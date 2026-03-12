@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="replicateComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>重复测定比较</value>
+  </data>
+  <data name="timePeptideComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>肽段比较</value>
+  </data>
+  <data name="scoreToRunToolStripMenuItem.Text" xml:space="preserve">
+    <value>得分到运行</value>
+  </data>
+  <data name="runToRunToolStripMenuItem.Text" xml:space="preserve">
+    <value>运行到运行</value>
+  </data>
+  <data name="regressionContextMenuItem.Text" xml:space="preserve">
+    <value>回归</value>
+  </data>
+  <data name="schedulingContextMenuItem.Text" xml:space="preserve">
+    <value>时序安排</value>
+  </data>
+  <data name="timeGraphContextMenuItem.Text" xml:space="preserve">
+    <value>图</value>
+  </data>
+  <data name="timeCorrelationContextMenuItem.Text" xml:space="preserve">
+    <value>关联</value>
+  </data>
+  <data name="timeResidualsContextMenuItem.Text" xml:space="preserve">
+    <value>残留</value>
+  </data>
+  <data name="timePlotContextMenuItem.Text" xml:space="preserve">
+    <value>绘图</value>
+  </data>
+  <data name="timeTargetsContextMenuItem.Text" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="targetsAt1FDRToolStripMenuItem.Text" xml:space="preserve">
+    <value>1% FDR 时的目标</value>
+  </data>
+  <data name="timeStandardsContextMenuItem.Text" xml:space="preserve">
+    <value>标准</value>
+  </data>
+  <data name="timeDecoysContextMenuItem.Text" xml:space="preserve">
+    <value>诱饵</value>
+  </data>
+  <data name="timePointsContextMenuItem.Text" xml:space="preserve">
+    <value>点</value>
+  </data>
+  <data name="allRTValueContextMenuItem.Text" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="timeRTValueContextMenuItem.Text" xml:space="preserve">
+    <value>保留时间</value>
+  </data>
+  <data name="fwhmRTValueContextMenuItem.Text" xml:space="preserve">
+    <value>半峰宽</value>
+  </data>
+  <data name="fwbRTValueContextMenuItem.Text" xml:space="preserve">
+    <value>FWB</value>
+  </data>
+  <data name="rtValueMenuItem.Text" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="showRTLegendContextMenuItem.Text" xml:space="preserve">
+    <value>图例</value>
+  </data>
+  <data name="refineRTContextMenuItem.Text" xml:space="preserve">
+    <value>调整</value>
+  </data>
+  <data name="predictionRTContextMenuItem.Text" xml:space="preserve">
+    <value>预测</value>
+  </data>
+  <data name="setRTThresholdContextMenuItem.Text" xml:space="preserve">
+    <value>设定阈值…</value>
+  </data>
+  <data name="linearRegressionContextMenuItem.Text" xml:space="preserve">
+    <value>线性回归</value>
+  </data>
+  <data name="kernelDensityEstimationContextMenuItem.Text" xml:space="preserve">
+    <value>核密度估计</value>
+  </data>
+  <data name="logRegressionContextMenuItem.Text" xml:space="preserve">
+    <value>对数回归</value>
+  </data>
+  <data name="loessContextMenuItem.Text" xml:space="preserve">
+    <value>局部加权回归</value>
+  </data>
+  <data name="setRegressionMethodContextMenuItem.Text" xml:space="preserve">
+    <value>回归方法</value>
+  </data>
+  <data name="createRTRegressionContextMenuItem.Text" xml:space="preserve">
+    <value>创建回归…</value>
+  </data>
+  <data name="placeholderToolStripMenuItem1.Text" xml:space="preserve">
+    <value>&lt;placeholder&gt;</value>
+  </data>
+  <data name="addCalculatorContextMenuItem.Text" xml:space="preserve">
+    <value>添加…</value>
+  </data>
+  <data name="updateCalculatorContextMenuItem.Text" xml:space="preserve">
+    <value>编辑当前…</value>
+  </data>
+  <data name="chooseCalculatorContextMenuItem.Text" xml:space="preserve">
+    <value>计算器</value>
+  </data>
+  <data name="removeRTOutliersContextMenuItem.Text" xml:space="preserve">
+    <value>删除异常值</value>
+  </data>
+  <data name="removeRTContextMenuItem.Text" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="timePropsContextMenuItem.Text" xml:space="preserve">
+    <value>属性…</value>
+  </data>
+</root>

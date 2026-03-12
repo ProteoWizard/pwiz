@@ -718,6 +718,12 @@
     <Compile Include="Menus\MassErrorsContextMenu.Designer.cs">
       <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
     </Compile>
+    <Compile Include="Menus\RetentionTimesContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\RetentionTimesContextMenu.Designer.cs">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menus\SpectrumContextMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3361,6 +3367,17 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\MassErrorsContextMenu.zh-CHS.resx">
       <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RetentionTimesContextMenu.ja.resx">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RetentionTimesContextMenu.resx">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RetentionTimesContextMenu.zh-CHS.resx">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\SpectrumContextMenu.ja.resx">
       <DependentUpon>SpectrumContextMenu.cs</DependentUpon>

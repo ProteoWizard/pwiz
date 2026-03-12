@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <metadata name="contextMenuRetentionTimes.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>731, 17</value>
+  </metadata>
+  <data name="replicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="replicateComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>Replicate Comparison</value>
+  </data>
+  <data name="timePeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="timePeptideComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>Peptide Comparison</value>
+  </data>
+  <data name="scoreToRunToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 22</value>
+  </data>
+  <data name="scoreToRunToolStripMenuItem.Text" xml:space="preserve">
+    <value>Score To Run</value>
+  </data>
+  <data name="runToRunToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 22</value>
+  </data>
+  <data name="runToRunToolStripMenuItem.Text" xml:space="preserve">
+    <value>Run To Run</value>
+  </data>
+  <data name="regressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="regressionContextMenuItem.Text" xml:space="preserve">
+    <value>Regression</value>
+  </data>
+  <data name="schedulingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="schedulingContextMenuItem.Text" xml:space="preserve">
+    <value>Scheduling</value>
+  </data>
+  <data name="timeGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="timeGraphContextMenuItem.Text" xml:space="preserve">
+    <value>Graph</value>
+  </data>
+  <data name="timeCorrelationContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>133, 22</value>
+  </data>
+  <data name="timeCorrelationContextMenuItem.Text" xml:space="preserve">
+    <value>Correlation</value>
+  </data>
+  <data name="timeResidualsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>133, 22</value>
+  </data>
+  <data name="timeResidualsContextMenuItem.Text" xml:space="preserve">
+    <value>Residuals</value>
+  </data>
+  <data name="timePlotContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="timePlotContextMenuItem.Text" xml:space="preserve">
+    <value>Plot</value>
+  </data>
+  <data name="timeTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 22</value>
+  </data>
+  <data name="timeTargetsContextMenuItem.Text" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="targetsAt1FDRToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 22</value>
+  </data>
+  <data name="targetsAt1FDRToolStripMenuItem.Text" xml:space="preserve">
+    <value>Targets at 1% FDR</value>
+  </data>
+  <data name="timeStandardsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 22</value>
+  </data>
+  <data name="timeStandardsContextMenuItem.Text" xml:space="preserve">
+    <value>Standards</value>
+  </data>
+  <data name="timeDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 22</value>
+  </data>
+  <data name="timeDecoysContextMenuItem.Text" xml:space="preserve">
+    <value>Decoys</value>
+  </data>
+  <data name="timePointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="timePointsContextMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
+  </data>
+  <data name="allRTValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 22</value>
+  </data>
+  <data name="allRTValueContextMenuItem.Text" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="timeRTValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 22</value>
+  </data>
+  <data name="timeRTValueContextMenuItem.Text" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
+  <data name="fwhmRTValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 22</value>
+  </data>
+  <data name="fwhmRTValueContextMenuItem.Text" xml:space="preserve">
+    <value>FWHM</value>
+  </data>
+  <data name="fwbRTValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 22</value>
+  </data>
+  <data name="fwbRTValueContextMenuItem.Text" xml:space="preserve">
+    <value>FWB</value>
+  </data>
+  <data name="rtValueMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="rtValueMenuItem.Text" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="showRTLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="showRTLegendContextMenuItem.Text" xml:space="preserve">
+    <value>Legend</value>
+  </data>
+  <data name="refineRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="refineRTContextMenuItem.Text" xml:space="preserve">
+    <value>Refine</value>
+  </data>
+  <data name="predictionRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="predictionRTContextMenuItem.Text" xml:space="preserve">
+    <value>Prediction</value>
+  </data>
+  <data name="setRTThresholdContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="setRTThresholdContextMenuItem.Text" xml:space="preserve">
+    <value>Set Threshold...</value>
+  </data>
+  <data name="linearRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>208, 22</value>
+  </data>
+  <data name="linearRegressionContextMenuItem.Text" xml:space="preserve">
+    <value>Linear Regression</value>
+  </data>
+  <data name="kernelDensityEstimationContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>208, 22</value>
+  </data>
+  <data name="kernelDensityEstimationContextMenuItem.Text" xml:space="preserve">
+    <value>Kernel Density Estimation</value>
+  </data>
+  <data name="logRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>208, 22</value>
+  </data>
+  <data name="logRegressionContextMenuItem.Text" xml:space="preserve">
+    <value>Logarithmic Regression</value>
+  </data>
+  <data name="loessContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>208, 22</value>
+  </data>
+  <data name="loessContextMenuItem.Text" xml:space="preserve">
+    <value>Loess</value>
+  </data>
+  <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="setRegressionMethodContextMenuItem.Text" xml:space="preserve">
+    <value>Regression Method</value>
+  </data>
+  <data name="toolStripSeparator22.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 6</value>
+  </data>
+  <data name="createRTRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="createRTRegressionContextMenuItem.Text" xml:space="preserve">
+    <value>Create Regression...</value>
+  </data>
+  <data name="placeholderToolStripMenuItem1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="placeholderToolStripMenuItem1.Text" xml:space="preserve">
+    <value>&lt;placeholder&gt;</value>
+  </data>
+  <data name="toolStripSeparatorCalculators.Size" type="System.Drawing.Size, System.Drawing">
+    <value>149, 6</value>
+  </data>
+  <data name="addCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="addCalculatorContextMenuItem.Text" xml:space="preserve">
+    <value>Add...</value>
+  </data>
+  <data name="updateCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="updateCalculatorContextMenuItem.Text" xml:space="preserve">
+    <value>Edit Current...</value>
+  </data>
+  <data name="chooseCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="chooseCalculatorContextMenuItem.Text" xml:space="preserve">
+    <value>Calculator</value>
+  </data>
+  <data name="toolStripSeparator23.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 6</value>
+  </data>
+  <data name="removeRTOutliersContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="removeRTOutliersContextMenuItem.Text" xml:space="preserve">
+    <value>Remove Outliers</value>
+  </data>
+  <data name="removeRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="removeRTContextMenuItem.Text" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="timePropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="timePropsContextMenuItem.Text" xml:space="preserve">
+    <value>Properties...</value>
+  </data>
+  <data name="toolStripSeparator38.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 6</value>
+  </data>
+  <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 430</value>
+  </data>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>489, 346</value>
+  </data>
+  <data name=">>$this.Name" xml:space="preserve">
+    <value>RetentionTimesContextMenu</value>
+  </data>
+  <data name=">>$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>

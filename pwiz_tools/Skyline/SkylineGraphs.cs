@@ -331,8 +331,6 @@ namespace pwiz.Skyline
                 ViewMenu.UpdateGraphUi(layoutLock.EnsureLocked, settingsNew, deserialized);
 
                 var enable = settingsNew.HasResults;
-                bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
-                runToRunToolStripMenuItem.Enabled = enableRunToRun;
                 if (_graphFullScan != null && _graphFullScan.Visible && !enable)
                 {
                     layoutLock.EnsureLocked();
@@ -2538,7 +2536,10 @@ namespace pwiz.Skyline
             ContextMenuGraphSummary = controller.GraphSummary;
             var graphController = controller as RTGraphController;
             if (graphController != null)
-                BuildRTGraphMenu(controller.GraphSummary, menuStrip, mousePt, graphController);
+            {
+                using var retentionTimesContextMenu = new RetentionTimesContextMenu(this);
+                retentionTimesContextMenu.BuildRTGraphMenu(controller.GraphSummary, menuStrip, mousePt, graphController);
+            }
             else if (controller is AreaGraphController)
                 BuildAreaGraphMenu(controller.GraphSummary, menuStrip, mousePt);
             else if (controller is MassErrorGraphController)
@@ -2643,229 +2644,7 @@ namespace pwiz.Skyline
             ShowGraphSpectrum(true);
         }
 
-        private void BuildRTGraphMenu(GraphSummary graph, ToolStrip menuStrip, Point mousePt, RTGraphController controller)
-        {
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator25);
-
-            // Insert skyline specific menus
-            var set = Settings.Default;
-            int iInsert = 0;
-            menuStrip.Items.Insert(iInsert++, timeGraphContextMenuItem);
-            if (timeGraphContextMenuItem.DropDownItems.Count == 0)
-            {
-                timeGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    replicateComparisonContextMenuItem,
-                    timePeptideComparisonContextMenuItem,
-                    regressionContextMenuItem,
-                    schedulingContextMenuItem
-                });
-            }
-            if (regressionContextMenuItem.DropDownItems.Count == 0)
-            {
-                regressionContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    scoreToRunToolStripMenuItem,
-                    runToRunToolStripMenuItem
-                });
-            }
-
-            GraphTypeSummary graphType = graph.Type;
-            if (graphType == GraphTypeSummary.score_to_run_regression || graphType == GraphTypeSummary.run_to_run_regression)
-            {
-                var runToRun = graphType == GraphTypeSummary.run_to_run_regression;
-                menuStrip.Items.Insert(iInsert++, timePlotContextMenuItem);
-                if (timePlotContextMenuItem.DropDownItems.Count == 0)
-                {
-                    timePlotContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        timeCorrelationContextMenuItem,
-                        timeResidualsContextMenuItem
-                    });
-                }
-                timeCorrelationContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.correlation;
-                timeResidualsContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.residuals;
-
-                menuStrip.Items.Insert(iInsert++,setRegressionMethodContextMenuItem);
-                if (setRegressionMethodContextMenuItem.DropDownItems.Count == 0)
-                {
-                    setRegressionMethodContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        linearRegressionContextMenuItem,
-                        kernelDensityEstimationContextMenuItem,
-                        logRegressionContextMenuItem,
-                        loessContextMenuItem
-                    });
-                }
-                linearRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.linear;
-                kernelDensityEstimationContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.kde;
-                logRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.log;
-                loessContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.loess;
-
-                var showPointsTypeStandards = Document.GetRetentionTimeStandards().Any();
-                var showPointsTypeDecoys = Document.PeptideGroups.Any(nodePepGroup => nodePepGroup.Children.Cast<PeptideDocNode>().Any(nodePep => nodePep.IsDecoy));
-                var qvalues = Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
-                if (showPointsTypeStandards || showPointsTypeDecoys || qvalues)
-                {
-                    menuStrip.Items.Insert(iInsert++, timePointsContextMenuItem);
-                    if (timePointsContextMenuItem.DropDownItems.Count == 0)
-                    {
-                        timePointsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                        {
-                            timeTargetsContextMenuItem,
-                            timeStandardsContextMenuItem,
-                            timeDecoysContextMenuItem
-                        });
-
-                        if (Document.Settings.HasResults &&
-                            Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained)
-                        {
-                            timePointsContextMenuItem.DropDownItems.Insert(1, targetsAt1FDRToolStripMenuItem);
-                        }
-                    }
-                    timeStandardsContextMenuItem.Visible = showPointsTypeStandards;
-                    timeDecoysContextMenuItem.Visible = showPointsTypeDecoys;
-                    timeTargetsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.targets;
-                    targetsAt1FDRToolStripMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.targets_fdr;
-                    timeStandardsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.standards;
-                    timeDecoysContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.decoys;
-                }
-
-                refineRTContextMenuItem.Checked = set.RTRefinePeptides;
-                //Grey out so user knows we cannot refine with current regression method
-                refineRTContextMenuItem.Enabled = RTGraphController.CanDoRefinementForRegressionMethod;
-                menuStrip.Items.Insert(iInsert++, refineRTContextMenuItem);
-                if (!runToRun)
-                {
-                    predictionRTContextMenuItem.Checked = set.RTPredictorVisible;
-                    menuStrip.Items.Insert(iInsert++, predictionRTContextMenuItem);
-                    iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                }
-
-                menuStrip.Items.Insert(iInsert++, setRTThresholdContextMenuItem);
-                if (!runToRun)
-                {
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator22);
-                    menuStrip.Items.Insert(iInsert++, createRTRegressionContextMenuItem);
-                    menuStrip.Items.Insert(iInsert++, chooseCalculatorContextMenuItem);
-
-                    if (chooseCalculatorContextMenuItem.DropDownItems.Count == 0)
-                    {
-                        chooseCalculatorContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                        {
-                            placeholderToolStripMenuItem1,
-                            toolStripSeparatorCalculators,
-                            addCalculatorContextMenuItem,
-                            updateCalculatorContextMenuItem
-                        });
-                    }
-                }
-                var regressionRT = controller.RegressionRefined;
-                createRTRegressionContextMenuItem.Enabled = (regressionRT != null) && !runToRun;
-                updateCalculatorContextMenuItem.Visible = (regressionRT != null &&
-                    Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator) && !runToRun);
-                bool showDelete = controller.ShowDelete(mousePt);
-                bool showDeleteOutliers = controller.ShowDeleteOutliers;
-                if (showDelete || showDeleteOutliers)
-                {
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator23);
-                    if (showDelete)
-                        menuStrip.Items.Insert(iInsert++, removeRTContextMenuItem);
-                    if (showDeleteOutliers)
-                        menuStrip.Items.Insert(iInsert++, removeRTOutliersContextMenuItem);
-                }
-            }
-            else if (graphType == GraphTypeSummary.schedule)
-            {
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
-                menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);                
-            }
-            else
-            {
-                menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
-                menuStrip.Items.Insert(iInsert++, rtValueMenuItem);
-                if (rtValueMenuItem.DropDownItems.Count == 0)
-                {
-                    rtValueMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        allRTValueContextMenuItem,
-                        timeRTValueContextMenuItem,
-                        fwhmRTValueContextMenuItem,
-                        fwbRTValueContextMenuItem
-                    });
-                }
-                AddTransitionContextMenu(menuStrip, iInsert++);
-                if (graphType == GraphTypeSummary.replicate)
-                {
-                    iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
-                    var rtReplicateGraphPane = graph.GraphPanes.FirstOrDefault() as RTReplicateGraphPane;
-                    if (rtReplicateGraphPane != null && rtReplicateGraphPane.CanShowRTLegend)
-                    {
-                        showRTLegendContextMenuItem.Checked = set.ShowRetentionTimesLegend;
-                        menuStrip.Items.Insert(iInsert++, showRTLegendContextMenuItem);
-                    }
-                    if (rtReplicateGraphPane != null)
-                    {
-                        ChromFileInfoId chromFileInfoId = null;
-                        if (DocumentUI.Settings.HasResults)
-                        {
-                            var chromatogramSet = DocumentUI.Settings.MeasuredResults.Chromatograms[SelectedResultsIndex];
-                            if (chromatogramSet.MSDataFileInfos.Count == 1)
-                            {
-                                chromFileInfoId = chromatogramSet.MSDataFileInfos[0].FileId;
-                            }
-                        }
-                        iInsert = InsertAlignmentMenuItems(menuStrip.Items, chromFileInfoId, iInsert);
-                    }
-                }
-                else if (graphType == GraphTypeSummary.peptide)
-                {
-                    AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                    iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                    AddScopeContextMenu(menuStrip, iInsert++);
-                    InsertAlignmentMenuItems(menuStrip.Items, null, iInsert);
-                }
-                if (graphType == GraphTypeSummary.peptide ||  graphType == GraphTypeSummary.abundance || null != SummaryReplicateGraphPane.GroupByReplicateAnnotation)
-                {
-                    menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
-                    peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
-                }
-                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
-                menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);
-
-                var isotopeLabelType = graph.GraphPaneFromPoint(mousePt) != null
-                    ? graph.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
-                    : null;
-                using var chromatogramContextMenu = new ChromatogramContextMenu(this);
-                chromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
-            }
-
-            menuStrip.Items.Insert(iInsert, toolStripSeparator24);
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
-        }
+        // BuildRTGraphMenu has been moved to RetentionTimesContextMenu
 
         internal void AddScopeContextMenu(ToolStrip menuStrip, int iInsert)
         {
@@ -2939,30 +2718,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
         }
 
-        private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var types = Settings.Default.RTGraphTypes;
-            bool runToRunRegression = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.run_to_run_regression);
-            bool scoreToRunRegression = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.score_to_run_regression);
-
-            runToRunToolStripMenuItem.Checked = runToRunRegression;
-            scoreToRunToolStripMenuItem.Checked = scoreToRunRegression;
-            regressionContextMenuItem.Checked = runToRunRegression || scoreToRunRegression;
-
-            replicateComparisonContextMenuItem.Checked = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.replicate);
-            timePeptideComparisonContextMenuItem.Checked = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.peptide);
-            schedulingContextMenuItem.Checked = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.schedule);
-        }
-
-        private void regressionMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTRegressionGraphScoreToRun();
-        }
-
-        private void fullReplicateComparisonToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTRegressionGraphRunToRun();
-        }
+        // timeGraphMenuItem_DropDownOpening, regressionMenuItem_Click, fullReplicateComparisonToolStripMenuItem_Click
+        // moved to RetentionTimesContextMenu
 
         public void ShowRTRegressionGraphScoreToRun()
         {
@@ -2978,68 +2735,7 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void linearRegressionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionMethod(RegressionMethodRT.linear);
-        }
-
-        private void kernelDensityEstimationContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionMethod(RegressionMethodRT.kde);
-        }
-
-        private void logRegressionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionMethod(RegressionMethodRT.log);
-        }
-
-        private void loessContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionMethod(RegressionMethodRT.loess);
-        }
-
-        private void timeCorrelationContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPlotType(PlotTypeRT.correlation);
-        }
-
-        private void timeResidualsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPlotType(PlotTypeRT.residuals);
-        }
-
-        private void timeTargetsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsType(PointsTypeRT.targets);
-        }
-
-        private void targetsAt1FDRToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (RTLinearRegressionGraphPane.ShowReplicate != ReplicateDisplay.single &&
-                RTGraphController.GraphType == GraphTypeSummary.score_to_run_regression)
-            {
-                using (var dlg = new MultiButtonMsgDlg(
-                    SkylineResources.SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_,
-                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
-                {
-                    if (dlg.ShowDialog(this) != DialogResult.Yes)
-                        return;
-                }
-            }
-
-            ShowSingleReplicate();
-            ShowPointsType(PointsTypeRT.targets_fdr);
-        }
-
-        private void timeStandardsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsType(PointsTypeRT.standards);
-        }
-
-        private void timeDecoysContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsType(PointsTypeRT.decoys);
-        }
+        // RT regression/plot/points event handlers moved to RetentionTimesContextMenu
 
         public void ShowPlotType(PlotTypeRT plotTypeRT)
         {
@@ -3059,10 +2755,7 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void timePeptideComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPeptideGraph();
-        }
+        // timePeptideComparisonMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTPeptideGraph()
         {
@@ -3072,10 +2765,7 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        private void showRTLegendContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTLegend(!Settings.Default.ShowRetentionTimesLegend);
-        }
+        // showRTLegendContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTLegend(bool show)
         {
@@ -3083,10 +2773,7 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void replicateComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTReplicateGraph();
-        }
+        // replicateComparisonMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTReplicateGraph()
         {
@@ -3096,10 +2783,7 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        private void schedulingMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTSchedulingGraph();
-        }
+        // schedulingMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTSchedulingGraph()
         {
@@ -3114,17 +2798,7 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void refineRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.RTRefinePeptides = refineRTContextMenuItem.Checked;
-            UpdateRetentionTimeGraph();
-        }
-
-        private void predictionRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.RTPredictorVisible = predictionRTContextMenuItem.Checked;
-            UpdateRetentionTimeGraph();
-        }
+        // refineRTContextMenuItem_Click, predictionRTContextMenuItem_Click moved to RetentionTimesContextMenu
 
         private void averageReplicatesContextMenuItem_Click(object sender, EventArgs e)
         {
@@ -3166,10 +2840,7 @@ namespace pwiz.Skyline
             bestReplicateRTContextMenuItem.Checked = (replicate == ReplicateDisplay.best);
         }
 
-        private void setRTThresholdContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionRTThresholdDlg();
-        }
+        // setRTThresholdContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRegressionRTThresholdDlg()
         {
@@ -3184,10 +2855,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void createRTRegressionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            CreateRegression();               
-        }
+        // createRTRegressionContextMenuItem_Click moved to RetentionTimesContextMenu
         public void CreateRegression()
         {
             var listRegression = Settings.Default.RetentionTimeList;
@@ -3220,36 +2888,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void chooseCalculatorContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            SetupCalculatorChooser();
-        }
-
-        public void SetupCalculatorChooser()
-        {
-            while (!ReferenceEquals(chooseCalculatorContextMenuItem.DropDownItems[0], toolStripSeparatorCalculators))
-                chooseCalculatorContextMenuItem.DropDownItems.RemoveAt(0);
-
-            //If no calculator has been picked for use in the graph, get the best one.
-            var autoItem = new ToolStripMenuItem(SkylineResources.SkylineWindow_SetupCalculatorChooser_Auto, null,
-                delegate { ChooseCalculator(string.Empty); })
-            {
-                Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
-            };
-            chooseCalculatorContextMenuItem.DropDownItems.Insert(0, autoItem);
-
-            int i = 0;
-            var document = DocumentUI;
-            foreach (var optionVariable in RtCalculatorOption.GetOptions(document))
-            {
-                var option = optionVariable;
-                var menuItem = new ToolStripMenuItem(option.DisplayName, null, delegate { ChooseCalculator(option); })
-                {
-                    Checked = Equals(option, Settings.Default.RtCalculatorOption)
-                };
-                chooseCalculatorContextMenuItem.DropDownItems.Insert(i++, menuItem);
-            }
-        }
+        // chooseCalculatorContextMenuItem_DropDownOpening, SetupCalculatorChooser moved to RetentionTimesContextMenu
 
         public void ChooseCalculator(RtCalculatorOption option)
         {
@@ -3262,18 +2901,7 @@ namespace pwiz.Skyline
             ChooseCalculator(new RtCalculatorOption.Irt(irtCalc));
         }
 
-        private void addCalculatorContextMenuItem_Click(object sender, EventArgs e)
-        {
-            var list = Settings.Default.RTScoreCalculatorList;
-            var calcNew = list.EditItem(this, null, list, null);
-            if (calcNew != null)
-                list.SetValue(calcNew);
-        }
-
-        private void updateCalculatorContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowEditCalculatorDlg();
-        }
+        // addCalculatorContextMenuItem_Click, updateCalculatorContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowEditCalculatorDlg()
         {
@@ -3299,10 +2927,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void removeRTOutliersContextMenuItem_Click(object sender, EventArgs e)
-        {
-            RemoveRTOutliers();
-        }
+        // removeRTOutliersContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void RemoveRTOutliers()
         {
@@ -3317,63 +2942,9 @@ namespace pwiz.Skyline
                     MessageType.removed_rt_outliers, docPair.OldDocumentType, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
         }
 
-        private void removeRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            deleteMenuItem_Click(sender, e);
-        }
-
-        private void peptideRTValueMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            RTPeptideValue rtValue = RTPeptideGraphPane.RTValue;
-            allRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.All);
-            timeRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.Retention);
-            fwhmRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.FWHM);
-            fwbRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.FWB);
-        }
-
-        /// <summary>
-        /// If the predicted retention time is auto calculated, add a "Show {Prediction} score" menu item.
-        /// If there are retention time alignments available for the specified chromFileInfoId, then adds 
-        /// a "Align Times To {Specified File}" menu item to a context menu.
-        /// </summary>
-        private int InsertAlignmentMenuItems(ToolStripItemCollection items, ChromFileInfoId chromFileInfoId, int iInsert)
-        {
-            var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
-            if (predictRT != null && predictRT.IsAutoCalculated)
-            {
-                var menuItem = new ToolStripMenuItem(
-                    string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null,
-                    (sender, eventArgs) => AlignToRtPrediction = !AlignToRtPrediction)
-                {
-                    Checked = AlignToRtPrediction,
-                };
-                items.Insert(iInsert++, menuItem);
-            }
-
-            return iInsert;
-        }
-
-        private void allRTValueContextMenuItem_Click(object sender, EventArgs e)
-        {
-            // No CVs with all retention time values showing
-            Settings.Default.ShowPeptideCV = false;
-            ShowRTPeptideValue(RTPeptideValue.All);
-        }
-
-        private void timeRTValueContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPeptideValue(RTPeptideValue.Retention);
-        }
-
-        private void fwhmRTValueContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPeptideValue(RTPeptideValue.FWHM);
-        }
-
-        private void fwbRTValueContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPeptideValue(RTPeptideValue.FWB);
-        }
+        // removeRTContextMenuItem_Click, peptideRTValueMenuItem_DropDownOpening, InsertAlignmentMenuItems,
+        // allRTValueContextMenuItem_Click, timeRTValueContextMenuItem_Click, fwhmRTValueContextMenuItem_Click,
+        // fwbRTValueContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTPeptideValue(RTPeptideValue value)
         {
@@ -3381,10 +2952,7 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void timePropsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPropertyDlg(ContextMenuGraphSummary);
-        }
+        // timePropsContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTPropertyDlg(GraphSummary graph)
         {
