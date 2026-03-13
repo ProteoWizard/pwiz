@@ -22,16 +22,13 @@
 
 namespace SkylineTool
 {
-    /// <summary>
-    /// POCO models for typed IJsonToolService parameters and return values.
-    /// These are serialized as JSON over the named pipe: PascalCase properties
-    /// map to snake_case JSON via naming policies on each side (Newtonsoft
-    /// SnakeCaseNamingStrategy on the server, System.Text.Json SnakeCaseLower
-    /// on the client). No serialization attributes needed.
-    ///
-    /// This file is link-compiled into both .NET Framework 4.7.2 (Skyline)
-    /// and .NET 8.0 (SkylineMcpServer), so it must not reference any JSON library.
-    /// </summary>
+    // POCO models for typed IJsonToolService parameters and return values.
+    // Serialized as JSON over the named pipe: PascalCase properties map to
+    // snake_case JSON via naming policies (Newtonsoft SnakeCaseNamingStrategy
+    // on the server, System.Text.Json SnakeCaseLower on the client).
+    //
+    // Link-compiled into both .NET Framework 4.7.2 (Skyline) and .NET 8.0
+    // (SkylineMcpServer), so must not reference any JSON library.
 
     // --- Report models ---
 

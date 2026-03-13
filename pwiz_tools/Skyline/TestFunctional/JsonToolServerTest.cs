@@ -233,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
             var moleculeLines = TextUtil.ReadLines(locations).ToArray();
             string lastMoleculeLocator = moleculeLines.Last().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
             server.SetSelectedElement(lastMoleculeLocator);
-            WaitForConditionUI(() => server.GetSelection().Contains(lastMoleculeLocator));
+            WaitForCondition(() => server.GetSelection().Contains(lastMoleculeLocator));
 
             // Multi-selection: select multiple molecules at once
             string firstMoleculeLocator = moleculeLines.First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
@@ -257,7 +257,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Navigate back to a regular element to leave things in a known state
             server.SetSelectedElement(firstMoleculeLocator);
-            WaitForConditionUI(() => server.GetSelection().Contains(firstMoleculeLocator));
+            WaitForCondition(() => server.GetSelection().Contains(firstMoleculeLocator));
         }
 
         private void TestLocations(JsonToolServer server)
@@ -306,7 +306,7 @@ namespace pwiz.SkylineTestFunctional
             // SetReplicate - navigate to a different replicate
             string targetRep = names.ReadLines().Last();
             server.SetReplicate(targetRep);
-            WaitForConditionUI(() => server.GetReplicateName() == targetRep);
+            WaitForCondition(() => server.GetReplicateName() == targetRep);
 
             // Error: nonexistent replicate - SetReplicate returns error message (not exception)
             string errorResult = server.SetReplicate(@"NonexistentReplicate_12345");
@@ -880,24 +880,26 @@ namespace pwiz.SkylineTestFunctional
                 .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
 
             // Test Deny - dialog should return denial message
+            // Run server call on a background thread (like the real pipe server thread)
+            // so InvokeOnUiThread marshals to the UI thread correctly.
             string imagePath = TestFilesDir.GetTestPath(@"deny_test.png");
             string denyResult = null;
-            var dlg = ShowDialog<ScreenCapturePermissionDlg>(
-                () => denyResult = server.GetFormImage(formId, imagePath));
+            ActionUtil.RunAsync(() => denyResult = server.GetFormImage(formId, imagePath));
+            var dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
             Assert.IsFalse(dlg.DoNotAskAgain);
             CancelDialog(dlg);
-            WaitForConditionUI(() => denyResult != null);
+            WaitForCondition(() => denyResult != null);
             AssertEx.Contains(denyResult, @"denied");
             Assert.IsFalse(File.Exists(imagePath));
 
             // Test Allow - dialog should grant session permission
             string allowPath = TestFilesDir.GetTestPath(@"allow_test.png");
             string allowResult = null;
-            dlg = ShowDialog<ScreenCapturePermissionDlg>(
-                () => allowResult = server.GetFormImage(formId, allowPath));
+            ActionUtil.RunAsync(() => allowResult = server.GetFormImage(formId, allowPath));
+            dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
             Assert.IsFalse(dlg.DoNotAskAgain);
             OkDialog(dlg);
-            WaitForConditionUI(() => allowResult != null);
+            WaitForCondition(() => allowResult != null);
             // After Allow, file should be created (content may be blank in offscreen mode)
             Assert.IsTrue(File.Exists(allowPath));
             Assert.IsTrue(new FileInfo(allowPath).Length > 0);
@@ -916,11 +918,11 @@ namespace pwiz.SkylineTestFunctional
 
             string persistPath = TestFilesDir.GetTestPath(@"persist_test.png");
             string persistResult = null;
-            dlg = ShowDialog<ScreenCapturePermissionDlg>(
-                () => persistResult = server.GetFormImage(formId, persistPath));
+            ActionUtil.RunAsync(() => persistResult = server.GetFormImage(formId, persistPath));
+            dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
             RunUI(() => dlg.DoNotAskAgain = true);
             OkDialog(dlg);
-            WaitForConditionUI(() => persistResult != null);
+            WaitForCondition(() => persistResult != null);
             Assert.IsTrue(File.Exists(persistPath));
             Assert.IsTrue(Settings.Default.AllowMcpScreenCapture);
 
