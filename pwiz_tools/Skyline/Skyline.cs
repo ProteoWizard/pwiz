@@ -3153,10 +3153,13 @@ namespace pwiz.Skyline
 
         private void reportsHelpMenuItem_Click(object sender, EventArgs e)
         {
-            var dataSchema = new SkylineDataSchema(this,
-                SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            var documentationGenerator = new DocumentationGenerator(
-                ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument)))
+            ShowReportsDocumentation();
+        }
+
+        public void ShowReportsDocumentation()
+        {
+            var dataSchema = new SkylineWindowDataSchema(this, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var documentationGenerator = new DocumentationGenerator(ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument), ModeUI.ToString()))
             {
                 IncludeHidden = false
             };
