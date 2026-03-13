@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Compile Include="..\..\..\..\SkylineTool\IJsonToolService.cs" Link="IJsonToolService.cs" />
+    <Compile Include="..\..\..\..\SkylineTool\JsonToolModels.cs" Link="JsonToolModels.cs" />
   </ItemGroup>
 
 </Project>

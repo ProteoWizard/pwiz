@@ -22,11 +22,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using ModelContextProtocol.Server;
 using SkylineTool;
-using REPORT = SkylineTool.JsonToolConstants.REPORT;
-using TUTORIAL = SkylineTool.JsonToolConstants.TUTORIAL;
 
 namespace SkylineMcpServer.Tools;
 
@@ -134,7 +131,7 @@ public static class SkylineTools
         {
             filePath ??= GetTempReportPath(reportName, format);
             string culture = invariant ? JsonToolConstants.CULTURE_INVARIANT : JsonToolConstants.CULTURE_LOCALIZED;
-            string metadata = connection.Call(nameof(IJsonToolService.ExportReport), reportName, filePath, culture);
+            var metadata = connection.CallTyped<ReportMetadata>(nameof(IJsonToolService.ExportReport), reportName, filePath, culture);
             return FormatReportResult(metadata);
         });
     }
@@ -157,7 +154,7 @@ public static class SkylineTools
         {
             filePath ??= GetTempReportPath(JsonToolConstants.DEFAULT_REPORT_NAME, format);
             string culture = invariant ? JsonToolConstants.CULTURE_INVARIANT : JsonToolConstants.CULTURE_LOCALIZED;
-            string metadata = connection.Call(nameof(IJsonToolService.ExportReportFromDefinition), reportDefinitionJson, filePath, culture);
+            var metadata = connection.CallTyped<ReportMetadata>(nameof(IJsonToolService.ExportReportFromDefinition), reportDefinitionJson, filePath, culture);
             return FormatReportResult(metadata);
         });
     }
@@ -491,34 +488,12 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetTutorial), name, language, filePath);
-            if (string.IsNullOrEmpty(result))
+            var metadata = connection.CallTyped<TutorialMetadata>(
+                nameof(IJsonToolService.GetTutorial), name, language, filePath);
+            if (metadata == null)
                 return $"Tutorial not found: {name}";
 
-            // Parse the JSON to give a friendly summary
-            using var doc = JsonDocument.Parse(result);
-            var root = doc.RootElement;
-            string savedPath = root.GetProperty(nameof(TUTORIAL.file_path)).GetString();
-            string title = root.GetProperty(nameof(TUTORIAL.title)).GetString();
-            int lineCount = root.GetProperty(nameof(TUTORIAL.line_count)).GetInt32();
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"Tutorial: {title}");
-            sb.AppendLine($"Lines: {lineCount}");
-            sb.AppendLine($"File: {savedPath}");
-            sb.AppendLine();
-            sb.AppendLine("Table of Contents:");
-            foreach (var entry in root.GetProperty(nameof(TUTORIAL.toc)).EnumerateArray())
-            {
-                int level = entry.GetProperty(nameof(TUTORIAL.level)).GetInt32();
-                string heading = entry.GetProperty(nameof(TUTORIAL.heading)).GetString();
-                int line = entry.GetProperty(nameof(TUTORIAL.line)).GetInt32();
-                string indent = level > 1 ? "  " : "";
-                sb.AppendLine($"{indent}- {heading} (line {line})");
-            }
-            sb.AppendLine();
-            sb.AppendLine("Use the Read tool to read sections from the file.");
-            return sb.ToString();
+            return FormatTutorialResult(metadata);
         });
     }
 
@@ -537,15 +512,12 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetTutorialImage), name, imageFilename, language, filePath);
-            if (string.IsNullOrEmpty(result))
+            var metadata = connection.CallTyped<TutorialImageMetadata>(
+                nameof(IJsonToolService.GetTutorialImage), name, imageFilename, language, filePath);
+            if (metadata == null)
                 return $"Image not found: {imageFilename} in tutorial {name}";
 
-            using var doc = JsonDocument.Parse(result);
-            var root = doc.RootElement;
-            string savedPath = root.GetProperty(nameof(TUTORIAL.file_path)).GetString();
-
-            return $"Image downloaded: {savedPath}\n\nUse the Read tool to view this image.";
+            return $"Image downloaded: {metadata.FilePath}\n\nUse the Read tool to view this image.";
         });
     }
 
@@ -663,9 +635,11 @@ public static class SkylineTools
     /// </summary>
     private static string Invoke(Func<SkylineConnection, string> action)
     {
+        SkylineConnection connection = null;
         try
         {
-            var (connection, error) = SkylineConnection.TryConnect();
+            string error;
+            (connection, error) = SkylineConnection.TryConnect();
             if (connection == null)
                 return error;
 
@@ -682,6 +656,18 @@ public static class SkylineTools
             {
                 return "Skyline disconnected during the operation. " +
                        "The Skyline process may have exited or been restarted. Try again.";
+            }
+
+            // Enrich version mismatch errors with Skyline and MCP server identity
+            if (ex is InvalidOperationException && ex.Message.Contains("Unknown method:"))
+            {
+                string skylineId = connection?.SkylineVersion;
+                if (!string.IsNullOrEmpty(skylineId))
+                {
+                    return $"Error: {ex.Message}\n\n" +
+                           $"This method is not available in {skylineId}. " +
+                           "A newer version of Skyline may be required.";
+                }
             }
 
             return ErrorDetailLevel == ErrorDetail.Full
@@ -701,46 +687,54 @@ public static class SkylineTools
         return result;
     }
 
-    private static string FormatReportResult(string metadataJson)
+    private static string FormatReportResult(ReportMetadata metadata)
     {
-        if (string.IsNullOrEmpty(metadataJson))
+        if (metadata == null)
             return "Report returned no data. The report may not exist or the document may be empty.";
 
-        using var doc = JsonDocument.Parse(metadataJson);
-        var root = doc.RootElement;
-
-        string filePath = root.TryGetProperty(nameof(REPORT.file_path), out var fpEl) ? fpEl.GetString() : null;
-        string reportName = root.TryGetProperty(nameof(REPORT.report_name), out var rnEl) ? rnEl.GetString() : "Report";
-        int rowCount = root.TryGetProperty(nameof(REPORT.row_count), out var rcEl) ? rcEl.GetInt32() : -1;
-        string columns = root.TryGetProperty(nameof(REPORT.columns), out var colEl) ? colEl.GetString() : null;
-        string preview = root.TryGetProperty(nameof(REPORT.preview), out var pvEl) ? pvEl.GetString() : null;
-        string format = root.TryGetProperty(nameof(REPORT.format), out var fmtEl) ? fmtEl.GetString() : null;
-
         var sb = new StringBuilder();
-        sb.AppendLine($"Report: {reportName}");
-        if (rowCount >= 0)
-            sb.AppendLine($"Rows: {rowCount}");
-        if (columns != null)
-            sb.AppendLine($"Columns: {columns}");
-        if (format != null)
-            sb.AppendLine($"Format: {format}");
+        sb.AppendLine($"Report: {metadata.ReportName ?? "Report"}");
+        if (metadata.RowCount.HasValue)
+            sb.AppendLine($"Rows: {metadata.RowCount.Value}");
+        if (metadata.Columns != null)
+            sb.AppendLine($"Columns: {metadata.Columns}");
+        if (metadata.Format != null)
+            sb.AppendLine($"Format: {metadata.Format}");
         sb.AppendLine();
 
-        if (!string.IsNullOrEmpty(preview))
+        if (!string.IsNullOrEmpty(metadata.Preview))
         {
             sb.AppendLine("Preview:");
-            sb.AppendLine(preview);
-            if (rowCount > 5)
-                sb.AppendLine($"... ({rowCount - 5} more rows)");
+            sb.AppendLine(metadata.Preview);
+            if (metadata.RowCount > 5)
+                sb.AppendLine($"... ({metadata.RowCount.Value - 5} more rows)");
             sb.AppendLine();
         }
 
-        if (filePath != null)
+        if (metadata.FilePath != null)
         {
-            sb.AppendLine($"Full data saved to: {filePath}");
+            sb.AppendLine($"Full data saved to: {metadata.FilePath}");
             sb.AppendLine("Use the Read tool to explore the full dataset.");
         }
 
+        return sb.ToString();
+    }
+
+    private static string FormatTutorialResult(TutorialMetadata metadata)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"Tutorial: {metadata.Title}");
+        sb.AppendLine($"Lines: {metadata.LineCount}");
+        sb.AppendLine($"File: {metadata.FilePath}");
+        sb.AppendLine();
+        sb.AppendLine("Table of Contents:");
+        foreach (var entry in metadata.Toc ?? Array.Empty<TocEntry>())
+        {
+            string indent = entry.Level > 1 ? "  " : "";
+            sb.AppendLine($"{indent}- {entry.Heading} (line {entry.Line})");
+        }
+        sb.AppendLine();
+        sb.AppendLine("Use the Read tool to read sections from the file.");
         return sb.ToString();
     }
 

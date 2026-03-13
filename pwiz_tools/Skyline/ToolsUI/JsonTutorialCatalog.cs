@@ -23,13 +23,12 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 using LlmInstruction = pwiz.Skyline.Util.Extensions.LlmInstruction;
-using TUTORIAL = SkylineTool.JsonToolConstants.TUTORIAL;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -71,9 +70,9 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Fetch a tutorial from GitHub, convert HTML to markdown, write to a file,
-        /// and return JSON metadata with file path and table of contents.
+        /// and return metadata with file path and table of contents.
         /// </summary>
-        public static string FetchTutorial(string name, string language, string filePath = null)
+        public static TutorialMetadata FetchTutorial(string name, string language, string filePath = null)
         {
             var tutorial = TutorialCatalog.FindTutorial(name);
             if (tutorial == null)
@@ -108,15 +107,15 @@ namespace pwiz.Skyline.ToolsUI
             string markdown = ConvertHtmlToMarkdown(html);
 
             // Build TOC from headings
-            var toc = new JArray();
+            var tocEntries = new System.Collections.Generic.List<TocEntry>();
             var lines = markdown.Split('\n');
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i];
                 if (line.StartsWith(@"## "))
-                    toc.Add(new JObject { [nameof(TUTORIAL.heading)] = line.Substring(3).Trim(), [nameof(TUTORIAL.level)] = 2, [nameof(TUTORIAL.line)] = i + 1 });
+                    tocEntries.Add(new TocEntry { Heading = line.Substring(3).Trim(), Level = 2, Line = i + 1 });
                 else if (line.StartsWith(@"# "))
-                    toc.Add(new JObject { [nameof(TUTORIAL.heading)] = line.Substring(2).Trim(), [nameof(TUTORIAL.level)] = 1, [nameof(TUTORIAL.line)] = i + 1 });
+                    tocEntries.Add(new TocEntry { Heading = line.Substring(2).Trim(), Level = 1, Line = i + 1 });
             }
 
             // Write to file
@@ -124,23 +123,22 @@ namespace pwiz.Skyline.ToolsUI
             DirectoryEx.CreateForFilePath(filePath);
             File.WriteAllText(filePath, markdown, new UTF8Encoding(false));
 
-            var result = new JObject
+            return new TutorialMetadata
             {
-                [nameof(TUTORIAL.file_path)] = filePath.ToForwardSlashPath(),
-                [nameof(TUTORIAL.title)] = t.Caption,
-                [nameof(TUTORIAL.tutorial)] = t.FolderName,
-                [nameof(TUTORIAL.language)] = language,
-                [nameof(TUTORIAL.line_count)] = lines.Length,
-                [nameof(TUTORIAL.toc)] = toc
+                FilePath = filePath.ToForwardSlashPath(),
+                Title = t.Caption,
+                Tutorial = t.FolderName,
+                Language = language,
+                LineCount = lines.Length,
+                Toc = tocEntries.ToArray()
             };
-            return result.ToString();
         }
 
         /// <summary>
         /// Fetch a tutorial image from GitHub and save to a file.
-        /// Returns JSON with file_path for the downloaded image.
+        /// Returns metadata with the file path of the downloaded image.
         /// </summary>
-        public static string FetchTutorialImage(string name, string imageFilename, string language, string filePath = null)
+        public static TutorialImageMetadata FetchTutorialImage(string name, string imageFilename, string language, string filePath = null)
         {
             var tutorial = TutorialCatalog.FindTutorial(name);
             if (tutorial == null)
@@ -177,14 +175,11 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
-            var result = new JObject
+            return new TutorialImageMetadata
             {
-                [nameof(TUTORIAL.file_path)] = filePath.ToForwardSlashPath(),
-                [nameof(TUTORIAL.tutorial)] = t.FolderName,
-                [nameof(TUTORIAL.image)] = imageFilename,
-                [nameof(TUTORIAL.language)] = language
+                FilePath = filePath.ToForwardSlashPath(),
+                Image = imageFilename
             };
-            return result.ToString();
         }
 
         /// <summary>

@@ -50,7 +50,6 @@ using JSON = SkylineTool.JsonToolConstants.JSON;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using REPORT = SkylineTool.JsonToolConstants.REPORT;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
-using TUTORIAL = SkylineTool.JsonToolConstants.TUTORIAL;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -487,14 +486,13 @@ namespace pwiz.SkylineTestFunctional
             // Isotope label type pivoting: Precursor and ModifiedSequence should pivot
             // into label-prefixed columns (e.g., "light Precursor", "heavy Precursor")
             string isotopePivotPath = TestFilesDir.GetTestPath(@"report_isotope_pivot.csv");
-            string isotopePivotJson = new JObject
+            var isotopePivotDef = new ReportDefinition
             {
-                [nameof(REPORT.select)] = new JArray(@"Peptide", @"Precursor", @"ModifiedSequence"),
-                [nameof(REPORT.pivot_isotope_label)] = true
-            }.ToString();
-            string isotopePivotResult = server.ExportReportFromDefinition(
-                isotopePivotJson, isotopePivotPath, JsonToolConstants.CULTURE_INVARIANT);
-            var isotopePivotMetadata = JObject.Parse(isotopePivotResult);
+                Select = new[] { @"Peptide", @"Precursor", @"ModifiedSequence" },
+                PivotIsotopeLabel = true
+            };
+            var isotopePivotMetadata = server.ExportReportFromDefinition(
+                isotopePivotDef, isotopePivotPath, JsonToolConstants.CULTURE_INVARIANT);
             // With light + heavy labels, pivoting produces one row per peptide
             // with fewer rows than the unpivoted 2-per-peptide result
             int isotopePivotRows = GetRowCount(isotopePivotMetadata);
@@ -517,13 +515,11 @@ namespace pwiz.SkylineTestFunctional
             string tempPath = TestFilesDir.GetTestPath(@"report_test.csv");
 
             // ExportReport - export a built-in report
-            string result = server.ExportReport(REPORT_AREAS, tempPath, JsonToolConstants.CULTURE_INVARIANT);
-            Assert.IsFalse(string.IsNullOrEmpty(result));
+            var metadata = server.ExportReport(REPORT_AREAS, tempPath, JsonToolConstants.CULTURE_INVARIANT);
+            AssertEx.IsNotNull(metadata);
 
-            // Parse JSON metadata
-            var metadata = JObject.Parse(result);
             Assert.AreEqual(16, GetRowCount(metadata));
-            Assert.IsNotNull(metadata[nameof(REPORT.columns)]);
+            AssertEx.IsNotNull(metadata.Columns);
 
             // Verify file was created
             Assert.IsTrue(File.Exists(tempPath));
@@ -540,9 +536,8 @@ namespace pwiz.SkylineTestFunctional
         {
             // Simple select
             string tempPath = TestFilesDir.GetTestPath(@"report_def_simple.csv");
-            string json = BuildSelectJson(COL_PROTEIN_NAME, COL_PEPTIDE_SEQUENCE, COL_PRECURSOR_MZ);
-            string result = server.ExportReportFromDefinition(json, tempPath, JsonToolConstants.CULTURE_INVARIANT);
-            var metadata = JObject.Parse(result);
+            var def = BuildSelectDef(COL_PROTEIN_NAME, COL_PEPTIDE_SEQUENCE, COL_PRECURSOR_MZ);
+            var metadata = server.ExportReportFromDefinition(def, tempPath, JsonToolConstants.CULTURE_INVARIANT);
             Assert.AreEqual(13, GetRowCount(metadata));
             var lines = File.ReadAllLines(tempPath);
             string header = lines[0];
@@ -552,21 +547,15 @@ namespace pwiz.SkylineTestFunctional
 
             // With filter: PrecursorMz > 500
             string tempPathFilter = TestFilesDir.GetTestPath(@"report_def_filter.csv");
-            string filterJson = new JObject
+            var filterDef = new ReportDefinition
             {
-                [nameof(REPORT.select)] = new JArray(COL_PROTEIN_NAME, COL_PRECURSOR_MZ),
-                [nameof(REPORT.filter)] = new JArray
+                Select = new[] { COL_PROTEIN_NAME, COL_PRECURSOR_MZ },
+                Filter = new[]
                 {
-                    new JObject
-                    {
-                        [nameof(REPORT.column)] = COL_PRECURSOR_MZ,
-                        [nameof(REPORT.op)] = @">",
-                        [nameof(REPORT.value)] = @"500"
-                    }
+                    new ReportFilter { Column = COL_PRECURSOR_MZ, Op = @">", Value = @"500" }
                 }
-            }.ToString();
-            string filterResult = server.ExportReportFromDefinition(filterJson, tempPathFilter, JsonToolConstants.CULTURE_INVARIANT);
-            var filterMetadata = JObject.Parse(filterResult);
+            };
+            var filterMetadata = server.ExportReportFromDefinition(filterDef, tempPathFilter, JsonToolConstants.CULTURE_INVARIANT);
             Assert.AreEqual(11, GetRowCount(filterMetadata));
             // Verify all rows satisfy the filter
             var filterLines = File.ReadAllLines(tempPathFilter);
@@ -583,20 +572,15 @@ namespace pwiz.SkylineTestFunctional
 
             // With sort: PrecursorMz descending
             string tempPathSort = TestFilesDir.GetTestPath(@"report_def_sort.csv");
-            string sortJson = new JObject
+            var sortDef = new ReportDefinition
             {
-                [nameof(REPORT.select)] = new JArray(COL_PROTEIN_NAME, COL_PRECURSOR_MZ),
-                [nameof(REPORT.sort)] = new JArray
+                Select = new[] { COL_PROTEIN_NAME, COL_PRECURSOR_MZ },
+                Sort = new[]
                 {
-                    new JObject
-                    {
-                        [nameof(REPORT.column)] = COL_PRECURSOR_MZ,
-                        [nameof(REPORT.direction)] = JsonToolConstants.SORT_DESC
-                    }
+                    new ReportSort { Column = COL_PRECURSOR_MZ, Direction = JsonToolConstants.SORT_DESC }
                 }
-            }.ToString();
-            string sortResult = server.ExportReportFromDefinition(sortJson, tempPathSort, JsonToolConstants.CULTURE_INVARIANT);
-            var sortMetadata = JObject.Parse(sortResult);
+            };
+            var sortMetadata = server.ExportReportFromDefinition(sortDef, tempPathSort, JsonToolConstants.CULTURE_INVARIANT);
             Assert.AreEqual(13, GetRowCount(sortMetadata));
             // Verify descending order
             var sortLines = File.ReadAllLines(tempPathSort);
@@ -614,9 +598,8 @@ namespace pwiz.SkylineTestFunctional
 
             // With pivot_replicate
             string tempPathPivot = TestFilesDir.GetTestPath(@"report_def_pivot.csv");
-            string pivotJson = BuildSelectPivotJson(COL_PEPTIDE_SEQUENCE, COL_TOTAL_AREA);
-            string pivotResult = server.ExportReportFromDefinition(pivotJson, tempPathPivot, JsonToolConstants.CULTURE_INVARIANT);
-            var pivotMetadata = JObject.Parse(pivotResult);
+            var pivotDef = BuildSelectPivotDef(COL_PEPTIDE_SEQUENCE, COL_TOTAL_AREA);
+            var pivotMetadata = server.ExportReportFromDefinition(pivotDef, tempPathPivot, JsonToolConstants.CULTURE_INVARIANT);
             // Peptide row source: one row per peptide (13), not per protein (5)
             Assert.AreEqual(13, GetRowCount(pivotMetadata));
             // Pivoted header should contain replicate names as column suffixes
@@ -627,19 +610,15 @@ namespace pwiz.SkylineTestFunctional
 
             // With sort ascending (exercises "asc" path in ParseSortDirection)
             string tempPathSortAsc = TestFilesDir.GetTestPath(@"report_def_sort_asc.csv");
-            string sortAscJson = new JObject
+            var sortAscDef = new ReportDefinition
             {
-                [nameof(REPORT.select)] = new JArray(COL_PROTEIN_NAME, COL_PRECURSOR_MZ),
-                [nameof(REPORT.sort)] = new JArray
+                Select = new[] { COL_PROTEIN_NAME, COL_PRECURSOR_MZ },
+                Sort = new[]
                 {
-                    new JObject
-                    {
-                        [nameof(REPORT.column)] = COL_PRECURSOR_MZ,
-                        [nameof(REPORT.direction)] = JsonToolConstants.SORT_ASC
-                    }
+                    new ReportSort { Column = COL_PRECURSOR_MZ, Direction = JsonToolConstants.SORT_ASC }
                 }
-            }.ToString();
-            server.ExportReportFromDefinition(sortAscJson, tempPathSortAsc, JsonToolConstants.CULTURE_INVARIANT);
+            };
+            server.ExportReportFromDefinition(sortAscDef, tempPathSortAsc, JsonToolConstants.CULTURE_INVARIANT);
             var sortAscLines = File.ReadAllLines(tempPathSortAsc);
             int sortAscMzIndex = Array.IndexOf(sortAscLines[0].ParseDsvFields(TextUtil.SEPARATOR_CSV), COL_PRECURSOR_MZ);
             double prevAscMz = 0;
@@ -655,104 +634,82 @@ namespace pwiz.SkylineTestFunctional
 
             // With unary filter: isnullorblank (exercises unary op path in ParseFilterSpecs)
             string tempPathUnary = TestFilesDir.GetTestPath(@"report_def_unary.csv");
-            string unaryJson = new JObject
+            var unaryDef = new ReportDefinition
             {
-                [nameof(REPORT.select)] = new JArray(COL_PROTEIN_NAME, COL_TOTAL_AREA),
-                [nameof(REPORT.filter)] = new JArray
+                Select = new[] { COL_PROTEIN_NAME, COL_TOTAL_AREA },
+                Filter = new[]
                 {
-                    new JObject
-                    {
-                        [nameof(REPORT.column)] = COL_TOTAL_AREA,
-                        [nameof(REPORT.op)] = @"isnotnullorblank"
-                    }
+                    new ReportFilter { Column = COL_TOTAL_AREA, Op = @"isnotnullorblank" }
                 }
-            }.ToString();
-            string unaryResult = server.ExportReportFromDefinition(unaryJson, tempPathUnary, JsonToolConstants.CULTURE_INVARIANT);
-            Assert.IsTrue(GetRowCount(JObject.Parse(unaryResult)) > 0);
+            };
+            var unaryMetadata = server.ExportReportFromDefinition(unaryDef, tempPathUnary, JsonToolConstants.CULTURE_INVARIANT);
+            Assert.IsTrue(GetRowCount(unaryMetadata) > 0);
 
-            // Error: invalid JSON
-            string tempPathBadJson = TestFilesDir.GetTestPath(@"report_def_badjson.csv");
-            AssertEx.ThrowsException<ArgumentException>(() =>
-                server.ExportReportFromDefinition(@"not valid json", tempPathBadJson, JsonToolConstants.CULTURE_INVARIANT));
-
-            // Error: unknown column with "did you mean" suggestion
-            string badColJson = BuildSelectJson(COL_PRECURSOR_MZ + "z", COL_PROTEIN_NAME);
+            // Error: empty select
             string tempPathBad = TestFilesDir.GetTestPath(@"report_def_bad.csv");
             AssertEx.ThrowsException<ArgumentException>(() =>
-                    server.ExportReportFromDefinition(badColJson, tempPathBad, JsonToolConstants.CULTURE_INVARIANT),
+                server.ExportReportFromDefinition(new ReportDefinition { Select = new string[0] },
+                    tempPathBad, JsonToolConstants.CULTURE_INVARIANT));
+
+            // Error: unknown column with "did you mean" suggestion
+            var badColDef = BuildSelectDef(COL_PRECURSOR_MZ + @"z", COL_PROTEIN_NAME);
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.ExportReportFromDefinition(badColDef, tempPathBad, JsonToolConstants.CULTURE_INVARIANT),
                 ex => AssertEx.Contains(ex.Message, COL_PRECURSOR_MZ));
 
             // Error: unknown filter column
-            string badFilterColJson = new JObject
+            var badFilterColDef = new ReportDefinition
             {
-                [nameof(REPORT.select)] = new JArray(COL_PROTEIN_NAME),
-                [nameof(REPORT.filter)] = new JArray
+                Select = new[] { COL_PROTEIN_NAME },
+                Filter = new[]
                 {
-                    new JObject
-                    {
-                        [nameof(REPORT.column)] = @"NotAColumn_xyz",
-                        [nameof(REPORT.op)] = @">",
-                        [nameof(REPORT.value)] = @"1"
-                    }
+                    new ReportFilter { Column = @"NotAColumn_xyz", Op = @">", Value = @"1" }
                 }
-            }.ToString();
+            };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                server.ExportReportFromDefinition(badFilterColJson, tempPathBad, JsonToolConstants.CULTURE_INVARIANT));
+                server.ExportReportFromDefinition(badFilterColDef, tempPathBad, JsonToolConstants.CULTURE_INVARIANT));
 
             // Error: unknown filter operation
-            string badFilterOpJson = new JObject
+            var badFilterOpDef = new ReportDefinition
             {
-                [nameof(REPORT.select)] = new JArray(COL_PROTEIN_NAME),
-                [nameof(REPORT.filter)] = new JArray
+                Select = new[] { COL_PROTEIN_NAME },
+                Filter = new[]
                 {
-                    new JObject
-                    {
-                        [nameof(REPORT.column)] = COL_PROTEIN_NAME,
-                        [nameof(REPORT.op)] = @"bogus",
-                        [nameof(REPORT.value)] = @"1"
-                    }
+                    new ReportFilter { Column = COL_PROTEIN_NAME, Op = @"bogus", Value = @"1" }
                 }
-            }.ToString();
+            };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                    server.ExportReportFromDefinition(badFilterOpJson, tempPathBad, JsonToolConstants.CULTURE_INVARIANT),
+                    server.ExportReportFromDefinition(badFilterOpDef, tempPathBad, JsonToolConstants.CULTURE_INVARIANT),
                 ex => AssertEx.Contains(ex.Message, @"bogus"));
 
             // Error: missing value for binary filter op
-            string missingValJson = new JObject
+            var missingValDef = new ReportDefinition
             {
-                [nameof(REPORT.select)] = new JArray(COL_PROTEIN_NAME),
-                [nameof(REPORT.filter)] = new JArray
+                Select = new[] { COL_PROTEIN_NAME },
+                Filter = new[]
                 {
-                    new JObject
-                    {
-                        [nameof(REPORT.column)] = COL_PROTEIN_NAME,
-                        [nameof(REPORT.op)] = @">"
-                    }
+                    new ReportFilter { Column = COL_PROTEIN_NAME, Op = @">" }
                 }
-            }.ToString();
+            };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                server.ExportReportFromDefinition(missingValJson, tempPathBad, JsonToolConstants.CULTURE_INVARIANT));
+                server.ExportReportFromDefinition(missingValDef, tempPathBad, JsonToolConstants.CULTURE_INVARIANT));
 
             // Error: invalid sort direction
-            string badSortJson = new JObject
+            var badSortDef = new ReportDefinition
             {
-                [nameof(REPORT.select)] = new JArray(COL_PROTEIN_NAME),
-                [nameof(REPORT.sort)] = new JArray
+                Select = new[] { COL_PROTEIN_NAME },
+                Sort = new[]
                 {
-                    new JObject
-                    {
-                        [nameof(REPORT.column)] = COL_PROTEIN_NAME,
-                        [nameof(REPORT.direction)] = @"sideways"
-                    }
+                    new ReportSort { Column = COL_PROTEIN_NAME, Direction = @"sideways" }
                 }
-            }.ToString();
+            };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                server.ExportReportFromDefinition(badSortJson, tempPathBad, JsonToolConstants.CULTURE_INVARIANT));
+                server.ExportReportFromDefinition(badSortDef, tempPathBad, JsonToolConstants.CULTURE_INVARIANT));
         }
 
-        private static int GetRowCount(JObject jObject)
+        private static int GetRowCount(ReportMetadata metadata)
         {
-            return (int)jObject[nameof(REPORT.row_count)];
+            return metadata.RowCount ?? 0;
         }
 
         private static void VerifyRowSource(ColumnResolver resolver, string[] columns,
@@ -763,20 +720,24 @@ namespace pwiz.SkylineTestFunctional
                 string.Format(@"Row source mismatch: {0}", message));
         }
 
+        private static ReportDefinition BuildSelectDef(params string[] columns)
+        {
+            return new ReportDefinition { Select = columns };
+        }
+
+        private static ReportDefinition BuildSelectPivotDef(params string[] columns)
+        {
+            return new ReportDefinition { Select = columns, PivotReplicate = true };
+        }
+
+        /// <summary>
+        /// Builds a JSON string for wire-protocol tests that go through HandleRequest.
+        /// </summary>
         private static string BuildSelectJson(params string[] columns)
         {
             return new JObject
             {
                 [nameof(REPORT.select)] = new JArray(columns)
-            }.ToString();
-        }
-
-        private static string BuildSelectPivotJson(params string[] columns)
-        {
-            return new JObject
-            {
-                [nameof(REPORT.select)] = new JArray(columns),
-                [nameof(REPORT.pivot_replicate)] = true
             }.ToString();
         }
 
@@ -1094,15 +1055,13 @@ namespace pwiz.SkylineTestFunctional
             string tutorialPath = TestFilesDir.GetTestPath(@"tutorial_test.md");
             using (HttpClientTestHelper.SimulateSuccessfulDownload(realHtml))
             {
-                string result = server.GetTutorial(TUTORIAL_NAME, TUTORIAL_EN, tutorialPath);
-                var metadata = JObject.Parse(result);
+                var metadata = server.GetTutorial(TUTORIAL_NAME, TUTORIAL_EN, tutorialPath);
 
                 // Verify metadata
-                Assert.AreEqual(TUTORIAL_NAME, (string)metadata[nameof(TUTORIAL.tutorial)]);
-                Assert.AreEqual(TUTORIAL_EN, (string)metadata[nameof(TUTORIAL.language)]);
-                var toc = (JArray)metadata[nameof(TUTORIAL.toc)];
-                Assert.IsTrue(toc?.Count > 0);
-                Assert.IsTrue((int)metadata[nameof(TUTORIAL.line_count)] > 10);
+                Assert.AreEqual(TUTORIAL_NAME, metadata.Tutorial);
+                Assert.AreEqual(TUTORIAL_EN, metadata.Language);
+                Assert.IsTrue(metadata.Toc?.Length > 0);
+                Assert.IsTrue(metadata.LineCount > 10);
             }
 
             // Verify markdown was written and has expected structure
@@ -1120,10 +1079,9 @@ namespace pwiz.SkylineTestFunctional
             string imagePath = TestFilesDir.GetTestPath(@"tutorial_image.png");
             using (HttpClientTestHelper.SimulateSuccessfulDownload(realImageData))
             {
-                string imageResult = server.GetTutorialImage(TUTORIAL_NAME, imageFilename, TUTORIAL_EN, imagePath);
-                var imageMetadata = JObject.Parse(imageResult);
-                Assert.AreEqual(TUTORIAL_NAME, (string)imageMetadata[nameof(TUTORIAL.tutorial)]);
-                Assert.AreEqual(imageFilename, (string)imageMetadata[nameof(TUTORIAL.image)]);
+                var imageMetadata = server.GetTutorialImage(TUTORIAL_NAME, imageFilename, TUTORIAL_EN, imagePath);
+                Assert.IsNotNull(imageMetadata.FilePath);
+                Assert.AreEqual(imageFilename, imageMetadata.Image);
             }
             Assert.IsTrue(File.Exists(imagePath));
             Assert.AreEqual(realImageData.Length, new FileInfo(imagePath).Length);
@@ -1167,12 +1125,12 @@ namespace pwiz.SkylineTestFunctional
         private void TestAddReport(JsonToolServer server)
         {
             const string reportName = @"TestMcpReport";
-            string json = new JObject
+            var definition = new ReportDefinition
             {
-                [nameof(REPORT.name)] = reportName,
-                [nameof(REPORT.select)] = new JArray(COL_PROTEIN_NAME, COL_PRECURSOR_MZ)
-            }.ToString();
-            string result = server.AddReportFromDefinition(json);
+                Name = reportName,
+                Select = new[] { COL_PROTEIN_NAME, COL_PRECURSOR_MZ }
+            };
+            string result = server.AddReportFromDefinition(definition);
             Assert.IsFalse(string.IsNullOrEmpty(result));
 
             // Verify the report was persisted with correct uimode
@@ -1187,12 +1145,12 @@ namespace pwiz.SkylineTestFunctional
         private void TestAddReportMoleculeMode(JsonToolServer server)
         {
             const string reportName = @"TestMcpMoleculeReport";
-            string json = new JObject
+            var definition = new ReportDefinition
             {
-                [nameof(REPORT.name)] = reportName,
-                [nameof(REPORT.select)] = new JArray(@"MoleculeListName", @"MoleculeFormula")
-            }.ToString();
-            string result = server.AddReportFromDefinition(json);
+                Name = reportName,
+                Select = new[] { @"MoleculeListName", @"MoleculeFormula" }
+            };
+            string result = server.AddReportFromDefinition(definition);
             Assert.IsFalse(string.IsNullOrEmpty(result));
 
             // Verify molecule mode report gets small_molecules uimode

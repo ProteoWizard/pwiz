@@ -36,6 +36,13 @@ public class SkylineConnection : IDisposable
     private readonly NamedPipeClientStream _pipe;
 
     /// <summary>
+    /// Identity string from the connected Skyline instance (e.g.,
+    /// "Skyline-daily (64-bit) 26.1.1.238"). Readable after Dispose
+    /// for error enrichment.
+    /// </summary>
+    public string SkylineVersion { get; private set; }
+
+    /// <summary>
     /// When set, TryConnect targets this specific Skyline process instead of the
     /// most recently started one. Set via the skyline_set_instance MCP tool.
     /// </summary>
@@ -158,7 +165,7 @@ public class SkylineConnection : IDisposable
         {
             pipe.Connect(5000);
             pipe.ReadMode = PipeTransmissionMode.Message;
-            return (new SkylineConnection(pipe), null);
+            return (new SkylineConnection(pipe) { SkylineVersion = info.SkylineVersion }, null);
         }
         catch (TimeoutException)
         {
@@ -205,10 +212,36 @@ public class SkylineConnection : IDisposable
                 return null;
             if (resultElement.ValueKind == JsonValueKind.Number)
                 return resultElement.GetRawText();
+            if (resultElement.ValueKind == JsonValueKind.Object ||
+                resultElement.ValueKind == JsonValueKind.Array)
+                return resultElement.GetRawText();
             return resultElement.GetString();
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// System.Text.Json options configured with snake_case naming to match
+    /// the PascalCase POCO properties to the snake_case JSON wire format.
+    /// </summary>
+    private static readonly JsonSerializerOptions _snakeCaseOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        PropertyNameCaseInsensitive = true
+    };
+
+    /// <summary>
+    /// Call a method on the Skyline JSON tool service and deserialize the
+    /// result into a typed POCO. The wire format remains JSON strings over
+    /// named pipes; this method handles the deserialization.
+    /// </summary>
+    public T CallTyped<T>(string method, params string[] args)
+    {
+        string json = Call(method, args);
+        if (string.IsNullOrEmpty(json))
+            return default;
+        return JsonSerializer.Deserialize<T>(json, _snakeCaseOptions);
     }
 
     public void Dispose()
