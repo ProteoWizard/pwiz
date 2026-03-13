@@ -184,6 +184,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
+        echo Building Skyline Test DLLs in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Test /t:TestData /t:TestFunctional /t:TestConnected /t:TestTutorial /t:TestPerf /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
         msbuild $(SKYLINE_PATH)/Executables/AssortResources/AssortResources.sln /p:Configuration=$(CONFIGURATION);Platform="Any CPU";OutDir=$(OUTPUT_PATH) /t:AssortResources /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
@@ -206,8 +210,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building SkylineBatch in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Executables/SkylineBatch/SkylineBatch.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:SkylineBatchTest /nologo /verbosity:minimal
-        set status=%ERRORLEVEL%
-        exit %status%
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
 
     rule do_skyline_batch_test ( targets + : sources * : properties * )
@@ -233,9 +236,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
-        echo Building Skyline Test in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Test /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
         $(OUTPUT_PATH)TestRunner.exe log=Test.log buildcheck=1 test=Test.dll $(.teamcity-test-decoration)
@@ -252,9 +252,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
-        echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestData /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Unit testing pwiz data reading in Skyline in $(CONFIGURATION:L) configuration...
         $(OUTPUT_PATH)TestRunner.exe log=TestData.log buildcheck=1 test=TestData.dll $(.teamcity-test-decoration)
@@ -271,9 +268,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
-        echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestData /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Testing subset of Skyline's leak checking (pass1) in $(CONFIGURATION:L) configuration...
         $(OUTPUT_PATH)TestRunner.exe log=TestPass1Subset.log buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram,TestDiaSearchFixedWindows $(.teamcity-test-decoration)
@@ -290,9 +284,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
-        echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /t:TestConnected /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         REM docker > nul 2>&1
         REM if ERRORLEVEL 1 (
@@ -315,9 +306,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
-        echo Building Skyline TestConnected in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestConnected /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Running Skyline's remote connection tests (TestConnected) in $(CONFIGURATION:L) configuration...
         $(OUTPUT_PATH)TestRunner.exe log=TestConnected.log buildcheck=1 test=TestConnected.dll $(.teamcity-test-decoration)
@@ -337,9 +325,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
-        echo Building Skyline TestConnected, TestTutorial, TestPerf, SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
     
     rule create_skyline_zips ( targets + : sources * : properties * )
@@ -350,9 +335,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions create_skyline_zips
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
-        echo SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Creating SkylineTester.zip
         $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineTester.zip
@@ -374,10 +356,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions create_skylinetester_zip_with_testdata
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
-        echo SkylineTesterWithTestData in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
-
         echo Creating SkylineTester.zip
         $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineTesterWithTestData.zip
     }
