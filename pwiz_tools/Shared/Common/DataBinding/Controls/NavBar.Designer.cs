@@ -13,9 +13,21 @@ namespace pwiz.Common.DataBinding.Controls
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                // Break reference chains from COM accessibility objects.
+                // The ContextMenuStrip created dynamically in NavBarButtonViewsOnDropDownOpening
+                // is not in the components container and won't be disposed automatically.
+                // Its ToolStripMenuItems have Click delegates capturing 'this' (NavBar),
+                // and COM accessibility wrappers can keep the ContextMenuStrip alive.
+                if (navBarButtonViews != null)
+                {
+                    var dropDown = navBarButtonViews.DropDown;
+                    navBarButtonViews.DropDown = null;
+                    dropDown?.Dispose();
+                }
+                _bindingListSource = null;
+                components?.Dispose();
             }
             base.Dispose(disposing);
         }

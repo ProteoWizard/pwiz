@@ -66,7 +66,14 @@ namespace pwiz.Common.DataBinding.Controls
         {
             if (disposing)
             {
+                ViewContext = null;
                 BindingListView.Dispose();
+                BindingListView = null;
+                // Clear the WinForms BindingSource internal dataSource field to prevent
+                // BindingContext CurrencyManager cache from chaining through:
+                // CurrencyManager → BindingListSource.dataSource → BindingListView →
+                // ViewInfo → DataSchema → SkylineWindow
+                base.DataSource = null;
             }
             base.Dispose(disposing);
         }

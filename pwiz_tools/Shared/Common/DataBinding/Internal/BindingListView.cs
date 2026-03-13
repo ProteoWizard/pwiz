@@ -524,6 +524,7 @@ namespace pwiz.Common.DataBinding.Internal
             RowSource = null;
             _queryRequestor.Dispose();
             _queryResults = null;
+            _reportResults = ReportResults.EMPTY;
             if (EventTaskScheduler != null)
             {
                 EventTaskScheduler.Dispose();

@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Controls.AuditLog
         // Cached icon to avoid GDI handle leak - ToIcon() creates a native handle that must be disposed
         private static readonly Icon AUDIT_LOG_ICON = Resources.AuditLog.ToIcon();
 
-        private readonly SkylineWindow _skylineWindow;
+        private SkylineWindow _skylineWindow;
         //private readonly ToolStripButton _clearLogButton;
         private readonly CheckBox _enableAuditLogging;
 
@@ -160,6 +160,7 @@ namespace pwiz.Skyline.Controls.AuditLog
             //_clearLogButton.Click -= _clearLogButton_Click;
             BindingListSource.ListChanged -= BindingListSource_ListChanged;
             _skylineWindow.DocumentUIChangedEvent -= _skylineWindow_DocumentUIChangedEvent;
+            _skylineWindow = null;
 
             base.OnHandleDestroyed(e);
         }

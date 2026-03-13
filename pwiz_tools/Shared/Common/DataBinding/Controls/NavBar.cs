@@ -186,6 +186,13 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void NavBarButtonViewsOnDropDownOpening(object sender, EventArgs e)
         {
+            // Dispose the previous dropdown to unsubscribe from SystemEvents.UserPreferenceChanged.
+            // Without this, every dropdown opening leaks a ContextMenuStrip via the static event,
+            // which chains back through ToolStripMenuItems → NavBar → SkylineWindow.
+            var oldDropDown = navBarButtonViews.DropDown;
+            navBarButtonViews.DropDown = null;
+            oldDropDown?.Dispose();
+
             var contextMenu = new ContextMenuStrip();
             var bindingSource = BindingListSource;
             if (bindingSource != null && ViewContext != null)

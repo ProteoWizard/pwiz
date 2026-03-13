@@ -1341,7 +1341,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void MainGridPopulated()
         {
-            if (_inColumnChange)
+            if (_inColumnChange || BindingListSource == null)
             {
                 return;
             }
