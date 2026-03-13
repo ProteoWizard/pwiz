@@ -22,14 +22,12 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Menus
 {
-    public partial class SpectrumContextMenu : SkylineControl
+    public partial class SpectrumContextMenu : ContextMenuControl
     {
         public SpectrumContextMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
@@ -38,20 +36,6 @@ namespace pwiz.Skyline.Menus
 
         public void BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (var i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i - 1;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator27);
-
             // Insert skyline specific menus
             var set = Settings.Default;
             var control = FormUtil.FindParentOfType<IMzScalePlot>(menuStrip.SourceControl);
@@ -138,15 +122,6 @@ namespace pwiz.Skyline.Menus
             */
             //menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
-
-            ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
             UpdateIonTypeMenu();
             UpdateChargesMenu();
         }

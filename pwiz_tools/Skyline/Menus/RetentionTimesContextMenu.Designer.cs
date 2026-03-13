@@ -100,6 +100,11 @@ namespace pwiz.Skyline.Menus
             //
             // timeGraphContextMenuItem
             //
+            this.timeGraphContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.replicateComparisonContextMenuItem,
+            this.timePeptideComparisonContextMenuItem,
+            this.regressionContextMenuItem,
+            this.schedulingContextMenuItem});
             this.timeGraphContextMenuItem.Name = "timeGraphContextMenuItem";
             resources.ApplyResources(this.timeGraphContextMenuItem, "timeGraphContextMenuItem");
             this.timeGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.timeGraphMenuItem_DropDownOpening);
@@ -119,6 +124,9 @@ namespace pwiz.Skyline.Menus
             //
             // regressionContextMenuItem
             //
+            this.regressionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.scoreToRunToolStripMenuItem,
+            this.runToRunToolStripMenuItem});
             this.regressionContextMenuItem.Name = "regressionContextMenuItem";
             resources.ApplyResources(this.regressionContextMenuItem, "regressionContextMenuItem");
             //
@@ -142,6 +150,9 @@ namespace pwiz.Skyline.Menus
             //
             // timePlotContextMenuItem
             //
+            this.timePlotContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.timeCorrelationContextMenuItem,
+            this.timeResidualsContextMenuItem});
             this.timePlotContextMenuItem.Name = "timePlotContextMenuItem";
             resources.ApplyResources(this.timePlotContextMenuItem, "timePlotContextMenuItem");
             //
@@ -159,6 +170,11 @@ namespace pwiz.Skyline.Menus
             //
             // timePointsContextMenuItem
             //
+            this.timePointsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.timeTargetsContextMenuItem,
+            this.targetsAt1FDRToolStripMenuItem,
+            this.timeStandardsContextMenuItem,
+            this.timeDecoysContextMenuItem});
             this.timePointsContextMenuItem.Name = "timePointsContextMenuItem";
             resources.ApplyResources(this.timePointsContextMenuItem, "timePointsContextMenuItem");
             //
@@ -188,6 +204,11 @@ namespace pwiz.Skyline.Menus
             //
             // rtValueMenuItem
             //
+            this.rtValueMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.allRTValueContextMenuItem,
+            this.timeRTValueContextMenuItem,
+            this.fwhmRTValueContextMenuItem,
+            this.fwbRTValueContextMenuItem});
             this.rtValueMenuItem.Name = "rtValueMenuItem";
             resources.ApplyResources(this.rtValueMenuItem, "rtValueMenuItem");
             this.rtValueMenuItem.DropDownOpening += new System.EventHandler(this.peptideRTValueMenuItem_DropDownOpening);
@@ -244,6 +265,11 @@ namespace pwiz.Skyline.Menus
             //
             // setRegressionMethodContextMenuItem
             //
+            this.setRegressionMethodContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.linearRegressionContextMenuItem,
+            this.kernelDensityEstimationContextMenuItem,
+            this.logRegressionContextMenuItem,
+            this.loessContextMenuItem});
             this.setRegressionMethodContextMenuItem.Name = "setRegressionMethodContextMenuItem";
             resources.ApplyResources(this.setRegressionMethodContextMenuItem, "setRegressionMethodContextMenuItem");
             //
@@ -284,6 +310,11 @@ namespace pwiz.Skyline.Menus
             //
             // chooseCalculatorContextMenuItem
             //
+            this.chooseCalculatorContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.placeholderToolStripMenuItem1,
+            this.toolStripSeparatorCalculators,
+            this.addCalculatorContextMenuItem,
+            this.updateCalculatorContextMenuItem});
             this.chooseCalculatorContextMenuItem.Name = "chooseCalculatorContextMenuItem";
             resources.ApplyResources(this.chooseCalculatorContextMenuItem, "chooseCalculatorContextMenuItem");
             this.chooseCalculatorContextMenuItem.DropDownOpening += new System.EventHandler(this.chooseCalculatorContextMenuItem_DropDownOpening);

@@ -20,7 +20,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -28,11 +27,10 @@ using pwiz.Skyline.Properties;
 using System;
 using System.Linq;
 using System.Windows.Forms;
-using ZedGraph;
 
 namespace pwiz.Skyline.Menus
 {
-    public partial class ChromatogramContextMenu : SkylineControl
+    public partial class ChromatogramContextMenu : ContextMenuControl
     {
         public ChromatogramContextMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
@@ -40,22 +38,8 @@ namespace pwiz.Skyline.Menus
         }
 
         #region Build Menu
-        public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
+        public void BuildChromatogramMenu(PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
         {
-            // Store original menu items in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator26);
-
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
@@ -139,15 +123,6 @@ namespace pwiz.Skyline.Menus
             menuStrip.Items.Insert(iInsert++, toolStripSeparator18);
             menuStrip.Items.Insert(iInsert++, chromPropsContextMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator19);
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
-            ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
         /// <summary>
@@ -259,11 +234,6 @@ namespace pwiz.Skyline.Menus
                 if (separator > 0)
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator1);
             }
-        }
-
-        public void AddRelativeAbundanceFormattingMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert, relativeAbundanceFormattingMenuItem);
         }
 
         public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
@@ -553,10 +523,6 @@ namespace pwiz.Skyline.Menus
             SkylineWindow.ShowQc(qcTraceItem.Text);
         }
 
-        private void relativeAbundanceFormattingMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowRelativeAbundanceFormatting();
-        }
         private void allTranMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowAllTransitions();

@@ -36,7 +36,6 @@ namespace pwiz.Skyline
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineWindow));
             this.selectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.synchronizeSummaryZoomingContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -44,8 +43,6 @@ namespace pwiz.Skyline
             this.averageReplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleReplicateRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bestReplicateRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator24 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator25 = new System.Windows.Forms.ToolStripSeparator();
             this.peptideOrderContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderDocumentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -58,7 +55,6 @@ namespace pwiz.Skyline
             this.documentScopeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.proteinScopeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.groupReplicatesByContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupByReplicateContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -179,8 +175,7 @@ namespace pwiz.Skyline
             this.mainToolStrip.SuspendLayout();
             this.menuMain.SuspendLayout();
             this.SuspendLayout();
-            // contextMenuTreeNode and tree node items moved to TreeNodeContextMenu
-            //
+            // 
             // selectionContextMenuItem
             // 
             this.selectionContextMenuItem.CheckOnClick = true;
@@ -194,7 +189,7 @@ namespace pwiz.Skyline
             this.synchronizeSummaryZoomingContextMenuItem.Name = "synchronizeSummaryZoomingContextMenuItem";
             resources.ApplyResources(this.synchronizeSummaryZoomingContextMenuItem, "synchronizeSummaryZoomingContextMenuItem");
             this.synchronizeSummaryZoomingContextMenuItem.Click += new System.EventHandler(this.synchronizeSummaryZoomingContextMenuItem_Click);
-            //
+            // 
             // replicatesRTContextMenuItem
             // 
             this.replicatesRTContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -222,18 +217,7 @@ namespace pwiz.Skyline
             this.bestReplicateRTContextMenuItem.Name = "bestReplicateRTContextMenuItem";
             resources.ApplyResources(this.bestReplicateRTContextMenuItem, "bestReplicateRTContextMenuItem");
             this.bestReplicateRTContextMenuItem.Click += new System.EventHandler(this.bestReplicateRTContextMenuItem_Click);
-            //
-            // toolStripSeparator24
-            //
-            this.toolStripSeparator24.Name = "toolStripSeparator24";
-            resources.ApplyResources(this.toolStripSeparator24, "toolStripSeparator24");
-            //
-            // toolStripSeparator25
-            //
-            this.toolStripSeparator25.Name = "toolStripSeparator25";
-            resources.ApplyResources(this.toolStripSeparator25, "toolStripSeparator25");
-            // contextMenuPeakAreas and peak area items moved to PeakAreasContextMenu
-            //
+            // 
             // peptideOrderContextMenuItem
             // 
             this.peptideOrderContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -288,7 +272,7 @@ namespace pwiz.Skyline
             this.replicateOrderAcqTimeContextMenuItem.Name = "replicateOrderAcqTimeContextMenuItem";
             resources.ApplyResources(this.replicateOrderAcqTimeContextMenuItem, "replicateOrderAcqTimeContextMenuItem");
             this.replicateOrderAcqTimeContextMenuItem.Click += new System.EventHandler(this.replicateOrderAcqTimeContextMenuItem_Click);
-            //
+            // 
             // scopeContextMenuItem
             // 
             this.scopeContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -309,7 +293,7 @@ namespace pwiz.Skyline
             this.proteinScopeContextMenuItem.Name = "proteinScopeContextMenuItem";
             resources.ApplyResources(this.proteinScopeContextMenuItem, "proteinScopeContextMenuItem");
             this.proteinScopeContextMenuItem.Click += new System.EventHandler(this.proteinScopeContextMenuItem_Click);
-            //
+            // 
             // peptideCvsContextMenuItem
             // 
             this.peptideCvsContextMenuItem.CheckOnClick = true;
@@ -317,11 +301,6 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.peptideCvsContextMenuItem, "peptideCvsContextMenuItem");
             this.peptideCvsContextMenuItem.Click += new System.EventHandler(this.peptideCvsContextMenuItem_Click);
             // 
-            // toolStripSeparator28
-            // 
-            this.toolStripSeparator28.Name = "toolStripSeparator28";
-            resources.ApplyResources(this.toolStripSeparator28, "toolStripSeparator28");
-            //
             // groupReplicatesByContextMenuItem
             // 
             this.groupReplicatesByContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -334,7 +313,7 @@ namespace pwiz.Skyline
             this.groupByReplicateContextMenuItem.Name = "groupByReplicateContextMenuItem";
             resources.ApplyResources(this.groupByReplicateContextMenuItem, "groupByReplicateContextMenuItem");
             this.groupByReplicateContextMenuItem.Click += new System.EventHandler(this.groupByReplicateContextMenuItem_Click);
-            //
+            // 
             // panel1
             // 
             this.panel1.Controls.Add(this.dockPanel);
@@ -1136,7 +1115,7 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
             this.modeUIHandler.SetUIMode(this.eSPFeaturesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
-            //
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -1209,8 +1188,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripButton copyToolBarButton;        
         private System.Windows.Forms.ToolStripButton pasteToolBarButton;        
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator21;        
-        internal System.Windows.Forms.ToolStripSeparator toolStripSeparator24;
-        internal System.Windows.Forms.ToolStripSeparator toolStripSeparator25;
         private System.Windows.Forms.ToolStripMenuItem exportTransitionListMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportReportMenuItem;
         // timeGraphContextMenuItem, regressionContextMenuItem, replicateComparisonContextMenuItem, schedulingContextMenuItem moved to RetentionTimesContextMenu
@@ -1235,7 +1212,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem shareDocumentMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator37;
         private System.Windows.Forms.ToolStripMenuItem integrateAllMenuItem;
-        internal System.Windows.Forms.ToolStripSeparator toolStripSeparator28;
         // timePeptideComparisonContextMenuItem, rtValueMenuItem, RT value items, timePropsContextMenuItem, toolStripSeparator38 moved to RetentionTimesContextMenu
         private System.Windows.Forms.ToolStripStatusLabel statusPeptides;
         private System.Windows.Forms.ToolStripMenuItem replicatesRTContextMenuItem;

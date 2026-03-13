@@ -21,19 +21,16 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Menus
 {
-    public partial class PeakAreasContextMenu : SkylineControl
+    public partial class PeakAreasContextMenu : ContextMenuControl
     {
         public PeakAreasContextMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
@@ -46,42 +43,14 @@ namespace pwiz.Skyline.Menus
         {
             _graphSummary = graphSummary;
 
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, SkylineWindow.toolStripSeparator25);
-
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
             menuStrip.Items.Insert(iInsert++, areaGraphContextMenuItem);
-            areaGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                areaReplicateComparisonContextMenuItem,
-                areaPeptideComparisonContextMenuItem,
-                areaRelativeAbundanceContextMenuItem,
-                areaCVHistogramContextMenuItem,
-                areaCVHistogram2DContextMenuItem
-            });
             var graphType = graphSummary.Type;
             if (graphType == GraphTypeSummary.replicate)
             {
                 menuStrip.Items.Insert(iInsert++, graphTypeToolStripMenuItem);
-                graphTypeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    barAreaGraphDisplayTypeMenuItem,
-                    lineAreaGraphDisplayTypeMenuItem
-                });
-
             }
 
             menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
@@ -180,26 +149,10 @@ namespace pwiz.Skyline.Menus
                 {
                     UpdateAreaPointsTypeMenuItems();
 
-                    pointsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        areaCVtargetsToolStripMenuItem,
-                        areaCVdecoysToolStripMenuItem
-                    });
-
                     menuStrip.Items.Insert(iInsert++, pointsToolStripMenuItem);
                 }
 
                 UpdateAreaCVTransitionsMenuItems();
-
-                areaCVTransitionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    areaCVAllTransitionsToolStripMenuItem,
-                    areaCVCountTransitionsToolStripMenuItem,
-                    areaCVBestTransitionsToolStripMenuItem,
-                    toolStripSeparator58,
-                    areaCVPrecursorsToolStripMenuItem,
-                    areaCVProductsToolStripMenuItem
-                });
 
                 var maxTransCount = Document.MoleculeTransitionGroups
                     .Select(g => g.TransitionCount).Append(0).Max();
@@ -217,13 +170,6 @@ namespace pwiz.Skyline.Menus
 
 
                 UpdateAreaBinWidthMenuItems();
-                areaCVbinWidthToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    areaCV05binWidthToolStripMenuItem,
-                    areaCV10binWidthToolStripMenuItem,
-                    areaCV15binWidthToolStripMenuItem,
-                    areaCV20binWidthToolStripMenuItem
-                });
                 menuStrip.Items.Insert(iInsert++, areaCVbinWidthToolStripMenuItem);
                 var normalizeOptions = new List<NormalizeOption>();
                 normalizeOptions.Add(NormalizeOption.DEFAULT);
@@ -289,15 +235,14 @@ namespace pwiz.Skyline.Menus
                 }
             }
 
-            menuStrip.Items.Insert(iInsert++, SkylineWindow.toolStripSeparator24);
+            menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
             if(graphType != GraphTypeSummary.abundance)
                 menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
             else
             {
-                using var chromatogramContextMenu = new ChromatogramContextMenu(SkylineWindow);
-                chromatogramContextMenu.AddRelativeAbundanceFormattingMenu(menuStrip, iInsert++);
+                menuStrip.Items.Insert(iInsert++, relativeAbundanceFormattingMenuItem);
             }
-            menuStrip.Items.Insert(iInsert, SkylineWindow.toolStripSeparator28);
+            menuStrip.Items.Insert(iInsert, new ToolStripSeparator());
 
             if (!isHistogram && graphType != GraphTypeSummary.abundance)
             {
@@ -307,24 +252,10 @@ namespace pwiz.Skyline.Menus
                 using var chromatogramContextMenu = new ChromatogramContextMenu(SkylineWindow);
                 chromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
             }
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
         }
 
         private void AddTargetsContextMenu(ToolStrip menuStrip, int iInsert)
         {
-            abundanceTargetsMenuItem.DropDownItems.Clear();
-            abundanceTargetsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                abundanceTargetsPeptidesMenuItem,
-                abundanceTargetsProteinsMenuItem
-            });
             abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
             abundanceTargetsProteinsMenuItem.Checked = Settings.Default.AreaProteinTargets;
             menuStrip.Items.Insert(iInsert, abundanceTargetsMenuItem);
@@ -334,12 +265,7 @@ namespace pwiz.Skyline.Menus
         {
             excludeTargetsStandardsMenuItem.Checked = Settings.Default.ExcludeStandardsFromAbundanceGraph;
             excludeTargetsPeptideListMenuItem.Checked = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
-            excludeTargetsMenuItem.DropDownItems.Clear();
-            excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsStandardsMenuItem);
-            if (!SkylineWindow.IsSmallMoleculeOrMixedUI)
-            {
-                excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsPeptideListMenuItem);
-            }
+            excludeTargetsPeptideListMenuItem.Visible = !SkylineWindow.IsSmallMoleculeOrMixedUI;
             menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
         }
 
@@ -574,6 +500,9 @@ namespace pwiz.Skyline.Menus
 
         private void excludeTargetsPeptideListMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.SetExcludePeptideListsFromAbundanceGraph(!Settings.Default.ExcludePeptideListsFromAbundanceGraph);
+
+        private void relativeAbundanceFormattingMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.ShowRelativeAbundanceFormatting();
 
         private void excludeTargetsStandardsMenuItem_Click(object sender, EventArgs e)
         {

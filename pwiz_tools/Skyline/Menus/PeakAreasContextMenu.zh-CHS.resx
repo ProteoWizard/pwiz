@@ -234,6 +234,12 @@
   <data name="removeAboveCVCutoffToolStripMenuItem.Text" xml:space="preserve">
     <value>删除 CV 截止值以上</value>
   </data>
+  <data name="relativeAbundanceFormattingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="relativeAbundanceFormattingMenuItem.Text" xml:space="preserve">
+    <value>格式化…</value>
+  </data>
   <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
   </data>

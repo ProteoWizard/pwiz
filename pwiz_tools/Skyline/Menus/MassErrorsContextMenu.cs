@@ -20,12 +20,12 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using ZedGraph;
 
 namespace pwiz.Skyline.Menus
 {
-    public partial class MassErrorsContextMenu : SkylineControl
+    public partial class MassErrorsContextMenu : ContextMenuControl
     {
         public MassErrorsContextMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
@@ -34,20 +34,6 @@ namespace pwiz.Skyline.Menus
 
         public void BuildMassErrorGraphMenu(GraphSummary graph, ToolStrip menuStrip)
         {
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator25);
-
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
@@ -118,17 +104,9 @@ namespace pwiz.Skyline.Menus
                 menuStrip.Items.Insert(iInsert++, SkylineWindow.synchronizeSummaryZoomingContextMenuItem);
             }
 
-            menuStrip.Items.Insert(iInsert++, SkylineWindow.toolStripSeparator24);
+            menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
             menuStrip.Items.Insert(iInsert++, massErrorPropsContextMenuItem);
-            menuStrip.Items.Insert(iInsert, SkylineWindow.toolStripSeparator28);
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
+            menuStrip.Items.Insert(iInsert, new ToolStripSeparator());
         }
 
         private int AddPointsContextMenu(ToolStrip menuStrip, int iInsert)

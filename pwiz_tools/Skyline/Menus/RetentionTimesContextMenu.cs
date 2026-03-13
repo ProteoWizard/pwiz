@@ -24,14 +24,13 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Menus
 {
-    public partial class RetentionTimesContextMenu : SkylineControl
+    public partial class RetentionTimesContextMenu : ContextMenuControl
     {
         public RetentionTimesContextMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
@@ -44,36 +43,10 @@ namespace pwiz.Skyline.Menus
         {
             _graphSummary = graph;
 
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, SkylineWindow.toolStripSeparator25);
-
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
             menuStrip.Items.Insert(iInsert++, timeGraphContextMenuItem);
-            timeGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                replicateComparisonContextMenuItem,
-                timePeptideComparisonContextMenuItem,
-                regressionContextMenuItem,
-                schedulingContextMenuItem
-            });
-            regressionContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                scoreToRunToolStripMenuItem,
-                runToRunToolStripMenuItem
-            });
             runToRunToolStripMenuItem.Enabled = SkylineWindow.IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
 
             GraphTypeSummary graphType = graph.Type;
@@ -81,22 +54,10 @@ namespace pwiz.Skyline.Menus
             {
                 var runToRun = graphType == GraphTypeSummary.run_to_run_regression;
                 menuStrip.Items.Insert(iInsert++, timePlotContextMenuItem);
-                timePlotContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    timeCorrelationContextMenuItem,
-                    timeResidualsContextMenuItem
-                });
                 timeCorrelationContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.correlation;
                 timeResidualsContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.residuals;
 
                 menuStrip.Items.Insert(iInsert++,setRegressionMethodContextMenuItem);
-                setRegressionMethodContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    linearRegressionContextMenuItem,
-                    kernelDensityEstimationContextMenuItem,
-                    logRegressionContextMenuItem,
-                    loessContextMenuItem
-                });
                 linearRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.linear;
                 kernelDensityEstimationContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.kde;
                 logRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.log;
@@ -108,18 +69,9 @@ namespace pwiz.Skyline.Menus
                 if (showPointsTypeStandards || showPointsTypeDecoys || qvalues)
                 {
                     menuStrip.Items.Insert(iInsert++, timePointsContextMenuItem);
-                    timePointsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        timeTargetsContextMenuItem,
-                        timeStandardsContextMenuItem,
-                        timeDecoysContextMenuItem
-                    });
-
-                    if (SkylineWindow.Document.Settings.HasResults &&
-                        SkylineWindow.Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained)
-                    {
-                        timePointsContextMenuItem.DropDownItems.Insert(1, targetsAt1FDRToolStripMenuItem);
-                    }
+                    targetsAt1FDRToolStripMenuItem.Visible =
+                        SkylineWindow.Document.Settings.HasResults &&
+                        SkylineWindow.Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
                     timeStandardsContextMenuItem.Visible = showPointsTypeStandards;
                     timeDecoysContextMenuItem.Visible = showPointsTypeDecoys;
                     timeTargetsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.targets;
@@ -145,14 +97,6 @@ namespace pwiz.Skyline.Menus
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator22);
                     menuStrip.Items.Insert(iInsert++, createRTRegressionContextMenuItem);
                     menuStrip.Items.Insert(iInsert++, chooseCalculatorContextMenuItem);
-
-                    chooseCalculatorContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        placeholderToolStripMenuItem1,
-                        toolStripSeparatorCalculators,
-                        addCalculatorContextMenuItem,
-                        updateCalculatorContextMenuItem
-                    });
                 }
                 var regressionRT = controller.RegressionRefined;
                 createRTRegressionContextMenuItem.Enabled = (regressionRT != null) && !runToRun;
@@ -178,13 +122,6 @@ namespace pwiz.Skyline.Menus
             {
                 menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
                 menuStrip.Items.Insert(iInsert++, rtValueMenuItem);
-                rtValueMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    allRTValueContextMenuItem,
-                    timeRTValueContextMenuItem,
-                    fwhmRTValueContextMenuItem,
-                    fwbRTValueContextMenuItem
-                });
                 SkylineWindow.AddTransitionContextMenu(menuStrip, iInsert++);
                 if (graphType == GraphTypeSummary.replicate)
                 {
@@ -235,15 +172,7 @@ namespace pwiz.Skyline.Menus
                 chromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
             }
 
-            menuStrip.Items.Insert(iInsert, SkylineWindow.toolStripSeparator24);
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
+            menuStrip.Items.Insert(iInsert, new ToolStripSeparator());
         }
 
         /// <summary>

@@ -37,7 +37,6 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
@@ -1420,14 +1419,9 @@ namespace pwiz.Skyline
         void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
         {
             using var chromatogramContextMenu = new ChromatogramContextMenu(this);
-            chromatogramContextMenu.BuildChromatogramMenu(zedGraphControl, paneKey, menuStrip, chromFileInfoId);
+            chromatogramContextMenu.BuildChromatogramMenu(paneKey, menuStrip, chromFileInfoId);
         }
 
-        private void AddRelativeAbundanceFormattingForm(ToolStrip menuStrip, int iInsert)
-        {
-            using var chromatogramContextMenu = new ChromatogramContextMenu(this);
-            chromatogramContextMenu.AddRelativeAbundanceFormattingMenu(menuStrip, iInsert);
-        }
         internal void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
             using var chromatogramContextMenu = new ChromatogramContextMenu(this);
@@ -2528,6 +2522,18 @@ namespace pwiz.Skyline
         void GraphSummary.IStateProvider.BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt,
             GraphSummary.IController controller)
         {
+            for (int i = menuStrip.Items.Count - 1; i >= 0; i--)
+            {
+                string tag = (string)menuStrip.Items[i].Tag;
+                if (tag == @"set_default" || tag == @"show_val")
+                    menuStrip.Items.RemoveAt(i);
+            }
+            int iUnzoom = menuStrip.Items.Cast<ToolStripItem>().ToList().FindIndex(item => (string)item.Tag == @"unzoom");
+            if (iUnzoom >= 0)
+            {
+                menuStrip.Items.Insert(iUnzoom, new ToolStripSeparator());
+            }
+
             var graphController = controller as RTGraphController;
             if (graphController != null)
             {

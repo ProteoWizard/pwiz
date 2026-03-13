@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Menus
             this.areaCVNormalizedToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVLogScaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeAboveCVCutoffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.relativeAbundanceFormattingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator57 = new System.Windows.Forms.ToolStripSeparator();
             this.contextMenuPeakAreas = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuPeakAreas.SuspendLayout();
@@ -95,6 +96,7 @@ namespace pwiz.Skyline.Menus
             this.areaCVNormalizedToToolStripMenuItem,
             this.areaCVLogScaleToolStripMenuItem,
             this.removeAboveCVCutoffToolStripMenuItem,
+            this.relativeAbundanceFormattingMenuItem,
             this.toolStripSeparator57});
             this.contextMenuPeakAreas.Name = "contextMenuPeakAreas";
             resources.ApplyResources(this.contextMenuPeakAreas, "contextMenuPeakAreas");
@@ -170,6 +172,9 @@ namespace pwiz.Skyline.Menus
             //
             // abundanceTargetsMenuItem
             //
+            this.abundanceTargetsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.abundanceTargetsPeptidesMenuItem,
+            this.abundanceTargetsProteinsMenuItem});
             this.abundanceTargetsMenuItem.Name = "abundanceTargetsMenuItem";
             resources.ApplyResources(this.abundanceTargetsMenuItem, "abundanceTargetsMenuItem");
             //
@@ -187,6 +192,9 @@ namespace pwiz.Skyline.Menus
             //
             // excludeTargetsMenuItem
             //
+            this.excludeTargetsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.excludeTargetsStandardsMenuItem,
+            this.excludeTargetsPeptideListMenuItem});
             this.excludeTargetsMenuItem.Name = "excludeTargetsMenuItem";
             resources.ApplyResources(this.excludeTargetsMenuItem, "excludeTargetsMenuItem");
             //
@@ -357,6 +365,12 @@ namespace pwiz.Skyline.Menus
             resources.ApplyResources(this.removeAboveCVCutoffToolStripMenuItem, "removeAboveCVCutoffToolStripMenuItem");
             this.removeAboveCVCutoffToolStripMenuItem.Click += new System.EventHandler(this.removeAboveCVCutoffToolStripMenuItem_Click);
             //
+            // relativeAbundanceFormattingMenuItem
+            //
+            this.relativeAbundanceFormattingMenuItem.Name = "relativeAbundanceFormattingMenuItem";
+            resources.ApplyResources(this.relativeAbundanceFormattingMenuItem, "relativeAbundanceFormattingMenuItem");
+            this.relativeAbundanceFormattingMenuItem.Click += new System.EventHandler(this.relativeAbundanceFormattingMenuItem_Click);
+            //
             // toolStripSeparator57
             //
             this.toolStripSeparator57.Name = "toolStripSeparator57";
@@ -408,6 +422,7 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem areaCVNormalizedToToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVLogScaleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeAboveCVCutoffToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem relativeAbundanceFormattingMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator57;
     }
 }
