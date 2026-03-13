@@ -21,7 +21,6 @@
 //
 
 
-
 #include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/MSDataMerger.hpp"
@@ -115,7 +114,7 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
 
     bfs::path newFilename = runId + extension;
     bfs::path fullPath = bfs::path(outputPath) / newFilename;
-    return fullPath.string();
+    return fullPath.string(); 
 }
 
 
@@ -241,8 +240,8 @@ Config parseCommandLine(int argc, char** argv)
     bool format_CMS1 = false;
     bool format_MS2 = false;
     bool format_CMS2 = false;
-    bool format_mzMLb = false;    
-    int mzMLb_chunk_size = 0;
+    bool format_mzMLb = false;
+    int mzMLb_chunk_size = 0;    
     bool format_mz5 = false;
     bool precision_32 = false;
     bool precision_64 = false;
@@ -1142,7 +1141,7 @@ int go(const Config& config, const string& args)
             {
                 failedFileCount++;
                 *os_ << e.what() << endl;
-                *os_ << "Error processing file " << *it << "\n\n";
+                *os_ << "Error processing file " << *it << "\n\n"; 
             }
         }
     }

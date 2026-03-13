@@ -79,13 +79,13 @@ inline unsigned int endianize32(unsigned int n)
 
 inline unsigned long long endianize64(unsigned long long n)
 {
-    return ((n&0x00000000000000ffll)<<56) |
-           ((n&0x000000000000ff00ll)<<40) |
-           ((n&0x0000000000ff0000ll)<<24) |
+    return ((n&0x00000000000000ffll)<<56) | 
+           ((n&0x000000000000ff00ll)<<40) | 
+           ((n&0x0000000000ff0000ll)<<24) | 
            ((n&0x00000000ff000000ll)<<8)  |
-           ((n&0x000000ff00000000ll)>>8)  |
+           ((n&0x000000ff00000000ll)>>8)  | 
            ((n&0x0000ff0000000000ll)>>24) |
-           ((n&0x00ff000000000000ll)>>40) |
+           ((n&0x00ff000000000000ll)>>40) | 
            ((n&0xff00000000000000ll)>>56);
 }
 
@@ -101,7 +101,7 @@ inline unsigned long long endianize64(unsigned long long n)
 
 
 } // namespace util
-} // namespace pwiz
+} // namespace pwiz 
 
 
 #endif // _ENDIAN_HPP_

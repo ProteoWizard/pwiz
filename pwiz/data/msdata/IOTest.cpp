@@ -37,6 +37,7 @@ using boost::iostreams::stream_offset;
 
 ostream *os_ = 0;
 
+
 template <typename object_type>
 void testObject(const object_type& a)
 {
@@ -51,7 +52,7 @@ void testObject(const object_type& a)
 
     // read 'b' in from stream
 
-    object_type b;
+    object_type b; 
     istringstream iss(oss.str());
     IO::read(iss, b);
 
@@ -59,7 +60,7 @@ void testObject(const object_type& a)
 
     Diff<object_type, DiffConfig> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
-    unit_assert(!diff);
+    unit_assert(!diff); 
 }
 
 
@@ -77,7 +78,7 @@ void testObjectWithMSData(const object_type& a, const MSData& msd)
 
     // read 'b' in from stream
 
-    object_type b;
+    object_type b; 
     istringstream iss(oss.str());
     IO::read(iss, b);
 
@@ -85,7 +86,7 @@ void testObjectWithMSData(const object_type& a, const MSData& msd)
 
     Diff<object_type> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
-    unit_assert(!diff);
+    unit_assert(!diff); 
 }
 
 
@@ -214,7 +215,7 @@ void testFileDescription()
 {
     FileDescription a;
     a.fileContent.cvParams.push_back(MS_MSn_spectrum);
-
+    
     SourceFilePtr sf(new SourceFile("1", "tiny1.RAW", "file://F:/data/Exp01"));
     sf->cvParams.push_back(MS_Thermo_RAW_format);
     sf->cvParams.push_back(MS_SHA_1);
@@ -222,7 +223,7 @@ void testFileDescription()
 
     Contact contact;
     contact.cvParams.push_back(CVParam(MS_contact_name, "Darren"));
-    a.contacts.push_back(contact);
+    a.contacts.push_back(contact); 
 
     testObject(a);
 }
@@ -288,9 +289,9 @@ void testProcessingMethod()
 {
     ProcessingMethod a;
     a.order = 420;
-    a.cvParams.push_back(CVParam(MS_deisotoping, false));
-    a.cvParams.push_back(CVParam(MS_charge_deconvolution, false));
-    a.cvParams.push_back(CVParam(MS_peak_picking, true));
+    a.cvParams.push_back(CVParam(MS_deisotoping, false)); 
+    a.cvParams.push_back(CVParam(MS_charge_deconvolution, false)); 
+    a.cvParams.push_back(CVParam(MS_peak_picking, true)); 
     a.softwarePtr = SoftwarePtr(new Software("pwiz"));
     testObject(a);
 }
@@ -305,9 +306,9 @@ void testDataProcessing()
     ProcessingMethod pm1, pm2;
 
     pm1.order = 420;
-    pm1.cvParams.push_back(CVParam(MS_deisotoping, false));
-    pm1.cvParams.push_back(CVParam(MS_charge_deconvolution, false));
-    pm1.cvParams.push_back(CVParam(MS_peak_picking, true));
+    pm1.cvParams.push_back(CVParam(MS_deisotoping, false)); 
+    pm1.cvParams.push_back(CVParam(MS_charge_deconvolution, false)); 
+    pm1.cvParams.push_back(CVParam(MS_peak_picking, true)); 
     pm1.softwarePtr = SoftwarePtr(new Software("msdata"));
 
     pm2.order = 421;
@@ -315,7 +316,7 @@ void testDataProcessing()
 
     a.processingMethods.push_back(pm1);
     a.processingMethods.push_back(pm2);
-
+    
     testObject(a);
 }
 
@@ -336,7 +337,7 @@ void testScanSettings()
 
     a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf1")));
     a.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("sf2")));
-
+    
     testObject(a);
 }
 
@@ -344,7 +345,7 @@ void testScanSettings()
 void testPrecursor()
 {
     Precursor a;
-
+    
     a.spectrumID = "scan=19";
     a.isolationWindow.set(MS_isolation_window_target_m_z, 123456, MS_m_z);
     a.isolationWindow.set(MS_isolation_window_lower_offset, 2, MS_m_z);
@@ -365,11 +366,11 @@ void testPrecursor()
 void testProduct()
 {
     Product a;
-
+    
     a.isolationWindow.set(MS_isolation_window_target_m_z, 123456, MS_m_z);
     a.isolationWindow.set(MS_isolation_window_lower_offset, 2, MS_m_z);
     a.isolationWindow.set(MS_isolation_window_upper_offset, 3, MS_m_z);
-
+  
     testObject(a);
 }
 
@@ -378,7 +379,7 @@ void testScan()
 {
     Scan a;
 
-    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));
+    a.instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("LTQ FT"));    
     a.paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup("CommonMS1SpectrumParams")));
     a.cvParams.push_back(CVParam(MS_scan_start_time, 5.890500, UO_minute));
     a.cvParams.push_back(CVParam(MS_filter_string, "+ c NSI Full ms [ 400.00-1800.00]"));
@@ -466,7 +467,7 @@ void testBinaryDataArray()
     config.precision = BinaryDataEncoder::Precision_32;
     config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
     testBinaryDataArray(config);
-
+    
     config.precision = BinaryDataEncoder::Precision_64;
     config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
     testBinaryDataArray(config);
@@ -558,7 +559,7 @@ void testSpectrum()
     if (os_) *os_ << "testSpectrum():\n";
 
     Spectrum a;
-
+    
     a.index = 123;
     a.id = "goo";
     a.defaultArrayLength = 666;
@@ -581,7 +582,7 @@ void testSpectrum()
     a.precursors.back().selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
     a.precursors.back().selectedIons[0].set(MS_charge_state, 2);
     a.precursors.back().activation.set(MS_collision_induced_dissociation);
-    a.precursors.back().activation.set(MS_collision_energy, 35.00, UO_electronvolt);
+    a.precursors.back().activation.set(MS_collision_energy, 35.00, UO_electronvolt); 
 
     a.products.push_back(Product());
     a.products.back().isolationWindow.set(MS_ionization_type, "420");
@@ -595,7 +596,7 @@ void testSpectrum()
     Scan& scan2 = a.scanList.scans.back();
     scan2.set(MS_scan_start_time, 4.21);
     scan2.set(MS_filter_string, "doo");
-
+ 
     // write 'a' out to a stream
 
     ostringstream oss;
@@ -606,7 +607,7 @@ void testSpectrum()
 
     // read 'b' in from stream
 
-    Spectrum b;
+    Spectrum b; 
     istringstream iss(oss.str());
     IO::read(iss, b, IO::ReadBinaryData);
     unit_assert(b.sourceFilePosition == 0); // not -1
@@ -637,7 +638,7 @@ void testChromatogram()
     if (os_) *os_ << "testChromatogram():\n";
 
     Chromatogram a;
-
+    
     a.index = 123;
     a.id = "goo";
     a.defaultArrayLength = 666;
@@ -661,7 +662,7 @@ void testChromatogram()
 
     // read 'b' in from stream
 
-    Chromatogram b;
+    Chromatogram b; 
     istringstream iss(oss.str());
     IO::read(iss, b, IO::ReadBinaryData);
     unit_assert(b.sourceFilePosition == 0); // not -1
@@ -702,7 +703,7 @@ void testSpectrumList()
     spectrum2->index = 1;
     spectrum2->defaultArrayLength = 667;
     spectrum2->userParams.push_back(UserParam("description2"));
-
+    
     a.spectra.push_back(spectrum1);
     a.spectra.push_back(spectrum2);
     a.dp = DataProcessingPtr(new DataProcessing("dp"));
@@ -728,7 +729,7 @@ void testSpectrumListWithPositions()
     spectrum2->index = 1;
     spectrum2->defaultArrayLength = 667;
     spectrum2->userParams.push_back(UserParam("description2"));
-
+    
     a.spectra.push_back(spectrum1);
     a.spectra.push_back(spectrum2);
 
@@ -755,9 +756,9 @@ class TestIterationListener : public IterationListener
 {
     public:
 
-    virtual Status update(const UpdateMessage& updateMessage)
+    virtual Status update(const UpdateMessage& updateMessage) 
     {
-        indices_.push_back(updateMessage.iterationIndex);
+        indices_.push_back(updateMessage.iterationIndex); 
         return Status_Ok;
     }
 
@@ -772,10 +773,10 @@ class TestIterationListener_WithCancel : public IterationListener
 {
     public:
 
-    virtual Status update(const UpdateMessage& updateMessage)
+    virtual Status update(const UpdateMessage& updateMessage) 
     {
         if (updateMessage.iterationIndex == 5) return Status_Cancel;
-        indices_.push_back(updateMessage.iterationIndex);
+        indices_.push_back(updateMessage.iterationIndex); 
         return Status_Ok;
     }
 
@@ -793,7 +794,7 @@ void testSpectrumListWriteProgress()
     SpectrumListSimple a;
 
     for (size_t i=0; i<11; i++)
-    {
+    {    
         SpectrumPtr spectrum(new Spectrum);
         spectrum->id = "goober_" + lexical_cast<string>(i);
         spectrum->index = i;
@@ -812,10 +813,10 @@ void testSpectrumListWriteProgress()
     MSData dummy;
     IO::write(writer, a, dummy, BinaryDataEncoder::Config(), 0, &registry);
 
-    if (os_)
+    if (os_) 
     {
         *os_ << "callback indices: ";
-        copy(listener.indices().begin(), listener.indices().end(),
+        copy(listener.indices().begin(), listener.indices().end(), 
              ostream_iterator<size_t>(*os_, " "));
         *os_ << "\n\n";
     }
@@ -865,7 +866,7 @@ void testChromatogramList()
     chromatogram2->id = "raisinet";
     chromatogram2->index = 1;
     chromatogram2->defaultArrayLength = 667;
-
+    
     a.chromatograms.push_back(chromatogram1);
     a.chromatograms.push_back(chromatogram2);
     a.dp = DataProcessingPtr(new DataProcessing("dp"));
@@ -889,7 +890,7 @@ void testChromatogramListWithPositions()
     chromatogram2->id = "raisinet";
     chromatogram2->index = 1;
     chromatogram2->defaultArrayLength = 667;
-
+    
     a.chromatograms.push_back(chromatogram1);
     a.chromatograms.push_back(chromatogram2);
 
@@ -916,11 +917,11 @@ void testRun()
     if (os_) *os_ << "testRun():\n";
 
     Run a;
-
+    
     a.id = "goober";
     a.defaultInstrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration("instrumentConfiguration"));
     a.samplePtr = SamplePtr(new Sample("sample"));
-    a.startTimeStamp = "20 April 2004 4:20pm";
+    a.startTimeStamp = "20 April 2004 4:20pm";  
     a.defaultSourceFilePtr = SourceFilePtr(new SourceFile("sf1"));
 
     // spectrumList
@@ -938,7 +939,7 @@ void testRun()
     spectrum2->index = 1;
     spectrum2->defaultArrayLength = 667;
     spectrum2->userParams.push_back(UserParam("description2"));
-
+    
     spectrumListSimple->spectra.push_back(spectrum1);
     spectrumListSimple->spectra.push_back(spectrum2);
 
@@ -957,7 +958,7 @@ void testRun()
     chromatogram2->id = "raisinet";
     chromatogram2->index = 1;
     chromatogram2->defaultArrayLength = 667;
-
+    
     chromatogramListSimple->chromatograms.push_back(chromatogram1);
     chromatogramListSimple->chromatograms.push_back(chromatogram2);
 
@@ -976,7 +977,7 @@ void testRun()
 
     Run b;
     istringstream iss(oss.str());
-    IO::read(iss, b, IO::IgnoreSpectrumList); // IO::IgnoreSpectrumList
+    IO::read(iss, b, IO::IgnoreSpectrumList); // IO::IgnoreSpectrumList 
 
     // compare 'a' and 'b'
 
@@ -989,7 +990,7 @@ void testRun()
 
     // read 'c' in from stream, reading SpectrumList
 
-    Run c;
+    Run c; 
     iss.seekg(0);
     IO::read(iss, c, IO::ReadSpectrumList);
 
@@ -999,7 +1000,7 @@ void testRun()
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff);
 
-    // remove SpectrumList and ChromatogramList from a, and compare to b
+    // remove SpectrumList and ChromatogramList from a, and compare to b 
 
     a.spectrumListPtr.reset();
     a.chromatogramListPtr.reset();
@@ -1017,7 +1018,7 @@ void initializeTestData(MSData& msd)
 
     msd.cvs.resize(1);
     CV& cv = msd.cvs.front();
-    cv.URI = "http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo";
+    cv.URI = "http://psidev.sourceforge.net/ms/xml/mzdata/psi-ms.2.0.2.obo"; 
     cv.id = "MS";
     cv.fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
     cv.version = "2.0.2";
@@ -1041,7 +1042,7 @@ void initializeTestData(MSData& msd)
 
     msd.fileDescription.contacts.resize(1);
     Contact& contact = msd.fileDescription.contacts.front();
-    contact.cvParams.push_back(CVParam(MS_contact_name, "William Pennington"));
+    contact.cvParams.push_back(CVParam(MS_contact_name, "William Pennington")); 
     contact.cvParams.push_back(CVParam(MS_contact_address,
                                "Higglesworth University, 12 Higglesworth Avenue, 12045, HI, USA"));
 	contact.cvParams.push_back(CVParam(MS_contact_URL, "http://www.higglesworth.edu/"));
@@ -1090,7 +1091,7 @@ void initializeTestData(MSData& msd)
     softwareBioworks->id = "Bioworks";
     softwareBioworks->set(MS_Bioworks);
     softwareBioworks->version = "3.3.1 sp1";
-
+    
     SoftwarePtr software_pwiz(new Software);
     software_pwiz->id = "pwiz";
     software_pwiz->set(MS_pwiz);
@@ -1104,7 +1105,7 @@ void initializeTestData(MSData& msd)
 
     DataProcessingPtr dpXcalibur(new DataProcessing);
     dpXcalibur->id = "Xcalibur Processing";
-
+    
     ProcessingMethod procXcal;
     procXcal.order = 1;
     procXcal.softwarePtr = softwareXcalibur;
@@ -1123,7 +1124,7 @@ void initializeTestData(MSData& msd)
     proc_msconvert.cvParams.push_back(MS_Conversion_to_mzML);
 
     dp_msconvert->processingMethods.push_back(proc_msconvert);
-
+ 
     msd.dataProcessingPtrs.push_back(dpXcalibur);
     msd.dataProcessingPtrs.push_back(dp_msconvert);
 
@@ -1304,9 +1305,9 @@ void testMSData()
     unit_assert(diff.a_b.run.spectrumListPtr->size() == 1);
     unit_assert(diff.a_b.run.spectrumListPtr->spectrum(0)->userParams.size() == 1);
 
-    // read 'c' in from stream, reading SpectrumList
+    // read 'c' in from stream, reading SpectrumList 
 
-    MSData c;
+    MSData c; 
     iss.seekg(0);
     IO::read(iss, c, IO::ReadSpectrumList);
 
@@ -1316,7 +1317,7 @@ void testMSData()
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff);
 
-    // remove SpectrumList and ChromatogramList from a, and compare to b
+    // remove SpectrumList and ChromatogramList from a, and compare to b 
 
     a.run.spectrumListPtr.reset();
     a.run.chromatogramListPtr.reset();
@@ -1337,7 +1338,7 @@ void test()
     testFileDescription();
     testSample();
     testComponent();
-    testComponentList();
+    testComponentList(); 
     testSoftware();
     testInstrumentConfiguration();
     testProcessingMethod();

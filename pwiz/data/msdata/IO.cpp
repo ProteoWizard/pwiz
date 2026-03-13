@@ -1900,17 +1900,17 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
         encoder.encode(binaryDataArray.data, encoded);
         usedConfig = encoder.getConfig(); // config may have changed if numpress error was excessive
     }
-
+    
 
     XMLWriter::Attributes attributes;
-
+    
     size_t encoded_size = encoded.size();
 
     string dataset;
-#ifndef WITHOUT_MZMLB
+#ifndef WITHOUT_MZMLB        
     size_t offset;
     writeMzMLbExtra(mzMLb_os, dataset, offset, encoded, writer, binaryDataArray, usedConfig);
-#endif
+#endif        
 
     // primary array types can never override the default array length
     if (!binaryDataArray.hasCVParam(MS_m_z_array) &&
@@ -2114,7 +2114,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                                 stream_offset position)
     {
         if (name != "cvParam") // most common, but not handled here
-        {
+        { 
             if (name == "binaryDataArray")
             {
                 paramContainer.clear();
@@ -2136,7 +2136,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                 return Status::Ok;
             }
             else if (name == "binary")
-            {
+            {            
                 if (msd) References::resolve(paramContainer, *msd);
 
                 config = getConfig();
@@ -2253,7 +2253,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         }
 
         if (text.length() != encodedLength_)
-            throw runtime_error("[IO::HandlerBinaryDataArray] At position " + lexical_cast<string>(position) + ": encoded lengths differ.");
+            throw runtime_error("[IO::HandlerBinaryDataArray] At position " + lexical_cast<string>(position) + ": encoded lengths differ."); 
 
         return Status::Ok;
     }
@@ -2270,13 +2270,13 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
     CVID extractCVParam(ParamContainer& container, CVID cvid)
     {
         vector<CVParam>& params = container.cvParams;
-        vector<CVParam>::iterator it = find_if(params.begin(), params.end(),
+        vector<CVParam>::iterator it = find_if(params.begin(), params.end(), 
                                                CVParamIsChildOf(cvid));
 
         CVID result = CVID_Unknown;
 
         if (it != params.end())
-        {
+        {   
             // found the cvid in container -- erase the CVParam
             result = it->cvid;
             params.erase(it);
@@ -2320,7 +2320,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         vector<CVParam>& params = container.cvParams;
         vector<CVParam>::iterator it;
         while ((it = find_if(params.begin(), params.end(),CVParamIsChildOf(cvid))) != params.end())
-        {
+        {   
             // found the cvid in container -- erase the CVParam
             results.push_back(it->cvid);
             params.erase(it);
@@ -2360,7 +2360,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         }
         return false;
     }
-
+    
     BinaryDataEncoder::Config getConfig()
     {
         BinaryDataEncoder::Config config;
@@ -2380,7 +2380,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             config.prediction = BinaryDataEncoder::Prediction_Delta;
 
         cvidBinaryDataType = extractCVParam(paramContainer, MS_binary_data_type);
-
+ 
         // handle mix of zlib and numpress compression
         CVID cvidCompressionType;
         config.compression = BinaryDataEncoder::Compression_None;
@@ -2603,7 +2603,7 @@ PWIZ_API_DECL void read(std::istream& is, std::vector<BinaryDataArrayPtr>& binar
 
 
 PWIZ_API_DECL
-void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& msd,
+void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& msd, 
            const BinaryDataEncoder::Config& config)
 {
     XMLWriter::Attributes attributes;
@@ -2631,7 +2631,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
         attributes.add("count", spectrum.precursors.size());
         writer.startElement("precursorList", attributes);
         
-        for (vector<Precursor>::const_iterator it=spectrum.precursors.begin();
+        for (vector<Precursor>::const_iterator it=spectrum.precursors.begin(); 
              it!=spectrum.precursors.end(); ++it)
              write(writer, *it);
      
@@ -2644,7 +2644,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
         attributes.add("count", spectrum.products.size());
         writer.startElement("productList", attributes);
         
-        for (vector<Product>::const_iterator it=spectrum.products.begin();
+        for (vector<Product>::const_iterator it=spectrum.products.begin(); 
              it!=spectrum.products.end(); ++it)
              write(writer, *it);
      
@@ -2705,7 +2705,7 @@ struct HandlerSpectrum : public HandlerParamContainer
             throw runtime_error("[IO::HandlerSpectrum] Null spectrum.");
 
         if (name != "cvParam") // the most common, but not handled here
-        {
+        { 
             if (name == "spectrum")
             {
                 spectrum->sourceFilePosition = position;
@@ -3434,7 +3434,7 @@ struct HandlerMSData : public SAXParser::Handler
                                 stream_offset position)
     {
         if (!msd)
-            throw runtime_error("[IO::HandlerMSData] Null msd.");
+            throw runtime_error("[IO::HandlerMSData] Null msd."); 
 
         if (name == "mzML")
         {

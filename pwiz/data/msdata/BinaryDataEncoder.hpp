@@ -56,7 +56,7 @@ class PWIZ_API_DECL BinaryDataEncoder
     enum Format {Format_MzML, Format_MzMLb}; // if Format_MzMLb, we do not base64 encode, endianise or compress
     enum Type {Type_None, Type_Spectrum, Type_Chromatogram}; // mzMLb needs to know whether this BinaryDataArray is a spectrum or chromatogram (for HDF5 dataset name) [*this not essential*]
     
-    /// encoding/decoding configuration
+    /// encoding/decoding configuration 
     struct PWIZ_API_DECL Config
     {
         Precision precision;
@@ -99,15 +99,15 @@ class PWIZ_API_DECL BinaryDataEncoder
 
     const Config& getConfig() const; // get the config actually used - may differ from input for numpress use
 
-    /// encode binary data as a text string 
+    /// encode binary data as a text string
     void encode(const std::vector<double>& data, std::string& result, size_t* binaryByteCount = NULL) const;
     void encode(const std::vector<std::int64_t>& data, std::string& result, size_t* binaryByteCount = NULL) const;
 
-    /// encode binary data as a text string
+    /// encode binary data as a text string 
     void encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount = NULL) const;
     void encode(const std::int64_t* data, size_t dataSize, std::string& result, size_t* binaryByteCount = NULL) const;
 
-    /// decode text-encoded data as binary
+    /// decode text-encoded data as binary 
     void decode(const char *encodedData, size_t len, pwiz::util::BinaryData<double>& result) const;
     void decode(const std::string& encodedData, pwiz::util::BinaryData<double>& result) const
     {
