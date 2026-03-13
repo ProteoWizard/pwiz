@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -199,6 +200,10 @@ namespace pwiz.SkylineTestTutorial
                 Action actCancel = () => argsCollector.CancelButton.PerformClick();
                 argsCollector.BeginInvoke(actCancel);
                 WaitForClosedForm(argsCollector);
+
+                // RunTool creates a temp CSV via GetReportTempPath - clean it up
+                var tempCsvPath = ToolMacros.GetReportTempPath(QUASAR.ReportTitle, QUASAR.Title);
+                FileEx.SafeDelete(tempCsvPath);
             }
 
             // Try to prevent the occasional "The process cannot access the file 'QuaSAR_Tutorial.skyd' because it is being

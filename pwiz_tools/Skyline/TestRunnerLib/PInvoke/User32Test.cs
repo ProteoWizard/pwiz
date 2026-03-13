@@ -64,5 +64,11 @@ namespace TestRunnerLib.PInvoke
 
         [DllImport("user32.dll")]
         internal static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT { public int x, y; }
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
     }
 }

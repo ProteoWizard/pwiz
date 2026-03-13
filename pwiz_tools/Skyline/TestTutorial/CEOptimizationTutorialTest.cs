@@ -66,6 +66,7 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
             AsSmallMolecules = true;
+            CoverShotName = string.Empty; // No cover shot for small molecule tutorial tests
             RunCEOptimizationTutorialTest();
         }
 
@@ -74,7 +75,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
-            CoverShotName = "OptimizeCE";
+            CoverShotName ??= "OptimizeCE";
 
             ForceMzml = true;   // Mzml is ~2x faster for this test.
 

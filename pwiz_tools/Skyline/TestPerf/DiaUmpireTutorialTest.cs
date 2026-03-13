@@ -876,6 +876,7 @@ namespace TestPerf
 
         private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
         {
+            rectFrame = rectFrame.AdjustToBitmapCoords(bmp.Size);
             const int hBorder = 20;
             const int topBorder = 100;
             const int bottomBorder = 10;

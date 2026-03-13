@@ -246,7 +246,7 @@ namespace TestRunner
         static readonly string commandLineOptions =
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
-            "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
+            "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;screen=-1;multi=1;wait=off;internet=off;originalurls=off;" +
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
@@ -385,7 +385,7 @@ namespace TestRunner
 
                     TeamCityStartTestSuite(commandLineArgs);
 
-                    bool autoScreenshots = commandLineArgs.ArgAsLong("pause") == 3;
+                    bool autoScreenshots = commandLineArgs.ArgAsLong("pause") <= -3;
                     // Prevent system sleep.
                     using (new Kernel32Test.SystemSleep(autoScreenshots))
                     {
@@ -1376,6 +1376,7 @@ namespace TestRunner
             bool randomOrder = commandLineArgs.ArgAsBool("random");
             bool demoMode = commandLineArgs.ArgAsBool("demo");
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
+            int screenshotScreenIndex = (int)commandLineArgs.ArgAsLong("screen");
             bool internet = commandLineArgs.ArgAsBool("internet");
             bool useOriginalURLs = commandLineArgs.ArgAsBool("originalurls");
             bool perftests = commandLineArgs.ArgAsBool("perftests");
@@ -1413,6 +1414,13 @@ namespace TestRunner
             bool clientMode = parallelMode == "client";
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
             bool coverage = commandLineArgs.ArgAsBool("coverage");
+
+            // Screenshot modes (pause < 0) need windows on-screen for correct layout and capture
+            if (pauseSeconds < 0)
+            {
+                offscreen = false;
+                LogDisplayInfo(log);
+            }
 
             // If pausing for screenshots, make sure this process is allowed to fully activate its forms
             if (pauseSeconds != 0)
@@ -1479,7 +1487,7 @@ namespace TestRunner
                 throw new ArgumentException("Coverage only works in parallel testing mode.");
 
             var runTests = new RunTests(
-                demoMode, buildMode, offscreen, internet, useOriginalURLs, showStatus, perftests,
+                demoMode, buildMode, offscreen, screenshotScreenIndex, internet, useOriginalURLs, showStatus, perftests,
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration, teamcityCleanup,
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
@@ -1866,10 +1874,27 @@ namespace TestRunner
             }
 
             Console.WriteLine($"Tests finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
-            return runTests.FailureCount == 0;
+
+            // Generate screenshot comparison report if screenshot comparison mode was used
+            bool screenshotComparisonPassed = GenerateScreenshotComparisonReport(runTests);
+
+            return runTests.FailureCount == 0 && screenshotComparisonPassed;
         }
 
         //
+        private static void LogDisplayInfo(StreamWriter log)
+        {
+            foreach (var s in Screen.AllScreens)
+            {
+                var b = s.Bounds;
+                var w = s.WorkingArea;
+                var scale = ShcoreTest.GetScaleFactor(b.X + 1, b.Y + 1);
+                var line = $"# Display: {s.DeviceName} Bounds={b.Width}x{b.Height}@{b.X},{b.Y} WorkingArea={w.Width}x{w.Height}@{w.X},{w.Y} Primary={s.Primary} Scale={scale:P0}";
+                log.WriteLine(line);
+                Console.WriteLine(line);
+            }
+        }
+
         // Check for local ban on certain tests in nightly runs
         //
         private static void HandleNightlyTestExclusions(List<TestInfo> testList, List<TestInfo> unfilteredTestList, StreamWriter log, bool asNightly)
@@ -1914,6 +1939,21 @@ namespace TestRunner
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Outputs screenshot comparison report if screenshot comparison mode was used.
+        /// </summary>
+        /// <returns>True if no screenshot comparison failures, false if there were failures.</returns>
+        private static bool GenerateScreenshotComparisonReport(RunTests runTests)
+        {
+            var report = ScreenshotComparisonResults.ReportSummary;
+            if (report == null)
+                return true; // No comparison was done, so no failures
+
+            runTests.Log("\r\n" + report);
+
+            return ScreenshotComparisonResults.FailedCount == 0;
         }
 
         /// <summary>
@@ -2222,6 +2262,12 @@ namespace TestRunner
                 Console.WriteLine("# No failures.\n");
             foreach (var failure in errorList)
                 Console.WriteLine(failure);
+            if (ScreenshotComparisonResults.IsActive)
+            {
+                int failed = ScreenshotComparisonResults.FailedCount;
+                int total = ScreenshotComparisonResults.PassedCount + failed;
+                Console.WriteLine($"# {failed} out of {total} screenshot comparisons failed.");
+            }
 
             if (leakList.Count > 0)
             {
@@ -2310,6 +2356,13 @@ Here is a list of recognized arguments:
                                     
     offscreen=[on|off]              Set offscreen=on (the default) to keep Skyline windows
                                     from flashing on the desktop during a test run.
+
+    screen=[n]                      Specifies which screen (1-based) to use for screenshot
+                                    capture. Default is -1, which automatically picks the
+                                    largest screen (using the lowest index to break ties,
+                                    unless one of the ties is the primary display). Use
+                                    screen=2 to capture screenshots on a secondary monitor
+                                    while working on the primary monitor.
 
     language=[language1,language2,...]  Choose a random language from this list before executing
                                     each test.  Default value is ""en-US,fr-FR"".  You can

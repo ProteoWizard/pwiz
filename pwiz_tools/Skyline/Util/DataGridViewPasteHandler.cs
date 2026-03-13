@@ -36,13 +36,21 @@ namespace pwiz.Skyline.Util
     /// the text on the clipboard is parsed into rows and columns and pasted into the
     /// editable cells going right and down from the currently selected cell.
     /// </summary>
-    public class DataGridViewPasteHandler
+    public class DataGridViewPasteHandler : IDisposable
     {
         protected DataGridViewPasteHandler(DataGridView boundDataGridView, BindingListSource bindingListSource)
         {
             DataGridView = boundDataGridView;
             BindingListSource = bindingListSource;
             DataGridView.KeyDown += DataGridViewOnKeyDown;
+        }
+
+        public void Dispose()
+        {
+            if (DataGridView != null)
+            {
+                DataGridView.KeyDown -= DataGridViewOnKeyDown;
+            }
         }
 
         /// <summary>

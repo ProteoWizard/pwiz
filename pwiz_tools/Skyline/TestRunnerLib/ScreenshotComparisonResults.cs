@@ -1,0 +1,267 @@
+/*
+ * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace TestRunnerLib
+{
+    /// <summary>
+    /// Static class to hold screenshot comparison results that can be accessed by TestRunner
+    /// without requiring a reference to TestUtil.
+    /// </summary>
+    public static class ScreenshotComparisonResults
+    {
+        public const string SCREENSHOT_DIFFS_DIRECTORY = "ScreenshotDiffs";
+
+        private static readonly List<TestScreenshotResults> _testResults = new List<TestScreenshotResults>();
+        private static int _totalPassedCount;
+        private static int _totalFailedCount;
+        private static int _totalTestCount;
+        private static readonly List<string> _failedScreenshots = new List<string>();
+
+        /// <summary>
+        /// Folder where diff images were saved, or null if none were saved.
+        /// </summary>
+        public static string DiffImagesFolder { get; set; }
+
+        /// <summary>
+        /// Whether screenshot comparison mode was active.
+        /// </summary>
+        public static bool IsActive { get; set; }
+
+        /// <summary>
+        /// Total number of screenshots that passed comparison across all tests.
+        /// </summary>
+        public static int PassedCount => _totalPassedCount + _testResults.Sum(t => t.PassedCount);
+
+        /// <summary>
+        /// Total number of screenshots that failed comparison across all tests.
+        /// </summary>
+        public static int FailedCount => _totalFailedCount + _testResults.Sum(t => t.FailedCount);
+
+        /// <summary>
+        /// Total number of tests with screenshot comparison results.
+        /// </summary>
+        public static int TestCount => _totalTestCount + _testResults.Count;
+
+        /// <summary>
+        /// List of "TestName s-NN.png" strings for all failed screenshot comparisons.
+        /// </summary>
+        public static IReadOnlyList<string> FailedScreenshots => _failedScreenshots;
+
+        /// <summary>
+        /// Checks if a test has already been compared (to avoid duplicate comparisons in multiple iterations).
+        /// </summary>
+        public static bool HasTestBeenCompared(string testName)
+        {
+            return _testResults.Any(t => t.TestName == testName);
+        }
+
+        /// <summary>
+        /// Adds results for a single test.
+        /// </summary>
+        public static void AddTestResults(string testName, string tutorialPath, double thresholdPercent,
+            List<ScreenshotResult> results, string diffImagesFolder)
+        {
+            IsActive = true;
+            _testResults.Add(new TestScreenshotResults(testName, tutorialPath, thresholdPercent, results));
+            if (!string.IsNullOrEmpty(diffImagesFolder))
+                DiffImagesFolder = diffImagesFolder;
+        }
+
+        /// <summary>
+        /// Generates a report for the current test's screenshot comparisons (the test just run).
+        /// Returns null if no current results exist.
+        /// </summary>
+        public static string ReportCurrent
+        {
+            get
+            {
+                if (_testResults.Count == 0)
+                    return null;
+
+                var sb = new StringBuilder();
+                foreach (var test in _testResults.OrderBy(t => t.TestName))
+                {
+                    sb.AppendLine($"Test: {test.TestName}");
+                    sb.AppendLine($"  Tutorial Path: {test.TutorialPath}");
+                    sb.AppendLine($"  Threshold: {test.ThresholdPercent}%");
+                    sb.AppendLine($"  Screenshots: {test.Results.Count}");
+
+                    foreach (var r in test.Results.OrderBy(r => r.ScreenshotNumber))
+                    {
+                        if (!string.IsNullOrEmpty(r.Error))
+                        {
+                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png - ERROR - {r.Error} - {r.Description} ***");
+                        }
+                        else if (!string.IsNullOrEmpty(r.SizeMismatchText))
+                        {
+                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png - FAIL ({r.SizeMismatchText}) - {r.Description} ***");
+                        }
+                        else
+                        {
+                            var status = r.Passed ? "PASS" : "FAIL";
+                            var marker = r.Passed ? "" : " ***";
+                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png - {status} ({r.DiffPercentageWithoutTitleBar:F2}% diff) - {r.Description}{marker}");
+                            if (!r.Passed && r.DominantColorPairs.Count > 0)
+                            {
+                                foreach (var pair in r.DominantColorPairs)
+                                    sb.AppendLine($"      Dominant color pair: {pair}");
+                            }
+                        }
+                    }
+
+                    sb.AppendLine($"  Test Summary: {test.PassedCount} passed, {test.FailedCount} failed");
+                    sb.AppendLine();
+                }
+                return sb.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Generates a summary report of all failed comparisons and overall counts across all tests.
+        /// Returns null if screenshot comparison mode was not active.
+        /// </summary>
+        public static string ReportSummary
+        {
+            get
+            {
+                if (!IsActive)
+                    return null;
+
+                var sb = new StringBuilder();
+                sb.AppendLine("Screenshot Comparison Summary");
+                sb.AppendLine("=============================");
+                sb.AppendLine($"Overall: {PassedCount} passed, {FailedCount} failed across {TestCount} tests");
+
+                if (_failedScreenshots.Count > 0)
+                {
+                    sb.AppendLine("Failed screenshots:");
+                    foreach (var failure in _failedScreenshots)
+                        sb.AppendLine($"  {failure}");
+                }
+
+                if (!string.IsNullOrEmpty(DiffImagesFolder))
+                {
+                    var parentFolder = System.IO.Path.GetDirectoryName(DiffImagesFolder) ?? DiffImagesFolder;
+                    sb.AppendLine($"# Screenshot diff images saved to: {parentFolder}");
+                }
+
+                return sb.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Moves current results' counts to running totals and clears the current results list.
+        /// Call before each test so that after the test, _testResults contains only that test's results.
+        /// </summary>
+        public static void ClearCurrentResults()
+        {
+            foreach (var test in _testResults)
+            {
+                _totalPassedCount += test.PassedCount;
+                _totalFailedCount += test.FailedCount;
+                _totalTestCount++;
+                foreach (var r in test.Results.Where(r => !r.Passed))
+                {
+                    string failureReason;
+                    if (!string.IsNullOrEmpty(r.Error))
+                        failureReason = $"ERROR - {r.Error}";
+                    else if (!string.IsNullOrEmpty(r.SizeMismatchText))
+                        failureReason = r.SizeMismatchText;
+                    else
+                        failureReason = $"{r.DiffPercentageWithoutTitleBar:F2}% diff";
+                    var screenshotDesc = string.IsNullOrEmpty(r.Description) ? "" : $" - {r.Description}";
+                    _failedScreenshots.Add($"{test.TestName} - s-{r.ScreenshotNumber:D2}.png{screenshotDesc} - {failureReason}");
+                }
+            }
+            _testResults.Clear();
+        }
+
+        /// <summary>
+        /// Clears all results including running totals.
+        /// </summary>
+        public static void Clear()
+        {
+            _testResults.Clear();
+            _failedScreenshots.Clear();
+            _totalPassedCount = 0;
+            _totalFailedCount = 0;
+            _totalTestCount = 0;
+            DiffImagesFolder = null;
+            IsActive = false;
+        }
+    }
+
+    /// <summary>
+    /// Results for a single test's screenshot comparisons.
+    /// </summary>
+    public class TestScreenshotResults
+    {
+        public string TestName { get; }
+        public string TutorialPath { get; }
+        public double ThresholdPercent { get; }
+        public List<ScreenshotResult> Results { get; }
+
+        public int PassedCount => Results.Count(r => r.Passed);
+        public int FailedCount => Results.Count - PassedCount;
+
+        public TestScreenshotResults(string testName, string tutorialPath, double thresholdPercent,
+            List<ScreenshotResult> results)
+        {
+            TestName = testName;
+            TutorialPath = tutorialPath;
+            ThresholdPercent = thresholdPercent;
+            Results = results;
+        }
+    }
+
+    /// <summary>
+    /// Lightweight result class for screenshot comparison (no bitmap references).
+    /// </summary>
+    public class ScreenshotResult
+    {
+        public int ScreenshotNumber { get; }
+        public bool Passed { get; }
+        public double DiffPercentage { get; }
+        public double DiffPercentageWithoutTitleBar { get; }
+        public int DiffPixelCount { get; }
+        public string Error { get; }
+        public string SizeMismatchText { get; }
+        public string Description { get; }
+        public List<string> DominantColorPairs { get; }
+
+        public ScreenshotResult(int num, bool passed, double diffPercentage,
+            double diffPercentageWithoutTitleBar, int diffPixelCount, string error,
+            List<string> dominantColorPairs = null, string sizeMismatchText = null,
+            string description = null)
+        {
+            ScreenshotNumber = num;
+            Passed = passed;
+            DiffPercentage = diffPercentage;
+            DiffPercentageWithoutTitleBar = diffPercentageWithoutTitleBar;
+            DiffPixelCount = diffPixelCount;
+            Error = error;
+            SizeMismatchText = sizeMismatchText;
+            Description = description;
+            DominantColorPairs = dominantColorPairs ?? new List<string>();
+        }
+    }
+}

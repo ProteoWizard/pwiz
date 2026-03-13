@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestTutorial
         /// to regenerate checkpoint files for non-full-import mode,
         /// when something changes in the test.
         /// </summary>
-        private bool IsFullImportMode { get { return IsRecordMode || IsCoverShotMode || IsPauseForScreenShots || IsAutoScreenShotMode; } }
+        private bool IsFullImportMode { get { return !IsPass0 && (IsRecordMode || IsCoverShotMode || IsPauseForScreenShots || IsAutoScreenShotMode); } }
 
         protected override bool IsRecordMode => false;
 
@@ -271,7 +271,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
             });
 
-            if (IsPauseForScreenShots)
+            if (IsFullImportMode && IsPauseForScreenShots)
             {
                 var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
                 RunUI(() =>

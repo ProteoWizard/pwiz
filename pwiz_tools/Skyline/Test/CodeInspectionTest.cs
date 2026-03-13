@@ -613,8 +613,9 @@ namespace pwiz.SkylineTest
                 { typeof(Gdi32Test), 1 },
                 { typeof(Kernel32Test), 5 },
                 { typeof(Ole32Test), 1 },
-                { typeof(Shell32Test), 1 },
-                { typeof(User32Test), 9 }
+                { typeof(Shell32Test), 2 },
+                { typeof(ShcoreTest), 1 },
+                { typeof(User32Test), 10 }
             };
 
             // add types from production code

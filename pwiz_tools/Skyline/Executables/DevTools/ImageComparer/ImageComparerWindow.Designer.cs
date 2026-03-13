@@ -56,6 +56,7 @@ namespace ImageComparer
             this.contextMenuImageSource = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuItemGit = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemWeb = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemDevScreenshots = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripGotoWeb = new System.Windows.Forms.ToolStripButton();
             this.toolStripPickColorButton = new ImageComparer.AlphaColorPickerButton();
@@ -336,15 +337,16 @@ namespace ImageComparer
             //
             this.contextMenuImageSource.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuItemGit,
-            this.menuItemWeb});
+            this.menuItemWeb,
+            this.menuItemDevScreenshots});
             this.contextMenuImageSource.Name = "contextMenuImageSource";
-            this.contextMenuImageSource.Size = new System.Drawing.Size(120, 70);
+            this.contextMenuImageSource.Size = new System.Drawing.Size(200, 92);
             //
             // menuItemGit
             //
             this.menuItemGit.Image = global::ImageComparer.Properties.Resources.gitsource;
             this.menuItemGit.Name = "menuItemGit";
-            this.menuItemGit.Size = new System.Drawing.Size(119, 22);
+            this.menuItemGit.Size = new System.Drawing.Size(199, 22);
             this.menuItemGit.Text = "Git HEAD";
             this.menuItemGit.Click += new System.EventHandler(this.menuItemGit_Click);
             //
@@ -352,9 +354,17 @@ namespace ImageComparer
             //
             this.menuItemWeb.Image = global::ImageComparer.Properties.Resources.websource;
             this.menuItemWeb.Name = "menuItemWeb";
-            this.menuItemWeb.Size = new System.Drawing.Size(119, 22);
+            this.menuItemWeb.Size = new System.Drawing.Size(199, 22);
             this.menuItemWeb.Text = "Web";
             this.menuItemWeb.Click += new System.EventHandler(this.menuItemWeb_Click);
+            //
+            // menuItemDevScreenshots
+            //
+            this.menuItemDevScreenshots.Image = global::ImageComparer.Properties.Resources.gitsource;
+            this.menuItemDevScreenshots.Name = "menuItemDevScreenshots";
+            this.menuItemDevScreenshots.Size = new System.Drawing.Size(199, 22);
+            this.menuItemDevScreenshots.Text = "Developer Screenshots";
+            this.menuItemDevScreenshots.Click += new System.EventHandler(this.menuItemDevScreenshots_Click);
             //
             // toolStripSeparator3
             //
@@ -442,5 +452,6 @@ namespace ImageComparer
         private System.Windows.Forms.ContextMenuStrip contextMenuImageSource;
         private System.Windows.Forms.ToolStripMenuItem menuItemGit;
         private System.Windows.Forms.ToolStripMenuItem menuItemWeb;
+        private System.Windows.Forms.ToolStripMenuItem menuItemDevScreenshots;
     }
 }
