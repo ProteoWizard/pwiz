@@ -1068,7 +1068,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSe
     writer.endElement();
 }
 
-
+    
 struct HandlerScanSettings : public HandlerParamContainer
 {
     ScanSettings* scanSettings;
@@ -1448,7 +1448,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan, const MS
         for (vector<ScanWindow>::const_iterator it=scan.scanWindows.begin(); 
              it!=scan.scanWindows.end(); ++it)
              write(writer, *it);
-    
+     
         writer.endElement();
     }
 
@@ -2109,7 +2109,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         autoUnescapeCharacters = false;
     }
 
-    virtual Status startElement(const string& name,
+    virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -2136,7 +2136,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                 return Status::Ok;
             }
             else if (name == "binary")
-            {            
+            {               
                 if (msd) References::resolve(paramContainer, *msd);
 
                 config = getConfig();
@@ -2263,7 +2263,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
     size_t arrayLength_;
     size_t encodedLength_;
     std::string external_dataset_;
-    size_t external_offset_;
+    size_t external_offset_; 
 
     std::istream* is_;
 
@@ -2366,7 +2366,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         BinaryDataEncoder::Config config;
 
         //
-        // Note: these CVParams are really info about the encoding, and not
+        // Note: these CVParams are really info about the encoding, and not 
         // part of the BinaryDataArray.  We look at them to see how to decode the data,
         // and remove them from the BinaryDataArray struct (extractCVParam does the removal).
         //

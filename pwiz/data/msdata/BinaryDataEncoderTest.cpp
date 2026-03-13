@@ -119,12 +119,12 @@ const char *
         return sampleEncoded32Big_;
 
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
+        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian &&
         config.compression == BinaryDataEncoder::Compression_None)
         return sampleEncoded64Little_;
 
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian && 
+        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
         config.compression == BinaryDataEncoder::Compression_None)
         return sampleEncoded64Big_;
 
@@ -142,7 +142,7 @@ const char *
         config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
         config.compression == BinaryDataEncoder::Compression_Zlib)
         return sampleEncoded64LittleZlib_;
-
+    
     if (config.precision == BinaryDataEncoder::Precision_64 &&
         config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian && 
         config.compression == BinaryDataEncoder::Compression_Zlib)

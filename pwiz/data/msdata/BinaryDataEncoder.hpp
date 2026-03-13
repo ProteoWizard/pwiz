@@ -39,7 +39,7 @@ namespace pwiz {
 namespace msdata {
 
 const double BinaryDataEncoder_default_numpressSlofErrorTolerance = 0.0002; // 2/100th of one percent
-const double BinaryDataEncoder_default_numpressLinearErrorTolerance = 2e-9;
+const double BinaryDataEncoder_default_numpressLinearErrorTolerance = 2e-9; 
 const double BinaryDataEncoder_default_numpressPicErrorTolerance = 0.5; // rounds to nearest integer
 
 /// binary-to-text encoding
@@ -103,7 +103,7 @@ class PWIZ_API_DECL BinaryDataEncoder
     void encode(const std::vector<double>& data, std::string& result, size_t* binaryByteCount = NULL) const;
     void encode(const std::vector<std::int64_t>& data, std::string& result, size_t* binaryByteCount = NULL) const;
 
-    /// encode binary data as a text string 
+    /// encode binary data as a text string
     void encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount = NULL) const;
     void encode(const std::int64_t* data, size_t dataSize, std::string& result, size_t* binaryByteCount = NULL) const;
 

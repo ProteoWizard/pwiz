@@ -679,7 +679,7 @@ Config parseCommandLine(int argc, char** argv)
             default:
                 throw user_error("[msconvert] Unsupported format."); 
         }
-        if (config.writeConfig.gzipped)
+        if (config.writeConfig.gzipped) 
         {
             config.extension += ".gz";
         }
@@ -700,7 +700,7 @@ Config parseCommandLine(int argc, char** argv)
         config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_m_z_array] = BinaryDataEncoder::Prediction_Linear;
         config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_time_array] = BinaryDataEncoder::Prediction_Linear;
     }
-
+ 
 
     // precision defaults
 

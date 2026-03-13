@@ -1390,7 +1390,7 @@ rule msparser-usage-requirements ( properties * )
 searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@msparser-usage-requirements ;
 
 
-.msvcrt-x86 =
+.msvcrt-x86 = 
     Microsoft.VC110.CRT/x86/msvcp110.dll 
     Microsoft.VC110.CRT/x86/msvcr110.dll 
     Microsoft.VC110.CRT/x86/vcomp110.dll 
@@ -1815,7 +1815,7 @@ constant .common-sources :
     $(BOOST_SUBSET_PATH)/libraries
 ;
 
-.no-t =
+.no-t = 
     "exclude:*Test*.data*"
     "exclude:*Test.?pp"
     "exclude:*TestData.?pp"

@@ -270,7 +270,7 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
                 numpressed.resize(dataSize * 2 + 8);
                 break;
 
-            default:
+            default: 
                 throw runtime_error("[BinaryDataEncoder::encode()] unknown numpress mode");
                 break;
             }
@@ -282,8 +282,8 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
                     if (config_.numpressLinearAbsMassAcc > 0.0)
                     {
                       double fp = MSNumpress::optimalLinearFixedPointMass(data, dataSize, config_.numpressLinearAbsMassAcc);
-                      if (fp < 0.0)
-                      {
+                      if (fp < 0.0) 
+                      { 
                         // failure: cannot achieve that accuracy, thus don't numpress (see below)
                         n = 0;
                         byteCount = MSNumpress::encodeLinear(data, dataSize, &numpressed[0], config_.numpressFixedPoint);
@@ -298,7 +298,7 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
                     }
                     numpressed.resize(byteCount);
                     if ((numpressErrorTolerance=config_.numpressLinearErrorTolerance) > 0) // decompress to check accuracy loss
-                        MSNumpress::decodeLinear(numpressed,unpressed);
+                        MSNumpress::decodeLinear(numpressed,unpressed); 
                     break;
 
                 case Numpress_Pic:
@@ -306,26 +306,26 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
                     numpressed.resize(byteCount);
                     numpressErrorTolerance = 0.5; // it's an integer rounding, so always +- 0.5
                     MSNumpress::decodePic(numpressed,unpressed); // but susceptible to overflow, so always check
-                    break;
+                    break; 
 
                 case Numpress_Slof:
                     byteCount = MSNumpress::encodeSlof(data, dataSize, &numpressed[0], config_.numpressFixedPoint);
                     numpressed.resize(byteCount);
                     if ((numpressErrorTolerance=config_.numpressSlofErrorTolerance) > 0) // decompress to check accuracy loss
-                        MSNumpress::decodeSlof(numpressed,unpressed);
+                        MSNumpress::decodeSlof(numpressed,unpressed); 
                     break;
 
                 default:
                     break;
             }
             // now check to see if encoding introduces excessive error
-            if (numpressErrorTolerance)
+            if (numpressErrorTolerance) 
             {
                 if (Numpress_Pic == config_.numpress)  // integer rounding, abs accuracy is +- 0.5
                 {
                     for (n=(int)dataSize;n--;) // check for overflow, strange rounding
                     {
-                        if ((!boost::math::isfinite(unpressed[n])) || (fabs(data[n]-unpressed[n])>=1.0))
+                        if ((!boost::math::isfinite(unpressed[n])) || (fabs(data[n]-unpressed[n])>=1.0)) 
                             break;
                     }
                 }
@@ -377,7 +377,7 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
         //    and fall through to Base64 encoding
         //
 
-        byteBuffer = reinterpret_cast<const void*>(data);
+        byteBuffer = reinterpret_cast<const void*>(data); 
         byteCount = dataSize * sizeof(T);
 
         // 64-bit -> 32-bit downconversion
