@@ -63,7 +63,7 @@ namespace SkylineTool
         string RunCommandSilent(string commandArgs);
         string GetSettingsListNames(string listType);
         string GetReportDocTopic(string topicName);
-        string AddReportFromDefinition(string json);
+        string AddReportFromDefinition(ReportDefinition definition);
         string InsertSmallMoleculeTransitionList(string textCSV);
         string ImportProperties(string csvText);
         string SetReplicate(string replicateName);
@@ -80,12 +80,12 @@ namespace SkylineTool
         string ImportFasta(string textFasta, string keepEmptyProteins = null);
 
         // 3-arg methods
-        string ExportReport(string reportName, string filePath, string culture);
-        string ExportReportFromDefinition(string json, string filePath, string culture);
-        string GetTutorial(string name, string language = "en", string filePath = null);
+        ReportMetadata ExportReport(string reportName, string filePath, string culture);
+        ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture);
+        TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null);
 
         // 4-arg methods
-        string GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null);
+        TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null);
     }
 
     /// <summary>

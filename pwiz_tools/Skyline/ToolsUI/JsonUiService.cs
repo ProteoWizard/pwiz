@@ -75,10 +75,12 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Executes a function on the UI thread and returns the result.
+        /// Must be called from a background thread (pipe server thread).
         /// Exceptions propagate to the caller.
         /// </summary>
         public static string InvokeOnUiThread(Func<string> func)
         {
+            Assume.IsTrue(Program.MainWindow.InvokeRequired);
             string result = null;
             Program.MainWindow.Invoke(new Action(() =>
             {
