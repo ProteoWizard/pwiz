@@ -214,6 +214,20 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_add_settings_list_item"),
+     Description("Add a new settings item to a Skyline settings list. " +
+        "Use skyline_get_settings_list_item to see the XML format for existing items, " +
+        "then modify the XML for a new item. Rejects duplicates unless overwrite is true.")]
+    public static string AddSettingsListItem(
+        [Description("The settings list type (e.g., 'Enzymes', 'Structural Modifications')")] string listType,
+        [Description("XML definition of the settings item")] string itemXml,
+        [Description("Set to true to replace an existing item with the same name")] bool overwrite = false)
+    {
+        return Invoke(connection => overwrite
+            ? connection.Call(nameof(IJsonToolService.AddSettingsListItem), listType, itemXml, "true")
+            : connection.Call(nameof(IJsonToolService.AddSettingsListItem), listType, itemXml));
+    }
+
     [McpServerTool(Name = "skyline_run_command"),
      Description("Run a command line against the running Skyline instance. Uses the same command syntax as SkylineCmd/SkylineRunner. Commands are echoed to Skyline's Immediate Window for user visibility. Examples: '--report-name=\"Peak Area\" --report-file=output.csv', '--import-file=results.raw', '--refine-cv-remove-above-cutoff=20'. Use '--help' to see all available commands.")]
     public static string RunCommand(

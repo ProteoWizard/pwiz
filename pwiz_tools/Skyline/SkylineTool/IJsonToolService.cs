@@ -83,6 +83,7 @@ namespace SkylineTool
         ReportMetadata ExportReport(string reportName, string filePath, string culture);
         ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture);
         TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null);
+        string AddSettingsListItem(string listType, string itemXml, bool overwrite = false);
 
         // 4-arg methods
         TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null);

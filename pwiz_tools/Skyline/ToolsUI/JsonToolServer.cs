@@ -720,6 +720,59 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Item not found:", itemName));
         }
 
+        public string AddSettingsListItem(string listType, string itemXml, bool overwrite = false)
+        {
+            string propName = ResolveLlmListType(listType);
+            if (propName == nameof(PersistedViews))
+            {
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(
+                    @"Use skyline_add_report to add reports, not AddSettingsListItem."));
+            }
+
+            var prop = typeof(Settings).GetProperty(propName);
+            if (prop == null)
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Unknown settings list type:", listType));
+            var value = prop.GetValue(Settings.Default);
+            if (value == null)
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Settings list is null:", listType));
+
+            Type itemType = GetSettingsListItemType(prop.PropertyType);
+            if (itemType == null)
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Cannot determine item type for:", listType));
+
+            object item = DeserializeSettingsItem(itemType, itemXml);
+
+            var keyContainer = (IKeyContainer<string>)item;
+            string itemName = keyContainer.GetKey();
+
+            bool exists = false;
+            foreach (var existing in (IEnumerable)value)
+            {
+                if (existing is IKeyContainer<string> kc && kc.GetKey() == itemName)
+                {
+                    exists = true;
+                    break;
+                }
+            }
+
+            if (exists && !overwrite)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Item {0} already exists in {1}. Set overwrite to true to replace it.",
+                    itemName.SingleQuote(), listType));
+            }
+
+            // MappedList.InsertItem handles upsert (removes existing key before inserting)
+            var addMethod = value.GetType().GetMethod(@"Add", new[] { itemType });
+            if (addMethod == null)
+                throw new InvalidOperationException(LlmInstruction.SpaceSeparate(@"No Add method found on:", value.GetType().Name));
+            addMethod.Invoke(value, new[] { item });
+
+            return exists
+                ? LlmInstruction.Format(@"Replaced {0} in {1}.", itemName.SingleQuote(), listType)
+                : LlmInstruction.Format(@"Added {0} to {1}.", itemName.SingleQuote(), listType);
+        }
+
         public TutorialMetadata GetTutorial(string name, string language = @"en", string filePath = null)
         {
             return JsonTutorialCatalog.FetchTutorial(name, language, filePath);
@@ -1403,6 +1456,42 @@ namespace pwiz.Skyline.ToolsUI
                 writer.WriteEndElement();
             }
             return sb.ToString();
+        }
+
+        private static Type GetSettingsListItemType(Type listType)
+        {
+            var type = listType;
+            while (type != null)
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SettingsListBase<>))
+                    return type.GetGenericArguments()[0];
+                type = type.BaseType;
+            }
+            return null;
+        }
+
+        private static object DeserializeSettingsItem(Type itemType, string xml)
+        {
+            if (!xml.TrimStart().StartsWith(@"<"))
+            {
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(
+                    @"Expected XML content but received:",
+                    xml.Substring(0, Math.Min(50, xml.Length))));
+            }
+
+            using (var reader = XmlReader.Create(new StringReader(xml)))
+            {
+                reader.MoveToContent();
+                var deserialize = itemType.GetMethod(@"Deserialize",
+                    BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(XmlReader) }, null);
+                if (deserialize == null)
+                {
+                    throw new InvalidOperationException(LlmInstruction.SpaceSeparate(
+                        @"No static Deserialize(XmlReader) method found on:", itemType.Name));
+                }
+                return deserialize.Invoke(null, new object[] { reader });
+            }
         }
 
         /// <summary>

@@ -100,6 +100,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Document-modifying tools
             TestAddReport(server);
+            TestAddSettingsListItem(server);
             TestInsertSmallMoleculeTransitionList(server);
             TestImportProperties(server);
             var doc = TestImportFasta(server);
@@ -1174,6 +1175,68 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsNotNull(viewSpec, @"Molecule report should be persisted");
             AssertEx.AreEqual(UiModes.SMALL_MOLECULES, viewSpec?.UiMode,
                 @"Report should have small_molecules uimode matching current SkylineWindow mode");
+        }
+
+        private void TestAddSettingsListItem(JsonToolServer server)
+        {
+            string enzymesName = JsonToolServer.GetSettingsListName<EnzymeList>();
+
+            // Get an existing enzyme's XML to use as a template for the roundtrip format
+            var defaultEnzyme = EnzymeList.GetDefault();
+            string templateXml = server.GetSettingsListItem(enzymesName, defaultEnzyme.GetKey());
+
+            // Create a new enzyme, get its XML via GetSettingsListItem on a temp add,
+            // then verify full roundtrip through AddSettingsListItem
+            var enzyme = new Enzyme(@"TestMcpEnzyme", @"KR", @"P");
+            // Serialize using the same path as GetSettingsListItem (add, retrieve, remove, re-add)
+            Settings.Default.EnzymeList.Add(enzyme);
+            string enzymeXml = server.GetSettingsListItem(enzymesName, enzyme.GetKey());
+            Settings.Default.EnzymeList.Remove(enzyme);
+
+            // Add via AddSettingsListItem and verify typed roundtrip
+            string result = server.AddSettingsListItem(enzymesName, enzymeXml);
+            AssertEx.Contains(result, enzyme.Name);
+            AssertEx.IsTrue(Settings.Default.EnzymeList.TryGetValue(enzyme.GetKey(), out var retrieved));
+            AssertEx.Cloned(enzyme, retrieved);
+
+            // Verify XML roundtrip
+            string retrievedXml = server.GetSettingsListItem(enzymesName, enzyme.GetKey());
+            AssertEx.NoDiff(enzymeXml, retrievedXml);
+
+            // Verify it appears in names list
+            AssertEx.Contains(server.GetSettingsListNames(enzymesName), enzyme.Name);
+
+            // Error: duplicate name without overwrite
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.AddSettingsListItem(enzymesName, enzymeXml));
+
+            // Overwrite: replace existing item
+            string overwriteResult = server.AddSettingsListItem(enzymesName, enzymeXml, true);
+            AssertEx.Contains(overwriteResult, enzyme.Name);
+
+            // Error: invalid XML
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.AddSettingsListItem(enzymesName, @"not xml"));
+
+            // Error: PersistedViews should redirect to skyline_add_report
+            string reportsName = JsonToolServer.GetSettingsListName<PersistedViews>();
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.AddSettingsListItem(reportsName, @"<view />"));
+
+            // Error: unknown list type
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.AddSettingsListItem(@"NonexistentList", @"<item />"));
+
+            // Add a structural modification to verify a second list type works
+            string structModsName = JsonToolServer.GetSettingsListName<StaticModList>();
+            var mod = new StaticMod(@"TestMcpMod", @"C", null, @"C2H3NO");
+            Settings.Default.StaticModList.Add(mod);
+            string modXml = server.GetSettingsListItem(structModsName, mod.GetKey());
+            Settings.Default.StaticModList.Remove(mod);
+
+            server.AddSettingsListItem(structModsName, modXml);
+            AssertEx.IsTrue(Settings.Default.StaticModList.TryGetValue(mod.GetKey(), out var retrievedMod));
+            AssertEx.Cloned(mod, retrievedMod);
         }
 
         private void TestInsertSmallMoleculeTransitionList(JsonToolServer server)
