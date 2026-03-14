@@ -900,7 +900,16 @@ namespace pwiz.Skyline.ToolsUI {
                 return ResourceManager.GetString("ToolService_ImportProperties_Import_Properties_from_external_tool", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Run command.
+        /// </summary>
+        public static string ToolService_RunCommand_Run_command {
+            get {
+                return ResourceManager.GetString("ToolService_RunCommand_Run_command", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Downloading {0}.
         /// </summary>

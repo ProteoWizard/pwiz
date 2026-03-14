@@ -22,9 +22,11 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.SettingsUI;
+using SkylineTool;
 
 namespace pwiz.Skyline.Properties
 {
+    [LlmName("Metadata Rule Sets")]
     public class MetadataRuleSetList : SettingsList<MetadataRuleSet>
     {
         public override IEnumerable<MetadataRuleSet> GetDefaults(int revisionIndex)

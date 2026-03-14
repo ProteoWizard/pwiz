@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>SkylineAiConnector</RootNamespace>
+    <AssemblyName>SkylineAiConnector</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ApplicationIcon>SkylineAiConnector.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\SkylineTool\SkylineTool.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <!-- Build the MCP server (net8.0) before packaging, since cross-targeting
+       prevents a normal ProjectReference from net472 to net8.0 -->
+  <Target Name="BuildMcpServer" BeforeTargets="PackageToolZip">
+    <MSBuild Projects="$(MSBuildProjectDirectory)\..\SkylineMcpServer\SkylineMcpServer.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)" />
+  </Target>
+
+  <!-- Package the Skyline External Tool ZIP after build -->
+  <Target Name="PackageToolZip" AfterTargets="Build">
+    <PropertyGroup>
+      <_ToolZipDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineMcp\</_ToolZipDir>
+      <_ToolZipPath>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineAiConnector.zip</_ToolZipPath>
+      <_ConnectorBinDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\</_ConnectorBinDir>
+      <_McpServerBinDir>$(MSBuildProjectDirectory)\..\SkylineMcpServer\bin\$(Configuration)\net8.0-windows\win-x64\</_McpServerBinDir>
+    </PropertyGroup>
+
+    <!-- Clean staging directory -->
+    <RemoveDir Directories="$(_ToolZipDir)" />
+    <MakeDir Directories="$(_ToolZipDir)" />
+    <MakeDir Directories="$(_ToolZipDir)tool-inf\" />
+    <MakeDir Directories="$(_ToolZipDir)mcp-server\" />
+
+    <!-- Copy connector output (exe + all dependencies) -->
+    <ItemGroup>
+      <ConnectorFiles Include="$(_ConnectorBinDir)*.exe;$(_ConnectorBinDir)*.dll;$(_ConnectorBinDir)*.config" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ConnectorFiles)" DestinationFolder="$(_ToolZipDir)" />
+
+    <!-- Copy tool-inf (recursive to include docs/ subdirectory) -->
+    <ItemGroup>
+      <ToolInfFiles Include="$(MSBuildProjectDirectory)\tool-inf\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ToolInfFiles)" DestinationFolder="$(_ToolZipDir)tool-inf\%(RecursiveDir)" />
+
+    <!-- Stamp version into staged info.properties, reading the exact string
+         from AssemblyInfo.cs to preserve leading zeros (e.g. 26.1.1.070) -->
+    <Exec Command="powershell -NoProfile -Command &quot;$v = (Select-String -Path '$(MSBuildProjectDirectory)\Properties\AssemblyInfo.cs' -Pattern 'AssemblyVersion\(\&quot;(.+?)\&quot;\)').Matches[0].Groups[1].Value; (Get-Content '$(_ToolZipDir)tool-inf\info.properties') -replace '\$\{version\}',$v | Set-Content '$(_ToolZipDir)tool-inf\info.properties'&quot;" />
+
+    <!-- Copy MCP server output -->
+    <ItemGroup>
+      <McpServerFiles Include="$(_McpServerBinDir)*.exe;$(_McpServerBinDir)*.dll;$(_McpServerBinDir)*.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(McpServerFiles)" DestinationFolder="$(_ToolZipDir)mcp-server\" />
+
+    <!-- Create ZIP (delete existing first) -->
+    <Delete Files="$(_ToolZipPath)" Condition="Exists('$(_ToolZipPath)')" />
+    <ZipDirectory SourceDirectory="$(_ToolZipDir)" DestinationFile="$(_ToolZipPath)" />
+
+    <Message Importance="high" Text="Tool ZIP created: $(_ToolZipPath)" />
+  </Target>
+
+</Project>

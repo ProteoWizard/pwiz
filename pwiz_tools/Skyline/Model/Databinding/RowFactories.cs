@@ -180,11 +180,12 @@ namespace pwiz.Skyline.Model.Databinding
 
             var viewInfo = new ViewInfo(DataSchema, factory.ItemType, viewSpec);
             ExportReport(CancellationToken, stream, viewInfo, layout, factory, rowItemExporter, progressMonitor, ref status);
-
         }
 
-        public static void ExportReport(CancellationToken cancellationToken, Stream stream, ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
-            IReportExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public static void ExportReport(CancellationToken cancellationToken, Stream stream,
+            ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
+            IReportExporter rowItemExporter, IProgressMonitor progressMonitor,
+            ref IProgressStatus status)
         {
             RowItemEnumerator rowItemEnumerator = null;
             if (layout == null || layout.RowTransforms.Count == 0)

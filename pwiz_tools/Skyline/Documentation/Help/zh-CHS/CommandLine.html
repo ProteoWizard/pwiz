@@ -46,9 +46,11 @@ td {
 <table>
 <tr><th>参数</th><th>描述</th></tr>
 <tr><td><nobr>--in</nobr>=路径/到/文件.sky</td><td>打开 Skyline 文件</td></tr>
+<tr><td><nobr>--open</nobr>=路径/到/文件.sky</td><td>Synonym for <nobr>--in</nobr>. Open a Skyline file.</td></tr>
 <tr><td><nobr>--save</nobr></td><td>保存对文件的任何更改</td></tr>
 <tr><td><nobr>--save-settings</nobr></td><td>让设置更改为全局环境，例如 添加的报告、库、酶等，以保存到程序配置文件中。</td></tr>
 <tr><td><nobr>--out</nobr>=路径/到/文件.sky</td><td>与“保存”相同，但会写入指定的文件</td></tr>
+<tr><td><nobr>--save-as</nobr>=路径/到/文件.sky</td><td>Synonym for <nobr>--out</nobr>. Save to the specified file.</td></tr>
 <tr><td><nobr>--new</nobr>=路径/到/文件.sky</td><td>使用当前的 Skyline 设置创建新文档。</td></tr>
 <tr><td><nobr>--overwrite</nobr></td><td>如果 <nobr>--new</nobr> 指定的文件路径已存在，则覆盖该文件路径且不报错。</td></tr>
 <tr><td><nobr>--share-zip</nobr>[=路径/到/文件.sky.zip]</td><td>将整个项目（文档、结果、库等）保存到 ZIP 档案。默认为最小档案。</td></tr>
@@ -58,7 +60,7 @@ td {
 <tr><td><nobr>--timestamp</nobr></td><td>所有日志记录输出都将以时间和日期作为开头。</td></tr>
 <tr><td><nobr>--memstamp</nobr></td><td>所有日志记录输出都将以两个受控内存使用值作为开头，并以 MB 为单位处理专用字节（四舍五入到最接近的数字）。</td></tr>
 <tr><td><nobr>--log-file</nobr>=路径/到/文件</td><td>将所有记录的输出发送到文件。</td></tr>
-<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr>&gt;]</td><td>显示此文本。</td></tr>
+<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr> | sections&gt;]</td><td>显示此文本。</td></tr>
 <tr><td><nobr>--version</nobr></td><td>发出正在运行的安装的版本信息</td></tr>
 <tr><td><nobr>--verbose-errors</nobr></td><td>请在出错时为程序输出添加额外信息，此举可能对 Skyline 开发人员有所帮助。</td></tr>
 </table>
