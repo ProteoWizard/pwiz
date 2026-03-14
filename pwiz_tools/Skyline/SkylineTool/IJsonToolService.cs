@@ -107,24 +107,6 @@ namespace SkylineTool
             log,                                                      // diagnostic log
         }
 
-        /// <summary>Report metadata and definition property names.</summary>
-        public enum REPORT
-        {
-            file_path, report_name, format, row_count, columns, preview,  // metadata
-            select, name, filter, sort, column, op, value, direction,     // definition
-            pivot_replicate, pivot_isotope_label,                         // pivot
-            uimode,                                                       // UI mode
-        }
-
-        /// <summary>Tutorial metadata property names.</summary>
-        public enum TUTORIAL
-        {
-            title, tutorial, language, line_count, toc,    // tutorial metadata
-            heading, level, line,                          // TOC entries
-            image,                                         // tutorial image
-            file_path,                                     // shared with REPORT
-        }
-
         // ReSharper restore InconsistentNaming
 
         // --- API value constants ---

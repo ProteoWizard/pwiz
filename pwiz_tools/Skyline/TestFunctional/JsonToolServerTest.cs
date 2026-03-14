@@ -48,7 +48,6 @@ using pwiz.SkylineTestUtil;
 using SkylineTool;
 using JSON = SkylineTool.JsonToolConstants.JSON;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
-using REPORT = SkylineTool.JsonToolConstants.REPORT;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
 
 namespace pwiz.SkylineTestFunctional
@@ -730,17 +729,6 @@ namespace pwiz.SkylineTestFunctional
             return new ReportDefinition { Select = columns, PivotReplicate = true };
         }
 
-        /// <summary>
-        /// Builds a JSON string for wire-protocol tests that go through HandleRequest.
-        /// </summary>
-        private static string BuildSelectJson(params string[] columns)
-        {
-            return new JObject
-            {
-                [nameof(REPORT.select)] = new JArray(columns)
-            }.ToString();
-        }
-
         private void TestDocumentSettings(JsonToolServer server)
         {
             string elementName = typeof(SrmSettings)
@@ -826,7 +814,7 @@ namespace pwiz.SkylineTestFunctional
 
             // ExportReportFromDefinition with logging - log field should appear
             string reportPath = TestFilesDir.GetTestPath(@"report_log_test.csv");
-            string reportJson = BuildSelectJson(COL_PROTEIN_NAME, COL_PRECURSOR_MZ);
+            string reportJson = new JObject { [@"select"] = new JArray(COL_PROTEIN_NAME, COL_PRECURSOR_MZ) }.ToString();
             var reportRequest = new JObject
             {
                 [nameof(JSON.method)] = nameof(IJsonToolService.ExportReportFromDefinition),
