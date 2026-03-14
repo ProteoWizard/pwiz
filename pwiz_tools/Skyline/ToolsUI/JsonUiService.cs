@@ -321,7 +321,11 @@ namespace pwiz.Skyline.ToolsUI
                 // Check permission (dialog may appear over the target form)
                 bool dialogShown = ScreenCapture.EnsurePermission(out bool wasFirstPrompt);
                 if (!dialogShown)
-                    return @"Screen capture denied by user.";
+                    return new LlmInstruction(@"Screen capture denied by user.");
+
+                // Check desktop availability before attempting capture
+                if (!ScreenCapture.IsDesktopAvailable())
+                    return new LlmInstruction(@"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.");
 
                 // Activate the form
                 ScreenCapture.ActivateForm(form);

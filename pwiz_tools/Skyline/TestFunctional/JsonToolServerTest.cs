@@ -879,6 +879,8 @@ namespace pwiz.SkylineTestFunctional
                 .First(l => l.Contains(nameof(SequenceTreeForm)))
                 .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
 
+            bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
+
             // Test Deny - dialog should return denial message
             // Run server call on a background thread (like the real pipe server thread)
             // so InvokeOnUiThread marshals to the UI thread correctly.
@@ -900,14 +902,24 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(dlg.DoNotAskAgain);
             OkDialog(dlg);
             WaitForCondition(() => allowResult != null);
-            // After Allow, file should be created (content may be blank in offscreen mode)
-            Assert.IsTrue(File.Exists(allowPath));
-            Assert.IsTrue(new FileInfo(allowPath).Length > 0);
+            if (desktopAvailable)
+            {
+                // After Allow, file should be created
+                Assert.IsTrue(File.Exists(allowPath));
+                Assert.IsTrue(new FileInfo(allowPath).Length > 0);
+            }
+            else
+            {
+                AssertEx.Contains(allowResult, @"not available");
+            }
 
             // Session permission is now granted - subsequent calls should not show dialog
             string sessionPath = TestFilesDir.GetTestPath(@"session_test.png");
             string sessionResult = server.GetFormImage(formId, sessionPath);
-            Assert.IsTrue(File.Exists(sessionPath));
+            if (desktopAvailable)
+                Assert.IsTrue(File.Exists(sessionPath));
+            else
+                AssertEx.Contains(sessionResult, @"not available");
 
             // Test Allow + DoNotAskAgain - should persist the setting
             RunUI(() =>
@@ -923,7 +935,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => dlg.DoNotAskAgain = true);
             OkDialog(dlg);
             WaitForCondition(() => persistResult != null);
-            Assert.IsTrue(File.Exists(persistPath));
+            if (desktopAvailable)
+                Assert.IsTrue(File.Exists(persistPath));
+            else
+                AssertEx.Contains(persistResult, @"not available");
             Assert.IsTrue(Settings.Default.AllowMcpScreenCapture);
 
             // Clean up setting for other tests
@@ -946,30 +961,39 @@ namespace pwiz.SkylineTestFunctional
             string imageName = @"form_image_test.png";
             string imagePath = TestFilesDir.GetTestPath(imageName);
 
+            bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
+
             string result = server.GetFormImage(formId, imagePath);
-            Assert.IsTrue(File.Exists(imagePath));
-            Assert.IsTrue(new FileInfo(imagePath).Length > 0);
-            // Result should be the file path (forward-slash format)
-            AssertEx.Contains(result, imageName);
+            if (desktopAvailable)
+            {
+                Assert.IsTrue(File.Exists(imagePath));
+                Assert.IsTrue(new FileInfo(imagePath).Length > 0);
+                // Result should be the file path (forward-slash format)
+                AssertEx.Contains(result, imageName);
 
-            // Verify the image is valid by loading it
-            using (var img = Image.FromFile(imagePath))
-            {
-                Assert.IsTrue(img.Width > 0);
-                Assert.IsTrue(img.Height > 0);
-            }
+                // Verify the image is valid by loading it
+                using (var img = Image.FromFile(imagePath))
+                {
+                    Assert.IsTrue(img.Width > 0);
+                    Assert.IsTrue(img.Height > 0);
+                }
 
-            // Auto-generated path (null filePath) - exercise default path logic
-            string autoImagePath = null;
-            try
-            {
-                autoImagePath = server.GetFormImage(formId);
-                Assert.IsTrue(File.Exists(autoImagePath));
+                // Auto-generated path (null filePath) - exercise default path logic
+                string autoImagePath = null;
+                try
+                {
+                    autoImagePath = server.GetFormImage(formId);
+                    Assert.IsTrue(File.Exists(autoImagePath));
+                }
+                finally
+                {
+                    if (autoImagePath != null)
+                        FileEx.SafeDelete(autoImagePath);
+                }
             }
-            finally
+            else
             {
-                if (autoImagePath != null)
-                    FileEx.SafeDelete(autoImagePath);
+                AssertEx.Contains(result, @"not available");
             }
 
             // Error: invalid form ID

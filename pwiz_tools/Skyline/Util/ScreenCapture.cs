@@ -136,14 +136,41 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Returns true if the desktop is available for screen capture.
+        /// False in Docker containers, disconnected Remote Desktop sessions, etc.
+        /// </summary>
+        public static bool IsDesktopAvailable()
+        {
+            try
+            {
+                using var bmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
+                using var g = Graphics.FromImage(bmp);
+                g.CopyFromScreen(0, 0, 0, 0, new Size(1, 1));
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Captures a raw screen region as a bitmap.
         /// </summary>
         public static Bitmap CaptureScreen(Rectangle screenRect)
         {
             var bmp = new Bitmap(screenRect.Width, screenRect.Height, PixelFormat.Format32bppArgb);
-            using (var g = Graphics.FromImage(bmp))
+            try
             {
-                g.CopyFromScreen(screenRect.Location, Point.Empty, screenRect.Size);
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.CopyFromScreen(screenRect.Location, Point.Empty, screenRect.Size);
+                }
+            }
+            catch (Exception)
+            {
+                // CopyFromScreen can fail if the desktop session disconnects mid-capture
+                // (e.g. Remote Desktop disconnect). Return blank bitmap rather than crashing.
             }
             return bmp;
         }
