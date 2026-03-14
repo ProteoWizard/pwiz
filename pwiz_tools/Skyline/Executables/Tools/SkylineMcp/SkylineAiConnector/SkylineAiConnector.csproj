@@ -3,11 +3,12 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net472</TargetFramework>
-    <RootNamespace>SkylineMcpConnector</RootNamespace>
-    <AssemblyName>SkylineMcpConnector</AssemblyName>
+    <RootNamespace>SkylineAiConnector</RootNamespace>
+    <AssemblyName>SkylineAiConnector</AssemblyName>
     <LangVersion>latest</LangVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <ApplicationIcon>SkylineMcpConnector.ico</ApplicationIcon>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ApplicationIcon>SkylineAiConnector.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,7 +36,7 @@
   <Target Name="PackageToolZip" AfterTargets="Build">
     <PropertyGroup>
       <_ToolZipDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineMcp\</_ToolZipDir>
-      <_ToolZipPath>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineMcp.zip</_ToolZipPath>
+      <_ToolZipPath>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineAiConnector.zip</_ToolZipPath>
       <_ConnectorBinDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\</_ConnectorBinDir>
       <_McpServerBinDir>$(MSBuildProjectDirectory)\..\SkylineMcpServer\bin\$(Configuration)\net8.0-windows\win-x64\</_McpServerBinDir>
     </PropertyGroup>
@@ -52,11 +53,15 @@
     </ItemGroup>
     <Copy SourceFiles="@(ConnectorFiles)" DestinationFolder="$(_ToolZipDir)" />
 
-    <!-- Copy tool-inf -->
+    <!-- Copy tool-inf (recursive to include docs/ subdirectory) -->
     <ItemGroup>
-      <ToolInfFiles Include="$(MSBuildProjectDirectory)\tool-inf\*" />
+      <ToolInfFiles Include="$(MSBuildProjectDirectory)\tool-inf\**\*" />
     </ItemGroup>
-    <Copy SourceFiles="@(ToolInfFiles)" DestinationFolder="$(_ToolZipDir)tool-inf\" />
+    <Copy SourceFiles="@(ToolInfFiles)" DestinationFolder="$(_ToolZipDir)tool-inf\%(RecursiveDir)" />
+
+    <!-- Stamp version into staged info.properties, reading the exact string
+         from AssemblyInfo.cs to preserve leading zeros (e.g. 26.1.1.070) -->
+    <Exec Command="powershell -NoProfile -Command &quot;$v = (Select-String -Path '$(MSBuildProjectDirectory)\Properties\AssemblyInfo.cs' -Pattern 'AssemblyVersion\(\&quot;(.+?)\&quot;\)').Matches[0].Groups[1].Value; (Get-Content '$(_ToolZipDir)tool-inf\info.properties') -replace '\$\{version\}',$v | Set-Content '$(_ToolZipDir)tool-inf\info.properties'&quot;" />
 
     <!-- Copy MCP server output -->
     <ItemGroup>

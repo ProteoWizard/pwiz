@@ -21,7 +21,7 @@ using System;
 using System.IO;
 using SkylineTool;
 
-namespace SkylineMcpConnector
+namespace SkylineAiConnector
 {
     public static class McpServerDeployer
     {

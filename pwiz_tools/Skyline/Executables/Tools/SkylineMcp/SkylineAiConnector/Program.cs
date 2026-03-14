@@ -20,7 +20,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace SkylineMcpConnector
+namespace SkylineAiConnector
 {
     static class Program
     {

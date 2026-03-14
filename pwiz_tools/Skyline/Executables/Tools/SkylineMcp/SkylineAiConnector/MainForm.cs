@@ -28,7 +28,7 @@ using SkylineTool;
 using Timer = System.Windows.Forms.Timer;
 using Version = SkylineTool.Version;
 
-namespace SkylineMcpConnector
+namespace SkylineAiConnector
 {
     public partial class MainForm : Form
     {

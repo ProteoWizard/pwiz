@@ -24,7 +24,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using SkylineTool;
 
-namespace SkylineMcpConnector
+namespace SkylineAiConnector
 {
     public class ConnectionInfo
     {
