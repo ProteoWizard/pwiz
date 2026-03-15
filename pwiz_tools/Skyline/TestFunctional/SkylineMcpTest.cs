@@ -22,6 +22,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
@@ -44,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private const int EXPECTED_TOOL_COUNT = 35;
+        private const int EXPECTED_TOOL_COUNT = 36;
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -140,6 +141,8 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };

@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 using System;
+using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -35,6 +36,11 @@ public static class Program
 
     public static async System.Threading.Tasks.Task Main(string[] args)
     {
+        // MCP JSON-RPC over stdio requires UTF-8. Windows defaults to the system's
+        // OEM code page, which corrupts non-ASCII characters (e.g. paths with accented letters).
+        Console.InputEncoding = Encoding.UTF8;
+        Console.OutputEncoding = Encoding.UTF8;
+
         FunctionalTest = Environment.GetEnvironmentVariable("SKYLINE_MCP_TEST") == "1" ||
                          Array.Exists(args, a => a == "--test");
 
