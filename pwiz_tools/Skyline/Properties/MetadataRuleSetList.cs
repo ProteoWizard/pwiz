@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;

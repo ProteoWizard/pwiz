@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
