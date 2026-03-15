@@ -3367,6 +3367,12 @@
     <EmbeddedResource Include="Menus\ContextMenuControl.resx">
       <DependentUpon>ContextMenuControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ContextMenuControl.ja.resx">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ContextMenuControl.zh-CHS.resx">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Menus\DetectionsContextMenu.ja.resx">
       <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
       <SubType>Designer</SubType>

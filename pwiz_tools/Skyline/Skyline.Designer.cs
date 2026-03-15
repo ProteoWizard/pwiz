@@ -37,8 +37,6 @@ namespace pwiz.Skyline
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineWindow));
-            this.selectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.synchronizeSummaryZoomingContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicatesRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.averageReplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleReplicateRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -54,7 +52,6 @@ namespace pwiz.Skyline
             this.scopeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentScopeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.proteinScopeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupReplicatesByContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupByReplicateContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -175,21 +172,7 @@ namespace pwiz.Skyline
             this.mainToolStrip.SuspendLayout();
             this.menuMain.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // selectionContextMenuItem
-            // 
-            this.selectionContextMenuItem.CheckOnClick = true;
-            this.selectionContextMenuItem.Name = "selectionContextMenuItem";
-            resources.ApplyResources(this.selectionContextMenuItem, "selectionContextMenuItem");
-            this.selectionContextMenuItem.Click += new System.EventHandler(this.selectionContextMenuItem_Click);
-            // 
-            // synchronizeSummaryZoomingContextMenuItem
-            // 
-            this.synchronizeSummaryZoomingContextMenuItem.CheckOnClick = true;
-            this.synchronizeSummaryZoomingContextMenuItem.Name = "synchronizeSummaryZoomingContextMenuItem";
-            resources.ApplyResources(this.synchronizeSummaryZoomingContextMenuItem, "synchronizeSummaryZoomingContextMenuItem");
-            this.synchronizeSummaryZoomingContextMenuItem.Click += new System.EventHandler(this.synchronizeSummaryZoomingContextMenuItem_Click);
-            // 
+            //
             // replicatesRTContextMenuItem
             // 
             this.replicatesRTContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -293,14 +276,7 @@ namespace pwiz.Skyline
             this.proteinScopeContextMenuItem.Name = "proteinScopeContextMenuItem";
             resources.ApplyResources(this.proteinScopeContextMenuItem, "proteinScopeContextMenuItem");
             this.proteinScopeContextMenuItem.Click += new System.EventHandler(this.proteinScopeContextMenuItem_Click);
-            // 
-            // peptideCvsContextMenuItem
-            // 
-            this.peptideCvsContextMenuItem.CheckOnClick = true;
-            this.peptideCvsContextMenuItem.Name = "peptideCvsContextMenuItem";
-            resources.ApplyResources(this.peptideCvsContextMenuItem, "peptideCvsContextMenuItem");
-            this.peptideCvsContextMenuItem.Click += new System.EventHandler(this.peptideCvsContextMenuItem_Click);
-            // 
+            //
             // groupReplicatesByContextMenuItem
             // 
             this.groupReplicatesByContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1204,11 +1180,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem peptideOrderDocumentContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderRTContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderAreaContextMenuItem;
-        internal System.Windows.Forms.ToolStripMenuItem peptideCvsContextMenuItem;
+
         private System.Windows.Forms.ToolStripMenuItem documentSettingsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refineToolStripMenuItem;
-        internal System.Windows.Forms.ToolStripMenuItem selectionContextMenuItem;
-        internal System.Windows.Forms.ToolStripMenuItem synchronizeSummaryZoomingContextMenuItem;
+
         private System.Windows.Forms.ToolStripMenuItem shareDocumentMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator37;
         private System.Windows.Forms.ToolStripMenuItem integrateAllMenuItem;

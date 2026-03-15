@@ -120,7 +120,44 @@
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="selectionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="selectionContextMenuItem.Text" xml:space="preserve">
+    <value>Selection</value>
+  </data>
+  <data name="synchronizeSummaryZoomingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="synchronizeSummaryZoomingContextMenuItem.Text" xml:space="preserve">
+    <value>Synchronize Zooming</value>
+  </data>
+  <data name="peptideCvsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="peptideCvsContextMenuItem.Text" xml:space="preserve">
+    <value>CV Values</value>
+  </data>
   <metadata name="sharedContextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
+  <data name="&gt;&gt;selectionContextMenuItem.Name" xml:space="preserve">
+    <value>selectionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;selectionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;synchronizeSummaryZoomingContextMenuItem.Name" xml:space="preserve">
+    <value>synchronizeSummaryZoomingContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;synchronizeSummaryZoomingContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;peptideCvsContextMenuItem.Name" xml:space="preserve">
+    <value>peptideCvsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;peptideCvsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

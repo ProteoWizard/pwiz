@@ -2769,12 +2769,6 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void selectionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowReplicateSelection = selectionContextMenuItem.Checked;
-            UpdateSummaryGraphs();
-        }
-
         // refineRTContextMenuItem_Click, predictionRTContextMenuItem_Click moved to RetentionTimesContextMenu
 
         private void averageReplicatesContextMenuItem_Click(object sender, EventArgs e)
@@ -3156,12 +3150,6 @@ namespace pwiz.Skyline
             }
         }
 
-        void synchronizeSummaryZoomingContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.SynchronizeSummaryZooming = synchronizeSummaryZoomingContextMenuItem.Checked;
-            SynchronizeSummaryZooming();
-        }
-
         void GraphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
             // We pass in a GraphSummary here because sometimes dockPanel.ActiveContent is not the graph the user is zooming in on
@@ -3517,11 +3505,6 @@ namespace pwiz.Skyline
         {
             Settings.Default.RelativeAbundanceLogScale = isChecked ;
             UpdateRelativeAbundanceGraphs();
-        }
-
-        private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCVValues(peptideCvsContextMenuItem.Checked);
         }
 
         public void SetAreaProteinTargets(bool areaProteinTargets)

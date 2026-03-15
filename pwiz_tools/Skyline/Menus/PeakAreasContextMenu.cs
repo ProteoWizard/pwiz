@@ -187,8 +187,8 @@ namespace pwiz.Skyline.Menus
                     menuStrip.Items.Insert(iInsert++, areaCVLogScaleToolStripMenuItem);
                 }
 
-                SkylineWindow.selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, SkylineWindow.selectionContextMenuItem);
+                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
+                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
 
                 menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
                 menuStrip.Items.Insert(iInsert++, removeAboveCVCutoffToolStripMenuItem);
@@ -197,8 +197,8 @@ namespace pwiz.Skyline.Menus
             {
                 if (graphType == GraphTypeSummary.peptide || graphType == GraphTypeSummary.abundance || !string.IsNullOrEmpty(Settings.Default.GroupByReplicateAnnotation))
                 {
-                    menuStrip.Items.Insert(iInsert++, SkylineWindow.peptideCvsContextMenuItem);
-                    SkylineWindow.peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
+                    menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
+                    peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
                 }
 
                 if (graphType != GraphTypeSummary.abundance)
@@ -211,8 +211,8 @@ namespace pwiz.Skyline.Menus
                     menuStrip.Items.Insert(iInsert++, relativeAbundanceLogScaleContextMenuItem);
                     relativeAbundanceLogScaleContextMenuItem.Checked = set.RelativeAbundanceLogScale;
                 }
-                SkylineWindow.selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, SkylineWindow.selectionContextMenuItem);
+                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
+                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
                 if (graphType == GraphTypeSummary.abundance)
                 {
                     menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels, null, OnLabelOverlapClick)
@@ -230,8 +230,8 @@ namespace pwiz.Skyline.Menus
                 }
                 else
                 {
-                    SkylineWindow.synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                    menuStrip.Items.Insert(iInsert++, SkylineWindow.synchronizeSummaryZoomingContextMenuItem);
+                    synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
+                    menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
                 }
             }
 

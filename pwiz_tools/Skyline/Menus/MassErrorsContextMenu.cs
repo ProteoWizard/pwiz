@@ -91,17 +91,17 @@ namespace pwiz.Skyline.Menus
             }
             if (graphType == GraphTypeSummary.peptide || (null != Settings.Default.GroupByReplicateAnnotation && graphType == GraphTypeSummary.replicate))
             {
-                menuStrip.Items.Insert(iInsert++, SkylineWindow.peptideCvsContextMenuItem);
-                SkylineWindow.peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
+                menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
+                peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
             }
 
             if (graphType == GraphTypeSummary.peptide ||
                 graphType == GraphTypeSummary.replicate)
             {
-                SkylineWindow.selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, SkylineWindow.selectionContextMenuItem);
-                SkylineWindow.synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                menuStrip.Items.Insert(iInsert++, SkylineWindow.synchronizeSummaryZoomingContextMenuItem);
+                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
+                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
+                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
+                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
             }
 
             menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());

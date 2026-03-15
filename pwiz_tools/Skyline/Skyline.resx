@@ -121,18 +121,6 @@
     <value>17, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="selectionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="selectionContextMenuItem.Text" xml:space="preserve">
-    <value>Selection</value>
-  </data>
-  <data name="synchronizeSummaryZoomingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="synchronizeSummaryZoomingContextMenuItem.Text" xml:space="preserve">
-    <value>Synchronize Zooming</value>
-  </data>
   <data name="averageReplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 22</value>
   </data>
@@ -228,12 +216,6 @@
   </data>
   <data name="scopeContextMenuItem.Text" xml:space="preserve">
     <value>Scope</value>
-  </data>
-  <data name="peptideCvsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="peptideCvsContextMenuItem.Text" xml:space="preserve">
-    <value>CV Values</value>
   </data>
   <data name="toolStripSeparator28.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
@@ -1101,18 +1083,6 @@
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=26.1.1.69, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;selectionContextMenuItem.Name" xml:space="preserve">
-    <value>selectionContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;selectionContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;synchronizeSummaryZoomingContextMenuItem.Name" xml:space="preserve">
-    <value>synchronizeSummaryZoomingContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;synchronizeSummaryZoomingContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;replicatesRTContextMenuItem.Name" xml:space="preserve">
     <value>replicatesRTContextMenuItem</value>
   </data>
@@ -1213,12 +1183,6 @@
     <value>proteinScopeContextMenuItem</value>
   </data>
   <data name="&gt;&gt;proteinScopeContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;peptideCvsContextMenuItem.Name" xml:space="preserve">
-    <value>peptideCvsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;peptideCvsContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator28.Name" xml:space="preserve">
