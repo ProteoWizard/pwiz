@@ -60,9 +60,174 @@ namespace pwiz.Skyline.Menus
             this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuSpectrum.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
+            // ionTypesContextMenuItem
+            // 
+            this.ionTypesContextMenuItem.Name = "ionTypesContextMenuItem";
+            resources.ApplyResources(this.ionTypesContextMenuItem, "ionTypesContextMenuItem");
+            this.ionTypesContextMenuItem.DropDownOpening += new System.EventHandler(this.ionTypeMenuItem_DropDownOpening);
+            // 
+            // fragmentionsContextMenuItem
+            // 
+            this.fragmentionsContextMenuItem.CheckOnClick = true;
+            this.fragmentionsContextMenuItem.Name = "fragmentionsContextMenuItem";
+            resources.ApplyResources(this.fragmentionsContextMenuItem, "fragmentionsContextMenuItem");
+            this.fragmentionsContextMenuItem.Click += new System.EventHandler(this.fragmentsMenuItem_Click);
+            // 
+            // specialionsContextMenuItem
+            // 
+            this.specialionsContextMenuItem.CheckOnClick = true;
+            this.specialionsContextMenuItem.Name = "specialionsContextMenuItem";
+            resources.ApplyResources(this.specialionsContextMenuItem, "specialionsContextMenuItem");
+            this.specialionsContextMenuItem.Click += new System.EventHandler(this.specialionsContextMenuItem_Click);
+            // 
+            // precursorIonContextMenuItem
+            // 
+            this.precursorIonContextMenuItem.Name = "precursorIonContextMenuItem";
+            resources.ApplyResources(this.precursorIonContextMenuItem, "precursorIonContextMenuItem");
+            this.precursorIonContextMenuItem.Click += new System.EventHandler(this.precursorIonMenuItem_Click);
+            // 
+            // toolStripSeparator11
+            // 
+            this.toolStripSeparator11.Name = "toolStripSeparator11";
+            resources.ApplyResources(this.toolStripSeparator11, "toolStripSeparator11");
+            // 
+            // chargesContextMenuItem
+            // 
+            this.chargesContextMenuItem.Name = "chargesContextMenuItem";
+            resources.ApplyResources(this.chargesContextMenuItem, "chargesContextMenuItem");
+            this.chargesContextMenuItem.DropDownOpening += new System.EventHandler(this.chargesMenuItem_DropDownOpening);
+            // 
+            // toolStripSeparator12
+            // 
+            this.toolStripSeparator12.Name = "toolStripSeparator12";
+            resources.ApplyResources(this.toolStripSeparator12, "toolStripSeparator12");
+            // 
+            // ranksContextMenuItem
+            // 
+            this.ranksContextMenuItem.CheckOnClick = true;
+            this.ranksContextMenuItem.Name = "ranksContextMenuItem";
+            resources.ApplyResources(this.ranksContextMenuItem, "ranksContextMenuItem");
+            this.ranksContextMenuItem.Click += new System.EventHandler(this.ranksMenuItem_Click);
+            // 
+            // scoreContextMenuItem
+            // 
+            this.scoreContextMenuItem.CheckOnClick = true;
+            this.scoreContextMenuItem.Name = "scoreContextMenuItem";
+            resources.ApplyResources(this.scoreContextMenuItem, "scoreContextMenuItem");
+            this.scoreContextMenuItem.Click += new System.EventHandler(this.scoresContextMenuItem_Click);
+            // 
+            // massErrorToolStripMenuItem
+            // 
+            this.massErrorToolStripMenuItem.CheckOnClick = true;
+            this.massErrorToolStripMenuItem.Name = "massErrorToolStripMenuItem";
+            resources.ApplyResources(this.massErrorToolStripMenuItem, "massErrorToolStripMenuItem");
+            this.massErrorToolStripMenuItem.Click += new System.EventHandler(this.massErrorToolStripMenuItem_Click);
+            // 
+            // ionMzValuesContextMenuItem
+            // 
+            this.ionMzValuesContextMenuItem.CheckOnClick = true;
+            this.ionMzValuesContextMenuItem.Name = "ionMzValuesContextMenuItem";
+            resources.ApplyResources(this.ionMzValuesContextMenuItem, "ionMzValuesContextMenuItem");
+            this.ionMzValuesContextMenuItem.Click += new System.EventHandler(this.ionMzValuesContextMenuItem_Click);
+            // 
+            // observedMzValuesContextMenuItem
+            // 
+            this.observedMzValuesContextMenuItem.CheckOnClick = true;
+            this.observedMzValuesContextMenuItem.Name = "observedMzValuesContextMenuItem";
+            resources.ApplyResources(this.observedMzValuesContextMenuItem, "observedMzValuesContextMenuItem");
+            this.observedMzValuesContextMenuItem.Click += new System.EventHandler(this.observedMzValuesContextMenuItem_Click);
+            // 
+            // duplicatesContextMenuItem
+            // 
+            this.duplicatesContextMenuItem.CheckOnClick = true;
+            this.duplicatesContextMenuItem.Name = "duplicatesContextMenuItem";
+            resources.ApplyResources(this.duplicatesContextMenuItem, "duplicatesContextMenuItem");
+            this.duplicatesContextMenuItem.Click += new System.EventHandler(this.duplicatesContextMenuItem_Click);
+            // 
+            // toolStripSeparator13
+            // 
+            this.toolStripSeparator13.Name = "toolStripSeparator13";
+            resources.ApplyResources(this.toolStripSeparator13, "toolStripSeparator13");
+            // 
+            // lockYaxisContextMenuItem
+            // 
+            this.lockYaxisContextMenuItem.CheckOnClick = true;
+            this.lockYaxisContextMenuItem.Name = "lockYaxisContextMenuItem";
+            resources.ApplyResources(this.lockYaxisContextMenuItem, "lockYaxisContextMenuItem");
+            this.lockYaxisContextMenuItem.Click += new System.EventHandler(this.lockYaxisContextMenuItem_Click);
+            // 
+            // toolStripSeparator14
+            // 
+            this.toolStripSeparator14.Name = "toolStripSeparator14";
+            resources.ApplyResources(this.toolStripSeparator14, "toolStripSeparator14");
+            // 
+            // koinaLibMatchItem
+            // 
+            this.koinaLibMatchItem.Name = "koinaLibMatchItem";
+            resources.ApplyResources(this.koinaLibMatchItem, "koinaLibMatchItem");
+            this.koinaLibMatchItem.Click += new System.EventHandler(this.koinaLibMatchItem_Click);
+            // 
+            // mirrorMenuItem
+            // 
+            this.mirrorMenuItem.Name = "mirrorMenuItem";
+            resources.ApplyResources(this.mirrorMenuItem, "mirrorMenuItem");
+            this.mirrorMenuItem.Click += new System.EventHandler(this.mirrorMenuItem_Click);
+            // 
+            // toolStripSeparator61
+            // 
+            this.toolStripSeparator61.Name = "toolStripSeparator61";
+            resources.ApplyResources(this.toolStripSeparator61, "toolStripSeparator61");
+            // 
+            // spectrumGraphPropsContextMenuItem
+            // 
+            this.spectrumGraphPropsContextMenuItem.Name = "spectrumGraphPropsContextMenuItem";
+            resources.ApplyResources(this.spectrumGraphPropsContextMenuItem, "spectrumGraphPropsContextMenuItem");
+            this.spectrumGraphPropsContextMenuItem.Click += new System.EventHandler(this.spectrumGraphPropsContextMenuItem_Click);
+            // 
+            // showLibSpectrumPropertiesContextMenuItem
+            // 
+            this.showLibSpectrumPropertiesContextMenuItem.Name = "showLibSpectrumPropertiesContextMenuItem";
+            resources.ApplyResources(this.showLibSpectrumPropertiesContextMenuItem, "showLibSpectrumPropertiesContextMenuItem");
+            this.showLibSpectrumPropertiesContextMenuItem.Click += new System.EventHandler(this.showLibSpectrumPropertiesContextMenuItem_Click);
+            // 
+            // showFullScanSpectrumPropertiesContextMenuItem
+            // 
+            this.showFullScanSpectrumPropertiesContextMenuItem.Name = "showFullScanSpectrumPropertiesContextMenuItem";
+            resources.ApplyResources(this.showFullScanSpectrumPropertiesContextMenuItem, "showFullScanSpectrumPropertiesContextMenuItem");
+            this.showFullScanSpectrumPropertiesContextMenuItem.Click += new System.EventHandler(this.showFullScanSpectrumPropertiesContextMenuItem_Click);
+            // 
+            // toolStripSeparator15
+            // 
+            this.toolStripSeparator15.Name = "toolStripSeparator15";
+            resources.ApplyResources(this.toolStripSeparator15, "toolStripSeparator15");
+            // 
+            // zoomSpectrumContextMenuItem
+            // 
+            this.zoomSpectrumContextMenuItem.Name = "zoomSpectrumContextMenuItem";
+            resources.ApplyResources(this.zoomSpectrumContextMenuItem, "zoomSpectrumContextMenuItem");
+            this.zoomSpectrumContextMenuItem.Click += new System.EventHandler(this.zoomSpectrumContextMenuItem_Click);
+            // 
+            // toolStripSeparator27
+            // 
+            this.toolStripSeparator27.Name = "toolStripSeparator27";
+            resources.ApplyResources(this.toolStripSeparator27, "toolStripSeparator27");
+            // 
+            // showLibraryChromatogramsSpectrumContextMenuItem
+            // 
+            this.showLibraryChromatogramsSpectrumContextMenuItem.Name = "showLibraryChromatogramsSpectrumContextMenuItem";
+            resources.ApplyResources(this.showLibraryChromatogramsSpectrumContextMenuItem, "showLibraryChromatogramsSpectrumContextMenuItem");
+            this.showLibraryChromatogramsSpectrumContextMenuItem.Click += new System.EventHandler(this.showChromatogramsSpectrumContextMenuItem_Click);
+            // 
+            // synchMzScaleToolStripMenuItem
+            // 
+            this.synchMzScaleToolStripMenuItem.CheckOnClick = true;
+            this.synchMzScaleToolStripMenuItem.Name = "synchMzScaleToolStripMenuItem";
+            resources.ApplyResources(this.synchMzScaleToolStripMenuItem, "synchMzScaleToolStripMenuItem");
+            this.synchMzScaleToolStripMenuItem.Click += new System.EventHandler(this.synchMzScaleToolStripMenuItem_Click);
+            // 
             // contextMenuSpectrum
-            //
+            // 
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.ionTypesContextMenuItem,
             this.toolStripSeparator11,
@@ -90,173 +255,13 @@ namespace pwiz.Skyline.Menus
             this.synchMzScaleToolStripMenuItem});
             this.contextMenuSpectrum.Name = "contextMenuSpectrum";
             resources.ApplyResources(this.contextMenuSpectrum, "contextMenuSpectrum");
-            //
-            // ionTypesContextMenuItem
-            //
-            this.ionTypesContextMenuItem.Name = "ionTypesContextMenuItem";
-            resources.ApplyResources(this.ionTypesContextMenuItem, "ionTypesContextMenuItem");
-            this.ionTypesContextMenuItem.DropDownOpening += new System.EventHandler(this.ionTypeMenuItem_DropDownOpening);
-            //
-            // fragmentionsContextMenuItem
-            //
-            this.fragmentionsContextMenuItem.CheckOnClick = true;
-            this.fragmentionsContextMenuItem.Name = "fragmentionsContextMenuItem";
-            resources.ApplyResources(this.fragmentionsContextMenuItem, "fragmentionsContextMenuItem");
-            this.fragmentionsContextMenuItem.Click += new System.EventHandler(this.fragmentsMenuItem_Click);
-            //
-            // specialionsContextMenuItem
-            //
-            this.specialionsContextMenuItem.CheckOnClick = true;
-            this.specialionsContextMenuItem.Name = "specialionsContextMenuItem";
-            resources.ApplyResources(this.specialionsContextMenuItem, "specialionsContextMenuItem");
-            this.specialionsContextMenuItem.Click += new System.EventHandler(this.specialionsContextMenuItem_Click);
-            //
-            // precursorIonContextMenuItem
-            //
-            this.precursorIonContextMenuItem.Name = "precursorIonContextMenuItem";
-            resources.ApplyResources(this.precursorIonContextMenuItem, "precursorIonContextMenuItem");
-            this.precursorIonContextMenuItem.Click += new System.EventHandler(this.precursorIonMenuItem_Click);
-            //
-            // toolStripSeparator11
-            //
-            this.toolStripSeparator11.Name = "toolStripSeparator11";
-            resources.ApplyResources(this.toolStripSeparator11, "toolStripSeparator11");
-            //
-            // chargesContextMenuItem
-            //
-            this.chargesContextMenuItem.Name = "chargesContextMenuItem";
-            resources.ApplyResources(this.chargesContextMenuItem, "chargesContextMenuItem");
-            this.chargesContextMenuItem.DropDownOpening += new System.EventHandler(this.chargesMenuItem_DropDownOpening);
-            //
-            // toolStripSeparator12
-            //
-            this.toolStripSeparator12.Name = "toolStripSeparator12";
-            resources.ApplyResources(this.toolStripSeparator12, "toolStripSeparator12");
-            //
-            // ranksContextMenuItem
-            //
-            this.ranksContextMenuItem.CheckOnClick = true;
-            this.ranksContextMenuItem.Name = "ranksContextMenuItem";
-            resources.ApplyResources(this.ranksContextMenuItem, "ranksContextMenuItem");
-            this.ranksContextMenuItem.Click += new System.EventHandler(this.ranksMenuItem_Click);
-            //
-            // scoreContextMenuItem
-            //
-            this.scoreContextMenuItem.CheckOnClick = true;
-            this.scoreContextMenuItem.Name = "scoreContextMenuItem";
-            resources.ApplyResources(this.scoreContextMenuItem, "scoreContextMenuItem");
-            this.scoreContextMenuItem.Click += new System.EventHandler(this.scoresContextMenuItem_Click);
-            //
-            // massErrorToolStripMenuItem
-            //
-            this.massErrorToolStripMenuItem.CheckOnClick = true;
-            this.massErrorToolStripMenuItem.Name = "massErrorToolStripMenuItem";
-            resources.ApplyResources(this.massErrorToolStripMenuItem, "massErrorToolStripMenuItem");
-            this.massErrorToolStripMenuItem.Click += new System.EventHandler(this.massErrorToolStripMenuItem_Click);
-            //
-            // ionMzValuesContextMenuItem
-            //
-            this.ionMzValuesContextMenuItem.CheckOnClick = true;
-            this.ionMzValuesContextMenuItem.Name = "ionMzValuesContextMenuItem";
-            resources.ApplyResources(this.ionMzValuesContextMenuItem, "ionMzValuesContextMenuItem");
-            this.ionMzValuesContextMenuItem.Click += new System.EventHandler(this.ionMzValuesContextMenuItem_Click);
-            //
-            // observedMzValuesContextMenuItem
-            //
-            this.observedMzValuesContextMenuItem.CheckOnClick = true;
-            this.observedMzValuesContextMenuItem.Name = "observedMzValuesContextMenuItem";
-            resources.ApplyResources(this.observedMzValuesContextMenuItem, "observedMzValuesContextMenuItem");
-            this.observedMzValuesContextMenuItem.Click += new System.EventHandler(this.observedMzValuesContextMenuItem_Click);
-            //
-            // duplicatesContextMenuItem
-            //
-            this.duplicatesContextMenuItem.CheckOnClick = true;
-            this.duplicatesContextMenuItem.Name = "duplicatesContextMenuItem";
-            resources.ApplyResources(this.duplicatesContextMenuItem, "duplicatesContextMenuItem");
-            this.duplicatesContextMenuItem.Click += new System.EventHandler(this.duplicatesContextMenuItem_Click);
-            //
-            // toolStripSeparator13
-            //
-            this.toolStripSeparator13.Name = "toolStripSeparator13";
-            resources.ApplyResources(this.toolStripSeparator13, "toolStripSeparator13");
-            //
-            // lockYaxisContextMenuItem
-            //
-            this.lockYaxisContextMenuItem.CheckOnClick = true;
-            this.lockYaxisContextMenuItem.Name = "lockYaxisContextMenuItem";
-            resources.ApplyResources(this.lockYaxisContextMenuItem, "lockYaxisContextMenuItem");
-            this.lockYaxisContextMenuItem.Click += new System.EventHandler(this.lockYaxisContextMenuItem_Click);
-            //
-            // toolStripSeparator14
-            //
-            this.toolStripSeparator14.Name = "toolStripSeparator14";
-            resources.ApplyResources(this.toolStripSeparator14, "toolStripSeparator14");
-            //
-            // koinaLibMatchItem
-            //
-            this.koinaLibMatchItem.Name = "koinaLibMatchItem";
-            resources.ApplyResources(this.koinaLibMatchItem, "koinaLibMatchItem");
-            this.koinaLibMatchItem.Click += new System.EventHandler(this.koinaLibMatchItem_Click);
-            //
-            // mirrorMenuItem
-            //
-            this.mirrorMenuItem.Name = "mirrorMenuItem";
-            resources.ApplyResources(this.mirrorMenuItem, "mirrorMenuItem");
-            this.mirrorMenuItem.Click += new System.EventHandler(this.mirrorMenuItem_Click);
-            //
-            // toolStripSeparator61
-            //
-            this.toolStripSeparator61.Name = "toolStripSeparator61";
-            resources.ApplyResources(this.toolStripSeparator61, "toolStripSeparator61");
-            //
-            // spectrumGraphPropsContextMenuItem
-            //
-            this.spectrumGraphPropsContextMenuItem.Name = "spectrumGraphPropsContextMenuItem";
-            resources.ApplyResources(this.spectrumGraphPropsContextMenuItem, "spectrumGraphPropsContextMenuItem");
-            this.spectrumGraphPropsContextMenuItem.Click += new System.EventHandler(this.spectrumGraphPropsContextMenuItem_Click);
-            //
-            // showLibSpectrumPropertiesContextMenuItem
-            //
-            this.showLibSpectrumPropertiesContextMenuItem.Name = "showLibSpectrumPropertiesContextMenuItem";
-            resources.ApplyResources(this.showLibSpectrumPropertiesContextMenuItem, "showLibSpectrumPropertiesContextMenuItem");
-            this.showLibSpectrumPropertiesContextMenuItem.Click += new System.EventHandler(this.showLibSpectrumPropertiesContextMenuItem_Click);
-            //
-            // showFullScanSpectrumPropertiesContextMenuItem
-            //
-            this.showFullScanSpectrumPropertiesContextMenuItem.Name = "showFullScanSpectrumPropertiesContextMenuItem";
-            resources.ApplyResources(this.showFullScanSpectrumPropertiesContextMenuItem, "showFullScanSpectrumPropertiesContextMenuItem");
-            this.showFullScanSpectrumPropertiesContextMenuItem.Click += new System.EventHandler(this.showFullScanSpectrumPropertiesContextMenuItem_Click);
-            //
-            // toolStripSeparator15
-            //
-            this.toolStripSeparator15.Name = "toolStripSeparator15";
-            resources.ApplyResources(this.toolStripSeparator15, "toolStripSeparator15");
-            //
-            // zoomSpectrumContextMenuItem
-            //
-            this.zoomSpectrumContextMenuItem.Name = "zoomSpectrumContextMenuItem";
-            resources.ApplyResources(this.zoomSpectrumContextMenuItem, "zoomSpectrumContextMenuItem");
-            this.zoomSpectrumContextMenuItem.Click += new System.EventHandler(this.zoomSpectrumContextMenuItem_Click);
-            //
-            // toolStripSeparator27
-            //
-            this.toolStripSeparator27.Name = "toolStripSeparator27";
-            resources.ApplyResources(this.toolStripSeparator27, "toolStripSeparator27");
-            //
-            // showLibraryChromatogramsSpectrumContextMenuItem
-            //
-            this.showLibraryChromatogramsSpectrumContextMenuItem.Name = "showLibraryChromatogramsSpectrumContextMenuItem";
-            resources.ApplyResources(this.showLibraryChromatogramsSpectrumContextMenuItem, "showLibraryChromatogramsSpectrumContextMenuItem");
-            this.showLibraryChromatogramsSpectrumContextMenuItem.Click += new System.EventHandler(this.showChromatogramsSpectrumContextMenuItem_Click);
-            //
-            // synchMzScaleToolStripMenuItem
-            //
-            this.synchMzScaleToolStripMenuItem.CheckOnClick = true;
-            this.synchMzScaleToolStripMenuItem.Name = "synchMzScaleToolStripMenuItem";
-            resources.ApplyResources(this.synchMzScaleToolStripMenuItem, "synchMzScaleToolStripMenuItem");
-            this.synchMzScaleToolStripMenuItem.Click += new System.EventHandler(this.synchMzScaleToolStripMenuItem_Click);
+            // 
+            // SpectrumContextMenu
+            // 
+            this.Name = "SpectrumContextMenu";
             this.contextMenuSpectrum.ResumeLayout(false);
             this.ResumeLayout(false);
+
         }
 
         #endregion

@@ -1,5 +1,64 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -58,10 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <metadata name="contextMenuRetentionTimes.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>731, 17</value>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="replicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -99,7 +158,7 @@
     <value>Scheduling</value>
   </data>
   <data name="timeGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="timeGraphContextMenuItem.Text" xml:space="preserve">
     <value>Graph</value>
@@ -117,7 +176,7 @@
     <value>Residuals</value>
   </data>
   <data name="timePlotContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="timePlotContextMenuItem.Text" xml:space="preserve">
     <value>Plot</value>
@@ -147,7 +206,7 @@
     <value>Decoys</value>
   </data>
   <data name="timePointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="timePointsContextMenuItem.Text" xml:space="preserve">
     <value>Points</value>
@@ -177,31 +236,31 @@
     <value>FWB</value>
   </data>
   <data name="rtValueMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="rtValueMenuItem.Text" xml:space="preserve">
     <value>Value</value>
   </data>
   <data name="showRTLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="showRTLegendContextMenuItem.Text" xml:space="preserve">
     <value>Legend</value>
   </data>
   <data name="refineRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="refineRTContextMenuItem.Text" xml:space="preserve">
     <value>Refine</value>
   </data>
   <data name="predictionRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="predictionRTContextMenuItem.Text" xml:space="preserve">
     <value>Prediction</value>
   </data>
   <data name="setRTThresholdContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="setRTThresholdContextMenuItem.Text" xml:space="preserve">
     <value>Set Threshold...</value>
@@ -231,16 +290,16 @@
     <value>Loess</value>
   </data>
   <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="setRegressionMethodContextMenuItem.Text" xml:space="preserve">
     <value>Regression Method</value>
   </data>
   <data name="toolStripSeparator22.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 6</value>
+    <value>174, 6</value>
   </data>
   <data name="createRTRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="createRTRegressionContextMenuItem.Text" xml:space="preserve">
     <value>Create Regression...</value>
@@ -267,60 +326,306 @@
     <value>Edit Current...</value>
   </data>
   <data name="chooseCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="chooseCalculatorContextMenuItem.Text" xml:space="preserve">
     <value>Calculator</value>
   </data>
   <data name="toolStripSeparator23.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 6</value>
+    <value>174, 6</value>
   </data>
   <data name="removeRTOutliersContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="removeRTOutliersContextMenuItem.Text" xml:space="preserve">
     <value>Remove Outliers</value>
   </data>
   <data name="removeRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="removeRTContextMenuItem.Text" xml:space="preserve">
     <value>Remove</value>
   </data>
   <data name="timePropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="timePropsContextMenuItem.Text" xml:space="preserve">
     <value>Properties...</value>
   </data>
   <data name="toolStripSeparator38.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 6</value>
-  </data>
-  <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 430</value>
-  </data>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>489, 346</value>
-  </data>
-  <data name=">>$this.Name" xml:space="preserve">
-    <value>RetentionTimesContextMenu</value>
-  </data>
-  <data name=">>$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>174, 6</value>
   </data>
   <metadata name="contextMenuRetentionTimes.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>155, 17</value>
   </metadata>
   <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 48</value>
+    <value>178, 330</value>
   </data>
   <data name="&gt;&gt;contextMenuRetentionTimes.Name" xml:space="preserve">
     <value>contextMenuRetentionTimes</value>
   </data>
   <data name="&gt;&gt;contextMenuRetentionTimes.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=26.1.1.69, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;timeGraphContextMenuItem.Name" xml:space="preserve">
+    <value>timeGraphContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeGraphContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;replicateComparisonContextMenuItem.Name" xml:space="preserve">
+    <value>replicateComparisonContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;replicateComparisonContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timePeptideComparisonContextMenuItem.Name" xml:space="preserve">
+    <value>timePeptideComparisonContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timePeptideComparisonContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;regressionContextMenuItem.Name" xml:space="preserve">
+    <value>regressionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;regressionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;scoreToRunToolStripMenuItem.Name" xml:space="preserve">
+    <value>scoreToRunToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;scoreToRunToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;runToRunToolStripMenuItem.Name" xml:space="preserve">
+    <value>runToRunToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;runToRunToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;schedulingContextMenuItem.Name" xml:space="preserve">
+    <value>schedulingContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;schedulingContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timePlotContextMenuItem.Name" xml:space="preserve">
+    <value>timePlotContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timePlotContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timeCorrelationContextMenuItem.Name" xml:space="preserve">
+    <value>timeCorrelationContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeCorrelationContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timeResidualsContextMenuItem.Name" xml:space="preserve">
+    <value>timeResidualsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeResidualsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timePointsContextMenuItem.Name" xml:space="preserve">
+    <value>timePointsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timePointsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timeTargetsContextMenuItem.Name" xml:space="preserve">
+    <value>timeTargetsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeTargetsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;targetsAt1FDRToolStripMenuItem.Name" xml:space="preserve">
+    <value>targetsAt1FDRToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;targetsAt1FDRToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timeStandardsContextMenuItem.Name" xml:space="preserve">
+    <value>timeStandardsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeStandardsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timeDecoysContextMenuItem.Name" xml:space="preserve">
+    <value>timeDecoysContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeDecoysContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtValueMenuItem.Name" xml:space="preserve">
+    <value>rtValueMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtValueMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;allRTValueContextMenuItem.Name" xml:space="preserve">
+    <value>allRTValueContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;allRTValueContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timeRTValueContextMenuItem.Name" xml:space="preserve">
+    <value>timeRTValueContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timeRTValueContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;fwhmRTValueContextMenuItem.Name" xml:space="preserve">
+    <value>fwhmRTValueContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;fwhmRTValueContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;fwbRTValueContextMenuItem.Name" xml:space="preserve">
+    <value>fwbRTValueContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;fwbRTValueContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showRTLegendContextMenuItem.Name" xml:space="preserve">
+    <value>showRTLegendContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showRTLegendContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;refineRTContextMenuItem.Name" xml:space="preserve">
+    <value>refineRTContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;refineRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;predictionRTContextMenuItem.Name" xml:space="preserve">
+    <value>predictionRTContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;predictionRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;setRTThresholdContextMenuItem.Name" xml:space="preserve">
+    <value>setRTThresholdContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;setRTThresholdContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;setRegressionMethodContextMenuItem.Name" xml:space="preserve">
+    <value>setRegressionMethodContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;setRegressionMethodContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linearRegressionContextMenuItem.Name" xml:space="preserve">
+    <value>linearRegressionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;linearRegressionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;kernelDensityEstimationContextMenuItem.Name" xml:space="preserve">
+    <value>kernelDensityEstimationContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;kernelDensityEstimationContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;logRegressionContextMenuItem.Name" xml:space="preserve">
+    <value>logRegressionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;logRegressionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;loessContextMenuItem.Name" xml:space="preserve">
+    <value>loessContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;loessContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator22.Name" xml:space="preserve">
+    <value>toolStripSeparator22</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator22.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;createRTRegressionContextMenuItem.Name" xml:space="preserve">
+    <value>createRTRegressionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;createRTRegressionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;chooseCalculatorContextMenuItem.Name" xml:space="preserve">
+    <value>chooseCalculatorContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;chooseCalculatorContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;placeholderToolStripMenuItem1.Name" xml:space="preserve">
+    <value>placeholderToolStripMenuItem1</value>
+  </data>
+  <data name="&gt;&gt;placeholderToolStripMenuItem1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorCalculators.Name" xml:space="preserve">
+    <value>toolStripSeparatorCalculators</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorCalculators.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addCalculatorContextMenuItem.Name" xml:space="preserve">
+    <value>addCalculatorContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addCalculatorContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;updateCalculatorContextMenuItem.Name" xml:space="preserve">
+    <value>updateCalculatorContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;updateCalculatorContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator23.Name" xml:space="preserve">
+    <value>toolStripSeparator23</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator23.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeRTOutliersContextMenuItem.Name" xml:space="preserve">
+    <value>removeRTOutliersContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeRTOutliersContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeRTContextMenuItem.Name" xml:space="preserve">
+    <value>removeRTContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;timePropsContextMenuItem.Name" xml:space="preserve">
+    <value>timePropsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;timePropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator38.Name" xml:space="preserve">
+    <value>toolStripSeparator38</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator38.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>RetentionTimesContextMenu</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Menus.ContextMenuControl, Skyline-daily, Version=26.1.1.69, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

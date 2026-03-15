@@ -60,9 +60,192 @@ namespace pwiz.Skyline.Menus
             this.contextMenuMassErrors = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuMassErrors.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
+            // massErrorGraphContextMenuItem
+            // 
+            this.massErrorGraphContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.massErrorReplicateComparisonContextMenuItem,
+            this.massErrorPeptideComparisonContextMenuItem,
+            this.massErrorHistogramContextMenuItem,
+            this.massErrorHistogram2DContextMenuItem});
+            this.massErrorGraphContextMenuItem.Name = "massErrorGraphContextMenuItem";
+            resources.ApplyResources(this.massErrorGraphContextMenuItem, "massErrorGraphContextMenuItem");
+            this.massErrorGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.massErrorMenuItem_DropDownOpening);
+            // 
+            // massErrorReplicateComparisonContextMenuItem
+            // 
+            this.massErrorReplicateComparisonContextMenuItem.CheckOnClick = true;
+            this.massErrorReplicateComparisonContextMenuItem.Name = "massErrorReplicateComparisonContextMenuItem";
+            resources.ApplyResources(this.massErrorReplicateComparisonContextMenuItem, "massErrorReplicateComparisonContextMenuItem");
+            this.massErrorReplicateComparisonContextMenuItem.Click += new System.EventHandler(this.massErrorReplicateComparisonMenuItem_Click);
+            // 
+            // massErrorPeptideComparisonContextMenuItem
+            // 
+            this.massErrorPeptideComparisonContextMenuItem.Name = "massErrorPeptideComparisonContextMenuItem";
+            resources.ApplyResources(this.massErrorPeptideComparisonContextMenuItem, "massErrorPeptideComparisonContextMenuItem");
+            this.massErrorPeptideComparisonContextMenuItem.Click += new System.EventHandler(this.massErrorPeptideComparisonMenuItem_Click);
+            // 
+            // massErrorHistogramContextMenuItem
+            // 
+            this.massErrorHistogramContextMenuItem.Name = "massErrorHistogramContextMenuItem";
+            resources.ApplyResources(this.massErrorHistogramContextMenuItem, "massErrorHistogramContextMenuItem");
+            this.massErrorHistogramContextMenuItem.Click += new System.EventHandler(this.massErrorHistogramMenuItem_Click);
+            // 
+            // massErrorHistogram2DContextMenuItem
+            // 
+            this.massErrorHistogram2DContextMenuItem.Name = "massErrorHistogram2DContextMenuItem";
+            resources.ApplyResources(this.massErrorHistogram2DContextMenuItem, "massErrorHistogram2DContextMenuItem");
+            this.massErrorHistogram2DContextMenuItem.Click += new System.EventHandler(this.massErrorHistogram2DMenuItem_Click);
+            // 
+            // massErrorPropsContextMenuItem
+            // 
+            this.massErrorPropsContextMenuItem.Name = "massErrorPropsContextMenuItem";
+            resources.ApplyResources(this.massErrorPropsContextMenuItem, "massErrorPropsContextMenuItem");
+            this.massErrorPropsContextMenuItem.Click += new System.EventHandler(this.massErrorPropsContextMenuItem_Click);
+            // 
+            // showMassErrorLegendContextMenuItem
+            // 
+            this.showMassErrorLegendContextMenuItem.Name = "showMassErrorLegendContextMenuItem";
+            resources.ApplyResources(this.showMassErrorLegendContextMenuItem, "showMassErrorLegendContextMenuItem");
+            this.showMassErrorLegendContextMenuItem.Click += new System.EventHandler(this.showMassErrorLegendContextMenuItem_Click);
+            // 
+            // massErrorPointsContextMenuItem
+            // 
+            this.massErrorPointsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.massErrorTargetsContextMenuItem,
+            this.massErrorTargets1FDRContextMenuItem,
+            this.massErrorDecoysContextMenuItem});
+            this.massErrorPointsContextMenuItem.Name = "massErrorPointsContextMenuItem";
+            resources.ApplyResources(this.massErrorPointsContextMenuItem, "massErrorPointsContextMenuItem");
+            // 
+            // massErrorTargetsContextMenuItem
+            // 
+            this.massErrorTargetsContextMenuItem.Name = "massErrorTargetsContextMenuItem";
+            resources.ApplyResources(this.massErrorTargetsContextMenuItem, "massErrorTargetsContextMenuItem");
+            this.massErrorTargetsContextMenuItem.Click += new System.EventHandler(this.massErrorTargetsContextMenuItem_Click);
+            // 
+            // massErrorTargets1FDRContextMenuItem
+            // 
+            this.massErrorTargets1FDRContextMenuItem.Name = "massErrorTargets1FDRContextMenuItem";
+            resources.ApplyResources(this.massErrorTargets1FDRContextMenuItem, "massErrorTargets1FDRContextMenuItem");
+            this.massErrorTargets1FDRContextMenuItem.Click += new System.EventHandler(this.massErrorTargets1FDRContextMenuItem_Click);
+            // 
+            // massErrorDecoysContextMenuItem
+            // 
+            this.massErrorDecoysContextMenuItem.Name = "massErrorDecoysContextMenuItem";
+            resources.ApplyResources(this.massErrorDecoysContextMenuItem, "massErrorDecoysContextMenuItem");
+            this.massErrorDecoysContextMenuItem.Click += new System.EventHandler(this.massErrorDecoysContextMenuItem_Click);
+            // 
+            // binCountContextMenuItem
+            // 
+            this.binCountContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ppm05ContextMenuItem,
+            this.ppm10ContextMenuItem,
+            this.ppm15ContextMenuItem,
+            this.ppm20ContextMenuItem});
+            this.binCountContextMenuItem.Name = "binCountContextMenuItem";
+            resources.ApplyResources(this.binCountContextMenuItem, "binCountContextMenuItem");
+            this.binCountContextMenuItem.DropDownOpening += new System.EventHandler(this.binCountContextMenuItem_DropDownOpening);
+            // 
+            // ppm05ContextMenuItem
+            // 
+            this.ppm05ContextMenuItem.Name = "ppm05ContextMenuItem";
+            resources.ApplyResources(this.ppm05ContextMenuItem, "ppm05ContextMenuItem");
+            this.ppm05ContextMenuItem.Click += new System.EventHandler(this.ppm05ContextMenuItem_Click);
+            // 
+            // ppm10ContextMenuItem
+            // 
+            this.ppm10ContextMenuItem.Name = "ppm10ContextMenuItem";
+            resources.ApplyResources(this.ppm10ContextMenuItem, "ppm10ContextMenuItem");
+            this.ppm10ContextMenuItem.Click += new System.EventHandler(this.ppm10ContextMenuItem_Click);
+            // 
+            // ppm15ContextMenuItem
+            // 
+            this.ppm15ContextMenuItem.Name = "ppm15ContextMenuItem";
+            resources.ApplyResources(this.ppm15ContextMenuItem, "ppm15ContextMenuItem");
+            this.ppm15ContextMenuItem.Click += new System.EventHandler(this.ppm15ContextMenuItem_Click);
+            // 
+            // ppm20ContextMenuItem
+            // 
+            this.ppm20ContextMenuItem.Name = "ppm20ContextMenuItem";
+            resources.ApplyResources(this.ppm20ContextMenuItem, "ppm20ContextMenuItem");
+            this.ppm20ContextMenuItem.Click += new System.EventHandler(this.ppm20ContextMenuItem_Click);
+            // 
+            // massErrorTransitionsContextMenuItem
+            // 
+            this.massErrorTransitionsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.massErrorAllTransitionsContextMenuItem,
+            this.massErrorBestTransitionsContextMenuItem,
+            this.toolStripSeparator55,
+            this.MassErrorPrecursorsContextMenuItem,
+            this.MassErrorProductsContextMenuItem});
+            this.massErrorTransitionsContextMenuItem.Name = "massErrorTransitionsContextMenuItem";
+            resources.ApplyResources(this.massErrorTransitionsContextMenuItem, "massErrorTransitionsContextMenuItem");
+            this.massErrorTransitionsContextMenuItem.DropDownOpening += new System.EventHandler(this.massErrorTransitionsContextMenuItem_DropDownOpening);
+            // 
+            // massErrorAllTransitionsContextMenuItem
+            // 
+            this.massErrorAllTransitionsContextMenuItem.Name = "massErrorAllTransitionsContextMenuItem";
+            resources.ApplyResources(this.massErrorAllTransitionsContextMenuItem, "massErrorAllTransitionsContextMenuItem");
+            this.massErrorAllTransitionsContextMenuItem.Click += new System.EventHandler(this.massErrorAllTransitionsContextMenuItem_Click);
+            // 
+            // massErrorBestTransitionsContextMenuItem
+            // 
+            this.massErrorBestTransitionsContextMenuItem.Name = "massErrorBestTransitionsContextMenuItem";
+            resources.ApplyResources(this.massErrorBestTransitionsContextMenuItem, "massErrorBestTransitionsContextMenuItem");
+            this.massErrorBestTransitionsContextMenuItem.Click += new System.EventHandler(this.massErrorBestTransitionsContextMenuItem_Click);
+            // 
+            // toolStripSeparator55
+            // 
+            this.toolStripSeparator55.Name = "toolStripSeparator55";
+            resources.ApplyResources(this.toolStripSeparator55, "toolStripSeparator55");
+            // 
+            // MassErrorPrecursorsContextMenuItem
+            // 
+            this.MassErrorPrecursorsContextMenuItem.Name = "MassErrorPrecursorsContextMenuItem";
+            resources.ApplyResources(this.MassErrorPrecursorsContextMenuItem, "MassErrorPrecursorsContextMenuItem");
+            this.MassErrorPrecursorsContextMenuItem.Click += new System.EventHandler(this.MassErrorPrecursorsContextMenuItem_Click);
+            // 
+            // MassErrorProductsContextMenuItem
+            // 
+            this.MassErrorProductsContextMenuItem.Name = "MassErrorProductsContextMenuItem";
+            resources.ApplyResources(this.MassErrorProductsContextMenuItem, "MassErrorProductsContextMenuItem");
+            this.MassErrorProductsContextMenuItem.Click += new System.EventHandler(this.MassErrorProductsContextMenuItem_Click);
+            // 
+            // massErrorXAxisContextMenuItem
+            // 
+            this.massErrorXAxisContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.massErorrRetentionTimeContextMenuItem,
+            this.massErrorMassToChargContextMenuItem});
+            this.massErrorXAxisContextMenuItem.Name = "massErrorXAxisContextMenuItem";
+            resources.ApplyResources(this.massErrorXAxisContextMenuItem, "massErrorXAxisContextMenuItem");
+            this.massErrorXAxisContextMenuItem.DropDownOpening += new System.EventHandler(this.massErrorXAxisContextMenuItem_DropDownOpening);
+            // 
+            // massErorrRetentionTimeContextMenuItem
+            // 
+            this.massErorrRetentionTimeContextMenuItem.Name = "massErorrRetentionTimeContextMenuItem";
+            resources.ApplyResources(this.massErorrRetentionTimeContextMenuItem, "massErorrRetentionTimeContextMenuItem");
+            this.massErorrRetentionTimeContextMenuItem.Click += new System.EventHandler(this.massErorrRetentionTimeContextMenuItem_Click);
+            // 
+            // massErrorMassToChargContextMenuItem
+            // 
+            this.massErrorMassToChargContextMenuItem.Name = "massErrorMassToChargContextMenuItem";
+            resources.ApplyResources(this.massErrorMassToChargContextMenuItem, "massErrorMassToChargContextMenuItem");
+            this.massErrorMassToChargContextMenuItem.Click += new System.EventHandler(this.massErrorMassToChargContextMenuItem_Click);
+            // 
+            // massErrorlogScaleContextMenuItem
+            // 
+            this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
+            resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
+            this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
+            // 
+            // toolStripSeparator25
+            // 
+            this.toolStripSeparator25.Name = "toolStripSeparator25";
+            resources.ApplyResources(this.toolStripSeparator25, "toolStripSeparator25");
+            // 
             // contextMenuMassErrors
-            //
+            // 
             this.contextMenuMassErrors.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.massErrorGraphContextMenuItem,
             this.massErrorPropsContextMenuItem,
@@ -75,194 +258,11 @@ namespace pwiz.Skyline.Menus
             this.toolStripSeparator25});
             this.contextMenuMassErrors.Name = "contextMenuMassErrors";
             resources.ApplyResources(this.contextMenuMassErrors, "contextMenuMassErrors");
-            //
-            // massErrorGraphContextMenuItem
-            //
-            this.massErrorGraphContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.massErrorReplicateComparisonContextMenuItem,
-            this.massErrorPeptideComparisonContextMenuItem,
-            this.massErrorHistogramContextMenuItem,
-            this.massErrorHistogram2DContextMenuItem});
-            this.massErrorGraphContextMenuItem.Name = "massErrorGraphContextMenuItem";
-            resources.ApplyResources(this.massErrorGraphContextMenuItem, "massErrorGraphContextMenuItem");
-            this.massErrorGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.massErrorMenuItem_DropDownOpening);
-            //
-            // massErrorReplicateComparisonContextMenuItem
-            //
-            this.massErrorReplicateComparisonContextMenuItem.CheckOnClick = true;
-            this.massErrorReplicateComparisonContextMenuItem.Name = "massErrorReplicateComparisonContextMenuItem";
-            resources.ApplyResources(this.massErrorReplicateComparisonContextMenuItem, "massErrorReplicateComparisonContextMenuItem");
-            this.massErrorReplicateComparisonContextMenuItem.Click += new System.EventHandler(this.massErrorReplicateComparisonMenuItem_Click);
-            //
-            // massErrorPeptideComparisonContextMenuItem
-            //
-            this.massErrorPeptideComparisonContextMenuItem.Name = "massErrorPeptideComparisonContextMenuItem";
-            resources.ApplyResources(this.massErrorPeptideComparisonContextMenuItem, "massErrorPeptideComparisonContextMenuItem");
-            this.massErrorPeptideComparisonContextMenuItem.Click += new System.EventHandler(this.massErrorPeptideComparisonMenuItem_Click);
-            //
-            // massErrorHistogramContextMenuItem
-            //
-            this.massErrorHistogramContextMenuItem.Name = "massErrorHistogramContextMenuItem";
-            resources.ApplyResources(this.massErrorHistogramContextMenuItem, "massErrorHistogramContextMenuItem");
-            this.massErrorHistogramContextMenuItem.Click += new System.EventHandler(this.massErrorHistogramMenuItem_Click);
-            //
-            // massErrorHistogram2DContextMenuItem
-            //
-            this.massErrorHistogram2DContextMenuItem.Name = "massErrorHistogram2DContextMenuItem";
-            resources.ApplyResources(this.massErrorHistogram2DContextMenuItem, "massErrorHistogram2DContextMenuItem");
-            this.massErrorHistogram2DContextMenuItem.Click += new System.EventHandler(this.massErrorHistogram2DMenuItem_Click);
-            //
-            // massErrorPropsContextMenuItem
-            //
-            this.massErrorPropsContextMenuItem.Name = "massErrorPropsContextMenuItem";
-            resources.ApplyResources(this.massErrorPropsContextMenuItem, "massErrorPropsContextMenuItem");
-            this.massErrorPropsContextMenuItem.Click += new System.EventHandler(this.massErrorPropsContextMenuItem_Click);
-            //
-            // showMassErrorLegendContextMenuItem
-            //
-            this.showMassErrorLegendContextMenuItem.Name = "showMassErrorLegendContextMenuItem";
-            resources.ApplyResources(this.showMassErrorLegendContextMenuItem, "showMassErrorLegendContextMenuItem");
-            this.showMassErrorLegendContextMenuItem.Click += new System.EventHandler(this.showMassErrorLegendContextMenuItem_Click);
-            //
-            // massErrorPointsContextMenuItem
-            //
-            this.massErrorPointsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.massErrorTargetsContextMenuItem,
-            this.massErrorTargets1FDRContextMenuItem,
-            this.massErrorDecoysContextMenuItem});
-            this.massErrorPointsContextMenuItem.Name = "massErrorPointsContextMenuItem";
-            resources.ApplyResources(this.massErrorPointsContextMenuItem, "massErrorPointsContextMenuItem");
-            //
-            // massErrorTargetsContextMenuItem
-            //
-            this.massErrorTargetsContextMenuItem.Name = "massErrorTargetsContextMenuItem";
-            resources.ApplyResources(this.massErrorTargetsContextMenuItem, "massErrorTargetsContextMenuItem");
-            this.massErrorTargetsContextMenuItem.Click += new System.EventHandler(this.massErrorTargetsContextMenuItem_Click);
-            //
-            // massErrorTargets1FDRContextMenuItem
-            //
-            this.massErrorTargets1FDRContextMenuItem.Name = "massErrorTargets1FDRContextMenuItem";
-            resources.ApplyResources(this.massErrorTargets1FDRContextMenuItem, "massErrorTargets1FDRContextMenuItem");
-            this.massErrorTargets1FDRContextMenuItem.Click += new System.EventHandler(this.massErrorTargets1FDRContextMenuItem_Click);
-            //
-            // massErrorDecoysContextMenuItem
-            //
-            this.massErrorDecoysContextMenuItem.Name = "massErrorDecoysContextMenuItem";
-            resources.ApplyResources(this.massErrorDecoysContextMenuItem, "massErrorDecoysContextMenuItem");
-            this.massErrorDecoysContextMenuItem.Click += new System.EventHandler(this.massErrorDecoysContextMenuItem_Click);
-            //
-            // binCountContextMenuItem
-            //
-            this.binCountContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ppm05ContextMenuItem,
-            this.ppm10ContextMenuItem,
-            this.ppm15ContextMenuItem,
-            this.ppm20ContextMenuItem});
-            this.binCountContextMenuItem.Name = "binCountContextMenuItem";
-            resources.ApplyResources(this.binCountContextMenuItem, "binCountContextMenuItem");
-            this.binCountContextMenuItem.DropDownOpening += new System.EventHandler(this.binCountContextMenuItem_DropDownOpening);
-            //
-            // ppm05ContextMenuItem
-            //
-            this.ppm05ContextMenuItem.Name = "ppm05ContextMenuItem";
-            resources.ApplyResources(this.ppm05ContextMenuItem, "ppm05ContextMenuItem");
-            this.ppm05ContextMenuItem.Click += new System.EventHandler(this.ppm05ContextMenuItem_Click);
-            //
-            // ppm10ContextMenuItem
-            //
-            this.ppm10ContextMenuItem.Name = "ppm10ContextMenuItem";
-            resources.ApplyResources(this.ppm10ContextMenuItem, "ppm10ContextMenuItem");
-            this.ppm10ContextMenuItem.Click += new System.EventHandler(this.ppm10ContextMenuItem_Click);
-            //
-            // ppm15ContextMenuItem
-            //
-            this.ppm15ContextMenuItem.Name = "ppm15ContextMenuItem";
-            resources.ApplyResources(this.ppm15ContextMenuItem, "ppm15ContextMenuItem");
-            this.ppm15ContextMenuItem.Click += new System.EventHandler(this.ppm15ContextMenuItem_Click);
-            //
-            // ppm20ContextMenuItem
-            //
-            this.ppm20ContextMenuItem.Name = "ppm20ContextMenuItem";
-            resources.ApplyResources(this.ppm20ContextMenuItem, "ppm20ContextMenuItem");
-            this.ppm20ContextMenuItem.Click += new System.EventHandler(this.ppm20ContextMenuItem_Click);
-            //
-            // massErrorTransitionsContextMenuItem
-            //
-            this.massErrorTransitionsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.massErrorAllTransitionsContextMenuItem,
-            this.massErrorBestTransitionsContextMenuItem,
-            this.toolStripSeparator55,
-            this.MassErrorPrecursorsContextMenuItem,
-            this.MassErrorProductsContextMenuItem});
-            this.massErrorTransitionsContextMenuItem.Name = "massErrorTransitionsContextMenuItem";
-            resources.ApplyResources(this.massErrorTransitionsContextMenuItem, "massErrorTransitionsContextMenuItem");
-            this.massErrorTransitionsContextMenuItem.DropDownOpening += new System.EventHandler(this.massErrorTransitionsContextMenuItem_DropDownOpening);
-            //
-            // massErrorAllTransitionsContextMenuItem
-            //
-            this.massErrorAllTransitionsContextMenuItem.Name = "massErrorAllTransitionsContextMenuItem";
-            resources.ApplyResources(this.massErrorAllTransitionsContextMenuItem, "massErrorAllTransitionsContextMenuItem");
-            this.massErrorAllTransitionsContextMenuItem.Click += new System.EventHandler(this.massErrorAllTransitionsContextMenuItem_Click);
-            //
-            // massErrorBestTransitionsContextMenuItem
-            //
-            this.massErrorBestTransitionsContextMenuItem.Name = "massErrorBestTransitionsContextMenuItem";
-            resources.ApplyResources(this.massErrorBestTransitionsContextMenuItem, "massErrorBestTransitionsContextMenuItem");
-            this.massErrorBestTransitionsContextMenuItem.Click += new System.EventHandler(this.massErrorBestTransitionsContextMenuItem_Click);
-            //
-            // toolStripSeparator55
-            //
-            this.toolStripSeparator55.Name = "toolStripSeparator55";
-            resources.ApplyResources(this.toolStripSeparator55, "toolStripSeparator55");
-            //
-            // MassErrorPrecursorsContextMenuItem
-            //
-            this.MassErrorPrecursorsContextMenuItem.Name = "MassErrorPrecursorsContextMenuItem";
-            resources.ApplyResources(this.MassErrorPrecursorsContextMenuItem, "MassErrorPrecursorsContextMenuItem");
-            this.MassErrorPrecursorsContextMenuItem.Click += new System.EventHandler(this.MassErrorPrecursorsContextMenuItem_Click);
-            //
-            // MassErrorProductsContextMenuItem
-            //
-            this.MassErrorProductsContextMenuItem.Name = "MassErrorProductsContextMenuItem";
-            resources.ApplyResources(this.MassErrorProductsContextMenuItem, "MassErrorProductsContextMenuItem");
-            this.MassErrorProductsContextMenuItem.Click += new System.EventHandler(this.MassErrorProductsContextMenuItem_Click);
-            //
-            // massErrorXAxisContextMenuItem
-            //
-            this.massErrorXAxisContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.massErorrRetentionTimeContextMenuItem,
-            this.massErrorMassToChargContextMenuItem});
-            this.massErrorXAxisContextMenuItem.Name = "massErrorXAxisContextMenuItem";
-            resources.ApplyResources(this.massErrorXAxisContextMenuItem, "massErrorXAxisContextMenuItem");
-            this.massErrorXAxisContextMenuItem.DropDownOpening += new System.EventHandler(this.massErrorXAxisContextMenuItem_DropDownOpening);
-            //
-            // massErorrRetentionTimeContextMenuItem
-            //
-            this.massErorrRetentionTimeContextMenuItem.Name = "massErorrRetentionTimeContextMenuItem";
-            resources.ApplyResources(this.massErorrRetentionTimeContextMenuItem, "massErorrRetentionTimeContextMenuItem");
-            this.massErorrRetentionTimeContextMenuItem.Click += new System.EventHandler(this.massErorrRetentionTimeContextMenuItem_Click);
-            //
-            // massErrorMassToChargContextMenuItem
-            //
-            this.massErrorMassToChargContextMenuItem.Name = "massErrorMassToChargContextMenuItem";
-            resources.ApplyResources(this.massErrorMassToChargContextMenuItem, "massErrorMassToChargContextMenuItem");
-            this.massErrorMassToChargContextMenuItem.Click += new System.EventHandler(this.massErrorMassToChargContextMenuItem_Click);
-            //
-            // massErrorlogScaleContextMenuItem
-            //
-            this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
-            resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
-            this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
-            //
-            // toolStripSeparator25
-            //
-            this.toolStripSeparator25.Name = "toolStripSeparator25";
-            resources.ApplyResources(this.toolStripSeparator25, "toolStripSeparator25");
-            //
+            // 
             // MassErrorsContextMenu
-            //
-            resources.ApplyResources(this, "$this");
+            // 
             this.Name = "MassErrorsContextMenu";
+            resources.ApplyResources(this, "$this");
             this.contextMenuMassErrors.ResumeLayout(false);
             this.ResumeLayout(false);
 
