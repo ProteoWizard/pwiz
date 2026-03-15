@@ -53,7 +53,7 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>058</ApplicationRevision>
+    <ApplicationRevision>58</ApplicationRevision>
     <ApplicationVersion>26.1.1.058</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -212,6 +212,9 @@
     <Compile Include="Controls\Graphs\ZoomSynchronizer.cs" />
     <Compile Include="Menus\ContextMenuControl.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\ContextMenuControl.Designer.cs">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
@@ -3360,6 +3363,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.zh-CHS.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ContextMenuControl.resx">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\DetectionsContextMenu.ja.resx">
       <DependentUpon>DetectionsContextMenu.cs</DependentUpon>

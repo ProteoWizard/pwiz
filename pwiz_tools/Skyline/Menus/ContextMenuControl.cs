@@ -1,9 +1,10 @@
 namespace pwiz.Skyline.Menus
 {
-    public class ContextMenuControl : SkylineControl
+    public partial class ContextMenuControl : SkylineControl
     {
         public ContextMenuControl(SkylineWindow skylineWindow) : base(skylineWindow)
         {
+            InitializeComponent();
         }
 
         private ContextMenuControl()
