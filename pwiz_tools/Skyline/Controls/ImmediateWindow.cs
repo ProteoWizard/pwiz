@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -41,6 +42,7 @@ namespace pwiz.Skyline.Controls
         public ImmediateWindow(SkylineWindow parent, TextBoxStreamWriterHelper writerHelper)
         {
             InitializeComponent();
+            textImWindow.Font = new Font(@"Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point);
             // Initializes a new TextWriter to write to the textBox instead.
             _textBoxStreamWriter = new TextBoxStreamWriter(textImWindow, this, writerHelper);
             _parent = parent;
@@ -65,14 +67,13 @@ namespace pwiz.Skyline.Controls
         {
             if (e.KeyChar == '\r')
             {
-                string textBoxText = TextContent;
-                int line = GetCurrentLine(textImWindow);                
-                RunLine(line);             
-                if (textBoxText != TextContent)
-                {
-                    // This supresses the newline character if RunLine modified the textBoxText
-                    e.Handled = true;
-                }
+                int line = GetCurrentLine(textImWindow);
+                // Add a newline before running the command so output doesn't
+                // concatenate with the typed text (e.g. "--helpTo access...")
+                textImWindow.AppendText(Environment.NewLine);
+                RunLine(line);
+                // Suppress the Enter key's default newline since we already added one
+                e.Handled = true;
             }
         }
 
