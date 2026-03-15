@@ -244,6 +244,25 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.ThrowsException<ArgumentException>(() =>
                 server.SelectSettingsListItems(enzymesName,
                     new[] { @"NonexistentEnzyme_12345" }));
+
+            // Error: multiple items for single-select list
+            var twoEnzymes = Settings.Default.EnzymeList.Take(2).Select(e => e.GetKey()).ToArray();
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.SelectSettingsListItems(enzymesName, twoEnzymes));
+
+            // Error: empty array for single-select list
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.SelectSettingsListItems(enzymesName, new string[0]));
+
+            // Clear selection: empty array for multi-select list
+            string staticModsName = JsonToolServer.GetSettingsListName<StaticModList>();
+            string[] originalMods = Settings.Default.StaticModList.GetSelectedItems(
+                SkylineWindow.Document.Settings);
+            server.SelectSettingsListItems(staticModsName, new string[0]);
+            AssertEx.AreEqual(0, SkylineWindow.Document.Settings.PeptideSettings
+                .Modifications.StaticModifications.Count);
+            // Restore
+            server.SelectSettingsListItems(staticModsName, originalMods);
         }
 
         /// <summary>
