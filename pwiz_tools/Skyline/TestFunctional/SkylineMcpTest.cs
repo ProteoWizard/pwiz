@@ -154,7 +154,10 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
 
         private void ValidateMcpProtocol(Process mcpProcess)
         {
-            var stdin = mcpProcess.StandardInput;
+            // Wrap stdin with UTF-8 StreamWriter (Process.StandardInput defaults to
+            // system code page on .NET Framework, corrupting non-ASCII characters)
+            var stdin = new StreamWriter(mcpProcess.StandardInput.BaseStream, new UTF8Encoding(false))
+                { AutoFlush = false };
             var stdout = mcpProcess.StandardOutput;
             int id = 0;
 
@@ -219,7 +222,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             AssertEx.Contains(reportResult, columnNames.ToDsvLine(TextUtil.SEPARATOR_CSV));
 
             // Save via MCP run_command and verify get_document_path returns the saved path
-            const string saveFileName = "McpTest.sky";
+            const string saveFileName = "SkÿlineMcpTest.sky";   // Be sure to test Unicode round-tripping
             string docPath = TestContext.GetTestResultsPath(saveFileName);
             string saveResponse = McpToolCall(stdin, stdout, ref id, "skyline_run_command",
                 new JObject { ["commandArgs"] = TextUtil.SpaceSeparate(
