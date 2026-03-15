@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Menus
                 SkylineWindow.selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, SkylineWindow.selectionContextMenuItem);
 
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator57);
+                menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
                 menuStrip.Items.Insert(iInsert++, removeAboveCVCutoffToolStripMenuItem);
             }
             else

@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Menus
 
             synchronizeIntegrationContextMenuItem.Checked = DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any();
             menuStrip.Items.Insert(iInsert++, synchronizeIntegrationContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
+            menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
 
             legendChromContextMenuItem.Checked = set.ShowChromatogramLegend;
             menuStrip.Items.Insert(iInsert++, legendChromContextMenuItem);
