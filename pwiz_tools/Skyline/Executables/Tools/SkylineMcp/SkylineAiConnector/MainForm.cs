@@ -89,8 +89,8 @@ namespace SkylineAiConnector
             try
             {
                 _remoteClient = new RemoteClient(legacyPipeName);
-                version = (Version)_remoteClient.RemoteCallName("GetVersion", new object[0]);
-                processId = (int)_remoteClient.RemoteCallName("GetProcessId", new object[0]);
+                version = (Version)_remoteClient.RemoteCallName("GetVersion", []);
+                processId = (int)_remoteClient.RemoteCallName("GetProcessId", []);
             }
             catch
             {
@@ -118,7 +118,7 @@ namespace SkylineAiConnector
             string mcpResult;
             try
             {
-                mcpResult = (string)_remoteClient.RemoteCallName("StartMcpConnection", new object[] { null });
+                mcpResult = (string)_remoteClient.RemoteCallName("StartMcpConnection", [null]);
             }
             catch
             {
@@ -134,7 +134,7 @@ namespace SkylineAiConnector
             labelStatus.Text = _autoConnectEnabled
                 ? "Skyline will connect to AI at startup."
                 : "Connected to Skyline";
-            labelVersion.Text = string.Format(_versionFormat, versionString);
+            labelVersion.Text = string.Format(_versionFormat, ParseVersion(mcpResult) ?? versionString);
             UpdateDocumentPath();
 
             DeployMcpServer();
@@ -156,7 +156,7 @@ namespace SkylineAiConnector
                 return false;
             if (version.Major == 26 && version.Minor == 1 && version.Build < 1) // 26.1.0
                 return false;
-            return version.Major != 26 || version.Minor != 1 || version.Build != 1 || version.Revision >= 61; // 26.1.1.xxx < 61
+            return version.Major != 26 || version.Minor != 1 || version.Build != 1 || version.Revision >= 70; // 26.1.1.xxx < 70
         }
 
         private void DeployMcpServer()
@@ -274,7 +274,7 @@ namespace SkylineAiConnector
 
             try
             {
-                string path = (string)_remoteClient.RemoteCallName("GetDocumentPath", new object[0]);
+                string path = (string)_remoteClient.RemoteCallName("GetDocumentPath", []);
                 labelDocument.Text = string.Format(_documentFormat, path ?? "(unsaved)");
                 labelDocument.Visible = true;
             }
@@ -544,7 +544,7 @@ namespace SkylineAiConnector
             try
             {
                 string result = (string)_remoteClient.RemoteCallName("StartMcpConnection",
-                    new object[] { checkAutoConnect.Checked.ToString() });
+                    [checkAutoConnect.Checked.ToString()]);
                 _autoConnectEnabled = ParseAutoConnect(result);
                 labelStatus.Text = _autoConnectEnabled
                     ? "Skyline will connect to AI at startup."
@@ -568,6 +568,14 @@ namespace SkylineAiConnector
             {
                 return false;
             }
+        }
+
+        private static string ParseVersion(string json)
+        {
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.TryGetProperty(nameof(JsonToolConstants.JSON.version), out var prop)
+                ? prop.GetString()
+                : null;
         }
 
         private void RevertCheckbox(CheckBox checkBox)

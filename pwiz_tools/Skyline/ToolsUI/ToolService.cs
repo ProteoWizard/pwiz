@@ -653,7 +653,8 @@ namespace pwiz.Skyline.ToolsUI
             return new JObject
             {
                 [nameof(JsonToolConstants.JSON.status)] = status,
-                [nameof(JsonToolConstants.JSON.auto_connect)] = Settings.Default.EnableMcpAutoConnect
+                [nameof(JsonToolConstants.JSON.auto_connect)] = Settings.Default.EnableMcpAutoConnect,
+                [nameof(JsonToolConstants.JSON.version)] = Install.ProgramNameAndVersion
             }.ToString(Newtonsoft.Json.Formatting.None);
         }
     }
