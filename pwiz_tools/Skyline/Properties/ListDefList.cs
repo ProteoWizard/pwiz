@@ -18,8 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.Lists;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Util;
 using SkylineTool;
@@ -27,7 +29,7 @@ using SkylineTool;
 namespace pwiz.Skyline.Properties
 {
     [LlmName("Lists")]
-    public class ListDefList : SettingsList<ListData>, IListSerializer<ListData>
+    public class ListDefList : SettingsList<ListData>, IListSerializer<ListData>, ISettingsListDocumentSelection
     {
         public override ListData CopyItem(ListData item)
         {
@@ -68,5 +70,13 @@ namespace pwiz.Skyline.Properties
 
         public Type DeserialType { get { return SerialType; } }
         public Type SerialType { get { return typeof(ListDef); } }
+
+        public bool SingleSelect => false;
+
+        public string[] GetSelectedItems(SrmSettings settings) =>
+            GetKeys(settings.DataSettings.Lists);
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangeDataSettings(settings.DataSettings.ChangeListDefs(ResolveKeys(keys)));
     }
 }

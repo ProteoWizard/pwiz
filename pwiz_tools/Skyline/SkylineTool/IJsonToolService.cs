@@ -62,6 +62,7 @@ namespace SkylineTool
         string RunCommand(string commandArgs);
         string RunCommandSilent(string commandArgs);
         string GetSettingsListNames(string listType);
+        string GetSettingsListSelectedItems(string listType);
         string GetReportDocTopic(string topicName);
         string AddReportFromDefinition(ReportDefinition definition);
         string InsertSmallMoleculeTransitionList(string textCSV);
@@ -77,6 +78,7 @@ namespace SkylineTool
         string GetGraphImage(string graphId, string filePath = null);
         string GetFormImage(string formId, string filePath = null);
         string GetSettingsListItem(string listType, string itemName);
+        string SelectSettingsListItems(string listType, string[] itemNames);
         string ImportFasta(string textFasta, string keepEmptyProteins = null);
 
         // 3-arg methods

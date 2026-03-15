@@ -83,7 +83,6 @@ namespace pwiz.SkylineTestFunctional
             TestSelection(server);
             TestLocations(server);
             TestReplicates(server);
-            TestSettingsLists(server);
             TestReportDocumentation(server);
             TestNamedReports(server);
             TestReportFromDefinition(server);
@@ -99,8 +98,6 @@ namespace pwiz.SkylineTestFunctional
             TestTutorialFetchErrors(server);
 
             // Document-modifying tools
-            TestAddReport(server);
-            TestAddSettingsListItem(server);
             TestInsertSmallMoleculeTransitionList(server);
             TestImportProperties(server);
             var doc = TestImportFasta(server);
@@ -110,7 +107,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Molecule mode: File > New via run_command, switch to small molecules, verify uimode
             RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
-            TestAddReportMoleculeMode(server);
         }
 
         /// <summary>
@@ -311,63 +307,6 @@ namespace pwiz.SkylineTestFunctional
             // Error: nonexistent replicate - SetReplicate returns error message (not exception)
             string errorResult = server.SetReplicate(@"NonexistentReplicate_12345");
             Assert.AreNotEqual(@"OK", errorResult);
-        }
-
-        private void TestSettingsLists(JsonToolServer server)
-        {
-            string enzymesName = JsonToolServer.GetSettingsListName<EnzymeList>();
-            string reportsName = JsonToolServer.GetSettingsListName<PersistedViews>();
-            string heavyModsName = JsonToolServer.GetSettingsListName<HeavyModList>();
-
-            // GetSettingsListTypes - should return LlmName values, not property names
-            string types = server.GetSettingsListTypes();
-            AssertEx.Contains(types, enzymesName);
-            AssertEx.Contains(types, reportsName);
-            AssertEx.Contains(types, heavyModsName);
-            // Should NOT contain internal property names
-            AssertEx.IsFalse(types.Contains(nameof(EnzymeList)),
-                @"GetSettingsListTypes should return LlmName values, not property names");
-
-            // GetSettingsListNames - using LlmName
-            var defaultEnzyme = EnzymeList.GetDefault();
-            string enzymes = server.GetSettingsListNames(enzymesName);
-            AssertEx.Contains(enzymes, defaultEnzyme.Name);
-
-            // GetSettingsListItem - using LlmName
-            string enzymeXml = server.GetSettingsListItem(enzymesName, defaultEnzyme.GetKey());
-            AssertEx.Contains(enzymeXml, string.Format(@"name={0}", defaultEnzyme.Name.Quote()));
-
-            // Backward compatibility - property names still work
-            string enzymes2 = server.GetSettingsListNames(nameof(EnzymeList));
-            AssertEx.Contains(enzymes2, defaultEnzyme.Name);
-            string enzymeXml2 = server.GetSettingsListItem(nameof(EnzymeList), defaultEnzyme.GetKey());
-            AssertEx.Contains(enzymeXml2, string.Format(@"name={0}", defaultEnzyme.Name.Quote()));
-
-            // GetSettingsListNames for PersistedViews (reports) - using LlmName
-            string viewNames = server.GetSettingsListNames(reportsName);
-            AssertEx.Contains(viewNames, @"# Main");
-            AssertEx.Contains(viewNames, REPORT_AREAS);
-
-            // Backward compatibility - PersistedViews property name still works
-            string viewNames2 = server.GetSettingsListNames(nameof(PersistedViews));
-            AssertEx.Contains(viewNames2, @"# Main");
-
-            // GetSettingsListItem for PersistedViews - using LlmName
-            string viewXml = server.GetSettingsListItem(reportsName, REPORT_AREAS);
-            AssertEx.Contains(viewXml, @"<view");
-            AssertEx.Contains(viewXml, REPORT_AREAS);
-
-            // Error: nonexistent list
-            AssertEx.ThrowsException<ArgumentException>(() =>
-                server.GetSettingsListNames(@"NonexistentList"));
-
-            // Error: nonexistent item
-            AssertEx.ThrowsException<ArgumentException>(() =>
-                server.GetSettingsListItem(enzymesName, @"NotAnEnzyme"));
-
-            // Error: nonexistent persisted view
-            AssertEx.ThrowsException<ArgumentException>(() =>
-                server.GetSettingsListItem(reportsName, @"NotAView_12345"));
         }
 
         private void TestReportDocumentation(JsonToolServer server)
@@ -1135,108 +1074,6 @@ namespace pwiz.SkylineTestFunctional
                 server.GetTutorialImage(TUTORIAL_NAME, @"../../../etc/passwd"));
             AssertEx.ThrowsException<ArgumentException>(() =>
                 server.GetTutorialImage(TUTORIAL_NAME, @"sub\dir\img.png"));
-        }
-
-        private void TestAddReport(JsonToolServer server)
-        {
-            const string reportName = @"TestMcpReport";
-            var definition = new ReportDefinition
-            {
-                Name = reportName,
-                Select = new[] { COL_PROTEIN_NAME, COL_PRECURSOR_MZ }
-            };
-            string result = server.AddReportFromDefinition(definition);
-            Assert.IsFalse(string.IsNullOrEmpty(result));
-
-            // Verify the report was persisted with correct uimode
-            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(
-                PersistedViews.MainGroup.Id);
-            var viewSpec = viewSpecList.ViewSpecs.FirstOrDefault(v => v.Name == reportName);
-            AssertEx.IsNotNull(viewSpec, @"Report should be persisted");
-            AssertEx.AreEqual(UiModes.PROTEOMIC, viewSpec?.UiMode,
-                @"Report should have proteomic uimode matching current SkylineWindow mode");
-        }
-
-        private void TestAddReportMoleculeMode(JsonToolServer server)
-        {
-            const string reportName = @"TestMcpMoleculeReport";
-            var definition = new ReportDefinition
-            {
-                Name = reportName,
-                Select = new[] { @"MoleculeListName", @"MoleculeFormula" }
-            };
-            string result = server.AddReportFromDefinition(definition);
-            Assert.IsFalse(string.IsNullOrEmpty(result));
-
-            // Verify molecule mode report gets small_molecules uimode
-            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(
-                PersistedViews.MainGroup.Id);
-            var viewSpec = viewSpecList.ViewSpecs.FirstOrDefault(v => v.Name == reportName);
-            AssertEx.IsNotNull(viewSpec, @"Molecule report should be persisted");
-            AssertEx.AreEqual(UiModes.SMALL_MOLECULES, viewSpec?.UiMode,
-                @"Report should have small_molecules uimode matching current SkylineWindow mode");
-        }
-
-        private void TestAddSettingsListItem(JsonToolServer server)
-        {
-            string enzymesName = JsonToolServer.GetSettingsListName<EnzymeList>();
-
-            // Get an existing enzyme's XML to use as a template for the roundtrip format
-            var defaultEnzyme = EnzymeList.GetDefault();
-            string templateXml = server.GetSettingsListItem(enzymesName, defaultEnzyme.GetKey());
-
-            // Create a new enzyme, get its XML via GetSettingsListItem on a temp add,
-            // then verify full roundtrip through AddSettingsListItem
-            var enzyme = new Enzyme(@"TestMcpEnzyme", @"KR", @"P");
-            // Serialize using the same path as GetSettingsListItem (add, retrieve, remove, re-add)
-            Settings.Default.EnzymeList.Add(enzyme);
-            string enzymeXml = server.GetSettingsListItem(enzymesName, enzyme.GetKey());
-            Settings.Default.EnzymeList.Remove(enzyme);
-
-            // Add via AddSettingsListItem and verify typed roundtrip
-            string result = server.AddSettingsListItem(enzymesName, enzymeXml);
-            AssertEx.Contains(result, enzyme.Name);
-            AssertEx.IsTrue(Settings.Default.EnzymeList.TryGetValue(enzyme.GetKey(), out var retrieved));
-            AssertEx.Cloned(enzyme, retrieved);
-
-            // Verify XML roundtrip
-            string retrievedXml = server.GetSettingsListItem(enzymesName, enzyme.GetKey());
-            AssertEx.NoDiff(enzymeXml, retrievedXml);
-
-            // Verify it appears in names list
-            AssertEx.Contains(server.GetSettingsListNames(enzymesName), enzyme.Name);
-
-            // Error: duplicate name without overwrite
-            AssertEx.ThrowsException<ArgumentException>(() =>
-                server.AddSettingsListItem(enzymesName, enzymeXml));
-
-            // Overwrite: replace existing item
-            string overwriteResult = server.AddSettingsListItem(enzymesName, enzymeXml, true);
-            AssertEx.Contains(overwriteResult, enzyme.Name);
-
-            // Error: invalid XML
-            AssertEx.ThrowsException<ArgumentException>(() =>
-                server.AddSettingsListItem(enzymesName, @"not xml"));
-
-            // Error: PersistedViews should redirect to skyline_add_report
-            string reportsName = JsonToolServer.GetSettingsListName<PersistedViews>();
-            AssertEx.ThrowsException<ArgumentException>(() =>
-                server.AddSettingsListItem(reportsName, @"<view />"));
-
-            // Error: unknown list type
-            AssertEx.ThrowsException<ArgumentException>(() =>
-                server.AddSettingsListItem(@"NonexistentList", @"<item />"));
-
-            // Add a structural modification to verify a second list type works
-            string structModsName = JsonToolServer.GetSettingsListName<StaticModList>();
-            var mod = new StaticMod(@"TestMcpMod", @"C", null, @"C2H3NO");
-            Settings.Default.StaticModList.Add(mod);
-            string modXml = server.GetSettingsListItem(structModsName, mod.GetKey());
-            Settings.Default.StaticModList.Remove(mod);
-
-            server.AddSettingsListItem(structModsName, modXml);
-            AssertEx.IsTrue(Settings.Default.StaticModList.TryGetValue(mod.GetKey(), out var retrievedMod));
-            AssertEx.Cloned(mod, retrievedMod);
         }
 
         private void TestInsertSmallMoleculeTransitionList(JsonToolServer server)

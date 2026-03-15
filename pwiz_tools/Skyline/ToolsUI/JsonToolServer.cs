@@ -479,7 +479,7 @@ namespace pwiz.Skyline.ToolsUI
         private IList<ColumnResolver.TopicInfo> GetTopicList()
         {
             var document = Program.MainWindow.Document;
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT, Program.MainWindow.ModeUI);
             var resolver = new ColumnResolver(dataSchema);
             return resolver.GetTopics();
         }
@@ -611,7 +611,7 @@ namespace pwiz.Skyline.ToolsUI
         public string AddReportFromDefinition(ReportDefinition definition)
         {
             var document = Program.MainWindow.Document;
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT, Program.MainWindow.ModeUI);
             var viewSpec = ResolveReportDefinition(definition, dataSchema);
 
             if (string.IsNullOrEmpty(viewSpec.Name) || viewSpec.Name == JsonToolConstants.DEFAULT_REPORT_NAME)
@@ -774,6 +774,64 @@ namespace pwiz.Skyline.ToolsUI
                 : LlmInstruction.Format(@"Added {0} to {1}.", itemName.SingleQuote(), listType);
         }
 
+        public string GetSettingsListSelectedItems(string listType)
+        {
+            var selector = ResolveDocumentSelector(listType);
+            var settings = Program.MainWindow.Document.Settings;
+            string[] selected = selector.GetSelectedItems(settings);
+            return TextUtil.LineSeparate(selected);
+        }
+
+        public string SelectSettingsListItems(string listType, string[] itemNames)
+        {
+            var selector = ResolveDocumentSelector(listType);
+
+            if (selector.SingleSelect && itemNames.Length != 1)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"{0} requires exactly one item.", listType));
+            }
+
+            try
+            {
+                return JsonUiService.InvokeOnUiThread(() =>
+                {
+                    Program.MainWindow.ModifyDocument(
+                        LlmInstruction.Format(@"Select {0} items", listType),
+                        doc => doc.ChangeSettings(selector.SetSelectedItems(doc.Settings, itemNames)),
+                        docPair => AuditLogEntry.CreateSimpleEntry(
+                            MessageType.ran_command_line,
+                            docPair.NewDocumentType,
+                            string.Join(@", ", itemNames)));
+                    return LlmInstruction.Format(@"Selected {0} item(s) in {1}: {2}",
+                        itemNames.Length.ToString(), listType,
+                        itemNames.Length > 0
+                            ? string.Join(@", ", itemNames.Select(n => n.SingleQuote()))
+                            : @"(none)");
+                });
+            }
+            catch (SettingsListItemNotFoundException ex)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Item {0} not found in {1}. Use skyline_add_settings_list_item to add it first.",
+                    ex.ItemKey.SingleQuote(), listType));
+            }
+        }
+
+        private ISettingsListDocumentSelection ResolveDocumentSelector(string listType)
+        {
+            string propName = ResolveLlmListType(listType);
+            var prop = typeof(Settings).GetProperty(propName);
+            if (prop == null)
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Unknown settings list type:", listType));
+            var value = prop.GetValue(Settings.Default);
+            if (value is ISettingsListDocumentSelection selector)
+                return selector;
+            throw new ArgumentException(LlmInstruction.SpaceSeparate(
+                @"Selection is not supported for settings list:", listType + @".",
+                @"Use skyline_get_document_settings to see the current document configuration."));
+        }
+
         public TutorialMetadata GetTutorial(string name, string language = @"en", string filePath = null)
         {
             return JsonTutorialCatalog.FetchTutorial(name, language, filePath);
@@ -799,7 +857,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             Log(string.Format(@"Exporting named report '{0}'", reportName));
             var document = Program.MainWindow.Document;
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer);
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
 
             var viewName = FindReportViewName(reportName);
@@ -824,7 +882,7 @@ namespace pwiz.Skyline.ToolsUI
         private ReportMetadata ExportJsonDefinitionReport(ReportDefinition definition, string filePath, DataSchemaLocalizer localizer)
         {
             var document = Program.MainWindow.Document;
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer);
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
 
             var viewSpec = ResolveReportDefinition(definition, dataSchema);
             var sortSpecs = ParseSortSpecs(definition);

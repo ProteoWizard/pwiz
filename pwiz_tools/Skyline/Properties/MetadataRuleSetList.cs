@@ -18,8 +18,10 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.SettingsUI;
 using SkylineTool;
@@ -27,7 +29,7 @@ using SkylineTool;
 namespace pwiz.Skyline.Properties
 {
     [LlmName("Metadata Rule Sets")]
-    public class MetadataRuleSetList : SettingsList<MetadataRuleSet>
+    public class MetadataRuleSetList : SettingsList<MetadataRuleSet>, ISettingsListDocumentSelection
     {
         public override IEnumerable<MetadataRuleSet> GetDefaults(int revisionIndex)
         {
@@ -63,5 +65,13 @@ namespace pwiz.Skyline.Properties
                 }
             }
         }
+
+        public bool SingleSelect => false;
+
+        public string[] GetSelectedItems(SrmSettings settings) =>
+            GetKeys(settings.DataSettings.MetadataRuleSets);
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangeDataSettings(settings.DataSettings.ChangeExtractedMetadata(ResolveKeys(keys)));
     }
 }

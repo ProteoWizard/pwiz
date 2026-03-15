@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using ModelContextProtocol.Server;
 using SkylineTool;
 
@@ -226,6 +227,39 @@ public static class SkylineTools
         return Invoke(connection => overwrite
             ? connection.Call(nameof(IJsonToolService.AddSettingsListItem), listType, itemXml, "true")
             : connection.Call(nameof(IJsonToolService.AddSettingsListItem), listType, itemXml));
+    }
+
+    [McpServerTool(Name = "skyline_get_settings_list_selected_items"),
+     Description("Get the names of items from a settings list that are currently active " +
+        "in the document. For example, which enzyme is selected, which modifications are " +
+        "enabled, which annotations are included. Returns one name per line. " +
+        "Use skyline_get_settings_list_names to see all available items.")]
+    public static string GetSettingsListSelectedItems(
+        [Description("The settings list type (e.g., 'Enzymes', 'Structural Modifications')")] string listType)
+    {
+        return Invoke(connection =>
+        {
+            string result = connection.Call(
+                nameof(IJsonToolService.GetSettingsListSelectedItems), listType);
+            return string.IsNullOrEmpty(result)
+                ? $"No items are currently selected in {listType}."
+                : result;
+        });
+    }
+
+    [McpServerTool(Name = "skyline_select_settings_list_items"),
+     Description("Set which items from a settings list are active in the document. " +
+        "This replaces the current selection — the provided list becomes the full active set. " +
+        "For single-select lists (e.g., Enzymes), provide exactly one item. " +
+        "For multi-select lists (e.g., Structural Modifications), provide all desired items. " +
+        "Items must exist in the settings list (use skyline_add_settings_list_item to add new ones).")]
+    public static string SelectSettingsListItems(
+        [Description("The settings list type (e.g., 'Enzymes', 'Structural Modifications')")] string listType,
+        [Description("Array of item names to activate")] string[] itemNames)
+    {
+        return Invoke(connection =>
+            connection.Call(nameof(IJsonToolService.SelectSettingsListItems),
+                listType, JsonSerializer.Serialize(itemNames)));
     }
 
     [McpServerTool(Name = "skyline_run_command"),
