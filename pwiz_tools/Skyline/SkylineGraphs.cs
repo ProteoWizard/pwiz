@@ -1413,6 +1413,7 @@ namespace pwiz.Skyline
 
         void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
         {
+            PrepareZedGraphContextMenu(zedGraphControl, menuStrip);
             using var chromatogramContextMenu = new ChromatogramContextMenu(this);
             chromatogramContextMenu.BuildChromatogramMenu(paneKey, menuStrip, chromFileInfoId);
         }
@@ -2464,18 +2465,7 @@ namespace pwiz.Skyline
         void GraphSummary.IStateProvider.BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt,
             GraphSummary.IController controller)
         {
-            for (int i = menuStrip.Items.Count - 1; i >= 0; i--)
-            {
-                string tag = (string)menuStrip.Items[i].Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.RemoveAt(i);
-            }
-            int iUnzoom = menuStrip.Items.Cast<ToolStripItem>().ToList().FindIndex(item => (string)item.Tag == @"unzoom");
-            if (iUnzoom >= 0)
-            {
-                menuStrip.Items.Insert(iUnzoom, new ToolStripSeparator());
-            }
-
+            PrepareZedGraphContextMenu(zedGraphControl, menuStrip);
             var graphController = controller as RTGraphController;
             if (graphController != null)
             {
@@ -2498,6 +2488,26 @@ namespace pwiz.Skyline
                 detectionsContextMenu.BuildDetectionsGraphMenu(controller.GraphSummary, menuStrip);
             }
 
+        }
+
+        /// <summary>
+        /// Removes "Set Scale to Default" and "Show Point Values" from ZedGraph context menu.
+        /// Adds separator before "Unzoom".
+        /// Adds "Copy Metafile" and "Copy Data" menu items. 
+        /// </summary>
+        private void PrepareZedGraphContextMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
+        {
+            for (int i = menuStrip.Items.Count - 1; i >= 0; i--)
+            {
+                string tag = (string)menuStrip.Items[i].Tag;
+                if (tag == @"set_default" || tag == @"show_val")
+                    menuStrip.Items.RemoveAt(i);
+            }
+            int iUnzoom = menuStrip.Items.Cast<ToolStripItem>().ToList().FindIndex(item => (string)item.Tag == @"unzoom");
+            if (iUnzoom >= 0)
+            {
+                menuStrip.Items.Insert(iUnzoom, new ToolStripSeparator());
+            }
             ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
