@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Menus
             {
                 menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
                 menuStrip.Items.Insert(iInsert++, rtValueMenuItem);
-                SkylineWindow.AddTransitionContextMenu(menuStrip, iInsert++);
+                AddTransitionContextMenu(menuStrip, iInsert++);
                 if (graphType == GraphTypeSummary.replicate)
                 {
                     iInsert = SkylineWindow.AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);

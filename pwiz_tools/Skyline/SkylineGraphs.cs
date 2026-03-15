@@ -1112,7 +1112,7 @@ namespace pwiz.Skyline
 
         void GraphSpectrum.IStateProvider.BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
-            using var spectrumContextMenu = new Menus.SpectrumContextMenu(this);
+            using var spectrumContextMenu = new SpectrumContextMenu(this);
             spectrumContextMenu.BuildSpectrumMenu(isProteomic, zedGraphControl, menuStrip);
         }
 
@@ -1420,12 +1420,6 @@ namespace pwiz.Skyline
         {
             using var chromatogramContextMenu = new ChromatogramContextMenu(this);
             chromatogramContextMenu.BuildChromatogramMenu(paneKey, menuStrip, chromFileInfoId);
-        }
-
-        internal void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            using var chromatogramContextMenu = new ChromatogramContextMenu(this);
-            chromatogramContextMenu.AddTransitionContextMenu(menuStrip, iInsert);
         }
 
         public void ShowChromatogramLegends(bool show)
@@ -2542,8 +2536,8 @@ namespace pwiz.Skyline
             }
             else if (controller is AreaGraphController)
             {
-                using var peakAreasContextMenu = new PeakAreasContextMenu(this);
-                peakAreasContextMenu.BuildAreaGraphMenu(controller.GraphSummary, menuStrip, mousePt);
+                using var peakAreasContextMenu = new PeakAreasContextMenu(this, controller.GraphSummary);
+                peakAreasContextMenu.BuildAreaGraphMenu(menuStrip, mousePt);
             }
             else if (controller is MassErrorGraphController)
             {

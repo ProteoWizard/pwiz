@@ -20,7 +20,6 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Menus
 {

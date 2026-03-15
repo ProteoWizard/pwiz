@@ -21,7 +21,6 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
-using ZedGraph;
 
 namespace pwiz.Skyline.Menus
 {
@@ -44,7 +43,7 @@ namespace pwiz.Skyline.Menus
             if (graphType == GraphTypeSummary.peptide ||
                 graphType == GraphTypeSummary.replicate)
             {
-                SkylineWindow.AddTransitionContextMenu(menuStrip, iInsert++);
+                AddTransitionContextMenu(menuStrip, iInsert++);
             }
             if (graphType == GraphTypeSummary.replicate)
             {

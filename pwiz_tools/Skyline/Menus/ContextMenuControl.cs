@@ -1,5 +1,6 @@
-using System;
 using pwiz.Skyline.Properties;
+using System;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.Menus
 {
@@ -29,6 +30,12 @@ namespace pwiz.Skyline.Menus
         private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowCVValues(peptideCvsContextMenuItem.Checked);
+        }
+
+        protected void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
+        {
+            using var chromatogramContextMenu = new ChromatogramContextMenu(SkylineWindow);
+            chromatogramContextMenu.AddTransitionContextMenu(menuStrip, iInsert);
         }
     }
 }

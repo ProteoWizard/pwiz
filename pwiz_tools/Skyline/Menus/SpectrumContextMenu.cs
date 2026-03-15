@@ -21,7 +21,6 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 

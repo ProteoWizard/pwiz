@@ -32,22 +32,22 @@ namespace pwiz.Skyline.Menus
 {
     public partial class PeakAreasContextMenu : ContextMenuControl
     {
-        public PeakAreasContextMenu(SkylineWindow skylineWindow) : base(skylineWindow)
+        private GraphSummary _graphSummary;
+        public PeakAreasContextMenu(SkylineWindow skylineWindow, GraphSummary graphSummary) : base(skylineWindow)
         {
             InitializeComponent();
+            _graphSummary = graphSummary;
         }
 
-        private GraphSummary _graphSummary;
 
-        public void BuildAreaGraphMenu(GraphSummary graphSummary, ToolStrip menuStrip, Point mousePt)
+        public void BuildAreaGraphMenu(ToolStrip menuStrip, Point mousePt)
         {
-            _graphSummary = graphSummary;
-
+            var graphSummary = _graphSummary;
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
             menuStrip.Items.Insert(iInsert++, areaGraphContextMenuItem);
-            var graphType = graphSummary.Type;
+            var graphType = _graphSummary.Type;
             if (graphType == GraphTypeSummary.replicate)
             {
                 menuStrip.Items.Insert(iInsert++, graphTypeToolStripMenuItem);
@@ -61,9 +61,9 @@ namespace pwiz.Skyline.Menus
             {
                 SkylineWindow.EditMenu.AddGroupByMenuItems(menuStrip, SkylineWindow.ReplicateGroupByContextMenuItem, SkylineWindow.SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
             }
-            else if(graphType != GraphTypeSummary.abundance)
+            else if (graphType != GraphTypeSummary.abundance)
             {
-                SkylineWindow.AddTransitionContextMenu(menuStrip, iInsert++);
+                AddTransitionContextMenu(menuStrip, iInsert++);
             }
             else
             {
