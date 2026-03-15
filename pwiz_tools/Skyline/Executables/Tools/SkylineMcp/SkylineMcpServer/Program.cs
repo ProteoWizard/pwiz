@@ -17,15 +17,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Logging.ClearProviders();
-builder.Services
-    .AddMcpServer()
-    .WithStdioServerTransport()
-    .WithToolsFromAssembly();
+namespace SkylineMcpServer;
 
-await builder.Build().RunAsync();
+public static class Program
+{
+    /// <summary>
+    /// When true, relaxes checks that assume the host process is Skyline
+    /// (e.g. process name validation in <see cref="SkylineConnection"/>).
+    /// Set via SKYLINE_MCP_TEST=1 environment variable or --test command-line arg.
+    /// </summary>
+    public static bool FunctionalTest { get; private set; }
+
+    public static async System.Threading.Tasks.Task Main(string[] args)
+    {
+        FunctionalTest = Environment.GetEnvironmentVariable("SKYLINE_MCP_TEST") == "1" ||
+                         Array.Exists(args, a => a == "--test");
+
+        var builder = Host.CreateApplicationBuilder(args);
+        builder.Logging.ClearProviders();
+        builder.Services
+            .AddMcpServer()
+            .WithStdioServerTransport()
+            .WithToolsFromAssembly();
+
+        await builder.Build().RunAsync();
+    }
+}

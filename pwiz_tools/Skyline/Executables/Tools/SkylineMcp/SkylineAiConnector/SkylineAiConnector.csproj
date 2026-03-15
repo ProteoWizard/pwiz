@@ -36,7 +36,7 @@
   <Target Name="PackageToolZip" AfterTargets="Build">
     <PropertyGroup>
       <_ToolZipDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineMcp\</_ToolZipDir>
-      <_ToolZipPath>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineAiConnector.zip</_ToolZipPath>
+      <_ToolZipPath>$(MSBuildProjectDirectory)\SkylineAiConnector.zip</_ToolZipPath>
       <_ConnectorBinDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\</_ConnectorBinDir>
       <_McpServerBinDir>$(MSBuildProjectDirectory)\..\SkylineMcpServer\bin\$(Configuration)\net8.0-windows\win-x64\</_McpServerBinDir>
     </PropertyGroup>

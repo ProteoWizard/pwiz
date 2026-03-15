@@ -297,7 +297,8 @@ public class SkylineConnection : IDisposable
         try
         {
             var process = Process.GetProcessById(processId);
-            return process.ProcessName.StartsWith("Skyline", StringComparison.OrdinalIgnoreCase);
+            return Program.FunctionalTest ||
+                   process.ProcessName.StartsWith("Skyline", StringComparison.OrdinalIgnoreCase);
         }
         catch (ArgumentException)
         {
