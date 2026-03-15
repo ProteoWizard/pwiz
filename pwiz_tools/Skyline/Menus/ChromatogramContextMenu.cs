@@ -23,6 +23,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Properties;
 using System;
 using System.Linq;
@@ -373,12 +374,12 @@ namespace pwiz.Skyline.Menus
 
         private void peakBoundariesContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowPeakBoundaries(peakBoundariesContextMenuItem.Checked);
+            ShowPeakBoundaries(peakBoundariesContextMenuItem.Checked);
         }
 
         private void originalPeakContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowOriginalPeak(originalPeakMenuItem.Checked);
+            ShowOriginalPeak(originalPeakMenuItem.Checked);
         }
 
         private void exemplaryPeakMenuItem_Click(object sender, EventArgs e)
@@ -388,7 +389,7 @@ namespace pwiz.Skyline.Menus
 
         private void massErrorContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowMassErrors(massErrorContextMenuItem.Checked);
+            ShowMassErrors(massErrorContextMenuItem.Checked);
         }
         #endregion
 
@@ -406,16 +407,16 @@ namespace pwiz.Skyline.Menus
 
         private void allRTContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.SetShowRetentionTimes(ShowRTChrom.all);
+            SetShowRetentionTimes(ShowRTChrom.all);
         }
 
         private void bestRTContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.SetShowRetentionTimes(ShowRTChrom.best);
+            SetShowRetentionTimes(ShowRTChrom.best);
         }
         private void noneRTContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.SetShowRetentionTimes(ShowRTChrom.none);
+            SetShowRetentionTimes(ShowRTChrom.none);
         }
 
         private void thresholdRTContextMenuItem_Click(object sender, EventArgs e)
@@ -423,9 +424,21 @@ namespace pwiz.Skyline.Menus
             ShowChromatogramRTThresholdDlg();
         }
 
-        public void ShowChromatogramRTThresholdDlg()
+        private void ShowChromatogramRTThresholdDlg()
         {
-            SkylineWindow.ShowChromatogramRTThresholdDlg();
+            using (var dlg = new ChromatogramRTThresholdDlg())
+            {
+                double threshold = Settings.Default.ShowRetentionTimesThreshold;
+                if (threshold > 0)
+                    dlg.Threshold = threshold;
+
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
+                {
+                    Settings.Default.ShowRetentionTimesThreshold = dlg.Threshold;
+                    Settings.Default.ShowRetentionTimesEnum = ShowRTChrom.threshold.ToString();
+                    SkylineWindow.UpdateChromGraphs();
+                }
+            }
         }
 
         private void rawTimesContextMenuItem_Click(object sender, EventArgs e)
@@ -434,12 +447,12 @@ namespace pwiz.Skyline.Menus
         }
         private void retentionTimePredContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.SetShowRetentionTimePred(retentionTimePredContextMenuItem.Checked);
+            SetShowRetentionTimePred(retentionTimePredContextMenuItem.Checked);
         }
 
         private void idTimesNoneContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.HideAllIdTimes();
+            HideAllIdTimes();
         }
         private void peptideIDTimesContextMenuItem_Click(object sender, EventArgs e)
         {
@@ -635,8 +648,59 @@ namespace pwiz.Skyline.Menus
         #endregion
         private void chromPropsContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowChromatogramProperties();
+            ShowChromatogramProperties();
         }
+
+        #region Moved from SkylineGraphs
+
+        private void ShowPeakBoundaries(bool show)
+        {
+            Settings.Default.ShowPeakBoundaries = show;
+            SkylineWindow.UpdateChromGraphs();
+        }
+
+        private void ShowOriginalPeak(bool show)
+        {
+            Settings.Default.ShowOriginalPeak = show;
+            SkylineWindow.UpdateChromGraphs();
+        }
+
+        private void SetShowRetentionTimes(ShowRTChrom showRTChrom)
+        {
+            Settings.Default.ShowRetentionTimesEnum = showRTChrom.ToString();
+            SkylineWindow.UpdateChromGraphs();
+        }
+
+        private void SetShowRetentionTimePred(bool showRetentionTimePred)
+        {
+            Settings.Default.ShowRetentionTimePred = showRetentionTimePred;
+            SkylineWindow.UpdateChromGraphs();
+        }
+
+        private void HideAllIdTimes()
+        {
+            Settings.Default.ShowPeptideIdTimes =
+                Settings.Default.ShowAlignedPeptideIdTimes =
+                Settings.Default.ShowUnalignedPeptideIdTimes = false;
+            SkylineWindow.UpdateChromGraphs();
+        }
+
+        private void ShowMassErrors(bool show)
+        {
+            Settings.Default.ShowMassError = show;
+            SkylineWindow.UpdateChromGraphs();
+        }
+
+        private void ShowChromatogramProperties()
+        {
+            using (var dlg = new ChromChartPropertyDlg())
+            {
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
+                    SkylineWindow.UpdateChromGraphs();
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// Returns true if the imputed peak boundaries should be shown for a particular document.

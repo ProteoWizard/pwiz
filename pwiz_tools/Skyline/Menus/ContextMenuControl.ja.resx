@@ -30,4 +30,106 @@
   <data name="peptideCvsContextMenuItem.Text" xml:space="preserve">
     <value>CV値</value>
   </data>
+  <data name="peptideOrderDocumentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 22</value>
+  </data>
+  <data name="peptideOrderDocumentContextMenuItem.Text" xml:space="preserve">
+    <value>ドキュメント</value>
+  </data>
+  <data name="peptideOrderRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 22</value>
+  </data>
+  <data name="peptideOrderRTContextMenuItem.Text" xml:space="preserve">
+    <value>保持時間</value>
+  </data>
+  <data name="peptideOrderAreaContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 22</value>
+  </data>
+  <data name="peptideOrderAreaContextMenuItem.Text" xml:space="preserve">
+    <value>ピーク面積</value>
+  </data>
+  <data name="peptideOrderMassErrorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 22</value>
+  </data>
+  <data name="peptideOrderMassErrorContextMenuItem.Text" xml:space="preserve">
+    <value>質量誤差</value>
+  </data>
+  <data name="peptideOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="peptideOrderContextMenuItem.Text" xml:space="preserve">
+    <value>次数</value>
+  </data>
+  <data name="scopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="scopeContextMenuItem.Text" xml:space="preserve">
+    <value>適用範囲</value>
+  </data>
+  <data name="documentScopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="documentScopeContextMenuItem.Text" xml:space="preserve">
+    <value>ドキュメント</value>
+  </data>
+  <data name="proteinScopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="proteinScopeContextMenuItem.Text" xml:space="preserve">
+    <value>タンパク質</value>
+  </data>
+  <data name="replicatesRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="replicatesRTContextMenuItem.Text" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="averageReplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 22</value>
+  </data>
+  <data name="averageReplicatesContextMenuItem.Text" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="singleReplicateRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 22</value>
+  </data>
+  <data name="singleReplicateRTContextMenuItem.Text" xml:space="preserve">
+    <value>単一</value>
+  </data>
+  <data name="bestReplicateRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 22</value>
+  </data>
+  <data name="bestReplicateRTContextMenuItem.Text" xml:space="preserve">
+    <value>最良</value>
+  </data>
+  <data name="replicateOrderDocumentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>151, 22</value>
+  </data>
+  <data name="replicateOrderDocumentContextMenuItem.Text" xml:space="preserve">
+    <value>ドキュメント</value>
+  </data>
+  <data name="replicateOrderAcqTimeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>151, 22</value>
+  </data>
+  <data name="replicateOrderAcqTimeContextMenuItem.Text" xml:space="preserve">
+    <value>取得時間</value>
+  </data>
+  <data name="replicateOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="replicateOrderContextMenuItem.Text" xml:space="preserve">
+    <value>次数</value>
+  </data>
+  <data name="groupByReplicateContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 22</value>
+  </data>
+  <data name="groupByReplicateContextMenuItem.Text" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="groupReplicatesByContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="groupReplicatesByContextMenuItem.Text" xml:space="preserve">
+    <value>グループ別</value>
+  </data>
 </root>

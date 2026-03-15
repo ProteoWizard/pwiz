@@ -1104,11 +1104,6 @@ namespace pwiz.Skyline
         }
 
 
-        public void ToggleObservedMzValues()
-        {
-            Settings.Default.ShowObservedMz = !Settings.Default.ShowObservedMz;
-            UpdateSpectrumGraph(false);
-        }
 
         void GraphSpectrum.IStateProvider.BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
@@ -1428,52 +1423,12 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        public void ShowMassErrors(bool show)
-        {
-            Settings.Default.ShowMassError = show;
-            UpdateChromGraphs();
-        }
-
-        public void ShowPeakBoundaries(bool show)
-        {
-            Settings.Default.ShowPeakBoundaries = show;
-            UpdateChromGraphs();
-        }
-
-        public void ShowOriginalPeak(bool show)
-        {
-            Settings.Default.ShowOriginalPeak = show;
-            UpdateChromGraphs();
-        }
-
         public void ShowExemplaryPeak(bool show)
         {
             Settings.Default.ShowExemplaryPeakBounds = show;
             UpdateChromGraphs();
         }
 
-        public void SetShowRetentionTimes(ShowRTChrom showRTChrom)
-        {
-            Settings.Default.ShowRetentionTimesEnum = showRTChrom.ToString();
-            UpdateChromGraphs();
-        }
-
-        public void ShowChromatogramRTThresholdDlg()
-        {
-            using (var dlg = new ChromatogramRTThresholdDlg())
-            {
-                double threshold = Settings.Default.ShowRetentionTimesThreshold;
-                if (threshold > 0)
-                    dlg.Threshold = threshold;
-
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    Settings.Default.ShowRetentionTimesThreshold = dlg.Threshold;
-                    Settings.Default.ShowRetentionTimesEnum = ShowRTChrom.threshold.ToString();
-                    UpdateChromGraphs();
-                }
-            }
-        }
 
         public void ToggleRawTimesMenuItem()
         {
@@ -1481,12 +1436,6 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        public void SetShowRetentionTimePred(bool showRetentionTimePred)
-        {
-            Settings.Default.ShowRetentionTimePred = showRetentionTimePred;
-            UpdateChromGraphs();
-
-        }
 
         public void ShowPeptideIDTimes(bool show)
         {
@@ -1506,13 +1455,6 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        public void HideAllIdTimes()
-        {
-            Settings.Default.ShowPeptideIdTimes =
-                Settings.Default.ShowAlignedPeptideIdTimes =
-                Settings.Default.ShowUnalignedPeptideIdTimes = false;
-            UpdateChromGraphs();
-        }
 
         public bool IsMultipleIonSources
         {
@@ -1557,17 +1499,6 @@ namespace pwiz.Skyline
             SetDisplayTypeChrom(DisplayTypeChrom.products);
         }
 
-        public void ShowRelativeAbundanceFormatting()
-        {
-            var summary = _listGraphPeakArea.FirstOrDefault(graph => graph.Type == GraphTypeSummary.abundance);
-            if (summary != null)
-            {
-                if (summary.TryGetGraphPane<SummaryRelativeAbundanceGraphPane>(out var graphPane))
-                {
-                    graphPane.ShowFormattingDialog();
-                }
-            }
-        }
         public void ShowAllTransitions()
         {
             SetDisplayTypeChrom(DisplayTypeChrom.all);
@@ -1683,6 +1614,23 @@ namespace pwiz.Skyline
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                     UpdateChromGraphs();
+            }
+        }
+
+        public void ShowChromatogramRTThresholdDlg()
+        {
+            using (var dlg = new ChromatogramRTThresholdDlg())
+            {
+                double threshold = Settings.Default.ShowRetentionTimesThreshold;
+                if (threshold > 0)
+                    dlg.Threshold = threshold;
+
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.ShowRetentionTimesThreshold = dlg.Threshold;
+                    Settings.Default.ShowRetentionTimesEnum = ShowRTChrom.threshold.ToString();
+                    UpdateChromGraphs();
+                }
             }
         }
 
@@ -2275,7 +2223,7 @@ namespace pwiz.Skyline
                 _graphSpectrum.SelectSpectrum(e.SpectrumId);
         }
 
-        private void UpdateChromGraphs()
+        public void UpdateChromGraphs()
         {
             foreach (var graphChrom in _listGraphChrom)
                 graphChrom.UpdateUI();
@@ -2643,51 +2591,7 @@ namespace pwiz.Skyline
 
         // BuildRTGraphMenu has been moved to RetentionTimesContextMenu
 
-        internal void AddScopeContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert, scopeContextMenuItem);
-            if (scopeContextMenuItem.DropDownItems.Count == 0)
-            {
-                scopeContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    documentScopeContextMenuItem,
-                    proteinScopeContextMenuItem
-                });
-            }
-        }
-
-        internal int AddReplicatesContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            if (DocumentUI.Settings.HasResults &&
-                DocumentUI.Settings.MeasuredResults.Chromatograms.Count > 1)
-            {
-                menuStrip.Items.Insert(iInsert++, replicatesRTContextMenuItem);
-                if (replicatesRTContextMenuItem.DropDownItems.Count == 0)
-                {
-                    replicatesRTContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        averageReplicatesContextMenuItem,
-                        singleReplicateRTContextMenuItem,
-                        bestReplicateRTContextMenuItem
-                    });
-                }
-            }
-            return iInsert;
-        }
-
-        internal void AddPeptideOrderContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert, peptideOrderContextMenuItem);
-            if (peptideOrderContextMenuItem.DropDownItems.Count == 0)
-            {
-                peptideOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    peptideOrderDocumentContextMenuItem,
-                    peptideOrderRTContextMenuItem,
-                    peptideOrderAreaContextMenuItem
-                });
-            }
-        }
+        // AddScopeContextMenu, AddReplicatesContextMenu, AddPeptideOrderContextMenu moved to ContextMenuControl
 
         // timeGraphMenuItem_DropDownOpening, regressionMenuItem_Click, fullReplicateComparisonToolStripMenuItem_Click
         // moved to RetentionTimesContextMenu
@@ -2765,10 +2669,7 @@ namespace pwiz.Skyline
 
         // refineRTContextMenuItem_Click, predictionRTContextMenuItem_Click moved to RetentionTimesContextMenu
 
-        private void averageReplicatesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowAverageReplicates();
-        }
+        // averageReplicatesContextMenuItem_Click moved to ContextMenuControl
 
         public void ShowAverageReplicates()
         {
@@ -2776,10 +2677,7 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void singleReplicateRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowSingleReplicate();
-        }
+        // singleReplicateRTContextMenuItem_Click moved to ContextMenuControl
 
         public void ShowSingleReplicate()
         {
@@ -2789,21 +2687,7 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void bestReplicateRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.best.ToString();
-            // No CVs with single replicate data views
-            Settings.Default.ShowPeptideCV = false;
-            UpdateSummaryGraphs();
-        }
-
-        private void replicatesRTContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            ReplicateDisplay replicate = RTLinearRegressionGraphPane.ShowReplicate;
-            averageReplicatesContextMenuItem.Checked = (replicate == ReplicateDisplay.all);
-            singleReplicateRTContextMenuItem.Checked = (replicate == ReplicateDisplay.single);
-            bestReplicateRTContextMenuItem.Checked = (replicate == ReplicateDisplay.best);
-        }
+        // bestReplicateRTContextMenuItem_Click, replicatesRTContextMenuItem_DropDownOpening moved to ContextMenuControl
 
         // setRTThresholdContextMenuItem_Click moved to RetentionTimesContextMenu
 
@@ -3082,12 +2966,6 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        public void SetAreaCVMsLevel(AreaCVMsLevel msLevel)
-        {
-            AreaGraphController.AreaCVMsLevel = msLevel;
-            UpdatePeakAreaGraph();
-        }
-
 
         public void SetAreaGraphDisplayType(AreaGraphDisplayType displayType)
         {
@@ -3156,77 +3034,8 @@ namespace pwiz.Skyline
             Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString();
         }
 
-        internal int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
-        {
-            ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
-            var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
-
-            var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
-                value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
-            menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
-            replicateOrderContextMenuItem.DropDownItems.Clear();
-            replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                replicateOrderDocumentContextMenuItem,
-                replicateOrderAcqTimeContextMenuItem
-            });
-            replicateOrderDocumentContextMenuItem.Checked
-                = null == orderByReplicateAnnotationDef &&
-                  SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
-            replicateOrderAcqTimeContextMenuItem.Checked
-                = null == orderByReplicateAnnotationDef &&
-                  SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
-            foreach (var replicateValue in groupByValues)
-            {
-                replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
-                    replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
-            }
-            
-            if (groupByValues.Length > 0)
-            {
-                menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
-                groupReplicatesByContextMenuItem.DropDownItems.Clear();
-                groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked = currentGroupBy == null;
-                foreach (var replicateValue in groupByValues)
-                {
-                    groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, Equals(replicateValue, currentGroupBy)));
-                }
-            }
-            return iInsert;
-        }
-
-        public ToolStripMenuItem ReplicateOrderContextMenuItem
-        {
-            get
-            {
-                return replicateOrderContextMenuItem;
-            }
-        }
-
-        public ToolStripMenuItem ReplicateGroupByContextMenuItem
-        {
-            get { return groupReplicatesByContextMenuItem; }
-        }
-
-        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, bool isChecked)
-        {
-            return new ToolStripMenuItem(replicateValue.Title, null,
-                (sender, eventArgs) => GroupByReplicateValue(replicateValue))
-            {
-                Checked = isChecked
-            };
-        }
-
-        private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string currentOrderBy)
-        {
-            return new ToolStripMenuItem(replicateValue.Title, null,
-                                         (sender, eventArgs) => OrderByReplicateAnnotation(replicateValue))
-                {
-                    Checked = replicateValue.ToPersistedString() == currentOrderBy
-                };
-        }
+        // AddReplicateOrderAndGroupByMenuItems, ReplicateOrderContextMenuItem, ReplicateGroupByContextMenuItem,
+        // GroupByReplicateAnnotationMenuItem, OrderByReplicateAnnotationMenuItem moved to ContextMenuControl
 
         public void RemoveAboveCVCutoff(GraphSummary graphSummary)
         {
@@ -3313,11 +3122,6 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        public void EnableAreaCVLogScale(bool enabled)
-        {
-            Settings.Default.AreaCVLogScale = enabled;
-            UpdatePeakAreaGraph();
-        }
 
         public void SetNormalizationMethod(NormalizeOption normalizeOption)
         {
@@ -3379,15 +3183,7 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        private void replicateOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowReplicateOrder(SummaryReplicateOrder.document);
-        }
-
-        private void replicateOrderAcqTimeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowReplicateOrder(SummaryReplicateOrder.time);
-        }
+        // replicateOrderDocumentContextMenuItem_Click, replicateOrderAcqTimeContextMenuItem_Click moved to ContextMenuControl
 
         public void ShowReplicateOrder(SummaryReplicateOrder order)
         {
@@ -3396,10 +3192,7 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void groupByReplicateContextMenuItem_Click(object sender, EventArgs e)
-        {
-            GroupByReplicateValue(null);
-        }
+        // groupByReplicateContextMenuItem_Click moved to ContextMenuControl
 
         public void GroupByReplicateValue(ReplicateValue replicateValue)
         {
@@ -3420,22 +3213,8 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void scopeContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var areaScope = AreaGraphController.AreaScope;
-            documentScopeContextMenuItem.Checked = (areaScope == AreaScope.document);
-            proteinScopeContextMenuItem.Checked = (areaScope == AreaScope.protein);
-        }
-
-        private void documentScopeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AreaScopeTo(AreaScope.document);
-        }
-
-        private void proteinScopeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AreaScopeTo(AreaScope.protein);
-        }
+        // scopeContextMenuItem_DropDownOpening, documentScopeContextMenuItem_Click,
+        // proteinScopeContextMenuItem_Click moved to ContextMenuControl
 
         public void AreaScopeTo(AreaScope areaScope)
         {
@@ -3443,34 +3222,9 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void peptideOrderContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            SummaryPeptideOrder peptideOrder = SummaryPeptideGraphPane.PeptideOrder;
-            peptideOrderDocumentContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.document);
-            peptideOrderRTContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.time);
-            peptideOrderAreaContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.area);
-            peptideOrderMassErrorContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.mass_error);
-        }
-
-        private void peptideOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeptideOrder(SummaryPeptideOrder.document);
-        }
-
-        private void peptideOrderRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeptideOrder(SummaryPeptideOrder.time);
-        }
-
-        private void peptideOrderAreaContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeptideOrder(SummaryPeptideOrder.area);
-        }
-
-        private void peptideOrderMassErrorContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeptideOrder(SummaryPeptideOrder.mass_error);
-        }
+        // peptideOrderContextMenuItem_DropDownOpening, peptideOrderDocumentContextMenuItem_Click,
+        // peptideOrderRTContextMenuItem_Click, peptideOrderAreaContextMenuItem_Click,
+        // peptideOrderMassErrorContextMenuItem_Click moved to ContextMenuControl
 
         public void ShowPeptideOrder(SummaryPeptideOrder order)
         {
@@ -3495,11 +3249,6 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        public void ShowRelativeAbundanceLogScale(bool isChecked)
-        {
-            Settings.Default.RelativeAbundanceLogScale = isChecked ;
-            UpdateRelativeAbundanceGraphs();
-        }
 
         public void SetAreaProteinTargets(bool areaProteinTargets)
         {

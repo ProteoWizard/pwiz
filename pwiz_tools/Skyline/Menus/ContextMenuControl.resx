@@ -142,6 +142,108 @@
   <data name="peptideCvsContextMenuItem.Text" xml:space="preserve">
     <value>CV Values</value>
   </data>
+  <data name="peptideOrderDocumentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 22</value>
+  </data>
+  <data name="peptideOrderDocumentContextMenuItem.Text" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="peptideOrderRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 22</value>
+  </data>
+  <data name="peptideOrderRTContextMenuItem.Text" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
+  <data name="peptideOrderAreaContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 22</value>
+  </data>
+  <data name="peptideOrderAreaContextMenuItem.Text" xml:space="preserve">
+    <value>Peak Area</value>
+  </data>
+  <data name="peptideOrderMassErrorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 22</value>
+  </data>
+  <data name="peptideOrderMassErrorContextMenuItem.Text" xml:space="preserve">
+    <value>Mass Error</value>
+  </data>
+  <data name="peptideOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="peptideOrderContextMenuItem.Text" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="scopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="scopeContextMenuItem.Text" xml:space="preserve">
+    <value>Scope</value>
+  </data>
+  <data name="documentScopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="documentScopeContextMenuItem.Text" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="proteinScopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="proteinScopeContextMenuItem.Text" xml:space="preserve">
+    <value>Protein</value>
+  </data>
+  <data name="replicatesRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="replicatesRTContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="averageReplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 22</value>
+  </data>
+  <data name="averageReplicatesContextMenuItem.Text" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="singleReplicateRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 22</value>
+  </data>
+  <data name="singleReplicateRTContextMenuItem.Text" xml:space="preserve">
+    <value>Single</value>
+  </data>
+  <data name="bestReplicateRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 22</value>
+  </data>
+  <data name="bestReplicateRTContextMenuItem.Text" xml:space="preserve">
+    <value>Best</value>
+  </data>
+  <data name="replicateOrderDocumentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="replicateOrderDocumentContextMenuItem.Text" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="replicateOrderAcqTimeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="replicateOrderAcqTimeContextMenuItem.Text" xml:space="preserve">
+    <value>Acquired Time</value>
+  </data>
+  <data name="replicateOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="replicateOrderContextMenuItem.Text" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="groupByReplicateContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 22</value>
+  </data>
+  <data name="groupByReplicateContextMenuItem.Text" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="groupReplicatesByContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="groupReplicatesByContextMenuItem.Text" xml:space="preserve">
+    <value>Group By</value>
+  </data>
   <data name="sharedContextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 70</value>
   </data>
@@ -179,6 +281,108 @@
     <value>peptideCvsContextMenuItem</value>
   </data>
   <data name="&gt;&gt;peptideCvsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderContextMenuItem.Name" xml:space="preserve">
+    <value>peptideOrderContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderDocumentContextMenuItem.Name" xml:space="preserve">
+    <value>peptideOrderDocumentContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderDocumentContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderRTContextMenuItem.Name" xml:space="preserve">
+    <value>peptideOrderRTContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderAreaContextMenuItem.Name" xml:space="preserve">
+    <value>peptideOrderAreaContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderAreaContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderMassErrorContextMenuItem.Name" xml:space="preserve">
+    <value>peptideOrderMassErrorContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;peptideOrderMassErrorContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;scopeContextMenuItem.Name" xml:space="preserve">
+    <value>scopeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;scopeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;documentScopeContextMenuItem.Name" xml:space="preserve">
+    <value>documentScopeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;documentScopeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;proteinScopeContextMenuItem.Name" xml:space="preserve">
+    <value>proteinScopeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;proteinScopeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;replicatesRTContextMenuItem.Name" xml:space="preserve">
+    <value>replicatesRTContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;replicatesRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;averageReplicatesContextMenuItem.Name" xml:space="preserve">
+    <value>averageReplicatesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;averageReplicatesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;singleReplicateRTContextMenuItem.Name" xml:space="preserve">
+    <value>singleReplicateRTContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;singleReplicateRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bestReplicateRTContextMenuItem.Name" xml:space="preserve">
+    <value>bestReplicateRTContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;bestReplicateRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;replicateOrderContextMenuItem.Name" xml:space="preserve">
+    <value>replicateOrderContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;replicateOrderContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;replicateOrderDocumentContextMenuItem.Name" xml:space="preserve">
+    <value>replicateOrderDocumentContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;replicateOrderDocumentContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;replicateOrderAcqTimeContextMenuItem.Name" xml:space="preserve">
+    <value>replicateOrderAcqTimeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;replicateOrderAcqTimeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupReplicatesByContextMenuItem.Name" xml:space="preserve">
+    <value>groupReplicatesByContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;groupReplicatesByContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupByReplicateContextMenuItem.Name" xml:space="preserve">
+    <value>groupByReplicateContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;groupByReplicateContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

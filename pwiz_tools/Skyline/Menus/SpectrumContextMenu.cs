@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Menus
 
         private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ToggleObservedMzValues();
+            ToggleObservedMzValues();
         }
 
         private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
@@ -277,6 +277,16 @@ namespace pwiz.Skyline.Menus
         {
             var source = (synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm() as IMzScalePlot;
             SkylineWindow.SynchMzScaleToolStripMenuItemClick(synchMzScaleToolStripMenuItem.Checked, source);
+        }
+
+        #endregion
+
+        #region Moved from SkylineGraphs
+
+        private void ToggleObservedMzValues()
+        {
+            Settings.Default.ShowObservedMz = !Settings.Default.ShowObservedMz;
+            SkylineWindow.UpdateSpectrumGraph(false);
         }
 
         #endregion

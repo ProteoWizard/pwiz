@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Menus
             }
             if (graphType == GraphTypeSummary.replicate)
             {
-                iInsert = SkylineWindow.AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
+                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
                 var massErrorReplicateGraphPane = graph.GraphPanes.FirstOrDefault() as MassErrorReplicateGraphPane;
                 if (massErrorReplicateGraphPane != null)
                 {
@@ -62,13 +62,13 @@ namespace pwiz.Skyline.Menus
             }
             else if (graphType == GraphTypeSummary.peptide)
             {
-                SkylineWindow.AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                iInsert = SkylineWindow.AddReplicatesContextMenu(menuStrip, iInsert);
-                SkylineWindow.AddScopeContextMenu(menuStrip, iInsert++);
+                AddPeptideOrderContextMenu(menuStrip, iInsert++);
+                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
+                AddScopeContextMenu(menuStrip, iInsert++);
             }
             else if (graphType == GraphTypeSummary.histogram || graphType == GraphTypeSummary.histogram2d)
             {
-                iInsert = SkylineWindow.AddReplicatesContextMenu(menuStrip, iInsert);
+                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
                 iInsert = AddPointsContextMenu(menuStrip, iInsert);
                 massErrorTargetsContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.targets;
                 massErrorDecoysContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.decoys;

@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Menus
 
             if (isHistogram)
             {
-                SkylineWindow.EditMenu.AddGroupByMenuItems(menuStrip, SkylineWindow.ReplicateGroupByContextMenuItem, SkylineWindow.SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
+                SkylineWindow.EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SkylineWindow.SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
             }
             else if (graphType != GraphTypeSummary.abundance)
             {
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Menus
             }
             if (graphType == GraphTypeSummary.replicate)
             {
-                iInsert = SkylineWindow.AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
+                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
                 var normalizeOptions = new List<NormalizeOption>();
                 normalizeOptions.Add(NormalizeOption.DEFAULT);
                 normalizeOptions.AddRange(NormalizeOption.AvailableNormalizeOptions(DocumentUI));
@@ -132,12 +132,12 @@ namespace pwiz.Skyline.Menus
             }
             else if (graphType == GraphTypeSummary.peptide)
             {
-                SkylineWindow.AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                SkylineWindow.AddScopeContextMenu(menuStrip, iInsert++);
+                AddPeptideOrderContextMenu(menuStrip, iInsert++);
+                AddScopeContextMenu(menuStrip, iInsert++);
             }
             if (graphType == GraphTypeSummary.abundance || graphType == GraphTypeSummary.peptide)
             {
-                iInsert = SkylineWindow.AddReplicatesContextMenu(menuStrip, iInsert);
+                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
             }
 
             if (isHistogram)
@@ -419,7 +419,7 @@ namespace pwiz.Skyline.Menus
             => SkylineWindow.ShowPeptideLogScale(peptideLogScaleContextMenuItem.Checked);
 
         private void relativeAbundanceLogScaleContextMenuItem_Click(object sender, EventArgs e)
-            => SkylineWindow.ShowRelativeAbundanceLogScale(relativeAbundanceLogScaleContextMenuItem.Checked);
+            => ShowRelativeAbundanceLogScale(relativeAbundanceLogScaleContextMenuItem.Checked);
 
         private void areaPropsContextMenuItem_Click(object sender, EventArgs e)
         {
@@ -438,7 +438,7 @@ namespace pwiz.Skyline.Menus
         }
 
         private void areaCVLogScaleToolStripMenuItem_Click(object sender, EventArgs e)
-            => SkylineWindow.EnableAreaCVLogScale(!Settings.Default.AreaCVLogScale);
+            => EnableAreaCVLogScale(!Settings.Default.AreaCVLogScale);
 
         private void areaCVAllTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.SetAreaCVTransitions(AreaCVTransitions.all, -1);
@@ -454,10 +454,10 @@ namespace pwiz.Skyline.Menus
             => SkylineWindow.SetAreaCVTransitions(AreaCVTransitions.best, -1);
 
         private void areaCVPrecursorsToolStripMenuItem_Click(object sender, EventArgs e)
-            => SkylineWindow.SetAreaCVMsLevel(AreaCVMsLevel.precursors);
+            => SetAreaCVMsLevel(AreaCVMsLevel.precursors);
 
         private void areaCVProductsToolStripMenuItem_Click(object sender, EventArgs e)
-            => SkylineWindow.SetAreaCVMsLevel(AreaCVMsLevel.products);
+            => SetAreaCVMsLevel(AreaCVMsLevel.products);
 
         private void areaCVtargetsToolStripMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets);
@@ -502,12 +502,46 @@ namespace pwiz.Skyline.Menus
             => SkylineWindow.SetExcludePeptideListsFromAbundanceGraph(!Settings.Default.ExcludePeptideListsFromAbundanceGraph);
 
         private void relativeAbundanceFormattingMenuItem_Click(object sender, EventArgs e)
-            => SkylineWindow.ShowRelativeAbundanceFormatting();
+            => ShowRelativeAbundanceFormatting();
 
         private void excludeTargetsStandardsMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ExcludeStandardsFromAbundanceGraph = !Settings.Default.ExcludeStandardsFromAbundanceGraph;
             SkylineWindow.UpdateSummaryGraphs();
         }
+
+        #region Moved from SkylineGraphs
+
+        private void ShowRelativeAbundanceFormatting()
+        {
+            var summary = SkylineWindow.ListGraphPeakArea.FirstOrDefault(graph => graph.Type == GraphTypeSummary.abundance);
+            if (summary != null)
+            {
+                if (summary.TryGetGraphPane<SummaryRelativeAbundanceGraphPane>(out var graphPane))
+                {
+                    graphPane.ShowFormattingDialog();
+                }
+            }
+        }
+
+        private void ShowRelativeAbundanceLogScale(bool isChecked)
+        {
+            Settings.Default.RelativeAbundanceLogScale = isChecked;
+            SkylineWindow.UpdateRelativeAbundanceGraphs();
+        }
+
+        private void EnableAreaCVLogScale(bool enabled)
+        {
+            Settings.Default.AreaCVLogScale = enabled;
+            SkylineWindow.UpdatePeakAreaGraph();
+        }
+
+        private void SetAreaCVMsLevel(AreaCVMsLevel msLevel)
+        {
+            AreaGraphController.AreaCVMsLevel = msLevel;
+            SkylineWindow.UpdatePeakAreaGraph();
+        }
+
+        #endregion
     }
 }

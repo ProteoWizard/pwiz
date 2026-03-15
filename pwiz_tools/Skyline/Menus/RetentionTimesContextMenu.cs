@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Menus
                 {
                     predictionRTContextMenuItem.Checked = set.RTPredictorVisible;
                     menuStrip.Items.Insert(iInsert++, predictionRTContextMenuItem);
-                    iInsert = SkylineWindow.AddReplicatesContextMenu(menuStrip, iInsert);
+                    iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
                 }
 
                 menuStrip.Items.Insert(iInsert++, setRTThresholdContextMenuItem);
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Menus
                 AddTransitionContextMenu(menuStrip, iInsert++);
                 if (graphType == GraphTypeSummary.replicate)
                 {
-                    iInsert = SkylineWindow.AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
+                    iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
                     var rtReplicateGraphPane = graph.GraphPanes.FirstOrDefault() as RTReplicateGraphPane;
                     if (rtReplicateGraphPane != null && rtReplicateGraphPane.CanShowRTLegend)
                     {
@@ -148,9 +148,9 @@ namespace pwiz.Skyline.Menus
                 }
                 else if (graphType == GraphTypeSummary.peptide)
                 {
-                    SkylineWindow.AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                    iInsert = SkylineWindow.AddReplicatesContextMenu(menuStrip, iInsert);
-                    SkylineWindow.AddScopeContextMenu(menuStrip, iInsert++);
+                    AddPeptideOrderContextMenu(menuStrip, iInsert++);
+                    iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
+                    AddScopeContextMenu(menuStrip, iInsert++);
                     InsertAlignmentMenuItems(menuStrip.Items, null, iInsert);
                 }
                 if (graphType == GraphTypeSummary.peptide ||  graphType == GraphTypeSummary.abundance || null != SummaryReplicateGraphPane.GroupByReplicateAnnotation)
