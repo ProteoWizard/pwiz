@@ -139,6 +139,7 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_get_report_from_definition"),
      Description("Run a custom Skyline report from a JSON report definition and return results. Use this when you need specific columns not available in predefined reports. The JSON format uses a 'select' array of column display names (PascalCase, invariant). Use skyline_get_report_doc_topics and skyline_get_report_doc_topic to discover available column names. Example: {\"select\": [\"ProteinName\", \"PeptideModifiedSequence\", \"PrecursorMz\", \"BestRetentionTime\", \"Area\"]}. The row source is automatically inferred from the selected columns. " +
+        "Optional 'scope' field targets a specific reporting scope: 'document_grid' (default, auto-detected), 'audit_log', 'group_comparisons', or 'candidate_peaks'. " +
         "Optional 'filter' array filters rows: [{\"column\": \"Area\", \"op\": \">\", \"value\": \"1000\"}, {\"column\": \"ProteinName\", \"op\": \"contains\", \"value\": \"INS\"}]. " +
         "Valid filter ops: 'equals', '<>', '>', '<', '>=', '<=', 'contains', 'notcontains', 'startswith', 'notstartswith', 'isnullorblank', 'isnotnullorblank'. " +
         "Filter columns can reference any column in the data model, not just selected ones. 'value' is required for all ops except 'isnullorblank'/'isnotnullorblank'. " +
@@ -146,7 +147,7 @@ public static class SkylineTools
         "Optional 'pivot_replicate': true pivots replicates into columns (one column per replicate); false forces one row per replicate. Omit to use default inference. " +
         "Optional 'pivot_isotope_label': true pivots isotope label types into columns.")]
     public static string GetReportFromDefinition(
-        [Description("JSON report definition with a 'select' array of column names. Example: {\"select\": [\"ProteinName\", \"PrecursorMz\", \"Area\"]}. Optional 'name' field for the report name. Optional 'filter' array to filter rows and 'sort' array to sort results.")] string reportDefinitionJson,
+        [Description("JSON report definition with a 'select' array of column names. Example: {\"select\": [\"ProteinName\", \"PrecursorMz\", \"Area\"]}. Optional 'name' field for the report name. Optional 'filter' array to filter rows, 'sort' array to sort results, and 'scope' to target a specific reporting scope.")] string reportDefinitionJson,
         [Description("Output file path. If not specified, saves to a temp directory. Extension determines format (.csv, .tsv, .parquet).")] string filePath = null,
         [Description("Output format when filePath is not specified: csv, tsv, or parquet (default: csv)")] string format = "csv",
         [Description("Use invariant locale for consistent decimal separators and full precision (default: true). Set to false for localized format.")] bool invariant = true)
@@ -162,10 +163,10 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_add_report"),
      Description("Save a custom report definition to the user's Skyline session. Uses the same JSON format as skyline_get_report_from_definition but persists the report so it appears in Skyline's report list. The 'name' field is required. Use skyline_get_report_doc_topics and skyline_get_report_doc_topic to discover available column names. " +
-        "Supports optional 'filter', 'pivot_replicate', and 'pivot_isotope_label' fields - see skyline_get_report_from_definition for format details. " +
+        "Supports optional 'scope', 'filter', 'pivot_replicate', and 'pivot_isotope_label' fields - see skyline_get_report_from_definition for format details. " +
         "Note: 'sort' is ignored when saving reports, as Skyline report definitions do not include a default sort order.")]
     public static string AddReport(
-        [Description("JSON report definition with a required 'name' field and a 'select' array of column names. Example: {\"name\": \"My Report\", \"select\": [\"ProteinName\", \"PrecursorMz\", \"Area\"]}. Optional 'filter', 'pivot_replicate', and 'pivot_isotope_label' fields.")] string reportDefinitionJson)
+        [Description("JSON report definition with a required 'name' field and a 'select' array of column names. Example: {\"name\": \"My Report\", \"select\": [\"ProteinName\", \"PrecursorMz\", \"Area\"]}. Optional 'scope', 'filter', 'pivot_replicate', and 'pivot_isotope_label' fields.")] string reportDefinitionJson)
     {
         return Invoke(connection =>
         {
@@ -304,12 +305,20 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_get_report_doc_topics"),
-     Description("List available report column documentation topics. Returns tab-separated lines of DisplayName and QualifiedTypeName for each entity type (e.g., Molecule, Precursor, Transition). Use skyline_get_report_doc_topic to get column details for a specific topic.")]
-    public static string GetReportDocTopics()
+     Description("List available report column documentation topics. Returns tab-separated lines " +
+        "of DisplayName and ColumnCount for each entity type (e.g., Molecule, Precursor, Transition). " +
+        "Use skyline_get_report_doc_topic to get column details for a specific topic. " +
+        "Supports multiple scopes: 'document_grid' (default), 'audit_log', 'group_comparisons', " +
+        "'candidate_peaks'.")]
+    public static string GetReportDocTopics(
+        [Description("Reporting scope: 'document_grid' (default), 'audit_log', 'group_comparisons', " +
+            "or 'candidate_peaks'. Each scope has its own column namespace.")] string scope = null)
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetReportDocTopics));
+            string result = string.IsNullOrEmpty(scope)
+                ? connection.Call(nameof(IJsonToolService.GetReportDocTopics))
+                : connection.Call(nameof(IJsonToolService.GetReportDocTopics), scope);
             return string.IsNullOrEmpty(result)
                 ? "No report documentation topics found."
                 : result;
@@ -317,13 +326,21 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_get_report_doc_topic"),
-     Description("Get column documentation for a specific report entity type. Returns a table of column names, descriptions, and types. Use skyline_get_report_doc_topics to discover available topics.")]
+     Description("Get column documentation for a specific report entity type. Returns a table of " +
+        "column names, descriptions, and types. Use skyline_get_report_doc_topics to discover " +
+        "available topics. Supports scopes: 'document_grid' (default), 'audit_log', " +
+        "'group_comparisons', 'candidate_peaks'.")]
     public static string GetReportDocTopic(
-        [Description("The topic name (display name like 'Molecule' or qualified type name). Case-insensitive partial match on display name.")] string topic)
+        [Description("The topic name (display name like 'Molecule' or qualified type name). " +
+            "Case-insensitive partial match on display name.")] string topic,
+        [Description("Reporting scope: 'document_grid' (default), 'audit_log', 'group_comparisons', " +
+            "or 'candidate_peaks'.")] string scope = null)
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetReportDocTopic), topic);
+            string result = string.IsNullOrEmpty(scope)
+                ? connection.Call(nameof(IJsonToolService.GetReportDocTopic), topic)
+                : connection.Call(nameof(IJsonToolService.GetReportDocTopic), topic, scope);
             return string.IsNullOrEmpty(result)
                 ? $"No documentation found for topic: {topic}"
                 : result;

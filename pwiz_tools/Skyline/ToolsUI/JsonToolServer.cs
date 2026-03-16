@@ -37,7 +37,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -404,9 +403,9 @@ namespace pwiz.Skyline.ToolsUI
             return JsonTutorialCatalog.FormatCatalog();
         }
 
-        public string GetReportDocTopics()
+        public string GetReportDocTopics(string scope = null)
         {
-            var topics = GetTopicList();
+            var topics = GetTopicList(scope);
             var sb = new StringBuilder();
             foreach (var topic in topics)
             {
@@ -458,9 +457,9 @@ namespace pwiz.Skyline.ToolsUI
             return sb.ToString();
         }
 
-        public string GetReportDocTopic(string topicName)
+        public string GetReportDocTopic(string topicName, string scope = null)
         {
-            var topics = GetTopicList();
+            var topics = GetTopicList(scope);
             var matchedTopic = FindMatchingTopic(topicName, topics);
             if (matchedTopic == null)
                 return null;
@@ -476,12 +475,12 @@ namespace pwiz.Skyline.ToolsUI
             return sb.ToString();
         }
 
-        private IList<ColumnResolver.TopicInfo> GetTopicList()
+        private IList<ColumnResolver.TopicInfo> GetTopicList(string scope)
         {
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT, Program.MainWindow.ModeUI);
-            var resolver = new ColumnResolver(dataSchema);
-            return resolver.GetTopics();
+            var reader = new ReportDefinitionReader(dataSchema);
+            return reader.GetTopics(scope);
         }
 
         private static ColumnResolver.TopicInfo FindMatchingTopic(string topicName,
@@ -948,160 +947,15 @@ namespace pwiz.Skyline.ToolsUI
 
         private ViewSpec ResolveReportDefinition(ReportDefinition definition, SkylineDataSchema dataSchema)
         {
-            if (definition.Select == null || definition.Select.Length == 0)
-            {
-                throw new ArgumentException(new LlmInstruction(
-                    @"The 'select' array is required and must not be empty."));
-            }
-
-            var columnNames = definition.Select.ToList();
-            if (columnNames.Any(string.IsNullOrWhiteSpace))
-            {
-                throw new ArgumentException(new LlmInstruction(
-                    @"Column names in 'select' must not be empty."));
-            }
-
             string reportName = definition.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
             Log(string.Format(@"Resolving report '{0}' with {1} columns: {2}",
-                reportName, columnNames.Count, string.Join(@", ", columnNames)));
+                reportName, definition.Select?.Length ?? 0,
+                definition.Select != null ? string.Join(@", ", definition.Select) : string.Empty));
 
-            try
-            {
-                var resolver = new ColumnResolver(dataSchema);
-                var result = resolver.Resolve(columnNames);
-
-                var columnSpecs = result.PropertyPaths.Select(p => new ColumnSpec(p)).ToList();
-                Log(string.Format(@"Resolved {0} columns via {1} row source, sublist={2}",
-                    result.PropertyPaths.Count, result.RowSourceType.Name, result.SublistId));
-
-                var viewSpec = new ViewSpec()
-                    .SetName(reportName)
-                    .SetRowType(result.RowSourceType)
-                    .SetColumns(columnSpecs);
-                if (!result.SublistId.IsRoot)
-                    viewSpec = viewSpec.SetSublistId(result.SublistId);
-
-                // Apply UI mode: use explicit value or default to current SkylineWindow mode
-                string uiMode = definition.Uimode;
-                if (string.IsNullOrEmpty(uiMode))
-                    uiMode = UiModes.FromDocumentType(Program.MainWindow.ModeUI);
-                viewSpec = viewSpec.SetUiMode(uiMode);
-
-                // Apply filter specs
-                var filters = definition.Filter;
-                if (filters != null && filters.Length > 0)
-                {
-                    viewSpec = viewSpec.SetFilters(ParseFilterSpecs(filters, result));
-                    Log(string.Format(@"Applied {0} filter(s)", filters.Length));
-                }
-
-                // Apply pivot specs
-                if (definition.PivotReplicate == true)
-                {
-                    viewSpec = viewSpec.SetSublistId(PropertyPath.Root);
-                    Log(@"pivot_replicate=true: set sublist to root");
-                }
-                else if (definition.PivotReplicate == false)
-                {
-                    viewSpec = viewSpec.SetSublistId(
-                        SublistPaths.GetReplicateSublist(result.RowSourceType));
-                    Log(@"pivot_replicate=false: set sublist to replicate");
-                }
-
-                if (definition.PivotIsotopeLabel == true)
-                {
-                    viewSpec = PivotReplicateAndIsotopeLabelWidget.PivotIsotopeLabel(viewSpec, true);
-                    Log(@"pivot_isotope_label=true: applied isotope label pivot");
-                }
-
-                return viewSpec;
-            }
-            catch (ColumnResolver.UnresolvedColumnsException ex)
-            {
-                throw new ArgumentException(FormatUnresolvedColumnsError(ex));
-            }
-        }
-
-        private static LlmInstruction FormatUnresolvedColumnsError(
-            ColumnResolver.UnresolvedColumnsException ex)
-        {
-            var parts = ex.UnresolvedColumns.Select(col =>
-            {
-                if (col.Suggestions.Count > 0)
-                {
-                    return string.Format(@"Unknown column {0}. Did you mean: {1}?",
-                        col.Name.SingleQuote(),
-                        string.Join(@", ", col.Suggestions.Select(s => s.SingleQuote())));
-                }
-                return string.Format(@"Unknown column {0}.", col.Name.SingleQuote());
-            });
-            return LlmInstruction.SpaceSeparate(parts.ToArray());
-        }
-
-        private static List<FilterSpec> ParseFilterSpecs(ReportFilter[] reportFilters,
-            ColumnResolver.ResolveResult result)
-        {
-            var filters = new List<FilterSpec>();
-            foreach (var item in reportFilters)
-            {
-                string columnName = item.Column;
-                if (string.IsNullOrWhiteSpace(columnName))
-                {
-                    throw new ArgumentException(new LlmInstruction(
-                        @"Each filter must have a 'column' field."));
-                }
-
-                string opName = item.Op;
-                if (string.IsNullOrWhiteSpace(opName))
-                {
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Filter on column {0} must have an 'op' field.",
-                            columnName.SingleQuote()));
-                }
-
-                // Resolve column against the row source's full column index
-                // ReSharper disable once AssignNullToNotNullAttribute
-                if (!result.ColumnIndex.TryGetValue(columnName, out var columnInfo))
-                {
-                    var suggestions = ColumnResolver.FindSuggestions(columnName, result.ColumnIndex.Keys);
-                    if (suggestions.Count > 0)
-                    {
-                        throw new ArgumentException(LlmInstruction.Format(
-                            @"Unknown filter column {0}. Did you mean: {1}?",
-                                columnName.SingleQuote(),
-                                string.Join(@", ", suggestions.Select(s => s.SingleQuote()))));
-                    }
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Unknown filter column {0}.", columnName.SingleQuote()));
-                }
-
-                // Look up filter operation
-                var operation = FilterOperations.GetOperation(opName);
-                if (operation == null)
-                {
-                    var validOps = FilterOperations.ListOperations()
-                        .Where(o => !string.IsNullOrEmpty(o.OpName))
-                        .Select(o => o.OpName.SingleQuote());
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Unknown filter operation {0}. Valid operations: {1}.",
-                            opName.SingleQuote(), string.Join(@", ", validOps)));
-                }
-
-                // Validate operand presence
-                string operand = item.Value;
-                bool isUnaryOp = operation == FilterOperations.OP_IS_BLANK ||
-                                 operation == FilterOperations.OP_IS_NOT_BLANK;
-                if (!isUnaryOp && string.IsNullOrEmpty(operand))
-                {
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Filter operation {0} on column {1} requires a 'value' field.",
-                            opName.SingleQuote(), columnName.SingleQuote()));
-                }
-
-                var predicate = FilterPredicate.FromInvariantOperandText(operation, operand ?? string.Empty);
-                filters.Add(new FilterSpec(columnInfo.PropertyPath, predicate));
-            }
-            return filters;
+            var reader = new ReportDefinitionReader(dataSchema);
+            var viewSpec = reader.CreateViewSpec(definition, definition.Scope);
+            Log(string.Format(@"Resolved via {0} row source", viewSpec.RowSource));
+            return viewSpec;
         }
 
         private static List<RowFilter.ColumnSort> ParseSortSpecs(ReportDefinition definition)

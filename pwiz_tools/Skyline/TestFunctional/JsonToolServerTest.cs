@@ -315,7 +315,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsFalse(string.IsNullOrEmpty(topics));
             var topicLines = topics.ReadLines().ToList();
 
-            // Expect ~12 higher-level entity topics (10 target + 2 summary + replicate + audit log)
+            // Expect multiple entity topics from Document Grid scope (Protein, Peptide, etc.)
             AssertEx.IsTrue(topicLines.Count >= 10 && topicLines.Count <= 16,
                 @"Expected 10-16 topics, got " + topicLines.Count);
 
@@ -379,30 +379,31 @@ namespace pwiz.SkylineTestFunctional
             }
             AssertEx.IsTrue(foundNormalizedArea, @"NormalizedArea should appear in some topic");
 
-            // Audit log topics present
-            AssertEx.IsTrue(topicNames.Any(t => t.Contains(@"Audit")),
-                @"Expected audit log topic");
+            // Audit log topics available via scope
+            string auditTopics = server.GetReportDocTopics(ReportDefinitionReader.SCOPE_AUDIT_LOG);
+            AssertEx.Contains(auditTopics, @"Audit");
 
             // Spot-check: resolve a few columns from first topic
             var document = SkylineWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
-            var resolver = new ColumnResolver(dataSchema);
+            var reader = new ReportDefinitionReader(dataSchema);
             var sampleColumns = firstTopic.ReadLines().Skip(3).Take(3)
                 .Select(line => line.Split(TextUtil.SEPARATOR_TSV)[0]).ToList();
             if (sampleColumns.Count > 0)
-                AssertEx.IsNotNull(resolver.Resolve(sampleColumns));
+                AssertEx.IsNotNull(reader.CreateViewSpec(BuildSelectDef(sampleColumns.ToArray())));
 
             // Entity references and nested parents must be resolvable (bug fix:
             // ViewEditor lets users check these nodes, so they appear in reports)
-            AssertEx.IsNotNull(resolver.Resolve(new[] { @"Precursor" }),
+            AssertEx.IsNotNull(reader.CreateViewSpec(BuildSelectDef(@"Precursor")),
                 @"Root entity 'Precursor' should be resolvable");
-            AssertEx.IsNotNull(resolver.Resolve(new[] { @"Peptide" }),
+            AssertEx.IsNotNull(reader.CreateViewSpec(BuildSelectDef(@"Peptide")),
                 @"Parent entity 'Peptide' should be resolvable from Precursor");
-            AssertEx.IsNotNull(resolver.Resolve(new[] { @"ModifiedSequence" }),
+            AssertEx.IsNotNull(reader.CreateViewSpec(BuildSelectDef(@"ModifiedSequence")),
                 @"Nested parent 'ModifiedSequence' should be resolvable");
 
             // Row source selection: deepest entity level touched by any column wins
             // (matching DocumentViewTransformer.ConvertFromDocumentView behavior)
+            var resolver = new ColumnResolver(dataSchema);
             VerifyRowSource(resolver, new[] { @"PeptideModifiedSequence", @"PrecursorMz", @"Area" },
                 typeof(Transition), @"Area is TransitionResult -> Transition row source");
             VerifyRowSource(resolver, new[] { @"PeptideModifiedSequence", @"TotalArea" },

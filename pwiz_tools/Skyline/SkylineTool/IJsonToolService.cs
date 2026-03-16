@@ -53,7 +53,7 @@ namespace SkylineTool
         string GetDocumentStatus();
         string GetSettingsListTypes();
         string GetAvailableTutorials();
-        string GetReportDocTopics();
+        string GetReportDocTopics(string scope = null);
         string GetProcessId();
         string GetOpenForms();
 
@@ -63,7 +63,7 @@ namespace SkylineTool
         string RunCommandSilent(string commandArgs);
         string GetSettingsListNames(string listType);
         string GetSettingsListSelectedItems(string listType);
-        string GetReportDocTopic(string topicName);
+        string GetReportDocTopic(string topicName, string scope = null);
         string AddReportFromDefinition(ReportDefinition definition);
         string InsertSmallMoleculeTransitionList(string textCSV);
         string ImportProperties(string csvText);

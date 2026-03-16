@@ -59,6 +59,7 @@ namespace SkylineTool
         public bool? PivotReplicate { get; set; }
         public bool? PivotIsotopeLabel { get; set; }
         public string Uimode { get; set; }
+        public string Scope { get; set; }
     }
 
     /// <summary>

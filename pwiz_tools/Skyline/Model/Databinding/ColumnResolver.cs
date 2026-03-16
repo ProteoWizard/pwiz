@@ -24,6 +24,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -86,6 +87,8 @@ namespace pwiz.Skyline.Model.Databinding
         {
             _dataSchema = dataSchema;
         }
+
+        public SkylineDataSchema DataSchema => _dataSchema;
 
         public ResolveResult Resolve(IList<string> columnNames)
         {
@@ -701,7 +704,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// Thrown when one or more column names cannot be resolved to PropertyPaths.
         /// Contains structured data about each unresolved column and suggested alternatives.
         /// </summary>
-        public class UnresolvedColumnsException : Exception
+        public class UnresolvedColumnsException : ArgumentException
         {
             public UnresolvedColumnsException(List<UnresolvedColumn> unresolvedColumns)
                 : base(FormatMessage(unresolvedColumns))
@@ -711,11 +714,19 @@ namespace pwiz.Skyline.Model.Databinding
 
             public List<UnresolvedColumn> UnresolvedColumns { get; }
 
-            // Basic message for non-LLM consumers (e.g., logging)
             private static string FormatMessage(List<UnresolvedColumn> columns)
             {
-                return string.Format(@"Unresolved columns: {0}",
-                    string.Join(@", ", columns.Select(c => c.Name)));
+                var parts = columns.Select(col =>
+                {
+                    if (col.Suggestions.Count > 0)
+                    {
+                        return string.Format(@"Unknown column {0}. Did you mean: {1}?",
+                            col.Name.SingleQuote(),
+                            string.Join(@", ", col.Suggestions.Select(s => s.SingleQuote())));
+                    }
+                    return string.Format(@"Unknown column {0}.", col.Name.SingleQuote());
+                });
+                return string.Join(@" ", parts);
             }
         }
     }

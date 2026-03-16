@@ -576,6 +576,7 @@
     <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
     <Compile Include="Model\Databinding\DsvReportExporter.cs" />
     <Compile Include="Model\Databinding\ColumnResolver.cs" />
+    <Compile Include="Model\Databinding\ReportDefinitionReader.cs" />
     <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRowFactory.cs" />
