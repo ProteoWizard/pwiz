@@ -9,6 +9,20 @@ IF DEFINED TEAMCITY_VERSION (
 REM Remove C++ build artifacts to free up space
 rmdir /s /q build-nt-x86
 
+REM Run only specific failing tests for investigation
+set FailedTests=0
+set Aborted=0
+FOR %%I IN (TestAuditLogTutorial TestLiveReportsTutorial TestSmallMolMethodDevCEOptTutorial TestDiaSearchStellarTutorialDraft TestDiaQeDiaNnTutorialDraft) DO (
+IF !Aborted! equ 1 goto :doneFailingTests
+pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I pass0=on teamcitytestsuite=TestTutorial loop=1 language=en perftests=on teamcitytestdecoration=on runsmallmoleculeversions=on showheader=off pause=-4
+IF !ERRORLEVEL! equ -1073741510 set Aborted=1
+IF !Aborted! equ 1 goto :doneFailingTests
+IF ERRORLEVEL 1 set /a FailedTests += 1
+call :cleanup
+)
+:doneFailingTests
+goto :done
+
 pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestTutorial.dll listonly > tests.txt
 powershell "Get-Content tests.txt | ForEach-Object { $_.split(\"`t\")[1] }" > tutorialTestNames.txt
 pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestPerf.dll listonly > tests.txt
