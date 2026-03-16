@@ -189,13 +189,16 @@ namespace pwiz.Skyline.Model.Databinding
             RowItemEnumerator rowItemEnumerator = null;
             if (layout == null || layout.RowTransforms.Count == 0)
             {
-
                 rowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
             }
 
             if (rowItemEnumerator == null)
             {
                 using var bindingListSource = new BindingListSource(cancellationToken);
+                if (layout != null)
+                {
+                    bindingListSource.ApplyLayout(layout);
+                }
                 bindingListSource.SetView(viewInfo, rowSource);
                 cancellationToken.ThrowIfCancellationRequested();
                 rowItemEnumerator = new RowItemList(bindingListSource.ReportResults.RowItems)
