@@ -403,6 +403,7 @@
     <Compile Include="ExplicitVariableTest.cs" />
     <Compile Include="ImportEncyclopeDiaLibraryTest.cs" />
     <Compile Include="ImportFailureTest.cs" />
+    <Compile Include="ImportFullScanNarrowScanWindowsTest.cs" />
     <Compile Include="ImportIsolationSchemeTest.cs" />
     <Compile Include="ImportPeptideSearchTest.cs" />
     <Compile Include="ImportResultsCancelTest.cs" />
