@@ -111,11 +111,11 @@ H162	M	235	Scamper
 
 报告名称 = "default"
 
-Undo Redo : 注释 > "SubjectID" > Lookup 已更改为 "Samples"
-Summary   : 设置 > 文档设置 -- 注释 > "SubjectID" > Lookup 已更改为 "Samples"
+Undo Redo : 注释 > "SubjectID" > 查询 已更改为 "Samples"
+Summary   : 设置 > 文档设置 -- 注释 > "SubjectID" > 查询 已更改为 "Samples"
 All Info  :
-注释 > "SubjectID" > Lookup 已更改为 "Samples"
-设置 > 文档设置 -- 注释 > "SubjectID" > Lookup 从 缺失 更改到 "Samples"
+注释 > "SubjectID" > 查询 已更改为 "Samples"
+设置 > 文档设置 -- 注释 > "SubjectID" > 查询 从 缺失 更改到 "Samples"
 
 Undo Redo : 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于总体标准品比率"
 Summary   : 设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于总体标准品比率"

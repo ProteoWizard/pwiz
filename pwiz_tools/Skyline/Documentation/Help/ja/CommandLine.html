@@ -256,13 +256,13 @@ td {
 </table>
 <div class="RowType">装置メソッドのネイティブファイルをエクスポート中</div>
 <table>
-<tr><td><nobr>--exp-method-instrument</nobr>=<br/>&lt;Agilent 6400 Series | Agilent MassHunter 12 and higher | Bruker QTOF | Bruker timsTOF | SCIEX QQQ/QTRAP <nobr>-</nobr> Analyst | SCIEX QTOF <nobr>-</nobr> Analyst | SCIEX QQQ/QTRAP <nobr>-</nobr> SCIEX OS | SCIEX QTOF <nobr>-</nobr> SCIEX OS | Shimadzu | Thermo | Thermo TSQ Vantage/Ultra | Thermo LTQ (legacy) | Waters Xevo TQ | Waters Quattro Premier&gt;</td><td>メソッドをエクスポートします。このオプションはメソッドのエクスポートに必要で、デフォルトはありません。メソッドと単離リスト/トランジションリストを同時にエクスポートできないので、<nobr>このオプションは-</nobr>–<nobr>exp-isolationlist-instrumentまたは--exp-translist-instrumentとは併用できません</nobr>。</td></tr>
+<tr><td><nobr>--exp-method-instrument</nobr>=<br/>&lt;Agilent 6400 Series | Agilent MassHunter 12 and higher | Bruker QTOF | Bruker timsTOF | SCIEX QQQ/QTRAP <nobr>-</nobr> Analyst | SCIEX QTOF <nobr>-</nobr> Analyst | SCIEX QQQ/QTRAP <nobr>-</nobr> SCIEX OS | SCIEX QTOF <nobr>-</nobr> SCIEX OS | Shimadzu | Thermo | Thermo TSQ Vantage/Ultra | Thermo LTQ (legacy) | Thermo Quantiva | Thermo Altis | Thermo Stellar | Thermo Exploris | Thermo Eclipse | Thermo Fusion | Thermo Fusion Lumos | Waters TQ (MassLynx) | Waters TQ (waters_connect) | Waters Quattro Premier&gt;</td><td>メソッドをエクスポートします。このオプションはメソッドのエクスポートに必要で、デフォルトはありません。メソッドと単離リスト/トランジションリストを同時にエクスポートできないので、<nobr>このオプションは-</nobr>–<nobr>exp-isolationlist-instrumentまたは--exp-translist-instrumentとは併用できません</nobr>。</td></tr>
 <tr><td><nobr>--exp-template</nobr>=path/to/file（ファイル）</td><td>メソッドテンプレートのパスです。お使いの装置によって、これはファイルである場合もあれば、ディレクトリである場合もあります。このオプションはメソッドのエクスポートに必要です。</td></tr>
 </table>
 <div class="RowType">メソッドとトランジションリストのオプション</div>
 <table>
 <tr><td><nobr>--exp-file</nobr>=path/to/file（ファイル）</td><td>エクスポート先のメソッドかトランジションのリストファイル（またはディレクトリ）へのパスです。このオプションはメソッドおよびトランジションのリストのエクスポートに必要です。</td></tr>
-<tr><td><nobr>--exp-strategy</nobr>=<br/>&lt;Single | Protein | Buckets&gt;</td><td>メソッドをインジェクション回数に分ける方法です。デフォルトは「単一」です。</td></tr>
+<tr><td><nobr>--exp-strategy</nobr>=<br/>&lt;Single | Protein | Buckets | WcDecide&gt;</td><td>メソッドをインジェクション回数に分ける方法です。デフォルトは「単一」です。</td></tr>
 <tr><td><nobr>--exp-method-type</nobr>=<br/>&lt;Standard | Scheduled | Triggered&gt;</td><td>標準メソッド、スケジュールメソッドかトリガーメソッドを設定します。デフォルトは「標準」です。</td></tr>
 <tr><td><nobr>--exp-max-trans</nobr>=&lt;名前&gt;</td><td>エクスポート方法「タンパク質」と「バケット」のインジェクション毎の最大トランジション数、またはスケジュールメソッドに対する最大同時トランジションの数です。デフォルトは100です。</td></tr>
 <tr><td><nobr>--exp-optimizing</nobr>=&lt;CE | DP&gt;</td><td>最適な衝突エネルギーまたはデクラスタリングポテンシャルを見つけるために、追加のトランジションを含むメソッドをエクスポートします。</td></tr>

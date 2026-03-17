@@ -763,6 +763,9 @@
   <data name="FormulaBox_helpToolStripMenuItem_Click_Formula_Help" xml:space="preserve">
     <value>Formula Help</value>
   </data>
+  <data name="FormulaBox_UpdateAverageAndMonoTextsForFormula_The_formula___0___would_result_in_negative_atom_counts" xml:space="preserve">
+    <value>The formula "{0}" would result in negative atom counts</value>
+  </data>
   <data name="FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_" xml:space="preserve">
     <value>Mass &amp;Accuracy:</value>
   </data>
@@ -1227,7 +1230,7 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
     <value>Add peptide precursors to the document to build a library from AlphaPeptDeep predictions.</value>
   </data>
   <data name="PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip" xml:space="preserve">
-	  <value>Choose the retention time alignment strategy for mapping the retention times of MS/MS IDs from libraries to result files in the document,
+    <value>Choose the retention time alignment strategy for mapping the retention times of MS/MS IDs from libraries to result files in the document,
 and between result files in the document for peak boundary imputation.</value>
   </data>
 </root>

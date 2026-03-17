@@ -1157,6 +1157,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exemplary Replicate.
+        /// </summary>
+        public static string GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All.
         /// </summary>
         public static string GraphChromatogram_UpdateToolbar_All {
@@ -1380,6 +1389,42 @@ namespace pwiz.Skyline.Controls.Graphs {
         public static string GraphSpectrum_DoUpdate_dotp___0_0_0000_ {
             get {
                 return ResourceManager.GetString("GraphSpectrum_DoUpdate_dotp___0_0_0000_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Intensity:.
+        /// </summary>
+        public static string GraphSpectrum_ToolTip_Intensity {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_ToolTip_Intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Matched Ions.
+        /// </summary>
+        public static string GraphSpectrum_ToolTip_MatchedIons {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_ToolTip_MatchedIons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Observed m/z:.
+        /// </summary>
+        public static string GraphSpectrum_ToolTip_mz {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_ToolTip_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rank:.
+        /// </summary>
+        public static string GraphSpectrum_ToolTip_Rank {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_ToolTip_Rank", resourceCulture);
             }
         }
         
@@ -1903,6 +1948,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         public static string SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate {
             get {
                 return ResourceManager.GetString("SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion m/z (calculated).
+        /// </summary>
+        public static string ToolTipImplementation_RenderTip_Calculated_Mass {
+            get {
+                return ResourceManager.GetString("ToolTipImplementation_RenderTip_Calculated_Mass", resourceCulture);
             }
         }
         

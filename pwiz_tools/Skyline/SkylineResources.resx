@@ -742,6 +742,9 @@
   <data name="SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_" xml:space="preserve">
     <value>The raw file must be re-imported in order to show full scans: {0}</value>
   </data>
+  <data name="SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded" xml:space="preserve">
+    <value>Peak integration cannot be changed until library loading is complete. Please wait for the libraries to finish loading.</value>
+  </data>
   <data name="SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_" xml:space="preserve">
     <value>Pick peak {0:F01}</value>
   </data>

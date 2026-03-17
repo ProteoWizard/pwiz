@@ -79,7 +79,7 @@ namespace TestPerf
                     new[] {-0.2, 2.5 },
                     new[] {-0.2, 2.5 },
                 },
-                ChromatogramClickPoint = new PointF(32.2f, 12.5f)
+                ChromatogramClickPoint = new PointF(32.175f, 3.184607E+07f)  // MS1 chromatogram peak
             };
 
             RunTest();
@@ -125,7 +125,7 @@ namespace TestPerf
                     new[] {-0.4, 2.3},
                     new[] {-0.3, 2.4},
                 },
-                ChromatogramClickPoint = new PointF(32.2f, 12.5f)
+                ChromatogramClickPoint = new PointF(32.175f, 3.184607E+07f)  // MS1 chromatogram peak
             };
 
             RunTest();
@@ -227,7 +227,7 @@ namespace TestPerf
             var browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());
             RunUI(() =>
             {
-                browseNarrowDlg.CurrentDirectory = new MsDataFilePath(workingDir);
+                browseNarrowDlg.SetCurrentDirectory(new MsDataFilePath(workingDir));
                 browseNarrowDlg.SelectAllFileType("mzML", s => _analysisValues.NarrowWindowDiaFiles.Contains(s));
             });
             PauseForScreenShot<OpenDataSourceDialog>("Narrow Window Results - Browse for Results Files form");
@@ -238,7 +238,7 @@ namespace TestPerf
             var browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
             RunUI(() =>
             {
-                browseWideDlg.CurrentDirectory = new MsDataFilePath(workingDir);
+                browseWideDlg.SetCurrentDirectory(new MsDataFilePath(workingDir));
                 browseWideDlg.SelectAllFileType("mzML", s => _analysisValues.WideWindowDiaFiles.Contains(s));
             });
             PauseForScreenShot<OpenDataSourceDialog>("Wide Window Results - Browse for Results Files form");
@@ -349,7 +349,7 @@ namespace TestPerf
             }
             //WaitForDocumentLoaded();
 
-            //PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 13, 30 * 1000); // 30 second timeout to avoid getting stuck
+            //PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window");
             //WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             RunUI(() => SkylineWindow.SaveDocument());

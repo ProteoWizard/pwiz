@@ -402,6 +402,12 @@ using SharedBatch.Properties;
 
         private void WriteToBuffer(string message)
         {
+            // Protect against null _logBuffer (can happen if logger not initialized or already disposed)
+            if (_logBuffer == null)
+            {
+                return;
+            }
+
             if (_logBuffer.Length > LogBufferSize)
             {
                 return;

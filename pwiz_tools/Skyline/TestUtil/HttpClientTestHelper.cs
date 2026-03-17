@@ -26,9 +26,11 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -563,6 +565,7 @@ namespace pwiz.SkylineTestUtil
         public bool SimulateProgress { get; set; }
         public Action OnProgressCallback { get; set; }
         public Func<Uri, Stream> ResponseFactory { get; set; }
+        public Func<HttpRequestMessage, Stream> RequestResponseFactory { get; set; }
 
         public virtual void OnResponse(Uri uri, HttpResponseMessage response)
         {
@@ -633,6 +636,30 @@ namespace pwiz.SkylineTestUtil
             }
 
             contentLength = 0;
+            return null;
+        }
+
+        public Stream GetMockResponseStreamFromRequest(HttpRequestMessage request)
+        {
+            if (request == null)
+                return null;
+
+            // Prefer RequestResponseFactory if available (supports authorization header lookup)
+            if (RequestResponseFactory != null)
+            {
+                var stream = RequestResponseFactory(request);
+                if (stream != null)
+                {
+                    return stream;
+                }
+            }
+
+            // Fall back to URL-based lookup
+            if (request.RequestUri != null)
+            {
+                return GetMockResponseStream(request.RequestUri, out _);
+            }
+
             return null;
         }
 
@@ -730,6 +757,7 @@ namespace pwiz.SkylineTestUtil
             _responses = BuildResponseMap(interactions);
             _captureInteractions = captureInteractions;
             ResponseFactory = HandleResponse;
+            RequestResponseFactory = HandleRequestResponse;
         }
 
         private static Dictionary<string, HttpInteraction> BuildResponseMap(IEnumerable<HttpInteraction> interactions)
@@ -739,14 +767,25 @@ namespace pwiz.SkylineTestUtil
             {
                 if (interaction?.Url == null)
                     continue;
-                // Store one interaction per URL - if the same URL appears multiple times in the recording,
-                // use the first one (they should all be identical anyway for consistent web behavior)
-                if (!map.ContainsKey(interaction.Url))
+                // Use both URL and authorization header as lookup key to distinguish between
+                // different authentication contexts for the same URL (e.g., authenticated vs anonymous)
+                var lookupKey = BuildLookupKey(interaction.Url, interaction.Authorization);
+                // Store one interaction per URL+Authorization combination
+                // If the same combination appears multiple times, use the first one
+                if (!map.ContainsKey(lookupKey))
                 {
-                    map.Add(interaction.Url, interaction);
+                    map.Add(lookupKey, interaction);
                 }
             }
             return map;
+        }
+
+        private static string BuildLookupKey(string url, string authorization)
+        {
+            // Use a separator that's unlikely to appear in URLs or auth headers
+            // Empty authorization is treated as null for consistency
+            var authKey = string.IsNullOrEmpty(authorization) ? string.Empty : authorization;
+            return $"{url}#AUTH:{authKey}";
         }
 
         private Stream HandleResponse(Uri uri)
@@ -754,16 +793,111 @@ namespace pwiz.SkylineTestUtil
             if (uri == null)
                 throw new ArgumentNullException(nameof(uri));
 
+            // For backward compatibility with old recordings, try without authorization first
             var urlKey = uri.ToString();
-            if (!_responses.TryGetValue(urlKey, out var interaction))
+            var lookupKey = BuildLookupKey(urlKey, null);
+            if (!_responses.TryGetValue(lookupKey, out var interaction))
+            {
                 throw new InvalidOperationException($"Unexpected URL during playback: {uri}");
+            }
 
             CaptureInteraction(interaction);
             if (!string.IsNullOrEmpty(interaction.ExceptionType))
                 throw CreateException(uri, interaction);
 
-            var text = interaction.ResponseBody ?? string.Empty;
-            return new MemoryStream(Encoding.UTF8.GetBytes(text));
+            return GetResponseStream(interaction);
+        }
+
+        private Stream HandleRequestResponse(HttpRequestMessage request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            var uri = request.RequestUri;
+            if (uri == null)
+                throw new ArgumentNullException(nameof(uri));
+
+            // Extract Authorization header from request
+            string authorization = null;
+            if (request.Headers?.Authorization != null)
+            {
+                var authScheme = request.Headers.Authorization.Scheme;
+                var authParameter = request.Headers.Authorization.Parameter;
+                if (!string.IsNullOrEmpty(authScheme) && !string.IsNullOrEmpty(authParameter))
+                {
+                    authorization = $"{authScheme} {authParameter}";
+                }
+            }
+
+            var urlKey = uri.ToString();
+            var lookupKey = BuildLookupKey(urlKey, authorization);
+            
+            // Fallback to lookup without authorization for backward compatibility
+            if (!_responses.TryGetValue(lookupKey, out var interaction))
+            {
+                lookupKey = BuildLookupKey(urlKey, null);
+                if (!_responses.TryGetValue(lookupKey, out interaction))
+                {
+                    throw new InvalidOperationException($"Unexpected URL during playback: {uri} (Authorization: {authorization ?? "none"})");
+                }
+            }
+
+            CaptureInteraction(interaction);
+            if (!string.IsNullOrEmpty(interaction.ExceptionType))
+                throw CreateException(uri, interaction);
+
+            return GetResponseStream(interaction);
+        }
+
+        private static Stream GetResponseStream(HttpInteraction interaction)
+        {
+            // Note: ResponseBodyIndex should have been resolved during deserialization,
+            // but handle it defensively here as well
+            if (interaction == null)
+                throw new ArgumentNullException(nameof(interaction));
+
+            if (interaction.ResponseBodyIndex.HasValue)
+            {
+                throw new InvalidOperationException(
+                    $"ResponseBodyIndex {interaction.ResponseBodyIndex.Value} was not resolved during deserialization. " +
+                    "This should not happen if LoadHttpInteractionsForType was used.");
+            }
+
+            byte[] responseBytes;
+            if (interaction.ResponseBodyIsBase64)
+            {
+                // Decode base64-encoded binary content
+                // If ResponseBodyLines is present, join lines first (line breaks are ignored in base64)
+                string base64String;
+                if (interaction.ResponseBodyLines != null && interaction.ResponseBodyLines.Count > 0)
+                {
+                    base64String = string.Join("", interaction.ResponseBodyLines);
+                }
+                else
+                {
+                    base64String = interaction.ResponseBody ?? string.Empty;
+                }
+                responseBytes = string.IsNullOrEmpty(base64String)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(base64String);
+            }
+            else
+            {
+                // Reconstruct text from ResponseBodyLines if available (for better readability in JSON)
+                // Otherwise use ResponseBody directly
+                string text;
+                if (interaction.ResponseBodyLines != null && interaction.ResponseBodyLines.Count > 0)
+                {
+                    text = string.Join("\n", interaction.ResponseBodyLines);
+                }
+                else
+                {
+                    text = interaction.ResponseBody ?? string.Empty;
+                }
+                responseBytes = Encoding.UTF8.GetBytes(text);
+            }
+            
+            return new MemoryStream(responseBytes);
         }
 
         private void CaptureInteraction(HttpInteraction interaction)
@@ -827,12 +961,55 @@ namespace pwiz.SkylineTestUtil
     {
         public string Url { get; set; }
         public string Method { get; set; }
+        /// <summary>
+        /// Authorization header value (e.g., "Basic base64credentials" or "Bearer token").
+        /// Used to distinguish between different authentication contexts for the same URL during playback.
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string Authorization { get; set; }
         public int? StatusCode { get; set; }
         public string ContentType { get; set; }
         public string ResponseBody { get; set; }
+        public bool ResponseBodyIsBase64 { get; set; }
+        /// <summary>
+        /// Alternative representation of ResponseBody as an array of lines for better JSON readability.
+        /// Used when ResponseBody contains newlines and is text (not base64).
+        /// During deserialization, if this is set, ResponseBody is reconstructed by joining lines.
+        /// </summary>
+        public List<string> ResponseBodyLines { get; set; }
+        /// <summary>
+        /// Index reference to a previously recorded response body with identical content.
+        /// If set, ResponseBody and ResponseBodyLines should be null/empty as they are referenced by index.
+        /// Used to deduplicate identical responses and reduce file size.
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? ResponseBodyIndex { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ExceptionType { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ExceptionMessage { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string FailureType { get; set; }
+
+        /// <summary>
+        /// Suppresses ResponseBody serialization when ResponseBodyLines is present to avoid duplication.
+        /// </summary>
+        public bool ShouldSerializeResponseBody()
+        {
+            // Don't serialize ResponseBody if we have ResponseBodyLines (avoids duplication in JSON)
+            // Also don't serialize if ResponseBodyIndex is set (response body is referenced by index)
+            return (ResponseBodyLines == null || ResponseBodyLines.Count == 0) && 
+                   !ResponseBodyIndex.HasValue;
+        }
+
+        /// <summary>
+        /// Suppresses ResponseBodyLines serialization when ResponseBodyIndex is set.
+        /// </summary>
+        public bool ShouldSerializeResponseBodyLines()
+        {
+            // Don't serialize ResponseBodyLines if ResponseBodyIndex is set (response body is referenced by index)
+            return !ResponseBodyIndex.HasValue;
+        }
 
         public HttpInteraction Clone()
         {
@@ -880,10 +1057,25 @@ namespace pwiz.SkylineTestUtil
             if (response == null)
                 throw new ArgumentNullException(nameof(response));
 
+            // Extract Authorization header from request for playback lookup
+            string authorization = null;
+            if (response.RequestMessage?.Headers?.Authorization != null)
+            {
+                var authScheme = response.RequestMessage.Headers.Authorization.Scheme;
+                var authParameter = response.RequestMessage.Headers.Authorization.Parameter;
+                if (!string.IsNullOrEmpty(authScheme) && !string.IsNullOrEmpty(authParameter))
+                {
+                    authorization = $"{authScheme} {authParameter}";
+                }
+            }
+
+            var urlString = uri.ToString();
+            
             var interaction = new HttpInteraction
             {
-                Url = uri.ToString(),
+                Url = urlString,
                 Method = response.RequestMessage?.Method?.Method,
+                Authorization = authorization,
                 StatusCode = (int)response.StatusCode,
                 ContentType = response.Content?.Headers?.ContentType?.ToString()
             };
@@ -936,6 +1128,16 @@ namespace pwiz.SkylineTestUtil
             }
 
             entry.Interaction.ResponseBody = responseBody;
+            entry.Interaction.ResponseBodyIsBase64 = false; // responseBody is already a string (text)
+            // If text contains newlines, also store as array of lines for better JSON readability
+            if (!string.IsNullOrEmpty(responseBody) && responseBody.Contains("\n"))
+            {
+                entry.Interaction.ResponseBodyLines = responseBody.ReadLines().ToList();
+            }
+            else
+            {
+                entry.Interaction.ResponseBodyLines = null;
+            }
             UpdateException(entry.Interaction, exception);
             entry.Completed = true;
         }
@@ -995,7 +1197,19 @@ namespace pwiz.SkylineTestUtil
                 interaction.StatusCode = networkException.StatusCode != null ? (int)networkException.StatusCode : interaction.StatusCode;
                 interaction.FailureType = networkException.FailureType.ToString();
                 if (!string.IsNullOrEmpty(networkException.ResponseBody))
+                {
                     interaction.ResponseBody = networkException.ResponseBody;
+                    interaction.ResponseBodyIsBase64 = false; // networkException.ResponseBody is already a string (text)
+                    // If text contains newlines, also store as array of lines for better JSON readability
+                    if (networkException.ResponseBody.Contains("\n"))
+                    {
+                        interaction.ResponseBodyLines = networkException.ResponseBody.ReadLines().ToList();
+                    }
+                    else
+                    {
+                        interaction.ResponseBodyLines = null;
+                    }
+                }
             }
         }
 
@@ -1016,9 +1230,96 @@ namespace pwiz.SkylineTestUtil
 
         private static void AssignResponseBody(HttpInteraction interaction, byte[] bytes)
         {
-            interaction.ResponseBody = bytes == null || bytes.Length == 0
-                ? string.Empty
-                : Encoding.UTF8.GetString(bytes);
+            if (bytes == null || bytes.Length == 0)
+            {
+                interaction.ResponseBody = string.Empty;
+                interaction.ResponseBodyIsBase64 = false;
+                return;
+            }
+
+            // Check if content is binary based on ContentType
+            bool isBinary = IsBinaryContentType(interaction.ContentType);
+            
+            // If not determined by ContentType, try to decode as UTF-8 to detect binary
+            if (!isBinary)
+            {
+                try
+                {
+                    var testString = Encoding.UTF8.GetString(bytes);
+                    // Verify round-trip: if re-encoding doesn't match, it's likely binary
+                    var reencoded = Encoding.UTF8.GetBytes(testString);
+                    isBinary = !bytes.SequenceEqual(reencoded);
+                }
+                catch
+                {
+                    isBinary = true; // If decoding fails, treat as binary
+                }
+            }
+
+            if (isBinary)
+            {
+                // Encode binary content as base64 and split into lines for better JSON readability
+                // (similar to how .NET .resx files format base64 content)
+                var base64String = Convert.ToBase64String(bytes);
+                interaction.ResponseBody = base64String;
+                interaction.ResponseBodyIsBase64 = true;
+                // Split base64 into lines (76 characters per line is a common standard)
+                interaction.ResponseBodyLines = SplitBase64IntoLines(base64String);
+            }
+            else
+            {
+                // Store text content as UTF-8 string
+                var text = Encoding.UTF8.GetString(bytes);
+                interaction.ResponseBody = text;
+                interaction.ResponseBodyIsBase64 = false;
+                
+                // If text contains newlines, also store as array of lines for better JSON readability
+                if (text.Contains("\n"))
+                {
+                    interaction.ResponseBodyLines = text.ReadLines().ToList();
+                }
+                else
+                {
+                    interaction.ResponseBodyLines = null; // Single line, no need for array
+                }
+            }
+        }
+
+        private static List<string> SplitBase64IntoLines(string base64String)
+        {
+            if (string.IsNullOrEmpty(base64String))
+                return new List<string>();
+            
+            const int lineLength = 76; // Common base64 line length (matches .NET .resx files)
+            var lines = new List<string>();
+            
+            for (int i = 0; i < base64String.Length; i += lineLength)
+            {
+                int length = Math.Min(lineLength, base64String.Length - i);
+                lines.Add(base64String.Substring(i, length));
+            }
+            
+            return lines;
+        }
+
+        private static bool IsBinaryContentType(string contentType)
+        {
+            if (string.IsNullOrEmpty(contentType))
+                return false;
+
+            var lowerContentType = contentType.ToLowerInvariant();
+            // Common binary content types
+            return lowerContentType.Contains("application/octet-stream") ||
+                   lowerContentType.Contains("application/zip") ||
+                   lowerContentType.Contains("application/x-zip") ||
+                   lowerContentType.Contains("application/x-compressed") ||
+                   lowerContentType.Contains("application/gzip") ||
+                   lowerContentType.Contains("image/") ||
+                   lowerContentType.Contains("video/") ||
+                   lowerContentType.Contains("audio/") ||
+                   lowerContentType.Contains("application/pdf") ||
+                   lowerContentType.Contains("application/x-msdownload") ||
+                   lowerContentType.Contains("application/x-executable");
         }
 
         private class RecordingStream : Stream

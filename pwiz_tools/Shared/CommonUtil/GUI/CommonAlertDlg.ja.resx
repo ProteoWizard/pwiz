@@ -141,7 +141,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>31, 42</value>
+    <value>23, 23</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
@@ -255,6 +255,54 @@
   <data name="splitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
+  <data name="iconAndMessageSplitContainer.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="iconAndMessageSplitContainer.IsSplitterFixed" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="iconAndMessageSplitContainer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="iconPictureBox.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="iconPictureBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="iconPictureBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 91</value>
+  </data>
+  <data name="iconPictureBox.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
+    <value>CenterImage</value>
+  </data>
+  <data name="iconPictureBox.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;iconPictureBox.Name" xml:space="preserve">
+    <value>iconPictureBox</value>
+  </data>
+  <data name="&gt;&gt;iconPictureBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;iconPictureBox.Parent" xml:space="preserve">
+    <value>iconAndMessageSplitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;iconPictureBox.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Panel1.Name" xml:space="preserve">
+    <value>iconAndMessageSplitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Panel1.Parent" xml:space="preserve">
+    <value>iconAndMessageSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="messageScrollPanel.AutoScroll" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -262,10 +310,10 @@
     <value>True</value>
   </data>
   <data name="labelMessage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 21</value>
+    <value>0, 21</value>
   </data>
   <data name="labelMessage.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>356, 0</value>
+    <value>320, 0</value>
   </data>
   <data name="labelMessage.Size" type="System.Drawing.Size, System.Drawing">
     <value>50, 13</value>
@@ -298,7 +346,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="messageScrollPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>398, 91</value>
+    <value>337, 91</value>
   </data>
   <data name="messageScrollPanel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -310,9 +358,45 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;messageScrollPanel.Parent" xml:space="preserve">
-    <value>splitContainer.Panel1</value>
+    <value>iconAndMessageSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;messageScrollPanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Panel2.Name" xml:space="preserve">
+    <value>iconAndMessageSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Panel2.Parent" xml:space="preserve">
+    <value>iconAndMessageSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="iconAndMessageSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>398, 91</value>
+  </data>
+  <data name="iconAndMessageSplitContainer.SplitterDistance" type="System.Int32, mscorlib">
+    <value>60</value>
+  </data>
+  <data name="iconAndMessageSplitContainer.SplitterWidth" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="iconAndMessageSplitContainer.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Name" xml:space="preserve">
+    <value>iconAndMessageSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.Parent" xml:space="preserve">
+    <value>splitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;iconAndMessageSplitContainer.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="&gt;&gt;splitContainer.Panel1.Name" xml:space="preserve">
@@ -418,6 +502,6 @@
     <value>CommonAlertDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Common.SystemUtil.CommonFormEx, pwiz.CommonUtil, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

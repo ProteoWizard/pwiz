@@ -135,6 +135,19 @@ namespace pwiz.SkylineTestUtil
             }
             return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(newMeasuredResults));
         }
+
+        /// <summary>
+        /// Set all of FileWriteTime values in all of the ChromFileInfos to null.
+        /// </summary>
+        public static SrmDocument ClearFileWriteTimes(SrmDocument document)
+        {
+            var newMeasuredResults = document.MeasuredResults?.ClearFileWriteTimes();
+            if (Equals(newMeasuredResults, document.MeasuredResults))
+            {
+                return document;
+            }
+            return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(newMeasuredResults));
+        }
     }
 
     public class DocResultsState

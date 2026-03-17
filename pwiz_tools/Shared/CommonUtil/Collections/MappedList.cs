@@ -134,6 +134,25 @@ namespace pwiz.Common.Collections
             }
         }
 
+        /// <summary>
+        /// Replaces an existing value in the list by an original name, maintaining the same position.
+        /// This is useful when you need to replace a specific instance rather than matching by key.
+        /// For example, when an element may be renamed.
+        /// </summary>
+        /// <param name="oldValue">The existing value to replace (based on its key)</param>
+        /// <param name="newValue">The new value to replace it with</param>
+        /// <returns>True if the old value was found and replaced, false otherwise</returns>
+        public bool ReplaceValue(TValue oldValue, TValue newValue)
+        {
+            TValue valueCurrent;
+            if (TryGetValue(oldValue.GetKey(), out valueCurrent))
+            {
+                SetItem(IndexOf(valueCurrent), newValue);
+                return true;
+            }
+            return false;
+        }
+
         public void AddRange(IEnumerable<TValue> collection)
         {
             foreach (TValue item in collection)

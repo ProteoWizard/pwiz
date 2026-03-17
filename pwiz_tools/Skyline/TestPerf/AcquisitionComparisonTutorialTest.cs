@@ -99,17 +99,18 @@ namespace TestPerf
 
         protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
-            using var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
-            
+            var result = base.ProcessCoverShot(bmp);
+            using var graph = Graphics.FromImage(result);
+
             // Draw the figure 1 image from the tutorial in the lower right corner
             using var figure1 = Image.FromFile(Path.Combine(TutorialPath, "image-figure1.png"));
             int widthFigure1 = 509;
-            int destX = bmp.Width - widthFigure1 - 15;
-            int destY = bmp.Height - figure1.Height - 55;
+            int destX = result.Width - widthFigure1 - 15;
+            int destY = result.Height - figure1.Height - 55;
             var rectFigure1 = new Rectangle(destX, destY, widthFigure1, figure1.Height);
             var rectSrc = new Rectangle(0, 0, widthFigure1, figure1.Height);
             graph.DrawImage(figure1, rectFigure1, rectSrc, GraphicsUnit.Pixel);
-            
+
             // Draw a border around it to make it stand out a bit more
             using var whitePen = new Pen(Color.White);
             rectFigure1.X--;
@@ -122,8 +123,8 @@ namespace TestPerf
             rectFigure1.Width++;
             rectFigure1.Height++;
             graph.DrawRectangle(grayPen, rectFigure1);
-            
-            return bmp;
+
+            return result;
         }
 
         protected override void DoTest()
@@ -330,7 +331,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 var dataFolder = Path.GetDirectoryName(GetTestPath(Path.Combine(PRM_DATA_DIR, "PRM_100fmol.mzML")));
-                openDataSourceDialog.CurrentDirectory = new MsDataFilePath(dataFolder);
+                openDataSourceDialog.SetCurrentDirectory(new MsDataFilePath(dataFolder));
                 openDataSourceDialog.SelectAllFileType(DataExt);
             });
             OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
@@ -394,7 +395,7 @@ namespace TestPerf
             Assert.IsNotNull(importResults);
 
             var dataFolder = Path.GetDirectoryName(GetTestPath(Path.Combine(DIA_DATA_DIR, "DIA_100fmol.mzML")));
-            importResults.UpdateResultsFiles(new[] { dataFolder }, true);
+            RunUI(() => importResults.UpdateResultsFiles(new[] { dataFolder }, true));
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.AreEqual(4, importResults.FoundResultsFiles.Count));

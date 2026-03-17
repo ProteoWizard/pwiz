@@ -27,6 +27,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Clustering;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
@@ -83,10 +84,11 @@ namespace pwiz.Skyline
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
         private CandidatePeakForm _candidatePeakForm;
-        public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
+        public static int MAX_GRAPH_CHROM => Settings.Default.MaxChromatogramGraphs; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
         private bool _alignToPrediction;
+        private bool _shouldShowFilesTree;
 
         public RTGraphController RTGraphController
         {
@@ -464,6 +466,7 @@ namespace pwiz.Skyline
 
             UpdateGraphPanes(listUpdateGraphs);
             FoldChangeForm.CloseInapplicableForms(this);
+            ListGridForm.CloseInapplicableForms(this);
         }
 
         public void UpdateGraphSpectrumEnabled()
@@ -499,6 +502,7 @@ namespace pwiz.Skyline
             // deserialization has problems using existing windows.
             DestroySequenceTreeForm();
             DestroyGraphSpectrum();
+            DestroyFilesTreeForm();
 
             var type = RTGraphController.GraphType;
             _listGraphRetentionTime.ToList().ForEach(DestroyGraphRetentionTime);
@@ -517,6 +521,7 @@ namespace pwiz.Skyline
             DetectionsGraphController.GraphType = type;
 
             FormUtil.OpenForms.OfType<FoldChangeForm>().ForEach(f => f.Close());
+            FormUtil.OpenForms.OfType<ListGridForm>().ForEach(f => f.Close());
 
             DestroyResultsGrid();
             DestroyDocumentGrid();
@@ -530,15 +535,71 @@ namespace pwiz.Skyline
                 DestroyGraphChrom(graphChrom);
             DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
-            // SequenceTree resizes often prior to display, so we must restore its scrolling after
+
+            InsertFilesViewIntoLegacyLayout();
+
+            // TreeViews resizes often prior to display, so we must restore horizontal scrolling after
             // all resizing has occurred
-            if (SequenceTree != null)
-            {
-                SequenceTree.UpdateTopNode();
-                SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
-            }
+            ResetHorizontalScroll(SequenceTree);
+            ResetHorizontalScroll(FilesTree);
 
             EnsureFloatingWindowsVisible();
+        }
+
+        private static void ResetHorizontalScroll(TreeViewMS treeView)
+        {
+            if (treeView == null)
+                return;
+            treeView.UpdateTopNode();
+            treeView.SetScrollPos(Orientation.Horizontal, 0);
+        }
+
+        private void InsertFilesViewIntoLegacyLayout()
+        {
+            if (_filesTreeForm == null && _shouldShowFilesTree)
+            {
+                // Store whatever is active now
+                var activeForm = dockPanel.ActiveContent as DockableForm;
+
+                // First time displaying FilesTree so no view state to restore
+                _filesTreeForm = CreateFilesTreeForm(null);
+            
+                // If SequenceTree exists, put FilesTree in a tab behind SequenceTree
+                if (_sequenceTreeForm != null) 
+                {
+                    var sequenceTreeDockState = _sequenceTreeForm.DockState;
+                    if (sequenceTreeDockState != DockState.Hidden)
+                    {
+                        var sequencePane = _sequenceTreeForm.Pane;
+                        // Show FilesTree in the same pane as SequenceTree - note that it is not
+                        // possible to show after the SequenceTree. So, we activate it after showing.
+                        if (sequencePane != null)
+                        {
+                            // Add as a tab in the same pane
+                            _filesTreeForm.Show(sequencePane, null);
+                        }
+                        else
+                        {
+                            // Hacky fallback that often works if pane is null
+                            _filesTreeForm.Show(dockPanel, sequenceTreeDockState);
+                        }
+
+                        // Activate SequenceTree again to keep it on top but re-activate whatever was active before
+                        _sequenceTreeForm.Activate();
+                    }
+                    // If SequenceTree is hidden, skip.
+                    // CONSIDER: if SequenceTree exists but is hidden, FilesTree cannot be added. Ignoring that case for now.
+
+                    activeForm?.Activate();
+                }
+                else
+                {
+                    // Could not find SequenceTree so put Files in its default location
+                    _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+                }
+            
+                _shouldShowFilesTree = false;
+            }
         }
 
         /// <summary>
@@ -629,6 +690,11 @@ namespace pwiz.Skyline
             else if (Equals(persistentString, typeof(GraphSpectrum).ToString()))
             {
                 return _graphSpectrum ?? CreateGraphSpectrum();                
+            }
+            else if (persistentString.StartsWith(typeof(FilesTreeForm).ToString()))
+            {
+                // show FilesTree if it has serialized state in the .view file
+                return FilesTreeForm ?? CreateFilesTreeForm(persistentString);
             }
 
             var split = persistentString.Split('|');
@@ -769,6 +835,7 @@ namespace pwiz.Skyline
             listUpdateGraphs.AddRange(_listGraphRetentionTime.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphPeakArea.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphMassError.Where(g => g.Visible));
+            listUpdateGraphs.AddRange(_listGraphDetections.Where(g => g.Visible));
             if (_calibrationForm != null && _calibrationForm.Visible)
                 listUpdateGraphs.Add(_calibrationForm);
 
@@ -1815,11 +1882,7 @@ namespace pwiz.Skyline
 
             if (zoomAll)
             {
-                var activeForm = dockPanel.ActiveContent;
-                int iActive = _listGraphChrom.IndexOf(chrom => ReferenceEquals(chrom, activeForm));
-                ZoomState zoomState = (iActive != -1 ? _listGraphChrom[iActive].ZoomState : null);
-                if (zoomState != null)
-                    graphChromatogram_ZoomAll(null, new ZoomEventArgs(zoomState));
+                (dockPanel.ActiveContent as GraphChromatogram)?.OnZoom();
             }
         }
 
@@ -1967,7 +2030,6 @@ namespace pwiz.Skyline
             graphChrom.ClickedChromatogram += graphChromatogram_ClickedChromatogram;
             graphChrom.ChangedPeakBounds += graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum += graphChromatogram_PickedSpectrum;
-            graphChrom.ZoomAll += graphChromatogram_ZoomAll;
             _listGraphChrom.Add(graphChrom);
             return graphChrom;
         }
@@ -1982,7 +2044,6 @@ namespace pwiz.Skyline
             graphChrom.ClickedChromatogram -= graphChromatogram_ClickedChromatogram;
             graphChrom.ChangedPeakBounds -= graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum -= graphChromatogram_PickedSpectrum;
-            graphChrom.ZoomAll -= graphChromatogram_ZoomAll;
             graphChrom.HideOnClose = false;
             graphChrom.Close();
         }
@@ -2055,12 +2116,14 @@ namespace pwiz.Skyline
 
         private void graphChromatogram_PickedPeak(object sender, PickedPeakEventArgs e)
         {
+            if (!EnsureLibrariesLoadedForPeakIntegration())
+                return;
             var graphChrom = sender as GraphChromatogram;
             if (graphChrom != null)
                 graphChrom.LockZoom();
             try
             {
-                ModifyDocument(string.Format(SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime), 
+                ModifyDocument(string.Format(SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime),
                     doc => PickPeak(doc, e), docPair =>
                     {
                         var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
@@ -2173,6 +2236,9 @@ namespace pwiz.Skyline
 
         private void graphChromatogram_ChangedPeakBounds(object sender, ChangedMultiPeakBoundsEventArgs eMulti)
         {
+            if (!EnsureLibrariesLoadedForPeakIntegration())
+                return;
+
             var graphChrom = sender as GraphChromatogram;
             if (graphChrom != null)
                 graphChrom.LockZoom();
@@ -2296,6 +2362,22 @@ namespace pwiz.Skyline
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Checks that document libraries are loaded, which is required for peak integration
+        /// changes that need to look up peptide ID times. Shows a message to the user if not.
+        /// </summary>
+        /// <returns>True if libraries are loaded and peak integration can proceed</returns>
+        public bool EnsureLibrariesLoadedForPeakIntegration()
+        {
+            if (!DocumentUI.Settings.PeptideSettings.Libraries.IsLoaded)
+            {
+                MessageDlg.Show(this,
+                    SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded);
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -2449,18 +2531,6 @@ namespace pwiz.Skyline
             }
             if (_graphSpectrum != null)
                 _graphSpectrum.SelectSpectrum(e.SpectrumId);
-        }
-
-        private void graphChromatogram_ZoomAll(object sender, ZoomEventArgs e)
-        {
-            foreach (var graphChrom in _listGraphChrom)
-            {
-                if (!ReferenceEquals(sender, graphChrom))
-                {
-                    graphChrom.ZoomTo(e.ZoomState);
-                    graphChrom.UpdateUI();
-                }
-            }
         }
 
         private void UpdateChromGraphs()
@@ -5876,9 +5946,16 @@ namespace pwiz.Skyline
         private void PlacePane(int row, int col, int count,
             DockPaneAlignment alignment, IList<List<List<DockableForm>>> listTiles)
         {
+            if (row >= listTiles.Count || col >= listTiles[row].Count)
+                return;
+            int previousIndex = alignment == DockPaneAlignment.Bottom ? row - 1 : col - 1;
+            if (previousIndex < 0)
+                return;
+            if (alignment == DockPaneAlignment.Bottom && col >= listTiles[previousIndex].Count)
+                return;
             DockableForm previousForm = alignment == DockPaneAlignment.Bottom
-                                            ? listTiles[row - 1][col][0]
-                                            : listTiles[row][col - 1][0];
+                                            ? listTiles[previousIndex][col][0]
+                                            : listTiles[row][previousIndex][0];
             DockPane previousPane = FindPane(previousForm);
             var groupForms = listTiles[row][col];
             var dockableForm = groupForms[0];

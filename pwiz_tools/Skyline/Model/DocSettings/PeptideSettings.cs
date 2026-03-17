@@ -108,6 +108,16 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren]
         public ImputationSettings Imputation { get; private set; }
 
+        public bool HasLibraries { get { return Libraries != null && Libraries.HasLibraries; } }
+
+        public bool HasDocumentLibrary { get { return Libraries != null && Libraries.HasDocumentLibrary; } }
+
+        public bool HasBackgroundProteome { get { return BackgroundProteome != null && !BackgroundProteome.IsNone; } }
+
+        public bool HasRTPrediction { get { return Prediction != null && Prediction.RetentionTime != null; } }
+
+        public bool HasRTCalcPersisted { get { return HasRTPrediction && Prediction.RetentionTime.Calculator.PersistencePath != null; } }
+
         #region Property change methods
 
         public PeptideSettings ChangeEnzyme(Enzyme prop)
@@ -2300,16 +2310,30 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideLibraries ChangeLibrarySpecs(IList<LibrarySpec> prop)
         {
             return ChangeProp(ImClone(this),
-                              im =>
-                                  {
-                                      im.LibrarySpecs = prop;
-                                      // Keep the libraries array in synch, reloading all libraries, if necessary.
-                                      // CONSIDER: Loop checking name matching?
-                                      if (im.Libraries.Count != prop.Count)
-                                      {
-                                          im.Libraries = new Library[prop.Count];
-                                      }
-                                  });
+                im =>
+                {
+                    // Keep the libraries array in sync
+                    // Try to preserve existing library instances where possible
+                    // Otherwise, set to null to indicate not yet loaded for LibraryManager to load
+                    im.Libraries = prop.Select((spec, i) =>
+                    {
+                        // Try to find existing library matching this spec by ID
+                        int specIndex = im.LibrarySpecs.IndexOf(existing =>
+                            ReferenceEquals(existing?.Id, spec.Id));
+                        if (specIndex == -1)
+                        {
+                            // If no matching spec, try finding a library with the right filename
+                            string fileName = Path.GetFileName(spec.FilePath);
+                            specIndex = im.Libraries.IndexOf(existing =>
+                                Equals(existing.FileNameHint, fileName));
+                            // Use it only if it resolves an unresolved library spec
+                            if (specIndex != -1 && im.LibrarySpecs[specIndex] != null)
+                                specIndex = -1;
+                        }
+                        return specIndex != -1 ? im.Libraries[specIndex] : null;
+                    }).ToArray();
+                    im.LibrarySpecs = prop;
+                });
         }        
 
         public PeptideLibraries ChangeLibraries(IList<Library> prop)
@@ -2748,6 +2772,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public LibrarySpec FindLibrarySpec(Identity identity)
+        {
+            return _librarySpecs.FirstOrDefault(librarySpec => ReferenceEquals(librarySpec.Id, identity));
+        }
     }
 
 

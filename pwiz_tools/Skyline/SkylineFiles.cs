@@ -950,72 +950,74 @@ namespace pwiz.Skyline
                     {
                         // Set initial message with indeterminate progress (marquee/busy-wait) before downloading folder JSON
                         progressMonitor.UpdateProgress(new ProgressStatus(PanoramaClient.Properties.Resources.PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders).ChangePercentComplete(-1));
-                        dlg.InitializeDialog(progressMonitor);
+                        // Fetch data on background thread (control already created on UI thread)
+                        dlg.LoadServerData(progressMonitor);
                     });
                     
                     if (status.IsCanceled)
                         return; // User canceled - don't show dialog
                 }
 
-                if (dlg.ShowDialog(this) != DialogResult.Cancel)
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
+                var folderPath = string.Empty;
+                if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
                 {
-                    Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
-                    var folderPath = string.Empty;
-                    if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
-                    {
-                        folderPath = Settings.Default.PanoramaLocalSavePath;
-                    }
-                    var curServer = dlg.FolderBrowser.GetActiveServer();
+                    folderPath = Settings.Default.PanoramaLocalSavePath;
+                }
+                var curServer = dlg.FolderBrowser.GetActiveServer();
 
-                    var downloadPath = string.Empty;
-                    var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
-                    if (downloadFilePath == null)
+                var downloadPath = string.Empty;
+                var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
+                if (downloadFilePath == null)
+                {
+                    using (var saveAsDlg = new SaveFileDialog())
                     {
-                        using (var saveAsDlg = new SaveFileDialog())
+                        saveAsDlg.FileName = dlg.FileName;
+                        saveAsDlg.DefaultExt = extension;
+                        saveAsDlg.SupportMultiDottedExtensions = true;
+                        saveAsDlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP);
+                        saveAsDlg.InitialDirectory = folderPath;
+                        saveAsDlg.OverwritePrompt = true;
+                        if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
                         {
-                            saveAsDlg.FileName = dlg.FileName;
-                            saveAsDlg.DefaultExt = extension;
-                            saveAsDlg.SupportMultiDottedExtensions = true;
-                            saveAsDlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP);
-                            saveAsDlg.InitialDirectory = folderPath;
-                            saveAsDlg.OverwritePrompt = true;
-                            if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
-                            {
-                                return;
-                            }
-
-                            Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
-                            var folder = Path.GetDirectoryName(saveAsDlg.FileName);
-                            if (!string.IsNullOrEmpty(folder))
-                            {
-                                downloadPath = saveAsDlg.FileName;
-                            }
+                            return;
                         }
-                    }
-                    else
-                    {
-                        downloadPath = downloadFilePath;
-                    }
 
-                    if (!string.IsNullOrEmpty(downloadPath))
-                    {
-                        var size = dlg.FileSize;
-                        var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
-                        if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
+                        Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
+                        var folder = Path.GetDirectoryName(saveAsDlg.FileName);
+                        if (!string.IsNullOrEmpty(folder))
                         {
-                            OpenSharedFile(downloadPath);
-                        }
-                        else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
-                        {
-                            OpenFile(downloadPath);
+                            downloadPath = saveAsDlg.FileName;
                         }
                     }
                 }
+                else
+                {
+                    downloadPath = downloadFilePath;
+                }
+
+                if (!string.IsNullOrEmpty(downloadPath))
+                {
+                    var size = dlg.FileSize;
+                    var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
+                    if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
+                    {
+                        OpenSharedFile(downloadPath);
+                    }
+                    else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
+                    {
+                        OpenFile(downloadPath);
+                    }
+                }
+
                 Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
             }
             catch (Exception e)
             {
-                MessageDlg.ShowException(this, e);
+                ExceptionUtil.DisplayOrReportException(this, e);
             }
         }
 
@@ -1112,12 +1114,16 @@ namespace pwiz.Skyline
 
             using (var dlg = new SaveFileDialog())
             {
+                var isSaveAs = false;
+
                 dlg.InitialDirectory = Settings.Default.ActiveDirectory;
                 dlg.OverwritePrompt = true;
                 dlg.DefaultExt = SrmDocument.EXT;
                 dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                     dlg.FileName = Path.GetFileName(DocumentFilePath);
+                else
+                    isSaveAs = true;
 
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -1131,7 +1137,7 @@ namespace pwiz.Skyline
                         MessageDlg.ShowWithException(this, e.Message, e);
                         return false;
                     }
-                    if (SaveDocument(fileName))
+                    if (SaveDocument(fileName, isSaveAs:isSaveAs))
                         return true;
                 }
             }
@@ -1144,8 +1150,9 @@ namespace pwiz.Skyline
         /// <param name="fileName">File name to save the .sky file to. If this is different from the current path, the document will be assigned a new GUID</param>
         /// <param name="includingCacheFile">Whether to also update the .skyd file by copying to a new path and/or removing <see cref="ChromCachedFile"/> entries which are no longer part of the document.
         /// When saving immediately before a ReScore the .skyd file should not be changed because a new one is about to be created.</param>
+        /// <param name="isSaveAs">Flag indicating whether this saves the document to a new file name.</param>
         /// <returns></returns>
-        public bool SaveDocument(String fileName, bool includingCacheFile = true)
+        public bool SaveDocument(String fileName, bool includingCacheFile = true, bool isSaveAs = false)
         {
             if (string.IsNullOrEmpty(DocumentUI.Settings.DataSettings.DocumentGuid) ||
                 !Equals(DocumentFilePath, fileName))
@@ -1157,6 +1164,8 @@ namespace pwiz.Skyline
                     docOriginal = Document;
                     docNew = docOriginal.ChangeDocumentGuid();
                 } while (!SetDocument(docNew, docOriginal));
+
+                isSaveAs = true;
             }
 
             SrmDocument document = Document;
@@ -1231,6 +1240,14 @@ namespace pwiz.Skyline
             catch (IOException) {}
             catch (OperationCanceledException) {}
             catch (TargetInvocationException) {}
+
+            // CONSIDER: it might be possible to remove the DocumentSaved event by moving DocumentFilePath into SrmSettings.
+            //           DocumentSaved lets subscribers know about a new DocumentFilePath. Example: FilesTree uses this event 
+            //           to start watching the file system. DocumentChange is not a viable alternative because it fires before
+            //           the new path is set. We might be able to remove this event if path becomes an SrmSettings property
+            //           so path changes simply are another document change. Changing this means tackling the hash code
+            //           dance between setting a new guid on the .sky / .skyl files, writing files to disk, and firing events.
+            DocumentSavedEvent?.Invoke(this, new DocumentSavedEventArgs(DocumentFilePath, isSaveAs));
 
             return true;
         }
@@ -2410,7 +2427,7 @@ namespace pwiz.Skyline
                     }
                 }
                 var dbPath = calcIrt.DatabasePath;
-                db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
+                db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath) : IrtDb.CreateIrtDb(dbPath);
             }
             else
             {
@@ -3799,7 +3816,7 @@ namespace pwiz.Skyline
         {
             JToken folders = null;
             var folderPath = panoramaSavedUri.AbsolutePath;
-            var folderPathNoCtx = PanoramaServer.getFolderPath(server, panoramaSavedUri); // get folder path without the context path
+            var folderPathNoCtx = PanoramaServer.GetFolderPath(server, panoramaSavedUri); // get folder path without the context path
             var folderToQuery = folderPathNoCtx.TrimEnd('/').TrimStart('/');
             
             // Get folder information with progress dialog (can be slow, needs cancellation)

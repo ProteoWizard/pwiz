@@ -96,6 +96,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -115,6 +118,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\BigList.cs" />
     <Compile Include="Collections\DisposableCollection.cs" />
     <Compile Include="Collections\Factor.cs" />
     <Compile Include="Collections\ImmutableListFactory.cs" />
@@ -175,6 +179,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
+    <Compile Include="GUI\MessageIcons.cs" />
+    <Compile Include="Mock\HttpMessageHandlerFactory.cs" />
     <Compile Include="SystemUtil\Assume.cs" />
     <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
     <Compile Include="SystemUtil\Caching\Production.cs" />
@@ -296,6 +302,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="GUI\CommonAlertDlg.resx">
       <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="GUI\CommonAlertDlg.zh-CHS.resx">
       <DependentUpon>CommonAlertDlg.cs</DependentUpon>
@@ -342,6 +349,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CommonResources\Copy.bmp" />
+    <Content Include="CommonResources\SuccessMessageIcon.png" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -100,6 +100,8 @@ exe Hardklor
     <toolset>msvc:<cxxflags>/wd4101                 # warning: unreferenced local variable
     <toolset>msvc:<cxxflags>/wd4706                 # warning: assignment within conditional expression
     <toolset>msvc:<cxxflags>/wd4505                 # warning: unreferenced function with internal linkage has been removed    
+    <toolset>msvc:<cflags>/wd5286                   # warning: implicit conversion from enum type 'XML_Status' to enum type 'XML_Error'; use an explicit cast to silence this warning
+
     <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
 
     <link>static

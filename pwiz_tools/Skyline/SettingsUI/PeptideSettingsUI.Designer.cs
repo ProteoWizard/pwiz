@@ -78,9 +78,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tbxIonRatioThreshold = new System.Windows.Forms.TextBox();
             this.cbxSimpleRatios = new System.Windows.Forms.CheckBox();
             this.groupBoxPeakImputation = new System.Windows.Forms.GroupBox();
-            this.pictureBoxRunAlignmentError = new System.Windows.Forms.PictureBox();
-            this.comboRunToRunAlignment = new System.Windows.Forms.ComboBox();
-            this.lblRunToRunAlignment = new System.Windows.Forms.Label();
             this.lblPeakWidthVariationPercent = new System.Windows.Forms.Label();
             this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
             this.lblMaxPeakWidthVariation = new System.Windows.Forms.Label();
@@ -88,6 +85,9 @@ namespace pwiz.Skyline.SettingsUI
             this.tbxMaxRtShift = new System.Windows.Forms.TextBox();
             this.lblMaxRtShift = new System.Windows.Forms.Label();
             this.cbxImputeMissingPeaks = new System.Windows.Forms.CheckBox();
+            this.pictureBoxRunAlignmentError = new System.Windows.Forms.PictureBox();
+            this.comboRunToRunAlignment = new System.Windows.Forms.ComboBox();
+            this.lblRunToRunAlignment = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
@@ -535,27 +535,6 @@ namespace pwiz.Skyline.SettingsUI
             this.groupBoxPeakImputation.TabStop = false;
             this.helpTip.SetToolTip(this.groupBoxPeakImputation, resources.GetString("groupBoxPeakImputation.ToolTip"));
             // 
-            // pictureBoxRunAlignmentError
-            // 
-            resources.ApplyResources(this.pictureBoxRunAlignmentError, "pictureBoxRunAlignmentError");
-            this.pictureBoxRunAlignmentError.Image = global::pwiz.Skyline.Properties.Resources.Error;
-            this.pictureBoxRunAlignmentError.Name = "pictureBoxRunAlignmentError";
-            this.pictureBoxRunAlignmentError.TabStop = false;
-            // 
-            // comboRunToRunAlignment
-            // 
-            this.comboRunToRunAlignment.DisplayMember = "Key";
-            this.comboRunToRunAlignment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboRunToRunAlignment.FormattingEnabled = true;
-            resources.ApplyResources(this.comboRunToRunAlignment, "comboRunToRunAlignment");
-            this.comboRunToRunAlignment.Name = "comboRunToRunAlignment";
-            this.comboRunToRunAlignment.SelectedIndexChanged += new System.EventHandler(this.comboRunToRunAlignment_SelectedIndexChanged);
-            // 
-            // lblRunToRunAlignment
-            // 
-            resources.ApplyResources(this.lblRunToRunAlignment, "lblRunToRunAlignment");
-            this.lblRunToRunAlignment.Name = "lblRunToRunAlignment";
-            // 
             // lblPeakWidthVariationPercent
             // 
             resources.ApplyResources(this.lblPeakWidthVariationPercent, "lblPeakWidthVariationPercent");
@@ -594,6 +573,27 @@ namespace pwiz.Skyline.SettingsUI
             this.cbxImputeMissingPeaks.Name = "cbxImputeMissingPeaks";
             this.helpTip.SetToolTip(this.cbxImputeMissingPeaks, resources.GetString("cbxImputeMissingPeaks.ToolTip"));
             this.cbxImputeMissingPeaks.UseVisualStyleBackColor = true;
+            // 
+            // pictureBoxRunAlignmentError
+            // 
+            resources.ApplyResources(this.pictureBoxRunAlignmentError, "pictureBoxRunAlignmentError");
+            this.pictureBoxRunAlignmentError.Image = global::pwiz.Skyline.Properties.Resources.Error;
+            this.pictureBoxRunAlignmentError.Name = "pictureBoxRunAlignmentError";
+            this.pictureBoxRunAlignmentError.TabStop = false;
+            // 
+            // comboRunToRunAlignment
+            // 
+            this.comboRunToRunAlignment.DisplayMember = "Key";
+            this.comboRunToRunAlignment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRunToRunAlignment.FormattingEnabled = true;
+            resources.ApplyResources(this.comboRunToRunAlignment, "comboRunToRunAlignment");
+            this.comboRunToRunAlignment.Name = "comboRunToRunAlignment";
+            this.comboRunToRunAlignment.SelectedIndexChanged += new System.EventHandler(this.comboRunToRunAlignment_SelectedIndexChanged);
+            // 
+            // lblRunToRunAlignment
+            // 
+            resources.ApplyResources(this.lblRunToRunAlignment, "lblRunToRunAlignment");
+            this.lblRunToRunAlignment.Name = "lblRunToRunAlignment";
             // 
             // tabControl1
             // 

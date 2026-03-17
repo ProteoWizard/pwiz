@@ -91,7 +91,8 @@ namespace pwiz.SkylineTestFunctional
                     RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
                     {
                         var diaSource = importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources[0];
-                        importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath()));
+                        importRangesDlg.SetCurrentDirectory(
+                            new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath())));
                         importRangesDlg.SelectFile(importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources.First().GetFileName());
                         importRangesDlg.Open();
                     });
@@ -105,7 +106,6 @@ namespace pwiz.SkylineTestFunctional
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindows()
         {
@@ -121,7 +121,6 @@ namespace pwiz.SkylineTestFunctional
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsgfPlus()
         {
@@ -138,7 +137,6 @@ namespace pwiz.SkylineTestFunctional
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES),
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsFragger()
         {
@@ -167,7 +165,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaSearchFixedWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -209,7 +207,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaSearch()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -229,7 +227,7 @@ namespace pwiz.SkylineTestFunctional
                     RunDlg<OpenDataSourceDialog>(editIsolationSchemeDlg.ImportRanges, importRangesDlg =>
                     {
                         var diaSource = importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources[0];
-                        importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath()));
+                        importRangesDlg.SetCurrentDirectory(new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath())));
                         importRangesDlg.SelectFile(importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources.First().GetFileName());
                         importRangesDlg.Open();
                     });
@@ -501,7 +499,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SearchControl.Cancel();
             });
 
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue, 
+            WaitForConditionUI(60000, () => searchSucceeded.HasValue,
                 () => importPeptideSearchDlg.SearchControl.LogText);
             RunUI(() => Assert.IsFalse(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             searchSucceeded = null;

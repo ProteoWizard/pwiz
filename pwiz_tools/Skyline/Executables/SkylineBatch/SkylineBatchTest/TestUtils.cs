@@ -23,7 +23,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
 using System.Linq;
-using System.Threading;
 using SharedBatch.Properties;
 using System.Text.RegularExpressions;
 
@@ -86,7 +85,7 @@ namespace SkylineBatchTest
                 currentPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
             }
 
-            var batchTestPath = Path.Combine(currentPath, "Test");
+            var batchTestPath = Path.Combine(currentPath ?? string.Empty, "Test");
             if (!Directory.Exists(batchTestPath))
                 throw new DirectoryNotFoundException("Unable to find test data directory at: " + batchTestPath);
             return Path.Combine(batchTestPath, fileName);
@@ -250,7 +249,7 @@ namespace SkylineBatchTest
 
         /// <summary>
         /// Replaces R version references in a line with the current installed version.
-        /// Handles both formats: <r_script> and <script_path>.
+        /// Handles both formats: &lt;r_script&gt; and &lt;script_path&gt;.
         /// </summary>
         public static string ReplaceRVersionWithCurrent(string line)
         {
@@ -339,11 +338,6 @@ namespace SkylineBatchTest
             return new SkylineBatchConfig(name, true, false, DateTime.Now, main, file, refine, reports, skyline);
         }
 
-        public static ConfigRunner GetTestConfigRunner(string configName = "name")
-        {
-            return new ConfigRunner(GetTestConfig(configName), GetTestLogger());
-        }
-
         public static List<IConfig> ConfigListFromNames(List<string> names)
         {
             var configList = new List<IConfig>();
@@ -352,15 +346,6 @@ namespace SkylineBatchTest
                 configList.Add(GetTestConfig(name));
             }
             return configList;
-        }
-
-        public static SkylineBatchConfigManager GetTestConfigManager()
-        {
-            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
-            testConfigManager.UserAddConfig(GetTestConfig("one"));
-            testConfigManager.UserAddConfig(GetTestConfig("two"));
-            testConfigManager.UserAddConfig(GetTestConfig("three"));
-            return testConfigManager;
         }
 
         public static string GetSkylineDir()
@@ -381,9 +366,30 @@ namespace SkylineBatchTest
             return null;
         }
 
-        public static Logger GetTestLogger(string logFolder = "")
+        /// <summary>
+        /// Gets the TestResults path for a specific test.
+        /// Creates a test-specific folder similar to Skyline's ExtensionTestContext.GetTestResultsPath().
+        /// </summary>
+        public static string GetTestResultsPath(TestContext testContext, string relativePath = null)
         {
-            logFolder = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
+            // Build path similar to Skyline: <project_root>/TestResults/<TestName>/<relativePath>
+            var testResultsDir = Path.Combine(GetProjectDirectory("TestResults"), testContext.TestName);
+            if (!string.IsNullOrEmpty(relativePath))
+                testResultsDir = Path.Combine(testResultsDir, relativePath);
+            
+            return Path.GetFullPath(testResultsDir);
+        }
+
+        public static Logger GetTestLogger(TestContext testContext, string logSubfolder = "")
+        {
+            // Use test-specific folder in TestResults
+            var logFolder = string.IsNullOrEmpty(logSubfolder)
+                ? GetTestResultsPath(testContext, "Logs")
+                : GetTestResultsPath(testContext, logSubfolder);
+
+            if (!Directory.Exists(logFolder))
+                Directory.CreateDirectory(logFolder);
+
             var logName = "TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log";
             return new Logger(Path.Combine(logFolder, logName), logName, true);
         }
@@ -399,9 +405,10 @@ namespace SkylineBatchTest
             ConfigList.XmlVersion = SkylineBatch.Properties.Settings.Default.XmlVersion;
         }
 
-        public static List<string> GetAllLogFiles(string directory = null)
+        public static List<string> GetAllLogFiles(TestContext testContext, string directory = null)
         {
-            directory = directory == null ? GetTestFilePath("OldLogs\\TestTinyLog") : directory;
+            directory ??= GetTestResultsPath(testContext, "TestTinyLog");
+
             var files = Directory.GetFiles(directory);
             var logFiles = new List<string>();
             foreach (var fullName in files)
@@ -411,19 +418,6 @@ namespace SkylineBatchTest
                     logFiles.Add(fullName);
             }
             return logFiles;
-        }
-
-        public delegate bool ConditionDelegate();
-
-        public static void WaitForCondition(ConditionDelegate condition, TimeSpan timeout, int timestep, string errorMessage)
-        {
-            var startTime = DateTime.Now;
-            while (DateTime.Now - startTime < timeout)
-            {
-                if (condition()) return;
-                Thread.Sleep(timestep);
-            }
-            throw new Exception(errorMessage);
         }
 
         public static void CompareFiles(string expectedFilePath, string actualFilePath, List<Regex> skipLines = null)
@@ -477,7 +471,7 @@ namespace SkylineBatchTest
         /// <summary>
         /// Copies a file from the test directory, replacing all occurrences of a string.
         /// </summary>
-        public static string CopyFileFindReplace(string fileName, string stringToBeReplaced, string replacementString, string newName = null)
+        public static string CopyFileFindReplace(string fileName, string stringToBeReplaced, string replacementString, string newName)
         {
             // String.Replace() replaces all occurrences - no while loop needed
             return CopyFileWithLineTransform(fileName,
@@ -490,12 +484,12 @@ namespace SkylineBatchTest
         /// </summary>
         /// <param name="fileName">Source file name (relative to test directory)</param>
         /// <param name="lineTransform">Function to transform each line (input line -> output line)</param>
-        /// <param name="newName">Optional destination file path (temp file if not specified)</param>
+        /// <param name="newName">Destination file path (required)</param>
         /// <returns>Path to the created file</returns>
-        public static string CopyFileWithLineTransform(string fileName, Func<string, string> lineTransform, string newName = null)
+        public static string CopyFileWithLineTransform(string fileName, Func<string, string> lineTransform, string newName)
         {
             var originalFilePath = GetTestFilePath(fileName);
-            return CopyFileWithLineTransformAbsolute(originalFilePath, lineTransform, newName ?? Path.GetTempFileName());
+            return CopyFileWithLineTransformAbsolute(originalFilePath, lineTransform, newName);
         }
 
         /// <summary>

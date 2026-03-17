@@ -83,13 +83,17 @@ namespace pwiz.SkylineTestUtil
             var unexpectedOpenForms = FindOpenForms<Form>().Where(f => f.Modal).Select(form => form.Name).ToList();
             AssertEx.AreEqual(0, unexpectedOpenForms.Count, $@"Can't open a document when other dialogs are still open: {CommonTextUtil.LineSeparate(unexpectedOpenForms)}");
 
-            string documentFile = null;
-            foreach (var testFileDir in TestFilesDirs)
+            string documentFile = documentPath; // Default to assuming an absolute path
+            if (!Path.IsPathRooted(documentFile))
             {
-                documentFile = testFileDir.GetTestPath(documentPath);
-                if (File.Exists(documentFile))
+                // Check for relative path in test files dirs
+                foreach (var testFileDir in TestFilesDirs)
                 {
-                    break;
+                    documentFile = testFileDir.GetTestPath(documentPath);
+                    if (File.Exists(documentFile))
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -109,6 +113,17 @@ namespace pwiz.SkylineTestUtil
             var documentFile = TestFilesDir.GetTestPath(documentPath);
             WaitForCondition(() => File.Exists(documentFile));
             SkylineWindow.BeginInvoke((Action) (() => SkylineWindow.OpenFile(documentFile)));
+        }
+
+        /// <summary>
+        /// Restore the document to its original state using the undo buffer.
+        /// Much faster than reopening from disk since it swaps in-memory immutable trees.
+        /// </summary>
+        public SrmDocument RestoreOriginalDocument(int version = 0)
+        {
+            using var _ = new WaitDocumentChange(null, true);
+            RunUI(() => SkylineWindow.UndoAll(version));
+            return SkylineWindow.Document;
         }
 
         public static void CheckConsistentLibraryInfo(SrmDocument doc = null)
@@ -988,7 +1003,7 @@ namespace pwiz.SkylineTestUtil
                 DocViewer = ShowDialog<DocumentationViewer>(showViewer);
 
                 // Wait for the document to load completely in WebView2
-                WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Length > 0);
+                WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Contains("<table"));
             }
             
             public DocumentationViewer DocViewer { get; }

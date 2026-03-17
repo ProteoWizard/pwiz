@@ -155,11 +155,16 @@ namespace ResourcesOrganizer.ResourcesModel
             using var zipArchive = new ZipArchive(stream, ZipArchiveMode.Create);
             foreach (var file in ResourcesFiles)
             {
-                var entry = zipArchive.CreateEntry(file.Key);
-                using (var entryStream = entry.Open())
+                // Only export English (invariant) files when overrideAll is true
+                // In incremental mode, we only update localized files to avoid whitespace reformatting
+                if (overrideAll)
                 {
-                    using var writer = new StreamWriter(entryStream, TextUtil.Utf8Encoding);
-                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null, overrideAll)));
+                    var entry = zipArchive.CreateEntry(file.Key);
+                    using (var entryStream = entry.Open())
+                    {
+                        using var writer = new StreamWriter(entryStream, TextUtil.Utf8Encoding);
+                        writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null, overrideAll)));
+                    }
                 }
                 foreach (var language in file.Value.Entries
                              .SelectMany(resourceEntry => resourceEntry.LocalizedValues.Keys).Distinct())
@@ -466,28 +471,48 @@ namespace ResourcesOrganizer.ResourcesModel
         public void ExportLocalizationCsv(string path, string language, out int entryCount)
         {
             var records = new List<LocalizationCsvRecord>();
-            foreach (var textGroup in GetInvariantResources().Values.SelectMany(list=>list)
-                         .Where(resourceEntry=>resourceEntry.Invariant.IsLocalizableText && NeedsLocalizationHelp(resourceEntry, language))
-                         .GroupBy(resourceEntry=>resourceEntry.Invariant with {File = string.Empty, Name = string.Empty}))
-            {
-                var individualRecords =
-                    textGroup.Select(resourceEntry => MakeLocalizationCsvRecord(resourceEntry, language)).ToList();
 
-                if (individualRecords.Count > 1)
+            // Iterate over ResourcesFiles directly to preserve file path information
+            var entriesWithFiles = ResourcesFiles
+                .SelectMany(kvp => kvp.Value.Entries
+                    .Where(entry => entry.Invariant.IsLocalizableText && NeedsLocalizationHelp(entry, language))
+                    .Select(entry => (FilePath: kvp.Key, Entry: entry)))
+                .GroupBy(x => x.Entry.Invariant with { File = string.Empty, Name = string.Empty });
+
+            foreach (var textGroup in entriesWithFiles)
+            {
+                var groupList = textGroup.ToList();
+                var uniqueFiles = groupList.Select(x => x.FilePath).Distinct().OrderBy(f => f).ToList();
+                var fileCount = uniqueFiles.Count;
+
+                // Create records with file path association preserved
+                var recordsWithFiles = groupList
+                    .Select(x => (FilePath: x.FilePath, Record: MakeLocalizationCsvRecord(x.Entry, language)))
+                    .ToList();
+
+                if (recordsWithFiles.Count > 1)
                 {
-                    var uniqueIssues = textGroup.Select(entry => entry.GetTranslation(language)?.Issue)
+                    var uniqueIssues = groupList.Select(x => x.Entry.GetTranslation(language)?.Issue)
                         .OfType<LocalizationIssue>()
                         .Where(issue => issue != LocalizationIssue.MissingTranslation).Distinct()
                         .ToList();
                     if (uniqueIssues.Count == 1)
                     {
-                        individualRecords = individualRecords.Select(record => uniqueIssues[0].StoreInCsvRecord(record))
+                        recordsWithFiles = recordsWithFiles
+                            .Select(x => (x.FilePath, Record: uniqueIssues[0].StoreInCsvRecord(x.Record)))
                             .Distinct().ToList();
                     }
-                    var unqualifiedRecords = individualRecords.Select(record => record with
+
+                    // Build a file list for context (show up to 3 files, with "..." if more)
+                    var fileList = uniqueFiles.Count <= 3
+                        ? string.Join("; ", uniqueFiles)
+                        : string.Join("; ", uniqueFiles.Take(3)) + "; ...";
+
+                    var unqualifiedRecords = recordsWithFiles.Select(x => x.Record with
                     {
-                        File = string.Empty,
-                        Name = string.Empty
+                        File = fileList,
+                        Name = string.Empty,
+                        FileCount = fileCount
                     }).Distinct().ToList();
                     if (unqualifiedRecords.Count == 1)
                     {
@@ -495,7 +520,9 @@ namespace ResourcesOrganizer.ResourcesModel
                         continue;
                     }
                 }
-                records.AddRange(individualRecords);
+
+                // For non-consolidated entries, each record keeps its own file path with FileCount=1
+                records.AddRange(recordsWithFiles.Select(x => x.Record with { FileCount = 1, File = x.FilePath }));
             }
             using var stream = new FileStream(path, FileMode.Create);
             using var writer = new StreamWriter(stream, new UTF8Encoding(false));

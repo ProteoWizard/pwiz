@@ -77,7 +77,6 @@ namespace TestPerf
 
         [TestMethod, 
          NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Reader wants exclusive read access to raw data?
-         NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // Do not run full filesets for nightly tests
         public void TestDiaUmpireWiffFile()
         {
@@ -254,7 +253,7 @@ namespace TestPerf
             });
             RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
             {
-                importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(searchFiles[0]));
+                importRangesDlg.SetCurrentDirectory(new MsDataFilePath(Path.GetDirectoryName(searchFiles[0])));
                 importRangesDlg.SelectFile(Path.GetFileName(DiaFiles[0]));
                 importRangesDlg.Open();
             });

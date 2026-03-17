@@ -38,6 +38,7 @@ rule vendor-api-requirements ( properties * )
     {
         result += <source>MassHunterData.cpp ;
         result += <source>MidacData.cpp ;
+        result += <source>XmlMetadataParser.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
         result += <link>static ; # <using-clr>true and <link>shared don't mix
     }

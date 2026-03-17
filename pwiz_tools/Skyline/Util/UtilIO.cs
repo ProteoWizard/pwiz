@@ -29,6 +29,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
+using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -171,16 +172,6 @@ namespace pwiz.Skyline.Util
         /// <param name="pathCache">Path of potential cache</param>
         /// <returns>True if path is cached</returns>
         bool IsCached(string path, string pathCache);
-
-        /// <summary>
-        /// True when the pool contains open streams. Useful for debugging
-        /// </summary>
-        bool HasPooledStreams { get; }
-
-        /// <summary>
-        /// Returns a string enumeration of the open streams and their GlobalIndex values. Useful for debugging
-        /// </summary>
-        string ReportPooledStreams();
     }
 
     /// <summary>
@@ -191,9 +182,39 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public sealed class ConnectionPool
     {
-        private readonly Dictionary<int, IDisposable> _connections =
-            new Dictionary<int, IDisposable>();
-        
+        /// <summary>
+        /// When true, connect/disconnect events are recorded for diagnostic
+        /// reporting. Default false - negligible overhead when disabled.
+        /// Managed by <see cref="StartTrackingHistory"/> and <see cref="EndTrackingHistory"/>.
+        /// </summary>
+        private bool _trackHistory;
+
+        /// <summary>
+        /// Begin recording connect/disconnect events with stack traces.
+        /// Clears any stale history from a previous tracking session.
+        /// </summary>
+        public void StartTrackingHistory()
+        {
+            ClearHistory();
+            _trackHistory = true;
+        }
+
+        /// <summary>
+        /// Stop recording events and release all history memory.
+        /// </summary>
+        public void EndTrackingHistory()
+        {
+            _trackHistory = false;
+            ClearHistory();
+        }
+
+        private readonly Dictionary<ReferenceValue<Identity>, IDisposable> _connections =
+            new Dictionary<ReferenceValue<Identity>, IDisposable>();
+
+        // Tracking data keyed by GlobalIndex: persists across connect/disconnect cycles
+        private readonly Dictionary<int, List<PoolEvent>> _history =
+            new Dictionary<int, List<PoolEvent>>();
+
         /// <summary>
         /// True if the connection for this <see cref="Identity"/> is currently
         /// pooled.
@@ -204,7 +225,7 @@ namespace pwiz.Skyline.Util
         {
             lock (this)
             {
-                return _connections.ContainsKey(id.GlobalIndex);
+                return _connections.ContainsKey(id);
             }
         }
 
@@ -222,14 +243,16 @@ namespace pwiz.Skyline.Util
             lock (this)
             {
                 IDisposable connection;
-                if (_connections.TryGetValue(id.GlobalIndex, out connection))
+                if (_connections.TryGetValue(id, out connection))
                     return connection;
                 // Connection must be made inside lock to keep the get and add
                 // within a single synchronized block.
                 connection = connect();
-                _connections.Add(id.GlobalIndex, connection);
+                _connections.Add(id, connection);
+                if (_trackHistory)
+                    RecordEvent(id.GlobalIndex, PoolEventType.Connect);
                 return connection;
-            }            
+            }
         }
 
         /// <summary>
@@ -242,9 +265,11 @@ namespace pwiz.Skyline.Util
             lock (this)
             {
                 IDisposable connection;
-                if (!_connections.TryGetValue(id.GlobalIndex, out connection))
+                if (!_connections.TryGetValue(id, out connection))
                     return;
-                _connections.Remove(id.GlobalIndex);
+                _connections.Remove(id);
+                if (_trackHistory)
+                    RecordEvent(id.GlobalIndex, PoolEventType.Disconnect);
                 // Disconnect inside lock, since a new attempt to connect
                 // may fail if the old connection is not fully disconnected.
                 connection.Dispose();
@@ -257,6 +282,8 @@ namespace pwiz.Skyline.Util
             {
                 using (stream.ReaderWriterLock.CancelAndGetWriteLock())
                 {
+                    if (_trackHistory)
+                        RecordEvent(stream.GlobalIndex, PoolEventType.DisconnectWhile);
                     stream.CloseStream();
                     act();
                 }
@@ -274,14 +301,35 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public static string FormatConnectionLine(Identity id)
+        {
+            return string.Format(@"{0}. {1}", id.GlobalIndex, id); // Not L10N - debug only
+        }
+
+        internal static string FormatEventLine(PoolEvent poolEvent)
+        {
+            return poolEvent.StackTrace == null
+                ? $@"    {poolEvent}" // Not L10N - debug only
+                : $@"    {poolEvent.ToDetailString()}"; // Not L10N - debug only
+        }
+
         public string ReportPooledConnections()
         {
             lock (this)
             {
+                if (_connections.Count == 0)
+                    return null;
+
                 var sb = new StringBuilder();
                 foreach (var connection in _connections)
                 {
-                    sb.AppendLine(string.Format(@"{0}. {1}", connection.Key, connection.Value));
+                    var id = connection.Key.Value;
+                    sb.AppendLine(FormatConnectionLine(id));
+                    if (_trackHistory && _history.TryGetValue(id.GlobalIndex, out var events))
+                    {
+                        foreach (var poolEvent in events)
+                            sb.AppendLine(FormatEventLine(poolEvent));
+                    }
                 }
                 return sb.ToString();
             }
@@ -294,7 +342,64 @@ namespace pwiz.Skyline.Util
                 foreach (var connection in _connections.Values)
                     connection.Dispose();
                 _connections.Clear();
+                _history.Clear();
             }
+        }
+
+        /// <summary>
+        /// Clear all tracking history. Does not affect open connections.
+        /// </summary>
+        public void ClearHistory()
+        {
+            lock (this)
+            {
+                _history.Clear();
+            }
+        }
+
+        // Must be called inside lock(this)
+        private void RecordEvent(int globalIndex, PoolEventType eventType)
+        {
+            if (!_history.TryGetValue(globalIndex, out var events))
+            {
+                events = new List<PoolEvent>();
+                _history[globalIndex] = events;
+            }
+            events.Add(new PoolEvent(eventType, DateTime.Now, new StackTrace(true)));
+        }
+    }
+
+    internal enum PoolEventType
+    {
+        Connect,        // Not L10N
+        Disconnect,     // Not L10N
+        DisconnectWhile // Not L10N
+    }
+
+    internal struct PoolEvent
+    {
+        public PoolEventType EventType { get; }
+        public DateTime Timestamp { get; }
+        public StackTrace StackTrace { get; }
+
+        public PoolEvent(PoolEventType eventType, DateTime timestamp, StackTrace stackTrace)
+        {
+            EventType = eventType;
+            Timestamp = timestamp;
+            StackTrace = stackTrace;
+        }
+
+        public override string ToString()
+        {
+            return $@"[{Timestamp:HH:mm:ss.fff}] {EventType}"; // Not L10N - debug only
+        }
+
+        /// <summary>
+        /// Full diagnostic output including stack trace.
+        /// </summary>
+        public string ToDetailString()
+        {
+            return $@"[{Timestamp:HH:mm:ss.fff}] {EventType}{Environment.NewLine}{StackTrace}"; // Not L10N - debug only
         }
     }
 
@@ -370,6 +475,11 @@ namespace pwiz.Skyline.Util
         /// Globally unique index by which to identify the stream.
         /// </summary>
         int GlobalIndex { get; }
+
+        /// <summary>
+        /// Path of the file associated with this pooled stream.
+        /// </summary>
+        string FilePath { get; }
 
         /// <summary>
         /// The pooled stream.  Use of this property may actually create
@@ -508,6 +618,11 @@ namespace pwiz.Skyline.Util
         {
             Disconnect();
         }
+
+        public override string ToString()
+        {
+            return $@"PooledFileStream({FilePath})"; // Not L10N - debug only
+        }
     }
 
     public sealed class PooledSessionFactory : ConnectionId<ISessionFactory>, IPooledStream
@@ -521,7 +636,7 @@ namespace pwiz.Skyline.Util
         }
 
         private Type TypeDb { get; set; }
-        private string FilePath { get; set; }
+        public string FilePath { get; private set; }
         private DateTime FileTime { get; set; }
 
         protected override IDisposable Connect()
@@ -562,6 +677,11 @@ namespace pwiz.Skyline.Util
         {
             Disconnect();
         }
+
+        public override string ToString()
+        {
+            return $@"PooledSessionFactory({FilePath})"; // Not L10N - debug only
+        }
     }
 
     public class FileStreamManager : IStreamManager
@@ -587,6 +707,16 @@ namespace pwiz.Skyline.Util
         public string ReportPooledStreams()
         {
             return _connectionPool.ReportPooledConnections();
+        }
+
+        public void StartTrackingHistory()
+        {
+            _connectionPool.StartTrackingHistory();
+        }
+
+        public void EndTrackingHistory()
+        {
+            _connectionPool.EndTrackingHistory();
         }
 
         public void CloseAllStreams()

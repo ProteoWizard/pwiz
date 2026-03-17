@@ -142,8 +142,10 @@
     <Compile Include="CarafeBuildLibraryTest.cs" />
     <Compile Include="CarafeBuildLibraryTutorial.cs" />
     <Compile Include="DiaNnPeakImputationTest.cs" />
+    <Compile Include="PeakBoundaryImputationDiaTutorial.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />
+    <Compile Include="PerfFeatureDetectionSIMscansTest.cs" />
     <Compile Include="PerfCreateLibraryFromSpectraTest.cs" />
     <Compile Include="PerfAssociateProteinsHugeTest.cs" />
     <Compile Include="DdaTutorialTest.cs" />

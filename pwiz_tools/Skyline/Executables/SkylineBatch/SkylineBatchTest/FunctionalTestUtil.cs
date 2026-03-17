@@ -20,7 +20,17 @@ namespace SkylineBatchTest
             var startTime = DateTime.Now;
             while (DateTime.Now - startTime < timeout)
             {
+                // Condition satisfied
                 if (condition(mainForm, expectedValue)) return;
+
+                // Bail out early if a connection error dialog is open (network/panorama dependency unavailable)
+                var connectionError = SharedBatchTest.AbstractBaseFunctionalTest.FindOpenForm<ConnectionErrorForm>();
+                if (connectionError != null)
+                {
+                    Assert.Inconclusive("Skipping test due to ConnectionErrorForm (network or server unavailable).");
+                    return;
+                }
+
                 Thread.Sleep(timestep);
             }
             throw new Exception(errorMessage);

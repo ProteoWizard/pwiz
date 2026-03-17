@@ -1271,8 +1271,7 @@ namespace pwiz.SkylineTest
             // Test ability to roundtrip to older doc formats
             var xml = SETTINGS_V19.Replace("</peptide_prediction>", predictor3 + "\n</peptide_prediction>");
             var settings = AssertEx.Deserialize<SrmSettings>(xml);
-            var save = AuditLogList.IgnoreTestChecks;
-            AuditLogList.IgnoreTestChecks = true;
+            using var ignore = new AuditLogList.IgnoreTestChecksScope();
             var tmpFile19 = TestContext.GetTestResultsPath("V19_1.sky");
             var tmpFileCurrent = TestContext.GetTestResultsPath("V20_13.sky");
             var oldDoc = new SrmDocument(settings.ChangeDataSettings(settings.DataSettings.ChangeAuditLogging(false)));
@@ -1289,12 +1288,11 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(!currentDocXML.Contains(DriftTimePredictor.EL.predict_drift_time.ToString()));
             var newDoc = AssertEx.Deserialize<SrmDocument>(oldDocXML);
             var currentDoc = AssertEx.Deserialize<SrmDocument>(currentDocXML);
-            var diff = SrmDocument.EqualsVerbose(oldDoc, newDoc);
+            var diff = DocumentComparer.CompareDocuments(oldDoc, newDoc);
             if (diff != null)
                 Assert.Fail(diff);
             Assert.AreEqual(newDoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name, "test");
             Assert.AreEqual(currentDoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name, "test");
-            AuditLogList.IgnoreTestChecks = save;
         }
 
         private const string VALID_ISOTOPE_ENRICHMENT_XML =

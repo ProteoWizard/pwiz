@@ -471,7 +471,7 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                DisplayError(ex.Message);
+                DisplayErrorWithException(ex.Message, ex);
             }
 
             _scrolling = true;

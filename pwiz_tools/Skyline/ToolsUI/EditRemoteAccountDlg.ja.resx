@@ -364,11 +364,7 @@
     <value>9</value>
   </data>
   <data name="btnTest.Text" xml:space="preserve">
-    <value>&amp;Test</value>
-    <comment>Needs Review:English text changed
-Old English:Test
-Current English:&amp;Test
-Old Localized:テスト</comment>
+    <value>テスト(&amp;T)</value>
   </data>
   <data name="&gt;&gt;btnTest.Name" xml:space="preserve">
     <value>btnTest</value>
@@ -416,11 +412,7 @@ Old Localized:テスト</comment>
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>&amp;Account type:</value>
-    <comment>Needs Review:English text changed
-Old English:Account type:
-Current English:&amp;Account type:
-Old Localized:アカウントタイプ：</comment>
+    <value>アカウントタイプ(&amp;A):</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -584,6 +576,9 @@ Old Localized:アカウントタイプ：</comment>
   <data name="lblClientId.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
+  <data name="lblClientId.Text" xml:space="preserve">
+    <value>クライアントID(&amp;D):</value>
+  </data>
   <data name="tbxClientSecret.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -612,11 +607,7 @@ Old Localized:アカウントタイプ：</comment>
     <value>4</value>
   </data>
   <data name="lblClientSecret.Text" xml:space="preserve">
-    <value>Client sec&amp;ret:</value>
-    <comment>Needs Review:English text changed
-Old English:Client secret:
-Current English:Client sec&amp;ret:
-Old Localized:クライアントの秘密：</comment>
+    <value>クライアントの秘密(&amp;R):</value>
   </data>
   <data name="tbxClientScope.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -643,11 +634,7 @@ Old Localized:クライアントの秘密：</comment>
     <value>2</value>
   </data>
   <data name="lblClientScope.Text" xml:space="preserve">
-    <value>Client s&amp;cope:</value>
-    <comment>Needs Review:English text changed
-Old English:Client scope:
-Current English:Client s&amp;cope:
-Old Localized:クライアントの適用範囲：</comment>
+    <value>クライアントの適用範囲(&amp;C):</value>
   </data>
   <data name="tbxIdentityServer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -674,11 +661,7 @@ Old Localized:クライアントの適用範囲：</comment>
     <value>0</value>
   </data>
   <data name="lblIdentityServer.Text" xml:space="preserve">
-    <value>Ide&amp;ntity server:</value>
-    <comment>Needs Review:English text changed
-Old English:Identity server:
-Current English:Ide&amp;ntity server:
-Old Localized:アイデンティティサーバー：</comment>
+    <value>アイデンティティサーバー(&amp;N):</value>
   </data>
   <data name="wizardPagesByAccountType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -720,7 +703,7 @@ Old Localized:アイデンティティサーバー：</comment>
     <value>wizardPagesByAccountType</value>
   </data>
   <data name="&gt;&gt;wizardPagesByAccountType.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.209, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPagesByAccountType.Parent" xml:space="preserve">
     <value>$this</value>
@@ -951,7 +934,7 @@ Old Localized:アイデンティティサーバー：</comment>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.209, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
@@ -963,6 +946,60 @@ Old Localized:アイデンティティサーバー：</comment>
     <value>EditRemoteAccountDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.209, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="lblAlias.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblAlias.Location" type="System.Drawing.Point, System.Drawing">
+    <value>168, 9</value>
+  </data>
+  <data name="lblAlias.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 13</value>
+  </data>
+  <data name="lblAlias.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblAlias.Text" xml:space="preserve">
+    <value>アカウントエイリアス：</value>
+  </data>
+  <data name="&gt;&gt;lblAlias.Name" xml:space="preserve">
+    <value>lblAlias</value>
+  </data>
+  <data name="&gt;&gt;lblAlias.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblAlias.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblAlias.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textAlias.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textAlias.Location" type="System.Drawing.Point, System.Drawing">
+    <value>168, 25</value>
+  </data>
+  <data name="textAlias.Size" type="System.Drawing.Size, System.Drawing">
+    <value>138, 20</value>
+  </data>
+  <data name="textAlias.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textAlias.Name" xml:space="preserve">
+    <value>textAlias</value>
+  </data>
+  <data name="&gt;&gt;textAlias.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textAlias.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textAlias.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textAlias.ToolTip" xml:space="preserve">
+    <value>わかりやすいアカウント名。この名前がUIに表示されます。</value>
   </data>
 </root>

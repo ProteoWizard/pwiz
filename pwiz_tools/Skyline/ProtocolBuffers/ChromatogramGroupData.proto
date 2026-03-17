@@ -48,6 +48,7 @@ message ResultFileMetaDataProto {
 		bool negativeCharge = 12;
 		int32 msLevel = 13;
 		google.protobuf.DoubleValue constantNeutralLoss = 14;
+		google.protobuf.DoubleValue sourceOffsetVoltage = 15;
 	}
 
 	message Precursor {
@@ -111,6 +112,7 @@ message ChromatogramGroupIdsProto {
 		int32 targetIndex = 1; // one-based index into "targets"
 		repeated int32 filterIndexes = 2; // zero-based indexes into "filter"
 		string qcTraceName = 3;
+		string qcTraceTypeWithUnits = 4; // e.g. "pressure (psi)", "temperature (°C)" etc
 	}
 
 	message SpectrumFilter {

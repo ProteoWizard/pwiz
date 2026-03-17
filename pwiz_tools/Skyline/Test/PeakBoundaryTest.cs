@@ -17,12 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -37,6 +31,11 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 
 namespace pwiz.SkylineTest
 {
@@ -453,12 +452,7 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(documentContainer.SetDocument(doc, documentContainer.Document));
             var skylineDataSchema = new SkylineDataSchema(documentContainer, new DataSchemaLocalizer(cultureInfo, cultureInfo));
             var viewContext = new DocumentGridViewContext(skylineDataSchema);
-            using (var writer = new StreamWriter(fileName))
-            {
-                IProgressStatus status = new ProgressStatus();
-                viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref status,
-                    viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, TextUtil.GetCsvSeparator(cultureInfo));
-            }
+            viewContext.ExportViewToFile(viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec), fileName, TextUtil.GetCsvSeparator(cultureInfo));
         }
 
         private ViewSpec MakeReportSpec()

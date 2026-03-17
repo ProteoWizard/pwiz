@@ -2088,7 +2088,17 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("FormulaBox_helpToolStripMenuItem_Click_Formula_Help", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The formula &quot;{0}&quot; would result in negative atom counts.
+        /// </summary>
+        public static string FormulaBox_UpdateAverageAndMonoTextsForFormula_The_formula___0___would_result_in_negative_atom_counts {
+            get {
+                return ResourceManager.GetString("FormulaBox_UpdateAverageAndMonoTextsForFormula_The_formula___0___would_result_in_n" +
+                        "egative_atom_counts", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0} methods usually specify the time range for the mass spectrometer to acquire spectra.
         ///

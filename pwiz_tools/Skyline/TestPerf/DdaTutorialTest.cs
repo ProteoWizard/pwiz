@@ -43,7 +43,7 @@ namespace TestPerf
     [TestClass]
     public class DdaTutorialTest : AbstractFunctionalTest
     {
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -103,9 +103,10 @@ namespace TestPerf
 
         protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
-            using var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
-            graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
-            return bmp;
+            var result = base.ProcessCoverShot(bmp);
+            using var graph = Graphics.FromImage(result);
+            graph.DrawImageUnscaled(_searchLogImage, result.Width - _searchLogImage.Width - 10, result.Height - _searchLogImage.Height - 30);
+            return result;
         }
 
         /// <summary>
@@ -449,7 +450,7 @@ namespace TestPerf
             DirectoryEx.SafeDelete(Path.Combine(Path.GetDirectoryName(SearchFiles.First())!, "converted"));
             foreach (var searchFile in SearchFiles)
             {
-                FileEx.SafeDelete(Path.ChangeExtension(searchFile, ".mzid.gz"));
+                FileEx.SafeDelete(Path.ChangeExtension(searchFile, ".mzid.gz"), true);
             }
         }
 

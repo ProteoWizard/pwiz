@@ -19,18 +19,13 @@
 // limitations under the License.
 //
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Text;
-using System.Linq;
-using System.Drawing;
-using System.Windows.Forms;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
 using pwiz.Common.Collections;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
 
 public class Pair<T1, T2>
 {
@@ -240,8 +235,69 @@ namespace seems
 
             if( IsChromatogram )
             {
-                axis.Title.Text = "Total Intensity";
-            } else
+                // Determine axis title based on chromatogram type and intensity units
+                string axisTitle = "Total Intensity";
+                
+                Chromatogram chromatogram = this as Chromatogram;
+                if (chromatogram != null && chromatogram.Element != null)
+                {
+                    var intensityArray = chromatogram.Element.getIntensityArray();
+                    var type = chromatogram.Element.cvParamChild(CVID.MS_chromatogram_type);
+                    if (type.cvid == CVID.CVID_Unknown)
+                    {
+                        // Didn't find a particular kind of chromatogram, look for generic
+                        type = chromatogram.Element.cvParam(CVID.MS_chromatogram);
+                    }
+
+                    if (type.cvid != CVID.MS_total_ion_current_chromatogram &&
+                             type.cvid != CVID.MS_basepeak_chromatogram &&
+                             intensityArray != null)
+                    {
+                        // Get Y axis title - ideally the units for the intensity array
+                        var unitsParam = intensityArray.cvParamChild(CVID.MS_intensity_array);
+                        if (unitsParam.empty() ||
+                            unitsParam.units == CVID.MS_number_of_detector_counts ||
+                            unitsParam.units == CVID.CVID_Unknown)
+                        {
+                            // Look for a userParam with name="units"
+                            string unitsValue = null;
+                            foreach (var userParam in chromatogram.Element.userParams)
+                            {
+                                if (userParam.name == "units")
+                                {
+                                    unitsValue = userParam.value;
+                                    break;
+                                }
+                            }
+                            
+                            if (!string.IsNullOrEmpty(unitsValue))
+                            {
+                                axisTitle = unitsValue;
+                            }
+                            else
+                            {
+                                axisTitle = "Intensity";
+                            }
+                        }
+                        else
+                        {
+                            var unitName = unitsParam.unitsName;
+                            if (!string.IsNullOrEmpty(unitName))
+                            {
+                                // Remove " unit" suffix if present
+                                if (unitName.EndsWith(" unit", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    unitName = unitName.Substring(0, unitName.Length - 5).TrimEnd();
+                                }
+                                axisTitle = unitName;
+                            }
+                        }
+                    }
+                }
+                
+                axis.Title.Text = axisTitle;
+            } 
+            else
             {
                 axis.Title.Text = "Intensity";
             }

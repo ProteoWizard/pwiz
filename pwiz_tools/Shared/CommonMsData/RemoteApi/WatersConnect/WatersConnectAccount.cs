@@ -15,24 +15,105 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using IdentityModel.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Linq;
+using pwiz.Common;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
+    public enum AuthenticationErrorType
+    {
+        InvalidIdentityServer,
+        InvalidClientScope,
+        InvalidClientSecret,
+        InvalidPassword,
+        Generic,
+        InvalidResponse
+    }
+
+    public static class AuthenticationErrorTypeExtension
+    {
+        public static string ToUserMessage(this AuthenticationErrorType errorType)
+        {
+            switch (errorType)
+            {
+                case AuthenticationErrorType.InvalidIdentityServer:
+                    return WatersConnectResources.WatersConnectAccount_AuthenticationErrorType_InvalidIdentityServer;
+                case AuthenticationErrorType.InvalidClientScope:
+                    return WatersConnectResources.WatersConnectAccount_AuthenticationErrorType_InvalidClientScope;
+                case AuthenticationErrorType.InvalidClientSecret:
+                    return WatersConnectResources.WatersConnectAccount_AuthenticationErrorType_InvalidClientSecret;
+                case AuthenticationErrorType.InvalidPassword:
+                    return WatersConnectResources.WatersConnectAccount_AuthenticationErrorType_InvalidPassword;
+                case AuthenticationErrorType.InvalidResponse:
+                    return WatersConnectResources.WatersConnectAccount_AuthenticationErrorType_InvalidServerResponse;
+                case AuthenticationErrorType.Generic:
+                default:
+                    return WatersConnectResources.WatersConnectAccount_AuthenticationErrorType_Generic;
+            }
+        }
+    }
+
     [XmlRoot("waters_connect_account")]
     public class WatersConnectAccount : RemoteAccount
     {
+        public static readonly string HANDLER_NAME = @"WatersConnect.Handler.Main";
+        public static readonly string AUTH_HANDLER_NAME = @"WatersConnect.Handler.Authentication";
+        public static readonly string TOKEN_DATA = @"token";
+        public static readonly string GET_FOLDERS = @"/waters_connect/v2.0/folders";
+
+        public class TokenCacheEntry
+        {
+            public TokenResponse TokenResponse { get; set; }
+            public DateTime ExpirationDateTime { get; set; }
+        }
+
+        public static readonly Dictionary<WatersConnectAccount, TokenCacheEntry> _authenticationTokens = new Dictionary<WatersConnectAccount, TokenCacheEntry>();
+        public static IHttpClientFactory _httpClientFactory;
+
         public static readonly WatersConnectAccount DEFAULT
+            = new WatersConnectAccount(@"https://localhost:48444", string.Empty, string.Empty)
+            {
+                IdentityServer = @"https://localhost:48333",
+                ClientScope = @"webapi",
+                ClientSecret = @"method-develop-secret",
+                ClientId = @"method-develop"
+            };
+        public static readonly WatersConnectAccount DEV_DEFAULT
             = new WatersConnectAccount(@"https://devconnect.waters.com:48444", string.Empty, string.Empty)
             {
-                IdentityServer = @"https://devconnect.waters.com:48333"
+                IdentityServer = @"https://devconnect.waters.com:48333",
+                ClientScope = @"webapi",
+                ClientSecret = @"secret",
+                ClientId = @"resourceownerclient_jwt"
             };
+
+        static WatersConnectAccount()
+        {
+            var services = new ServiceCollection();
+            var builder = services.AddHttpClient(@"customClient");
+            builder.ConfigurePrimaryHttpMessageHandler(() =>
+                // Get mock handler for testing purposes.
+                CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(
+                    HANDLER_NAME,
+                    () => new WebRequestHandler()
+                        { UnsafeAuthenticatedConnectionSharing = true, PreAuthenticate = true })
+            );
+            var provider = services.BuildServiceProvider();
+            _httpClientFactory = provider.GetService<IHttpClientFactory>();
+        }
+
         public WatersConnectAccount(string serverUrl, string username, string password)
         {
             ServerUrl = serverUrl;
@@ -49,12 +130,31 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 IdentityServer = ServerUrl.Substring(0, ichLastColon) + strPort;
             }
-            ClientScope = @"webapi";
-            ClientSecret = @"secret";
-            ClientId = @"resourceownerclient_jwt";
         }
 
         public string IdentityServer { get; private set; }
+
+        public bool SupportsMethodDevelopment(out string reason)
+        {
+            reason = null;
+            if (!DEFAULT.ClientId.Equals(ClientId))
+            {
+                reason = WatersConnectResources
+                    .WatersConnectAccount_SupportsMethodDevelopment_Not_supported_by_the_waters_connect_server_;
+                return false;
+            }
+            try
+            {
+                Authenticate();
+                return true;
+            }
+            catch (AuthenticationException ex)
+            {
+                var authReason = HandleAuthenticationException(ex, out _);
+                reason = WatersConnectResources.WatersConnectAccount_SupportsMethodDevelopment_Cannot_authenticate__ + authReason.ToUserMessage();
+                return false;
+            }
+        }
 
         public WatersConnectAccount ChangeIdentityServer(string identityServer)
         {
@@ -114,16 +214,93 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         public string GetFoldersUrl()
         {
-            return ServerUrl + @"/waters_connect/v1.0/folders";
+            return ServerUrl + GET_FOLDERS;
         }
 
         private string IdentityConnectEndpoint => @"/connect/token";
 
         public TokenResponse Authenticate()
         {
+            // First check the cache for a valid token
+            if (_authenticationTokens.TryGetValue(this, out var tokenCacheEntry) && tokenCacheEntry.ExpirationDateTime > DateTime.UtcNow)
+            {
+                return tokenCacheEntry.TokenResponse;
+            }
+            // Get mock handler for testing purposes.
+            var authHandler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(AUTH_HANDLER_NAME, () => new HttpClientHandler());
             var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, ClientId,
-                ClientSecret, new HttpClientHandler());
-            return tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
+                ClientSecret, authHandler);
+            // Try to refresh the token if we have an expired one
+            if (_authenticationTokens.TryGetValue(this, out var expiredTokenCacheEntry))
+            {
+                var refreshedToken = tokenClient.RequestRefreshTokenAsync(expiredTokenCacheEntry.TokenResponse.RefreshToken).Result;
+                if (!refreshedToken.IsError)
+                {
+                    // If the refresh token worked, update the cache with the new token
+                    _authenticationTokens[this] = new TokenCacheEntry()
+                        { TokenResponse = refreshedToken, ExpirationDateTime = DateTime.UtcNow.AddSeconds(refreshedToken.ExpiresIn) };
+                    return refreshedToken;
+                }
+            }
+            // Otherwise, request a new token using the username and password
+            var newToken = tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
+            if (newToken.IsError)
+            {
+                AuthenticationException ex;
+                if (newToken.ErrorType == ResponseErrorType.Exception)
+                    ex = new AuthenticationException(newToken.Error);
+                else
+                    ex = new AuthenticationException(string.Format(CultureInfo.CurrentCulture,
+                        WatersConnectResources.WatersConnectAccount_Authenticate_Failed_to_authenticate_waters_connect_account__0__with_error___1_,
+                        Username, newToken.ErrorDescription ?? newToken.Error));
+                ex.Data[TOKEN_DATA] = newToken.Raw;
+                throw ex;
+            }
+            _authenticationTokens[this] = new TokenCacheEntry()
+                { TokenResponse = newToken, ExpirationDateTime = DateTime.UtcNow.AddSeconds(newToken.ExpiresIn) };
+            return newToken;
+        }
+
+        public static AuthenticationErrorType HandleAuthenticationException(AuthenticationException ex, out string message)
+        {
+            message = null;
+            if (!ex.Data.Contains(TOKEN_DATA) || string.IsNullOrEmpty(ex.Data[TOKEN_DATA] as string))
+            {
+                message = CommonTextUtil.LineSeparate(WatersConnectResources.WatersConnectAccount_HandleAuthenticationException_waters_connect_server_returned_non_JSON_body__, ex.Message);
+                return AuthenticationErrorType.Generic;
+            }
+            try
+            {
+                var tokenResponse = JObject.Parse((string)ex.Data[TOKEN_DATA]);
+                string error = (tokenResponse[@"error_description"] ?? tokenResponse[@"error"] ?? "").ToString();
+                var errorType = (tokenResponse[@"error"] ?? "").ToString();
+                if (errorType == @"invalid_scope")
+                {
+                    return AuthenticationErrorType.InvalidClientScope;
+                }
+                else if (errorType == @"invalid_client")
+                {
+                    return AuthenticationErrorType.InvalidClientSecret;
+                }
+                else if (errorType == @"invalid_grant")
+                {
+                    return AuthenticationErrorType.InvalidPassword;
+                }
+                else if (!string.IsNullOrEmpty(error))
+                {
+                    message = error;
+                    return AuthenticationErrorType.Generic;
+                }
+                else
+                {
+                    return AuthenticationErrorType.InvalidIdentityServer;
+                }
+            }
+            catch(Exception)
+            {
+                message = CommonTextUtil.LineSeparate(WatersConnectResources.WatersConnectAccount_HandleAuthenticationException_waters_connect_server_returned_non_JSON_body__, ex.Message);
+                return AuthenticationErrorType.InvalidResponse;
+            }
         }
 
         /*public IEnumerable<WatersConnectFolderObject> GetFolders()
@@ -159,20 +336,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public HttpClient GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
-
-            var services = new ServiceCollection();
-            var builder = services.AddHttpClient(@"customClient");
-            builder.ConfigurePrimaryHttpMessageHandler(() =>
-            {
-                var handler = new WebRequestHandler();
-                handler.UnsafeAuthenticatedConnectionSharing = true;
-                handler.PreAuthenticate = true;
-                return handler;
-            });
-            var provider = services.BuildServiceProvider();
-            var httpClientFactory = provider.GetService<IHttpClientFactory>();
-
-            var httpClient = httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient(@"customClient");
             httpClient.SetBearerToken(tokenResponse.AccessToken);
             //httpClient.DefaultRequestHeaders.Remove(@"Accept");
             //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");

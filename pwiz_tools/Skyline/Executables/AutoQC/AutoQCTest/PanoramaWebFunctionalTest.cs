@@ -256,6 +256,8 @@ namespace AutoQCTest
             WaitForConfigRunnerWaiting(mainForm, configIndex);
         }
 
+        // Disable warning about possible null reference exceptions for code that accesses JSON properties.
+        // ReSharper disable PossibleNullReferenceException
         private void VerifyReplicateAnnotationsOnPanoramaWeb(IPanoramaClient panoramaClient, string folderPath, int expectedRowCount, 
             Dictionary<string, int> expectedPrecursorCount, Dictionary<string, int> expectedProteinCount)
         {
@@ -354,6 +356,7 @@ namespace AutoQCTest
             var rowCount = json["rowCount"].ToObject<int>();
             return rowCount;
         }
+        // ReSharper restore PossibleNullReferenceException
 
         private JObject DoQuery(IPanoramaClient panoramaClient, string folderPath, string schemaName, string queryName,
             string[] columns, string[] sort, string filter = null)

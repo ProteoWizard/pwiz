@@ -225,6 +225,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition.
+        /// </summary>
+        public static string ApexTransitionIonCount {
+            get {
+                return ResourceManager.GetString("ApexTransitionIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Area under the curve (AUC), minus background, for the transition peak..
         /// </summary>
         public static string Area {
@@ -1339,6 +1348,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name of the group comparison.
+        /// </summary>
+        public static string GroupComparison {
+            get {
+                return ResourceManager.GetString("GroupComparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The maximum intensity of the points between the transition peak integration
         ///boundaries..
         /// </summary>
@@ -1780,6 +1798,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LcPeakTotalIonCurrentAreaMS1 {
             get {
                 return ResourceManager.GetString("LcPeakTotalIonCurrentAreaMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakTransitionIonCount {
+            get {
+                return ResourceManager.GetString("LcPeakTransitionIonCount", resourceCulture);
             }
         }
         
@@ -4216,6 +4243,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation.
+        /// </summary>
+        public static string SourceOffsetVoltage {
+            get {
+                return ResourceManager.GetString("SourceOffsetVoltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Extra criteria that spectra must pass to be included in the extracted ion chromatogram.
         /// </summary>
         public static string SpectrumFilter {
@@ -4543,6 +4579,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string TransitionCount {
             get {
                 return ResourceManager.GetString("TransitionCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values related to the number of ions in the mass spectrometer.
+        /// </summary>
+        public static string TransitionIonMetrics {
+            get {
+                return ResourceManager.GetString("TransitionIonMetrics", resourceCulture);
             }
         }
         

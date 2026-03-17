@@ -23,6 +23,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
 using pwiz.Common.SystemUtil.PInvoke;
+using System.Text;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -105,7 +106,7 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Environment variable which can be used to override <see cref="GetDownloadsPath"/>.
         /// </summary>
-        private const string SKYLINE_DOWNLOAD_PATH = @"SKYLINE_DOWNLOAD_PATH";
+        public const string SKYLINE_DOWNLOAD_PATH = @"SKYLINE_DOWNLOAD_PATH";
 
         // From http://stackoverflow.com/questions/3795023/downloads-folder-not-special-enough
         // Get the path for the Downloads directory, avoiding the assumption that it's under the 
@@ -394,6 +395,63 @@ namespace pwiz.Common.SystemUtil
             }
             return fileName;
         }
+
+        /// <summary>
+        /// We often encounter tools that can't deal with Unicode characters in file paths, this method
+        /// will try to convert such paths to a non-Unicode version using the 8.3 format short path name.
+        /// Converts only the segments that need it, to avoid trashing filename extensions.
+        /// e.g. "C:\Program Files\Common Files\my files with ünicode\foo.mzml" (note the umlaut U) => ""C:\Program Files\Common Files\MYFILE~1\foo.mzml"
+        ///
+        /// Only works on NTFS volumes, with 8.3 support enabled. So, for example, not on Docker instances.
+        ///
+        /// N.B there is an equivalent function in pwiz CLI util.Filesystem, but not all uses of
+        /// this capability necessarily want to depend on the CLI. The Skyline test system checks for
+        /// identical performance of the two implementations.
+        ///
+        /// </summary>
+        /// <param name="path">Path to an existing file</param>
+        /// <returns>Path with unicode segments changed to 8.3 representation, if possible</returns>    
+        public static string GetNonUnicodePath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+
+            // Check for non-printable or non-ASCII characters
+            var hasNonAscii = path.Any(c => c < 32 || c > 126);
+            if (!hasNonAscii)
+            {
+                return path;
+            }
+
+            var fullPath = Path.GetFullPath(path);
+            var segments = fullPath.Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            var currentPath = segments[0] + Path.DirectorySeparatorChar; // Root directory
+
+            foreach (var segment in segments.Skip(1))
+            {
+                var nextPath = Path.Combine(currentPath, segment);
+
+                // Replace segment with 8.3 short name only if it contains non-ASCII
+                var needsShort = segment.Any(c => c < 32 || c > 126);
+                if (needsShort && (Directory.Exists(nextPath) || File.Exists(nextPath)))
+                {
+                    var sb = new StringBuilder(260);
+                    var result = Kernel32.GetShortPathName(nextPath, sb, sb.Capacity);
+                    if (result > 0)
+                    {
+                        var shortSegment = Path.GetFileName(sb.ToString());
+                        nextPath = Path.Combine(currentPath, shortSegment);
+                    }
+                }
+
+                currentPath = nextPath;
+            }
+
+            return currentPath;
+        }
+
     }
 
     /// <summary>

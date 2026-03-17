@@ -47,8 +47,9 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         /// <param name="testContext">The test context for the test creating the directory</param>
         /// <param name="relativePathZip">A root project relative path to the ZIP file</param>
-        public TestFilesDir(TestContext testContext, string relativePathZip)
-            : this(testContext, relativePathZip, null)
+        /// <param name="suffix">Optional suffix to append to the directory name to differentiate tests using the same ZIP file</param>
+        public TestFilesDir(TestContext testContext, string relativePathZip, string suffix = null)
+            : this(testContext, relativePathZip, null, suffix)
         {
             
         }
@@ -60,8 +61,9 @@ namespace pwiz.SkylineTestUtil
         /// <param name="testContext">The test context for the test creating the directory</param>
         /// <param name="relativePathZip">A root project relative path to the ZIP file</param>
         /// <param name="directoryName">Name of directory to create in the test results</param>
-        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName)
-            : this(testContext, relativePathZip, directoryName, null)
+        /// <param name="suffix">Optional suffix to append to the directory name to differentiate tests using the same ZIP file</param>
+        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName, string suffix = null)
+            : this(testContext, relativePathZip, directoryName, null, false, suffix)
         {
 
         }
@@ -75,12 +77,18 @@ namespace pwiz.SkylineTestUtil
         /// <param name="directoryName">Name of directory to create in the test results</param>
         /// <param name="persistentFiles">List of files we'd like to extract in the ZIP file's directory for (re)use</param>
         /// <param name="isExtractHere">If false then the zip base name is used as the destination directory</param>
-        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName, string[] persistentFiles, bool isExtractHere = false)
+        /// <param name="suffix">Optional suffix to append to the directory name to differentiate tests using the same ZIP file</param>
+        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName, string[] persistentFiles, bool isExtractHere = false, string suffix = null)
         {
             TestContext = testContext;
             string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
             if (zipBaseName == null)
                 Assert.Fail("Null zip base name");  // Resharper
+            // Append suffix to zipBaseName if provided
+            if (!string.IsNullOrEmpty(suffix))
+            {
+                zipBaseName = zipBaseName + suffix;
+            }
             DirectoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
             FullPath = TestContext.GetTestPath(DirectoryName);
             if (Directory.Exists(FullPath))
@@ -105,7 +113,10 @@ namespace pwiz.SkylineTestUtil
             {
                 var persistentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
                 PersistentFilesDirTotalSize = persistentFileInfos.Sum(f => f.Length);
-                PersistentFilesDirFileSet = persistentFileInfos.Select(f => PathEx.GetRelativePath(Path.GetDirectoryName(PersistentFilesDir), f.FullName)).ToHashSet();
+                PersistentFilesDirFileSizes = persistentFileInfos.ToDictionary(
+                    f => PathEx.GetRelativePath(Path.GetDirectoryName(PersistentFilesDir), f.FullName),
+                    f => f.Length);
+                PersistentFilesDirFileSet = PersistentFilesDirFileSizes.Keys.ToHashSet();
             }
         }
 
@@ -137,6 +148,29 @@ namespace pwiz.SkylineTestUtil
         /// Full list of all file paths in the persistent files dir after extracting the ZIP.
         /// </summary>
         public ISet<string> PersistentFilesDirFileSet { get; private set; }
+
+        /// <summary>
+        /// Maps each file path in <see cref="PersistentFilesDirFileSet"/> to its original
+        /// size in bytes, recorded at ZIP extraction time.
+        /// </summary>
+        public IDictionary<string, long> PersistentFilesDirFileSizes { get; private set; }
+
+        /// <summary>
+        /// Relative paths (from <see cref="PersistentFilesDir"/>) of files the test
+        /// may create in the persistent directory on its initial run (e.g., converted
+        /// mzML files created for feature detection tests). These are excluded from the
+        /// modification check when they appear as new files after the first run of a test.
+        /// On subsequent test runs such files are expected to be unchanged.
+        /// </summary>
+        public ISet<string> PotentialAdditionalPersistentFileSet { get; set; }
+
+        /// <summary>
+        /// Relative paths (from <see cref="PersistentFilesDir"/>) of files that were
+        /// present in the ZIP but may be intentionally removed during the test (e.g.,
+        /// a subdirectory deleted before taking screenshots). These are excluded from
+        /// the modification check when they appear as deleted files.
+        /// </summary>
+        public ISet<string> PotentialMissingPersistentFileSet { get; set; }
 
         public string RootPath
         {
@@ -316,6 +350,50 @@ namespace pwiz.SkylineTestUtil
             newFiles.ExceptWith(PersistentFilesDirFileSet);
             var deletedFiles = new HashSet<string>(PersistentFilesDirFileSet);
             deletedFiles.ExceptWith(currentFiles);
+
+            // Some tests will create new persistent files on the first run, so in case of mismatch check the
+            // possibility that they weren't there when PersistentFilesDirTotalSize was set.
+            if (PersistentFilesDirTotalSize != currentSize && PotentialAdditionalPersistentFileSet?.Count > 0)
+            {
+                var persistentBaseName = Path.GetFileName(PersistentFilesDir) ?? "";
+                var expectedFullPaths = new HashSet<string>(
+                    PotentialAdditionalPersistentFileSet.Select(f => Path.Combine(persistentBaseName, f)),
+                    StringComparer.OrdinalIgnoreCase);
+                var expectedNewFiles = newFiles.Where(f => expectedFullPaths.Contains(f)).ToHashSet();
+                var excludedPaths = expectedNewFiles
+                    .Select(f => Path.Combine(Path.GetDirectoryName(PersistentFilesDir) ?? "", f))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var revisedSize = currentSize - currentFileInfos.Where(fi => excludedPaths.Contains(fi.FullName))
+                    .Sum(fi => fi.Length);
+                if (PersistentFilesDirTotalSize == revisedSize)
+                {
+                    // Adjust current size to exclude expected new files for the size comparison
+                    currentSize = revisedSize;
+                    // Exclude expected new files from newFiles since they are not unexpected changes
+                    newFiles.ExceptWith(expectedNewFiles);
+                }
+            }
+
+            // Some tests intentionally remove persistent files (e.g. deleting a subdirectory
+            // before taking screenshots). Exclude those from the modification check.
+            if (deletedFiles.Count > 0 && PotentialMissingPersistentFileSet?.Count > 0)
+            {
+                var persistentBaseName = Path.GetFileName(PersistentFilesDir) ?? "";
+                var expectedMissingPaths = new HashSet<string>(
+                    PotentialMissingPersistentFileSet.Select(f => Path.Combine(persistentBaseName, f)),
+                    StringComparer.OrdinalIgnoreCase);
+                var expectedDeletedFiles = deletedFiles.Where(f => expectedMissingPaths.Contains(f)).ToHashSet();
+                if (expectedDeletedFiles.Count > 0)
+                {
+                    deletedFiles.ExceptWith(expectedDeletedFiles);
+                    // Subtract the recorded sizes of the expected missing files from the
+                    // original total so the size comparison remains accurate.
+                    var expectedMissingSize = expectedDeletedFiles
+                        .Sum(f => PersistentFilesDirFileSizes != null && PersistentFilesDirFileSizes.TryGetValue(f, out var size) ? size : 0);
+                    PersistentFilesDirTotalSize -= expectedMissingSize;
+                }
+            }
+
             if (newFiles.Any() || deletedFiles.Any() || PersistentFilesDirTotalSize - currentSize > 0)
             {
                 var changeSummary = new StringBuilder($"PersistentFilesDir ({PersistentFilesDir}) has been modified.\r\n");
@@ -339,6 +417,9 @@ namespace pwiz.SkylineTestUtil
 
         public static void CheckForFileLocks(string path, bool useDeletion = false)
         {
+            if (string.IsNullOrEmpty(path))
+                return;
+
             // Do a garbage collection in case any finalizer is supposed to release a file handle
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -378,6 +459,13 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception e)
                 {
+                    // If the directory doesn't exist, it may have been deleted by another test/process.
+                    // This can happen when multiple tests use the same ZIP file and run in parallel.
+                    // Allow the test to continue in this case.
+                    if (!Directory.Exists(path))
+                    {
+                        return;
+                    }
                     throw new IOException($@"Directory.Delete(""{path}"",true) failed with ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
                 return;
@@ -434,8 +522,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static void RemoveReadonlyFlags(string path)
         {
-            string[] files = Directory.GetFiles(path);
-            string[] dirs = Directory.GetDirectories(path);
+            string[] files = GetSafeArray(() => Directory.GetFiles(path));
+            string[] dirs = GetSafeArray(() => Directory.GetDirectories(path));
 
             foreach (string file in files)
             {
@@ -445,6 +533,19 @@ namespace pwiz.SkylineTestUtil
             foreach (string dir in dirs)
             {
                 RemoveReadonlyFlags(dir);
+            }
+        }
+
+        private static string[] GetSafeArray(Func<string[]> getArray)
+        {
+            try
+            {
+                return getArray();
+            }
+            catch (Exception)
+            {
+                // Just skip anything that throws an exception
+                return Array.Empty<string>();
             }
         }
     }

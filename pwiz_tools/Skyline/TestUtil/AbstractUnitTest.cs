@@ -17,17 +17,19 @@
  * limitations under the License.
  */
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.Util;
+using pwiz.Skyline;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
 
 // Once-per-application setup information to perform logging with log4net.
@@ -86,6 +88,18 @@ namespace pwiz.SkylineTestUtil
         {
             get { return TestContext.GetBoolValue("RunPerfTests", true); }  // Return true if unspecified
             set { TestContext.Properties["RunPerfTests"] = value.ToString(CultureInfo.InvariantCulture); }
+        }
+
+        /// <summary>
+        /// When true, enables ConsoleTraceListener during test cleanup to capture
+        /// DetailedTrace.WriteLine() output in Console (and TeamCity logs).
+        /// This is useful for debugging cleanup issues but should be used sparingly
+        /// as it can make logs harder to read.
+        /// </summary>
+        protected bool EnableTraceOutputDuringCleanup
+        {
+            get { return TestContext.GetBoolValue("EnableTraceOutputDuringCleanup", false); }  // Return false if unspecified
+            set { TestContext.Properties["EnableTraceOutputDuringCleanup"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -175,6 +189,27 @@ namespace pwiz.SkylineTestUtil
             return @"https://" + PanoramaDomainAndPath + @"/perftests/" + filename;
         }
 
+        /// <summary>
+        /// Finds the ai/.tmp directory by walking up from the Skyline project directory
+        /// looking for a sibling "ai" folder that contains a ".tmp" subfolder.
+        /// Returns null if not found (e.g. on build servers without the ai repo).
+        /// </summary>
+        public static string FindAiTmpPath(string relativePath = null)
+        {
+            var projectDir = ExtensionTestContext.GetProjectDirectory();
+            if (projectDir == null)
+                return null;
+            for (var dir = Path.GetDirectoryName(projectDir);
+                 dir != null && dir.Length > 3;
+                 dir = Path.GetDirectoryName(dir))
+            {
+                var aiTmp = Path.Combine(dir, "ai", ".tmp");
+                if (Directory.Exists(aiTmp))
+                    return relativePath != null ? Path.Combine(aiTmp, relativePath) : aiTmp;
+            }
+            return null;
+        }
+
         private string[] _testFilesZips;
         public string TestFilesZip
         {
@@ -251,7 +286,7 @@ namespace pwiz.SkylineTestUtil
                 for (int i = 0; i < TestFilesZipPaths.Length; i++)
                 {
                     TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                        TestFilesPersistent, IsExtractHere(i));
+                        TestFilesPersistent, IsExtractHere(i), TestFilesZipSuffix);
                 }
                 CleanupPersistentDir(); // Clean up before recording metrics
                 foreach (var dir in TestFilesDirs)
@@ -326,6 +361,11 @@ namespace pwiz.SkylineTestUtil
         }
 
         public string TestDirectoryName { get; set; }
+        /// <summary>
+        /// Optional suffix to append to ZIP file base name to differentiate tests using the same ZIP file.
+        /// For example, if two tests use "ImportDocTest.zip", one could use suffix "-functional" and the other "-unit".
+        /// </summary>
+        public string TestFilesZipSuffix { get; set; }
         public TestFilesDir TestFilesDir
         {
             get
@@ -403,6 +443,7 @@ namespace pwiz.SkylineTestUtil
         {
             Program.UnitTest = true;
             Program.TestName = TestContext.TestName;
+            Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
@@ -422,6 +463,7 @@ namespace pwiz.SkylineTestUtil
                 if (isTeamCity)
                     DesiredCleanupLevel = DesiredCleanupLevel.all;
             }
+            FileStreamManager.Default.StartTrackingHistory();
             STOPWATCH.Restart();
             Initialize();
         }
@@ -438,6 +480,10 @@ namespace pwiz.SkylineTestUtil
             STOPWATCH.Stop();
 
             Settings.Release();
+
+            // Release cached NHibernate SessionFactories to prevent managed memory growth.
+            // Normally only called in Skyline.OnClosed(), but unit tests have no main window.
+            DatabaseResources.ReleaseAll();
 
             // Save profile snapshot if we are profiling.
             DotTraceProfile.Save();
@@ -458,6 +504,36 @@ namespace pwiz.SkylineTestUtil
 
         private void CleanupFiles()
         {
+            // Report any pooled streams left open, then stop tracking and clean up
+            string poolReport = FileStreamManager.Default.ReportPooledStreams();
+            FileStreamManager.Default.EndTrackingHistory();
+            FileStreamManager.Default.CloseAllStreams();
+
+            Exception cleanupException = null;
+            try
+            {
+                CleanupSystemFiles();
+            }
+            catch (Exception ex)
+            {
+                cleanupException = ex;
+            }
+
+            if (poolReport != null || cleanupException != null)
+            {
+                var errors = new List<string>();
+                if (poolReport != null)
+                    errors.AddRange(new[] {"Streams left open:", string.Empty, poolReport});
+                if (cleanupException != null)
+                    errors.AddRange(new[] {"CleanupFiles failed:", string.Empty, cleanupException.Message});
+                Assert.Fail(TextUtil.LineSeparate(errors));
+            }
+        }
+
+        private void CleanupSystemFiles()
+        {
+            using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
+
             // If test passed, dispose the working directories to make sure file handles are not still open.
             // Note: Normally this has no impact on the directory contents, because the directory is
             // simply renamed and then renamed back. If the rename fails, the directory gets
@@ -529,6 +605,31 @@ namespace pwiz.SkylineTestUtil
                 return true;
             }
             return false;
+        }
+    }
+
+    /// <summary>
+    /// IDisposable wrapper for ConsoleTraceListener that adds it to Trace.Listeners
+    /// on construction and removes it on disposal. This ensures trace output appears
+    /// in Console (and TeamCity logs) only for the scope where it's used.
+    /// </summary>
+    internal class ScopedConsoleTraceListener : IDisposable
+    {
+        private readonly ConsoleTraceListener _listener;
+
+        public ScopedConsoleTraceListener()
+        {
+            _listener = new ConsoleTraceListener();
+            Trace.Listeners.Add(_listener);
+        }
+
+        public void Dispose()
+        {
+            if (_listener != null)
+            {
+                Trace.Listeners.Remove(_listener);
+                _listener.Dispose();
+            }
         }
     }
 }

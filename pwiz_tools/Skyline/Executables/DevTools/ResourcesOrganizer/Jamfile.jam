@@ -102,5 +102,69 @@ make FinalizeResxFiles
 
 explicit FinalizeResxFiles ;
 
+##############
+# GenerateLocalizationCsvFiles
+# Should be run on the release branch after FinalizeResxFiles to generate CSV files for translators
+##############
+
+rule do_GenerateLocalizationCsvFiles ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_GenerateLocalizationCsvFiles
+{
+    echo Generating localization CSV files
+    call $(CURRENT_DIR)\scripts\GenerateLocalizationCsvFiles.bat
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+
+make GenerateLocalizationCsvFiles
+    : # sources
+    : # actions
+        @do_GenerateLocalizationCsvFiles
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+        <dependency>ResourcesOrganizer.exe
+    ;
+
+explicit GenerateLocalizationCsvFiles ;
+
+##############
+# ImportLocalizationCsvFiles
+# Should be run on the release branch after receiving translated CSV files from translators
+# Imports translations and updates the .resx files
+##############
+
+rule do_ImportLocalizationCsvFiles ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_ImportLocalizationCsvFiles
+{
+    echo Importing localization CSV files
+    call $(CURRENT_DIR)\scripts\ImportLocalizationCsvFiles.bat
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+
+make ImportLocalizationCsvFiles
+    : # sources
+    : # actions
+        @do_ImportLocalizationCsvFiles
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+        <dependency>ResourcesOrganizer.exe
+    ;
+
+explicit ImportLocalizationCsvFiles ;
 
 

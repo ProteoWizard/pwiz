@@ -53,7 +53,7 @@ namespace TestPerf
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             RunUI(() =>
             {
-                openDataSourceDialog.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(templateFile));
+                openDataSourceDialog.SetCurrentDirectory(new MsDataFilePath(Path.GetDirectoryName(templateFile)));
                 openDataSourceDialog.SelectAllFileType("mzML");
             });
             

@@ -687,10 +687,15 @@
     </table>
     <p>
         Again, there is an ID for the peptide in 5b_MCF7_TiTip3 but not in 1_MCF7_TiB_L. The peak in 1_MCF7_TiB_L was picked based on alignment with
-        the ID in 5b_MCF7_TiTip3. It appears to be almost free of interference from the peak to its right on its M+2 chromatogram, with a -33.7 ppm
-        mass error on its most abundant peak. If you use your mouse scrollwheel to zoom out again, you will see both graphs contain a very similar
-        peak at about 36 minutes with +20.7 and +27.5 ppm mass error and idotp values of 0.78 and 0.76 (which you can see in the <b>Peak
-            Areas</b> view, after clicking the retention time annotations to select the peaks).
+        the ID in 5b_MCF7_TiTip3. In this case, Skyline has selected the taller peak at 38.0 minutes, but notice that it is missing signal on the
+        M+1 (purple) channel, and the M+2 (brown) is much larger than the monoisotopic peak (blue). This is a sign of interference, likely from a
+        peptide 2 Da heavier. The smaller peak to the left at ~37 minutes shows signal on all three isotope channels, which is the expected pattern
+        for the target peptide. This illustrates how automatic peak picking can sometimes be misled by nearby interference, especially when aligned ID
+        retention times fall close to peak boundaries.
+    </p>
+    <p>
+        To manually select the correct peak, click and drag beneath the x-axis in 1_MCF7_TiB_L to select the peak boundary range around 37 minutes.
+        You can then compare its idotp and mass error values in the <b>Peak Areas</b> view to confirm it is the better choice.
     </p>
     <p>
         The integration boundaries for 5b_MCF7_TiTip3 actually include the interference on M+2, and in fact the other peak in this chromatogram is

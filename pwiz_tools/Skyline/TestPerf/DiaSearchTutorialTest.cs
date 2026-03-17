@@ -80,7 +80,7 @@ namespace TestPerf
             public Dictionary<string, string> AdditionalSettings;
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaSearchStellarTutorialDraft()
         {
             // Set true to look at tutorial screenshots.
@@ -131,7 +131,7 @@ namespace TestPerf
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaSearchQeTutorialDraft()
         {
             // Set true to look at tutorial screenshots.
@@ -209,9 +209,10 @@ namespace TestPerf
 
         protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
-            using var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
-            graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
-            return bmp;
+            var result = base.ProcessCoverShot(bmp);
+            using var graph = Graphics.FromImage(result);
+            graph.DrawImageUnscaled(_searchLogImage, result.Width - _searchLogImage.Width - 10, result.Height - _searchLogImage.Height - 30);
+            return result;
         }
 
         /// <summary>
@@ -341,7 +342,7 @@ namespace TestPerf
             });
             RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
             {
-                importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(SearchFiles.First()));
+                importRangesDlg.SetCurrentDirectory(new MsDataFilePath(Path.GetDirectoryName(SearchFiles.First())));
                 _analysisValues.DiaFiles.ForEach(importRangesDlg.SelectFile);
                 importRangesDlg.Open();
             });

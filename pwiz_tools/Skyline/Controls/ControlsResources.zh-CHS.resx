@@ -193,4 +193,7 @@
   <data name="UndoRedoList_GetLabelText_Undo_1_Action" xml:space="preserve">
     <value>撤销动作 1</value>
   </data>
+  <data name="NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_" xml:space="preserve">
+    <value>显示工具提示时出错。</value>
+  </data>
 </root>

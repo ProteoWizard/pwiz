@@ -119,6 +119,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     _changingOptimizeSettings = true;
                     _minimizeResults.Settings = value;
+                    _minStatistics = null; // Reset so IsComplete waits for new worker
                     // ReSharper disable once PossibleNullReferenceException
                     cbxDiscardUnmatchedChromatograms.Checked = Settings.DiscardUnmatchedChromatograms;
                     if (Settings.NoiseTimeRange.HasValue)
@@ -183,9 +184,14 @@ namespace pwiz.Skyline.FileUI
 
         private void cbxLimitNoiseTime_CheckedChanged(object sender, EventArgs e)
         {
+            UpdateLimitNoiseTime();
+        }
+
+        private void UpdateLimitNoiseTime()
+        {
             Settings = cbxLimitNoiseTime.Checked
-                           ? Settings.ChangeNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text))
-                           : Settings.ChangeNoiseTimeRange(null);
+                ? Settings.ChangeNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text))
+                : Settings.ChangeNoiseTimeRange(null);
         }
 
         private void btnMinimize_Click(object sender, EventArgs e)
@@ -301,16 +307,18 @@ namespace pwiz.Skyline.FileUI
             lock (worker)
             {
                 CheckDisposed();
-                bool updateUi = _minStatistics == null || 
-                                _minStatistics.PercentComplete != minStatistics.PercentComplete ||
-                                _minStatistics.MinimizedRatio != minStatistics.MinimizedRatio;
-                _minStatistics = minStatistics;
-                var _this = this;
+                // Only update statistics from the current collector, not stale workers
+                // that are still running after settings changed and a new worker started
                 if (ReferenceEquals(_minimizeResults.StatisticsCollector, worker))
                 {
+                    bool updateUi = _minStatistics == null ||
+                                    _minStatistics.PercentComplete != minStatistics.PercentComplete ||
+                                    _minStatistics.MinimizedRatio != minStatistics.MinimizedRatio;
+                    _minStatistics = minStatistics;
                     if (updateUi && !_updatePending)
                     {
                         //_updatePending = true;
+                        var _this = this;
                         try
                         {
                             BeginInvoke(new Action(() => UpdateStatistics(worker)));
@@ -390,17 +398,27 @@ namespace pwiz.Skyline.FileUI
 
         #region Functional Test Support
 
-        public bool LimitNoiseTime
+        public void SetNoiseLimit(bool limitNoiseTime, double? noiseTimeRange = null)
         {
-            get { return cbxLimitNoiseTime.Checked; }
-            set { cbxLimitNoiseTime.Checked = value; }
+            if (noiseTimeRange.HasValue)
+                tbxNoiseTimeRange.Text = noiseTimeRange.Value.ToString(CultureInfo.CurrentCulture);
+            // Make sure the checkbox is the right state and that recalculation happens
+            if (cbxLimitNoiseTime.Checked != limitNoiseTime)
+                cbxLimitNoiseTime.Checked = limitNoiseTime;
+            else
+            {
+                // If already set correctly, then just trigger the update directly
+                UpdateLimitNoiseTime();
+            }
         }
 
-        public double NoiseTimeRange
-        {
-            get { return double.Parse(tbxNoiseTimeRange.Text); }
-            set { tbxNoiseTimeRange.Text = value.ToString(CultureInfo.CurrentCulture); }
-        }
+        public int PercentOfTotalCompression => (int)Math.Round((_minStatistics?.MinimizedRatio ?? 0) * 100);
+
+        /// <summary>
+        /// Returns true when background statistics computation is complete.
+        /// Use this to wait before taking screenshots to ensure consistent compression ratios.
+        /// </summary>
+        public bool IsComplete => _minStatistics?.PercentComplete == 100;
 
         #endregion
 

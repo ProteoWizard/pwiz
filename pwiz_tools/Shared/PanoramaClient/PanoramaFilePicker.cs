@@ -26,6 +26,7 @@ namespace pwiz.PanoramaClient
         private bool _restoring;
         private readonly bool _showWebDav;
         private int _sortColumn = -1;
+        private bool _serverDataLoaded;
 
         public static string RECENT_VER => Resources.PanoramaFilePicker_RECENT_VER_Most_recent;
         public static string ALL_VER => Resources.PanoramaFilePicker_ALL_VER_All;
@@ -41,7 +42,6 @@ namespace pwiz.PanoramaClient
         public JToken TestFileJson;
         public JToken TestSizeJson;
         public string SelectedPath { get; private set; }
-
         public bool ShowLatestVersion => versionOptions.Text.Equals(RECENT_VER);
 
         public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showWebDav = false, string selectedPath = null)
@@ -51,14 +51,23 @@ namespace pwiz.PanoramaClient
             _servers = servers;
             _treeState = stateString;
             _showWebDav = showWebDav;
+            _serverDataLoaded = showWebDav; // WebDav does not require background data loading
             _restoring = true;
             versionOptions.Text = RECENT_VER;
             _restoring = false;
             SelectedPath = selectedPath;
             noFiles.Visible = false;
+
+            // Add the FolderBrowser control and initialize the arrow buttons
+            InitializeDialog();
         }
 
-        public void InitializeDialog(IProgressMonitor progressMonitor = null)
+        /// <summary>
+        /// Creates the FolderBrowser control on the UI thread.
+        /// Must be called on the UI thread to avoid thread handle leaks.
+        /// This method is now called automatically in the constructor.
+        /// </summary>
+        private void InitializeDialog()
         {
             if (FolderBrowser == null)
             {
@@ -68,7 +77,7 @@ namespace pwiz.PanoramaClient
                 }
                 else
                 {
-                    FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath, progressMonitor);
+                    FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath);
                 }
             }
 
@@ -93,6 +102,32 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
+        /// Loads server folder data from the web on a background thread.
+        /// Must be called before ShowDialog() on a background thread.
+        /// The TreeView will be populated automatically when the form loads (OnLoad lifecycle event).
+        /// </summary>
+        public void LoadServerData(IProgressMonitor progressMonitor)
+        {
+            Assume.IsFalse(IsHandleCreated, @"LoadServerData must be called before the form handle is created (before ShowDialog)");
+
+            // Prevent duplicate loading if already called
+            if (_serverDataLoaded)
+                return;
+
+            FolderBrowser.LoadServerData(progressMonitor);
+            _serverDataLoaded = true;
+        }
+
+        /// <summary>
+        /// Populates the TreeView with the loaded server data.
+        /// Must be called on the UI thread after LoadServerData() completes.
+        /// </summary>
+        public void PopulateTreeView()
+        {
+            FolderBrowser?.PopulateTreeView();
+        }
+
+        /// <summary>
         /// Changes the 'Open' button text if a custom string is passed in
         /// and docks the PanoramaFolderBrowser user control in a panel
         /// </summary>
@@ -104,6 +139,13 @@ namespace pwiz.PanoramaClient
             }
             IsLoaded = true;
             UpdateButtonState();
+            
+            // Populate TreeView with server data if it was loaded before the form was shown
+            // Both LKContainerBrowser and WebDavBrowser require LoadServerData to be called first
+            if (_serverDataLoaded)
+            {
+                PopulateTreeView();
+            }
         }
 
         /// <summary>
@@ -162,13 +204,21 @@ namespace pwiz.PanoramaClient
                         var sizeObj = new FileSizeFormatProvider();
                         var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
                         listItem[1] = sizeString;
-                        // The date format for webDav files is: Thu Jul 13 12:00:00 PDT 2023
-                        // We need to use a custom date format and remove the time zone characters
-                        // in order to apply an InvariantCulture
+                        // Parse the creationdate field, which can be in two formats:
+                        // - ISO 8601: 2013-01-31T22:29:34-08:00 (LabKey 24.11+)
+                        // - Legacy: Thu Jul 13 12:00:00 PDT 2023 (older LabKey versions)
                         var date = (string)file[@"creationdate"];
-                        date = date!.Remove(20, 4);
-                        var format = @"ddd MMM dd HH:mm:ss yyyy";
-                        DateTime.TryParseExact(date, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var formattedDate);
+                        DateTime formattedDate;
+                        if (!DateTime.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.None, out formattedDate))
+                        {
+                            // Fall back to legacy format: remove timezone chars (e.g., "PDT ") and parse
+                            if (date != null && date.Length > 24)
+                            {
+                                date = date.Remove(20, 4);
+                                var format = @"ddd MMM dd HH:mm:ss yyyy";
+                                DateTime.TryParseExact(date, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out formattedDate);
+                            }
+                        }
                         listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
                         var fileNode = fileName!.EndsWith(EXT) || fileName.EndsWith(ZIP_EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
                         fileNode.Tag = size;
@@ -441,7 +491,7 @@ namespace pwiz.PanoramaClient
         private void PanoramaFilePicker_FormClosing(object sender, FormClosingEventArgs e) 
         {
             FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
-            _treeState = FolderBrowser.GetClosingTreeState();
+            _treeState = FolderBrowser?.GetClosingTreeState();
         }
 
         /// <summary>
@@ -551,6 +601,8 @@ namespace pwiz.PanoramaClient
 
         private void UpdateButtonState()
         {
+            if (FolderBrowser == null)
+                return;
             up.Enabled = FolderBrowser.UpEnabled;
             forward.Enabled = FolderBrowser.ForwardEnabled;
             back.Enabled = FolderBrowser.BackEnabled;
@@ -662,8 +714,7 @@ namespace pwiz.PanoramaClient
 
         #region Test Support
 
-        public PanoramaFilePicker(Uri serverUri, string user, string pass,
-            JToken folderJson, JToken fileJson, JToken sizeJson)
+        public PanoramaFilePicker(PanoramaServer server, JToken folderJson, JToken fileJson, JToken sizeJson)
         {
             InitializeComponent();
 
@@ -674,7 +725,6 @@ namespace pwiz.PanoramaClient
             TestFileJson = fileJson;
             TestSizeJson = sizeJson;
 
-            var server = new PanoramaServer(serverUri, user, pass);
             _servers = new List<PanoramaServer> { server };
 
             FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);

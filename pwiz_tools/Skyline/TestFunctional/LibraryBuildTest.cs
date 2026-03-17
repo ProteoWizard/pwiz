@@ -187,8 +187,10 @@ namespace pwiz.SkylineTestFunctional
             viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() => AssertEx.IsTrue(viewLibUI.GraphItem.IonLabels.Any()));
             // Add All should cause some notifications since one of them is bad
-            var filterMatchedDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => viewLibUI.AddAllPeptides());
-            OkDialog(filterMatchedDlg, filterMatchedDlg.CancelDialog);
+            RunDlg<FilterMatchedPeptidesDlg>(viewLibUI.AddAllPeptides, filterMatchedDlg =>
+            {
+                filterMatchedDlg.CancelDialog();
+            });
             OkDialog(viewLibUI, viewLibUI.CancelDialog);
 
             // Barbara added code to ProteoWizard to rebuild a missing or invalid mzXML index
@@ -478,7 +480,7 @@ namespace pwiz.SkylineTestFunctional
             var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
             var addPredictorDlg = ShowDialog<AddRetentionTimePredictorDlg>(recalibrateDlg.BtnCancelClick);
             OkDialog(addPredictorDlg, addPredictorDlg.NoDialog);
-            var twoStandardDb = IrtDb.GetIrtDb(TestFilesDir.GetTestPath(_libraryName) + ".blib", null);
+            var twoStandardDb = IrtDb.GetIrtDb(TestFilesDir.GetTestPath(_libraryName) + ".blib");
             var dbStandards = twoStandardDb.StandardPeptides.ToArray();
             // Check that the created blib has the chosen standards.
             Assert.AreEqual(dbStandards.Length, IrtStandard.BIOGNOSYS_11.Peptides.Count);

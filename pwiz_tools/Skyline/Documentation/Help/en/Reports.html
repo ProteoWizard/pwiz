@@ -755,6 +755,7 @@ using the Results Grid.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Transition Result Is MS1</td><td class="ColumnDescription">Whether this result was obtained from an MS1 scan.</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">Precursor Result</td><td class="ColumnDescription">Precursor Result</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">Precursor Result</a></td></tr>
 <tr><td class="ColumnCaption">Transition Result Locator</td><td class="ColumnDescription">Unique identifier of the transition result within the document. This begins with &quot;TransitionResult:&quot; and usually ends with the replicate name, but may have additional attributes for the optimization step and result file.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Transition Ion Metrics</td><td class="ColumnDescription">Values related to the number of ions in the mass spectrometer</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">Transition Ion Metrics</a></td></tr>
 </table>
 
 <div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult"><span class="RowType">PrecursorQuantificationResult</span>
@@ -835,6 +836,13 @@ If the Qualitative Ion Ratio Threshold has not been specified then Qualitative I
 </table>
 
 </td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">Transition Ion Metrics</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LC Peak Transition Ion Count</td><td class="ColumnDescription">Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Transition Ion Count</td><td class="ColumnDescription">Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition</td><td class="ColumnType">Double</td></tr>
 </table>
 
 

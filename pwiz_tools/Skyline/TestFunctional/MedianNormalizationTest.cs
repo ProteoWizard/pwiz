@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
     public class MedianNormalizationTest : AbstractFunctionalTest
     {
         private const string REPORTNAME_RESULTFILE_NORMALIZATION = "File Normalization Values";
-        private const string REPORTNAME_PROTEINABUNDANCES = "Protein Abundances";
+        private const string REPORTNAME_PROTEINABUNDANCES = "Protein Abundances Test";
         private const string ANNOTIONNAME_DIAGNOSIS = "Diagnosis";
         [TestMethod]
         public void TestMedianNormalization()

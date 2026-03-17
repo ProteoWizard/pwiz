@@ -166,11 +166,10 @@
     <value>iRT保持時間予測</value>
   </data>
   <data name="CustomReports_Caption" xml:space="preserve">
-    <value>Custom Reports</value>
-    <comment>Needs Review:English text changed
-Old English:Custom &amp; Live Reports
-Current English:Custom Reports
-Old Localized:カスタムおよびライブレポート</comment>
+    <value>カスタムレポート</value>
+  </data>
+  <data name="LiveReports_Caption" xml:space="preserve">
+    <value>ライブレポート</value>
   </data>
   <data name="iRT_Description" xml:space="preserve">
     <value>スケジュール済みの取得やピーク強度検証に対し、保持時間予測に将来使用するためライブラリ内にある校正済みの実験的に測定されたペプチド保持時間の保存テクニックをiRTを使用して実務経験を積みます。このチュートリアルでは、自分のiRTカルキュレータを校正し、さらにiRTキットのペプチド標準に対し、Biognosysが提案するiRT-C18校正について学びます。SRMデータ、探索実験のMS1スキャンからフィルタされたスペクトルライブラリやクロマトグラムピークから新しいiRT値を校正します。また、新しいグラジエントを用いて新しい列でSRM取得をスケジュールするために、これらのiRTの再校正方法も学びます。クロマトグラムピーク強度検証においてさらに信頼性を高めるiRTに基づき、より正確な保持時間予測を確認できます。</value>
@@ -198,6 +197,9 @@ Old Localized:カスタムおよびライブレポート</comment>
   </data>
   <data name="CustomReports_Description" xml:space="preserve">
     <value>Skylineカスタムライブレポートを使ってSkylineドキュメントからの幅広い値を表示し、編集し、エクスポートする実務経験を積みます。これらのレポートは、ExcelやR、Matlab、Java、C++や他の言語で記述されたカスタムコードで使用し、装置の出力をSkylineで処理した後に詳細な統計的分析を行うのに最適です。また、Skyline結果グリッド表示を使用してこれらの値にアクセスし、Skylineでデータを検査しながらカスタム注釈を追加する方法も学びます。本チュートリアルを進め、Skylineで達成可能な実験範囲を大きく広げましょう。</value>
+  </data>
+  <data name="LiveReports_Description" xml:space="preserve">
+    <value>Skylineライブレポートを実際にご体験ください。カスタマイズ可能な表形式のビューで定量データの解析やレポートを表示します。これらのビューは、使用中のSkylineドキュメントを変更するとリアルタイムで更新されます。また、重要な値に直接アクセスして変更することもできます。監査やビューのログを有効にする方法、ビルトインやユーザー定義のレポートの活用方法、注釈やリストの作成方法、データのピボットやフィルタリング方法、グループ比較の実施方法を学ぶことができます。チュートリアルでは、棒グラフやヒートマップなどの図表作成方法、カスタマイズレポートの定義をエクスポートして共有したり再利用したりする方法も説明します。</value>
   </data>
   <data name="MethodEdit_Caption" xml:space="preserve">
     <value>ターゲットメソッドの編集</value>
@@ -275,11 +277,7 @@ Old Localized:カスタムおよびライブレポート</comment>
     <value>レポート</value>
   </data>
   <data name="SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
-    <value>Learn how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.</value>
-    <comment>Needs Review:English text changed
-Old English:Learn how how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.
-Current English:Learn how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.
-Old Localized:文献の引用から、プリカーサーm/z、プロダクトイオンm/z、衝突エネルギー値のみ指定されている安定同位体標識分子をターゲットとするSkylineドキュメントを作成する方法を学びます。Waters Xevo TQ-Sで分析した複数の繰り返し測定データセットをインポートし、Sciex三連四重極計の初期CE値を使用して分子の保持時間スケジュールと衝突エネルギー最適化を実施します。また、元々ターゲットプロテオミクスの使用を目的に作成された多数の既存のSkyline機能が、非プロテオミクス分子データにどのように適用できるかを学習します。</comment>
+    <value>唯一のプリカーサーm/z、プロダクトイオンm/z、そして衝突エネルギーの値のみが指定されている文献引用から、安定同位体標識の分子をターゲットとするSkylineドキュメントを作成する方法を学びます。また、Sciex製Triple QuadによるCE初期値を用いたWaters製Xevo TQ-Sの複数の繰り返し測定データセットをインポートすることで、分子の保持時間スケジュール設定と衝突エネルギーの最適化を実施します。ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="SmallMoleculeQuantification_Description" xml:space="preserve">
     <value>プリカーサーイオン化学式および付加物、プロダクトイオンm/z値として指定される分子をターゲットとするSkylineドキュメントの作成方法を学びます。三連四重極計LC-MS/MSで収集された複数の繰り返し測定データセットをインポートし、元々ターゲットプロテオミクス使用を目的に作成された既存の多数のSkyline機能が非プロテオミクス分子データにどのように適用できるかを学習します。</value>

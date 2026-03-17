@@ -32,6 +32,7 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 using pwiz.Common;
 using pwiz.Common.Collections;
+using pwiz.Common.Mock;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -81,6 +82,11 @@ namespace pwiz.Skyline
             }
         }
 
+        public static HttpMessageHandlerFactory HttpMessageHandlerFactory
+        {
+            get { return CommonApplicationSettings.HttpMessageHandlerFactory; }
+        }
+
         // TODO(nicksh): Remove this once intermittent failures in these tests are fixed
         public static bool IsVerboseLogging(string name)
         {
@@ -90,9 +96,10 @@ namespace pwiz.Skyline
             }.Any(folder => name.IndexOf(folder, StringComparison.Ordinal) >= 0);
         }
         public static string TestName { get; set; }                 // Set during unit and functional tests
+        public static bool DoNotTestUnicodeHandling { get; set; }   // Set true to skip unicode handling tests, either because the platform doesn't support it or test attribute forbids it
         public static bool ClosingForms { get; set; }               // Set to true during AbstractFunctionalTest.CloseOpenForm (all forms should check this before cancelling a Close request)
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
-        public static bool IsPaused => FormUtil.OpenForms.Any(form => form.GetType().Name == "PauseAndContinueForm");
+        public static bool IsPaused => FormUtil.OpenForms.Any(form => form.GetType().Name == @"PauseAndContinueForm");
 
         public static bool SkylineOffscreen
         {
@@ -131,6 +138,7 @@ namespace pwiz.Skyline
         public static string ExtraRawFileSearchFolder { get; set; } // Perf test support for avoiding extra copying of large raw files
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
         public static Action<string> Log { get; set; }              // Function to allow Skyline to write to the test log. Needs to be thread-safe
+        public static IGarbageCollectionTracker GcTracker { get; set; } // WeakReference tracker for verifying primary objects are GC'd after tests
 
         // Command-line results import support
         public static bool DisableJoining { get; set; }
@@ -165,6 +173,7 @@ namespace pwiz.Skyline
 
             CommonApplicationSettings.ProgramName = Name;
             CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
+            SkylineRemoteAccountServices.Initialize();
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             // For testing and debugging Skyline command-line interface
@@ -882,5 +891,15 @@ namespace pwiz.Skyline
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Interface for tracking objects via WeakReferences to verify they become
+    /// eligible for garbage collection after test cleanup. Set on
+    /// <see cref="Program.GcTracker"/> during tests; null in production.
+    /// </summary>
+    public interface IGarbageCollectionTracker
+    {
+        void Register<T>(T target);
     }
 }

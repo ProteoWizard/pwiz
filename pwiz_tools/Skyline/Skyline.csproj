@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>271</ApplicationRevision>
-    <ApplicationVersion>25.1.1.271</ApplicationVersion>
+    <ApplicationRevision>058</ApplicationRevision>
+    <ApplicationVersion>26.1.1.058</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -161,6 +161,12 @@
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="ParquetNet">
+      <HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Emit.Lightweight">
+      <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
+    </Reference>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -186,14 +192,8 @@
       <HintPath>..\Shared\Lib\System.Interactive.Async.dll</HintPath>
     </Reference>
     <Reference Include="System.Management" />
-    <Reference Include="System.Memory">
-      <HintPath>..\Shared\Lib\System.Memory.dll</HintPath>
-    </Reference>
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data.DataSetExtensions">
@@ -207,7 +207,11 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\FilesTree\FileSystemHealthMonitor.cs" />
+    <Compile Include="Controls\FilesTree\FileSystemUtil.cs" />
+    <Compile Include="Controls\FilesTree\ManagedFileSystemWatcher.cs" />
     <Compile Include="Controls\Databinding\BuiltInReports.cs" />
+    <Compile Include="Controls\Graphs\ZoomSynchronizer.cs" />
     <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -400,6 +404,19 @@
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
     <Compile Include="Controls\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
+    <Compile Include="Controls\FilesTree\BackgroundActionService.cs" />
+    <Compile Include="Controls\FilesTree\FilesTree.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\FilesTree\FilesTreeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\FilesTree\FilesTreeForm.Designer.cs">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\FilesTree\DragDropHandler.cs" />
+    <Compile Include="Controls\FilesTree\FilesTreeNode.cs" />
+    <Compile Include="Controls\FilesTree\FileSystemService.cs" />
     <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -445,6 +462,7 @@
       <DependentUpon>MatchExpressionListDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
+    <Compile Include="Controls\Graphs\ReplicateCachingReceiver.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\SummaryRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\ImageListBox.cs">
@@ -501,6 +519,9 @@
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
+    <Compile Include="FileUI\WatersConnectSelectMethodFileDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\OpenFileDialogNE.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -534,13 +555,27 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FileUI\WatersConnectSaveMethodFileDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\WatersConnectMethodFileDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\PublishDocumentDlgArdia.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Model\Databinding\CandidatePeakGroupFactory.cs" />
+    <Compile Include="Model\Databinding\Collections\ResultMap.cs" />
+    <Compile Include="Model\Databinding\ReportExporters.cs" />
+    <Compile Include="Model\Databinding\ParquetReportExporter.cs" />
+    <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
+    <Compile Include="Model\Databinding\DsvReportExporter.cs" />
+    <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
+    <Compile Include="Model\GroupComparison\FoldChangeRowFactory.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRows.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
@@ -580,7 +615,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Databinding\ReplicatePivotColumns.cs" />
     <Compile Include="Model\DdaSearch\TideSearchEngine.cs" />
     <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
@@ -590,9 +624,34 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
+    <Compile Include="Model\DocSettings\IFile.cs" />
     <Compile Include="Model\DocSettings\ImputationSettings.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
+    <Compile Include="Model\Files\BackgroundProteome.cs" />
+    <Compile Include="Model\Files\FileModel.cs" />
+    <Compile Include="Controls\FilesTree\FilesTreeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FilesTreeResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Files\IonMobilityLibrary.cs" />
+    <Compile Include="Model\Files\OptimizationLibrary.cs" />
+    <Compile Include="Model\Files\Replicate.cs" />
+    <Compile Include="Model\Files\ReplicateSampleFile.cs" />
+    <Compile Include="Model\Files\ReplicatesFolder.cs" />
+    <Compile Include="Model\Files\SkylineFile.cs" />
+    <Compile Include="Model\Files\RTCalc.cs" />
+    <Compile Include="Model\Files\SkylineAuditLog.cs" />
+    <Compile Include="Model\Files\SkylineChromatogramCache.cs" />
+    <Compile Include="Model\Files\SkylineViewFile.cs" />
+    <Compile Include="Model\Files\SpectralLibrariesFolder.cs" />
+    <Compile Include="Model\Files\SpectralLibrary.cs" />
+    <Compile Include="Model\Files\FileResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FileResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -612,9 +671,13 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ModelResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Results\ReplicatePositions.cs" />
+    <Compile Include="Model\Results\TransitionGroupIntegrator.cs" />
+    <Compile Include="Model\WatersConnect\MethodModel.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\TransitionIonMetrics.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
     <Compile Include="Model\Results\ReplicateValue.cs" />
     <Compile Include="Model\Results\ScoredPeakBounds.cs" />
@@ -731,7 +794,7 @@
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
-  <Compile Include="Model\Databinding\SublistPaths.cs" />
+    <Compile Include="Model\Databinding\SublistPaths.cs" />
     <Compile Include="Controls\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Controls\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\NormalizationMethodDataGridViewColumn.cs" />
@@ -947,6 +1010,7 @@
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
+    <Compile Include="Util\SkylineRemoteAccountServices.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1472,6 +1536,7 @@
       <DependentUpon>GraphChromatogram.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\CustomTip.cs" />
+    <Compile Include="Controls\NodeTip.cs" />
     <Compile Include="Controls\Graphs\GraphSpectrum.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1534,6 +1599,7 @@
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\ColorGenerator.cs" />
+    <Compile Include="Model\CachingContracts.cs" />
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
     <Compile Include="Controls\PopupPickList.cs">
@@ -2724,6 +2790,16 @@
     <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.zh-CHS.resx">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeForm.resx">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeForm.ja.resx">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeForm.zh-CHS.resx">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbar.ja.resx">
       <DependentUpon>AreaCVToolbar.cs</DependentUpon>
     </EmbeddedResource>
@@ -3741,6 +3817,28 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FilesTreeResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeResources.ja.resx">
+      <DependentUpon>FilesTreeResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeResources.zh-CHS.resx">
+      <DependentUpon>FilesTreeResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Files\FileResources.resx">
+      <SubType>Designer</SubType>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FileResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Files\FileResources.ja.resx">
+      <DependentUpon>FileResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Files\FileResources.zh-CHS.resx">
+      <DependentUpon>FileResources.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\FullScanPropertiesRes.ja.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -4273,6 +4371,19 @@
     <None Include="Resources\prosit_logo_dark_blue.png" />
     <None Include="Resources\Skyline_Daily.bmp" />
     <None Include="Resources\FolderSampleSet.png" />
+    <None Include="Resources\AuditLog.png" />
+    <None Include="Resources\CacheFile.png" />
+    <None Include="Resources\FileMissing.png" />
+    <None Include="Resources\FolderMissing.png" />
+    <None Include="Resources\MethodFile.png" />
+    <None Include="Resources\ReplicateMissing.png" />
+    <None Include="Resources\Skyline_FilesTree.bmp" />
+    <None Include="Resources\Trash.png" />
+    <None Include="Resources\ViewFile.png" />
+    <None Include="Resources\ImsDB.png" />
+    <None Include="Resources\IrtCalculator.png" />
+    <None Include="Resources\OptDB.png" />
+    <None Include="Resources\ProtDB.png" />
     <Content Include="SkylineDocPointer.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -7013,6 +7124,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="DigitalRune.Windows.Docking.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="enzymes.xml">
       <Visible>False</Visible>

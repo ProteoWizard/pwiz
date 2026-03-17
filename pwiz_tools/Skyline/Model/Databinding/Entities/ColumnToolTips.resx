@@ -153,6 +153,9 @@ If more than one analyzer was used, the names of the analyzers will be separated
   <data name="ApexTotalIonCountMS1">
     <value>Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</value>
   </data>
+  <data name="ApexTransitionIonCount">
+    <value>Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition</value>
+  </data>
   <data name="Area">
     <value>Area under the curve (AUC), minus background, for the transition peak.</value>
   </data>
@@ -542,6 +545,9 @@ which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</value>
   <data name="Group">
     <value>Value of the replicate annotation of the replicates that were compared to the control group.</value>
   </data>
+  <data name="GroupComparison">
+    <value>Name of the group comparison</value>
+  </data>
   <data name="Height">
     <value>The maximum intensity of the points between the transition peak integration
 boundaries.</value>
@@ -698,6 +704,9 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   </data>
   <data name="LcPeakTotalIonCurrentAreaMS1">
     <value>Integral of the total ion current of the MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTransitionIonCount">
+    <value>Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>The collision cross section for the precursor from the ion mobility library</value>
@@ -1582,6 +1591,9 @@ file, or the file name again for other file types.</value>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
+  <data name="SourceOffsetVoltage">
+    <value>The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation</value>
+  </data>
   <data name="SpectrumFilter">
     <value>Extra criteria that spectra must pass to be included in the extracted ion chromatogram</value>
   </data>
@@ -1696,6 +1708,9 @@ particular precursor</value>
   </data>
   <data name="TransitionCount">
     <value>Number of transitions under this precursor.</value>
+  </data>
+  <data name="TransitionIonMetrics">
+    <value>Values related to the number of ions in the mass spectrometer</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>True if this is a decoy transition</value>

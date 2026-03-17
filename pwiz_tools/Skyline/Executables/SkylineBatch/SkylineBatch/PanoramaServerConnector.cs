@@ -151,8 +151,16 @@ namespace SkylineBatch
         {
             var folderUrl = Path.GetDirectoryName(remoteUri.LocalPath);
             var folderUri = new Uri(panoramaServerUri.AbsoluteUri + folderUrl);
-            var filesJsonAsString = webClient.DownloadStringAsync(new Uri(folderUri, "?method=json"), cancelToken);
+            var requestUri = new Uri(folderUri, "?method=json");
+            var filesJsonAsString = webClient.DownloadStringAsync(requestUri, cancelToken);
             dynamic jsonObject = JsonConvert.DeserializeObject(filesJsonAsString);
+            // TODO: Future enhancement - add structured validation (ensure expected properties) & typed models.
+            if (jsonObject == null)
+            {
+                throw new IOException(TextUtil.LineSeparate($"Failed to parse JSON response from {requestUri}. Response was empty or invalid.",
+                    string.Empty, filesJsonAsString));
+            }
+            
             long size = 0;
             try
             {
@@ -169,7 +177,8 @@ namespace SkylineBatch
             }
             catch (Exception e)
             {
-                throw new Exception("Could not parse json response: " + e.Message + Environment.NewLine + Environment.NewLine + filesJsonAsString);
+                throw new IOException(TextUtil.LineSeparate($"Failed to parse JSON response from {requestUri}:",
+                    e.Message, string.Empty, filesJsonAsString), e);
             }
             return size;
         }

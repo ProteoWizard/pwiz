@@ -366,12 +366,10 @@ namespace pwiz.Skyline.Model.Koina.Models
 
                     Intensities = new IonTable<float[]>(IonType.y, seqLength);
 
-                    const float intensityCutoff = 1.0e-6f; // Koina produces many peaks with intensity < 1e-6 that the older Koina does not
-
                     for (int i = 0; i < ionTypeNumberCharges.Length; ++i)
                     {
                         var ionTypeNumberCharge = ionTypeNumberCharges[i];
-                        if (ionTypeNumberCharge.intensity <= intensityCutoff)
+                        if (ionTypeNumberCharge.intensity <= KoinaConstants.INTENSITY_CUTOFF)
                             continue;
 
                         if (Intensities.GetIonValue(ionTypeNumberCharge.ionType, ionTypeNumberCharge.ionNumber) == null)

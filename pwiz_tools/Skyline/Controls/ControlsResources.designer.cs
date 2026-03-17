@@ -171,6 +171,15 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred displaying a tooltip..
+        /// </summary>
+        public static string NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_ {
+            get {
+                return ResourceManager.GetString("NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Auto-select filtered {0}.
         /// </summary>
         public static string PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_ {

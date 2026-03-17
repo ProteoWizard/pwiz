@@ -343,7 +343,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             using (var dlg = new LongWaitDlg())
             {
                 dlg.Message = IrtResources.EditIrtCalcDlg_OpenDatabase_Opening_database;
-                var status = dlg.PerformWork(this, 800, progressMonitor => db = IrtDb.GetIrtDb(path, progressMonitor, out dbPeptides));
+                var status = dlg.PerformWork(this, 800, progressMonitor =>
+                {
+                    IProgressStatus status = new ProgressStatus();
+                    db = IrtDb.GetIrtDb(path, progressMonitor, ref status, out dbPeptides);
+                });
                 if (status.IsError)
                 {
                     MessageDlg.Show(this, status.ErrorException.Message);
@@ -372,6 +376,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         public void OkDialog()
+        {
+            OkDialog(null);
+        }
+
+        public void OkDialog(string saveAsPath)
         {
             if (string.IsNullOrEmpty(textCalculatorName.Text))
             {
@@ -421,14 +430,21 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     MessageDlg.Show(this, chromLib
                         ? IrtResources.EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_
                         : IrtResources.EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_);
-                    using (var saveDlg = new SaveFileDialog())
+                    if (saveAsPath != null)
                     {
-                        saveDlg.Filter = IrtDb.FILTER_IRTDB;
-                        if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
+                        pathNew = saveAsPath;
+                    }
+                    else
+                    {
+                        using (var saveDlg = new SaveFileDialog())
                         {
-                            return;
+                            saveDlg.Filter = IrtDb.FILTER_IRTDB;
+                            if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
+                            {
+                                return;
+                            }
+                            pathNew = saveDlg.FileName;
                         }
-                        pathNew = saveDlg.FileName;
                     }
                 } while (string.Equals(path, pathNew));
                 path = pathNew;
@@ -488,7 +504,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         else
                         {
                             fileSaver.CopyFile(path);
-                            db = IrtDb.GetIrtDb(fileSaver.SafeName, null).RemoveDuplicateLibraryPeptides();
+                            db = IrtDb.GetIrtDb(fileSaver.SafeName).RemoveDuplicateLibraryPeptides();
                         }
                         
                         db = db.SetRedundant(IsRedundant);
@@ -529,7 +545,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (!string.IsNullOrEmpty(docXml) && !Equals(docXml, selected.DocXml))
                         _driverStandards.List[comboStandards.SelectedIndex] = selected.ChangeDocXml(docXml);
                 }
-                Calculator = new RCalcIrt(textCalculatorName.Text, path).ChangeDatabase(IrtDb.GetIrtDb(path, null));
+                Calculator = new RCalcIrt(textCalculatorName.Text, path).ChangeDatabase(IrtDb.GetIrtDb(path));
             }
             catch (DatabaseOpeningException x)
             {
@@ -1121,7 +1137,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     {
                         var status = longWait.PerformWork(MessageParent, 800, monitor =>
                         {
-                            var irtDb = IrtDb.GetIrtDb(irtCalc.DatabasePath, monitor);
+                            IProgressStatus status = new ProgressStatus();
+                            var irtDb = IrtDb.GetIrtDb(irtCalc.DatabasePath, monitor, ref status);
 
                             irtAverages = ProcessRetentionTimes(monitor,
                                 new[] { new IrtRetentionTimeProvider(!irtCalc.Name.Equals(AddIrtCalculatorDlg.DEFAULT_NAME) ? irtCalc.Name : Path.GetFileName(irtCalc.DatabasePath), irtDb) },
@@ -1129,7 +1146,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         });
                         if (status.IsError)
                         {
-                            MessageDlg.Show(MessageParent, status.ErrorException.Message);
+                            MessageDlg.ShowException(MessageParent, status.ErrorException);
                             return;
                         }
                     }
@@ -1138,7 +1155,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         var message = TextUtil.LineSeparate(string.Format(
                             IrtResources.LibraryGridViewDriver_AddIrtDatabase_An_error_occurred_attempting_to_load_the_iRT_database_file__0__,
                             irtCalc.DatabasePath), x.Message);
-                        MessageDlg.Show(MessageParent, message);
+                        MessageDlg.ShowWithException(MessageParent, message, x);
                         return;
                     }
                 }

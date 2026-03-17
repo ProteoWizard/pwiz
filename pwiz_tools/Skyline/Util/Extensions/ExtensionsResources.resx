@@ -145,4 +145,10 @@
   <data name="TextUtil_FileDialogFiltersAll_All_Files" xml:space="preserve">
     <value>All Files</value>
   </data>
+  <data name="ListItemSeparator" xml:space="preserve">
+	  <value>, </value>
+  </data>
+  <data name="TextUtil_DESCRIPTION_PARQUET_Parquet" xml:space="preserve">
+	  <value>Parquet</value>
+  </data>
 </root>

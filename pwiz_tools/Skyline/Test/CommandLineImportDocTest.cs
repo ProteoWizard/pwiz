@@ -39,7 +39,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ConsoleImportDocTest()
         {
-            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE, suffix: "-unit");
 
             string[] documentPaths =
             {

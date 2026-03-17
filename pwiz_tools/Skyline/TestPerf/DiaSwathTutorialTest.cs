@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -74,6 +75,18 @@ namespace TestPerf
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
             public string ExamplePeptide;
+
+            // Frozen progress values for consistent AllChromatogramsGraph screenshots
+            public ImportProgressFreezeValues FrozenImportValues;
+        }
+
+        public class ImportProgressFreezeValues
+        {
+            public int TotalProgress;
+            public string ElapsedTime;
+            public float? GraphTime;
+            public float? GraphIntensityMax;
+            public Dictionary<string, int> FileProgress;
         }
 
         public class AnalysisValues
@@ -149,7 +162,20 @@ namespace TestPerf
                 IsolationSchemeName = "ETH TTOF (64 variable)",
                 IsolationSchemeFile = "64_variable_windows.csv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
-                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
+                FrozenImportValues = new ImportProgressFreezeValues
+                {
+                    TotalProgress = 20,
+                    ElapsedTime = "00:00:22",
+                    GraphTime = 39f,
+                    GraphIntensityMax = 1.00e4f,
+                    FileProgress = new Dictionary<string, int>
+                    {
+                        { "collinsb_I180316_001", 41 },
+                        { "collinsb_I180316_002", 41 },
+                        { "collinsb_I180316_003", 41 }
+                    }
+                }
             });
 
             if (fullSet)
@@ -208,7 +234,20 @@ namespace TestPerf
                 IsolationSchemeName = "ETH QE (18 variable)",
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
-                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
+                FrozenImportValues = new ImportProgressFreezeValues
+                {
+                    TotalProgress = 21,
+                    ElapsedTime = "00:00:12",
+                    GraphTime = 35f,
+                    GraphIntensityMax = 3e7f,
+                    FileProgress = new Dictionary<string, int>
+                    {
+                        { "collinsb_X1803_171-A", 42 },
+                        { "collinsb_X1803_172-B", 43 },
+                        { "collinsb_X1803_173-A", 43 }
+                    }
+                }
             });
 
             if (fullSet)
@@ -308,6 +347,22 @@ namespace TestPerf
         public void TestPasefData(bool fullSet)
         {
             ReadExpectedValues(nameof(TestPasefData), fullSet);
+
+            // Freeze values are the same for both full and small PASEF data sets
+            var frozenImportValues = new ImportProgressFreezeValues
+            {
+                TotalProgress = 20,
+                ElapsedTime = "00:00:11",
+                GraphTime = 11.5f,
+                GraphIntensityMax =1.8e5f,
+                FileProgress = new Dictionary<string, int>
+                {
+                    { "A210331_bcc_1180", 44 },
+                    { "A210331_bcc_1181", 44 },
+                    { "A210331_bcc_1182", 42 }
+                }
+            };
+
             if (fullSet)
             {
                 _analysisValues = new AnalysisValues
@@ -345,7 +400,8 @@ namespace TestPerf
                     IsolationSchemeName = "diaPASEF (24 fixed)",
                     IsolationSchemeFile = "diaPASEF_24fix.csv",
                     IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
-                    ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+                    ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
+                    FrozenImportValues = frozenImportValues
                 });
             }
             else
@@ -384,7 +440,8 @@ namespace TestPerf
                     IsolationSchemeName = "diaPASEF (24 fixed)",
                     IsolationSchemeFile = "diaPASEF_24fix.csv",
                     IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
-                    ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+                    ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
+                    FrozenImportValues = frozenImportValues
                 });
             }
 
@@ -718,12 +775,19 @@ namespace TestPerf
             if (IsPauseForScreenShots)
             {
                 // delete -diaumpire files so they don't show up for screenshots
-                foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
-                    FileEx.SafeDelete(file);
+                DeleteFilesForScreenshots(Directory.GetFiles(diaDir, "*-diaumpire.*"));
             }
 
             if (!IsDiaNN)
             {
+                // Get rid of the DIANN directory for the screenshot if it is there
+                var diannDir = Path.Combine(diaDir, "DIANN");
+                if (IsPauseForScreenShots && Directory.Exists(diannDir))
+                {
+                    DeleteFilesForScreenshots(Directory.EnumerateFiles(diannDir, "*", SearchOption.AllDirectories));
+                    Directory.Delete(diannDir, true);
+                }
+
                 var importResultsDia = importResults as ImportResultsDIAControl;
                 Assert.IsNotNull(importResults);
                 var openDataFiles = ShowDialog<OpenDataSourceDialog>(() => importResultsDia.Browse(diaDir));
@@ -822,7 +886,7 @@ namespace TestPerf
             });
             RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
             {
-                importRangesDlg.CurrentDirectory = new MsDataFilePath(diaDir);
+                importRangesDlg.SetCurrentDirectory(new MsDataFilePath(diaDir));
                 importRangesDlg.SelectFile(DiaFiles[0]);
                 importRangesDlg.Open();
             });
@@ -904,11 +968,12 @@ namespace TestPerf
 
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
-            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            allChrom.SetFreezeProgressPercent(41, @"00:00:22");
-            WaitForCondition(10 * 60 * 1000, () => allChrom.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
-            allChrom.SetFreezeProgressPercent(null, null);
+            var fv = _instrumentValues.FrozenImportValues;
+            if (fv != null && !PauseForAllChromatogramsGraphScreenShot("Importing Results form",
+                    fv.TotalProgress, fv.ElapsedTime, fv.GraphTime, fv.GraphIntensityMax, fv.FileProgress))
+            {
+                return;
+            }
             WaitForDocumentChangeLoaded(doc, 40 * 60 * 1000); // 40 minutes
 
             if (importPeptideSearchDlg.ImportFastaControl.AutoTrain)
@@ -1526,6 +1591,27 @@ namespace TestPerf
         private int GetBarCount(FoldChangeBarGraph barGraph)
         {
             return barGraph.ZedGraphControl.GraphPane.CurveList[0].Points.Count;
+        }
+
+        /// <summary>
+        /// Registers files as potentially missing in their owning persistent directory, then
+        /// deletes them. Use when a test intentionally removes files for clean screenshots so
+        /// that the persistent-dir modification check does not flag them as unexpected deletions.
+        /// </summary>
+        private void DeleteFilesForScreenshots(IEnumerable<string> filePaths)
+        {
+            foreach (var filePath in filePaths)
+            {
+                var testFilesDir = TestFilesDirs.FirstOrDefault(d =>
+                    filePath.StartsWith(d.PersistentFilesDir ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+                if (testFilesDir != null)
+                {
+                    var relativePath = PathEx.GetRelativePath(testFilesDir.PersistentFilesDir, filePath);
+                    testFilesDir.PotentialMissingPersistentFileSet ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    testFilesDir.PotentialMissingPersistentFileSet.Add(relativePath);
+                }
+                FileEx.SafeDelete(filePath);
+            }
         }
 
         private static void SortByFoldChange(DataboundGridControl fcGridControl, PropertyPath fcResultProperty)

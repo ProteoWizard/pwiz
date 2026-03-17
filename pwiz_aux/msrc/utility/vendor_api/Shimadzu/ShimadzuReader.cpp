@@ -118,7 +118,13 @@ public:
             precursorMz_ = precursorInfo->first;
             precursorCharge_ = precursorInfo->second;
         }
-        else
+
+        if (spectrum_->PrecursorMzList->Count > 0 && spectrum_->PrecursorMzList[0] > 0)
+        {
+            // override with per-spectrum precursor if available
+            precursorMz_ = (double)spectrum_->PrecursorMzList[0] * MASS_MULTIPLIER;
+        }
+        else if (precursorInfo == nullptr)
             precursorMz_ = (double)spectrum_->AcqModeMz * MASS_MULTIPLIER;
 
         if (((ShimadzuGeneric::Param::MS::MassEventInfo^) eventInfo_) != nullptr)

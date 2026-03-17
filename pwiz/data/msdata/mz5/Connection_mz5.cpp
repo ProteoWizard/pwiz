@@ -27,6 +27,7 @@
 #include "Translator_mz5.hpp"
 #include <algorithm>
 #include "boost/thread/mutex.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 
 namespace pwiz {
@@ -37,14 +38,43 @@ using namespace H5;
 
 namespace {boost::mutex connectionReadMutex_, connectionWriteMutex_;}
 
-Connection_mz5::Connection_mz5(const std::string filename, const OpenPolicy op,
+Connection_mz5::Connection_mz5(const std::string filenameIn, const OpenPolicy op,
         const Configuration_mz5 config) :
     config_(config)
 {
     boost::mutex::scoped_lock lock(connectionReadMutex_);
+    
+#ifdef WIN32
+    // Try to deal with Unicode paths using NTFS 8.3 short name conversion
+    bool createdEmptyFile = false;
+
+    if (pwiz::util::findUnicodeBytes(filenameIn) != filenameIn.end())
+    {
+        // Try deal with Unicode in file paths
+        bfs::path mz5Path(filenameIn);
+        if (!bfs::exists(mz5Path) && (op == RemoveAndCreate || op == ReadWrite))
+        {
+            // 8.3 conversion can't happen until file exists, so create an empty file first
+            std::wofstream ofs(mz5Path.wstring()); // Closes immediately on loss of scope
+            createdEmptyFile = true;
+        }
+    }
+#endif
+
+    string filename = util::get_non_unicode_path(filenameIn); // Try to convert to Windows short path if necessary - mz5 library doesn't like Unicode in filenames
 
     if (pwiz::util::findUnicodeBytes(filename) != filename.end())
+    {
+#ifdef WIN32
+        // 8.3 conversion didn't work
+        if (createdEmptyFile)
+        {
+            // Remove the dummy file we created while trying to deal with Unicode
+            bfs::remove(bfs::path(filenameIn));
+        }
+#endif
         throw ReaderFail("[Connection_mz5] MZ5 does not support Unicode in filepaths ('" + filename + "')");
+    }
 
     FileCreatPropList fcparm = FileCreatPropList::DEFAULT;
     FileAccPropList faparm = FileAccPropList::DEFAULT;

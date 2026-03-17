@@ -662,7 +662,7 @@ namespace pwiz.SkylineTestUtil
 
         private void SetPreviewImage(PictureBox previewBox, ScreenshotInfo screenshot, ScreenshotDiff diff = null)
         {
-            var baseImage = diff?.HighlightedImage ?? screenshot.Image;
+            var baseImage = GetDisplayImage(diff, screenshot);
             var newImage = baseImage;
             if (baseImage != null && !screenshot.IsPlaceholder)
             {
@@ -688,6 +688,53 @@ namespace pwiz.SkylineTestUtil
                 // The oldScreenshotPictureBox never gets a white background
                 previewBox.BackColor = oldScreenshotPictureBox.BackColor;
             }
+        }
+
+        /// <summary>
+        /// Gets the appropriate image to display based on diff-only and amplification settings.
+        /// </summary>
+        private Bitmap GetDisplayImage(ScreenshotDiff diff, ScreenshotInfo screenshot)
+        {
+            if (diff == null)
+                return screenshot.Image;
+
+            int amplifyRadius = GetAmplifyRadius();
+            bool diffOnly = toolStripDiffOnly.Checked;
+
+            if (amplifyRadius > 0)
+            {
+                // Amplified view - fall back to normal view if no diff pixels
+                var amplifiedImage = diffOnly
+                    ? diff.CreateAmplifiedDiffOnlyImage(amplifyRadius)
+                    : diff.CreateAmplifiedImage(amplifyRadius);
+                if (amplifiedImage != null)
+                    return amplifiedImage;
+                // Fall through to non-amplified handling when no diff pixels
+            }
+
+            if (diffOnly)
+            {
+                // Diff-only view - show white rectangle if no diff pixels
+                return diff.DiffOnlyImage ?? CreateWhiteImage(screenshot.ImageSize);
+            }
+
+            // Normal highlighted view
+            return diff.HighlightedImage ?? screenshot.Image;
+        }
+
+        private static Bitmap CreateWhiteImage(Size size)
+        {
+            var result = new Bitmap(size.Width, size.Height);
+            using (var g = Graphics.FromImage(result))
+            {
+                g.Clear(Color.White);
+            }
+            return result;
+        }
+
+        private int GetAmplifyRadius()
+        {
+            return toolStripAmplify.Checked ? 5 : 0;
         }
 
         private Size CalcBitmapSize(ScreenshotInfo screenshot, Size containerSize)
@@ -981,6 +1028,59 @@ namespace pwiz.SkylineTestUtil
                 RefreshOldScreenshot();
         }
 
+        private void SaveDiffImage()
+        {
+            try
+            {
+                ScreenshotFile file;
+                ScreenshotDiff diff;
+                lock (_lock)
+                {
+                    file = _fileToShow;
+                    diff = _diff;
+                }
+
+                if (file == null)
+                {
+                    ShowMessage("No screenshot selected.");
+                    return;
+                }
+
+                if (diff?.HighlightedImage == null)
+                {
+                    ShowMessage("No diff image available to save.");
+                    return;
+                }
+
+                var aiTmpFolder = file.GetAiTmpFolder();
+                if (aiTmpFolder == null)
+                {
+                    ShowMessage(@"Could not locate ai\.tmp folder.");
+                    return;
+                }
+
+                // Ensure the folder exists
+                if (!Directory.Exists(aiTmpFolder))
+                {
+                    Directory.CreateDirectory(aiTmpFolder);
+                }
+
+                var fileName = file.GetDiffFileName(diff.PixelCount);
+                var fullPath = Path.Combine(aiTmpFolder, fileName);
+
+                lock (diff.HighlightedImage)
+                {
+                    diff.HighlightedImage.Save(fullPath, ImageFormat.Png);
+                }
+
+                ShowMessage($"Diff image saved to:\n{fullPath}");
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException("Failed to save diff image.", e);
+            }
+        }
+
         private void GotoLink()
         {
             string urlInTutorial;
@@ -1200,7 +1300,54 @@ namespace pwiz.SkylineTestUtil
 
         private void buttonImageSource_Click(object sender, EventArgs e)
         {
-            NextOldImageSource();
+            // Update menu check marks
+            menuItemDisk.Checked = OldImageSource == ImageSource.disk;
+            menuItemGit.Checked = OldImageSource == ImageSource.git;
+            menuItemWeb.Checked = OldImageSource == ImageSource.web;
+
+            // Show context menu below the button
+            contextMenuImageSource.Show(buttonImageSource, new Point(0, buttonImageSource.Height));
+        }
+
+        private void menuItemDisk_Click(object sender, EventArgs e)
+        {
+            SetOldImageSource(ImageSource.disk);
+        }
+
+        private void menuItemGit_Click(object sender, EventArgs e)
+        {
+            SetOldImageSource(ImageSource.git);
+        }
+
+        private void menuItemWeb_Click(object sender, EventArgs e)
+        {
+            SetOldImageSource(ImageSource.web);
+        }
+
+        private void SetOldImageSource(ImageSource source)
+        {
+            if (OldImageSource == source)
+                return;
+
+            OldImageSource = source;
+            UpdateImageSourceButtons();
+
+            lock (_lock)
+            {
+                _oldScreenshot = new OldScreenshot(_oldScreenshot, null, OldImageSource);
+            }
+
+            FormStateChanged();
+        }
+
+        private void toolStripDiffOnly_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdatePreviewImages();
+        }
+
+        private void toolStripAmplify_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdatePreviewImages();
         }
 
         private void ScreenshotPreviewForm_KeyDown(object sender, KeyEventArgs e)
@@ -1242,8 +1389,15 @@ namespace pwiz.SkylineTestUtil
                 case Keys.S:
                     if (e.Control)
                     {
-                        if (IsComplete)
+                        if (e.Alt)
+                        {
+                            // Ctrl+Alt+S: Save diff image to ai\.tmp
+                            SaveDiffImage();
+                        }
+                        else if (IsComplete)
+                        {
                             SaveAndStay();
+                        }
                         e.Handled = true;
                     }
                     break;
@@ -1267,7 +1421,21 @@ namespace pwiz.SkylineTestUtil
                         Bitmap imageToCopy;
                         lock (_lock)
                         {
-                            imageToCopy = e.Shift ? _oldScreenshot.Image : _newScreenshot.Image;
+                            if (e.Alt)
+                            {
+                                // Ctrl+Alt+C: Copy diff image
+                                imageToCopy = _diff?.HighlightedImage;
+                                if (imageToCopy == null)
+                                {
+                                    ShowMessage("No diff image available to copy.");
+                                    e.Handled = true;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                imageToCopy = e.Shift ? _oldScreenshot.Image : _newScreenshot.Image;
+                            }
                         }
                         CopyBitmap(imageToCopy);
                         e.Handled = true;
@@ -1279,6 +1447,14 @@ namespace pwiz.SkylineTestUtil
                         Revert();
                         e.Handled = true;
                     }
+                    break;
+                case Keys.D:
+                    toolStripDiffOnly.Checked = !toolStripDiffOnly.Checked;
+                    e.Handled = true;
+                    break;
+                case Keys.A:
+                    toolStripAmplify.Checked = !toolStripAmplify.Checked;
+                    e.Handled = true;
                     break;
             }
         }

@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -130,10 +132,10 @@ namespace pwiz.SkylineTestData
             {
                 var pressureTraces = msDataFile.GetQcTraces();
 
-                VerifyQcTrace(pressureTraces[0], "Column Pressure (channel 1)", 1148, 0, 9.558333, 1470, 210, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.PoundsPerSquareInch);
+                VerifyQcTrace(pressureTraces[0], "Column Pressure (channel 1)", 1148, 0, 9.558333, 1470, 210, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.Pascal);
                 VerifyQcTrace(pressureTraces[1], "Pump A Flowrate (channel 2)", 1148, 0, 9.558333, 91590, 89120, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
                 VerifyQcTrace(pressureTraces[2], "Pump B Flowrate (channel 3)", 1148, 0, 9.558333, 0, 840, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
-                VerifyQcTrace(pressureTraces[3], "Column Pressure (channel 4)", 3508, 0, 29.225, 1396, 1322, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.PoundsPerSquareInch);
+                VerifyQcTrace(pressureTraces[3], "Column Pressure (channel 4)", 3508, 0, 29.225, 1396, 1322, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.Pascal);
                 VerifyQcTrace(pressureTraces[4], "Pump A Flowrate (channel 5)", 3508, 0, 29.225, 7038, 7833, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
                 VerifyQcTrace(pressureTraces[5], "Pump B Flowrate (channel 6)", 3508, 0, 29.225, 680, 151, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
 
@@ -268,6 +270,31 @@ namespace pwiz.SkylineTestData
             {
                 Assert.AreEqual(serialNumber, msDataFile.GetInstrumentSerialNumber());
             }
+        }
+
+        [TestMethod]
+        public void VerifyUnicodePathHandling()
+        {
+            //
+            // Verify that the logic for converting Unicode paths to 8.3 short format
+            // works the same in PathEx and it does in the pwiz CLI
+            //
+
+            // Create a temporary file with Unicode characters in its name
+            var tempFilePath = PathEx.GetTempFileNameWithExtension("test测试文件.txt");
+            File.WriteAllText(tempFilePath, @"This is a test file with Unicode characters in its name.");
+
+            // Use PathEx.GetNonUnicodePath() to get the non-Unicode path
+            var nonUnicodePath = PathEx.GetNonUnicodePath(tempFilePath);
+
+            // Use the CLI implementation to get the non-Unicode path
+            var cliEquivalentPath = MsDataFileImpl.GetNonUnicodePath(tempFilePath);
+
+            File.Delete(tempFilePath); // No longer needed
+
+            // Assert that the two (possibly 8.3 converted) paths are equivalent
+            Assert.AreEqual(cliEquivalentPath, nonUnicodePath,
+                @$"The 8.3 converted path for {tempFilePath} does not match the pwiz CLI implementation.");
         }
     }
 }
