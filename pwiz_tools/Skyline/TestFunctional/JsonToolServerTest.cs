@@ -36,6 +36,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
@@ -421,7 +422,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Add K and R labeling", doc =>
                 doc.ChangeSettings(doc.Settings.ChangePeptideModifications(pm =>
                         pm.AddHeavyModifications(aquaMods))
-                    .ChangeTransitionFilter(tf => tf.ChangeAutoSelect(true)))));
+                    .ChangeTransitionFilter(tf => tf.ChangeAutoSelect(true))), AuditLogEntry.SettingsLogFunction));
 
             // Isotope label type pivoting: Precursor and ModifiedSequence should pivot
             // into label-prefixed columns (e.g., "light Precursor", "heavy Precursor")
@@ -447,7 +448,35 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(isotopePivotColCount > 3,
                 string.Format(@"Expected pivoted columns > 3, got {0}", isotopePivotColCount));
 
+            // Audit log scope: verify columns resolve and topic content is accessible
+            string auditLogPath = TestFilesDir.GetTestPath(@"report_audit_log.csv");
+            var columns = new[] { @"SummaryMessage", @"User" };
+            var auditLogDef = new ReportDefinition
+            {
+                Select = columns,
+                Scope = ReportDefinitionReader.SCOPE_AUDIT_LOG
+            };
+            var auditLogViewSpec = reader.CreateViewSpec(auditLogDef, ReportDefinitionReader.SCOPE_AUDIT_LOG);
+            AssertEx.IsNotNull(auditLogViewSpec, @"Audit log columns should resolve");
+
+            // Verify audit log topic has columns that match what we resolved
+            string auditLogTopicContent = server.GetReportDocTopic(@"AuditLog",
+                ReportDefinitionReader.SCOPE_AUDIT_LOG);
+            foreach (var column in columns)
+                AssertEx.Contains(auditLogTopicContent, column);
+
+            // Verify ModifyDocument entry appears in audit log report, then undo and verify it goes away
+            var auditLogSummary = server.ExportReportFromDefinition(
+                auditLogDef, auditLogPath, JsonToolConstants.CULTURE_INVARIANT);
+            AssertEx.AreEqual(2, Helpers.CountLinesInString(auditLogSummary.Preview));
+            AssertEx.Contains(auditLogSummary.Preview, columns.ToDsvLine(TextUtil.SEPARATOR_CSV), "Settings changed");
+
             RunUI(SkylineWindow.Undo);
+
+            auditLogSummary = server.ExportReportFromDefinition(
+                auditLogDef, auditLogPath, JsonToolConstants.CULTURE_INVARIANT);
+            AssertEx.AreEqual(1, Helpers.CountLinesInString(auditLogSummary.Preview));
+            AssertEx.Contains(auditLogSummary.Preview, columns.ToDsvLine(TextUtil.SEPARATOR_CSV));
         }
 
         private void TestNamedReports(JsonToolServer server)

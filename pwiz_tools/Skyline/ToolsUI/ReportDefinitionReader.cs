@@ -26,6 +26,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog.Databinding;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util.Extensions;
@@ -35,7 +36,7 @@ using TopicInfo = pwiz.Skyline.Model.Databinding.ColumnResolver.TopicInfo;
 using UnresolvedColumn = pwiz.Skyline.Model.Databinding.ColumnResolver.UnresolvedColumn;
 using UnresolvedColumnsException = pwiz.Skyline.Model.Databinding.ColumnResolver.UnresolvedColumnsException;
 
-namespace pwiz.Skyline.Model.Databinding
+namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
     /// Resolves <see cref="ReportDefinition"/> objects (from the MCP/JSON tool API) into
@@ -449,7 +450,7 @@ namespace pwiz.Skyline.Model.Databinding
                 get
                 {
                     // Build broadest index (Transition) for column name enumeration
-                    return _resolver.GetAvailableColumns(typeof(Entities.Transition))
+                    return _resolver.GetAvailableColumns(typeof(Transition))
                         .Select(c => c.InvariantName).ToArray();
                 }
             }
