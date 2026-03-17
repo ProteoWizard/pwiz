@@ -2230,10 +2230,11 @@ namespace pwiz.SkylineTestUtil
             using (referenceBmp)
             {
                 Thread.Sleep(INITIAL_WAIT_MS);
-                _shotManager.ActivateScreenshotForm(screenshotForm);
 
                 while (settleTimer.ElapsedMilliseconds < MAX_WAIT_MS)
                 {
+                    _shotManager.ActivateScreenshotForm(screenshotForm);
+
                     using (var shot = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot))
                     {
                         if (QuickDiffPercent(referenceBmp, shot) <= SETTLE_THRESHOLD)
