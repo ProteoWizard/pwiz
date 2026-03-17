@@ -84,6 +84,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(double.TryParse(p.TextPValueCutoff.Text, out value));
                 Assert.AreEqual(-Math.Log10(0.05), value, ACCURACY);
             });
+            // Repro for issue #4052: after modifying settings the dotted reference lines must
+            // still be visible. CurveCount == 5 means fold-change and p-value cutoff lines are present.
+            WaitForVolcanoPlotPointCount(grid, 125);
+            RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 1, 42, 82));
 
             // Remove peptides below cutoffs and restore them
             var count = GetRowCount(grid);
