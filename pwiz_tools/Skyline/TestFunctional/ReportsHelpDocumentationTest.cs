@@ -34,7 +34,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ReportsHelpDocumentationTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.WEB_BROWSER_USE)]
         public void TestReportsHelpDocumentationViewer()
         {
             RunFunctionalTest();
@@ -135,7 +135,7 @@ namespace pwiz.SkylineTestFunctional
         private HtmlDocument GetHtmlDocument(DocumentationViewer documentationViewer)
         {
             var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(documentationViewer.GetWebView2HtmlContent());
+            htmlDoc.LoadHtml(CallUI(() => documentationViewer.GetWebView2HtmlContent()));
             return htmlDoc;
         }
 
