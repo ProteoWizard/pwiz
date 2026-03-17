@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -54,6 +55,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check if data is displayed correctly without any bounds set
             OpenVolcanoPlotProperties(volcanoPlot, p => p.TextFoldChangeCutoff.Text = p.TextFoldChangeCutoff.Text = p.TextPValueCutoff.Text = "");
+            WaitForConditionUI(() => !volcanoPlot.UpdatePending);
             WaitForVolcanoPlotPointCount(grid, 125);
             RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, false, 1, 124, 0));
 
@@ -66,6 +68,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check if data is displayed correctly with default settings
             WaitForVolcanoPlotPointCount(grid, 125);
+            WaitForConditionUI(() => !volcanoPlot.UpdatePending);
             RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 1, 42, 82));
 
             // Verify that checking/unchecking the checkbox correctly converts the values
@@ -84,10 +87,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(double.TryParse(p.TextPValueCutoff.Text, out value));
                 Assert.AreEqual(-Math.Log10(0.05), value, ACCURACY);
             });
-            // Repro for issue #4052: after modifying settings the dotted reference lines must
-            // still be visible. CurveCount == 5 means fold-change and p-value cutoff lines are present.
+            // Repro for issue #4052: after modifying properties the dotted reference lines must
+            // still span the axes. A degenerate line (Y=[0,0] or X=[0,0]) is invisible even
+            // though it is present in CurveList — this assertion catches that case.
             WaitForVolcanoPlotPointCount(grid, 125);
-            RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 1, 42, 82));
+            WaitForConditionUI(() => !volcanoPlot.UpdatePending);
+            RunUI(() => AssertCutoffLinesVisible(volcanoPlot));
 
             // Remove peptides below cutoffs and restore them
             var count = GetRowCount(grid);
@@ -189,6 +194,29 @@ namespace pwiz.SkylineTestFunctional
                 volcanoPlot.ClickSelectedRow();
                 volcanoPlot.OverridenModifierKeys = Keys.None;
             });
+        }
+
+        // Verifies that the cutoff reference lines are non-degenerate (i.e. span the axes).
+        // Before the fix for issue #4052, UpdateGraph() skipped AdjustLocations() when only
+        // cutoff settings changed (_dataChanged=false), leaving lines with Y=[0,0] or X=[0,0].
+        private static void AssertCutoffLinesVisible(FoldChangeVolcanoPlot plot)
+        {
+            var curveList = plot.CurveList;
+            var startIndex = plot.MatchedPointsStartIndex;
+            // Fold-change lines are vertical: their two points must have different Y values.
+            if (FoldChangeVolcanoPlot.CutoffSettings.FoldChangeCutoffValid)
+            {
+                var fc1 = (LineItem) curveList[1];
+                var fc2 = (LineItem) curveList[2];
+                Assert.AreNotEqual(fc1[0].Y, fc1[1].Y, "Fold-change cutoff line 1 must span the Y axis (issue #4052)");
+                Assert.AreNotEqual(fc2[0].Y, fc2[1].Y, "Fold-change cutoff line 2 must span the Y axis (issue #4052)");
+            }
+            // P-value line is horizontal: its two points must have different X values.
+            if (FoldChangeVolcanoPlot.CutoffSettings.PValueCutoffValid)
+            {
+                var pvLine = (LineItem) curveList[startIndex - 1];
+                Assert.AreNotEqual(pvLine[0].X, pvLine[1].X, "P-value cutoff line must span the X axis (issue #4052)");
+            }
         }
 
         private static void AssertVolcanoPlotCorrect(FoldChangeVolcanoPlot plot, bool showingBounds, int selectedCount, int outCount, int inCount)
