@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var importResultsFilesDlg = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             var dataDir = new MsDataFilePath(Path.GetDirectoryName(importFile));
-            RunUI(() => importResultsFilesDlg.CurrentDirectory = dataDir);
+            RunUI(() => importResultsFilesDlg.SetCurrentDirectory(dataDir));
 
             Size saveSize = importResultsFilesDlg.Size;
             saveSize.Width += 100;

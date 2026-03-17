@@ -91,7 +91,8 @@ namespace pwiz.SkylineTestFunctional
                     RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
                     {
                         var diaSource = importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources[0];
-                        importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath()));
+                        importRangesDlg.SetCurrentDirectory(
+                            new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath())));
                         importRangesDlg.SelectFile(importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources.First().GetFileName());
                         importRangesDlg.Open();
                     });
@@ -226,7 +227,7 @@ namespace pwiz.SkylineTestFunctional
                     RunDlg<OpenDataSourceDialog>(editIsolationSchemeDlg.ImportRanges, importRangesDlg =>
                     {
                         var diaSource = importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources[0];
-                        importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath()));
+                        importRangesDlg.SetCurrentDirectory(new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath())));
                         importRangesDlg.SelectFile(importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources.First().GetFileName());
                         importRangesDlg.Open();
                     });
@@ -498,7 +499,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SearchControl.Cancel();
             });
 
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue, 
+            WaitForConditionUI(60000, () => searchSucceeded.HasValue,
                 () => importPeptideSearchDlg.SearchControl.LogText);
             RunUI(() => Assert.IsFalse(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             searchSucceeded = null;

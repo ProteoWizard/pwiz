@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
             var importDlg = ShowDialog<OpenDataSourceDialog>(isoEditor.ImportRanges);
             RunUI(() =>
             {
-                importDlg.CurrentDirectory = new MsDataFilePath(TestFilesDir.FullPath);
+                importDlg.SetCurrentDirectory(new MsDataFilePath(TestFilesDir.FullPath));
                 foreach (var rawFileName in rawFileNames)
                     importDlg.SelectFile(rawFileName);
                 if (!ArrayUtil.EqualsDeep(rawFileNames, importDlg.SelectedFiles.ToArray()))

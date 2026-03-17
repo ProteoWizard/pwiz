@@ -35,9 +35,10 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (item.Tag is SourceInfo sourceInfo && sourceInfo.MsDataFileUri is WatersConnectUrl wcu)
                     {
-                        if (wcu.FindMatchingAccount() is WatersConnectAccount wca && !wca.SupportsMethodDevelopment)
+                        if (wcu.FindMatchingAccount() is WatersConnectAccount wca && !wca.SupportsMethodDevelopment(out var reason))
                         {
-                            item.ToolTipText = FileUIResources.WatersConnectMethodFileDialog_ListViewPostprocessing_This_account_does_not_support_method_development;
+                            item.ToolTipText = FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_ +
+                                               (string.IsNullOrEmpty(reason) ? "" : FileUIResources.WatersConnectMethodFileDialog_ListViewPostprocessing_Reason + reason);
                             item.BackColor = System.Drawing.Color.LightCoral;
                         }
                     }
