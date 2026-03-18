@@ -61,7 +61,19 @@ namespace TestPerf
             const string pepOfInterest2 = "KADLVNR";
             RunUI(() =>
             {
-                if (!Program.SkylineOffscreen)
+                var expectedWidth = 1680;
+                var expectedHeight = 1032; // 1920x1080 with taskbar's 48px removed from height
+                if (IsRecordingScreenShots || IsScreenshotComparisonMode)
+                {
+                    var screenBounds = Screen.GetWorkingArea(SkylineWindow);
+                    if (screenBounds.Width < expectedWidth || screenBounds.Height < expectedHeight)
+                    {
+                        Assert.Fail($"Screen working area of {screenBounds.Size} is too small for capturing screenshots for this tutorial. " +
+                            $"Requires at least {expectedWidth}x{expectedHeight} of usable desktop (no taskbar).");
+                    }
+                    SkylineWindow.Bounds = new Rectangle(0, 0, expectedWidth, expectedHeight);
+                }
+                else if (!Program.SkylineOffscreen)
                 {
                     var screenBounds = Screen.GetWorkingArea(SkylineWindow);
                     var width = Math.Min(screenBounds.Width, 1680);

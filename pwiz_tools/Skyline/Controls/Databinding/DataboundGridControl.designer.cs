@@ -16,9 +16,17 @@ namespace pwiz.Skyline.Controls.Databinding
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                // Dispose BindingListSource before components to break reference chains
+                // while BindingListView is still alive (base.DataSource = null in
+                // BindingListSource.Dispose fires ListChanged events that access it).
+                _boundDataGridViewPasteHandler?.Dispose();
+                var oldBindingListSource = BindingListSource;
+                BindingListSource = null;
+                oldBindingListSource?.Dispose();
+                ViewContext = null;
+                components?.Dispose();
             }
             base.Dispose(disposing);
         }

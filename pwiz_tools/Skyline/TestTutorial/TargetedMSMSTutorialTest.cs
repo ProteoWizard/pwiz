@@ -91,7 +91,8 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //            IsPauseForScreenShots = true;
             //            IsCoverShotMode = true;
-            CoverShotName = "PRM";
+            if (smallMoleculesTestMode == RefinementSettings.ConvertToSmallMoleculesMode.none)
+                CoverShotName = "PRM";
 
             if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none &&
                 SkipSmallMoleculeTestVersions())

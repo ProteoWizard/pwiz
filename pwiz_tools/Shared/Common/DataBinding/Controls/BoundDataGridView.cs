@@ -56,6 +56,28 @@ namespace pwiz.Common.DataBinding.Controls
             MaximumColumnCount = 2000;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_viewContext != null)
+                {
+                    DataError -= _viewContext.OnDataError;
+                    _viewContext = null;
+                }
+                if (_bindingListSource != null)
+                {
+                    _bindingListSource.AllRowsChanged -= BindingListSourceOnAllRowsChanged;
+                    _bindingListSource.ColumnFormats.FormatsChanged -= OnFormatsChanged;
+                    _bindingListSource = null;
+                }
+                // Clear ItemProperties which contain ColumnPropertyDescriptor →
+                // DisplayColumn → ColumnDescriptor → DataSchema → SkylineWindow chain
+                _itemProperties = null;
+            }
+            base.Dispose(disposing);
+        }
+
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
         {
             var bindingListSource = DataSource as BindingListSource;

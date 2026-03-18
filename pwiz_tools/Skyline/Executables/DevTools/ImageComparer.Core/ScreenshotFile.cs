@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace ImageComparer.Core
@@ -78,11 +79,36 @@ namespace ImageComparer.Core
                     return $"Git HEAD: {RelativePath}";
                 case ImageSource.web:
                     return UrlToDownload;
+                case ImageSource.developer_screenshots:
+                    return $"Developer: {GetAlternatePath() ?? RelativePath}";
                 case ImageSource.disk:
                 default:
                     return Path;
             }
         }
+
+        /// <summary>
+        /// Gets the corresponding path in the alternate screenshot location.
+        /// If this file is in TestTutorial\TutorialScreenshots, returns the Documentation\Tutorials path.
+        /// If this file is in Documentation\Tutorials, returns the TestTutorial\TutorialScreenshots path.
+        /// </summary>
+        public string GetAlternatePath()
+        {
+            const string tutorialScreenshots = @"TestTutorial\TutorialScreenshots";
+            const string docTutorials = @"Documentation\Tutorials";
+
+            if (Path.IndexOf(tutorialScreenshots, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                return Path.Replace(tutorialScreenshots, docTutorials);
+            if (Path.IndexOf(docTutorials, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                return Path.Replace(docTutorials, tutorialScreenshots);
+            return null;
+        }
+
+        /// <summary>
+        /// Returns true if this file is in a TutorialScreenshots or Documentation\Tutorials folder
+        /// that has a corresponding alternate location.
+        /// </summary>
+        public bool HasAlternatePath => GetAlternatePath() != null;
 
         /// <summary>
         /// Generates a diff filename for saving to ai\.tmp folder.

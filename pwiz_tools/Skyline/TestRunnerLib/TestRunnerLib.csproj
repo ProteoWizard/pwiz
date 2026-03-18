@@ -95,6 +95,7 @@
     <Compile Include="MiniDump.cs" />
     <Compile Include="PInvoke\DwmapiTest.cs" />
     <Compile Include="PInvoke\Gdi32Test.cs" />
+    <Compile Include="PInvoke\ShcoreTest.cs" />
     <Compile Include="PInvoke\Kernel32Test.cs" />
     <Compile Include="PInvoke\Ole32Test.cs" />
     <Compile Include="PInvoke\Shell32Test.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="PInvoke\User32TestExtensions.cs" />
     <Compile Include="RunTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScreenshotComparisonResults.cs" />
     <Compile Include="TestRunnerContext.cs" />
   </ItemGroup>
   <ItemGroup>

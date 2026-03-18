@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Controls.Lists
         private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
         {
             string title = ListsResources.ListGridForm_BindingListSourceOnListChanged_List__ + ListName;
-            ViewInfo view = BindingListSource.ViewInfo;
+            ViewInfo view = BindingListSource?.ViewInfo;
             if (null != view && view.Name != AbstractViewContext.DefaultViewName)
             {
                 title = TextUtil.SpaceSeparate(title, view.Name);

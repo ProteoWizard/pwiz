@@ -22,7 +22,7 @@ using System.IO;
 
 namespace ImageComparer.Core
 {
-    public enum ImageSource { disk, web, git }
+    public enum ImageSource { disk, web, git, developer_screenshots }
 
     public class ScreenshotInfo
     {

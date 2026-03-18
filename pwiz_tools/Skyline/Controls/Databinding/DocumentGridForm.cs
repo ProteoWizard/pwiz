@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Databinding
     public partial class DocumentGridForm : DataboundGridForm
     {
         private readonly string _originalFormTitle;
-        private readonly SkylineWindow _skylineWindow;
+        private SkylineWindow _skylineWindow;
         private IList<AnnotationDef> _annotations;
 
         public DocumentGridForm() : this(null, null) {} // For designer
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             if (ShowViewsMenu)
             {
-                ViewInfo view = BindingListSource.ViewInfo;
+                ViewInfo view = BindingListSource?.ViewInfo;
                 string title;
                 if (null == view)
                 {
@@ -112,6 +112,7 @@ namespace pwiz.Skyline.Controls.Databinding
             if (null != _skylineWindow)
             {
                 _skylineWindow.DocumentUIChangedEvent -= SkylineWindowOnDocumentUIChangedEvent;
+                _skylineWindow = null;
             }
             base.OnHandleDestroyed(e);
         }

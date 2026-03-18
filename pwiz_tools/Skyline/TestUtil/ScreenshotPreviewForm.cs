@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestUtil
             var savedLocation = TestUtilSettings.Default.PreviewFormLocation;
             if (!TestUtilSettings.Default.ManualSizePreview)
             {
-                Location = Equals(_screenshotManager.GetScreenshotScreen(), Screen.FromPoint(savedLocation))
+                Location = Equals(ScreenshotManager.GetScreenshotScreen(), Screen.FromPoint(savedLocation))
                     ? GetBestLocation()
                     : savedLocation;
             }
@@ -792,7 +792,7 @@ namespace pwiz.SkylineTestUtil
             ClientSize = autoSize;
             _autoResizeComplete = true;
 
-            if (_screenshotManager.GetScreenshotScreen().Equals(Screen.FromControl(this)))
+            if (ScreenshotManager.GetScreenshotScreen().Equals(Screen.FromControl(this)))
             {
                 Location = GetBestLocation();
             }

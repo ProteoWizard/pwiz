@@ -72,8 +72,12 @@ namespace SkylineTester
                 args.Append(" pause=-1"); // Magic number that tells TestRunner to pause and show UI for a manual screenshot
             if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Covershot"))
                 args.Append(" pause=-2"); // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
-            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Auto-Screenshots"))
-                args.Append(" pause=-3"); // Magic number that tells TestRunner to save the screenshot to the tutorials folder
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Auto-Screenshots for publishing"))
+                args.Append(" pause=-3"); // Magic number that tells TestRunner to save screenshots to the Documentation location
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Auto-Screenshots for development"))
+                args.Append(" pause=-5"); // Magic number that tells TestRunner to save screenshots to the TestTutorials location
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Screenshot Comparisons"))
+                args.Append(" pause=-4"); // Magic number that tells TestRunner to compare screenshots to the TestTutorials location and report differences
 
             if (MainWindow.TestsRunSmallMoleculeVersions.Checked)
                 args.Append(" runsmallmoleculeversions=on");

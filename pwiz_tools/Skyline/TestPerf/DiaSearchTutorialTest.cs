@@ -42,6 +42,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using static TestPerf.DdaTutorialTest;
 
 namespace TestPerf
 {
@@ -452,8 +453,15 @@ namespace TestPerf
             // Run the search
             if (IsCoverShotMode)
             {
+                // Filter time related messages
+                RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = new FilterTimeMessageLock());
                 // Resize the form before running or the output will not appear scrolled to the end
                 RunUI(() => importPeptideSearchDlg.Size = new Size(404, 578));  // minimum height
+            }
+            else if (IsPauseForScreenShots)
+            {
+                // Stop progress at a specific line number
+                RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = new FixedLineCountLock(31));
             }
 
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
@@ -483,7 +491,13 @@ namespace TestPerf
             {
 
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
-                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - Search Progress page");
+                if (IsPauseForScreenShots)
+                {
+                    WaitForConditionUI(() => importPeptideSearchDlg.SearchControl.IsProgressLocked);
+                    PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - Search Progress page", null,
+                        bmp => bmp.CleanupBorder().FillProgressBar(importPeptideSearchDlg.SearchControl.ProgressBar));
+                    RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = null); // Unfreeze progress
+                }
 
                 // Wait for search to finish
                 WaitForConditionUI(60000 * 60, () => searchSucceeded.HasValue);
@@ -496,6 +510,8 @@ namespace TestPerf
 
             if (IsCoverShotMode)
             {
+                // Screenshot at 100% means no animation in the progress bar
+                ScreenshotManager.ActivateScreenshotForm(importPeptideSearchDlg);
                 _searchLogImage = ScreenshotManager.TakeShot(importPeptideSearchDlg);
                 Assert.IsNotNull(_searchLogImage);
             }
@@ -550,7 +566,7 @@ namespace TestPerf
                     }
                 }
             });
-            PauseForScreenShot("Import Peptide Search - Empty Proteins dialog");
+            PauseForScreenShot<AssociateProteinsDlg>("Import Peptide Search - Empty Proteins dialog");
 
             using (new WaitDocumentChange(null, true, 600 * 1000))
             {
