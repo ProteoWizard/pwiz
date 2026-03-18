@@ -493,6 +493,9 @@
     <Compile Include="LabelPeakPickingTest.cs" />
     <Compile Include="TargetResolverTest.cs" />
     <Compile Include="TicNormalizationTest.cs" />
+    <Compile Include="JsonToolServerTest.cs" />
+    <Compile Include="JsonToolServerSettingsTest.cs" />
+    <Compile Include="SkylineMcpTest.cs" />
     <Compile Include="ToolServiceTest.cs" />
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />

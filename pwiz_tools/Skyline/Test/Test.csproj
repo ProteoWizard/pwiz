@@ -190,6 +190,7 @@
     <Compile Include="ImmutableListTest.cs" />
     <Compile Include="FormattableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
+    <Compile Include="TutorialCatalogTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="LongPathDirectoryTest.cs" />
     <Compile Include="MassListIonsTest.cs" />

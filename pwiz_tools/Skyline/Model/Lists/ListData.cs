@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Lists
             get { return ReadOnlyList.Create(RowCount, GetRowAnnotations); }
         }
 
-        string IKeyContainer<string>.GetKey()
+        public string GetKey()
         {
             return ListName;
         }

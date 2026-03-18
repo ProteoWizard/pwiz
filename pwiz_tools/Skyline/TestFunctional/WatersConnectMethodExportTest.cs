@@ -165,7 +165,9 @@ namespace pwiz.SkylineTestFunctional
             // Remove the cached token to force authentication server call
             WatersConnectAccount._authenticationTokens.Clear();
             var authErrorDlg = ShowDialog<MessageDlg>(() => exportMethodDlg.ClickTemplateButton());
-            Assert.IsTrue(authErrorDlg.Message.Contains("method development"), "Expected authentication error message not found.");
+            Assert.IsTrue(
+                authErrorDlg.Message.Contains(FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_),
+                "Expected authentication error message not found.");
             var templateDialog = ShowDialog<WatersConnectSelectMethodFileDialog>(authErrorDlg.OkDialog);
             Assert.IsNotNull(templateDialog);
             CancelDialog(templateDialog);

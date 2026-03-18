@@ -20,7 +20,6 @@
 // limitations under the License.
 //
 
-
 #include "BinaryDataEncoder.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/filesystem.hpp"
@@ -82,7 +81,17 @@ const char* sampleEncodedNumpressPic_ =     "aMhoyGjIaMhpyGnIachpyGnF2DacUvRpxa5
 const char* sampleEncodedNumpressPicZlib_ = "eJzLOJEBhpkwePSG2ZygL5lH17nNCQyGiGWciFEsDJhYFfIxJbVVtc8AAAjsG4c=";
 const char* sampleEncodedModified64BigZlib_ = "eJxzyGRg7Jor/r/+/X8wcMhkYG6rrWz9j+CzNsVpL6m/D+ez19nrxf+H85UzTM3Y1zFAAZCfZbZjz2okfo6F9eE5SPw8y/0yTUj8Amun41EOPalVCRB+kc2xI6oOk08KH4DwS+y8hZ46TF5R6gDhl9mf3zzDoast4gGEX+EYssweybwqp5uvbiPxa1ziGzMRfAYU4FB0AEzbf4DyK6G0CpSud4DQkVB+E0S9Qz9EHACREFv+";
 
-const char* regressionTest(const BinaryDataEncoder::Config& config,bool expectNumpressIgnored)
+const char *sampleEncoded32Zstd_ = "KLUv/SCghQMAVAUMAEhDAAAAABwsPEIbSVJicoIbSUPTK2NEkhtJQ55InkSiG0lDqkOdRLIbSUPHMlREwtLiAAAAlkMAAIA/AADIQwAAIEEAAPpDAADIQgAAFkQAAHpECwBzyALyQWYZQiYgC8gHkoHmgBPg7txyBA==";
+const char *sampleEncoded64Zstd_ = "KLUv/WBAAJ0FAMQH/xedigEAaUAAhXl9hgOkK16CBV8uP34Hrgc2NWgjq7y4Nmqcwzs4bIIcvzluWsdCO3BgemWMQCXExjxywBPJk0DlEks+dEB1qJNAmLPPP3bgWIaKQD+mVEF42+rZQnppgV9EfMBy8D8AeUAAJEBAf0AAAFlAwIJAAECPQBoAIAY4AmyANoAMlYunSgQtAASAARg9MabgBjAQGAgMBAYCQwOjgdHAaLALMBoYPdPoDBwB";
+
+const char *sampleEncoded32ShuffleZstd_ = "KLUv/SCg/QIAVAQMABwALAA8AEIAUgBiAHIAgtOSnqKqssfCANIA4gAbKxtIG0MbMkhJY0meSZ1JVEgAloDIIPrIFnpDAEQAQz9DQUNCREQKAGAAyG6up5jDALlcZqW2nTksR1w94AQ=";
+const char *sampleEncoded64ShuffleZstd_ = "KLUv/WBAAD0GADIMKjIwc9IawKBH6X442Jy+dOTi9k0fskbmRtDHm1FJn/8+YigSr2eHAr2kZTwCsMpwNCmdAnd3d9g9lazC5AAldFo1VmO1lO1a761VF8y1c2VcR6aKUISAfBCcUh47ctyoUVRgQIARSyF+sHtoOWCQNmQ4urBkVnXVtOdEnhJzltokpTmKvUiy5cmgL2cOxKnT4M2aogoTohZsfWJXAkVoMcsypkxTlyiHAgwAgADIbq6jm4TJ9TRzWI64Au8E2wm2E2znBpw=";
+
+const char *sampleEncoded32DictZstd_ = "KLUv/SCspQMAtAWEAB0ADBwsPEJSYnKCkqKywtLix9MAqp4bMisAQ0gAgCDISEmWyPoWVGN6nZ4AP0FCQ0QFAAYABwAIAAkACgALAAwADRkOHA8bEBgRABIAEwAEABQBFQIWAxcaCgBAEIBXsBdnWNMCbt+iSuMZKjBtAG0=";
+const char *sampleEncoded64DictZstd_ = "KLUv/WAgAPUFAAQK+AAdAP+FpF+uq5yCWiXlmD/baQAXeSsuB7zDHMfEErOm6oEAnX1ePza4O79CxkvPVNlfAIqGgn41Njg5Ozw+P0FCROBgAEDAAAEDBQdoamxucHJ0dnh6fFh6AHUTI8AAQMCGZUCoyQDwJFlpcnl/goqMj5OTAD9ABQAGAAcACAAJAAoACwAMAA0ZDhwPGxAYEQASABMABAAUARUCFgMXGgwAwE5AV3xfIpR2MxZLaD6DChwAOABwADBtAG0=";
+
+const char *
+    regressionTest(const BinaryDataEncoder::Config &config, bool expectNumpressIgnored)
 {
     if (expectNumpressIgnored)  // when set, expecting numpress not to be used even though it was requested
     {
@@ -133,13 +142,43 @@ const char* regressionTest(const BinaryDataEncoder::Config& config,bool expectNu
         config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
         config.compression == BinaryDataEncoder::Compression_Zlib)
         return sampleEncoded64LittleZlib_;
-     
+    
     if (config.precision == BinaryDataEncoder::Precision_64 &&
         config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian && 
         config.compression == BinaryDataEncoder::Compression_Zlib)
         return sampleEncoded64BigZlib_;
 
-     throw runtime_error("[BinaryDataEncoderTest::regressionTest()] Untested configuration.");
+    if (config.precision == BinaryDataEncoder::Precision_64 &&
+        config.compression == BinaryDataEncoder::Compression_Zstd)
+    {
+        return sampleEncoded64Zstd_;
+    }
+    if (config.precision == BinaryDataEncoder::Precision_32 &&
+        config.compression == BinaryDataEncoder::Compression_Zstd)
+    {
+        return sampleEncoded32Zstd_;
+    }
+    if (config.precision == BinaryDataEncoder::Precision_64 &&
+        config.compression == BinaryDataEncoder::Compression_ByteShuffleZstd)
+    {
+        return sampleEncoded64ShuffleZstd_;
+    }
+    if (config.precision == BinaryDataEncoder::Precision_32 &&
+        config.compression == BinaryDataEncoder::Compression_ByteShuffleZstd)
+    {
+        return sampleEncoded32ShuffleZstd_;
+    }
+    if (config.precision == BinaryDataEncoder::Precision_64 &&
+        config.compression == BinaryDataEncoder::Compression_DictZstd)
+    {
+        return sampleEncoded64DictZstd_;
+    }
+    if (config.precision == BinaryDataEncoder::Precision_32 &&
+        config.compression == BinaryDataEncoder::Compression_DictZstd)
+    {
+        return sampleEncoded32DictZstd_;
+    }
+    throw runtime_error("[BinaryDataEncoderTest::regressionTest()] Untested configuration.");
 }
 
  
@@ -183,33 +222,45 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
     string encoded;
     encoder.encode(binary, encoded);
 
-    string encodedInt;
-    encoder.encode(binaryInt, encodedInt);
 
     if (os_)
     {
-        *os_ << "encoded: " << encoded.size() << endl << encoded << endl;
-        *os_ << "encodedInt: " << encodedInt.size() << endl << encodedInt << endl;
+        auto e = regressionTest(config, checkNumpressMaxErrorSupression);
+        * os_ << "encoded: " << encoded.size() << endl << encoded << endl;
+        *os_ << "expected: " << string(e).size() << endl << string(e) << endl;
     }
 
     // regression testing for encoding
 
     unit_assert(encoded == regressionTest(config,checkNumpressMaxErrorSupression));
 
+    string encodedInt;
+    encoder.encode(binaryInt, encodedInt);
+
+    if (os_) {
+        *os_ << "encodedInt: " << encodedInt.size() << endl
+             << encodedInt << endl;
+    }
+
     // decode
 
     BinaryData<double> decoded;
     encoder.decode(encoded, decoded);
-
-    BinaryData<std::int64_t> decodedInt;
-    encoder.decode(encodedInt, decodedInt);
 
     if (os_)
     {
         *os_ << "decoded: " << decoded.size() << endl;
         copy(decoded.begin(), decoded.end(), ostream_iterator<double>(*os_, " "));
         *os_ << endl;
+    }
 
+    unit_assert(binary.size() == decoded.size());
+
+    BinaryData<std::int64_t> decodedInt;
+    encoder.decode(encodedInt, decodedInt);
+
+    if (os_)
+    {
         *os_ << "decodedInt: " << decodedInt.size() << endl;
         copy(decodedInt.begin(), decodedInt.end(), ostream_iterator<std::int64_t>(*os_, " "));
         *os_ << endl;
@@ -289,9 +340,41 @@ void test()
     config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
     config.compression = BinaryDataEncoder::Compression_Zlib;
     testConfiguration(config);
-    
+
+    config.precision = BinaryDataEncoder::Precision_64;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_Zstd;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_Zstd;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_64;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_ByteShuffleZstd;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_ByteShuffleZstd;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_64;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_DictZstd;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_DictZstd;
+    testConfiguration(config);
+
+    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
     // test the numpress stuff with and without zlib, and to see if it honors error limits
     config.compression = BinaryDataEncoder::Compression_None;
+    config.precision = BinaryDataEncoder::Precision_64;
     config.numpressLinearErrorTolerance = 0; // means don't do tolerance checks
     config.numpressSlofErrorTolerance = 0; // means don't do tolerance checks
     for (int zloop=3;zloop--;)

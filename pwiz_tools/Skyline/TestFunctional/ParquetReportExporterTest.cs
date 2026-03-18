@@ -59,7 +59,8 @@ namespace pwiz.SkylineTestFunctional
             var viewInfo = new ViewInfo(dataSchema, typeof(MyObject), viewSpec);
             var rowItemExporter = new ParquetReportExporter();
             IProgressStatus status = new ProgressStatus();
-            RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items), rowItemExporter, new SilentProgressMonitor(), ref status);
+            RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items),
+                rowItemExporter, new SilentProgressMonitor(), ref status);
             stream.Position = 0;
             var table = ParquetReader.ReadTableFromStream(stream);
             Assert.AreEqual(1, table.Schema.Fields.Count);
