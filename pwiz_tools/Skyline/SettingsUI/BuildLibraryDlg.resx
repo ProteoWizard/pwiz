@@ -522,11 +522,7 @@ of the redundant library data.</value>
     <value>gridInputFiles</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
-<<<<<<< HEAD
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
-=======
     <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
->>>>>>> bd3296f4ce1076618fb34151549ec1ce3c522a31
   </data>
   <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -1032,8 +1028,6 @@ of the redundant library data.</value>
   <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-<<<<<<< HEAD
-=======
   <data name="tabKoinaSource.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
@@ -1134,7 +1128,6 @@ library will be created.</value>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
->>>>>>> bd3296f4ce1076618fb34151549ec1ce3c522a31
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 273</value>
   </data>
@@ -1724,11 +1717,7 @@ library will be created.</value>
     <value>tabControlMain</value>
   </data>
   <data name="&gt;&gt;tabControlMain.Type" xml:space="preserve">
-<<<<<<< HEAD
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
-=======
     <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
->>>>>>> bd3296f4ce1076618fb34151549ec1ce3c522a31
   </data>
   <data name="&gt;&gt;tabControlMain.Parent" xml:space="preserve">
     <value>$this</value>
@@ -3736,11 +3725,6 @@ library will be created.</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Build Library</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
