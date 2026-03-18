@@ -73,7 +73,6 @@ namespace TestPerf
         private const string TESTDATA_FILE = @"CarafeBuildLibraryTest.zip";
 
         private string _toolName = CarafeLibraryBuilder.CARAFE;
-        private string _pythonVersion = CarafeLibraryBuilder.PythonVersion;
 
         private void PrintEnvironment()
         {
@@ -520,9 +519,9 @@ namespace TestPerf
             MessageDlg confirmDlg = null;
             RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
             {
-                Assert.AreEqual(string.Format(
+                AssertEx.AreComparableStrings(
                     ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                    _pythonVersion, _toolName), pythonDlg.Message);
+                    pythonDlg.Message);
 
                 if (!PythonInstaller.ValidateEnableLongpaths())
                 {

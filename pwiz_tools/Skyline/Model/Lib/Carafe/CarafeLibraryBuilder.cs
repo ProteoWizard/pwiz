@@ -33,7 +33,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -48,13 +47,10 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private const string BIN = @"bin";
         private const string INPUT = @"input";
         private const string TRAIN = @"train";
-        private const string CARAFE_VERSION = @"1.1.2";
-        private const string CARAFE_URI_NAME = @"carafe-";
-        private const string CARAFE_DEV_VERSION = ""; //@"-beta"; //CARAFE_DEV + @"-20250304T224833Z-001";
-        private const string CONDITIONAL_CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND + TextUtil.AMPERSAND;
+        private const string CARAFE_VERSION = @"2.0.0";
+        private const string CARAFE_DEV_VERSION = @"-260217";
         private const string DOT_JAR = @".jar";
         private const string DOT_ZIP = @".zip";
-        private const string DOWNLOADS = @"Downloads";
         private const string HYPHEN = TextUtil.HYPHEN;
         private const string JAVA = @"java";
         private const string JAVA_EXECUTABLE = @"java.exe";
@@ -108,8 +104,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             };
         public ISkylineProcessRunnerWrapper SkylineProcessRunner { get; set; }
 
-        private string PythonVirtualEnvironmentScriptsDir { get; }
-
         internal static List<ModificationType> MODEL_SUPPORTED_UNIMODS =
             new List<ModificationType>
 
@@ -148,18 +142,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         public LibrarySpec LibrarySpec { get; private set; }
 
-        public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
-        private string PythonVirtualEnvironmentName { get; }
         public string DbInputFilePath { get; private set; }
         internal string ExperimentDataFilePath { get; set; }
         internal string ExperimentDataTuningFilePath { get; set; }
-
-        //internal string ProteinDatabaseFilePath;
-
-        //private bool BuildLibraryForCurrentSkylineDocument => ProteinDatabaseFilePath.IsNullOrEmpty();
-        private string PythonVirtualEnvironmentActivateScriptPath =>
-            PythonInstallerUtil.GetPythonVirtualEnvironmentActivationScriptPath(PythonVersion,
-                PythonVirtualEnvironmentName);
 
 
 
@@ -175,38 +160,14 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private string JavaSdkDownloadPath => Path.Combine(JavaDir, JavaSdkDownloadFileName);
         private string JavaExecutablePath { get; set; }
         private string CarafeFileBaseName => @"carafe" + HYPHEN + CARAFE_VERSION;
-        private string CarafeJarZipFileName => CarafeFileBaseName + CARAFE_DEV_VERSION + DOT_ZIP;
-        private string CarafeJarFileName => CarafeFileBaseName + DOT_JAR;
+        private string CarafeFullName => CarafeFileBaseName + CARAFE_DEV_VERSION;
+        private string CarafeJarZipFileName => CarafeFullName + DOT_ZIP;
+        private string CarafeJarFileName => CarafeFullName + DOT_JAR;
 
-        private static string AlphapeptdeepDiaRepo = @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0";
-        public static PythonInstaller CreatePythonInstaller(TextWriter writer)
-        {
-            var packages = new[]
-            {
-                new PythonPackage  { Name = AlphapeptdeepDiaRepo, Version = null},
-                //  { Name = PEPTDEEP, Version = AlphapeptdeepDiaRepo },
-                new PythonPackage { Name = @"alphabase", Version = @"1.2.1" },
-                new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
-                new PythonPackage { Name = @"transformers", Version = @"4.36.1" },
-                new PythonPackage { Name = @"torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu126", Version = null },
-                new PythonPackage { Name = @"wheel", Version = null },
-                new PythonPackage { Name = @"huggingface-hub", Version = null}
-            };
-
-            return new PythonInstaller(packages, writer, CARAFE);
-        }
-
-        private static string CARAFE_JAR_URI => @$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}/";
+        private static string CARAFE_JAR_URI => @"https://proteome.gs.washington.edu/~nicksh/carafe/";
         private Uri CarafeJarZipDownloadUrl()
         {
-            //return new Uri(@$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/carafe-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
-            return new Uri(@$"{CARAFE_JAR_URI}{CARAFE_URI_NAME}{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
-        }
-
-        //Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}-dev/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
-        private Uri CarafeJarZipUri()
-        {
-            return new Uri(CarafeJarZipDownloadUrl() + CarafeJarZipFileName);
+            return new Uri(@$"{CARAFE_JAR_URI}{CarafeJarZipFileName}");
         }
 
         private string CarafeJarZipDownloadPath => Path.Combine(CarafeJavaDir, CarafeJarZipFileName);
@@ -218,7 +179,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         internal string CarafeOutputLibraryCsvFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME_CSV);
         //        public string BuilderLibraryPath;
 
-        private string CarafeJarFileDir => Path.Combine(CarafeJavaDir, CarafeFileBaseName);
+        private string CarafeJarFileDir => Path.Combine(CarafeJavaDir, CarafeFullName);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
 
         private string InputFileName =>
@@ -511,14 +472,12 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
-            string pythonVirtualEnvironmentName,
-            string pythonVirtualEnvironmentScriptsDir,
             string experimentDataFilePath,
             string experimentDataTuningFilePath,
             string dbInputFilePath,
             SrmDocument document,
             SrmDocument trainingDocument,
-            bool diann_training, 
+            bool diann_training,
             IrtStandard irtStandard, out string testLibraryOutputPath, out string builderLibraryOutputPath) : base(document, trainingDocument, irtStandard)
         {
             DefaultTestDevice = DeviceTypes.cpu;
@@ -532,8 +491,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             EnsureWorkDir(rootProcessingDir, PREFIX_WORKDIR);
 
             DbInputFilePath = dbInputFilePath;
-            PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
-            PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
@@ -563,22 +520,15 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
-            //string pythonVersion,
-            string pythonVirtualEnvironmentName,
-            string pythonVirtualEnvironmentScriptsDir,
             string proteinDatabaseFilePath,
             string experimentDataFilePath,
             string experimentDataTuningFilePath,
-            SrmDocument document, 
-            SrmDocument trainingDocument, 
+            SrmDocument document,
+            SrmDocument trainingDocument,
             IDictionary<string, AbstractDdaSearchEngine.Setting> libraryParameters,
             IrtStandard irtStandard) : base(document, trainingDocument, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            //PythonVersion = pythonVersion;
-            PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
-            PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
-            //ProteinDatabaseFilePath = proteinDatabaseFilePath;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
             LibraryParameters = libraryParameters;
@@ -949,18 +899,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
             progressStatus.ChangePercentComplete(0);
 
-            // compose carafe cmd command arguments to build library
-            //var args = @$"cd {WorkDir} && echo %PATH% > myPath && " + TextUtil.SpaceSeparate(
-            //    TextUtil.Quote(PythonVirtualEnvironmentActivateScriptPath)
-            //);
-
+            // Carafe 2.0 manages its own Python environment via its built-in PyInstaller,
+            // so we just run java directly without activating a Python venv.
             var args = TextUtil.SpaceSeparate(
-                TextUtil.Quote(PythonVirtualEnvironmentActivateScriptPath)
-            );
-
-            args += TextUtil.SpaceSeparate(CONDITIONAL_CMD_PROCEEDING_SYMBOL) + SPACE;
-
-            args += TextUtil.SpaceSeparate(
                 TextUtil.Quote(JavaExecutablePath)
             );
 

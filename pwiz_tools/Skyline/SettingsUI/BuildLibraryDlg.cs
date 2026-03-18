@@ -140,7 +140,6 @@ namespace pwiz.Skyline.SettingsUI
         public const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.13";
         private const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
         private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
-        internal const string CARAFE_PYTHON_VERSION = @"3.9.13";
         private const string CARAFE = @"Carafe";
         private const string WORKSPACES = @"workspaces";
         private const string PEPTDEEP = @"PeptDeep";
@@ -156,8 +155,6 @@ namespace pwiz.Skyline.SettingsUI
         private bool IsCarafeEnabled => true;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
-        private string CarafePythonVirtualEnvironmentDir =>
-            PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(CARAFE_PYTHON_VERSION, CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
         //        private string AlphapeptdeepDiaRepo => Path.Combine(UserDir, WORKSPACES, ALPHAPEPTDEEP_DIA);
@@ -454,19 +451,13 @@ namespace pwiz.Skyline.SettingsUI
             }
 
 
-            if (!SetupPythonEnvironmentForCarafe())
-            {
-                return false;
-            }
-
-
             string msMsDataFilePath = textBoxMsMsData.Text;
             if (!File.Exists(msMsDataFilePath))
             {
                 _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
                 return false;
             }
-            Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE, CarafePythonVirtualEnvironmentDir,
+            Builder = new CarafeLibraryBuilder(name, outputPath,
                 msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _trainingDocument,
                 labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard, out _testLibFilepath, out _libFilepath);
 
@@ -541,30 +532,6 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             return true;
-        }
-
-        private bool SetupPythonEnvironmentForCarafe()
-        {
-            var pythonInstaller = CarafeLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
-
-            btnNext.Enabled = false;
-            bool setupSuccess = false;
-            try
-            {
-                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller, CarafeLibraryBuilder.PythonVersion, CarafeLibraryBuilder.CARAFE);
-            }
-            finally
-            {
-                // If not a successful installation, try to clean-up before leaving
-                if (!setupSuccess)
-                    pythonInstaller.CleanUpPythonEnvironment(CarafeLibraryBuilder.CARAFE);
-
-                btnNext.Enabled = true;
-            }
-
-            return setupSuccess;
-
-
         }
 
         private bool SetupPythonEnvironmentForAlpha()
