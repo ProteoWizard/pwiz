@@ -102,6 +102,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     generate-skyline-AssemblyInfo.cs "SkylineTester" : "Testing GUI" : "SkylineTester/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineNightly" : "Nightly Test Runner" : "SkylineNightly/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineNightlyShim" : "Thin wrapper for SkylineNightly, updates SkylineNightly from TeamCity then executes it, passing along any provided args" : "SkylineNightlyShim/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "SkylineAiConnector" : "AI Connector for Skyline" : "Executables/Tools/SkylineMcp/SkylineAiConnector/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "SkylineMcpServer" : "MCP Server for Skyline" : "Executables/Tools/SkylineMcp/SkylineMcpServer/Properties/AssemblyInfo.cs" ;
 
     .teamcity-test-decoration = "" ;
     if --teamcity-test-decoration in [ modules.peek : ARGV ]

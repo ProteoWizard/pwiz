@@ -265,7 +265,13 @@ namespace pwiz.Skyline
             }
             if (args != null && args.Length != 0)
             {
-                _fileToOpen = args.Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
+                // Support both --opendoc path/to/file and --opendoc=path/to/file
+                _fileToOpen = args.Select(a =>
+                {
+                    if (a.StartsWith(Program.OPEN_DOCUMENT_ARG + @"="))
+                        return a.Substring(Program.OPEN_DOCUMENT_ARG.Length + 1);
+                    return a;
+                }).Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
             }
 
             var defaultUIMode = Settings.Default.UIMode;
@@ -1219,11 +1225,16 @@ namespace pwiz.Skyline
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            // Clean up the MCP tool service before the process is killed below
+            Program.StopToolService();
+
             base.OnHandleDestroyed(e);
-            
+
             if (!Program.FunctionalTest)
             {
-                // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
+                // HACK: Kill the process to avoid "invalid string binding" errors from
+                // native instrument vendor DLLs during shutdown. This means nothing after
+                // Application.Run() in Program.Main() will ever execute.
                 Process.GetCurrentProcess().Kill();
             }
         }
