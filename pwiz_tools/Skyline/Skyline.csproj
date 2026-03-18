@@ -311,6 +311,12 @@
     <Compile Include="Alerts\ReportErrorDlg.Designer.cs">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\ScreenCapturePermissionDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ScreenCapturePermissionDlg.Designer.cs">
+      <DependentUpon>ScreenCapturePermissionDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\ShareTypeDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -573,6 +579,8 @@
     <Compile Include="Model\Databinding\ParquetReportExporter.cs" />
     <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
     <Compile Include="Model\Databinding\DsvReportExporter.cs" />
+    <Compile Include="Model\Databinding\ColumnResolver.cs" />
+    <Compile Include="ToolsUI\ReportDefinitionReader.cs" />
     <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRowFactory.cs" />
@@ -1320,6 +1328,9 @@
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\ToolDescriptionRunUI.cs" />
+    <Compile Include="ToolsUI\JsonToolServer.cs" />
+    <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
+    <Compile Include="ToolsUI\JsonUiService.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
@@ -1621,6 +1632,7 @@
       <DependentUpon>ActionBoxControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Startup\ActionTutorial.cs" />
+    <Compile Include="Controls\Startup\TutorialCatalog.cs" />
     <Compile Include="Controls\Startup\RecentFileControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2660,6 +2672,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ScreenCapturePermissionDlg.resx">
+      <DependentUpon>ScreenCapturePermissionDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.ja.resx">
       <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
@@ -5272,6 +5287,7 @@
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
     <Compile Include="Util\ClipboardEx.cs" />
+    <Compile Include="Util\ScreenCapture.cs" />
     <Compile Include="Util\FormEx.cs">
       <SubType>Form</SubType>
     </Compile>

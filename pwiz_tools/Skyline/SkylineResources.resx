@@ -1207,4 +1207,7 @@ Do you want to save the document now?</value>
   <data name="Select_Training_Document" xml:space="preserve">
     <value>Select Training Document</value>
   </data>
+  <data name="CommandLine_SaveFile_File__0__save_canceled" xml:space="preserve">
+    <value>File {0} save canceled</value>
+  </data>
 </root>

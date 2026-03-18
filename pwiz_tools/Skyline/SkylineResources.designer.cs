@@ -19,7 +19,7 @@ namespace pwiz.Skyline {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SkylineResources {
@@ -1294,6 +1294,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File {0} save canceled.
+        /// </summary>
+        public static string CommandLine_SaveFile_File__0__save_canceled {
+            get {
+                return ResourceManager.GetString("CommandLine_SaveFile_File__0__save_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Saving file....
         /// </summary>
         public static string CommandLine_SaveFile_Saving_file___ {
@@ -2069,7 +2078,7 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Pick peak {0:F01}.
         /// </summary>
@@ -2768,6 +2777,26 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to add the server to your settings..
+        /// </summary>
+        public static string SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_server_to_your_settings_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_s" +
+                        "erver_to_your_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server {0} is not in your list of Panorama servers..
+        /// </summary>
+        public static string SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_servers_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_se" +
+                        "rvers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This file was last uploaded to: {0}.
         /// </summary>
         public static string SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_ {
@@ -2791,26 +2820,6 @@ namespace pwiz.Skyline {
         public static string SkylineWindow_PublishToSavedUri_Validating_saved_folder {
             get {
                 return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Validating_saved_folder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The server {0} is not in your list of Panorama servers..
-        /// </summary>
-        public static string SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_servers_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_s" +
-                        "ervers_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to add the server to your settings..
-        /// </summary>
-        public static string SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_server_to_your_settings_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_" +
-                        "server_to_your_settings_", resourceCulture);
             }
         }
         

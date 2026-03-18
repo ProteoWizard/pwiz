@@ -28,6 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Carafe;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -113,7 +114,18 @@ namespace TestPerf
             };
             TestFilesPersistent = new[] { "rawdata" };
 
-            RunFunctionalTest();
+            // CarafeLibraryBuilder checks SimulatedInstallationState to select CPU vs GPU.
+            // Set to NONVIDIAHARD so tests use CPU on machines without a GPU.
+            var originalInstallationState = PythonInstaller.SimulatedInstallationState;
+            try
+            {
+                PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
+                RunFunctionalTest();
+            }
+            finally
+            {
+                PythonInstaller.SimulatedInstallationState = originalInstallationState;
+            }
         }
 
         private enum TestLibrary

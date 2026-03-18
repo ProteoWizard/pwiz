@@ -207,6 +207,7 @@ RTChartPropertyDlg,TestEditDialogs
 RTDetails,IrtFunctionalTest
 SaveSettingsDlg,TestShareSettings
 SchedulingGraphPropertyDlg,TestIrtTutorial
+ScreenCapturePermissionDlg,TestJsonToolServer
 SchedulingOptionsDlg,TestExportIsolationList
 SelectIrtStandardDlg,TestLibraryBuild
 SequenceTreeForm,*

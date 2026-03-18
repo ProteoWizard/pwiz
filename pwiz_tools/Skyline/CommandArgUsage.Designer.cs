@@ -1258,6 +1258,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Synonym for --in. Open a Skyline file..
+        /// </summary>
+        public static string _open {
+            get {
+                return ResourceManager.GetString("_open", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Same as save except writes to the specified file.
         /// </summary>
         public static string _out {
@@ -1918,7 +1927,16 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("_save", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Synonym for --out. Save to the specified file..
+        /// </summary>
+        public static string _save_as {
+            get {
+                return ResourceManager.GetString("_save_as", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file..
         /// </summary>
@@ -2798,6 +2816,16 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to No help section matching &apos;{0}&apos; found. Use --help=sections to list available sections..
+        /// </summary>
+        public static string CommandArgs_Usage_No_help_section_matching___0___found__Use___help_sections_to_list_available_sections_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_Usage_No_help_section_matching___0___found__Use___help_sections_to_lis" +
+                        "t_available_sections_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Until the section titled Settings Customization all other command line arguments rely on the &apos;--in&apos; argument because they all rely on having a Skyline document open..
         /// </summary>
