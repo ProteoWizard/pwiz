@@ -379,6 +379,7 @@ build-nt-x86
 /libraries/msparser_*_win64
 /libraries/msparser_*_linux64
 /libraries/zlib*
+/libraries/zstd*
 Version.cpp
 /pwiz_tools/BiblioSpec/tests/inputs
 /pwiz_tools/BiblioSpec/tests/output
