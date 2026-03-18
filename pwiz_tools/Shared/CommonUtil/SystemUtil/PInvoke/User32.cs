@@ -191,6 +191,10 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public delegate bool EnumThreadWindowsProc(IntPtr hWnd, IntPtr lp);
 
         [DllImport("user32.dll")]
+        public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
         public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen); 
         
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -240,6 +244,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool SetCapture(IntPtr hWnd);
