@@ -993,6 +993,18 @@ namespace pwiz.Skyline.Util
 
     public static class DirectoryEx
     {
+        /// <summary>
+        /// Creates the parent directory for a file path, throwing if the
+        /// path has no directory component (e.g. a root or invalid path).
+        /// </summary>
+        public static void CreateForFilePath(string filePath)
+        {
+            string dir = Path.GetDirectoryName(filePath);
+            if (dir == null)
+                throw new ArgumentException(@"Invalid file path: " + filePath);
+            Directory.CreateDirectory(dir);
+        }
+
         public static void SafeDelete(string path)
         {
             try
