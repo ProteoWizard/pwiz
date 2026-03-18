@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Util
         static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
         public static string JavaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Java, Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe"));
-        public static string JavaExtraArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Java, JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3));
+        public static string JavaExtraArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Java, DefaultJavaMaxHeap);
 
         // TODO: Try to find a pre-existing installation of Java instead of downloading: https://stackoverflow.com/questions/3038140/how-to-determine-windows-java-installation-location
         public static FileDownloadInfo[] FilesToDownload => new[]
@@ -149,6 +149,7 @@ namespace pwiz.Skyline.Util
             }
         }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
 
+        public static string DefaultJavaMaxHeap => TryHelper.IsParallelClient ? JavaMaxHeapArg(8L * 1024 * 1024 * 1024) : JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3);
         public static string JavaMaxHeapArg(long maxHeapBytes) => $@"-Xmx{maxHeapBytes / 1024 / 1024}M";
     }
 

@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestConnected
             //var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-            var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
+            var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.SetCurrentDirectory(RemoteUrl.EMPTY));
 
             // Test invalid server URLs
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("localhost")));
@@ -124,7 +124,7 @@ namespace pwiz.SkylineTestConnected
 
             RunUI(() =>
             {
-                openDataSourceDialog.CurrentDirectory = (openDataSourceDialog.CurrentDirectory as RemoteUrl)!.ChangePathParts(_dataPath);
+                openDataSourceDialog.SetCurrentDirectory((openDataSourceDialog.CurrentDirectory as RemoteUrl)!.ChangePathParts(_dataPath));
             });
             foreach (var filename in _filenames)
                 OpenFile(openDataSourceDialog, filename, false);
