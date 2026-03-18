@@ -706,11 +706,11 @@ namespace TestRunner
                     try
                     {
                         using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
-                    string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
+                        string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
                         httpClient.DownloadFile("https://github.com/ProteoWizard/AlwaysUpRunner/archive/refs/heads/master.zip", tmpFile);
 
-                    using var alwaysUpRunnerCode = new ZipFile(tmpFile);
-                    alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
+                        using var alwaysUpRunnerCode = new ZipFile(tmpFile);
+                        alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
                     }
                     catch (Exception ex)
                     {
@@ -1384,7 +1384,6 @@ namespace TestRunner
             bool recordauditlogs = commandLineArgs.ArgAsBool("recordauditlogs"); // Replace or create audit logs for tutorial tests
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
-            bool logDriveInfo = commandLineArgs.ArgAsBool("driveinfo");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
@@ -1461,7 +1460,6 @@ namespace TestRunner
                 offscreen = true;
                 useVendorReaders = true;
                 showStatus = false;
-                logDriveInfo = false;
                 qualityMode = false;
                 pauseSeconds = 0;
             }
