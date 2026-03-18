@@ -42,7 +42,7 @@ namespace TestPerf
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfFeatureDetectionSIMscans.zip");
             TestFilesPersistent = new[] { RAW_FILE }; // keep the large raw file between runs
-            TestDirectoryName = "FeatureDetectionSIMscansTest";
+            TestDirectoryName = "HardklorSIMtest";
             RunFunctionalTest();
         }
 
