@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private const string OUTPUT_LIBRARY = @"output_library";
 
         // Processing file names
-        private const string OUTPUT_LIBRARY_FILE_NAME_BLIB = "SkylineAI_spectral_library.blib";
+        private const string OUTPUT_LIBRARY_FILE_NAME_BLIB = "carafe_spectral_library.blib";
         private const string OUTPUT_LIBRARY_FILE_NAME_CSV = @"test_res_fine_tuned.csv";
 
         private const string SPACE = TextUtil.SPACE;
@@ -153,6 +153,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         private static string JAVA_TMPDIR_PATH => Path.Combine(Environment.GetEnvironmentVariable("SystemRoot")!, @"Temp");
         private string CarafeJavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE);
+        private string CarafePythonDir => Path.Combine(CarafeJavaDir, @".venv", @"Scripts");
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         private DirectoryInfo JavaDirInfo => new DirectoryInfo(JavaDir);
         private string JavaSdkDownloadFileName => @"jdk-21_windows-x64_bin.zip";
@@ -491,6 +492,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             EnsureWorkDir(rootProcessingDir, PREFIX_WORKDIR);
 
             DbInputFilePath = dbInputFilePath;
+
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
@@ -529,6 +531,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             IrtStandard irtStandard) : base(document, trainingDocument, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
+
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
             LibraryParameters = libraryParameters;
@@ -899,18 +902,26 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
             progressStatus.ChangePercentComplete(0);
 
-            // Carafe 2.0 manages its own Python environment via its built-in PyInstaller,
-            // so we just run java directly without activating a Python venv.
-            var args = TextUtil.SpaceSeparate(
-                TextUtil.Quote(JavaExecutablePath)
-            );
+            // Carafe 2.0 includes a PyInstaller class that uses 'uv' to download
+            // Python 3.9.18 and install required packages (torch, etc.) into a .venv.
+            // We run PyInstaller first, then add the .venv/Scripts to PATH so that
+            // AIGear (which calls "python" by name) finds the installed Python.
+            var cmdBuilder = new StringBuilder();
+
+            // Step 1: Run Carafe's built-in PyInstaller to set up Python environment
+            cmdBuilder.AppendLine($@"{TextUtil.Quote(JavaExecutablePath)} -cp {TextUtil.Quote(CarafeJarFilePath)} main.java.util.PyInstaller {TextUtil.Quote(CarafeJavaDir)}");
+
+            // Step 2: Add the installed Python to PATH
+            cmdBuilder.AppendLine($@"set PATH={CarafePythonDir};%PATH%");
+
+            // Step 3: Run Carafe
+            var args = TextUtil.Quote(JavaExecutablePath);
 
             args += SPACE + TextUtil.SpaceSeparate(
                 commandArgs.Select(arg =>
                     arg.ToString())
             );
 
-            var cmdBuilder = new StringBuilder();
             cmdBuilder.Append(args).Append(SPACE);
 
             string batPath = Path.Combine(WorkDir, @"runCarafe.bat");

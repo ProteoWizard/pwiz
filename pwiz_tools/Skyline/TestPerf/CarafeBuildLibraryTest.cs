@@ -302,8 +302,8 @@ namespace TestPerf
             Assert.IsTrue(buildLibraryDlg.ButtonNextEnabled);
             const int waitTime = 30 * 60 * 1000;
 
-            // Carafe 2.0 manages its own Python via PyInstaller, so no Python
-            // installation dialogs are expected. Just click Finish and wait.
+            // Carafe 2.0 handles its own Python installation via uv (built into
+            // the JAR), so no Python installation dialogs are expected from Skyline.
             SkylineWindow.BeginInvoke(new Action(buildLibraryDlg.OkWizardPage));
             WaitForCondition(waitTime, () => buildLibraryDlgFinished || iRTtype != null && null != FindOpenForm<AddIrtPeptidesDlg>());
 
@@ -319,6 +319,7 @@ namespace TestPerf
                 OkDialog(addRtPredDlg, addRtPredDlg.OkDialog);
             }
 
+            // PauseTest();
             WaitForCondition(waitTime, () => buildLibraryDlgFinished);
             var carafeLibraryBuilder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;

@@ -457,6 +457,7 @@ namespace pwiz.Skyline.SettingsUI
                 _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
                 return false;
             }
+
             Builder = new CarafeLibraryBuilder(name, outputPath,
                 msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _trainingDocument,
                 labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard, out _testLibFilepath, out _libFilepath);
@@ -465,6 +466,8 @@ namespace pwiz.Skyline.SettingsUI
 
             return true;
         }
+
+
         private bool CreateAlphaBuilder(string name, string outputPath)
         {
             var doc = _documentUiContainer.DocumentUI;
