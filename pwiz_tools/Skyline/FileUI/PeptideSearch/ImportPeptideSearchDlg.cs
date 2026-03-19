@@ -312,7 +312,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MatchModificationsControl.Initialize(Document, preset);
 
             // Apply workflow and IRT settings (null means reset to defaults)
-            BuildPepSearchLibControl.WorkflowType = preset.WorkflowType ?? Workflow.dda;
+            if (!string.IsNullOrEmpty(preset.WorkflowType) &&
+                Enum.TryParse(preset.WorkflowType, out Workflow workflow))
+                BuildPepSearchLibControl.WorkflowType = workflow;
+            else
+                BuildPepSearchLibControl.WorkflowType = Workflow.dda;
             if (!string.IsNullOrEmpty(preset.IrtStandardName))
             {
                 var irtStandard = IrtStandard.ALL.FirstOrDefault(s => s.Name == preset.IrtStandardName);
@@ -397,7 +401,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             return new SearchSettingsPreset(
                 name,
-                SearchSettingsControl?.SelectedSearchEngine ?? SearchSettingsControl.SearchEngine.MSAmanda,
+                SearchSettingsControl?.SelectedSearchEngine ?? SearchEngine.MSAmanda,
                 GetToleranceSafe(() => SearchSettingsControl?.PrecursorTolerance),
                 GetToleranceSafe(() => SearchSettingsControl?.FragmentTolerance),
                 SearchSettingsControl?.MaxVariableMods ?? 2,
@@ -410,7 +414,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 ImportFastaControl?.MaxMissedCleavages ?? 0,
                 structuralModifications: structuralMods,
                 heavyModifications: heavyMods,
-                workflowType: BuildPepSearchLibControl.WorkflowType,
+                workflowType: BuildPepSearchLibControl.WorkflowType.ToString(),
                 irtStandardName: BuildPepSearchLibControl.IrtStandards?.Name,
                 hasExplicitModifications: true);
         }

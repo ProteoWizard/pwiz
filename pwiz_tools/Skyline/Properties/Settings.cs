@@ -1741,7 +1741,7 @@ namespace pwiz.Skyline.Properties
         {
             yield return new SearchSettingsPreset(
                 "Default",
-                SearchSettingsControl.SearchEngine.MSAmanda,
+                SearchEngine.MSAmanda,
                 new MzTolerance(0, MzTolerance.Units.ppm),
                 new MzTolerance(0, MzTolerance.Units.ppm),
                 maxVariableMods: 2,

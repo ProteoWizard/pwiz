@@ -86,8 +86,8 @@ namespace TestPerf
         protected override void DoTest()
         {
             var searchEngine = IsRecordingScreenShots
-                ? SearchSettingsControl.SearchEngine.MSAmanda
-                : SearchSettingsControl.SearchEngine.MSFragger;
+                ? SearchEngine.MSAmanda
+                : SearchEngine.MSFragger;
             TestSearch(searchEngine);
         }
 
@@ -97,7 +97,7 @@ namespace TestPerf
         protected override bool IsRecordMode => false;
 
         private bool RedownloadTools => !IsRecordMode && !IsRecordAuditLogForTutorials && IsPass0;
-        private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchSettingsControl.SearchEngine.MSFragger);
+        private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchEngine.MSFragger);
 
         private Image _searchLogImage;
 
@@ -112,7 +112,7 @@ namespace TestPerf
         /// <summary>
         /// Test that the "Match Modifications" page of the Import Peptide Search wizard gets skipped.
         /// </summary>
-        private void TestSearch(SearchSettingsControl.SearchEngine searchEngine)
+        private void TestSearch(SearchEngine searchEngine)
         {
             PrepareDocument("TestDdaTutorial.sky");
 
@@ -230,13 +230,13 @@ namespace TestPerf
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
                 // Using the default q value of 0.01 (FDR 1%) is best for teaching and requires less explaining
                 // importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
-                if (searchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                if (searchEngine == SearchEngine.MSFragger)
                 {
                     importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
                     importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
                     //importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("keep-intermediate-files", "True");
                 }
-                else if (searchEngine == SearchSettingsControl.SearchEngine.Comet)
+                else if (searchEngine == SearchEngine.Comet)
                 {
                     importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(0.02);
                     importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("auto_peptide_mass_tolerance", "fail");
@@ -275,7 +275,7 @@ namespace TestPerf
             // Handle download dialogs if necessary
             if (RedownloadTools || HasMissingDependencies)
             {
-                if (searchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                if (searchEngine == SearchEngine.MSFragger)
                 {
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                     if (msfraggerDownloaderDlg != null)
@@ -286,7 +286,7 @@ namespace TestPerf
                     }
                 }
 
-                if (searchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
+                if (searchEngine != SearchEngine.MSAmanda)
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
@@ -328,7 +328,7 @@ namespace TestPerf
             }
 
             bool isNotAmanda = false;
-            RunUI(() => isNotAmanda = importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchSettingsControl.SearchEngine.MSAmanda);
+            RunUI(() => isNotAmanda = importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchEngine.MSAmanda);
 
             // clicking 'Finish' (Next) will run ImportFasta
             AssociateProteinsDlg emptyProteinsDlg;
@@ -452,7 +452,7 @@ namespace TestPerf
             VerifyPresetInNewWizard(SEARCH_PRESET_NAME, searchEngine);
         }
 
-        private void VerifyPresetInNewWizard(string presetName, SearchSettingsControl.SearchEngine expectedEngine)
+        private void VerifyPresetInNewWizard(string presetName, SearchEngine expectedEngine)
         {
             var preset = Settings.Default.SearchSettingsPresets.FirstOrDefault(p => p.Name == presetName);
             Assert.IsNotNull(preset, $"Preset '{presetName}' should exist in settings");

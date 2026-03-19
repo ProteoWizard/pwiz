@@ -27,18 +27,28 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
+    public enum SearchEngine
+    {
+        MSAmanda,
+        MSGFPlus,
+        MSFragger,
+        Comet,
+        Tide,
+        Hardklor
+    }
+
+
     [XmlRoot("search_workflow")]
     public sealed class SearchSettingsPreset : Immutable, IKeyContainer<string>, IXmlSerializable
     {
         // Search engine settings
         public string Name { get; private set; }
-        public SearchSettingsControl.SearchEngine SearchEngine { get; private set; }
+        public SearchEngine SearchEngine { get; private set; }
         public double PrecursorToleranceValue { get; private set; }
         public MzTolerance.Units PrecursorToleranceUnit { get; private set; }
         public double FragmentToleranceValue { get; private set; }
@@ -63,11 +73,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         public bool HasExplicitModifications { get; private set; }
 
         // Workflow settings
-        public ImportPeptideSearchDlg.Workflow? WorkflowType { get; private set; }
+        public string WorkflowType { get; private set; }
         public string IrtStandardName { get; private set; }
 
         public SearchSettingsPreset(string name,
-            SearchSettingsControl.SearchEngine searchEngine,
+            SearchEngine searchEngine,
             MzTolerance precursorTolerance,
             MzTolerance fragmentTolerance,
             int maxVariableMods,
@@ -83,7 +93,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             bool autoTrain = false,
             IEnumerable<StaticMod> structuralModifications = null,
             IEnumerable<StaticMod> heavyModifications = null,
-            ImportPeptideSearchDlg.Workflow? workflowType = null,
+            string workflowType = null,
             string irtStandardName = null,
             bool hasExplicitModifications = false)
             : this(name, searchEngine, precursorTolerance, fragmentTolerance, maxVariableMods,
@@ -94,7 +104,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
 
         public SearchSettingsPreset(string name,
-            SearchSettingsControl.SearchEngine searchEngine,
+            SearchEngine searchEngine,
             MzTolerance precursorTolerance,
             MzTolerance fragmentTolerance,
             int maxVariableMods,
@@ -110,7 +120,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             bool autoTrain = false,
             IEnumerable<StaticMod> structuralModifications = null,
             IEnumerable<StaticMod> heavyModifications = null,
-            ImportPeptideSearchDlg.Workflow? workflowType = null,
+            string workflowType = null,
             string irtStandardName = null,
             bool hasExplicitModifications = false)
         {
@@ -275,7 +285,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public void ReadXml(XmlReader reader)
         {
             Name = reader.GetAttribute(ATTR.name);
-            SearchEngine = reader.GetEnumAttribute(ATTR.search_engine, SearchSettingsControl.SearchEngine.MSFragger);
+            SearchEngine = reader.GetEnumAttribute(ATTR.search_engine, SearchEngine.MSFragger);
             PrecursorToleranceValue = reader.GetDoubleAttribute(ATTR.precursor_tolerance_value, 10.0);
             PrecursorToleranceUnit = reader.GetEnumAttribute(ATTR.precursor_tolerance_unit, MzTolerance.Units.ppm);
             FragmentToleranceValue = reader.GetDoubleAttribute(ATTR.fragment_tolerance_value, 0.5);
@@ -290,10 +300,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             DecoyGenerationMethod = reader.GetAttribute(ATTR.decoy_generation_method);
             NumDecoys = reader.GetNullableDoubleAttribute(ATTR.num_decoys);
             AutoTrain = reader.GetBoolAttribute(ATTR.auto_train, false);
-            var workflowStr = reader.GetAttribute(ATTR.workflow_type);
-            WorkflowType = workflowStr != null
-                ? (ImportPeptideSearchDlg.Workflow?)Enum.Parse(typeof(ImportPeptideSearchDlg.Workflow), workflowStr)
-                : null;
+            WorkflowType = reader.GetAttribute(ATTR.workflow_type);
             IrtStandardName = reader.GetAttribute(ATTR.irt_standard_name);
             HasExplicitModifications = reader.GetBoolAttribute(ATTR.has_explicit_modifications, false);
 
@@ -358,8 +365,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             if (NumDecoys.HasValue)
                 writer.WriteAttribute(ATTR.num_decoys, NumDecoys.Value);
             writer.WriteAttribute(ATTR.auto_train, AutoTrain);
-            if (WorkflowType.HasValue)
-                writer.WriteAttributeString(ATTR.workflow_type.ToString(), WorkflowType.Value.ToString());
+            writer.WriteAttributeIfString(ATTR.workflow_type, WorkflowType);
             writer.WriteAttributeIfString(ATTR.irt_standard_name, IrtStandardName);
             writer.WriteAttribute(ATTR.has_explicit_modifications, HasExplicitModifications);
 

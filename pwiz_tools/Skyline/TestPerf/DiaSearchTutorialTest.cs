@@ -203,7 +203,7 @@ namespace TestPerf
         }
 
         private bool RedownloadTools => !IsRecordMode && !IsRecordAuditLogForTutorials;
-        private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchSettingsControl.SearchEngine.MSFragger);
+        private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchEngine.MSFragger);
 
         private Image _searchLogImage;
 
@@ -501,7 +501,7 @@ namespace TestPerf
             }
 
             bool isNotAmanda = false;
-            RunUI(() => isNotAmanda = importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchSettingsControl.SearchEngine.MSAmanda);
+            RunUI(() => isNotAmanda = importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchEngine.MSAmanda);
 
             // clicking 'Finish' (Next) will run ImportFasta
             AssociateProteinsDlg emptyProteinsDlg;

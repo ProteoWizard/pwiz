@@ -73,8 +73,8 @@ namespace pwiz.SkylineTestFunctional
 
         public class DdaTestSettings
         {
-            private SearchSettingsControl.SearchEngine _searchEngine;
-            public SearchSettingsControl.SearchEngine SearchEngine
+            private SearchEngine _searchEngine;
+            public SearchEngine SearchEngine
             {
                 get => _searchEngine;
                 set
@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSettings = new DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.MSAmanda,
+                SearchEngine = SearchEngine.MSAmanda,
                 FragmentIons = "b, y",
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSettings = new DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.MSGFPlus,
+                SearchEngine = SearchEngine.MSGFPlus,
                 FragmentIons = "CID",
                 Ms2Analyzer = "Orbitrap/FTICR/Lumos",
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSettings = new DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.Comet,
+                SearchEngine = SearchEngine.Comet,
                 FragmentIons = "b,y",
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
@@ -180,7 +180,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSettings = new DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.Comet,
+                SearchEngine = SearchEngine.Comet,
                 FragmentIons = "b,y",
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
@@ -212,7 +212,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSettings = new DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.Tide,
+                SearchEngine = SearchEngine.Tide,
                 FragmentIons = "b,y",
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
@@ -234,7 +234,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSettings = new DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.MSFragger,
+                SearchEngine = SearchEngine.MSFragger,
                 FragmentIons = "b,y",
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
@@ -261,7 +261,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSettings = new DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.MSFragger,
+                SearchEngine = SearchEngine.MSFragger,
                 FragmentIons = "b,y",
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
@@ -320,7 +320,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSettings = new DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.Comet,
+                SearchEngine = SearchEngine.Comet,
                 FragmentIons = "b,y",
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
@@ -345,7 +345,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Default preset (built-in)
             const string DEFAULT_PRESET_NAME = "Default";
-            const SearchSettingsControl.SearchEngine DEFAULT_ENGINE = SearchSettingsControl.SearchEngine.MSAmanda;
+            const SearchEngine DEFAULT_ENGINE = SearchEngine.MSAmanda;
             const int DEFAULT_MAX_VARIABLE_MODS = 2;
             const double DEFAULT_CUTOFF = 0.01;
             const int DEFAULT_MISSED_CLEAVAGES = 0;
@@ -353,7 +353,7 @@ namespace pwiz.SkylineTestFunctional
             // Preset 1: MSAmanda DDA with specific tolerances and FASTA settings
             const string PRESET_1_NAME = "MSAmanda - Test Config";
             const ImportPeptideSearchDlg.Workflow PRESET_1_WORKFLOW = ImportPeptideSearchDlg.Workflow.dda;
-            const SearchSettingsControl.SearchEngine PRESET_1_ENGINE = SearchSettingsControl.SearchEngine.MSAmanda;
+            const SearchEngine PRESET_1_ENGINE = SearchEngine.MSAmanda;
             const double PRESET_1_PRECURSOR_TOL = 10;
             const MzTolerance.Units PRESET_1_PRECURSOR_UNIT = MzTolerance.Units.ppm;
             const double PRESET_1_FRAGMENT_TOL = 20;
@@ -369,7 +369,7 @@ namespace pwiz.SkylineTestFunctional
             // Preset 2: Comet DDA with different tolerances and FASTA settings
             const string PRESET_2_NAME = "Comet - Test Config";
             const ImportPeptideSearchDlg.Workflow PRESET_2_WORKFLOW = ImportPeptideSearchDlg.Workflow.dda;
-            const SearchSettingsControl.SearchEngine PRESET_2_ENGINE = SearchSettingsControl.SearchEngine.Comet;
+            const SearchEngine PRESET_2_ENGINE = SearchEngine.Comet;
             const double PRESET_2_PRECURSOR_TOL = 25;
             const MzTolerance.Units PRESET_2_PRECURSOR_UNIT = MzTolerance.Units.ppm;
             const double PRESET_2_FRAGMENT_TOL = 1.0005;
@@ -996,7 +996,7 @@ namespace pwiz.SkylineTestFunctional
 
             if (RedownloadTools || TestSettings.HasMissingDependencies)
             {
-                if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                if (TestSettings.SearchEngine == SearchEngine.MSFragger)
                 {
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                     if (msfraggerDownloaderDlg != null)
@@ -1016,7 +1016,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (TestSettings.SearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
+                if (TestSettings.SearchEngine != SearchEngine.MSAmanda)
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
@@ -1160,7 +1160,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
 
                     // If this message is seen, the default config needs to be updated.
-                    if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                    if (TestSettings.SearchEngine == SearchEngine.MSFragger)
                     {
                         const string parameterNotSuppliedMessage = @"was not supplied. Using default value";
                         Assert.IsFalse(
@@ -1187,10 +1187,10 @@ namespace pwiz.SkylineTestFunctional
             foreach(var requiredFile in requiredFiles)
                 Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType));
             
-            if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+            if (TestSettings.SearchEngine == SearchEngine.MSFragger)
                 StringAssert.Matches(Settings.Default.SearchToolList[SearchToolType.Java].ExtraCommandlineArgs, new Regex(@"-Xmx\d+M"));
             
-            if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.Comet)
+            if (TestSettings.SearchEngine == SearchEngine.Comet)
             {
                 Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(SearchToolType.CruxComet));
                 Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(SearchToolType.CruxPercolator));
