@@ -54,6 +54,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 
 namespace pwiz.Skyline.Properties
 {    
@@ -1448,6 +1449,7 @@ namespace pwiz.Skyline.Properties
     {        
     }
 
+    [LlmName("External Tools")]
     public sealed class ToolList : SettingsList<ToolDescription>
     {
         public override IEnumerable<ToolDescription> GetDefaults(int revisionIndex)
@@ -1488,7 +1490,8 @@ namespace pwiz.Skyline.Properties
         }
     }
 
-    public sealed class EnzymeList : SettingsList<Enzyme>
+    [LlmName("Enzymes")]
+    public sealed class EnzymeList : SettingsList<Enzyme>, ISettingsListDocumentSelection
     {
         public static Enzyme GetDefault()
         {
@@ -1548,9 +1551,18 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return PropertiesResources.EnzymeList_Title_Edit_Enzymes; } }
 
         public override string Label { get { return PropertiesResources.EnzymeList_Label_Enzymes; } }
+
+        public bool SingleSelect => true;
+
+        public string[] GetSelectedItems(SrmSettings settings) =>
+            new[] { settings.PeptideSettings.Enzyme.GetKey() };
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangePeptideSettings(settings.PeptideSettings.ChangeEnzyme(ResolveKey(keys)));
     }
 
-    public sealed class PeptideExcludeList : SettingsList<PeptideExcludeRegex>
+    [LlmName("Peptide Exclusions")]
+    public sealed class PeptideExcludeList : SettingsList<PeptideExcludeRegex>, ISettingsListDocumentSelection
     {
         public override IEnumerable<PeptideExcludeRegex> GetDefaults(int revisionIndex)
         {
@@ -1587,8 +1599,17 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return PropertiesResources.PeptideExcludeList_Title_Edit_Exclusions; } }
 
         public override string Label { get { return PropertiesResources.PeptideExcludeList_Label_Exclusions; } }
+
+        public bool SingleSelect => false;
+
+        public string[] GetSelectedItems(SrmSettings settings) => GetKeys(settings.PeptideSettings.Filter.Exclusions);
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangePeptideSettings(settings.PeptideSettings.ChangeFilter(
+                settings.PeptideSettings.Filter.ChangeExclusions(ResolveKeys(keys))));
     }
 
+    [LlmName("Servers")]
     public sealed class ServerList : SettingsList<Server>
     {
         public override IEnumerable<Server>  GetDefaults(int revisionIndex)
@@ -1661,6 +1682,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Search Tools")]
     public sealed class SearchToolList : SettingsList<SearchTool>
     {
         public override IEnumerable<SearchTool> GetDefaults(int revisionIndex)
@@ -1740,7 +1762,8 @@ namespace pwiz.Skyline.Properties
     }
 
 
-    public sealed class SpectralLibraryList : SettingsListNotifying<LibrarySpec>
+    [LlmName("Spectral Libraries")]
+    public sealed class SpectralLibraryList : SettingsListNotifying<LibrarySpec>, ISettingsListDocumentSelection
     {
         public override IEnumerable<LibrarySpec> GetDefaults(int revisionIndex)
         {
@@ -1782,9 +1805,18 @@ namespace pwiz.Skyline.Properties
         {
             return PeptideLibraries.LibrarySpecXmlHelpers;
         }
+
+        public bool SingleSelect => false;
+
+        public string[] GetSelectedItems(SrmSettings settings) =>
+            GetKeys(settings.PeptideSettings.Libraries.LibrarySpecs.Where(spec => spec != null));
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangePeptideLibraries(libs => libs.ChangeLibrarySpecs(ResolveKeys(keys)));
     }
 
-    public sealed class BackgroundProteomeList : SettingsList<BackgroundProteomeSpec>
+    [LlmName("Background Proteomes")]
+    public sealed class BackgroundProteomeList : SettingsList<BackgroundProteomeSpec>, ISettingsListDocumentSelection
     {
         private static readonly BackgroundProteomeSpec NONE = new BackgroundProteomeSpec(ELEMENT_NONE, string.Empty);
 
@@ -1851,9 +1883,22 @@ namespace pwiz.Skyline.Properties
         {
             get { return 1; }
         }
+
+        public bool SingleSelect => true;
+
+        public string[] GetSelectedItems(SrmSettings settings)
+        {
+            var bg = settings.PeptideSettings.BackgroundProteome;
+            return bg == null || bg.IsNone ? Array.Empty<string>() : new[] { bg.GetKey() };
+        }
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangePeptideSettings(settings.PeptideSettings.ChangeBackgroundProteome(
+                new BackgroundProteome(ResolveKey(keys))));
     }
 
-    public sealed class StaticModList : SettingsList<StaticMod>
+    [LlmName("Structural Modifications")]
+    public sealed class StaticModList : SettingsList<StaticMod>, ISettingsListDocumentSelection
     {
         public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine";
         public const string DEFAULT_NAME = "Carbamidomethyl (C)";
@@ -1896,9 +1941,18 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return PropertiesResources.StaticModList_Title_Edit_Structural_Modifications; } }
 
         public override string Label { get { return PropertiesResources.StaticModList_Label_Modifications; } }
+
+        public bool SingleSelect => false;
+
+        public string[] GetSelectedItems(SrmSettings settings) =>
+            GetKeys(settings.PeptideSettings.Modifications.StaticModifications);
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangePeptideModifications(m => m.ChangeStaticModifications(ResolveKeys(keys)));
     }
 
-    public sealed class HeavyModList : SettingsList<StaticMod>
+    [LlmName("Isotope Modifications")]
+    public sealed class HeavyModList : SettingsList<StaticMod>, ISettingsListDocumentSelection
     {
         public static StaticMod[] GetDefaultsOn()
         {
@@ -1931,8 +1985,22 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return PropertiesResources.HeavyModList_Title_Edit_Isotope_Modifications; } }
 
         public override string Label { get { return PropertiesResources.StaticModList_Label_Modifications; } }
+
+        public bool SingleSelect => false;
+
+        public string[] GetSelectedItems(SrmSettings settings) =>
+            GetKeys(settings.PeptideSettings.Modifications.AllHeavyModifications);
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys)
+        {
+            var heavyType = settings.PeptideSettings.Modifications.GetHeavyModifications()
+                .Select(tm => tm.LabelType).FirstOrDefault() ?? IsotopeLabelType.heavy;
+            return settings.ChangePeptideModifications(m =>
+                m.ChangeModifications(heavyType, ResolveKeys(keys)));
+        }
     }
 
+    [LlmName("Collision Energy Regressions")]
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
     {
         public static readonly CollisionEnergyRegression NONE =
@@ -2193,6 +2261,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
+    [LlmName("Optimization Libraries")]
     public sealed class OptimizationLibraryList : SettingsList<OptimizationLibrary>
     {
         public override string GetDisplayName(OptimizationLibrary item)
@@ -2240,6 +2309,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
+    [LlmName("Declustering Potential Regressions")]
     public sealed class DeclusterPotentialList : SettingsList<DeclusteringPotentialRegression>
     {
         public static readonly DeclusteringPotentialRegression NONE =
@@ -2310,6 +2380,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
+    [LlmName("Compensation Voltage Parameters")]
     public sealed class CompensationVoltageList : SettingsList<CompensationVoltageParameters>
     {
         public static readonly CompensationVoltageParameters NONE = new CompensationVoltageParameters(ELEMENT_NONE, 0, 0, 0, 0, 0);
@@ -2373,6 +2444,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
     
+    [LlmName("Retention Time Calculators")]
     public sealed class RTScoreCalculatorList : SettingsListNotifying<RetentionScoreCalculatorSpec>
     {
         public static readonly RetentionScoreCalculator[] DEFAULTS =
@@ -2476,29 +2548,49 @@ namespace pwiz.Skyline.Properties
             return RetentionTimeRegression.CalculatorXmlHelpers;
         }
 
-        public void Initialize(IProgressMonitor loadMonitor)
+        public static RetentionScoreCalculatorSpec[] Initialize(RetentionScoreCalculatorSpec[] calculatorSpecs,
+            IProgressMonitor loadMonitor)
         {
-            foreach (var calc in this.ToArray())
-                Initialize(loadMonitor, calc);
+            var status = new ProgressStatus().ChangeSegments(0, calculatorSpecs.Length);
+            var list = new List<RetentionScoreCalculatorSpec>();
+            foreach (var calc in calculatorSpecs)
+            {
+                list.Add(Initialize(calc, loadMonitor, ref status));
+                status = status.NextSegment();
+                loadMonitor?.UpdateProgress(status);
+            }
+            return list.ToArray();
         }
 
-        public RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor, RetentionScoreCalculatorSpec calc)
+
+        public static RetentionScoreCalculatorSpec Initialize(RetentionScoreCalculatorSpec calc,
+            IProgressMonitor loadMonitor)
+        {
+            IProgressStatus status = new ProgressStatus();
+            return Initialize(calc, loadMonitor, ref status);
+        }
+
+        private static RetentionScoreCalculatorSpec Initialize(RetentionScoreCalculatorSpec calc,
+            IProgressMonitor loadMonitor, ref IProgressStatus status)
         {
             if (calc == null)
                 return null;
 
             try
             {
-                var calcInit = calc.Initialize(loadMonitor);
-                if (!Equals(calc.Name, XmlNamedElement.NAME_INTERNAL) && !ReferenceEquals(calcInit, calc))
-                    SetValue(calcInit);
-                calc = calcInit;
+                return calc.Initialize(loadMonitor, ref status);
             }
             catch (CalculatorException)
             {
                 //Consider: Should we really fail silently?
+                return calc;
             }
-            return calc;
+        }
+
+        public void SetInitializedValue(RetentionScoreCalculatorSpec calcOrig, RetentionScoreCalculatorSpec calcInit)
+        {
+            if (calcInit != null && !Equals(calcOrig.Name, XmlNamedElement.NAME_INTERNAL) && !ReferenceEquals(calcInit, calcOrig))
+                SetValue(calcInit);
         }
 
         public override string Title { get { return PropertiesResources.RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators; } }
@@ -2513,6 +2605,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("iRT Standards")]
     public sealed class IrtStandardList : SettingsList<IrtStandard>
     {
         public override IrtStandard EditItem(Control owner, IrtStandard item, IEnumerable<IrtStandard> existing,
@@ -2557,6 +2650,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults => 1;
     }
 
+    [LlmName("Ion Mobility Libraries")]
     public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrary>
     {
         public override bool AcceptList(Control owner, IList<IonMobilityLibrary> listNew)
@@ -2631,7 +2725,8 @@ namespace pwiz.Skyline.Properties
         }
     }
 
-    public sealed class PeakScoringModelList : SettingsListNotifying<PeakScoringModelSpec>
+    [LlmName("Peak Scoring Models")]
+    public sealed class PeakScoringModelList : SettingsListNotifying<PeakScoringModelSpec>, ISettingsListDocumentSelection
     {
         private static readonly PeakScoringModelSpec[] DEFAULTS =
         {
@@ -2691,8 +2786,23 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return PropertiesResources.PeakScoringModelList_Label_Peak_Scoring_Models; } }
 
         public override int ExcludeDefaults { get { return DEFAULTS.Length; } }
+
+        public bool SingleSelect => true;
+
+        public string[] GetSelectedItems(SrmSettings settings)
+        {
+            var model = settings.PeptideSettings.Integration.PeakScoringModel;
+            return model == null || model is LegacyScoringModel
+                ? Array.Empty<string>()
+                : new[] { model.GetKey() };
+        }
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangePeptideSettings(settings.PeptideSettings.ChangeIntegration(
+                settings.PeptideSettings.Integration.ChangePeakScoringModel(ResolveKey(keys))));
     }
-    
+
+    [LlmName("Retention Time Regressions")]
     public sealed class RetentionTimeList : SettingsList<RetentionTimeRegression>
     {
         private static readonly RetentionTimeRegression NONE =
@@ -2747,7 +2857,8 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
-    public sealed class MeasuredIonList : SettingsList<MeasuredIon>
+    [LlmName("Special Ions")]
+    public sealed class MeasuredIonList : SettingsList<MeasuredIon>, ISettingsListDocumentSelection
     {
         public static readonly MeasuredIon NTERM_PROLINE =
             new MeasuredIon(@"N-terminal to Proline", @"P", null, SequenceTerminus.N, 3);
@@ -2842,8 +2953,17 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return PropertiesResources.MeasuredIonList_Title_Edit_Special_Ions; } }
 
         public override string Label { get { return PropertiesResources.MeasuredIonList_Label_Special_ion; } }
+
+        public bool SingleSelect => false;
+
+        public string[] GetSelectedItems(SrmSettings settings) =>
+            GetKeys(settings.TransitionSettings.Filter.MeasuredIons);
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangeTransitionFilter(f => f.ChangeMeasuredIons(ResolveKeys(keys)));
     }
 
+    [LlmName("Isotope Labeling Enrichments")]
     public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
     {
         public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(@"Default",   // Persisted in XML
@@ -2893,6 +3013,7 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return PropertiesResources.IsotopeEnrichmentsList_Label_Isotope_labeling_entrichment; } }        
     }
 
+    [LlmName("Isolation Schemes")]
     public sealed class IsolationSchemeList : SettingsList<IsolationScheme>
     {
         public override int RevisionIndexCurrent { get { return 2; } }
@@ -3221,6 +3342,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Settings Profiles")]
     public sealed class SrmSettingsList : SerializableSettingsList<SrmSettings>
     {
         public const string EXT_SETTINGS = ".skys";
@@ -3395,6 +3517,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Legacy Reports")]
     public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
         /// <summary>
@@ -3557,7 +3680,8 @@ namespace pwiz.Skyline.Properties
     {
     }
 
-    public sealed class AnnotationDefList : SettingsList<AnnotationDef>, IListSerializer<AnnotationDef>
+    [LlmName("Annotations")]
+    public sealed class AnnotationDefList : SettingsList<AnnotationDef>, IListSerializer<AnnotationDef>, ISettingsListDocumentSelection
     {
         public override IEnumerable<AnnotationDef> GetDefaults(int revisionIndex)
         {
@@ -3596,8 +3720,16 @@ namespace pwiz.Skyline.Properties
         {
             return new AnnotationDefList();
         }
+
+        public bool SingleSelect => false;
+
+        public string[] GetSelectedItems(SrmSettings settings) => GetKeys(settings.DataSettings.AnnotationDefs);
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangeDataSettings(settings.DataSettings.ChangeAnnotationDefs(ResolveKeys(keys)));
     }
 
+    [LlmName("Color Schemes")]
     public class ColorSchemeList : SettingsList<ColorScheme>, IListSerializer<ColorScheme>
     {
         // Great websites for generating/finding schemes
@@ -3896,6 +4028,33 @@ namespace pwiz.Skyline.Properties
         public override bool AllowReset { get { return true; } }
     }
 
+    /// <summary>
+    /// Interface for settings lists that support document-level item selection.
+    /// Lists implementing this interface allow getting and setting which items
+    /// from the global settings list are active in the current document.
+    /// </summary>
+    public interface ISettingsListDocumentSelection
+    {
+        bool SingleSelect { get; }
+        string[] GetSelectedItems(SrmSettings settings);
+        SrmSettings SetSelectedItems(SrmSettings settings, string[] keys);
+    }
+
+    /// <summary>
+    /// Thrown by <see cref="ISettingsListDocumentSelection.SetSelectedItems"/> when
+    /// one or more requested item keys are not found in the settings list.
+    /// </summary>
+    public class SettingsListItemNotFoundException : KeyNotFoundException
+    {
+        public string ItemKey { get; }
+
+        public SettingsListItemNotFoundException(string itemKey)
+            : base(itemKey)
+        {
+            ItemKey = itemKey;
+        }
+    }
+
     public abstract class SettingsListBase<TItem>
         : XmlMappedList<string, TItem>, IListDefaults<TItem>, IListEditor<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>, IXmlSerializable
@@ -3909,6 +4068,40 @@ namespace pwiz.Skyline.Properties
         {
             return GetDefaults(RevisionIndexCurrent);
         }
+
+        #region ISettingsListDocumentSelection Support
+        
+        /// <summary>
+        /// Resolves a single item key, validating that exactly one key is provided.
+        /// Throws <see cref="SettingsListItemNotFoundException"/> if the key is not found.
+        /// </summary>
+        protected TItem ResolveKey(string[] keys)
+        {
+            Assume.IsTrue(keys.Length == 1);
+            if (!TryGetValue(keys[0], out var item))
+                throw new SettingsListItemNotFoundException(keys[0]);
+            return item;
+        }
+
+        /// <summary>
+        /// Resolves an array of item keys to items in this list.
+        /// Throws <see cref="SettingsListItemNotFoundException"/> for any key not found.
+        /// </summary>
+        protected TItem[] ResolveKeys(string[] keys)
+        {
+            return keys.Select(key =>
+            {
+                if (!TryGetValue(key, out var item))
+                    throw new SettingsListItemNotFoundException(key);
+                return item;
+            }).ToArray();
+        }
+        protected string[] GetKeys(IEnumerable<TItem> items)
+        {
+            return items.Select(item => item.GetKey()).ToArray();
+        }
+
+        #endregion
 
         #region IListDefaults<TValue> Members
 

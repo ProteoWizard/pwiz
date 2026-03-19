@@ -324,6 +324,9 @@
   <data name="_memstamp" xml:space="preserve">
     <value>All logging output will be preceded by two memory usage values managed and process private bytes in MB, rounded to the nearest MB.</value>
   </data>
+  <data name="_open" xml:space="preserve">
+    <value>Synonym for --in. Open a Skyline file.</value>
+  </data>
   <data name="_out" xml:space="preserve">
     <value>Same as save except writes to the specified file</value>
   </data>
@@ -377,6 +380,9 @@
   </data>
   <data name="_save" xml:space="preserve">
     <value>Saves any changes to the file</value>
+  </data>
+  <data name="_save_as" xml:space="preserve">
+    <value>Synonym for --out. Save to the specified file.</value>
   </data>
   <data name="_share_type" xml:space="preserve">
     <value>Specifies the type, 'minimal' or 'complete', of archive to share when --share-zip is specified. Minimal is the default attempting to reduce the size of the archive to the minimum necessary to represent the targets in the document while 'complete' maintains full fidelity of all project files.</value>
@@ -452,6 +458,9 @@
   </data>
   <data name="CommandArgs_Usage_para4" xml:space="preserve">
     <value>The Skyline command-line interface is intended for automating tasks such as quality control, scheduling and refinement, during acquisition.  With the Skyline command-line interface, you can open a Skyline document, import a newly acquired data file, and export a report or new method. You can also run large-scale chromatogram extraction and peak picking for proteomewide DIA and DDA experiments faster and consuming less memory than using the full graphic user interface. (See Webinar 14: https://skyline.ms/webinar14.url)</value>
+  </data>
+  <data name="CommandArgs_Usage_No_help_section_matching___0___found__Use___help_sections_to_list_available_sections_" xml:space="preserve">
+    <value>No help section matching '{0}' found. Use --help=sections to list available sections.</value>
   </data>
   <data name="CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_" xml:space="preserve">
     <value>Until the section titled Settings Customization all other command line arguments rely on the '--in' argument because they all rely on having a Skyline document open.</value>

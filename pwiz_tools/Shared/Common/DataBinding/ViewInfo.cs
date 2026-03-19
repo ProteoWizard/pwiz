@@ -19,6 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
@@ -65,23 +68,6 @@ namespace pwiz.Common.DataBinding
             }
             
             Filters = Array.AsReadOnly(filters.ToArray());
-            var sorts = new List<KeyValuePair<int, DisplayColumn>>();
-            for (int i = 0; i < DisplayColumns.Count; i++)
-            {
-                if (DisplayColumns[i].ColumnSpec.SortDirection != null)
-                {
-                    sorts.Add(new KeyValuePair<int, DisplayColumn>(i, DisplayColumns[i]));
-                }
-            }
-            if (sorts.Count > 0)
-            {
-                sorts.Sort(CompareSortEntries);
-                SortColumns = Array.AsReadOnly(sorts.Select(kvp => kvp.Value).ToArray());
-            }
-            else
-            {
-                SortColumns = new DisplayColumn[0];
-            }
         }
         public ViewSpec GetViewSpec()
         {
@@ -123,7 +109,6 @@ namespace pwiz.Common.DataBinding
         public string RowSourceName { get; private set; }
         public PropertyPath SublistId { get; private set; }
         public IList<DisplayColumn> DisplayColumns { get; private set; }
-        public IList<DisplayColumn> SortColumns { get; private set; }
         public IList<FilterInfo> Filters { get; private set; }
         public IEnumerable<ColumnDescriptor> AllColumnDescriptors { get { return _columnDescriptors.Values.ToArray(); } }
         public ICollection<ColumnDescriptor> GetCollectionColumns()
@@ -169,15 +154,42 @@ namespace pwiz.Common.DataBinding
             return columnDescriptor;
         }
 
-        private int CompareSortEntries(KeyValuePair<int, DisplayColumn> kvp1, KeyValuePair<int, DisplayColumn> kvp2)
+        public StreamingRowItemEnumerator GetStreamingRowItemEnumerator(CancellationToken cancellationToken,
+            IRowSource rowSource)
         {
-            var sortIndex1 = kvp1.Value.ColumnSpec.SortIndex;
-            var sortIndex2 = kvp2.Value.ColumnSpec.SortIndex;
-            if (sortIndex1.HasValue && sortIndex2.HasValue)
+            if (HasTotals)
             {
-                return sortIndex1.Value.CompareTo(sortIndex2.Value);
+                return null;
             }
-            return kvp1.Key.CompareTo(kvp2.Key);
+            var pivoter = new Pivoter(this);
+            if (pivoter.CollectionColumns.Count > pivoter.SublistColumns.Count + 1 || pivoter.PivotColumns.Count > 0)
+            {
+                return null;
+            }
+
+            var sourceItems = new List<RowItem>();
+            foreach (var item in rowSource.GetItems())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                sourceItems.Add(new RowItem(item));
+            }
+
+            return GetStreamingRowItemEnumerator(sourceItems, sourceItems.Count, pivoter);
+        }
+
+        private StreamingRowItemEnumerator GetStreamingRowItemEnumerator(IEnumerable<RowItem> sourceItems,
+            long? sourceItemCount, Pivoter pivoter)
+        {
+            long? rowCount = null;
+            if (pivoter.CollectionColumns.Count == 1 && Filters.Count == 0)
+            {
+                rowCount = sourceItemCount;
+            }
+            var itemProperties = new ItemProperties(pivoter.GetItemProperties(BigList<RowItem>.Empty));
+            return new StreamingRowItemEnumerator(sourceItems, sourceItemCount, pivoter.ExpandAndFilter, rowCount)
+            {
+                ItemProperties = itemProperties
+            };
         }
     }
 }

@@ -175,6 +175,9 @@
       <Component Id="DigitalRune.Windows.Docking.dll">
         <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="DigitalRune.Windows.Docking.pdb">
+        <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.pdb" KeyPath="yes"/>
+      </Component>
       <Component Id="DotNetZip.dll">
         <File Source="$(var.Skyline.TargetDir)/DotNetZip.dll" KeyPath="yes"/>
       </Component>
@@ -251,6 +254,9 @@
       <?endif?>
       <Component Id="NHibernate.dll">
         <File Source="$(var.Skyline.TargetDir)/NHibernate.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="ParquetNet.dll">
+        <File Source="$(var.Skyline.TargetDir)/ParquetNet.dll" KeyPath="yes"/>
       </Component>
       <Component Id="parquet.dll">
         <File Source="$(var.Skyline.TargetDir)/parquet.dll" KeyPath="yes"/>
@@ -389,6 +395,9 @@
       </Component>
       <Component Id="System.Interactive.Async.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Interactive.Async.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="System.Reflection.Emit.Lightweight.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Reflection.Emit.Lightweight.dll" KeyPath="yes"/>
       </Component>
       <Component Id="unimod.obo">
         <File Source="$(var.Skyline.TargetDir)/unimod.obo" KeyPath="yes"/>

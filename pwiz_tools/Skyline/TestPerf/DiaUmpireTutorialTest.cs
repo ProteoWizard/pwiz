@@ -127,9 +127,10 @@ namespace TestPerf
 
         protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
-            var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
-            graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
-            return bmp;
+            var result = base.ProcessCoverShot(bmp);
+            using var graph = Graphics.FromImage(result);
+            graph.DrawImageUnscaled(_searchLogImage, result.Width - _searchLogImage.Width - 10, result.Height - _searchLogImage.Height - 30);
+            return result;
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
@@ -466,7 +467,7 @@ namespace TestPerf
             });
             RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
             {
-                importRangesDlg.CurrentDirectory = new MsDataFilePath(diaDir);
+                importRangesDlg.SetCurrentDirectory(new MsDataFilePath(diaDir));
                 importRangesDlg.SelectFile(DiaFiles[0]);
                 importRangesDlg.Open();
             });
@@ -579,7 +580,8 @@ namespace TestPerf
             {
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
                 WaitForConditionUI(WAIT_TIME * 4, () => importPeptideSearchDlg.SearchControl.PercentComplete > 17);
-                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA search progress page");
+                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA search progress page", null,
+                    bmp => bmp.CleanupBorder().FillProgressBar(importPeptideSearchDlg.SearchControl.ProgressBar));
 
                 WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
                 RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));

@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         // Cache stores results paired with their source document
         private readonly ConcurrentDictionary<int, CacheEntry> _localCache = new ConcurrentDictionary<int, CacheEntry>();
-        private readonly Dictionary<int, CompletionListener> _pendingListeners = new Dictionary<int, CompletionListener>();
+        private readonly ConcurrentDictionary<int, CompletionListener> _pendingListeners = new ConcurrentDictionary<int, CompletionListener>();
         private object _cachedSettings;
         private int _currentCacheKey = int.MinValue;
 
@@ -161,10 +161,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _localCache.TryRemove(key, out _);
                 // Also clean up any pending listener for this key
-                if (_pendingListeners.TryGetValue(key, out var listener))
+                if (_pendingListeners.TryRemove(key, out var listener))
                 {
                     listener.Unlisten();
-                    _pendingListeners.Remove(key);
                 }
             }
         }
@@ -282,10 +281,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _localCache.TryRemove(key, out _);
                     // Also clean up any pending listener for this key
-                    if (_pendingListeners.TryGetValue(key, out var listener))
+                    if (_pendingListeners.TryRemove(key, out var listener))
                     {
                         listener.Unlisten();
-                        _pendingListeners.Remove(key);
                     }
                 }
             }
@@ -329,19 +327,28 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void KeepCalculationAlive(int cacheKey)
         {
-            // Don't add duplicate listeners
-            if (_pendingListeners.ContainsKey(cacheKey))
-                return;
-
             // Get the current work order before the Receiver switches away from it
             var workOrder = _receiver.CurrentWorkOrder;
             if (workOrder == null)
                 return;
 
             // Add our completion listener to keep the calculation running
+            // TryAdd atomically checks for existing key and adds if not present
             var listener = new CompletionListener(this, cacheKey, workOrder);
-            _pendingListeners[cacheKey] = listener;
-            _receiver.Cache.Listen(workOrder, listener);
+            if (_pendingListeners.TryAdd(cacheKey, listener))
+            {
+                _receiver.Cache.Listen(workOrder, listener);
+
+                // If the result became available between the IsProcessing() check
+                // and Cache.Listen, the CompletionListener missed the notification
+                // from NotifyResultAvailable (which snapshots listeners before we
+                // were added). Check now and handle it directly.
+                var result = _receiver.Cache.GetResult(workOrder);
+                if (result != null)
+                {
+                    listener.OnProductAvailable(workOrder, result);
+                }
+            }
         }
 
         /// <summary>
@@ -418,7 +425,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 // Clean up: unlisten and remove from pending
                 Unlisten();
-                _owner._pendingListeners.Remove(_cacheKey);
+                _owner._pendingListeners.TryRemove(_cacheKey, out _);
             }
 
             public void OnProductStatusChanged(WorkOrder key, int progress)
@@ -439,31 +446,34 @@ namespace pwiz.Skyline.Controls.Graphs
 
         #region Cache tracking for tests
 
-        /// <summary>
-        /// When true, records all cached results for later inspection by tests.
-        /// Use ScopedAction to enable/disable around test code.
-        /// Setting to true clears any previously tracked results.
-        /// </summary>
-        public static bool TrackCaching
-        {
-            get => _trackCaching;
-            set
-            {
-                _trackCaching = value;
-                if (value)
-                    _cachedSinceTracked = new List<TResult>();
-                // Don't clear on false - test needs to read the results
-            }
-        }
-
         // ReSharper disable once StaticMemberInGenericType
         private static bool _trackCaching;
         private static List<TResult> _cachedSinceTracked;
 
         /// <summary>
-        /// Returns all results cached since TrackCaching was enabled.
-        /// Use First() to get the initial (full) calculation after document reopen.
-        /// Subsequent entries should be incremental updates with zero recalculation.
+        /// Begin recording cached results for test inspection.
+        /// Clears any stale results from a previous tracking session.
+        /// Use with <see cref="EndTrackCaching"/> in a ScopedAction.
+        /// </summary>
+        public static void StartTrackCaching()
+        {
+            _cachedSinceTracked = new List<TResult>();
+            _trackCaching = true;
+        }
+
+        /// <summary>
+        /// Stop recording and release all tracked results to free references
+        /// (e.g., SrmDocument held by GraphData).
+        /// </summary>
+        public static void EndTrackCaching()
+        {
+            _trackCaching = false;
+            _cachedSinceTracked = null;
+        }
+
+        /// <summary>
+        /// Returns all results cached since StartTrackCaching was called.
+        /// Must be read before EndTrackCaching clears the list.
         /// </summary>
         public static IEnumerable<TResult> CachedSinceTracked =>
             _cachedSinceTracked ?? Enumerable.Empty<TResult>();

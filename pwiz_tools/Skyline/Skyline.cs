@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -195,7 +196,8 @@ namespace pwiz.Skyline
             _autoTrainManager.Register(this);
             _immediateWindowWarningListener = new ImmediateWindowWarningListener(this);
             RemoteSession.RemoteAccountUserInteraction = this;
-            RemoteUrl.RemoteAccountStorage = this;
+
+            Program.GcTracker?.Register(this);
 
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
@@ -263,7 +265,13 @@ namespace pwiz.Skyline
             }
             if (args != null && args.Length != 0)
             {
-                _fileToOpen = args.Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
+                // Support both --opendoc path/to/file and --opendoc=path/to/file
+                _fileToOpen = args.Select(a =>
+                {
+                    if (a.StartsWith(Program.OPEN_DOCUMENT_ARG + @"="))
+                        return a.Substring(Program.OPEN_DOCUMENT_ARG.Length + 1);
+                    return a;
+                }).Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
             }
 
             var defaultUIMode = Settings.Default.UIMode;
@@ -389,7 +397,7 @@ namespace pwiz.Skyline
             base.OnHandleCreated(e);
         }
 
-        public void Listen(EventHandler<DocumentChangedEventArgs> listener)
+        void IDocumentContainer.Listen(EventHandler<DocumentChangedEventArgs> listener)
         {
             DocumentChangedEvent += listener;
         }
@@ -742,6 +750,8 @@ namespace pwiz.Skyline
 
             if (!ReferenceEquals(docResult, docOriginal))
                 return false;
+
+            Program.GcTracker?.Register(docNew);
 
             if (DocumentChangedEvent != null)
                 DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
@@ -1190,9 +1200,20 @@ namespace pwiz.Skyline
 
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 
-            foreach (var loader in BackgroundLoaders)
+            foreach (var loader in BackgroundLoaders.ToList())
             {
+                loader.Unregister(this);
                 loader.ClearCache();
+            }
+
+            if (RemoteUrl.RemoteAccountStorage == this)
+            {
+                RemoteUrl.RemoteAccountStorage = null;
+            }
+
+            if (RemoteSession.RemoteAccountUserInteraction == this)
+            {
+                RemoteSession.RemoteAccountUserInteraction = null;
             }
 
             if (!Program.FunctionalTest)
@@ -1204,11 +1225,16 @@ namespace pwiz.Skyline
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            // Clean up the MCP tool service before the process is killed below
+            Program.StopToolService();
+
             base.OnHandleDestroyed(e);
-            
+
             if (!Program.FunctionalTest)
             {
-                // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
+                // HACK: Kill the process to avoid "invalid string binding" errors from
+                // native instrument vendor DLLs during shutdown. This means nothing after
+                // Application.Run() in Program.Main() will ever execute.
                 Process.GetCurrentProcess().Kill();
             }
         }
@@ -3138,10 +3164,13 @@ namespace pwiz.Skyline
 
         private void reportsHelpMenuItem_Click(object sender, EventArgs e)
         {
-            var dataSchema = new SkylineDataSchema(this,
-                SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            var documentationGenerator = new DocumentationGenerator(
-                ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument)))
+            ShowReportsDocumentation();
+        }
+
+        public void ShowReportsDocumentation()
+        {
+            var dataSchema = new SkylineWindowDataSchema(this, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var documentationGenerator = new DocumentationGenerator(ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument), ModeUI.ToString()))
             {
                 IncludeHidden = false
             };
@@ -4724,6 +4753,7 @@ namespace pwiz.Skyline
             MarkQuantitative(true);
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization)]
         public void MarkQuantitative(bool quantitative)
         {
             lock (GetDocumentChangeLock())

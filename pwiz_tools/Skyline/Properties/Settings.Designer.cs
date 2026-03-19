@@ -3632,5 +3632,41 @@ namespace pwiz.Skyline.Properties {
                 this["MaxChromatogramGraphs"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10000000")]
+        public int MaxGridRowCount {
+            get {
+                return ((int)(this["MaxGridRowCount"]));
+            }
+            set {
+                this["MaxGridRowCount"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AllowMcpScreenCapture {
+            get {
+                return ((bool)(this["AllowMcpScreenCapture"]));
+            }
+            set {
+                this["AllowMcpScreenCapture"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EnableMcpAutoConnect {
+            get {
+                return ((bool)(this["EnableMcpAutoConnect"]));
+            }
+            set {
+                this["EnableMcpAutoConnect"] = value;
+            }
+        }
     }
 }

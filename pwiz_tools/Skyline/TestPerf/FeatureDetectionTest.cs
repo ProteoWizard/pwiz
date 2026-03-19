@@ -139,6 +139,12 @@ namespace TestPerf
         private const int SMALL_MOL_ONLY_PASS = 1;
         protected override void DoTest()
         {
+            // Converted mzML files are created in the persistent directory and intentionally
+            // left for reuse on subsequent runs. Note these so the change detection code doesn't
+            // get confused by them appearing after the first pass.
+            TestFilesDirs[0].PotentialAdditionalPersistentFileSet = new HashSet<string>(
+                _testFiles.Select(f => Path.Combine(MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, Path.ChangeExtension(f, ".mzML"))));
+
             // First some low level tests
             AssertEx.AreEqual(1.0, ImportPeptideSearch.HardklorSettings.NormalizedContrastAngleFromCosineAngle(1.0));
             AssertEx.AreEqual(1.0,  ImportPeptideSearch.HardklorSettings.CosineAngleFromNormalizedContrastAngle(1.0));
@@ -449,10 +455,10 @@ namespace TestPerf
             // See if Hardklor output is stable
             var expectedHardklorFiles = @"expected_hardklor_files";
             var expectedFilesPath = GetTestPath(expectedHardklorFiles);
+            var columnTolerances = new AssertEx.ColumnTolerances(0.00015); // Allow a little rounding wiggle in the numeric values
             foreach (var hkExpectedFilePath in Directory.EnumerateFiles(expectedFilesPath))
             {
                 var hkActualFilePath = hkExpectedFilePath.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @".."));
-                var columnTolerances = new Dictionary<int, double>() { { -1, .00015 } }; // Allow a little rounding wiggle in the decimal values
                 AssertEx.FileEquals(hkExpectedFilePath, hkActualFilePath, columnTolerances, true);
             }
 

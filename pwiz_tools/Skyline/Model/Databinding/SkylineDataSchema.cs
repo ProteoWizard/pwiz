@@ -56,6 +56,8 @@ namespace pwiz.Skyline.Model.Databinding
         private BatchChangesState _batchChangesState;
 
         private SrmDocument _document;
+        private SrmDocument.DOCUMENT_TYPE _modeUIOverride = SrmDocument.DOCUMENT_TYPE.none;
+
         public SkylineDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer) : base(dataSchemaLocalizer)
         {
             _documentContainer = documentContainer;
@@ -81,6 +83,9 @@ namespace pwiz.Skyline.Model.Databinding
         {
             get
             {
+                if (_modeUIOverride != SrmDocument.DOCUMENT_TYPE.none)
+                    return _modeUIOverride;
+
                 if (SkylineWindow != null)
                 {
                     return SkylineWindow.ModeUI;
@@ -552,11 +557,15 @@ namespace pwiz.Skyline.Model.Databinding
             return listLookupPropertyDescriptor;
         }
 
-        public static SkylineDataSchema MemoryDataSchema(SrmDocument document, DataSchemaLocalizer localizer)
+        public static SkylineDataSchema MemoryDataSchema(SrmDocument document, DataSchemaLocalizer localizer,
+            SrmDocument.DOCUMENT_TYPE modeUI = SrmDocument.DOCUMENT_TYPE.none)
         {
             var documentContainer = new MemoryDocumentContainer();
             documentContainer.SetDocument(document, documentContainer.Document);
-            return new SkylineDataSchema(documentContainer, localizer);
+            var schema = new SkylineDataSchema(documentContainer, localizer);
+            if (modeUI != SrmDocument.DOCUMENT_TYPE.none)
+                schema._modeUIOverride = modeUI;
+            return schema;
         }
 
         public override string NormalizeUiMode(string uiMode)
@@ -613,6 +622,15 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
+        public virtual void SelectDocNode(IdentityPath identityPath)
+        {
+            
+        }
+
+        public virtual void ShowCalibrationCurve(Model.Databinding.Entities.Peptide peptide)
+        {
+        }
+
         private class BatchChangesState
         {
             public BatchChangesState(SrmDocument originalDocument, IUndoState undoState)
@@ -624,6 +642,14 @@ namespace pwiz.Skyline.Model.Databinding
             public SrmDocument OriginalDocument { get; }
             public IUndoState UndoState { get; }
             public List<EditDescription> EditDescriptions { get; }
+        }
+
+        public override int MaxGridRowCount
+        {
+            get
+            {
+                return Settings.Default.MaxGridRowCount;
+            }
         }
     }
 }

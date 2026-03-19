@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Util.Extensions
 
         public const string EXT_CSV = ".csv";
         public const string EXT_TSV = ".tsv";
+        public const string EXT_PARQUET = ".parquet";
 
         public static string FILTER_CSV
         {
@@ -59,6 +60,11 @@ namespace pwiz.Skyline.Util.Extensions
         public static string FILTER_TSV
         {
             get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
+        }
+
+        public static string FILTER_PARQUET
+        {
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_PARQUET_Parquet, EXT_PARQUET); }
         }
 
         public const char SEPARATOR_CSV = ',';
@@ -374,6 +380,11 @@ namespace pwiz.Skyline.Util.Extensions
             return '"' + text + '"';
         }
 
+        public static string SingleQuote(this string text)
+        {
+            return '\'' + text + '\'';
+        }
+
         /// <summary>
         /// This function can be used as a replacement for String.Join("\n", ...)
         /// </summary>
@@ -592,8 +603,46 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Replaces tabs, carriage returns, and newlines with spaces, collapsing
+        /// consecutive whitespace into a single space. Useful for embedding
+        /// multi-line descriptions into TSV fields without escaping.
+        /// </summary>
+        public static string FlattenToSingleLine(this string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return string.Empty;
+            var sb = new StringBuilder(str.Length);
+            bool lastWasSpace = false;
+            foreach (char c in str)
+            {
+                if (c == '\r' || c == '\n' || c == '\t')
+                {
+                    if (!lastWasSpace)
+                    {
+                        sb.Append(' ');
+                        lastWasSpace = true;
+                    }
+                }
+                else if (c == ' ')
+                {
+                    if (!lastWasSpace)
+                    {
+                        sb.Append(' ');
+                        lastWasSpace = true;
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                    lastWasSpace = false;
+                }
+            }
+            return sb.ToString().TrimEnd();
+        }
+
         private const int TAB_SIZE = 4;
-        
+
         public static string GetIndentation(int indentLevel, int tabSize = TAB_SIZE)
         {
             if (indentLevel <= 0)
@@ -853,6 +902,8 @@ namespace pwiz.Skyline.Util.Extensions
         
         public int NumberOfFields { get; private set; }
         public Dictionary<string, int> FieldDict { get; private set; }
+        // Small molecule list reader supports multiple fragments per input line
+        public Dictionary<string, List<int>> FieldIndicesMulti { get; private set; } // Tracks all indices for duplicate field names
         public List<string> FieldNames { get; private set; } 
 
         public DsvFileReader(string fileName, char separator, bool hasHeaders=true) : 
@@ -876,6 +927,7 @@ namespace pwiz.Skyline.Util.Extensions
             _reader = reader;
             FieldNames = new List<string>();
             FieldDict = new Dictionary<string, int>();
+            FieldIndicesMulti = new Dictionary<string, List<int>>(); // Some formats allow duplicate column types, e.g. small molecule list reader
             _titleLine = _reader.ReadLine(); // we will re-use this if it's not actually a header line
             string saveTitleLine = _titleLine; // because we can overwrite the first line and might want to use it later, save it
             _rereadTitleLine = !hasHeaders; // tells us whether or not to reuse the supposed header line on first read
@@ -900,7 +952,14 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 var fieldName = fields[i].Trim();
                 FieldNames.Add(fieldName);
-                FieldDict[fieldName] = i;
+                // Track all indices for each field name (supports duplicate column headers as in small molecule list reader)
+                if (!FieldIndicesMulti.TryGetValue(fieldName, out var multiList))
+                {
+                    FieldIndicesMulti[fieldName] = multiList = new List<int>();
+                }
+                multiList.Add(i);
+                if (!FieldDict.ContainsKey(fieldName))
+                    FieldDict[fieldName] = i; // Keep first occurrence for backward compat with single-index lookup
                 // Check to see if the given column name is actually a synonym for the internal canonical (no spaces, serialized) name
                 if (headerSynonyms != null)
                 {
@@ -908,6 +967,17 @@ namespace pwiz.Skyline.Util.Extensions
                     if (!string.IsNullOrEmpty(key))
                     {
                         var syn = headerSynonyms[key];
+                        // Track all indices for canonical synonym name too, but only if it
+                        // differs from the field name (avoid double-counting identity mappings
+                        // like "ProductMz" → "ProductMz" which would inflate FragmentCount)
+                        if (!string.Equals(syn, fieldName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!FieldIndicesMulti.TryGetValue(syn, out var synList))
+                            {
+                                FieldIndicesMulti[syn] = synList = new List<int>();
+                            }
+                            synList.Add(i);
+                        }
                         if (!FieldDict.ContainsKey(syn))
                         {
                             // Note the internal name for this field
@@ -990,6 +1060,17 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Get all indices for a field name that appears multiple times in the header
+        /// </summary>
+        public List<int> GetFieldIndices(string fieldName)
+        {
+            if (FieldIndicesMulti != null && FieldIndicesMulti.TryGetValue(fieldName, out var indices))
+                return indices;
+            var single = GetFieldIndex(fieldName);
+            return single >= 0 ? new List<int> { single } : new List<int>();
+        }
+
+        /// <summary>
         /// IDisposable pattern implementation for using clause to dispose of the reader,
         /// in case it is a StreamReader holding onto a file handle.
         /// </summary>
@@ -1036,5 +1117,47 @@ namespace pwiz.Skyline.Util.Extensions
         public string PlainMessage { get; private set; }
         public long LineNumber { get; private set; }
         public int ColumnIndex { get; private set; }
+    }
+
+    /// <summary>
+    /// Natural language text intended as instruction for an LLM consumer,
+    /// not for direct display to end users. Distinguished from user-facing
+    /// text (which must be in .resx for localization) and debug text
+    /// (which is developer-only). Currently English, but marked distinctly
+    /// so it can be localized for LLM prompt translation in the future.
+    /// </summary>
+    public readonly struct LlmInstruction
+    {
+        public static LlmInstruction Format(string formatString, params string[] args)
+        {
+            return new LlmInstruction(string.Format(formatString, args));
+        }
+
+        public static LlmInstruction SpaceSeparate(params string[] values)
+        {
+            return new LlmInstruction(TextUtil.SpaceSeparate(values));
+        }
+
+        public static LlmInstruction TabSeparate(params string[] values)
+        {
+            return new LlmInstruction(values.ToDsvLine(TextUtil.SEPARATOR_TSV));
+        }
+
+        public LlmInstruction(string value)
+        {
+            Value = value;
+        }
+
+        public string Value { get; }
+
+        public static implicit operator string(LlmInstruction instruction)
+        {
+            return instruction.Value;
+        }
+
+        public override string ToString()
+        {
+            return Value;
+        }
     }
 }
