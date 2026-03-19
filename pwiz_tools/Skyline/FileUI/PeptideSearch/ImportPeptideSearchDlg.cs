@@ -30,9 +30,12 @@ using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
@@ -98,6 +101,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private readonly Stack<SrmDocument> _documents;
         public bool IsAutomatedTest; // Testing support
+
+        private SettingsListComboDriver<SearchSettingsPreset> _settingsPresetDriver;
+        private SearchSettingsPreset _lastAppliedPreset;
+        private MsDataFileUri[] _originalDdaSearchDataSources;
 
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, bool isRunPeptideSearch, Workflow? workflowType, bool useExistingLibrary = false)
         {
@@ -176,6 +183,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 SearchControl.SetProgressBarDisplayStyle(ProgressBarDisplayText.CustomText);
             }
 
+            // Initialize settings preset controls at the bottom-left of the dialog
+            if (!isFeatureDetection && !useExistingLibrary)
+            {
+                InitSettingsPresetControls();
+            }
+            else
+            {
+                lblSettingsPreset.Visible = false;
+                cbSettingsPreset.Visible = false;
+                btnSavePreset.Visible = false;
+            }
+
             _pagesToSkip = new HashSet<Pages>();
 
             if (workflowType.HasValue)
@@ -228,6 +247,251 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             pageControl.Height = tabPage.Height - header - border;
             tabPage.Controls.Add(pageControl);
         }
+
+        #region Settings Preset
+
+        private void InitSettingsPresetControls()
+        {
+            _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
+                cbSettingsPreset,
+                Settings.Default.SearchSettingsPresets,
+                true);
+            _settingsPresetDriver.LoadList(null);
+
+            cbSettingsPreset.SelectedIndexChanged += cbSettingsPreset_SelectedIndexChanged;
+            btnSavePreset.Click += btnSavePreset_Click;
+        }
+
+        private void cbSettingsPreset_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_settingsPresetDriver.SelectedIndexChangedEvent(sender, e))
+            {
+                _settingsPresetDriver.LoadList(_settingsPresetDriver.SelectedItem?.Name);
+                return;
+            }
+
+            var preset = _settingsPresetDriver.SelectedItem;
+            if (preset != null)
+                ApplyPreset(preset);
+        }
+
+        private void ApplyPreset(SearchSettingsPreset preset)
+        {
+            _lastAppliedPreset = preset;
+
+            // Apply search engine settings
+            SearchSettingsControl?.ApplySearchSettingsPreset(preset);
+
+            // Apply FASTA settings
+            if (!string.IsNullOrEmpty(preset.FastaFilePath))
+                ImportFastaControl.SetFastaContent(preset.FastaFilePath, true);
+            else
+                ImportFastaControl.ClearFastaContent();
+            if (!string.IsNullOrEmpty(preset.EnzymeName))
+            {
+                var enzyme = Settings.Default.GetEnzymeByName(preset.EnzymeName);
+                if (enzyme != null && enzyme.Name == preset.EnzymeName)
+                    ImportFastaControl.Enzyme = enzyme;
+                else
+                {
+                    // Enzyme not in current list; look it up from defaults
+                    var defaultEnzyme = new EnzymeList().GetDefaults(0)
+                        .FirstOrDefault(e => e.Name == preset.EnzymeName);
+                    if (defaultEnzyme != null)
+                    {
+                        if (!Settings.Default.EnzymeList.ContainsKey(preset.EnzymeName))
+                            Settings.Default.EnzymeList.Add(defaultEnzyme);
+                        ImportFastaControl.Enzyme = defaultEnzyme;
+                    }
+                }
+            }
+            ImportFastaControl.MaxMissedCleavages = preset.MaxMissedCleavages;
+
+            // Apply modification settings immediately if we're on the mods page
+            if (CurrentPage == Pages.match_modifications_page)
+                MatchModificationsControl.Initialize(Document, preset);
+
+            // Apply workflow and IRT settings (null means reset to defaults)
+            BuildPepSearchLibControl.WorkflowType = preset.WorkflowType ?? Workflow.dda;
+            if (!string.IsNullOrEmpty(preset.IrtStandardName))
+            {
+                var irtStandard = IrtStandard.ALL.FirstOrDefault(s => s.Name == preset.IrtStandardName);
+                if (irtStandard != null)
+                    BuildPepSearchLibControl.IrtStandards = irtStandard;
+            }
+            else
+            {
+                BuildPepSearchLibControl.IrtStandards = IrtStandard.EMPTY;
+            }
+        }
+
+        private void btnSavePreset_Click(object sender, EventArgs e)
+        {
+            var currentPreset = _settingsPresetDriver.SelectedItem;
+            var isDefault = currentPreset != null &&
+                            Settings.Default.SearchSettingsPresets.GetDefaults(0).Any(d => d.Name == currentPreset.Name);
+            var suggestedName = currentPreset != null && !isDefault
+                ? currentPreset.Name
+                : SearchSettingsControl != null
+                    ? $@"{SearchSettingsControl.SelectedSearchEngine} - "
+                    : string.Empty;
+
+            if (!ShowPresetNameInputDialog(PeptideSearchResources.SearchSettingsControl_SaveSettingsPreset, suggestedName, out string name))
+                return;
+
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingPreset != null)
+            {
+                var result = MessageDlg.Show(this,
+                    string.Format(PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_, name),
+                    false, MessageBoxButtons.YesNo);
+                if (result != DialogResult.Yes)
+                    return;
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+            }
+
+            var preset = BuildPresetFromCurrentSettings(name);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            _settingsPresetDriver.LoadList(name);
+        }
+
+        private static MzTolerance GetToleranceSafe(Func<MzTolerance?> getter)
+        {
+            try { return getter() ?? new MzTolerance(0, MzTolerance.Units.ppm); }
+            catch (FormatException) { return new MzTolerance(0, MzTolerance.Units.ppm); }
+        }
+
+        private SearchSettingsPreset BuildPresetFromCurrentSettings(string name)
+        {
+            // Determine mod state based on context:
+            // - On the mods page: read directly from the listbox (user may have changed checkboxes)
+            // - Off the mods page with an applied preset: use the preset's mods (document may have
+            //   been reverted by back-navigation popping the document stack)
+            // - Off the mods page with no preset: use document mods (reflects last UpdateModificationSettings)
+            IEnumerable<StaticMod> structuralMods;
+            IEnumerable<StaticMod> heavyMods;
+            if (CurrentPage == Pages.match_modifications_page)
+            {
+                var checkedModNames = MatchModificationsControl?.CheckedModificationNames?.ToList() ?? new List<string>();
+                structuralMods = checkedModNames
+                    .Select(modName => Settings.Default.StaticModList.FirstOrDefault(m => m.Name == modName))
+                    .Where(m => m != null);
+                heavyMods = checkedModNames
+                    .Select(modName => Settings.Default.HeavyModList.FirstOrDefault(m => m.Name == modName))
+                    .Where(m => m != null);
+            }
+            else if (_lastAppliedPreset != null && _lastAppliedPreset.HasExplicitModifications)
+            {
+                structuralMods = _lastAppliedPreset.StructuralModifications;
+                heavyMods = _lastAppliedPreset.HeavyModifications;
+            }
+            else
+            {
+                var docMods = Document.Settings.PeptideSettings.Modifications;
+                structuralMods = docMods.StaticModifications;
+                heavyMods = docMods.AllHeavyModifications;
+            }
+
+            return new SearchSettingsPreset(
+                name,
+                SearchSettingsControl?.SelectedSearchEngine ?? SearchSettingsControl.SearchEngine.MSAmanda,
+                GetToleranceSafe(() => SearchSettingsControl?.PrecursorTolerance),
+                GetToleranceSafe(() => SearchSettingsControl?.FragmentTolerance),
+                SearchSettingsControl?.MaxVariableMods ?? 2,
+                SearchSettingsControl?.FragmentIons,
+                SearchSettingsControl?.Ms2Analyzer,
+                SearchSettingsControl?.CutoffScore ?? 0.01,
+                SearchSettingsPreset.SerializeAdditionalSettings(ImportPeptideSearch.SearchEngine?.AdditionalSettings),
+                ImportFastaControl?.FastaFile,
+                ImportFastaControl?.Enzyme?.Name,
+                ImportFastaControl?.MaxMissedCleavages ?? 0,
+                structuralModifications: structuralMods,
+                heavyModifications: heavyMods,
+                workflowType: BuildPepSearchLibControl.WorkflowType,
+                irtStandardName: BuildPepSearchLibControl.IrtStandards?.Name,
+                hasExplicitModifications: true);
+        }
+
+        private bool ShowPresetNameInputDialog(string title, string defaultValue, out string result)
+        {
+            result = null;
+            using (var form = new Form())
+            {
+                form.Text = title;
+                form.FormBorderStyle = FormBorderStyle.FixedDialog;
+                form.StartPosition = FormStartPosition.CenterParent;
+                form.MaximizeBox = false;
+                form.MinimizeBox = false;
+                form.Width = 350;
+                form.Height = 130;
+
+                var label = new Label { Left = 10, Top = 15, Text = PeptideSearchResources.SearchSettingsControl_SettingsPreset, AutoSize = true };
+                var textBox = new TextBox { Left = 10, Top = 35, Width = 310, Text = defaultValue };
+                textBox.SelectionStart = textBox.Text.Length;
+                var btnOk = new Button { Text = @"OK", Left = 150, Width = 80, Top = 65, DialogResult = DialogResult.OK };
+                var btnCancelDlg = new Button { Text = @"Cancel", Left = 240, Width = 80, Top = 65, DialogResult = DialogResult.Cancel };
+
+                form.Controls.Add(label);
+                form.Controls.Add(textBox);
+                form.Controls.Add(btnOk);
+                form.Controls.Add(btnCancelDlg);
+                form.AcceptButton = btnOk;
+                form.CancelButton = btnCancelDlg;
+
+                if (form.ShowDialog(this) == DialogResult.OK)
+                {
+                    result = textBox.Text;
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        // Test helpers
+        public bool SettingsPresetVisible => cbSettingsPreset?.Visible ?? false;
+
+        public string SelectedPresetName
+        {
+            get => _settingsPresetDriver?.SelectedItem?.Name;
+            set
+            {
+                if (_settingsPresetDriver == null)
+                    return;
+                for (int i = 0; i < cbSettingsPreset.Items.Count; i++)
+                {
+                    if (cbSettingsPreset.Items[i].ToString() == value)
+                    {
+                        cbSettingsPreset.SelectedIndex = i;
+                        var preset = _settingsPresetDriver.SelectedItem;
+                        if (preset != null)
+                            ApplyPreset(preset);
+                        return;
+                    }
+                }
+                if (string.IsNullOrEmpty(value))
+                    _settingsPresetDriver.LoadList(null);
+            }
+        }
+
+        public IEnumerable<string> PresetNames => Settings.Default.SearchSettingsPresets.Select(w => w.Name);
+
+        public void SaveSettingsPreset(string name)
+        {
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingPreset != null)
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+
+            var preset = BuildPresetFromCurrentSettings(name);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            _settingsPresetDriver?.LoadList(name);
+        }
+
+        public SearchSettingsPreset LastAppliedPreset => _lastAppliedPreset;
+
+        #endregion
 
         private UserControl GetPageControl(TabPage tabPage)
         {
@@ -707,7 +971,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, libIonMobilities);
                     AdjustHeightForFullScanSettings();
 
-                    bool hasMatchedMods = MatchModificationsControl.Initialize(Document);
+                    bool hasMatchedMods = MatchModificationsControl.Initialize(Document, _lastAppliedPreset);
                         if (BuildPepSearchLibControl.FilterForDocumentPeptides && !BuildPepSearchLibControl.PerformDDASearch)
                         _pagesToSkip.Add(Pages.import_fasta_page);
                     if (!BuildPepSearchLibControl.PerformDDASearch)
@@ -860,6 +1124,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 case Pages.dda_search_page: // this is really the last page
                     var eCancel2 = new CancelEventArgs();
+                    // Save original data sources before replacing with search result files
+                    _originalDdaSearchDataSources = BuildPepSearchLibControl.DdaSearchDataSources;
                     //change search files to result files
                     BuildPepSearchLibControl.Grid.IsFileOnly = false;
                     var scoreThreshold = SearchSettingsControl.CutoffScore;
@@ -1176,6 +1442,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
                 case Pages.dda_search_settings_page:
                     btnNext.Enabled = true;
+                    // Restore original data sources if they were replaced by search result filenames
+                    if (_originalDdaSearchDataSources != null)
+                    {
+                        BuildPepSearchLibControl.DdaSearchDataSources = _originalDdaSearchDataSources;
+                        _originalDdaSearchDataSources = null;
+                    }
                     break;
                 case Pages.dda_search_page:
                     SearchControl.SearchFinished -= SearchControlSearchFinished;
