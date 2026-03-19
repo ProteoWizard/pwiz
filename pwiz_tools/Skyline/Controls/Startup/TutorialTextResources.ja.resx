@@ -150,7 +150,7 @@
   <data name="TargetedMSMS_Caption" xml:space="preserve">
     <value>ターゲットMS/MS (PRM)</value>
   </data>
-  <data name="PRMOrbitraip_Description" xml:space="preserve">
+  <data name="PRMOrbitrap_Description" xml:space="preserve">
     <value>並列反応モニタリング（PRM）を使用してマウス線維芽細胞の19個の目的タンパク質から31個のペプチドを定量化するためのデータ取得メソッドを設定してみましょう。Orbitrapマスアナライザーを搭載するThermo Fusion質量分析装置で9回のランを実施して測定された3回の生物学的繰り返し測定をとりあげます。</value>
   </data>
   <data name="PRMOrbitrap_Caption" xml:space="preserve">
@@ -189,7 +189,7 @@
   <data name="DDASearch_Caption" xml:space="preserve">
     <value>MS1フィルタリングに対するDDA検索</value>
   </data>
-  <data name="DDSearch_Description" xml:space="preserve">
+  <data name="DDASearch_Description" xml:space="preserve">
     <value>DDA質量分析計ファイルを開始してMS Amandaでペプチド検索を実行し、検索結果からスペクトルライブラリを構築し、最後にクロマトグラムを抽出してDDAファイルのMS1スペクトルから定量分析を行って実務経験を積みます。本チュートリアルでは、Skylineペプチド検索ウィザードを使用して、安定同位体標識タンパク質が急増したSigma Aldrich UPS1標準混合液を使ったヒト全細胞溶解液から取得した3つのDDAデータファイルを検索します。データファイル中のMS1スペクトルから検出されたすべてのペプチドに対するプリカーサー同位体クロマトグラムを抽出するようにSkylineをセットアップし、Skylineでその結果の検査を開始します。</value>
   </data>
   <data name="PeakPicking_Caption" xml:space="preserve">

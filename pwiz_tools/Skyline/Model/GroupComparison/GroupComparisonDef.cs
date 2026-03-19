@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            return controlReplicateValue.Parse(CaseValue);
+            return controlReplicateValue?.Parse(CaseValue);
         }
         
         public GroupComparisonDef ChangeControlAnnotation(string value)
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return default;
             }
 
-            return GetControlReplicateValue(settings).Parse(ControlValue);
+            return GetControlReplicateValue(settings)?.Parse(ControlValue) ?? default;
         }
 
         [TrackChildren]

@@ -522,7 +522,9 @@ namespace pwiz.Skyline.Model.Irt
                 }
             }
 
-            return GetIrtDb(path, null);
+            // Use null monitor to throw on error (just created, so failure is unexpected)
+            IProgressStatus status = new ProgressStatus();
+            return GetIrtDb(path, null, ref status);
         }
 
         /// <summary>
@@ -534,15 +536,36 @@ namespace pwiz.Skyline.Model.Irt
             return SessionFactoryFactory.CreateSessionFactory(path, typeof(IrtDb), false);
         }
 
-        //Throws DatabaseOpeningException
-        public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor)
+        /// <summary>
+        /// Opens an iRT database, throwing DatabaseOpeningException on error.
+        /// For background loading with progress reporting, use the overload that takes IProgressMonitor.
+        /// </summary>
+        public static IrtDb GetIrtDb(string path)
         {
-            return GetIrtDb(path, loadMonitor, out _);
+            return GetIrtDb(path, out _);
         }
 
-        public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor, out IList<DbIrtPeptide> dbPeptides)
+        /// <summary>
+        /// Opens an iRT database, throwing DatabaseOpeningException on error.
+        /// For background loading with progress reporting, use the overload that takes IProgressMonitor.
+        /// </summary>
+        public static IrtDb GetIrtDb(string path, out IList<DbIrtPeptide> dbPeptides)
         {
-            var status = new ProgressStatus(string.Format(IrtResources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
+            // Passing null for loadMonitor causes exceptions to be thrown directly to caller
+            // (see catch block below that checks for null monitor)
+            IProgressStatus status = new ProgressStatus();
+            return GetIrtDb(path, null, ref status, out dbPeptides);
+        }
+
+        public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor, ref IProgressStatus status)
+        {
+            return GetIrtDb(path, loadMonitor, ref status, out _);
+        }
+
+        //Throws DatabaseOpeningException
+        public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor, ref IProgressStatus status, out IList<DbIrtPeptide> dbPeptides)
+        {
+            status = status.ChangeMessage(string.Format(IrtResources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
             loadMonitor?.UpdateProgress(status);
 
             try
@@ -591,6 +614,8 @@ namespace pwiz.Skyline.Model.Irt
             }
             catch (DatabaseOpeningException x)
             {
+                // When loadMonitor is null, throw exception directly to caller.
+                // When loadMonitor is provided, report error through progress system and return null.
                 if (loadMonitor == null)
                     throw;
                 loadMonitor.UpdateProgress(status.ChangeErrorException(x));

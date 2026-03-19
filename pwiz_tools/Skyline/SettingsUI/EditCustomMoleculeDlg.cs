@@ -683,6 +683,13 @@ namespace pwiz.Skyline.SettingsUI
                     return;
             }
 
+            if (_formulaBox.FormulaError != null)
+            {
+                // User must fix the problem before we will admit the new values
+                _formulaBox.ShowTextBoxErrorFormula(helper, _formulaBox.FormulaError);
+                return;
+            }
+
             var monoMass = new TypedMass(_formulaBox.MonoMass ?? 0, MassType.Monoisotopic);
             var averageMass = new TypedMass(_formulaBox.AverageMass ?? 0, MassType.Average);
             if (monoMass < CustomMolecule.MIN_MASS || averageMass < CustomMolecule.MIN_MASS)

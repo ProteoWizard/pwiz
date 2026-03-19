@@ -164,12 +164,14 @@
     <Compile Include="AbstractLibraryBuilderModificationSupportTest.cs" />
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
+    <Compile Include="AiFolderTest.cs" />
     <Compile Include="AlphapeptdeepLibraryBuilderTest.cs" />
     <Compile Include="AnalyticsTest.cs" />
     <Compile Include="AnnotatedDoubleTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="AntivirusExclusionTest.cs" />
     <Compile Include="AuditLogListTest.cs" />
+    <Compile Include="BigListTest.cs" />
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BilinearFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
@@ -177,6 +179,7 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
+    <Compile Include="ConnectionPoolTest.cs" />
     <Compile Include="CommandLineThermoMethodTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="EncryptedTokenTest.cs" />
@@ -186,6 +189,7 @@
     <Compile Include="FilteredMessageWriterTest.cs" />
     <Compile Include="ImmutableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
+    <Compile Include="TutorialCatalogTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="LongPathDirectoryTest.cs" />
     <Compile Include="MassListIonsTest.cs" />

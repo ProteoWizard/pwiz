@@ -185,7 +185,7 @@ namespace pwiz.SkylineTestData
                 "--import-search-file=" + searchFilePath,
                 "--import-search-irts=CiRT (iRT-C18)",
                 "--import-search-num-cirts=10");
-            var libIrts = IrtDb.GetIrtDb(TestFilesDir.GetTestPath("blank.blib"), null).StandardPeptides.ToArray();
+            var libIrts = IrtDb.GetIrtDb(TestFilesDir.GetTestPath("blank.blib")).StandardPeptides.ToArray();
             AssertEx.AreEqual(10, libIrts.Length);
             foreach (var libIrt in libIrts)
                 AssertEx.IsTrue(IrtStandard.CIRT.Contains(libIrt));

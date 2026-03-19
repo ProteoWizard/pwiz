@@ -398,7 +398,7 @@ namespace pwiz.SkylineTestFunctional
             return tools;
         }
 
-        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
+        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver, string downloadUrl = null)
         {
             // Find the tool zip file path for this identifier
             var toolZipPath = GetToolZipPath(packageIdentifier);

@@ -111,14 +111,14 @@ namespace pwiz.Skyline.Model.Files
                 var peptideSettings = document.Settings.PeptideSettings;
                 if (peptideSettings is { HasLibraries: true })
                 {
-                    var librarySpecs = peptideSettings.Libraries.LibrarySpecs.ToList();
+                    var librarySpecs = peptideSettings.Libraries.LibrarySpecs.Where(s => s != null).ToList();
                     if (librarySpecs.Count == 1)
                     {
                         // Single library - show without folder, using same format as other library types
                         var file = SpectralLibrary.Create(documentFilePath, librarySpecs[0], includeTypePrefix: true);
                         list.Add(file);
                     }
-                    else
+                    else if (librarySpecs.Count > 1)
                     {
                         // Multiple libraries - show in folder
                         var files = librarySpecs.Select(library => SpectralLibrary.Create(documentFilePath, library)).ToList();

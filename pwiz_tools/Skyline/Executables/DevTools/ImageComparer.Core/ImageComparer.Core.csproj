@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;netstandard2.0</TargetFrameworks>
+    <RootNamespace>ImageComparer.Core</RootNamespace>
+    <AssemblyName>ImageComparer.Core</AssemblyName>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!-- System.Drawing.Common NuGet only needed for netstandard2.0 target -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Drawing.Common" Version="4.7.3" />
+  </ItemGroup>
+
+  <!-- .NET Framework 4.7.2 uses System.Drawing from the framework -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+
+</Project>

@@ -118,6 +118,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\BigList.cs" />
     <Compile Include="Collections\DisposableCollection.cs" />
     <Compile Include="Collections\Factor.cs" />
     <Compile Include="Collections\ImmutableListFactory.cs" />

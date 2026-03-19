@@ -133,4 +133,8 @@
   <data name="Waters_Connect_GroupBox_Label" xml:space="preserve">
     <value>Advanced waters_connect settings</value>
   </data>
+  <data name="Waters_Connect_Auth_Failure_Message" xml:space="preserve">
+    <value>Cannot authenticate waters_connect account {0}
+    Error: {1}</value>
+  </data>
 </root>

@@ -8,11 +8,11 @@ namespace pwiz.Common.DataBinding
     {
         private IRowSource _rows;
         public RowSourceInfo(IRowSource rows, ViewInfo viewInfo)
-            : this(viewInfo.ParentColumn.PropertyType, rows, new[] { viewInfo })
+            : this(viewInfo.ParentColumn.PropertyType, rows, new[] { viewInfo }, viewInfo.ViewSpec.RowSource, viewInfo.ParentColumn.PropertyType.Name)
         {
         }
 
-        public RowSourceInfo(Type rowType, IRowSource rows, IEnumerable<ViewInfo> views) : this(rowType, rows, views, rowType.FullName, rowType.Name)
+        public RowSourceInfo(Type rowType, IRowSource rows, IEnumerable<ViewInfo> views) : this(rowType, rows, views, ViewSpec.GetRowSourceName(rowType), rowType.Name)
         {
         }
 

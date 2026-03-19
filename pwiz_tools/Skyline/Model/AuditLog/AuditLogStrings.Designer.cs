@@ -1295,6 +1295,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ran command: {0}.
+        /// </summary>
+        public static string ran_command_line {
+            get {
+                return ResourceManager.GetString("ran_command_line", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Refined targets.
         /// </summary>
         public static string refined_targets {

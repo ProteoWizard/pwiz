@@ -45,16 +45,17 @@ td {
 <div id="pwiz.Skyline.Model.Databinding.Entities.SkylineDocument"><span class="RowType">SkylineDocument</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Molecule Lists</td><td class="ColumnDescription">The top level set of the groupings of all of the molecules in a Skyline document.</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">Molecule List</a></td></tr>
+<tr><td class="ColumnCaption">Proteins</td><td class="ColumnDescription">Proteins</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">Protein</a></td></tr>
 <tr><td class="ColumnCaption">Replicates</td><td class="ColumnDescription">Replicates</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">Replicate</a></td></tr>
 </table>
 
-<div id="pwiz.Skyline.Model.Databinding.Entities.Protein"><span class="RowType">Molecule List</span>
+<div id="pwiz.Skyline.Model.Databinding.Entities.Protein"><span class="RowType">Protein</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Molecules</td><td class="ColumnDescription">The molecules in a Molecule List.</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">Molecule</a></td></tr>
-<tr><td class="ColumnCaption">Molecule List Results</td><td class="ColumnDescription">Molecule List Results</td><td class="ColumnType">Map of ResultKey to <a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">Molecule List Result</a></td></tr>
-<tr><td class="ColumnCaption">Molecule List Name</td><td class="ColumnDescription">The name of the molecule list.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Peptides</td><td class="ColumnDescription">Peptides</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">Peptide</a></td></tr>
+<tr><td class="ColumnCaption">Protein Results</td><td class="ColumnDescription">Protein Results</td><td class="ColumnType">Map of ResultKey to <a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">Protein Result</a></td></tr>
+<tr><td class="ColumnCaption">Protein Name</td><td class="ColumnDescription">Protein Name as defined or entered into Skyline (in some cases in
+conjunction with the accession number)</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Protein Description</td><td class="ColumnDescription">When proteins are imported into Skyline through public FASTA
 sequence files, a Protein Description is provided. You can see the Protein Description
 also when you hover over the protein name in the peptide tree view.</td><td class="ColumnType">String</td></tr>
@@ -65,10 +66,11 @@ also when you hover over the protein name in the peptide tree view.</td><td clas
 <tr><td class="ColumnCaption">Protein Sequence</td><td class="ColumnDescription">When proteins are imported into Skyline through public FASTA
 sequence files the full protein sequence is accessible. You can see the protein sequence
 also when you hover over the protein name in the peptide tree view.</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Auto Select Molecules</td><td class="ColumnDescription">If true, then Skyline will automatically add or remove molecules from the Molecule List based on the current settings.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Auto Select Peptides</td><td class="ColumnDescription">If true, then Skyline will automatically add or remove peptides based on the Peptide Settings Filter.</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">Protein Sequence Coverage</td><td class="ColumnDescription">The fraction of amino acids in the protein sequence which could be part of one or more of the sequences of the child peptides.</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Molecule List Note</td><td class="ColumnDescription">A free text note associated with the molecule list.</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Molecule List Locator</td><td class="ColumnDescription">Unique identifier of the molecule list within the document. This begins with &quot;MoleculeGroup:&quot;.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Protein Note</td><td class="ColumnDescription">A free text note associated with the protein by clicking Edit Note on the
+Edit menu</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Protein Locator</td><td class="ColumnDescription">Unique identifier of the protein within the document. This begins with &quot;MoleculeGroup:&quot; and usually ends with the protein name but may have additional attributes if the protein name is not unique within the document.</td><td class="ColumnType">String</td></tr>
 </table>
 
 <div id="pwiz.Skyline.Model.Databinding.Entities.Replicate"><span class="RowType">Replicate</span>
@@ -91,12 +93,12 @@ will be calculated using the subset of external standards with the same batch na
 <tr><td class="ColumnCaption">Replicate Locator</td><td class="ColumnDescription">Unique identifier of the replicate within the document. This is always &quot;Replicate:/&quot; followed by the name of the replicate.</td><td class="ColumnType">String</td></tr>
 </table>
 
-<div id="pwiz.Skyline.Model.Databinding.Entities.Peptide"><span class="RowType">Molecule</span>
+<div id="pwiz.Skyline.Model.Databinding.Entities.Peptide"><span class="RowType">Peptide</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
 <tr><td class="ColumnCaption">Precursors</td><td class="ColumnDescription">Precursors</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">Precursor</a></td></tr>
-<tr><td class="ColumnCaption">Molecule Results</td><td class="ColumnDescription">The results associated with the molecule.</td><td class="ColumnType">Map of ResultKey to <a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">Molecule Result</a></td></tr>
-<tr><td class="ColumnCaption">Molecule List</td><td class="ColumnDescription">A grouping of molecules in a Skyline document.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">Molecule List</a></td></tr>
+<tr><td class="ColumnCaption">Peptide Results</td><td class="ColumnDescription">Peptide Results</td><td class="ColumnType">Map of ResultKey to <a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">Peptide Result</a></td></tr>
+<tr><td class="ColumnCaption">Protein</td><td class="ColumnDescription">Protein</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">Protein</a></td></tr>
 <tr><td class="ColumnCaption">Peptide Sequence</td><td class="ColumnDescription">Amino acid sequence of the peptide.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Peptide Sequence Length</td><td class="ColumnDescription">Amino acid count in the sequence of the peptide.</td><td class="ColumnType">Int32</td></tr>
 <tr><td class="ColumnCaption">Peptide Modified Sequence</td><td class="ColumnDescription">Amino acid sequence annotated with only structural
@@ -111,7 +113,6 @@ modification delta masses (e.g. AC[+57]GR).</td><td class="ColumnType"><a href="
 </table>
 
 </td></tr>
-<tr><td class="ColumnCaption">Molecule Name</td><td class="ColumnDescription">A general name that may be assigned to a molecule in its neutral, unlabeled form.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Molecule Formula</td><td class="ColumnDescription">An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Standard Type</td><td class="ColumnDescription">Standard Type</td><td class="ColumnType">Standard Type</td></tr>
 <tr><td class="ColumnCaption">Previous Aa</td><td class="ColumnDescription">Previous Aa</td><td class="ColumnType">Char</td></tr>
@@ -132,18 +133,13 @@ SSRCalc 3.0 is available), or #N/A if no retention time regression has been assi
 <tr><td class="ColumnCaption">Explicit Retention Time Window</td><td class="ColumnDescription">The exact desired retention time window (in minutes) to be used for a target, overriding all other settings used to derive this value.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Normalization Method</td><td class="ColumnDescription">Override of the normalization method to use with this particular molecule for absolute quantification and group comparisons.</td><td class="ColumnType">Normalization Method</td></tr>
 <tr><td class="ColumnCaption">Surrogate External Standard</td><td class="ColumnDescription">Name of another peptide or molecule whose fitted calibration curve will be used for quantification of this peptide or molecule</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Molecule Note</td><td class="ColumnDescription">A free text note associated with the molecule.</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Molecule Locator</td><td class="ColumnDescription">Unique identifier of the molecule within the document. This begins with &quot;Molecule:&quot;.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Peptide Note</td><td class="ColumnDescription">A free text note associated with the peptide by clicking Edit Note on the
+Edit menu</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Peptide Locator</td><td class="ColumnDescription">Unique identifier of the peptide within the Skyline document. This will always start with &quot;Molecule:&quot;, and usually ends with the peptide modified sequence or molecule name.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Internal Standard Concentration</td><td class="ColumnDescription">Quantity of internal standard in the sample.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Concentration Multiplier</td><td class="ColumnDescription">Value to multiply the replicate&#39;s &quot;analyte concentration&quot; by in order to get the specific concentration of the specific peptide or molecule.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Calibration Curve</td><td class="ColumnDescription">Calibration Curve that was calculated using Replicates whose Sample Type was &quot;Standard&quot; and that had an &quot;Analyte Concentration&quot; specified.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics">Calibration Curve</a></td></tr>
 <tr><td class="ColumnCaption">Figures Of Merit</td><td class="ColumnDescription">The limits of detection and quantification for the peptide or molecule. The method for calculating these quantities can be chosen on the Quantification tab of the Peptide Settings.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit">Figures Of Merit</a></td></tr>
-<tr><td class="ColumnCaption">InChiKey</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">CAS</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">HMDB</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">InChI</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">SMILES</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">KEGG</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Auto Select Precursors</td><td class="ColumnDescription">If true, then Skyline will automatically add or remove precursors based on the Transition Settings Filter, spectral library, etc.</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">Attribute Group ID</td><td class="ColumnDescription">Affects the grouping of peptides or molecules in the calculation of Attribute Area Proportion.</td><td class="ColumnType">String</td></tr>
 </table>
@@ -169,11 +165,11 @@ SSRCalc 3.0 is available), or #N/A if no retention time regression has been assi
 The options for determining this value can be specified on the Quantification tab of the Peptide Settings.</td><td class="ColumnType">Double</td></tr>
 </table>
 
-<div id="pwiz.Skyline.Model.Databinding.Entities.ProteinResult"><span class="RowType">Molecule List Result</span>
+<div id="pwiz.Skyline.Model.Databinding.Entities.ProteinResult"><span class="RowType">Protein Result</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
 <tr><td class="ColumnCaption">Replicate</td><td class="ColumnDescription">Replicate</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">Replicate</a></td></tr>
-<tr><td class="ColumnCaption">Molecule List Abundance</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
+<tr><td class="ColumnCaption">Protein Abundance</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
 Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue">AbundanceValue</a></td></tr>
 </table>
 
@@ -216,7 +212,7 @@ The default normalization method is specified on the Quantification tab of the P
 <div id="pwiz.Skyline.Model.Databinding.Entities.Precursor"><span class="RowType">Precursor</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Molecule</td><td class="ColumnDescription">Molecules belong to Molecule Lists and contain Precursors.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">Molecule</a></td></tr>
+<tr><td class="ColumnCaption">Peptide</td><td class="ColumnDescription">Peptide</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">Peptide</a></td></tr>
 <tr><td class="ColumnCaption">Transitions</td><td class="ColumnDescription">Transitions</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Transition">Transition</a></td></tr>
 <tr><td class="ColumnCaption">Precursor Results</td><td class="ColumnDescription">Precursor Results</td><td class="ColumnType">Map of ResultKey to <a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">Precursor Result</a></td></tr>
 <tr><td class="ColumnCaption">Precursor Results Summary</td><td class="ColumnDescription">Precursor Results Summary</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResultSummary">PrecursorResultSummary</a></td></tr>
@@ -225,10 +221,8 @@ The default normalization method is specified on the Quantification tab of the P
 indicating which isotope modifications are applied</td><td class="ColumnType">Isotope Label Type</td></tr>
 <tr><td class="ColumnCaption">Precursor Neutral Mass</td><td class="ColumnDescription">Neutral mass of the precursor in Daltons</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Transition Count</td><td class="ColumnDescription">Number of transitions under this precursor.</td><td class="ColumnType">Int32</td></tr>
-<tr><td class="ColumnCaption">Precursor Ion Name</td><td class="ColumnDescription">The name of the precursor.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Precursor Ion Formula</td><td class="ColumnDescription">The formula of the precursor ion.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Precursor Neutral Formula</td><td class="ColumnDescription">The formula of the precursor ion. This is deprecated and &quot;PrecursorIonFomula&quot; should be used instead.</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Precursor Adduct</td><td class="ColumnDescription">The adduct which is applied to the molecule to make the precursor.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Precursor Mz</td><td class="ColumnDescription">The mass to charge ratio (m/z) of the precursor ion.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Collision Energy</td><td class="ColumnDescription">Collision Energy for the precursor ion according to instrument/vendor
 specific default collision energy equation within Skyline</td><td class="ColumnType">Double</td></tr>
@@ -381,18 +375,18 @@ for all peptide precursors in the document</td><td class="ColumnType"><a href="#
 </td></tr>
 </table>
 
-<div id="pwiz.Skyline.Model.Databinding.Entities.PeptideResult"><span class="RowType">Molecule Result</span>
+<div id="pwiz.Skyline.Model.Databinding.Entities.PeptideResult"><span class="RowType">Peptide Result</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Molecule Peak Found Ratio</td><td class="ColumnDescription">Molecule Peak Found Ratio</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Molecule Retention Time</td><td class="ColumnDescription">The average of the Best Retention Time values for the precursors in a particular replicate.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Peptide Peak Found Ratio</td><td class="ColumnDescription">Peptide Peak Found Ratio</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Peptide Retention Time</td><td class="ColumnDescription">Peptide retention time for each replicate run.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Predicted Result Retention Time</td><td class="ColumnDescription">Peptide retention time for each replicate run.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Ratio To Standard</td><td class="ColumnDescription">Peptide area ratio of light to heavy</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Best Replicate</td><td class="ColumnDescription">True if this replicate has the highest overall peptide peak score.</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">Modified Area Proportion</td><td class="ColumnDescription">The normalized area of this peptide result divided by the sum of all peptide results in this protein and replicate that have the same unmodified sequence.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Attribute Area Proportion</td><td class="ColumnDescription">The ratio of the normalized area to the sum of the normalized areas of all of the other peptides or molecules in the document that have the same Attribute Area Proportion.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Result File</td><td class="ColumnDescription">Result File</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ResultFile">Result File</a></td></tr>
-<tr><td class="ColumnCaption">Molecule List Result</td><td class="ColumnDescription">Molecule List Result</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">Molecule List Result</a></td></tr>
+<tr><td class="ColumnCaption">Protein Result</td><td class="ColumnDescription">Protein Result</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">Protein Result</a></td></tr>
 <tr><td class="ColumnCaption">Exclude From Calibration</td><td class="ColumnDescription">Whether the results in the replicate should be excluded from the peptide&#39;s calibration curve calculation.</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">Quantification</td><td class="ColumnDescription">Values related to using the calibration curve or normalization method to quantify the analyte.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.QuantificationResult">QuantificationResult</a></td></tr>
 <tr><td class="ColumnCaption">Replicate Calibration Curve</td><td class="ColumnDescription">The calibration curve made using the replicates that have the same Batch Name as this replicate.
@@ -421,7 +415,7 @@ If the Precursor Concentration is specified on any of the Precursors in this Pep
 If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
 to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Peptide Spectrum Match Count</td><td class="ColumnDescription">Number of spectra in the spectral library which match the peptide and result file.</td><td class="ColumnType">Int32</td></tr>
-<tr><td class="ColumnCaption">Molecule Result Locator</td><td class="ColumnDescription">Unique identifier of the Molecule Result within the document. This will begin with &quot;MoleculeResult:&quot; and will contain the molecule name and the replicate name.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Peptide Result Locator</td><td class="ColumnDescription">Unique identifier of the Peptide Result within the document. This will begin with &quot;MoleculeResult:&quot; and will contain the peptide modified sequence and the replicate name.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">RatioLightToHeavy</td><td class="ColumnDescription"></td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">DotProductLightToHeavy</td><td class="ColumnDescription"></td><td class="ColumnType">Double</td></tr>
 </table>
@@ -429,13 +423,13 @@ to be the Analyte Concentration from the Replicate times the Concentration Multi
 <div id="pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue"><span class="RowType">AbundanceValue</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Molecule List Abundance Raw</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
+<tr><td class="ColumnCaption">Protein Abundance Raw</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
 Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
 Available even when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Molecule List Abundance Strict</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
+<tr><td class="ColumnCaption">Protein Abundance Strict</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
 Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
 Unavailable when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Molecule List Abundance Message</td><td class="ColumnDescription">Warning if missing data impacts comparisons of &quot;Molecule List Abundance&quot; between replicates</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Protein Abundance Message</td><td class="ColumnDescription">Warning if missing data impacts comparisons of &quot;Protein Abundance&quot; between replicates</td><td class="ColumnType">String</td></tr>
 </table>
 
 <div id="pwiz.Skyline.Model.Databinding.Entities.Transition"><span class="RowType">Transition</span>
@@ -450,7 +444,6 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 <tr><td class="ColumnCaption">Fragment Ion</td><td class="ColumnDescription">The name of the product ion peptide fragment (e.g. y8, y10, b7, etc.).</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Product Ion Formula</td><td class="ColumnDescription">The formula of the product ion.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Product Neutral Formula</td><td class="ColumnDescription">The formula of the product ion. This is deprecated, and &quot;ProductIonFormula&quot; should be used instead.</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Product Adduct</td><td class="ColumnDescription">The adduct applied to the product ion.</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Fragment Ion Type</td><td class="ColumnDescription">The type of the product ion (y, b, c, z, a, x, precursor)</td><td class="ColumnType">IonType</td></tr>
 <tr><td class="ColumnCaption">Fragment Ion Ordinal</td><td class="ColumnDescription">Position of the amino acid in the peptide after (C-terminal of)
 which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</td><td class="ColumnType">Int32</td></tr>
@@ -458,7 +451,7 @@ which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</td><td 
 peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.)</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Loss Neutral Mass</td><td class="ColumnDescription">The total mass of all neutral losses from this fragment.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Losses</td><td class="ColumnDescription">A comma separated list of all neutral losses from this fragment</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Loss Formulas</td><td class="ColumnDescription">A comma separated list of the chemical forumulas for all neutral losses from this fragment, or empty if not all losses have formulas</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Loss Formulas</td><td class="ColumnDescription">A comma separated list of the chemical formulas for all neutral losses from this fragment, or empty if not all losses have formulas</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">Quantitative</td><td class="ColumnDescription">Whether the transition&#39;s peak area should be included when quantifying peptides.</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">Explicit Collision Energy</td><td class="ColumnDescription">The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library or per-precursor explicit values.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Explicit SLens</td><td class="ColumnDescription">The exact desired SLens value (Thermo instruments only) to be used in SRM methods or transitions lists for a target.</td><td class="ColumnType">Double</td></tr>
@@ -658,7 +651,7 @@ OptStep if declustering potential optimization is being performed</td><td class=
 </td></tr>
 <tr><td class="ColumnCaption">Precursor Replicate Note</td><td class="ColumnDescription">A free text note associated with a result set of the precursor
 using the Results Grid.</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Molecule Result</td><td class="ColumnDescription">Molecule Result</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">Molecule Result</a></td></tr>
+<tr><td class="ColumnCaption">Peptide Result</td><td class="ColumnDescription">Peptide Result</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">Peptide Result</a></td></tr>
 <tr><td class="ColumnCaption">Imputed Peak</td><td class="ColumnDescription">Peak boundaries of the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>

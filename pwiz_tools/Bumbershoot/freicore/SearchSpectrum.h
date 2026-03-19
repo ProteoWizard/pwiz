@@ -688,7 +688,7 @@ namespace freicore
                 //else if (ionSeries == "x-H2O")      sip.additionalSearchParams.set(MS_param__x_ion_H2O);
                 else if (ionSeries == "y")          sip.additionalSearchParams.set(MS_param__y_ion);
                 else if (ionSeries == "y-NH3")      sip.additionalSearchParams.set(MS_param__y_ion_NH3_DEPRECATED);
-                else if (ionSeries == "y-H2O")      sip.additionalSearchParams.set(MS_param__y_ion_H2O_DEPRECATED);
+                else if (ionSeries == "y-H2O")      sip.additionalSearchParams.set(MS_param__y_ion_H2O_DEPRECATED_OBSOLETE);
                 else if (ionSeries == "z")          sip.additionalSearchParams.set(MS_param__z_ion);
                 //else if (ionSeries == "z-NH3")      sip.additionalSearchParams.set(MS_param__z_ion_NH3);
                 //else if (ionSeries == "z-H2O")      sip.additionalSearchParams.set(MS_param__z_ion_H2O);

@@ -69,6 +69,9 @@
     <Reference Include="DotNetZip">
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Diagnostics.Runtime">
+      <HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler">
       <HintPath>..\SkylineTester\Microsoft.Win32.TaskScheduler.dll</HintPath>
     </Reference>

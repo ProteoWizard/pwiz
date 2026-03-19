@@ -64,6 +64,7 @@ lib pwiz_utility_misc
         <library>/ext/boost//date_time
         <library>/ext/boost//nowide
         <library>/ext/zlib//z
+        <library>/ext/zstd//zstd
     : # default-build
     : # usage-requirements
         <library>/ext/boost//thread
@@ -72,6 +73,7 @@ lib pwiz_utility_misc
         <library>/ext/boost//date_time
         <library>/ext/boost//nowide
         <library>/ext/zlib//z
+        <library>/ext/zstd//zstd
         <toolset>msvc:<library>oleaut32
         <toolset>msvc:<library>psapi
     ;

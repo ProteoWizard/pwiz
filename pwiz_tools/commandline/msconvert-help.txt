@@ -37,6 +37,9 @@ Options:
   --noindex                          : do not write index
   -i [ --contactInfo ] arg           : filename for contact info
   -z [ --zlib ] [=arg(=1)]           : use zlib compression for binary data (add =off to disable compression)
+  --zstd                             : use Zstandard compression for binary data. This applies to all data arrays, instead of zlib, even if zlib=off is specified
+  --mzShuffleZstd                    : use byte-shuffling Zstandard compression for m/z and time values
+  --dictZstd                         : use dictionary encoding followed by Zstandard compression for m/z and ion mobility values. This overrides --mzShuffleZstd
   --numpressLinear [=arg(=2.0e-09)]  : use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)
   --numpressLinearAbsTol [=arg(=-1)] : desired absolute tolerance for linear numpress prediction (e.g. use 1e-4 for a mass accuracy of 0.2 ppm at 500 m/z, default uses -1.0 for maximal accuracy). Note: setting this value may substantially reduce file size, this overrides relative accuracy tolerance.
   --numpressPic                      : use numpress positive integer compression for binary intensities (absolute accuracy loss will not exceed 0.5)

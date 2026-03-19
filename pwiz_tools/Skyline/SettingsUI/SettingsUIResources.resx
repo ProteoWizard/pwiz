@@ -733,6 +733,9 @@
   <data name="FormulaBox_helpToolStripMenuItem_Click_Formula_Help" xml:space="preserve">
     <value>Formula Help</value>
   </data>
+  <data name="FormulaBox_UpdateAverageAndMonoTextsForFormula_The_formula___0___would_result_in_negative_atom_counts" xml:space="preserve">
+    <value>The formula "{0}" would result in negative atom counts</value>
+  </data>
   <data name="FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_" xml:space="preserve">
     <value>Mass &amp;Accuracy:</value>
   </data>

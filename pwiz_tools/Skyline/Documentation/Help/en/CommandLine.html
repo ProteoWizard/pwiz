@@ -46,9 +46,11 @@ td {
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>--in</nobr>=path/to/file.sky</td><td>Open a Skyline file</td></tr>
+<tr><td><nobr>--open</nobr>=path/to/file.sky</td><td>Synonym for <nobr>--in</nobr>. Open a Skyline file.</td></tr>
 <tr><td><nobr>--save</nobr></td><td>Saves any changes to the file</td></tr>
 <tr><td><nobr>--save-settings</nobr></td><td>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</td></tr>
 <tr><td><nobr>--out</nobr>=path/to/file.sky</td><td>Same as save except writes to the specified file</td></tr>
+<tr><td><nobr>--save-as</nobr>=path/to/file.sky</td><td>Synonym for <nobr>--out</nobr>. Save to the specified file.</td></tr>
 <tr><td><nobr>--new</nobr>=path/to/file.sky</td><td>Create a new document using the current Skyline settings.</td></tr>
 <tr><td><nobr>--overwrite</nobr></td><td>Overwrite the filepath specified by <nobr>--new</nobr> if it already exists, instead of producing an error.</td></tr>
 <tr><td><nobr>--share-zip</nobr>[=path/to/file.sky.zip]</td><td>Saves the entire project (document, results, libraries, etc.) to a ZIP archive. Defaults to a minimal archive.</td></tr>
@@ -58,7 +60,7 @@ td {
 <tr><td><nobr>--timestamp</nobr></td><td>All logging output will be preceded by a time and date.</td></tr>
 <tr><td><nobr>--memstamp</nobr></td><td>All logging output will be preceded by two memory usage values managed and process private bytes in MB, rounded to the nearest MB.</td></tr>
 <tr><td><nobr>--log-file</nobr>=path/to/file</td><td>Sends all logged output to a file.</td></tr>
-<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr>&gt;]</td><td>Shows this text.</td></tr>
+<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr> | sections&gt;]</td><td>Shows this text.</td></tr>
 <tr><td><nobr>--version</nobr></td><td>Emits version information for the running installation</td></tr>
 <tr><td><nobr>--verbose-errors</nobr></td><td>Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers.</td></tr>
 </table>

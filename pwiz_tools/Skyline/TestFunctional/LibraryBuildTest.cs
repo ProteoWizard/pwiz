@@ -480,7 +480,7 @@ namespace pwiz.SkylineTestFunctional
             var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
             var addPredictorDlg = ShowDialog<AddRetentionTimePredictorDlg>(recalibrateDlg.BtnCancelClick);
             OkDialog(addPredictorDlg, addPredictorDlg.NoDialog);
-            var twoStandardDb = IrtDb.GetIrtDb(TestFilesDir.GetTestPath(_libraryName) + ".blib", null);
+            var twoStandardDb = IrtDb.GetIrtDb(TestFilesDir.GetTestPath(_libraryName) + ".blib");
             var dbStandards = twoStandardDb.StandardPeptides.ToArray();
             // Check that the created blib has the chosen standards.
             Assert.AreEqual(dbStandards.Length, IrtStandard.BIOGNOSYS_11.Peptides.Count);

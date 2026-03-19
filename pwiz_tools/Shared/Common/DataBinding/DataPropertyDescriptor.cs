@@ -5,11 +5,13 @@ namespace pwiz.Common.DataBinding
 {
     public abstract class DataPropertyDescriptor : PropertyDescriptor
     {
-        protected DataPropertyDescriptor(string name, IColumnCaption caption, DataSchemaLocalizer dataSchemaLocalizer, Attribute[] attrs) : base(name, attrs)
+        protected DataPropertyDescriptor(string name, IColumnCaption caption, DataSchema dataSchema, Attribute[] attrs) : base(name, attrs)
         {
             ColumnCaption = caption;
-            DataSchemaLocalizer = dataSchemaLocalizer;
+            DataSchema = dataSchema;
         }
+
+        public DataSchema DataSchema { get; }
 
         public void SetAttributes(Attribute[] newAttributes)
         {
@@ -17,7 +19,10 @@ namespace pwiz.Common.DataBinding
         }
 
         public IColumnCaption ColumnCaption { get; private set; }
-        public DataSchemaLocalizer DataSchemaLocalizer { get; private set; }
+        public DataSchemaLocalizer DataSchemaLocalizer
+        {
+            get { return DataSchema.DataSchemaLocalizer; }
+        }
 
         public override string DisplayName
         {

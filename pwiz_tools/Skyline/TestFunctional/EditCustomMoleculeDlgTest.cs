@@ -60,6 +60,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestFormulaErrorTooltip();
             TestEditBogusMolecule();
             TestEditMassWithPrecursorTransitions();
             TestEditWithIsotopeDistribution();
@@ -204,6 +205,60 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(testRTWindow, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow.Value, massPrecisionTolerance);
 
         }
+        private static void TestFormulaErrorTooltip()
+        {
+            // Verify that FormulaBox shows error details in tooltip when formula is invalid
+            RunUI(() => SkylineWindow.NewDocument(true));
+            var origDoc = SkylineWindow.Document;
+            RunUI(() =>
+                SkylineWindow.ModifyDocument("", mdoc =>
+                {
+                    return mdoc.AddPeptideGroups(new[]
+                    {
+                        new PeptideGroupDocNode(new PeptideGroup(), mdoc.Annotations, "Molecule Group", "",
+                            new PeptideDocNode[0])
+                    }, true, IdentityPath.ROOT, out _, out _);
+                }));
+            WaitForDocumentChange(origDoc);
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(SkylineWindow.Document.MoleculeGroups.ElementAt(0).Id));
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
+            RunUI(() =>
+            {
+                // Valid formula - remember the help tooltip
+                editMoleculeDlg.FormulaBox.FormulaText = "C12H6[M+H]";
+                var helpTooltip = editMoleculeDlg.FormulaBox.FormulaToolTip;
+                AssertEx.IsTrue(helpTooltip.Length > 0);
+
+                // Adduct tries to remove O from a molecule with no O - should show error in tooltip
+                editMoleculeDlg.FormulaBox.FormulaText = "C12H[M-O+H]";
+                var errorTooltip = editMoleculeDlg.FormulaBox.FormulaToolTip;
+                AssertEx.AreNotEqual(helpTooltip, errorTooltip, "Expected error tooltip for C12H[M-O+H]");
+                // Error message from Adduct.ApplyToMolecule mentions the adduct and molecule
+                AssertEx.Contains(errorTooltip, "[M-O+H]");
+                AssertEx.Contains(errorTooltip, "C12H");
+
+                // Adduct labels more atoms than exist - original crash scenario from issue #4009
+                editMoleculeDlg.FormulaBox.FormulaText = "H[M7H2+NH4]";
+                errorTooltip = editMoleculeDlg.FormulaBox.FormulaToolTip;
+                AssertEx.AreNotEqual(helpTooltip, errorTooltip, "Expected error tooltip for H[M7H2+NH4]");
+                AssertEx.Contains(errorTooltip, "[M7H2+NH4]");
+
+                // Formula with negative atom counts (skyline.ms issue #1053 - "U-H2O")
+                editMoleculeDlg.FormulaBox.FormulaText = "U-H2O";
+                errorTooltip = editMoleculeDlg.FormulaBox.FormulaToolTip;
+                AssertEx.AreNotEqual(helpTooltip, errorTooltip, "Expected error tooltip for U-H2O");
+                AssertEx.Contains(errorTooltip,
+                    string.Format(SettingsUIResources.FormulaBox_UpdateAverageAndMonoTextsForFormula_The_formula___0___would_result_in_negative_atom_counts,
+                        "U-H2O"));
+
+                // Valid formula again - tooltip should revert to help text
+                editMoleculeDlg.FormulaBox.FormulaText = "C12H6[M+H]";
+                AssertEx.AreEqual(helpTooltip, editMoleculeDlg.FormulaBox.FormulaToolTip);
+            });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.CancelDialog);
+            RunUI(() => SkylineWindow.NewDocument(true));
+        }
+
         private static void TestEditBogusMolecule()
         {
             // Add a legit molecule, then try to modify it with garbage

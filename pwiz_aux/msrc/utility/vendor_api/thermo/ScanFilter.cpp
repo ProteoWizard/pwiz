@@ -140,7 +140,7 @@ MS[#]       no
 MSorder
 MS2			MSn order
 MS3
-…
+â€¦
 MS15
 
 Activation Type
@@ -157,7 +157,7 @@ ffr1			field free region 1
 ffr2			field free region 2
 
 Mass range
-[low mass – high mass]
+[low mass â€“ high mass]
 
 */
 
@@ -429,6 +429,7 @@ ScanFilter::initialize()
 	scanRangeMin_.clear();
 	scanRangeMax_.clear();
     compensationVoltage_ = 0.;
+    sourceOffsetVoltage_ = 0.;
     multiplePrecursorMode_ = false;
     constantNeutralLoss_ = false;
     analyzer_scan_offset_ = 0;
@@ -495,6 +496,17 @@ ScanFilter::parse(const string& filterLine)
         coronaOn_ = parseThermoBool(what["corona"]);
         photoIonizationOn_ = parseThermoBool(what["photoIonization"]);
         sourceCIDOn_ = parseThermoBool(what["sourceCID"]);
+
+        // parse source offset voltage from sid=NNN
+        const auto& sourceCID = what["sourceCID"];
+        if (sourceCID.matched)
+        {
+            string sourceCIDStr = sourceCID.str();
+            size_t eqPos = sourceCIDStr.find('=');
+            if (eqPos != string::npos)
+                sourceOffsetVoltage_ = lexical_cast<double>(sourceCIDStr.substr(eqPos + 1));
+        }
+
         detectorSet_ = parseThermoBool(what["detectorSet"]);
 
         turboScanOn_ = parseThermoBool(what["rapid"]);

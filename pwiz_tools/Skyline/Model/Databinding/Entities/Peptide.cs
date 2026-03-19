@@ -43,10 +43,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [InvariantDisplayName("Molecule")]
     public class Peptide : SkylineDocNode<PeptideDocNode>
     {
+        private readonly Protein _protein;
         private readonly CachedValues _cachedValues = new CachedValues();
-        public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath)
-            : base(dataSchema, identityPath)
+        public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath) : this(new Protein(dataSchema, identityPath.GetPathTo(0)), identityPath.Child)
         {
+        }
+
+        public Peptide(Protein protein, Identity peptide) : base(protein.DataSchema, new IdentityPath(protein.IdentityPath, peptide))
+        {
+            _protein = protein;
         }
 
         [OneToMany(ForeignKey = "Peptide")]
@@ -87,7 +92,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [InvariantDisplayName("MoleculeList", ExceptInUiMode = UiModes.PROTEOMIC)]
         public Protein Protein
         {
-            get { return new Protein(DataSchema, IdentityPath.Parent); }
+            get
+            {
+                return _protein;
+            }
         }
 
         [InvariantDisplayName("PeptideSequence")]
@@ -428,21 +436,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var calibrationCurve = curveFitter.GetCalibrationCurveMetrics();
                 return new LinkValue<CalibrationCurveMetrics>(calibrationCurve, (sender, args) =>
                 {
-                    if (null == DataSchema.SkylineWindow)
-                    {
-                        return;
-                    }
-                    DataSchema.SkylineWindow.SelectedPath = IdentityPath;
-                    var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
-                    if (calibrationForm != null)
-                    {
-                        if (DocNode.HasPrecursorConcentrations &&
-                            Settings.Default.CalibrationCurveOptions.SingleBatch)
-                        {
-                            Settings.Default.CalibrationCurveOptions = Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(false);
-                            calibrationForm.UpdateUI(false);
-                        }
-                    }
+                    DataSchema.ShowCalibrationCurve(this);
                 });
             }
         }
@@ -581,7 +575,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             protected override ImmutableList<Precursor> CalculateValue1(Peptide owner)
             {
                 return ImmutableList.ValueOf(owner.DocNode.Children.Select(child =>
-                    new Precursor(owner.DataSchema, new IdentityPath(owner.IdentityPath, child.Id))));
+                    new Precursor(owner, child.Id)));
             }
 
             protected override IDictionary<ResultKey, PeptideResult> CalculateValue2(Peptide owner)

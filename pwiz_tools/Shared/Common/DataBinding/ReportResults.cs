@@ -24,24 +24,36 @@ namespace pwiz.Common.DataBinding
 {
     public class ReportResults : Immutable
     {
-        public static readonly ReportResults EMPTY = new ReportResults(ImmutableList.Empty<RowItem>(), ItemProperties.EMPTY);
-        public ReportResults(IEnumerable<RowItem> rowItems, IEnumerable<DataPropertyDescriptor> itemProperties) 
+        private BigList<RowItem> _allRowItems;
+        public static readonly ReportResults EMPTY = new ReportResults(BigList<RowItem>.Empty, ItemProperties.EMPTY);
+        public ReportResults(BigList<RowItem> rowItems, IEnumerable<DataPropertyDescriptor> itemProperties) 
         {
-            RowItems = ImmutableList.ValueOf(rowItems);
+            RowItems = rowItems;
             ItemProperties = ItemProperties.FromList(itemProperties);
         }
 
-        public ImmutableList<RowItem> RowItems { get; private set; }
+        public BigList<RowItem> RowItems
+        {
+            get
+            {
+                return _allRowItems;
+            }
+            private set
+            {
+                _allRowItems = value;
+            }
+        }
 
-        public virtual ReportResults ChangeRowItems(IEnumerable<RowItem> rowItems)
+
+        public virtual ReportResults ChangeRowItems(BigList<RowItem> rowItems)
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.RowItems = ImmutableList.ValueOf(rowItems);
+                im.RowItems = rowItems;
             });
         }
 
-        public int RowCount
+        public long RowCount
         {
             get { return RowItems.Count; }
         }

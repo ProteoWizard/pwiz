@@ -1765,9 +1765,14 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (IsSingleTime)
                     chromCollector.AddTime(chromIndex, time, _blockWriter);
-                chromCollector.AddPoint(chromIndex, 
-                    spectrum.Intensities[j],
-                    spectrum.MassErrors != null ? spectrum.MassErrors[j] : (float?)null, 
+                // For targets not covered by the spectrum's scan window, write NaN
+                // so that ChromCollector can filter them out at release time
+                float intensity = spectrum.Intensities[j];
+                if (spectrum.HasScanWindowCoverage != null && !spectrum.HasScanWindowCoverage[j])
+                    intensity = float.NaN;
+                chromCollector.AddPoint(chromIndex,
+                    intensity,
+                    spectrum.MassErrors != null ? spectrum.MassErrors[j] : (float?)null,
                     _blockWriter);
             }
 

@@ -27,7 +27,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.GUI;
 using pwiz.Skyline.Alerts;
@@ -39,6 +38,7 @@ using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.FileUI;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -404,37 +404,38 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (AuthenticationException ae)
             {
-                if (!ae.Data.Contains(WatersConnectAccount.TOKEN_DATA) ||
-                    ae.Data[WatersConnectAccount.TOKEN_DATA] == null)
+                switch (WatersConnectAccount.HandleAuthenticationException(ae, out var message))
                 {
-                    MessageDlg.Show(this,
-                        TextUtil.LineSeparate(
-                            ToolsUIResources
-                                .EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_,
-                            ae.Message));
-                    return false;
+                    case AuthenticationErrorType.Generic:
+                        MessageDlg.Show(this,
+                            TextUtil.LineSeparate(
+                                ToolsUIResources
+                                    .EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_,
+                                ae.Message));
+                        return false;
+                    case AuthenticationErrorType.InvalidClientScope:
+                        tbxClientScope.Focus();
+                        break;
+                    case AuthenticationErrorType.InvalidClientSecret:
+                        message = ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret;
+                        tbxClientSecret.Focus();
+                        break;
+                    case AuthenticationErrorType.InvalidPassword:
+                        textPassword.Focus();
+                        break;
+                    case AuthenticationErrorType.InvalidIdentityServer:
+                        tbxIdentityServer.Focus();
+                        break;
+                    case AuthenticationErrorType.InvalidResponse:
+                        MessageDlg.Show(this,
+                            TextUtil.LineSeparate(
+                                ToolsUIResources
+                                    .EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_,
+                                ae.Message, ae.Data[WatersConnectAccount.TOKEN_DATA] as string));
+                        return false;
                 }
-                var tokenResponse = JObject.Parse((string)ae.Data[WatersConnectAccount.TOKEN_DATA]);
-                string error = (tokenResponse[@"error_description"] ?? tokenResponse[@"error"] ?? "").ToString();
-                var errorType = (tokenResponse[@"error"] ?? "").ToString();
-                if (errorType.ToString() == @"invalid_scope")
-                {
-                    tbxClientScope.Focus();
-                }
-                else if (errorType.ToString() == @"invalid_client")
-                {
-                    tbxClientSecret.Focus();
-                    error = ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret;
-                }
-                else if (errorType.ToString() == @"invalid_grant")
-                {
-                    textPassword.Focus();
-                }
-                else
-                {
-                    tbxIdentityServer.Focus();
-                }
-                MessageDlg.ShowError(this, TextUtil.LineSeparate(ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
+                MessageDlg.ShowError(this, TextUtil.LineSeparate(ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_,
+                    message));
                 return false;
             }
             catch (Exception e)
@@ -582,9 +583,10 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
-            if (session.Account is WatersConnectAccount wca && !wca.SupportsMethodDevelopment)
+            if (session.Account is WatersConnectAccount wca && !wca.SupportsMethodDevelopment(out var reason))
                 MessageDlg.Show(this,
-                    ToolsUIResources.EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_instance_does_not_support_method_development__Method_upload_will_be_disabled_,
+                    ToolsUIResources.EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_instance_does_not_support_method_development__Method_upload_will_be_disabled_ +
+                (string.IsNullOrEmpty(reason) ? "" : FileUIResources.WatersConnectMethodFileDialog_ListViewPostprocessing_Reason + reason),
                     false, MessageIcons.Warning);
             else
                 MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Settings_are_correct, false, MessageIcons.Success);

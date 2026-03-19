@@ -705,16 +705,11 @@ Would you like to remove some or all of this suffix to shorten the names used in
     <value>Selected account does not support method development. Please, create or select another account.</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_" xml:space="preserve">
-    <value>Account for this template does not support method development.</value>
-  </data>
-  <data name="ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_" xml:space="preserve">
-    <value>Selected waters_connect account does not support method development.</value>
+    <value>Account for this template does not support method development.
+Reason: {0}</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_" xml:space="preserve">
     <value>Cannot find waters_connect account for the selected URL.</value>
-  </data>
-  <data name="WatersConnectMethodFileDialog_ListViewPostprocessing_This_account_does_not_support_method_development" xml:space="preserve">
-    <value>This account does not support method development</value>
   </data>
   <data name="ExportDlgProperties_PerformLongExport_The_server_returns_the_following_message" xml:space="preserve">
     <value>
@@ -729,5 +724,18 @@ and {0} other {1}. Click More Info to see them.</value>
   </data>
   <data name="ExportDlgProperties_PerformLongExport_message" xml:space="preserve">
     <value>message</value>
+  </data>
+  <data name="BaseFileDialogNE_Authentication_exception_message" xml:space="preserve">
+    <value>Cannot authenticate account {0}. Error type: {1}.</value>
+  </data>
+  <data name="BaseFileDialogNE_Authentication_exception_server_response" xml:space="preserve">
+    <value>Server response: {0}.</value>
+  </data>
+  <data name="WatersConnectMethodFileDialog_ListViewPostprocessing_Reason" xml:space="preserve">
+    <value>
+Reason: </value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_There_is_no_valid_account_for_this_template_that_would_support_method_development_" xml:space="preserve">
+    <value>There is no valid account for this template that would support method development.</value>
   </data>
 </root>

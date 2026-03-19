@@ -73,6 +73,16 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap AcquisitionComparison_start {
+            get {
+                object obj = ResourceManager.GetObject("AcquisitionComparison_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap AuditLog_start {
             get {
                 object obj = ResourceManager.GetObject("AuditLog_start", resourceCulture);
@@ -133,6 +143,16 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap DIA_TTOF_start {
+            get {
+                object obj = ResourceManager.GetObject("DIA_TTOF_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap DIA_Umpire_TTOF_start {
             get {
                 object obj = ResourceManager.GetObject("DIA_Umpire_TTOF_start", resourceCulture);
@@ -153,9 +173,9 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap GroupedStudies_start {
+        internal static System.Drawing.Bitmap GroupedStudy_start {
             get {
-                object obj = ResourceManager.GetObject("GroupedStudies_start", resourceCulture);
+                object obj = ResourceManager.GetObject("GroupedStudy_start", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -263,9 +283,19 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap PRM_start {
+        internal static System.Drawing.Bitmap PeakBoundaryImputation_start {
             get {
-                object obj = ResourceManager.GetObject("PRM_start", resourceCulture);
+                object obj = ResourceManager.GetObject("PeakBoundaryImputation_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap TargetedMSMS_start {
+            get {
+                object obj = ResourceManager.GetObject("TargetedMSMS_start", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

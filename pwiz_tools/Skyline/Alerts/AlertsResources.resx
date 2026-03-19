@@ -329,6 +329,21 @@ If you don't get an email, double-check your email address or click "More Info" 
   <data name="MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server" xml:space="preserve">
     <value>Contacting MS Fragger download server</value>
   </data>
+  <data name="ScreenCapturePermissionDlg_Message" xml:space="preserve">
+    <value>An AI assistant is requesting to capture a screenshot of the Skyline window. Non-Skyline content will be automatically redacted.</value>
+  </data>
+  <data name="ScreenCapturePermissionDlg_DoNotAskAgain" xml:space="preserve">
+    <value>Do not ask me again</value>
+  </data>
+  <data name="ScreenCapturePermissionDlg_Allow" xml:space="preserve">
+    <value>Allow</value>
+  </data>
+  <data name="ScreenCapturePermissionDlg_Deny" xml:space="preserve">
+    <value>Deny</value>
+  </data>
+  <data name="ScreenCapturePermissionDlg_Title" xml:space="preserve">
+    <value>Screen Capture Permission</value>
+  </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>Error downloading tool</value>
   </data>

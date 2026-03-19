@@ -78,7 +78,7 @@ namespace TestPerf
 
                 RunUI(() =>
                 {
-                    openDataSourceDialog.CurrentDirectory = new MsDataFilePath(DataPath);
+                    openDataSourceDialog.SetCurrentDirectory(new MsDataFilePath(DataPath));
                     openDataSourceDialog.SelectAllFileType(".d");
                 });
 

@@ -93,6 +93,7 @@ namespace pwiz.SkylineTestFunctional
                 TestLiveKoinaMirrorPlots();
                 Settings.Default.Koina = false; // Disable Koina to avoid that last query after building the library
                 TestKoinaLibraryBuild(false);
+                TestMissingRetentionTimePrediction();
                 TestInvalidPepSequences(); // Do this at the end, otherwise it messes with the order of nodes
                 //var expected = RecordData ? 0 : QUERIES.Count;
                 //Assert.AreEqual(expected, ((FakeKoinaPredictionClient)KoinaPredictionClient.Current).QueryIndex);
@@ -100,6 +101,50 @@ namespace pwiz.SkylineTestFunctional
                 TestKoinaLibraryBuild(true);
             }
             KoinaConstants.CACHE_PREV_PREDICTION = true;
+        }
+
+        /// <summary>
+        /// Regression test for issue #3971: when the RT model fails to return a result,
+        /// the error should be properly reported instead of leaving the UI stuck on
+        /// "Making predictions..." indefinitely due to an unhandled exception.
+        /// Before the fix, KeyNotFoundException escaped to ActionUtil.RunAsync's generic
+        /// handler, so neither Spectrum nor Exception was set on the KoinaRequest.
+        /// After the fix, the exception is caught and reported to the UI.
+        /// </summary>
+        public void TestMissingRetentionTimePrediction()
+        {
+            var client = (FakeKoinaPredictionClient) KoinaPredictionClient.Current;
+            client.SuppressRetentionTimePrediction = true;
+            try
+            {
+                // Use NCE 25 for molecule 0, which already has an intensity query
+                // in the expected queries from TestKoinaSinglePrecursorPredictions
+                Settings.Default.KoinaNCE = 25;
+                // LibMatchMirror is left enabled by TestLiveKoinaMirrorPlots;
+                // disable it so the Koina error path is exercised instead of falling
+                // back to the library spectrum.
+                Settings.Default.LibMatchMirror = false;
+                SelectNode(SrmDocument.Level.Molecules, 0);
+                Settings.Default.Koina = true;
+                RunUI(SkylineWindow.UpdateGraphPanes);
+                WaitForGraphs();
+                // The exception should be properly reported, not stuck on "Making predictions..."
+                WaitForConditionUI(() =>
+                    SkylineWindow.GraphSpectrum.GraphException != null &&
+                    !(SkylineWindow.GraphSpectrum.GraphException is KoinaPredictingException));
+                RunUI(() =>
+                {
+                    var ex = SkylineWindow.GraphSpectrum.GraphException;
+                    Assert.IsInstanceOfType(ex, typeof(KoinaException));
+                    Assert.IsNotNull(ex.InnerException,
+                        "Expected KoinaException wrapping the original RT prediction failure");
+                });
+            }
+            finally
+            {
+                client.SuppressRetentionTimePrediction = false;
+                Settings.Default.Koina = false;
+            }
         }
 
         public void TestInvalidPepSequences()

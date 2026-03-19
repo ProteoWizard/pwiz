@@ -965,6 +965,20 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public string GetLabel(double precursorMz,
+            string resultsText)
+        {
+            return string.Format(@"{0}{1}{2}{3}", GetMzLabel(precursorMz),
+                Transition.GetChargeIndicator(PrecursorAdduct), LabelTypeText, resultsText);
+        }
+
+        private string GetMzLabel(double precursorMz)
+        {
+            int? massShift = DecoyMassShift;
+            double shift = SequenceMassCalc.GetPeptideInterval(massShift);
+            return string.Format(@"{0:F04}{1}", precursorMz - shift, Transition.GetDecoyText(massShift));
+        }
+
         #region object overrides
 
         public bool Equals(TransitionGroup obj)

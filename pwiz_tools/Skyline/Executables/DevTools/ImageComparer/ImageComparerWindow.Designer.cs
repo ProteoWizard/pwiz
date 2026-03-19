@@ -39,6 +39,7 @@ namespace ImageComparer
             this.oldScreenshotLabel = new System.Windows.Forms.Label();
             this.newScreenshotLabelPanel = new System.Windows.Forms.Panel();
             this.labelNewSize = new System.Windows.Forms.Label();
+            this.labelChangeCount = new System.Windows.Forms.Label();
             this.newScreenshotLabel = new System.Windows.Forms.Label();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.toolStrip = new System.Windows.Forms.ToolStrip();
@@ -50,6 +51,11 @@ namespace ImageComparer
             this.toolStripRevert = new System.Windows.Forms.ToolStripButton();
             this.toolStripFileList = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripAutoSize = new System.Windows.Forms.ToolStripButton();
+            this.toolStripDiffOnly = new System.Windows.Forms.ToolStripButton();
+            this.toolStripAmplify = new System.Windows.Forms.ToolStripButton();
+            this.contextMenuImageSource = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.menuItemGit = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemWeb = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripGotoWeb = new System.Windows.Forms.ToolStripButton();
             this.toolStripPickColorButton = new ImageComparer.AlphaColorPickerButton();
@@ -172,6 +178,7 @@ namespace ImageComparer
             // 
             this.newScreenshotLabelPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.newScreenshotLabelPanel.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.newScreenshotLabelPanel.Controls.Add(this.labelChangeCount);
             this.newScreenshotLabelPanel.Controls.Add(this.labelNewSize);
             this.newScreenshotLabelPanel.Controls.Add(this.newScreenshotLabel);
             this.newScreenshotLabelPanel.Dock = System.Windows.Forms.DockStyle.Top;
@@ -180,15 +187,25 @@ namespace ImageComparer
             this.newScreenshotLabelPanel.Name = "newScreenshotLabelPanel";
             this.newScreenshotLabelPanel.Size = new System.Drawing.Size(487, 30);
             this.newScreenshotLabelPanel.TabIndex = 3;
-            // 
+            //
             // labelNewSize
-            // 
+            //
             this.labelNewSize.AutoSize = true;
             this.labelNewSize.Location = new System.Drawing.Point(5, 9);
             this.labelNewSize.Name = "labelNewSize";
             this.labelNewSize.Size = new System.Drawing.Size(48, 13);
             this.labelNewSize.TabIndex = 2;
             this.labelNewSize.Text = "new size";
+            //
+            // labelChangeCount
+            //
+            this.labelChangeCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelChangeCount.Location = new System.Drawing.Point(387, 9);
+            this.labelChangeCount.Name = "labelChangeCount";
+            this.labelChangeCount.Size = new System.Drawing.Size(95, 13);
+            this.labelChangeCount.TabIndex = 3;
+            this.labelChangeCount.Text = "0/0 changes";
+            this.labelChangeCount.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // newScreenshotLabel
             // 
@@ -216,6 +233,8 @@ namespace ImageComparer
             this.toolStripFileList,
             this.toolStripAutoSize,
             this.toolStripPickColorButton,
+            this.toolStripDiffOnly,
+            this.toolStripAmplify,
             this.toolStripSeparator3,
             this.toolStripGotoWeb});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
@@ -292,12 +311,56 @@ namespace ImageComparer
             this.toolStripAutoSize.Size = new System.Drawing.Size(23, 22);
             this.toolStripAutoSize.ToolTipText = "Auto-Size";
             this.toolStripAutoSize.CheckedChanged += new System.EventHandler(this.toolStripAutoSize_CheckedChanged);
-            // 
+            //
+            // toolStripDiffOnly
+            //
+            this.toolStripDiffOnly.CheckOnClick = true;
+            this.toolStripDiffOnly.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripDiffOnly.Image = global::ImageComparer.Properties.Resources.blank;
+            this.toolStripDiffOnly.Name = "toolStripDiffOnly";
+            this.toolStripDiffOnly.Size = new System.Drawing.Size(23, 22);
+            this.toolStripDiffOnly.ToolTipText = "Show diff pixels only on white background (D)";
+            this.toolStripDiffOnly.CheckedChanged += new System.EventHandler(this.toolStripDiffOnly_CheckedChanged);
+            //
+            // toolStripAmplify
+            //
+            this.toolStripAmplify.CheckOnClick = true;
+            this.toolStripAmplify.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripAmplify.Name = "toolStripAmplify";
+            this.toolStripAmplify.Size = new System.Drawing.Size(23, 22);
+            this.toolStripAmplify.Text = "Amp";
+            this.toolStripAmplify.ToolTipText = "Amplify diff pixels to 5x larger squares (A)";
+            this.toolStripAmplify.CheckedChanged += new System.EventHandler(this.toolStripAmplify_CheckedChanged);
+            //
+            // contextMenuImageSource
+            //
+            this.contextMenuImageSource.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItemGit,
+            this.menuItemWeb});
+            this.contextMenuImageSource.Name = "contextMenuImageSource";
+            this.contextMenuImageSource.Size = new System.Drawing.Size(120, 70);
+            //
+            // menuItemGit
+            //
+            this.menuItemGit.Image = global::ImageComparer.Properties.Resources.gitsource;
+            this.menuItemGit.Name = "menuItemGit";
+            this.menuItemGit.Size = new System.Drawing.Size(119, 22);
+            this.menuItemGit.Text = "Git HEAD";
+            this.menuItemGit.Click += new System.EventHandler(this.menuItemGit_Click);
+            //
+            // menuItemWeb
+            //
+            this.menuItemWeb.Image = global::ImageComparer.Properties.Resources.websource;
+            this.menuItemWeb.Name = "menuItemWeb";
+            this.menuItemWeb.Size = new System.Drawing.Size(119, 22);
+            this.menuItemWeb.Text = "Web";
+            this.menuItemWeb.Click += new System.EventHandler(this.menuItemWeb_Click);
+            //
             // toolStripSeparator3
-            // 
+            //
             this.toolStripSeparator3.Name = "toolStripSeparator3";
             this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
-            // 
+            //
             // toolStripGotoWeb
             // 
             this.toolStripGotoWeb.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -369,9 +432,15 @@ namespace ImageComparer
         private System.Windows.Forms.Button buttonImageSource;
         private System.Windows.Forms.Label labelOldSize;
         private System.Windows.Forms.Label labelNewSize;
+        private System.Windows.Forms.Label labelChangeCount;
         private System.Windows.Forms.PictureBox pictureMatching;
         private System.Windows.Forms.ToolStripComboBox toolStripFileList;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private AlphaColorPickerButton toolStripPickColorButton;
+        private System.Windows.Forms.ToolStripButton toolStripDiffOnly;
+        private System.Windows.Forms.ToolStripButton toolStripAmplify;
+        private System.Windows.Forms.ContextMenuStrip contextMenuImageSource;
+        private System.Windows.Forms.ToolStripMenuItem menuItemGit;
+        private System.Windows.Forms.ToolStripMenuItem menuItemWeb;
     }
 }

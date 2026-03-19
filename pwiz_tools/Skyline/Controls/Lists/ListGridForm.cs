@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Util;
@@ -80,6 +82,21 @@ namespace pwiz.Skyline.Controls.Lists
             if (persisted.Parts.Count > 1)
                 return persisted.Parts[1];
             return null;
+        }
+
+        /// <summary>
+        /// Closes ListGridForm forms whose list no longer exists in the document.
+        /// </summary>
+        public static void CloseInapplicableForms(SkylineWindow skylineWindow)
+        {
+            var dataSettings = skylineWindow.Document.Settings.DataSettings;
+            foreach (var form in FormUtil.OpenForms.OfType<ListGridForm>().ToList())
+            {
+                if (!ReferenceEquals(skylineWindow, form.ListViewContext.SkylineDataSchema.SkylineWindow))
+                    continue;
+                if (dataSettings.FindList(form.ListName) == null)
+                    form.Close();
+            }
         }
     }
 }

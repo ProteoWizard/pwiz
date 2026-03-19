@@ -709,6 +709,51 @@ namespace pwiz.Skyline.Alerts {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allow.
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_Allow {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_Allow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Deny.
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_Deny {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_Deny", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Do not ask me again.
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_DoNotAskAgain {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_DoNotAskAgain", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to An AI assistant is requesting to capture a screenshot of the Skyline window. Non-Skyline content will be automatically redacted..
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_Message {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_Message", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Screen Capture Permission.
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_Title {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_Title", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Maybe &amp;Later.
         /// </summary>
         public static string UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later {

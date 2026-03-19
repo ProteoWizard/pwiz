@@ -51,7 +51,7 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
-    
+
 #ifdef PWIZ_READER_ABI
     SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile,
                      const ExperimentsMap& experimentsMap, int sample,

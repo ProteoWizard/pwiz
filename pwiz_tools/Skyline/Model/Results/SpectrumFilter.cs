@@ -830,6 +830,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public const int SIM_ISOLATION_CUTOFF = 500;
+        public const int NARROW_SCAN_WINDOW_CUTOFF = 30;
 
         private static bool IsSimIsolation(IsolationWindowFilter isoWin)
         {

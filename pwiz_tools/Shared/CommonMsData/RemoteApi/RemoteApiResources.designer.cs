@@ -88,6 +88,16 @@ namespace pwiz.CommonMsData.RemoteApi {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot authenticate waters_connect account {0}
+        ///    Error: {1}.
+        /// </summary>
+        public static string Waters_Connect_Auth_Failure_Message {
+            get {
+                return ResourceManager.GetString("Waters_Connect_Auth_Failure_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Advanced waters_connect settings.
         /// </summary>
         public static string Waters_Connect_GroupBox_Label {

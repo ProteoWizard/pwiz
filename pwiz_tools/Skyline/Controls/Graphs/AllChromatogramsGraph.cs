@@ -988,6 +988,20 @@ namespace pwiz.Skyline.Controls.Graphs
         public ProgressBar ProgressBarTotal => progressBarTotal;
 
         /// <summary>
+        /// Gets all visible file progress bars for screenshot processing.
+        /// Use with ScreenshotProcessingExtensions.FillProgressBar to paint over
+        /// animated progress bars with static representations.
+        /// </summary>
+        public IEnumerable<ProgressBar> GetVisibleFileProgressBars()
+        {
+            foreach (FileProgressControl control in flowFileStatus.Controls)
+            {
+                if (control.ProgressBar.Visible)
+                    yield return control.ProgressBar;
+            }
+        }
+
+        /// <summary>
         /// Gets the current Y-axis intensity maximum of the displayed graph.
         /// Useful for determining what value to use for graphIntensityMax parameter.
         /// </summary>

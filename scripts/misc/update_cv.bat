@@ -18,6 +18,10 @@ REM # download latest OBO files
 pushd %~dp0
 echo Downloading latest controlled vocabularies...
 call download_cv.vbs
+IF ERRORLEVEL 1 (
+    echo ERROR: download_cv.vbs failed
+    exit /b 1
+)
 popd
 
 @echo off

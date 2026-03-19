@@ -27,10 +27,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -102,16 +102,12 @@ namespace pwiz.Skyline.ToolsUI
             var container = new MemoryDocumentContainer();
             container.SetDocument(document, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-            var viewContext = new DocumentGridViewContext(dataSchema);
+            using var stream = new MemoryStream();
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
             IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
-            var writer = new StringWriter();
-            if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), viewSpec.DefaultViewLayout, writer,
-                    TextUtil.SEPARATOR_CSV))
-            {
-                return writer.ToString();
-            }
-            return null;
+            rowFactories.ExportReport(stream, viewSpec.ViewSpec, viewSpec.DefaultViewLayout, ReportExporters.ForSeparator(DataSchemaLocalizer.INVARIANT, TextUtil.SEPARATOR_CSV), progressMonitor, ref status);
+            return Encoding.UTF8.GetString(stream.ToArray());
         }
 
         [Obsolete]
@@ -632,6 +628,34 @@ namespace pwiz.Skyline.ToolsUI
             }
             var elementRefs = new ElementRefs(document);
             return elementRefs.GetNodeRef(selectedPath.GetPathTo((int)nodeLevel));
+        }
+
+        public string StartMcpConnection(string alwaysAtStartup)
+        {
+            string status;
+            var jsonToolServer = Program.MainJsonToolServer;
+            if (jsonToolServer != null)
+            {
+                jsonToolServer.WriteConnectionInfo();
+                status = @"started";
+            }
+            else
+            {
+                status = @"failed";
+            }
+
+            if (bool.TryParse(alwaysAtStartup, out bool enable))
+            {
+                Settings.Default.EnableMcpAutoConnect = enable;
+                Settings.Default.Save();
+            }
+
+            return new JObject
+            {
+                [nameof(JsonToolConstants.JSON.status)] = status,
+                [nameof(JsonToolConstants.JSON.auto_connect)] = Settings.Default.EnableMcpAutoConnect,
+                [nameof(JsonToolConstants.JSON.version)] = Install.ProgramNameAndVersion
+            }.ToString(Newtonsoft.Json.Formatting.None);
         }
     }
 }

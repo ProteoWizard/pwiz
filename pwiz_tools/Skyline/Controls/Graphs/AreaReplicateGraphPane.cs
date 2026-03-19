@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
@@ -1192,7 +1193,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  bool zeroMissingValues = false)
                 : base(document, selectedDocNodePaths, displayType, replicateGroupOp, paneKey)
             {
-                _normalizeOption = normalizeOption;
+                _normalizeOption = normalizeOption ?? NormalizeOption.DEFAULT;
                 _dataScalingOption = dataScalingOption;
                 _expectedVisible = expectedVisible;
                 _zeroMissingValues = zeroMissingValues;
@@ -1309,6 +1310,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return false;
             }
 
+            [MethodImpl(MethodImplOptions.NoOptimization)]
             private float GetDotProductResults(TransitionGroupDocNode nodeGroup, int indexResult)
             {
                 if (_expectedVisible == AreaExpectedValue.none)

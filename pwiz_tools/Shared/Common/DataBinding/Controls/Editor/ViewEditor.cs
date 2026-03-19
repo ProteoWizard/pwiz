@@ -315,7 +315,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public static bool IsCanonical(DisplayColumn displayColumn)
         {
-            if (displayColumn.ColumnSpec.Hidden && null != displayColumn.ColumnSpec.SortDirection)
+            if (displayColumn.ColumnSpec.Hidden)
             {
                 return false;
             }

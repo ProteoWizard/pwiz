@@ -2523,6 +2523,47 @@ namespace pwiz.Skyline.Model
 
         public int MoleculeNameColumn { get; set; }
 
+        // Multiple fragments per line (Issue 860): Fragment-oriented column types (Product m/z,
+        // Product Formula, etc.) can be assigned to multiple columns in the column picker,
+        // allowing each row to define multiple transitions. The nth assignment of each type
+        // maps to the nth fragment. Types with fewer assignments than Product m/z use
+        // fill-forward (the last value applies to remaining fragments).
+        // Names intentionally don't end in "Column" to avoid reflection-based init/reset.
+        public List<int> ProductMzColumns { get; } = new List<int>();
+        public List<int> ProductFormulaColumns { get; } = new List<int>();
+        public List<int> ProductNameColumns { get; } = new List<int>();
+        public List<int> ProductChargeColumns { get; } = new List<int>();
+        public List<int> ProductAdductColumns { get; } = new List<int>();
+        public List<int> ProductNeutralLossColumns { get; } = new List<int>();
+
+        /// <summary>
+        /// Number of fragments per line, driven by the maximum repeat count across all
+        /// fragment-oriented column types (Product m/z, Product Formula, Product Name, etc.)
+        /// </summary>
+        public int FragmentCount => GetFragmentCount(
+            ProductMzColumns.Count, ProductFormulaColumns.Count, ProductNameColumns.Count,
+            ProductChargeColumns.Count, ProductAdductColumns.Count, ProductNeutralLossColumns.Count);
+
+        public static int GetFragmentCount(params int[] fragmentColumnCounts)
+        {
+            return Math.Max(1, fragmentColumnCounts.Max());
+        }
+
+        /// <summary>
+        /// Get the column index for a given fragment, with fill-forward for types that have
+        /// fewer assignments than Product m/z columns
+        /// </summary>
+        public static int GetProductColumnForFragment(List<int> columnList, int fragmentIndex)
+        {
+            if (columnList.Count == 0)
+            {
+                return -1;
+            }
+            return fragmentIndex < columnList.Count
+                ? columnList[fragmentIndex]
+                : columnList[columnList.Count - 1]; // fill-forward
+        }
+
         public ColumnIndices()
         {
             // Iterates through the column indices and initializes them all to -1
@@ -2563,7 +2604,7 @@ namespace pwiz.Skyline.Model
                 property.SetValue(this, value);
             }
 
-            void FindValueMatch(string key, string header, string propertyName)
+            void FindValueMatch(string key, string header, string propertyName, List<int> columnList = null)
             {
                 considered.Add(propertyName); // Aids in checking that we've covered all header types
                 foreach (var item in SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms)
@@ -2579,8 +2620,16 @@ namespace pwiz.Skyline.Model
                         lowerKey = lowerKey.Replace(@" ", string.Empty);
                         if (lowerValue.Equals(lowerHeader) || lowerKey.Equals(lowerHeader))
                         {
-
-                            SetPropertyValue(propertyName, index);
+                            if (columnList != null)
+                            {
+                                columnList.Add(index);
+                                if (columnList.Count == 1)
+                                    SetPropertyValue(propertyName, index); // First match sets primary
+                            }
+                            else
+                            {
+                                SetPropertyValue(propertyName, index);
+                            }
                         }
                     }
                 }
@@ -2590,14 +2639,14 @@ namespace pwiz.Skyline.Model
             {
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, header, nameof(MoleculeListNameColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.namePrecursor, header, nameof(MoleculeNameColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.nameProduct, header, nameof(ProductNameColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.nameProduct, header, nameof(ProductNameColumn), ProductNameColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, header, nameof(MolecularFormulaColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaProduct, header, nameof(ProductFormulaColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct, header, nameof(ProductNeutralLossColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaProduct, header, nameof(ProductFormulaColumn), ProductFormulaColumns);
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct, header, nameof(ProductNeutralLossColumn), ProductNeutralLossColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, header, nameof(PrecursorColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzProduct, header, nameof(ProductColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzProduct, header, nameof(ProductColumn), ProductMzColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, header, nameof(PrecursorChargeColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargeProduct, header, nameof(ProductChargeColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargeProduct, header, nameof(ProductChargeColumn), ProductChargeColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, header, nameof(ExplicitRetentionTimeColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor, header, nameof(ExplicitRetentionTimeWindowColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.cePrecursor, header, nameof(ExplicitCollisionEnergyColumn));
@@ -2617,7 +2666,7 @@ namespace pwiz.Skyline.Model
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeListNote, header, nameof(MoleculeListNoteColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.labelType, header, nameof(LabelTypeColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, header, nameof(PrecursorAdductColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductProduct, header, nameof(ProductAdductColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductProduct, header, nameof(ProductAdductColumn), ProductAdductColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idCAS, header, nameof(CASColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idInChiKey, header, nameof(InChiKeyColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idInChi, header, nameof(InChiColumn));
@@ -2662,6 +2711,22 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+            // Also remove from multi-fragment lists and re-point primary properties
+            RemoveFromColumnList(ProductMzColumns, index, v => ProductColumn = v);
+            RemoveFromColumnList(ProductFormulaColumns, index, v => ProductFormulaColumn = v);
+            RemoveFromColumnList(ProductNameColumns, index, v => ProductNameColumn = v);
+            RemoveFromColumnList(ProductChargeColumns, index, v => ProductChargeColumn = v);
+            RemoveFromColumnList(ProductAdductColumns, index, v => ProductAdductColumn = v);
+            RemoveFromColumnList(ProductNeutralLossColumns, index, v => ProductNeutralLossColumn = v);
+        }
+
+        private static void RemoveFromColumnList(List<int> columnList, int index, Action<int> setPrimary)
+        {
+            columnList.RemoveAll(i => i == index);
+            // If the primary property was reset to -1 but the list still has entries,
+            // re-point the primary to the first remaining entry
+            if (columnList.Count > 0)
+                setPrimary(columnList[0]);
         }
 
         /// <summary>

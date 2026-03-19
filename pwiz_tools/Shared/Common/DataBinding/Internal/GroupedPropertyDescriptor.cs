@@ -33,7 +33,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
 
         public GroupedPropertyDescriptor(string name, PivotKey outerPivotKey, DisplayColumn displayColumn, PivotKey innerPivotKey) 
-            : base(name, displayColumn.GetColumnCaption(MergePivotKeys(outerPivotKey, innerPivotKey)), displayColumn.DataSchema.DataSchemaLocalizer, displayColumn.GetAttributes(MergePivotKeys(outerPivotKey, innerPivotKey)).ToArray())
+            : base(name, displayColumn.GetColumnCaption(MergePivotKeys(outerPivotKey, innerPivotKey)), displayColumn.DataSchema, displayColumn.GetAttributes(MergePivotKeys(outerPivotKey, innerPivotKey)).ToArray())
         {
             OuterPivotKey = outerPivotKey;
             InnerPivotKey = innerPivotKey;
@@ -43,6 +43,7 @@ namespace pwiz.Common.DataBinding.Internal
         public DisplayColumn DisplayColumn { get; private set; }
         public PivotKey OuterPivotKey { get; private set; }
         public PivotKey InnerPivotKey { get; private set; }
+
         public override bool CanResetValue(object component)
         {
             return false;

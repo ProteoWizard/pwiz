@@ -751,7 +751,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 var rowHeight = firstDisplayedCell?.Size.Height ?? DataGridView.Rows[0].Height;
                 int firstDisplayedRowIndex = firstDisplayedCell?.RowIndex ?? 0;
                 var firstLocation = 3.5;
-                var rowLocations = ImmutableList.ValueOf(Enumerable.Range(0, reportResults.RowCount).Select(rowIndex =>
+                var rowLocations = ImmutableList.ValueOf(Enumerable.Range(0, BindingListSource.Count).Select(rowIndex =>
                         (rowIndex - firstDisplayedRowIndex) * rowHeight + firstLocation))
                     .Select(d => new KeyValuePair<double, double>(d, d + rowHeight));
                 IEnumerable<IEnumerable<Color>> rowColors = null;

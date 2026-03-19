@@ -79,7 +79,10 @@ void testFilter(const ScanInfo& scanFilter,
     unit_assert_operator_equal(polarityType, scanFilter.polarityType());
     unit_assert_operator_equal(dataPointType, scanFilter.isCentroidScan() ? DataPointType_Centroid : DataPointType_Profile);
     unit_assert_operator_equal(ionizationType, scanFilter.ionizationType());
-    unit_assert_operator_equal(activationType, scanFilter.activationType());
+    if (scanFilter.precursorCount() > 0)
+        unit_assert_operator_equal(activationType, scanFilter.precursorActivationType(0));
+    else
+        unit_assert_operator_equal(activationType, ActivationType_Unknown);
     unit_assert_operator_equal(scanType, scanFilter.scanType());
     unit_assert_operator_equal(hasMultiplePrecursors, scanFilter.hasMultiplePrecursors());
     unit_assert_operator_equal(faimsOn, scanFilter.FAIMSOn() ? TriBool_True : TriBool_Unknown);

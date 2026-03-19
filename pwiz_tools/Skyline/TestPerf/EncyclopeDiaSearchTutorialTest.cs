@@ -227,7 +227,7 @@ namespace TestPerf
             var browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());
             RunUI(() =>
             {
-                browseNarrowDlg.CurrentDirectory = new MsDataFilePath(workingDir);
+                browseNarrowDlg.SetCurrentDirectory(new MsDataFilePath(workingDir));
                 browseNarrowDlg.SelectAllFileType("mzML", s => _analysisValues.NarrowWindowDiaFiles.Contains(s));
             });
             PauseForScreenShot<OpenDataSourceDialog>("Narrow Window Results - Browse for Results Files form");
@@ -238,7 +238,7 @@ namespace TestPerf
             var browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
             RunUI(() =>
             {
-                browseWideDlg.CurrentDirectory = new MsDataFilePath(workingDir);
+                browseWideDlg.SetCurrentDirectory(new MsDataFilePath(workingDir));
                 browseWideDlg.SelectAllFileType("mzML", s => _analysisValues.WideWindowDiaFiles.Contains(s));
             });
             PauseForScreenShot<OpenDataSourceDialog>("Wide Window Results - Browse for Results Files form");

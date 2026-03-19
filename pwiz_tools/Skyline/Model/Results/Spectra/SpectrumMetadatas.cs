@@ -48,6 +48,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private readonly ImmutableList<bool> _negativeCharges;
         private readonly ImmutableList<int> _msLevels;
         private readonly ImmutableList<double?> _constantNeutralLosses;
+        private readonly ImmutableList<double?> _sourceOffsetVoltages;
 
         public SpectrumMetadatas(IEnumerable<SpectrumMetadata> enumerable)
         {
@@ -67,6 +68,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _negativeCharges = collection.Select(m => m.NegativeCharge).ToFactor().MaybeConstant();
             _msLevels = collection.Select(m => m.MsLevel).ToFactor().MaybeConstant();
             _constantNeutralLosses = collection.Select(m => m.ConstantNeutralLoss).Nullables().MaybeConstant();
+            _sourceOffsetVoltages = collection.Select(m => m.SourceOffsetVoltage).Nullables().MaybeConstant();
         }
 
         public SpectrumMetadatas(ResultFileMetaDataProto proto)
@@ -121,6 +123,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _spectrumPrecursors = spectrumPrecursorsList.ToFactor().MaybeConstant();
             _msLevels = IntegerList.FromIntegers(msLevels);
             _constantNeutralLosses = proto.Spectra.Select(s => s.ConstantNeutralLoss).Nullables().MaybeConstant();
+            _sourceOffsetVoltages = proto.Spectra.Select(s => s.SourceOffsetVoltage).Nullables().MaybeConstant();
         }
 
         public override SpectrumMetadata this[int index]
@@ -136,7 +139,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     .ChangeScanDescription(_scanDescriptions[index])
                     .ChangeTotalIonCurrent(_totalIonCurrents[index])
                     .ChangeConstantNeutralLoss(_constantNeutralLosses[index])
-                    .ChangeNegativeCharge(_negativeCharges[index]);
+                    .ChangeNegativeCharge(_negativeCharges[index])
+                    .ChangeSourceOffsetVoltage(_sourceOffsetVoltages[index]);
                 var precursorsByLevelLookup = _spectrumPrecursors[index].ToLookup(t=>t.MsLevel, t=>t.Precursor);
                 var precursors = Enumerable.Range(1, _msLevels[index] - 1)
                     .Select(level => precursorsByLevelLookup[level]);
@@ -195,7 +199,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     PrecursorIndex = { _spectrumPrecursors[index].Select(p=>precursors.IndexOf(p) + 1) },
                     ScanDescriptionIndex = scanDescriptions.LevelIndices[index],
                     ScanWindowIndex = scanWindows.LevelIndices[index],
-                    CompensationVoltage = _compensationVoltages[index]
+                    CompensationVoltage = _compensationVoltages[index],
+                    SourceOffsetVoltage = _sourceOffsetVoltages[index]
                 };
                 _scanIds[index].SetInProto(spectrum);
                 proto.Spectra.Add(spectrum);

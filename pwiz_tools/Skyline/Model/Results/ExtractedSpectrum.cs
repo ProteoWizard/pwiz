@@ -55,5 +55,12 @@ namespace pwiz.Skyline.Model.Results
         public float[] Intensities { get; private set; }
         public float[] MassErrors { get; private set; }
         public ChromExtractor Extractor { get; private set; }
+
+        /// <summary>
+        /// Per-target flag indicating whether the target's product m/z was within the
+        /// scan window of any contributing spectrum. Null means all targets are covered
+        /// (no narrow scan window filtering was needed).
+        /// </summary>
+        public bool[] HasScanWindowCoverage { get; set; }
     }
 }

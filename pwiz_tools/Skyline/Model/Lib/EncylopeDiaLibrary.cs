@@ -970,7 +970,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public override IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles, ICollection<Target> targets)
         {
-            var fileIndexes = spectrumSourceFiles.Select(file => LibraryFiles.IndexOfFilePath(file)).ToList();
+            var fileIndexes = spectrumSourceFiles?.Select(file => LibraryFiles.IndexOfFilePath(file)).ToList()
+                              ?? Enumerable.Range(0, LibraryFiles.Count).ToList();
             var lists = new IList<double>[LibraryFiles.Count];
             foreach (var fileIndex in fileIndexes)
             {

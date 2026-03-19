@@ -328,15 +328,18 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return new DataRow[0];
             }
+            var target = targetKey.Value.RetentionTimeSource;
+            if (target == null)
+                return new DataRow[0];
             var documentRetentionTimes = Document.Settings.DocumentRetentionTimes;
             var dataRows = new List<DataRow>();
             foreach (var retentionTimeSource in GetRetentionTimeSources())
             {
-                if (targetKey.Value.RetentionTimeSource.Name == retentionTimeSource.Name)
+                if (target.Name == retentionTimeSource.Name)
                 {
                     continue;
                 }
-                dataRows.Add(new DataRow(Document.Settings, targetKey.Value.RetentionTimeSource, retentionTimeSource));
+                dataRows.Add(new DataRow(Document.Settings, target, retentionTimeSource));
             }
             return dataRows;
         }

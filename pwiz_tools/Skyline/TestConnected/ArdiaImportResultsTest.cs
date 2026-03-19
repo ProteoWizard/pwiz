@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestConnected
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("caffeicquinic acid.sky")));
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-            var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
+            var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.SetCurrentDirectory(RemoteUrl.EMPTY));
             RunUI(() => editAccountDlg.SetRemoteAccount(_account));
 
             // Click test button
@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestConnected
 
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-            RunUI(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
+            RunUI(() => openDataSourceDialog.SetCurrentDirectory(RemoteUrl.EMPTY));
             foreach (var paths in _openPaths)
                 OpenFile(openDataSourceDialog, paths);
             WaitForDocumentLoaded();

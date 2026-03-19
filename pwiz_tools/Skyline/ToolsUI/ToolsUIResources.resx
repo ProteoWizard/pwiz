@@ -313,6 +313,9 @@
   <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
     <value>Import Properties from external tool</value>
   </data>
+  <data name="ToolService_RunCommand_Run_command" xml:space="preserve">
+    <value>Run command</value>
+  </data>
   <data name="ToolStoreDlg_DownloadSelectedTool_Downloading__0_" xml:space="preserve">
     <value>Downloading {0}</value>
   </data>

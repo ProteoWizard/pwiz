@@ -173,7 +173,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             {
                 result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
                 ScanInfoPtr scanInfo = rawfile_->getScanInfoFromFilterString(ci.filter);
-                ActivationType activationType = scanInfo->activationType();
+                ActivationType activationType = scanInfo->precursorActivationType(0);
                 if (activationType == ActivationType_Unknown)
                     activationType = ActivationType_CID; // assume CID
                 string polarity = polarityStringForFilter(ci.polarityType);

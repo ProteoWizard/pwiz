@@ -19,9 +19,11 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
+using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -79,6 +81,32 @@ namespace pwiz.SkylineTestFunctional
                 File.Delete(versionTooHigh2);
                 alertDlg.OkDialog();
             });
+
+            // Test opening a mass spec data file - should show friendly error message
+            {
+                var mzmlFile = TestFilesDir.GetTestPath("test.mzML");
+                File.WriteAllText(mzmlFile, ExampleText.TEXT_EMPTY_MZML);
+                RunDlg<MessageDlg>(() => Program.MainWindow.OpenFile(mzmlFile), messageDlg =>
+                {
+                    AssertEx.Contains(messageDlg.Message,
+                        string.Format(ModelResources.SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file,
+                            Path.GetFileName(mzmlFile), DataSourceUtil.TYPE_MZML));
+                    messageDlg.OkDialog();
+                });
+            }
+
+            // Test opening a .sky file with non-Skyline content - should show generic "not a Skyline document" error
+            {
+                var fakeSkyFile = TestFilesDir.GetTestPath("notreally.sky");
+                File.WriteAllText(fakeSkyFile, ExampleText.TEXT_EMPTY_MZML);
+                RunDlg<MessageDlg>(() => Program.MainWindow.OpenFile(fakeSkyFile), messageDlg =>
+                {
+                    AssertEx.Contains(messageDlg.Message,
+                        string.Format(ModelResources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                            fakeSkyFile, SrmDocument.EXT, SrmDocumentSharing.EXT_SKY_ZIP));
+                    messageDlg.OkDialog();
+                });
+            }
         }
     }
 }

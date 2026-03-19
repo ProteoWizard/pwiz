@@ -88,9 +88,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
-    <Reference Include="JetBrains.Profiler.Api">
-      <HintPath>..\..\Shared\Lib\Test\JetBrains.Profiler.Api.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(ProgramFiles)\Microsoft Visual Studio 10.0\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
     </Reference>
@@ -104,7 +101,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandLineArgs.cs" />
-    <Compile Include="MemoryProfiler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Statistics.cs" />
