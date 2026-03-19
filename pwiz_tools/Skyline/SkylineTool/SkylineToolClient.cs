@@ -268,11 +268,6 @@ namespace SkylineTool
             {
                 return _remoteClient.RemoteCallFunction(GetSelectedElementLocator, elementType);
             }
-
-            public void ReorderElements(string[] elementLocators)
-            {
-                _remoteClient.RemoteCall(ReorderElements, elementLocators);
-            }
         }
 
         private class Report : IReport
