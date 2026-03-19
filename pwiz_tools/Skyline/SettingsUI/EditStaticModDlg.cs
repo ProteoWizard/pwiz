@@ -70,6 +70,7 @@ namespace pwiz.Skyline.SettingsUI
                 SettingsUIResources.EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_,
                 SettingsUIResources.EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_)
             {
+                AllowNegativeAtomCounts = true,
                 Location = location,
                 TabIndex = cbVariableMod.TabIndex+1
             };

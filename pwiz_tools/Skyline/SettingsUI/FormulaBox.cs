@@ -302,6 +302,8 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public bool AllowNegativeAtomCounts { get; set; }
+
         public string FormulaToolTip
         {
             get { return toolTip1.GetToolTip(textFormula); } // For test support
@@ -694,13 +696,16 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    // Check for negative atom counts (e.g. "U-H2O" produces negative H and O)
-                    var molecule = Molecule.Parse(neutralFormula);
-                    if (molecule.Values.Any(count => count < 0))
+                    if (!AllowNegativeAtomCounts)
                     {
-                        throw new InvalidOperationException(
-                            string.Format(SettingsUIResources.FormulaBox_UpdateAverageAndMonoTextsForFormula_The_formula___0___would_result_in_negative_atom_counts,
-                                neutralFormula));
+                        // Check for negative atom counts (e.g. "U-H2O" produces negative H and O)
+                        var molecule = Molecule.Parse(neutralFormula);
+                        if (molecule.Values.Any(count => count < 0))
+                        {
+                            throw new InvalidOperationException(
+                                string.Format(SettingsUIResources.FormulaBox_UpdateAverageAndMonoTextsForFormula_The_formula___0___would_result_in_negative_atom_counts,
+                                    neutralFormula));
+                        }
                     }
                     // Is there an isotopic label we should apply to get the mass?
                     if (IsotopeLabelsForMassCalc != null && (Adduct.IsEmpty || !Adduct.HasIsotopeLabels)) // If adduct declares an isotope, that takes precedence
