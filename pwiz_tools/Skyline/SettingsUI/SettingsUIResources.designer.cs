@@ -404,7 +404,25 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("BuildLibraryDlg_Select_Skyline_document_file", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Select mzML File....
+        /// </summary>
+        public static string BuildLibraryDlg_Select_mzML_file {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Select_mzML_file", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Select Data Folder....
+        /// </summary>
+        public static string BuildLibraryDlg_Select_data_folder {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Select_data_folder", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to &amp;Skyline tuning document:.
         /// </summary>

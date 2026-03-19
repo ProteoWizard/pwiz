@@ -452,7 +452,7 @@ namespace pwiz.Skyline.SettingsUI
 
 
             string msMsDataFilePath = textBoxMsMsData.Text;
-            if (!File.Exists(msMsDataFilePath))
+            if (!File.Exists(msMsDataFilePath) && !Directory.Exists(msMsDataFilePath))
             {
                 _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
                 return false;
@@ -1480,8 +1480,17 @@ namespace pwiz.Skyline.SettingsUI
 
         private void buttonMsMsData_Click(object sender, EventArgs e)
         {
+            var menu = new ContextMenuStrip();
+            menu.Items.Add(SettingsUIResources.BuildLibraryDlg_Select_mzML_file, null, (s, args) => BrowseMsMsDataFile());
+            menu.Items.Add(SettingsUIResources.BuildLibraryDlg_Select_data_folder, null, (s, args) => BrowseMsMsDataFolder());
+            var button = (Button)sender;
+            menu.Show(button, new System.Drawing.Point(0, button.Height));
+        }
+
+        private void BrowseMsMsDataFile()
+        {
             using var dlg = new OpenFileDialog();
-            dlg.Title = @"Select Ms/Ms Data File";
+            dlg.Title = SettingsUIResources.BuildLibraryDlg_Select_mzML_file;
             dlg.InitialDirectory = Settings.Default.ActiveDirectory;
             dlg.CheckPathExists = true;
             dlg.Multiselect = false;
@@ -1491,6 +1500,20 @@ namespace pwiz.Skyline.SettingsUI
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
                 textBoxMsMsData.Text = dlg.FileName;
+            }
+            TestAndEnableFinish();
+        }
+
+        private void BrowseMsMsDataFolder()
+        {
+            using var dlg = new FolderBrowserDialog();
+            dlg.Description = SettingsUIResources.BuildLibraryDlg_Select_data_folder;
+            dlg.ShowNewFolderButton = false;
+            if (!string.IsNullOrEmpty(Settings.Default.ActiveDirectory))
+                dlg.SelectedPath = Settings.Default.ActiveDirectory;
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                textBoxMsMsData.Text = dlg.SelectedPath;
             }
             TestAndEnableFinish();
         }

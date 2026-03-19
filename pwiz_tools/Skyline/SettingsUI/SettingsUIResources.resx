@@ -247,6 +247,12 @@
   <data name="BuildLibraryDlg_Select_Skyline_document_file" xml:space="preserve">
     <value>Select Skyline Document File</value>
   </data>
+  <data name="BuildLibraryDlg_Select_mzML_file" xml:space="preserve">
+    <value>Select mzML File...</value>
+  </data>
+  <data name="BuildLibraryDlg_Select_data_folder" xml:space="preserve">
+    <value>Select Data Folder...</value>
+  </data>
   <data name="BuildLibraryDlg_DIANN_report_document" xml:space="preserve">
     <value>&amp;DIA-NN report document:</value>
   </data>
