@@ -27,6 +27,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -656,6 +657,34 @@ namespace pwiz.Skyline.ToolsUI
             }
             var elementRefs = new ElementRefs(document);
             return elementRefs.GetNodeRef(selectedPath.GetPathTo((int)nodeLevel));
+        }
+
+        public string StartMcpConnection(string alwaysAtStartup)
+        {
+            string status;
+            var jsonToolServer = Program.MainJsonToolServer;
+            if (jsonToolServer != null)
+            {
+                jsonToolServer.WriteConnectionInfo();
+                status = @"started";
+            }
+            else
+            {
+                status = @"failed";
+            }
+
+            if (bool.TryParse(alwaysAtStartup, out bool enable))
+            {
+                Settings.Default.EnableMcpAutoConnect = enable;
+                Settings.Default.Save();
+            }
+
+            return new JObject
+            {
+                [nameof(JsonToolConstants.JSON.status)] = status,
+                [nameof(JsonToolConstants.JSON.auto_connect)] = Settings.Default.EnableMcpAutoConnect,
+                [nameof(JsonToolConstants.JSON.version)] = Install.ProgramNameAndVersion
+            }.ToString(Newtonsoft.Json.Formatting.None);
         }
     }
 }

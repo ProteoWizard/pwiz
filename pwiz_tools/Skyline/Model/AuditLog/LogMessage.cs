@@ -136,6 +136,7 @@ namespace pwiz.Skyline.Model.AuditLog
         picked_child,
         picked_children,
         picked_peak,
+        ran_command_line,
         refined_targets,
         reintegrated_peaks,
         removed_all_libraries,

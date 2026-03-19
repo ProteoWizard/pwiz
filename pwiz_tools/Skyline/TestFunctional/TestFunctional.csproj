@@ -105,6 +105,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\..\Shared\Lib\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="DotNetZip">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
@@ -186,8 +189,10 @@
     <Compile Include="MedianDocumentRetentionTimesTest.cs" />
     <Compile Include="OpenPeakAreasFromStartPageTest.cs" />
     <Compile Include="OriginalPeakScoreTest.cs" />
+    <Compile Include="PivotIsotopeLabelTest.cs" />
     <Compile Include="RemovePeakFromAllTest.cs" />
     <Compile Include="ReorderElementsTest.cs" />
+    <Compile Include="ReportsHelpDocumentationTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
@@ -403,6 +408,7 @@
     <Compile Include="ExplicitVariableTest.cs" />
     <Compile Include="ImportEncyclopeDiaLibraryTest.cs" />
     <Compile Include="ImportFailureTest.cs" />
+    <Compile Include="ImportFullScanNarrowScanWindowsTest.cs" />
     <Compile Include="ImportIsolationSchemeTest.cs" />
     <Compile Include="ImportPeptideSearchTest.cs" />
     <Compile Include="ImportResultsCancelTest.cs" />
@@ -492,6 +498,9 @@
     <Compile Include="LabelPeakPickingTest.cs" />
     <Compile Include="TargetResolverTest.cs" />
     <Compile Include="TicNormalizationTest.cs" />
+    <Compile Include="JsonToolServerTest.cs" />
+    <Compile Include="JsonToolServerSettingsTest.cs" />
+    <Compile Include="SkylineMcpTest.cs" />
     <Compile Include="ToolServiceTest.cs" />
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />
