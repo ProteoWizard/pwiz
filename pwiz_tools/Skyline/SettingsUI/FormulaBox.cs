@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -302,6 +303,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DefaultValue(false)]
         public bool AllowNegativeAtomCounts { get; set; }
 
         public string FormulaToolTip
