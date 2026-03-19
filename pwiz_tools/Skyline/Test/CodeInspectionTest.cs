@@ -615,7 +615,7 @@ namespace pwiz.SkylineTest
                 { typeof(Ole32Test), 1 },
                 { typeof(Shell32Test), 2 },
                 { typeof(ShcoreTest), 1 },
-                { typeof(User32Test), 10 }
+                { typeof(User32Test), 12 }
             };
 
             // add types from production code

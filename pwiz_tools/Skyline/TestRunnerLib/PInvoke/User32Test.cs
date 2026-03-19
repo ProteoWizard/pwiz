@@ -70,5 +70,22 @@ namespace TestRunnerLib.PInvoke
 
         [DllImport("user32.dll")]
         public static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
+
+        // SystemParametersInfo for toggling window drop shadows
+        // ReSharper disable InconsistentNaming
+        public const uint SPI_GETDROPSHADOW = 0x1024;
+        public const uint SPI_SETDROPSHADOW = 0x1025;
+        public const uint SPIF_SENDCHANGE = 0x0002;
+        // ReSharper restore InconsistentNaming
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SystemParametersInfo(uint uiAction, uint uiParam,
+            ref bool pvParam, uint fWinIni);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SystemParametersInfo(uint uiAction, uint uiParam,
+            IntPtr pvParam, uint fWinIni);
     }
 }

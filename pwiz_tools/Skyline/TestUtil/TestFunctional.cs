@@ -2187,6 +2187,47 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForScreenshotToSettle(screenshotForm, fullScreen, processShot);
             _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot, description: description);
+
+            // In recording mode, also capture a no-shadow version if shadows are enabled
+            // and the two versions differ meaningfully
+            CaptureNoshadowScreenShot(screenshotForm, fullScreen, filePath, processShot, description);
+        }
+
+        /// <summary>
+        /// If drop shadows are enabled, temporarily disables them and captures a second
+        /// screenshot. If it differs from the shadow version by more than 1%, saves it
+        /// as a "-noshadow.png" companion file for cross-platform comparison.
+        /// </summary>
+        private void CaptureNoshadowScreenShot(Control screenshotForm, bool fullScreen,
+            string shadowFilePath, Func<Bitmap, Bitmap> processShot, string description)
+        {
+            const double SHADOW_DIFF_THRESHOLD = 1.0;
+
+            var noshadowPath = shadowFilePath?.Replace(".png", "-noshadow.png");
+            if (noshadowPath == null)
+                return;
+
+            using (var restoreShadow = DropShadowToggle.TemporarilyDisable())
+            {
+                if (restoreShadow == null)
+                    return; // Shadows already disabled, no need for a second capture
+
+                _shotManager.ActivateScreenshotForm(screenshotForm);
+                using (var shadowShot = new Bitmap(shadowFilePath))
+                using (var noshadowShot = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot))
+                {
+                    if (QuickDiffPercent(shadowShot, noshadowShot) > SHADOW_DIFF_THRESHOLD)
+                    {
+                        _shotManager.TakeShot(screenshotForm, fullScreen, noshadowPath, processShot, description: description);
+                    }
+                    else
+                    {
+                        // Remove stale noshadow file if it exists and is no longer needed
+                        if (File.Exists(noshadowPath))
+                            File.Delete(noshadowPath);
+                    }
+                }
+            }
         }
 
         private void CompareScreenShot(Control screenshotForm, bool fullScreen,
@@ -2194,7 +2235,7 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForScreenshotToSettle(screenshotForm, fullScreen, processShot);
             var shotPic = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot, description: description);
-            ScreenshotComparer.Compare(ScreenshotCounter, shotPic, description);
+            ScreenshotComparer.CompareWithFallback(ScreenshotCounter, shotPic, description);
         }
 
         /// <summary>
@@ -2212,22 +2253,27 @@ namespace pwiz.SkylineTestUtil
 
             var settleTimer = System.Diagnostics.Stopwatch.StartNew();
 
-            // Try to load existing reference screenshot
+            // Try to load existing reference screenshot (prefer noshadow if it exists)
             Bitmap referenceBmp = null;
+            Bitmap noshadowBmp = null;
             if (TutorialScreenshotPath != null)
             {
                 var refPath = Path.Combine(TutorialScreenshotPath, $"s-{ScreenshotCounter:D2}.png");
                 if (File.Exists(refPath))
                     referenceBmp = new Bitmap(refPath);
+                var noshadowPath = Path.Combine(TutorialScreenshotPath, $"s-{ScreenshotCounter:D2}-noshadow.png");
+                if (File.Exists(noshadowPath))
+                    noshadowBmp = new Bitmap(noshadowPath);
             }
 
-            if (referenceBmp == null)
+            if (referenceBmp == null && noshadowBmp == null)
             {
                 Thread.Sleep(MAX_WAIT_MS);
                 return;
             }
 
             using (referenceBmp)
+            using (noshadowBmp)
             {
                 Thread.Sleep(INITIAL_WAIT_MS);
 
@@ -2237,7 +2283,11 @@ namespace pwiz.SkylineTestUtil
 
                     using (var shot = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot))
                     {
-                        if (QuickDiffPercent(referenceBmp, shot) <= SETTLE_THRESHOLD)
+                        // Settle if we match either the shadow or noshadow reference
+                        var diff = referenceBmp != null ? QuickDiffPercent(referenceBmp, shot) : 100.0;
+                        if (noshadowBmp != null)
+                            diff = Math.Min(diff, QuickDiffPercent(noshadowBmp, shot));
+                        if (diff <= SETTLE_THRESHOLD)
                             return;
                     }
 

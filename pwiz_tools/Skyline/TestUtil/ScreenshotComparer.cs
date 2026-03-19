@@ -113,6 +113,55 @@ namespace pwiz.SkylineTestUtil
 
 
         /// <summary>
+        /// Compare against both the standard and noshadow reference (if it exists),
+        /// and use whichever gives the smaller diff.
+        /// </summary>
+        public ComparisonResult CompareWithFallback(int screenshotNum, Bitmap capturedScreenshot, string description = null)
+        {
+            var result = Compare(screenshotNum, capturedScreenshot, description);
+
+            var noshadowPath = Path.Combine(_tutorialPath, $"s-{screenshotNum:D2}-noshadow.png");
+            if (!File.Exists(noshadowPath) || result.DiffPercentage == 0)
+                return result;
+
+            // Compare against the noshadow reference
+            var noshadowBytes = File.ReadAllBytes(noshadowPath);
+            var noshadowInfo = new ScreenshotInfo(new MemoryStream(noshadowBytes));
+            var capturedInfo = new ScreenshotInfo(SaveToMemory(capturedScreenshot), capturedScreenshot);
+            const int COLOR_TOLERANCE = 3;
+            var noshadowDiff = new ScreenshotDiff(noshadowInfo, capturedInfo, Color.FromArgb(128, 255, 0, 0), COLOR_TOLERANCE);
+
+            if (noshadowDiff.DiffPercentage >= result.DiffPercentage)
+                return result; // Standard reference was better
+
+            // Replace with the noshadow result
+            string sizeMismatchText = null;
+            if (noshadowDiff.SizesDiffer)
+            {
+                sizeMismatchText =
+                    $"size mismatch: {noshadowDiff.SizeOld.Width}x{noshadowDiff.SizeOld.Height} (original) vs {noshadowDiff.SizeNew.Width}x{noshadowDiff.SizeNew.Height} (new)";
+            }
+
+            var noshadowResult = new ComparisonResult(
+                screenshotNum,
+                passed: !noshadowDiff.ExceedsThreshold(_thresholdPercent),
+                diffPercentage: noshadowDiff.DiffPercentage,
+                diffPercentageWithoutTitleBar: noshadowDiff.DiffPercentage,
+                diffPixelCount: noshadowDiff.PixelCount,
+                originalImage: noshadowInfo.Image,
+                newImage: capturedScreenshot,
+                diffImage: noshadowDiff.HighlightedImage,
+                dominantColorPairs: noshadowDiff.DominantColorPairs,
+                sizeMismatchText: sizeMismatchText,
+                description: description
+            );
+
+            // Replace the last result
+            Results[Results.Count - 1] = noshadowResult;
+            return noshadowResult;
+        }
+
+        /// <summary>
         /// Gets results that should be saved to disk.
         /// On TeamCity, only failed comparisons are saved to reduce artifacts.
         /// Locally, any comparison with non-zero diff is saved for easier debugging.

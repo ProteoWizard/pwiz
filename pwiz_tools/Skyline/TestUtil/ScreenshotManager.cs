@@ -334,6 +334,11 @@ namespace pwiz.SkylineTestUtil
             return !string.IsNullOrEmpty(_tutorialDestPath) ? $"{Path.Combine(_tutorialDestPath, "s-" + PadScreenshotNum(screenshotNum))}.png" : null;
         }
 
+        public string ScreenshotNoshadowDestFile(int screenshotNum)
+        {
+            return !string.IsNullOrEmpty(_tutorialDestPath) ? $"{Path.Combine(_tutorialDestPath, "s-" + PadScreenshotNum(screenshotNum))}-noshadow.png" : null;
+        }
+
         public static string PadScreenshotNum(int screenshotNum)
         {
             return screenshotNum.ToString("D2");
@@ -584,8 +589,24 @@ namespace pwiz.SkylineTestUtil
 
         private void SaveToFile(string filePath, Bitmap bmp, string description = null)
         {
+            // Skip overwrite if the existing file has identical pixel content.
+            // Re-encoding the same image can produce different file sizes due to
+            // PNG compression/metadata differences, causing unnecessary git churn.
+            const double IDENTICAL_THRESHOLD_PERCENT = 0.01;
             if (File.Exists(filePath))
+            {
+                using (var existing = new Bitmap(filePath))
+                {
+                    if (existing.Width == bmp.Width && existing.Height == bmp.Height &&
+                        ScreenshotDiff.QuickDiffPercent(existing, bmp) < IDENTICAL_THRESHOLD_PERCENT)
+                    {
+                        return;
+                    }
+                }
+
                 File.Delete(filePath);
+            }
+
             var dirPath = Path.GetDirectoryName(filePath);
             if (dirPath != null && !Directory.Exists(dirPath))
                 Directory.CreateDirectory(dirPath);
