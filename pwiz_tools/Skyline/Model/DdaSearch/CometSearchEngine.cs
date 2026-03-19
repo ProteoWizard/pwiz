@@ -22,6 +22,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System;
@@ -772,6 +773,81 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 DeleteIntermediateFiles(); // In case cancel came at an awkward time
             }
+        }
+
+        /// <summary>
+        /// Default presets for Comet search engine with different instrument configurations.
+        /// Values from https://uwpr.github.io/Comet/parameters/parameters_202601/
+        /// </summary>
+        public static IEnumerable<SearchSettingsPreset> GetDefaultPresets()
+        {
+            // Settings that differ from Skyline's Comet defaults, shared by all presets
+            var commonSettings = new Dictionary<string, string>
+            {
+                { @"use_NL_ions", @"0" },
+                { @"spectrum_batch_size", @"15000" },
+                { @"max_duplicate_proteins", @"10" },
+                { @"peptide_length_range", @"5 50" },
+            };
+
+            // high-high: Q Exactive, Q-Tof
+            var highHighSettings = new Dictionary<string, string>(commonSettings)
+            {
+                { @"fragment_bin_offset", @"0" },
+                { @"isotope_error", @"2" },
+                { @"theoretical_fragment_ions", @"0" },
+                { @"minimum_intensity", @"0.001" },
+            };
+            yield return new SearchSettingsPreset(
+                "Comet high-high (QE/Q-Tof)",
+                SearchSettingsControl.SearchEngine.Comet,
+                new MzTolerance(20, MzTolerance.Units.ppm),
+                new MzTolerance(0.02, MzTolerance.Units.mz),
+                maxVariableMods: 5,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettings: highHighSettings,
+                enzymeName: "Trypsin",
+                maxMissedCleavages: 2);
+
+            // high-low: Velos-Orbitrap
+            var highLowSettings = new Dictionary<string, string>(commonSettings)
+            {
+                { @"isotope_error", @"2" },
+                { @"minimum_intensity", @"0.01" },
+            };
+            yield return new SearchSettingsPreset(
+                "Comet high-low (Velos-Orbitrap)",
+                SearchSettingsControl.SearchEngine.Comet,
+                new MzTolerance(20, MzTolerance.Units.ppm),
+                new MzTolerance(1.0005, MzTolerance.Units.mz),
+                maxVariableMods: 5,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettings: highLowSettings,
+                enzymeName: "Trypsin",
+                maxMissedCleavages: 2);
+
+            // low-low: ion trap
+            var lowLowSettings = new Dictionary<string, string>(commonSettings)
+            {
+                { @"precursor_tolerance_type", @"0" },
+                { @"minimum_intensity", @"0.01" },
+            };
+            yield return new SearchSettingsPreset(
+                "Comet low-low (ion trap)",
+                SearchSettingsControl.SearchEngine.Comet,
+                new MzTolerance(3, MzTolerance.Units.mz),
+                new MzTolerance(1.0005, MzTolerance.Units.mz),
+                maxVariableMods: 5,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettings: lowLowSettings,
+                enzymeName: "Trypsin",
+                maxMissedCleavages: 2);
         }
     }
 }

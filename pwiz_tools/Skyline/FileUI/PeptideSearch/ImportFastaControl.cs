@@ -186,7 +186,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public Enzyme Enzyme
         {
             get { return Settings.Default.GetEnzymeByName(comboEnzyme.SelectedItem.ToString()); }
-            set { comboEnzyme.SelectedItem = value; }
+            set
+            {
+                if (value == null)
+                    return;
+                // Try to find in current combo items
+                for (int i = 0; i < comboEnzyme.Items.Count; i++)
+                {
+                    if (comboEnzyme.Items[i].ToString() == value.Name)
+                    {
+                        comboEnzyme.SelectedIndex = i;
+                        return;
+                    }
+                }
+                // If not found, reload the combo from the current enzyme list and try again
+                _driverEnzyme.LoadList(value.GetKey());
+            }
         }
 
         public int MaxMissedCleavages
@@ -239,6 +254,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public string FastaFile { get; private set; }
         public string FastaText { get; private set; }
+
+        public void ClearFastaContent()
+        {
+            FastaFile = null;
+            _fastaFile = IsDDASearch;
+            tbxFasta.Text = string.Empty;
+        }
 
         public string FastaImportTargetsFile
         {

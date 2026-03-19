@@ -26,6 +26,7 @@ using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
@@ -1716,7 +1717,22 @@ namespace pwiz.Skyline.Properties
     {
         public override IEnumerable<SearchSettingsPreset> GetDefaults(int revisionIndex)
         {
-            yield break;
+            yield return new SearchSettingsPreset(
+                "Default",
+                SearchSettingsControl.SearchEngine.MSAmanda,
+                new MzTolerance(0, MzTolerance.Units.ppm),
+                new MzTolerance(0, MzTolerance.Units.ppm),
+                maxVariableMods: 2,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettingsXml: null,
+                enzymeName: "Trypsin",
+                maxMissedCleavages: 0);
+
+            // Engine-specific presets
+            foreach (var preset in CometSearchEngine.GetDefaultPresets())
+                yield return preset;
         }
 
         public override string Title => PropertiesResources.SearchSettingsPresetList_Title_Edit_Settings_Presets;
