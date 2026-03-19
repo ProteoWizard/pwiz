@@ -22,7 +22,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System;
@@ -800,7 +799,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             };
             yield return new SearchSettingsPreset(
                 "Comet high-high (QE/Q-Tof)",
-                SearchSettingsControl.SearchEngine.Comet,
+                SearchEngine.Comet,
                 new MzTolerance(20, MzTolerance.Units.ppm),
                 new MzTolerance(0.02, MzTolerance.Units.mz),
                 maxVariableMods: 5,
@@ -819,7 +818,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             };
             yield return new SearchSettingsPreset(
                 "Comet high-low (Velos-Orbitrap)",
-                SearchSettingsControl.SearchEngine.Comet,
+                SearchEngine.Comet,
                 new MzTolerance(20, MzTolerance.Units.ppm),
                 new MzTolerance(1.0005, MzTolerance.Units.mz),
                 maxVariableMods: 5,
@@ -838,7 +837,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             };
             yield return new SearchSettingsPreset(
                 "Comet low-low (ion trap)",
-                SearchSettingsControl.SearchEngine.Comet,
+                SearchEngine.Comet,
                 new MzTolerance(3, MzTolerance.Units.mz),
                 new MzTolerance(1.0005, MzTolerance.Units.mz),
                 maxVariableMods: 5,

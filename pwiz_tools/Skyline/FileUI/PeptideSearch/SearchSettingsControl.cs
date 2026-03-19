@@ -136,16 +136,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public enum SearchEngine
-        {
-            MSAmanda,
-            MSGFPlus,
-            MSFragger,
-            Comet,
-            Tide,
-            Hardklor
-
-        }
 
         public SearchEngine SelectedSearchEngine
         {
