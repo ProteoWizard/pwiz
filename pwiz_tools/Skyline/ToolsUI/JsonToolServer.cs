@@ -629,6 +629,38 @@ namespace pwiz.Skyline.ToolsUI
             return LlmInstruction.Format(@"Report {0} has been added to Skyline.", viewSpec.Name.SingleQuote());
         }
 
+        public string ReorderElements(string[] elementLocators)
+        {
+            return JsonUiService.InvokeOnUiThread(() =>
+            {
+                var orderedElements = elementLocators.Select(locator =>
+                    ElementRefs.FromObjectReference(ElementLocator.Parse(locator))).ToList();
+                lock (Program.MainWindow.GetDocumentChangeLock())
+                {
+                    var originalDocument = Program.MainWindow.Document;
+                    var reorderer = new ElementReorderer(CancellationToken.None, originalDocument);
+                    var newDocument = reorderer.SetNewOrder(orderedElements);
+                    if (!ReferenceEquals(newDocument, originalDocument))
+                    {
+                        Program.MainWindow.ModifyDocument(
+                            ToolsUIResources.ToolService_ReorderElements_Elements_reordered_by_external_tool,
+                            doc =>
+                            {
+                                if (!ReferenceEquals(doc, originalDocument))
+                                {
+                                    throw new InvalidOperationException(Resources
+                                        .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                                }
+                                return newDocument;
+                            },
+                            pair => AuditLogEntry.CreateSingleMessageEntry(
+                                new MessageInfo(MessageType.reordered_elements, newDocument.DocumentType)));
+                    }
+                }
+                return (string)null;
+            });
+        }
+
         public string InsertSmallMoleculeTransitionList(string textCSV)
         {
             return JsonUiService.InvokeOnUiThread(() =>

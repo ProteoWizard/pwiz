@@ -1,13 +1,18 @@
-using System.Diagnostics;
 using System.Globalization;
+using System.Text.Json;
 using CsvHelper;
 using CsvHelper.Configuration;
 using SkylineTool;
 
 namespace SortProteins
 {
-    public class ProteinSorter(RemoteClient client)
+    public class ProteinSorter(JsonClient client)
     {
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+        };
+
         public IEnumerable<string> GetProteinLocators(string? orderBy)
         {
             var rows = ReadRows(orderBy).ToList();
@@ -28,13 +33,38 @@ namespace SortProteins
 
         private IEnumerable<Row> ReadRows(string? column)
         {
-            var queryDef = CreateQueryDef();
+            var columns = new List<string> { "Locator" };
             if (!string.IsNullOrEmpty(column))
             {
-                queryDef.AddColumn(column);
+                columns.Add(column);
             }
-            var csvText = (string)client.RemoteCallName(nameof(IToolService.GetReportFromDefinition), [queryDef.ToString()]);
 
+            var definition = new ReportDefinition
+            {
+                Select = columns.ToArray(),
+                Scope = "proteomic"
+            };
+
+            var tempFile = Path.GetTempFileName();
+            tempFile = Path.ChangeExtension(tempFile, ".csv");
+            try
+            {
+                var definitionJson = JsonSerializer.Serialize(definition, _jsonOptions);
+                client.Call(nameof(IJsonToolService.ExportReportFromDefinition),
+                    definitionJson, tempFile, JsonToolConstants.CULTURE_INVARIANT);
+                var csvText = File.ReadAllText(tempFile);
+                return ParseCsv(csvText, column);
+            }
+            finally
+            {
+                if (File.Exists(tempFile))
+                    File.Delete(tempFile);
+            }
+        }
+
+        private static List<Row> ParseCsv(string csvText, string? column)
+        {
+            var rows = new List<Row>();
             using var reader = new StringReader(csvText);
             var config = new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true };
             using var csv = new CsvReader(reader, config);
@@ -45,7 +75,7 @@ namespace SortProteins
                 var row = new Row(csv.GetField<string>(0)!);
                 if (string.IsNullOrEmpty(column))
                 {
-                    yield return row;
+                    rows.Add(row);
                 }
                 else
                 {
@@ -61,24 +91,16 @@ namespace SortProteins
                         row = row with { NumberValue = doubleValue };
                     }
 
-                    yield return row;
+                    rows.Add(row);
                 }
             }
+            return rows;
         }
 
         public void SetProteinOrder(IEnumerable<string> newOrder)
         {
-            client.RemoteCallName(nameof(IToolService.ReorderElements), [newOrder.ToArray()]);
-        }
-
-        private ReportDefinition CreateQueryDef()
-        {
-            var queryDef = new ReportDefinition();
-            var type = typeof(ProteinSorter);
-            using var stream = type.Assembly.GetManifestResourceStream(type, "ProteinLocators.skyr");
-            Debug.Assert(stream != null);
-            queryDef.ReadDefinition(stream);
-            return queryDef;
+            var locatorsJson = JsonSerializer.Serialize(newOrder.ToArray());
+            client.Call(nameof(IJsonToolService.ReorderElements), locatorsJson);
         }
 
         private record Row(string Locator)

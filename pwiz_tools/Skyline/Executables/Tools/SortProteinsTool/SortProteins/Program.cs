@@ -1,6 +1,5 @@
 using CommandLine;
 using JetBrains.Annotations;
-using SkylineTool;
 
 namespace SortProteins;
 
@@ -30,8 +29,8 @@ public static class Program
 
     private static void Run(Options options)
     {
-        var remoteClient = new RemoteClient(options.ConnectionName);
-        var proteinSorter = new ProteinSorter(remoteClient);
+        using var client = new JsonClient(options.ConnectionName);
+        var proteinSorter = new ProteinSorter(client);
         var locators = proteinSorter.GetProteinLocators(options.OrderBy);
         if (options.Random)
         {

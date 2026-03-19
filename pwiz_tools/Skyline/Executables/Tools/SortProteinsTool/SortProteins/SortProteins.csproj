@@ -6,16 +6,7 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="ProteinLocators.skyr" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="ProteinLocators.skyr" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\SkylineTool\SkylineTool.csproj" />

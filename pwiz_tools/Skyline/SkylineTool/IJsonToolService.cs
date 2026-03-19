@@ -70,6 +70,7 @@ namespace SkylineTool
         string SetReplicate(string replicateName);
         string GetDocumentSettings(string filePath);
         string GetDefaultSettings(string filePath);
+        string ReorderElements(string[] elementLocators);
 
         // 2-arg methods
         string GetLocations(string level, string rootLocator = null);
