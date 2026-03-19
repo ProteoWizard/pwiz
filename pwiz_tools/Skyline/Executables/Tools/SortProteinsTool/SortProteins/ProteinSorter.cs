@@ -33,7 +33,7 @@ namespace SortProteins
 
         private IEnumerable<Row> ReadRows(string? column)
         {
-            var columns = new List<string> { "Locator" };
+            var columns = new List<string> { "ProteinLocator" };
             if (!string.IsNullOrEmpty(column))
             {
                 columns.Add(column);
@@ -42,7 +42,8 @@ namespace SortProteins
             var definition = new ReportDefinition
             {
                 Select = columns.ToArray(),
-                Scope = "proteomic"
+                Uimode = "proteomic",
+                Scope = "document_grid"
             };
 
             var tempFile = Path.GetTempFileName();
