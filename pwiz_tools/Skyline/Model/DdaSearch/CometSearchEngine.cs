@@ -778,6 +778,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         /// Default presets for Comet search engine with different instrument configurations.
         /// Values from https://uwpr.github.io/Comet/parameters/parameters_202601/
         /// </summary>
+        private const string PRESET_HIGH_HIGH = @"Comet high-high (QE/Q-Tof)";
+        private const string PRESET_HIGH_LOW = @"Comet high-low (Velos-Orbitrap)";
+        private const string PRESET_LOW_LOW = @"Comet low-low (ion trap)";
+        private const string ENZYME_TRYPSIN = @"Trypsin";
+
         public static IEnumerable<SearchSettingsPreset> GetDefaultPresets()
         {
             // Settings that differ from Skyline's Comet defaults, shared by all presets
@@ -798,16 +803,16 @@ namespace pwiz.Skyline.Model.DdaSearch
                 { @"minimum_intensity", @"0.001" },
             };
             yield return new SearchSettingsPreset(
-                "Comet high-high (QE/Q-Tof)",
+                PRESET_HIGH_HIGH,
                 SearchEngine.Comet,
                 new MzTolerance(20, MzTolerance.Units.ppm),
-                new MzTolerance(0.02, MzTolerance.Units.mz),
+                new MzTolerance(0.02),
                 maxVariableMods: 5,
                 fragmentIons: null,
                 ms2Analyzer: null,
                 cutoffScore: 0.01,
                 additionalSettings: highHighSettings,
-                enzymeName: "Trypsin",
+                enzymeName: ENZYME_TRYPSIN,
                 maxMissedCleavages: 2);
 
             // high-low: Velos-Orbitrap
@@ -817,16 +822,16 @@ namespace pwiz.Skyline.Model.DdaSearch
                 { @"minimum_intensity", @"0.01" },
             };
             yield return new SearchSettingsPreset(
-                "Comet high-low (Velos-Orbitrap)",
+                PRESET_HIGH_LOW,
                 SearchEngine.Comet,
                 new MzTolerance(20, MzTolerance.Units.ppm),
-                new MzTolerance(1.0005, MzTolerance.Units.mz),
+                new MzTolerance(1.0005),
                 maxVariableMods: 5,
                 fragmentIons: null,
                 ms2Analyzer: null,
                 cutoffScore: 0.01,
                 additionalSettings: highLowSettings,
-                enzymeName: "Trypsin",
+                enzymeName: ENZYME_TRYPSIN,
                 maxMissedCleavages: 2);
 
             // low-low: ion trap
@@ -836,16 +841,16 @@ namespace pwiz.Skyline.Model.DdaSearch
                 { @"minimum_intensity", @"0.01" },
             };
             yield return new SearchSettingsPreset(
-                "Comet low-low (ion trap)",
+                PRESET_LOW_LOW,
                 SearchEngine.Comet,
-                new MzTolerance(3, MzTolerance.Units.mz),
-                new MzTolerance(1.0005, MzTolerance.Units.mz),
+                new MzTolerance(3),
+                new MzTolerance(1.0005),
                 maxVariableMods: 5,
                 fragmentIons: null,
                 ms2Analyzer: null,
                 cutoffScore: 0.01,
                 additionalSettings: lowLowSettings,
-                enzymeName: "Trypsin",
+                enzymeName: ENZYME_TRYPSIN,
                 maxMissedCleavages: 2);
         }
     }

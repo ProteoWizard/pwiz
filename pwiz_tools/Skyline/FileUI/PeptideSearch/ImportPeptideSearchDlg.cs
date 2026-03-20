@@ -362,7 +362,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _settingsPresetDriver.LoadList(name);
         }
 
-        private static MzTolerance GetToleranceSafe(Func<MzTolerance?> getter)
+        private static MzTolerance GetToleranceSafe(Func<MzTolerance> getter)
         {
             try { return getter() ?? new MzTolerance(0, MzTolerance.Units.ppm); }
             catch (FormatException) { return new MzTolerance(0, MzTolerance.Units.ppm); }
