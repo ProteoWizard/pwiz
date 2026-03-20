@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -174,7 +173,10 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             var doc = new XmlDocument();
             doc.LoadXml(AdditionalSettingsXml);
-            foreach (XmlNode node in doc.SelectNodes(@"//Setting"))
+            var nodes = doc.SelectNodes(@"//Setting");
+            if (nodes == null)
+                return;
+            foreach (XmlNode node in nodes)
             {
                 var settingName = node.Attributes?[@"name"]?.Value;
                 var settingValue = node.Attributes?[@"value"]?.Value;
