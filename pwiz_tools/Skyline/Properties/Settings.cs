@@ -26,7 +26,6 @@ using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
@@ -1737,10 +1736,13 @@ namespace pwiz.Skyline.Properties
 
     public sealed class SearchSettingsPresetList : SettingsListBase<SearchSettingsPreset>
     {
+        public const string DEFAULT_PRESET_NAME = @"Default";
+        public const string DEFAULT_ENZYME_NAME = @"Trypsin";
+
         public override IEnumerable<SearchSettingsPreset> GetDefaults(int revisionIndex)
         {
             yield return new SearchSettingsPreset(
-                "Default",
+                DEFAULT_PRESET_NAME,
                 SearchEngine.MSAmanda,
                 new MzTolerance(0, MzTolerance.Units.ppm),
                 new MzTolerance(0, MzTolerance.Units.ppm),
@@ -1749,7 +1751,7 @@ namespace pwiz.Skyline.Properties
                 ms2Analyzer: null,
                 cutoffScore: 0.01,
                 additionalSettingsXml: null,
-                enzymeName: "Trypsin",
+                enzymeName: DEFAULT_ENZYME_NAME,
                 maxMissedCleavages: 0);
 
             // Engine-specific presets
