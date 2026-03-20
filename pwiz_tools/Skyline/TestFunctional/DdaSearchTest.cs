@@ -368,7 +368,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Preset 2: Comet DDA with different tolerances and FASTA settings
             const string PRESET_2_NAME = "Comet - Test Config";
-            const ImportPeptideSearchDlg.Workflow PRESET_2_WORKFLOW = ImportPeptideSearchDlg.Workflow.dda;
             const SearchEngine PRESET_2_ENGINE = SearchEngine.Comet;
             const double PRESET_2_PRECURSOR_TOL = 25;
             const MzTolerance.Units PRESET_2_PRECURSOR_UNIT = MzTolerance.Units.ppm;
