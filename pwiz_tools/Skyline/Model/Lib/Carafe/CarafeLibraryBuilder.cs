@@ -47,8 +47,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private const string BIN = @"bin";
         private const string INPUT = @"input";
         private const string TRAIN = @"train";
-        private const string CARAFE_VERSION = @"2.0.0";
-        private const string CARAFE_DEV_VERSION = @"-260217";
         private const string DOT_JAR = @".jar";
         private const string DOT_ZIP = @".zip";
         private const string HYPHEN = TextUtil.HYPHEN;
@@ -160,8 +158,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private Uri JavaSdkUri => new Uri(JAVA_SDK_DOWNLOAD_URL + JavaSdkDownloadFileName);
         private string JavaSdkDownloadPath => Path.Combine(JavaDir, JavaSdkDownloadFileName);
         private string JavaExecutablePath { get; set; }
-        private string CarafeFileBaseName => @"carafe" + HYPHEN + CARAFE_VERSION;
-        private string CarafeFullName => CarafeFileBaseName + CARAFE_DEV_VERSION;
+        private string CarafeFullName => @"carafe-2.0.0-20260320";
         private string CarafeJarZipFileName => CarafeFullName + DOT_ZIP;
         private string CarafeJarFileName => CarafeFullName + DOT_JAR;
 
