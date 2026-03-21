@@ -64,7 +64,9 @@ namespace AutoQC.Properties
             }
 
             // get file path of user.config file with old settings
-            var savedVersion = !string.IsNullOrEmpty(Default.InstalledVersion) ? new Version(Default.InstalledVersion) : null;
+            // Parse numeric portion only (strip git hash if present from older versions)
+            var installedVersionStr = Default.InstalledVersion?.Split('-')[0];
+            var savedVersion = !string.IsNullOrEmpty(installedVersionStr) && Version.TryParse(installedVersionStr, out var parsed) ? parsed : null;
             var possibleOldSettingsVersion = savedVersion != null && savedVersion.Major > 1
                 ? Default.InstalledVersion
                 : "1.0.0.0";

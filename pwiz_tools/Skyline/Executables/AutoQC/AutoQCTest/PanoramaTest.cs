@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -19,38 +18,31 @@ namespace AutoQCTest
         private const int WAIT_3SEC = 3000;
         private const int TIMEOUT_80SEC = 80000;
 
-        private string _testPanoramaFolder;
-        private WebPanoramaClient _panoramaClient;
-
-        /// <summary>
-        /// Called by the unit test framework when a test begins.
-        /// </summary>
-        [TestInitialize]
-        public void TestInitialize()
-        {
-            // Create a Panorama folder for the test
-            var panoramaServerUri = new Uri(TestUtils.PANORAMAWEB);
-            _panoramaClient = new WebPanoramaClient(panoramaServerUri, TestUtils.GetPanoramaWebUsername(),
-                TestUtils.GetPanoramaWebPassword());
-
-            _testPanoramaFolder = TestUtils.CreatePanoramaWebTestFolder(_panoramaClient, TestUtils.PANORAMAWEB_TEST_FOLDER,
-                PANORAMA_FOLDER_PREFIX);
-        }
-
-        /// <summary>
-        /// Called by the unit test framework when a test is finished.
-        /// </summary>
-        [TestCleanup]
-        public void TestCleanup()
-        {
-            TestUtils.DeletePanoramaWebTestFolder(_panoramaClient, _testPanoramaFolder);
-        }
-
         [TestMethod]
+        [TestCategory("Connected")]
         [DeploymentItem(@"..\AutoQC\FileAcquisitionTime.skyr")]
         [DeploymentItem(@"..\AutoQC\SkylineRunner.exe")]
         [DeploymentItem(@"..\AutoQC\SkylineDailyRunner.exe")]
-        public async Task TestPublishToPanorama()
+        public void TestPublishToPanorama()
+        {
+            if (!AllowInternetAccess) return;
+
+            var panoramaServerUri = new Uri(TestUtils.PANORAMAWEB);
+            var panoramaClient = new WebPanoramaClient(panoramaServerUri, TestUtils.GetPanoramaWebUsername(),
+                TestUtils.GetPanoramaWebPassword());
+            var testPanoramaFolder = TestUtils.CreatePanoramaWebTestFolder(panoramaClient, TestUtils.PANORAMAWEB_TEST_FOLDER,
+                PANORAMA_FOLDER_PREFIX);
+            try
+            {
+                DoTestPublishToPanorama(testPanoramaFolder);
+            }
+            finally
+            {
+                TestUtils.DeletePanoramaWebTestFolder(panoramaClient, testPanoramaFolder);
+            }
+        }
+
+        private void DoTestPublishToPanorama(string testPanoramaFolder)
         {
             var testFilesDir = new TestFilesDir(TestContext, TestUtils.GetTestFilePath("PanoramaPublishTest.zip"));
             var skyFileName = "QEP_2015_0424_RJ.sky";
@@ -66,8 +58,8 @@ namespace AutoQCTest
 
             var config = new AutoQcConfig("PanoramaTestConfig", false, DateTime.MinValue, DateTime.MinValue,
                 TestUtils.GetTestMainSettings(testFilesDir.GetTestPath(skyFileName), "folderToWatch", testFilesDir.FullPath),
-                new PanoramaSettings(true, TestUtils.PANORAMAWEB, TestUtils.GetPanoramaWebUsername(), 
-                    TestUtils.GetPanoramaWebPassword(), $"{_testPanoramaFolder}"), 
+                new PanoramaSettings(true, TestUtils.PANORAMAWEB, TestUtils.GetPanoramaWebUsername(),
+                    TestUtils.GetPanoramaWebPassword(), testPanoramaFolder),
                 skylineSettings);
 
             // Validate the configuration
@@ -84,8 +76,8 @@ namespace AutoQCTest
             Assert.IsTrue(runner.CanStart());
             runner.Start();
             Assert.IsTrue(WaitForConfigRunning(runner), $"Expected configuration to be running. Status was {runner.GetStatus()}.");
-            
-            var success = await SuccessfulPanoramaUpload(_testPanoramaFolder);
+
+            var success = SuccessfulPanoramaUpload(testPanoramaFolder);
             Assert.IsTrue(success, "File was not uploaded to panorama.");
 
             runner.Stop();
@@ -107,7 +99,7 @@ namespace AutoQCTest
         }
 
 
-        private async Task<bool> SuccessfulPanoramaUpload(string uniqueFolder)
+        private bool SuccessfulPanoramaUpload(string uniqueFolder)
         {
             var panoramaServerUri = PanoramaUtil.ServerNameToUri(TestUtils.PANORAMAWEB);
             var labKeyQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", $"{uniqueFolder}",
@@ -122,7 +114,7 @@ namespace AutoQCTest
                 var jsonAsString = requestHelper.DoGet(labKeyQuery);
                 var json = JsonConvert.DeserializeObject<PanoramaJsonObject>(jsonAsString);
                 if (json.rowCount > 0) return true;
-                await Task.Delay(WAIT_3SEC);
+                Thread.Sleep(WAIT_3SEC);
                 x = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             }
 

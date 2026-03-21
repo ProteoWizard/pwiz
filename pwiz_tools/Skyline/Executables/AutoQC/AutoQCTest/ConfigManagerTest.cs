@@ -235,12 +235,14 @@ namespace AutoQCTest
 
             var testingConfigs = TestUtils.ConfigListFromNames(new[] { "one", "two", "three" });
             configManager.Import(configsXmlPath);
-            Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
+            Assert.IsTrue(configManager.ConfigListEquals(testingConfigs),
+                $"First import config mismatch:\n{configManager.ConfigListDiffReport(testingConfigs)}");
 
             configManager.SelectConfig(2);
             configManager.SetState(configManager.AutoQcState, configManager.AutoQcState.UserRemoveSelected(null, out _));
             configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
-            Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
+            Assert.IsTrue(configManager.ConfigListEquals(testingConfigs),
+                $"Re-import config mismatch:\n{configManager.ConfigListDiffReport(testingConfigs)}");
 
             File.Delete(configsXmlPath);
         }
@@ -255,8 +257,10 @@ namespace AutoQCTest
             configManager.Close();
             var testConfigManager = new AutoQcConfigManager();
             // Simulate loading saved configs from file
-            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
-            Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
+            var configFilePath = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            testConfigManager.Import(configFilePath);
+            Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs),
+                $"CloseReopen config mismatch:\n{testConfigManager.ConfigListDiffReport(testingConfigs)}");
             var version = AutoQC.Properties.Settings.Default.XmlVersion;
             Assert.AreEqual(version, ConfigList.XmlVersion, $"Expected ConfigList version '{version}. But it was '{ConfigList.XmlVersion}.'");
         }
