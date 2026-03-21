@@ -46,14 +46,14 @@ namespace SkylineTool
         // 0-arg methods
         string GetDocumentPath();
         string GetVersion();
-        string GetSelection();
+        SelectionInfo GetSelection();
         string GetSelectionText();
         string GetReplicateName();
         string[] GetReplicateNames();
-        string GetDocumentStatus();
+        DocumentStatus GetDocumentStatus();
         string[] GetSettingsListTypes();
         TutorialListItem[] GetAvailableTutorials();
-        ReportDocTopicSummary[] GetReportDocTopics(string scope = null);
+        ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null);
         string GetProcessId();
         FormInfo[] GetOpenForms();
 
@@ -63,29 +63,29 @@ namespace SkylineTool
         string RunCommandSilent(string[] args);
         string[] GetSettingsListNames(string listType, string groupName = null);
         string[] GetSettingsListSelectedItems(string listType);
-        string GetReportDocTopic(string topicName, string scope = null);
-        string AddReportFromDefinition(ReportDefinition definition);
-        string InsertSmallMoleculeTransitionList(string textCSV);
-        string ImportProperties(string csvText);
-        string SetReplicate(string replicateName);
+        ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null);
+        void AddReportFromDefinition(ReportDefinition definition);
+        void InsertSmallMoleculeTransitionList(string textCSV);
+        void ImportProperties(string csvText);
+        void SetReplicate(string replicateName);
         string GetDocumentSettings(string filePath);
         string GetDefaultSettings(string filePath);
 
         // 2-arg methods
         LocationEntry[] GetLocations(string level, string rootLocator = null);
-        string SetSelectedElement(string elementLocator, string additionalLocators = null);
+        void SetSelectedElement(string elementLocator, string additionalLocators = null);
         string GetGraphData(string graphId, string filePath = null);
         string GetGraphImage(string graphId, string filePath = null);
         string GetFormImage(string formId, string filePath = null);
         string GetSettingsListItem(string listType, string itemName);
-        string SelectSettingsListItems(string listType, string[] itemNames);
-        string ImportFasta(string textFasta, string keepEmptyProteins = null);
+        void SelectSettingsListItems(string listType, string[] itemNames);
+        void ImportFasta(string textFasta, string keepEmptyProteins = null);
 
         // 3-arg methods
         ReportMetadata ExportReport(string reportName, string filePath, string culture);
         ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture);
         TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null);
-        string AddSettingsListItem(string listType, string itemXml, bool overwrite = false);
+        void AddSettingsListItem(string listType, string itemXml, bool overwrite = false);
 
         // 4-arg methods
         TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null);

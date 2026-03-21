@@ -199,13 +199,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(Install.Version, version);
 
             // GetDocumentStatus - verify counts match document
-            string status = server.GetDocumentStatus();
+            var status = server.GetDocumentStatus();
             var doc = SkylineWindow.Document;
-            AssertEx.Contains(status, doc.MoleculeGroupCount.ToString());
-            AssertEx.Contains(status, doc.MoleculeCount.ToString());
-            AssertEx.Contains(status, doc.MoleculeTransitionGroupCount.ToString());
-            AssertEx.Contains(status, doc.MoleculeTransitionCount.ToString());
-            AssertEx.Contains(status, doc.Settings.MeasuredResults?.Chromatograms.Count.ToString());
+            Assert.AreEqual(doc.MoleculeGroupCount, status.Groups);
+            Assert.AreEqual(doc.MoleculeCount, status.Molecules);
+            Assert.AreEqual(doc.MoleculeTransitionGroupCount, status.Precursors);
+            Assert.AreEqual(doc.MoleculeTransitionCount, status.Transitions);
+            Assert.AreEqual(doc.Settings.MeasuredResults?.Chromatograms.Count ?? 0, status.Replicates);
 
             // GetProcessId - should match current process
             string pidStr = server.GetProcessId();
@@ -216,8 +216,8 @@ namespace pwiz.SkylineTestFunctional
         private void TestSelection(JsonToolServer server)
         {
             // Get initial selection
-            string sel = server.GetSelection();
-            Assert.IsFalse(string.IsNullOrEmpty(sel));
+            var sel = server.GetSelection();
+            Assert.IsTrue(sel.Locators.Length > 0);
 
             // GetSelectionText - human-readable location name
             string selText = server.GetSelectionText();
@@ -231,8 +231,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SelectedPath = moleculePath);
             WaitForConditionUI(() => SkylineWindow.SelectedPath.Equals(moleculePath));
 
-            string sel2 = server.GetSelection();
-            Assert.IsFalse(string.IsNullOrEmpty(sel2));
+            var sel2 = server.GetSelection();
+            Assert.IsTrue(sel2.Locators.Length > 0);
 
             // GetSelectedElementLocator - get locator for selected molecule
             string moleculeLocator = server.GetSelectedElementLocator(@"Molecule");
@@ -245,31 +245,30 @@ namespace pwiz.SkylineTestFunctional
             // Pick the last molecule and navigate to it
             string lastMoleculeLocator = locations.Last().Locator;
             server.SetSelectedElement(lastMoleculeLocator);
-            WaitForCondition(() => server.GetSelection().Contains(lastMoleculeLocator));
+            WaitForCondition(() => server.GetSelection().Locators.Contains(lastMoleculeLocator));
 
             // Multi-selection: select multiple molecules at once
             string firstMoleculeLocator = locations.First().Locator;
             string secondMoleculeLocator = locations.Skip(1).First().Locator;
             server.SetSelectedElement(firstMoleculeLocator,
                 TextUtil.LineSeparate(secondMoleculeLocator, lastMoleculeLocator));
-            string multiSel = server.GetSelection();
-            // Multi-selection should return multiple locators, one per line
-            var multiSelLines = TextUtil.ReadLines(multiSel).ToArray();
-            Assert.AreEqual(3, multiSelLines.Length,
+            var multiSel = server.GetSelection();
+            // Multi-selection should return multiple locators
+            Assert.AreEqual(3, multiSel.Locators.Length,
                 @"Multi-selection should return 3 locators");
-            AssertEx.Contains(multiSel, firstMoleculeLocator);
-            AssertEx.Contains(multiSel, secondMoleculeLocator);
-            AssertEx.Contains(multiSel, lastMoleculeLocator);
+            Assert.IsTrue(multiSel.Locators.Contains(firstMoleculeLocator));
+            Assert.IsTrue(multiSel.Locators.Contains(secondMoleculeLocator));
+            Assert.IsTrue(multiSel.Locators.Contains(lastMoleculeLocator));
 
             // Select the insertion node and verify round-trip
             server.SetSelectedElement(JsonUiService.INSERT_NODE_LOCATOR);
-            string insertSel = server.GetSelection();
-            Assert.AreEqual(JsonUiService.INSERT_NODE_LOCATOR, insertSel,
+            var insertSel = server.GetSelection();
+            Assert.IsTrue(insertSel.Locators.Contains(JsonUiService.INSERT_NODE_LOCATOR),
                 @"Insertion node selection should round-trip through GetSelection");
 
             // Navigate back to a regular element to leave things in a known state
             server.SetSelectedElement(firstMoleculeLocator);
-            WaitForCondition(() => server.GetSelection().Contains(firstMoleculeLocator));
+            WaitForCondition(() => server.GetSelection().Locators.Contains(firstMoleculeLocator));
         }
 
         private void TestLocations(JsonToolServer server)
@@ -319,9 +318,9 @@ namespace pwiz.SkylineTestFunctional
             server.SetReplicate(targetRep);
             WaitForCondition(() => server.GetReplicateName() == targetRep);
 
-            // Error: nonexistent replicate - SetReplicate returns error message (not exception)
-            string errorResult = server.SetReplicate(@"NonexistentReplicate_12345");
-            Assert.AreNotEqual(@"OK", errorResult);
+            // Error: nonexistent replicate
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.SetReplicate(@"NonexistentReplicate_12345"));
         }
 
         private void TestReportDocumentation(JsonToolServer server)
@@ -368,9 +367,10 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(precursorsIdx < transitionsIdx, @"Precursors before Transitions");
 
             // Topic detail retrieval
-            string firstTopic = server.GetReportDocTopic(topicNames[0]);
+            var firstTopic = server.GetReportDocTopic(topicNames[0]);
             AssertEx.IsNotNull(firstTopic);
-            AssertEx.Contains(firstTopic, @"Name" + TextUtil.SEPARATOR_TSV + @"Description");
+            Assert.IsTrue(firstTopic.Columns.Length > 0);
+            AssertEx.IsNotNull(firstTopic.Columns[0].Name);
 
             // Case-insensitive matching
             AssertEx.IsNotNull(server.GetReportDocTopic(topicNames[0].ToLowerInvariant()));
@@ -382,8 +382,8 @@ namespace pwiz.SkylineTestFunctional
             bool foundNormalizedArea = false;
             foreach (var name in topicNames)
             {
-                string detail = server.GetReportDocTopic(name);
-                if (detail != null && detail.Contains(@"NormalizedArea"))
+                var detail = server.GetReportDocTopic(name);
+                if (detail != null && detail.Columns.Any(c => c.Name == @"NormalizedArea"))
                 {
                     foundNormalizedArea = true;
                     break;
@@ -399,8 +399,8 @@ namespace pwiz.SkylineTestFunctional
             var document = SkylineWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
             var reader = new ReportDefinitionReader(dataSchema);
-            var sampleColumns = firstTopic.ReadLines().Skip(3).Take(3)
-                .Select(line => line.Split(TextUtil.SEPARATOR_TSV)[0]).ToList();
+            var sampleColumns = firstTopic.Columns.Skip(3).Take(3)
+                .Select(c => c.Name).ToList();
             if (sampleColumns.Count > 0)
                 AssertEx.IsNotNull(reader.CreateViewSpec(BuildSelectDef(sampleColumns.ToArray())));
 
@@ -465,16 +465,16 @@ namespace pwiz.SkylineTestFunctional
             var auditLogDef = new ReportDefinition
             {
                 Select = columns,
-                Scope = ReportDefinitionReader.SCOPE_AUDIT_LOG
+                DataSource = ReportDefinitionReader.SCOPE_AUDIT_LOG
             };
             var auditLogViewSpec = reader.CreateViewSpec(auditLogDef, ReportDefinitionReader.SCOPE_AUDIT_LOG);
             AssertEx.IsNotNull(auditLogViewSpec, @"Audit log columns should resolve");
 
             // Verify audit log topic has columns that match what we resolved
-            string auditLogTopicContent = server.GetReportDocTopic(@"AuditLog",
+            var auditLogTopicDetail = server.GetReportDocTopic(@"AuditLog",
                 ReportDefinitionReader.SCOPE_AUDIT_LOG);
             foreach (var column in columns)
-                AssertEx.Contains(auditLogTopicContent, column);
+                Assert.IsTrue(auditLogTopicDetail.Columns.Any(c => c.Name == column));
 
             // Verify ModifyDocument entry appears in audit log report, then undo and verify it goes away
             var auditLogSummary = server.ExportReportFromDefinition(
@@ -1128,7 +1128,7 @@ namespace pwiz.SkylineTestFunctional
             int groupsBefore = doc.MoleculeGroupCount;
 
             string csvText = GetSmallMoleculeTransitionsText();
-            string result = server.InsertSmallMoleculeTransitionList(csvText);
+            server.InsertSmallMoleculeTransitionList(csvText);
 
             var docAfter = SkylineWindow.Document;
             Assert.IsTrue(docAfter.MoleculeGroupCount > groupsBefore);
@@ -1154,8 +1154,7 @@ namespace pwiz.SkylineTestFunctional
             string csvText = @"ElementLocator,TestAnnotation" + Environment.NewLine +
                              firstGroupLocator + @",test_value";
 
-            string result = server.ImportProperties(csvText);
-            Assert.IsFalse(string.IsNullOrEmpty(result));
+            server.ImportProperties(csvText);
         }
 
         private SrmDocument TestImportFasta(JsonToolServer server)

@@ -73,14 +73,14 @@ public class SkylineConnection : IJsonToolService, IDisposable
     // 0-arg methods
     public string GetDocumentPath() { return CallClient(c => c.GetDocumentPath()); }
     public string GetVersion() { return CallClient(c => c.GetVersion()); }
-    public string GetSelection() { return CallClient(c => c.GetSelection()); }
+    public SelectionInfo GetSelection() { return CallClient(c => c.GetSelection()); }
     public string GetSelectionText() { return CallClient(c => c.GetSelectionText()); }
     public string GetReplicateName() { return CallClient(c => c.GetReplicateName()); }
     public string[] GetReplicateNames() { return CallClient(c => c.GetReplicateNames()); }
-    public string GetDocumentStatus() { return CallClient(c => c.GetDocumentStatus()); }
+    public DocumentStatus GetDocumentStatus() { return CallClient(c => c.GetDocumentStatus()); }
     public string[] GetSettingsListTypes() { return CallClient(c => c.GetSettingsListTypes()); }
     public TutorialListItem[] GetAvailableTutorials() { return CallClient(c => c.GetAvailableTutorials()); }
-    public ReportDocTopicSummary[] GetReportDocTopics(string scope = null) { return CallClient(c => c.GetReportDocTopics(scope)); }
+    public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null) { return CallClient(c => c.GetReportDocTopics(dataSource)); }
     public string GetProcessId() { return CallClient(c => c.GetProcessId()); }
     public FormInfo[] GetOpenForms() { return CallClient(c => c.GetOpenForms()); }
 
@@ -90,29 +90,29 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string RunCommandSilent(string[] args) { return CallClient(c => c.RunCommandSilent(args)); }
     public string[] GetSettingsListNames(string listType, string groupName = null) { return CallClient(c => c.GetSettingsListNames(listType, groupName)); }
     public string[] GetSettingsListSelectedItems(string listType) { return CallClient(c => c.GetSettingsListSelectedItems(listType)); }
-    public string GetReportDocTopic(string topicName, string scope = null) { return CallClient(c => c.GetReportDocTopic(topicName, scope)); }
-    public string AddReportFromDefinition(ReportDefinition definition) { return CallClient(c => c.AddReportFromDefinition(definition)); }
-    public string InsertSmallMoleculeTransitionList(string textCSV) { return CallClient(c => c.InsertSmallMoleculeTransitionList(textCSV)); }
-    public string ImportProperties(string csvText) { return CallClient(c => c.ImportProperties(csvText)); }
-    public string SetReplicate(string replicateName) { return CallClient(c => c.SetReplicate(replicateName)); }
+    public ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null) { return CallClient(c => c.GetReportDocTopic(topicName, dataSource)); }
+    public void AddReportFromDefinition(ReportDefinition definition) { CallClientVoid(c => c.AddReportFromDefinition(definition)); }
+    public void InsertSmallMoleculeTransitionList(string textCSV) { CallClientVoid(c => c.InsertSmallMoleculeTransitionList(textCSV)); }
+    public void ImportProperties(string csvText) { CallClientVoid(c => c.ImportProperties(csvText)); }
+    public void SetReplicate(string replicateName) { CallClientVoid(c => c.SetReplicate(replicateName)); }
     public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
 
     // 2-arg methods
     public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
-    public string SetSelectedElement(string elementLocator, string additionalLocators = null) { return CallClient(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
+    public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
     public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }
     public string GetGraphImage(string graphId, string filePath = null) { return CallClient(c => c.GetGraphImage(graphId, filePath)); }
     public string GetFormImage(string formId, string filePath = null) { return CallClient(c => c.GetFormImage(formId, filePath)); }
     public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }
-    public string SelectSettingsListItems(string listType, string[] itemNames) { return CallClient(c => c.SelectSettingsListItems(listType, itemNames)); }
-    public string ImportFasta(string textFasta, string keepEmptyProteins = null) { return CallClient(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
+    public void SelectSettingsListItems(string listType, string[] itemNames) { CallClientVoid(c => c.SelectSettingsListItems(listType, itemNames)); }
+    public void ImportFasta(string textFasta, string keepEmptyProteins = null) { CallClientVoid(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
 
     // 3-arg methods
     public ReportMetadata ExportReport(string reportName, string filePath, string culture) { return CallClient(c => c.ExportReport(reportName, filePath, culture)); }
     public ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture) { return CallClient(c => c.ExportReportFromDefinition(definition, filePath, culture)); }
     public TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorial(name, language, filePath)); }
-    public string AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { return CallClient(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
+    public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { CallClientVoid(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
 
     // 4-arg methods
     public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorialImage(name, imageFilename, language, filePath)); }
@@ -125,6 +125,15 @@ public class SkylineConnection : IJsonToolService, IDisposable
         var result = action(_client);
         LastLog = _client.LastLog;
         return result;
+    }
+
+    /// <summary>
+    /// Delegates a void call to the client and captures the diagnostic log.
+    /// </summary>
+    private void CallClientVoid(Action<SkylineJsonToolClient> action)
+    {
+        action(_client);
+        LastLog = _client.LastLog;
     }
 
     public void Dispose()

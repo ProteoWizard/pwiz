@@ -137,8 +137,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.EnzymeList.Remove(enzyme);
 
             // Add via AddSettingsListItem and verify typed roundtrip
-            string result = server.AddSettingsListItem(enzymesName, enzymeXml);
-            AssertEx.Contains(result, enzyme.Name);
+            server.AddSettingsListItem(enzymesName, enzymeXml);
             AssertEx.IsTrue(Settings.Default.EnzymeList.TryGetValue(enzyme.GetKey(), out var retrieved));
             AssertEx.Cloned(enzyme, retrieved);
 
@@ -154,8 +153,7 @@ namespace pwiz.SkylineTestFunctional
                 server.AddSettingsListItem(enzymesName, enzymeXml));
 
             // Overwrite: replace existing item
-            string overwriteResult = server.AddSettingsListItem(enzymesName, enzymeXml, true);
-            AssertEx.Contains(overwriteResult, enzyme.Name);
+            server.AddSettingsListItem(enzymesName, enzymeXml, true);
 
             // Error: invalid XML
             AssertEx.ThrowsException<ArgumentException>(() =>
@@ -194,8 +192,7 @@ namespace pwiz.SkylineTestFunctional
                 Name = reportName,
                 Select = new[] { @"ProteinName", @"PrecursorMz" }
             };
-            string result = server.AddReportFromDefinition(definition);
-            Assert.IsFalse(string.IsNullOrEmpty(result));
+            server.AddReportFromDefinition(definition);
 
             // Verify the report was persisted with correct uimode
             var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(
@@ -214,8 +211,7 @@ namespace pwiz.SkylineTestFunctional
                 Name = reportName,
                 Select = new[] { @"MoleculeListName", @"MoleculeFormula" }
             };
-            string result = server.AddReportFromDefinition(definition);
-            Assert.IsFalse(string.IsNullOrEmpty(result));
+            server.AddReportFromDefinition(definition);
 
             // Verify molecule mode report gets small_molecules uimode
             var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(

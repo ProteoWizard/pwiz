@@ -370,7 +370,7 @@ namespace pwiz.Skyline.ToolsUI
             return _toolService.GetDocumentLocationName();
         }
 
-        public string GetSelection()
+        public SelectionInfo GetSelection()
         {
             return JsonUiService.GetSelection();
         }
@@ -399,46 +399,38 @@ namespace pwiz.Skyline.ToolsUI
             return LlmNameMap.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
-        public string GetDocumentStatus()
+        public DocumentStatus GetDocumentStatus()
         {
-            // All labels in this method are LLM-facing (not localizable)
             var doc = Program.MainWindow.Document;
-            string mode = doc.DocumentType.ToString();
-            int groups = doc.MoleculeGroupCount;
-            int molecules = doc.MoleculeCount;
-            int precursors = doc.MoleculeTransitionGroupCount;
-            int transitions = doc.MoleculeTransitionCount;
-            int replicates = doc.Settings.MeasuredResults?.Chromatograms.Count ?? 0;
             string docPath = _toolService.GetDocumentPath();
-            string docDisplay = string.IsNullOrEmpty(docPath)
-                ? new LlmInstruction(@"(unsaved)")
-                : docPath.ToForwardSlashPath();
 
-            LlmInstruction groupsLabel, moleculesLabel;
+            string groupsLabel, moleculesLabel;
             if (doc.DocumentType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
-                groupsLabel = new LlmInstruction(@"Lists");
-                moleculesLabel = new LlmInstruction(@"Molecules");
+                groupsLabel = @"Lists";
+                moleculesLabel = @"Molecules";
             }
             else
             {
-                // proteomic and mixed both support proteins and free-form peptide lists
-                groupsLabel = new LlmInstruction(@"Proteins/Lists");
+                groupsLabel = @"Proteins/Lists";
                 moleculesLabel = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.mixed
-                    ? new LlmInstruction(@"Peptides/Molecules")
-                    : new LlmInstruction(@"Peptides");
+                    ? @"Peptides/Molecules"
+                    : @"Peptides";
             }
 
-            bool dirty = Program.MainWindow.Dirty;
-
-            return TextUtil.LineSeparate($@"Mode: {mode}",
-                $@"{groupsLabel}: {groups}",
-                $@"{moleculesLabel}: {molecules}",
-                $@"Precursors: {precursors}",
-                $@"Transitions: {transitions}",
-                $@"Replicates: {replicates}",
-                $@"Document: {docDisplay}",
-                $@"Saved: {(dirty ? new LlmInstruction(@"no (unsaved changes)") : new LlmInstruction(@"yes"))}");
+            return new DocumentStatus
+            {
+                DocumentPath = string.IsNullOrEmpty(docPath) ? null : docPath.ToForwardSlashPath(),
+                DocumentType = doc.DocumentType.ToString(),
+                Groups = doc.MoleculeGroupCount,
+                GroupsLabel = groupsLabel,
+                Molecules = doc.MoleculeCount,
+                MoleculesLabel = moleculesLabel,
+                Precursors = doc.MoleculeTransitionGroupCount,
+                Transitions = doc.MoleculeTransitionCount,
+                Replicates = doc.Settings.MeasuredResults?.Chromatograms.Count ?? 0,
+                HasUnsavedChanges = Program.MainWindow.Dirty,
+            };
         }
 
         public TutorialListItem[] GetAvailableTutorials()
@@ -446,9 +438,9 @@ namespace pwiz.Skyline.ToolsUI
             return JsonTutorialCatalog.GetCatalog();
         }
 
-        public ReportDocTopicSummary[] GetReportDocTopics(string scope = null)
+        public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null)
         {
-            var topics = GetTopicList(scope);
+            var topics = GetTopicList(dataSource);
             return topics.Select(t => new ReportDocTopicSummary
             {
                 Name = t.DisplayName,
@@ -495,22 +487,23 @@ namespace pwiz.Skyline.ToolsUI
             return names.ToArray();
         }
 
-        public string GetReportDocTopic(string topicName, string scope = null)
+        public ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null)
         {
-            var topics = GetTopicList(scope);
+            var topics = GetTopicList(dataSource);
             var matchedTopic = FindMatchingTopic(topicName, topics);
             if (matchedTopic == null)
                 return null;
 
-            var sb = new StringBuilder();
-            sb.AppendLine(matchedTopic.DisplayName);
-            sb.AppendLine();
-            sb.AppendLine(LlmInstruction.TabSeparate(@"Name", @"Description", @"Type"));
-            foreach (var col in matchedTopic.Columns)
-                sb.AppendLine(col.InvariantName + TextUtil.SEPARATOR_TSV +
-                              col.Description.FlattenToSingleLine() + TextUtil.SEPARATOR_TSV +
-                              col.TypeName);
-            return sb.ToString();
+            return new ReportDocTopicDetail
+            {
+                Name = matchedTopic.DisplayName,
+                Columns = matchedTopic.Columns.Select(col => new ColumnDefinition
+                {
+                    Name = col.InvariantName,
+                    Description = col.Description.FlattenToSingleLine(),
+                    Type = col.TypeName,
+                }).ToArray(),
+            };
         }
 
         private IList<ColumnResolver.TopicInfo> GetTopicList(string scope)
@@ -645,7 +638,7 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        public string AddReportFromDefinition(ReportDefinition definition)
+        public void AddReportFromDefinition(ReportDefinition definition)
         {
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT, Program.MainWindow.ModeUI);
@@ -663,21 +656,19 @@ namespace pwiz.Skyline.ToolsUI
             viewSpecList = viewSpecList.ReplaceView(viewSpec.Name, layout);
             Settings.Default.PersistedViews.SetViewSpecList(groupId, viewSpecList);
             Log(string.Format(@"Saved report '{0}' to {1}", viewSpec.Name, groupId));
-
-            return LlmInstruction.Format(@"Report {0} has been added to Skyline.", viewSpec.Name.SingleQuote());
         }
 
-        public string InsertSmallMoleculeTransitionList(string textCSV)
+        public void InsertSmallMoleculeTransitionList(string textCSV)
         {
-            return JsonUiService.InvokeOnUiThread(() =>
+            JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.InsertSmallMoleculeTransitionList(textCSV,
                     @"Insert small molecule transition list"));
         }
 
-        public string ImportFasta(string textFasta, string keepEmptyProteins = null)
+        public void ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
             bool? keepEmpty = keepEmptyProteins == null ? (bool?)null : bool.Parse(keepEmptyProteins);
-            return JsonUiService.InvokeOnUiThread(() =>
+            JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.ImportFasta(new StringReader(textFasta),
                     Helpers.CountLinesInString(textFasta), false,
                     @"Import FASTA from MCP",
@@ -685,23 +676,23 @@ namespace pwiz.Skyline.ToolsUI
                     keepEmpty));
         }
 
-        public string ImportProperties(string csvText)
+        public void ImportProperties(string csvText)
         {
-            return JsonUiService.InvokeOnUiThread(() =>
+            JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations,
                         Program.MainWindow.Document.DocumentType,
                         @"Import properties from MCP")));
         }
 
-        public string SetSelectedElement(string elementLocatorString, string additionalLocators = null)
+        public void SetSelectedElement(string elementLocatorString, string additionalLocators = null)
         {
-            return JsonUiService.SetSelection(elementLocatorString, additionalLocators);
+            JsonUiService.SetSelection(elementLocatorString, additionalLocators);
         }
 
-        public string SetReplicate(string replicateName)
+        public void SetReplicate(string replicateName)
         {
-            return JsonUiService.SetReplicate(replicateName);
+            JsonUiService.SetReplicate(replicateName);
         }
 
         public FormInfo[] GetOpenForms()
@@ -758,7 +749,7 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Item not found:", itemName));
         }
 
-        public string AddSettingsListItem(string listType, string itemXml, bool overwrite = false)
+        public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false)
         {
             string propName = ResolveLlmListType(listType);
             if (propName == nameof(PersistedViews))
@@ -805,10 +796,6 @@ namespace pwiz.Skyline.ToolsUI
             if (addMethod == null)
                 throw new InvalidOperationException(LlmInstruction.SpaceSeparate(@"No Add method found on:", value.GetType().Name));
             addMethod.Invoke(value, new[] { item });
-
-            return exists
-                ? LlmInstruction.Format(@"Replaced {0} in {1}.", itemName.SingleQuote(), listType)
-                : LlmInstruction.Format(@"Added {0} to {1}.", itemName.SingleQuote(), listType);
         }
 
         public string[] GetSettingsListSelectedItems(string listType)
@@ -818,7 +805,7 @@ namespace pwiz.Skyline.ToolsUI
             return selector.GetSelectedItems(settings);
         }
 
-        public string SelectSettingsListItems(string listType, string[] itemNames)
+        public void SelectSettingsListItems(string listType, string[] itemNames)
         {
             var selector = ResolveDocumentSelector(listType);
 
@@ -828,9 +815,9 @@ namespace pwiz.Skyline.ToolsUI
                     @"{0} requires exactly one item.", listType));
             }
 
-            try
+            JsonUiService.InvokeOnUiThread(() =>
             {
-                return JsonUiService.InvokeOnUiThread(() =>
+                try
                 {
                     Program.MainWindow.ModifyDocument(
                         LlmInstruction.Format(@"Select {0} items", listType),
@@ -839,19 +826,14 @@ namespace pwiz.Skyline.ToolsUI
                             MessageType.ran_command_line,
                             docPair.NewDocumentType,
                             string.Join(@", ", itemNames)));
-                    return LlmInstruction.Format(@"Selected {0} item(s) in {1}: {2}",
-                        itemNames.Length.ToString(), listType,
-                        itemNames.Length > 0
-                            ? string.Join(@", ", itemNames.Select(n => n.SingleQuote()))
-                            : @"(none)");
-                });
-            }
-            catch (SettingsListItemNotFoundException ex)
-            {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Item {0} not found in {1}. Use skyline_add_settings_list_item to add it first.",
-                    ex.ItemKey.SingleQuote(), listType));
-            }
+                }
+                catch (SettingsListItemNotFoundException ex)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Item {0} not found in {1}. Use skyline_add_settings_list_item to add it first.",
+                        ex.ItemKey.SingleQuote(), listType));
+                }
+            });
         }
 
         private ISettingsListDocumentSelection ResolveDocumentSelector(string listType)
@@ -990,7 +972,7 @@ namespace pwiz.Skyline.ToolsUI
                 definition.Select != null ? string.Join(@", ", definition.Select) : string.Empty));
 
             var reader = new ReportDefinitionReader(dataSchema);
-            var viewSpec = reader.CreateViewSpec(definition, definition.Scope);
+            var viewSpec = reader.CreateViewSpec(definition, definition.DataSource);
             Log(string.Format(@"Resolved via {0} row source", viewSpec.RowSource));
             return viewSpec;
         }

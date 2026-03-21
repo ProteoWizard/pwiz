@@ -66,21 +66,21 @@ namespace SkylineTool
         // 0-arg methods
         public string GetDocumentPath() { return Call(nameof(GetDocumentPath)); }
         public string GetVersion() { return Call(nameof(GetVersion)); }
-        public string GetSelection() { return Call(nameof(GetSelection)); }
+        public SelectionInfo GetSelection() { return CallTyped<SelectionInfo>(nameof(GetSelection)); }
         public string GetSelectionText() { return Call(nameof(GetSelectionText)); }
         public string GetReplicateName() { return Call(nameof(GetReplicateName)); }
         public string[] GetReplicateNames() { return CallTyped<string[]>(nameof(GetReplicateNames)); }
-        public string GetDocumentStatus() { return Call(nameof(GetDocumentStatus)); }
+        public DocumentStatus GetDocumentStatus() { return CallTyped<DocumentStatus>(nameof(GetDocumentStatus)); }
         public string[] GetSettingsListTypes() { return CallTyped<string[]>(nameof(GetSettingsListTypes)); }
         public TutorialListItem[] GetAvailableTutorials() { return CallTyped<TutorialListItem[]>(nameof(GetAvailableTutorials)); }
         public string GetProcessId() { return Call(nameof(GetProcessId)); }
         public FormInfo[] GetOpenForms() { return CallTyped<FormInfo[]>(nameof(GetOpenForms)); }
 
-        public ReportDocTopicSummary[] GetReportDocTopics(string scope = null)
+        public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null)
         {
-            return scope == null
+            return dataSource == null
                 ? CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics))
-                : CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), scope);
+                : CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), dataSource);
         }
 
         // 1-arg methods
@@ -107,25 +107,25 @@ namespace SkylineTool
             return CallTyped<string[]>(nameof(GetSettingsListSelectedItems), listType);
         }
 
-        public string GetReportDocTopic(string topicName, string scope = null)
+        public ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null)
         {
-            return scope == null
-                ? Call(nameof(GetReportDocTopic), topicName)
-                : Call(nameof(GetReportDocTopic), topicName, scope);
+            return dataSource == null
+                ? CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName)
+                : CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName, dataSource);
         }
 
-        public string AddReportFromDefinition(ReportDefinition definition)
+        public void AddReportFromDefinition(ReportDefinition definition)
         {
-            return Call(nameof(AddReportFromDefinition),
+            Call(nameof(AddReportFromDefinition),
                 JsonSerializer.Serialize(definition, _snakeCaseOptions));
         }
 
-        public string InsertSmallMoleculeTransitionList(string textCSV)
+        public void InsertSmallMoleculeTransitionList(string textCSV)
         {
-            return Call(nameof(InsertSmallMoleculeTransitionList), textCSV);
+            Call(nameof(InsertSmallMoleculeTransitionList), textCSV);
         }
-        public string ImportProperties(string csvText) { return Call(nameof(ImportProperties), csvText); }
-        public string SetReplicate(string replicateName) { return Call(nameof(SetReplicate), replicateName); }
+        public void ImportProperties(string csvText) { Call(nameof(ImportProperties), csvText); }
+        public void SetReplicate(string replicateName) { Call(nameof(SetReplicate), replicateName); }
         public string GetDocumentSettings(string filePath) { return Call(nameof(GetDocumentSettings), filePath); }
         public string GetDefaultSettings(string filePath) { return Call(nameof(GetDefaultSettings), filePath); }
 
@@ -137,11 +137,12 @@ namespace SkylineTool
                 : CallTyped<LocationEntry[]>(nameof(GetLocations), level, rootLocator);
         }
 
-        public string SetSelectedElement(string elementLocator, string additionalLocators = null)
+        public void SetSelectedElement(string elementLocator, string additionalLocators = null)
         {
-            return additionalLocators == null
-                ? Call(nameof(SetSelectedElement), elementLocator)
-                : Call(nameof(SetSelectedElement), elementLocator, additionalLocators);
+            if (additionalLocators == null)
+                Call(nameof(SetSelectedElement), elementLocator);
+            else
+                Call(nameof(SetSelectedElement), elementLocator, additionalLocators);
         }
 
         public string GetGraphData(string graphId, string filePath = null)
@@ -170,17 +171,18 @@ namespace SkylineTool
             return Call(nameof(GetSettingsListItem), listType, itemName);
         }
 
-        public string SelectSettingsListItems(string listType, string[] itemNames)
+        public void SelectSettingsListItems(string listType, string[] itemNames)
         {
-            return Call(nameof(SelectSettingsListItems), listType,
+            Call(nameof(SelectSettingsListItems), listType,
                 JsonSerializer.Serialize(itemNames));
         }
 
-        public string ImportFasta(string textFasta, string keepEmptyProteins = null)
+        public void ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
-            return keepEmptyProteins == null
-                ? Call(nameof(ImportFasta), textFasta)
-                : Call(nameof(ImportFasta), textFasta, keepEmptyProteins);
+            if (keepEmptyProteins == null)
+                Call(nameof(ImportFasta), textFasta);
+            else
+                Call(nameof(ImportFasta), textFasta, keepEmptyProteins);
         }
 
         // 3-arg methods
@@ -201,11 +203,12 @@ namespace SkylineTool
             return CallTyped<TutorialMetadata>(nameof(GetTutorial), name, language, filePath);
         }
 
-        public string AddSettingsListItem(string listType, string itemXml, bool overwrite = false)
+        public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false)
         {
-            return overwrite
-                ? Call(nameof(AddSettingsListItem), listType, itemXml, "true")
-                : Call(nameof(AddSettingsListItem), listType, itemXml);
+            if (overwrite)
+                Call(nameof(AddSettingsListItem), listType, itemXml, "true");
+            else
+                Call(nameof(AddSettingsListItem), listType, itemXml);
         }
 
         // 4-arg methods

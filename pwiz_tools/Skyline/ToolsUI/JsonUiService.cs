@@ -54,12 +54,12 @@ namespace pwiz.Skyline.ToolsUI
         // Level 1: Primitives - UI thread marshaling
 
         /// <summary>
-        /// Executes an action on the UI thread. Returns "OK" on success
-        /// or the exception message on failure.
+        /// Executes an action on the UI thread.
+        /// Exceptions propagate to the caller via wrapping to preserve the original stack trace.
         /// </summary>
-        public static string InvokeOnUiThread(Action action)
+        public static void InvokeOnUiThread(Action action)
         {
-            string error = null;
+            Exception caught = null;
             Program.MainWindow.Invoke(new Action(() =>
             {
                 try
@@ -68,10 +68,13 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (Exception ex)
                 {
-                    error = ex.Message;
+                    caught = ex;
                 }
             }));
-            return error ?? @"OK";
+            if (caught is ArgumentException)
+                throw new ArgumentException(caught.Message, caught);
+            if (caught != null)
+                ExceptionUtil.WrapAndThrowException(caught);
         }
 
         /// <summary>
@@ -118,7 +121,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public const string INSERT_NODE_LOCATOR = @"/Insert";
 
-        public static string GetSelection()
+        public static SelectionInfo GetSelection()
         {
             return InvokeOnUiThread(() =>
             {
@@ -127,35 +130,31 @@ namespace pwiz.Skyline.ToolsUI
                 var sequenceTree = skylineWindow.SequenceTree;
                 var selectedPaths = sequenceTree.SelectedPaths;
                 if (selectedPaths.Count == 0)
-                    return string.Empty;
+                    return new SelectionInfo { Locators = Array.Empty<string>() };
 
                 var elementRefs = new ElementRefs(document);
-                var sb = new StringBuilder();
+                var locators = new List<string>();
                 foreach (var path in selectedPaths)
                 {
                     if (path.IsRoot)
                         continue;
                     if (sequenceTree.IsInsertPath(path))
                     {
-                        if (sb.Length > 0)
-                            sb.AppendLine();
-                        sb.Append(INSERT_NODE_LOCATOR);
+                        locators.Add(INSERT_NODE_LOCATOR);
                         continue;
                     }
                     var nodeRef = elementRefs.GetNodeRef(path);
                     if (nodeRef == null)
                         continue;
-                    if (sb.Length > 0)
-                        sb.AppendLine();
-                    sb.Append(nodeRef);
+                    locators.Add(nodeRef.ToString());
                 }
-                return sb.ToString();
+                return new SelectionInfo { Locators = locators.ToArray() };
             });
         }
 
-        public static string SetSelection(string elementLocatorString, string additionalLocators)
+        public static void SetSelection(string elementLocatorString, string additionalLocators)
         {
-            return InvokeOnUiThread(() =>
+            InvokeOnUiThread(() =>
             {
                 var skylineWindow = Program.MainWindow;
 
@@ -200,9 +199,9 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
-        public static string SetReplicate(string replicateName)
+        public static void SetReplicate(string replicateName)
         {
-            return InvokeOnUiThread(() =>
+            InvokeOnUiThread(() =>
             {
                 var document = Program.MainWindow.DocumentUI;
                 if (!document.Settings.HasResults)

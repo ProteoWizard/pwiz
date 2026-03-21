@@ -59,7 +59,7 @@ namespace SkylineTool
         public bool? PivotReplicate { get; set; }
         public bool? PivotIsotopeLabel { get; set; }
         public string Uimode { get; set; }
-        public string Scope { get; set; }
+        public string DataSource { get; set; }
     }
 
     /// <summary>
@@ -114,6 +114,52 @@ namespace SkylineTool
     {
         public string FilePath { get; set; }
         public string Image { get; set; }
+    }
+
+    // --- Document status and selection models ---
+
+    /// <summary>
+    /// Document overview returned by GetDocumentStatus.
+    /// </summary>
+    public class DocumentStatus
+    {
+        public string DocumentPath { get; set; }
+        public string DocumentType { get; set; }
+        public int Groups { get; set; }
+        public string GroupsLabel { get; set; }
+        public int Molecules { get; set; }
+        public string MoleculesLabel { get; set; }
+        public int Precursors { get; set; }
+        public int Transitions { get; set; }
+        public int Replicates { get; set; }
+        public bool HasUnsavedChanges { get; set; }
+    }
+
+    /// <summary>
+    /// Current selection state returned by GetSelection.
+    /// </summary>
+    public class SelectionInfo
+    {
+        public string[] Locators { get; set; }
+    }
+
+    /// <summary>
+    /// Detailed column documentation for a report topic returned by GetReportDocTopic.
+    /// </summary>
+    public class ReportDocTopicDetail
+    {
+        public string Name { get; set; }
+        public ColumnDefinition[] Columns { get; set; }
+    }
+
+    /// <summary>
+    /// A single column definition within a report documentation topic.
+    /// </summary>
+    public class ColumnDefinition
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Type { get; set; }
     }
 
     // --- Catalog and enumeration models ---
