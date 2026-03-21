@@ -49,9 +49,9 @@ namespace SkylineTool
         string GetSelection();
         string GetSelectionText();
         string GetReplicateName();
-        string GetReplicateNames();
+        string[] GetReplicateNames();
         string GetDocumentStatus();
-        string GetSettingsListTypes();
+        string[] GetSettingsListTypes();
         string GetAvailableTutorials();
         string GetReportDocTopics(string scope = null);
         string GetProcessId();
@@ -61,8 +61,8 @@ namespace SkylineTool
         string GetSelectedElementLocator(string elementType);
         string RunCommand(string commandArgs);
         string RunCommandSilent(string commandArgs);
-        string GetSettingsListNames(string listType);
-        string GetSettingsListSelectedItems(string listType);
+        string[] GetSettingsListNames(string listType, string groupName = null);
+        string[] GetSettingsListSelectedItems(string listType);
         string GetReportDocTopic(string topicName, string scope = null);
         string AddReportFromDefinition(ReportDefinition definition);
         string InsertSmallMoleculeTransitionList(string textCSV);

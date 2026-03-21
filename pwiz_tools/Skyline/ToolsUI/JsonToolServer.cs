@@ -380,20 +380,13 @@ namespace pwiz.Skyline.ToolsUI
             return _toolService.GetReplicateName();
         }
 
-        public string GetReplicateNames()
+        public string[] GetReplicateNames()
         {
             var doc = Program.MainWindow.Document;
             var measuredResults = doc.Settings.MeasuredResults;
             if (measuredResults == null)
-                return string.Empty;
-            var sb = new StringBuilder();
-            foreach (var chromSet in measuredResults.Chromatograms)
-            {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-                sb.Append(chromSet.Name);
-            }
-            return sb.ToString();
+                return Array.Empty<string>();
+            return measuredResults.Chromatograms.Select(c => c.Name).ToArray();
         }
 
         public string GetProcessId()
@@ -401,9 +394,9 @@ namespace pwiz.Skyline.ToolsUI
             return _toolService.GetProcessId().ToString();
         }
 
-        public string GetSettingsListTypes()
+        public string[] GetSettingsListTypes()
         {
-            return TextUtil.LineSeparate(LlmNameMap.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase));
+            return LlmNameMap.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
         public string GetDocumentStatus()
@@ -485,11 +478,11 @@ namespace pwiz.Skyline.ToolsUI
             return RunCommandImpl(commandArgs, true);
         }
 
-        public string GetSettingsListNames(string listType)
+        public string[] GetSettingsListNames(string listType, string groupName = null)
         {
             string propName = ResolveLlmListType(listType);
             if (propName == nameof(PersistedViews))
-                return GetPersistedViewNames();
+                return GetPersistedViewNames(groupName);
 
             var prop = typeof(Settings).GetProperty(propName);
             if (prop == null)
@@ -497,14 +490,14 @@ namespace pwiz.Skyline.ToolsUI
             var value = prop.GetValue(Settings.Default);
             if (value == null)
                 throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Settings list is null:", listType));
-            var sb = new StringBuilder();
+            var names = new List<string>();
             foreach (var item in (IEnumerable)value)
             {
                 var keyContainer = item as IKeyContainer<string>;
                 if (keyContainer != null)
-                    sb.AppendLine(keyContainer.GetKey());
+                    names.Add(keyContainer.GetKey());
             }
-            return sb.ToString();
+            return names.ToArray();
         }
 
         public string GetReportDocTopic(string topicName, string scope = null)
@@ -823,12 +816,11 @@ namespace pwiz.Skyline.ToolsUI
                 : LlmInstruction.Format(@"Added {0} to {1}.", itemName.SingleQuote(), listType);
         }
 
-        public string GetSettingsListSelectedItems(string listType)
+        public string[] GetSettingsListSelectedItems(string listType)
         {
             var selector = ResolveDocumentSelector(listType);
             var settings = Program.MainWindow.Document.Settings;
-            string[] selected = selector.GetSelectedItems(settings);
-            return TextUtil.LineSeparate(selected);
+            return selector.GetSelectedItems(settings);
         }
 
         public string SelectSettingsListItems(string listType, string[] itemNames)
@@ -1358,17 +1350,26 @@ namespace pwiz.Skyline.ToolsUI
             return LlmNameMap.TryGetValue(listType, out string propName) ? propName : listType;
         }
 
-        private static string GetPersistedViewNames()
+        private static string[] GetPersistedViewNames(string groupName)
         {
             var persistedViews = Settings.Default.PersistedViews;
-            var sb = new StringBuilder();
-            sb.AppendLine(new LlmInstruction(@"# Main"));
-            foreach (var viewSpec in persistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).ViewSpecs)
-                sb.AppendLine(viewSpec.Name);
-            sb.AppendLine(new LlmInstruction(@"# External Tools"));
-            foreach (var viewSpec in persistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).ViewSpecs)
-                sb.AppendLine(viewSpec.Name);
-            return sb.ToString();
+            var groups = new[] { PersistedViews.MainGroup, PersistedViews.ExternalToolsGroup };
+            if (groupName != null)
+            {
+                var match = groups.FirstOrDefault(g =>
+                    string.Equals(g.Id.Name, groupName, StringComparison.OrdinalIgnoreCase));
+                if (match == null)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown report group: {0}. Valid groups: main, external_tools", groupName));
+                }
+                groups = new[] { match };
+            }
+            var names = new List<string>();
+            foreach (var group in groups)
+                foreach (var viewSpec in persistedViews.GetViewSpecList(group.Id).ViewSpecs)
+                    names.Add(viewSpec.Name);
+            return names.ToArray();
         }
 
         private static string GetPersistedViewItem(string itemName)

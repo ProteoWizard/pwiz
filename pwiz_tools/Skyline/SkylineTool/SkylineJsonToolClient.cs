@@ -69,9 +69,9 @@ namespace SkylineTool
         public string GetSelection() { return Call(nameof(GetSelection)); }
         public string GetSelectionText() { return Call(nameof(GetSelectionText)); }
         public string GetReplicateName() { return Call(nameof(GetReplicateName)); }
-        public string GetReplicateNames() { return Call(nameof(GetReplicateNames)); }
+        public string[] GetReplicateNames() { return CallTyped<string[]>(nameof(GetReplicateNames)); }
         public string GetDocumentStatus() { return Call(nameof(GetDocumentStatus)); }
-        public string GetSettingsListTypes() { return Call(nameof(GetSettingsListTypes)); }
+        public string[] GetSettingsListTypes() { return CallTyped<string[]>(nameof(GetSettingsListTypes)); }
         public string GetAvailableTutorials() { return Call(nameof(GetAvailableTutorials)); }
         public string GetProcessId() { return Call(nameof(GetProcessId)); }
         public string GetOpenForms() { return Call(nameof(GetOpenForms)); }
@@ -90,10 +90,15 @@ namespace SkylineTool
         }
         public string RunCommand(string commandArgs) { return Call(nameof(RunCommand), commandArgs); }
         public string RunCommandSilent(string commandArgs) { return Call(nameof(RunCommandSilent), commandArgs); }
-        public string GetSettingsListNames(string listType) { return Call(nameof(GetSettingsListNames), listType); }
-        public string GetSettingsListSelectedItems(string listType)
+        public string[] GetSettingsListNames(string listType, string groupName = null)
         {
-            return Call(nameof(GetSettingsListSelectedItems), listType);
+            return groupName == null
+                ? CallTyped<string[]>(nameof(GetSettingsListNames), listType)
+                : CallTyped<string[]>(nameof(GetSettingsListNames), listType, groupName);
+        }
+        public string[] GetSettingsListSelectedItems(string listType)
+        {
+            return CallTyped<string[]>(nameof(GetSettingsListSelectedItems), listType);
         }
 
         public string GetReportDocTopic(string topicName, string scope = null)

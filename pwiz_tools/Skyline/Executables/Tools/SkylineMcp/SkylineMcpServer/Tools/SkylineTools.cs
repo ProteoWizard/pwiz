@@ -94,10 +94,10 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.GetReplicateNames();
-            return string.IsNullOrEmpty(result)
+            string[] result = connection.GetReplicateNames();
+            return result.Length == 0
                 ? "No replicates in the document."
-                : result;
+                : string.Join("\n", result);
         });
     }
 
@@ -186,10 +186,10 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.GetSettingsListTypes();
-            return string.IsNullOrEmpty(result)
+            string[] result = connection.GetSettingsListTypes();
+            return result.Length == 0
                 ? "No settings lists found."
-                : result;
+                : string.Join("\n", result);
         });
     }
 
@@ -200,10 +200,10 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.GetSettingsListNames(listType);
-            return string.IsNullOrEmpty(result)
+            string[] result = connection.GetSettingsListNames(listType);
+            return result.Length == 0
                 ? $"No items found in {listType}."
-                : result;
+                : string.Join("\n", result);
         });
     }
 
@@ -244,10 +244,10 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.GetSettingsListSelectedItems(listType);
-            return string.IsNullOrEmpty(result)
+            string[] result = connection.GetSettingsListSelectedItems(listType);
+            return result.Length == 0
                 ? $"No items are currently selected in {listType}."
-                : result;
+                : string.Join("\n", result);
         });
     }
 

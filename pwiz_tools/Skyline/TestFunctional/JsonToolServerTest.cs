@@ -313,11 +313,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(string.IsNullOrEmpty(currentRep));
 
             // GetReplicateNames - count should match
-            string names = server.GetReplicateNames();
-            Assert.AreEqual(chromatograms.Count, Helpers.CountLinesInString(names));
+            string[] names = server.GetReplicateNames();
+            AssertEx.AreEqual(chromatograms.Count, names.Length);
 
             // SetReplicate - navigate to a different replicate
-            string targetRep = names.ReadLines().Last();
+            string targetRep = names.Last();
             server.SetReplicate(targetRep);
             WaitForCondition(() => server.GetReplicateName() == targetRep);
 

@@ -78,36 +78,36 @@ namespace pwiz.SkylineTestFunctional
             string heavyModsName = JsonToolServer.GetSettingsListName<HeavyModList>();
 
             // GetSettingsListTypes - should return LlmName values, not property names
-            string types = server.GetSettingsListTypes();
-            AssertEx.Contains(types, enzymesName);
-            AssertEx.Contains(types, reportsName);
-            AssertEx.Contains(types, heavyModsName);
+            string[] types = server.GetSettingsListTypes();
+            Assert.IsTrue(types.Contains(enzymesName));
+            Assert.IsTrue(types.Contains(reportsName));
+            Assert.IsTrue(types.Contains(heavyModsName));
             // Should NOT contain internal property names
             AssertEx.IsFalse(types.Contains(nameof(EnzymeList)),
                 @"GetSettingsListTypes should return LlmName values, not property names");
 
             // GetSettingsListNames - using LlmName
             var defaultEnzyme = EnzymeList.GetDefault();
-            string enzymes = server.GetSettingsListNames(enzymesName);
-            AssertEx.Contains(enzymes, defaultEnzyme.Name);
+            string[] enzymes = server.GetSettingsListNames(enzymesName);
+            Assert.IsTrue(enzymes.Any(e => e.StartsWith(defaultEnzyme.Name)));
 
             // GetSettingsListItem - using LlmName
             string enzymeXml = server.GetSettingsListItem(enzymesName, defaultEnzyme.GetKey());
             AssertEx.Contains(enzymeXml, string.Format(@"name={0}", defaultEnzyme.Name.Quote()));
 
             // Backward compatibility - property names still work
-            string enzymes2 = server.GetSettingsListNames(nameof(EnzymeList));
-            AssertEx.Contains(enzymes2, defaultEnzyme.Name);
+            string[] enzymes2 = server.GetSettingsListNames(nameof(EnzymeList));
+            Assert.IsTrue(enzymes2.Any(e => e.StartsWith(defaultEnzyme.Name)));
             string enzymeXml2 = server.GetSettingsListItem(nameof(EnzymeList), defaultEnzyme.GetKey());
             AssertEx.Contains(enzymeXml2, string.Format(@"name={0}", defaultEnzyme.Name.Quote()));
 
             // GetSettingsListNames for PersistedViews (reports) - using LlmName
-            string viewNames = server.GetSettingsListNames(reportsName);
-            AssertEx.Contains(viewNames, @"# Main");
+            string[] viewNames = server.GetSettingsListNames(reportsName);
+            Assert.IsTrue(viewNames.Length > 0);
 
             // Backward compatibility - PersistedViews property name still works
-            string viewNames2 = server.GetSettingsListNames(nameof(PersistedViews));
-            AssertEx.Contains(viewNames2, @"# Main");
+            string[] viewNames2 = server.GetSettingsListNames(nameof(PersistedViews));
+            AssertEx.AreEqual(viewNames.Length, viewNames2.Length);
 
             // Error: nonexistent list
             AssertEx.ThrowsException<ArgumentException>(() =>
@@ -147,7 +147,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.NoDiff(enzymeXml, retrievedXml);
 
             // Verify it appears in names list
-            AssertEx.Contains(server.GetSettingsListNames(enzymesName), enzyme.Name);
+            Assert.IsTrue(server.GetSettingsListNames(enzymesName).Any(e => e.StartsWith(enzyme.Name)));
 
             // Error: duplicate name without overwrite
             AssertEx.ThrowsException<ArgumentException>(() =>
@@ -283,7 +283,7 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.Document.Settings);
 
                 // Also verify the server method works
-                string serverResult = server.GetSettingsListSelectedItems(listType);
+                string[] serverResult = server.GetSettingsListSelectedItems(listType);
 
                 // Get available items to select from
                 var availableKeys = GetAvailableKeys(t.selector);

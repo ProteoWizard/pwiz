@@ -76,9 +76,9 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string GetSelection() { return CallClient(c => c.GetSelection()); }
     public string GetSelectionText() { return CallClient(c => c.GetSelectionText()); }
     public string GetReplicateName() { return CallClient(c => c.GetReplicateName()); }
-    public string GetReplicateNames() { return CallClient(c => c.GetReplicateNames()); }
+    public string[] GetReplicateNames() { return CallClient(c => c.GetReplicateNames()); }
     public string GetDocumentStatus() { return CallClient(c => c.GetDocumentStatus()); }
-    public string GetSettingsListTypes() { return CallClient(c => c.GetSettingsListTypes()); }
+    public string[] GetSettingsListTypes() { return CallClient(c => c.GetSettingsListTypes()); }
     public string GetAvailableTutorials() { return CallClient(c => c.GetAvailableTutorials()); }
     public string GetReportDocTopics(string scope = null) { return CallClient(c => c.GetReportDocTopics(scope)); }
     public string GetProcessId() { return CallClient(c => c.GetProcessId()); }
@@ -88,8 +88,8 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string GetSelectedElementLocator(string elementType) { return CallClient(c => c.GetSelectedElementLocator(elementType)); }
     public string RunCommand(string commandArgs) { return CallClient(c => c.RunCommand(commandArgs)); }
     public string RunCommandSilent(string commandArgs) { return CallClient(c => c.RunCommandSilent(commandArgs)); }
-    public string GetSettingsListNames(string listType) { return CallClient(c => c.GetSettingsListNames(listType)); }
-    public string GetSettingsListSelectedItems(string listType) { return CallClient(c => c.GetSettingsListSelectedItems(listType)); }
+    public string[] GetSettingsListNames(string listType, string groupName = null) { return CallClient(c => c.GetSettingsListNames(listType, groupName)); }
+    public string[] GetSettingsListSelectedItems(string listType) { return CallClient(c => c.GetSettingsListSelectedItems(listType)); }
     public string GetReportDocTopic(string topicName, string scope = null) { return CallClient(c => c.GetReportDocTopic(topicName, scope)); }
     public string AddReportFromDefinition(ReportDefinition definition) { return CallClient(c => c.AddReportFromDefinition(definition)); }
     public string InsertSmallMoleculeTransitionList(string textCSV) { return CallClient(c => c.InsertSmallMoleculeTransitionList(textCSV)); }
