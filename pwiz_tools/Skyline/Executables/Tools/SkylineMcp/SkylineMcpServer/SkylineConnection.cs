@@ -92,7 +92,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string[] GetSettingsListSelectedItems(string listType) { return CallClient(c => c.GetSettingsListSelectedItems(listType)); }
     public ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null) { return CallClient(c => c.GetReportDocTopic(topicName, dataSource)); }
     public void AddReportFromDefinition(ReportDefinition definition) { CallClientVoid(c => c.AddReportFromDefinition(definition)); }
-    public void InsertSmallMoleculeTransitionList(string textCSV) { CallClientVoid(c => c.InsertSmallMoleculeTransitionList(textCSV)); }
+    public void InsertSmallMoleculeTransitionList(string textCsv) { CallClientVoid(c => c.InsertSmallMoleculeTransitionList(textCsv)); }
     public void ImportProperties(string csvText) { CallClientVoid(c => c.ImportProperties(csvText)); }
     public void SetReplicate(string replicateName) { CallClientVoid(c => c.SetReplicate(replicateName)); }
     public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }

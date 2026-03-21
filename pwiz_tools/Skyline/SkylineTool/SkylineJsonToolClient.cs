@@ -23,17 +23,38 @@ using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
 using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
+// ReSharper disable InvalidXmlDocComment (for direct link into .NET 8.0)
 
 namespace SkylineTool
 {
     /// <summary>
-    /// JSON-RPC 2.0 client for the Skyline JSON tool service.
-    /// Connects to a Skyline instance via named pipe and provides a fully
-    /// typed IJsonToolService proxy. Replaces SkylineToolClient (which uses
-    /// the deprecated BinaryFormatter transport) with modern JSON-RPC.
+    /// JSON-RPC 2.0 client for the Skyline JSON tool service. Connects to a
+    /// running Skyline instance via named pipe and provides a fully typed
+    /// <see cref="IJsonToolService"/> implementation. Replaces
+    /// <see cref="SkylineToolClient"/> (which uses the deprecated BinaryFormatter
+    /// transport) with modern JSON-RPC.
     ///
-    /// Link-compiled into both .NET Framework 4.7.2 (SkylineAiConnector)
-    /// and .NET 8.0 (SkylineMcpServer). Uses System.Text.Json.
+    /// <para><b>.NET Framework 4.7.2 tools</b>: Reference SkylineTool.dll.
+    /// The System.Text.Json dependency is included. Create a
+    /// <see cref="System.IO.Pipes.NamedPipeClientStream"/> connected to the
+    /// Skyline pipe and pass it to the constructor.</para>
+    ///
+    /// <para><b>.NET 8.0+ tools</b>: Link-compile IJsonToolService.cs,
+    /// JsonToolConstants.cs, JsonToolModels.cs, and SkylineJsonToolClient.cs
+    /// into your project. System.Text.Json is built into .NET 8.0.</para>
+    ///
+    /// <para><b>Usage</b>:</para>
+    /// <code>
+    /// var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut);
+    /// pipe.Connect(5000);
+    /// pipe.ReadMode = PipeTransmissionMode.Message;
+    /// using (var client = new SkylineJsonToolClient(pipe))
+    /// {
+    ///     string path = client.GetDocumentPath();
+    ///     var status = client.GetDocumentStatus();
+    ///     var report = client.ExportReport("Peak Area", "output.csv", "invariant");
+    /// }
+    /// </code>
     /// </summary>
     public class SkylineJsonToolClient : IJsonToolService, IDisposable
     {
@@ -225,7 +246,8 @@ namespace SkylineTool
         {
             // Build JSON-RPC 2.0 request
             object request = LoggingEnabled
-                ? (object)new { jsonrpc = JsonToolConstants.JSONRPC_VERSION, method, @params = args, id = 1, _log = true }
+                // ReSharper disable once RedundantCast (for .NET 8.0)
+                ? (object) new { jsonrpc = JsonToolConstants.JSONRPC_VERSION, method, @params = args, id = 1, _log = true }
                 : new { jsonrpc = JsonToolConstants.JSONRPC_VERSION, method, @params = args, id = 1 };
             byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
             _pipe.Write(requestBytes, 0, requestBytes.Length);

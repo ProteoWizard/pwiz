@@ -32,7 +32,7 @@ namespace SkylineMcpServer.Tools;
 [McpServerToolType]
 public static class SkylineTools
 {
-    private static readonly JsonSerializerOptions _snakeCaseOptions = new()
+    private static readonly JsonSerializerOptions SnakeCaseOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true
@@ -166,7 +166,7 @@ public static class SkylineTools
         {
             filePath ??= GetTempReportPath(JsonToolConstants.DEFAULT_REPORT_NAME, format);
             string culture = invariant ? JsonToolConstants.CULTURE_INVARIANT : JsonToolConstants.CULTURE_LOCALIZED;
-            var definition = JsonSerializer.Deserialize<ReportDefinition>(reportDefinitionJson, _snakeCaseOptions);
+            var definition = JsonSerializer.Deserialize<ReportDefinition>(reportDefinitionJson, SnakeCaseOptions);
             var metadata = connection.ExportReportFromDefinition(definition, filePath, culture);
             return FormatReportResult(metadata);
         });
@@ -181,7 +181,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            var definition = JsonSerializer.Deserialize<ReportDefinition>(reportDefinitionJson, _snakeCaseOptions);
+            var definition = JsonSerializer.Deserialize<ReportDefinition>(reportDefinitionJson, SnakeCaseOptions);
             connection.AddReportFromDefinition(definition);
             return $"Report '{definition.Name}' added.";
         });

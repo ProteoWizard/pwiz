@@ -159,7 +159,7 @@ namespace pwiz.SkylineTestFunctional
             var unknownResult = JObject.Parse(unknownResponse);
             Assert.IsNotNull(unknownResult[nameof(JSON_RPC.error)]);
             AssertEx.AreEqual(JsonToolConstants.ERROR_METHOD_NOT_FOUND,
-                (int)unknownResult[nameof(JSON_RPC.error)][nameof(JSON_RPC.code)]);
+                (int)unknownResult[nameof(JSON_RPC.error)]?[nameof(JSON_RPC.code)]);
 
             // Error: too few arguments for a method that requires them
             string tooFewResponse = server.HandleRequest(
@@ -167,7 +167,7 @@ namespace pwiz.SkylineTestFunctional
             var tooFewResult = JObject.Parse(tooFewResponse);
             Assert.IsNotNull(tooFewResult[nameof(JSON_RPC.error)]);
             AssertEx.AreEqual(JsonToolConstants.ERROR_INVALID_PARAMS,
-                (int)tooFewResult[nameof(JSON_RPC.error)][nameof(JSON_RPC.code)]);
+                (int)tooFewResult[nameof(JSON_RPC.error)]?[nameof(JSON_RPC.code)]);
 
             // Error: malformed JSON request
             string badJsonResponse = server.HandleRequest(
