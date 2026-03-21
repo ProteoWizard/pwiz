@@ -1511,6 +1511,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Enforce a minimum rendered width of 1 pixel for extraction boxes so they
                 // remain visible when the m/z axis is zoomed out to a wide range.
                 double minWidth = Math.Abs(XAxis.Scale.ReverseTransform(1) - XAxis.Scale.ReverseTransform(0));
+                if (double.IsNaN(minWidth) || double.IsInfinity(minWidth) || minWidth <= 0)
+                    return;
                 foreach (var obj in GraphObjList.OfType<BoxObj>())
                 {
                     if (!(obj.Tag is ExtractionBoxInfo info))
