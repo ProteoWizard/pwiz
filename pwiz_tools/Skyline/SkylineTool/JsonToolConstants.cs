@@ -63,6 +63,8 @@ namespace SkylineTool
         // --- JSON-RPC 2.0 protocol constants ---
 
         public const string JSONRPC_VERSION = @"2.0";
+        public const int ERROR_PARSE = -32700;
+        public const int ERROR_INVALID_REQUEST = -32600;
         public const int ERROR_METHOD_NOT_FOUND = -32601;
         public const int ERROR_INVALID_PARAMS = -32602;
         public const int ERROR_INTERNAL = -32603;

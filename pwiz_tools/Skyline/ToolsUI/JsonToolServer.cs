@@ -278,6 +278,13 @@ namespace pwiz.Skyline.ToolsUI
             {
                 string json = Encoding.UTF8.GetString(requestBytes);
                 var request = JsonConvert.DeserializeObject<JsonRpcRequest>(json);
+                if (request?.Method == null)
+                {
+                    return SerializeError(
+                        new JsonRpcException(JsonToolConstants.ERROR_INVALID_REQUEST,
+                            @"Invalid JSON-RPC request: missing method"),
+                        id, JsonToolConstants.ERROR_INVALID_REQUEST);
+                }
                 id = request.Id;
                 string[] args = request.Params ?? Array.Empty<string>();
 
@@ -292,6 +299,10 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     _currentLog = null;
                 }
+            }
+            catch (JsonReaderException ex)
+            {
+                return SerializeError(ex, id, JsonToolConstants.ERROR_PARSE);
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
@@ -1097,7 +1108,11 @@ namespace pwiz.Skyline.ToolsUI
 
         private static int GetErrorCode(Exception ex)
         {
-            return ex is JsonRpcException rpcEx ? rpcEx.Code : JsonToolConstants.ERROR_INTERNAL;
+            if (ex is JsonRpcException rpcEx)
+                return rpcEx.Code;
+            if (ex is ArgumentException || ex is FormatException)
+                return JsonToolConstants.ERROR_INVALID_PARAMS;
+            return JsonToolConstants.ERROR_INTERNAL;
         }
 
         private static byte[] ReadAllBytes(PipeStream stream)

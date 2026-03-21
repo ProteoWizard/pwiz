@@ -71,8 +71,8 @@ namespace pwiz.Skyline.ToolsUI
                     caught = ex;
                 }
             }));
-            if (caught is ArgumentException)
-                throw new ArgumentException(caught.Message, caught);
+            if (caught is ArgumentException argEx)
+                throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
             if (caught != null)
                 ExceptionUtil.WrapAndThrowException(caught);
         }
