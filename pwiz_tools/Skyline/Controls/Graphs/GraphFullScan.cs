@@ -404,6 +404,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Fill = new Fill(color1, color2, 90),
                     IsClippedToChartRect = true,
                 };
+                extractionBox.Tag = new ExtractionBoxInfo(transition.ProductMz, transition.ExtractionWidth.Value);
                 GraphPane.GraphObjList.Add(extractionBox);
             }
 
@@ -1481,6 +1482,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private HeatMapGraphPane HeatMapGraphPane { get { return (HeatMapGraphPane) GraphPane; } }
 
+        private struct ExtractionBoxInfo
+        {
+            public readonly double CenterMz;
+            public readonly double OriginalWidth;
+
+            public ExtractionBoxInfo(double centerMz, double originalWidth)
+            {
+                CenterMz = centerMz;
+                OriginalWidth = originalWidth;
+            }
+        }
+
         /// <summary>
         /// Extends <see cref="HeatMapGraphPane"/> with <see cref="IHeatMapDataProvider"/> so that
         /// Copy Data produces clean 3-column output instead of per-curve data.
@@ -1489,6 +1502,24 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public HeatMapData HeatMapData => ShowHeatMap ? _heatMapData : null;
             public string HeatMapZAxisName => GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+
+            public override void SetScale(Graphics g)
+            {
+                base.SetScale(g);
+                if (!ShowHeatMap)
+                    return;
+                // Enforce a minimum rendered width of 1 pixel for extraction boxes so they
+                // remain visible when the m/z axis is zoomed out to a wide range.
+                double minWidth = Math.Abs(XAxis.Scale.ReverseTransform(1) - XAxis.Scale.ReverseTransform(0));
+                foreach (var obj in GraphObjList.OfType<BoxObj>())
+                {
+                    if (!(obj.Tag is ExtractionBoxInfo info))
+                        continue;
+                    double w = Math.Max(info.OriginalWidth, minWidth);
+                    obj.Location.X = info.CenterMz - w / 2;
+                    obj.Location.Width = w;
+                }
+            }
         }
 
         private void filterBtn_CheckedChanged(object sender, EventArgs e)
