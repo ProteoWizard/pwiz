@@ -23,17 +23,20 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using SkylineTool;
-using JSON = SkylineTool.JsonToolConstants.JSON;
 
 namespace SkylineMcpServer;
 
-public class SkylineConnection : IDisposable
+/// <summary>
+/// MCP-specific connection manager for Skyline instances.
+/// Handles instance discovery, targeting, and diagnostic logging.
+/// Delegates all IJsonToolService calls to <see cref="SkylineJsonToolClient"/>.
+/// </summary>
+public class SkylineConnection : IJsonToolService, IDisposable
 {
-    private readonly NamedPipeClientStream _pipe;
+    private readonly SkylineJsonToolClient _client;
 
     /// <summary>
     /// Identity string from the connected Skyline instance (e.g.,
@@ -49,7 +52,7 @@ public class SkylineConnection : IDisposable
     public static int? TargetProcessId { get; set; }
 
     /// <summary>
-    /// When true, requests include "log": true to enable diagnostic logging.
+    /// When true, requests include diagnostic logging.
     /// Set via the skyline_set_logging MCP tool.
     /// </summary>
     public static bool LoggingEnabled { get; set; }
@@ -59,10 +62,77 @@ public class SkylineConnection : IDisposable
     /// </summary>
     public static string LastLog { get; set; }
 
-    private SkylineConnection(NamedPipeClientStream pipe)
+    private SkylineConnection(SkylineJsonToolClient client)
     {
-        _pipe = pipe;
+        _client = client;
+        _client.LoggingEnabled = LoggingEnabled;
     }
+
+    // --- IJsonToolService delegation to SkylineJsonToolClient ---
+
+    // 0-arg methods
+    public string GetDocumentPath() { return CallClient(c => c.GetDocumentPath()); }
+    public string GetVersion() { return CallClient(c => c.GetVersion()); }
+    public string GetSelection() { return CallClient(c => c.GetSelection()); }
+    public string GetSelectionText() { return CallClient(c => c.GetSelectionText()); }
+    public string GetReplicateName() { return CallClient(c => c.GetReplicateName()); }
+    public string GetReplicateNames() { return CallClient(c => c.GetReplicateNames()); }
+    public string GetDocumentStatus() { return CallClient(c => c.GetDocumentStatus()); }
+    public string GetSettingsListTypes() { return CallClient(c => c.GetSettingsListTypes()); }
+    public string GetAvailableTutorials() { return CallClient(c => c.GetAvailableTutorials()); }
+    public string GetReportDocTopics(string scope = null) { return CallClient(c => c.GetReportDocTopics(scope)); }
+    public string GetProcessId() { return CallClient(c => c.GetProcessId()); }
+    public string GetOpenForms() { return CallClient(c => c.GetOpenForms()); }
+
+    // 1-arg methods
+    public string GetSelectedElementLocator(string elementType) { return CallClient(c => c.GetSelectedElementLocator(elementType)); }
+    public string RunCommand(string commandArgs) { return CallClient(c => c.RunCommand(commandArgs)); }
+    public string RunCommandSilent(string commandArgs) { return CallClient(c => c.RunCommandSilent(commandArgs)); }
+    public string GetSettingsListNames(string listType) { return CallClient(c => c.GetSettingsListNames(listType)); }
+    public string GetSettingsListSelectedItems(string listType) { return CallClient(c => c.GetSettingsListSelectedItems(listType)); }
+    public string GetReportDocTopic(string topicName, string scope = null) { return CallClient(c => c.GetReportDocTopic(topicName, scope)); }
+    public string AddReportFromDefinition(ReportDefinition definition) { return CallClient(c => c.AddReportFromDefinition(definition)); }
+    public string InsertSmallMoleculeTransitionList(string textCSV) { return CallClient(c => c.InsertSmallMoleculeTransitionList(textCSV)); }
+    public string ImportProperties(string csvText) { return CallClient(c => c.ImportProperties(csvText)); }
+    public string SetReplicate(string replicateName) { return CallClient(c => c.SetReplicate(replicateName)); }
+    public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }
+    public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
+
+    // 2-arg methods
+    public string GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
+    public string SetSelectedElement(string elementLocator, string additionalLocators = null) { return CallClient(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
+    public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }
+    public string GetGraphImage(string graphId, string filePath = null) { return CallClient(c => c.GetGraphImage(graphId, filePath)); }
+    public string GetFormImage(string formId, string filePath = null) { return CallClient(c => c.GetFormImage(formId, filePath)); }
+    public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }
+    public string SelectSettingsListItems(string listType, string[] itemNames) { return CallClient(c => c.SelectSettingsListItems(listType, itemNames)); }
+    public string ImportFasta(string textFasta, string keepEmptyProteins = null) { return CallClient(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
+
+    // 3-arg methods
+    public ReportMetadata ExportReport(string reportName, string filePath, string culture) { return CallClient(c => c.ExportReport(reportName, filePath, culture)); }
+    public ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture) { return CallClient(c => c.ExportReportFromDefinition(definition, filePath, culture)); }
+    public TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorial(name, language, filePath)); }
+    public string AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { return CallClient(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
+
+    // 4-arg methods
+    public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorialImage(name, imageFilename, language, filePath)); }
+
+    /// <summary>
+    /// Delegates to the client and captures the diagnostic log.
+    /// </summary>
+    private T CallClient<T>(Func<SkylineJsonToolClient, T> action)
+    {
+        var result = action(_client);
+        LastLog = _client.LastLog;
+        return result;
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
+    }
+
+    // --- MCP-specific connection management ---
 
     /// <summary>
     /// Human-readable status message describing the current Skyline connection state.
@@ -136,13 +206,13 @@ public class SkylineConnection : IDisposable
                 {
                     using (connection)
                     {
-                        documentPath = connection.Call(nameof(IJsonToolService.GetDocumentPath));
+                        documentPath = connection.GetDocumentPath();
                     }
                 }
             }
             catch
             {
-                // Best effort — document path will be null
+                // Best effort - document path will be null
             }
 
             results.Add(new InstanceInfo
@@ -165,7 +235,8 @@ public class SkylineConnection : IDisposable
         {
             pipe.Connect(5000);
             pipe.ReadMode = PipeTransmissionMode.Message;
-            return (new SkylineConnection(pipe) { SkylineVersion = info.SkylineVersion }, null);
+            var client = new SkylineJsonToolClient(pipe);
+            return (new SkylineConnection(client) { SkylineVersion = info.SkylineVersion }, null);
         }
         catch (TimeoutException)
         {
@@ -176,77 +247,8 @@ public class SkylineConnection : IDisposable
         catch (IOException)
         {
             pipe.Dispose();
-            return (null, null); // Connection failed silently — try next
+            return (null, null); // Connection failed silently - try next
         }
-    }
-
-    public string Call(string method, params string[] args)
-    {
-        object request = LoggingEnabled
-            ? (object)new { method, args, log = true }
-            : new { method, args };
-        byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
-        _pipe.Write(requestBytes, 0, requestBytes.Length);
-        _pipe.Flush();
-        _pipe.WaitForPipeDrain();
-
-        byte[] responseBytes = ReadAllBytes(_pipe);
-        string responseJson = Encoding.UTF8.GetString(responseBytes);
-
-        using var doc = JsonDocument.Parse(responseJson);
-        var root = doc.RootElement;
-
-        LastLog = root.TryGetProperty(nameof(JSON.log), out var logElement)
-            ? logElement.GetString()
-            : null;
-
-        if (root.TryGetProperty(nameof(JSON.error), out var errorElement))
-        {
-            string error = errorElement.GetString();
-            throw new InvalidOperationException(error ?? "Unknown error from Skyline");
-        }
-
-        if (root.TryGetProperty(nameof(JSON.result), out var resultElement))
-        {
-            if (resultElement.ValueKind == JsonValueKind.Null)
-                return null;
-            if (resultElement.ValueKind == JsonValueKind.Number)
-                return resultElement.GetRawText();
-            if (resultElement.ValueKind == JsonValueKind.Object ||
-                resultElement.ValueKind == JsonValueKind.Array)
-                return resultElement.GetRawText();
-            return resultElement.GetString();
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// System.Text.Json options configured with snake_case naming to match
-    /// the PascalCase POCO properties to the snake_case JSON wire format.
-    /// </summary>
-    private static readonly JsonSerializerOptions _snakeCaseOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        PropertyNameCaseInsensitive = true
-    };
-
-    /// <summary>
-    /// Call a method on the Skyline JSON tool service and deserialize the
-    /// result into a typed POCO. The wire format remains JSON strings over
-    /// named pipes; this method handles the deserialization.
-    /// </summary>
-    public T CallTyped<T>(string method, params string[] args)
-    {
-        string json = Call(method, args);
-        if (string.IsNullOrEmpty(json))
-            return default;
-        return JsonSerializer.Deserialize<T>(json, _snakeCaseOptions);
-    }
-
-    public void Dispose()
-    {
-        _pipe.Dispose();
     }
 
     /// <summary>
@@ -310,20 +312,6 @@ public class SkylineConnection : IDisposable
     {
         try { File.Delete(path); }
         catch { /* Best effort */ }
-    }
-
-    private static byte[] ReadAllBytes(PipeStream stream)
-    {
-        var memoryStream = new MemoryStream();
-        do
-        {
-            var buffer = new byte[65536];
-            int count = stream.Read(buffer, 0, buffer.Length);
-            if (count == 0)
-                return memoryStream.ToArray();
-            memoryStream.Write(buffer, 0, count);
-        } while (!stream.IsMessageComplete);
-        return memoryStream.ToArray();
     }
 
     // POCO matching the Skyline connection file format

@@ -31,7 +31,6 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -47,7 +46,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
-using JSON = SkylineTool.JsonToolConstants.JSON;
+using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -60,18 +59,64 @@ namespace pwiz.Skyline.ToolsUI
     {
 
         /// <summary>
-        /// Shared Newtonsoft.Json serializer configured with snake_case naming.
+        /// Shared Newtonsoft.Json settings configured with snake_case naming.
         /// Used for POCO serialization/deserialization in the dispatch layer so
         /// PascalCase C# properties map to snake_case JSON keys.
         /// </summary>
-        private static readonly JsonSerializer _snakeCaseSerializer = JsonSerializer.Create(
+        private static readonly JsonSerializerSettings _snakeCaseSettings =
             new JsonSerializerSettings
             {
                 ContractResolver = new DefaultContractResolver
                 {
                     NamingStrategy = new SnakeCaseNamingStrategy()
                 }
-            });
+            };
+
+        // JSON-RPC 2.0 request/response POCOs for typed deserialization
+
+        private class JsonRpcRequest
+        {
+            [JsonProperty(nameof(JSON_RPC.method))]
+            public string Method { get; set; }
+            [JsonProperty(nameof(JSON_RPC.@params))]
+            public string[] Params { get; set; }
+            [JsonProperty(nameof(JSON_RPC.id))]
+            public int Id { get; set; }
+            [JsonProperty(nameof(JSON_RPC._log))]
+            public bool Log { get; set; }
+        }
+
+        private class JsonRpcResponse
+        {
+            [JsonProperty(nameof(JSON_RPC.jsonrpc))]
+            public string Jsonrpc { get; set; } = JsonToolConstants.JSONRPC_VERSION;
+            [JsonProperty(nameof(JSON_RPC.result))]
+            public object Result { get; set; }
+            [JsonProperty(nameof(JSON_RPC.error))]
+            public JsonRpcError Error { get; set; }
+            [JsonProperty(nameof(JSON_RPC.id))]
+            public int Id { get; set; }
+            [JsonProperty(nameof(JSON_RPC._log), NullValueHandling = NullValueHandling.Ignore)]
+            public string Log { get; set; }
+
+            // JSON-RPC 2.0: result present only on success, error present only on failure
+            public bool ShouldSerializeResult() { return Error == null; }
+            public bool ShouldSerializeError() { return Error != null; }
+        }
+
+        private class JsonRpcError
+        {
+            [JsonProperty(nameof(JSON_RPC.code))]
+            public int Code { get; set; }
+            [JsonProperty(nameof(JSON_RPC.message))]
+            public string Message { get; set; }
+        }
+
+        private class JsonRpcException : Exception
+        {
+            public int Code { get; }
+            public JsonRpcException(int code, string message) : base(message) { Code = code; }
+        }
 
         private readonly ToolService _toolService;
         private readonly string _pipeName;
@@ -120,14 +165,15 @@ namespace pwiz.Skyline.ToolsUI
         {
             string dir = JsonToolConstants.GetConnectionDirectory();
             Directory.CreateDirectory(dir);
-            var obj = new JObject
+            var info = new
             {
-                [nameof(JSON.pipe_name)] = _pipeName,
-                [nameof(JSON.process_id)] = Process.GetCurrentProcess().Id,
-                [nameof(JSON.connected_at)] = DateTime.UtcNow.ToString(@"o"),
-                [nameof(JSON.skyline_version)] = Install.ProgramNameAndVersion
+                pipe_name = _pipeName,
+                process_id = Process.GetCurrentProcess().Id,
+                connected_at = DateTime.UtcNow.ToString(@"o"),
+                skyline_version = Install.ProgramNameAndVersion
             };
-            File.WriteAllText(JsonToolConstants.GetConnectionFilePath(_pipeName), obj.ToString());
+            File.WriteAllText(JsonToolConstants.GetConnectionFilePath(_pipeName),
+                JsonConvert.SerializeObject(info, Newtonsoft.Json.Formatting.Indented));
 
             // Clean up stale files from dead instances
             CleanupStaleConnectionFiles(dir);
@@ -155,8 +201,8 @@ namespace pwiz.Skyline.ToolsUI
                 try
                 {
                     string json = File.ReadAllText(file);
-                    var obj = JObject.Parse(json);
-                    int pid = (int)obj[nameof(JSON.process_id)];
+                    var obj = JsonConvert.DeserializeAnonymousType(json, new { process_id = 0 });
+                    int pid = obj.process_id;
                     if (!IsSkylineProcess(pid))
                         File.Delete(file);
                 }
@@ -227,20 +273,20 @@ namespace pwiz.Skyline.ToolsUI
 
         public string HandleRequest(byte[] requestBytes)
         {
+            int id = 0;
             try
             {
                 string json = Encoding.UTF8.GetString(requestBytes);
-                var root = JObject.Parse(json);
-                string method = (string) root[nameof(JSON.method)];
-                string[] args = ParseArgs(root[nameof(JSON.args)]);
+                var request = JsonConvert.DeserializeObject<JsonRpcRequest>(json);
+                id = request.Id;
+                string[] args = request.Params ?? Array.Empty<string>();
 
-                bool logRequested = root[nameof(JSON.log)]?.Value<bool>() == true;
-                _currentLog = logRequested ? new ToolLog() : null;
+                _currentLog = request.Log ? new ToolLog() : null;
 
                 try
                 {
-                    object result = Dispatch(method, args);
-                    return SerializeResult(result);
+                    object result = Dispatch(request.Method, args);
+                    return SerializeResult(result, id);
                 }
                 finally
                 {
@@ -249,11 +295,11 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
-                return SerializeError(ex.InnerException);
+                return SerializeError(ex.InnerException, id, GetErrorCode(ex.InnerException));
             }
             catch (Exception ex)
             {
-                return SerializeError(ex);
+                return SerializeError(ex, id, GetErrorCode(ex));
             }
         }
 
@@ -272,14 +318,18 @@ namespace pwiz.Skyline.ToolsUI
                 return string.Join(@",", _methods.Keys.OrderBy(k => k));
 
             if (!_methods.TryGetValue(method, out var methodInfo))
-                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Unknown method:", method));
+            {
+                throw new JsonRpcException(JsonToolConstants.ERROR_METHOD_NOT_FOUND,
+                    LlmInstruction.SpaceSeparate(@"Unknown method:", method));
+            }
 
             var parameters = methodInfo.GetParameters();
             int requiredCount = parameters.Count(p => !p.HasDefaultValue);
             if (args.Length < requiredCount)
             {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"{0} requires at least {1} argument(s)", method, requiredCount.ToString()));
+                throw new JsonRpcException(JsonToolConstants.ERROR_INVALID_PARAMS,
+                    LlmInstruction.Format(@"{0} requires at least {1} argument(s)",
+                        method, requiredCount.ToString()));
             }
 
             var invokeArgs = new object[parameters.Length];
@@ -300,7 +350,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (string.IsNullOrEmpty(json))
                 return null;
-            return JToken.Parse(json).ToObject(targetType, _snakeCaseSerializer);
+            return JsonConvert.DeserializeObject(json, targetType, _snakeCaseSettings);
         }
 
         // 0-arg methods
@@ -1054,46 +1104,31 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Report not found:", reportName));
         }
 
-        private string SerializeResult(object result)
+        private string SerializeResult(object result, int id)
         {
-            var obj = new JObject();
-            if (result == null)
-                obj[nameof(JSON.result)] = null;
-            else if (result is string s)
-                obj[nameof(JSON.result)] = s;
-            else
-                obj[nameof(JSON.result)] = JToken.FromObject(result, _snakeCaseSerializer);
-            AppendLog(obj);
-            return obj.ToString();
-        }
-
-        private string SerializeError(Exception ex)
-        {
-            var obj = new JObject
+            var response = new JsonRpcResponse
             {
-                [nameof(JSON.error)] = ex.ToString()
+                Result = result,
+                Id = id,
+                Log = _currentLog?.HasContent == true ? _currentLog.ToString() : null,
             };
-            AppendLog(obj);
-            return obj.ToString();
+            return JsonConvert.SerializeObject(response, _snakeCaseSettings);
         }
 
-        private void AppendLog(JObject obj)
+        private string SerializeError(Exception ex, int id, int code)
         {
-            if (_currentLog != null && _currentLog.HasContent)
-                obj[nameof(JSON.log)] = _currentLog.ToString();
-        }
-
-        private static string[] ParseArgs(JToken argsToken)
-        {
-            if (argsToken == null || argsToken.Type != JTokenType.Array)
-                return Array.Empty<string>();
-            var array = (JArray)argsToken;
-            var args = new string[array.Count];
-            for (int i = 0; i < array.Count; i++)
+            var response = new JsonRpcResponse
             {
-                args[i] = (string)array[i];
-            }
-            return args;
+                Error = new JsonRpcError { Code = code, Message = ex.Message },
+                Id = id,
+                Log = _currentLog?.HasContent == true ? _currentLog.ToString() : null,
+            };
+            return JsonConvert.SerializeObject(response);
+        }
+
+        private static int GetErrorCode(Exception ex)
+        {
+            return ex is JsonRpcException rpcEx ? rpcEx.Code : JsonToolConstants.ERROR_INTERNAL;
         }
 
         private static byte[] ReadAllBytes(PipeStream stream)

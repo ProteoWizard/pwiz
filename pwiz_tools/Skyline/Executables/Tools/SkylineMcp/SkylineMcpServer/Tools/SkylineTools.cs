@@ -31,13 +31,19 @@ namespace SkylineMcpServer.Tools;
 [McpServerToolType]
 public static class SkylineTools
 {
+    private static readonly JsonSerializerOptions _snakeCaseOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        PropertyNameCaseInsensitive = true
+    };
+
     [McpServerTool(Name = "skyline_get_document_path"),
      Description("Get the file path of the currently open Skyline document.")]
     public static string GetDocumentPath()
     {
         return Invoke(connection =>
         {
-            string path = connection.Call(nameof(IJsonToolService.GetDocumentPath));
+            string path = connection.GetDocumentPath();
             return path ?? "(unsaved)";
         });
     }
@@ -48,7 +54,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string version = connection.Call(nameof(IJsonToolService.GetVersion));
+            string version = connection.GetVersion();
             return version ?? "Unknown version";
         });
     }
@@ -61,7 +67,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string selection = connection.Call(nameof(IJsonToolService.GetSelection));
+            string selection = connection.GetSelection();
             return string.IsNullOrEmpty(selection)
                 ? "Nothing is currently selected in Skyline."
                 : selection;
@@ -74,7 +80,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string replicate = connection.Call(nameof(IJsonToolService.GetReplicateName));
+            string replicate = connection.GetReplicateName();
             return string.IsNullOrEmpty(replicate)
                 ? "No replicate is currently selected."
                 : replicate;
@@ -88,7 +94,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetReplicateNames));
+            string result = connection.GetReplicateNames();
             return string.IsNullOrEmpty(result)
                 ? "No replicates in the document."
                 : result;
@@ -111,9 +117,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = string.IsNullOrEmpty(rootLocator)
-                ? connection.Call(nameof(IJsonToolService.GetLocations), level)
-                : connection.Call(nameof(IJsonToolService.GetLocations), level, rootLocator);
+            string result = connection.GetLocations(level, rootLocator);
             return string.IsNullOrEmpty(result)
                 ? "No elements found at the specified level."
                 : result;
@@ -132,7 +136,7 @@ public static class SkylineTools
         {
             filePath ??= GetTempReportPath(reportName, format);
             string culture = invariant ? JsonToolConstants.CULTURE_INVARIANT : JsonToolConstants.CULTURE_LOCALIZED;
-            var metadata = connection.CallTyped<ReportMetadata>(nameof(IJsonToolService.ExportReport), reportName, filePath, culture);
+            var metadata = connection.ExportReport(reportName, filePath, culture);
             return FormatReportResult(metadata);
         });
     }
@@ -156,7 +160,8 @@ public static class SkylineTools
         {
             filePath ??= GetTempReportPath(JsonToolConstants.DEFAULT_REPORT_NAME, format);
             string culture = invariant ? JsonToolConstants.CULTURE_INVARIANT : JsonToolConstants.CULTURE_LOCALIZED;
-            var metadata = connection.CallTyped<ReportMetadata>(nameof(IJsonToolService.ExportReportFromDefinition), reportDefinitionJson, filePath, culture);
+            var definition = JsonSerializer.Deserialize<ReportDefinition>(reportDefinitionJson, _snakeCaseOptions);
+            var metadata = connection.ExportReportFromDefinition(definition, filePath, culture);
             return FormatReportResult(metadata);
         });
     }
@@ -170,7 +175,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            return connection.Call(nameof(IJsonToolService.AddReportFromDefinition), reportDefinitionJson);
+            var definition = JsonSerializer.Deserialize<ReportDefinition>(reportDefinitionJson, _snakeCaseOptions);
+            return connection.AddReportFromDefinition(definition);
         });
     }
 
@@ -180,7 +186,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetSettingsListTypes));
+            string result = connection.GetSettingsListTypes();
             return string.IsNullOrEmpty(result)
                 ? "No settings lists found."
                 : result;
@@ -194,7 +200,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetSettingsListNames), listType);
+            string result = connection.GetSettingsListNames(listType);
             return string.IsNullOrEmpty(result)
                 ? $"No items found in {listType}."
                 : result;
@@ -209,7 +215,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetSettingsListItem), listType, itemName);
+            string result = connection.GetSettingsListItem(listType, itemName);
             return string.IsNullOrEmpty(result)
                 ? $"Item not found: {itemName} in {listType}."
                 : result;
@@ -225,9 +231,7 @@ public static class SkylineTools
         [Description("XML definition of the settings item")] string itemXml,
         [Description("Set to true to replace an existing item with the same name")] bool overwrite = false)
     {
-        return Invoke(connection => overwrite
-            ? connection.Call(nameof(IJsonToolService.AddSettingsListItem), listType, itemXml, "true")
-            : connection.Call(nameof(IJsonToolService.AddSettingsListItem), listType, itemXml));
+        return Invoke(connection => connection.AddSettingsListItem(listType, itemXml, overwrite));
     }
 
     [McpServerTool(Name = "skyline_get_settings_list_selected_items"),
@@ -240,8 +244,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(
-                nameof(IJsonToolService.GetSettingsListSelectedItems), listType);
+            string result = connection.GetSettingsListSelectedItems(listType);
             return string.IsNullOrEmpty(result)
                 ? $"No items are currently selected in {listType}."
                 : result;
@@ -259,8 +262,7 @@ public static class SkylineTools
         [Description("Array of item names to activate")] string[] itemNames)
     {
         return Invoke(connection =>
-            connection.Call(nameof(IJsonToolService.SelectSettingsListItems),
-                listType, JsonSerializer.Serialize(itemNames)));
+            connection.SelectSettingsListItems(listType, itemNames));
     }
 
     [McpServerTool(Name = "skyline_run_command"),
@@ -270,7 +272,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string output = connection.Call(nameof(IJsonToolService.RunCommand), commandArgs);
+            string output = connection.RunCommand(commandArgs);
             return string.IsNullOrEmpty(output)
                 ? "Command completed with no output."
                 : output;
@@ -283,7 +285,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string output = connection.Call(nameof(IJsonToolService.RunCommandSilent), "--help=sections");
+            string output = connection.RunCommandSilent("--help=sections");
             return string.IsNullOrEmpty(output)
                 ? "No help sections available."
                 : output;
@@ -297,7 +299,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string output = connection.Call(nameof(IJsonToolService.RunCommandSilent), $"--help={section} --help=no-borders");
+            string output = connection.RunCommandSilent($"--help={section} --help=no-borders");
             return string.IsNullOrEmpty(output)
                 ? $"No help found for section: {section}"
                 : output;
@@ -316,9 +318,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = string.IsNullOrEmpty(scope)
-                ? connection.Call(nameof(IJsonToolService.GetReportDocTopics))
-                : connection.Call(nameof(IJsonToolService.GetReportDocTopics), scope);
+            string result = connection.GetReportDocTopics(scope);
             return string.IsNullOrEmpty(result)
                 ? "No report documentation topics found."
                 : result;
@@ -338,9 +338,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = string.IsNullOrEmpty(scope)
-                ? connection.Call(nameof(IJsonToolService.GetReportDocTopic), topic)
-                : connection.Call(nameof(IJsonToolService.GetReportDocTopic), topic, scope);
+            string result = connection.GetReportDocTopic(topic, scope);
             return string.IsNullOrEmpty(result)
                 ? $"No documentation found for topic: {topic}"
                 : result;
@@ -354,7 +352,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            return connection.Call(nameof(IJsonToolService.InsertSmallMoleculeTransitionList), textCsv);
+            return connection.InsertSmallMoleculeTransitionList(textCsv);
         });
     }
 
@@ -365,7 +363,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            return connection.Call(nameof(IJsonToolService.ImportFasta), textFasta);
+            return connection.ImportFasta(textFasta);
         });
     }
 
@@ -376,7 +374,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            return connection.Call(nameof(IJsonToolService.ImportProperties), csvText);
+            return connection.ImportProperties(csvText);
         });
     }
 
@@ -392,9 +390,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            if (string.IsNullOrEmpty(additionalLocators))
-                return connection.Call(nameof(IJsonToolService.SetSelectedElement), elementLocator);
-            return connection.Call(nameof(IJsonToolService.SetSelectedElement), elementLocator, additionalLocators);
+            return connection.SetSelectedElement(elementLocator, additionalLocators);
         });
     }
 
@@ -406,7 +402,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            return connection.Call(nameof(IJsonToolService.SetReplicate), replicateName);
+            return connection.SetReplicate(replicateName);
         });
     }
 
@@ -416,7 +412,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetDocumentStatus));
+            string result = connection.GetDocumentStatus();
             return result ?? "No document information available.";
         });
     }
@@ -431,7 +427,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetOpenForms));
+            string result = connection.GetOpenForms();
             return string.IsNullOrEmpty(result)
                 ? "No forms are currently open in Skyline."
                 : result;
@@ -449,9 +445,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = string.IsNullOrEmpty(filePath)
-                ? connection.Call(nameof(IJsonToolService.GetGraphData), graphId)
-                : connection.Call(nameof(IJsonToolService.GetGraphData), graphId, filePath);
+            string result = connection.GetGraphData(graphId, filePath);
             return string.IsNullOrEmpty(result)
                 ? "No data in graph."
                 : $"Graph data saved to: {result}\n\nUse the Read tool to examine the data.";
@@ -468,9 +462,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = string.IsNullOrEmpty(filePath)
-                ? connection.Call(nameof(IJsonToolService.GetGraphImage), graphId)
-                : connection.Call(nameof(IJsonToolService.GetGraphImage), graphId, filePath);
+            string result = connection.GetGraphImage(graphId, filePath);
             return $"Graph image saved to: {result}\n\nUse the Read tool to view this image.";
         });
     }
@@ -486,9 +478,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = string.IsNullOrEmpty(filePath)
-                ? connection.Call(nameof(IJsonToolService.GetFormImage), formId)
-                : connection.Call(nameof(IJsonToolService.GetFormImage), formId, filePath);
+            string result = connection.GetFormImage(formId, filePath);
             if (result == "Screen capture denied by user.")
                 return result;
             return $"Form image saved to: {result}\n\nUse the Read tool to view this image.";
@@ -503,7 +493,7 @@ public static class SkylineTools
         return Invoke(connection =>
         {
             filePath ??= GetTempSettingsPath("document");
-            string result = connection.Call(nameof(IJsonToolService.GetDocumentSettings), filePath);
+            string result = connection.GetDocumentSettings(filePath);
             return $"Document settings saved to: {result}\nUse the Read tool to examine the settings XML.";
         });
     }
@@ -516,7 +506,7 @@ public static class SkylineTools
         return Invoke(connection =>
         {
             filePath ??= GetTempSettingsPath("defaults");
-            string result = connection.Call(nameof(IJsonToolService.GetDefaultSettings), filePath);
+            string result = connection.GetDefaultSettings(filePath);
             return $"Default settings saved to: {result}\nUse the Read tool to examine the settings XML.";
         });
     }
@@ -530,7 +520,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.Call(nameof(IJsonToolService.GetAvailableTutorials));
+            string result = connection.GetAvailableTutorials();
             return string.IsNullOrEmpty(result)
                 ? "No tutorials available."
                 : result;
@@ -553,8 +543,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            var metadata = connection.CallTyped<TutorialMetadata>(
-                nameof(IJsonToolService.GetTutorial), name, language, filePath);
+            var metadata = connection.GetTutorial(name, language, filePath);
             if (metadata == null)
                 return $"Tutorial not found: {name}";
 
@@ -577,8 +566,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            var metadata = connection.CallTyped<TutorialImageMetadata>(
-                nameof(IJsonToolService.GetTutorialImage), name, imageFilename, language, filePath);
+            var metadata = connection.GetTutorialImage(name, imageFilename, language, filePath);
             if (metadata == null)
                 return $"Image not found: {imageFilename} in tutorial {name}";
 
@@ -650,8 +638,8 @@ public static class SkylineTools
 
             using (connection)
             {
-                string docPath = connection.Call(nameof(IJsonToolService.GetDocumentPath)) ?? "(unsaved)";
-                string version = connection.Call(nameof(IJsonToolService.GetVersion)) ?? "unknown";
+                string docPath = connection.GetDocumentPath() ?? "(unsaved)";
+                string version = connection.GetVersion() ?? "unknown";
                 return $"Now targeting Skyline process {processId} (v{version})\n" +
                        $"Document: {docPath}";
             }

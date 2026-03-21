@@ -97,20 +97,29 @@ namespace SkylineTool
     /// </summary>
     public static class JsonToolConstants
     {
-        // --- JSON property name enums (use nameof() as JObject keys) ---
-
         // ReSharper disable InconsistentNaming
 
-        /// <summary>Pipe protocol and connection file property names.</summary>
+        /// <summary>Connection file and MCP status property names (use nameof() as keys).</summary>
         public enum JSON
         {
-            method, args, result, error,                              // protocol
             pipe_name, process_id, connected_at, skyline_version,     // connection file
-            status, auto_connect, version,                            // MCP status
-            log,                                                      // diagnostic log
+            status, auto_connect, version,                            // MCP connector status
+        }
+
+        /// <summary>JSON-RPC 2.0 protocol field names (use nameof() as keys).</summary>
+        public enum JSON_RPC
+        {
+            jsonrpc, method, @params, id, result, error, code, message, _log,
         }
 
         // ReSharper restore InconsistentNaming
+
+        // --- JSON-RPC 2.0 protocol constants ---
+
+        public const string JSONRPC_VERSION = @"2.0";
+        public const int ERROR_METHOD_NOT_FOUND = -32601;
+        public const int ERROR_INVALID_PARAMS = -32602;
+        public const int ERROR_INTERNAL = -32603;
 
         // --- API value constants ---
 
