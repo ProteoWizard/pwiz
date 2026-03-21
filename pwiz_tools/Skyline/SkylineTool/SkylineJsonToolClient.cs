@@ -72,15 +72,15 @@ namespace SkylineTool
         public string[] GetReplicateNames() { return CallTyped<string[]>(nameof(GetReplicateNames)); }
         public string GetDocumentStatus() { return Call(nameof(GetDocumentStatus)); }
         public string[] GetSettingsListTypes() { return CallTyped<string[]>(nameof(GetSettingsListTypes)); }
-        public string GetAvailableTutorials() { return Call(nameof(GetAvailableTutorials)); }
+        public TutorialListItem[] GetAvailableTutorials() { return CallTyped<TutorialListItem[]>(nameof(GetAvailableTutorials)); }
         public string GetProcessId() { return Call(nameof(GetProcessId)); }
-        public string GetOpenForms() { return Call(nameof(GetOpenForms)); }
+        public FormInfo[] GetOpenForms() { return CallTyped<FormInfo[]>(nameof(GetOpenForms)); }
 
-        public string GetReportDocTopics(string scope = null)
+        public ReportDocTopicSummary[] GetReportDocTopics(string scope = null)
         {
             return scope == null
-                ? Call(nameof(GetReportDocTopics))
-                : Call(nameof(GetReportDocTopics), scope);
+                ? CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics))
+                : CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), scope);
         }
 
         // 1-arg methods
@@ -88,8 +88,14 @@ namespace SkylineTool
         {
             return Call(nameof(GetSelectedElementLocator), elementType);
         }
-        public string RunCommand(string commandArgs) { return Call(nameof(RunCommand), commandArgs); }
-        public string RunCommandSilent(string commandArgs) { return Call(nameof(RunCommandSilent), commandArgs); }
+        public string RunCommand(string[] args)
+        {
+            return Call(nameof(RunCommand), JsonSerializer.Serialize(args));
+        }
+        public string RunCommandSilent(string[] args)
+        {
+            return Call(nameof(RunCommandSilent), JsonSerializer.Serialize(args));
+        }
         public string[] GetSettingsListNames(string listType, string groupName = null)
         {
             return groupName == null
@@ -124,11 +130,11 @@ namespace SkylineTool
         public string GetDefaultSettings(string filePath) { return Call(nameof(GetDefaultSettings), filePath); }
 
         // 2-arg methods
-        public string GetLocations(string level, string rootLocator = null)
+        public LocationEntry[] GetLocations(string level, string rootLocator = null)
         {
             return rootLocator == null
-                ? Call(nameof(GetLocations), level)
-                : Call(nameof(GetLocations), level, rootLocator);
+                ? CallTyped<LocationEntry[]>(nameof(GetLocations), level)
+                : CallTyped<LocationEntry[]>(nameof(GetLocations), level, rootLocator);
         }
 
         public string SetSelectedElement(string elementLocator, string additionalLocators = null)

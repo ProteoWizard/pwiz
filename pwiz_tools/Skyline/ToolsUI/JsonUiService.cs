@@ -36,6 +36,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 using ZedGraph;
 
 namespace pwiz.Skyline.ToolsUI
@@ -78,10 +79,10 @@ namespace pwiz.Skyline.ToolsUI
         /// Must be called from a background thread (pipe server thread).
         /// Exceptions propagate to the caller.
         /// </summary>
-        public static string InvokeOnUiThread(Func<string> func)
+        public static T InvokeOnUiThread<T>(Func<T> func)
         {
             Assume.IsTrue(Program.MainWindow.InvokeRequired);
-            string result = null;
+            T result = default(T);
             Program.MainWindow.Invoke(new Action(() =>
             {
                 result = func();
@@ -216,13 +217,12 @@ namespace pwiz.Skyline.ToolsUI
 
         // Level 3: Complete UI operations - Graphs
 
-        public static string GetOpenForms()
+        public static FormInfo[] GetOpenForms()
         {
             return InvokeOnUiThread(() =>
             {
                 var skylineWindow = Program.MainWindow;
-                var sb = new StringBuilder();
-                sb.Append(TextUtil.ToEscapedTSV(new[] {@"Type", @"Title", @"HasGraph", @"DockState", @"ID"}));
+                var results = new List<FormInfo>();
                 var dockedForms = new HashSet<Form>();
                 foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                 {
@@ -231,12 +231,14 @@ namespace pwiz.Skyline.ToolsUI
                     if (dockState == DockState.Hidden || dockState == DockState.Unknown)
                         continue;
                     var zedGraph = TryGetZedGraphControl(form);
-                    bool hasGraph = zedGraph != null;
-                    string id = GetFormId(form);
-                    string type = form.GetType().Name;
-                    string title = GetFormTitle(form);
-                    sb.AppendLine();
-                    sb.Append(TextUtil.ToEscapedTSV(new[] {type, title, hasGraph.ToString(), dockState.ToString(), id}));
+                    results.Add(new FormInfo
+                    {
+                        Type = form.GetType().Name,
+                        Title = GetFormTitle(form),
+                        HasGraph = zedGraph != null,
+                        DockState = dockState.ToString(),
+                        Id = GetFormId(form),
+                    });
                 }
 
                 // Enumerate non-docked forms (dialogs, popups)
@@ -246,13 +248,16 @@ namespace pwiz.Skyline.ToolsUI
                         continue;
                     if (!form.Visible)
                         continue;
-                    string id = GetFormId(form);
-                    string type = form.GetType().Name;
-                    string title = GetFormTitle(form);
-                    sb.AppendLine();
-                    sb.Append(TextUtil.ToEscapedTSV(new[] {type, title, false.ToString(), @"Dialog", id}));
+                    results.Add(new FormInfo
+                    {
+                        Type = form.GetType().Name,
+                        Title = GetFormTitle(form),
+                        HasGraph = false,
+                        DockState = @"Dialog",
+                        Id = GetFormId(form),
+                    });
                 }
-                return sb.ToString();
+                return results.ToArray();
             });
         }
 

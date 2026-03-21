@@ -52,15 +52,15 @@ namespace SkylineTool
         string[] GetReplicateNames();
         string GetDocumentStatus();
         string[] GetSettingsListTypes();
-        string GetAvailableTutorials();
-        string GetReportDocTopics(string scope = null);
+        TutorialListItem[] GetAvailableTutorials();
+        ReportDocTopicSummary[] GetReportDocTopics(string scope = null);
         string GetProcessId();
-        string GetOpenForms();
+        FormInfo[] GetOpenForms();
 
         // 1-arg methods
         string GetSelectedElementLocator(string elementType);
-        string RunCommand(string commandArgs);
-        string RunCommandSilent(string commandArgs);
+        string RunCommand(string[] args);
+        string RunCommandSilent(string[] args);
         string[] GetSettingsListNames(string listType, string groupName = null);
         string[] GetSettingsListSelectedItems(string listType);
         string GetReportDocTopic(string topicName, string scope = null);
@@ -72,7 +72,7 @@ namespace SkylineTool
         string GetDefaultSettings(string filePath);
 
         // 2-arg methods
-        string GetLocations(string level, string rootLocator = null);
+        LocationEntry[] GetLocations(string level, string rootLocator = null);
         string SetSelectedElement(string elementLocator, string additionalLocators = null);
         string GetGraphData(string graphId, string filePath = null);
         string GetGraphImage(string graphId, string filePath = null);

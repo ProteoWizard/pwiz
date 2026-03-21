@@ -441,24 +441,19 @@ namespace pwiz.Skyline.ToolsUI
                 $@"Saved: {(dirty ? new LlmInstruction(@"no (unsaved changes)") : new LlmInstruction(@"yes"))}");
         }
 
-        public string GetAvailableTutorials()
+        public TutorialListItem[] GetAvailableTutorials()
         {
-            return JsonTutorialCatalog.FormatCatalog();
+            return JsonTutorialCatalog.GetCatalog();
         }
 
-        public string GetReportDocTopics(string scope = null)
+        public ReportDocTopicSummary[] GetReportDocTopics(string scope = null)
         {
             var topics = GetTopicList(scope);
-            var sb = new StringBuilder();
-            foreach (var topic in topics)
+            return topics.Select(t => new ReportDocTopicSummary
             {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-                sb.Append(topic.DisplayName);
-                sb.Append(TextUtil.SEPARATOR_TSV);
-                sb.Append(topic.Columns.Count);
-            }
-            return sb.ToString();
+                Name = t.DisplayName,
+                ColumnCount = t.Columns.Count,
+            }).ToArray();
         }
 
         // 1-arg methods
@@ -468,14 +463,14 @@ namespace pwiz.Skyline.ToolsUI
             return _toolService.GetSelectedElementLocator(elementType);
         }
 
-        public string RunCommand(string commandArgs)
+        public string RunCommand(string[] args)
         {
-            return RunCommandImpl(commandArgs, false);
+            return RunCommandImpl(args, false);
         }
 
-        public string RunCommandSilent(string commandArgs)
+        public string RunCommandSilent(string[] args)
         {
-            return RunCommandImpl(commandArgs, true);
+            return RunCommandImpl(args, true);
         }
 
         public string[] GetSettingsListNames(string listType, string groupName = null)
@@ -548,7 +543,7 @@ namespace pwiz.Skyline.ToolsUI
             return null;
         }
 
-        public string GetLocations(string level, string rootLocator = null)
+        public LocationEntry[] GetLocations(string level, string rootLocator = null)
         {
             var document = Program.MainWindow.Document;
             var elementRefs = new ElementRefs(document);
@@ -606,16 +601,16 @@ namespace pwiz.Skyline.ToolsUI
                     @"Level '{0}' must be deeper than the root element.", level));
             }
 
-            var sb = new StringBuilder();
+            var results = new List<LocationEntry>();
             EnumerateAtDepth(document, elementRefs,
                 (DocNodeParent)document.FindNode(rootPath),
-                rootPath, rootDepth, targetDepth, sb);
-            return sb.ToString();
+                rootPath, rootDepth, targetDepth, results);
+            return results.ToArray();
         }
 
         private static void EnumerateAtDepth(SrmDocument document, ElementRefs elementRefs,
             DocNodeParent currentNode, IdentityPath currentPath,
-            int currentDepth, int targetDepth, StringBuilder sb)
+            int currentDepth, int targetDepth, List<LocationEntry> results)
         {
             if (currentNode == null)
                 return;
@@ -629,11 +624,11 @@ namespace pwiz.Skyline.ToolsUI
                     var nodeRef = elementRefs.GetNodeRef(childPath);
                     if (nodeRef == null)
                         continue;
-                    if (sb.Length > 0)
-                        sb.AppendLine();
-                    sb.Append(nodeRef.Name);
-                    sb.Append('\t');
-                    sb.Append(nodeRef);
+                    results.Add(new LocationEntry
+                    {
+                        Name = nodeRef.Name,
+                        Locator = nodeRef.ToString(),
+                    });
                 }
             }
             else
@@ -645,7 +640,7 @@ namespace pwiz.Skyline.ToolsUI
                         continue;
                     var childPath = new IdentityPath(currentPath, child.Id);
                     EnumerateAtDepth(document, elementRefs, childParent,
-                        childPath, currentDepth + 1, targetDepth, sb);
+                        childPath, currentDepth + 1, targetDepth, results);
                 }
             }
         }
@@ -709,7 +704,7 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.SetReplicate(replicateName);
         }
 
-        public string GetOpenForms()
+        public FormInfo[] GetOpenForms()
         {
             return JsonUiService.GetOpenForms();
         }
@@ -1154,19 +1149,20 @@ namespace pwiz.Skyline.ToolsUI
             return filePath.ToForwardSlashPath();
         }
 
-        private string RunCommandImpl(string args, bool silent)
+        private string RunCommandImpl(string[] args, bool silent)
         {
             var capture = new StringWriter();
+            string argsDisplay = string.Join(@" ", args);
             TextWriter output;
 
             if (silent)
                 output = capture;
             else
-                output = JsonUiService.CreateImmediateWindowTee(capture, args);
+                output = JsonUiService.CreateImmediateWindowTee(capture, argsDisplay);
 
             // Run on the current thread (already a background pipe server thread).
             // The Immediate Window writer handles cross-thread writes via BeginInvoke.
-            var parsedArgs = CommandLine.ParseArgs(args);
+            var parsedArgs = args;
             var docBefore = Program.MainWindow.Document;
             var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore,
                 Program.MainWindow.DocumentFilePath);

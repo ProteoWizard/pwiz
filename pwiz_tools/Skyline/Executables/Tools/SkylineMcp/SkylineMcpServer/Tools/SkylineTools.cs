@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -117,10 +118,15 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.GetLocations(level, rootLocator);
-            return string.IsNullOrEmpty(result)
-                ? "No elements found at the specified level."
-                : result;
+            var entries = connection.GetLocations(level, rootLocator);
+            if (entries == null || entries.Length == 0)
+                return "No elements found at the specified level.";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Name\tLocator");
+            foreach (var entry in entries)
+                sb.AppendLine($"{entry.Name}\t{entry.Locator}");
+            return sb.ToString().TrimEnd();
         });
     }
 
@@ -272,7 +278,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string output = connection.RunCommand(commandArgs);
+            string[] args = SplitCommandArgs(commandArgs);
+            string output = connection.RunCommand(args);
             return string.IsNullOrEmpty(output)
                 ? "Command completed with no output."
                 : output;
@@ -285,7 +292,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string output = connection.RunCommandSilent("--help=sections");
+            string output = connection.RunCommandSilent(new[] { "--help=sections" });
             return string.IsNullOrEmpty(output)
                 ? "No help sections available."
                 : output;
@@ -299,7 +306,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string output = connection.RunCommandSilent($"--help={section} --help=no-borders");
+            string output = connection.RunCommandSilent(new[] { $"--help={section}", "--help=no-borders" });
             return string.IsNullOrEmpty(output)
                 ? $"No help found for section: {section}"
                 : output;
@@ -318,10 +325,15 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.GetReportDocTopics(scope);
-            return string.IsNullOrEmpty(result)
-                ? "No report documentation topics found."
-                : result;
+            var topics = connection.GetReportDocTopics(scope);
+            if (topics == null || topics.Length == 0)
+                return "No report documentation topics found.";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Name\tColumnCount");
+            foreach (var topic in topics)
+                sb.AppendLine($"{topic.Name}\t{topic.ColumnCount}");
+            return sb.ToString().TrimEnd();
         });
     }
 
@@ -427,10 +439,15 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.GetOpenForms();
-            return string.IsNullOrEmpty(result)
-                ? "No forms are currently open in Skyline."
-                : result;
+            var forms = connection.GetOpenForms();
+            if (forms == null || forms.Length == 0)
+                return "No forms are currently open in Skyline.";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Type\tTitle\tHasGraph\tDockState\tId");
+            foreach (var form in forms)
+                sb.AppendLine($"{form.Type}\t{form.Title}\t{form.HasGraph}\t{form.DockState}\t{form.Id}");
+            return sb.ToString().TrimEnd();
         });
     }
 
@@ -520,10 +537,15 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            string result = connection.GetAvailableTutorials();
-            return string.IsNullOrEmpty(result)
-                ? "No tutorials available."
-                : result;
+            var tutorials = connection.GetAvailableTutorials();
+            if (tutorials == null || tutorials.Length == 0)
+                return "No tutorials available.";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Category\tName\tTitle\tDescription\tWikiUrl\tZipUrl");
+            foreach (var t in tutorials)
+                sb.AppendLine($"{t.Category}\t{t.Name}\t{t.Title}\t{t.Description}\t{t.WikiUrl}\t{t.ZipUrl}");
+            return sb.ToString().TrimEnd();
         });
     }
 
@@ -805,6 +827,47 @@ public static class SkylineTools
         string timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
         string fileName = $"skyline-settings-{label}-{timestamp}.xml";
         return Path.Combine(tmpDir, fileName);
+    }
+
+    /// <summary>
+    /// Splits a command-line string into individual arguments, respecting
+    /// double-quoted segments (e.g., <c>--name="Peak Area" --file=out.csv</c>
+    /// becomes <c>["--name=Peak Area", "--file=out.csv"]</c>).
+    /// </summary>
+    private static string[] SplitCommandArgs(string commandLine)
+    {
+        if (string.IsNullOrEmpty(commandLine))
+            return Array.Empty<string>();
+
+        var args = new List<string>();
+        var current = new StringBuilder();
+        bool inQuotes = false;
+
+        for (int i = 0; i < commandLine.Length; i++)
+        {
+            char c = commandLine[i];
+            if (c == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (c == ' ' && !inQuotes)
+            {
+                if (current.Length > 0)
+                {
+                    args.Add(current.ToString());
+                    current.Clear();
+                }
+            }
+            else
+            {
+                current.Append(c);
+            }
+        }
+
+        if (current.Length > 0)
+            args.Add(current.ToString());
+
+        return args.ToArray();
     }
 
     private static string GetTempReportPath(string reportName, string format)

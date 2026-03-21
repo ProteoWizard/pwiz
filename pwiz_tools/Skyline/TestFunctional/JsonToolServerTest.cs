@@ -239,18 +239,17 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(string.IsNullOrEmpty(moleculeLocator));
 
             // SetSelectedElement - navigate to a different location via locator
-            string locations = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE);
-            Assert.AreEqual(doc.MoleculeCount, Helpers.CountLinesInString(locations));
+            var locations = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE);
+            Assert.AreEqual(doc.MoleculeCount, locations.Length);
 
             // Pick the last molecule and navigate to it
-            var moleculeLines = TextUtil.ReadLines(locations).ToArray();
-            string lastMoleculeLocator = moleculeLines.Last().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
+            string lastMoleculeLocator = locations.Last().Locator;
             server.SetSelectedElement(lastMoleculeLocator);
             WaitForCondition(() => server.GetSelection().Contains(lastMoleculeLocator));
 
             // Multi-selection: select multiple molecules at once
-            string firstMoleculeLocator = moleculeLines.First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
-            string secondMoleculeLocator = moleculeLines.Skip(1).First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
+            string firstMoleculeLocator = locations.First().Locator;
+            string secondMoleculeLocator = locations.Skip(1).First().Locator;
             server.SetSelectedElement(firstMoleculeLocator,
                 TextUtil.LineSeparate(secondMoleculeLocator, lastMoleculeLocator));
             string multiSel = server.GetSelection();
@@ -278,26 +277,25 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
 
             // Group level
-            string groups = server.GetLocations(JsonToolConstants.LEVEL_GROUP);
-            Assert.AreEqual(doc.MoleculeGroupCount, Helpers.CountLinesInString(groups));
+            var groups = server.GetLocations(JsonToolConstants.LEVEL_GROUP);
+            Assert.AreEqual(doc.MoleculeGroupCount, groups.Length);
 
             // Molecule level
-            string molecules = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE);
-            Assert.AreEqual(doc.MoleculeCount, Helpers.CountLinesInString(molecules));
+            var molecules = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE);
+            Assert.AreEqual(doc.MoleculeCount, molecules.Length);
 
             // Precursor level
-            string precursors = server.GetLocations(JsonToolConstants.LEVEL_PRECURSOR);
-            Assert.AreEqual(doc.MoleculeTransitionGroupCount, Helpers.CountLinesInString(precursors));
+            var precursors = server.GetLocations(JsonToolConstants.LEVEL_PRECURSOR);
+            Assert.AreEqual(doc.MoleculeTransitionGroupCount, precursors.Length);
 
             // Transition level
-            string transitions = server.GetLocations(JsonToolConstants.LEVEL_TRANSITION);
-            Assert.AreEqual(doc.MoleculeTransitionCount, Helpers.CountLinesInString(transitions));
+            var transitions = server.GetLocations(JsonToolConstants.LEVEL_TRANSITION);
+            Assert.AreEqual(doc.MoleculeTransitionCount, transitions.Length);
 
             // Scoped enumeration - molecules under first group
-            var groupLines = groups.ReadLines();
-            string firstGroupLocator = groupLines.First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
-            string scopedMolecules = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE, firstGroupLocator);
-            Assert.AreEqual(doc.MoleculeGroups.First().MoleculeCount, Helpers.CountLinesInString(scopedMolecules));
+            string firstGroupLocator = groups.First().Locator;
+            var scopedMolecules = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE, firstGroupLocator);
+            Assert.AreEqual(doc.MoleculeGroups.First().MoleculeCount, scopedMolecules.Length);
 
             // Error: invalid level
             AssertEx.ThrowsException<ArgumentException>(() => server.GetLocations(@"invalid"));
@@ -328,29 +326,26 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestReportDocumentation(JsonToolServer server)
         {
-            string topics = server.GetReportDocTopics();
-            AssertEx.IsFalse(string.IsNullOrEmpty(topics));
-            var topicLines = topics.ReadLines().ToList();
+            var topics = server.GetReportDocTopics();
+            AssertEx.IsTrue(topics.Length > 0);
 
             // Expect multiple entity topics from Document Grid scope (Protein, Peptide, etc.)
-            AssertEx.IsTrue(topicLines.Count >= 10 && topicLines.Count <= 16,
-                @"Expected 10-16 topics, got " + topicLines.Count);
+            AssertEx.IsTrue(topics.Length >= 10 && topics.Length <= 16,
+                @"Expected 10-16 topics, got " + topics.Length);
 
             // No IList`1 or raw generic type names
-            AssertEx.IsFalse(topicLines.Any(t => t.Contains(@"IList") || t.Contains(@"`")),
-                @"Raw type names should not appear: " + string.Join(@", ", topicLines));
+            AssertEx.IsFalse(topics.Any(t => t.Name.Contains(@"IList") || t.Name.Contains(@"`")),
+                @"Raw type names should not appear: " + string.Join(@", ", topics.Select(t => t.Name)));
 
-            // Each line is Name\tCount format
-            foreach (var line in topicLines)
+            // Each topic should have a positive column count
+            foreach (var topic in topics)
             {
-                var parts = line.Split(TextUtil.SEPARATOR_TSV);
-                AssertEx.AreEqual(2, parts.Length, @"Expected Name\tCount format: " + line);
-                AssertEx.IsTrue(int.TryParse(parts[1], out int count) && count > 0,
-                    @"Expected positive column count: " + line);
+                AssertEx.IsTrue(topic.ColumnCount > 0,
+                    @"Expected positive column count for " + topic.Name);
             }
 
             // Extract just names for ordering checks
-            var topicNames = topicLines.Select(l => l.Split(TextUtil.SEPARATOR_TSV)[0]).ToList();
+            var topicNames = topics.Select(t => t.Name).ToList();
 
             // Check hierarchy ordering (using Contains for UI-mode flexibility)
             int proteinsIdx = topicNames.FindIndex(t => t.Contains(@"Protein") || t.Contains(@"MoleculeList"));
@@ -397,8 +392,8 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(foundNormalizedArea, @"NormalizedArea should appear in some topic");
 
             // Audit log topics available via scope
-            string auditTopics = server.GetReportDocTopics(ReportDefinitionReader.SCOPE_AUDIT_LOG);
-            AssertEx.Contains(auditTopics, @"Audit");
+            var auditTopics = server.GetReportDocTopics(ReportDefinitionReader.SCOPE_AUDIT_LOG);
+            AssertEx.IsTrue(auditTopics.Any(t => t.Name.Contains(@"Audit")));
 
             // Spot-check: resolve a few columns from first topic
             var document = SkylineWindow.Document;
@@ -740,17 +735,18 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestAvailableTutorials(JsonToolServer server)
         {
-            string catalog = server.GetAvailableTutorials();
-            Assert.IsFalse(string.IsNullOrEmpty(catalog));
+            var tutorials = server.GetAvailableTutorials();
+            Assert.IsTrue(tutorials.Length > 0);
 
-            Assert.AreEqual(TutorialCatalog.Tutorials.Length, Helpers.CountLinesInString(catalog));
+            Assert.AreEqual(TutorialCatalog.Tutorials.Length, tutorials.Length);
 
-            // Each line should have 6 tab-separated fields
-            foreach (var line in catalog.ReadLines())
+            // Each tutorial should have non-null properties
+            foreach (var tutorial in tutorials)
             {
-                var fields = line.ParseDsvFields(TextUtil.SEPARATOR_TSV);
-                Assert.AreEqual(6, fields.Length,
-                    @"Expected 6 tab-separated fields, got {0}: {1}", fields.Length, line);
+                Assert.IsFalse(string.IsNullOrEmpty(tutorial.Name),
+                    @"Tutorial Name should not be null or empty");
+                Assert.IsFalse(string.IsNullOrEmpty(tutorial.Title),
+                    @"Tutorial Title should not be null or empty");
             }
         }
 
@@ -758,7 +754,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // RunCommandSilent with --help should return sections list
             string iwBefore = GetImmediateWindowText();
-            string sections = server.RunCommandSilent(@"--help=sections --help=no-borders");
+            string sections = server.RunCommandSilent(new[] { @"--help=sections", @"--help=no-borders" });
             Assert.IsFalse(string.IsNullOrEmpty(sections));
             // Silent mode should not write to Immediate Window
             Assert.AreEqual(iwBefore, GetImmediateWindowText());
@@ -843,10 +839,10 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestOpenForms(JsonToolServer server)
         {
-            string forms = server.GetOpenForms();
-            Assert.IsFalse(string.IsNullOrEmpty(forms));
+            var forms = server.GetOpenForms();
+            Assert.IsTrue(forms.Length > 0);
             // The Targets panel (SequenceTreeForm) should always be open
-            AssertEx.Contains(forms, nameof(SequenceTreeForm));
+            Assert.IsTrue(forms.Any(f => f.Type == nameof(SequenceTreeForm)));
         }
 
         private void TestScreenCapturePermissionDlg(JsonToolServer server)
@@ -858,9 +854,8 @@ namespace pwiz.SkylineTestFunctional
                 ScreenCapture.ResetSessionPermission();
             });
 
-            string formId = server.GetOpenForms().ReadLines()
-                .First(l => l.Contains(nameof(SequenceTreeForm)))
-                .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            string formId = server.GetOpenForms()
+                .First(f => f.Type == nameof(SequenceTreeForm)).Id;
 
             bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
 
@@ -938,9 +933,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Settings.Default.AllowMcpScreenCapture = true);
 
             // Capture the Targets panel
-            string formId = server.GetOpenForms().ReadLines()
-                .First(l => l.Contains(nameof(SequenceTreeForm)))
-                .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            string formId = server.GetOpenForms()
+                .First(f => f.Type == nameof(SequenceTreeForm)).Id;
             string imageName = @"form_image_test.png";
             string imagePath = TestFilesDir.GetTestPath(imageName);
 
@@ -991,16 +985,15 @@ namespace pwiz.SkylineTestFunctional
         private void TestGraphDataAndImage(JsonToolServer server)
         {
             // Find a graph form from the open forms list
-            string forms = server.GetOpenForms();
-            string graphLine = forms.ReadLines()
-                .FirstOrDefault(l => l.Contains(@"GraphSummary"));
-            if (graphLine == null)
+            var forms = server.GetOpenForms();
+            var graphForm = forms.FirstOrDefault(f => f.Type.Contains(@"GraphSummary"));
+            if (graphForm == null)
             {
                 // No graph open - skip gracefully (Rat_plasma.sky should have graphs)
                 return;
             }
 
-            string graphId = graphLine.ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            string graphId = graphForm.Id;
 
             // GetGraphData - export to TSV
             string dataPath = TestFilesDir.GetTestPath(@"graph_data.tsv");
@@ -1042,9 +1035,7 @@ namespace pwiz.SkylineTestFunctional
                     TestFilesDir.GetTestPath(@"graph_bad.png")));
 
             // Error: non-graph form used with graph methods
-            string nonGraphId = forms.ReadLines()
-                .First(l => l.Contains(nameof(SequenceTreeForm)))
-                .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            string nonGraphId = forms.First(f => f.Type == nameof(SequenceTreeForm)).Id;
             AssertEx.ThrowsException<ArgumentException>(() =>
                 server.GetGraphData(nonGraphId, badGraphPath));
         }
@@ -1155,11 +1146,11 @@ namespace pwiz.SkylineTestFunctional
                     defs => defs.Concat(new[] { annotationDef }).ToList()))));
 
             // Get protein locators
-            string groups = server.GetLocations(JsonToolConstants.LEVEL_GROUP);
-            Assert.IsTrue(Helpers.CountLinesInString(groups) > 0);
+            var groups = server.GetLocations(JsonToolConstants.LEVEL_GROUP);
+            Assert.IsTrue(groups.Length > 0);
 
             // Build CSV for ImportProperties: ElementLocator,TestAnnotation
-            string firstGroupLocator = groups.ReadLines().First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
+            string firstGroupLocator = groups.First().Locator;
             string csvText = @"ElementLocator,TestAnnotation" + Environment.NewLine +
                              firstGroupLocator + @",test_value";
 
@@ -1200,21 +1191,23 @@ namespace pwiz.SkylineTestFunctional
         private void TestRunCommand(JsonToolServer server, SrmDocument docAfterKeep)
         {
             // --version output should contain both parts of the version string
-            string versionResult = server.RunCommandSilent(CommandArgs.ARG_VERSION.ArgumentText);
+            string versionResult = server.RunCommandSilent(new[] { CommandArgs.ARG_VERSION.ArgumentText });
             // GetVersion returns "26.1.1.061-6c3244bc0a", --version shows "26.1.1.061 (6c3244bc0a)"
             AssertEx.Contains(versionResult, server.GetVersion().Split('-'));
 
             // Read operation: export a report via CLI (non-silent, writes to Immediate Window)
             string reportPath = TestFilesDir.GetTestPath(@"run_command_report.csv");
-            string reportArgs = TextUtil.SpaceSeparate(
-                CommandArgs.ARG_REPORT_NAME + REPORT_AREAS.Quote(),
-                CommandArgs.ARG_REPORT_FILE + reportPath.ToForwardSlashPath().Quote());
+            var reportArgs = new[]
+            {
+                CommandArgs.ARG_REPORT_NAME + REPORT_AREAS,
+                CommandArgs.ARG_REPORT_FILE + reportPath.ToForwardSlashPath()
+            };
             server.RunCommand(reportArgs);
             Assert.IsTrue(File.Exists(reportPath));
             Assert.IsTrue(new FileInfo(reportPath).Length > 0);
             // Verify Immediate Window contains the command header and report output
             string iwAfterReport = GetImmediateWindowText();
-            AssertEx.Contains(iwAfterReport, reportArgs);
+            AssertEx.Contains(iwAfterReport, TextUtil.SpaceSeparate(reportArgs));
             // Resource: "Exporting report {0}..." and "Report {0} exported successfully to {1}."
             AssertEx.Contains(iwAfterReport,
                 string.Format(SkylineResources.CommandLine_ExportLiveReport_Exporting_report__0____, REPORT_AREAS));
@@ -1224,12 +1217,12 @@ namespace pwiz.SkylineTestFunctional
 
             // Write operation: refine to remove proteins with fewer than 100 peptides
             var docBeforeRefine = SkylineWindow.Document;
-            string refineArgs = CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100";
+            var refineArgs = new[] { CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100" };
             server.RunCommand(refineArgs);
             Assert.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount,
                 @"Refine with min-peptides=100 should remove all proteins");
             string iwAfterRefine = GetImmediateWindowText();
-            AssertEx.Contains(iwAfterRefine, refineArgs);
+            AssertEx.Contains(iwAfterRefine, TextUtil.SpaceSeparate(refineArgs));
             // Resource: "Refining document..."
             AssertEx.Contains(iwAfterRefine,
                 Resources.CommandLine_RefineDocument_Refining_document___);
@@ -1242,9 +1235,11 @@ namespace pwiz.SkylineTestFunctional
             string fastaPath = TestFilesDir.GetTestPath(@"import_test.fasta");
             File.WriteAllText(fastaPath, TEXT_FASTA);
             var docBeforeFasta = SkylineWindow.Document;
-            string fastaArgs = TextUtil.SpaceSeparate(
-                CommandArgs.ARG_IMPORT_FASTA + fastaPath.ToForwardSlashPath().Quote(),
-                CommandArgs.ARG_KEEP_EMPTY_PROTEINS.ArgumentText);
+            var fastaArgs = new[]
+            {
+                CommandArgs.ARG_IMPORT_FASTA + fastaPath.ToForwardSlashPath(),
+                CommandArgs.ARG_KEEP_EMPTY_PROTEINS.ArgumentText
+            };
             server.RunCommand(fastaArgs);
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var docAfterFasta = SkylineWindow.Document;
@@ -1254,7 +1249,7 @@ namespace pwiz.SkylineTestFunctional
                 @"Document should contain the imported ALBU_BOVIN protein");
             AssertEx.DocumentCloned(docAfterKeep, docAfterFasta);
             string iwAfterFasta = GetImmediateWindowText();
-            AssertEx.Contains(iwAfterFasta, fastaArgs);
+            AssertEx.Contains(iwAfterFasta, TextUtil.SpaceSeparate(fastaArgs));
             // Resource: "Importing FASTA file {0}..."
             AssertEx.Contains(iwAfterFasta,
                 string.Format(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____,
@@ -1276,12 +1271,12 @@ namespace pwiz.SkylineTestFunctional
 
             // Save original document so on-disk state matches in-memory state
             // (prior tests may have modified the document without saving)
-            server.RunCommand(CommandArgs.ARG_SAVE.ArgumentText);
+            server.RunCommand(new[] { CommandArgs.ARG_SAVE.ArgumentText });
 
             // --new: create empty document at a temp path
             // Note: paths must be quoted because test directories may contain spaces
             string newPath = TestFilesDir.GetTestPath(@"doc_ops_new.sky");
-            string newResult = server.RunCommand(CommandArgs.ARG_NEW + newPath.Quote());
+            string newResult = server.RunCommand(new[] { CommandArgs.ARG_NEW + newPath });
             AssertEx.Contains(newResult, Path.GetFileName(newPath));
             AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
@@ -1294,7 +1289,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(SkylineWindow.Dirty);
 
             // --save: save the modified document, verify clean state
-            string saveResult = server.RunCommand(CommandArgs.ARG_SAVE.ArgumentText);
+            string saveResult = server.RunCommand(new[] { CommandArgs.ARG_SAVE.ArgumentText });
             AssertEx.Contains(saveResult, Path.GetFileName(newPath));
             AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
             Assert.IsFalse(SkylineWindow.Dirty);
@@ -1302,14 +1297,14 @@ namespace pwiz.SkylineTestFunctional
 
             // --save-as (synonym for --out): save to a different path
             string saveAsPath = TestFilesDir.GetTestPath(@"doc_ops_saveas.sky");
-            string saveAsResult = server.RunCommand(CommandArgs.ARG_SAVE_AS + saveAsPath.Quote());
+            string saveAsResult = server.RunCommand(new[] { CommandArgs.ARG_SAVE_AS + saveAsPath });
             AssertEx.Contains(saveAsResult, Path.GetFileName(saveAsPath));
             AssertEx.AreEqual(saveAsPath, SkylineWindow.DocumentFilePath);
             Assert.IsFalse(SkylineWindow.Dirty);
             Assert.IsTrue(File.Exists(saveAsPath));
 
             // --open (synonym for --in): re-open the first saved file, verify round-trip
-            string openResult = server.RunCommand(CommandArgs.ARG_OPEN + newPath.Quote());
+            string openResult = server.RunCommand(new[] { CommandArgs.ARG_OPEN + newPath });
             AssertEx.Contains(openResult, Path.GetFileName(newPath));
             AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(savedGroups, SkylineWindow.Document.MoleculeGroupCount);
@@ -1317,26 +1312,30 @@ namespace pwiz.SkylineTestFunctional
                 g => g.Name.Contains(@"ALBU_BOVIN")));
 
             // --in: re-open the original document from disk
-            string inResult = server.RunCommand(CommandArgs.ARG_IN + originalPath.Quote());
+            string inResult = server.RunCommand(new[] { CommandArgs.ARG_IN + originalPath });
             AssertEx.Contains(inResult, Path.GetFileName(originalPath));
             AssertEx.AreEqual(originalPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(originalGroups, SkylineWindow.Document.MoleculeGroupCount);
 
             // Combined: --open + --refine + --out
             string combinedPath = TestFilesDir.GetTestPath(@"doc_ops_combined.sky");
-            string combinedResult = server.RunCommand(TextUtil.SpaceSeparate(
-                CommandArgs.ARG_OPEN + newPath.Quote(),
+            string combinedResult = server.RunCommand(new[]
+            {
+                CommandArgs.ARG_OPEN + newPath,
                 CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100",
-                CommandArgs.ARG_OUT + combinedPath.Quote()));
+                CommandArgs.ARG_OUT + combinedPath
+            });
             AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
             Assert.IsTrue(File.Exists(combinedPath));
 
             // --new to leave a clean state for subsequent tests
             string tempPath = TestFilesDir.GetTestPath(@"doc_ops_temp.sky");
-            server.RunCommand(TextUtil.SpaceSeparate(
-                CommandArgs.ARG_NEW + tempPath.Quote(),
-                CommandArgs.ARG_OVERWRITE.ArgumentText));
+            server.RunCommand(new[]
+            {
+                CommandArgs.ARG_NEW + tempPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText
+            });
         }
 
         /// <summary>

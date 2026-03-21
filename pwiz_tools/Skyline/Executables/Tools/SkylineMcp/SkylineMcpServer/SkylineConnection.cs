@@ -79,15 +79,15 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string[] GetReplicateNames() { return CallClient(c => c.GetReplicateNames()); }
     public string GetDocumentStatus() { return CallClient(c => c.GetDocumentStatus()); }
     public string[] GetSettingsListTypes() { return CallClient(c => c.GetSettingsListTypes()); }
-    public string GetAvailableTutorials() { return CallClient(c => c.GetAvailableTutorials()); }
-    public string GetReportDocTopics(string scope = null) { return CallClient(c => c.GetReportDocTopics(scope)); }
+    public TutorialListItem[] GetAvailableTutorials() { return CallClient(c => c.GetAvailableTutorials()); }
+    public ReportDocTopicSummary[] GetReportDocTopics(string scope = null) { return CallClient(c => c.GetReportDocTopics(scope)); }
     public string GetProcessId() { return CallClient(c => c.GetProcessId()); }
-    public string GetOpenForms() { return CallClient(c => c.GetOpenForms()); }
+    public FormInfo[] GetOpenForms() { return CallClient(c => c.GetOpenForms()); }
 
     // 1-arg methods
     public string GetSelectedElementLocator(string elementType) { return CallClient(c => c.GetSelectedElementLocator(elementType)); }
-    public string RunCommand(string commandArgs) { return CallClient(c => c.RunCommand(commandArgs)); }
-    public string RunCommandSilent(string commandArgs) { return CallClient(c => c.RunCommandSilent(commandArgs)); }
+    public string RunCommand(string[] args) { return CallClient(c => c.RunCommand(args)); }
+    public string RunCommandSilent(string[] args) { return CallClient(c => c.RunCommandSilent(args)); }
     public string[] GetSettingsListNames(string listType, string groupName = null) { return CallClient(c => c.GetSettingsListNames(listType, groupName)); }
     public string[] GetSettingsListSelectedItems(string listType) { return CallClient(c => c.GetSettingsListSelectedItems(listType)); }
     public string GetReportDocTopic(string topicName, string scope = null) { return CallClient(c => c.GetReportDocTopic(topicName, scope)); }
@@ -99,7 +99,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
 
     // 2-arg methods
-    public string GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
+    public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
     public string SetSelectedElement(string elementLocator, string additionalLocators = null) { return CallClient(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
     public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }
     public string GetGraphImage(string graphId, string filePath = null) { return CallClient(c => c.GetGraphImage(graphId, filePath)); }

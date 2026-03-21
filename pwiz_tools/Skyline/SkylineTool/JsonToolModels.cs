@@ -115,4 +115,49 @@ namespace SkylineTool
         public string FilePath { get; set; }
         public string Image { get; set; }
     }
+
+    // --- Catalog and enumeration models ---
+
+    /// <summary>
+    /// A tutorial entry from the catalog returned by GetAvailableTutorials.
+    /// </summary>
+    public class TutorialListItem
+    {
+        public string Category { get; set; }
+        public string Name { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string WikiUrl { get; set; }
+        public string ZipUrl { get; set; }
+    }
+
+    /// <summary>
+    /// Summary of a report documentation topic returned by GetReportDocTopics.
+    /// </summary>
+    public class ReportDocTopicSummary
+    {
+        public string Name { get; set; }
+        public int ColumnCount { get; set; }
+    }
+
+    /// <summary>
+    /// Information about an open form/window returned by GetOpenForms.
+    /// </summary>
+    public class FormInfo
+    {
+        public string Type { get; set; }
+        public string Title { get; set; }
+        public bool HasGraph { get; set; }
+        public string DockState { get; set; }
+        public string Id { get; set; }
+    }
+
+    /// <summary>
+    /// A document tree element with name and locator returned by GetLocations.
+    /// </summary>
+    public class LocationEntry
+    {
+        public string Name { get; set; }
+        public string Locator { get; set; }
+    }
 }
