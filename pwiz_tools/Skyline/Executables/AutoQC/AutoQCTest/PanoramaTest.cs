@@ -25,7 +25,8 @@ namespace AutoQCTest
         [DeploymentItem(@"..\AutoQC\SkylineDailyRunner.exe")]
         public void TestPublishToPanorama()
         {
-            if (!AllowInternetAccess) return;
+            if (!AllowInternetAccess)
+                return;
 
             var panoramaServerUri = new Uri(TestUtils.PANORAMAWEB);
             var panoramaClient = new WebPanoramaClient(panoramaServerUri, TestUtils.GetPanoramaWebUsername(),

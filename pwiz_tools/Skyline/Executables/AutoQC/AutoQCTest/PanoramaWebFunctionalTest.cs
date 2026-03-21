@@ -45,6 +45,8 @@ namespace AutoQCTest
         /// 8. Delete the test folder on PanoramaWeb
         /// </summary>
 
+        private const int PANORAMA_WAIT_TIME = 120*1000;    // milliseconds. Use longer wait time for operations that depend on PanoramaWeb.
+
         private WebPanoramaClient _panoramaClient;
         private string _panoramaWebTestFolder;
         private string _panoramaWebPassword;
@@ -121,7 +123,7 @@ namespace AutoQCTest
 
             // Skyline document has replicates. It should be uploaded to PanoramaWeb after config starts.
             // Use longer timeout for network-dependent operations
-            WaitForConfigRunnerWaiting(MainForm, configIndex, 120 * 1000);
+            WaitForConfigRunnerWaiting(MainForm, configIndex, PANORAMA_WAIT_TIME);
 
             // Wait for the upload to complete successfully
             WaitForPanoramaUploadSuccess(MainForm, configIndex);
@@ -164,10 +166,10 @@ namespace AutoQCTest
 
             // Wait for the file to be imported into the document, and document uploaded to PanoramaWeb
             // Use longer timeout for network-dependent operations
-            WaitForConfigRunnerWaiting(MainForm, configIndex, 120 * 1000);
+            WaitForConfigRunnerWaiting(MainForm, configIndex, PANORAMA_WAIT_TIME);
 
             // Wait for the upload to complete successfully
-            WaitForPanoramaUploadSuccess(MainForm, configIndex, 120 * 1000);
+            WaitForPanoramaUploadSuccess(MainForm, configIndex, PANORAMA_WAIT_TIME);
 
             // Verify expected status on PanoramaWeb. Two rows in pipeline.Job. 
             // We expect to see only one row in the targetedms.Runs table since the previous run becomes redundant and is deleted.
@@ -259,7 +261,7 @@ namespace AutoQCTest
         {
             WaitForAnnotationsFileUpdated(mainForm, configIndex);
             Thread.Sleep(ConfigRunner.WAIT_FOR_NEW_FILE); // Pause for the file to be detected
-            WaitForConfigRunnerWaiting(mainForm, configIndex, 120 * 1000);
+            WaitForConfigRunnerWaiting(mainForm, configIndex, PANORAMA_WAIT_TIME);
         }
 
         // Disable warning about possible null reference exceptions for code that accesses JSON properties.
