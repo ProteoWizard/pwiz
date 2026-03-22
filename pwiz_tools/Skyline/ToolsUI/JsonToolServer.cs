@@ -359,7 +359,7 @@ namespace pwiz.Skyline.ToolsUI
         private static object ConvertArg(JToken token, Type targetType)
         {
             if (token == null || token.Type == JTokenType.Null)
-                return targetType == typeof(string) ? null : Activator.CreateInstance(targetType);
+                return null;
             if (targetType == typeof(string))
                 return token.Type == JTokenType.String ? token.Value<string>() : token.ToString();
             return token.ToObject(targetType, _snakeCaseSerializer);
