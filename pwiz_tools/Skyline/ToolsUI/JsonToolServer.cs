@@ -31,6 +31,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -79,7 +80,7 @@ namespace pwiz.Skyline.ToolsUI
             [JsonProperty(nameof(JSON_RPC.method))]
             public string Method { get; set; }
             [JsonProperty(nameof(JSON_RPC.@params))]
-            public string[] Params { get; set; }
+            public JToken[] Params { get; set; }
             [JsonProperty(nameof(JSON_RPC.id))]
             public int Id { get; set; }
             [JsonProperty(nameof(JSON_RPC._log))]
@@ -286,7 +287,7 @@ namespace pwiz.Skyline.ToolsUI
                         id, JsonToolConstants.ERROR_INVALID_REQUEST);
                 }
                 id = request.Id;
-                string[] args = request.Params ?? Array.Empty<string>();
+                JToken[] args = request.Params ?? Array.Empty<JToken>();
 
                 _currentLog = request.Log ? new ToolLog() : null;
 
@@ -323,7 +324,7 @@ namespace pwiz.Skyline.ToolsUI
             _currentLog?.Write(message);
         }
 
-        private object Dispatch(string method, string[] args)
+        private object Dispatch(string method, JToken[] args)
         {
             if (method == @"QueryAvailableMethods")
                 return string.Join(@",", _methods.Keys.OrderBy(k => k));
@@ -348,21 +349,23 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (i >= args.Length)
                     invokeArgs[i] = parameters[i].DefaultValue;
-                else if (parameters[i].ParameterType == typeof(string))
-                    invokeArgs[i] = args[i];
                 else
-                    invokeArgs[i] = DeserializeArg(args[i], parameters[i].ParameterType);
+                    invokeArgs[i] = ConvertArg(args[i], parameters[i].ParameterType);
             }
 
             return methodInfo.Invoke(this, invokeArgs);
         }
 
-        private static object DeserializeArg(string json, Type targetType)
+        private static object ConvertArg(JToken token, Type targetType)
         {
-            if (string.IsNullOrEmpty(json))
-                return null;
-            return JsonConvert.DeserializeObject(json, targetType, _snakeCaseSettings);
+            if (token == null || token.Type == JTokenType.Null)
+                return targetType == typeof(string) ? null : Activator.CreateInstance(targetType);
+            if (targetType == typeof(string))
+                return token.Type == JTokenType.String ? token.Value<string>() : token.ToString();
+            return token.ToObject(targetType, _snakeCaseSerializer);
         }
+
+        private static readonly JsonSerializer _snakeCaseSerializer = JsonSerializer.Create(_snakeCaseSettings);
 
         // 0-arg methods
 

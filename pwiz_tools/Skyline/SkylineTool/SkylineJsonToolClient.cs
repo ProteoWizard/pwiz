@@ -111,11 +111,11 @@ namespace SkylineTool
         }
         public string RunCommand(string[] args)
         {
-            return Call(nameof(RunCommand), JsonSerializer.Serialize(args));
+            return Call(nameof(RunCommand), (object) args);
         }
         public string RunCommandSilent(string[] args)
         {
-            return Call(nameof(RunCommandSilent), JsonSerializer.Serialize(args));
+            return Call(nameof(RunCommandSilent), (object) args);
         }
         public string[] GetSettingsListNames(string listType, string groupName = null)
         {
@@ -137,8 +137,7 @@ namespace SkylineTool
 
         public void AddReportFromDefinition(ReportDefinition definition)
         {
-            Call(nameof(AddReportFromDefinition),
-                JsonSerializer.Serialize(definition, _snakeCaseOptions));
+            Call(nameof(AddReportFromDefinition), definition);
         }
 
         public void InsertSmallMoleculeTransitionList(string textCSV)
@@ -194,8 +193,7 @@ namespace SkylineTool
 
         public void SelectSettingsListItems(string listType, string[] itemNames)
         {
-            Call(nameof(SelectSettingsListItems), listType,
-                JsonSerializer.Serialize(itemNames));
+            Call(nameof(SelectSettingsListItems), listType, itemNames);
         }
 
         public void ImportFasta(string textFasta, string keepEmptyProteins = null)
@@ -216,7 +214,7 @@ namespace SkylineTool
             string filePath, string culture)
         {
             return CallTyped<ReportMetadata>(nameof(ExportReportFromDefinition),
-                JsonSerializer.Serialize(definition, _snakeCaseOptions), filePath, culture);
+                definition, filePath, culture);
         }
 
         public TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null)
@@ -227,7 +225,7 @@ namespace SkylineTool
         public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false)
         {
             if (overwrite)
-                Call(nameof(AddSettingsListItem), listType, itemXml, "true");
+                Call(nameof(AddSettingsListItem), listType, itemXml, true);
             else
                 Call(nameof(AddSettingsListItem), listType, itemXml);
         }
@@ -242,14 +240,14 @@ namespace SkylineTool
 
         // --- JSON-RPC 2.0 transport ---
 
-        private string Call(string method, params string[] args)
+        private string Call(string method, params object[] args)
         {
             // Build JSON-RPC 2.0 request
             object request = LoggingEnabled
                 // ReSharper disable once RedundantCast (for .NET 8.0)
                 ? (object) new { jsonrpc = JsonToolConstants.JSONRPC_VERSION, method, @params = args, id = 1, _log = true }
                 : new { jsonrpc = JsonToolConstants.JSONRPC_VERSION, method, @params = args, id = 1 };
-            byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
+            byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request, _snakeCaseOptions));
             _pipe.Write(requestBytes, 0, requestBytes.Length);
             _pipe.Flush();
             _pipe.WaitForPipeDrain();
@@ -289,7 +287,7 @@ namespace SkylineTool
             }
         }
 
-        private T CallTyped<T>(string method, params string[] args)
+        private T CallTyped<T>(string method, params object[] args)
         {
             string json = Call(method, args);
             if (string.IsNullOrEmpty(json))
