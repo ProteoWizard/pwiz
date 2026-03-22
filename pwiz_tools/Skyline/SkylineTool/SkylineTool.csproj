@@ -79,6 +79,10 @@
     <CodeAnalysisFailOnMissingRules>true</CodeAnalysisFailOnMissingRules>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <RuntimeIdentifiers>win</RuntimeIdentifiers>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
@@ -87,14 +91,19 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="DocumentLocation.cs" />
     <Compile Include="IJsonToolService.cs" />
     <Compile Include="IToolService.cs" />
+    <Compile Include="JsonToolConstants.cs" />
     <Compile Include="JsonToolModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteBase.cs" />
     <Compile Include="RemoteClient.cs" />
     <Compile Include="RemoteService.cs" />
+    <Compile Include="SkylineJsonToolClient.cs" />
     <Compile Include="SkylineToolClient.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
