@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestFunctional
     {
         const string REPORT_NAME = "PivotIsotopeLabelTestReport";
         [TestMethod]
-        public void TestPivotIsotopeLabel()
+        public void TestPivotIsotopeLabelExport()
         {
             TestFilesZip = @"TestFunctional\PivotIsotopeLabelTest.zip";
             RunFunctionalTest();
@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
             var viewName = documentGrid.GetViewName();
             Assert.IsNotNull(viewName);
             Assert.AreNotEqual(ViewGroup.BUILT_IN.Id, viewName.Value.GroupId);
-            var userInterfaceRows = GetDsvRows(documentGrid.DataGridView, '\t').ToList();
+            var userInterfaceRows = CallUI(()=>GetDsvRows(documentGrid.DataGridView, '\t').ToList());
             var reportName = viewName.Value.Name;
             var outFile = TestFilesDir.GetTestPath(reportName + ".tsv");
             RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportLiveReportDlg =>

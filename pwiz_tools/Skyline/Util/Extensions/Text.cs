@@ -380,6 +380,11 @@ namespace pwiz.Skyline.Util.Extensions
             return '"' + text + '"';
         }
 
+        public static string SingleQuote(this string text)
+        {
+            return '\'' + text + '\'';
+        }
+
         /// <summary>
         /// This function can be used as a replacement for String.Join("\n", ...)
         /// </summary>
@@ -598,8 +603,46 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Replaces tabs, carriage returns, and newlines with spaces, collapsing
+        /// consecutive whitespace into a single space. Useful for embedding
+        /// multi-line descriptions into TSV fields without escaping.
+        /// </summary>
+        public static string FlattenToSingleLine(this string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return string.Empty;
+            var sb = new StringBuilder(str.Length);
+            bool lastWasSpace = false;
+            foreach (char c in str)
+            {
+                if (c == '\r' || c == '\n' || c == '\t')
+                {
+                    if (!lastWasSpace)
+                    {
+                        sb.Append(' ');
+                        lastWasSpace = true;
+                    }
+                }
+                else if (c == ' ')
+                {
+                    if (!lastWasSpace)
+                    {
+                        sb.Append(' ');
+                        lastWasSpace = true;
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                    lastWasSpace = false;
+                }
+            }
+            return sb.ToString().TrimEnd();
+        }
+
         private const int TAB_SIZE = 4;
-        
+
         public static string GetIndentation(int indentLevel, int tabSize = TAB_SIZE)
         {
             if (indentLevel <= 0)
@@ -1074,5 +1117,47 @@ namespace pwiz.Skyline.Util.Extensions
         public string PlainMessage { get; private set; }
         public long LineNumber { get; private set; }
         public int ColumnIndex { get; private set; }
+    }
+
+    /// <summary>
+    /// Natural language text intended as instruction for an LLM consumer,
+    /// not for direct display to end users. Distinguished from user-facing
+    /// text (which must be in .resx for localization) and debug text
+    /// (which is developer-only). Currently English, but marked distinctly
+    /// so it can be localized for LLM prompt translation in the future.
+    /// </summary>
+    public readonly struct LlmInstruction
+    {
+        public static LlmInstruction Format(string formatString, params string[] args)
+        {
+            return new LlmInstruction(string.Format(formatString, args));
+        }
+
+        public static LlmInstruction SpaceSeparate(params string[] values)
+        {
+            return new LlmInstruction(TextUtil.SpaceSeparate(values));
+        }
+
+        public static LlmInstruction TabSeparate(params string[] values)
+        {
+            return new LlmInstruction(values.ToDsvLine(TextUtil.SEPARATOR_TSV));
+        }
+
+        public LlmInstruction(string value)
+        {
+            Value = value;
+        }
+
+        public string Value { get; }
+
+        public static implicit operator string(LlmInstruction instruction)
+        {
+            return instruction.Value;
+        }
+
+        public override string ToString()
+        {
+            return Value;
+        }
     }
 }

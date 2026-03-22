@@ -397,6 +397,15 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
+        /// Replaces backslashes with forward slashes. Used when paths are sent over
+        /// JSON/MCP protocols where forward slashes are the expected convention.
+        /// </summary>
+        public static string ToForwardSlashPath(this string path)
+        {
+            return path?.Replace('\\', '/');
+        }
+
+        /// <summary>
         /// We often encounter tools that can't deal with Unicode characters in file paths, this method
         /// will try to convert such paths to a non-Unicode version using the 8.3 format short path name.
         /// Converts only the segments that need it, to avoid trashing filename extensions.

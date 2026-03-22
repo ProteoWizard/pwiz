@@ -173,9 +173,15 @@ namespace pwiz.Skyline
 
         public static readonly Argument ARG_IN = new DocArgument(@"in", PATH_TO_DOCUMENT,
             (c, p) => c.SkylineFile = p.ValueFullPath);
+        // Synonym for --in
+        public static readonly Argument ARG_OPEN = new DocArgument(@"open", PATH_TO_DOCUMENT,
+            (c, p) => c.SkylineFile = p.ValueFullPath);
         public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => { c.Saving = true; });
         public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
+            (c, p) => { c.SaveFile = p.ValueFullPath; });
+        // Synonym for --out
+        public static readonly Argument ARG_SAVE_AS = new DocArgument(@"save-as", PATH_TO_DOCUMENT,
             (c, p) => { c.SaveFile = p.ValueFullPath; });
         public static readonly Argument ARG_NEW = new DocArgument(@"new", PATH_TO_DOCUMENT, (c, p) =>
         {
@@ -221,16 +227,17 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_MEMSTAMP = new Argument(@"memstamp", (c, p) => c._out.IsMemStamped = true);
         public static readonly Argument ARG_LOG_FILE = new Argument(@"log-file", PATH_TO_FILE, (c, p) => c.LogFile = p.Value);
         public static readonly Argument ARG_HELP = new Argument(@"help",
-            new[] { ARG_VALUE_ASCII, ARG_VALUE_NO_BORDERS },
-            (c, p) => c.Usage(p.Value)) {OptionalValue = true};
+            new[] { ARG_VALUE_ASCII, ARG_VALUE_NO_BORDERS, ARG_VALUE_SECTIONS },
+            (c, p) => c.Usage(p.Value)) {OptionalValue = true, HasValueChecking = true};
         public const string ARG_VALUE_ASCII = "ascii";
         public const string ARG_VALUE_NO_BORDERS = "no-borders";
+        public const string ARG_VALUE_SECTIONS = "sections";
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
         public static readonly Argument ARG_VERBOSE_ERRORS =
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
-            ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_NEW, ARG_OVERWRITE, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
+            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_NEW, ARG_OVERWRITE, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
             ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
             Validate = c => c.ValidateGeneralArgs()
@@ -2458,11 +2465,34 @@ namespace pwiz.Skyline
                 if (formatType == ARG_VALUE_ASCII)
                     CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;  // Use invariant culture for ascii output
                 UsageShown = true;
-                foreach (var block in UsageBlocks)
-                    _out.Write(block.ToString(_usageWidth, formatType));
+
+                if (formatType == ARG_VALUE_SECTIONS)
+                {
+                    // List section names only
+                    foreach (var block in SectionGroups)
+                        _out.WriteLine(block.Title);
+                }
+                else if (formatType == null || formatType == ARG_VALUE_ASCII || formatType == ARG_VALUE_NO_BORDERS)
+                {
+                    foreach (var block in UsageBlocks)
+                        _out.Write(block.ToString(_usageWidth, formatType));
+                }
+                else
+                {
+                    // Treat as a section name filter — show matching sections
+                    var group = SectionGroups.FirstOrDefault(
+                        g => g.Title.IndexOf(formatType, StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (group == null)
+                        _out.WriteLine(CommandArgUsage.CommandArgs_Usage_No_help_section_matching___0___found__Use___help_sections_to_list_available_sections_, formatType);
+                    else
+                        _out.Write(group.ToString(_usageWidth, ARG_VALUE_NO_BORDERS));
+                }
             }
             return false;   // End argument processing
         }
+
+        private IEnumerable<ArgumentGroup> SectionGroups =>
+            UsageBlocks.OfType<ArgumentGroup>().Where(g => g.IncludeInUsage);
 
         private int _usageWidth = 78;
 

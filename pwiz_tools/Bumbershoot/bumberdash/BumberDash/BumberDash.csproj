@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>BumberDash</RootNamespace>
     <AssemblyName>BumberDash</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <StartupObject>BumberDash.Program</StartupObject>
     <IsWebBootstrapper>false</IsWebBootstrapper>

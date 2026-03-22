@@ -379,6 +379,7 @@ build-nt-x86
 /libraries/msparser_*_win64
 /libraries/msparser_*_linux64
 /libraries/zlib*
+/libraries/zstd*
 Version.cpp
 /pwiz_tools/BiblioSpec/tests/inputs
 /pwiz_tools/BiblioSpec/tests/output
@@ -453,6 +454,8 @@ SkylineTester Results
 /pwiz_tools/Skyline/SkylineTester/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs
+/pwiz_tools/Skyline/Executables/Tools/SkylineMcp/SkylineAiConnector/Properties/AssemblyInfo.cs
+/pwiz_tools/Skyline/Executables/Tools/SkylineMcp/SkylineMcpServer/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Installer/FileList64.txt
 /pwiz_tools/Skyline/TestSettings_x??.testsettings
 /pwiz_tools/Skyline/SignAfterPublishPW.bat
