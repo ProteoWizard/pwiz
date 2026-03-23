@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using AutoQC.Properties;
 using SharedBatch;
@@ -442,15 +443,29 @@ namespace AutoQC
 
         public bool ConfigListEquals(List<AutoQcConfig> otherConfigs)
         {
+            return string.IsNullOrEmpty(ConfigListDiffReport(otherConfigs));
+        }
+
+        public string ConfigListDiffReport(List<AutoQcConfig> otherConfigs)
+        {
             var state = AutoQcState;
-            if (otherConfigs.Count != state.BaseState.ConfigList.Count) return false;
-
-            for (int i = 0; i < state.BaseState.ConfigList.Count; i++)
+            var sb = new StringBuilder();
+            if (otherConfigs.Count != state.BaseState.ConfigList.Count)
+                sb.AppendLine($"Count mismatch: expected {otherConfigs.Count}, actual {state.BaseState.ConfigList.Count}");
+            var count = Math.Min(otherConfigs.Count, state.BaseState.ConfigList.Count);
+            for (int i = 0; i < count; i++)
             {
-                if (!Equals(otherConfigs[i], state.BaseState.ConfigList[i])) return false;
+                var actual = state.BaseState.ConfigList[i] as AutoQcConfig;
+                if (actual == null)
+                {
+                    sb.AppendLine($"[{i}] actual is not AutoQcConfig");
+                    continue;
+                }
+                var diff = otherConfigs[i].DiffReport(actual);
+                if (!string.IsNullOrEmpty(diff))
+                    sb.AppendLine($"[{i}] '{otherConfigs[i].Name}':\n{diff}");
             }
-
-            return true;
+            return sb.ToString();
         }
 
         public bool ConfigOrderEquals(string[] configNames)
