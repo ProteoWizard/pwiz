@@ -1506,8 +1506,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public override void SetScale(Graphics g)
             {
                 base.SetScale(g);
-                if (!ShowHeatMap)
-                    return;
                 // Enforce a minimum rendered width of 1 pixel for extraction boxes so they
                 // remain visible when the m/z axis is zoomed out to a wide range.
                 double minWidth = Math.Abs(XAxis.Scale.ReverseTransform(1) - XAxis.Scale.ReverseTransform(0));
