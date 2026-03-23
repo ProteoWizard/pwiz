@@ -462,7 +462,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 searchSettingsControl.SelectedSearchEngine = PRESET_2_ENGINE;
                 searchSettingsControl.PrecursorTolerance = new MzTolerance(PRESET_2_PRECURSOR_TOL, PRESET_2_PRECURSOR_UNIT);
-                searchSettingsControl.FragmentTolerance = new MzTolerance(PRESET_2_FRAGMENT_TOL, PRESET_2_FRAGMENT_UNIT);
+                searchSettingsControl.FragmentTolerance = new MzTolerance(PRESET_2_FRAGMENT_TOL);
                 searchSettingsControl.FragmentIons = PRESET_2_FRAGMENT_IONS;
                 searchSettingsControl.Ms2Analyzer = PRESET_2_MS2_ANALYZER;
                 searchSettingsControl.CutoffScore = PRESET_2_CUTOFF;
