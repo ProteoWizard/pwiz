@@ -47,7 +47,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using SkylineTool;
-using JSON = SkylineTool.JsonToolConstants.JSON;
+using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
 
@@ -115,12 +115,17 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestDispatch(JsonToolServer server)
         {
-            // Helper to build a JSON request like the MCP server sends
+            // Helper to build a JSON-RPC 2.0 request like the MCP server sends
             string buildRequest(string method, params string[] args)
             {
-                var obj = new JObject { [nameof(JSON.method)] = method };
+                var obj = new JObject
+                {
+                    [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
+                    [nameof(JSON_RPC.method)] = method,
+                    [nameof(JSON_RPC.id)] = 1
+                };
                 if (args.Length > 0)
-                    obj[nameof(JSON.args)] = new JArray(args);
+                    obj[nameof(JSON_RPC.@params)] = new JArray(args);
                 return obj.ToString();
             }
 
@@ -128,20 +133,22 @@ namespace pwiz.SkylineTestFunctional
             string versionResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(buildRequest(nameof(IJsonToolService.GetVersion))));
             var versionResult = JObject.Parse(versionResponse);
-            Assert.IsNotNull(versionResult[nameof(JSON.result)]);
-            AssertEx.Contains((string)versionResult[nameof(JSON.result)], Install.Version);
+            AssertEx.AreEqual(JsonToolConstants.JSONRPC_VERSION,
+                (string)versionResult[nameof(JSON_RPC.jsonrpc)]);
+            Assert.IsNotNull(versionResult[nameof(JSON_RPC.result)]);
+            AssertEx.Contains((string)versionResult[nameof(JSON_RPC.result)], Install.Version);
 
             // Successful call: GetSelectedElementLocator (1-arg method with default)
             string locatorResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(buildRequest(nameof(IJsonToolService.GetSelectedElementLocator), @"Molecule")));
             var locatorResult = JObject.Parse(locatorResponse);
-            Assert.IsNotNull(locatorResult[nameof(JSON.result)]);
+            Assert.IsNotNull(locatorResult[nameof(JSON_RPC.result)]);
 
             // QueryAvailableMethods - special dispatch path (not on the interface)
             string methodsResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(buildRequest(@"QueryAvailableMethods")));
             var methodsResult = JObject.Parse(methodsResponse);
-            string methods = (string)methodsResult[nameof(JSON.result)];
+            string methods = (string)methodsResult[nameof(JSON_RPC.result)];
             AssertEx.Contains(methods, nameof(IJsonToolService.GetVersion));
             AssertEx.Contains(methods, nameof(IJsonToolService.GetSelection));
             AssertEx.Contains(methods, nameof(IJsonToolService.ExportReport));
@@ -150,26 +157,35 @@ namespace pwiz.SkylineTestFunctional
             string unknownResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(buildRequest(@"NotARealMethod")));
             var unknownResult = JObject.Parse(unknownResponse);
-            Assert.IsNotNull(unknownResult[nameof(JSON.error)]);
+            Assert.IsNotNull(unknownResult[nameof(JSON_RPC.error)]);
+            AssertEx.AreEqual(JsonToolConstants.ERROR_METHOD_NOT_FOUND,
+                (int)unknownResult[nameof(JSON_RPC.error)]?[nameof(JSON_RPC.code)]);
 
             // Error: too few arguments for a method that requires them
             string tooFewResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(buildRequest(nameof(IJsonToolService.ExportReport))));
             var tooFewResult = JObject.Parse(tooFewResponse);
-            Assert.IsNotNull(tooFewResult[nameof(JSON.error)]);
+            Assert.IsNotNull(tooFewResult[nameof(JSON_RPC.error)]);
+            AssertEx.AreEqual(JsonToolConstants.ERROR_INVALID_PARAMS,
+                (int)tooFewResult[nameof(JSON_RPC.error)]?[nameof(JSON_RPC.code)]);
 
             // Error: malformed JSON request
             string badJsonResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(@"not json at all"));
             var badJsonResult = JObject.Parse(badJsonResponse);
-            Assert.IsNotNull(badJsonResult[nameof(JSON.error)]);
+            Assert.IsNotNull(badJsonResult[nameof(JSON_RPC.error)]);
 
-            // Null args array (exercises ParseArgs null path)
-            var noArgsRequest = new JObject { [nameof(JSON.method)] = nameof(IJsonToolService.GetVersion) };
-            string noArgsResponse = server.HandleRequest(
-                Encoding.UTF8.GetBytes(noArgsRequest.ToString()));
-            var noArgsResult = JObject.Parse(noArgsResponse);
-            Assert.IsNotNull(noArgsResult[nameof(JSON.result)]);
+            // Null params array (no params key in request)
+            var noParamsRequest = new JObject
+            {
+                [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
+                [nameof(JSON_RPC.method)] = nameof(IJsonToolService.GetVersion),
+                [nameof(JSON_RPC.id)] = 1
+            };
+            string noParamsResponse = server.HandleRequest(
+                Encoding.UTF8.GetBytes(noParamsRequest.ToString()));
+            var noParamsResult = JObject.Parse(noParamsResponse);
+            Assert.IsNotNull(noParamsResult[nameof(JSON_RPC.result)]);
         }
 
         private void TestDocumentInfo(JsonToolServer server)
@@ -183,13 +199,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(Install.Version, version);
 
             // GetDocumentStatus - verify counts match document
-            string status = server.GetDocumentStatus();
+            var status = server.GetDocumentStatus();
             var doc = SkylineWindow.Document;
-            AssertEx.Contains(status, doc.MoleculeGroupCount.ToString());
-            AssertEx.Contains(status, doc.MoleculeCount.ToString());
-            AssertEx.Contains(status, doc.MoleculeTransitionGroupCount.ToString());
-            AssertEx.Contains(status, doc.MoleculeTransitionCount.ToString());
-            AssertEx.Contains(status, doc.Settings.MeasuredResults?.Chromatograms.Count.ToString());
+            Assert.AreEqual(doc.MoleculeGroupCount, status.Groups);
+            Assert.AreEqual(doc.MoleculeCount, status.Molecules);
+            Assert.AreEqual(doc.MoleculeTransitionGroupCount, status.Precursors);
+            Assert.AreEqual(doc.MoleculeTransitionCount, status.Transitions);
+            Assert.AreEqual(doc.Settings.MeasuredResults?.Chromatograms.Count ?? 0, status.Replicates);
 
             // GetProcessId - should match current process
             string pidStr = server.GetProcessId();
@@ -200,8 +216,8 @@ namespace pwiz.SkylineTestFunctional
         private void TestSelection(JsonToolServer server)
         {
             // Get initial selection
-            string sel = server.GetSelection();
-            Assert.IsFalse(string.IsNullOrEmpty(sel));
+            var sel = server.GetSelection();
+            Assert.IsTrue(sel.Locators.Length > 0);
 
             // GetSelectionText - human-readable location name
             string selText = server.GetSelectionText();
@@ -215,46 +231,44 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SelectedPath = moleculePath);
             WaitForConditionUI(() => SkylineWindow.SelectedPath.Equals(moleculePath));
 
-            string sel2 = server.GetSelection();
-            Assert.IsFalse(string.IsNullOrEmpty(sel2));
+            var sel2 = server.GetSelection();
+            Assert.IsTrue(sel2.Locators.Length > 0);
 
             // GetSelectedElementLocator - get locator for selected molecule
             string moleculeLocator = server.GetSelectedElementLocator(@"Molecule");
             Assert.IsFalse(string.IsNullOrEmpty(moleculeLocator));
 
             // SetSelectedElement - navigate to a different location via locator
-            string locations = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE);
-            Assert.AreEqual(doc.MoleculeCount, Helpers.CountLinesInString(locations));
+            var locations = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE);
+            Assert.AreEqual(doc.MoleculeCount, locations.Length);
 
             // Pick the last molecule and navigate to it
-            var moleculeLines = TextUtil.ReadLines(locations).ToArray();
-            string lastMoleculeLocator = moleculeLines.Last().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
+            string lastMoleculeLocator = locations.Last().Locator;
             server.SetSelectedElement(lastMoleculeLocator);
-            WaitForCondition(() => server.GetSelection().Contains(lastMoleculeLocator));
+            WaitForCondition(() => server.GetSelection().Locators.Contains(lastMoleculeLocator));
 
             // Multi-selection: select multiple molecules at once
-            string firstMoleculeLocator = moleculeLines.First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
-            string secondMoleculeLocator = moleculeLines.Skip(1).First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
+            string firstMoleculeLocator = locations.First().Locator;
+            string secondMoleculeLocator = locations.Skip(1).First().Locator;
             server.SetSelectedElement(firstMoleculeLocator,
                 TextUtil.LineSeparate(secondMoleculeLocator, lastMoleculeLocator));
-            string multiSel = server.GetSelection();
-            // Multi-selection should return multiple locators, one per line
-            var multiSelLines = TextUtil.ReadLines(multiSel).ToArray();
-            Assert.AreEqual(3, multiSelLines.Length,
+            var multiSel = server.GetSelection();
+            // Multi-selection should return multiple locators
+            Assert.AreEqual(3, multiSel.Locators.Length,
                 @"Multi-selection should return 3 locators");
-            AssertEx.Contains(multiSel, firstMoleculeLocator);
-            AssertEx.Contains(multiSel, secondMoleculeLocator);
-            AssertEx.Contains(multiSel, lastMoleculeLocator);
+            Assert.IsTrue(multiSel.Locators.Contains(firstMoleculeLocator));
+            Assert.IsTrue(multiSel.Locators.Contains(secondMoleculeLocator));
+            Assert.IsTrue(multiSel.Locators.Contains(lastMoleculeLocator));
 
             // Select the insertion node and verify round-trip
             server.SetSelectedElement(JsonUiService.INSERT_NODE_LOCATOR);
-            string insertSel = server.GetSelection();
-            Assert.AreEqual(JsonUiService.INSERT_NODE_LOCATOR, insertSel,
+            var insertSel = server.GetSelection();
+            Assert.IsTrue(insertSel.Locators.Contains(JsonUiService.INSERT_NODE_LOCATOR),
                 @"Insertion node selection should round-trip through GetSelection");
 
             // Navigate back to a regular element to leave things in a known state
             server.SetSelectedElement(firstMoleculeLocator);
-            WaitForCondition(() => server.GetSelection().Contains(firstMoleculeLocator));
+            WaitForCondition(() => server.GetSelection().Locators.Contains(firstMoleculeLocator));
         }
 
         private void TestLocations(JsonToolServer server)
@@ -262,26 +276,25 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
 
             // Group level
-            string groups = server.GetLocations(JsonToolConstants.LEVEL_GROUP);
-            Assert.AreEqual(doc.MoleculeGroupCount, Helpers.CountLinesInString(groups));
+            var groups = server.GetLocations(JsonToolConstants.LEVEL_GROUP);
+            Assert.AreEqual(doc.MoleculeGroupCount, groups.Length);
 
             // Molecule level
-            string molecules = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE);
-            Assert.AreEqual(doc.MoleculeCount, Helpers.CountLinesInString(molecules));
+            var molecules = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE);
+            Assert.AreEqual(doc.MoleculeCount, molecules.Length);
 
             // Precursor level
-            string precursors = server.GetLocations(JsonToolConstants.LEVEL_PRECURSOR);
-            Assert.AreEqual(doc.MoleculeTransitionGroupCount, Helpers.CountLinesInString(precursors));
+            var precursors = server.GetLocations(JsonToolConstants.LEVEL_PRECURSOR);
+            Assert.AreEqual(doc.MoleculeTransitionGroupCount, precursors.Length);
 
             // Transition level
-            string transitions = server.GetLocations(JsonToolConstants.LEVEL_TRANSITION);
-            Assert.AreEqual(doc.MoleculeTransitionCount, Helpers.CountLinesInString(transitions));
+            var transitions = server.GetLocations(JsonToolConstants.LEVEL_TRANSITION);
+            Assert.AreEqual(doc.MoleculeTransitionCount, transitions.Length);
 
             // Scoped enumeration - molecules under first group
-            var groupLines = groups.ReadLines();
-            string firstGroupLocator = groupLines.First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
-            string scopedMolecules = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE, firstGroupLocator);
-            Assert.AreEqual(doc.MoleculeGroups.First().MoleculeCount, Helpers.CountLinesInString(scopedMolecules));
+            string firstGroupLocator = groups.First().Locator;
+            var scopedMolecules = server.GetLocations(JsonToolConstants.LEVEL_MOLECULE, firstGroupLocator);
+            Assert.AreEqual(doc.MoleculeGroups.First().MoleculeCount, scopedMolecules.Length);
 
             // Error: invalid level
             AssertEx.ThrowsException<ArgumentException>(() => server.GetLocations(@"invalid"));
@@ -297,44 +310,41 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(string.IsNullOrEmpty(currentRep));
 
             // GetReplicateNames - count should match
-            string names = server.GetReplicateNames();
-            Assert.AreEqual(chromatograms.Count, Helpers.CountLinesInString(names));
+            string[] names = server.GetReplicateNames();
+            AssertEx.AreEqual(chromatograms.Count, names.Length);
 
             // SetReplicate - navigate to a different replicate
-            string targetRep = names.ReadLines().Last();
+            string targetRep = names.Last();
             server.SetReplicate(targetRep);
             WaitForCondition(() => server.GetReplicateName() == targetRep);
 
-            // Error: nonexistent replicate - SetReplicate returns error message (not exception)
-            string errorResult = server.SetReplicate(@"NonexistentReplicate_12345");
-            Assert.AreNotEqual(@"OK", errorResult);
+            // Error: nonexistent replicate
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.SetReplicate(@"NonexistentReplicate_12345"));
         }
 
         private void TestReportDocumentation(JsonToolServer server)
         {
-            string topics = server.GetReportDocTopics();
-            AssertEx.IsFalse(string.IsNullOrEmpty(topics));
-            var topicLines = topics.ReadLines().ToList();
+            var topics = server.GetReportDocTopics();
+            AssertEx.IsTrue(topics.Length > 0);
 
             // Expect multiple entity topics from Document Grid scope (Protein, Peptide, etc.)
-            AssertEx.IsTrue(topicLines.Count >= 10 && topicLines.Count <= 16,
-                @"Expected 10-16 topics, got " + topicLines.Count);
+            AssertEx.IsTrue(topics.Length >= 10 && topics.Length <= 16,
+                @"Expected 10-16 topics, got " + topics.Length);
 
             // No IList`1 or raw generic type names
-            AssertEx.IsFalse(topicLines.Any(t => t.Contains(@"IList") || t.Contains(@"`")),
-                @"Raw type names should not appear: " + string.Join(@", ", topicLines));
+            AssertEx.IsFalse(topics.Any(t => t.Name.Contains(@"IList") || t.Name.Contains(@"`")),
+                @"Raw type names should not appear: " + string.Join(@", ", topics.Select(t => t.Name)));
 
-            // Each line is Name\tCount format
-            foreach (var line in topicLines)
+            // Each topic should have a positive column count
+            foreach (var topic in topics)
             {
-                var parts = line.Split(TextUtil.SEPARATOR_TSV);
-                AssertEx.AreEqual(2, parts.Length, @"Expected Name\tCount format: " + line);
-                AssertEx.IsTrue(int.TryParse(parts[1], out int count) && count > 0,
-                    @"Expected positive column count: " + line);
+                AssertEx.IsTrue(topic.ColumnCount > 0,
+                    @"Expected positive column count for " + topic.Name);
             }
 
             // Extract just names for ordering checks
-            var topicNames = topicLines.Select(l => l.Split(TextUtil.SEPARATOR_TSV)[0]).ToList();
+            var topicNames = topics.Select(t => t.Name).ToList();
 
             // Check hierarchy ordering (using Contains for UI-mode flexibility)
             int proteinsIdx = topicNames.FindIndex(t => t.Contains(@"Protein") || t.Contains(@"MoleculeList"));
@@ -357,9 +367,10 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(precursorsIdx < transitionsIdx, @"Precursors before Transitions");
 
             // Topic detail retrieval
-            string firstTopic = server.GetReportDocTopic(topicNames[0]);
+            var firstTopic = server.GetReportDocTopic(topicNames[0]);
             AssertEx.IsNotNull(firstTopic);
-            AssertEx.Contains(firstTopic, @"Name" + TextUtil.SEPARATOR_TSV + @"Description");
+            Assert.IsTrue(firstTopic.Columns.Length > 0);
+            AssertEx.IsNotNull(firstTopic.Columns[0].Name);
 
             // Case-insensitive matching
             AssertEx.IsNotNull(server.GetReportDocTopic(topicNames[0].ToLowerInvariant()));
@@ -371,8 +382,8 @@ namespace pwiz.SkylineTestFunctional
             bool foundNormalizedArea = false;
             foreach (var name in topicNames)
             {
-                string detail = server.GetReportDocTopic(name);
-                if (detail != null && detail.Contains(@"NormalizedArea"))
+                var detail = server.GetReportDocTopic(name);
+                if (detail != null && detail.Columns.Any(c => c.Name == @"NormalizedArea"))
                 {
                     foundNormalizedArea = true;
                     break;
@@ -381,15 +392,15 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(foundNormalizedArea, @"NormalizedArea should appear in some topic");
 
             // Audit log topics available via scope
-            string auditTopics = server.GetReportDocTopics(ReportDefinitionReader.SCOPE_AUDIT_LOG);
-            AssertEx.Contains(auditTopics, @"Audit");
+            var auditTopics = server.GetReportDocTopics(ReportDefinitionReader.SCOPE_AUDIT_LOG);
+            AssertEx.IsTrue(auditTopics.Any(t => t.Name.Contains(@"Audit")));
 
             // Spot-check: resolve a few columns from first topic
             var document = SkylineWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
             var reader = new ReportDefinitionReader(dataSchema);
-            var sampleColumns = firstTopic.ReadLines().Skip(3).Take(3)
-                .Select(line => line.Split(TextUtil.SEPARATOR_TSV)[0]).ToList();
+            var sampleColumns = firstTopic.Columns.Skip(3).Take(3)
+                .Select(c => c.Name).ToList();
             if (sampleColumns.Count > 0)
                 AssertEx.IsNotNull(reader.CreateViewSpec(BuildSelectDef(sampleColumns.ToArray())));
 
@@ -454,16 +465,16 @@ namespace pwiz.SkylineTestFunctional
             var auditLogDef = new ReportDefinition
             {
                 Select = columns,
-                Scope = ReportDefinitionReader.SCOPE_AUDIT_LOG
+                DataSource = ReportDefinitionReader.SCOPE_AUDIT_LOG
             };
             var auditLogViewSpec = reader.CreateViewSpec(auditLogDef, ReportDefinitionReader.SCOPE_AUDIT_LOG);
             AssertEx.IsNotNull(auditLogViewSpec, @"Audit log columns should resolve");
 
             // Verify audit log topic has columns that match what we resolved
-            string auditLogTopicContent = server.GetReportDocTopic(@"AuditLog",
+            var auditLogTopicDetail = server.GetReportDocTopic(@"AuditLog",
                 ReportDefinitionReader.SCOPE_AUDIT_LOG);
             foreach (var column in columns)
-                AssertEx.Contains(auditLogTopicContent, column);
+                Assert.IsTrue(auditLogTopicDetail.Columns.Any(c => c.Name == column));
 
             // Verify ModifyDocument entry appears in audit log report, then undo and verify it goes away
             var auditLogSummary = server.ExportReportFromDefinition(
@@ -724,17 +735,18 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestAvailableTutorials(JsonToolServer server)
         {
-            string catalog = server.GetAvailableTutorials();
-            Assert.IsFalse(string.IsNullOrEmpty(catalog));
+            var tutorials = server.GetAvailableTutorials();
+            Assert.IsTrue(tutorials.Length > 0);
 
-            Assert.AreEqual(TutorialCatalog.Tutorials.Length, Helpers.CountLinesInString(catalog));
+            Assert.AreEqual(TutorialCatalog.Tutorials.Length, tutorials.Length);
 
-            // Each line should have 6 tab-separated fields
-            foreach (var line in catalog.ReadLines())
+            // Each tutorial should have non-null properties
+            foreach (var tutorial in tutorials)
             {
-                var fields = line.ParseDsvFields(TextUtil.SEPARATOR_TSV);
-                Assert.AreEqual(6, fields.Length,
-                    @"Expected 6 tab-separated fields, got {0}: {1}", fields.Length, line);
+                Assert.IsFalse(string.IsNullOrEmpty(tutorial.Name),
+                    @"Tutorial Name should not be null or empty");
+                Assert.IsFalse(string.IsNullOrEmpty(tutorial.Title),
+                    @"Tutorial Title should not be null or empty");
             }
         }
 
@@ -742,7 +754,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // RunCommandSilent with --help should return sections list
             string iwBefore = GetImmediateWindowText();
-            string sections = server.RunCommandSilent(@"--help=sections --help=no-borders");
+            string sections = server.RunCommandSilent(new[] { @"--help=sections", @"--help=no-borders" });
             Assert.IsFalse(string.IsNullOrEmpty(sections));
             // Silent mode should not write to Immediate Window
             Assert.AreEqual(iwBefore, GetImmediateWindowText());
@@ -750,78 +762,87 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestDiagnosticLogging(JsonToolServer server)
         {
-            // Helper to build a JSON request with optional logging
+            // Helper to build a JSON-RPC 2.0 request with optional logging
             byte[] buildRequest(string method, bool log, params string[] args)
             {
-                var obj = new JObject { [nameof(JSON.method)] = method };
+                var obj = new JObject
+                {
+                    [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
+                    [nameof(JSON_RPC.method)] = method,
+                    [nameof(JSON_RPC.id)] = 1
+                };
                 if (args.Length > 0)
-                    obj[nameof(JSON.args)] = new JArray(args);
+                    obj[nameof(JSON_RPC.@params)] = new JArray(args);
                 if (log)
-                    obj[nameof(JSON.log)] = true;
+                    obj[nameof(JSON_RPC._log)] = true;
                 return Encoding.UTF8.GetBytes(obj.ToString());
             }
 
-            // Logging disabled by default - no log field in response
+            // Logging disabled by default - no _log field in response
             string normalResult = server.HandleRequest(
                 buildRequest(nameof(IJsonToolService.GetVersion), false));
             var normalJson = JObject.Parse(normalResult);
-            Assert.IsNotNull(normalJson[nameof(JSON.result)]);
-            Assert.IsNull(normalJson[nameof(JSON.log)]);
+            Assert.IsNotNull(normalJson[nameof(JSON_RPC.result)]);
+            Assert.IsNull(normalJson[nameof(JSON_RPC._log)]);
 
-            // Logging enabled but GetVersion has no Log() calls - no log field
+            // Logging enabled but GetVersion has no Log() calls - no _log field
             string loggedResult = server.HandleRequest(
                 buildRequest(nameof(IJsonToolService.GetVersion), true));
             var loggedJson = JObject.Parse(loggedResult);
-            Assert.IsNotNull(loggedJson[nameof(JSON.result)]);
-            Assert.IsNull(loggedJson[nameof(JSON.log)]);
+            Assert.IsNotNull(loggedJson[nameof(JSON_RPC.result)]);
+            Assert.IsNull(loggedJson[nameof(JSON_RPC._log)]);
 
-            // Error response without logging - no log field
+            // Error response without logging - no _log field
             string errorResult = server.HandleRequest(
                 buildRequest(@"NotARealMethod", false));
             var errorJson = JObject.Parse(errorResult);
-            Assert.IsNotNull(errorJson[nameof(JSON.error)]);
-            Assert.IsNull(errorJson[nameof(JSON.log)]);
+            Assert.IsNotNull(errorJson[nameof(JSON_RPC.error)]);
+            Assert.IsNull(errorJson[nameof(JSON_RPC._log)]);
 
-            // ExportReportFromDefinition with logging - log field should appear
+            // ExportReportFromDefinition with logging - _log field should appear
             string reportPath = TestFilesDir.GetTestPath(@"report_log_test.csv");
             string reportJson = new JObject { [@"select"] = new JArray(COL_PROTEIN_NAME, COL_PRECURSOR_MZ) }.ToString();
             var reportRequest = new JObject
             {
-                [nameof(JSON.method)] = nameof(IJsonToolService.ExportReportFromDefinition),
-                [nameof(JSON.args)] = new JArray(reportJson, reportPath,
+                [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
+                [nameof(JSON_RPC.method)] = nameof(IJsonToolService.ExportReportFromDefinition),
+                [nameof(JSON_RPC.@params)] = new JArray(reportJson, reportPath,
                     JsonToolConstants.CULTURE_INVARIANT),
-                [nameof(JSON.log)] = true
+                [nameof(JSON_RPC._log)] = true,
+                [nameof(JSON_RPC.id)] = 1
             };
             string reportResult = server.HandleRequest(
                 Encoding.UTF8.GetBytes(reportRequest.ToString()));
             var reportResultJson = JObject.Parse(reportResult);
-            Assert.IsNotNull(reportResultJson[nameof(JSON.result)]);
-            string logContent = (string)reportResultJson[nameof(JSON.log)];
+            Assert.IsNotNull(reportResultJson[nameof(JSON_RPC.result)]);
+            string logContent = (string)reportResultJson[nameof(JSON_RPC._log)];
             Assert.IsNotNull(logContent, @"Log should appear for method with Log() calls");
             AssertEx.Contains(logContent, @"ms");
             AssertEx.Contains(logContent, @"Resolved");
 
-            // Same call without logging - no log field
+            // Same call without logging - no _log field
             string reportPath2 = TestFilesDir.GetTestPath(@"report_nolog_test.csv");
             var noLogRequest = new JObject
             {
-                [nameof(JSON.method)] = nameof(IJsonToolService.ExportReportFromDefinition),
-                [nameof(JSON.args)] = new JArray(reportJson, reportPath2,
+                [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
+                [nameof(JSON_RPC.method)] = nameof(IJsonToolService.ExportReportFromDefinition),
+                [nameof(JSON_RPC.@params)] = new JArray(reportJson, reportPath2,
                     JsonToolConstants.CULTURE_INVARIANT),
+                [nameof(JSON_RPC.id)] = 1
             };
             string noLogResult = server.HandleRequest(
                 Encoding.UTF8.GetBytes(noLogRequest.ToString()));
             var noLogResultJson = JObject.Parse(noLogResult);
-            Assert.IsNotNull(noLogResultJson[nameof(JSON.result)]);
-            Assert.IsNull(noLogResultJson[nameof(JSON.log)]);
+            Assert.IsNotNull(noLogResultJson[nameof(JSON_RPC.result)]);
+            Assert.IsNull(noLogResultJson[nameof(JSON_RPC._log)]);
         }
 
         private void TestOpenForms(JsonToolServer server)
         {
-            string forms = server.GetOpenForms();
-            Assert.IsFalse(string.IsNullOrEmpty(forms));
+            var forms = server.GetOpenForms();
+            Assert.IsTrue(forms.Length > 0);
             // The Targets panel (SequenceTreeForm) should always be open
-            AssertEx.Contains(forms, nameof(SequenceTreeForm));
+            Assert.IsTrue(forms.Any(f => f.Type == nameof(SequenceTreeForm)));
         }
 
         private void TestScreenCapturePermissionDlg(JsonToolServer server)
@@ -833,9 +854,8 @@ namespace pwiz.SkylineTestFunctional
                 ScreenCapture.ResetSessionPermission();
             });
 
-            string formId = server.GetOpenForms().ReadLines()
-                .First(l => l.Contains(nameof(SequenceTreeForm)))
-                .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            string formId = server.GetOpenForms()
+                .First(f => f.Type == nameof(SequenceTreeForm)).Id;
 
             bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
 
@@ -913,9 +933,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Settings.Default.AllowMcpScreenCapture = true);
 
             // Capture the Targets panel
-            string formId = server.GetOpenForms().ReadLines()
-                .First(l => l.Contains(nameof(SequenceTreeForm)))
-                .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            string formId = server.GetOpenForms()
+                .First(f => f.Type == nameof(SequenceTreeForm)).Id;
             string imageName = @"form_image_test.png";
             string imagePath = TestFilesDir.GetTestPath(imageName);
 
@@ -966,16 +985,15 @@ namespace pwiz.SkylineTestFunctional
         private void TestGraphDataAndImage(JsonToolServer server)
         {
             // Find a graph form from the open forms list
-            string forms = server.GetOpenForms();
-            string graphLine = forms.ReadLines()
-                .FirstOrDefault(l => l.Contains(@"GraphSummary"));
-            if (graphLine == null)
+            var forms = server.GetOpenForms();
+            var graphForm = forms.FirstOrDefault(f => f.Type.Contains(@"GraphSummary"));
+            if (graphForm == null)
             {
                 // No graph open - skip gracefully (Rat_plasma.sky should have graphs)
                 return;
             }
 
-            string graphId = graphLine.ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            string graphId = graphForm.Id;
 
             // GetGraphData - export to TSV
             string dataPath = TestFilesDir.GetTestPath(@"graph_data.tsv");
@@ -1017,9 +1035,7 @@ namespace pwiz.SkylineTestFunctional
                     TestFilesDir.GetTestPath(@"graph_bad.png")));
 
             // Error: non-graph form used with graph methods
-            string nonGraphId = forms.ReadLines()
-                .First(l => l.Contains(nameof(SequenceTreeForm)))
-                .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            string nonGraphId = forms.First(f => f.Type == nameof(SequenceTreeForm)).Id;
             AssertEx.ThrowsException<ArgumentException>(() =>
                 server.GetGraphData(nonGraphId, badGraphPath));
         }
@@ -1112,7 +1128,7 @@ namespace pwiz.SkylineTestFunctional
             int groupsBefore = doc.MoleculeGroupCount;
 
             string csvText = GetSmallMoleculeTransitionsText();
-            string result = server.InsertSmallMoleculeTransitionList(csvText);
+            server.InsertSmallMoleculeTransitionList(csvText);
 
             var docAfter = SkylineWindow.Document;
             Assert.IsTrue(docAfter.MoleculeGroupCount > groupsBefore);
@@ -1130,16 +1146,15 @@ namespace pwiz.SkylineTestFunctional
                     defs => defs.Concat(new[] { annotationDef }).ToList()))));
 
             // Get protein locators
-            string groups = server.GetLocations(JsonToolConstants.LEVEL_GROUP);
-            Assert.IsTrue(Helpers.CountLinesInString(groups) > 0);
+            var groups = server.GetLocations(JsonToolConstants.LEVEL_GROUP);
+            Assert.IsTrue(groups.Length > 0);
 
             // Build CSV for ImportProperties: ElementLocator,TestAnnotation
-            string firstGroupLocator = groups.ReadLines().First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
+            string firstGroupLocator = groups.First().Locator;
             string csvText = @"ElementLocator,TestAnnotation" + Environment.NewLine +
                              firstGroupLocator + @",test_value";
 
-            string result = server.ImportProperties(csvText);
-            Assert.IsFalse(string.IsNullOrEmpty(result));
+            server.ImportProperties(csvText);
         }
 
         private SrmDocument TestImportFasta(JsonToolServer server)
@@ -1175,21 +1190,23 @@ namespace pwiz.SkylineTestFunctional
         private void TestRunCommand(JsonToolServer server, SrmDocument docAfterKeep)
         {
             // --version output should contain both parts of the version string
-            string versionResult = server.RunCommandSilent(CommandArgs.ARG_VERSION.ArgumentText);
+            string versionResult = server.RunCommandSilent(new[] { CommandArgs.ARG_VERSION.ArgumentText });
             // GetVersion returns "26.1.1.061-6c3244bc0a", --version shows "26.1.1.061 (6c3244bc0a)"
             AssertEx.Contains(versionResult, server.GetVersion().Split('-'));
 
             // Read operation: export a report via CLI (non-silent, writes to Immediate Window)
             string reportPath = TestFilesDir.GetTestPath(@"run_command_report.csv");
-            string reportArgs = TextUtil.SpaceSeparate(
-                CommandArgs.ARG_REPORT_NAME + REPORT_AREAS.Quote(),
-                CommandArgs.ARG_REPORT_FILE + reportPath.ToForwardSlashPath().Quote());
+            var reportArgs = new[]
+            {
+                CommandArgs.ARG_REPORT_NAME + REPORT_AREAS,
+                CommandArgs.ARG_REPORT_FILE + reportPath.ToForwardSlashPath()
+            };
             server.RunCommand(reportArgs);
             Assert.IsTrue(File.Exists(reportPath));
             Assert.IsTrue(new FileInfo(reportPath).Length > 0);
             // Verify Immediate Window contains the command header and report output
             string iwAfterReport = GetImmediateWindowText();
-            AssertEx.Contains(iwAfterReport, reportArgs);
+            AssertEx.Contains(iwAfterReport, TextUtil.SpaceSeparate(reportArgs));
             // Resource: "Exporting report {0}..." and "Report {0} exported successfully to {1}."
             AssertEx.Contains(iwAfterReport,
                 string.Format(SkylineResources.CommandLine_ExportLiveReport_Exporting_report__0____, REPORT_AREAS));
@@ -1199,12 +1216,12 @@ namespace pwiz.SkylineTestFunctional
 
             // Write operation: refine to remove proteins with fewer than 100 peptides
             var docBeforeRefine = SkylineWindow.Document;
-            string refineArgs = CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100";
+            var refineArgs = new[] { CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100" };
             server.RunCommand(refineArgs);
             Assert.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount,
                 @"Refine with min-peptides=100 should remove all proteins");
             string iwAfterRefine = GetImmediateWindowText();
-            AssertEx.Contains(iwAfterRefine, refineArgs);
+            AssertEx.Contains(iwAfterRefine, TextUtil.SpaceSeparate(refineArgs));
             // Resource: "Refining document..."
             AssertEx.Contains(iwAfterRefine,
                 Resources.CommandLine_RefineDocument_Refining_document___);
@@ -1217,9 +1234,11 @@ namespace pwiz.SkylineTestFunctional
             string fastaPath = TestFilesDir.GetTestPath(@"import_test.fasta");
             File.WriteAllText(fastaPath, TEXT_FASTA);
             var docBeforeFasta = SkylineWindow.Document;
-            string fastaArgs = TextUtil.SpaceSeparate(
-                CommandArgs.ARG_IMPORT_FASTA + fastaPath.ToForwardSlashPath().Quote(),
-                CommandArgs.ARG_KEEP_EMPTY_PROTEINS.ArgumentText);
+            var fastaArgs = new[]
+            {
+                CommandArgs.ARG_IMPORT_FASTA + fastaPath.ToForwardSlashPath(),
+                CommandArgs.ARG_KEEP_EMPTY_PROTEINS.ArgumentText
+            };
             server.RunCommand(fastaArgs);
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var docAfterFasta = SkylineWindow.Document;
@@ -1229,7 +1248,7 @@ namespace pwiz.SkylineTestFunctional
                 @"Document should contain the imported ALBU_BOVIN protein");
             AssertEx.DocumentCloned(docAfterKeep, docAfterFasta);
             string iwAfterFasta = GetImmediateWindowText();
-            AssertEx.Contains(iwAfterFasta, fastaArgs);
+            AssertEx.Contains(iwAfterFasta, TextUtil.SpaceSeparate(fastaArgs));
             // Resource: "Importing FASTA file {0}..."
             AssertEx.Contains(iwAfterFasta,
                 string.Format(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____,
@@ -1251,12 +1270,12 @@ namespace pwiz.SkylineTestFunctional
 
             // Save original document so on-disk state matches in-memory state
             // (prior tests may have modified the document without saving)
-            server.RunCommand(CommandArgs.ARG_SAVE.ArgumentText);
+            server.RunCommand(new[] { CommandArgs.ARG_SAVE.ArgumentText });
 
             // --new: create empty document at a temp path
             // Note: paths must be quoted because test directories may contain spaces
             string newPath = TestFilesDir.GetTestPath(@"doc_ops_new.sky");
-            string newResult = server.RunCommand(CommandArgs.ARG_NEW + newPath.Quote());
+            string newResult = server.RunCommand(new[] { CommandArgs.ARG_NEW + newPath });
             AssertEx.Contains(newResult, Path.GetFileName(newPath));
             AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
@@ -1269,7 +1288,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(SkylineWindow.Dirty);
 
             // --save: save the modified document, verify clean state
-            string saveResult = server.RunCommand(CommandArgs.ARG_SAVE.ArgumentText);
+            string saveResult = server.RunCommand(new[] { CommandArgs.ARG_SAVE.ArgumentText });
             AssertEx.Contains(saveResult, Path.GetFileName(newPath));
             AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
             Assert.IsFalse(SkylineWindow.Dirty);
@@ -1277,14 +1296,14 @@ namespace pwiz.SkylineTestFunctional
 
             // --save-as (synonym for --out): save to a different path
             string saveAsPath = TestFilesDir.GetTestPath(@"doc_ops_saveas.sky");
-            string saveAsResult = server.RunCommand(CommandArgs.ARG_SAVE_AS + saveAsPath.Quote());
+            string saveAsResult = server.RunCommand(new[] { CommandArgs.ARG_SAVE_AS + saveAsPath });
             AssertEx.Contains(saveAsResult, Path.GetFileName(saveAsPath));
             AssertEx.AreEqual(saveAsPath, SkylineWindow.DocumentFilePath);
             Assert.IsFalse(SkylineWindow.Dirty);
             Assert.IsTrue(File.Exists(saveAsPath));
 
             // --open (synonym for --in): re-open the first saved file, verify round-trip
-            string openResult = server.RunCommand(CommandArgs.ARG_OPEN + newPath.Quote());
+            string openResult = server.RunCommand(new[] { CommandArgs.ARG_OPEN + newPath });
             AssertEx.Contains(openResult, Path.GetFileName(newPath));
             AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(savedGroups, SkylineWindow.Document.MoleculeGroupCount);
@@ -1292,26 +1311,30 @@ namespace pwiz.SkylineTestFunctional
                 g => g.Name.Contains(@"ALBU_BOVIN")));
 
             // --in: re-open the original document from disk
-            string inResult = server.RunCommand(CommandArgs.ARG_IN + originalPath.Quote());
+            string inResult = server.RunCommand(new[] { CommandArgs.ARG_IN + originalPath });
             AssertEx.Contains(inResult, Path.GetFileName(originalPath));
             AssertEx.AreEqual(originalPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(originalGroups, SkylineWindow.Document.MoleculeGroupCount);
 
             // Combined: --open + --refine + --out
             string combinedPath = TestFilesDir.GetTestPath(@"doc_ops_combined.sky");
-            string combinedResult = server.RunCommand(TextUtil.SpaceSeparate(
-                CommandArgs.ARG_OPEN + newPath.Quote(),
+            string combinedResult = server.RunCommand(new[]
+            {
+                CommandArgs.ARG_OPEN + newPath,
                 CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100",
-                CommandArgs.ARG_OUT + combinedPath.Quote()));
+                CommandArgs.ARG_OUT + combinedPath
+            });
             AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
             Assert.IsTrue(File.Exists(combinedPath));
 
             // --new to leave a clean state for subsequent tests
             string tempPath = TestFilesDir.GetTestPath(@"doc_ops_temp.sky");
-            server.RunCommand(TextUtil.SpaceSeparate(
-                CommandArgs.ARG_NEW + tempPath.Quote(),
-                CommandArgs.ARG_OVERWRITE.ArgumentText));
+            server.RunCommand(new[]
+            {
+                CommandArgs.ARG_NEW + tempPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText
+            });
         }
 
         /// <summary>
