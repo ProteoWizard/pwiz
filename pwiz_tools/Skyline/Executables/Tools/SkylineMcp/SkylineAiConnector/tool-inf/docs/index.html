@@ -1,0 +1,171 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">Skyline AI Connector</h1>
+    <p>
+        The AI Connector enables AI client applications to interact with a running Skyline instance through the
+        Model Context Protocol (MCP). Once configured, you can use natural language to query document data, run
+        reports, import targets, execute commands, and access documentation for reports, command-line, and
+        tutorials directly in your running Skyline instance.
+    </p>
+    <p>
+        Supported AI client applications include Claude Desktop, Claude Code, Gemini CLI, VS Code (Copilot),
+        and Cursor.
+    </p>
+
+    <h1>Prerequisites</h1>
+    <ul>
+        <li><b>Skyline-daily 26.1.1</b> or later</li>
+        <li><b>.NET 8.0 Desktop Runtime</b> &mdash; required by the MCP server component
+            (<a href="https://dotnet.microsoft.com/download/dotnet/8.0">download</a>)</li>
+        <li>At least one of the above supported AI client applications installed</li>
+    </ul>
+
+    <h1>Installing the AI Connector</h1>
+    <p>
+        To install the AI Connector from the Skyline Tool Store:
+    </p>
+    <ul>
+        <li>On the <b>Tools</b> menu, click <b>Tool Store</b>.</li>
+    </ul>
+    <p>
+        <img src="s-01.png" />
+    </p>
+    <p>
+        This will open the <b>Install from Tool Store</b> dialog. Select <b>AI Connector</b> from the list
+        and click <b>Install</b>.
+    </p>
+    <p>
+        <img src="s-02.png" />
+    </p>
+    <p>
+        After installation, <b>AI Connector</b> will appear at the top of the <b>Tools</b> menu.
+    </p>
+    <p>
+        <img src="s-03.png" />
+    </p>
+
+    <h1>Connecting to an AI Client</h1>
+    <p>
+        Click <b>Tools &gt; AI Connector</b> to launch the connector. It will automatically connect to the
+        Skyline instance that launched it and display the version and current document.
+    </p>
+    <p>
+        If no AI clients have been registered yet, the setup panel will expand automatically, showing which
+        AI client applications are available on your computer.
+    </p>
+    <p>
+        <img src="s-04.png" />
+    </p>
+    <p>
+        Installed applications appear with enabled checkboxes. Applications that are not installed are shown
+        in gray. Check the box next to any AI client you want to use with Skyline.
+    </p>
+    <p>
+        In this example, registering with <b>Claude Desktop</b> is shown. If Claude Desktop is running when
+        you check its box, the connector will ask you to close it first, since Claude Desktop must be
+        restarted to pick up configuration changes.
+    </p>
+    <p>
+        <img src="s-05.png" />
+    </p>
+    <p>
+        If you did not close Claude Desktop yourself, or even if you do and it continues running in the background, the connector will offer to stop it for you.
+    </p>
+    <p>
+        <img src="s-06.png" />
+    </p>
+    <p>
+        Once registered, the status message will confirm the registration and remind you to start the
+        AI client to activate the connection.
+    </p>
+    <p>
+        <img src="s-07.png" />
+    </p>
+
+    <h1>Connecting at Startup</h1>
+    <p>
+        By default, the AI Connector must be launched manually from the <b>Tools</b> menu each time you
+        want to use it. To have Skyline automatically connect to AI clients at startup, check
+        <b>Configure Skyline to connect at startup</b>.
+    </p>
+    <p>
+        <img src="s-08.png" />
+    </p>
+    <p>
+        With this option enabled, Skyline will register with the MCP server automatically when it launches, so
+        your AI clients can connect without opening the AI Connector form. The MCP server once registered with
+		your AI client will continue running even as Skyline sessions come and go. It will tell your AI client
+		if it cannot find a session, and it can allow your AI client to work with multiple sessions at once.
+    </p>
+
+    <h1>Verifying the Connection</h1>
+    <p>
+        To verify the connection in Claude Desktop, open <b>Settings</b> from the menu in the lower-left
+        corner of the Claude Desktop window.
+    </p>
+    <p>
+        <img src="s-09.png" />
+    </p>
+    <p>
+        Navigate to <b>Developer</b> at the bottom of the settings panel. You should see
+        <b>skyline</b> listed as a local MCP server with status <b>running</b>.
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+
+    <h1>Your First Interaction</h1>
+    <p>
+        Start a new chat in your AI client (here Claude Desktop). You can ask the AI to connect to your Skyline instance and
+        work with your data. For example, you might ask it to open a document:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p>
+        The AI will use the MCP tools to interact with Skyline, opening the requested file and reporting
+        the result.
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+
+    <h1>What You Can Do</h1>
+    <p>
+        With the AI Connector, you can ask your AI client to:
+    </p>
+    <ul>
+        <li><b>Add targets</b> &mdash; import FASTA files, transition lists, and small molecule targets</li>
+        <li><b>Query document data</b> &mdash; ask about proteins, peptides, precursors, transitions,
+            and their properties</li>
+        <li><b>Run and add reports</b> &mdash; export or create any Skyline report or create custom reports on the fly
+            with filtering, sorting, and pivoting - potentially for advanced or publication-ready plotting with R or Python</li>
+        <li><b>Navigate the document</b> &mdash; select specific targets, switch replicates, and
+            explore the document tree</li>
+        <li><b>View graphs</b> &mdash; capture chromatograms, peak area charts, and other Skyline
+            visualizations</li>
+        <li><b>Execute commands</b> &mdash; run any Skyline command-line operation with full undo support</li>
+        <li><b>Access documentation</b> &mdash; browse report columns, command-line help, and tutorial
+            content</li>
+        <li><b>Manage settings</b> &mdash; inspect modifications, enzymes, and other Skyline settings lists</li>
+    </ul>
+
+    <h1>Troubleshooting</h1>
+    <ul>
+        <li><b>AI client does not see Skyline</b> &mdash; Make sure Skyline is running and the AI Connector
+            has been launched (or auto-connect is enabled). Restart the AI client after registering.</li>
+        <li><b>MCP server not running</b> &mdash; Check that the .NET 8.0 Desktop Runtime is installed.
+            The MCP server requires it to run.</li>
+        <li><b>"Skyline does not support AI connections"</b> &mdash; Update to Skyline-daily 26.1.1 or
+            later. Older versions do not include the MCP server infrastructure.</li>
+        <li><b>Claude Desktop checkbox disabled</b> &mdash; Claude Desktop may not be detected if it has
+            never been launched. Start Claude Desktop at least once to create its configuration.</li>
+    </ul>
+</body>
+</html>

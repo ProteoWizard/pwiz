@@ -169,10 +169,12 @@ namespace pwiz.Skyline.ToolsUI
 
         private void DownloadAndInstallSelectedTool()
         {
-            string identifier = _tools[listBoxTools.SelectedIndex].Identifier;
-            string toolName = _tools[listBoxTools.SelectedIndex].Name;
+            var selectedTool = _tools[listBoxTools.SelectedIndex];
+            string identifier = selectedTool.Identifier;
+            string toolName = selectedTool.Name;
+            string downloadUrl = selectedTool.DownloadUrl;
             string toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
-            
+
             // Use FileSaver pattern: download to ~SK*.tmp, extract/install, never commit (auto-cleanup)
             // Logical destination is toolName.zip in tools directory (for error messages)
             string zipDestination = Path.Combine(toolsDirectory, toolName + ToolDescription.EXT_INSTALL);
@@ -188,7 +190,7 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         downloadStatus = dlg.PerformWork(this, 500, progressMonitor =>
                         {
-                            _toolStoreClient.GetToolZipFile(progressMonitor, progressStatus, identifier, fileSaver);
+                            _toolStoreClient.GetToolZipFile(progressMonitor, progressStatus, identifier, fileSaver, downloadUrl);
                         });
                     }
                     
@@ -258,7 +260,8 @@ namespace pwiz.Skyline.ToolsUI
         /// <param name="progressStatus">Initial progress status with message to display during download</param>
         /// <param name="packageIdentifier">Unique identifier for the tool package to download</param>
         /// <param name="fileSaver">FileSaver managing the destination zip file (downloads to fileSaver.SafeName)</param>
-        void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver);
+        /// <param name="downloadUrl">Optional server-provided download URL path (preferred over constructing from LSID)</param>
+        void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver, string downloadUrl = null);
         
         /// <summary>
         /// Returns true if the given package (identified by its version), has an update available. The
@@ -270,6 +273,8 @@ namespace pwiz.Skyline.ToolsUI
     public class WebToolStoreClient : IToolStoreClient
     {
         public static readonly Uri TOOL_STORE_URI = new Uri(@"https://skyline.ms");
+        // For debugging with a local LabKey server:
+        // public static readonly Uri TOOL_STORE_URI = new Uri(@"http://localhost:8080");
         protected const string GET_TOOLS_URL = "/skyts/home/getToolsApi.view";
         protected const string DOWNLOAD_TOOL_URL = "/skyts/home/downloadTool.view";
         public const string TOOL_DETAILS_URL = "/skyts/home/details.view";
@@ -289,24 +294,35 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier,
-            FileSaver fileSaver)
+            FileSaver fileSaver, string downloadUrl = null)
         {
-            GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, fileSaver);
+            GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, fileSaver, downloadUrl);
         }
 
-        public static void GetToolZipFileWithProgress(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
+        public static void GetToolZipFileWithProgress(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver, string downloadUrl = null)
         {
             using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
-            var uri = new UriBuilder(TOOL_STORE_URI)
+            Uri downloadUri;
+            if (!string.IsNullOrEmpty(downloadUrl))
             {
-                Path = DOWNLOAD_TOOL_URL,
-                Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
-            };
-            
+                // Use server-provided download URL (correct container path)
+                downloadUri = new Uri(TOOL_STORE_URI, downloadUrl);
+            }
+            else
+            {
+                // Fall back to constructing URL from LSID
+                var uri = new UriBuilder(TOOL_STORE_URI)
+                {
+                    Path = DOWNLOAD_TOOL_URL,
+                    Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
+                };
+                downloadUri = uri.Uri;
+            }
+
             // Download the tool zip file directly to FileSaver's temp location (~SK*.tmp)
             // Progress reporting and cancellation handled by HttpClientWithProgress
             // FileSaver provides automatic cleanup if not committed
-            httpClient.DownloadFile(uri.Uri, fileSaver.SafeName);
+            httpClient.DownloadFile(downloadUri, fileSaver.SafeName);
         }
 
         public bool IsToolUpdateAvailable(string identifier, Version version)
@@ -343,6 +359,7 @@ namespace pwiz.Skyline.ToolsUI
         public bool Installed { get; private set; }
         public bool IsMostRecentVersion { get; private set; }
         public string FilePath { get; private set; }
+        public string DownloadUrl { get; private set; }
 
         public bool IconDownloading { get; private set; }
         public Action IconLoadComplete { get; set; }
@@ -361,6 +378,7 @@ namespace pwiz.Skyline.ToolsUI
             Installed = item.Installed;
             IsMostRecentVersion = item.IsMostRecentVersion;
             FilePath = item.FilePath;
+            DownloadUrl = item.DownloadUrl;
         }
 
         public ToolStoreItem(string name,
@@ -438,6 +456,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             Installed = ToolStoreUtil.IsInstalled(identifier);
             IsMostRecentVersion = ToolStoreUtil.IsMostRecentVersion(identifier, version);
+            DownloadUrl = downloadUrl;
             UriBuilder uri = new UriBuilder(WebToolStoreClient.TOOL_STORE_URI)
                 {
                     Path = WebToolStoreClient.TOOL_DETAILS_URL,
