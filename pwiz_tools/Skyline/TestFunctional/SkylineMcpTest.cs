@@ -21,6 +21,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,6 +34,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using SkylineTool;
+using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -119,7 +121,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 mcpProcess = StartMcpServer(mcpServerPath);
 
                 // Run MCP protocol tests
-                ValidateMcpProtocol(mcpProcess);
+                ValidateMcpProtocol(mcpProcess, server);
             }
             finally
             {
@@ -152,7 +154,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             return process;
         }
 
-        private void ValidateMcpProtocol(Process mcpProcess)
+        private void ValidateMcpProtocol(Process mcpProcess, JsonToolServer server)
         {
             // Wrap stdin with UTF-8 StreamWriter (Process.StandardInput defaults to
             // system code page on .NET Framework, corrupting non-ASCII characters)
@@ -231,6 +233,77 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             AssertEx.Contains(saveResponse, saveFileName);
             string savedPath = McpToolCall(stdin, stdout, ref id, "skyline_get_document_path");
             AssertEx.AreEqual(docPath.ToForwardSlashPath(), savedPath);
+
+            // Version mismatch detection: verify that an unknown method sent through
+            // the pipe produces an error with the Skyline version, so the LLM can
+            // diagnose version mismatches between SkylineMcpServer and Skyline.
+            TestVersionMismatchError(server);
+        }
+
+        /// <summary>
+        /// Verify that when a newer SkylineMcpServer calls a method not supported by the
+        /// running Skyline instance, the error includes the Skyline version for diagnostics.
+        /// Connects directly to the pipe (like the MCP server does internally) and sends
+        /// a request for a non-existent method.
+        /// </summary>
+        private void TestVersionMismatchError(JsonToolServer server)
+        {
+            // Connect to the same pipe the MCP server uses
+            var pipe = new NamedPipeClientStream(@".", server.PipeName, PipeDirection.InOut);
+            pipe.Connect(5000);
+            pipe.ReadMode = PipeTransmissionMode.Message;
+            using (var client = new SkylineJsonToolClient(pipe))
+            {
+                // Verify normal operation first
+                string version = client.GetVersion();
+                Assert.IsFalse(string.IsNullOrEmpty(version));
+
+                // Simulate a newer client calling a method the server doesn't have.
+                // Send a raw JSON-RPC request since the typed client won't let us
+                // call a method that doesn't exist in IJsonToolService.
+                string request = new JObject
+                {
+                    [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
+                    [nameof(JSON_RPC.method)] = @"GetFutureFeature",
+                    [nameof(JSON_RPC.id)] = 1
+                }.ToString();
+                byte[] requestBytes = Encoding.UTF8.GetBytes(request);
+                pipe.Write(requestBytes, 0, requestBytes.Length);
+                pipe.Flush();
+                pipe.WaitForPipeDrain();
+
+                // Read the error response
+                var ms = new MemoryStream();
+                do
+                {
+                    var buffer = new byte[65536];
+                    int count = pipe.Read(buffer, 0, buffer.Length);
+                    if (count == 0) break;
+                    ms.Write(buffer, 0, count);
+                } while (!pipe.IsMessageComplete);
+                var response = JObject.Parse(Encoding.UTF8.GetString(ms.ToArray()));
+
+                // Verify the error has the correct JSON-RPC structure and content
+                var error = response[nameof(JSON_RPC.error)];
+                Assert.IsNotNull(error, @"Unknown method should return a JSON-RPC error");
+                AssertEx.AreEqual(JsonToolConstants.ERROR_METHOD_NOT_FOUND,
+                    (int)error[nameof(JSON_RPC.code)]);
+
+                // The error message must contain "Unknown method:" - this is the pattern
+                // that SkylineTools.Invoke checks to trigger version mismatch enrichment
+                string message = (string)error[nameof(JSON_RPC.message)];
+                AssertEx.Contains(message, @"Unknown method:");
+                AssertEx.Contains(message, @"GetFutureFeature");
+
+                // Verify the connection file contains the Skyline version that
+                // SkylineTools.Invoke uses to enrich the error message.
+                // SkylineConnection reads this during TryConnect and stores it
+                // as SkylineVersion, which gets included in the enriched error:
+                // "This method is not available in {skylineId}."
+                string connectionJson = File.ReadAllText(
+                    JsonToolConstants.GetConnectionFilePath(server.PipeName));
+                AssertEx.Contains(connectionJson, Install.BareVersion);
+            }
         }
 
         /// <summary>
