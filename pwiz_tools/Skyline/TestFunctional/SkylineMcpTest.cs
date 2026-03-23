@@ -357,10 +357,20 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 string line = reader.ReadLine();
                 if (line == null)
                 {
+                    bool killed = false;
+                    if (!mcpProcess.HasExited)
+                    {
+                        if (!mcpProcess.WaitForExit(5000))
+                        {
+                            mcpProcess.Kill();
+                            killed = true;
+                        }
+                    }
                     string stderr = mcpProcess.StandardError.ReadToEnd();
-                    int exitCode = mcpProcess.HasExited ? mcpProcess.ExitCode : -1;
-                    Assert.Fail("MCP server exited unexpectedly (exit code {0}).{1}",
-                        exitCode,
+                    string status = killed
+                        ? "MCP server stopped responding and was terminated"
+                        : string.Format("MCP server exited unexpectedly (exit code {0})", mcpProcess.ExitCode);
+                    Assert.Fail("{0}.{1}", status,
                         string.IsNullOrEmpty(stderr) ? string.Empty : "\nStderr: " + stderr);
                 }
                 if (string.IsNullOrWhiteSpace(line))
