@@ -56,11 +56,19 @@ namespace pwiz.MSGraph
             if (cellWidth <= 0 || double.IsNaN(cellWidth) || cellHeight <= 0 || double.IsNaN(cellHeight))
                 return;
 
-            // Use log scale for heat intensity.
-            double scale = (_heatMapColors.Length - 1)/
-                           (logScale ? Math.Log(heatMapData.MaxPoint.Point.Z) : heatMapData.MaxPoint.Point.Z);
+            // Use log scale for heat intensity. In discrete mode (few distinct Z values and variable
+            // dot sizes), compress the scale so sizes stay in the smaller portion of the available range,
+            // then remap colors back to the full range. When minDotRadius == maxDotRadius, sizes are
+            // uniform and the discrete path is skipped (full color scale is used directly).
+            int legendStep = _heatMapColors.Length / 4;
+            bool isDiscrete = minDotRadius != maxDotRadius && heatMapData.MaxPoint.Point.Z <= legendStep;
+            double maxZValue = logScale ? Math.Log(heatMapData.MaxPoint.Point.Z) : heatMapData.MaxPoint.Point.Z;
+            double fullScale = (_heatMapColors.Length - 1.0) / maxZValue;
+            double scale = isDiscrete
+                ? Math.Min(legendStep, fullScale)
+                : fullScale;
 
-            // Create curves for each intensity color.
+            // Create curves for each intensity color (legend labels assigned after data is loaded).
             var curves = new LineItem[_heatMapColors.Length];
             for (int i = 0; i < curves.Length; i++) {
                 var color = _heatMapColors[i];
@@ -77,12 +85,6 @@ namespace pwiz.MSGraph
                     },
                     Tag = new List<object>()
                 };
-                if ((i + 1) % (_heatMapColors.Length / 4) == 0)
-                {
-                    double intensity = logScale ? Math.Pow(Math.E, i/scale) : i / scale;
-                    curves[i].Label.Text = intensity.ToString(@"F0");
-                }
-                graphPane.CurveList.Insert(0, curves[i]);
             }
 
             // Get points within bounds of graph/filter, with density appropriate for the current display resolution.
@@ -94,16 +96,60 @@ namespace pwiz.MSGraph
                 cellWidth,
                 cellHeight);
 
+            var usedIntensities = new HashSet<int>();
             foreach (var heatPoint in points) {
                 // A log scale produces a better visual display.
-                int intensity = (int)((logScale ? Math.Log(heatPoint.Point.Z) : heatPoint.Point.Z) * scale);
+                int intensity = Math.Min((int)((logScale ? Math.Log(heatPoint.Point.Z) : heatPoint.Point.Z) * scale), curves.Length - 1);
                 if (intensity >= cutoff)
                 {
                     curves[intensity].AddPoint(heatPoint.Point.X, heatPoint.Point.Y);
                     ((List<object>)curves[intensity].Tag).Add(heatPoint.Tag);
+                    if (usedIntensities.Add(intensity) && isDiscrete)
+                    {
+                        // Remap color to full range so the legend shows blue->red even with few values.
+                        int colorIndex = Math.Min((int)(intensity / scale * fullScale), curves.Length - 1);
+                        curves[intensity].Symbol.Fill = new Fill(_heatMapColors[colorIndex]);
+                    }
                 }
-                    
             }
+
+            // Assign legend labels. When the data has few distinct Z values (<= one legend step's worth),
+            // label only the intensity buckets that actually contain data, using their exact Z value.
+            // Otherwise use representative labels at fixed intervals across the full range.
+            if (isDiscrete)
+            {
+                var labeledZValues = new HashSet<string>();
+                for (int i = curves.Length - 1; i >= 0; i--)
+                {
+                    if (!usedIntensities.Contains(i))
+                        continue;
+                    double z = logScale ? Math.Exp(i / scale) : i / scale;
+                    var label = z.ToString(@"F0");
+                    if (labeledZValues.Add(label))
+                    {
+                        curves[i].Label.Text = label;
+                        curves[i].LegendGroupName = heatMapData.ZAxisName;
+                    }
+                }
+            }
+            else
+            {
+                string lastLegendLabel = null;
+                for (int i = legendStep - 1; i < curves.Length; i += legendStep)
+                {
+                    double intensity = logScale ? Math.Exp(i / scale) : i / scale;
+                    var label = intensity.ToString(@"F0");
+                    if (label != lastLegendLabel)
+                    {
+                        curves[i].Label.Text = label;
+                        curves[i].LegendGroupName = heatMapData.ZAxisName;
+                        lastLegendLabel = label;
+                    }
+                }
+            }
+
+            for (int i = 0; i < curves.Length; i++)
+                graphPane.CurveList.Insert(0, curves[i]);
         }
 
         public void SetPoints(HeatMapData heatMapData, double yMin, double yMax)

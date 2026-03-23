@@ -1465,6 +1465,24 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string MassErrorBinFinder_DisplayName_Peptides {
+            get {
+                return ResourceManager.GetString("MassErrorBinFinder_DisplayName_Peptides", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} ppm.
+        /// </summary>
+        public static string MassErrorBinFinder_GetDisplayText_Mass_Error {
+            get {
+                return ResourceManager.GetString("MassErrorBinFinder_GetDisplayText_Mass_Error", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to m/z.
         /// </summary>
         public static string MassErrorHistogram2DGraphPane_Graph_Mz {
@@ -1482,6 +1500,42 @@ namespace pwiz.Skyline.Controls.Graphs {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to {0} across {1} replicates.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_ToolTip_Count_Format {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_ToolTip_Count_Format", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_ToolTip_Peptides {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_ToolTip_Peptides", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to  +{0} more.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_ToolTip_Plus_N_More {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_ToolTip_Plus_N_More", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Transitions.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_ToolTip_Transitions {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_ToolTip_Transitions", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Mass Errors Unavailable.
         /// </summary>

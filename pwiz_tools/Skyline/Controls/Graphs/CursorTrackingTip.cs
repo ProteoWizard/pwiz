@@ -102,7 +102,16 @@ namespace pwiz.Skyline.Controls.Graphs
                                        (int)Math.Ceiling(size.Height) + PADDING * 2);
             }
             _panel.Invalidate();
-            _panel.Location = new Point(e.X + CURSOR_OFFSET_X, e.Y + CURSOR_OFFSET_Y);
+            // Position the tooltip to avoid clipping at the parent's edges.
+            // Default is lower-right of the cursor; flip to opposite quadrant as needed.
+            var parentControl = (Control)sender;
+            int x = e.X + CURSOR_OFFSET_X;
+            int y = e.Y + CURSOR_OFFSET_Y;
+            if (x + _panel.Width > parentControl.ClientSize.Width)
+                x = e.X - CURSOR_OFFSET_X - _panel.Width;
+            if (y + _panel.Height > parentControl.ClientSize.Height)
+                y = e.Y - CURSOR_OFFSET_Y - _panel.Height;
+            _panel.Location = new Point(Math.Max(0, x), Math.Max(0, y));
             _panel.Visible = true;
             _panel.BringToFront();
         }
