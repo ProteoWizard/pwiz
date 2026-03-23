@@ -454,6 +454,7 @@ SkylineTester Results
 /pwiz_tools/Skyline/SkylineTester/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs
+/pwiz_tools/Skyline/Executables/AutoQC/AutoQC/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Tools/SkylineMcp/SkylineAiConnector/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Tools/SkylineMcp/SkylineMcpServer/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Installer/FileList64.txt
