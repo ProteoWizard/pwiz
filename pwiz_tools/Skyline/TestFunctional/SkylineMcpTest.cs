@@ -164,7 +164,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             int id = 0;
 
             // Initialize MCP session
-            var initResponse = McpCall(stdin, stdout, ref id, "initialize", new JObject
+            var initResponse = McpCall(mcpProcess, stdin, stdout, ref id, "initialize", new JObject
             {
                 ["protocolVersion"] = "2024-11-05",
                 ["capabilities"] = new JObject(),
@@ -184,21 +184,21 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             });
 
             // Verify tool list
-            var toolsResult = McpCall(stdin, stdout, ref id, "tools/list");
+            var toolsResult = McpCall(mcpProcess, stdin, stdout, ref id, "tools/list");
             var tools = (JArray)toolsResult["result"]?["tools"];
             Assert.IsNotNull(tools, "tools/list should return tools array");
             AssertEx.AreEqual(EXPECTED_TOOL_COUNT, tools.Count);
 
             // Verify get_version returns a non-empty string
-            string version = McpToolCall(stdin, stdout, ref id, "skyline_get_version");
+            string version = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_version");
             Assert.AreEqual(Install.Version, version);
 
             // Verify get_document_path handles unsaved document (no NRE)
-            string unsavedPath = McpToolCall(stdin, stdout, ref id, "skyline_get_document_path");
+            string unsavedPath = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path");
             Assert.AreEqual("(unsaved)", unsavedPath);
 
             // Import FASTA via MCP - the MCP server drives the document change
-            McpToolCall(stdin, stdout, ref id, "skyline_import_fasta",
+            McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_import_fasta",
                 new JObject { ["textFasta"] = TEST_FASTA });
 
             // Verify from inside Skyline that the import worked
@@ -214,7 +214,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             // Query protein info via MCP report and verify against the document model
             var columnNames = new[] { "ProteinName", "ProteinDescription", "ProteinSequence" };
             var reportDef = new JObject { ["select"] = new JArray(columnNames) };
-            string reportResult = McpToolCall(stdin, stdout, ref id,
+            string reportResult = McpToolCall(mcpProcess, stdin, stdout, ref id,
                 "skyline_get_report_from_definition",
                 new JObject { ["reportDefinitionJson"] = reportDef.ToString() });
             var values = new[] { protein.Name, protein.Description, protein.PeptideGroup.Sequence };
@@ -226,12 +226,12 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             // Save via MCP run_command and verify get_document_path returns the saved path
             const string saveFileName = "SkÿlineMcpTest.sky";   // Be sure to test Unicode round-tripping
             string docPath = TestContext.GetTestResultsPath(saveFileName);
-            string saveResponse = McpToolCall(stdin, stdout, ref id, "skyline_run_command",
+            string saveResponse = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_run_command",
                 new JObject { ["commandArgs"] = TextUtil.SpaceSeparate(
                     CommandArgs.ARG_SAVE_AS + docPath.Quote(),
                     CommandArgs.ARG_OVERWRITE.ToString()) });
             AssertEx.Contains(saveResponse, saveFileName);
-            string savedPath = McpToolCall(stdin, stdout, ref id, "skyline_get_document_path");
+            string savedPath = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path");
             AssertEx.AreEqual(docPath.ToForwardSlashPath(), savedPath);
 
             // Version mismatch detection: verify that an unknown method sent through
@@ -309,7 +309,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         /// <summary>
         /// Send a JSON-RPC method call and return the response.
         /// </summary>
-        private static JObject McpCall(StreamWriter stdin, StreamReader stdout,
+        private static JObject McpCall(Process mcpProcess, StreamWriter stdin, StreamReader stdout,
             ref int id, string method, JObject parameters = null)
         {
             id++;
@@ -322,7 +322,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             if (parameters != null)
                 message["params"] = parameters;
             SendJsonRpc(stdin, message);
-            var response = ReadJsonRpcResponse(stdout, id);
+            var response = ReadJsonRpcResponse(mcpProcess, stdout, id);
             AssertEx.AreEqual(id, (int)response["id"]);
             return response;
         }
@@ -330,10 +330,10 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         /// <summary>
         /// Call an MCP tool and return the text content from the response.
         /// </summary>
-        private static string McpToolCall(StreamWriter stdin, StreamReader stdout,
+        private static string McpToolCall(Process mcpProcess, StreamWriter stdin, StreamReader stdout,
             ref int id, string toolName, JObject arguments = null)
         {
-            var response = McpCall(stdin, stdout, ref id, "tools/call", new JObject
+            var response = McpCall(mcpProcess, stdin, stdout, ref id, "tools/call", new JObject
             {
                 ["name"] = toolName,
                 ["arguments"] = arguments ?? new JObject()
@@ -349,13 +349,20 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             writer.Flush();
         }
 
-        private static JObject ReadJsonRpcResponse(StreamReader reader, int expectedId)
+        private static JObject ReadJsonRpcResponse(Process mcpProcess, StreamReader reader, int expectedId)
         {
             // Read lines until we get a JSON-RPC response with the expected id
             for (int i = 0; i < 100; i++)
             {
                 string line = reader.ReadLine();
-                Assert.IsNotNull(line, "Unexpected end of MCP server output");
+                if (line == null)
+                {
+                    string stderr = mcpProcess.StandardError.ReadToEnd();
+                    int exitCode = mcpProcess.HasExited ? mcpProcess.ExitCode : -1;
+                    Assert.Fail("MCP server exited unexpectedly (exit code {0}).{1}",
+                        exitCode,
+                        string.IsNullOrEmpty(stderr) ? string.Empty : "\nStderr: " + stderr);
+                }
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
                 var obj = JObject.Parse(line);
