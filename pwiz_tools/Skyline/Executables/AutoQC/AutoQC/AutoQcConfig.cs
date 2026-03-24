@@ -251,6 +251,55 @@ namespace AutoQC
 
         #region Equality members
 
+        /// <summary>
+        /// Returns a human-readable report of differences between this config and another.
+        /// Returns empty string if they are equal.
+        /// </summary>
+        public string DiffReport(AutoQcConfig other)
+        {
+            if (other == null) return "other is null";
+            var sb = new StringBuilder();
+            if (!string.Equals(Name, other.Name))
+                sb.AppendLine($"  Name: '{Name}' vs '{other.Name}'");
+            if (IsEnabled != other.IsEnabled)
+                sb.AppendLine($"  IsEnabled: {IsEnabled} vs {other.IsEnabled}");
+            if (!Equals(MainSettings, other.MainSettings))
+            {
+                sb.AppendLine("  MainSettings differ:");
+                if (MainSettings.SkylineFilePath != other.MainSettings.SkylineFilePath)
+                    sb.AppendLine($"    SkylineFilePath: '{MainSettings.SkylineFilePath}' vs '{other.MainSettings.SkylineFilePath}'");
+                if (MainSettings.FolderToWatch != other.MainSettings.FolderToWatch)
+                    sb.AppendLine($"    FolderToWatch: '{MainSettings.FolderToWatch}' vs '{other.MainSettings.FolderToWatch}'");
+                if (MainSettings.IncludeSubfolders != other.MainSettings.IncludeSubfolders)
+                    sb.AppendLine($"    IncludeSubfolders: {MainSettings.IncludeSubfolders} vs {other.MainSettings.IncludeSubfolders}");
+                if (!Equals(MainSettings.QcFileFilter, other.MainSettings.QcFileFilter))
+                    sb.AppendLine($"    QcFileFilter differs");
+                if (MainSettings.RemoveResults != other.MainSettings.RemoveResults)
+                    sb.AppendLine($"    RemoveResults: {MainSettings.RemoveResults} vs {other.MainSettings.RemoveResults}");
+                if (MainSettings.ResultsWindow != other.MainSettings.ResultsWindow)
+                    sb.AppendLine($"    ResultsWindow: {MainSettings.ResultsWindow} vs {other.MainSettings.ResultsWindow}");
+                if (MainSettings.InstrumentType != other.MainSettings.InstrumentType)
+                    sb.AppendLine($"    InstrumentType: '{MainSettings.InstrumentType}' vs '{other.MainSettings.InstrumentType}'");
+                if (MainSettings.AcquisitionTime != other.MainSettings.AcquisitionTime)
+                    sb.AppendLine($"    AcquisitionTime: {MainSettings.AcquisitionTime} vs {other.MainSettings.AcquisitionTime}");
+                if (MainSettings.AnnotationsFilePath != other.MainSettings.AnnotationsFilePath)
+                    sb.AppendLine($"    AnnotationsFilePath: '{MainSettings.AnnotationsFilePath}' vs '{other.MainSettings.AnnotationsFilePath}'");
+            }
+            if (!Equals(PanoramaSettings, other.PanoramaSettings))
+            {
+                sb.AppendLine("  PanoramaSettings differ:");
+                if (PanoramaSettings.PublishToPanorama != other.PanoramaSettings.PublishToPanorama)
+                    sb.AppendLine($"    PublishToPanorama: {PanoramaSettings.PublishToPanorama} vs {other.PanoramaSettings.PublishToPanorama}");
+                if (PanoramaSettings.PanoramaServerUrl != other.PanoramaSettings.PanoramaServerUrl)
+                    sb.AppendLine($"    ServerUrl: '{PanoramaSettings.PanoramaServerUrl}' vs '{other.PanoramaSettings.PanoramaServerUrl}'");
+                if (PanoramaSettings.PanoramaFolder != other.PanoramaSettings.PanoramaFolder)
+                    sb.AppendLine($"    Folder: '{PanoramaSettings.PanoramaFolder}' vs '{other.PanoramaSettings.PanoramaFolder}'");
+            }
+            if (!Equals(SkylineSettings, other.SkylineSettings))
+                sb.AppendLine($"  SkylineSettings differ: Type={SkylineSettings.Type}|{other.SkylineSettings.Type} CmdPath={SkylineSettings.CmdPath}|{other.SkylineSettings.CmdPath}");
+            return sb.ToString();
+        }
+
         protected bool Equals(AutoQcConfig other)
         {
             return string.Equals(Name, other.Name)

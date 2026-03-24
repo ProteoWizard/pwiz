@@ -107,28 +107,35 @@ namespace AutoQCTest
 
         public void WaitForConfigState(MainForm mainForm, int configIndex, RunnerStatus waitForStatus)
         {
-            if (!WaitForCondition(mainForm, configIndex, cRunner => cRunner.GetStatus() == waitForStatus, 
-                    out var timeout, out var configRunner))
+            // Don't bail on error if we're specifically waiting for the error state
+            if (!WaitForCondition(mainForm, configIndex, cRunner => cRunner.GetStatus() == waitForStatus,
+                    out var elapsed, out var configRunner,
+                    failOnError: waitForStatus != RunnerStatus.Error))
             {
                 var status = configRunner?.GetStatus().ToString() ?? "Unknown";
                 Assert.Fail(@"Timeout {0} seconds exceeded in WaitForConfigState. Expected config status: {1}. Found status: {2}",
-                    timeout, waitForStatus, status);
+                    elapsed, waitForStatus, status);
             }
         }
 
-        public void WaitForConfigRunnerWaiting(MainForm mainForm, int configIndex)
+        public void WaitForConfigRunnerWaiting(MainForm mainForm, int configIndex, int millis = WAIT_TIME)
         {
-            if (!WaitForCondition(mainForm, configIndex,
-                configRunner => configRunner.Waiting, out var timeout, out _))
+            if (!WaitForCondition(mainForm, configIndex, runner =>
+                    runner.Waiting, out var elapsed, out var configRunner, millis))
             {
-                Assert.Fail(@"Timeout {0} seconds exceeded in WaitForConfigRunnerWaiting.", timeout);
+                var status = configRunner?.GetStatus().ToString() ?? "Unknown";
+                var hasError = configRunner?.IsError() == true;
+                var logFile = configRunner?.GetLogger()?.LogFile ?? "Unknown";
+                Assert.Fail(
+                    @"Failed after {0} seconds in WaitForConfigRunnerWaiting. Status: {1}, IsError: {2}, Log: {3}",
+                    elapsed, status, hasError, logFile);
             }
         }
 
-        protected void WaitForPanoramaUploadSuccess(MainForm mainForm, int configIndex)
+        protected void WaitForPanoramaUploadSuccess(MainForm mainForm, int configIndex, int millis = WAIT_TIME)
         {
             // First wait for the config to be in a waiting state (indicating upload is complete)
-            WaitForConfigRunnerWaiting(mainForm, configIndex);
+            WaitForConfigRunnerWaiting(mainForm, configIndex, millis);
 
             // Then verify there was no upload error
             var configRunner = mainForm.GetConfigRunner(configIndex);
@@ -141,12 +148,12 @@ namespace AutoQCTest
             }
         }
 
-        public bool WaitForCondition(MainForm mainForm, int configIndex, Func<ConfigRunner, bool> condition, 
-            out int timeout, out ConfigRunner configRunner)
+        public bool WaitForCondition(MainForm mainForm, int configIndex, Func<ConfigRunner, bool> condition,
+            out int elapsedSeconds, out ConfigRunner configRunner, int millis = WAIT_TIME,
+            bool failOnError = true)
         {
-            var waitCycles = GetWaitCycles();
-            timeout = waitCycles * SLEEP_INTERVAL / 1000;
-            
+            var waitCycles = GetWaitCycles(millis);
+
             for (var i = 0; i < waitCycles; i++)
             {
                 Assert.IsFalse(GetTestExceptions().Any(), "Exception while running test");
@@ -154,10 +161,22 @@ namespace AutoQCTest
                 configRunner = mainForm.GetConfigRunner(configIndex);
                 Assert.IsNotNull(configRunner);
 
-                if (condition(configRunner)) return true; // Condition satisfied
+                if (condition(configRunner))
+                {
+                    elapsedSeconds = i * SLEEP_INTERVAL / 1000;
+                    return true; // Condition satisfied
+                }
+
+                // Fail fast if the config runner has entered an error state
+                if (failOnError && configRunner.IsError())
+                {
+                    elapsedSeconds = i * SLEEP_INTERVAL / 1000;
+                    return false;
+                }
 
                 Thread.Sleep(SLEEP_INTERVAL); // Wait before the next check
             }
+            elapsedSeconds = waitCycles * SLEEP_INTERVAL / 1000;
             configRunner = mainForm.GetConfigRunner(configIndex);
             return false;
         }
@@ -165,9 +184,9 @@ namespace AutoQCTest
         public void WaitForAnnotationsFileUpdated(MainForm mainForm, int configIndex)
         {
             if (!WaitForCondition(mainForm, configIndex,
-                    cRunner => cRunner.AnnotationsFileUpdated, out var timeout, out _))
+                    cRunner => cRunner.AnnotationsFileUpdated, out var elapsed, out _))
             {
-                Assert.Fail(@"Timeout {0} seconds exceeded in WaitForAnnotationsFileImported. ", timeout);
+                Assert.Fail(@"Failed after {0} seconds in WaitForAnnotationsFileUpdated.", elapsed);
             }
         }
 
