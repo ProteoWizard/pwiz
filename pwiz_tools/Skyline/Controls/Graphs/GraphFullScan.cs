@@ -1367,8 +1367,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 leftButton.Enabled = (_msDataFileScanHelper.ScanIndex > 0);
                 rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Count-1);
                 lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString(@"D");
-                if (!spectrumBtn.Checked)
-                    GraphPane.SetScale(CreateGraphics());
+                GraphPane.SetScale(CreateGraphics());
                 if (_msDataFileScanHelper.IsWatersSonarData)
                 {
                     filterBtn.ToolTipText = GraphsResources.GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range;
