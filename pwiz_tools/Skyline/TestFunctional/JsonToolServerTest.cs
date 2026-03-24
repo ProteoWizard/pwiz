@@ -801,12 +801,12 @@ namespace pwiz.SkylineTestFunctional
 
             // ExportReportFromDefinition with logging - _log field should appear
             string reportPath = TestFilesDir.GetTestPath(@"report_log_test.csv");
-            string reportJson = new JObject { [@"select"] = new JArray(COL_PROTEIN_NAME, COL_PRECURSOR_MZ) }.ToString();
+            var reportDef = new JObject { [@"select"] = new JArray(COL_PROTEIN_NAME, COL_PRECURSOR_MZ) };
             var reportRequest = new JObject
             {
                 [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
                 [nameof(JSON_RPC.method)] = nameof(IJsonToolService.ExportReportFromDefinition),
-                [nameof(JSON_RPC.@params)] = new JArray(reportJson, reportPath,
+                [nameof(JSON_RPC.@params)] = new JArray(reportDef, reportPath,
                     JsonToolConstants.CULTURE_INVARIANT),
                 [nameof(JSON_RPC._log)] = true,
                 [nameof(JSON_RPC.id)] = 1
@@ -826,7 +826,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
                 [nameof(JSON_RPC.method)] = nameof(IJsonToolService.ExportReportFromDefinition),
-                [nameof(JSON_RPC.@params)] = new JArray(reportJson, reportPath2,
+                [nameof(JSON_RPC.@params)] = new JArray(reportDef, reportPath2,
                     JsonToolConstants.CULTURE_INVARIANT),
                 [nameof(JSON_RPC.id)] = 1
             };
