@@ -26,6 +26,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using CustomProgressCell;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
 
 namespace MSConvertGUI
 {
@@ -45,19 +47,17 @@ namespace MSConvertGUI
         private string _outputFolder;
         private string _options;
         private List<MainLogic> _tasksRunningList;
-        private Map<string, UnifiBrowserForm.Credentials> _unifiCredentialsByUrl;
         private Map<string, int> _usedOutputFilenames;
         private object _calculateSHA1Mutex = new object();
         private object _cancelMutex = new object();
 
-        public ProgressForm(IEnumerable<object> filesToProcess, string outputFolder, string options, Map<string, UnifiBrowserForm.Credentials> unifiCredentialsByUrl)
+        public ProgressForm(IEnumerable<object> filesToProcess, string outputFolder, string options)
         {
             InitializeComponent();
             _filesToProcess = filesToProcess;
             _outputFolder = outputFolder;
             _options = options;
             _tasksRunningList = new List<MainLogic>();
-            _unifiCredentialsByUrl = unifiCredentialsByUrl;
             _usedOutputFilenames = new Map<string, int>();
         }
 
@@ -189,9 +189,13 @@ namespace MSConvertGUI
                 _tasksRunningList.Add(runProgram);
                 info.workProcess = runProgram;
 
-                string workItem = (item as INetworkSource)?.Url ?? item.ToString();
-                if (MainForm.IsNetworkSource(item))
-                    workItem = _unifiCredentialsByUrl[workItem].GetUrlWithAuthentication(workItem);
+                string workItem;
+                if (item is RemoteUrl remoteUrl)
+                    workItem = remoteUrl.GetAuthenticatedUrl();
+                else if (item is MsDataFilePath msDataFilePath)
+                    workItem = msDataFilePath.FilePath;
+                else
+                    workItem = item.ToString();
 
                 var config = runProgram.ParseCommandLine(_outputFolder, (workItem + "|" + _options).Trim('|'));
                 config.WriteConfig.continueOnError = true;

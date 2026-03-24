@@ -119,6 +119,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return result;
         }
 
+        public override string GetAuthenticatedUrl()
+        {
+            return GetMsDataUrl();
+        }
+
         private string GetMsDataUrl()
         {
             var account = FindMatchingAccount() as WatersConnectAccount;

@@ -61,12 +61,12 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
             return result;
         }
 
-        public override MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openMsDataFileParams)
+        public override string GetAuthenticatedUrl()
         {
             var account = FindMatchingAccount() as UnifiAccount;
             if (account == null)
             {
-                throw new RemoteServerException(string.Format(UnifiResources.UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
+                throw new RemoteServerException(string.Format(UnifiResources.UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__,
                     Username, ServerUrl));
             }
             // ReSharper disable LocalizableElement
@@ -76,7 +76,12 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
                          Uri.EscapeDataString(account.ClientScope) + "&secret=" +
                          Uri.EscapeDataString(account.ClientSecret);
             // ReSharper restore LocalizableElement
-            return openMsDataFileParams.OpenLocalFile(serverUrl, 0, LockMassParameters);
+            return serverUrl;
+        }
+
+        public override MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openMsDataFileParams)
+        {
+            return openMsDataFileParams.OpenLocalFile(GetAuthenticatedUrl(), 0, LockMassParameters);
         }
     }
 }

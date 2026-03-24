@@ -19,12 +19,11 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
-using pwiz.Skyline.Alerts;
 
 
-namespace pwiz.Skyline.FileUI
+namespace pwiz.CommonFileDialogs
 {
-    public class OpenFileDialogNE : SkylineFileDialogNE
+    public class OpenFileDialogNE : BaseFileDialogNE
     {
         /// <summary>
         /// File picker which is aware of mass spec "files" that are really directories
@@ -82,7 +81,7 @@ namespace pwiz.Skyline.FileUI
             catch { } // guard against user typed-in-garbage
 
             // No files or folders selected: Show an error message.
-            MessageDlg.Show(this, FileUIResources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources);
+            ShowErrorMessage(this, CommonFileDialogResources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources);
         }
 
     }
