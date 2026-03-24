@@ -1665,10 +1665,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private TableDesc GetSpectrumTooltipTable(PointF pt)
         {
+            StickItem nearestCurve;
             int nearestIndex;
-            CurveItem nearestCurve;
 
-            if (!GraphPane.FindNearestPoint(pt, out nearestCurve, out nearestIndex))
+            if (!GraphPane.FindNearestStick(pt, out nearestCurve, out nearestIndex))
                 return null;
 
             var rt = _cursorTip.RenderTools;
