@@ -119,7 +119,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return result;
         }
 
-        public override string GetAuthenticatedUrl()
+        public string GetAuthenticatedUrl()
         {
             return GetMsDataUrl();
         }

@@ -61,7 +61,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
             return result;
         }
 
-        public override string GetAuthenticatedUrl()
+        public string GetAuthenticatedUrl()
         {
             var account = FindMatchingAccount() as UnifiAccount;
             if (account == null)

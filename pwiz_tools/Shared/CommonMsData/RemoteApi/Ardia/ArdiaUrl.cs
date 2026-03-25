@@ -168,12 +168,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         }
 
-        public override string GetAuthenticatedUrl()
-        {
-            // Ardia downloads files rather than streaming via URL, so there is no authenticated URL.
-            throw new NotSupportedException(@"Ardia does not support direct URL-based access. Use OpenMsDataFile instead.");
-        }
-
         // Approach to reporting progress from reading from a FileStream adapted from:
         //      https://stackoverflow.com/a/57439154/638445
         public override MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openMsDataFileParams)

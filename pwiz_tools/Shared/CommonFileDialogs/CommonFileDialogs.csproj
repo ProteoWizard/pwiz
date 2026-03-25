@@ -109,6 +109,14 @@
       <LastGenOutput>CommonFileDialogResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommonFileDialogResources.ja.resx">
+      <DependentUpon>CommonFileDialogResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonFileDialogResources.zh-CHS.resx">
+      <DependentUpon>CommonFileDialogResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CommonUtil\CommonUtil.csproj">

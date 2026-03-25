@@ -28,6 +28,8 @@ using System.Windows.Forms;
 using CustomProgressCell;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 
 namespace MSConvertGUI
 {
@@ -190,8 +192,10 @@ namespace MSConvertGUI
                 info.workProcess = runProgram;
 
                 string workItem;
-                if (item is RemoteUrl remoteUrl)
-                    workItem = remoteUrl.GetAuthenticatedUrl();
+                if (item is UnifiUrl unifiUrl)
+                    workItem = unifiUrl.GetAuthenticatedUrl();
+                else if (item is WatersConnectUrl wcUrl)
+                    workItem = wcUrl.GetAuthenticatedUrl();
                 else if (item is MsDataFilePath msDataFilePath)
                     workItem = msDataFilePath.FilePath;
                 else

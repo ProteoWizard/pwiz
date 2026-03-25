@@ -295,11 +295,6 @@ namespace pwiz.CommonMsData.RemoteApi
                 return string.Empty;
             }
 
-            public override string GetAuthenticatedUrl()
-            {
-                throw new InvalidOperationException();
-            }
-
             public override MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openMsDataFileParams)
             {
                 throw new InvalidOperationException();
@@ -361,11 +356,6 @@ namespace pwiz.CommonMsData.RemoteApi
         /// Users of the RemoteApi classes must set this to provide the RemoteAccounts (usually stored in their Settings object).
         /// </summary>
         public static IRemoteAccountStorage RemoteAccountStorage { get; set; }
-
-        /// <summary>
-        /// Returns the authenticated URL string that can be passed to native readers (e.g. pwiz_bindings_cli).
-        /// </summary>
-        public abstract string GetAuthenticatedUrl();
 
         public virtual RemoteAccount FindMatchingAccount()
         {

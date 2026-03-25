@@ -256,8 +256,8 @@ namespace MSConvertGUI.TestConnected
                 Assert.IsNotNull(sample, "Expected sample containing 'Hi3_ClpB_MSe' in test folder. Found: " +
                     string.Join(", ", samples.Select(c => c.Label).Take(10)));
 
-                var url = sample.MsDataFileUri as RemoteUrl;
-                Assert.IsNotNull(url, "Sample should have a RemoteUrl");
+                var url = sample.MsDataFileUri as UnifiUrl;
+                Assert.IsNotNull(url, "Sample should have a UnifiUrl");
 
                 // GetAuthenticatedUrl should produce a valid URL string with credentials
                 var authUrl = url.GetAuthenticatedUrl();
