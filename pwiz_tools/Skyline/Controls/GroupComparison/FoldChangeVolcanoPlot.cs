@@ -424,14 +424,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _minPValueLine = CreateAndInsert(index, 0.0, 0.0, Settings.Default.PValueCutoff, Settings.Default.PValueCutoff);
             }
 
-                if (_dataChanged)
-                {
-                    zedGraphControl.GraphPane.YAxis.Scale.Min = 0.0;
-                    zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;
-                    zedGraphControl.GraphPane.AxisChange();
-                    zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
-                    _dataChanged = false;
-                }
+            if (_dataChanged)
+            {
+                zedGraphControl.GraphPane.YAxis.Scale.Min = 0.0;
+                zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;
+                zedGraphControl.GraphPane.AxisChange();
+                zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
+                _dataChanged = false;
+            }
+            else
+            {
+                // Only cutoff settings changed; AxisChange() was not called so reposition
+                // the reference lines manually to span the current axis range (issue #4052).
+                AdjustLocations(zedGraphControl.GraphPane);
+            }
 
                 if (Settings.Default.GroupComparisonAvoidLabelOverlap)
                 {
