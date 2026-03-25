@@ -105,6 +105,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\..\Shared\Lib\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="DotNetZip">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
@@ -188,6 +191,7 @@
     <Compile Include="OriginalPeakScoreTest.cs" />
     <Compile Include="PivotIsotopeLabelTest.cs" />
     <Compile Include="RemovePeakFromAllTest.cs" />
+    <Compile Include="ReportsHelpDocumentationTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
