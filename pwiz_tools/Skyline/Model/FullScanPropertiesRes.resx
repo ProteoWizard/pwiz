@@ -325,4 +325,10 @@
   <data name="Description_ConstantNeutralLoss" xml:space="preserve">
     <value>Analyzer offset for Constant Neutral Loss spectrum (negative value for constant neutral gain)</value>
   </data>
+  <data name="SourceOffsetVoltage" xml:space="preserve">
+    <value>Source Offset Voltage</value>
+  </data>
+  <data name="Description_SourceOffsetVoltage" xml:space="preserve">
+    <value>Source induced dissociation (SID) offset voltage used to acquire this spectrum.</value>
+  </data>
 </root>

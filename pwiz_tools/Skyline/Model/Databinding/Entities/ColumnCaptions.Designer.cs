@@ -1321,6 +1321,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Group Comparison.
+        /// </summary>
+        public static string GroupComparison {
+            get {
+                return ResourceManager.GetString("GroupComparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Height.
         /// </summary>
         public static string Height {
@@ -4098,6 +4107,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SMILES {
             get {
                 return ResourceManager.GetString("SMILES", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source Offset Voltage.
+        /// </summary>
+        public static string SourceOffsetVoltage {
+            get {
+                return ResourceManager.GetString("SourceOffsetVoltage", resourceCulture);
             }
         }
         

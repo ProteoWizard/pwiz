@@ -33,6 +33,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static void SetScrollPos(this Control control, Orientation orientation, int pos)
         {
             User32.SetScrollPos(control.Handle, orientation, pos, true);
+            // Post a scroll message to make the control actually scroll its content.
+            // SetScrollPos only moves the scrollbar thumb without scrolling the viewport.
+            var msg = orientation == Orientation.Horizontal
+                ? User32.WinMessageType.WM_HSCROLL
+                : User32.WinMessageType.WM_VSCROLL;
+            User32.PostMessageA(control.Handle, msg,
+                User32.SB_THUMBPOSITION + 0x10000 * pos, 0);
         }
     }
 }

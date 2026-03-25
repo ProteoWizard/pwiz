@@ -105,6 +105,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\..\Shared\Lib\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="DotNetZip">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
@@ -125,6 +128,10 @@
     <Reference Include="NHibernate">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
+    </Reference>
+    <Reference Include="ParquetNet, Version=3.0.0.0, Culture=neutral, PublicKeyToken=de28deb604dd91c9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -176,9 +183,17 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
+    <Compile Include="ExportHugeParquetReportTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
+    <Compile Include="ParquetReportExporterTest.cs" />
     <Compile Include="MedianDocumentRetentionTimesTest.cs" />
+    <Compile Include="OpenPeakAreasFromStartPageTest.cs" />
+    <Compile Include="OriginalPeakScoreTest.cs" />
+    <Compile Include="PivotIsotopeLabelTest.cs" />
+    <Compile Include="RemovePeakFromAllTest.cs" />
+    <Compile Include="ReportsHelpDocumentationTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
+    <Compile Include="RunToRunRecalcRegressionTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
     <Compile Include="FilesModelTest.cs" />
     <Compile Include="ChromatogramExtractionRangeTest.cs" />
@@ -261,6 +276,7 @@
     <Compile Include="SequenceTreeExpandCollapseTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="SkipZoomScansTest.cs" />
+    <Compile Include="SourceOffsetVoltageTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
@@ -391,6 +407,7 @@
     <Compile Include="ExplicitVariableTest.cs" />
     <Compile Include="ImportEncyclopeDiaLibraryTest.cs" />
     <Compile Include="ImportFailureTest.cs" />
+    <Compile Include="ImportFullScanNarrowScanWindowsTest.cs" />
     <Compile Include="ImportIsolationSchemeTest.cs" />
     <Compile Include="ImportPeptideSearchTest.cs" />
     <Compile Include="ImportResultsCancelTest.cs" />
@@ -480,6 +497,9 @@
     <Compile Include="LabelPeakPickingTest.cs" />
     <Compile Include="TargetResolverTest.cs" />
     <Compile Include="TicNormalizationTest.cs" />
+    <Compile Include="JsonToolServerTest.cs" />
+    <Compile Include="JsonToolServerSettingsTest.cs" />
+    <Compile Include="SkylineMcpTest.cs" />
     <Compile Include="ToolServiceTest.cs" />
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />
@@ -488,6 +508,7 @@
     <Compile Include="ReintegrateDlgTest.cs" />
     <Compile Include="AssayLibraryImportTest.cs" />
     <Compile Include="PeakBoundaryCompareTest.cs" />
+    <Compile Include="PeakIntegrationLibraryGuardTest.cs" />
     <Compile Include="SwathIsolationListsTest.cs" />
     <Compile Include="TriggeredAcquisitionTest.cs" />
     <Compile Include="UIModeTest.cs" />
@@ -559,6 +580,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="AccessServerTest.zip" />
     <None Include="AddAllPeptidesWithModificationsTest.zip" />
     <None Include="AddIrtStandardsTest.zip" />

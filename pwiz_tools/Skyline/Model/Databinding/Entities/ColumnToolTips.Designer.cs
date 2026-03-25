@@ -1348,6 +1348,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name of the group comparison.
+        /// </summary>
+        public static string GroupComparison {
+            get {
+                return ResourceManager.GetString("GroupComparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The maximum intensity of the points between the transition peak integration
         ///boundaries..
         /// </summary>
@@ -1987,7 +1996,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A comma separated list of the chemical forumulas for all neutral losses from this fragment, or empty if not all losses have formulas.
+        ///   Looks up a localized string similar to A comma separated list of the chemical formulas for all neutral losses from this fragment, or empty if not all losses have formulas.
         /// </summary>
         public static string LossFormulas {
             get {
@@ -4230,6 +4239,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SMILES {
             get {
                 return ResourceManager.GetString("SMILES", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation.
+        /// </summary>
+        public static string SourceOffsetVoltage {
+            get {
+                return ResourceManager.GetString("SourceOffsetVoltage", resourceCulture);
             }
         }
         

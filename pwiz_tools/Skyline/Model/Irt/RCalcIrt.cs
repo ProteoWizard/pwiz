@@ -68,13 +68,12 @@ namespace pwiz.Skyline.Model.Irt
 
         public override bool IsUsable => _database != null;
 
-        public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
+        public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor, ref IProgressStatus status)
         {
-            IProgressStatus status = new ProgressStatus();
-            return Initialize(loadMonitor, ref status);
+            return InitializeIrt(loadMonitor, ref status);
         }
 
-        public RCalcIrt Initialize(IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public RCalcIrt InitializeIrt(IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             if (_database != null)
                 return this;
@@ -463,7 +462,8 @@ namespace pwiz.Skyline.Model.Irt
 
             try
             {
-                calc = calc.Initialize(null) as RCalcIrt;
+                IProgressStatus status = new ProgressStatus();
+                calc = calc.InitializeIrt(null, ref status);
             }
             catch
             {

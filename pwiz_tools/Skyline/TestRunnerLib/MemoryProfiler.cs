@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Runtime.CompilerServices;
 using JetBrains.Profiler.Api;
 
 // ReSharper disable LocalizableElement
@@ -27,6 +28,34 @@ namespace TestRunnerLib
     /// </summary>
     public static class MemoryProfiler
     {
+        /// <summary>
+        /// True when dotMemory is attached and ready for API-controlled snapshots.
+        /// Returns false if JetBrains.Profiler.Api assembly is not available.
+        /// The JetBrains reference is isolated in a separate non-inlineable method
+        /// so that the JIT failure (missing assembly) is caught by the try/catch
+        /// rather than failing during JIT of this property getter.
+        /// </summary>
+        public static bool IsReady
+        {
+            get
+            {
+                try
+                {
+                    return IsReadyInternal();
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static bool IsReadyInternal()
+        {
+            return 0 != (JetBrains.Profiler.Api.MemoryProfiler.GetFeatures() & MemoryFeatures.Ready);
+        }
+
         /// <summary>
         /// When true, starts collecting allocation stack traces on first Snapshot call.
         /// This enables seeing where leaked objects were allocated in dotMemory analysis.

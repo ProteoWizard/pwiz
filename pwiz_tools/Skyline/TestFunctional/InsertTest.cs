@@ -184,6 +184,17 @@ namespace pwiz.SkylineTestFunctional
             // This would formerly throw IndexOutOfRangeException on the malformed rows
             WaitForConditionUI(() => columnSelectDlg.AssociateProteinsPreviewCompleted);
 
+            // Test for exception #73851: ArgumentOutOfRangeException in dataGrid_MouseMove
+            // when hovering over row 0 (combo-box placeholder) or the trailing "..." row
+            // while protein association is active
+            RunUI(() =>
+            {
+                // Row 0 is the combo-box placeholder - formerly caused _proteinList[-1] access
+                columnSelectDlg.TestMouseMoveToGridCell(0, 0);
+                // Also test the last row which may be a trailing "..." indicator
+                columnSelectDlg.TestMouseMoveToGridCell(0, columnSelectDlg.DataGridRowCount - 1);
+            });
+
             OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
         }
 

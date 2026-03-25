@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -79,7 +80,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
-            graphControl.GraphPane = new HeatMapGraphPane
+            graphControl.GraphPane = new FullScanHeatMapGraphPane
             {
                 MinDotRadius = MIN_DOT_RADIUS,
                 MaxDotRadius = MAX_DOT_RADIUS,
@@ -403,6 +404,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Fill = new Fill(color1, color2, 90),
                     IsClippedToChartRect = true,
                 };
+                extractionBox.Tag = new ExtractionBoxInfo(transition.ProductMz, transition.ExtractionWidth.Value);
                 GraphPane.GraphObjList.Add(extractionBox);
             }
 
@@ -1211,7 +1213,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 xScale.Min = mz - 1.5;
                 xScale.Max = mz + 3.5;
             }
-            else
+            else if (_requestedRange != null)
             {
                 xScale.Min = _requestedRange.Min;
                 xScale.Max = _requestedRange.Max;
@@ -1381,8 +1383,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void OnClosed(EventArgs e)
         {
+            graphControlExtension.PropertiesSheet.SelectedObject = null;
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
             _msDataFileScanHelper.Dispose();
+            base.OnClosed(e);
         }
 
         private void leftButton_Click(object sender, EventArgs e)
@@ -1477,6 +1481,46 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private HeatMapGraphPane HeatMapGraphPane { get { return (HeatMapGraphPane) GraphPane; } }
+
+        private struct ExtractionBoxInfo
+        {
+            public readonly double CenterMz;
+            public readonly double OriginalWidth;
+
+            public ExtractionBoxInfo(double centerMz, double originalWidth)
+            {
+                CenterMz = centerMz;
+                OriginalWidth = originalWidth;
+            }
+        }
+
+        /// <summary>
+        /// Extends <see cref="HeatMapGraphPane"/> with <see cref="IHeatMapDataProvider"/> so that
+        /// Copy Data produces clean 3-column output instead of per-curve data.
+        /// </summary>
+        private class FullScanHeatMapGraphPane : HeatMapGraphPane, IHeatMapDataProvider
+        {
+            public HeatMapData HeatMapData => ShowHeatMap ? _heatMapData : null;
+            public string HeatMapZAxisName => GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+
+            public override void SetScale(Graphics g)
+            {
+                base.SetScale(g);
+                // Enforce a minimum rendered width of 1 pixel for extraction boxes so they
+                // remain visible when the m/z axis is zoomed out to a wide range.
+                double minWidth = Math.Abs(XAxis.Scale.ReverseTransform(1) - XAxis.Scale.ReverseTransform(0));
+                if (double.IsNaN(minWidth) || double.IsInfinity(minWidth) || minWidth <= 0)
+                    return;
+                foreach (var obj in GraphObjList.OfType<BoxObj>())
+                {
+                    if (!(obj.Tag is ExtractionBoxInfo info))
+                        continue;
+                    double w = Math.Max(info.OriginalWidth, minWidth);
+                    obj.Location.X = info.CenterMz - w / 2;
+                    obj.Location.Width = w;
+                }
+            }
+        }
 
         private void filterBtn_CheckedChanged(object sender, EventArgs e)
         {

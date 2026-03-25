@@ -701,9 +701,6 @@
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_" xml:space="preserve">
     <value>選択されたアカウントはメソッド開発をサポートしません。別のアカウントを作成または選択してください。</value>
   </data>
-  <data name="ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_" xml:space="preserve">
-    <value>このテンプレートのアカウントはメソッド開発をサポートしません。</value>
-  </data>
   <data name="ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_" xml:space="preserve">
     <value>選択されたwaters_connectアカウントはメソッド開発をサポートしません。</value>
   </data>

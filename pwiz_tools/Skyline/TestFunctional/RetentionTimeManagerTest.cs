@@ -119,6 +119,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Wait for the document to be loaded so that it does not get switched out during a ReadPeaks call which might reopen a file stream
             WaitForDocumentLoaded();
+            _documents.Clear(); // And make sure the documents list is empty
         }
 
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)

@@ -370,18 +370,23 @@ namespace pwiz.Skyline.SettingsUI
                     longWait.Message = string.Format(SettingsUIResources.EditRTDlg_ShowGraph_Initializing__0__calculator, calc.Name);
                     try
                     {
-                        var status = longWait.PerformWork(this, 800, monitor =>
+                        var calcOrig = calc;
+                        IProgressStatus status = longWait.PerformWork(this, 800, monitor =>
                         {
-                            calc = Settings.Default.RTScoreCalculatorList.Initialize(monitor, calc);
+                            calc = RTScoreCalculatorList.Initialize(calc, monitor);
                         });
                         if (status.IsError)
                         {
                             MessageDlg.Show(this, status.ErrorException.Message);
                             return;
                         }
+                        Settings.Default.RTScoreCalculatorList.SetInitializedValue(calcOrig, calc);
                     }
                     catch (Exception x)
                     {
+                        if (ExceptionUtil.IsProgrammingDefect(x))
+                            throw;
+
                         var message = TextUtil.LineSeparate(string.Format(SettingsUIResources.EditRTDlg_ShowGraph_An_error_occurred_attempting_to_initialize_the_calculator__0__,
                                                                           calc.Name),
                                                             x.Message);
@@ -477,12 +482,39 @@ namespace pwiz.Skyline.SettingsUI
             if (activePeptides.Count == 0)
                 return null;
 
-            //Try connecting all the calculators
-            Settings.Default.RTScoreCalculatorList.Initialize(null);
+            // Try connecting all the calculators
+            using (var longWait = new LongWaitDlg())
+            {
+                longWait.Text = SettingsUIResources.EditRTDlg_ShowGraph_Initializing;
+                try
+                {
+                    var calculatorSpecsOrig = Settings.Default.RTScoreCalculatorList.ToArray();
+                    var calculatorSpecsInitialized = new RetentionScoreCalculatorSpec[calculatorSpecsOrig.Length];  // All nulls
+                    IProgressStatus status = longWait.PerformWork(this, 800, monitor =>
+                    {
+                        calculatorSpecsInitialized = RTScoreCalculatorList.Initialize(calculatorSpecsOrig, monitor);
+                    });
+
+                    // No error checking here. This is a best-effort attempt to connect all calculators.
+
+                    for (int i = 0; i < calculatorSpecsOrig.Length; i++)
+                    {
+                        var calcOrig = calculatorSpecsOrig[i];
+                        var calc = calculatorSpecsInitialized[i];
+                        Settings.Default.RTScoreCalculatorList.SetInitializedValue(calcOrig, calc);
+                    }
+                }
+                catch (Exception x)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(x))
+                        throw;
+                    // Ignore user-facing errors here
+                }
+            }
 
             if (calculator == null)
             {
-                //this will not update the calculator
+                // this will not update the calculator
                 calculator = RecalcRegression(activePeptides);
                 if (calculator == null)
                     return null;
@@ -495,9 +527,8 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (!calculator.IsUsable)
                 {
-                    MessageDlg.Show(this,
-                                    SettingsUIResources.
-                                        EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please_check_its_settings);
+                    MessageDlg.Show(this, SettingsUIResources.
+                        EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please_check_its_settings);
                     return activePeptides;
                 }
 

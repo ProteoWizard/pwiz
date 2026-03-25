@@ -709,6 +709,32 @@ namespace pwiz.SkylineTestFunctional
             // Used to cause a message box, but should work now, because iRT databases get loaded once
             RunUI(() => SkylineWindow.ChooseCalculator(irtCalc));
 
+            // Clear the IRT cache to simulate a restart with the missing .irtdb file.
+            // Re-choosing the calculator triggers regression recalculation with _calculator null.
+            // Before the fix, this caused NullReferenceException in InstanceData.Refine().
+            RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
+            RunUI(() => SkylineWindow.SaveDocument());
+            RunUI(SkylineWindow.NewDocument);
+            RTScoreCalculatorList irtCalculatorList = null;
+            RunUI(() => irtCalculatorList = Settings.Default.RTScoreCalculatorList);
+            Settings.Default.RTScoreCalculatorList = null;  // Setting to null resets default
+            RunUI(SkylineWindow.IrtDbManager.ClearCache);
+            RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath), dlg => dlg.OkDialog());
+
+            WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.RTGraphController != null);
+            var regressionGraph = FindGraphSummaryByGraphType<RTLinearRegressionGraphPane>();
+            Assert.IsNotNull(regressionGraph);
+            Assert.IsTrue(regressionGraph.TryGetGraphPane<RTLinearRegressionGraphPane>(out var graphPane));
+            WaitForConditionUI(() => !graphPane.IsCalculating);
+            // All peptides should be outliers, since we cannot calculate iRTs without the database
+            // TODO(brendanx): Completely removing the named calculator should set the calculator used back to "Auto"
+            //                 and the case below should require setting the IRT-C18 calculator to uninitialized.
+            //                 and even that case should cause the graph to add a message that the calculator could
+            //                 not be loaded, presenting the path we tried to load it from. (See Issue #3939)
+            RunUI(() => Assert.AreEqual(SkylineWindow.Document.PeptideCount, graphPane.Outliers.Length));
+            RunUI(() => Settings.Default.RTScoreCalculatorList = irtCalculatorList);
+
             /*
              * Now clean up by deleting all these calculators. If we don't, then the next functional test
              * will fail because it will try to use a calculator from settings which will not have its

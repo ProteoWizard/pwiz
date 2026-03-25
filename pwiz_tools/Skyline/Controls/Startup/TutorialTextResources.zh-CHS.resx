@@ -150,7 +150,7 @@
   <data name="TargetedMSMS_Caption" xml:space="preserve">
     <value>靶向 MS/MS (PRM)</value>
   </data>
-  <data name="PRMOrbitraip_Description" xml:space="preserve">
+  <data name="PRMOrbitrap_Description" xml:space="preserve">
     <value>使用平行反应监测 (PRM) ，获得建立采集方法的实际操作处理经验，以便量化小鼠成纤维细胞中 19 种相关蛋白质的 31 个肽段。使用配备 Orbitrap 质量分析仪的 Thermo Fusion 质谱仪，对 3 个生物学重复测定进行 9 次检测。</value>
   </data>
   <data name="PRMOrbitrap_Caption" xml:space="preserve">
@@ -189,7 +189,7 @@
   <data name="DDASearch_Caption" xml:space="preserve">
     <value>用于 MS1 过滤的 DDA 搜索</value>
   </data>
-  <data name="DDSearch_Description" xml:space="preserve">
+  <data name="DDASearch_Description" xml:space="preserve">
     <value>您将获得启动 DDA 质谱仪文件、使用 MS Amanda 运行肽段搜索、根据搜索结果建立谱图库以及最终从 DDA 文件中的 MS1 谱图提取色谱图进行定量分析的实际经验。在本教程中，您将使用 Skyline 肽段搜索向导来搜索从人类全细胞裂解物中采集的 3 个 DDA 数据文件，其中加入了稳定同位素标记蛋白质的 Sigma Alrich UPS1 标准混合物。</value>
   </data>
   <data name="PeakPicking_Caption" xml:space="preserve">

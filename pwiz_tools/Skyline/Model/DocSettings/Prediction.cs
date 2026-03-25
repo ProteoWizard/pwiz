@@ -1184,7 +1184,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public virtual bool IsAlignmentOnly { get { return false; } }
 
-        public virtual RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
+        public RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
+        {
+            IProgressStatus status = new ProgressStatus();
+            return Initialize(loadMonitor, ref status);
+        }
+
+        public virtual RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor, ref IProgressStatus status)
         {
             return this;
         }

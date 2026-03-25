@@ -36,11 +36,7 @@ namespace {
     enum MatchType
     {
         Exact,
-        Contains,
-        ContainsNoSpaces,
-        StartsWith,
-        EndsWith,
-        ExactNoSpaces
+        Contains
     };
 
 } // namespace

@@ -22,7 +22,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -120,6 +122,36 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SequenceTree.SelectedPath = identityPaths[2];
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
                     27.54730, 27.24320, 26.82722, 27.28895, 27.10232));
+            });
+
+            // Test fix for #3905: NullReferenceException in ApplyPeakWithLongWait when
+            // synchronized integration is active and a transition group has no chromatogram data.
+            // Enable auto-select so pasted peptide gets a precursor
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
+            {
+                dlg.SetAutoSelect = true;
+                dlg.OkDialog();
+            });
+            var docBeforePaste = WaitForDocumentLoaded();
+
+            // Add a peptide with no chromatogram data
+            SetClipboardTextUI("PEPTIDER");
+            RunUI(() => SkylineWindow.Paste());
+            var docAfterPaste = WaitForDocumentChange(docBeforePaste);
+
+            // Enable synchronized integration (all replicates selected by default)
+            var syncDlg = ShowDialog<SynchronizedIntegrationDlg>(
+                SkylineWindow.EditMenu.ShowSynchronizedIntegrationDialog);
+            OkDialog(syncDlg, syncDlg.OkDialog);
+            WaitForDocumentChange(docAfterPaste);
+
+            // Select all and apply peak. The empty peptide causes FindChromInfo to
+            // return null. Without fix for #3905, this crashes with
+            // NullReferenceException at chromInfo.StartRetentionTime.
+            RunUI(() =>
+            {
+                SkylineWindow.SelectAll();
+                SkylineWindow.ApplyPeak(false, false);
             });
         }
 

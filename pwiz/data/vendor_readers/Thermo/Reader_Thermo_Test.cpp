@@ -114,11 +114,6 @@ int main(int argc, char* argv[])
                 switch (model)
                 {
                     case InstrumentModelType_Tempus_TOF:
-                    case InstrumentModelType_Element_2:
-                    case InstrumentModelType_Element_XR:
-                    case InstrumentModelType_Element_GD:
-                    case InstrumentModelType_Delta_Plus_Advantage:
-                    case InstrumentModelType_Delta_Plus_XP:
                     case InstrumentModelType_Neptune:
                     case InstrumentModelType_Triton:
                         unit_assert(configurations.empty());
@@ -134,10 +129,6 @@ int main(int argc, char* argv[])
 
                 switch (model)
                 {
-                    case InstrumentModelType_Element_XR:
-                    case InstrumentModelType_Element_2:
-                    case InstrumentModelType_Delta_Plus_Advantage:
-                    case InstrumentModelType_Delta_Plus_XP:
                     case InstrumentModelType_Neptune:
                     case InstrumentModelType_Tempus_TOF:
                     case InstrumentModelType_Triton:
@@ -161,11 +152,6 @@ int main(int argc, char* argv[])
 
                 switch (model)
                 {
-                    case InstrumentModelType_Element_XR:
-                    case InstrumentModelType_Element_2:
-                    case InstrumentModelType_Element_GD:
-                    case InstrumentModelType_Delta_Plus_Advantage:
-                    case InstrumentModelType_Delta_Plus_XP:
                     case InstrumentModelType_Neptune:
                     case InstrumentModelType_Triton:
                     case InstrumentModelType_Surveyor_PDA:

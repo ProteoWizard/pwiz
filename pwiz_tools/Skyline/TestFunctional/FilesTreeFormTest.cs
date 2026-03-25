@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -37,15 +44,9 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.SettingsUI.Irt;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using System.Xml.Serialization;
 using static pwiz.Skyline.Model.Files.FileModel;
 using BackgroundProteome = pwiz.Skyline.Model.Files.BackgroundProteome;
 using IonMobilityLibrary = pwiz.Skyline.Model.Files.IonMobilityLibrary;
@@ -114,6 +115,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.txt"));
             Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.raw"));
             Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.RAW"));
+
+            // Extension ignore list should be case-insensitive
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.TMP"));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.BAK"));
+
+            // FileSaver temporary files should be ignored, because they use the .tmp extension, but this should always be true
+            using (var fileSaver = new FileSaver(GetTestPath("test.sky")))
+                Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(fileSaver.SafeName));
+
+            // NTFS Alternate Data Stream paths should be ignored
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\Downloads\file.zip:Zone.Identifier"));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.txt:SmallData"));
         }
 
         protected void TestFileSystemHelpers()
@@ -142,6 +155,19 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\dir"));
 
             Assert.IsTrue(FileSystemUtil.PathEquals(@"C:\Users\Foobar\directory\foo.mzML", @"c:\users\foobar\directory\foo.mzml"));
+
+            // ADS paths should be detected
+            Assert.IsTrue(FileSystemUtil.IsAlternateDataStream(@"c:\Users\foobar\file.zip:Zone.Identifier"));
+            Assert.IsTrue(FileSystemUtil.IsAlternateDataStream(@"c:\Users\foobar\file.txt:SmallData"));
+            Assert.IsFalse(FileSystemUtil.IsAlternateDataStream(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(FileSystemUtil.IsAlternateDataStream(@"\\?\C:\Users\foobar\file.txt"));
+            Assert.IsFalse(FileSystemUtil.IsAlternateDataStream(null));
+
+            // ADS paths should not crash path methods - they degrade gracefully.
+            // ShouldIgnoreFile filters ADS paths before they reach these methods in FSW handlers.
+            // IsFileInDirectory returns true because the base file IS in the directory.
+            Assert.IsTrue(FileSystemUtil.IsFileInDirectory(@"c:\Users\foobar", @"c:\Users\foobar\file.zip:Zone.Identifier"));
+            Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar", @"c:\Users\foobar\sub:Stream"));
         }
 
         protected void TestEmptyDocument()

@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lists;
 
-namespace pwiz.Skyline.Controls.Databinding
+namespace pwiz.Skyline.Model.Databinding
 {
     public abstract class ReplicatePivotColumns
     {
@@ -217,7 +216,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         /// <summary>
         /// For rows from the DocumentGrid:
-        /// <see cref="Protein"/>, <see cref="Peptide"/> <see cref="Precursor"/> <see cref="Transition"/>.
+        /// <see cref="Protein"/>, <see cref="Entities.Peptide"/> <see cref="Precursor"/> <see cref="Entities.Transition"/>.
         /// </summary>
         private class DocumentGridReplicatePivotColumns : ReplicatePivotColumns
         {

@@ -257,6 +257,9 @@ Config parseCommandLine(int argc, char** argv)
     bool intensity_linear = false;
     bool noindex = false;
     bool zlib = true;
+    bool zstd = false;
+    bool mz_zstd_shuffle = false;
+    bool mz_im_zstd_dict = false;
     bool gzip = false;
     bool ms_numpress_all = false; // if true, use this numpress compression with default tolerance
     double ms_numpress_linear = -1; // if >= 0, use this numpress linear compression with this tolerance
@@ -386,6 +389,19 @@ Config parseCommandLine(int argc, char** argv)
         ("zlib,z",
             po::value<bool>(&zlib)->implicit_value(true),
             ": use zlib compression for binary data (add =off to disable compression)")
+        ("zstd",
+            po::value<bool>(&zstd)->zero_tokens(),
+            ": use Zstandard compression for binary data. This applies to all data arrays, instead of zlib, even if zlib=off is specified"
+        )
+        ("mzShuffleZstd",
+            po::value<bool>(&mz_zstd_shuffle)->zero_tokens(),
+            ": use byte-shuffling Zstandard compression for m/z and time values"
+        )
+        (
+            "dictZstd",
+            po::value<bool>(&mz_im_zstd_dict)->zero_tokens(),
+            ": use dictionary encoding followed by Zstandard compression for m/z and ion mobility values. This overrides --mzShuffleZstd"
+        )
         ("numpressLinear",
             po::value<double>(&ms_numpress_linear)->implicit_value(ms_numpress_linear_default, toString(ms_numpress_linear_default)),
             ": use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
@@ -734,8 +750,38 @@ Config parseCommandLine(int argc, char** argv)
         config.writeConfig.indexed = false;
 
     if (zlib)
-        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib; 
- 
+        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+
+    if (zstd)
+    {
+        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zstd;
+    }
+
+    if (mz_zstd_shuffle)
+    {
+        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_m_z_array] = BinaryDataEncoder::Compression_ByteShuffleZstd;
+        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_time_array] = BinaryDataEncoder::Compression_ByteShuffleZstd;
+    }
+
+    if (mz_im_zstd_dict)
+    {
+        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_m_z_array] = BinaryDataEncoder::Compression_DictZstd;
+        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_time_array] = BinaryDataEncoder::Compression_ByteShuffleZstd;
+
+        auto imArrays = {
+            MS_ion_mobility_array,
+            MS_raw_ion_mobility_drift_time_array,
+            MS_mean_inverse_reduced_ion_mobility_array,
+            MS_mean_ion_mobility_drift_time_array,
+            MS_deconvoluted_ion_mobility_drift_time_array,
+        };
+
+        for (auto t : imArrays)
+        {
+            config.writeConfig.binaryDataEncoderConfig.compressionOverrides[t] = BinaryDataEncoder::Compression_DictZstd;
+        }
+    }
+
     config.writeConfig.mzMLb_chunk_size = mzMLb_chunk_size;
 
     if ((ms_numpress_slof>=0) && ms_numpress_pic)

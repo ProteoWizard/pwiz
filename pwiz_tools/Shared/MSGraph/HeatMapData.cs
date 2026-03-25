@@ -83,6 +83,14 @@ namespace pwiz.MSGraph
         }
 
         /// <summary>
+        /// Return all raw points without filtering. Used for "Copy Data" to clipboard.
+        /// </summary>
+        public IEnumerable<TaggedPoint3D> GetAllPoints()
+        {
+            return _cell.GetAllPoints();
+        }
+
+        /// <summary>
         /// A cell within the quad-tree data structure.
         /// </summary>
         private class Cell
@@ -128,6 +136,14 @@ namespace pwiz.MSGraph
             public TaggedPoint3D MaxPoint
             {
                 get { return _maxPoint; }
+            }
+
+            /// <summary>
+            /// Return all raw points in this cell.
+            /// </summary>
+            public IEnumerable<TaggedPoint3D> GetAllPoints()
+            {
+                return _points;
             }
 
             /// <summary>

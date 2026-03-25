@@ -1,21 +1,30 @@
 name: Cherry pick PR to release
 
-# Controls when the workflow will run
 on:
   pull_request:
     branches: [ master ]
     types: [ closed ]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to backport'
+        required: true
+        type: number
+
 jobs:
   release_pull_request:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'Cherry pick to release')
+    if: >
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'Cherry pick to release'))
     runs-on: ubuntu-latest
     name: release_pull_request
     steps:
     - name: checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v6
     - name: Cherry pick PR to release
-      uses: chambm/gh-backport-action@v2
+      uses: chambm/gh-backport-action@v3
       with:
         pr_branch: 'Skyline/skyline_26_1'
         pr_title: 'Cherry pick of #{pr_number} ({original_title}) from {base_branch} to {pr_branch}'
+        pr_number: ${{ github.event.inputs.pr_number }}
         github_token: ${{ secrets.GITHUB_TOKEN }}

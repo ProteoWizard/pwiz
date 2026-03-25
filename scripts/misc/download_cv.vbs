@@ -22,10 +22,13 @@ If objXMLHTTP.Status = 200 Then
   objADOStream.SaveToFile psimsDestination
   objADOStream.Close
   Set objADOStream = Nothing
+Else
+    WScript.Echo "ERROR: HTTP request " & psimsURL & " failed: " & objXMLHTTP.Status
+    WScript.Quit 1
 End if
 
 ' Download unit.obo
-unitURL = "https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"
+unitURL = "https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/uo.obo"
 unitDestination = "..\..\pwiz\data\common\unit.obo"
 objXMLHTTP.open "GET", unitURL, false
 objXMLHTTP.send()
@@ -45,6 +48,9 @@ If objXMLHTTP.Status = 200 Then
   objADOStream.SaveToFile unitDestination
   objADOStream.Close
   Set objADOStream = Nothing
+Else
+    WScript.Echo "ERROR: HTTP request " & unitURL & " failed: " & objXMLHTTP.Status
+    WScript.Quit 1
 End if
 
 ' Download unimod.obo
@@ -68,6 +74,9 @@ If objXMLHTTP.Status = 200 Then
   objADOStream.SaveToFile unitDestination
   objADOStream.Close
   Set objADOStream = Nothing
+Else
+    WScript.Echo "ERROR: HTTP request " & unitURL & " failed: " & objXMLHTTP.Status
+    WScript.Quit 1
 End if
 
 Set objXMLHTTP = Nothing

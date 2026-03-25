@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4.6) <noreply .at. anthropic.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
  *
@@ -21,9 +22,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace ImageComparer
+namespace ImageComparer.Core
 {
-    internal static class GitFileHelper
+    public static class GitFileHelper
     {
         /// <summary>
         /// Retrieves the committed binary content of a file in a Git repository.
@@ -34,9 +35,11 @@ namespace ImageComparer
         {
             return RunGitCommand(GetPathInfo(fullPath), "show HEAD:{RelativePath}", process =>
             {
-                using var memoryStream = new MemoryStream();
-                process.StandardOutput.BaseStream.CopyTo(memoryStream);
-                return memoryStream.ToArray();
+                using (var memoryStream = new MemoryStream())
+                {
+                    process.StandardOutput.BaseStream.CopyTo(memoryStream);
+                    return memoryStream.ToArray();
+                }
             });
         }
 
@@ -62,16 +65,19 @@ namespace ImageComparer
         {
             var output = RunGitCommand(GetPathInfo(directoryPath), "status --porcelain \"{RelativePath}\"");
 
-            using var reader = new StringReader(output);
-            while (reader.ReadLine() is { } line)
+            using (var reader = new StringReader(output))
             {
-                // 'git status --porcelain' format: XY path/to/file
-                // For modified have seen " M " and "M  "
-                line = line.Trim();
-                if (!line.StartsWith("M"))
-                    continue;
-                var filePath = line.Substring(1).Trim().Replace('/', Path.DirectorySeparatorChar);
-                yield return Path.Combine(GetPathInfo(directoryPath).Root, filePath);
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    // 'git status --porcelain' format: XY path/to/file
+                    // For modified have seen " M " and "M  "
+                    line = line.Trim();
+                    if (!line.StartsWith("M"))
+                        continue;
+                    var filePath = line.Substring(1).Trim().Replace('/', Path.DirectorySeparatorChar);
+                    yield return Path.Combine(GetPathInfo(directoryPath).Root, filePath);
+                }
             }
         }
 
@@ -85,51 +91,11 @@ namespace ImageComparer
         }
 
         /// <summary>
-        /// Executes a Git command in the specified repository and returns the standard output as a string.
-        /// </summary>
-        /// <param name="pathInfo">The PathInfo object for the target path.</param>
-        /// <param name="commandTemplate">The Git command template with placeholders (e.g., {RelativePath}).</param>
-        /// <param name="processOutput">A function that takes a running process and returns the necessary output</param>
-        /// <returns>Output of type T from the process.</returns>
-        private static T RunGitCommand<T>(PathInfo pathInfo, string commandTemplate, Func<Process, T> processOutput)
-        {
-            var command = commandTemplate.Replace("{RelativePath}", pathInfo.RelativePath);
-            var processInfo = new ProcessStartInfo("git", command)
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = pathInfo.Root
-            };
-
-            using var process = new Process();
-            process.StartInfo = processInfo;
-            process.Start();
-
-            var output = processOutput(process);
-            var error = process.StandardError.ReadToEnd();
-            process.WaitForExit();
-
-            if (process.ExitCode != 0)
-            {
-                throw new Exception($"Git error: {error}");
-            }
-
-            return output;
-        }
-
-        private static string RunGitCommand(PathInfo pathInfo, string commandTemplate)
-        {
-            return RunGitCommand(pathInfo, commandTemplate, process => process.StandardOutput.ReadToEnd());
-        }
-
-        /// <summary>
-        /// Retrieves the root directory of the Git repository containing the given directory.
+        /// Retrieves the root directory of the Git repository containing the given path.
         /// </summary>
         /// <param name="startPath">The directory or file path to start searching from.</param>
         /// <returns>The root directory of the Git repository, or null if not found.</returns>
-        private static string GetGitRepositoryRoot(string startPath)
+        public static string GetGitRepositoryRoot(string startPath)
         {
             var currentDirectory = File.Exists(startPath)
                 ? Path.GetDirectoryName(startPath)
@@ -148,11 +114,43 @@ namespace ImageComparer
             return null; // No Git repository found
         }
 
-        /// <summary>
-        /// Retrieves path information for a given file or directory, including the repository root and relative path.
-        /// </summary>
-        /// <param name="fullPath">The fully qualified file or directory path.</param>
-        /// <returns>A PathInfo object containing the repository root and the relative path.</returns>
+        private static T RunGitCommand<T>(PathInfo pathInfo, string commandTemplate, Func<Process, T> processOutput)
+        {
+            var command = commandTemplate.Replace("{RelativePath}", pathInfo.RelativePath);
+            var processInfo = new ProcessStartInfo("git", command)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = true, // Prevent inheriting parent stdin (critical for MCP servers)
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = pathInfo.Root
+            };
+
+            using (var process = new Process())
+            {
+                process.StartInfo = processInfo;
+                process.Start();
+                process.StandardInput.Close(); // Immediately close stdin so git doesn't block
+
+                var output = processOutput(process);
+                var error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+
+                if (process.ExitCode != 0)
+                {
+                    throw new Exception($"Git error: {error}");
+                }
+
+                return output;
+            }
+        }
+
+        private static string RunGitCommand(PathInfo pathInfo, string commandTemplate)
+        {
+            return RunGitCommand(pathInfo, commandTemplate, process => process.StandardOutput.ReadToEnd());
+        }
+
         private static PathInfo GetPathInfo(string fullPath)
         {
             if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
@@ -187,5 +185,4 @@ namespace ImageComparer
             public string RelativePath { get; set; }
         }
     }
-
 }

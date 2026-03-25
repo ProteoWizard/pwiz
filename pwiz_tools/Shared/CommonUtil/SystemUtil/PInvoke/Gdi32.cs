@@ -20,7 +20,16 @@ using System.Runtime.InteropServices;
 namespace pwiz.Common.SystemUtil.PInvoke
 {
     public static class Gdi32
-    { 
+    {
+        // ReSharper disable once InconsistentNaming
+        public enum DeviceCap : uint
+        {
+            // ReSharper disable InconsistentNaming IdentifierTypo
+            VERTRES = 10,
+            DESKTOPVERTRES = 117
+            // ReSharper restore InconsistentNaming IdentifierTypo
+        }
+
         [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr CreateCompatibleDC(IntPtr hDC);
     
@@ -32,5 +41,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("gdi32.dll", SetLastError = true)]
         public static extern bool DeleteObject(IntPtr hObject);
+
+        [DllImport("gdi32.dll")]
+        public static extern int GetDeviceCaps(IntPtr hdc, DeviceCap flag);
     }
 }

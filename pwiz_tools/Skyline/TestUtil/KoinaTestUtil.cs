@@ -69,6 +69,13 @@ namespace pwiz.SkylineTestUtil
 
         public int QueryIndex { get; private set; }
 
+        /// <summary>
+        /// When set, RT model queries return an empty response, simulating
+        /// the case where the RT model fails to return a result for the peptide.
+        /// Used to test regression fix for issue #3971.
+        /// </summary>
+        public bool SuppressRetentionTimePrediction { get; set; }
+
         public override ModelInferResponse ModelInfer(ModelInferRequest request, CallOptions options)
         {
             // If this is a ping ms2 request, silently return and don't log
@@ -78,6 +85,13 @@ namespace pwiz.SkylineTestUtil
             // If this is a ping irt request, silently return and don't log
             if (PING_QUERY_IRT.MatchesQuery(request))
                 return PING_QUERY_IRT.Response;
+
+            // If suppressing RT predictions, return an empty response for RT model queries
+            if (SuppressRetentionTimePrediction &&
+                KoinaRetentionTimeModel.Models.Any(m => request.ModelName.StartsWith(m)))
+            {
+                return new ModelInferResponse();
+            }
 
             // Logging mode
             if (_recordData)
