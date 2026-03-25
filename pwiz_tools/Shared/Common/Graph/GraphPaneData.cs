@@ -18,10 +18,8 @@
  */
 
 using System.Collections.Generic;
-using System.Linq;
 using ZedGraph;
 using pwiz.Common.Collections;
-using pwiz.MSGraph;
 
 namespace pwiz.Common.Graph
 {
@@ -29,13 +27,6 @@ namespace pwiz.Common.Graph
     {
         public static GraphPaneData GetGraphPaneData(GraphPane graphPane)
         {
-            // Check if this is a HeatMapGraphPane with custom clipboard data
-            var customData = TryGetHeatMapData(graphPane);
-            if (customData != null)
-            {
-                return customData;
-            }
-
             var dataFrames = new List<DataFrame>();
             var rowHeaderToListIndex = new Dictionary<IColumnGroup, int>();
             foreach (var curveItem in graphPane.CurveList)
@@ -95,44 +86,5 @@ namespace pwiz.Common.Graph
 
         public string Title { get; private set; }
         public IList<DataFrame> DataFrames { get; private set; }
-
-        /// <summary>
-        /// Check if graphPane is a HeatMapGraphPane and extract its data directly.
-        /// </summary>
-        private static GraphPaneData TryGetHeatMapData(GraphPane graphPane)
-        {
-            var heatMapPane = graphPane as HeatMapGraphPane;
-            if (heatMapPane == null)
-            {
-                return null;
-            }
-
-            var result = heatMapPane.GetHeatMapDataForClipboard();
-            if (result == null)
-            {
-                return null;
-            }
-
-            var xAxisTitle = result.Item1;
-            var yAxisTitle = result.Item2;
-            var points = result.Item3.ToList();
-
-            if (points.Count == 0)
-            {
-                return null;
-            }
-
-            // Create DataFrame with 3 columns: m/z, ion mobility, intensity
-            var mzColumn = new DataColumn<double>(xAxisTitle ?? @"m/z", points.Select(p => (double)p.X).ToList());
-            var ionMobilityColumn = new DataColumn<double>(yAxisTitle ?? @"Ion Mobility", points.Select(p => (double)p.Y).ToList());
-            var intensityColumn = new DataColumn<double>(@"Intensity", points.Select(p => (double)p.Z).ToList());
-
-            var dataFrame = new DataFrame(null, points.Count)
-                .SetRowHeaders(mzColumn)
-                .AddColumn(ionMobilityColumn)
-                .AddColumn(intensityColumn);
-
-            return new GraphPaneData(graphPane.Title?.Text, new[] { dataFrame });
-        }
     }
 }

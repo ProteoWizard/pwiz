@@ -305,6 +305,7 @@ class PWIZ_API_DECL ScanInfo
     virtual double frequency() const = 0;
     virtual bool FAIMSOn() const = 0;
     virtual double compensationVoltage() const = 0;
+    virtual double sourceOffsetVoltage() const = 0;
 
     virtual bool isConstantNeutralLoss() const = 0;
     virtual double analyzerScanOffset() const = 0;

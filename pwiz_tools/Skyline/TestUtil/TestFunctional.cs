@@ -2633,6 +2633,10 @@ namespace pwiz.SkylineTestUtil
 
         private void WaitForSkyline()
         {
+            using var restoreTracking = new ScopedAction(
+                FileStreamManager.Default.StartTrackingHistory,
+                FileStreamManager.Default.EndTrackingHistory);
+
             try
             {
                 int waitCycles = GetWaitCycles();
@@ -2693,9 +2697,6 @@ namespace pwiz.SkylineTestUtil
 
         private void RunTest()
         {
-            ConnectionPool.TrackHistory = true;
-            FileStreamManager.Default.ConnectionPool.ClearHistory();
-
             if (null != SkylineWindow)
             {
                 // Clean-up before running the test
@@ -2786,9 +2787,9 @@ namespace pwiz.SkylineTestUtil
                 WaitForBackgroundLoaders();
 
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
-                if (FileStreamManager.Default.HasPooledStreams)
+                var report = FileStreamManager.Default.ReportPooledStreams();
+                if (report != null)
                 {
-                    var report = FileStreamManager.Default.ReportPooledStreams();
                     var message = TextUtil.LineSeparate("Streams left open:", string.Empty, report);
                     Console.WriteLine(message);
                     Program.AddTestException(new IOException(message));
@@ -3480,7 +3481,7 @@ namespace pwiz.SkylineTestUtil
                 importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null));
             RunUI(() =>
             {
-                openDataSourceDialog.CurrentDirectory = new MsDataFilePath(dirPath);
+                openDataSourceDialog.SetCurrentDirectory(new MsDataFilePath(dirPath));
                 openDataSourceDialog.SelectAllFileType(ext, path => filter == null || path.Contains(filter));
                 openDataSourceDialog.Open();
             });

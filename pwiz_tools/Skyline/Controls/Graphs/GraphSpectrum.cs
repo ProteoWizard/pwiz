@@ -744,7 +744,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _spectra = null;
                 _koinaSpectra = new Dictionary<Tuple<IsotopeLabelType, int>, SpectrumDisplayInfo>();
 
-                var s = TransitionGroupTreeNode.GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz.RawValue, null);
+                var s = DocNode.TransitionGroup.GetLabel(DocNode.PrecursorMz.RawValue, null);
                 DisplayString = !(selectedTreeNode is PeptideGroupTreeNode) ? s : $@"{DocNode.Peptide.Target}, {s}";
             }
 
@@ -1192,6 +1192,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private readonly GraphSpectrum _parent;
             private readonly Timer _timer;
+            private bool _disposed;
 
             public ImmutableList<Precursor> Precursors { get; private set; }
             private TreeNodeMS _treeNode;
@@ -1209,6 +1210,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void QueueUpdate(bool isUserAction)
             {
+                if (_disposed)
+                    return;
+
                 // Restart the timer at 100ms, giving the UI time to interrupt.
                 _timer.Stop();
                 _timer.Interval = 100;
@@ -1271,6 +1275,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void Dispose()
             {
+                _disposed = true;
+                _timer.Stop();
+                _timer.Tick -= DoUpdate;
                 _timer.Dispose();
             }
         }
@@ -1724,6 +1731,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _updateManager.Dispose();
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            _updateManager.Dispose();
+            _documentContainer.UnlistenUI(OnDocumentUIChanged);
+            base.OnHandleDestroyed(e);
         }
 
         private void GraphSpectrum_KeyDown(object sender, KeyEventArgs e)

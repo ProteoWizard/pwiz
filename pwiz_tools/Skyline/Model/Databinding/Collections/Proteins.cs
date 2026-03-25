@@ -23,13 +23,8 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 {
     public class Proteins : NodeList<Protein>
     {
-        public Proteins(SkylineDataSchema dataSchema) : base(dataSchema, IdentityPath.ROOT)
+        public Proteins(SkylineDataSchema dataSchema) : base(dataSchema, ROOT_IDENTITY_PATH)
         {
-        }
-
-        protected override Protein ConstructItem(IdentityPath identityPath)
-        {
-            return new Protein(DataSchema, identityPath);
         }
 
         protected override int NodeDepth

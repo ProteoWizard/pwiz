@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
@@ -52,8 +53,8 @@ namespace pwiz.Common.DataBinding.Internal
             // Construct the ViewInfo again so that it picks up the latest property definitions from
             // the DataSchema.
             viewInfo = new ViewInfo(viewInfo.DataSchema, viewInfo.ParentColumn.PropertyType, viewInfo.ViewSpec);
-            var pivoter = new Pivoter(viewInfo);
-            return pivoter.ExpandAndPivot(cancellationToken, results.SourceRows);
+            var pivoter = new Pivoter(cancellationToken, viewInfo);
+            return pivoter.ExpandAndPivot(results.SourceRows);
         }
 
         protected TransformResults Transform(CancellationToken cancellationToken, DataSchema dataSchema, TransformResults input,
@@ -85,7 +86,7 @@ namespace pwiz.Common.DataBinding.Internal
             return input;
         }
 
-        protected IEnumerable<RowItem> Filter(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter filter, ReportResults pivotedRows)
+        protected BigList<RowItem> Filter(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter filter, ReportResults pivotedRows)
         {
             if (filter.IsEmptyFilter)
             {
@@ -162,7 +163,7 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 return pivotedRows.RowItems;
             }
-            return filteredRows;
+            return filteredRows.ToBigList();
         }
 
         protected ReportResults Sort(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter rowFilter,
@@ -180,63 +181,85 @@ namespace pwiz.Common.DataBinding.Internal
             return pivotedRows.ChangeRowItems(Sort(cancellationToken, dataSchema, sortDescriptions, pivotedRows));
         }
 
-        protected IEnumerable<RowItem> Sort(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sortDescriptions, ReportResults pivotedRows)
+        protected BigList<RowItem> Sort(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sortDescriptions, ReportResults pivotedRows)
         {
             var unsortedRows = pivotedRows.RowItems;
             if (sortDescriptions == null || sortDescriptions.Count == 0)
             {
                 return unsortedRows;
             }
-            var sortRows = new SortRow[unsortedRows.Count];
-            for (int iRow = 0; iRow < sortRows.Length; iRow++)
+            
+            long rowIndex = 0;
+            var sortRows = unsortedRows.Select(row =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                sortRows[iRow] = new SortRow(cancellationToken, dataSchema, sortDescriptions, unsortedRows[iRow], iRow);
-            }
-            Array.Sort(sortRows);
-            return Array.AsReadOnly(sortRows.Select(sr => sr.RowItem).ToArray());
+                var keys = sortDescriptions.OfType<ListSortDescription>()
+                    .Select(desc => desc.PropertyDescriptor.GetValue(row)).ToArray();
+                var sortRow = new SortRow(row, keys, rowIndex);
+                rowIndex++;
+                return sortRow;
+            }).ToBigList();
+            var sortRowComparer = new SortRowComparer(cancellationToken, dataSchema, sortDescriptions);
+            return sortRows.Sort(sortRowComparer).Select(sortRow=>sortRow.RowItem).ToBigList();
         }
-        class SortRow : IComparable<SortRow>
+
+        class SortRowComparer : IComparer<SortRow>
         {
-            private readonly object[] _keys;
-            public SortRow(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sorts, RowItem rowItem, int rowIndex)
+            public SortRowComparer(CancellationToken cancellationToken, DataSchema dataSchema,
+                ListSortDescriptionCollection sorts)
             {
                 CancellationToken = cancellationToken;
                 DataSchema = dataSchema;
                 Sorts = sorts;
-                RowItem = rowItem;
-                OriginalRowIndex = rowIndex;
-                _keys = new object[Sorts.Count];
-                for (int i = 0; i < Sorts.Count; i++)
-                {
-                    _keys[i] = Sorts[i].PropertyDescriptor.GetValue(RowItem);
-                }
             }
-// ReSharper disable MemberCanBePrivate.Local
-            public CancellationToken CancellationToken { get; private set; }
-            public DataSchema DataSchema { get; private set; }
-            public RowItem RowItem { get; private set; }
-            public int OriginalRowIndex { get; private set; }
-            public ListSortDescriptionCollection Sorts { get; private set; }
-// ReSharper restore MemberCanBePrivate.Local
-            public int CompareTo(SortRow other)
+
+            public CancellationToken CancellationToken { get; }
+            public DataSchema DataSchema { get; }
+            public ListSortDescriptionCollection Sorts { get; }
+
+            public int Compare(SortRow x, SortRow y)
             {
                 CancellationToken.ThrowIfCancellationRequested();
-                for (int i = 0; i < Sorts.Count; i++)
+                if (x == null)
                 {
-                    var sort = Sorts[i];
-                    int result = DataSchema.Compare(_keys[i], other._keys[i]);
-                    if (sort.SortDirection == ListSortDirection.Descending)
-                    {
-                        result = -result;
-                    }
+                    return y == null ? 0 : -1;
+                }
+
+                if (y == null)
+                {
+                    return 1;
+                }
+
+                for (int iSort = 0; iSort < Sorts.Count; iSort++)
+                {
+                    var result = DataSchema.Compare(x.Keys[iSort], y.Keys[iSort]);
                     if (result != 0)
                     {
-                        return result;
+                        if (Sorts[iSort].SortDirection == ListSortDirection.Ascending)
+                        {
+                            return result;
+                        }
+                        return -result;
                     }
                 }
-                return OriginalRowIndex.CompareTo(other.OriginalRowIndex);
+
+                return x.OriginalRowIndex.CompareTo(y.OriginalRowIndex);
             }
+        }
+
+        class SortRow
+        {
+            public SortRow(RowItem rowItem, object[] keys, long originalRowIndex)
+            {
+                RowItem = rowItem;
+                Keys = keys;
+                OriginalRowIndex = originalRowIndex;
+            }
+
+
+            public RowItem RowItem { get; }
+            public object[] Keys { get; }
+            public long OriginalRowIndex { get; }
         }
     }
 }

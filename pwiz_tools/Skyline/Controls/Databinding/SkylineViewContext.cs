@@ -132,71 +132,16 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             return true;
         }
-
-        protected override void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
-            RowItemEnumerator rowItemEnumerator, char separator)
+        protected override DsvReportExporter CreateDsvReportExporter(char separator)
         {
-            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(rowItemEnumerator.ItemProperties);
-            if (true != replicatePivotColumns?.HasConstantAndVariableColumns())
+            var dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider,
+                DataSchema.DataSchemaLocalizer.Language,
+                separator);
+            if (IsInvariantLanguage())
             {
-                base.WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
-                return;
+                dsvWriter.NumberFormatOverride = Formats.RoundTrip;
             }
-            var dsvWriter = CreateDsvWriter(separator, rowItemEnumerator.ColumnFormats);
-
-            // Filter columns for main grid to be written out.
-            var filteredColumnDescriptors = rowItemEnumerator.ItemProperties.OfType<ColumnPropertyDescriptor>()
-                .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor)).ToList();
-
-            // Count main grid columns to add spaces.
-            var replicateVariablePropertyCounts = filteredColumnDescriptors.GroupBy(column => column.PivotKey ?? PivotKey.EMPTY)
-                .ToDictionary(grouping => grouping.Key, grouping => grouping.Count());
-            // Create header line with property column and replicate headers.
-            var propertyCaption = LocalizationHelper.CallWithCulture(DataSchema.DataSchemaLocalizer.Language,
-                () => Model.Databinding.DatabindingResources.SkylineViewContext_WriteDataWithStatus_Property);
-            var headerLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1)
-                .Prepend(propertyCaption).ToList();
-            var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
-            var propertyLines = new List<List<string>> { headerLine };
-            var allRowItems = rowItemEnumerator.GetRowItems();
-            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
-            {
-                // Add replicate to header line.
-                headerLine.Add(group.Key.ReplicateName);
-                headerLine.AddRange(Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[group.ToList()[0].PivotKey] - 1));
-
-                foreach (var column in group)
-                {
-                    if (!replicatePivotColumns.IsConstantColumn(column) || column.DisplayColumn.ColumnDescriptor == null)
-                    {
-                        continue;
-                    }
-
-                    var propertyPath = column.DisplayColumn.PropertyPath;
-                    if (!propertyLineDictionary.TryGetValue(propertyPath, out var propertyLine))
-                    {
-                        // Create a new row if property line does not exist yet.
-                        var propertyDisplayName = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
-                        propertyLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1).Prepend(propertyDisplayName).ToList();
-                        propertyLineDictionary[propertyPath] = propertyLine;
-                        propertyLines.Add(propertyLine);
-                    }
-
-                    // Add value to property line.
-                    var rowItem = allRowItems.FirstOrDefault(item => column.GetValue(item) != null);
-                    var formattedValue = dsvWriter.GetFormattedValue(rowItem, column);
-                    propertyLine.AddRange(Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[column.PivotKey] - 1).Prepend(formattedValue));
-                }
-            }
-
-            // Write pivot replicate data.
-            foreach (var line in propertyLines)
-            {
-                dsvWriter.WriteRowValues(writer, line);
-            }
-            writer.WriteLine();
-            var newRowItemEnumerator = new RowItemEnumerator(allRowItems, new ItemProperties(filteredColumnDescriptors), rowItemEnumerator.ColumnFormats);
-            base.WriteDataWithStatus(progressMonitor, ref status, writer, newRowItemEnumerator, separator);
+            return new ReplicatePivotDsvReportExporter(dsvWriter);
         }
 
         protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)
@@ -327,128 +272,31 @@ namespace pwiz.Skyline.Controls.Databinding
             ClipboardHelper.SetClipboardText(owner, text);
         }
 
-        public bool Export(Control owner, ViewInfo viewInfo)
-        {
-            using (var saveFileDialog = new SaveFileDialog())
-            {
-                saveFileDialog.InitialDirectory = GetExportDirectory();
-                saveFileDialog.OverwritePrompt = true;
-                saveFileDialog.DefaultExt = TextUtil.EXT_CSV;
-                saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV);
-                saveFileDialog.FileName = GetDefaultExportFilename(viewInfo);
-                // TODO: If document has been saved, initial directory should be document directory
-                if (saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
-                {
-                    return false;
-                }
-                char separator = saveFileDialog.FilterIndex == 2
-                    ? TextUtil.SEPARATOR_TSV
-                    : TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider);
-                SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
-                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, separator);
-            }
-        }
-
         public bool IsInvariantLanguage()
         {
             return ReferenceEquals(DataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT);
         }
 
-        public override DsvWriter CreateDsvWriter(char separator, ColumnFormats columnFormats)
+        public void ExportViewToFile(ViewInfo viewInfo, string fileName, char separator)
         {
-            var dsvWriter = base.CreateDsvWriter(separator, columnFormats);
-            if (IsInvariantLanguage())
+            using var fileSaver = new FileSaver(fileName, true);
+            using (var writer = new StreamWriter(fileSaver.Stream))
             {
-                dsvWriter.NumberFormatOverride = Formats.RoundTrip;
+                ExportViewToWriter(viewInfo, writer, separator);
             }
-
-            return dsvWriter;
+            fileSaver.Commit();
         }
 
-        public DsvWriter GetDsvWriter(char separator)
+        public void ExportViewToWriter(ViewInfo viewInfo, TextWriter writer, char separator)
         {
-            return CreateDsvWriter(separator, null);
+            using var bindingListSource = new BindingListSource(CancellationToken.None);
+            bindingListSource.SetView(viewInfo, GetRowSource(viewInfo));
+            WriteData(null, writer, bindingListSource, separator);
         }
 
-        public bool ExportToFile(Control owner, ViewInfo viewInfo, string fileName, char separator)
+        public void ExportToWriter(ViewSpec viewSpec, TextWriter writer, char separator)
         {
-            try
-            {
-                return SafeWriteToFile(owner, fileName, stream =>
-                {
-                    bool success = false;
-                    using (var longWait = new LongWaitDlg())
-                    {
-                        longWait.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
-                        var action = new Action<IProgressMonitor>(progressMonitor =>
-                        {
-                            IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
-                            progressMonitor.UpdateProgress(status);
-                            using (var writer = new StreamWriter(stream))
-                            {
-                                success = Export(longWait.CancellationToken, progressMonitor, ref status, viewInfo, writer, separator);
-                                writer.Close();
-                            }
-                            if (success)
-                            {
-                                progressMonitor.UpdateProgress(status.Complete());
-                            }
-                        });
-                        longWait.PerformWork(owner, 1500, action);
-                    }
-                    return success;
-                });
-            }
-            catch (Exception x)
-            {
-                MessageDlg.ShowWithException(owner,
-                    string.Format(DatabindingResources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
-                return false;
-            }
-        }
-
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor,
-            ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, char separator)
-        {
-            ViewLayout viewLayout = null;
-            if (viewInfo.ViewGroup != null)
-            {
-                var viewLayoutList = GetViewLayoutList(viewInfo.ViewGroup.Id.ViewName(viewInfo.Name));
-                if (viewLayoutList != null)
-                {
-                    viewLayout = viewLayoutList.DefaultLayout;
-                }
-            }
-
-            return Export(cancellationToken, progressMonitor, ref status, viewInfo, viewLayout, writer, separator);
-        }
-
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
-        {
-            progressMonitor ??= new SilentProgressMonitor(cancellationToken);
-            RowItemEnumerator rowItemEnumerator;
-            using (var bindingListSource = new BindingListSource(cancellationToken))
-            {
-                bindingListSource.SetViewContext(this, viewInfo);
-                if (viewLayout != null)
-                {
-                    foreach (var column in viewLayout.ColumnFormats)
-                    {
-                        bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
-                    }
-                }
-
-                rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
-            }
-
-            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
-                .ChangeMessage(DatabindingResources.ExportReportDlg_ExportReport_Writing_report));
-            WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
-            if (progressMonitor.IsCanceled)
-                return false;
-            writer.Flush();
-            progressMonitor.UpdateProgress(status = status.Complete());
-            return true;
+            ExportViewToWriter(GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, separator);
         }
 
         protected override bool SafeWriteToFile(Control owner, string fileName, Func<Stream, bool> writeFunc)
@@ -583,11 +431,11 @@ namespace pwiz.Skyline.Controls.Databinding
                 () => new Proteins(dataSchema));
             yield return MakeRowSource<Model.Databinding.Entities.Peptide>(dataSchema, 
                 proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
-                () => new Peptides(dataSchema, new[] {IdentityPath.ROOT}));
+                () => new Peptides(dataSchema));
             yield return MakeRowSource<Precursor>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 
-                () => new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
+                () => new Precursors(dataSchema));
             yield return MakeRowSource<Model.Databinding.Entities.Transition>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions, 
-                () => new Transitions(dataSchema, new[] { IdentityPath.ROOT }));
+                () => new Transitions(dataSchema));
             yield return MakeRowSource<Replicate>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, 
                 () => new ReplicateList(dataSchema));
             yield return new RowSourceInfo(typeof(SkylineDocument), new StaticRowSource(new SkylineDocument[0]), new ViewInfo[0]);
@@ -863,6 +711,11 @@ namespace pwiz.Skyline.Controls.Databinding
                 return false;
             }
 
+            return IsUiModeSupported(viewSpec);
+        }
+
+        public bool IsUiModeSupported(ViewSpec viewSpec)
+        {
             var reportUiMode = DataSchema.NormalizeUiMode(viewSpec.UiMode);
             switch (DataSchema.DefaultUiMode)
             {
