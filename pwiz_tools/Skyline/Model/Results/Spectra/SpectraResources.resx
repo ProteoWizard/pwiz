@@ -148,4 +148,7 @@
   <data name="SpectrumClassFilter_GetText_All" xml:space="preserve">
     <value>All</value>
   </data>
+  <data name="SpectrumClassFilter_ParseFilterString_Invalid_filter_string___0__" xml:space="preserve">
+    <value>Invalid filter string: {0}</value>
+  </data>
 </root>

@@ -165,6 +165,7 @@ namespace pwiz.Skyline.FileUI
                 CreateKnownHeaderDocType(@"InChi", SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(@"SMILES", SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(@"KEGG", SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType("Spectrum Filter", SrmDocument.DOCUMENT_TYPE.mixed)
             };
         }
 
@@ -566,6 +567,7 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.IrtColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
             SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
             SetComboBoxText(columns.LibraryColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
+            SetComboBoxText(columns.SpectrumFilterColumn, "Spectrum Filter");
             SetComboBoxText(columns.MoleculeNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
             SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
             SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
@@ -603,6 +605,7 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
             SetComboBoxText(columns.NoteColumn, Resources.PasteDlg_UpdateMoleculeType_Note);
             SetComboBoxText(columns.PrecursorNoteColumn, Resources.PasteDlg_UpdateMoleculeType_PrecursorNote);
+            SetComboBoxText(columns.SpectrumFilterColumn, "Spectrum Filter");
             SetComboBoxText(columns.MoleculeNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeNote);
             SetComboBoxText(columns.MoleculeListNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote);
 
@@ -1042,6 +1045,7 @@ namespace pwiz.Skyline.FileUI
             else if (SetColumn(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT, nameof(columns.IrtColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type, nameof(columns.LabelTypeColumn))) {}
             else if (SetColumn(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity, nameof(columns.LibraryColumn))) {}
+            else if (SetColumn("Spectrum Filter", nameof(columns.SpectrumFilterColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name, nameof(columns.MoleculeNameColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z, nameof(columns.PrecursorColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z, nameof(columns.ProductColumn), columns.ProductMzColumns)) {}
@@ -1249,6 +1253,7 @@ namespace pwiz.Skyline.FileUI
             SetBoxesForMode(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
             SetBoxesForMode(columns.IrtColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
             SetBoxesForMode(columns.LibraryColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
+            SetBoxesForMode(columns.SpectrumFilterColumn, "Spectrum Filter");
             SetBoxesForMode(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
             SetBoxesForMode(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             SetBoxesForMode(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);

@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -986,6 +987,17 @@ namespace pwiz.Skyline.Model
             public string MoleculeNote { get { return ColumnString(Fields, Indices.MoleculeNoteColumn); } }
             public string MoleculeListNote { get { return ColumnString(Fields, Indices.MoleculeListNoteColumn); } }
 
+            public SpectrumClassFilter SpectrumFilter
+            {
+                get
+                {
+                    var filterString = ColumnString(Fields, Indices.SpectrumFilterColumn);
+                    if (string.IsNullOrEmpty(filterString))
+                        return default;
+                    return SpectrumClassFilter.ParseFilterString(filterString);
+                }
+            }
+
             public ExplicitRetentionTimeInfo ExplicitRetentionTimeInfo
             {
                 get
@@ -1177,7 +1189,7 @@ namespace pwiz.Skyline.Model
                     if (!precursorCharge.IsEmpty)
                     {
                         info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, defaultLabelType,
-                                                                  precursorMassShift, info.ExplicitTransitionValues));
+                                                                  precursorMassShift, info.ExplicitTransitionValues, info.SpectrumFilter));
                     }
                     else
                     {
@@ -1199,7 +1211,7 @@ namespace pwiz.Skyline.Model
                         if (!precursorCharge.IsEmpty)
                         {
                             info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, labelType,
-                                                                      precursorMassShift, info.ExplicitTransitionValues));
+                                                                      precursorMassShift, info.ExplicitTransitionValues, info.SpectrumFilter));
                         }
                         else
                         {
@@ -1495,7 +1507,7 @@ namespace pwiz.Skyline.Model
                         if (!charge.IsEmpty)
                         {
                             indexPrec = i;
-                            transitionExps.Add(new TransitionExp(mods, charge, labelType, massShift, null)); // This is exploratory, explicit transition values don't matter here
+                            transitionExps.Add(new TransitionExp(mods, charge, labelType, massShift, null, default)); // This is exploratory, explicit transition values don't matter here
                         }
                     }
                 }
@@ -1591,12 +1603,12 @@ namespace pwiz.Skyline.Model
                     proteinName = Fields[ProteinColumn];
                 string peptideSequence = RemoveSequenceNotes(Fields[PeptideColumn]);
                 string modifiedSequence = RemoveModifiedSequenceNotes(Fields[PeptideColumn]);
-                var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionGroupValues, ExplicitTransitionValues, Note);
+                var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionGroupValues, ExplicitTransitionValues, Note, SpectrumFilter);
 
                 if (LabelTypeColumn != -1)
                 {
                     info.DefaultLabelType = GetLabelType(Fields[LabelTypeColumn]);
-                    info.IsExplicitLabelType = true;                    
+                    info.IsExplicitLabelType = true;
                 }
 
                 return info;
@@ -2138,7 +2150,7 @@ namespace pwiz.Skyline.Model
                     string peptideSequence = GetSequence(match);
                     string modifiedSequence = GetModifiedSequence(match);
 
-                    var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionGroupValues, ExplicitTransitionValues, Note)
+                    var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionGroupValues, ExplicitTransitionValues, Note, SpectrumFilter)
                         {
                             DefaultLabelType = GetLabelType(match, Settings),
                             IsExplicitLabelType = true
@@ -2453,6 +2465,11 @@ namespace pwiz.Skyline.Model
         /// A column specifying a spectral library intensity for the transition
         /// </summary>
         public int LibraryColumn { get; set; }
+        /// <summary>
+        /// A column containing something which can be parsed by
+        /// <see cref="pwiz.Skyline.Model.Results.Spectra.SpectrumClassFilter.ParseFilterString"/>
+        /// </summary>
+        public int SpectrumFilterColumn { get; set; }
 
         // After this point are new columns added that were initially only supported for small molecule transition lists
 
@@ -2685,6 +2702,7 @@ namespace pwiz.Skyline.Model
             SetPropertyValue(nameof(FragmentNameColumn), headers.IndexOf(col => FragmentNameNames.Contains(FormatHeader(col))));
             SetPropertyValue(nameof(ProteinDescriptionColumn), headers.IndexOf(col => ProteinDescriptionNames.Contains(FormatHeader(col))));
             SetPropertyValue(nameof(PeptideColumn), headers.IndexOf(col => PeptideNames.Contains(FormatHeader(col))));
+            SetPropertyValue(nameof(SpectrumFilterColumn), headers.IndexOf(col=>SpectrumFilterNames.Contains(FormatHeader(col))));
 
             // Now make sure that no column has been forgotten
             foreach (var property in GetType().GetProperties())
@@ -2774,6 +2792,7 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> ProductNameNames { get { return new[] { @"productname", @"fragmenttype", @"transitionname" }; } }
         public static IEnumerable<string> ProductNeutralLossNames { get { return new[] { @"productneutralloss" }; } }
         public static IEnumerable<string> MoleculeNameNames { get { return new[] { @"moleculename", @"precursorname" }; } }
+        public static IEnumerable<string> SpectrumFilterNames { get { return new[] { @"spectrumfilter" }; } }
         // ReSharper restore StringLiteralTypo
     }
 
@@ -2782,7 +2801,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class ExTransitionInfo
     {
-        public ExTransitionInfo(string proteinName, string peptideSequence, string modifiedSequence, double precursorMz, bool isDecoy, ExplicitTransitionGroupValues explicitTransitionGroupValues, ExplicitTransitionValues explicitTransitionValues, string note)
+        public ExTransitionInfo(string proteinName, string peptideSequence, string modifiedSequence, double precursorMz, bool isDecoy, ExplicitTransitionGroupValues explicitTransitionGroupValues, ExplicitTransitionValues explicitTransitionValues, string note, SpectrumClassFilter spectrumFilter)
         {
             ProteinName = proteinName;
             PeptideTarget = new Target(peptideSequence);
@@ -2794,6 +2813,7 @@ namespace pwiz.Skyline.Model
             ExplicitTransitionGroupValues = explicitTransitionGroupValues;
             ExplicitTransitionValues = explicitTransitionValues;
             Note = note;
+            SpectrumFilter = spectrumFilter;
         }
 
         public string ProteinName { get; private set; }
@@ -2804,6 +2824,7 @@ namespace pwiz.Skyline.Model
         public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
         public ExplicitTransitionValues ExplicitTransitionValues { get; private set; }
         public string Note { get; private set; }
+        public SpectrumClassFilter SpectrumFilter { get; private set; }
 
         public bool IsDecoy { get; private set; }
 
@@ -2833,9 +2854,9 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class TransitionExp
     {
-        public TransitionExp(ExplicitMods mods, Adduct precursorCharge, IsotopeLabelType labelType, int precursorMassShift, ExplicitTransitionValues explicitTransitionValues)
+        public TransitionExp(ExplicitMods mods, Adduct precursorCharge, IsotopeLabelType labelType, int precursorMassShift, ExplicitTransitionValues explicitTransitionValues, SpectrumClassFilter spectrumFilter)
         {
-            Precursor = new PrecursorExp(mods, precursorCharge, labelType, precursorMassShift); 
+            Precursor = new PrecursorExp(mods, precursorCharge, labelType, precursorMassShift, spectrumFilter);
             ExplicitTransitionValues = explicitTransitionValues;
         }
 
@@ -2857,7 +2878,7 @@ namespace pwiz.Skyline.Model
 
     public sealed class PrecursorExp
     {
-        public PrecursorExp(ExplicitMods mods, Adduct precursorAdduct, IsotopeLabelType labelType, int massShift)
+        public PrecursorExp(ExplicitMods mods, Adduct precursorAdduct, IsotopeLabelType labelType, int massShift, SpectrumClassFilter spectrumFilter)
         {
             VariableMods = mods;
             PrecursorAdduct = precursorAdduct;
@@ -2865,12 +2886,14 @@ namespace pwiz.Skyline.Model
             MassShift = null;
             if (massShift != 0)
                 MassShift = massShift;
+            SpectrumFilter = spectrumFilter;
         }
 
         public ExplicitMods VariableMods { get; private set; }
         public Adduct PrecursorAdduct { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
         public int? MassShift { get; private set; }
+        public SpectrumClassFilter SpectrumFilter { get; private set; }
 
         #region object overrides
 
@@ -2880,7 +2903,8 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.VariableMods, VariableMods) &&
                 Equals(other.PrecursorAdduct, PrecursorAdduct) &&
-                Equals(other.LabelType, LabelType);
+                Equals(other.LabelType, LabelType) &&
+                Equals(other.SpectrumFilter, SpectrumFilter);
         }
 
         public override bool Equals(object obj)
@@ -2898,6 +2922,7 @@ namespace pwiz.Skyline.Model
                 int result = (VariableMods != null ? VariableMods.GetHashCode() : 0);
                 result = (result*397) ^ PrecursorAdduct.GetHashCode();
                 result = (result*397) ^ (LabelType != null ? LabelType.GetHashCode() : 0);
+                result = (result*397) ^ SpectrumFilter.GetHashCode();
                 return result;
             }
         }
@@ -2981,6 +3006,7 @@ namespace pwiz.Skyline.Model
         private List<PrecursorExp> _activePrecursorExps;
         private double _activePrecursorMz;
         private ExplicitTransitionGroupValues _activeExplicitTransitionGroupValues;
+        private SpectrumClassFilter _activeSpectrumFilter;
         private readonly List<ExTransitionInfo> _activeTransitionInfos;
         private double? _irtValue;
         private readonly List<MeasuredRetentionTime> _irtPeptides;
@@ -3135,7 +3161,7 @@ namespace pwiz.Skyline.Model
                     // If unable to explain the next transition with the existing peptide, but the
                     // transition has the same precursor m/z as the last, try completing the existing
                     // peptide, and see if the current precursor can be completed as a new peptide
-                    if (intersectVariableMods.Count == 0 && _activePrecursorMz == info.PrecursorMz)
+                    if (intersectVariableMods.Count == 0 && _activePrecursorMz == info.PrecursorMz && Equals(_activeSpectrumFilter, info.SpectrumFilter))
                     {
                         CompletePeptide(false);
                         intersectVariableMods = new List<ExplicitMods>(info.PotentialVarMods);
@@ -3151,7 +3177,7 @@ namespace pwiz.Skyline.Model
                     {
                         _activeVariableMods = intersectVariableMods;
                     }
-                    else if (_activePrecursorMz == info.PrecursorMz)
+                    else if (_activePrecursorMz == info.PrecursorMz && Equals(_activeSpectrumFilter, info.SpectrumFilter))
                     {
                         var precursorMz = Math.Round(info.PrecursorMz, MassListImporter.MZ_ROUND_DIGITS);
                         var errorInfo = new TransitionImportErrorInfo(string.Format(Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_0__m_z__1__with_a_single_set_of_modifications,
@@ -3160,6 +3186,11 @@ namespace pwiz.Skyline.Model
                                                                         lineNum, lineText);
                         _peptideGroupErrorInfo.Add(errorInfo);
                         return;
+                    }
+                    else if (!Equals(_activeSpectrumFilter, info.SpectrumFilter))
+                    {
+                        // Different SpectrumFilter only requires a new TransitionGroup, not a new Peptide
+                        CompleteTransitionGroup();
                     }
                     else
                     {
@@ -3186,6 +3217,7 @@ namespace pwiz.Skyline.Model
                 _activeModifiedSequence = info.ModifiedSequence;
                 _activePrecursorMz = info.PrecursorMz;
                 _activeExplicitTransitionGroupValues = info.ExplicitTransitionGroupValues;
+                _activeSpectrumFilter = info.SpectrumFilter;
                 _activeVariableMods = new List<ExplicitMods>(info.PotentialVarMods.Distinct());
                 _activePrecursorExps = new List<PrecursorExp>(info.TransitionExps.Select(exp => exp.Precursor));
                 _activeExplicitRetentionTimeInfo = explicitRT;
@@ -3196,7 +3228,7 @@ namespace pwiz.Skyline.Model
             {
                 _activePrecursorExps = intersectPrecursors;
             }
-            else if (_activePrecursorMz == info.PrecursorMz)
+            else if (_activePrecursorMz == info.PrecursorMz && Equals(_activeSpectrumFilter, info.SpectrumFilter))
             {
                 var precursorMz = Math.Round(_activePrecursorMz, MassListImporter.MZ_ROUND_DIGITS);
                 var errorInfo = new TransitionImportErrorInfo(string.Format(ModelResources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor,
@@ -3224,6 +3256,7 @@ namespace pwiz.Skyline.Model
             {
                 _activePrecursorMz = info.PrecursorMz;
                 _activeExplicitTransitionGroupValues = info.ExplicitTransitionGroupValues;
+                _activeSpectrumFilter = info.SpectrumFilter;
                 _activePrecursorExps = new List<PrecursorExp>(info.TransitionExps.Select(exp => exp.Precursor));
             }
             _activeTransitionInfos.Add(info);
@@ -3328,7 +3361,8 @@ namespace pwiz.Skyline.Model
             foreach (var groupTriple in groupTriples)
             {
                 int iGroup = finalTriples.Count - 1;
-                if (iGroup == -1 || !Equals(finalTriples[iGroup].NodeGroup.TransitionGroup, groupTriple.NodeGroup.TransitionGroup))
+                if (iGroup == -1 || !Equals(finalTriples[iGroup].NodeGroup.TransitionGroup, groupTriple.NodeGroup.TransitionGroup) ||
+                    !Equals(finalTriples[iGroup].NodeGroup.SpectrumClassFilter, groupTriple.NodeGroup.SpectrumClassFilter))
                     finalTriples.Add(groupTriple);
                 else
                 {
@@ -3438,6 +3472,10 @@ namespace pwiz.Skyline.Model
 
             // m/z calculated later
             var newTransitionGroup = new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions), docNodeExplicitTransitionGroupValues);
+            if (!_activeSpectrumFilter.IsEmpty)
+            {
+                newTransitionGroup = newTransitionGroup.ChangeSpectrumClassFilter(_activeSpectrumFilter);
+            }
             var currentLibrarySpectrum = isAssayLibraryImport ? 
                 new SpectrumMzInfo
                 {
@@ -3452,6 +3490,7 @@ namespace pwiz.Skyline.Model
             _groupLibTriples.Add(new TransitionGroupLibraryIrtTriple(currentLibrarySpectrum, newTransitionGroup, _irtValue, _activePrecursorMz));
             _activePrecursorMz = 0;
             _activeExplicitTransitionGroupValues = ExplicitTransitionGroupValues.EMPTY;
+            _activeSpectrumFilter = default;
             _activePrecursorExps.Clear();
             _activeTransitionInfos.Clear();
             _activeLibraryIntensities.Clear();
