@@ -149,7 +149,12 @@ namespace pwiz.Skyline.Util
             }
         }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
 
-        public static string DefaultJavaMaxHeap => TryHelper.IsParallelClient ? JavaMaxHeapArg(8L * 1024 * 1024 * 1024) : JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3);
+        public const long SIZE_8_GB = 8L * 1024 * 1024 * 1024;
+        public const long SIZE_16_GB = 16L * 1024 * 1024 * 1024;
+
+        public static string DefaultJavaMaxHeap => TryHelper.IsParallelClient
+            ? JavaMaxHeapArg(SIZE_8_GB)
+            : JavaMaxHeapArg(Math.Min(SIZE_16_GB, 2 * MemoryInfo.TotalBytes / 3));
         public static string JavaMaxHeapArg(long maxHeapBytes) => $@"-Xmx{maxHeapBytes / 1024 / 1024}M";
     }
 

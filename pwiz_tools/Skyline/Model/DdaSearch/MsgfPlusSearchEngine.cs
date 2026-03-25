@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 try
                 {
-                    long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
+                    long javaMaxHeapMB = Math.Min(JavaDownloadInfo.SIZE_16_GB, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
 
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
