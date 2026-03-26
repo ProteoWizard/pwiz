@@ -147,8 +147,8 @@ namespace pwiz.SkylineTestFunctional
         
         protected override void DoTest()
         {
-            var docEmpty = NewDocument();
-            MultipleFragmentsPerLinePaste();
+            NewDocument();
+            TestMultipleFragmentsPerLinePaste();
             TestMultipleFragmentsPerLine();
             TestSimilarMzIsotopes();
             TestIsotopeLabelsInInChi();
@@ -1484,7 +1484,7 @@ namespace pwiz.SkylineTestFunctional
             dlg.SetSelectedColumnTypes(columnTypes);
         }
 
-        private void MultipleFragmentsPerLinePaste()
+        private void TestMultipleFragmentsPerLinePaste()
         {
             // Reported problem: when pasting a transition list with duplicate product
             // columns directly to the Targets window, Skyline threw:
