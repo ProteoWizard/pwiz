@@ -541,6 +541,9 @@ Here are the last 3 errors:
   <data name="GraphFullScan_ToolTip_Intensity" xml:space="preserve">
     <value>Intensity</value>
   </data>
+  <data name="GraphFullScan_ToolTip_Transition" xml:space="preserve">
+    <value>Transition</value>
+  </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
     <value>{0:0.0000}</value>
   </data>

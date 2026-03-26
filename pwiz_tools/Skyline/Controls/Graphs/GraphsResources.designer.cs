@@ -1402,6 +1402,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Transition.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_Transition {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_Transition", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0:0.0000}.
         /// </summary>
         public static string GraphSpectrum_DoUpdate_dotp___0_0_0000_ {

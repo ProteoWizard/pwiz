@@ -276,20 +276,30 @@ namespace pwiz.Skyline.Controls
         public const int COL_SPACING = 2;
         public const int TABLE_SPACING = 6;
 
-        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign, bool allBold = false)
+        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign, Font nameFont, Font valueFont)
         {
             var row = new RowDesc
             {
-                new CellDesc(name, rt) { Font = rt.FontBold },
-                new CellDesc(value, rt) { Align = dataAlign, Font = allBold ? rt.FontBold : rt.FontNormal}
+                new CellDesc(name, rt) { Font = nameFont },
+                new CellDesc(value, rt) { Align = dataAlign, Font = valueFont }
             };
             row.ColumnSpacing = COL_SPACING;
             Add(row);
         }
 
+        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign, bool allBold = false)
+        {
+            AddDetailRow(name, value, rt, dataAlign, rt.FontBold, allBold ? rt.FontBold : rt.FontNormal);
+        }
+
         public void AddDetailRow(string name, string value, RenderTools rt, bool allBold = false)
         {
             AddDetailRow(name, value, rt, StringAlignment.Near, allBold);
+        }
+
+        public void AddDetailRowNoBold(string name, string value, RenderTools rt)
+        {
+            AddDetailRow(name, value, rt, StringAlignment.Near, rt.FontNormal, rt.FontNormal);
         }
 
         private const string X80 =

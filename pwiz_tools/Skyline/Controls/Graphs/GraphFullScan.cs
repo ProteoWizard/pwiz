@@ -1706,6 +1706,33 @@ namespace pwiz.Skyline.Controls.Graphs
             var table = new TableDesc();
             table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_mz, nearestPoint.X.ToString(Formats.Mz), rt);
             table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity, nearestPoint.Y.ToString(@"F0"), rt);
+            // Look up matched ion info; used both to suppress the redundant Transition row and to build the table.
+            LibraryRankedSpectrumInfo.RankedMI rmi = null;
+            if (_rmis != null)
+                rmi = _rmis.Peaks.FirstOrDefault(p => p.ObservedMz == nearestPoint.X);
+            bool hasMatchedIons = rmi != null && rmi.MatchedIons != null && rmi.MatchedIons.Count > 0;
+
+            // In non-annotation mode, show the transition name when the peak falls within a transition's
+            // extraction window — but skip it when the Matched Ions section already names the same ion.
+            if (!_showIonSeriesAnnotations && !hasMatchedIons && _msDataFileScanHelper.ScanProvider != null)
+            {
+                var matchedTransition = _msDataFileScanHelper.ScanProvider.Transitions.FirstOrDefault(
+                    t => t.Source == _msDataFileScanHelper.Source && t.MatchMz(nearestPoint.X));
+                if (matchedTransition != null)
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, matchedTransition.Name, rt);
+            }
+            // Show matched ion info whenever available (explains ion-series coloring in annotation mode,
+            // and provides predicted m/z and mass error context in non-annotation mode too).
+            if (hasMatchedIons)
+            {
+                table.AddDetailRowNoBold(@"  ", @"  ", rt); // blank separator line
+                table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons,
+                    GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass, rt, true);
+                foreach (var mfi in rmi.MatchedIons)
+                    table.AddDetailRowNoBold(AbstractSpectrumGraphItem.GetLabel(mfi, rmi.Rank, false, !_showIonSeriesAnnotations),
+                        mfi.PredictedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture) + @"  " +
+                        AbstractSpectrumGraphItem.GetMassErrorString(rmi, mfi), rt);
+            }
             return table;
         }
 
