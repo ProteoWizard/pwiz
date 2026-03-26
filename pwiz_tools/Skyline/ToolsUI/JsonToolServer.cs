@@ -449,7 +449,10 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetUiMode()
         {
-            return Program.ModeUI.ToString();
+            // Access on UI thread since Program.ModeUI may read Settings.Default
+            string mode = null;
+            Program.MainWindow.Invoke(new Action(() => mode = Program.ModeUI.ToString()));
+            return mode;
         }
 
         public void SetUiMode(string mode)
@@ -468,17 +471,27 @@ namespace pwiz.Skyline.ToolsUI
 
         public UndoRedoEntry[] GetUndoRedo()
         {
-            var undoMgr = Program.MainWindow.GetUndoManager();
+            // Capture undo/redo descriptions on the UI thread to avoid concurrent
+            // enumeration of the UndoManager stacks which are not thread-safe.
+            List<string> undoDescriptions = null;
+            List<string> redoDescriptions = null;
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                var undoMgr = Program.MainWindow.GetUndoManager();
+                undoDescriptions = undoMgr.UndoDescriptions.ToList();
+                redoDescriptions = undoMgr.RedoDescriptions.ToList();
+            }));
+
             var entries = new List<UndoRedoEntry>();
 
             // Undo entries: index -1 = most recent undoable change, -2 = next, etc.
             int undoIndex = -1;
-            foreach (var desc in undoMgr.UndoDescriptions)
+            foreach (var desc in undoDescriptions)
                 entries.Add(new UndoRedoEntry { Index = undoIndex--, Description = desc });
 
             // Redo entries: index +1 = most recent redoable change, +2 = next, etc.
             int redoIndex = 1;
-            foreach (var desc in undoMgr.RedoDescriptions)
+            foreach (var desc in redoDescriptions)
                 entries.Add(new UndoRedoEntry { Index = redoIndex++, Description = desc });
 
             return entries.ToArray();

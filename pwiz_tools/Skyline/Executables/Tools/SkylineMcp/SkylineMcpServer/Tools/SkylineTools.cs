@@ -708,17 +708,22 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_new_document"),
      Description("Create a new blank Skyline document, optionally with a specific UI mode and/or " +
-        "saved settings preset. This discards the current document without saving.")]
+        "saved settings preset. If the current document has unsaved changes, you must set " +
+        "discardChanges to true or save first (skyline_run_command with --save or --out).")]
     public static string NewDocument(
         [Description("UI mode for the new document: 'proteomic', 'small_molecules', or 'mixed'. " +
             "If omitted, keeps the current UI mode.")] string uiMode = null,
         [Description("Name of a saved settings preset from the Settings menu (e.g. 'Default'). " +
-            "If omitted, uses the current default settings.")] string startSettings = null)
+            "If omitted, uses the current default settings.")] string startSettings = null,
+        [Description("Set to true to discard unsaved changes. If false (default) and the " +
+            "document has unsaved changes, the operation will fail with an error.")] bool discardChanges = false)
     {
         return Invoke(connection =>
         {
             // Build RunCommand args for --new (without path = UI mode)
             var args = new List<string> { "--new" };
+            if (discardChanges)
+                args.Add("--discard-changes");
             if (!string.IsNullOrEmpty(startSettings))
                 args.Add("--settings-name=" + startSettings);
 
@@ -794,6 +799,8 @@ public static class SkylineTools
         return Invoke(connection =>
         {
             connection.SetUndoRedoPosition(index);
+            if (index == 0)
+                return "Already at current state.";
             return index < 0
                 ? $"Undone to position {index}."
                 : $"Redone to position {index}.";

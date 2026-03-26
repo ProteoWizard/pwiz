@@ -235,19 +235,14 @@ namespace pwiz.SkylineTestFunctional
         #region Audit log reset on settings change
 
         /// <summary>
-        /// Verifies that applying saved settings to an empty new document with only
-        /// the initial start_log_existing_doc audit entry resets the audit log:
-        /// - File > New, Settings > Default = no audit log entries (settings match defaults)
-        /// - File > New, Settings > custom = one audit log entry (diff from defaults)
-        /// </summary>
-        /// <summary>
         /// Tests the new CLI paths (--new, --settings-name) via RunCommand, verifies
         /// Settings Profiles visibility through GetSettingsListNames, and tests
         /// the audit log reset behavior.
-        ///
-        /// Scenario 1: --new (non-default settings) → --settings-name=Default + Reset = empty audit log
-        /// Scenario 2: --new (non-default settings) → Reset = one audit entry (diff from defaults)
         /// </summary>
+        /// <remarks>
+        /// Scenario 1: --new (non-default settings) then --settings-name=Default + Reset = empty audit log
+        /// Scenario 2: --new (non-default settings) then Reset = one audit entry (diff from defaults)
+        /// </remarks>
         private void TestAuditLogResetOnSettingsChange(JsonToolServer server)
         {
             var defaultSettings = SrmSettingsList.GetDefault();
