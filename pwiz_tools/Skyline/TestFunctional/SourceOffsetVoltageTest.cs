@@ -55,7 +55,8 @@ namespace pwiz.SkylineTestFunctional
                 var row = dlg.RowBindingList.AddNew();
                 Assert.IsNotNull(row);
                 row.SetProperty(SpectrumClassColumn.SourceOffsetVoltage);
-                row.SetOperation(FilterOperations.OP_IS_BLANK);
+                row.SetOperation(FilterOperations.OP_EQUALS);
+                row.SetValue(0.0);
                 dlg.OkDialog();
             });
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>

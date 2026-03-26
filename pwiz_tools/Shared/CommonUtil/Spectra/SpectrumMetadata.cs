@@ -33,7 +33,6 @@ namespace pwiz.Common.Spectra
             HasTotalIonCurrent = 4,
             HasInjectionTime = 8,
             HasConstantNeutralLoss = 16,
-            HasSourceOffsetVoltage = 32,
         }
         private ImmutableList<ImmutableList<SpectrumPrecursor>> _precursorsByMsLevel =
             ImmutableList<ImmutableList<SpectrumPrecursor>>.EMPTY;
@@ -197,7 +196,7 @@ namespace pwiz.Common.Spectra
             {
                 return GetFlag(Flags.HasInjectionTime) ? _injectionTime : (double?)null;
             }
-            set
+            private set
             {
                 SetFlag(Flags.HasInjectionTime, value.HasValue);
                 _injectionTime = value.GetValueOrDefault();
@@ -209,22 +208,12 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.InjectionTime = value);
         }
 
-        private double _sourceOffsetVoltage;
-
-        public double? SourceOffsetVoltage
+        public double SourceOffsetVoltage
         {
-            get
-            {
-                return GetFlag(Flags.HasSourceOffsetVoltage) ? _sourceOffsetVoltage : (double?) null;
-            }
-            set
-            {
-                SetFlag(Flags.HasSourceOffsetVoltage, value.HasValue);
-                _sourceOffsetVoltage = value.GetValueOrDefault();
-            }
+            get; private set;
         }
 
-        public SpectrumMetadata ChangeSourceOffsetVoltage(double? value)
+        public SpectrumMetadata ChangeSourceOffsetVoltage(double value)
         {
             return ChangeProp(ImClone(this), im => im.SourceOffsetVoltage = value);
         }
@@ -242,7 +231,8 @@ namespace pwiz.Common.Spectra
                    Equals(PresetScanConfiguration, other.PresetScanConfiguration) &&
                    Nullable.Equals(TotalIonCurrent, other.TotalIonCurrent) &&
                    Nullable.Equals(InjectionTime, other.InjectionTime) &&
-                   Equals(Analyzer, other.Analyzer);
+                   Equals(Analyzer, other.Analyzer) &&
+                   SourceOffsetVoltage.Equals(other.SourceOffsetVoltage);
         }
 
         public override bool Equals(object obj)
@@ -267,6 +257,8 @@ namespace pwiz.Common.Spectra
                 hashCode = (hashCode * 397) ^ CompensationVoltage.GetHashCode();
                 hashCode = (hashCode * 397) ^ TotalIonCurrent.GetHashCode();
                 hashCode = (hashCode * 397) ^ InjectionTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Analyzer?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ SourceOffsetVoltage.GetHashCode();
                 return hashCode;
             }
         }
