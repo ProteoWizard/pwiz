@@ -109,6 +109,8 @@ ja\DigitalRune.Windows.Docking.resources.dll
 ja\MSGraph.resources.dll
 ja\ProteomeDb.resources.dll
 ja\pwiz.Common.resources.dll
+ja\pwiz.CommonFileDialogs.resources.dll
+ja\pwiz.CommonMsData.resources.dll
 ja\pwiz.CommonUtil.resources.dll
 ja\SkylineCmd.resources.dll
 ja\Skyline-daily.resources.dll
@@ -240,6 +242,10 @@ psi-ms.obo
 pt\ZedGraph.resources.dll
 pwiz.Common.dll
 pwiz.Common.pdb
+pwiz.CommonFileDialogs.dll
+pwiz.CommonFileDialogs.pdb
+pwiz.CommonMsData.dll
+pwiz.CommonMsData.pdb
 pwiz.CommonUtil.dll
 pwiz.CommonUtil.pdb
 pwiz_data_cli.dll
@@ -295,6 +301,8 @@ zh-CHS\DigitalRune.Windows.Docking.resources.dll
 zh-CHS\MSGraph.resources.dll
 zh-CHS\ProteomeDb.resources.dll
 zh-CHS\pwiz.Common.resources.dll
+zh-CHS\pwiz.CommonFileDialogs.resources.dll
+zh-CHS\pwiz.CommonMsData.resources.dll
 zh-CHS\SkylineCmd.resources.dll
 zh-CHS\Skyline-daily.resources.dll
 zh-CHS\ZedGraph.resources.dll

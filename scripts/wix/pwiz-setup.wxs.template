@@ -105,12 +105,13 @@
                     </Component>
                     __CONTEXTMENU_REGISTRY__
 
-                    <Component Feature="MainFeature"><File Source="msvc-release\CustomDataSourceDialog.dll"  KeyPath="yes"/></Component>
-                    <Component Feature="MainFeature"><File Source="msvc-release\CustomDataSourceDialog.dll.config" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\DigitalRune.Windows.Docking.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\MSGraph.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.exe.config" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.exe.manifest" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\ProteowizardWrapper.dll" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\pwiz.CommonFileDialogs.dll" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\pwiz.CommonMsData.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\pwiz.CommonUtil.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\pwiz_bindings_cli.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\seems.exe.config" KeyPath="yes"/></Component>
