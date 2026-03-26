@@ -32,6 +32,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -145,30 +146,39 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return false;
             }
-            using var fileSaver = new FileSaver(filename, true);
-            if (!fileSaver.CanSave(this))
+            try
             {
+                using var fileSaver = new FileSaver(filename, true);
+                if (!fileSaver.CanSave(this))
+                {
+                    return false;
+                }
+
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
+                IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
+                var dataSchema = GetSkylineDataSchema(true);
+                // ReSharper disable once RedundantLambdaParameterType
+                longWaitDlg.PerformWork(this, 1500, (IProgressMonitor progressMonitor) =>
+                {
+                    progressMonitor.UpdateProgress(status);
+                    var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
+                    rowFactories.ExportReport(fileSaver.Stream, viewName.Value, rowItemExporter, progressMonitor, ref status);
+                });
+                if (longWaitDlg.IsCanceled)
+                {
+                    return false;
+                }
+
+                fileSaver.Commit();
+                return true;
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(DatabindingResources.ExportReportDlg_ExportReport_Failed_exporting_to, filename, x.Message), x);
                 return false;
             }
-
-            using var longWaitDlg = new LongWaitDlg();
-            longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
-            IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
-            var dataSchema = GetSkylineDataSchema(true);
-            // ReSharper disable once RedundantLambdaParameterType
-            longWaitDlg.PerformWork(this, 1500, (IProgressMonitor progressMonitor) =>
-            {
-                progressMonitor.UpdateProgress(status);
-                var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
-                rowFactories.ExportReport(fileSaver.Stream, viewName.Value, rowItemExporter, progressMonitor, ref status);
-            });
-            if (longWaitDlg.IsCanceled)
-            {
-                return false;
-            }
-
-            fileSaver.Commit();
-            return true;
         }
 
         private void Repopulate()
