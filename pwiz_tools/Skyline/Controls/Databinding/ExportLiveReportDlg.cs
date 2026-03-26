@@ -16,14 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,7 +24,15 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
