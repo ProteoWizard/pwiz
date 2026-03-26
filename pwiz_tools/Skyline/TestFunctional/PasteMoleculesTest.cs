@@ -148,6 +148,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var docEmpty = NewDocument();
+            MultipleFragmentsPerLinePaste();
             TestMultipleFragmentsPerLine();
             TestSimilarMzIsotopes();
             TestIsotopeLabelsInInChi();
@@ -1481,6 +1482,32 @@ namespace pwiz.SkylineTestFunctional
         private static void SetComboBoxes(ImportTransitionListColumnSelectDlg dlg, params string[] columnTypes)
         {
             dlg.SetSelectedColumnTypes(columnTypes);
+        }
+
+        private void MultipleFragmentsPerLinePaste()
+        {
+            // Reported problem: when pasting a transition list with duplicate product
+            // columns directly to the Targets window, Skyline threw:
+            // "System.InvalidOperationException: Collection was modified; enumeration operation may not execute."
+            var text =
+                "Molecule List Name,Molecule Name,Molecule Formula,Precursor Adduct,Precursor Mz,Precursor Charge,Product name,Product M/z,Product Charge,Product name,Product M/z,Product Charge\r\nGlyCombo,(Hex)5 (NeuAc)2 (HexNAc)4,C84H140N6O62,[M-2H],1111.392052,-2,NeuAc Loss,965.892052,-2,NeuGc Loss,957.892052,-2";
+
+            // Paste directly into Targets window - should yield 1 precursor with 2 fragment transitions
+            var pastedDoc = PasteNewDocument(text, false);
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, 2);
+
+            var transGroup = pastedDoc.MoleculeTransitionGroups.First();
+            var mzValues = transGroup.Transitions.Select(t => t.Mz).OrderBy(m => m).ToArray();
+            Assert.AreEqual(2, mzValues.Length, "Expected 2 fragment transitions");
+            Assert.AreEqual(957.892052, mzValues[0], 0.001, "NeuGc Loss m/z");
+            Assert.AreEqual(965.892052, mzValues[1], 0.001, "NeuAc Loss m/z");
+            foreach (var t in transGroup.Transitions)
+            {
+                Assert.AreEqual(-2, t.Transition.Charge,
+                    string.Format("Fragment at m/z {0} should have charge -2", t.Mz));
+            }
+
+            NewDocument();
         }
 
         private void TestMultipleFragmentsPerLine()
