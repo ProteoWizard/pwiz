@@ -79,6 +79,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_XML = () => GetPathToFile(DataSourceUtil.EXT_XML);
         public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
+        public static readonly Func<string> PATH_TO_SKYS = () => GetPathToFile(SrmSettingsList.EXT_SETTINGS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
         public static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
         public static readonly Func<string> BOOL_VALUE = () => string.Format(CommandArgUsage.CommandArgs_BOOL_VALUE__0__or__1_, bool.TrueString, bool.FalseString);
@@ -122,8 +123,8 @@ namespace pwiz.Skyline
 
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
-            PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
-            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_XML, PATH_TO_PROTDB
+            PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_SKYS, PATH_TO_TSV,
+            PATH_TO_IMSDB, PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_XML, PATH_TO_PROTDB
         };
 
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
@@ -1163,8 +1164,7 @@ namespace pwiz.Skyline
         // For adding saved settings
         public static readonly Argument ARG_SETTINGS_NAME = new DocArgument(@"settings-name", NAME_VALUE,
             (c, p) => c.SettingsName = p.Value);
-        public static readonly Argument ARG_SETTINGS_ADD = new Argument(@"settings-add",
-            () => GetPathToFile(SrmSettingsList.EXT_SETTINGS),
+        public static readonly Argument ARG_SETTINGS_ADD = new Argument(@"settings-add", PATH_TO_SKYS,
             (c, p) => c.SettingsAddPath = p.ValueFullPath);
         public static readonly Argument ARG_SETTINGS_CONFLICT_RESOLUTION = new Argument(@"settings-conflict-resolution",
             new[] { ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP },
