@@ -57,6 +57,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky")));
+            WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
             CreateBaseView(documentGrid);

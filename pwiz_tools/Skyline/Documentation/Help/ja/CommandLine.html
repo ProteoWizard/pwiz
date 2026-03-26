@@ -46,9 +46,11 @@ td {
 <table>
 <tr><th>引数</th><th>説明</th></tr>
 <tr><td><nobr>--in</nobr>=path/to/file（ファイル）.sky</td><td>Skylineファイルを開きます</td></tr>
+<tr><td><nobr>--open</nobr>=path/to/file（ファイル）.sky</td><td>Synonym for <nobr>--in</nobr>. Open a Skyline file.</td></tr>
 <tr><td><nobr>--save</nobr></td><td>どんな変更もファイルに保存します。</td></tr>
 <tr><td><nobr>--save-settings</nobr></td><td>グローバル環境の設定変更が（追加されたレポート、ライブラリ、酵素など）がプログラム設定ファイルに保存されます。</td></tr>
 <tr><td><nobr>--out</nobr>=path/to/file（ファイル）.sky</td><td>指定されたファイルに書き込まれること以外は、保存と同じです。</td></tr>
+<tr><td><nobr>--save-as</nobr>=path/to/file（ファイル）.sky</td><td>Synonym for <nobr>--out</nobr>. Save to the specified file.</td></tr>
 <tr><td><nobr>--new</nobr>=path/to/file（ファイル）.sky</td><td>現在のSkyline設定を使用して新規ドキュメントを作成します。</td></tr>
 <tr><td><nobr>--overwrite</nobr></td><td><nobr>--newで指定されたファイルパスが既に存在する場合に</nobr>、エラーとなる代わりにファイルパスを上書きします。</td></tr>
 <tr><td><nobr>--share-zip</nobr>[=path/to/file（ファイル）.sky.zip]</td><td>プロジェクト全体（ドキュメント、結果、ライブラリなど）をZIPアーカイブに保存します。デフォルトは最小限のアーカイブです。</td></tr>
@@ -58,7 +60,7 @@ td {
 <tr><td><nobr>--timestamp</nobr></td><td>記録中のすべての出力は、日時の後に続きます。</td></tr>
 <tr><td><nobr>--memstamp</nobr></td><td>記録中のすべての出力は、管理されている2つのメモリ使用量の値と、プロセスプライベートバイト数（四捨五入されたMB単位）の後に続きます。</td></tr>
 <tr><td><nobr>--log-file</nobr>=path/to/file（ファイル）</td><td>記録されたすべての出力をファイルに送信します。</td></tr>
-<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr>&gt;]</td><td>このテキストを表示します。</td></tr>
+<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr> | sections&gt;]</td><td>このテキストを表示します。</td></tr>
 <tr><td><nobr>--version</nobr></td><td>実行中のインストールのバージョン情報が表示されます</td></tr>
 <tr><td><nobr>--verbose-errors</nobr></td><td>エラーが発生した場合、Skylineの開発者に役立つ可能性のある追加情報をプログラムの出力に追加します。</td></tr>
 </table>

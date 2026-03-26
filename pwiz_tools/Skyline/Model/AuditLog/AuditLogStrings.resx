@@ -296,6 +296,9 @@
   <data name="added_peptide_decoys" xml:space="preserve">
     <value>Added {0} peptide decoys using {1} method</value>
   </data>
+  <data name="ran_command_line" xml:space="preserve">
+    <value>Ran command: {0}</value>
+  </data>
   <data name="refined_targets" xml:space="preserve">
     <value>Refined targets</value>
   </data>
