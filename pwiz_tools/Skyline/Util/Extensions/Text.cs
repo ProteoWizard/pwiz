@@ -603,13 +603,13 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
-        public static string EscapeForXmlAttribute(string str)
+        public static string EscapePipe(string str)
         {
-            return str.Replace(@"&", @"&amp;").Replace(@"""", @"&quot;").Replace(@"<", @"&lt;").Replace(@">", @"&gt;").Replace(@"|", @"&#x7C");
+            return str.Replace(@"|", @"\pipe");
         }
-        public static string UnescapeFromXmlAttribute(string str)
+        public static string UnescapePipe(string str)
         {
-            return str.Replace(@"&quot;", @"""").Replace(@"&lt;", @"<").Replace(@"&gt;", @">").Replace(@"&amp;", @"&").Replace(@"&#x7C", @"|");
+            return str.Replace(@"\pipe", @"|");
         }
         /// <summary>
         /// Replaces tabs, carriage returns, and newlines with spaces, collapsing

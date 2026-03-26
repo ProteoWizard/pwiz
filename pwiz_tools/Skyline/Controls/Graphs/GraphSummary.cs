@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var panelLayouts = GraphPanes.OfType<ILayoutPersistable>().FirstOrDefault()?.GetPersistentString();
             if (panelLayouts != null)
             {
-                res = res + '|' + TextUtil.EscapeForXmlAttribute(panelLayouts);
+                res = res + '|' + TextUtil.EscapePipe(panelLayouts);
             }
             return res;
         }
