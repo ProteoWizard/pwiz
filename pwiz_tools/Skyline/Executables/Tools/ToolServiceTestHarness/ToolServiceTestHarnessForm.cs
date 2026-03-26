@@ -1,7 +1,10 @@
 using SkylineTool;
 using System.Diagnostics;
+using System.IO.Pipes;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text;
+using System.Text.Json;
 
 namespace ToolServiceTestHarness
 {
@@ -13,6 +16,7 @@ namespace ToolServiceTestHarness
         public ToolServiceTestHarnessForm()
         {
             InitializeComponent();
+            radioClassic.Checked = true;
             UpdateMethodDropdown(typeof(IToolService));
 
             _arg1OriginalLabel = lblArgument1.Text;
@@ -102,9 +106,18 @@ namespace ToolServiceTestHarness
 
             try
             {
-                var client = new RemoteClient(tbxConnection.Text);
-                var result = client.RemoteCallName(method.Name, arguments.ToArray());
-                tbxResult.Text = result?.ToString() ?? string.Empty;
+                if (radioJson.Checked)
+                {
+                    var args = arguments.Select(a => a?.ToString() ?? string.Empty).ToArray();
+                    var result = JsonCall(tbxConnection.Text, method.Name, args);
+                    tbxResult.Text = result ?? string.Empty;
+                }
+                else
+                {
+                    var client = new RemoteClient(tbxConnection.Text);
+                    var result = client.RemoteCallName(method.Name, arguments.ToArray());
+                    tbxResult.Text = result?.ToString() ?? string.Empty;
+                }
             }
             catch (Exception ex)
             {
@@ -191,11 +204,12 @@ namespace ToolServiceTestHarness
                 {
                     loadContext = new IsolatedAssemblyLoadContext();
                     var assembly = loadContext.LoadFromAssemblyPath(skylineToolPath);
-                    var toolServiceTypeName = typeof(IToolService).FullName!;
+                    var selectedType = radioJson.Checked ? typeof(IJsonToolService) : typeof(IToolService);
+                    var toolServiceTypeName = selectedType.FullName!;
                     var toolServiceType = assembly.GetType(toolServiceTypeName);
                     if (toolServiceType == null)
                     {
-                        ShowError($"Unable to find type {toolServiceType} in {skylineToolPath}");
+                        ShowError($"Unable to find type {toolServiceTypeName} in {skylineToolPath}");
                         return;
                     }
                     UpdateMethodDropdown(toolServiceType);
@@ -211,9 +225,68 @@ namespace ToolServiceTestHarness
             }
         }
 
+        private void radioInterface_CheckedChanged(object sender, EventArgs e)
+        {
+            var selectedType = radioJson.Checked ? typeof(IJsonToolService) : typeof(IToolService);
+            UpdateMethodDropdown(selectedType);
+        }
+
         public void HandleException(Exception ex)
         {
             ShowError(ex.Message);
+        }
+
+        private static string? JsonCall(string connectionName, string method, string[] args)
+        {
+            string pipeName = JsonToolConstants.GetJsonPipeName(connectionName);
+            using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut);
+            pipe.Connect(5000);
+            pipe.ReadMode = PipeTransmissionMode.Message;
+
+            var request = new { method, args };
+            byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
+            pipe.Write(requestBytes, 0, requestBytes.Length);
+            pipe.Flush();
+            pipe.WaitForPipeDrain();
+
+            byte[] responseBytes = ReadAllBytes(pipe);
+            string responseJson = Encoding.UTF8.GetString(responseBytes);
+
+            using var doc = JsonDocument.Parse(responseJson);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("error", out var errorElement))
+            {
+                string? error = errorElement.GetString();
+                throw new InvalidOperationException(error ?? "Unknown error from Skyline");
+            }
+
+            if (root.TryGetProperty("result", out var resultElement))
+            {
+                if (resultElement.ValueKind == JsonValueKind.Null)
+                    return null;
+                if (resultElement.ValueKind == JsonValueKind.Number ||
+                    resultElement.ValueKind == JsonValueKind.Object ||
+                    resultElement.ValueKind == JsonValueKind.Array)
+                    return resultElement.GetRawText();
+                return resultElement.GetString();
+            }
+
+            return null;
+        }
+
+        private static byte[] ReadAllBytes(PipeStream stream)
+        {
+            var memoryStream = new MemoryStream();
+            do
+            {
+                var buffer = new byte[65536];
+                int count = stream.Read(buffer, 0, buffer.Length);
+                if (count == 0)
+                    return memoryStream.ToArray();
+                memoryStream.Write(buffer, 0, count);
+            } while (!stream.IsMessageComplete);
+            return memoryStream.ToArray();
         }
 
         public class IsolatedAssemblyLoadContext() : AssemblyLoadContext(isCollectible: true)

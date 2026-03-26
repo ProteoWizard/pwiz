@@ -435,6 +435,60 @@
   <data name="&gt;&gt;btnUpdateMethods.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="radioClassic.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioClassic.Location" type="System.Drawing.Point, System.Drawing">
+    <value>310, 22</value>
+  </data>
+  <data name="radioClassic.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 17</value>
+  </data>
+  <data name="radioClassic.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="radioClassic.Text" xml:space="preserve">
+    <value>Classic</value>
+  </data>
+  <data name="&gt;&gt;radioClassic.Name" xml:space="preserve">
+    <value>radioClassic</value>
+  </data>
+  <data name="&gt;&gt;radioClassic.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioClassic.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioClassic.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="radioJson.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioJson.Location" type="System.Drawing.Point, System.Drawing">
+    <value>380, 22</value>
+  </data>
+  <data name="radioJson.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 17</value>
+  </data>
+  <data name="radioJson.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="radioJson.Text" xml:space="preserve">
+    <value>JSON</value>
+  </data>
+  <data name="&gt;&gt;radioJson.Name" xml:space="preserve">
+    <value>radioJson</value>
+  </data>
+  <data name="&gt;&gt;radioJson.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioJson.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioJson.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
