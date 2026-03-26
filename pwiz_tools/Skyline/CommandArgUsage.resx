@@ -968,6 +968,9 @@ Red &lt; 0.5</value>
   <data name="_pep_min_length" xml:space="preserve">
     <value>The minimum length of a peptide to add to the document.</value>
   </data>
+  <data name="CommandArgs_GROUP_SAVED_SETTINGS" xml:space="preserve">
+    <value>Saved settings</value>
+  </data>
   <data name="CommandArgs_GROUP_DOCUMENT_SETTINGS" xml:space="preserve">
     <value>Document settings</value>
   </data>

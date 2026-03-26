@@ -3964,6 +3964,59 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
+        public void ConsoleNewDocumentNoPathTest()
+        {
+            // --new without a path should fail in CLI mode.
+            // The DocArgument validation catches it as "no document specified".
+            string output = AbstractUnitTestEx.RunCommand(false, CommandArgs.ARG_NEW);
+            AssertEx.Contains(output, new CommandArgs.ValueMissingException(CommandArgs.ARG_NEW).Message);
+        }
+
+        [TestMethod]
+        public void ConsoleSettingsArgumentsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+
+            // Create a test document
+            string docPath = TestFilesDir.GetTestPath(@"settings_test.sky");
+            RunCommand(CommandArgs.ARG_NEW + docPath);
+
+            // --settings-name=Default should apply default settings
+            string output = RunCommand(CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_SETTINGS_NAME + @"Default",
+                CommandArgs.ARG_OUT + docPath);
+            AssertEx.Contains(output, string.Format(SkylineResources.CommandLine_ApplySettings_Settings___0___applied_to_document_, @"Default"));
+
+            // Verify the document has default settings applied
+            var doc = ResultsUtil.DeserializeDocument(docPath);
+            var defaultSettings = SrmSettingsList.GetDefault();
+            Assert.AreEqual(defaultSettings.PeptideSettings.Filter.ExcludeNTermAAs,
+                doc.Settings.PeptideSettings.Filter.ExcludeNTermAAs);
+
+            // --settings-name with nonexistent name should fail
+            const string nonexistentSettings = @"NonexistentSettings_12345";
+            string output2 = AbstractUnitTestEx.RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_SETTINGS_NAME + nonexistentSettings);
+            AssertEx.Contains(output2,
+                string.Format(SkylineResources.CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_,
+                    nonexistentSettings));
+
+            // --settings-add with nonexistent file should fail
+            string badPath = TestFilesDir.GetTestPath(@"nonexistent.skys");
+            string output3 = AbstractUnitTestEx.RunCommand(false,
+                CommandArgs.ARG_SETTINGS_ADD + badPath);
+            AssertEx.Contains(output3,
+                string.Format(SkylineResources.CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_, badPath));
+
+            // --discard-changes is accepted alongside --new (no-op in CLI since Dirty is always false)
+            string discardPath = TestFilesDir.GetTestPath(@"discard_test.sky");
+            string output4 = RunCommand(CommandArgs.ARG_NEW + discardPath, CommandArgs.ARG_DISCARD_CHANGES);
+            AssertEx.Contains(output4, Path.GetFileName(discardPath));
+            Assert.IsFalse(output4.Contains(SkylineResources.CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__or___discard_changes_before___new_or___in_));
+            Assert.IsTrue(File.Exists(discardPath));
+        }
+
+        [TestMethod]
         public void SkylineRunnerErrorDetectionTest()
         {
             TestSkylineRunnerErrorDetection(null);

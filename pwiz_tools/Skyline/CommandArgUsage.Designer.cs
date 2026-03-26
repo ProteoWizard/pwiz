@@ -2580,7 +2580,16 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("CommandArgs_GROUP_REPORT_Exporting_reports", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Saved settings.
+        /// </summary>
+        public static string CommandArgs_GROUP_SAVED_SETTINGS {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_SAVED_SETTINGS", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Peptide Settings.
         /// </summary>

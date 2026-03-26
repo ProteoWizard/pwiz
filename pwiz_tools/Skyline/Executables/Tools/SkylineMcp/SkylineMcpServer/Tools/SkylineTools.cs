@@ -706,6 +706,100 @@ public static class SkylineTools
         }
     }
 
+    [McpServerTool(Name = "skyline_new_document"),
+     Description("Create a new blank Skyline document, optionally with a specific UI mode and/or " +
+        "saved settings preset. This discards the current document without saving.")]
+    public static string NewDocument(
+        [Description("UI mode for the new document: 'proteomic', 'small_molecules', or 'mixed'. " +
+            "If omitted, keeps the current UI mode.")] string uiMode = null,
+        [Description("Name of a saved settings preset from the Settings menu (e.g. 'Default'). " +
+            "If omitted, uses the current default settings.")] string startSettings = null)
+    {
+        return Invoke(connection =>
+        {
+            // Build RunCommand args for --new (without path = UI mode)
+            var args = new List<string> { "--new" };
+            if (!string.IsNullOrEmpty(startSettings))
+                args.Add("--settings-name=" + startSettings);
+
+            string output = connection.RunCommand(args.ToArray());
+
+            // Set UI mode if requested
+            if (!string.IsNullOrEmpty(uiMode))
+                connection.SetUiMode(uiMode);
+
+            var status = connection.GetDocumentStatus();
+            var sb = new StringBuilder();
+            sb.AppendLine($"New document created (UI mode: {status.DocumentType}).");
+            if (!string.IsNullOrEmpty(startSettings))
+                sb.AppendLine($"Settings '{startSettings}' applied.");
+            if (!string.IsNullOrEmpty(output?.Trim()))
+                sb.AppendLine(output.Trim());
+            return sb.ToString().TrimEnd();
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_ui_mode"),
+     Description("Get the current Skyline UI mode: 'proteomic', 'small_molecules', or 'mixed'. " +
+        "The UI mode controls which interface elements are shown and how labels like " +
+        "'Peptides' vs 'Molecules' are displayed.")]
+    public static string GetUiMode()
+    {
+        return Invoke(connection => connection.GetUiMode());
+    }
+
+    [McpServerTool(Name = "skyline_set_ui_mode"),
+     Description("Set the Skyline UI mode. Controls which interface elements are shown.")]
+    public static string SetUiMode(
+        [Description("UI mode: 'proteomic', 'small_molecules', or 'mixed'.")] string mode)
+    {
+        return Invoke(connection =>
+        {
+            connection.SetUiMode(mode);
+            return $"UI mode set to '{connection.GetUiMode()}'.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_undo_redo"),
+     Description("Get the full undo/redo stack with descriptions and indices. " +
+        "Index -1 = most recent undoable change, -2 = next oldest, etc. " +
+        "Index +1 = most recent redoable change, +2 = next, etc. " +
+        "An empty result means no undo or redo steps are available.")]
+    public static string GetUndoRedo()
+    {
+        return Invoke(connection =>
+        {
+            var entries = connection.GetUndoRedo();
+            if (entries.Length == 0)
+                return "No undo or redo steps available.";
+
+            var sb = new StringBuilder();
+            foreach (var entry in entries)
+            {
+                string prefix = entry.Index < 0 ? "undo" : "redo";
+                sb.AppendLine($"[{entry.Index}] {prefix}: {entry.Description}");
+            }
+            return sb.ToString().TrimEnd();
+        });
+    }
+
+    [McpServerTool(Name = "skyline_set_undo_redo_position"),
+     Description("Navigate to a specific point in the undo/redo stack by index. " +
+        "Use negative indices to undo (e.g. -1 undoes the last change, -3 undoes the last 3). " +
+        "Use positive indices to redo (e.g. +1 redoes one step). " +
+        "Get available indices from skyline_get_undo_redo.")]
+    public static string SetUndoRedoPosition(
+        [Description("Target index: negative to undo, positive to redo.")] int index)
+    {
+        return Invoke(connection =>
+        {
+            connection.SetUndoRedoPosition(index);
+            return index < 0
+                ? $"Undone to position {index}."
+                : $"Redone to position {index}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_set_logging"),
      Description("Enable or disable diagnostic logging for Skyline MCP tool calls. " +
         "When enabled, subsequent tool responses include a diagnostic log " +

@@ -186,9 +186,14 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_NEW = new DocArgument(@"new", PATH_TO_DOCUMENT, (c, p) =>
         {
             c.CreateNewFile = true;
-            c.SaveFile = p.ValueFullPath;
-            c.SkylineFile = p.ValueFullPath;
-        });
+            if (!p.IsNameOnly)
+            {
+                c.SaveFile = p.ValueFullPath;
+                c.SkylineFile = p.ValueFullPath;
+            }
+        }) { OptionalValue = true };
+        public static readonly Argument ARG_DISCARD_CHANGES = new Argument(@"discard-changes",
+            (c, p) => c.DiscardChanges = true);
         public static readonly Argument ARG_OVERWRITE = new DocArgument(@"overwrite", (c, p) =>
         {
             c.OverwriteExisting = p.ValueBool;
@@ -237,7 +242,8 @@ namespace pwiz.Skyline
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
-            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_NEW, ARG_OVERWRITE, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
+            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_NEW, ARG_OVERWRITE,
+            ARG_DISCARD_CHANGES, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
             ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
             Validate = c => c.ValidateGeneralArgs()
@@ -258,7 +264,8 @@ namespace pwiz.Skyline
         private bool ValidateGeneralArgs()
         {
             // If SkylineFile isn't set and one of the commands that requires --in is called, complain.
-            if (string.IsNullOrEmpty(SkylineFile) && RequiresSkylineDocument && !_isDocumentLoaded)
+            // The argument --in without a file is now allowed and caught later as an error in command-line use (not inside GUI)
+            if (string.IsNullOrEmpty(SkylineFile) && !CreateNewFile && RequiresSkylineDocument && !_isDocumentLoaded)
             {
                 WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_);
                 return false;
@@ -276,6 +283,7 @@ namespace pwiz.Skyline
         public string LogFile { get; private set; }
         public string SkylineFile { get; private set; }
         public bool CreateNewFile { get; private set; }
+        public bool DiscardChanges { get; private set; }
         public bool OverwriteExisting { get; private set; }
         public string SaveFile { get; private set; }
         private bool _saving;
@@ -285,6 +293,19 @@ namespace pwiz.Skyline
             set { _saving = value; }
         }
         public bool SaveSettings { get; private set; }
+        public string SettingsName { get; private set; }
+        public string SettingsAddPath { get; private set; }
+        public bool? ResolveSettingsConflictsBySkipping { get; private set; }
+
+        public bool ApplyingSettings
+        {
+            get { return !string.IsNullOrEmpty(SettingsName); }
+        }
+
+        public bool AddingSettings
+        {
+            get { return !string.IsNullOrEmpty(SettingsAddPath); }
+        }
 
         // For sharing zip file
         public bool SharingZipFile { get; private set; }
@@ -1138,6 +1159,20 @@ namespace pwiz.Skyline
         public bool MProphetTargetsOnly { get; private set; }
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
+
+        // For adding saved settings
+        public static readonly Argument ARG_SETTINGS_NAME = new DocArgument(@"settings-name", NAME_VALUE,
+            (c, p) => c.SettingsName = p.Value);
+        public static readonly Argument ARG_SETTINGS_ADD = new Argument(@"settings-add",
+            () => GetPathToFile(SrmSettingsList.EXT_SETTINGS),
+            (c, p) => c.SettingsAddPath = p.ValueFullPath);
+        public static readonly Argument ARG_SETTINGS_CONFLICT_RESOLUTION = new Argument(@"settings-conflict-resolution",
+            new[] { ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP },
+            (c, p) => c.ResolveSettingsConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP));
+
+        private static readonly ArgumentGroup GROUP_SAVED_SETTINGS = new ArgumentGroup(
+            () => CommandArgUsage.CommandArgs_GROUP_SAVED_SETTINGS, false,
+            ARG_SETTINGS_NAME, ARG_SETTINGS_ADD, ARG_SETTINGS_CONFLICT_RESOLUTION, ARG_SAVE_SETTINGS);
 
         // For adding annotations
         public static readonly Argument ARG_ADD_ANNOTATIONS_FILE = new DocArgument(@"annotation-file",
@@ -2418,6 +2453,7 @@ namespace pwiz.Skyline
                     GROUP_EXP_GENERAL,
                     GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
+                    GROUP_SAVED_SETTINGS,
                     GROUP_DOCUMENT_SETTINGS,
                     GROUP_PEPTIDE_SETTINGS,
                     GROUP_TRANSITION_SETTINGS,
@@ -2728,7 +2764,7 @@ namespace pwiz.Skyline
             public string AppliesTo { get; set; }
             public string Description
             {
-                get { return CommandArgUsage.ResourceManager.GetString("_" + Name.Replace('-', '_')); }
+                get { return CommandArgUsage.ResourceManager.GetString(@"_" + Name.Replace('-', '_')); }
             }
             public Func<string> ValueExample { get; private set; }
             public string[] Values
@@ -2761,6 +2797,11 @@ namespace pwiz.Skyline
             public static string operator +(Argument arg, string value)
             {
                 return arg.GetArgumentTextWithValue(value);
+            }
+
+            public static implicit operator string(Argument arg)
+            {
+                return arg.ArgumentText;
             }
 
             public string ArgumentDescription
@@ -3284,7 +3325,7 @@ namespace pwiz.Skyline
 
             // Regular expression for an argument: a hyphen surrounded by zero or more word characters
             // (i.e. letters, numbers or UnicodeCategory.ConnectorPunctuation) or hyphens
-            private static readonly Regex REGEX_ARGUMENT = new Regex("[\\w-]*-[\\w-]*",
+            private static readonly Regex REGEX_ARGUMENT = new Regex(@"[\w-]*-[\w-]*",
                 RegexOptions.Compiled | RegexOptions.CultureInvariant);
             /// <summary>
             /// HTML encodes the string.
