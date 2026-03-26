@@ -580,11 +580,12 @@ namespace ZedGraph
 #if DEBUG
             // Log the annealing process for debugging
             StreamWriter log = null;
+            string logPath = null;
             try
             {
-                var logPath = Path.Combine(Path.GetTempPath(), @"LabelLayoutAnneal.csv");
-                if (File.Exists(logPath))
-                    File.Delete(logPath);
+                // Use the user-level TEMP to avoid interference with TestRunner's per-test temp redirect.
+                var tempDir = Environment.GetEnvironmentVariable(@"TEMP", EnvironmentVariableTarget.User) ?? Path.GetTempPath();
+                logPath = Path.Combine(tempDir, @"LabelLayoutAnneal.csv");
                 log = new StreamWriter(logPath);
                 log.WriteLine(@"iteration,point_count,temperature,cost, delta, jump");
             }
@@ -592,12 +593,19 @@ namespace ZedGraph
             {
                 Console.WriteLine(@$"LabelLayout: unable to open anneal log file: {ex.Message}");
                 log = null;
+                logPath = null;
             }
 #endif
             for (var iter = 0; iter < maxIterations; iter++)
             {
                 if (cancellationToken.IsCancellationRequested)
+                {
+#if DEBUG
+                    log?.Dispose();
+                    if (logPath != null) try { File.Delete(logPath); } catch { }
+#endif
                     return null;
+                }
 
                 var temp = startTemp - cooling * iter;
                 if (temp < minTemp || !movablePoints.Any())

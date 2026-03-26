@@ -40,19 +40,18 @@ namespace pwiz.Skyline.Controls.Graphs
         private Thread _labelLayoutWorkerThread;
         private CancellationTokenSource _labelLayoutCts;
         private IProgressStatus _labelLayoutStatus;
-        private int _labelLayoutRequestId;
+        private LabelLayoutRequest _currentRequest;
         private int _labelLayoutLastProgressMs;
         private System.Windows.Forms.Timer _labelLayoutDebounceTimer;
         private LabelLayoutRequest _pendingRequest;
 
         private sealed class LabelLayoutWorkItem
         {
-            public int RequestId;
             public GraphPane Pane;
             public LabelLayout LabelLayout;
             public List<LabeledPoint> VisiblePoints;
             public List<LabeledPoint.PointLayout> SavedLayout;
-            public CancellationTokenSource Cancellation;
+            public CancellationToken Cancellation;
         }
 
         private sealed class LabelLayoutWorkResult
@@ -63,7 +62,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private sealed class LabelLayoutRequest
         {
-            public int RequestId;
             public GraphPane Pane;
             public ZedGraphControl GraphControl;
             public IList<LabeledPoint> LabeledPoints;
@@ -77,14 +75,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private sealed class WorkerProgress : IProgress<int>
         {
-            private readonly Action<int, int> _reportProgress;
-            private readonly int _requestId;
-            private readonly CancellationTokenSource _cancellation;
+            private readonly Action<int> _reportProgress;
+            private readonly CancellationToken _cancellation;
 
-            public WorkerProgress(Action<int, int> reportProgress, int requestId, CancellationTokenSource cancellation)
+            public WorkerProgress(Action<int> reportProgress, CancellationToken cancellation)
             {
                 _reportProgress = reportProgress;
-                _requestId = requestId;
                 _cancellation = cancellation;
             }
 
@@ -94,11 +90,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
                 try
                 {
-                    _reportProgress?.Invoke(value, _requestId);
+                    _reportProgress?.Invoke(value);
                 }
                 catch (ObjectDisposedException)
                 {
-                    // Ignore race if cancellation source has already been disposed.
+                    // Ignore race if the UI control has already been disposed.
                 }
             }
         }
@@ -195,19 +191,17 @@ namespace pwiz.Skyline.Controls.Graphs
             return result;
         }
 
-        public void Start(GraphPane pane, IList<LabeledPoint> labeledPoints, IList<LabeledPoint.PointLayout> savedLayout,
-            Action<List<LabeledPoint.PointLayout>> saveLayout, Action invalidate, Func<bool> isDisposed,
-            IProgressMonitor progressMonitor, string statusMessage, ZedGraphControl graphControl = null)
+        public void Start(ZedGraphControl graphControl, IList<LabeledPoint> labeledPoints,
+            IList<LabeledPoint.PointLayout> savedLayout, Action<List<LabeledPoint.PointLayout>> saveLayout)
         {
+            if (graphControl == null || graphControl.IsDisposed)
+                return;
+
+            var pane = graphControl.GraphPane;
             if (pane == null || labeledPoints == null)
                 return;
-            if (isDisposed != null && isDisposed())
-                return;
 
-            _labelLayoutRequestId++;
-            var requestId = _labelLayoutRequestId;
-
-            CancelInFlight(progressMonitor);
+            CancelInFlight(Program.MainWindow);
 
             // DigitalRune docking panel sometimes is resized with negative chart width, which crashes the layout algorithm.
             if (!labeledPoints.Any() || pane.Chart.Rect.Width <= 0 || pane.Chart.Rect.Height <= 0)
@@ -215,40 +209,21 @@ namespace pwiz.Skyline.Controls.Graphs
 
             _pendingRequest = new LabelLayoutRequest
             {
-                RequestId = requestId,
                 Pane = pane,
-                GraphControl = graphControl ?? (pane as SummaryGraphPane)?.GraphSummary?.GraphControl,
+                GraphControl = graphControl,
                 LabeledPoints = labeledPoints,
                 SavedLayout = savedLayout,
                 SaveLayout = saveLayout,
-                Invalidate = invalidate,
-                IsDisposed = isDisposed,
-                ProgressMonitor = progressMonitor,
-                StatusMessage = statusMessage
+                Invalidate = graphControl.Invalidate,
+                IsDisposed = () => graphControl.IsDisposed,
+                ProgressMonitor = Program.MainWindow,
+                StatusMessage = GraphsResources.LabelLayoutRunner_Start_Label_layout
             };
 
             // ZedGraph tends to fire multiple Zoom events for a single mouse wheel movement, which causes multiple redundant layout runs. Use a debounce timer to avoid this.
             EnsureDebounceTimer();
             _labelLayoutDebounceTimer.Stop();
             _labelLayoutDebounceTimer.Start();
-        }
-
-        public void Start(ZedGraphControl graphControl, IList<LabeledPoint> labeledPoints,
-            IList<LabeledPoint.PointLayout> savedLayout, Action<List<LabeledPoint.PointLayout>> saveLayout)
-        {
-            if (graphControl == null || graphControl.IsDisposed)
-                return;
-
-            Start(
-                graphControl.GraphPane,
-                labeledPoints,
-                savedLayout,
-                saveLayout,
-                graphControl.Invalidate,
-                () => graphControl.IsDisposed,
-                Program.MainWindow,
-                GraphsResources.LabelLayoutRunner_Start_Label_layout,
-                graphControl);
         }
 
         private void EnsureDebounceTimer()
@@ -361,8 +336,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var workerCancellation = new CancellationTokenSource();
             _labelLayoutCts = workerCancellation;
+            _currentRequest = request;
 
-            var requestId = request.RequestId;
             var saveLayout = request.SaveLayout;
             var invalidate = request.Invalidate;
             var isDisposed = request.IsDisposed;
@@ -380,12 +355,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var workItem = new LabelLayoutWorkItem
             {
-                RequestId = requestId,
                 Pane = pane,
                 LabelLayout = samplingLayout,
                 VisiblePoints = visiblePoints,
                 SavedLayout = request.SavedLayout != null ? new List<LabeledPoint.PointLayout>(request.SavedLayout) : new List<LabeledPoint.PointLayout>(),
-                Cancellation = workerCancellation
+                Cancellation = workerCancellation.Token
             };
 
             Thread workerThread = null;
@@ -407,11 +381,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             var minLabelHeight = heights.FindAll(h => h > 0).Min();
                             var labelLayout = workItem.LabelLayout ?? new LabelLayout(workItem.Pane, (int)Math.Ceiling(minLabelHeight));
-                            var progress = new WorkerProgress((progressPercent, id) =>
+                            var progress = new WorkerProgress(progressPercent =>
                             {
                                 runOnUiThread(() =>
                                 {
-                                    if (id != _labelLayoutRequestId)
+                                    if (!ReferenceEquals(request, _currentRequest))
                                         return;
                                     var now = Environment.TickCount;
                                     if (progressPercent < 100 &&
@@ -423,10 +397,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                     _labelLayoutStatus = status;
                                     progressMonitor?.UpdateProgress(status);
                                 });
-                            }, workItem.RequestId, workItem.Cancellation);
+                            }, workItem.Cancellation);
 
                             var result = labelLayout.ComputePlacementsSimulatedAnnealing(workItem.VisiblePoints, g, workItem.SavedLayout,
-                                workItem.Cancellation.Token, progress);
+                                workItem.Cancellation, progress);
                             if (workItem.Cancellation.IsCancellationRequested)
                             {
                                 cancelled = true;
@@ -460,7 +434,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     try
                     {
-                        if (requestId != _labelLayoutRequestId)
+                        if (!ReferenceEquals(request, _currentRequest))
                             return;
                         if (isDisposed != null && isDisposed())
                             return;
