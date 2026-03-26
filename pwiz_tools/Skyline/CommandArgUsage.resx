@@ -971,17 +971,17 @@ Red &lt; 0.5</value>
   <data name="_discard_changes" xml:space="preserve">
     <value>Allows --new or --in to proceed when the current document has unsaved changes. Without this flag, the command will fail with an error if there are unsaved changes.</value>
   </data>
-  <data name="_settings_name" xml:space="preserve">
-    <value>The name of saved settings to apply to the document, as it appears in the Settings menu.</value>
+  <data name="_doc_settings_name" xml:space="preserve">
+    <value>The name of a settings preset to apply to the document, as it appears in the Settings menu.</value>
   </data>
-  <data name="_settings_add" xml:space="preserve">
-    <value>Add settings from a saved settings file to the running program.</value>
+  <data name="_doc_settings_add" xml:space="preserve">
+    <value>Add settings presets from a saved settings file to the running program.</value>
   </data>
-  <data name="_settings_conflict_resolution" xml:space="preserve">
-    <value>Specifies how to resolve settings name conflicts, by either overwriting or skipping them, when using --settings-add (default is to output an error message for conflicts)</value>
+  <data name="_doc_settings_conflict_resolution" xml:space="preserve">
+    <value>Specifies how to resolve settings name conflicts, by either overwriting or skipping them, when using --doc-settings-add (default is to output an error message for conflicts)</value>
   </data>
-  <data name="CommandArgs_GROUP_SAVED_SETTINGS" xml:space="preserve">
-    <value>Saved settings</value>
+  <data name="CommandArgs_GROUP_SETTINGS_PRESETS" xml:space="preserve">
+    <value>Settings presets</value>
   </data>
   <data name="CommandArgs_GROUP_DOCUMENT_SETTINGS" xml:space="preserve">
     <value>Document settings</value>

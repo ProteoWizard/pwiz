@@ -1211,10 +1211,10 @@ Do you want to save the document now?</value>
     <value>Settings imported from {0}.</value>
   </data>
   <data name="CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_" xml:space="preserve">
-    <value>Error: The following settings names already exist. Use --settings-conflict-resolution to specify overwrite or skip.</value>
+    <value>Error: The following settings names already exist. Use --doc-settings-conflict-resolution to specify overwrite or skip.</value>
   </data>
   <data name="CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_" xml:space="preserve">
-    <value>Error: The settings name '{0}' already exists. Use --settings-conflict-resolution to specify overwrite or skip.</value>
+    <value>Error: The settings name '{0}' already exists. Use --doc-settings-conflict-resolution to specify overwrite or skip.</value>
   </data>
   <data name="CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_" xml:space="preserve">
     <value>Error: The settings file {0} does not exist.</value>
@@ -1229,7 +1229,7 @@ Do you want to save the document now?</value>
     <value>The --new argument requires a file path in command-line mode.</value>
   </data>
   <data name="CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_" xml:space="preserve">
-    <value>Error: The settings '{0}' could not be found. Use --settings-name with a name from the Settings menu.</value>
+    <value>Error: The settings '{0}' could not be found. Use --doc-settings-name with a name from the Settings menu.</value>
   </data>
   <data name="CommandLine_ApplySettings_Settings___0___applied_to_document_" xml:space="preserve">
     <value>Settings '{0}' applied to document.</value>

@@ -3983,7 +3983,7 @@ namespace pwiz.SkylineTestData
 
             // --settings-name=Default should apply default settings
             string output = RunCommand(CommandArgs.ARG_IN + docPath,
-                CommandArgs.ARG_SETTINGS_NAME + @"Default",
+                CommandArgs.ARG_DOC_SETTINGS_NAME + @"Default",
                 CommandArgs.ARG_OUT + docPath);
             AssertEx.Contains(output, string.Format(SkylineResources.CommandLine_ApplySettings_Settings___0___applied_to_document_, @"Default"));
 
@@ -3996,7 +3996,7 @@ namespace pwiz.SkylineTestData
             // --settings-name with nonexistent name should fail
             const string nonexistentSettings = @"NonexistentSettings_12345";
             string output2 = AbstractUnitTestEx.RunCommand(false, CommandArgs.ARG_IN + docPath,
-                CommandArgs.ARG_SETTINGS_NAME + nonexistentSettings);
+                CommandArgs.ARG_DOC_SETTINGS_NAME + nonexistentSettings);
             AssertEx.Contains(output2,
                 string.Format(SkylineResources.CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_,
                     nonexistentSettings));
@@ -4004,7 +4004,7 @@ namespace pwiz.SkylineTestData
             // --settings-add with nonexistent file should fail
             string badPath = TestFilesDir.GetTestPath(@"nonexistent.skys");
             string output3 = AbstractUnitTestEx.RunCommand(false,
-                CommandArgs.ARG_SETTINGS_ADD + badPath);
+                CommandArgs.ARG_DOC_SETTINGS_ADD + badPath);
             AssertEx.Contains(output3,
                 string.Format(SkylineResources.CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_, badPath));
 

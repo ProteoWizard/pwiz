@@ -243,7 +243,7 @@ namespace pwiz.Skyline
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
-            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_OUT, ARG_SAVE_AS, ARG_NEW, ARG_OVERWRITE,
+            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_NEW, ARG_OVERWRITE,
             ARG_DISCARD_CHANGES, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
             ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
@@ -1161,18 +1161,18 @@ namespace pwiz.Skyline
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
 
-        // For adding saved settings
-        public static readonly Argument ARG_SETTINGS_NAME = new DocArgument(@"settings-name", NAME_VALUE,
+        // For applying and importing document settings presets
+        public static readonly Argument ARG_DOC_SETTINGS_NAME = new DocArgument(@"doc-settings-name", NAME_VALUE,
             (c, p) => c.SettingsName = p.Value);
-        public static readonly Argument ARG_SETTINGS_ADD = new Argument(@"settings-add", PATH_TO_SKYS,
+        public static readonly Argument ARG_DOC_SETTINGS_ADD = new Argument(@"doc-settings-add", PATH_TO_SKYS,
             (c, p) => c.SettingsAddPath = p.ValueFullPath);
-        public static readonly Argument ARG_SETTINGS_CONFLICT_RESOLUTION = new Argument(@"settings-conflict-resolution",
+        public static readonly Argument ARG_DOC_SETTINGS_CONFLICT_RESOLUTION = new Argument(@"doc-settings-conflict-resolution",
             new[] { ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP },
             (c, p) => c.ResolveSettingsConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP));
 
-        private static readonly ArgumentGroup GROUP_SAVED_SETTINGS = new ArgumentGroup(
-            () => CommandArgUsage.CommandArgs_GROUP_SAVED_SETTINGS, false,
-            ARG_SETTINGS_NAME, ARG_SETTINGS_ADD, ARG_SETTINGS_CONFLICT_RESOLUTION, ARG_SAVE_SETTINGS);
+        private static readonly ArgumentGroup GROUP_SETTINGS_PRESETS = new ArgumentGroup(
+            () => CommandArgUsage.CommandArgs_GROUP_SETTINGS_PRESETS, false,
+            ARG_DOC_SETTINGS_NAME, ARG_DOC_SETTINGS_ADD, ARG_DOC_SETTINGS_CONFLICT_RESOLUTION);
 
         // For adding annotations
         public static readonly Argument ARG_ADD_ANNOTATIONS_FILE = new DocArgument(@"annotation-file",
@@ -2453,7 +2453,7 @@ namespace pwiz.Skyline
                     GROUP_EXP_GENERAL,
                     GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
-                    GROUP_SAVED_SETTINGS,
+                    GROUP_SETTINGS_PRESETS,
                     GROUP_DOCUMENT_SETTINGS,
                     GROUP_PEPTIDE_SETTINGS,
                     GROUP_TRANSITION_SETTINGS,

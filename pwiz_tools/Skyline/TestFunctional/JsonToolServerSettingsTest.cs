@@ -278,7 +278,7 @@ namespace pwiz.SkylineTestFunctional
             // Scenario 1: --settings-name=Default via RunCommand, then reset audit log.
             // Default settings include AuditLogging=true, so reset can strip the log.
             // This is the core tutorial use case: new document + default settings = clean audit log.
-            server.RunCommand(CommandArgs.ARG_SETTINGS_NAME + @"Default");
+            server.RunCommand(CommandArgs.ARG_DOC_SETTINGS_NAME + @"Default");
             Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AuditLogging,
                 @"Default settings should preserve audit logging");
             RunUI(() => SkylineWindow.ResetInitialAuditLogEntry());
@@ -299,7 +299,7 @@ namespace pwiz.SkylineTestFunctional
                 @"After reset on document with non-default settings, should have one audit entry");
 
             // Restore defaults for subsequent tests
-            server.RunCommand(CommandArgs.ARG_SETTINGS_NAME + @"Default");
+            server.RunCommand(CommandArgs.ARG_DOC_SETTINGS_NAME + @"Default");
         }
 
         #endregion

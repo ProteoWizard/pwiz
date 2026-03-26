@@ -2582,11 +2582,11 @@ namespace pwiz.Skyline {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Saved settings.
+        ///   Looks up a localized string similar to Settings presets.
         /// </summary>
-        public static string CommandArgs_GROUP_SAVED_SETTINGS {
+        public static string CommandArgs_GROUP_SETTINGS_PRESETS {
             get {
-                return ResourceManager.GetString("CommandArgs_GROUP_SAVED_SETTINGS", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_GROUP_SETTINGS_PRESETS", resourceCulture);
             }
         }
 

@@ -725,7 +725,7 @@ public static class SkylineTools
             if (discardChanges)
                 args.Add("--discard-changes");
             if (!string.IsNullOrEmpty(startSettings))
-                args.Add("--settings-name=" + startSettings);
+                args.Add("--doc-settings-name=" + startSettings);
 
             string output = connection.RunCommand(args.ToArray());
 
