@@ -99,7 +99,7 @@ if errorlevel 1 (
     set "VS_ProgramFiles=%ProgramFiles%"
 )
 
-call guess_toolset.bat
+call .\guess_toolset.bat
 if errorlevel 1 (
     call :Error_Print "Could not find a suitable toolset.")
 goto :eof
@@ -156,7 +156,7 @@ if errorlevel 1 (
     goto Setup_Args
 )
 :Config_Toolset
-call config_toolset.bat
+call .\config_toolset.bat
 if "_%_known_%_" == "__" (
     call :Error_Print "Unknown toolset: %B2_TOOLSET%"
 )

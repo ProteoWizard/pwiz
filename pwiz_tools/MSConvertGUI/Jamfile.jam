@@ -33,19 +33,24 @@ if [ modules.peek : NT ]
 
     rule do_msconvert_build ( targets + : sources * : properties * )
     {
+        local config ;
         if <variant>debug in $(properties) ||
            <debug-symbols>on in $(properties)
         {
-            CONFIGURATION on $(<[1]) = "Debug" ;
+            config = "Debug" ;
         }
         else
         {
-            CONFIGURATION on $(<[1]) = "Release" ;
+            config = "Release" ;
         }
+        CONFIGURATION on $(<[1]) = $(config) ;
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
-        OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
-        INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
+        local output_path = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+        OUTPUT_PATH on $(<[1]) = $(output_path) ;
+        local intermediate_path = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
+        # PwizCli properties must use separate /p: args to avoid cmd.exe misinterpreting \; in paths
+        MSBUILD_PARAMETERS on $(<[1]) = "/p:Configuration=$(config);Platform=$(PLATFORM);$(intermediate_path);OutDir=$(output_path) /p:PwizCliAssembly=pwiz_bindings_cli /p:PwizCliHintPath=$(output_path)pwiz_bindings_cli.dll" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
         MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
     }
@@ -54,7 +59,7 @@ if [ modules.peek : NT ]
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building MSConvertGUI in $(CONFIGURATION:L) configuration...
-        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI /restore /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI /restore $(MSBUILD_PARAMETERS) /nologo /verbosity:minimal
     }
 
 
@@ -124,7 +129,7 @@ if [ modules.peek : NT ]
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building and testing MSConvertGUI Test in $(CONFIGURATION:L) configuration...
-        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI;Test /restore /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI;Test /restore $(MSBUILD_PARAMETERS) /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         vstest.console.exe $(OUTPUT_PATH)MSConvertGUITest.dll /InIsolation /Settings:$(MSCONVERT_PATH)/TestSettings_x64.runsettings
@@ -154,7 +159,7 @@ if [ modules.peek : NT ]
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building and testing MSConvertGUI TestConnected in $(CONFIGURATION:L) configuration...
-        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI;TestConnected /restore /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI;TestConnected /restore $(MSBUILD_PARAMETERS) /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         vstest.console.exe $(OUTPUT_PATH)MSConvertGUI.TestConnected.dll /InIsolation /Settings:$(MSCONVERT_PATH)/TestSettings_x64.runsettings
