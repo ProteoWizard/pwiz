@@ -20,6 +20,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
@@ -88,6 +89,12 @@ namespace pwiz.Skyline.Model.Databinding
             return ListTransitions().SelectMany(transition => transition.Results.Values);
         }
 
+        public IEnumerable<AuditLogRow> ListAuditLogRows()
+        {
+            return DataSchema.Document.AuditLog.AuditLogEntries.Enumerate()
+                .Select((e, i) => new AuditLogRow(DataSchema, e, i + 1));
+        }
+
         public void RegisterFactory<T>(Func<IEnumerable<T>> listItemsFunc)
         {
             RegisterFactory(ViewSpec.GetRowSourceName(typeof(T)), listItemsFunc);
@@ -144,6 +151,7 @@ namespace pwiz.Skyline.Model.Databinding
             RegisterFactory(foldChangeRowFactory.GetAllFoldChangeDetailRows);
             var candidatePeakGroupFactory = new CandidatePeakGroupFactory(CancellationToken, DataSchema);
             RegisterFactory(candidatePeakGroupFactory.GetAllCandidatePeakGroups);
+            RegisterFactory(ListAuditLogRows);
         }
 
         public static RowFactories GetRowFactories(CancellationToken cancellationToken, SkylineDataSchema dataSchema)
@@ -180,11 +188,12 @@ namespace pwiz.Skyline.Model.Databinding
 
             var viewInfo = new ViewInfo(DataSchema, factory.ItemType, viewSpec);
             ExportReport(CancellationToken, stream, viewInfo, layout, factory, rowItemExporter, progressMonitor, ref status);
-
         }
 
-        public static void ExportReport(CancellationToken cancellationToken, Stream stream, ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
-            IReportExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public static void ExportReport(CancellationToken cancellationToken, Stream stream,
+            ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
+            IReportExporter rowItemExporter, IProgressMonitor progressMonitor,
+            ref IProgressStatus status)
         {
             RowItemEnumerator rowItemEnumerator = null;
             if (layout == null || layout.RowTransforms.Count == 0)

@@ -105,7 +105,7 @@ namespace TestPerf
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResults.OkDialog);
             RunUI(() =>
             {
-                openDataSourceDialog.CurrentDirectory = new MsDataFilePath(DataPath);
+                openDataSourceDialog.SetCurrentDirectory(new MsDataFilePath(DataPath));
                 openDataSourceDialog.SelectAllFileType(dataExt);
             });
 

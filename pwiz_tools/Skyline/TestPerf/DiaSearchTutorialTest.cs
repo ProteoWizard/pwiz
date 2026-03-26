@@ -342,7 +342,7 @@ namespace TestPerf
             });
             RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
             {
-                importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(SearchFiles.First()));
+                importRangesDlg.SetCurrentDirectory(new MsDataFilePath(Path.GetDirectoryName(SearchFiles.First())));
                 _analysisValues.DiaFiles.ForEach(importRangesDlg.SelectFile);
                 importRangesDlg.Open();
             });

@@ -603,11 +603,11 @@ namespace pwiz.SkylineTest
             {
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
-                { typeof(Gdi32), 4 },
+                { typeof(Gdi32), 5 },
                 { typeof(Kernel32), 8 },
                 { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
-                { typeof(User32), 33 },
+                { typeof(User32), 35 },
 
                 { typeof(DwmapiTest), 4 },
                 { typeof(Gdi32Test), 1 },
@@ -1523,6 +1523,7 @@ namespace pwiz.SkylineTest
             result.Add("Executables\\Tools\\TestArgCollector");
             result.Add("Executables\\Tools\\ExampleInteractiveTool");
             result.Add("Executables\\DevTools");
+            result.Add("Executables\\Tools\\SkylineMcp");
             return result.ToArray();
         }
 

@@ -703,9 +703,6 @@
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_" xml:space="preserve">
     <value>所选帐户不支持方法开发。请创建或选择其它帐户。</value>
   </data>
-  <data name="ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_" xml:space="preserve">
-    <value>所选帐户不支持方法开发。</value>
-  </data>
   <data name="ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_" xml:space="preserve">
     <value>所选 waters_connect 帐户不支持方法开发。</value>
   </data>

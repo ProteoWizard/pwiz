@@ -3481,7 +3481,7 @@ namespace pwiz.SkylineTestUtil
                 importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null));
             RunUI(() =>
             {
-                openDataSourceDialog.CurrentDirectory = new MsDataFilePath(dirPath);
+                openDataSourceDialog.SetCurrentDirectory(new MsDataFilePath(dirPath));
                 openDataSourceDialog.SelectAllFileType(ext, path => filter == null || path.Contains(filter));
                 openDataSourceDialog.Open();
             });
