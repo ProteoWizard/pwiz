@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             Assert.AreEqual(1, SkylineWindow.Document.MoleculeTransitionGroupCount);
 
-            // Define three spectrum filters for SourceOffsetVoltage blank, 10, and 20
+            // Define three spectrum filters for SourceOffsetVoltage 0, 10, and 20
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
             {
                 dlg.CreateCopy = true;
