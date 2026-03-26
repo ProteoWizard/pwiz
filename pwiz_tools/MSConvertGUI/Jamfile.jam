@@ -49,8 +49,10 @@ if [ modules.peek : NT ]
         local output_path = [ path.native $(location)/ ] ; # OutDir requires trailing slash
         OUTPUT_PATH on $(<[1]) = $(output_path) ;
         local intermediate_path = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
+        local native_deps_path = [ path.native $(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/$(config)/ ] ;
         # PwizCli properties must use separate /p: args to avoid cmd.exe misinterpreting \; in paths
-        MSBUILD_PARAMETERS on $(<[1]) = "/p:Configuration=$(config);Platform=$(PLATFORM);$(intermediate_path);OutDir=$(output_path) /p:PwizCliAssembly=pwiz_bindings_cli /p:PwizCliHintPath=$(output_path)pwiz_bindings_cli.dll" ;
+        # PwizCliHintPath points to install-native-dependencies location, not OutDir (they may differ)
+        MSBUILD_PARAMETERS on $(<[1]) = "/p:Configuration=$(config);Platform=$(PLATFORM);$(intermediate_path);OutDir=$(output_path) /p:PwizCliAssembly=pwiz_bindings_cli /p:PwizCliHintPath=$(native_deps_path)pwiz_bindings_cli.dll" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
         MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
     }
