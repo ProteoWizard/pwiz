@@ -46,11 +46,14 @@ td {
 <table>
 <tr><th>参数</th><th>描述</th></tr>
 <tr><td><nobr>--in</nobr>=路径/到/文件.sky</td><td>打开 Skyline 文件</td></tr>
+<tr><td><nobr>--open</nobr>=路径/到/文件.sky</td><td>Synonym for <nobr>--in</nobr>. Open a Skyline file.</td></tr>
 <tr><td><nobr>--save</nobr></td><td>保存对文件的任何更改</td></tr>
 <tr><td><nobr>--save-settings</nobr></td><td>让设置更改为全局环境，例如 添加的报告、库、酶等，以保存到程序配置文件中。</td></tr>
 <tr><td><nobr>--out</nobr>=路径/到/文件.sky</td><td>与“保存”相同，但会写入指定的文件</td></tr>
-<tr><td><nobr>--new</nobr>=路径/到/文件.sky</td><td>使用当前的 Skyline 设置创建新文档。</td></tr>
+<tr><td><nobr>--save-as</nobr>=路径/到/文件.sky</td><td>Synonym for <nobr>--out</nobr>. Save to the specified file.</td></tr>
+<tr><td><nobr>--new</nobr>[=路径/到/文件.sky]</td><td>使用当前的 Skyline 设置创建新文档。</td></tr>
 <tr><td><nobr>--overwrite</nobr></td><td>如果 <nobr>--new</nobr> 指定的文件路径已存在，则覆盖该文件路径且不报错。</td></tr>
+<tr><td><nobr>--discard-changes</nobr></td><td>Allows <nobr>--new</nobr> or <nobr>--in</nobr> to proceed when the current document has unsaved changes. Without this flag, the command will fail with an error if there are unsaved changes.</td></tr>
 <tr><td><nobr>--share-zip</nobr>[=路径/到/文件.sky.zip]</td><td>将整个项目（文档、结果、库等）保存到 ZIP 档案。默认为最小档案。</td></tr>
 <tr><td><nobr>--share-type</nobr>=&lt;minimal | complete&gt;</td><td>指定当指定了“<nobr>--share-zip</nobr>”时要共享的档案类型：“最小”或“完整”。“最小”是默认尝试将档案的大小减小到代表文档中目标所需的最小值，而“完整”则会保留所有项目文件的完全保真度。</td></tr>
 <tr><td><nobr>--batch-commands</nobr>=路径/到/文件</td><td>按照“SkylineRunner/Cmd”输入的方式处理每一行，逐行运行文件。用于自动执行多个命令。 打开的 Skyline 文件在所有命令中保持活动状态。</td></tr>
@@ -58,7 +61,7 @@ td {
 <tr><td><nobr>--timestamp</nobr></td><td>所有日志记录输出都将以时间和日期作为开头。</td></tr>
 <tr><td><nobr>--memstamp</nobr></td><td>所有日志记录输出都将以两个受控内存使用值作为开头，并以 MB 为单位处理专用字节（四舍五入到最接近的数字）。</td></tr>
 <tr><td><nobr>--log-file</nobr>=路径/到/文件</td><td>将所有记录的输出发送到文件。</td></tr>
-<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr>&gt;]</td><td>显示此文本。</td></tr>
+<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr> | sections&gt;]</td><td>显示此文本。</td></tr>
 <tr><td><nobr>--version</nobr></td><td>发出正在运行的安装的版本信息</td></tr>
 <tr><td><nobr>--verbose-errors</nobr></td><td>请在出错时为程序输出添加额外信息，此举可能对 Skyline 开发人员有所帮助。</td></tr>
 </table>
@@ -288,6 +291,12 @@ http://localhost:8080</td></tr>
 <tr><td><nobr>--panorama-folder</nobr>=路径/到/文件夹</td><td>发布文件的目标 Panorama 服务器文件夹的路径（例如 MyProject/MyFolder）。</td></tr>
 </table>
 <p>如果上述参数与将结果文件导入文档的参数（“--import-file”或“--import-all”）一起使用，则只有在将新结果添加到文档中时，才会将 Skyline 文档上传到给定的 Panorama 服务器。</p>
+<div class="RowType">Settings presets</div>
+<table>
+<tr><td><nobr>--doc-settings-name</nobr>=&lt;名称&gt;</td><td>The name of a settings preset to apply to the document, as it appears in the Settings menu.</td></tr>
+<tr><td><nobr>--doc-settings-add</nobr>=路径/到/文件.skys</td><td>Add settings presets from a saved settings file to the running program.</td></tr>
+<tr><td><nobr>--doc-settings-conflict-resolution</nobr>=&lt;overwrite | skip&gt;</td><td>Specifies how to resolve settings name conflicts, by either overwriting or skipping them, when using <nobr>--doc-settings-add</nobr> (default is to output an error message for conflicts)</td></tr>
+</table>
 <div class="RowType">文档设置</div>
 <table>
 <tr><td><nobr>--annotation-name</nobr>=&lt;名称&gt;</td><td>向文档添加指定名称的注释。具有相同名称的现有注释将被覆盖。</td></tr>

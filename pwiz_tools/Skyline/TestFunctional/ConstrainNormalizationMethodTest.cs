@@ -61,6 +61,10 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsFalse(SkylineWindow.Document.Settings.HasGlobalStandardArea);
             string pathNoGlobalStandardsNoHeavy = TestFilesDir.GetTestPath("NoGlobalStandards.sky");
+            // Wait for results to load before saving: OptimizeCache in SaveDocument only creates
+            // the .skyd at the new path when results are fully loaded. On slower machines running
+            // parallel tests, loading may not finish in time, causing a missing-data dialog on reopen.
+            WaitForDocumentLoaded();
             RunUI(()=>SkylineWindow.SaveDocument(pathNoGlobalStandardsNoHeavy));
 
             // Open a document which has heavy standards and choose "Normalize To Heavy"

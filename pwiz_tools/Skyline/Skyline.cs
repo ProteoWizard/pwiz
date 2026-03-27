@@ -265,7 +265,13 @@ namespace pwiz.Skyline
             }
             if (args != null && args.Length != 0)
             {
-                _fileToOpen = args.Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
+                // Support both --opendoc path/to/file and --opendoc=path/to/file
+                _fileToOpen = args.Select(a =>
+                {
+                    if (a.StartsWith(Program.OPEN_DOCUMENT_ARG + @"="))
+                        return a.Substring(Program.OPEN_DOCUMENT_ARG.Length + 1);
+                    return a;
+                }).Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
             }
 
             var defaultUIMode = Settings.Default.UIMode;
@@ -961,6 +967,8 @@ namespace pwiz.Skyline
 
         public bool InUndoRedo { get { return _undoManager.InUndoRedo; } }
 
+        public UndoManager GetUndoManager() { return _undoManager; }
+
         /// <summary>
         /// Restores a specific document as the current document regardless of the
         /// state of background processing;
@@ -1219,11 +1227,16 @@ namespace pwiz.Skyline
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            // Clean up the MCP tool service before the process is killed below
+            Program.StopToolService();
+
             base.OnHandleDestroyed(e);
-            
+
             if (!Program.FunctionalTest)
             {
-                // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
+                // HACK: Kill the process to avoid "invalid string binding" errors from
+                // native instrument vendor DLLs during shutdown. This means nothing after
+                // Application.Run() in Program.Main() will ever execute.
                 Process.GetCurrentProcess().Kill();
             }
         }
@@ -2598,7 +2611,10 @@ namespace pwiz.Skyline
                     }
                 }
                 if (_skyline.ChangeSettings(settingsNew, true))
+                {
                     settingsNew.UpdateLists(_skyline.DocumentFilePath);
+                    _skyline.ResetInitialAuditLogEntry();
+                }
             }
         }
 
@@ -2607,6 +2623,43 @@ namespace pwiz.Skyline
             var defaultSettings = SrmSettingsList.GetDefault();
             if (!Equals(defaultSettings, DocumentUI.Settings))
                 ChangeSettings(defaultSettings, false, SkylineResources.SkylineWindow_ResetDefaultSettings_Reset_default_settings);
+        }
+
+        /// <summary>
+        /// When the document is empty and the only audit log entry is the initial
+        /// start_log_existing_doc entry, replace the audit log with a fresh initial
+        /// entry computed from the current settings. This avoids accumulating
+        /// unnecessary settings-change entries when switching saved settings on a
+        /// new document (e.g. File > New, Settings > Default).
+        /// </summary>
+        public void ResetInitialAuditLogEntry()
+        {
+            var doc = Document;
+            if (!doc.Settings.DataSettings.AuditLogging)
+                return;
+
+            // Only reset when the document has no content
+            if (doc.Children.Count > 0)
+                return;
+
+            var entries = doc.AuditLog.AuditLogEntries;
+            // Check that we have entries and the oldest one is start_log_existing_doc.
+            // Walk to the oldest entry (just before ROOT).
+            if (entries.IsRoot)
+                return;
+            var oldest = entries;
+            while (!oldest.Parent.IsRoot)
+                oldest = oldest.Parent;
+            if (oldest.UndoRedo?.Type != MessageType.start_log_existing_doc)
+                return;
+
+            // Strip the entire audit log and recompute the initial entry
+            var cleanDoc = doc.ChangeAuditLog(AuditLogEntry.ROOT);
+            var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(cleanDoc, ModeUI);
+            cleanDoc = entry?.AppendEntryToDocument(cleanDoc) ?? cleanDoc;
+
+            ModifyDocument(SkylineResources.SkylineWindow_ResetDefaultSettings_Reset_default_settings,
+                d => cleanDoc, AuditLogEntry.SkipChange);
         }
 
         public bool ChangeSettingsMonitored(Control parent, string message, Func<SrmSettings, SrmSettings> changeSettings)
@@ -3153,10 +3206,13 @@ namespace pwiz.Skyline
 
         private void reportsHelpMenuItem_Click(object sender, EventArgs e)
         {
-            var dataSchema = new SkylineDataSchema(this,
-                SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            var documentationGenerator = new DocumentationGenerator(
-                ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument)))
+            ShowReportsDocumentation();
+        }
+
+        public void ShowReportsDocumentation()
+        {
+            var dataSchema = new SkylineWindowDataSchema(this, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var documentationGenerator = new DocumentationGenerator(ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument), ModeUI.ToString()))
             {
                 IncludeHidden = false
             };

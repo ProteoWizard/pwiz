@@ -114,6 +114,43 @@ namespace pwiz.Skyline.Model.Results
             var scanIds = Scans != null
                 ? Scans.ToArray(bytesFromDisk)
                 : null;
+
+            // Filter out NaN intensities from narrow scan window coverage.
+            // NaN marks time points where the target's product m/z was outside the
+            // spectrum's scan window and should not contribute to the chromatogram.
+            int nanCount = 0;
+            for (int i = 0; i < intensities.Length; i++)
+            {
+                if (float.IsNaN(intensities[i]))
+                    nanCount++;
+            }
+            if (nanCount > 0)
+            {
+                int validCount = intensities.Length - nanCount;
+                var filteredTimes = new float[validCount];
+                var filteredIntensities = new float[validCount];
+                var filteredMassErrors = massErrors != null ? new float[validCount] : null;
+                var filteredScanIds = scanIds != null ? new int[validCount] : null;
+                int j = 0;
+                for (int i = 0; i < intensities.Length; i++)
+                {
+                    if (!float.IsNaN(intensities[i]))
+                    {
+                        filteredTimes[j] = times[i];
+                        filteredIntensities[j] = intensities[i];
+                        if (filteredMassErrors != null)
+                            filteredMassErrors[j] = massErrors[i];
+                        if (filteredScanIds != null)
+                            filteredScanIds[j] = scanIds[i];
+                        j++;
+                    }
+                }
+                times = filteredTimes;
+                intensities = filteredIntensities;
+                massErrors = filteredMassErrors;
+                scanIds = filteredScanIds;
+            }
+
             // Make sure times and intensities match in length.
             if (times.Length != intensities.Length)
             {

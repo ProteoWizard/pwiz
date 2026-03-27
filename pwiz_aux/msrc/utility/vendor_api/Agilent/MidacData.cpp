@@ -184,6 +184,10 @@ MidacDataImpl::MidacDataImpl(const std::string& path)
 MidacDataImpl::~MidacDataImpl() noexcept(false)
 {
     try {imsReader_->Close();} CATCH_AND_FORWARD
+    imsReader_ = nullptr;
+    imsCcsReader_ = nullptr;
+    System::GC::Collect();
+    System::GC::WaitForPendingFinalizers();
 }
 
 std::string MidacDataImpl::getVersion() const

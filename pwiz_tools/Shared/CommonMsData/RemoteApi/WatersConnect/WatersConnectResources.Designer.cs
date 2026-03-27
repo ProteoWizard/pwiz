@@ -71,6 +71,89 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Server returned error.
+        /// </summary>
+        public static string WatersConnectAccount_AuthenticationErrorType_Generic {
+            get {
+                return ResourceManager.GetString("WatersConnectAccount_AuthenticationErrorType_Generic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Client credentials rejected (Scope).
+        /// </summary>
+        public static string WatersConnectAccount_AuthenticationErrorType_InvalidClientScope {
+            get {
+                return ResourceManager.GetString("WatersConnectAccount_AuthenticationErrorType_InvalidClientScope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Client credentials rejected (Secret).
+        /// </summary>
+        public static string WatersConnectAccount_AuthenticationErrorType_InvalidClientSecret {
+            get {
+                return ResourceManager.GetString("WatersConnectAccount_AuthenticationErrorType_InvalidClientSecret", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot reach identity server (check server URL / VPN).
+        /// </summary>
+        public static string WatersConnectAccount_AuthenticationErrorType_InvalidIdentityServer {
+            get {
+                return ResourceManager.GetString("WatersConnectAccount_AuthenticationErrorType_InvalidIdentityServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Password rejected (check username/password).
+        /// </summary>
+        public static string WatersConnectAccount_AuthenticationErrorType_InvalidPassword {
+            get {
+                return ResourceManager.GetString("WatersConnectAccount_AuthenticationErrorType_InvalidPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid Server Response.
+        /// </summary>
+        public static string WatersConnectAccount_AuthenticationErrorType_InvalidServerResponse {
+            get {
+                return ResourceManager.GetString("WatersConnectAccount_AuthenticationErrorType_InvalidServerResponse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to waters_connect server returned non-JSON body. .
+        /// </summary>
+        public static string WatersConnectAccount_HandleAuthenticationException_waters_connect_server_returned_non_JSON_body__ {
+            get {
+                return ResourceManager.GetString("WatersConnectAccount_HandleAuthenticationException_waters_connect_server_returned" +
+                        "_non_JSON_body__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot authenticate: .
+        /// </summary>
+        public static string WatersConnectAccount_SupportsMethodDevelopment_Cannot_authenticate__ {
+            get {
+                return ResourceManager.GetString("WatersConnectAccount_SupportsMethodDevelopment_Cannot_authenticate__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not supported by the waters_connect server..
+        /// </summary>
+        public static string WatersConnectAccount_SupportsMethodDevelopment_Not_supported_by_the_waters_connect_server_ {
+            get {
+                return ResourceManager.GetString("WatersConnectAccount_SupportsMethodDevelopment_Not_supported_by_the_waters_connec" +
+                        "t_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid method version Id {0}.
         /// </summary>
         public static string WatersConnectAcquisitionMethodUrl_Init_Invalid_method_version_Id__0_ {

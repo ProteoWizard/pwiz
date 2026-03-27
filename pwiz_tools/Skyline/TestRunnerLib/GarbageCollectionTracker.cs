@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace TestRunnerLib
 {
@@ -60,7 +61,7 @@ namespace TestRunnerLib
         /// <summary>
         /// Checks whether all tracked objects have been garbage collected.
         /// Returns null on success, or an error message listing survivors.
-        /// Always clears the tracker regardless of outcome.
+        /// Clears collected objects but retains survivors for retry or pinning.
         /// </summary>
         public static string CheckForLeaks()
         {
@@ -69,16 +70,16 @@ namespace TestRunnerLib
                 if (_trackedObjects.Count == 0)
                     return null;
 
+                // Remove objects that have been collected, keep survivors
+                _trackedObjects.RemoveAll(t => !t.IsAlive);
+
+                if (_trackedObjects.Count == 0)
+                    return null;
+
                 var survivorCounts = _trackedObjects
-                    .Where(t => t.IsAlive)
                     .GroupBy(t => t.TypeName)
                     .Select(g => g.Count() == 1 ? g.Key : string.Format(@"{0} x{1}", g.Key, g.Count()))
                     .ToList();
-
-                _trackedObjects.Clear();
-
-                if (survivorCounts.Count == 0)
-                    return null;
 
                 return string.Format(@"Objects not garbage collected after test: {0}",
                     string.Join(@", ", survivorCounts));
@@ -95,6 +96,21 @@ namespace TestRunnerLib
             {
                 _pinnedSurvivors.Clear();
                 _trackedObjects.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Releases strong references to survivors pinned from the previous test.
+        /// Call this BEFORE FlushMemory so that pinned objects from the prior test
+        /// do not act as GC roots during the current test's collection cycle,
+        /// preventing a cascade where one real leak causes all subsequent tests
+        /// to appear to leak the same unreleased objects.
+        /// </summary>
+        public static void ClearPins()
+        {
+            lock (_lock)
+            {
+                _pinnedSurvivors.Clear();
             }
         }
 
@@ -122,6 +138,9 @@ namespace TestRunnerLib
             }
         }
 
+        private const int GC_RETRY_COUNT = 3;
+        private const int GC_RETRY_SLEEP_MS = 500;
+
         /// <summary>
         /// Post-test GC leak check with automatic dotMemory snapshot on leak detection.
         /// Call after FlushMemory. Returns an error message if a leak was found, null otherwise.
@@ -129,8 +148,8 @@ namespace TestRunnerLib
         /// Behavior depends on context:
         /// - DotMemoryWarmupRuns > 0: PinSurvivors mode (for explicit profiling sessions)
         /// - Prior test exception: Clear tracked objects (leak check would be misleading)
-        /// - dotMemory attached: Check for leaks, pin survivors and snapshot if found
-        /// - Normal: Check for leaks, report if found
+        /// - Survivors found: Retry with sleep+GC cycles to distinguish transient GC
+        ///   timing from real leaks, then pin survivors and snapshot if still leaking
         /// </summary>
         public static string CheckAfterTest(string testName, int dotMemoryWarmupRuns,
             Exception exception, Action<string, object[]> log)
@@ -147,57 +166,30 @@ namespace TestRunnerLib
                 return null;
             }
 
-            // Use CheckAndPinLeaks which checks + pins in one pass, keeping
-            // survivors accessible for dotMemory. The pin is harmless when
-            // dotMemory is not attached (just extra strong refs until next Clear).
-            var leakMessage = CheckAndPinLeaks();
-            if (leakMessage != null && MemoryProfiler.IsReady)
+            // Phase 1: Check for survivors without pinning
+            var leakMessage = CheckForLeaks();
+            if (leakMessage == null)
+                return null;
+
+            // Phase 2: Survivors found - retry with sleep+GC to rule out transient GC timing
+            for (int retry = 0; retry < GC_RETRY_COUNT; retry++)
             {
-                // dotMemory is attached - take a snapshot with pinned survivors
+                Thread.Sleep(GC_RETRY_SLEEP_MS);
+                RunTests.MemoryManagement.FlushMemory();
+                leakMessage = CheckForLeaks();
+                if (leakMessage == null)
+                    return null;
+            }
+
+            // Phase 3: Still leaking after retries - pin survivors and report
+            PinSurvivors();
+            if (MemoryProfiler.IsReady)
+            {
                 var snapshotName = testName + @"_GC_LEAK";
                 log("\n# GC leak detected - taking dotMemory snapshot: {0}\n", new object[] { snapshotName });
                 MemoryProfiler.Snapshot(snapshotName);
             }
             return leakMessage;
-        }
-
-        /// <summary>
-        /// Checks for leaks and pins survivors atomically. Returns an error message
-        /// listing survivors if any are found, null otherwise.  Pinning keeps the
-        /// leaked objects alive so dotMemory can show retention paths.
-        /// </summary>
-        private static string CheckAndPinLeaks()
-        {
-            lock (_lock)
-            {
-                if (_trackedObjects.Count == 0)
-                    return null;
-
-                _pinnedSurvivors.Clear();
-                var survivorCounts = new List<string>();
-
-                foreach (var group in _trackedObjects.Where(t => t.IsAlive).GroupBy(t => t.TypeName))
-                {
-                    // Pin survivors so dotMemory can inspect retention paths
-                    foreach (var t in group)
-                    {
-                        var target = t.Reference.Target;
-                        if (target != null)
-                            _pinnedSurvivors.Add(target);
-                    }
-                    survivorCounts.Add(group.Count() == 1
-                        ? group.Key
-                        : string.Format(@"{0} x{1}", group.Key, group.Count()));
-                }
-
-                _trackedObjects.Clear();
-
-                if (survivorCounts.Count == 0)
-                    return null;
-
-                return string.Format(@"Objects not garbage collected after test: {0}",
-                    string.Join(@", ", survivorCounts));
-            }
         }
 
         private class TrackedObject
