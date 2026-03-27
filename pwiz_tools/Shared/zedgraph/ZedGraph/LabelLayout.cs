@@ -146,7 +146,10 @@ namespace ZedGraph
                             if (intersect != Rectangle.Empty)
                             {
                                 cell.Density += intersect.Height * intersect.Width;
-                                cell.PointCount++;
+                                // TODO(ritach): Uncomment to enable per-cell sampling in SamplePointsByDensityGrid.
+                                // Currently cuts TestLabelLayoutDeterminism labels from 32 to 7 -- tune sampling
+                                // parameters (MAX_LABELS_PER_CELL, MAX_LABEL_AREA_RATIO) before enabling.
+                                // cell.PointCount++;
                             }
                         }
                     }
