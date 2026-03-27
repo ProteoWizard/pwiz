@@ -85,11 +85,11 @@ namespace ZedGraph
 
         public class GridCell
         {
-            public RectangleF _bounds;
-            public float _density;
-            public int _pointCount;
+            public RectangleF Bounds;
+            public float Density;
+            public int PointCount;
             // public PointF _gradient;
-            public static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
+            public static readonly Dictionary<Color, Brush> BRUSHES = new Dictionary<Color, Brush>();
         }
 
         // First index row, second index line
@@ -110,7 +110,7 @@ namespace ZedGraph
                     var location = new Point(j * _cellSize, i * _cellSize) + chartOffset;
                     _densityGrid[i][j] = new GridCell()
                     {
-                        _bounds = new RectangleF(location, new SizeF(_cellSize, _cellSize)),
+                        Bounds = new RectangleF(location, new SizeF(_cellSize, _cellSize)),
                     };
                 }
             }
@@ -142,11 +142,11 @@ namespace ZedGraph
 
                         foreach (var cell in GetRectangleCells(markerRect))
                         {
-                            var intersect = RectangleF.Intersect(markerRect, cell._bounds);
+                            var intersect = RectangleF.Intersect(markerRect, cell.Bounds);
                             if (intersect != Rectangle.Empty)
                             {
-                                cell._density += intersect.Height * intersect.Width;
-                                cell._pointCount++;
+                                cell.Density += intersect.Height * intersect.Width;
+                                cell.PointCount++;
                             }
                         }
                     }
@@ -266,8 +266,8 @@ namespace ZedGraph
             var totalOverlap = 0.0;
             foreach (var cell in GetRectangleCells(rect))
             {
-                var intersect = RectangleF.Intersect(rect, cell._bounds);
-                totalOverlap += 1.0 * intersect.Height * intersect.Width / (_cellSize * _cellSize) * cell._density;
+                var intersect = RectangleF.Intersect(rect, cell.Bounds);
+                totalOverlap += 1.0 * intersect.Height * intersect.Width / (_cellSize * _cellSize) * cell.Density;
             }
 
             // overlap with the target point is bad, we should penalize it heavily
@@ -303,7 +303,7 @@ namespace ZedGraph
 
             var rList = rxList.Select(r => new KeyValuePair<float, string>(r, "x")).ToList();
             rList.AddRange(ryList.Select(r => new KeyValuePair<float, string>(r, "y")));
-            var pathDensity = CellFromPoint(pathCellCoord)._density;
+            var pathDensity = CellFromPoint(pathCellCoord).Density;
             foreach (var kv in rList.OrderBy(kv => kv.Key))
             {
                 if ("x".Equals(kv.Value))
@@ -312,7 +312,7 @@ namespace ZedGraph
                     pathCellCoord.Y += lv.Y > 0 ? 1 : -1;
                 if (IndexesWithinGrid(
                         pathCellCoord)) // it can occasionally get out of boundaries, but we can safely ignore it.
-                    pathDensity += CellFromPoint(pathCellCoord)._density;
+                    pathDensity += CellFromPoint(pathCellCoord).Density;
             }
 
             var visibleArea = RectArea(RectangleF.Intersect(rect, _graph.Chart.Rect));
@@ -758,9 +758,9 @@ namespace ZedGraph
 
                 foreach (var cell in GetRectangleCells(newLabelRectangle))
                 {
-                    var cellOverlap = RectangleF.Intersect(newLabelRectangle, cell._bounds);
+                    var cellOverlap = RectangleF.Intersect(newLabelRectangle, cell.Bounds);
                     var densityIncrement = cellOverlap.Height * cellOverlap.Width;
-                    cell._density += 2.0f * densityIncrement;
+                    cell.Density += 2.0f * densityIncrement;
                 }
 
                 var targetPoint = _graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);

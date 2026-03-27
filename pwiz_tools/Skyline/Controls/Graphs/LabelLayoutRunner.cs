@@ -170,8 +170,8 @@ namespace pwiz.Skyline.Controls.Graphs
             var keep = new HashSet<LabeledPoint>(alwaysKeep);
             foreach (var cellEntry in pointCells)
             {
-                var cellpoPointCount = labelLayout.CellFromPoint(cellEntry.Item2)._pointCount;
-                var cutoff = cellpoPointCount > MAX_LABELS_PER_CELL ? MAX_LABELS_PER_CELL/ (double)cellpoPointCount : 1.0;
+                var cellPointCount = labelLayout.CellFromPoint(cellEntry.Item2).PointCount;
+                var cutoff = cellPointCount > MAX_LABELS_PER_CELL ? MAX_LABELS_PER_CELL / (double)cellPointCount : 1.0;
 
                 if (cellEntry.Item1.Point.IsSelected || (double)cellEntry.Item1.Hash / maxHash <= (cutoff * areaSamplingRate))
                 {

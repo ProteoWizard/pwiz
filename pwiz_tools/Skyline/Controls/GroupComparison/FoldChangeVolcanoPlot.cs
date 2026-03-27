@@ -356,37 +356,47 @@ namespace pwiz.Skyline.Controls.GroupComparison
             _suppressAxisChangeLayout = true;
             try
             {
-                zedGraphControl.GraphPane.GraphObjList.Clear();
-                zedGraphControl.GraphPane.CurveList.Clear();
-                _points.Clear();
-                _labeledPoints.Clear();
-                _foldChangeCutoffLine1 = _foldChangeCutoffLine2 = _minPValueLine = null;
+                UpdateGraphInternal();
+            }
+            finally
+            {
+                _suppressAxisChangeLayout = false;
+            }
+        }
 
-                var rows = GetFoldChangeRows(_bindingListSource).ToList();
-                if (!rows.Any()) // Nothing to graph
-                    return;
+        private void UpdateGraphInternal()
+        {
+            zedGraphControl.GraphPane.GraphObjList.Clear();
+            zedGraphControl.GraphPane.CurveList.Clear();
+            _points.Clear();
+            _labeledPoints.Clear();
+            _foldChangeCutoffLine1 = _foldChangeCutoffLine2 = _minPValueLine = null;
 
-                var selectedPoints = new PointPairList();
-                var otherPoints = new PointPairList();
+            var rows = GetFoldChangeRows(_bindingListSource).ToList();
+            if (!rows.Any()) // Nothing to graph
+                return;
 
-                var count = 0;
+            var selectedPoints = new PointPairList();
+            var otherPoints = new PointPairList();
 
-                // Create points and Selection objects
-                foreach (var row in rows.OrderBy(r => r.FoldChangeResult.AdjustedPValue))
+            var count = 0;
+
+            // Create points and Selection objects
+            foreach (var row in rows.OrderBy(r => r.FoldChangeResult.AdjustedPValue))
+            {
+                var foldChange = row.FoldChangeResult.Log2FoldChange;
+                var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
+                var point = new PointPair(foldChange, pvalue) { Tag = row };
+                if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && DotPlotUtil.IsTargetSelected(_skylineWindow, row.Peptide, row.Protein))
                 {
-                    var foldChange = row.FoldChangeResult.Log2FoldChange;
-                    var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
-                    var point = new PointPair(foldChange, pvalue) { Tag = row };
-                    if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && DotPlotUtil.IsTargetSelected(_skylineWindow, row.Peptide, row.Protein))
-                    {
-                        selectedPoints.Add(point);
-                        ++count;
-                    }
-                    else
-                    {
-                        otherPoints.Add(point);
-                    }
+                    selectedPoints.Add(point);
+                    ++count;
                 }
+                else
+                {
+                    otherPoints.Add(point);
+                }
+            }
 
             // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
             AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
@@ -439,17 +449,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 AdjustLocations(zedGraphControl.GraphPane);
             }
 
-                if (Settings.Default.GroupComparisonAvoidLabelOverlap)
-                {
-                    StartLabelLayoutAsync(_labeledPoints,
-                        _labelsLayouts.TryGetValue(GroupComparisonName, out var layout) ? layout : null);
-                }
-                zedGraphControl.Invalidate();
-            }
-            finally
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                _suppressAxisChangeLayout = false;
+                StartLabelLayoutAsync(_labeledPoints,
+                    _labelsLayouts.TryGetValue(GroupComparisonName, out var layout) ? layout : null);
             }
+            zedGraphControl.Invalidate();
         }
         // ReSharper restore PossibleMultipleEnumeration
 
