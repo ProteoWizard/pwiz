@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Menus
                     .Any(idItem => idItem.Checked);
             }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
-            AddTransitionContextMenu(menuStrip, iInsert++);
+            menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
             menuStrip.Items.Insert(iInsert++, transformChromContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator17);
             menuStrip.Items.Insert(iInsert++, autoZoomContextMenuItem);
@@ -237,10 +237,14 @@ namespace pwiz.Skyline.Menus
             }
         }
 
-        public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
+        public ToolStripMenuItem TransitionsContextMenuItem
         {
-            menuStrip.Items.Insert(iInsert, transitionsContextMenuItem);
+            get
+            {
+                return transitionsContextMenuItem;
+            }
         }
+
         #endregion
 
         #region Peaks

@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Menus
         protected void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
             using var chromatogramContextMenu = new ChromatogramContextMenu(SkylineWindow);
-            chromatogramContextMenu.AddTransitionContextMenu(menuStrip, iInsert);
+            menuStrip.Items.Insert(iInsert, chromatogramContextMenu.TransitionsContextMenuItem);
         }
 
         protected void AddPeptideOrderContextMenu(ToolStrip menuStrip, int iInsert)
