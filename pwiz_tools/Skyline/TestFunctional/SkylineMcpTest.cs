@@ -21,6 +21,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,6 +34,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using SkylineTool;
+using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -45,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private const int EXPECTED_TOOL_COUNT = 38;
+        private const int EXPECTED_TOOL_COUNT = 43;
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -119,7 +121,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 mcpProcess = StartMcpServer(mcpServerPath);
 
                 // Run MCP protocol tests
-                ValidateMcpProtocol(mcpProcess);
+                ValidateMcpProtocol(mcpProcess, server);
             }
             finally
             {
@@ -152,7 +154,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             return process;
         }
 
-        private void ValidateMcpProtocol(Process mcpProcess)
+        private void ValidateMcpProtocol(Process mcpProcess, JsonToolServer server)
         {
             // Wrap stdin with UTF-8 StreamWriter (Process.StandardInput defaults to
             // system code page on .NET Framework, corrupting non-ASCII characters)
@@ -162,7 +164,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             int id = 0;
 
             // Initialize MCP session
-            var initResponse = McpCall(stdin, stdout, ref id, "initialize", new JObject
+            var initResponse = McpCall(mcpProcess, stdin, stdout, ref id, "initialize", new JObject
             {
                 ["protocolVersion"] = "2024-11-05",
                 ["capabilities"] = new JObject(),
@@ -182,21 +184,21 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             });
 
             // Verify tool list
-            var toolsResult = McpCall(stdin, stdout, ref id, "tools/list");
+            var toolsResult = McpCall(mcpProcess, stdin, stdout, ref id, "tools/list");
             var tools = (JArray)toolsResult["result"]?["tools"];
             Assert.IsNotNull(tools, "tools/list should return tools array");
             AssertEx.AreEqual(EXPECTED_TOOL_COUNT, tools.Count);
 
             // Verify get_version returns a non-empty string
-            string version = McpToolCall(stdin, stdout, ref id, "skyline_get_version");
+            string version = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_version");
             Assert.AreEqual(Install.Version, version);
 
             // Verify get_document_path handles unsaved document (no NRE)
-            string unsavedPath = McpToolCall(stdin, stdout, ref id, "skyline_get_document_path");
+            string unsavedPath = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path");
             Assert.AreEqual("(unsaved)", unsavedPath);
 
             // Import FASTA via MCP - the MCP server drives the document change
-            McpToolCall(stdin, stdout, ref id, "skyline_import_fasta",
+            McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_import_fasta",
                 new JObject { ["textFasta"] = TEST_FASTA });
 
             // Verify from inside Skyline that the import worked
@@ -212,7 +214,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             // Query protein info via MCP report and verify against the document model
             var columnNames = new[] { "ProteinName", "ProteinDescription", "ProteinSequence" };
             var reportDef = new JObject { ["select"] = new JArray(columnNames) };
-            string reportResult = McpToolCall(stdin, stdout, ref id,
+            string reportResult = McpToolCall(mcpProcess, stdin, stdout, ref id,
                 "skyline_get_report_from_definition",
                 new JObject { ["reportDefinitionJson"] = reportDef.ToString() });
             var values = new[] { protein.Name, protein.Description, protein.PeptideGroup.Sequence };
@@ -224,19 +226,90 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             // Save via MCP run_command and verify get_document_path returns the saved path
             const string saveFileName = "SkÿlineMcpTest.sky";   // Be sure to test Unicode round-tripping
             string docPath = TestContext.GetTestResultsPath(saveFileName);
-            string saveResponse = McpToolCall(stdin, stdout, ref id, "skyline_run_command",
+            string saveResponse = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_run_command",
                 new JObject { ["commandArgs"] = TextUtil.SpaceSeparate(
                     CommandArgs.ARG_SAVE_AS + docPath.Quote(),
                     CommandArgs.ARG_OVERWRITE.ToString()) });
             AssertEx.Contains(saveResponse, saveFileName);
-            string savedPath = McpToolCall(stdin, stdout, ref id, "skyline_get_document_path");
+            string savedPath = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path");
             AssertEx.AreEqual(docPath.ToForwardSlashPath(), savedPath);
+
+            // Version mismatch detection: verify that an unknown method sent through
+            // the pipe produces an error with the Skyline version, so the LLM can
+            // diagnose version mismatches between SkylineMcpServer and Skyline.
+            TestVersionMismatchError(server);
+        }
+
+        /// <summary>
+        /// Verify that when a newer SkylineMcpServer calls a method not supported by the
+        /// running Skyline instance, the error includes the Skyline version for diagnostics.
+        /// Connects directly to the pipe (like the MCP server does internally) and sends
+        /// a request for a non-existent method.
+        /// </summary>
+        private void TestVersionMismatchError(JsonToolServer server)
+        {
+            // Connect to the same pipe the MCP server uses
+            var pipe = new NamedPipeClientStream(@".", server.PipeName, PipeDirection.InOut);
+            pipe.Connect(5000);
+            pipe.ReadMode = PipeTransmissionMode.Message;
+            using (var client = new SkylineJsonToolClient(pipe))
+            {
+                // Verify normal operation first
+                string version = client.GetVersion();
+                Assert.IsFalse(string.IsNullOrEmpty(version));
+
+                // Simulate a newer client calling a method the server doesn't have.
+                // Send a raw JSON-RPC request since the typed client won't let us
+                // call a method that doesn't exist in IJsonToolService.
+                string request = new JObject
+                {
+                    [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
+                    [nameof(JSON_RPC.method)] = @"GetFutureFeature",
+                    [nameof(JSON_RPC.id)] = 1
+                }.ToString();
+                byte[] requestBytes = Encoding.UTF8.GetBytes(request);
+                pipe.Write(requestBytes, 0, requestBytes.Length);
+                pipe.Flush();
+                pipe.WaitForPipeDrain();
+
+                // Read the error response
+                var ms = new MemoryStream();
+                do
+                {
+                    var buffer = new byte[65536];
+                    int count = pipe.Read(buffer, 0, buffer.Length);
+                    if (count == 0) break;
+                    ms.Write(buffer, 0, count);
+                } while (!pipe.IsMessageComplete);
+                var response = JObject.Parse(Encoding.UTF8.GetString(ms.ToArray()));
+
+                // Verify the error has the correct JSON-RPC structure and content
+                var error = response[nameof(JSON_RPC.error)];
+                Assert.IsNotNull(error, @"Unknown method should return a JSON-RPC error");
+                AssertEx.AreEqual(JsonToolConstants.ERROR_METHOD_NOT_FOUND,
+                    (int)error[nameof(JSON_RPC.code)]);
+
+                // The error message must contain "Unknown method:" - this is the pattern
+                // that SkylineTools.Invoke checks to trigger version mismatch enrichment
+                string message = (string)error[nameof(JSON_RPC.message)];
+                AssertEx.Contains(message, @"Unknown method:");
+                AssertEx.Contains(message, @"GetFutureFeature");
+
+                // Verify the connection file contains the Skyline version that
+                // SkylineTools.Invoke uses to enrich the error message.
+                // SkylineConnection reads this during TryConnect and stores it
+                // as SkylineVersion, which gets included in the enriched error:
+                // "This method is not available in {skylineId}."
+                string connectionJson = File.ReadAllText(
+                    JsonToolConstants.GetConnectionFilePath(server.PipeName));
+                AssertEx.Contains(connectionJson, Install.BareVersion);
+            }
         }
 
         /// <summary>
         /// Send a JSON-RPC method call and return the response.
         /// </summary>
-        private static JObject McpCall(StreamWriter stdin, StreamReader stdout,
+        private static JObject McpCall(Process mcpProcess, StreamWriter stdin, StreamReader stdout,
             ref int id, string method, JObject parameters = null)
         {
             id++;
@@ -249,7 +322,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             if (parameters != null)
                 message["params"] = parameters;
             SendJsonRpc(stdin, message);
-            var response = ReadJsonRpcResponse(stdout, id);
+            var response = ReadJsonRpcResponse(mcpProcess, stdout, id);
             AssertEx.AreEqual(id, (int)response["id"]);
             return response;
         }
@@ -257,10 +330,10 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         /// <summary>
         /// Call an MCP tool and return the text content from the response.
         /// </summary>
-        private static string McpToolCall(StreamWriter stdin, StreamReader stdout,
+        private static string McpToolCall(Process mcpProcess, StreamWriter stdin, StreamReader stdout,
             ref int id, string toolName, JObject arguments = null)
         {
-            var response = McpCall(stdin, stdout, ref id, "tools/call", new JObject
+            var response = McpCall(mcpProcess, stdin, stdout, ref id, "tools/call", new JObject
             {
                 ["name"] = toolName,
                 ["arguments"] = arguments ?? new JObject()
@@ -276,13 +349,30 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             writer.Flush();
         }
 
-        private static JObject ReadJsonRpcResponse(StreamReader reader, int expectedId)
+        private static JObject ReadJsonRpcResponse(Process mcpProcess, StreamReader reader, int expectedId)
         {
             // Read lines until we get a JSON-RPC response with the expected id
             for (int i = 0; i < 100; i++)
             {
                 string line = reader.ReadLine();
-                Assert.IsNotNull(line, "Unexpected end of MCP server output");
+                if (line == null)
+                {
+                    bool killed = false;
+                    if (!mcpProcess.HasExited)
+                    {
+                        if (!mcpProcess.WaitForExit(5000))
+                        {
+                            mcpProcess.Kill();
+                            killed = true;
+                        }
+                    }
+                    string stderr = mcpProcess.StandardError.ReadToEnd();
+                    string status = killed
+                        ? "MCP server stopped responding and was terminated"
+                        : string.Format("MCP server exited unexpectedly (exit code {0})", mcpProcess.ExitCode);
+                    Assert.Fail("{0}.{1}", status,
+                        string.IsNullOrEmpty(stderr) ? string.Empty : "\nStderr: " + stderr);
+                }
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
                 var obj = JObject.Parse(line);

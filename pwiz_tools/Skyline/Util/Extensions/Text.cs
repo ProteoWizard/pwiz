@@ -1137,7 +1137,7 @@ namespace pwiz.Skyline.Util.Extensions
     /// </summary>
     public readonly struct LlmInstruction
     {
-        public static LlmInstruction Format(string formatString, params string[] args)
+        public static LlmInstruction Format(string formatString, params object[] args)
         {
             return new LlmInstruction(string.Format(formatString, args));
         }

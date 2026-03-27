@@ -350,6 +350,10 @@
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SkylineTool\SkylineTool.csproj">
+      <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
+      <Name>SkylineTool</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
       <Project>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</Project>
       <Name>TestRunnerLib</Name>

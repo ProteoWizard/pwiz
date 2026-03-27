@@ -19,7 +19,7 @@ namespace pwiz.Skyline {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SkylineResources {
@@ -386,6 +386,54 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to add settings from the file {0}.
+        /// </summary>
+        public static string CommandLine_AddSettings_Error__Failed_attempting_to_add_settings_from_the_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Error__Failed_attempting_to_add_settings_from_the_file__0" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The following settings names already exist. Use --settings-conflict-resolution to specify overwrite or skip..
+        /// </summary>
+        public static string CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___" +
+                        "settings_conflict_resolution_to_specify_overwrite_or_skip_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The settings file {0} does not exist..
+        /// </summary>
+        public static string CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The settings name &apos;{0}&apos; already exists. Use --settings-conflict-resolution to specify overwrite or skip..
+        /// </summary>
+        public static string CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___sett" +
+                        "ings_conflict_resolution_to_specify_overwrite_or_skip_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings imported from {0}..
+        /// </summary>
+        public static string CommandLine_AddSettings_Settings_imported_from__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Settings_imported_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: {0} does not match the regular expression..
         /// </summary>
         public static string CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_ {
@@ -411,6 +459,25 @@ namespace pwiz.Skyline {
             get {
                 return ResourceManager.GetString("CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1" +
                         "____Ignoring__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The settings &apos;{0}&apos; could not be found. Use --settings-name with a name from the Settings menu..
+        /// </summary>
+        public static string CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___set" +
+                        "tings_name_with_a_name_from_the_Settings_menu_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings &apos;{0}&apos; applied to document..
+        /// </summary>
+        public static string CommandLine_ApplySettings_Settings___0___applied_to_document_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ApplySettings_Settings___0___applied_to_document_", resourceCulture);
             }
         }
         
@@ -1117,6 +1184,16 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The --new argument requires a file path in command-line mode..
+        /// </summary>
+        public static string CommandLine_NewDocument_The___new_argument_requires_a_file_path_in_command_line_mode_ {
+            get {
+                return ResourceManager.GetString("CommandLine_NewDocument_The___new_argument_requires_a_file_path_in_command_line_m" +
+                        "ode_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: No new results added. Skipping Panorama import..
         /// </summary>
         public static string CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_ {
@@ -1290,6 +1367,16 @@ namespace pwiz.Skyline {
             get {
                 return ResourceManager.GetString("CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_comm" +
                         "and_failed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document has unsaved changes. Use --save, --out, or --discard-changes before --new or --in..
+        /// </summary>
+        public static string CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__or___discard_changes_before___new_or___in_ {
+            get {
+                return ResourceManager.GetString("CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__" +
+                        "or___discard_changes_before___new_or___in_", resourceCulture);
             }
         }
         
