@@ -332,6 +332,9 @@
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Triangle" xml:space="preserve">
     <value>Triangle</value>
   </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None" xml:space="preserve">
+    <value>None</value>
+  </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle" xml:space="preserve">
     <value>Circle</value>
   </data>

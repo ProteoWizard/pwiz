@@ -354,24 +354,65 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
             AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
 
-            foreach (var colorRow in GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null))
+            // Resolve formatting traits per-point independently: for each trait (color, symbol, size,
+            // labeled), the first matching rule that has that trait set (non-null / non-Empty) wins.
+            // This lets separate rules control different traits, e.g. color by protein and shape by p-value.
+            var colorRows = GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null).ToList();
+            var unmatchedOtherPoints = new PointPairList();
+            var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
+            foreach (var point in otherPoints)
             {
-                var row = colorRow;
-                var matchedPoints = otherPoints.Where(p =>
-                {
-                    var foldChangeRow = (FoldChangeRow) p.Tag;
-                    return row.MatchExpression.Matches(Document, foldChangeRow.Protein, foldChangeRow.Peptide,
-                        foldChangeRow.FoldChangeResult, CutoffSettings);
-                }).ToArray();
+                var foldChangeRow = (FoldChangeRow)point.Tag;
+                Color? resolvedColor = null;
+                PointSymbol? resolvedSymbol = null;
+                PointSize? resolvedSize = null;
+                bool? resolvedLabeled = null;
+                int firstRuleIndex = -1;
 
-                if (matchedPoints.Any())
+                for (int ruleIndex = 0; ruleIndex < colorRows.Count; ruleIndex++)
                 {
-                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(row.PointSize), row.Labeled, row.PointSymbol);
-                    otherPoints = new PointPairList(otherPoints.Except(matchedPoints).ToArray());
+                    var colorRow = colorRows[ruleIndex];
+                    if (!colorRow.MatchExpression.Matches(Document, foldChangeRow.Protein, foldChangeRow.Peptide,
+                            foldChangeRow.FoldChangeResult, CutoffSettings))
+                        continue;
+
+                    if (firstRuleIndex < 0)
+                        firstRuleIndex = ruleIndex;
+
+                    if (resolvedColor == null && colorRow.Color != Color.Empty)
+                        resolvedColor = colorRow.Color;
+                    if (resolvedSymbol == null && colorRow.PointSymbol.HasValue)
+                        resolvedSymbol = colorRow.PointSymbol;
+                    if (resolvedSize == null && colorRow.PointSize.HasValue)
+                        resolvedSize = colorRow.PointSize;
+                    if (resolvedLabeled == null)
+                        resolvedLabeled = colorRow.Labeled;
+
+                    if (resolvedColor != null && resolvedSymbol != null && resolvedSize != null && resolvedLabeled != null)
+                        break;
                 }
+
+                if (firstRuleIndex < 0)
+                    unmatchedOtherPoints.Add(point);
+                else
+                    pointFormats.Add((point,
+                        resolvedColor ?? Color.Gray,
+                        resolvedSymbol ?? PointSymbol.Circle,
+                        resolvedSize ?? PointSize.small,
+                        resolvedLabeled ?? false,
+                        firstRuleIndex));
             }
 
-            AddPoints(otherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
+            foreach (var group in pointFormats
+                .GroupBy(pf => (pf.color, pf.symbol, pf.size, pf.labeled))
+                .OrderBy(g => g.Min(pf => pf.firstRuleIndex)))
+            {
+                var fmt = group.Key;
+                AddPoints(new PointPairList(group.Select(pf => pf.point).ToList()),
+                    fmt.color, DotPlotUtil.PointSizeToFloat(fmt.size), fmt.labeled, fmt.symbol);
+            }
+
+            AddPoints(unmatchedOtherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
 
             // The coordinates that depend on the axis scale don't matter here, the AxisChangeEvent will fix those
             // Insert after selected items, but before all other items

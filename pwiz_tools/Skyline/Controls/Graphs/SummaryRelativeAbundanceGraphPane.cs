@@ -525,26 +525,64 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // For each valid match expression specified by the user
-            var colorRows = (_formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting).ColorRows;
-            foreach (var colorRow in colorRows.Where(r => r.MatchExpression != null))
+            // Resolve formatting traits per-point independently: for each trait (color, symbol, size,
+            // labeled), the first matching rule that has that trait set (non-null / non-Empty) wins.
+            var colorRows = (_formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting).ColorRows
+                .Where(r => r.MatchExpression != null).ToList();
+            var remainingPoints = new List<PointPair>(); // points that matched no rule
+            var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
+            foreach (var point in unmatchedPoints)
             {
-                var matchedPoints = new List<PointPair>();
-                foreach (var point in unmatchedPoints)
+                var pointData = (GraphPointData)point.Tag;
+                Color? resolvedColor = null;
+                PointSymbol? resolvedSymbol = null;
+                PointSize? resolvedSize = null;
+                bool? resolvedLabeled = null;
+                int firstRuleIndex = -1;
+
+                for (int ruleIndex = 0; ruleIndex < colorRows.Count; ruleIndex++)
                 {
-                    var pointData = (GraphPointData)point.Tag;
-                    if (colorRow.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null))
-                    {
-                        matchedPoints.Add(point);
-                    }
+                    var colorRow = colorRows[ruleIndex];
+                    if (!colorRow.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null))
+                        continue;
+
+                    if (firstRuleIndex < 0)
+                        firstRuleIndex = ruleIndex;
+
+                    if (resolvedColor == null && colorRow.Color != Color.Empty)
+                        resolvedColor = colorRow.Color;
+                    if (resolvedSymbol == null && colorRow.PointSymbol.HasValue)
+                        resolvedSymbol = colorRow.PointSymbol;
+                    if (resolvedSize == null && colorRow.PointSize.HasValue)
+                        resolvedSize = colorRow.PointSize;
+                    if (resolvedLabeled == null)
+                        resolvedLabeled = colorRow.Labeled;
+
+                    if (resolvedColor != null && resolvedSymbol != null && resolvedSize != null && resolvedLabeled != null)
+                        break;
                 }
 
-                if (matchedPoints.Any())
-                {
-                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(colorRow.PointSize), colorRow.Labeled, colorRow.PointSymbol);
-                    unmatchedPoints = unmatchedPoints.Except(matchedPoints).ToList();
-                }
+                if (firstRuleIndex < 0)
+                    remainingPoints.Add(point);
+                else
+                    pointFormats.Add((point,
+                        resolvedColor ?? Color.Gray,
+                        resolvedSymbol ?? PointSymbol.Circle,
+                        resolvedSize ?? PointSize.normal,
+                        resolvedLabeled ?? false,
+                        firstRuleIndex));
             }
-            AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
+
+            foreach (var group in pointFormats
+                .GroupBy(pf => (pf.color, pf.symbol, pf.size, pf.labeled))
+                .OrderBy(g => g.Min(pf => pf.firstRuleIndex)))
+            {
+                var fmt = group.Key;
+                AddPoints(new PointPairList(group.Select(pf => pf.point).ToList()),
+                    fmt.color, DotPlotUtil.PointSizeToFloat(fmt.size), fmt.labeled, fmt.symbol);
+            }
+
+            AddPoints(new PointPairList(remainingPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
             if(dataChanged || Settings.Default.RelativeAbundanceLogScale != YAxis.Scale.IsLog)
                 UpdateAxes();
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)

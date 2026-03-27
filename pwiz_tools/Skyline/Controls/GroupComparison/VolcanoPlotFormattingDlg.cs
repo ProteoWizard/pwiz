@@ -105,6 +105,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             _symbolCombo.DisplayMember = @"DisplayString";
             _symbolCombo.ValueMember = @"PointSymbol";
             _symbolCombo.Items.AddRange(
+                new PointSymbolStringPair(null,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None),
                 new PointSymbolStringPair(PointSymbol.Circle,
                     GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle),
                 new PointSymbolStringPair(PointSymbol.Square,
@@ -131,6 +133,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             _pointSizeCombo.DisplayMember = @"DisplayString";
             _pointSizeCombo.ValueMember = @"PointSize";
             _pointSizeCombo.Items.AddRange(
+                new PointSizeStringPair(null,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None),
                 new PointSizeStringPair(PointSize.x_small,
                     GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small),
                 new PointSizeStringPair(PointSize.small,
@@ -164,7 +168,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public class PointSizeStringPair
         {
-            public PointSizeStringPair(PointSize pointSize, string displayString)
+            public PointSizeStringPair(PointSize? pointSize, string displayString)
             {
                 PointSize = pointSize;
                 DisplayString = displayString;
@@ -172,7 +176,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // These are actually used by the combo box
             // ReSharper disable once MemberCanBePrivate.Local
-            public PointSize PointSize { get; set; }
+            public PointSize? PointSize { get; set; }
 
             // ReSharper disable once UnusedAutoPropertyAccessor.Local
             // ReSharper disable once MemberCanBePrivate.Local
@@ -181,7 +185,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public class PointSymbolStringPair
         {
-            public PointSymbolStringPair(PointSymbol pointSymbol, string displayString)
+            public PointSymbolStringPair(PointSymbol? pointSymbol, string displayString)
             {
                 PointSymbol = pointSymbol;
                 DisplayString = displayString;
@@ -189,7 +193,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // These are actually used by the combo box
             // ReSharper disable once MemberCanBePrivate.Local
-            public PointSymbol PointSymbol { get; set; }
+            public PointSymbol? PointSymbol { get; set; }
 
             // ReSharper disable once UnusedAutoPropertyAccessor.Local
             // ReSharper disable once MemberCanBePrivate.Local
@@ -421,12 +425,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private bool IsLastRowEmpty => Equals(_bindingList.LastOrDefault(), MatchRgbHexColor.EMPTY);
 
-        public PointSymbol GetRowPointSymbol(int rowIndex)
+        public PointSymbol? GetRowPointSymbol(int rowIndex)
         {
             return _bindingList[rowIndex].PointSymbol;
         }
 
-        public void SetRowPointSymbol(int rowIndex, PointSymbol pointSymbol)
+        public void SetRowPointSymbol(int rowIndex, PointSymbol? pointSymbol)
         {
             _bindingList[rowIndex].PointSymbol = pointSymbol;
         }
