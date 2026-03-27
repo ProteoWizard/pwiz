@@ -146,6 +146,7 @@ namespace ZedGraph
                             if (intersect != Rectangle.Empty)
                             {
                                 cell._density += intersect.Height * intersect.Width;
+                                cell._pointCount++;
                             }
                         }
                     }
