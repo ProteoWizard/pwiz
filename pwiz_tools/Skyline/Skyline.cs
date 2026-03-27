@@ -147,7 +147,6 @@ namespace pwiz.Skyline
         {
             InitializeComponent();
             InitializeMenus();
-            _treeNodeContextMenu = new TreeNodeContextMenu(this);
             _undoManager = new UndoManager(this);
             _undoRedoButtons = new UndoRedoButtons(_undoManager,
                 EditMenu.UndoMenuItem, undoToolBarButton,
@@ -4704,6 +4703,7 @@ namespace pwiz.Skyline
 
         private void InitializeMenus()
         {
+            _skylineMenuControls.Add(_treeNodeContextMenu = new TreeNodeContextMenu(this));
             _skylineMenuControls.Add(RefineMenu = new RefineMenu(this));
             _skylineMenuControls.Add(EditMenu = new EditMenu(this));
             _skylineMenuControls.Add(ViewMenu= new ViewMenu(this));

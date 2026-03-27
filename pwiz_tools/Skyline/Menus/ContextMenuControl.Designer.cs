@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Menus
             this.peptideOrderContextMenuItem,
             this.scopeContextMenuItem,
             this.replicatesRTContextMenuItem});
-            this.sharedContextMenuStrip.Name = "sharedContextMenuString";
+            this.sharedContextMenuStrip.Name = "sharedContextMenuStrip";
             resources.ApplyResources(this.sharedContextMenuStrip, "sharedContextMenuStrip");
             // 
             // selectionContextMenuItem
