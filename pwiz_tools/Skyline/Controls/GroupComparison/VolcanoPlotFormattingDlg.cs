@@ -157,6 +157,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             advancedCheckBox.Checked = Settings.Default.ShowAdvancedVolcanoPlotFormatting;
             UpdateAdvancedColumns();
 
+            regexColorRowGrid1.AllowNullColor = true;
             regexColorRowGrid1.Owner = this;
             if (!hasFoldChangeResults)
             {

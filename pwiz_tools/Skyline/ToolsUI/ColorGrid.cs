@@ -167,6 +167,12 @@ namespace pwiz.Skyline.ToolsUI
             BindingList<T> GetCurrentBindingList();
         }
 
+        /// <summary>
+        /// When true, a context menu replaces the direct color picker so users can also choose "None" (Color.Empty).
+        /// The color cell renders with a "None" label when no color is set.
+        /// </summary>
+        public bool AllowNullColor { get; set; }
+
         private void dataGridViewColors_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             if (e.ColumnIndex != colorCol.Index || _owner == null)
@@ -177,7 +183,17 @@ namespace pwiz.Skyline.ToolsUI
                 var row = dataGridViewColors.Rows[e.RowIndex];
                 var colorRow = currentBindings[e.RowIndex];
                 var cell = row.Cells[e.ColumnIndex];
-                cell.Style.SelectionBackColor = cell.Style.SelectionForeColor = cell.Style.BackColor = colorRow.Color;
+                if (AllowNullColor && colorRow.Color == Color.Empty)
+                {
+                    cell.Style.BackColor = cell.Style.SelectionBackColor = SystemColors.Control;
+                    cell.Style.ForeColor = cell.Style.SelectionForeColor = SystemColors.GrayText;
+                    e.Value = ToolsUIResources.ColorGrid_AllowNullColor_None;
+                    e.FormattingApplied = true;
+                }
+                else
+                {
+                    cell.Style.SelectionBackColor = cell.Style.SelectionForeColor = cell.Style.BackColor = colorRow.Color;
+                }
             }
         }
 
@@ -194,13 +210,35 @@ namespace pwiz.Skyline.ToolsUI
             if (e.ColumnIndex == ButtonColumnIndex && e.RowIndex >= 0)
             {
                 var rowIndex = e.RowIndex;
-                var oldColor = ((T)bindingSource1[rowIndex]).Color;
-                colorPickerDlg.Color = oldColor;
-
-                if (colorPickerDlg.ShowDialog() == DialogResult.OK)
+                if (AllowNullColor)
                 {
-                    changeRowColor(rowIndex, colorPickerDlg.Color);
+                    ShowNullableColorMenu(rowIndex, e.ColumnIndex);
                 }
+                else
+                {
+                    var oldColor = ((T)bindingSource1[rowIndex]).Color;
+                    colorPickerDlg.Color = oldColor;
+                    if (colorPickerDlg.ShowDialog() == DialogResult.OK)
+                        changeRowColor(rowIndex, colorPickerDlg.Color);
+                }
+            }
+        }
+
+        private void ShowNullableColorMenu(int rowIndex, int columnIndex)
+        {
+            using (var menu = new ContextMenuStrip())
+            {
+                menu.Items.Add(ToolsUIResources.ColorGrid_AllowNullColor_PickColor, null, (s, ev) =>
+                {
+                    var oldColor = ((T)bindingSource1[rowIndex]).Color;
+                    colorPickerDlg.Color = oldColor == Color.Empty ? Color.Red : oldColor;
+                    if (colorPickerDlg.ShowDialog() == DialogResult.OK)
+                        changeRowColor(rowIndex, colorPickerDlg.Color);
+                });
+                menu.Items.Add(ToolsUIResources.ColorGrid_AllowNullColor_None, null, (s, ev) =>
+                    changeRowColor(rowIndex, Color.Empty));
+                var cellRect = dataGridViewColors.GetCellDisplayRectangle(columnIndex, rowIndex, false);
+                menu.Show(dataGridViewColors, cellRect.Left, cellRect.Bottom);
             }
         }
 
