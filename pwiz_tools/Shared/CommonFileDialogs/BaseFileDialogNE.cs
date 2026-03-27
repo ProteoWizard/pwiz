@@ -213,7 +213,7 @@ namespace pwiz.CommonFileDialogs
                         CommonFileDialogResources
                             .ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_,
                         remoteUrl.Username + @"@" + remoteUrl.ServerUrl);
-                    ShowErrorMessage(Visible ? (IWin32Window)this : GetFallbackDialogOwner(), message);
+                    ShowErrorMessage(Visible ? this : GetFallbackDialogOwner(), message);
                     CurrentDirectory = RemoteUrl.EMPTY;
                 }
                 else
@@ -235,7 +235,7 @@ namespace pwiz.CommonFileDialogs
                                 string.Format(CommonFileDialogResources.BaseFileDialogNE_Authentication_exception_server_response, msg));
                         }
                         // Dialog owner is not yet available when this is invoked from the ShowDialog override.
-                        ShowErrorMessage(Visible ? (IWin32Window)this : GetFallbackDialogOwner(), message);
+                        ShowErrorMessage(Visible ? this : GetFallbackDialogOwner(), message);
                         // and populate it with the root remote URL
                         CurrentDirectory = RemoteUrl.EMPTY;
                     }
