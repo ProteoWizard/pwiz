@@ -29,8 +29,6 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.ElementLocators;
@@ -381,15 +379,14 @@ namespace pwiz.Skyline.ToolsUI
 
         private static ZedGraphControl TryGetZedGraphControl(DockableFormEx form)
         {
-            switch (form)
+            // Use reflection to find any public property that returns ZedGraphControl,
+            // so that new graph forms are automatically supported.
+            foreach (var prop in form.GetType().GetProperties())
             {
-                case GraphSummary gs: return gs.GraphControl;
-                case GraphChromatogram gc: return gc.GraphControl;
-                case GraphSpectrum gsp: return gsp.ZedGraphControl;
-                case GraphFullScan gfs: return gfs.ZedGraphControl;
-                case CalibrationForm cf: return cf.ZedGraphControl;
-                default: return null;
+                if (typeof(ZedGraphControl).IsAssignableFrom(prop.PropertyType) && prop.GetIndexParameters().Length == 0)
+                    return prop.GetValue(form) as ZedGraphControl;
             }
+            return null;
         }
 
         /// <summary>
