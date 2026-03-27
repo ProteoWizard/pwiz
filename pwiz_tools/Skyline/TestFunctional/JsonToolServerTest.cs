@@ -106,8 +106,10 @@ namespace pwiz.SkylineTestFunctional
 
             TestDocumentOperations(server);
 
-            // Molecule mode: File > New via run_command, switch to small molecules, verify uimode
-            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
+            // Test UI mode and undo/redo on a blank document
+            server.RunCommand(CommandArgs.ARG_NEW, CommandArgs.ARG_DISCARD_CHANGES);
+            TestUiMode(server);
+            TestUndoRedo(server);
         }
 
         /// <summary>
@@ -754,7 +756,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // RunCommandSilent with --help should return sections list
             string iwBefore = GetImmediateWindowText();
-            string sections = server.RunCommandSilent(new[] { @"--help=sections", @"--help=no-borders" });
+            string sections = server.RunCommandSilent(@"--help=sections", @"--help=no-borders");
             Assert.IsFalse(string.IsNullOrEmpty(sections));
             // Silent mode should not write to Immediate Window
             Assert.AreEqual(iwBefore, GetImmediateWindowText());
@@ -1187,10 +1189,103 @@ namespace pwiz.SkylineTestFunctional
             return docAfterKeep;
         }
 
+        private void TestUiMode(JsonToolServer server)
+        {
+            // Get current mode
+            string mode = server.GetUiMode();
+            Assert.AreEqual(nameof(SrmDocument.DOCUMENT_TYPE.proteomic), mode);
+
+            // Set to mixed
+            server.SetUiMode(nameof(SrmDocument.DOCUMENT_TYPE.mixed));
+            Assert.AreEqual(nameof(SrmDocument.DOCUMENT_TYPE.mixed), server.GetUiMode());
+
+            // Set to small_molecules
+            server.SetUiMode(nameof(SrmDocument.DOCUMENT_TYPE.small_molecules));
+            Assert.AreEqual(nameof(SrmDocument.DOCUMENT_TYPE.small_molecules), server.GetUiMode());
+
+            // Restore to proteomic
+            server.SetUiMode(nameof(SrmDocument.DOCUMENT_TYPE.proteomic));
+            Assert.AreEqual(nameof(SrmDocument.DOCUMENT_TYPE.proteomic), server.GetUiMode());
+
+            // Error: invalid mode
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.SetUiMode(@"invalid_mode"));
+
+            // Error: none is not valid
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.SetUiMode(nameof(SrmDocument.DOCUMENT_TYPE.none)));
+        }
+
+        private void TestUndoRedo(JsonToolServer server)
+        {
+            // Capture original document state
+            var docOriginal = SkylineWindow.Document;
+            int originalExcludeNTermAAs = docOriginal.Settings.PeptideSettings.Filter.ExcludeNTermAAs;
+
+            // Make a change to create an undo entry.
+            // Use store=false to avoid modifying the saved settings list.
+            RunUI(() => SkylineWindow.ChangeSettings(
+                SkylineWindow.DocumentUI.Settings.ChangePeptideFilter(
+                    f => f.ChangeExcludeNTermAAs(7)), false));
+            var docModified = SkylineWindow.Document;
+            Assert.AreNotSame(docOriginal, docModified);
+            Assert.AreEqual(7, docModified.Settings.PeptideSettings.Filter.ExcludeNTermAAs);
+
+            // GetUndoRedo should show exactly one undo entry and no redo entries
+            var undoMgr = SkylineWindow.GetUndoManager();
+            Assert.AreEqual(1, undoMgr.UndoCount);
+            Assert.AreEqual(0, undoMgr.RedoCount);
+            var info = server.GetUndoRedo();
+            Assert.AreEqual(1, info.Length);
+            Assert.AreEqual(-1, info[0].Index);
+            Assert.IsFalse(string.IsNullOrEmpty(info[0].Description));
+
+            // Undo the change - document should revert to original
+            server.SetUndoRedoPosition(-1);
+            Assert.AreSame(docOriginal, SkylineWindow.Document);
+            Assert.AreEqual(originalExcludeNTermAAs,
+                SkylineWindow.Document.Settings.PeptideSettings.Filter.ExcludeNTermAAs);
+
+            // Stack should now have one redo entry and no undo entries
+            Assert.AreEqual(0, undoMgr.UndoCount);
+            Assert.AreEqual(1, undoMgr.RedoCount);
+            var infoAfterUndo = server.GetUndoRedo();
+            Assert.AreEqual(1, infoAfterUndo.Length);
+            Assert.AreEqual(1, infoAfterUndo[0].Index);
+
+            // Redo - document should return to modified state
+            server.SetUndoRedoPosition(1);
+            Assert.AreSame(docModified, SkylineWindow.Document);
+            Assert.AreEqual(7, SkylineWindow.Document.Settings.PeptideSettings.Filter.ExcludeNTermAAs);
+
+            // Stack should be back to one undo entry
+            Assert.AreEqual(1, undoMgr.UndoCount);
+            Assert.AreEqual(0, undoMgr.RedoCount);
+            var infoAfterRedo = server.GetUndoRedo();
+            Assert.AreEqual(1, infoAfterRedo.Length);
+            Assert.AreEqual(-1, infoAfterRedo[0].Index);
+
+            // Error: out of range undo
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() =>
+                server.SetUndoRedoPosition(-100));
+
+            // Error: out of range redo (no redo available)
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() =>
+                server.SetUndoRedoPosition(1));
+
+            // index 0 = no-op, document should not change
+            server.SetUndoRedoPosition(0);
+            Assert.AreSame(docModified, SkylineWindow.Document);
+
+            // Undo to restore original state for subsequent tests
+            server.SetUndoRedoPosition(-1);
+            Assert.AreSame(docOriginal, SkylineWindow.Document);
+        }
+
         private void TestRunCommand(JsonToolServer server, SrmDocument docAfterKeep)
         {
             // --version output should contain both parts of the version string
-            string versionResult = server.RunCommandSilent(new[] { CommandArgs.ARG_VERSION.ArgumentText });
+            string versionResult = server.RunCommandSilent(CommandArgs.ARG_VERSION);
             // GetVersion returns "26.1.1.061-6c3244bc0a", --version shows "26.1.1.061 (6c3244bc0a)"
             AssertEx.Contains(versionResult, server.GetVersion().Split('-'));
 
@@ -1270,25 +1365,53 @@ namespace pwiz.SkylineTestFunctional
 
             // Save original document so on-disk state matches in-memory state
             // (prior tests may have modified the document without saving)
-            server.RunCommand(new[] { CommandArgs.ARG_SAVE.ArgumentText });
+            server.RunCommand(CommandArgs.ARG_SAVE);
 
             // --new: create empty document at a temp path
-            // Note: paths must be quoted because test directories may contain spaces
             string newPath = TestFilesDir.GetTestPath(@"doc_ops_new.sky");
-            string newResult = server.RunCommand(new[] { CommandArgs.ARG_NEW + newPath });
+            string newResult = server.RunCommand(CommandArgs.ARG_NEW + newPath);
             AssertEx.Contains(newResult, Path.GetFileName(newPath));
             AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
 
-            // Import a FASTA to make the document non-trivial
+            // Import a FASTA to make the document non-trivial and dirty
             server.SetSelectedElement(JsonUiService.INSERT_NODE_LOCATOR);
             server.ImportFasta(TEXT_FASTA, @"true");
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
             Assert.IsTrue(SkylineWindow.Document.MoleculeGroupCount > 0);
             Assert.IsTrue(SkylineWindow.Dirty);
 
+            // Dirty document protection: --new and --in should fail without --discard-changes
+            var docDirty = SkylineWindow.Document;
+            string pathDirty = SkylineWindow.DocumentFilePath;
+
+            string dirtyNewResult = server.RunCommand(CommandArgs.ARG_NEW + newPath);
+            AssertEx.Contains(dirtyNewResult,
+                SkylineResources.CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__or___discard_changes_before___new_or___in_);
+            AssertDocumentUnchanged(docDirty, pathDirty);
+
+            string dirtyOpenResult = server.RunCommand(CommandArgs.ARG_IN + originalPath);
+            AssertEx.Contains(dirtyOpenResult,
+                SkylineResources.CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__or___discard_changes_before___new_or___in_);
+            AssertDocumentUnchanged(docDirty, pathDirty);
+
+            // --new with --discard-changes should succeed on a dirty document
+            string discardPath = TestFilesDir.GetTestPath(@"doc_ops_discard.sky");
+            string discardResult = server.RunCommand(
+                CommandArgs.ARG_NEW + discardPath, CommandArgs.ARG_DISCARD_CHANGES);
+            AssertEx.Contains(discardResult, Path.GetFileName(discardPath));
+            AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
+
+            // Re-open the document with data for subsequent tests
+            server.RunCommand(CommandArgs.ARG_OPEN + newPath);
+            // Re-import to make it dirty again for the --save test
+            server.SetSelectedElement(JsonUiService.INSERT_NODE_LOCATOR);
+            server.ImportFasta(TEXT_FASTA, @"true");
+            WaitForProteinMetadataBackgroundLoaderCompletedUI();
+            Assert.IsTrue(SkylineWindow.Dirty);
+
             // --save: save the modified document, verify clean state
-            string saveResult = server.RunCommand(new[] { CommandArgs.ARG_SAVE.ArgumentText });
+            string saveResult = server.RunCommand(CommandArgs.ARG_SAVE);
             AssertEx.Contains(saveResult, Path.GetFileName(newPath));
             AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
             Assert.IsFalse(SkylineWindow.Dirty);
@@ -1296,14 +1419,14 @@ namespace pwiz.SkylineTestFunctional
 
             // --save-as (synonym for --out): save to a different path
             string saveAsPath = TestFilesDir.GetTestPath(@"doc_ops_saveas.sky");
-            string saveAsResult = server.RunCommand(new[] { CommandArgs.ARG_SAVE_AS + saveAsPath });
+            string saveAsResult = server.RunCommand(CommandArgs.ARG_SAVE_AS + saveAsPath);
             AssertEx.Contains(saveAsResult, Path.GetFileName(saveAsPath));
             AssertEx.AreEqual(saveAsPath, SkylineWindow.DocumentFilePath);
             Assert.IsFalse(SkylineWindow.Dirty);
             Assert.IsTrue(File.Exists(saveAsPath));
 
             // --open (synonym for --in): re-open the first saved file, verify round-trip
-            string openResult = server.RunCommand(new[] { CommandArgs.ARG_OPEN + newPath });
+            string openResult = server.RunCommand(CommandArgs.ARG_OPEN + newPath);
             AssertEx.Contains(openResult, Path.GetFileName(newPath));
             AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(savedGroups, SkylineWindow.Document.MoleculeGroupCount);
@@ -1311,30 +1434,35 @@ namespace pwiz.SkylineTestFunctional
                 g => g.Name.Contains(@"ALBU_BOVIN")));
 
             // --in: re-open the original document from disk
-            string inResult = server.RunCommand(new[] { CommandArgs.ARG_IN + originalPath });
+            string inResult = server.RunCommand(CommandArgs.ARG_IN + originalPath);
             AssertEx.Contains(inResult, Path.GetFileName(originalPath));
             AssertEx.AreEqual(originalPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(originalGroups, SkylineWindow.Document.MoleculeGroupCount);
 
             // Combined: --open + --refine + --out
             string combinedPath = TestFilesDir.GetTestPath(@"doc_ops_combined.sky");
-            string combinedResult = server.RunCommand(new[]
-            {
+            string combinedResult = server.RunCommand(
                 CommandArgs.ARG_OPEN + newPath,
                 CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100",
-                CommandArgs.ARG_OUT + combinedPath
-            });
+                CommandArgs.ARG_OUT + combinedPath);
             AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
             Assert.IsTrue(File.Exists(combinedPath));
 
             // --new to leave a clean state for subsequent tests
             string tempPath = TestFilesDir.GetTestPath(@"doc_ops_temp.sky");
-            server.RunCommand(new[]
-            {
-                CommandArgs.ARG_NEW + tempPath,
-                CommandArgs.ARG_OVERWRITE.ArgumentText
-            });
+            server.RunCommand(CommandArgs.ARG_NEW + tempPath, CommandArgs.ARG_OVERWRITE);
+        }
+
+        /// <summary>
+        /// Verifies that a failed RunCommand left the document, dirty state,
+        /// and file path completely unchanged.
+        /// </summary>
+        private static void AssertDocumentUnchanged(SrmDocument expectedDoc, string expectedPath)
+        {
+            Assert.AreSame(expectedDoc, SkylineWindow.Document);
+            Assert.IsTrue(SkylineWindow.Dirty);
+            Assert.AreEqual(expectedPath, SkylineWindow.DocumentFilePath);
         }
 
         /// <summary>
