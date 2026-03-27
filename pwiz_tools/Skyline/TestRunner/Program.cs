@@ -738,11 +738,11 @@ namespace TestRunner
             string workerName = $"hostWorker{GetTestRunTimeStamp()}";
             string testRunnerLog = string.Empty;
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
-                testRunnerLog = @$"log={pwizRoot}\TestRunner-{workerName}.log";
+                testRunnerLog = @$"log=""{pwizRoot}\TestRunner-{workerName}.log""";
 
             // here paths are in host space
             var testRunnerExe = Assembly.GetExecutingAssembly().Location;
-            var testRunnerArgs = $"parallelmode=client showheader=0 results={pwizRoot}\\TestResults_host {testRunnerLog}";
+            var testRunnerArgs = $"parallelmode=client showheader=0 results=\"{pwizRoot}\\TestResults_host\" {testRunnerLog}";
             if (commandLineArgs.ArgAsBool("coverage"))
             {
                 string dotCoverExe = GetFullDotCoverExePath(commandLineArgs);
