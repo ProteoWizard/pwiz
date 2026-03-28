@@ -104,9 +104,18 @@ namespace pwiz.Skyline.Controls
         private readonly ITipDisplayer _tipDisplayer;
         private Rectangle _rectItem;
         private Timer _timer;
+        private Timer _autoHideTimer;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
         private const int NODE_SPACE_Y = 5;
+
+        /// <summary>
+        /// When set to a positive value, the tip automatically hides after the
+        /// specified number of milliseconds. Null (default) keeps the tip visible
+        /// until the cursor moves away — appropriate for information-rich tips.
+        /// For brief graph-point tips, a value like 10000 (10s) is recommended.
+        /// </summary>
+        public int? AutoHideDelay { get; set; }
 
         public NodeTip(ITipDisplayer tipDisplayer)
         {
@@ -122,6 +131,11 @@ namespace pwiz.Skyline.Controls
                 _timer.Dispose();
                 _timer = null;
             }
+            if (_autoHideTimer != null)
+            {
+                _autoHideTimer.Dispose();
+                _autoHideTimer = null;
+            }
             base.Dispose(disposing);
         }
 
@@ -135,17 +149,24 @@ namespace pwiz.Skyline.Controls
             if (!_moveThreshold.Moved(cursorPos))
                 return;
             _timer.Stop();
-            if (Visible)
-            {
-                AnimateMode animate = (Y < _rectItem.Y ?
-                AnimateMode.SlideTopToBottom : AnimateMode.SlideBottomToTop);
-                HideAnimate(animate);
-            }
+            _autoHideTimer?.Stop();
+            HideIfVisible();
             _tipProvider = tipProvider;
             _rectItem = _tipDisplayer.RectToScreen(rectItem);
             _moveThreshold.Location = cursorPos;
             if (tipProvider != null)
                 _timer.Start();
+        }
+
+        private void HideIfVisible()
+        {
+            if (Visible)
+            {
+                var animate = Y < _rectItem.Y
+                    ? AnimateMode.SlideTopToBottom
+                    : AnimateMode.SlideBottomToTop;
+                HideAnimate(animate);
+            }
         }
 
         public override void OnPaint(PaintEventArgs e)
@@ -219,6 +240,25 @@ namespace pwiz.Skyline.Controls
             }
 
             ShowAnimate(X, Y, animate); // Not really animated anymore, because of GDI handle leak on Windows 10
+            RestartAutoHideTimer();
+        }
+
+        private void RestartAutoHideTimer()
+        {
+            _autoHideTimer?.Stop();
+            if (AutoHideDelay == null)
+                return;
+            if (_autoHideTimer == null)
+            {
+                _autoHideTimer = new Timer();
+                _autoHideTimer.Tick += (s, e) =>
+                {
+                    _autoHideTimer.Stop();
+                    HideIfVisible();
+                };
+            }
+            _autoHideTimer.Interval = AutoHideDelay.Value;
+            _autoHideTimer.Start();
         }
 
         #region Test Support
