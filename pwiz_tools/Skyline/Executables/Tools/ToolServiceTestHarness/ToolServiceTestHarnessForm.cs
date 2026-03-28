@@ -108,8 +108,7 @@ namespace ToolServiceTestHarness
             {
                 if (radioJson.Checked)
                 {
-                    var args = arguments.Select(a => a?.ToString() ?? string.Empty).ToArray();
-                    var result = JsonCall(tbxConnection.Text, method.Name, args);
+                    var result = JsonCall(tbxConnection.Text, method.Name, arguments.ToArray());
                     tbxResult.Text = result ?? string.Empty;
                 }
                 else
@@ -236,15 +235,21 @@ namespace ToolServiceTestHarness
             ShowError(ex.Message);
         }
 
-        private static string? JsonCall(string connectionName, string method, string[] args)
+        private static readonly JsonSerializerOptions _snakeCaseOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            PropertyNameCaseInsensitive = true
+        };
+
+        private static string? JsonCall(string connectionName, string method, object?[] args)
         {
             string pipeName = JsonToolConstants.GetJsonPipeName(connectionName);
             using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut);
             pipe.Connect(5000);
             pipe.ReadMode = PipeTransmissionMode.Message;
 
-            var request = new { method, args };
-            byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
+            var request = new { jsonrpc = JsonToolConstants.JSONRPC_VERSION, method, @params = args, id = 1 };
+            byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request, _snakeCaseOptions));
             pipe.Write(requestBytes, 0, requestBytes.Length);
             pipe.Flush();
             pipe.WaitForPipeDrain();
@@ -257,8 +262,10 @@ namespace ToolServiceTestHarness
 
             if (root.TryGetProperty("error", out var errorElement))
             {
-                string? error = errorElement.GetString();
-                throw new InvalidOperationException(error ?? "Unknown error from Skyline");
+                string message = errorElement.TryGetProperty("message", out var msgElement)
+                    ? msgElement.GetString()
+                    : "Unknown error from Skyline";
+                throw new InvalidOperationException(message);
             }
 
             if (root.TryGetProperty("result", out var resultElement))
