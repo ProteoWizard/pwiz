@@ -38,17 +38,47 @@ namespace pwiz.Common.DataBinding.Filtering
         }
     }
 
-
-    public abstract class FilterHandler<TColumn, TOperand> : IFilterHandler
+    /// <summary>
+    /// Base class for all <see cref="IFilterHandler"/> implementations.
+    /// Provides default implementations of <see cref="GetOperand"/> and <see cref="OperandToList"/>
+    /// for handlers that operate on single values. <see cref="ListFilterHandler"/> overrides these
+    /// for multi-value operands.
+    /// </summary>
+    public abstract class FilterHandler : IFilterHandler
     {
-        object IFilterHandler.ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
+        public abstract bool IsBlank(object value);
+        public abstract object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo);
+        public abstract string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo);
+        public abstract bool ValueEqualsOperand(object value, object operand);
+        public abstract bool CanBeBlank { get; }
+
+        public virtual object GetOperand(IFilterOperation operation, IList<string> values)
         {
-            return ParseOperand(operation, text, cultureInfo);
+            if (values.Count != 1)
+            {
+                throw new ArgumentException(
+                    string.Format(@"Expected 1 value but got {0}", values.Count), nameof(values));
+            }
+            return ParseOperand(operation, values[0], CultureInfo.InvariantCulture);
         }
 
-        protected abstract TOperand ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo);
+        public virtual IList<string> OperandToList(IFilterOperation operation, object operand)
+        {
+            return new[] { OperandToString(operation, operand, CultureInfo.InvariantCulture) };
+        }
+    }
 
-        public string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
+
+    public abstract class FilterHandler<TColumn, TOperand> : FilterHandler
+    {
+        public sealed override object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
+        {
+            return ParseTypedOperand(operation, text, cultureInfo);
+        }
+
+        protected abstract TOperand ParseTypedOperand(IFilterOperation operation, string text, CultureInfo cultureInfo);
+
+        public sealed override string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
         {
             if (operand is TOperand tOperand)
             {
@@ -59,9 +89,7 @@ namespace pwiz.Common.DataBinding.Filtering
 
         protected abstract string OperandToString(IFilterOperation operation, TOperand operand, CultureInfo cultureInfo);
 
-        public abstract bool IsBlank(object value);
-
-        public bool ValueEqualsOperand(object value, object operand)
+        public sealed override bool ValueEqualsOperand(object value, object operand)
         {
             return CallWithOperand(value, operand, ValueEqualsOperand);
         }
@@ -78,21 +106,6 @@ namespace pwiz.Common.DataBinding.Filtering
         }
 
         protected abstract bool TryConvertColumnValue(object value, out TColumn columnValue);
-
-        public virtual object GetOperand(IFilterOperation operation, IList<string> values)
-        {
-            return ParseOperand(operation, string.Join(@", ", values), CultureInfo.InvariantCulture);
-        }
-
-        public virtual IList<string> OperandToList(IFilterOperation operation, object operand)
-        {
-            return new[] { OperandToString(operation, operand, CultureInfo.InvariantCulture) };
-        }
-
-        public virtual bool CanBeBlank
-        {
-            get { return true; }
-        }
     }
 
     public class TextFilterHandler : FilterHandler<string, string>
@@ -104,8 +117,12 @@ namespace pwiz.Common.DataBinding.Filtering
             return value == null || ValueEqualsOperand(string.Empty, value);
         }
 
+        public override bool CanBeBlank
+        {
+            get { return true; }
+        }
 
-        protected override string ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
+        protected override string ParseTypedOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
         {
             return text;
         }
@@ -119,7 +136,7 @@ namespace pwiz.Common.DataBinding.Filtering
         {
             return StringComparer.Ordinal.Equals(value, operand);
         }
-        
+
         protected override bool TryConvertColumnValue(object value, out string columnValue)
         {
             if (value == null)
@@ -155,7 +172,7 @@ namespace pwiz.Common.DataBinding.Filtering
             return value == null;
         }
 
-        protected override PrecisionNumber ParseOperand(IFilterOperation filterOperation, string text, CultureInfo cultureInfo)
+        protected override PrecisionNumber ParseTypedOperand(IFilterOperation filterOperation, string text, CultureInfo cultureInfo)
         {
             return PrecisionNumber.Parse(text, cultureInfo, ExplicitPrecision(filterOperation, cultureInfo));
         }
@@ -210,7 +227,7 @@ namespace pwiz.Common.DataBinding.Filtering
         }
     }
 
-    public class ListFilterHandler : IFilterHandler, IFilterHandler.IContains
+    public class ListFilterHandler : FilterHandler, IFilterHandler.IContains
     {
         public ListFilterHandler(IFilterHandler elementHandler)
         {
@@ -219,12 +236,12 @@ namespace pwiz.Common.DataBinding.Filtering
 
         public IFilterHandler ElementHandler { get; }
 
-        public bool IsBlank(object value)
+        public override bool IsBlank(object value)
         {
             return 0 == ((value as IListColumnValue)?.Count ?? 0);
         }
 
-        public object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
+        public override object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
         {
             if (text == null)
             {
@@ -241,7 +258,7 @@ namespace pwiz.Common.DataBinding.Filtering
                 ElementHandler.ParseOperand(FilterOperations.OP_EQUALS, str, cultureInfo)));
         }
 
-        public bool ValueEqualsOperand(object value, object operand)
+        public override bool ValueEqualsOperand(object value, object operand)
         {
             var listValue = ToListValue(value);
             if (listValue == null)
@@ -271,7 +288,7 @@ namespace pwiz.Common.DataBinding.Filtering
             return ElementsEqual(listValue.AsEnumerable(), listOperand.AsEnumerable().ToList());
         }
 
-        public string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
+        public override string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
         {
             var operandList = operand as IListColumnValue;
             if (operandList == null)
@@ -327,24 +344,13 @@ namespace pwiz.Common.DataBinding.Filtering
             return false;
         }
 
-        protected virtual IListColumnValue ToListValue(object columnValue)
-        {
-            return columnValue as IListColumnValue;
-        }
-
-        private bool ElementsEqual(IEnumerable<object> items, IList<object> operands)
-        {
-            return items.Zip(operands, (item, operand) =>
-                ElementHandler.ValueEqualsOperand(item, operand)).All(result => result);
-        }
-
-        public object GetOperand(IFilterOperation operation, IList<string> values)
+        public override object GetOperand(IFilterOperation operation, IList<string> values)
         {
             return ListColumnValue.FromItems(
                 values.Select(v => ElementHandler.GetOperand(FilterOperations.OP_EQUALS, new[] { v })));
         }
 
-        public IList<string> OperandToList(IFilterOperation operation, object operand)
+        public override IList<string> OperandToList(IFilterOperation operation, object operand)
         {
             var operandList = operand as IListColumnValue;
             if (operandList == null)
@@ -356,12 +362,24 @@ namespace pwiz.Common.DataBinding.Filtering
                 .ToArray();
         }
 
-        public bool CanBeBlank
+        public override bool CanBeBlank
         {
             get { return true; }
         }
+
+        protected virtual IListColumnValue ToListValue(object columnValue)
+        {
+            return columnValue as IListColumnValue;
+        }
+
+        private bool ElementsEqual(IEnumerable<object> items, IList<object> operands)
+        {
+            return items.Zip(operands, (item, operand) =>
+                ElementHandler.ValueEqualsOperand(item, operand)).All(result => result);
+        }
     }
-    public class EnumFilterHandler : IFilterHandler
+
+    public class EnumFilterHandler : FilterHandler
     {
         public EnumFilterHandler(Type enumType)
         {
@@ -369,12 +387,12 @@ namespace pwiz.Common.DataBinding.Filtering
         }
 
         public Type EnumType { get; }
-        public bool IsBlank(object value)
+        public override bool IsBlank(object value)
         {
             return value == null;
         }
 
-        public object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
+        public override object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -390,38 +408,23 @@ namespace pwiz.Common.DataBinding.Filtering
             }
         }
 
-        public string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
+        public override string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
         {
             return operand?.ToString() ?? string.Empty;
         }
 
-        public bool ValueEqualsOperand(object value, object operand)
+        public override bool ValueEqualsOperand(object value, object operand)
         {
             return Equals(value, operand);
         }
 
-        public string OperandToString(object operand, CultureInfo cultureInfo)
-        {
-            return operand?.ToString() ?? string.Empty;
-        }
-
-        public object GetOperand(IFilterOperation operation, IList<string> values)
-        {
-            return ParseOperand(operation, string.Join(@", ", values), CultureInfo.InvariantCulture);
-        }
-
-        public IList<string> OperandToList(IFilterOperation operation, object operand)
-        {
-            return new[] { OperandToString(operation, operand, CultureInfo.InvariantCulture) };
-        }
-
-        public bool CanBeBlank
+        public override bool CanBeBlank
         {
             get { return false; }
         }
     }
 
-    public class SimpleFilterHandler : IFilterHandler
+    public class SimpleFilterHandler : FilterHandler
     {
         public SimpleFilterHandler(Type type)
         {
@@ -430,39 +433,29 @@ namespace pwiz.Common.DataBinding.Filtering
 
         public Type ValueType { get; }
 
-        public bool IsBlank(object value)
+        public override bool IsBlank(object value)
         {
             return value == null;
         }
 
-        public object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
+        public override object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
         {
             var typeConverter = TypeDescriptor.GetConverter(ValueType);
             // ReSharper disable AssignNullToNotNullAttribute
             return typeConverter.ConvertFrom(null, cultureInfo, text);
         }
 
-        public string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
+        public override string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
         {
             return Convert.ToString(operand, cultureInfo);
         }
 
-        public bool ValueEqualsOperand(object value, object operand)
+        public override bool ValueEqualsOperand(object value, object operand)
         {
             return Equals(value, operand);
         }
 
-        public object GetOperand(IFilterOperation operation, IList<string> values)
-        {
-            return ParseOperand(operation, string.Join(@", ", values), CultureInfo.InvariantCulture);
-        }
-
-        public IList<string> OperandToList(IFilterOperation operation, object operand)
-        {
-            return new[] { OperandToString(operation, operand, CultureInfo.InvariantCulture) };
-        }
-
-        public bool CanBeBlank
+        public override bool CanBeBlank
         {
             get
             {
