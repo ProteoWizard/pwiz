@@ -16,6 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Xml;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -27,41 +37,29 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Clustering;
-using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using System.Xml;
-using pwiz.Skyline.Controls.Lists;
-using pwiz.Skyline.Menus;
-using pwiz.Skyline.Model.Lib;
 using ZedGraph;
-using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
-using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
 
 namespace pwiz.Skyline
 {

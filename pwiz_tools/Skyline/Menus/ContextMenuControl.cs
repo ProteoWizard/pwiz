@@ -16,13 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Properties;
 using System;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Menus
 {
