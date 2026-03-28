@@ -44,28 +44,24 @@ namespace pwiz.Skyline.ToolsUI
         private const string NL = "\n";
 
         /// <summary>
-        /// Format the full tutorial catalog as tab-separated text for MCP consumers.
+        /// Returns the tutorial catalog as typed objects.
         /// Uses invariant (English) strings throughout for LLM readability.
         /// </summary>
-        public static string FormatCatalog()
+        public static TutorialListItem[] GetCatalog()
         {
             var invariant = System.Globalization.CultureInfo.InvariantCulture;
             var textRes = TutorialTextResources.ResourceManager;
             var linkRes = TutorialLinkResources.ResourceManager;
 
-            var sb = new StringBuilder();
-            foreach (var t in TutorialCatalog.Tutorials)
+            return TutorialCatalog.Tutorials.Select(t => new TutorialListItem
             {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-                sb.Append(TutorialCatalog.GetSectionDisplayNameInvariant(t.Section)).Append(TextUtil.SEPARATOR_TSV);
-                sb.Append(t.FolderName).Append(TextUtil.SEPARATOR_TSV);
-                sb.Append(textRes.GetString(t.ResourcePrefix + @"_Caption", invariant) ?? t.ResourcePrefix).Append(TextUtil.SEPARATOR_TSV);
-                sb.Append(textRes.GetString(t.ResourcePrefix + @"_Description", invariant) ?? string.Empty).Append(TextUtil.SEPARATOR_TSV);
-                sb.Append(linkRes.GetString(t.ResourcePrefix + @"_pdf", invariant) ?? string.Empty).Append(TextUtil.SEPARATOR_TSV);
-                sb.Append(linkRes.GetString(t.ResourcePrefix + @"_zip", invariant) ?? string.Empty);
-            }
-            return sb.ToString();
+                Category = TutorialCatalog.GetSectionDisplayNameInvariant(t.Section),
+                Name = t.FolderName,
+                Title = textRes.GetString(t.ResourcePrefix + @"_Caption", invariant) ?? t.ResourcePrefix,
+                Description = textRes.GetString(t.ResourcePrefix + @"_Description", invariant) ?? string.Empty,
+                WikiUrl = linkRes.GetString(t.ResourcePrefix + @"_pdf", invariant) ?? string.Empty,
+                ZipUrl = linkRes.GetString(t.ResourcePrefix + @"_zip", invariant) ?? string.Empty,
+            }).ToArray();
         }
 
         /// <summary>

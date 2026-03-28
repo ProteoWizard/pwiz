@@ -51,8 +51,9 @@ td {
 <tr><td><nobr>--save-settings</nobr></td><td>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</td></tr>
 <tr><td><nobr>--out</nobr>=path/to/file.sky</td><td>Same as save except writes to the specified file</td></tr>
 <tr><td><nobr>--save-as</nobr>=path/to/file.sky</td><td>Synonym for <nobr>--out</nobr>. Save to the specified file.</td></tr>
-<tr><td><nobr>--new</nobr>=path/to/file.sky</td><td>Create a new document using the current Skyline settings.</td></tr>
+<tr><td><nobr>--new</nobr>[=path/to/file.sky]</td><td>Create a new document using the current Skyline settings.</td></tr>
 <tr><td><nobr>--overwrite</nobr></td><td>Overwrite the filepath specified by <nobr>--new</nobr> if it already exists, instead of producing an error.</td></tr>
+<tr><td><nobr>--discard-changes</nobr></td><td>Allows <nobr>--new</nobr> or <nobr>--in</nobr> to proceed when the current document has unsaved changes. Without this flag, the command will fail with an error if there are unsaved changes.</td></tr>
 <tr><td><nobr>--share-zip</nobr>[=path/to/file.sky.zip]</td><td>Saves the entire project (document, results, libraries, etc.) to a ZIP archive. Defaults to a minimal archive.</td></tr>
 <tr><td><nobr>--share-type</nobr>=&lt;minimal | complete&gt;</td><td>Specifies the type, &#39;minimal&#39; or &#39;complete&#39;, of archive to share when <nobr>--share-zip</nobr> is specified. Minimal is the default attempting to reduce the size of the archive to the minimum necessary to represent the targets in the document while &#39;complete&#39; maintains full fidelity of all project files.</td></tr>
 <tr><td><nobr>--batch-commands</nobr>=path/to/file</td><td>Runs a file line by line treating each line like a SkylineRunner/Cmd input. Useful for automating the execution of multiple commands.  The open Skyline file remains active through all commands.</td></tr>
@@ -290,6 +291,12 @@ http://localhost:8080</td></tr>
 <tr><td><nobr>--panorama-folder</nobr>=path/to/folder</td><td>The path to a folder on the Panorama server to which the file is to be published (e.g. MyProject/MyFolder).</td></tr>
 </table>
 <p>If the arguments above are used along with arguments to import results files into the document (--import-file or -–import-all) the Skyline document will be uploaded to the given Panorama server only if new results are added to the document.</p>
+<div class="RowType">Settings presets</div>
+<table>
+<tr><td><nobr>--doc-settings-name</nobr>=&lt;name&gt;</td><td>The name of a settings preset to apply to the document, as it appears in the Settings menu.</td></tr>
+<tr><td><nobr>--doc-settings-add</nobr>=path/to/file.skys</td><td>Add settings presets from a saved settings file to the running program.</td></tr>
+<tr><td><nobr>--doc-settings-conflict-resolution</nobr>=&lt;overwrite | skip&gt;</td><td>Specifies how to resolve settings name conflicts, by either overwriting or skipping them, when using <nobr>--doc-settings-add</nobr> (default is to output an error message for conflicts)</td></tr>
+</table>
 <div class="RowType">Document settings</div>
 <table>
 <tr><td><nobr>--annotation-name</nobr>=&lt;name&gt;</td><td>Add an annotation to the document with the specified name. Existing annotations with the same name will be overwritten.</td></tr>

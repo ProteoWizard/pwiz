@@ -1207,4 +1207,31 @@ Do you want to save the document now?</value>
   <data name="CommandLine_SaveFile_File__0__save_canceled" xml:space="preserve">
     <value>File {0} save canceled</value>
   </data>
+  <data name="CommandLine_AddSettings_Settings_imported_from__0__" xml:space="preserve">
+    <value>Settings imported from {0}.</value>
+  </data>
+  <data name="CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_" xml:space="preserve">
+    <value>Error: The following settings names already exist. Use --doc-settings-conflict-resolution to specify overwrite or skip.</value>
+  </data>
+  <data name="CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_" xml:space="preserve">
+    <value>Error: The settings name '{0}' already exists. Use --doc-settings-conflict-resolution to specify overwrite or skip.</value>
+  </data>
+  <data name="CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_" xml:space="preserve">
+    <value>Error: The settings file {0} does not exist.</value>
+  </data>
+  <data name="CommandLine_AddSettings_Error__Failed_attempting_to_add_settings_from_the_file__0_" xml:space="preserve">
+    <value>Error: Failed attempting to add settings from the file {0}</value>
+  </data>
+  <data name="CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__or___discard_changes_before___new_or___in_" xml:space="preserve">
+    <value>Error: The document has unsaved changes. Use --save, --out, or --discard-changes before --new or --in.</value>
+  </data>
+  <data name="CommandLine_NewDocument_The___new_argument_requires_a_file_path_in_command_line_mode_" xml:space="preserve">
+    <value>The --new argument requires a file path in command-line mode.</value>
+  </data>
+  <data name="CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_" xml:space="preserve">
+    <value>Error: The settings '{0}' could not be found. Use --doc-settings-name with a name from the Settings menu.</value>
+  </data>
+  <data name="CommandLine_ApplySettings_Settings___0___applied_to_document_" xml:space="preserve">
+    <value>Settings '{0}' applied to document.</value>
+  </data>
 </root>
