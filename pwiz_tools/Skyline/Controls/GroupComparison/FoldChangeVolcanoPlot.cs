@@ -395,6 +395,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
                 _dataChanged = false;
             }
+            else
+            {
+                // Only cutoff settings changed; AxisChange() was not called so reposition
+                // the reference lines manually to span the current axis range (issue #4052).
+                AdjustLocations(zedGraphControl.GraphPane);
+            }
 
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {

@@ -96,6 +96,8 @@ namespace SkylineTool
         public TutorialListItem[] GetAvailableTutorials() { return CallTyped<TutorialListItem[]>(nameof(GetAvailableTutorials)); }
         public string GetProcessId() { return Call(nameof(GetProcessId)); }
         public FormInfo[] GetOpenForms() { return CallTyped<FormInfo[]>(nameof(GetOpenForms)); }
+        public string GetUiMode() { return Call(nameof(GetUiMode)); }
+        public UndoRedoEntry[] GetUndoRedo() { return CallTyped<UndoRedoEntry[]>(nameof(GetUndoRedo)); }
 
         public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null)
         {
@@ -146,6 +148,8 @@ namespace SkylineTool
         }
         public void ImportProperties(string csvText) { Call(nameof(ImportProperties), csvText); }
         public void SetReplicate(string replicateName) { Call(nameof(SetReplicate), replicateName); }
+        public void SetUiMode(string mode) { Call(nameof(SetUiMode), mode); }
+        public void SetUndoRedoPosition(int index) { Call(nameof(SetUndoRedoPosition), index); }
         public string GetDocumentSettings(string filePath) { return Call(nameof(GetDocumentSettings), filePath); }
         public string GetDefaultSettings(string filePath) { return Call(nameof(GetDefaultSettings), filePath); }
 

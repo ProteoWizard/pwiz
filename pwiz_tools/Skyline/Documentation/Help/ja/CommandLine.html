@@ -51,8 +51,9 @@ td {
 <tr><td><nobr>--save-settings</nobr></td><td>グローバル環境の設定変更が（追加されたレポート、ライブラリ、酵素など）がプログラム設定ファイルに保存されます。</td></tr>
 <tr><td><nobr>--out</nobr>=path/to/file（ファイル）.sky</td><td>指定されたファイルに書き込まれること以外は、保存と同じです。</td></tr>
 <tr><td><nobr>--save-as</nobr>=path/to/file（ファイル）.sky</td><td>Synonym for <nobr>--out</nobr>. Save to the specified file.</td></tr>
-<tr><td><nobr>--new</nobr>=path/to/file（ファイル）.sky</td><td>現在のSkyline設定を使用して新規ドキュメントを作成します。</td></tr>
+<tr><td><nobr>--new</nobr>[=path/to/file（ファイル）.sky]</td><td>現在のSkyline設定を使用して新規ドキュメントを作成します。</td></tr>
 <tr><td><nobr>--overwrite</nobr></td><td><nobr>--newで指定されたファイルパスが既に存在する場合に</nobr>、エラーとなる代わりにファイルパスを上書きします。</td></tr>
+<tr><td><nobr>--discard-changes</nobr></td><td>Allows <nobr>--new</nobr> or <nobr>--in</nobr> to proceed when the current document has unsaved changes. Without this flag, the command will fail with an error if there are unsaved changes.</td></tr>
 <tr><td><nobr>--share-zip</nobr>[=path/to/file（ファイル）.sky.zip]</td><td>プロジェクト全体（ドキュメント、結果、ライブラリなど）をZIPアーカイブに保存します。デフォルトは最小限のアーカイブです。</td></tr>
 <tr><td><nobr>--share-type</nobr>=&lt;minimal | complete&gt;</td><td><nobr>--share-zipが指定されている場合</nobr>、共有するのが「最小限」または「完全」であるアーカイブタイプを特定します。「最小限」がデフォルトで、アーカイブのサイズを、ドキュメント内ターゲットを表すのに必要最小限に減らすようにしており、一方「完全」はすべてのプロジェクトファイルの完全な正確さを維持します。</td></tr>
 <tr><td><nobr>--batch-commands</nobr>=path/to/file（ファイル）</td><td>各行をSkylineRunner/Cmd入力のように扱ってファイルを行毎に実行します。複数コマンド実行の自動化に役立ちます。  開いているSkylineファイルはすべてのコマンド中、有効な状態を保ちます。</td></tr>
@@ -294,6 +295,12 @@ http://localhost:8080</td></tr>
 <tr><td><nobr>--panorama-folder</nobr>=path/to/folder（フォルダ）</td><td>ファイルの公開先となるPanoramaサーバー上のフォルダへのパスです（例：MyProject/MyFolder）。</td></tr>
 </table>
 <p>結果ファイルをインポートする引数（--import-fileまたは-–import-all）を上記の引数と併せて使用する場合で、新しい結果がSkylineドキュメントに追加される場合のみ、そのドキュメントが指定されたPanoramaサーバーにアップロードされます。</p>
+<div class="RowType">Settings presets</div>
+<table>
+<tr><td><nobr>--doc-settings-name</nobr>=&lt;名前&gt;</td><td>The name of a settings preset to apply to the document, as it appears in the Settings menu.</td></tr>
+<tr><td><nobr>--doc-settings-add</nobr>=path/to/file（ファイル）.skys</td><td>Add settings presets from a saved settings file to the running program.</td></tr>
+<tr><td><nobr>--doc-settings-conflict-resolution</nobr>=&lt;overwrite | skip&gt;</td><td>Specifies how to resolve settings name conflicts, by either overwriting or skipping them, when using <nobr>--doc-settings-add</nobr> (default is to output an error message for conflicts)</td></tr>
+</table>
 <div class="RowType">ドキュメント設定</div>
 <table>
 <tr><td><nobr>--annotation-name</nobr>=&lt;名前&gt;</td><td>指定した名前でドキュメントに注釈を追加します。同一の名前を持つ既存の注釈は上書きされます。</td></tr>

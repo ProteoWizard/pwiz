@@ -447,6 +447,87 @@ namespace pwiz.Skyline.ToolsUI
             };
         }
 
+        public string GetUiMode()
+        {
+            // Access on UI thread since Program.ModeUI may read Settings.Default
+            string mode = null;
+            Program.MainWindow.Invoke(new Action(() => mode = Program.ModeUI.ToString()));
+            return mode;
+        }
+
+        public void SetUiMode(string mode)
+        {
+            if (!Enum.TryParse(mode, true, out SrmDocument.DOCUMENT_TYPE docType) ||
+                docType == SrmDocument.DOCUMENT_TYPE.none)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Invalid UI mode '{0}'. Must be 'proteomic', 'small_molecules', or 'mixed'.", mode));
+            }
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                Program.MainWindow.SetUIMode(docType);
+            }));
+        }
+
+        public UndoRedoEntry[] GetUndoRedo()
+        {
+            // Capture undo/redo descriptions on the UI thread to avoid concurrent
+            // enumeration of the UndoManager stacks which are not thread-safe.
+            List<string> undoDescriptions = null;
+            List<string> redoDescriptions = null;
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                var undoMgr = Program.MainWindow.GetUndoManager();
+                undoDescriptions = undoMgr.UndoDescriptions.ToList();
+                redoDescriptions = undoMgr.RedoDescriptions.ToList();
+            }));
+
+            var entries = new List<UndoRedoEntry>();
+
+            // Undo entries: index -1 = most recent undoable change, -2 = next, etc.
+            int undoIndex = -1;
+            foreach (var desc in undoDescriptions)
+                entries.Add(new UndoRedoEntry { Index = undoIndex--, Description = desc });
+
+            // Redo entries: index +1 = most recent redoable change, +2 = next, etc.
+            int redoIndex = 1;
+            foreach (var desc in redoDescriptions)
+                entries.Add(new UndoRedoEntry { Index = redoIndex++, Description = desc });
+
+            return entries.ToArray();
+        }
+
+        public void SetUndoRedoPosition(int index)
+        {
+            if (index == 0)
+                return; // Already at current state
+
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                var undoMgr = Program.MainWindow.GetUndoManager();
+                if (index < 0)
+                {
+                    // Undo: index -1 = undo top (stack index 0), -2 = undo 2 deep, etc.
+                    int stackIndex = -index - 1;
+                    if (stackIndex >= undoMgr.UndoCount)
+                        throw new ArgumentOutOfRangeException(nameof(index),
+                            LlmInstruction.Format(@"Undo index {0} is out of range. Only {1} undo steps available.",
+                                index, undoMgr.UndoCount));
+                    undoMgr.UndoRestore(stackIndex);
+                }
+                else
+                {
+                    // Redo: index +1 = redo top (stack index 0), +2 = redo 2 deep, etc.
+                    int stackIndex = index - 1;
+                    if (stackIndex >= undoMgr.RedoCount)
+                        throw new ArgumentOutOfRangeException(nameof(index),
+                            LlmInstruction.Format(@"Redo index {0} is out of range. Only {1} redo steps available.",
+                                index, undoMgr.RedoCount));
+                    undoMgr.RedoRestore(stackIndex);
+                }
+            }));
+        }
+
         public TutorialListItem[] GetAvailableTutorials()
         {
             return JsonTutorialCatalog.GetCatalog();
@@ -469,15 +550,11 @@ namespace pwiz.Skyline.ToolsUI
             return _toolService.GetSelectedElementLocator(elementType);
         }
 
-        public string RunCommand(string[] args)
-        {
-            return RunCommandImpl(args, false);
-        }
+        string IJsonToolService.RunCommand(string[] args) => RunCommandImpl(args, false);
+        string IJsonToolService.RunCommandSilent(string[] args) => RunCommandImpl(args, true);
 
-        public string RunCommandSilent(string[] args)
-        {
-            return RunCommandImpl(args, true);
-        }
+        public string RunCommand(params string[] args) => RunCommandImpl(args, false);
+        public string RunCommandSilent(params string[] args) => RunCommandImpl(args, true);
 
         public string[] GetSettingsListNames(string listType, string groupName = null)
         {
@@ -1203,6 +1280,16 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private class SkylineWindowDocumentOperations : IDocumentOperations
         {
+            public bool Dirty
+            {
+                get
+                {
+                    bool dirty = false;
+                    Program.MainWindow.Invoke(new Action(() => dirty = Program.MainWindow.Dirty));
+                    return dirty;
+                }
+            }
+
             public SrmDocument OpenDocument(string skylineFile)
             {
                 bool success = false;
@@ -1219,15 +1306,20 @@ namespace pwiz.Skyline.ToolsUI
             {
                 Program.MainWindow.Invoke(new Action(() =>
                 {
-                    if (overwrite)
+                    if (skylineFile != null && overwrite)
                     {
                         FileEx.SafeDelete(skylineFile);
                         FileEx.SafeDelete(Path.ChangeExtension(skylineFile, ChromatogramCache.EXT));
                     }
+                    // Forced — dirty check is handled by the CLI layer
+                    // before reaching this point via --discard-changes.
                     Program.MainWindow.NewDocument(true);
-                    // Save empty document to set DocumentFilePath so subsequent
-                    // --save commands know the correct path
-                    Program.MainWindow.SaveDocument(skylineFile);
+                    if (skylineFile != null)
+                    {
+                        // Save empty document to set DocumentFilePath so subsequent
+                        // --save commands know the correct path
+                        Program.MainWindow.SaveDocument(skylineFile);
+                    }
                 }));
                 return WaitForDocumentLoaded();
             }

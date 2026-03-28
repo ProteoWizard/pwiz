@@ -888,7 +888,9 @@ namespace pwiz.Skyline.FileUI
 
         private void SetComboBoxTextExtra(List<int> columns, string text)
         {
-            foreach (var extraCol in columns.Skip(1))
+            // ToList() snapshots the indices before iterating: SetComboBoxText fires ComboChanged
+            // which calls ResetDuplicateColumns, modifying the same list we're iterating over.
+            foreach (var extraCol in columns.Skip(1).ToList())
                 SetComboBoxText(extraCol, text);
         }
 

@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private readonly ImmutableList<bool> _negativeCharges;
         private readonly ImmutableList<int> _msLevels;
         private readonly ImmutableList<double?> _constantNeutralLosses;
-        private readonly ImmutableList<double?> _sourceOffsetVoltages;
+        private readonly ImmutableList<double> _sourceOffsetVoltages;
 
         public SpectrumMetadatas(IEnumerable<SpectrumMetadata> enumerable)
         {
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _negativeCharges = collection.Select(m => m.NegativeCharge).ToFactor().MaybeConstant();
             _msLevels = collection.Select(m => m.MsLevel).ToFactor().MaybeConstant();
             _constantNeutralLosses = collection.Select(m => m.ConstantNeutralLoss).Nullables().MaybeConstant();
-            _sourceOffsetVoltages = collection.Select(m => m.SourceOffsetVoltage).Nullables().MaybeConstant();
+            _sourceOffsetVoltages = collection.Select(m => m.SourceOffsetVoltage).ToFactor().MaybeConstant();
         }
 
         public SpectrumMetadatas(ResultFileMetaDataProto proto)
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _spectrumPrecursors = spectrumPrecursorsList.ToFactor().MaybeConstant();
             _msLevels = IntegerList.FromIntegers(msLevels);
             _constantNeutralLosses = proto.Spectra.Select(s => s.ConstantNeutralLoss).Nullables().MaybeConstant();
-            _sourceOffsetVoltages = proto.Spectra.Select(s => s.SourceOffsetVoltage).Nullables().MaybeConstant();
+            _sourceOffsetVoltages = proto.Spectra.Select(s => s.SourceOffsetVoltage).ToFactor().MaybeConstant();
         }
 
         public override SpectrumMetadata this[int index]
