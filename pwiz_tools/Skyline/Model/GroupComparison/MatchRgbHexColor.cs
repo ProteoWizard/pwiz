@@ -140,6 +140,30 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
+        /// <summary>
+        /// Computed binding helper: true when a color is set, false when Color.Empty (no color override).
+        /// Setting to false clears the color. Setting to true when color is already set is a no-op;
+        /// ColorGrid opens the picker when checked with an empty color.
+        /// </summary>
+        public bool UseColor
+        {
+            get { return Color != Color.Empty; }
+            set { if (!value) Color = Color.Empty; }
+        }
+
+        // Shadow the base Color property to also notify UseColor when the empty/non-empty state changes.
+        public new Color Color
+        {
+            get { return base.Color; }
+            set
+            {
+                var wasUseColor = base.Color != Color.Empty;
+                base.Color = value;
+                if (wasUseColor != (value != Color.Empty))
+                    NotifyPropertyChanged(nameof(UseColor));
+            }
+        }
+
         public MatchRgbHexColor Clone()
         {
             return (MatchRgbHexColor) MemberwiseClone();

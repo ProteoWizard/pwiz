@@ -213,12 +213,6 @@
   <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
     <value>U&amp;RL:</value>
   </data>
-  <data name="ColorGrid_AllowNullColor_None" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="ColorGrid_AllowNullColor_PickColor" xml:space="preserve">
-    <value>Pick color...</value>
-  </data>
   <data name="EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_" xml:space="preserve">
     <value>The color scheme '{0}' already exists.</value>
   </data>

@@ -661,6 +661,15 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Color.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Color {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Color", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Circle.
         /// </summary>
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle {
