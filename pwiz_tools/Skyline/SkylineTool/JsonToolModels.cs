@@ -206,4 +206,14 @@ namespace SkylineTool
         public string Name { get; set; }
         public string Locator { get; set; }
     }
+
+    /// <summary>
+    /// A single entry in the undo/redo stack returned by GetUndoRedo.
+    /// Negative index = undo step, positive = redo step.
+    /// </summary>
+    public class UndoRedoEntry
+    {
+        public int Index { get; set; }
+        public string Description { get; set; }
+    }
 }

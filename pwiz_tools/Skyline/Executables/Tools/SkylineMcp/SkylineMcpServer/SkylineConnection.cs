@@ -83,6 +83,8 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null) { return CallClient(c => c.GetReportDocTopics(dataSource)); }
     public string GetProcessId() { return CallClient(c => c.GetProcessId()); }
     public FormInfo[] GetOpenForms() { return CallClient(c => c.GetOpenForms()); }
+    public string GetUiMode() { return CallClient(c => c.GetUiMode()); }
+    public UndoRedoEntry[] GetUndoRedo() { return CallClient(c => c.GetUndoRedo()); }
 
     // 1-arg methods
     public string GetSelectedElementLocator(string elementType) { return CallClient(c => c.GetSelectedElementLocator(elementType)); }
@@ -95,6 +97,8 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void InsertSmallMoleculeTransitionList(string textCsv) { CallClientVoid(c => c.InsertSmallMoleculeTransitionList(textCsv)); }
     public void ImportProperties(string csvText) { CallClientVoid(c => c.ImportProperties(csvText)); }
     public void SetReplicate(string replicateName) { CallClientVoid(c => c.SetReplicate(replicateName)); }
+    public void SetUiMode(string mode) { CallClientVoid(c => c.SetUiMode(mode)); }
+    public void SetUndoRedoPosition(int index) { CallClientVoid(c => c.SetUndoRedoPosition(index)); }
     public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
 
@@ -309,7 +313,8 @@ public class SkylineConnection : IJsonToolService, IDisposable
         {
             var process = Process.GetProcessById(processId);
             return Program.FunctionalTest ||
-                   process.ProcessName.StartsWith("Skyline", StringComparison.OrdinalIgnoreCase);
+                   process.ProcessName.StartsWith("Skyline", StringComparison.OrdinalIgnoreCase) ||
+                   process.ProcessName.StartsWith("TestRunner", StringComparison.OrdinalIgnoreCase);
         }
         catch (ArgumentException)
         {
