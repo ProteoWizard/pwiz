@@ -240,6 +240,34 @@ namespace SkylineTool
         /// <returns>The file path written to.</returns>
         string GetDefaultSettings(string filePath);
 
+        // --- UI mode ---
+
+        /// <summary>
+        /// Returns the current UI mode: "proteomic", "small_molecules", or "mixed".
+        /// </summary>
+        string GetUiMode();
+
+        /// <summary>
+        /// Sets the UI mode.
+        /// </summary>
+        /// <param name="mode">"proteomic", "small_molecules", or "mixed".</param>
+        void SetUiMode(string mode);
+
+        // --- Undo/redo ---
+
+        /// <summary>
+        /// Returns the full undo/redo stack with descriptions and indices.
+        /// Negative indices = undo steps, positive = redo steps.
+        /// </summary>
+        UndoRedoEntry[] GetUndoRedo();
+
+        /// <summary>
+        /// Navigates to a specific point in the undo/redo stack by index.
+        /// Negative indices undo, positive indices redo.
+        /// </summary>
+        /// <param name="index">Target position in the undo/redo stack.</param>
+        void SetUndoRedoPosition(int index);
+
         // --- UI state ---
 
         /// <summary>
