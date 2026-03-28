@@ -1,24 +1,29 @@
 using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
-using SkylineTool;
 
 namespace SortProteins
 {
     /// <summary>
-    /// Simple JSON pipe client for communicating with Skyline's JsonToolServer.
-    /// Derives the JSON pipe name from the legacy connection name passed via --connection_name.
+    /// JSON-RPC 2.0 pipe client for communicating with Skyline's JsonToolServer.
     /// </summary>
     public class JsonClient(string connectionName) : IDisposable
     {
-        private readonly string _pipeName = JsonToolConstants.GetJsonPipeName(connectionName);
+        private const string JSON_PIPE_PREFIX = "SkylineMcpJson-";
+        private readonly string _pipeName = JSON_PIPE_PREFIX + connectionName.Replace("-", string.Empty);
         private NamedPipeClientStream? _pipe;
 
-        public string Call(string method, params string[] args)
+        private static readonly JsonSerializerOptions _snakeCaseOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            PropertyNameCaseInsensitive = true
+        };
+
+        public string? Call(string method, params object[] args)
         {
             EnsureConnected();
-            var request = new { method, args };
-            byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
+            var request = new { jsonrpc = "2.0", method, @params = args, id = 1 };
+            byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request, _snakeCaseOptions));
             _pipe!.Write(requestBytes, 0, requestBytes.Length);
             _pipe.Flush();
             _pipe.WaitForPipeDrain();
@@ -31,23 +36,24 @@ namespace SortProteins
 
             if (root.TryGetProperty("error", out var errorElement))
             {
-                string? error = errorElement.GetString();
-                throw new InvalidOperationException(error ?? "Unknown error from Skyline");
+                string? message = errorElement.TryGetProperty("message", out var msgElement)
+                    ? msgElement.GetString()
+                    : "Unknown error from Skyline";
+                throw new InvalidOperationException(message);
             }
 
             if (root.TryGetProperty("result", out var resultElement))
             {
                 if (resultElement.ValueKind == JsonValueKind.Null)
-                    return null!;
-                if (resultElement.ValueKind == JsonValueKind.Number)
-                    return resultElement.GetRawText();
-                if (resultElement.ValueKind == JsonValueKind.Object ||
+                    return null;
+                if (resultElement.ValueKind == JsonValueKind.Number ||
+                    resultElement.ValueKind == JsonValueKind.Object ||
                     resultElement.ValueKind == JsonValueKind.Array)
                     return resultElement.GetRawText();
-                return resultElement.GetString()!;
+                return resultElement.GetString();
             }
 
-            return null!;
+            return null;
         }
 
         private void EnsureConnected()

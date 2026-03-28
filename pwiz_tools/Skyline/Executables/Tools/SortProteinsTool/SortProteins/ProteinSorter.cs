@@ -2,13 +2,12 @@ using System.Globalization;
 using System.Text.Json;
 using CsvHelper;
 using CsvHelper.Configuration;
-using SkylineTool;
 
 namespace SortProteins
 {
     public class ProteinSorter(JsonClient client)
     {
-        private static readonly JsonSerializerOptions _jsonOptions = new()
+        private static readonly JsonSerializerOptions _snakeCaseOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
         };
@@ -43,16 +42,14 @@ namespace SortProteins
             {
                 Select = columns.ToArray(),
                 Uimode = "proteomic",
-                Scope = "document_grid"
+                DataSource = "document_grid"
             };
 
             var tempFile = Path.GetTempFileName();
             tempFile = Path.ChangeExtension(tempFile, ".csv");
             try
             {
-                var definitionJson = JsonSerializer.Serialize(definition, _jsonOptions);
-                client.Call(nameof(IJsonToolService.ExportReportFromDefinition),
-                    definitionJson, tempFile, JsonToolConstants.CULTURE_INVARIANT);
+                client.Call("ExportReportFromDefinition", definition, tempFile, "invariant");
                 var csvText = File.ReadAllText(tempFile);
                 return ParseCsv(csvText, column);
             }
@@ -100,14 +97,20 @@ namespace SortProteins
 
         public void SetProteinOrder(IEnumerable<string> newOrder)
         {
-            var locatorsJson = JsonSerializer.Serialize(newOrder.ToArray());
-            client.Call(nameof(IJsonToolService.ReorderElements), locatorsJson);
+            client.Call("ReorderElements", [newOrder.ToArray()]);
         }
 
         private record Row(string Locator)
         {
             public string? TextValue { get; init; }
             public double? NumberValue { get; init; }
+        }
+
+        private class ReportDefinition
+        {
+            public string[]? Select { get; set; }
+            public string? Uimode { get; set; }
+            public string? DataSource { get; set; }
         }
     }
 }

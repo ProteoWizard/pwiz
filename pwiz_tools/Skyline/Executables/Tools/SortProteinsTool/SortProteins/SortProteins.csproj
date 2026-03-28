@@ -9,10 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\SkylineTool\SkylineTool.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="CommandLine">
       <HintPath>..\lib\CommandLine.dll</HintPath>
     </Reference>
