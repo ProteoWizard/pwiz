@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public MatchRgbHexColor()
-            : this(string.Empty, false, Color.Gray)
+            : this(string.Empty, false, Color.Empty)
         {
         }
 

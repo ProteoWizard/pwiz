@@ -529,48 +529,22 @@ namespace pwiz.Skyline.Controls.Graphs
             // labeled), the first matching rule that has that trait set (non-null / non-Empty) wins.
             var colorRows = (_formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting).ColorRows
                 .Where(r => r.MatchExpression != null).ToList();
-            var remainingPoints = new List<PointPair>(); // points that matched no rule
+            var unmatchedOtherPoints = new PointPairList(); // points that matched no rule
             var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
             foreach (var point in unmatchedPoints)
             {
                 var pointData = (GraphPointData)point.Tag;
-                Color? resolvedColor = null;
-                PointSymbol? resolvedSymbol = null;
-                PointSize? resolvedSize = null;
-                bool? resolvedLabeled = null;
-                int firstRuleIndex = -1;
-
-                for (int ruleIndex = 0; ruleIndex < colorRows.Count; ruleIndex++)
-                {
-                    var colorRow = colorRows[ruleIndex];
-                    if (!colorRow.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null))
-                        continue;
-
-                    if (firstRuleIndex < 0)
-                        firstRuleIndex = ruleIndex;
-
-                    if (resolvedColor == null && colorRow.Color != Color.Empty)
-                        resolvedColor = colorRow.Color;
-                    if (resolvedSymbol == null && colorRow.PointSymbol.HasValue)
-                        resolvedSymbol = colorRow.PointSymbol;
-                    if (resolvedSize == null && colorRow.PointSize.HasValue)
-                        resolvedSize = colorRow.PointSize;
-                    if (resolvedLabeled == null)
-                        resolvedLabeled = colorRow.Labeled;
-
-                    if (resolvedColor != null && resolvedSymbol != null && resolvedSize != null && resolvedLabeled != null)
-                        break;
-                }
-
-                if (firstRuleIndex < 0)
-                    remainingPoints.Add(point);
+                var resolved = DotPlotUtil.ResolvePointFormat(colorRows,
+                    rule => rule.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null));
+                if (resolved == null)
+                    unmatchedOtherPoints.Add(point);
                 else
                     pointFormats.Add((point,
-                        resolvedColor ?? Color.Gray,
-                        resolvedSymbol ?? PointSymbol.Circle,
-                        resolvedSize ?? PointSize.normal,
-                        resolvedLabeled ?? false,
-                        firstRuleIndex));
+                        resolved.Value.color ?? Color.Gray,
+                        resolved.Value.symbol ?? PointSymbol.Circle,
+                        resolved.Value.size ?? PointSize.normal,
+                        resolved.Value.labeled,
+                        resolved.Value.firstRuleIndex));
             }
 
             foreach (var group in pointFormats
@@ -582,7 +556,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     fmt.color, DotPlotUtil.PointSizeToFloat(fmt.size), fmt.labeled, fmt.symbol);
             }
 
-            AddPoints(new PointPairList(remainingPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
+            AddPoints(unmatchedOtherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
             if(dataChanged || Settings.Default.RelativeAbundanceLogScale != YAxis.Scale.IsLog)
                 UpdateAxes();
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)

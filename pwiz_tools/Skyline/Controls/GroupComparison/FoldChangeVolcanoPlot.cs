@@ -354,53 +354,27 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
             AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
 
-            // Resolve formatting traits per-point independently: for each trait (color, symbol, size,
-            // labeled), the first matching rule that has that trait set (non-null / non-Empty) wins.
-            // This lets separate rules control different traits, e.g. color by protein and shape by p-value.
+            // Resolve formatting traits per-point independently using DotPlotUtil.ResolvePointFormat.
+            // Each trait (color, symbol, size, labeled=true) is set by the first matching rule that
+            // explicitly provides it — separate rules can control different traits independently.
             var colorRows = GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null).ToList();
             var unmatchedOtherPoints = new PointPairList();
             var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
             foreach (var point in otherPoints)
             {
                 var foldChangeRow = (FoldChangeRow)point.Tag;
-                Color? resolvedColor = null;
-                PointSymbol? resolvedSymbol = null;
-                PointSize? resolvedSize = null;
-                bool? resolvedLabeled = null;
-                int firstRuleIndex = -1;
-
-                for (int ruleIndex = 0; ruleIndex < colorRows.Count; ruleIndex++)
-                {
-                    var colorRow = colorRows[ruleIndex];
-                    if (!colorRow.MatchExpression.Matches(Document, foldChangeRow.Protein, foldChangeRow.Peptide,
-                            foldChangeRow.FoldChangeResult, CutoffSettings))
-                        continue;
-
-                    if (firstRuleIndex < 0)
-                        firstRuleIndex = ruleIndex;
-
-                    if (resolvedColor == null && colorRow.Color != Color.Empty)
-                        resolvedColor = colorRow.Color;
-                    if (resolvedSymbol == null && colorRow.PointSymbol.HasValue)
-                        resolvedSymbol = colorRow.PointSymbol;
-                    if (resolvedSize == null && colorRow.PointSize.HasValue)
-                        resolvedSize = colorRow.PointSize;
-                    if (resolvedLabeled == null)
-                        resolvedLabeled = colorRow.Labeled;
-
-                    if (resolvedColor != null && resolvedSymbol != null && resolvedSize != null && resolvedLabeled != null)
-                        break;
-                }
-
-                if (firstRuleIndex < 0)
+                var resolved = DotPlotUtil.ResolvePointFormat(colorRows,
+                    rule => rule.MatchExpression.Matches(Document, foldChangeRow.Protein,
+                        foldChangeRow.Peptide, foldChangeRow.FoldChangeResult, CutoffSettings));
+                if (resolved == null)
                     unmatchedOtherPoints.Add(point);
                 else
                     pointFormats.Add((point,
-                        resolvedColor ?? Color.Gray,
-                        resolvedSymbol ?? PointSymbol.Circle,
-                        resolvedSize ?? PointSize.small,
-                        resolvedLabeled ?? false,
-                        firstRuleIndex));
+                        resolved.Value.color ?? Color.Gray,
+                        resolved.Value.symbol ?? PointSymbol.Circle,
+                        resolved.Value.size ?? PointSize.small,
+                        resolved.Value.labeled,
+                        resolved.Value.firstRuleIndex));
             }
 
             foreach (var group in pointFormats
