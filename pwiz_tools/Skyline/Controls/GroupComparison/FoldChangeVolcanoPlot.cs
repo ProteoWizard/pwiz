@@ -352,12 +352,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
-            AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
-
             // Resolve formatting traits per-point independently using DotPlotUtil.ResolvePointFormat.
             // Each trait (color, symbol, size, labeled=true) is set by the first matching rule that
             // explicitly provides it — separate rules can control different traits independently.
             var colorRows = GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null).ToList();
+
+            // Selected points keep the selection color but preserve the marker shape from the matching rule
+            foreach (var symbolGroup in selectedPoints.GroupBy(point =>
+            {
+                var row = (FoldChangeRow)point.Tag;
+                return DotPlotUtil.ResolvePointFormat(colorRows,
+                    rule => rule.MatchExpression.Matches(Document, row.Protein, row.Peptide,
+                        row.FoldChangeResult, CutoffSettings))?.symbol ?? PointSymbol.Circle;
+            }))
+            {
+                AddPoints(new PointPairList(symbolGroup.ToList()), Color.Red,
+                    DotPlotUtil.PointSizeToFloat(PointSize.large), true, symbolGroup.Key, true);
+            }
             var unmatchedOtherPoints = new PointPairList();
             var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
             foreach (var point in otherPoints)

@@ -497,6 +497,10 @@ namespace pwiz.Skyline.Controls.Graphs
             bool dataChanged = _graphData.MinY != oldGraphData?.MinY || _graphData.MaxY != oldGraphData?.MaxY;
 
             // For proper z-order, add the selected points, then the matched points, then the unmatched points
+            // Resolve formatting traits per-point independently: for each trait (color, symbol, size,
+            // labeled), the first matching rule that has that trait set (non-null / non-Empty) wins.
+            var colorRows = (_formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting).ColorRows
+                .Where(r => r.MatchExpression != null).ToList();
             var selectedPoints = new PointPairList();
             var unmatchedPoints = new List<PointPair>();
             if (ShowSelection)
@@ -505,7 +509,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _graphData.PointPairList.Select(point => point.Tag).OfType<GraphPointData>()
                         .Select(graphPointData => graphPointData.IdentityPath)).ToHashSet();
 
-                foreach (var point in _graphData.PointPairList) 
+                foreach (var point in _graphData.PointPairList)
                 {
                     var pointData = (GraphPointData)point.Tag;
                     if (selectedPaths.Contains(pointData.IdentityPath) && selectedPoints.Count < MAX_SELECTED)
@@ -517,18 +521,23 @@ namespace pwiz.Skyline.Controls.Graphs
                         unmatchedPoints.Add(point);
                     }
                 }
-                AddPoints(new PointPairList(selectedPoints), GraphSummary.ColorSelected, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
+                // Selected points keep the selection color but preserve the marker shape from the matching rule
+                foreach (var symbolGroup in selectedPoints.GroupBy(point =>
+                {
+                    var pointData = (GraphPointData)point.Tag;
+                    return DotPlotUtil.ResolvePointFormat(colorRows,
+                        rule => rule.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null))
+                        ?.symbol ?? PointSymbol.Circle;
+                }))
+                {
+                    AddPoints(new PointPairList(symbolGroup.ToList()), GraphSummary.ColorSelected,
+                        DotPlotUtil.PointSizeToFloat(PointSize.large), true, symbolGroup.Key, true);
+                }
             }
             else
             {
                 unmatchedPoints.AddRange(_graphData.PointPairList);
             }
-
-            // For each valid match expression specified by the user
-            // Resolve formatting traits per-point independently: for each trait (color, symbol, size,
-            // labeled), the first matching rule that has that trait set (non-null / non-Empty) wins.
-            var colorRows = (_formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting).ColorRows
-                .Where(r => r.MatchExpression != null).ToList();
             var unmatchedOtherPoints = new PointPairList(); // points that matched no rule
             var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
             foreach (var point in unmatchedPoints)
