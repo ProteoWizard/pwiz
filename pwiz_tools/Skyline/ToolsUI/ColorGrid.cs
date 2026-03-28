@@ -125,6 +125,7 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             ((T) bindingSource1[rowIndex]).Color = newColor;
+            dataGridViewColors.InvalidateRow(rowIndex);
         }
 
         public void UpdateBindingSource()
