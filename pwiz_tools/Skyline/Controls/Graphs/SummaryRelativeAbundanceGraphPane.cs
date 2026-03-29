@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Entries that survive cleaning but have a different document reference will be used
         /// as prior data for incremental updates.
         /// </summary>
-        private static IEnumerable<int> CleanCacheForIncrementalUpdates(
+        internal static IEnumerable<int> CleanCacheForIncrementalUpdates(
             SrmDocument currentDoc, IReadOnlyDictionary<int, SrmDocument> cachedEntries)
         {
             var keysToRemove = new List<int>();
@@ -470,15 +470,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         out newGraphData))
                 {
                     // Keep showing previous graph while calculating new data (stale-while-revalidate)
-                    // Set initial X-axis scale estimate based on document counts
                     if (_graphData == null)
-                    {
-                        int estimatedCount = graphSettings.AreaProteinTargets
-                            ? document.MoleculeGroupCount
-                            : document.MoleculeCount;
-                        XAxis.Scale.Max = estimatedCount;
-                        AxisChange();
-                    }
+                        InitializeEmptyGraph(document, graphSettings);
                     return;
                 }
             }
@@ -749,6 +742,41 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            AxisChange();
+        }
+
+        /// <summary>
+        /// Set axis labels and a reasonable default scale before data arrives from the
+        /// background computation, so the graph shows meaningful axes immediately.
+        /// </summary>
+        private void InitializeEmptyGraph(SrmDocument document, GraphSettings graphSettings)
+        {
+            int estimatedCount = graphSettings.AreaProteinTargets
+                ? document.MoleculeGroupCount
+                : document.MoleculeCount;
+            XAxis.Scale.Max = estimatedCount;
+
+            if (document.HasSmallMolecules)
+                XAxis.Title.Text = GraphsResources.SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank;
+            else
+                XAxis.Title.Text = graphSettings.AreaProteinTargets
+                    ? GraphsResources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank
+                    : GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peptide_Rank;
+
+            var yTitle = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+            if (Settings.Default.RelativeAbundanceLogScale)
+            {
+                YAxis.Title.Text = TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log, yTitle);
+                YAxis.Type = AxisType.Log;
+                YAxis.Scale.Min = 1e2;
+                YAxis.Scale.Max = 1e9;
+                YAxis.Scale.MinAuto = false;
+                YAxis.Scale.MaxAuto = false;
+            }
+            else
+            {
+                YAxis.Title.Text = yTitle;
+            }
             AxisChange();
         }
 

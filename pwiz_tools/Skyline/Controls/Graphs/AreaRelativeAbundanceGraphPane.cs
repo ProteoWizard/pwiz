@@ -32,6 +32,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override Producer<GraphDataParameters, GraphData> GraphDataProducer => _graphDataProducer;
 
+        /// <summary>
+        /// Shared Producer for abundance graph data. Used by both the RA dot-plot and
+        /// the Relative Abundance Comparison box plot to avoid duplicate computation.
+        /// </summary>
+        internal static Producer<GraphDataParameters, GraphData> SharedProducer => _graphDataProducer;
+
         protected override void UpdateAxes()
         {
             YAxis.Title.Text = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;

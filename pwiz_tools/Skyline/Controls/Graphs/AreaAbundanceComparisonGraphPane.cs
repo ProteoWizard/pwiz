@@ -19,29 +19,47 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
+using GraphData = pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphData;
+using GraphDataParameters = pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphDataParameters;
+using GraphPointData = pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphPointData;
+using GraphSettings = pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphSettings;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
     /// Box plot pane showing protein/peptide abundance distributions per replicate.
-    /// Provides a distributional overview of the same data points shown in the
-    /// Relative Abundance dot-plot.
+    /// Shares the same background data pipeline as the Relative Abundance dot-plot
+    /// via the shared Producer in AreaRelativeAbundanceGraphPane.
     /// </summary>
-    internal class AreaAbundanceComparisonGraphPane : SummaryGraphPane
+    internal class AreaAbundanceComparisonGraphPane : SummaryGraphPane, IDisposable
     {
         private static readonly Color DEFAULT_BAR_COLOR = Color.LightGreen;
+        private const int PROGRESS_INITIAL_DELAY_MS = 300;
+        private const int PROGRESS_UPDATE_INTERVAL_MS = 100;
+
+        // Shared data pipeline
+        private readonly ReplicateCachingReceiver<GraphDataParameters, GraphData> _graphDataReceiver;
+        private GraphData _graphData;
+
+        // Progress tracking
+        private PaneProgressBar _progressBar;
+        private int _progressValue = -1;
+        private Stopwatch _progressStopwatch;
 
         // Maps X position back to replicate index for click handling
         private int[] _xToReplicateIndex;
@@ -68,6 +86,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             BarSettings.MinClusterGap = 3f;
             BarSettings.Type = BarType.Overlay;
+
+            // Register on the shared Producer used by the RA dot-plot
+            var receiver = AreaRelativeAbundanceGraphPane.SharedProducer
+                .RegisterCustomer(graphSummary, ProductAvailableAction);
+            _graphDataReceiver = new ReplicateCachingReceiver<GraphDataParameters, GraphData>(
+                receiver,
+                SummaryRelativeAbundanceGraphPane.CleanCacheForIncrementalUpdates);
+            _graphDataReceiver.ProgressChange += UpdateProgressHandler;
         }
 
         public override void Draw(Graphics g)
@@ -95,10 +121,42 @@ namespace pwiz.Skyline.Controls.Graphs
 
             bool isLogScale = Settings.Default.RelativeAbundanceLogScale;
             YAxis.Type = isLogScale ? AxisType.Log : AxisType.Linear;
+            UpdateYAxisTitle(isLogScale);
 
-            var useProteinLevel = Settings.Default.AreaProteinTargets;
+            var graphSettings = GraphSettings.FromSettings();
+
+            // Request data from the shared pipeline (all replicates mode, cache key = -1)
+            _graphDataReceiver.CleanStaleEntries(document);
+            _graphDataReceiver.TryGetCachedResult(-1, out var priorGraphData);
+
+            GraphData newGraphData;
+            try
+            {
+                if (!_graphDataReceiver.TryGetProduct(
+                        new GraphDataParameters(document, graphSettings, ReplicateDisplay.best, -1, priorGraphData),
+                        out newGraphData))
+                {
+                    // Background computation in progress. Show replicate labels and
+                    // a reasonable default axis range while data is computing.
+                    if (_graphData == null)
+                    {
+                        InitializeEmptyGraph(measuredResults, isLogScale);
+                        GraphSummary.GraphControl.Invalidate();
+                    }
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(Program.MainWindow, e);
+                return;
+            }
+
+            _graphData = newGraphData;
+
+            // Extract per-replicate abundance values from the shared GraphData
             var replicateCount = measuredResults.Chromatograms.Count;
-            var replicateValues = CollectReplicateAbundances(document, useProteinLevel, replicateCount);
+            var replicateValues = ExtractReplicateValues(_graphData, replicateCount);
 
             // Determine replicate ordering
             var orderedIndices = GetOrderedReplicateIndices(document, measuredResults);
@@ -226,6 +284,7 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.TextLabels = labels;
             SetYAxisRange(isLogScale, yMin, yMax);
             AxisChange();
+            GraphSummary.GraphControl.Invalidate();
         }
 
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
@@ -252,10 +311,8 @@ namespace pwiz.Skyline.Controls.Graphs
             var point = nearestCurve.Points[iNearest];
             if (point.Tag is OutlierInfo outlier)
                 GraphSummary.StateProvider.SelectedPath = outlier.IdentityPath;
-            // Bar items use IsOverrideOrdinal (0-based index), but LineItem points
-            // use 1-based X values for text axis alignment, so subtract 1.
             int xPosition = point.Tag is OutlierInfo
-                ? (int)Math.Round(point.X) - 1
+                ? (int)Math.Round(point.X)
                 : iNearest;
             return NavigateToReplicate(xPosition);
         }
@@ -286,6 +343,92 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return false;
+        }
+
+        public override void OnClose(EventArgs e)
+        {
+            base.OnClose(e);
+            _progressBar?.Dispose();
+            _graphDataReceiver?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            _progressBar?.Dispose();
+            _graphDataReceiver?.Dispose();
+        }
+
+        private void ProductAvailableAction()
+        {
+            UpdateProgressHandler();
+            UpdateGraph(false);
+        }
+
+        private void UpdateProgressHandler()
+        {
+            if (_graphDataReceiver.IsProcessing())
+            {
+                var newProgressValue = _graphDataReceiver.GetProgressValue();
+                if (newProgressValue != _progressValue)
+                {
+                    if (_progressStopwatch == null)
+                    {
+                        _progressStopwatch = Stopwatch.StartNew();
+                        _progressValue = newProgressValue;
+                        return;
+                    }
+
+                    bool progressBarShowing = _progressBar != null;
+                    int throttleMs = progressBarShowing ? PROGRESS_UPDATE_INTERVAL_MS : PROGRESS_INITIAL_DELAY_MS;
+
+                    if (_progressStopwatch.ElapsedMilliseconds < throttleMs)
+                        return;
+
+                    _progressStopwatch.Restart();
+                    _progressBar ??= new PaneProgressBar(this);
+                    _progressBar.UpdateProgress(newProgressValue);
+                    _progressValue = newProgressValue;
+                }
+            }
+            else
+            {
+                _progressBar?.Dispose();
+                _progressBar = null;
+                _progressValue = -1;
+                _progressStopwatch = null;
+            }
+        }
+
+        /// <summary>
+        /// Extract per-replicate abundance values from the shared GraphData.
+        /// Each GraphPointData.ReplicateAreas contains values keyed by replicate index.
+        /// </summary>
+        private static List<AbundancePoint>[] ExtractReplicateValues(GraphData graphData, int replicateCount)
+        {
+            var replicateValues = new List<AbundancePoint>[replicateCount];
+            for (int i = 0; i < replicateCount; i++)
+                replicateValues[i] = new List<AbundancePoint>();
+
+            foreach (var point in graphData.PointPairList)
+            {
+                var gpd = (GraphPointData)point.Tag;
+                if (gpd == null)
+                    continue;
+                foreach (var replicateGroup in gpd.ReplicateAreas)
+                {
+                    int repIndex = replicateGroup.Key;
+                    if (repIndex >= 0 && repIndex < replicateCount)
+                    {
+                        foreach (var value in replicateGroup)
+                        {
+                            if (value > 0)
+                                replicateValues[repIndex].Add(new AbundancePoint(value, gpd.IdentityPath));
+                        }
+                    }
+                }
+            }
+
+            return replicateValues;
         }
 
         private bool NavigateToReplicate(int xPosition)
@@ -342,14 +485,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (values.Count == 0)
                 return null;
 
-            var positive = values.Where(v => v.Value > 0).ToArray();
-            if (positive.Length == 0)
-                return null;
-
-            // Compute statistics in log space because abundance data is log-normally
-            // distributed. This ensures symmetric outlier detection.
-            // Sort by log value, keeping track of original points for outlier identity.
-            var sortedByLog = positive.OrderBy(v => Math.Log10(v.Value)).ToArray();
+            // Values already filtered for > 0 during extraction
+            var sortedByLog = values.OrderBy(v => Math.Log10(v.Value)).ToArray();
             var sortedLog = sortedByLog.Select(v => Math.Log10(v.Value)).ToArray();
             var logTag = BoxPlotStatistics.ComputeBoxPlot(sortedLog);
             if (logTag == null)
@@ -401,58 +538,51 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        private void UpdateYAxisTitle(bool isLogScale)
+        {
+            YAxis.Title.Text = isLogScale
+                ? TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log,
+                    GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area)
+                : GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+        }
+
+        /// <summary>
+        /// Set up reasonable defaults before data arrives: replicate labels on x-axis,
+        /// sensible y-axis range, and no data curves.
+        /// </summary>
+        private void InitializeEmptyGraph(MeasuredResults measuredResults, bool isLogScale)
+        {
+            var replicateCount = measuredResults.Chromatograms.Count;
+            var labels = new string[replicateCount];
+            _xToReplicateIndex = new int[replicateCount];
+            for (int i = 0; i < replicateCount; i++)
+            {
+                labels[i] = measuredResults.Chromatograms[i].Name;
+                _xToReplicateIndex[i] = i;
+            }
+            XAxis.Scale.TextLabels = labels;
+
+            YAxis.Scale.MinAuto = false;
+            YAxis.Scale.MaxAuto = false;
+            if (isLogScale)
+            {
+                YAxis.Scale.Min = 1e2;
+                YAxis.Scale.Max = 1e9;
+            }
+            else
+            {
+                YAxis.Scale.Min = 0;
+                YAxis.Scale.Max = 1e6;
+            }
+            AxisChange();
+        }
+
         private static ReplicateValue GetCurrentGroupByValue(SrmDocument document)
         {
             var groupByAnnotation = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
             if (string.IsNullOrEmpty(groupByAnnotation))
                 return null;
             return ReplicateValue.FromPersistedString(document.Settings, groupByAnnotation);
-        }
-
-        private static List<AbundancePoint>[] CollectReplicateAbundances(SrmDocument document,
-            bool useProteinLevel, int replicateCount)
-        {
-            var replicateValues = new List<AbundancePoint>[replicateCount];
-            for (int i = 0; i < replicateCount; i++)
-                replicateValues[i] = new List<AbundancePoint>();
-
-            var dataSchema = new SkylineWindowDataSchema(Program.MainWindow);
-            var moleculeGroups = document.MoleculeGroups.ToList();
-
-            if (useProteinLevel)
-            {
-                foreach (var moleculeGroup in moleculeGroups)
-                {
-                    var path = new IdentityPath(IdentityPath.ROOT, moleculeGroup.PeptideGroup);
-                    var protein = new Protein(dataSchema, path);
-                    foreach (var kvp in protein.GetProteinAbundances())
-                    {
-                        if (kvp.Key >= 0 && kvp.Key < replicateCount)
-                            replicateValues[kvp.Key].Add(new AbundancePoint(kvp.Value.Raw, path));
-                    }
-                }
-            }
-            else
-            {
-                foreach (var moleculeGroup in moleculeGroups)
-                {
-                    var groupPath = new IdentityPath(IdentityPath.ROOT, moleculeGroup.PeptideGroup);
-                    foreach (var peptideDocNode in moleculeGroup.Molecules)
-                    {
-                        var peptidePath = new IdentityPath(groupPath, peptideDocNode.Peptide);
-                        var peptide = new Peptide(dataSchema, peptidePath);
-                        foreach (var result in peptide.Results.Values)
-                        {
-                            var replicateIndex = result.ResultFile.Replicate.ReplicateIndex;
-                            var area = result.GetQuantificationResult()?.NormalizedArea?.Raw;
-                            if (area.HasValue && replicateIndex >= 0 && replicateIndex < replicateCount)
-                                replicateValues[replicateIndex].Add(new AbundancePoint(area.Value, peptidePath));
-                        }
-                    }
-                }
-            }
-
-            return replicateValues;
         }
 
         private struct AbundancePoint
@@ -476,6 +606,5 @@ namespace pwiz.Skyline.Controls.Graphs
             public double Value { get; }
             public IdentityPath IdentityPath { get; }
         }
-
     }
 }

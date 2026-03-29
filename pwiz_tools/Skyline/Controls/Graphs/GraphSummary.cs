@@ -170,6 +170,10 @@ namespace pwiz.Skyline.Controls.Graphs
             Text = Controller.Text + @" - " + Type.CustomToString();
             Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
 
+            // Clear ZedGraph's default pane so the control paints blank until
+            // the controller creates the real pane in the first UpdateGraph call.
+            // This prevents the jarring "Title / Y Axis / X Axis" default appearance.
+            graphControl.MasterPane.PaneList.Clear();
             UpdateUI();
         }
 
