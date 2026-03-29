@@ -70,6 +70,9 @@
     <Reference Include="NHibernate">
       <HintPath>..\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
+    <Reference Include="Sprache">
+      <HintPath>..\Lib\Sprache.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -298,6 +301,7 @@
     <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataBinding\Filtering\FilterClauseSerializer.cs" />
     <Compile Include="DataBinding\Filtering\FilterHandler.cs" />
     <Compile Include="DataBinding\Filtering\FilterClause.cs" />
     <Compile Include="DataBinding\Filtering\FilterPage.cs" />

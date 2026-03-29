@@ -17,16 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using pwiz.Common.Properties;
+using Sprache;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Filtering;
-using Sprache;
+using System.Text.RegularExpressions;
 
-namespace pwiz.Skyline.Model.Results.Spectra
+namespace pwiz.Common.DataBinding.Filtering
 {
     /// <summary>
     /// Handles parsing a filter string into a list of <see cref="FilterClause"/> and
@@ -35,18 +36,19 @@ namespace pwiz.Skyline.Model.Results.Spectra
     public class FilterClauseSerializer
     {
         private readonly ColumnDescriptor _rootColumn;
+        private readonly Regex _regexNumber;
 
         public FilterClauseSerializer(ColumnDescriptor rootColumn)
         {
             _rootColumn = rootColumn;
+            CultureInfo = _rootColumn.DataSchema.DataSchemaLocalizer.FormatProvider;
+            var decimalSeparator = Regex.Escape(CultureInfo.NumberFormat.NumberDecimalSeparator);
+            _regexNumber = new Regex(@"-?[0-9]+" + decimalSeparator + @"?[0-9]*([Ee][+-]?[0-9]+)?");
         }
 
         public CultureInfo CultureInfo
         {
-            get
-            {
-                return _rootColumn.DataSchema.DataSchemaLocalizer.FormatProvider;
-            }
+            get;
         }
 
         /// <summary>
@@ -84,7 +86,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             if (!result.WasSuccessful)
             {
                 throw new FormatException(string.Format(
-                    SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_filter_string___0__, filterString));
+                    Resources.FilterClauseSerializer_ParseFilterString_Invalid_filter_string___0_, filterString));
             }
             return result.Value;
         }
@@ -157,7 +159,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// Numbers are unquoted, strings are single-quoted.
         /// Multiple values use square bracket syntax.
         /// </summary>
-        private static string FormatOperandTokens(IList<string> tokens)
+        private string FormatOperandTokens(IList<string> tokens)
         {
             if (tokens.Count == 1)
             {
@@ -170,13 +172,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// Formats a single token value for filter string syntax.
         /// Values that look like numbers are unquoted; others are single-quoted.
         /// </summary>
-        private static string FormatSingleToken(string value)
+        private string FormatSingleToken(string value)
         {
             if (string.IsNullOrEmpty(value))
             {
                 return @"''";
             }
-            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+
+            var match = _regexNumber.Match(value);
+            if (match.Success && match.Index == 0 && match.Length == value.Length)
             {
                 return value;
             }
@@ -226,7 +230,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 .Then(content => Parse.Char('\'').Return(content));
 
             // Unquoted number for operand values: optional minus, digits, optional decimal
-            var unquotedNumber = Parse.Regex(@"-?[0-9]+\.?[0-9]*");
+            var unquotedNumber = Parse.Regex(_regexNumber);
 
             // Single operand token (string literal or number text)
             var singleToken = singleQuotedString.Or(unquotedNumber);

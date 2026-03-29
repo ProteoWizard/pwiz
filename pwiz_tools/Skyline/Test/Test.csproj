@@ -186,6 +186,7 @@
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="CopyFileWithProgressTest.cs" />
+    <Compile Include="FilterClauseSerializerTest.cs" />
     <Compile Include="FilteredMessageWriterTest.cs" />
     <Compile Include="ImmutableListTest.cs" />
     <Compile Include="FormattableListTest.cs" />

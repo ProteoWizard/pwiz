@@ -369,7 +369,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private static FilterClauseSerializer CreateSerializer()
         {
             return new FilterClauseSerializer(
-                ColumnDescriptor.RootColumn(new DataSchema(), typeof(SpectrumClass)));
+                ColumnDescriptor.RootColumn(new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer()), typeof(SpectrumClass)));
         }
     }
 }
