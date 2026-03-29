@@ -465,14 +465,14 @@ namespace pwiz.Common.DataBinding
         private static Dictionary<Type, IFilterHandler> _filterHandlers = new Dictionary<Type, IFilterHandler>
         {
 
-            { typeof(sbyte), NumericFilterHandler.INSTANCE },
-            { typeof(byte), NumericFilterHandler.INSTANCE },
-            { typeof(short), NumericFilterHandler.INSTANCE },
-            { typeof(ushort), NumericFilterHandler.INSTANCE },
-            { typeof(int), NumericFilterHandler.INSTANCE },
-            { typeof(uint), NumericFilterHandler.INSTANCE },
-            { typeof(long), NumericFilterHandler.INSTANCE },
-            { typeof(ulong), NumericFilterHandler.INSTANCE },
+            { typeof(sbyte), IntegerFilterHandler.INSTANCE },
+            { typeof(byte), IntegerFilterHandler.INSTANCE },
+            { typeof(short), IntegerFilterHandler.INSTANCE },
+            { typeof(ushort), IntegerFilterHandler.INSTANCE },
+            { typeof(int), IntegerFilterHandler.INSTANCE },
+            { typeof(uint), IntegerFilterHandler.INSTANCE },
+            { typeof(long), IntegerFilterHandler.INSTANCE },
+            { typeof(ulong), IntegerFilterHandler.INSTANCE },
             { typeof(float), NumericFilterHandler.INSTANCE },
             { typeof(double), NumericFilterHandler.INSTANCE },
             { typeof(Decimal), NumericFilterHandler.INSTANCE },

@@ -178,6 +178,68 @@ namespace pwiz.Common.DataBinding.Filtering
         }
     }
 
+    public class IntegerFilterHandler : FilterHandler<double, double>, IFilterHandler.IComparison
+    {
+        public static readonly IntegerFilterHandler INSTANCE = new IntegerFilterHandler();
+        public override bool IsBlank(object value)
+        {
+            return value == null;
+        }
+        public override object DeserializeOperand(IFilterOperation operation, string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return null;
+            }
+            return double.Parse(text, CultureInfo.InvariantCulture);
+        }
+        public override string SerializeOperand(IFilterOperation operation, object operand)
+        {
+            return (operand as double?)?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+        protected override string OperandToString(IFilterOperation operation, CultureInfo cultureInfo, double operand)
+        {
+            return operand.ToString(cultureInfo);
+        }
+        protected override double ParseTypedOperand(IFilterOperation operation, CultureInfo cultureInfo, string text)
+        {
+            return double.Parse(text, cultureInfo);
+        }
+        protected override bool ValueEqualsOperand(double value, double operand)
+        {
+            return value == operand;
+        }
+        protected override bool TryConvertColumnValue(object value, out double columnValue)
+        {
+            if (value != null)
+            {
+                try
+                {
+                    columnValue = Convert.ToDouble(value);
+                    return true;
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+            columnValue = 0;
+            return false;
+        }
+        public int? Compare(object value, object operand)
+        {
+            return CallWithOperand(value, operand, Compare);
+        }
+        protected int? Compare(double columnValue, double doubleOperand)
+        {
+            return columnValue.CompareTo(doubleOperand);
+        }
+        public override bool CanBeBlank
+        {
+            get { return false; }
+        }
+    }
+
     public class NumericFilterHandler : FilterHandler<double, PrecisionNumber>, IFilterHandler.IComparison
     {
         public static readonly NumericFilterHandler INSTANCE = new NumericFilterHandler();
