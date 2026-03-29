@@ -718,6 +718,12 @@ Here are the last 3 errors:
   <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
     <value>Relative Abundance</value>
   </data>
+  <data name="Extensions_CustomToString_Relative_Abundance_Comparison" xml:space="preserve">
+    <value>Relative Abundance Comparison</value>
+  </data>
+  <data name="AreaAbundanceComparisonGraphPane_XAxis_Replicate" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
   <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
     <value>Protein Rank</value>
   </data>

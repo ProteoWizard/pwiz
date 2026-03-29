@@ -221,6 +221,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!(pane is AreaRelativeAbundanceGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaRelativeAbundanceGraphPane(GraphSummary) };
                     break;
+                case GraphTypeSummary.abundance_comparison:
+                    if (!(pane is AreaAbundanceComparisonGraphPane))
+                        GraphSummary.GraphPanes = new[] { new AreaAbundanceComparisonGraphPane(GraphSummary) };
+                    break;
                 case GraphTypeSummary.histogram:
                     if (!(pane is AreaCVHistogramGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaCVHistogramGraphPane(GraphSummary) };

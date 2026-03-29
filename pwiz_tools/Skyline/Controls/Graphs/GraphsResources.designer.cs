@@ -232,6 +232,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replicate.
+        /// </summary>
+        public static string AreaAbundanceComparisonGraphPane_XAxis_Replicate {
+            get {
+                return ResourceManager.GetString("AreaAbundanceComparisonGraphPane_XAxis_Replicate", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Not enough data.
         /// </summary>
         public static string AreaCVHistogram2DGraphPane_Draw_Not_enough_data {
@@ -906,7 +915,16 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("Extensions_CustomToString_Relative_Abundance", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Relative Abundance Comparison.
+        /// </summary>
+        public static string Extensions_CustomToString_Relative_Abundance_Comparison {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Relative_Abundance_Comparison", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Replicate Comparison.
         /// </summary>
