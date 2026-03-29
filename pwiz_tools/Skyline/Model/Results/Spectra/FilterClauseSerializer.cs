@@ -41,6 +41,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _rootColumn = rootColumn;
         }
 
+        public CultureInfo CultureInfo
+        {
+            get
+            {
+                return _rootColumn.DataSchema.DataSchemaLocalizer.FormatProvider;
+            }
+        }
+
         /// <summary>
         /// Returns a list of filter clauses as a human-readable string that can be parsed back.
         /// Format: FilterClauses are separated by " or ", FilterSpecs within a clause by " and ".
@@ -112,30 +120,24 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         /// <summary>
         /// Converts a <see cref="FilterSpec"/>'s operand to a list of string tokens
-        /// by resolving its column and using <see cref="IFilterHandler.OperandToList"/>.
+        /// by resolving its column and using <see cref="IFilterHandler.OperandToTokens"/>.
         /// Falls back to splitting the invariant text if the column cannot be resolved.
         /// </summary>
         private IList<string> GetOperandTokens(FilterSpec spec)
         {
-            var invariantText = spec.Predicate.InvariantOperandText ?? string.Empty;
             var column = FilterClause.FindColumn(_rootColumn, spec.ColumnId);
-            if (column != null)
+            if (column == null)
             {
-                var handler = column.GetFilterHandler();
-                var operand = handler.ParseOperand(spec.Operation, invariantText, CultureInfo.InvariantCulture);
-                return handler.OperandToList(spec.Operation, operand);
+                return new[] { spec.Predicate.InvariantOperandText ?? string.Empty};
             }
-            if (string.IsNullOrEmpty(invariantText) || !invariantText.Contains(@","))
-            {
-                return new[] { invariantText };
-            }
-            return invariantText.Split(',').Select(s => s.Trim()).ToArray();
+
+            return column.GetFilterHandler().OperandToTokens(spec.Operation, CultureInfo, spec.Predicate.GetOperandValue(column));
         }
 
         /// <summary>
         /// Converts a list of parsed string tokens into the invariant operand text for
         /// <see cref="FilterPredicate"/> by resolving the column and using
-        /// <see cref="IFilterHandler.GetOperand"/> and <see cref="IFilterHandler.OperandToString"/>.
+        /// <see cref="IFilterHandler.ParseOperandTokens"/> and <see cref="IFilterHandler.OperandToString"/>.
         /// Falls back to joining the tokens if the column cannot be resolved.
         /// </summary>
         private string TokensToInvariantText(PropertyPath columnId, IFilterOperation operation, IList<string> tokens)
@@ -144,8 +146,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
             if (column != null)
             {
                 var handler = column.GetFilterHandler();
-                var operand = handler.GetOperand(operation, tokens);
-                return handler.OperandToString(operation, operand, CultureInfo.InvariantCulture);
+                var operand = handler.ParseOperandTokens(operation, CultureInfo, tokens);
+                return handler.SerializeOperand(operation, operand);
             }
             return string.Join(@", ", tokens);
         }

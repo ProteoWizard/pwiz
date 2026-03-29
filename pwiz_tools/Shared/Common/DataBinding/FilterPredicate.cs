@@ -54,7 +54,7 @@ namespace pwiz.Common.DataBinding
             }
 
             var handler = dataSchema.GetFilterHandler(columnType);
-            return new FilterPredicate(filterOperation, handler.OperandToString(filterOperation, handler.ParseOperand(filterOperation, operandText, CultureInfo.CurrentCulture), CultureInfo.InvariantCulture));
+            return new FilterPredicate(filterOperation, handler.SerializeOperand(filterOperation, handler.ParseOperand(filterOperation, CultureInfo.CurrentCulture, operandText)));
         }
 
         public static FilterPredicate SafeParse(DataSchema dataSchema, Type columnType,
@@ -88,7 +88,16 @@ namespace pwiz.Common.DataBinding
 
         public object GetOperandValue(DataSchema dataSchema, Type columnType)
         {
-            return dataSchema.GetFilterHandler(columnType).ParseOperand(FilterOperation, InvariantOperandText, CultureInfo.InvariantCulture);
+            return dataSchema.GetFilterHandler(columnType).DeserializeOperand(FilterOperation, InvariantOperandText);
+        }
+
+        public object GetOperandValue(ColumnDescriptor columnDescriptor)
+        {
+            if (null == columnDescriptor)
+            {
+                return InvariantOperandText;
+            }
+            return GetOperandValue(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
         }
 
         public string GetOperandDisplayText(ColumnDescriptor columnDescriptor)
@@ -105,7 +114,7 @@ namespace pwiz.Common.DataBinding
             try
             {
                 var handler = dataSchema.GetFilterHandler(propertyType);
-                return handler.OperandToString(FilterOperation, handler.ParseOperand(FilterOperation, InvariantOperandText, CultureInfo.InvariantCulture), CultureInfo.CurrentCulture);
+                return handler.OperandToString(FilterOperation, CultureInfo.CurrentCulture, handler.DeserializeOperand(FilterOperation, InvariantOperandText));
             }
             catch (Exception)
             {
@@ -119,7 +128,7 @@ namespace pwiz.Common.DataBinding
             object operandValue;
             if (FilterOperation.HasOperand())
             {
-                operandValue = filterHandler.ParseOperand(FilterOperation, InvariantOperandText, CultureInfo.InvariantCulture);
+                operandValue = filterHandler.DeserializeOperand(FilterOperation, InvariantOperandText);
             }
             else
             {
