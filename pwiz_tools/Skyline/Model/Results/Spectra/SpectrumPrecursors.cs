@@ -24,7 +24,6 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Skyline.Model.Hibernate;
@@ -33,7 +32,6 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.Results.Spectra
 {
     [TypeConverter(typeof(Converter))]
-    [Filterable]
     public class SpectrumPrecursors : IFormattable
     {
         public static readonly ListFilterHandler FILTER_HANDLER = new FilterHandler();
