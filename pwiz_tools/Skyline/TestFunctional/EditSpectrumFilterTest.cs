@@ -91,8 +91,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, transitionGroupDocNode.SpectrumClassFilter.Clauses.Count);
                 var ms2Clause = transitionGroupDocNode.SpectrumClassFilter.Clauses[1];
                 Assert.AreEqual(2, ms2Clause.FilterSpecs.Count);
-                Assert.AreEqual(new PrecisionNumber(3).ChangeDecimalPlaces(0),
-                    ms2Clause.FilterSpecs[1].Predicate.GetOperandValue(new DataSchema(), typeof(double)));
+                Assert.AreEqual(3.0,
+                    ms2Clause.FilterSpecs[1].Predicate.GetOperandValue(new DataSchema(), typeof(int)));
             });
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
             {
