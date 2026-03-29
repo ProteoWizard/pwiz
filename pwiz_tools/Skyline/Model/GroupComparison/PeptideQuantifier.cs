@@ -374,6 +374,21 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     denominator = factor.Value;
                 }
+                else if (Equals(normalizationMethod, NormalizationMethod.RT_LOESS))
+                {
+                    var normalizationData = _normalizationData.Value;
+                    if (null == normalizationData)
+                    {
+                        throw new InvalidOperationException(string.Format(@"Normalization method '{0}' is not supported here.", NormalizationMethod));
+                    }
+                    double? rtLoessAdjustment = normalizationData.GetRtLoessAdjustment(
+                        replicateIndex, chromInfo.FileId, chromInfo.RetentionTime);
+                    if (!rtLoessAdjustment.HasValue)
+                    {
+                        return null;
+                    }
+                    normalizedArea /= Math.Pow(2.0, rtLoessAdjustment.Value);
+                }
             }
             return new Quantity(normalizedArea.Value, denominator, truncated);
         }

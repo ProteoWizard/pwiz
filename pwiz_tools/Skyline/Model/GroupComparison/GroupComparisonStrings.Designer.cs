@@ -569,7 +569,25 @@ namespace pwiz.Skyline.Model.GroupComparison {
                 return ResourceManager.GetString("NormalizationMethod_QUANTILE_Quantile", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to RT Loess.
+        /// </summary>
+        internal static string NormalizationMethod_RT_LOESS_RT_Loess {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_RT_LOESS_RT_Loess", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to RT Loess Normalized {0}.
+        /// </summary>
+        internal static string NormalizationMethod_RT_LOESS_RT_Loess_Normalized__0_ {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_RT_LOESS_RT_Loess_Normalized__0_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to TIC Normalized {0}.
         /// </summary>
