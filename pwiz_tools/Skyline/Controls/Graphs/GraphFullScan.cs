@@ -1841,7 +1841,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// For spectrum mode, x is m/z (y is ignored). For heatmap, x is m/z and y is
         /// ion mobility. Pass no arguments to use a representative midpoint.
         /// </summary>
-        public string TestGetTooltipText(double x = double.NaN, double y = double.NaN)
+        public TableDesc TestGetTooltipTable(double x = double.NaN, double y = double.NaN)
         {
             bool isHeatMap = spectrumBtn.Visible && !spectrumBtn.Checked;
             var rt = _cursorTip.RenderTools;
@@ -1903,7 +1903,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity,
                     dataPoint.Y.ToString(@"F0"), rt);
             }
-            return table.ToString();
+            return table;
+        }
+
+        public string TestGetTooltipText(double x = double.NaN, double y = double.NaN)
+        {
+            return TestGetTooltipTable(x, y)?.ToString();
         }
 
         public string TitleText { get { return GraphPane.Title.Text; } }

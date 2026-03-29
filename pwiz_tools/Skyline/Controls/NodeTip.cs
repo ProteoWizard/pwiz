@@ -72,6 +72,20 @@ namespace pwiz.Skyline.Controls
     }
 
     /// <summary>
+    /// Optional interface for tip providers that want to expose their tip content as a
+    /// structured <see cref="TableDesc"/> for testing. Prefer this over <see cref="ITipProviderWithText"/>
+    /// when tests need to inspect individual cells without parsing rendered text.
+    /// </summary>
+    public interface ITipProviderWithTable : ITipProvider
+    {
+        /// <summary>
+        /// Returns the tooltip content as a <see cref="TableDesc"/> so tests can inspect
+        /// individual cells directly (e.g. <c>table[0][0].Text</c>).
+        /// </summary>
+        TableDesc GetTooltipTable();
+    }
+
+    /// <summary>
     /// Implement to enable a control to display tool tips.
     /// </summary>
     public interface ITipDisplayer
@@ -267,13 +281,15 @@ namespace pwiz.Skyline.Controls
 
         public string TipText => (_tipProvider as ITipProviderWithText)?.TipText;
 
+        public TableDesc TipTable => (_tipProvider as ITipProviderWithTable)?.GetTooltipTable();
+
         #endregion
     }
 
     /// <summary>
     /// Implement to enable a control to display tool tips.
     /// </summary>
-    internal class RenderTools : IDisposable
+    public class RenderTools : IDisposable
     {
         bool _disposed;
 
@@ -311,7 +327,7 @@ namespace pwiz.Skyline.Controls
         #endregion
     }
 
-    internal class TableDesc : List<RowDesc>
+    public class TableDesc : List<RowDesc>
     {
         public const int COL_SPACING = 2;
         public const int TABLE_SPACING = 6;
@@ -450,7 +466,7 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    internal class RowDesc : List<CellDesc>
+    public class RowDesc : List<CellDesc>
     {
         public int ColumnSpacing { get; set; }
 
@@ -466,7 +482,7 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    internal class CellDesc
+    public class CellDesc
     {
         private SizeF _sizeF;
 

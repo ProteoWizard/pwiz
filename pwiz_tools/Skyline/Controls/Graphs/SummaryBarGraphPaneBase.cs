@@ -148,6 +148,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            public TableDesc TipTable => _table;
+
             #endregion
             private class UserPoint
             {

@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -336,30 +337,23 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestTooltip(bool isHeatMap)
         {
-            string tooltipText = null;
-            int expectedLines = isHeatMap ? 3 : 2;
-            RunUI(() => tooltipText = SkylineWindow.GraphFullScan.TestGetTooltipText());
-            Assert.IsNotNull(tooltipText, "Tooltip returned null");
-            var lines = tooltipText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            Assert.AreEqual(expectedLines, lines.Length,
-                string.Format("Expected {0} lines, got: {1}", expectedLines, tooltipText));
+            TableDesc table = null;
+            int expectedRows = isHeatMap ? 3 : 2;
+            RunUI(() => table = SkylineWindow.GraphFullScan.TestGetTooltipTable());
+            Assert.IsNotNull(table, "Tooltip returned null");
+            Assert.AreEqual(expectedRows, table.Count,
+                string.Format("Expected {0} rows, got: {1}", expectedRows, table));
 
-            // First line is always m/z with a parseable value
-            var mzParts = lines[0].Split(new[] { @" | " }, StringSplitOptions.None);
-            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_mz, mzParts[0]);
-            Assert.IsTrue(double.TryParse(mzParts[1], out _), "m/z value not parseable: " + mzParts[1]);
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_mz, table[0][0].Text);
+            Assert.IsTrue(double.TryParse(table[0][1].Text, out _), "m/z value not parseable: " + table[0][1].Text);
 
-            // Last line is always Intensity with a parseable value
-            var intParts = lines[expectedLines - 1].Split(new[] { @" | " }, StringSplitOptions.None);
-            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Intensity, intParts[0]);
-            Assert.IsTrue(double.TryParse(intParts[1], out _), "Intensity value not parseable: " + intParts[1]);
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Intensity, table[expectedRows - 1][0].Text);
+            Assert.IsTrue(double.TryParse(table[expectedRows - 1][1].Text, out _),
+                "Intensity value not parseable: " + table[expectedRows - 1][1].Text);
 
-            // Middle line (heatmap only) is ion mobility with a parseable value
             if (isHeatMap)
-            {
-                var midParts = lines[1].Split(new[] { @" | " }, StringSplitOptions.None);
-                Assert.IsTrue(double.TryParse(midParts[1], out _), "Ion mobility value not parseable: " + midParts[1]);
-            }
+                Assert.IsTrue(double.TryParse(table[1][1].Text, out _),
+                    "Ion mobility value not parseable: " + table[1][1].Text);
         }
 
         /// <summary>
@@ -376,38 +370,31 @@ namespace pwiz.SkylineTestFunctional
         private static void TestTooltip(double searchX, double? searchY,
             double mzExpected, double? imExpected, double intensityExpected)
         {
-            string tooltipText = null;
+            TableDesc table = null;
             double sy = searchY ?? double.NaN;
-            RunUI(() => tooltipText = SkylineWindow.GraphFullScan.TestGetTooltipText(searchX, sy));
-            Assert.IsNotNull(tooltipText,
+            RunUI(() => table = SkylineWindow.GraphFullScan.TestGetTooltipTable(searchX, sy));
+            Assert.IsNotNull(table,
                 string.Format("Tooltip returned null at ({0}, {1})", searchX, sy));
 
-            int expectedLines = imExpected.HasValue ? 3 : 2;
-            var lines = tooltipText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            Assert.AreEqual(expectedLines, lines.Length,
-                string.Format("Expected {0} lines, got: {1}", expectedLines, tooltipText));
+            int expectedRows = imExpected.HasValue ? 3 : 2;
+            Assert.AreEqual(expectedRows, table.Count,
+                string.Format("Expected {0} rows, got: {1}", expectedRows, table));
 
-            // m/z
-            var mzParts = lines[0].Split(new[] { @" | " }, StringSplitOptions.None);
-            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_mz, mzParts[0]);
-            Assert.IsTrue(double.TryParse(mzParts[1], out var mz));
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_mz, table[0][0].Text);
+            Assert.IsTrue(double.TryParse(table[0][1].Text, out var mz));
             AssertEx.AreEqual(mzExpected, mz, 0.01,
-                string.Format("m/z (full tooltip: {0})", tooltipText.Replace(Environment.NewLine, " / ")));
+                string.Format("m/z (full tooltip: {0})", table));
 
-            // Intensity (always last line)
-            var intParts = lines[expectedLines - 1].Split(new[] { @" | " }, StringSplitOptions.None);
-            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Intensity, intParts[0]);
-            Assert.IsTrue(double.TryParse(intParts[1], out var intensity));
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Intensity, table[expectedRows - 1][0].Text);
+            Assert.IsTrue(double.TryParse(table[expectedRows - 1][1].Text, out var intensity));
             AssertEx.AreEqual(intensityExpected, intensity, 1,
-                string.Format("Intensity (full tooltip: {0})", tooltipText.Replace(Environment.NewLine, " / ")));
+                string.Format("Intensity (full tooltip: {0})", table));
 
-            // Ion mobility (middle line, heatmap only)
             if (imExpected.HasValue)
             {
-                var midParts = lines[1].Split(new[] { @" | " }, StringSplitOptions.None);
-                Assert.IsTrue(double.TryParse(midParts[1], out var im));
+                Assert.IsTrue(double.TryParse(table[1][1].Text, out var im));
                 AssertEx.AreEqual(imExpected.Value, im, 0.01,
-                    string.Format("Ion mobility (full tooltip: {0})", tooltipText.Replace(Environment.NewLine, " / ")));
+                    string.Format("Ion mobility (full tooltip: {0})", table));
             }
         }
 
