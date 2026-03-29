@@ -653,14 +653,5 @@ namespace pwiz.Skyline.Model.Databinding
                 return Settings.Default.MaxGridRowCount;
             }
         }
-
-        public override IFilterHandler GetFilterHandler(Type type)
-        {
-            if (type == typeof(SpectrumPrecursors))
-            {
-                return SpectrumPrecursors.FILTER_HANDLER;
-            }
-            return base.GetFilterHandler(type);
-        }
     }
 }

@@ -330,7 +330,7 @@ namespace pwiz.Common.SystemUtil
             {
                 return ToDouble().ToString(null, formatProvider);
             }
-            if (explicitPrecision && DecimalPlaces == MAX_SIGNIFICANT_DIGITS)
+            if (explicitPrecision && SignificantDigits == MAX_SIGNIFICANT_DIGITS)
             {
                 return Value.ToString(formatProvider);
             }

@@ -40,12 +40,12 @@ namespace pwiz.SkylineTest
         {
             var clause1 = new FilterClause(new[]
             {
-                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.MsLevel)), FilterOperations.OP_CONTAINS,
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.Ms1Precursors)), FilterOperations.OP_CONTAINS,
                     PrecisionNumber.WithDecimalPlaces(400, 0))
             });
             var clause2 = new FilterClause(new[]
             {
-                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.MsLevel)), FilterOperations.OP_CONTAINS,
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.Ms1Precursors)), FilterOperations.OP_CONTAINS,
                     PrecisionNumber.WithDecimalPlaces(400, 1))
             });
             VerifyFilterClause(typeof(SpectrumClass), new[]{clause1});
@@ -55,15 +55,19 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestToFilterString()
         {
-            var frenchDataSchema =
-                new DataSchema(new DataSchemaLocalizer(CultureInfo.GetCultureInfo("fr"),
-                    CultureInfo.GetCultureInfo("fr")));
+            var frenchDataSchema = GetDataSchema(new DataSchemaLocalizer(CultureInfo.GetCultureInfo("fr"),
+                CultureInfo.GetCultureInfo("fr")));
             var serializer =
                 new FilterClauseSerializer(ColumnDescriptor.RootColumn(frenchDataSchema, typeof(SpectrumClass)));
-            var filterSpec = new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.MsLevel)),
+            var filterSpec = new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.Ms1Precursors)),
                 FilterOperations.OP_CONTAINS, PrecisionNumber.WithDecimalPlaces(400, 1));
             var text = serializer.ToFilterString(new[] { new FilterClause(new[] { filterSpec }) });
-            Assert.AreEqual("MsLevel contains 400,0", text);
+            Assert.AreEqual("Ms1Precursors contains 400,0", text);
+        }
+
+        private DataSchema GetDataSchema(DataSchemaLocalizer localizer)
+        {
+            return new DataSchema(localizer);
         }
 
         private void VerifyFilterClause(Type rowType, IList<FilterClause> filterClauses)
@@ -84,12 +88,12 @@ namespace pwiz.SkylineTest
 
         private IEnumerable<DataSchema> GetTestDataSchemas()
         {
-            yield return new DataSchema();
-            yield return new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            yield return GetDataSchema(DataSchemaLocalizer.INVARIANT);
+            yield return GetDataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
             foreach (var language in new[] { "en", "fr", "tr", "zh", "ja" })
             {
                 var cultureInfo = CultureInfo.GetCultureInfo(language);
-                yield return new DataSchema(new DataSchemaLocalizer(cultureInfo, cultureInfo, ColumnCaptions.ResourceManager));
+                yield return GetDataSchema(new DataSchemaLocalizer(cultureInfo, cultureInfo, ColumnCaptions.ResourceManager));
             }
         }
     }

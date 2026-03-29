@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Skyline.Model.Hibernate;
@@ -31,10 +32,9 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
-    [TypeConverter(typeof(Converter))]
+    [FilterHandler(typeof(FilterHandler))]
     public class SpectrumPrecursors : IFormattable
     {
-        public static readonly ListFilterHandler FILTER_HANDLER = new FilterHandler();
         private ImmutableList<SpectrumPrecursor> _precursors;
 
         public SpectrumPrecursors(IEnumerable<SpectrumPrecursor> precursors)
@@ -102,24 +102,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
 
-        }
-
-        public class Converter : TypeConverter
-        {
-            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-            {
-                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
-            }
-
-            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-            {
-                if (!(value is string stringValue))
-                {
-                    return base.ConvertFrom(context, culture, value);
-                }
-
-                return Parse(culture, stringValue);
-            }
         }
 
         private static ImmutableList<SpectrumPrecursor> SortedByMz(IEnumerable<SpectrumPrecursor> precursors)

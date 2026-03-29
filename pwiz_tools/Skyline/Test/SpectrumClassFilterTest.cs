@@ -22,10 +22,8 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
-using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -85,11 +83,7 @@ namespace pwiz.SkylineTest
             var filterSpecs = new[]
             {
                 new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,
-                    FilterPredicate.Create(FilterOperations.OP_EQUALS, new SpectrumPrecursors(new[]
-                    {
-                        new SpectrumPrecursor(new SignedMz(422.5)),
-                        new SpectrumPrecursor(new SignedMz(475.7))
-                    }))),
+                    FilterPredicate.Create(FilterOperations.OP_EQUALS, "422.5,475.7")),
                 new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath,
                     FilterPredicate.Create(FilterOperations.OP_EQUALS, 1)),
                 new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath, FilterPredicate.Create(FilterOperations.OP_IS_GREATER_THAN, 1)),
@@ -143,14 +137,9 @@ namespace pwiz.SkylineTest
 
         private SpectrumClassFilter CreateTestSpectrumClassFilter()
         {
-            var spectrumPrecursors = new SpectrumPrecursors(new[]
-            {
-                new SpectrumPrecursor(new SignedMz(422.5)),
-                new SpectrumPrecursor(new SignedMz(475.7))
-            });
             var filterSpecs = new[]
             {
-                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,FilterOperations.OP_EQUALS, spectrumPrecursors),
+                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,FilterOperations.OP_EQUALS, "422.5,475.7"),
                 new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath, FilterOperations.OP_CONTAINS, "SCAN")
             };
             return new SpectrumClassFilter(new FilterClause(filterSpecs));

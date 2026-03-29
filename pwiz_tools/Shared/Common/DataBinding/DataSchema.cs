@@ -484,6 +484,12 @@ namespace pwiz.Common.DataBinding
         public virtual IFilterHandler GetFilterHandler(Type type)
         {
             type = GetWrappedValueType(type);
+            var filterHandlerAttribute = (FilterHandlerAttribute) type.GetCustomAttribute<FilterHandlerAttribute>();
+            if (filterHandlerAttribute != null)
+            {
+                return (IFilterHandler)Activator.CreateInstance(filterHandlerAttribute.FilterHandlerType);
+            }
+
             var listElementType = ListColumnValue.GetElementType(type);
             if (listElementType != null)
             {
