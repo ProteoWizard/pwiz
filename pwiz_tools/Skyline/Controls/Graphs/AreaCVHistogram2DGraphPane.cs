@@ -34,12 +34,11 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IAreaCVHistogramInfo, IHeatMapDataProvider
+    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IAreaCVHistogramInfo, IHeatMapDataProvider, ICursorTrackingTooltipProvider
     {
         private readonly Receiver<AreaCVGraphData.Parameters, AreaCVGraphData> _receiver;
         private AreaCVGraphData _areaCVGraphData;
         private HeatMapData _heatMapData;
-        private readonly CursorTrackingTip _cursorTip;
         private SrmDocument _document;
 
         private readonly LineItem[] _lineItems;
@@ -54,7 +53,6 @@ namespace pwiz.Skyline.Controls.Graphs
             _areaCVGraphData = null;
             _lineItems = new LineItem[2];
             _receiver = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, OnProductAvailable);
-            _cursorTip = new CursorTrackingTip(graphSummary.GraphControl, GetTooltipTable);
         }
 
 
@@ -120,12 +118,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private void OnProductAvailable()
         {
             GraphSummary.UpdateUI();
-        }
-
-        public override void OnClose(EventArgs e)
-        {
-            base.OnClose(e);
-            _cursorTip.Dispose();
         }
 
         public override void UpdateGraph(bool selectionChanged)
@@ -213,7 +205,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public HeatMapData HeatMapData => _heatMapData;
         public string HeatMapZAxisName => GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Frequency;
 
-        private TableDesc GetTooltipTable(Point pt)
+        TableDesc ICursorTrackingTooltipProvider.GetTooltipTable(Point pt)
         {
             using (var g = GraphSummary.GraphControl.CreateGraphics())
             {
@@ -229,7 +221,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 var cvData = (CVData)objectList[index];
                 var factor = AreaGraphController.GetAreaCVFactorToDecimal();
-                var rt = _cursorTip.RenderTools;
+                var rt = CursorTipRenderTools;
 
                 var table = new TableDesc();
                 table.AddDetailRow(GraphsResources.AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area,

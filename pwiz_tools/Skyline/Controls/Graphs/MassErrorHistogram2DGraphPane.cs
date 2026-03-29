@@ -35,7 +35,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class MassErrorHistogram2DGraphPane : SummaryGraphPane, IHeatMapDataProvider
+    public class MassErrorHistogram2DGraphPane : SummaryGraphPane, IHeatMapDataProvider, ICursorTrackingTooltipProvider
     {
         public static ReplicateDisplay ShowReplicate
         {
@@ -43,19 +43,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private GraphData Data { get; set; }
-        private readonly CursorTrackingTip _cursorTip;
         private MassErrorBinData _selectedData;
 
         public MassErrorHistogram2DGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            _cursorTip = new CursorTrackingTip(graphSummary.GraphControl, GetTooltipTable);
-        }
-
-        public override void OnClose(EventArgs e)
-        {
-            base.OnClose(e);
-            _cursorTip.Dispose();
         }
 
         public void Update(SrmDocument document, int resultIndex, PointsTypeMassError pointsType)
@@ -172,7 +164,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 data.Graph(this, nodeSelected);
         }
 
-        private TableDesc GetTooltipTable(Point pt)
+        TableDesc ICursorTrackingTooltipProvider.GetTooltipTable(Point pt)
         {
             using (var g = GraphSummary.GraphControl.CreateGraphics())
             {
@@ -187,7 +179,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     return null;
 
                 var binData = (MassErrorBinData)objectList[index];
-                var rt = _cursorTip.RenderTools;
+                var rt = CursorTipRenderTools;
 
                 var table = new TableDesc();
                 var xLabel = Data != null && Data.XAxisType == Histogram2DXAxis.mass_to_charge

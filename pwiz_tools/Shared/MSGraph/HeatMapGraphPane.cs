@@ -56,8 +56,9 @@ namespace pwiz.MSGraph
             if (cellWidth <= 0 || double.IsNaN(cellWidth) || cellHeight <= 0 || double.IsNaN(cellHeight))
                 return;
 
-            // Use log scale for heat intensity. In discrete mode (few distinct Z values and variable
-            // dot sizes), compress the scale so sizes stay in the smaller portion of the available range,
+            // Use log scale for heat intensity.
+            // In discrete mode (few distinct Z values and variable dot sizes),
+            // compress the scale so sizes stay in the smaller portion of the available range,
             // then remap colors back to the full range. When minDotRadius == maxDotRadius, sizes are
             // uniform and the discrete path is skipped (full color scale is used directly).
             int legendStep = _heatMapColors.Length / 4;
@@ -118,10 +119,28 @@ namespace pwiz.MSGraph
             // Otherwise use representative labels at fixed intervals across the full range.
             if (isDiscrete)
             {
+                // Collect used intensity indices in ascending order, then pick at most
+                // MAX_DISCRETE_LEGEND entries: always the min and max, plus up to two
+                // evenly-spaced values in between.
+                const int MAX_DISCRETE_LEGEND = 4;
+                var sortedIntensities = new List<int>(usedIntensities);
+                sortedIntensities.Sort();
+                var selectedIntensities = new HashSet<int>();
+                if (sortedIntensities.Count > 0)
+                {
+                    selectedIntensities.Add(sortedIntensities[0]);
+                    selectedIntensities.Add(sortedIntensities[sortedIntensities.Count - 1]);
+                    int between = MAX_DISCRETE_LEGEND - 2;
+                    for (int k = 1; k <= between; k++)
+                    {
+                        int idx = (int)Math.Round(k * (sortedIntensities.Count - 1.0) / (between + 1));
+                        selectedIntensities.Add(sortedIntensities[idx]);
+                    }
+                }
                 var labeledZValues = new HashSet<string>();
                 for (int i = curves.Length - 1; i >= 0; i--)
                 {
-                    if (!usedIntensities.Contains(i))
+                    if (!selectedIntensities.Contains(i))
                         continue;
                     double z = logScale ? Math.Exp(i / scale) : i / scale;
                     var label = z.ToString(@"F0");

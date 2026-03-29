@@ -1697,19 +1697,35 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             StickItem nearestCurve;
             int nearestIndex;
+            double mz, intensity;
 
-            if (!GraphPane.FindNearestStick(pt, out nearestCurve, out nearestIndex))
-                return null;
+            if (GraphPane.FindNearestStick(pt, out nearestCurve, out nearestIndex))
+            {
+                mz = nearestCurve[nearestIndex].X;
+                intensity = nearestCurve[nearestIndex].Y;
+            }
+            else
+            {
+                // Cursor may be over an annotation label rather than the stick body itself.
+                // The label's X is the predicted m/z; find the closest observed stick nearby.
+                var label = GetNearestLabel(pt);
+                if (label == null)
+                    return null;
+                var stickPoint = FindStickPointNearMz(label.Location.X);
+                if (stickPoint == null)
+                    return null;
+                mz = stickPoint.X;
+                intensity = stickPoint.Y;
+            }
 
             var rt = _cursorTip.RenderTools;
-            var nearestPoint = nearestCurve[nearestIndex];
             var table = new TableDesc();
-            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_mz, nearestPoint.X.ToString(Formats.Mz), rt);
-            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity, nearestPoint.Y.ToString(@"F0"), rt);
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_mz, mz.ToString(Formats.Mz), rt);
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity, intensity.ToString(@"F0"), rt);
             // Look up matched ion info; used both to suppress the redundant Transition row and to build the table.
             LibraryRankedSpectrumInfo.RankedMI rmi = null;
             if (_rmis != null)
-                rmi = _rmis.Peaks.FirstOrDefault(p => p.ObservedMz == nearestPoint.X);
+                rmi = _rmis.Peaks.FirstOrDefault(p => p.ObservedMz == mz);
             bool hasMatchedIons = rmi != null && rmi.MatchedIons != null && rmi.MatchedIons.Count > 0;
 
             // In non-annotation mode, show the transition name when the peak falls within a transition's
@@ -1717,7 +1733,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!_showIonSeriesAnnotations && !hasMatchedIons && _msDataFileScanHelper.ScanProvider != null)
             {
                 var matchedTransition = _msDataFileScanHelper.ScanProvider.Transitions.FirstOrDefault(
-                    t => t.Source == _msDataFileScanHelper.Source && t.MatchMz(nearestPoint.X));
+                    t => t.Source == _msDataFileScanHelper.Source && t.MatchMz(mz));
                 if (matchedTransition != null)
                     table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, matchedTransition.Name, rt);
             }
@@ -1759,6 +1775,32 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return nearest;
+        }
+
+        /// <summary>
+        /// Finds the closest StickItem point to the given m/z, within a 1 Da tolerance.
+        /// Used to resolve the observed m/z and intensity from a label's predicted m/z.
+        /// </summary>
+        private PointPair FindStickPointNearMz(double mz)
+        {
+            PointPair best = null;
+            double bestDist = double.MaxValue;
+            foreach (var curve in GraphPane.CurveList)
+            {
+                var stick = curve as StickItem;
+                if (stick == null)
+                    continue;
+                for (int i = 0; i < stick.Points.Count; i++)
+                {
+                    double dist = Math.Abs(stick[i].X - mz);
+                    if (dist < bestDist)
+                    {
+                        bestDist = dist;
+                        best = stick[i];
+                    }
+                }
+            }
+            return bestDist <= 1.0 ? best : null;
         }
 
         private TextObj GetNearestLabel(PointF mousePoint)
