@@ -241,6 +241,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Outliers.
+        /// </summary>
+        public static string AreaAbundanceComparisonGraphPane_Outliers {
+            get {
+                return ResourceManager.GetString("AreaAbundanceComparisonGraphPane_Outliers", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Not enough data.
         /// </summary>
         public static string AreaCVHistogram2DGraphPane_Draw_Not_enough_data {

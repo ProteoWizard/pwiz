@@ -724,6 +724,9 @@ Here are the last 3 errors:
   <data name="AreaAbundanceComparisonGraphPane_XAxis_Replicate" xml:space="preserve">
     <value>Replicate</value>
   </data>
+  <data name="AreaAbundanceComparisonGraphPane_Outliers" xml:space="preserve">
+    <value>Outliers</value>
+  </data>
   <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
     <value>Protein Rank</value>
   </data>

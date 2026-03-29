@@ -197,7 +197,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnNormalizeOptionChanged()
         {
-            if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */)
+            if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() ||
+                GraphSummary.GraphPanes.OfType<AreaAbundanceComparisonGraphPane>().Any())
                 GraphSummary.UpdateUI();
         }
 

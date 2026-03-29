@@ -95,24 +95,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Draw median line inside the box
             g.DrawLine(MiddlePen, pixBoxLeft, pixMedian, pixBoxRight, pixMedian);
-
-            // Draw outliers
-            var symbol = CreateOutlierSymbol(barWidth / pane.CalcScaleFactor());
-            foreach (double outlier in boxPlotTag.Outliers)
-            {
-                float y = valueAxis.Scale.Transform(outlier);
-                symbol.DrawSymbol(g, pane, (int)Math.Round(pixX), (int)Math.Round(y), scaleFactor, true, pointPair);
-            }
-        }
-
-        private Symbol CreateOutlierSymbol(float size)
-        {
-            return new Symbol(SymbolType.Circle, Color.FromArgb(0, 0, 0, 0))
-            {
-                Size = size,
-                Fill = { Type = FillType.Solid, Color = Color.FromArgb(0, 0, 0, 0) },
-                Border = { Color = Color.Black, Width = 1.5f, IsVisible = true }
-            };
         }
     }
 

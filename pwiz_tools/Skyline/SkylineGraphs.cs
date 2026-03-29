@@ -4026,6 +4026,7 @@ namespace pwiz.Skyline
             }
             else if (graphType == GraphTypeSummary.abundance_comparison)
             {
+                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
                 menuStrip.Items.Insert(iInsert++, relativeAbundanceLogScaleContextMenuItem);
                 relativeAbundanceLogScaleContextMenuItem.Checked = set.RelativeAbundanceLogScale;
             }
