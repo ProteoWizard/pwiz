@@ -431,7 +431,9 @@
     <Compile Include="Controls\Graphs\Calibration\CalibrationGraphControl.Designer.cs">
       <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AreaAbundanceComparisonGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaRelativeAbundanceGraphPane.cs" />
+    <Compile Include="Controls\Graphs\BoxPlotBarItem.cs" />
     <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
