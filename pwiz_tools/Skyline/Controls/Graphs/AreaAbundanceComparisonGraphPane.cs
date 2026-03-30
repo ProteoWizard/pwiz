@@ -22,11 +22,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -61,19 +66,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         // Maps X position back to replicate index for click handling
         private int[] _xToReplicateIndex;
+        private readonly AxisLabelScaler _axisLabelScaler;
+        private NodeTip _toolTip;
 
         public AreaAbundanceComparisonGraphPane(GraphSummary graphSummary) : base(graphSummary)
         {
             XAxis.Title.Text = GraphsResources.AreaAbundanceComparisonGraphPane_XAxis_Replicate;
             XAxis.Type = AxisType.Text;
-            XAxis.Scale.FontSpec = GraphSummary.CreateFontSpec(Color.Black);
-            XAxis.Scale.FontSpec.Angle = 90;
-            XAxis.MinorTic.Size = 0;
-            XAxis.MajorTic.IsOpposite = false;
-            XAxis.MajorTic.Size = 2;
 
             YAxis.Title.Text = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
-            YAxis.MajorTic.IsOpposite = false;
 
             X2Axis.IsVisible = false;
             Y2Axis.IsVisible = false;
@@ -84,6 +85,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             BarSettings.MinClusterGap = 3f;
             BarSettings.Type = BarType.Overlay;
+
+            _axisLabelScaler = new AxisLabelScaler(this) { IsRepeatRemovalAllowed = true };
 
             // Register on the shared Producer used by the RA dot-plot
             var receiver = AreaRelativeAbundanceGraphPane.SharedProducer
@@ -120,8 +123,14 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public override void HandleResizeEvent()
+        {
+            _axisLabelScaler.ScaleAxisLabels();
+        }
+
         public override void Draw(Graphics g)
         {
+            HandleResizeEvent();
             if (!Settings.Default.RelativeAbundanceLogScale)
             {
                 YAxis.Scale.Min = 0;
@@ -145,7 +154,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             bool isLogScale = Settings.Default.RelativeAbundanceLogScale;
             YAxis.Type = isLogScale ? AxisType.Log : AxisType.Linear;
-            UpdateYAxisTitle(isLogScale);
+            UpdateYAxisTitle(document, isLogScale);
 
             var graphSettings = GraphSettings.FromSettings();
 
@@ -346,11 +355,27 @@ namespace pwiz.Skyline.Controls.Graphs
             if (e.Button != MouseButtons.None)
                 return base.HandleMouseMoveEvent(sender, e);
 
-            if (FindNearestPoint(new PointF(e.X, e.Y), out _, out _))
+            if (FindNearestPoint(new PointF(e.X, e.Y), out var nearestCurve, out var iNearest))
             {
                 sender.Cursor = Cursors.Hand;
+                var point = nearestCurve.Points[iNearest];
+                if (point.Tag is OutlierInfo outlier)
+                {
+                    int xPosition = (int)Math.Round(point.X);
+                    string replicateName = _xToReplicateIndex != null && xPosition >= 0 &&
+                                           xPosition < (XAxis.Scale.TextLabels?.Length ?? 0)
+                        ? _axisLabelScaler.OriginalTextLabels?[xPosition] ?? XAxis.Scale.TextLabels[xPosition]
+                        : null;
+                    var gpd = FindGraphPointData(outlier.IdentityPath);
+                    _toolTip ??= new NodeTip(this) { Parent = GraphSummary.GraphControl };
+                    _toolTip.SetTipProvider(
+                        new OutlierTipProvider(outlier, gpd, replicateName),
+                        new Rectangle(e.Location, new Size()), e.Location);
+                }
                 return true;
             }
+
+            _toolTip?.HideTip();
 
             // Check if hovering over X-axis label
             using (Graphics g = sender.CreateGraphics())
@@ -372,12 +397,14 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void OnClose(EventArgs e)
         {
             base.OnClose(e);
+            _toolTip?.Dispose();
             _progressBar?.Dispose();
             _graphDataReceiver?.Dispose();
         }
 
         public void Dispose()
         {
+            _toolTip?.Dispose();
             _progressBar?.Dispose();
             _graphDataReceiver?.Dispose();
         }
@@ -552,7 +579,7 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.MaxAuto = false;
             if (isLogScale)
             {
-                YAxis.Scale.Min = Math.Max(1, yMin / 2);
+                YAxis.Scale.Min = yMin / 2;
                 YAxis.Scale.Max = yMax * 2;
             }
             else
@@ -562,12 +589,15 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void UpdateYAxisTitle(bool isLogScale)
+        private void UpdateYAxisTitle(SrmDocument document, bool isLogScale)
         {
+            string yTitle = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+            var normMethod = document.Settings.PeptideSettings.Quantification.NormalizationMethod;
+            if (normMethod != null && !Equals(normMethod, NormalizationMethod.NONE))
+                yTitle = normMethod.GetAxisTitle(yTitle);
             YAxis.Title.Text = isLogScale
-                ? TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log,
-                    GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area)
-                : GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+                ? GraphValues.AnnotateLogAxisTitle(yTitle)
+                : yTitle;
         }
 
         /// <summary>
@@ -620,6 +650,15 @@ namespace pwiz.Skyline.Controls.Graphs
             public IdentityPath IdentityPath { get; }
         }
 
+        private GraphPointData FindGraphPointData(IdentityPath identityPath)
+        {
+            if (_graphData == null || identityPath == null)
+                return null;
+            return _graphData.PointPairList
+                .Select(pp => pp.Tag as GraphPointData)
+                .FirstOrDefault(gpd => gpd != null && Equals(gpd.IdentityPath, identityPath));
+        }
+
         internal class OutlierInfo
         {
             public OutlierInfo(double value, IdentityPath identityPath)
@@ -629,6 +668,66 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             public double Value { get; }
             public IdentityPath IdentityPath { get; }
+        }
+
+        private class OutlierTipProvider : ITipProvider
+        {
+            private readonly OutlierInfo _outlier;
+            private readonly GraphPointData _gpd;
+            private readonly string _replicateName;
+
+            public OutlierTipProvider(OutlierInfo outlier, GraphPointData gpd, string replicateName)
+            {
+                _outlier = outlier;
+                _gpd = gpd;
+                _replicateName = replicateName;
+            }
+
+            public bool HasTip => _outlier != null;
+
+            public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                if (!HasTip)
+                    return Size.Empty;
+
+                var table = new TableDesc();
+                using (var rt = new RenderTools())
+                {
+                    if (_gpd?.Peptide != null)
+                    {
+                        table.AddDetailRow(
+                            Helpers.PeptideToMoleculeTextMapper.Translate(
+                                GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Peptide,
+                                _gpd.Peptide.IsSmallMolecule()),
+                            _gpd.Peptide.ModifiedSequence?.ToString() ?? _gpd.Peptide.ToString(), rt);
+                    }
+                    if (_gpd?.Protein != null)
+                    {
+                        table.AddDetailRow(
+                            Helpers.PeptideToMoleculeTextMapper.Translate(
+                                GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Protein,
+                                _gpd.Protein.IsNonProteomic()),
+                            ProteinMetadataManager.ProteinModalDisplayText(_gpd.Protein.DocNode), rt);
+                    }
+                    if (_replicateName != null)
+                    {
+                        table.AddDetailRow(
+                            GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate,
+                            _replicateName, rt);
+                    }
+                    table.AddDetailRow(
+                        GraphsResources.RelativeAbundanceGraph_ToolTip_PeakArea,
+                        _outlier.Value.ToString(Formats.CalibrationCurve, CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow(
+                        GraphsResources.RelativeAbundanceGraph_ToolTip_LogPeakArea,
+                        Math.Log10(_outlier.Value).ToString(Formats.FoldChange, CultureInfo.CurrentCulture), rt);
+
+                    var size = table.CalcDimensions(g);
+                    if (draw)
+                        table.Draw(g);
+                    return new Size((int)size.Width + 2, (int)size.Height + 2);
+                }
+            }
         }
     }
 }

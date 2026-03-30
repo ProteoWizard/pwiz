@@ -26,7 +26,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
@@ -80,8 +79,7 @@ namespace pwiz.SkylineTestFunctional
 
                 // Default is log scale (RelativeAbundanceLogScale = True)
                 AssertEx.AreEqual(AxisType.Log, pane.YAxis.Type);
-                var expectedLogTitle = TextUtil.SpaceSeparate(
-                    GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log,
+                var expectedLogTitle = GraphValues.AnnotateLogAxisTitle(
                     GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area);
                 AssertEx.AreEqual(expectedLogTitle, pane.YAxis.Title.Text);
 
@@ -171,8 +169,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var pane = FindBoxPlotPane();
                 AssertEx.AreEqual(AxisType.Log, pane.YAxis.Type);
-                var expectedLogTitle = TextUtil.SpaceSeparate(
-                    GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log,
+                var expectedLogTitle = GraphValues.AnnotateLogAxisTitle(
                     GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area);
                 AssertEx.AreEqual(expectedLogTitle, pane.YAxis.Title.Text);
             });

@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -40,10 +41,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void UpdateAxes()
         {
-            YAxis.Title.Text = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+            string yTitle = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+            var normMethod = GraphSummary.DocumentUIContainer.DocumentUI.Settings
+                .PeptideSettings.Quantification.NormalizationMethod;
+            if (normMethod != null && !Equals(normMethod, NormalizationMethod.NONE))
+                yTitle = normMethod.GetAxisTitle(yTitle);
+            YAxis.Title.Text = yTitle;
 
             base.UpdateAxes();
-
         }
 
         internal class AreaGraphData : GraphData

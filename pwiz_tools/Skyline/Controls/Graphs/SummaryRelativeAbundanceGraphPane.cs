@@ -764,9 +764,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     : GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peptide_Rank;
 
             var yTitle = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+            var normMethod = document.Settings.PeptideSettings.Quantification.NormalizationMethod;
+            if (normMethod != null && !Equals(normMethod, NormalizationMethod.NONE))
+                yTitle = normMethod.GetAxisTitle(yTitle);
             if (Settings.Default.RelativeAbundanceLogScale)
             {
-                YAxis.Title.Text = TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log, yTitle);
+                YAxis.Title.Text = GraphValues.AnnotateLogAxisTitle(yTitle);
                 YAxis.Type = AxisType.Log;
                 YAxis.Scale.Min = 1e2;
                 YAxis.Scale.Max = 1e9;
@@ -1529,7 +1532,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (_pp != null )
                         {
                             table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_PeakArea,
-                                _pp.Y.ToString(Formats.PEAK_AREA, CultureInfo.CurrentCulture), rt);
+                                _pp.Y.ToString(Formats.CalibrationCurve, CultureInfo.CurrentCulture), rt);
                             table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_LogPeakArea,
                                 Math.Log10(_pp.Y).ToString(Formats.FoldChange, CultureInfo.CurrentCulture), rt);
                             table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_Rank,
