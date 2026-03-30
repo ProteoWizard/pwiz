@@ -30,9 +30,16 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static readonly SummarizationMethod AVERAGING 
             = new SummarizationMethod(@"averaging",
                 ()=>GroupComparisonStrings.SummarizationMethod_AVERAGING_Sum_of_transition_areas);
-        public static readonly SummarizationMethod MEDIANPOLISH 
+        public static readonly SummarizationMethod MEDIANPOLISH
+            = new SummarizationMethod(@"medianpolish2",
+                ()=>GroupComparisonStrings.SummarizationMethod_MEDIANPOLISH_Median_Polish);
+        public static readonly SummarizationMethod LEGACY_MEDIANPOLISH
             = new SummarizationMethod(@"medianpolish",
-                ()=>GroupComparisonStrings.SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish);
+                ()=>GroupComparisonStrings.SummarizationMethod_LEGACY_MEDIANPOLISH_Legacy_Median_Polish);
+
+        public static readonly SummarizationMethod DEFAULT_FROM_SETTINGS
+            = new SummarizationMethod(@"default",
+                ()=>GroupComparisonStrings.SummarizationMethod_DEFAULT_FROM_SETTINGS_Default);
 
         public static readonly SummarizationMethod DEFAULT = AVERAGING;
 
@@ -50,12 +57,24 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             return new[]
             {
-                AVERAGING, MEDIANPOLISH
+                AVERAGING, MEDIANPOLISH, LEGACY_MEDIANPOLISH
+            };
+        }
+
+        public static IList<SummarizationMethod> ListGroupComparisonMethods()
+        {
+            return new[]
+            {
+                DEFAULT_FROM_SETTINGS, AVERAGING, MEDIANPOLISH, LEGACY_MEDIANPOLISH
             };
         }
 
         public static SummarizationMethod FromName(string name)
         {
+            if (name == DEFAULT_FROM_SETTINGS.Name)
+            {
+                return DEFAULT_FROM_SETTINGS;
+            }
             if (name == REGRESSION.Name)
             {
                 return REGRESSION;
@@ -67,6 +86,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             if (name == MEDIANPOLISH.Name)
             {
                 return MEDIANPOLISH;
+            }
+            if (name == LEGACY_MEDIANPOLISH.Name)
+            {
+                return LEGACY_MEDIANPOLISH;
             }
             return DEFAULT;
         }
