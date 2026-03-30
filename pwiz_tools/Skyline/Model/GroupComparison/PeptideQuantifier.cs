@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Policy;
+using NHibernate.Hql.Ast.ANTLR.Tree;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Skyline.Model.DocSettings;
@@ -163,21 +163,32 @@ namespace pwiz.Skyline.Model.GroupComparison
             return quantities;
         }
 
-        public double?[] GetMedianPolishQuantities(SrmSettings settings, HashSet<int> replicateSubset)
+        public static bool IncludeInMedianPolish(SampleType sampleType)
+        {
+            return SampleType.STANDARD.Equals(sampleType) || SampleType.QC.Equals(sampleType) ||
+                   SampleType.UNKNOWN.Equals(sampleType);
+        }
+
+        public static HashSet<int> GetMedianPolishReplicates(SrmSettings settings)
+        {
+            return Enumerable.Range(0, settings.MeasuredResults?.Chromatograms.Count ?? 0)
+                .Where(i => IncludeInMedianPolish(settings.MeasuredResults.Chromatograms[i].SampleType))
+                .ToHashSet();
+        }
+
+        public double?[] GetMedianPolishQuantities(SrmSettings settings, HashSet<int> replicateIndexes)
         {
             if (settings.MeasuredResults == null)
             {
                 return Array.Empty<double?>();
             }
             int replicateCount = settings.MeasuredResults.Chromatograms.Count;
+
+            // Collect transition data for ALL replicates
             var transitionsByReplicate = new Dictionary<int, Dictionary<IdentityPath, double>>();
-            var allTransitions = new HashSet<IdentityPath>();
+            var subsetTransitions = new HashSet<IdentityPath>();
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
-                if (false == replicateSubset?.Contains(iReplicate))
-                {
-                    continue;
-                }
                 var transitionIntensities = GetTransitionIntensities(settings, iReplicate, false);
                 var intensities = new Dictionary<IdentityPath, double>();
                 foreach (var entry in transitionIntensities)
@@ -189,7 +200,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                         if (!double.IsNaN(log2Abundance) && !double.IsInfinity(log2Abundance))
                         {
                             intensities[entry.Key] = log2Abundance;
-                            allTransitions.Add(entry.Key);
+                            // Only count transitions from subset replicates for feature selection
+                            if (replicateIndexes.Contains(iReplicate))
+                            {
+                                subsetTransitions.Add(entry.Key);
+                            }
                         }
                     }
                 }
@@ -199,9 +214,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
 
-            // Filter transitions: require at least 2 non-missing values
-            var validTransitions = allTransitions
-                .Where(t => transitionsByReplicate.Count(kvp => kvp.Value.ContainsKey(t)) > 1)
+            // Filter transitions: require at least 2 non-missing values among subset replicates
+            var subsetReplicates = transitionsByReplicate
+                .Where(kvp => replicateIndexes.Contains(kvp.Key)).ToList();
+            var validTransitions = subsetTransitions
+                .Where(t => subsetReplicates.Count(kvp => kvp.Value.ContainsKey(t)) > 1)
                 .ToList();
             int featureCount = validTransitions.Count;
             if (featureCount == 0)
@@ -223,24 +240,53 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             else
             {
-                // Build feature(row) x replicate(col) matrix
-                var matrix = new double?[featureCount, replicateCount];
+                // Build feature(row) x subset-replicate(col) matrix for the polish
+                var subsetIndices = subsetReplicates.Select(kvp => kvp.Key).OrderBy(i => i).ToList();
+                int subsetCount = subsetIndices.Count;
+                var matrix = new double?[featureCount, subsetCount];
                 for (int iFeature = 0; iFeature < featureCount; iFeature++)
                 {
                     var transition = validTransitions[iFeature];
-                    foreach (var kvp in transitionsByReplicate)
+                    for (int iCol = 0; iCol < subsetCount; iCol++)
                     {
-                        if (kvp.Value.TryGetValue(transition, out double val))
+                        if (transitionsByReplicate.TryGetValue(subsetIndices[iCol], out var intensities) &&
+                            intensities.TryGetValue(transition, out double val))
                         {
-                            matrix[iFeature, kvp.Key] = val;
+                            matrix[iFeature, iCol] = val;
                         }
                     }
                 }
                 var mp = MedianPolish.GetMedianPolish(matrix);
                 double scaleFactor = Math.Log(featureCount, 2);
-                for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+
+                // Assign abundances for subset replicates from the polish
+                for (int iCol = 0; iCol < subsetCount; iCol++)
                 {
-                    sampleAbundances[iReplicate] = mp.OverallConstant + mp.ColumnEffects[iReplicate] + scaleFactor;
+                    sampleAbundances[subsetIndices[iCol]] =
+                        mp.OverallConstant + mp.ColumnEffects[iCol] + scaleFactor;
+                }
+
+                // For excluded replicates, project onto the fitted model:
+                // their column effect = median(value - rowEffect) across valid transitions
+                foreach (var kvp in transitionsByReplicate)
+                {
+                    if (replicateIndexes.Contains(kvp.Key))
+                    {
+                        var deviations = new List<double>();
+                        for (int iFeature = 0; iFeature < featureCount; iFeature++)
+                        {
+                            if (kvp.Value.TryGetValue(validTransitions[iFeature], out double val))
+                            {
+                                deviations.Add(val - mp.RowEffects[iFeature]);
+                            }
+                        }
+                        if (deviations.Count > 0)
+                        {
+                            deviations.Sort();
+                            double median = deviations[deviations.Count / 2];
+                            sampleAbundances[kvp.Key] = median + scaleFactor;
+                        }
+                    }
                 }
             }
 

@@ -526,7 +526,7 @@ namespace pwiz.Skyline.SettingsUI
             // lblSummarizationMethod
             //
             this.lblSummarizationMethod.AutoSize = true;
-            this.lblSummarizationMethod.Location = new System.Drawing.Point(25, 130);
+            this.lblSummarizationMethod.Location = new System.Drawing.Point(25, 88);
             this.lblSummarizationMethod.Name = "lblSummarizationMethod";
             this.lblSummarizationMethod.Size = new System.Drawing.Size(130, 13);
             this.lblSummarizationMethod.TabIndex = 30;
@@ -536,7 +536,7 @@ namespace pwiz.Skyline.SettingsUI
             //
             this.comboSummarizationMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboSummarizationMethod.FormattingEnabled = true;
-            this.comboSummarizationMethod.Location = new System.Drawing.Point(28, 146);
+            this.comboSummarizationMethod.Location = new System.Drawing.Point(28, 103);
             this.comboSummarizationMethod.Name = "comboSummarizationMethod";
             this.comboSummarizationMethod.Size = new System.Drawing.Size(239, 21);
             this.comboSummarizationMethod.TabIndex = 31;

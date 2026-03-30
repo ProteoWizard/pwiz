@@ -287,13 +287,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private IDictionary<int, AbundanceValue> CalculateProteinAbundancesWithMedianPolish()
         {
+            var replicateIndexes = PeptideQuantifier.GetMedianPolishReplicates(SrmDocument.Settings);
             // Stage 1: For each peptide, collect transition intensities across all replicates,
             // then median polish transitions -> peptide abundance per replicate
             var peptideAbundances = new List<double?[]>(); // peptide x replicate
             foreach (var peptide in Peptides)
             {
                 var peptideQuantifier = peptide.GetPeptideQuantifier();
-                var quantities = peptideQuantifier.GetMedianPolishQuantities(SrmDocument.Settings, null);
+                var quantities = peptideQuantifier.GetMedianPolishQuantities(SrmDocument.Settings, replicateIndexes);
                 if (quantities != null)
                 {
                     peptideAbundances.Add(quantities);
@@ -305,29 +306,57 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return new Dictionary<int, AbundanceValue>();
             }
 
-            // Stage 2: Median polish peptide -> protein
+            // Stage 2: Median polish peptide -> protein (using only subset replicates)
             int replicateCount = SrmDocument.MeasuredResults?.Chromatograms.Count ?? 0;
-            double[] proteinAbundances;
+            double[] proteinAbundances = new double[replicateCount];
+            for (int i = 0; i < replicateCount; i++)
+                proteinAbundances[i] = double.NaN;
+
             if (peptideCount == 1)
             {
-                proteinAbundances = peptideAbundances[0]
-                    .Select(v => v ?? double.NaN).ToArray();
+                for (int i = 0; i < replicateCount; i++)
+                    proteinAbundances[i] = peptideAbundances[0][i] ?? double.NaN;
             }
             else
             {
-                var matrix = new double?[peptideCount, replicateCount];
+                // Build peptide(row) x subset-replicate(col) matrix for the polish
+                var subsetIndices = replicateIndexes.OrderBy(i => i).ToList();
+                int subsetCount = subsetIndices.Count;
+                var matrix = new double?[peptideCount, subsetCount];
                 for (int iPeptide = 0; iPeptide < peptideCount; iPeptide++)
                 {
-                    for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+                    for (int iCol = 0; iCol < subsetCount; iCol++)
                     {
-                        matrix[iPeptide, iReplicate] = peptideAbundances[iPeptide][iReplicate];
+                        matrix[iPeptide, iCol] = peptideAbundances[iPeptide][subsetIndices[iCol]];
                     }
                 }
                 var mp = MedianPolish.GetMedianPolish(matrix);
-                proteinAbundances = new double[replicateCount];
+
+                // Assign abundances for subset replicates
+                for (int iCol = 0; iCol < subsetCount; iCol++)
+                {
+                    proteinAbundances[subsetIndices[iCol]] = mp.OverallConstant + mp.ColumnEffects[iCol];
+                }
+
+                // For excluded replicates, project onto the fitted model
                 for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
                 {
-                    proteinAbundances[iReplicate] = mp.OverallConstant + mp.ColumnEffects[iReplicate];
+                    if (replicateIndexes.Contains(iReplicate))
+                        continue;
+                    var deviations = new List<double>();
+                    for (int iPeptide = 0; iPeptide < peptideCount; iPeptide++)
+                    {
+                        double? val = peptideAbundances[iPeptide][iReplicate];
+                        if (val.HasValue)
+                        {
+                            deviations.Add(val.Value - mp.RowEffects[iPeptide]);
+                        }
+                    }
+                    if (deviations.Count > 0)
+                    {
+                        deviations.Sort();
+                        proteinAbundances[iReplicate] = deviations[deviations.Count / 2];
+                    }
                 }
             }
 
