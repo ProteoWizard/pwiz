@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
@@ -233,6 +234,44 @@ namespace pwiz.SkylineTestFunctional
                         $"Replicate {kvp.Key} outlier {i} should match");
                 }
             }
+
+            // Capture document-order labels for stable sort verification
+            string[] docOrderLabels = null;
+            RunUI(() => docOrderLabels = FindBoxPlotPane().XAxis.Scale.TextLabels.ToArray());
+
+            // Order by Condition annotation — stable sort should group Diseased before Healthy
+            // and preserve document order within each group
+            RunUI(() =>
+            {
+                var conditionValue = ReplicateValue.GetGroupableReplicateValues(SkylineWindow.Document)
+                    .First(v => v.Title == @"Condition");
+                SkylineWindow.OrderByReplicateAnnotation(conditionValue);
+            });
+            WaitForGraphs();
+
+            RunUI(() =>
+            {
+                var pane = FindBoxPlotPane();
+                var labels = pane.XAxis.Scale.TextLabels;
+
+                // All Diseased (D_*) replicates should come before Healthy (H_*)
+                var diseased = labels.Where(l => l.StartsWith(@"D")).ToArray();
+                var healthy = labels.Where(l => l.StartsWith(@"H")).ToArray();
+                AssertEx.IsTrue(diseased.Length > 0 && healthy.Length > 0,
+                    "Should have both Diseased and Healthy replicates");
+                int lastDiseased = Array.LastIndexOf(labels, diseased.Last());
+                int firstHealthy = Array.IndexOf(labels, healthy.First());
+                AssertEx.IsTrue(lastDiseased < firstHealthy,
+                    "When ordered by Condition, all Diseased replicates should precede Healthy");
+
+                // Stable sort: within each group, document order must be preserved
+                var docDiseased = docOrderLabels.Where(l => l.StartsWith(@"D")).ToArray();
+                var docHealthy = docOrderLabels.Where(l => l.StartsWith(@"H")).ToArray();
+                CollectionAssert.AreEqual(docDiseased, diseased,
+                    "Diseased replicates should preserve document order (stable sort)");
+                CollectionAssert.AreEqual(docHealthy, healthy,
+                    "Healthy replicates should preserve document order (stable sort)");
+            });
 
             // Reset to document order
             RunUI(() => SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.document));

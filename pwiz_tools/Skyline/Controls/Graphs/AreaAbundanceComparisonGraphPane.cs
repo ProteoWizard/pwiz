@@ -511,12 +511,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (orderByValue != null)
                 {
                     var calculator = new AnnotationCalculator(document);
-                    Array.Sort(indices, (a, b) =>
-                    {
-                        var valA = orderByValue.GetValue(calculator, chromatograms[a]);
-                        var valB = orderByValue.GetValue(calculator, chromatograms[b]);
-                        return CollectionUtil.ColumnValueComparer.Compare(valA, valB);
-                    });
+                    indices = indices
+                        .OrderBy(i => orderByValue.GetValue(calculator, chromatograms[i]),
+                            CollectionUtil.ColumnValueComparer)
+                        .ToArray();
                 }
             }
 
