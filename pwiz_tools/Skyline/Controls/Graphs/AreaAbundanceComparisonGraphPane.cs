@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4.6) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -24,10 +25,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -46,7 +44,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// Shares the same background data pipeline as the Relative Abundance dot-plot
     /// via the shared Producer in AreaRelativeAbundanceGraphPane.
     /// </summary>
-    internal class AreaAbundanceComparisonGraphPane : SummaryGraphPane, IDisposable
+    public class AreaAbundanceComparisonGraphPane : SummaryGraphPane, IDisposable
     {
         private static readonly Color DEFAULT_BAR_COLOR = Color.LightGreen;
         private const int PROGRESS_INITIAL_DELAY_MS = 300;
@@ -94,6 +92,32 @@ namespace pwiz.Skyline.Controls.Graphs
                 receiver,
                 SummaryRelativeAbundanceGraphPane.CleanCacheForIncrementalUpdates);
             _graphDataReceiver.ProgressChange += UpdateProgressHandler;
+        }
+
+        /// <summary>
+        /// True when the graph has finished computing and displaying data for the current document.
+        /// </summary>
+        public bool IsComplete
+        {
+            get
+            {
+                if (_graphDataReceiver.HasError)
+                    return true;
+
+                if (!_graphDataReceiver.TryGetCurrentProduct(out var product))
+                    return false;
+
+                var currentDoc = GraphSummary.DocumentUIContainer.DocumentUI;
+                var currentSettings = GraphSettings.FromSettings();
+
+                if (!ReferenceEquals(product.Document, currentDoc) ||
+                    !Equals(product.GraphSettings, currentSettings))
+                    return false;
+
+                return _graphData != null &&
+                       ReferenceEquals(_graphData.Document, currentDoc) &&
+                       Equals(_graphData.GraphSettings, currentSettings);
+            }
         }
 
         public override void Draw(Graphics g)
