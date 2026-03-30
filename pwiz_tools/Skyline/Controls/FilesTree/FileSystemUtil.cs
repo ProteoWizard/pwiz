@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 return Path.GetFullPath(path);
             }
             catch (NotSupportedException) { return path; }
-            catch (ArgumentException) { return path; }
+            catch (ArgumentException) { return null; }
         }
 
         /// <summary>
