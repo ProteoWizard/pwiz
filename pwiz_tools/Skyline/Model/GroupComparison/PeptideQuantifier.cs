@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
@@ -159,6 +161,90 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
             return quantities;
+        }
+
+        public double?[] GetMedianPolishQuantities(SrmSettings settings, HashSet<int> replicateSubset)
+        {
+            if (settings.MeasuredResults == null)
+            {
+                return Array.Empty<double?>();
+            }
+            int replicateCount = settings.MeasuredResults.Chromatograms.Count;
+            var transitionsByReplicate = new Dictionary<int, Dictionary<IdentityPath, double>>();
+            var allTransitions = new HashSet<IdentityPath>();
+            for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+            {
+                if (false == replicateSubset?.Contains(iReplicate))
+                {
+                    continue;
+                }
+                var transitionIntensities = GetTransitionIntensities(settings, iReplicate, false);
+                var intensities = new Dictionary<IdentityPath, double>();
+                foreach (var entry in transitionIntensities)
+                {
+                    if (!entry.Value.Truncated)
+                    {
+                        double log2Abundance = GroupComparer.CalcLog2Abundance(
+                            entry.Value.Intensity, entry.Value.Denominator);
+                        if (!double.IsNaN(log2Abundance) && !double.IsInfinity(log2Abundance))
+                        {
+                            intensities[entry.Key] = log2Abundance;
+                            allTransitions.Add(entry.Key);
+                        }
+                    }
+                }
+                if (intensities.Count > 0)
+                {
+                    transitionsByReplicate[iReplicate] = intensities;
+                }
+            }
+
+            // Filter transitions: require at least 2 non-missing values
+            var validTransitions = allTransitions
+                .Where(t => transitionsByReplicate.Count(kvp => kvp.Value.ContainsKey(t)) > 1)
+                .ToList();
+            int featureCount = validTransitions.Count;
+            if (featureCount == 0)
+            {
+                return null;
+            }
+
+            var sampleAbundances = new double?[replicateCount];
+            if (featureCount == 1)
+            {
+                var transition = validTransitions[0];
+                foreach (var kvp in transitionsByReplicate)
+                {
+                    if (kvp.Value.TryGetValue(transition, out double val))
+                    {
+                        sampleAbundances[kvp.Key] = val;
+                    }
+                }
+            }
+            else
+            {
+                // Build feature(row) x replicate(col) matrix
+                var matrix = new double?[featureCount, replicateCount];
+                for (int iFeature = 0; iFeature < featureCount; iFeature++)
+                {
+                    var transition = validTransitions[iFeature];
+                    foreach (var kvp in transitionsByReplicate)
+                    {
+                        if (kvp.Value.TryGetValue(transition, out double val))
+                        {
+                            matrix[iFeature, kvp.Key] = val;
+                        }
+                    }
+                }
+                var mp = MedianPolish.GetMedianPolish(matrix);
+                double scaleFactor = Math.Log(featureCount, 2);
+                for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+                {
+                    sampleAbundances[iReplicate] = mp.OverallConstant + mp.ColumnEffects[iReplicate] + scaleFactor;
+                }
+            }
+
+            return sampleAbundances;
         }
 
         public double GetIsotopologArea(SrmSettings settings, int replicateIndex, IsotopeLabelType labelType)

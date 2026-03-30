@@ -287,95 +287,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private IDictionary<int, AbundanceValue> CalculateProteinAbundancesWithMedianPolish()
         {
-            var quantifiers = Peptides.Select(peptide => peptide.GetPeptideQuantifier()).ToList();
-            int replicateCount = SrmDocument.Settings.HasResults
-                ? SrmDocument.Settings.MeasuredResults.Chromatograms.Count : 0;
-
-            if (replicateCount == 0 || quantifiers.Count == 0)
-            {
-                return new Dictionary<int, AbundanceValue>();
-            }
-
             // Stage 1: For each peptide, collect transition intensities across all replicates,
             // then median polish transitions -> peptide abundance per replicate
             var peptideAbundances = new List<double?[]>(); // peptide x replicate
-            foreach (var peptideQuantifier in quantifiers)
+            foreach (var peptide in Peptides)
             {
-                // Collect transition data for this peptide across all replicates
-                var transitionsByReplicate = new Dictionary<int, Dictionary<IdentityPath, double>>();
-                var allTransitions = new HashSet<IdentityPath>();
-                for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+                var peptideQuantifier = peptide.GetPeptideQuantifier();
+                var quantities = peptideQuantifier.GetMedianPolishQuantities(SrmDocument.Settings, null);
+                if (quantities != null)
                 {
-                    var transitionIntensities = peptideQuantifier.GetTransitionIntensities(
-                        SrmDocument.Settings, iReplicate, false);
-                    var intensities = new Dictionary<IdentityPath, double>();
-                    foreach (var entry in transitionIntensities)
-                    {
-                        if (!entry.Value.Truncated)
-                        {
-                            double log2Abundance = GroupComparer.CalcLog2Abundance(
-                                entry.Value.Intensity, entry.Value.Denominator);
-                            if (!double.IsNaN(log2Abundance) && !double.IsInfinity(log2Abundance))
-                            {
-                                intensities[entry.Key] = log2Abundance;
-                                allTransitions.Add(entry.Key);
-                            }
-                        }
-                    }
-                    if (intensities.Count > 0)
-                    {
-                        transitionsByReplicate[iReplicate] = intensities;
-                    }
+                    peptideAbundances.Add(quantities);
                 }
-
-                // Filter transitions: require at least 2 non-missing values
-                var validTransitions = allTransitions
-                    .Where(t => transitionsByReplicate.Count(kvp => kvp.Value.ContainsKey(t)) > 1)
-                    .ToList();
-                int featureCount = validTransitions.Count;
-                if (featureCount == 0)
-                {
-                    continue;
-                }
-
-                var sampleAbundances = new double?[replicateCount];
-                if (featureCount == 1)
-                {
-                    var transition = validTransitions[0];
-                    foreach (var kvp in transitionsByReplicate)
-                    {
-                        if (kvp.Value.TryGetValue(transition, out double val))
-                        {
-                            sampleAbundances[kvp.Key] = val;
-                        }
-                    }
-                }
-                else
-                {
-                    // Build feature(row) x replicate(col) matrix
-                    var matrix = new double?[featureCount, replicateCount];
-                    for (int iFeature = 0; iFeature < featureCount; iFeature++)
-                    {
-                        var transition = validTransitions[iFeature];
-                        foreach (var kvp in transitionsByReplicate)
-                        {
-                            if (kvp.Value.TryGetValue(transition, out double val))
-                            {
-                                matrix[iFeature, kvp.Key] = val;
-                            }
-                        }
-                    }
-                    var mp = MedianPolish.GetMedianPolish(matrix);
-                    double scaleFactor = Math.Log(featureCount, 2);
-                    for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
-                    {
-                        sampleAbundances[iReplicate] = mp.OverallConstant + mp.ColumnEffects[iReplicate] + scaleFactor;
-                    }
-                }
-
-                peptideAbundances.Add(sampleAbundances);
             }
-
             int peptideCount = peptideAbundances.Count;
             if (peptideCount == 0)
             {
@@ -383,6 +306,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             // Stage 2: Median polish peptide -> protein
+            int replicateCount = SrmDocument.MeasuredResults?.Chromatograms.Count ?? 0;
             double[] proteinAbundances;
             if (peptideCount == 1)
             {
