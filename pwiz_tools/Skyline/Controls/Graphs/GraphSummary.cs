@@ -170,6 +170,10 @@ namespace pwiz.Skyline.Controls.Graphs
             Text = Controller.Text + @" - " + Type.CustomToString();
             Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
 
+            // Clear ZedGraph's default pane so the control paints blank until
+            // the controller creates the real pane in the first UpdateGraph call.
+            // This prevents the jarring "Title / Y Axis / X Axis" default appearance.
+            graphControl.MasterPane.PaneList.Clear();
             UpdateUI();
         }
 
@@ -596,7 +600,8 @@ namespace pwiz.Skyline.Controls.Graphs
         histogram2d = 1 << 6,
         detections = 1 << 7,
         detections_histogram = 1 << 8,
-        abundance = 1 << 9
+        abundance = 1 << 9,
+        abundance_comparison = 1 << 10
     }
 
     public static class Extensions
@@ -613,6 +618,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     return GraphsResources.Extensions_CustomToString_Peptide_Comparison;
                 case GraphTypeSummary.abundance:
                     return GraphsResources.Extensions_CustomToString_Relative_Abundance;
+                case GraphTypeSummary.abundance_comparison:
+                    return GraphsResources.Extensions_CustomToString_Relative_Abundance_Comparison;
                 case GraphTypeSummary.score_to_run_regression:
                     return GraphsResources.Extensions_CustomToString_Score_To_Run_Regression;
                 case GraphTypeSummary.schedule:
