@@ -1690,6 +1690,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string RelativeAbundanceGraph_ToolTip_Replicate_All {
+            get {
+                return ResourceManager.GetString("RelativeAbundanceGraph_ToolTip_Replicate_All", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Replicate.
         /// </summary>
         public static string ReplicateGroupOp_ReplicateAxisTitle {

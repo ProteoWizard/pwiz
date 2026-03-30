@@ -242,7 +242,7 @@ namespace pwiz.SkylineTestFunctional
         private void VerifyGroupBy()
         {
             // Group by Condition: 2 groups (Diseased, Healthy)
-            RunUI(() => SkylineWindow.GroupByReplicateAnnotation("Condition"));
+            RunUI(() => SkylineWindow.GroupByAbundanceComparisonAnnotation("Condition"));
             WaitForGraphs();
 
             RunUI(() =>
@@ -276,7 +276,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Group by SubjectId: 14 groups (7 Diseased + 7 Healthy subjects, 3 tech reps each)
-            RunUI(() => SkylineWindow.GroupByReplicateAnnotation("SubjectId"));
+            RunUI(() => SkylineWindow.GroupByAbundanceComparisonAnnotation("SubjectId"));
             WaitForGraphs();
 
             RunUI(() =>
@@ -293,7 +293,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Clear grouping
-            RunUI(() => SkylineWindow.GroupByReplicateValue(null));
+            RunUI(() => SkylineWindow.GroupByAbundanceComparisonAnnotation(null));
             WaitForGraphs();
 
             RunUI(() =>

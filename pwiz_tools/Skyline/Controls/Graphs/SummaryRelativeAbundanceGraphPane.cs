@@ -405,7 +405,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var goalPoint = _graphData.PointPairList.FirstOrDefault(pp => identity.Equals((pp.Tag as GraphPointData)?.IdentityPath));
                 if (_toolTip == null)
                     _toolTip = new NodeTip(this) { Parent = GraphSummary.GraphControl };
-                _toolTip.SetTipProvider(new RelativeAbundanceTipProvider(goalPoint), new Rectangle(e.Location, new Size()), e.Location);
+                string replicateName = GetReplicateDisplayName();
+                _toolTip.SetTipProvider(new RelativeAbundanceTipProvider(goalPoint, replicateName), new Rectangle(e.Location, new Size()), e.Location);
                 return true;
             }
             else
@@ -413,6 +414,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 _toolTip?.HideTip();
                 return base.HandleMouseMoveEvent(sender, e);
             }
+        }
+
+        private string GetReplicateDisplayName()
+        {
+            if (_graphData == null)
+                return null;
+            if (_graphData.ShowReplicate == ReplicateDisplay.single)
+            {
+                var measuredResults = GraphSummary.DocumentUIContainer.DocumentUI.Settings.MeasuredResults;
+                if (measuredResults != null && _graphData.ResultsIndex >= 0 &&
+                    _graphData.ResultsIndex < measuredResults.Chromatograms.Count)
+                    return measuredResults.Chromatograms[_graphData.ResultsIndex].Name;
+            }
+            return GraphsResources.RelativeAbundanceGraph_ToolTip_Replicate_All;
         }
 
         private void ChangeSelection(IdentityPath identityPath, bool ctrl)
@@ -1500,9 +1515,11 @@ namespace pwiz.Skyline.Controls.Graphs
         class RelativeAbundanceTipProvider : ITipProvider
         {
             private PointPair _pp;
-            public RelativeAbundanceTipProvider(PointPair pp)
+            private string _replicateName;
+            public RelativeAbundanceTipProvider(PointPair pp, string replicateName)
             {
                 _pp = pp;
+                _replicateName = replicateName;
             }
 
             public bool HasTip
@@ -1529,6 +1546,10 @@ namespace pwiz.Skyline.Controls.Graphs
                             table.AddDetailRow(
                                 Helpers.PeptideToMoleculeTextMapper.Translate(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Protein, pd.Protein.IsNonProteomic()),
                                 ProteinMetadataManager.ProteinModalDisplayText(pd.Protein.DocNode), rt);
+                        if (_replicateName != null)
+                            table.AddDetailRow(
+                                GraphsResources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate,
+                                _replicateName, rt);
                         if (_pp != null )
                         {
                             table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_PeakArea,

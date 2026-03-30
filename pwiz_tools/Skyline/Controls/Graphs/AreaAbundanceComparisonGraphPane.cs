@@ -631,7 +631,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static ReplicateValue GetCurrentGroupByValue(SrmDocument document)
         {
-            var groupByAnnotation = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
+            var groupByAnnotation = Settings.Default.AbundanceComparisonGroupByAnnotation;
             if (string.IsNullOrEmpty(groupByAnnotation))
                 return null;
             return ReplicateValue.FromPersistedString(document.Settings, groupByAnnotation);
@@ -710,7 +710,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (_replicateName != null)
                     {
                         table.AddDetailRow(
-                            GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate,
+                            GraphsResources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate,
                             _replicateName, rt);
                     }
                     table.AddDetailRow(

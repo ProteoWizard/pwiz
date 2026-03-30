@@ -3930,8 +3930,7 @@ namespace pwiz.Skyline
                 AddPeptideOrderContextMenu(menuStrip, iInsert++);
                 AddScopeContextMenu(menuStrip, iInsert++);
             }
-            if (graphType == GraphTypeSummary.abundance || graphType == GraphTypeSummary.abundance_comparison ||
-                graphType == GraphTypeSummary.peptide)
+            if (graphType == GraphTypeSummary.abundance || graphType == GraphTypeSummary.peptide)
             {
                 iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
             }
@@ -4026,7 +4025,9 @@ namespace pwiz.Skyline
             }
             else if (graphType == GraphTypeSummary.abundance_comparison)
             {
-                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
+                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert,
+                    Settings.Default.AbundanceComparisonGroupByAnnotation,
+                    GroupByAbundanceComparisonMenuItem);
                 menuStrip.Items.Insert(iInsert++, relativeAbundanceLogScaleContextMenuItem);
                 relativeAbundanceLogScaleContextMenuItem.Checked = set.RelativeAbundanceLogScale;
             }
@@ -4321,7 +4322,16 @@ namespace pwiz.Skyline
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
-            ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
+            return AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert,
+                SummaryReplicateGraphPane.GroupByReplicateAnnotation,
+                GroupByReplicateAnnotationMenuItem);
+        }
+
+        private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert,
+            string currentGroupByAnnotation,
+            Func<ReplicateValue, bool, ToolStripMenuItem> getGroupByMenuItem)
+        {
+            var currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, currentGroupByAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
 
             var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
@@ -4349,12 +4359,12 @@ namespace pwiz.Skyline
             {
                 menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
                 groupReplicatesByContextMenuItem.DropDownItems.Clear();
-                groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked = currentGroupBy == null;
+                groupReplicatesByContextMenuItem.DropDownItems.Add(
+                    getGroupByMenuItem(null, currentGroupBy == null));
                 foreach (var replicateValue in groupByValues)
                 {
                     groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, Equals(replicateValue, currentGroupBy)));
+                        .Add(getGroupByMenuItem(replicateValue, Equals(replicateValue, currentGroupBy)));
                 }
             }
             return iInsert;
@@ -4375,8 +4385,23 @@ namespace pwiz.Skyline
 
         private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, bool isChecked)
         {
+            if (replicateValue == null)
+            {
+                groupByReplicateContextMenuItem.Checked = isChecked;
+                return groupByReplicateContextMenuItem;
+            }
             return new ToolStripMenuItem(replicateValue.Title, null,
                 (sender, eventArgs) => GroupByReplicateValue(replicateValue))
+            {
+                Checked = isChecked
+            };
+        }
+
+        private ToolStripMenuItem GroupByAbundanceComparisonMenuItem(ReplicateValue replicateValue, bool isChecked)
+        {
+            return new ToolStripMenuItem(
+                replicateValue?.Title ?? groupByReplicateContextMenuItem.Text, null,
+                (sender, eventArgs) => GroupByAbundanceComparisonAnnotation(replicateValue))
             {
                 Checked = isChecked
             };
@@ -4683,6 +4708,20 @@ namespace pwiz.Skyline
         {
             SummaryReplicateGraphPane.GroupByReplicateAnnotation =
                 DocumentAnnotations.ANNOTATION_PREFIX + annotationName;
+            UpdateSummaryGraphs();
+        }
+
+        private void GroupByAbundanceComparisonAnnotation(ReplicateValue replicateValue)
+        {
+            Settings.Default.AbundanceComparisonGroupByAnnotation = replicateValue?.ToPersistedString();
+            UpdateSummaryGraphs();
+        }
+
+        public void GroupByAbundanceComparisonAnnotation(string annotationName)
+        {
+            Settings.Default.AbundanceComparisonGroupByAnnotation = annotationName != null
+                ? DocumentAnnotations.ANNOTATION_PREFIX + annotationName
+                : null;
             UpdateSummaryGraphs();
         }
 
