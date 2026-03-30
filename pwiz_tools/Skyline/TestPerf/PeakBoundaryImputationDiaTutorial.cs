@@ -240,6 +240,7 @@ namespace TestPerf
                 });
             }
         }
+
         private AreaAbundanceComparisonGraphPane FindBoxPlotPane()
         {
             foreach (var graphSummary in SkylineWindow.ListGraphPeakArea)

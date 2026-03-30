@@ -26,7 +26,6 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
@@ -35,7 +34,6 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 using GraphData = pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphData;
 using GraphDataParameters = pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphDataParameters;
@@ -362,9 +360,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (point.Tag is OutlierInfo outlier)
                 {
                     int xPosition = (int)Math.Round(point.X);
-                    string replicateName = _xToReplicateIndex != null && xPosition >= 0 &&
-                                           xPosition < (XAxis.Scale.TextLabels?.Length ?? 0)
-                        ? _axisLabelScaler.OriginalTextLabels?[xPosition] ?? XAxis.Scale.TextLabels[xPosition]
+                    var labels = _axisLabelScaler.OriginalTextLabels ?? XAxis.Scale.TextLabels;
+                    string replicateName = labels != null && xPosition >= 0 && xPosition < labels.Length
+                        ? labels[xPosition]
                         : null;
                     var gpd = FindGraphPointData(outlier.IdentityPath);
                     _toolTip ??= new NodeTip(this) { Parent = GraphSummary.GraphControl };
