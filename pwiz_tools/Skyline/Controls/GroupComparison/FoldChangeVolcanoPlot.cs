@@ -357,18 +357,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // explicitly provides it — separate rules can control different traits independently.
             var colorRows = GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null).ToList();
 
-            // Selected points keep the selection color but preserve the marker shape from the matching rule
-            foreach (var symbolGroup in selectedPoints.GroupBy(point =>
+            // Selected points keep the selection color but preserve the marker shape from the first
+            // selected point's matching rule. Exactly one selected curve must always be added at
+            // index 0 so that the cutoff-line insertion indices and MatchedPointsStartIndex stay valid.
+            var selectedSymbol = PointSymbol.Circle;
+            if (selectedPoints.Count > 0)
             {
-                var row = (FoldChangeRow)point.Tag;
-                return DotPlotUtil.ResolvePointFormat(colorRows,
-                    rule => rule.MatchExpression.Matches(Document, row.Protein, row.Peptide,
-                        row.FoldChangeResult, CutoffSettings))?.symbol ?? PointSymbol.Circle;
-            }))
-            {
-                AddPoints(new PointPairList(symbolGroup.ToList()), Color.Red,
-                    DotPlotUtil.PointSizeToFloat(PointSize.large), true, symbolGroup.Key, true);
+                var firstRow = (FoldChangeRow)((PointPair)selectedPoints[0]).Tag;
+                selectedSymbol = DotPlotUtil.ResolvePointFormat(colorRows,
+                    rule => rule.MatchExpression.Matches(Document, firstRow.Protein, firstRow.Peptide,
+                        firstRow.FoldChangeResult, CutoffSettings))?.symbol ?? PointSymbol.Circle;
             }
+            AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, selectedSymbol, true);
             var unmatchedOtherPoints = new PointPairList();
             var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
             foreach (var point in otherPoints)
@@ -1046,18 +1046,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var outCount = 0;
             var inCount = 0;
 
-            var otherPoints = curveList[MatchedPointsStartIndex].Points;
-            for (var i = 0; i < otherPoints.Count; ++i)
+            // Iterate all non-selected, non-cutoff-line curves (formatted groups + unmatched "other").
+            // Formatted rule curves occupy MatchedPointsStartIndex..Count-2; the unmatched curve is last.
+            for (var curveIndex = MatchedPointsStartIndex; curveIndex < curveList.Count; curveIndex++)
             {
-                var pair = otherPoints[i];
-                var row = (FoldChangeRow) pair.Tag;
-                var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
+                var points = curveList[curveIndex].Points;
+                for (var i = 0; i < points.Count; ++i)
+                {
+                    var pair = points[i];
+                    var row = (FoldChangeRow) pair.Tag;
+                    var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
 
-                if ((!CutoffSettings.FoldChangeCutoffValid || row.FoldChangeResult.AbsLog2FoldChange > CutoffSettings.Log2FoldChangeCutoff) &&
-                    (!CutoffSettings.PValueCutoffValid || pvalue > CutoffSettings.PValueCutoff))
-                    ++outCount;
-                else
-                    ++inCount;
+                    if ((!CutoffSettings.FoldChangeCutoffValid || row.FoldChangeResult.AbsLog2FoldChange > CutoffSettings.Log2FoldChangeCutoff) &&
+                        (!CutoffSettings.PValueCutoffValid || pvalue > CutoffSettings.PValueCutoff))
+                        ++outCount;
+                    else
+                        ++inCount;
+                }
             }
 
             return new CurveCounts(curveList.Count, selectedCount,
