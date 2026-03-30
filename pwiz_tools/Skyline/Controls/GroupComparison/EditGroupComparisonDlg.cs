@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ReplaceComboItems(comboCaseValue, caseValues, groupComparisonDef.GetCaseGroupIdentifier(controlReplicateValue) ?? GroupIdentifier.EMPTY);
             ReplaceComboItems(comboIdentityAnnotation, availableReplicateValues.Prepend(null), groupComparisonDef.GetIdentityReplicateValue(srmSettings));
             ReplaceComboItems(comboNormalizationMethod, ListNormalizeOptions(), MakeNormalizationItem(groupComparisonDef.NormalizationMethod));
-            ReplaceComboItems(comboSummaryMethod, SummarizationMethod.ListSummarizationMethods(), groupComparisonDef.SummarizationMethod);
+            ReplaceComboItems(comboSummaryMethod, SummarizationMethod.ListGroupComparisonMethods(), groupComparisonDef.SummarizationMethod);
             tbxConfidenceLevel.Text = groupComparisonDef.ConfidenceLevelTimes100.ToString(CultureInfo.CurrentCulture);
             ReplaceComboItems(comboMsLevel, MsLevelOption.AllOptions, groupComparisonDef.MsLevel);
             radioScopeProtein.Checked = groupComparisonDef.PerProtein;
@@ -175,7 +175,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private bool RequiresAdvanced(GroupComparisonDef groupComparisonDef)
         {
             return groupComparisonDef.QValueCutoff.HasValue ||
-                   groupComparisonDef.SummarizationMethod != SummarizationMethod.AVERAGING ||
+                   (groupComparisonDef.SummarizationMethod != SummarizationMethod.AVERAGING &&
+                    groupComparisonDef.SummarizationMethod != SummarizationMethod.DEFAULT_FROM_SETTINGS) ||
                    groupComparisonDef.UseZeroForMissingPeaks;
         }
 

@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -232,6 +233,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return new Dictionary<int, AbundanceValue>();
             }
 
+            var summarizationMethod = SrmDocument.Settings.PeptideSettings.Quantification.SummarizationMethod;
+            if (Equals(summarizationMethod, SummarizationMethod.MEDIANPOLISH))
+            {
+                return CalculateProteinAbundancesWithMedianPolish();
+            }
+
+            return CalculateProteinAbundancesWithAveraging();
+        }
+
+        private IDictionary<int, AbundanceValue> CalculateProteinAbundancesWithAveraging()
+        {
             var quantifiers = Peptides.Select(peptide => peptide.GetPeptideQuantifier()).ToList();
             int replicateCount = SrmDocument.Settings.HasResults
                 ? SrmDocument.Settings.MeasuredResults.Chromatograms.Count : 0;
@@ -268,6 +280,96 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     int quantityCount = replicateQuantities[iReplicate].Keys.Intersect(allTransitionIdentityPaths)
                         .Count();
                     proteinAbundanceRecords[iReplicate] = new AbundanceValue(rawAbundance.Raw, rawAbundance.Raw * quantityCount, rawAbundance.Message);
+                }
+            }
+            return proteinAbundanceRecords;
+        }
+
+        private IDictionary<int, AbundanceValue> CalculateProteinAbundancesWithMedianPolish()
+        {
+            var replicateIndexes = PeptideQuantifier.GetMedianPolishReplicates(SrmDocument.Settings);
+            // Stage 1: For each peptide, collect transition intensities across all replicates,
+            // then median polish transitions -> peptide abundance per replicate
+            var peptideAbundances = new List<double?[]>(); // peptide x replicate
+            foreach (var peptide in Peptides)
+            {
+                var peptideQuantifier = peptide.GetPeptideQuantifier();
+                var quantities = peptideQuantifier.GetMedianPolishQuantities(SrmDocument.Settings, replicateIndexes);
+                if (quantities != null)
+                {
+                    peptideAbundances.Add(quantities);
+                }
+            }
+            int peptideCount = peptideAbundances.Count;
+            if (peptideCount == 0)
+            {
+                return new Dictionary<int, AbundanceValue>();
+            }
+
+            // Stage 2: Median polish peptide -> protein (using only subset replicates)
+            int replicateCount = SrmDocument.MeasuredResults?.Chromatograms.Count ?? 0;
+            double[] proteinAbundances = new double[replicateCount];
+            for (int i = 0; i < replicateCount; i++)
+                proteinAbundances[i] = double.NaN;
+
+            if (peptideCount == 1)
+            {
+                for (int i = 0; i < replicateCount; i++)
+                    proteinAbundances[i] = peptideAbundances[0][i] ?? double.NaN;
+            }
+            else
+            {
+                // Build peptide(row) x subset-replicate(col) matrix for the polish
+                var subsetIndices = replicateIndexes.OrderBy(i => i).ToList();
+                int subsetCount = subsetIndices.Count;
+                var matrix = new double?[peptideCount, subsetCount];
+                for (int iPeptide = 0; iPeptide < peptideCount; iPeptide++)
+                {
+                    for (int iCol = 0; iCol < subsetCount; iCol++)
+                    {
+                        matrix[iPeptide, iCol] = peptideAbundances[iPeptide][subsetIndices[iCol]];
+                    }
+                }
+                var mp = MedianPolish.GetMedianPolish(matrix);
+
+                // Assign abundances for subset replicates
+                for (int iCol = 0; iCol < subsetCount; iCol++)
+                {
+                    proteinAbundances[subsetIndices[iCol]] = mp.OverallConstant + mp.ColumnEffects[iCol];
+                }
+
+                // For excluded replicates, project onto the fitted model
+                for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+                {
+                    if (replicateIndexes.Contains(iReplicate))
+                        continue;
+                    var deviations = new List<double>();
+                    for (int iPeptide = 0; iPeptide < peptideCount; iPeptide++)
+                    {
+                        double? val = peptideAbundances[iPeptide][iReplicate];
+                        if (val.HasValue)
+                        {
+                            deviations.Add(val.Value - mp.RowEffects[iPeptide]);
+                        }
+                    }
+                    if (deviations.Count > 0)
+                    {
+                        deviations.Sort();
+                        proteinAbundances[iReplicate] = deviations[deviations.Count / 2];
+                    }
+                }
+            }
+
+            // Convert to AbundanceValue records
+            var proteinAbundanceRecords = new Dictionary<int, AbundanceValue>();
+            for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+            {
+                double abundance = proteinAbundances[iReplicate];
+                if (!double.IsNaN(abundance) && !double.IsInfinity(abundance))
+                {
+                    // Convert from log2 to linear scale
+                    double linearAbundance = Math.Pow(2, abundance);
+                    proteinAbundanceRecords[iReplicate] = new AbundanceValue(linearAbundance, linearAbundance, null);
                 }
             }
             return proteinAbundanceRecords;

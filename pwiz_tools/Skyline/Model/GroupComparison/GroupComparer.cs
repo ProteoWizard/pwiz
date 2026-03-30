@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Model.GroupComparison
     public class GroupComparer 
     {
         private readonly IList<KeyValuePair<int, ReplicateDetails>> _replicateIndexes;
+        private readonly IList<KeyValuePair<int, ReplicateDetails>> _allReplicateIndexes;
         private QrFactorizationCache _qrFactorizationCache;
         private Lazy<NormalizationData> _normalizationData;
         private ImmutableList<int> _msLevels;
@@ -78,6 +79,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
             _replicateIndexes = ImmutableList.ValueOf(replicateIndexes);
+            _allReplicateIndexes = BuildAllReplicateIndexes(document, annotationCalculator,
+                controlReplicateValue, identityReplicateValue, controlGroupIdentifier);
             IsValid = _replicateIndexes.Any(keyValuePair => keyValuePair.Value.IsControl) &&
                       _replicateIndexes.Any(keyValuePair => !keyValuePair.Value.IsControl);
             if (comparisonDef.MsLevel == MsLevelOption.ONE)
@@ -130,6 +133,20 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public SrmDocument SrmDocument { get; private set; }
+
+        public SummarizationMethod SummarizationMethod
+        {
+            get
+            {
+                var method = ComparisonDef.SummarizationMethod;
+                if (Equals(method, SummarizationMethod.DEFAULT_FROM_SETTINGS))
+                {
+                    return SrmDocument.Settings.PeptideSettings.Quantification.SummarizationMethod
+                           ?? SummarizationMethod.DEFAULT;
+                }
+                return method;
+            }
+        }
 
         public bool IsValid { get; private set; }
 
@@ -184,13 +201,18 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public GroupComparisonResult CalculateFoldChange(GroupComparisonSelector selector, List<RunAbundance> runAbundances)
         {
-            if (Equals(ComparisonDef.SummarizationMethod, SummarizationMethod.REGRESSION))
+            var summarizationMethod = SummarizationMethod;
+            if (Equals(summarizationMethod, SummarizationMethod.REGRESSION))
             {
                 return CalculateFoldChangeUsingRegression(selector, runAbundances);
             }
-            if (Equals(ComparisonDef.SummarizationMethod, SummarizationMethod.MEDIANPOLISH))
+            if (Equals(summarizationMethod, SummarizationMethod.LEGACY_MEDIANPOLISH))
             {
                 return CalculateFoldChangeWithSummarization(selector, runAbundances, SummarizeDataRowsWithMedianPolish);
+            }
+            if (Equals(summarizationMethod, SummarizationMethod.MEDIANPOLISH))
+            {
+                return CalculateFoldChangeWithTwoStageMedianPolish(selector, runAbundances);
             }
             return CalculateFoldChangeWithSummarization(selector, runAbundances, SummarizeDataRowsByAveraging);
         }
@@ -459,6 +481,253 @@ namespace pwiz.Skyline.Model.GroupComparison
         private bool IncludeFeatureForMedianPolish(IGrouping<IdentityPath, DataRowDetails> grouping)
         {
             return grouping.Count(dataRow => dataRow.Intensity > 1) > 1;
+        }
+
+        private static IList<KeyValuePair<int, ReplicateDetails>> BuildAllReplicateIndexes(
+            SrmDocument document, AnnotationCalculator annotationCalculator,
+            ReplicateValue controlReplicateValue, ReplicateValue identityReplicateValue,
+            GroupIdentifier controlGroupIdentifier)
+        {
+            var allReplicateIndexes = new List<KeyValuePair<int, ReplicateDetails>>();
+            if (document.Settings.HasResults)
+            {
+                var chromatograms = document.Settings.MeasuredResults.Chromatograms;
+                for (int i = 0; i < chromatograms.Count; i++)
+                {
+                    var chromatogramSet = chromatograms[i];
+                    var replicateDetails = new ReplicateDetails
+                    {
+                        GroupIdentifier = GroupIdentifier.MakeGroupIdentifier(
+                            controlReplicateValue?.GetValue(annotationCalculator, chromatogramSet)),
+                        IsControl = false
+                    };
+                    if (Equals(controlGroupIdentifier, replicateDetails.GroupIdentifier))
+                    {
+                        replicateDetails.IsControl = true;
+                    }
+                    if (identityReplicateValue != null)
+                    {
+                        replicateDetails.BioReplicate = GroupIdentifier.MakeGroupIdentifier(
+                            identityReplicateValue.GetValue(annotationCalculator, chromatogramSet));
+                    }
+                    allReplicateIndexes.Add(new KeyValuePair<int, ReplicateDetails>(i, replicateDetails));
+                }
+            }
+            return ImmutableList.ValueOf(allReplicateIndexes);
+        }
+
+        private GroupComparisonResult CalculateFoldChangeWithTwoStageMedianPolish(
+            GroupComparisonSelector selector, List<RunAbundance> runAbundances)
+        {
+            // Get transition-level data for ALL replicates
+            var allDataRows = new List<DataRowDetails>();
+            GetDataRowsForReplicates(selector, allDataRows, _allReplicateIndexes);
+            if (allDataRows.Count == 0)
+            {
+                return null;
+            }
+
+            // Group data rows by peptide
+            var dataRowsByPeptide = allDataRows.ToLookup(row =>
+                row.IdentityPath.GetPathTo((int)SrmDocument.Level.Molecules));
+
+            // Build a mapping from replicate index to column index
+            var allReplicateIndices = _allReplicateIndexes.Select(kvp => kvp.Key).ToList();
+            var replicateToColIndex = new Dictionary<int, int>();
+            for (int i = 0; i < allReplicateIndices.Count; i++)
+            {
+                replicateToColIndex[allReplicateIndices[i]] = i;
+            }
+            int sampleCount = allReplicateIndices.Count;
+
+            // Stage 1: Transition-to-Peptide median polish (per peptide)
+            var peptidePaths = new List<IdentityPath>();
+            var peptideAbundances = new List<double?[]>(); // peptide x sample
+
+            foreach (var peptideGrouping in dataRowsByPeptide)
+            {
+                var peptideRows = SumMs1Transitions(peptideGrouping.ToList());
+                var featuresByIdentity = peptideRows.ToLookup(row => row.IdentityPath)
+                    .Where(IncludeFeatureForMedianPolish).ToArray();
+                int featureCount = featuresByIdentity.Length;
+                if (featureCount == 0)
+                {
+                    continue;
+                }
+
+                var sampleAbundances = new double?[sampleCount];
+                if (featureCount == 1)
+                {
+                    // Single feature: use log2 abundance directly
+                    foreach (var row in featuresByIdentity[0])
+                    {
+                        if (replicateToColIndex.TryGetValue(row.ReplicateIndex, out int colIdx))
+                        {
+                            sampleAbundances[colIdx] = row.GetLog2Abundance();
+                        }
+                    }
+                }
+                else
+                {
+                    // Build feature(row) x sample(col) matrix
+                    var matrix = new double?[featureCount, sampleCount];
+                    for (int iFeature = 0; iFeature < featureCount; iFeature++)
+                    {
+                        foreach (var row in featuresByIdentity[iFeature])
+                        {
+                            if (replicateToColIndex.TryGetValue(row.ReplicateIndex, out int colIdx))
+                            {
+                                matrix[iFeature, colIdx] = row.GetLog2Abundance();
+                            }
+                        }
+                    }
+                    var mp = MedianPolish.GetMedianPolish(matrix);
+                    double scaleFactor = Math.Log(featureCount, 2);
+                    for (int iSample = 0; iSample < sampleCount; iSample++)
+                    {
+                        sampleAbundances[iSample] = mp.OverallConstant + mp.ColumnEffects[iSample] + scaleFactor;
+                    }
+                }
+
+                peptidePaths.Add(peptideGrouping.Key);
+                peptideAbundances.Add(sampleAbundances);
+            }
+
+            int peptideCount = peptidePaths.Count;
+            if (peptideCount == 0)
+            {
+                return null;
+            }
+
+            // Stage 2: Peptide-to-Protein median polish
+            double[] proteinAbundances;
+            if (peptideCount == 1)
+            {
+                // Single peptide: pass through
+                proteinAbundances = peptideAbundances[0]
+                    .Select(v => v ?? double.NaN).ToArray();
+            }
+            else
+            {
+                // Build peptide(row) x sample(col) matrix
+                var matrix = new double?[peptideCount, sampleCount];
+                for (int iPeptide = 0; iPeptide < peptideCount; iPeptide++)
+                {
+                    for (int iSample = 0; iSample < sampleCount; iSample++)
+                    {
+                        matrix[iPeptide, iSample] = peptideAbundances[iPeptide][iSample];
+                    }
+                }
+                var mp = MedianPolish.GetMedianPolish(matrix);
+                proteinAbundances = new double[sampleCount];
+                for (int iSample = 0; iSample < sampleCount; iSample++)
+                {
+                    proteinAbundances[iSample] = mp.OverallConstant + mp.ColumnEffects[iSample];
+                }
+            }
+
+            // Build RunAbundance entries for control+case replicates only
+            var replicateRows = new List<RunAbundance>();
+            foreach (var replicateEntry in _replicateIndexes)
+            {
+                if (!replicateToColIndex.TryGetValue(replicateEntry.Key, out int colIdx))
+                {
+                    continue;
+                }
+                double abundance = proteinAbundances[colIdx];
+                if (double.IsNaN(abundance) || double.IsInfinity(abundance))
+                {
+                    continue;
+                }
+                replicateRows.Add(new RunAbundance
+                {
+                    ReplicateIndex = replicateEntry.Key,
+                    BioReplicate = replicateEntry.Value.BioReplicate,
+                    Control = replicateEntry.Value.IsControl,
+                    Log2Abundance = abundance
+                });
+            }
+
+            if (replicateRows.Count == 0)
+            {
+                return null;
+            }
+            if (null != runAbundances)
+            {
+                runAbundances.AddRange(replicateRows);
+            }
+
+            // Calculate fold change from the summarized values (same as CalculateFoldChangeWithSummarization)
+            var summarizedRows = replicateRows;
+            if (replicateRows.Any(row => null != row.BioReplicate))
+            {
+                var groupedByBioReplicate = replicateRows.ToLookup(row => Tuple.Create(row.BioReplicate, row.Control));
+                summarizedRows = groupedByBioReplicate.Select(grouping => new RunAbundance
+                {
+                    BioReplicate = grouping.Key.Item1,
+                    Control = grouping.Key.Item2,
+                    ReplicateIndex = -1,
+                    Log2Abundance = grouping.Average(row => row.Log2Abundance),
+                }).ToList();
+            }
+
+            var quantifiedDataSet = new FoldChangeDataSet(
+                summarizedRows.Select(row => row.Log2Abundance).ToArray(),
+                Enumerable.Repeat(0, summarizedRows.Count).ToArray(),
+                Enumerable.Range(0, summarizedRows.Count).ToArray(),
+                Enumerable.Range(0, summarizedRows.Count).ToArray(),
+                summarizedRows.Select(row => row.Control).ToArray());
+
+            if (quantifiedDataSet.SubjectControls.Distinct().Count() < 2)
+            {
+                return null;
+            }
+            var designMatrix = DesignMatrix.GetDesignMatrix(quantifiedDataSet, false);
+            var foldChangeResult = designMatrix.PerformLinearFit(_qrFactorizationCache).First();
+            return new GroupComparisonResult(selector, replicateRows.Count, foldChangeResult, replicateRows);
+        }
+
+        private void GetDataRowsForReplicates(GroupComparisonSelector selector,
+            IList<DataRowDetails> foldChangeDetails,
+            IList<KeyValuePair<int, ReplicateDetails>> replicateIndexes)
+        {
+            NormalizationMethod normalizationMethod = NormalizationMethod;
+            if (normalizationMethod == null)
+            {
+                normalizationMethod = SrmDocument.Settings.PeptideSettings.Quantification.NormalizationMethod;
+            }
+            foreach (var replicateEntry in replicateIndexes)
+            {
+                foreach (var peptide in selector.ListPeptides())
+                {
+                    QuantificationSettings quantificationSettings = SrmDocument.Settings.PeptideSettings.Quantification
+                        .ChangeNormalizationMethod(normalizationMethod)
+                        .ChangeMsLevel(selector.MsLevel);
+                    var peptideQuantifier = new PeptideQuantifier(_normalizationData, selector.Protein, peptide,
+                        quantificationSettings)
+                    {
+                        QValueCutoff = ComparisonDef.QValueCutoff
+                    };
+                    if (null != selector.LabelType)
+                    {
+                        peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
+                    }
+                    foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings,
+                                 replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks).Where(kvp => !kvp.Value.Truncated))
+                    {
+                        var dataRowDetails = new DataRowDetails
+                        {
+                            BioReplicate = replicateEntry.Value.BioReplicate,
+                            Control = replicateEntry.Value.IsControl,
+                            IdentityPath = quantityEntry.Key,
+                            Intensity = quantityEntry.Value.Intensity,
+                            Denominator = quantityEntry.Value.Denominator,
+                            ReplicateIndex = replicateEntry.Key,
+                        };
+                        foldChangeDetails.Add(dataRowDetails);
+                    }
+                }
+            }
         }
 
         private IEnumerable<IGrouping<int, DataRowDetails>> RemoveIncompleteReplicates(IList<DataRowDetails> dataRows)

@@ -623,13 +623,31 @@ namespace pwiz.Skyline.Model.GroupComparison {
                 return ResourceManager.GetString("SummarizationMethod_AVERAGING_Sum_of_transition_areas", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Tukey&apos;s Median Polish.
+        ///   Looks up a localized string similar to Default.
         /// </summary>
-        internal static string SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish {
+        internal static string SummarizationMethod_DEFAULT_FROM_SETTINGS_Default {
             get {
-                return ResourceManager.GetString("SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish", resourceCulture);
+                return ResourceManager.GetString("SummarizationMethod_DEFAULT_FROM_SETTINGS_Default", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Legacy Median Polish.
+        /// </summary>
+        internal static string SummarizationMethod_LEGACY_MEDIANPOLISH_Legacy_Median_Polish {
+            get {
+                return ResourceManager.GetString("SummarizationMethod_LEGACY_MEDIANPOLISH_Legacy_Median_Polish", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median Polish.
+        /// </summary>
+        internal static string SummarizationMethod_MEDIANPOLISH_Median_Polish {
+            get {
+                return ResourceManager.GetString("SummarizationMethod_MEDIANPOLISH_Median_Polish", resourceCulture);
             }
         }
         
