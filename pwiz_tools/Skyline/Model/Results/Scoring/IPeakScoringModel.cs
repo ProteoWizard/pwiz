@@ -733,12 +733,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new NextGenIsotopeDotProductCalc(),
             new LegacyIdentifiedCountCalc(),
 
+            // Sum coelution score (DIA-NN style)
+            new SumCoelutionScoreCalc(),
+
             // Default calculators for scoring on import
-            new MQuestDefaultIntensityCalc(), 
-            new LegacyUnforcedCountScoreDefaultCalc(), 
-            new MQuestDefaultIntensityCorrelationCalc(), 
-            new MQuestDefaultWeightedCoElutionCalc(), 
-            new MQuestDefaultWeightedShapeCalc(), 
+            new MQuestDefaultIntensityCalc(),
+            new LegacyUnforcedCountScoreDefaultCalc(),
+            new MQuestDefaultIntensityCorrelationCalc(),
+            new MQuestDefaultWeightedCoElutionCalc(),
+            new MQuestDefaultWeightedShapeCalc(),
+            new DefaultSumCoelutionScoreCalc(),
         };
 
         public static IEnumerable<IPeakFeatureCalculator> Calculators
