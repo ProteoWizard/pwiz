@@ -2690,6 +2690,10 @@ namespace pwiz.Skyline
                     return GraphTypeSummary.abundance_comparison;
                 case GraphTypeSummary.abundance_comparison:
                     return GraphTypeSummary.abundance;
+                case GraphTypeSummary.histogram:
+                    return GraphTypeSummary.histogram2d;
+                case GraphTypeSummary.histogram2d:
+                    return GraphTypeSummary.histogram;
                 default:
                     return GraphTypeSummary.invalid;
             }

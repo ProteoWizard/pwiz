@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Controls.Graphs
                              new DefaultStateProvider();
 
             Type = type;
-            Text = Controller.Text + @" - " + Type.CustomToString();
+            Text = Controller.Text + @" - " + Type.CustomToString(Controller);
             Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
 
             // Clear ZedGraph's default pane so the control paints blank until
@@ -606,7 +606,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public static class Extensions
     {
-        public static string CustomToString(this GraphTypeSummary type)
+        public static string CustomToString(this GraphTypeSummary type, GraphSummary.IController controller = null)
         {
             switch (type)
             {
@@ -627,9 +627,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.run_to_run_regression:
                     return GraphsResources.Extensions_CustomToString_Run_To_Run_Regression;
                 case GraphTypeSummary.histogram:
-                    return GraphsResources.Extensions_CustomToString_Histogram;
+                    return controller is AreaGraphController
+                        ? GraphsResources.Extensions_CustomToString_CV_Histogram
+                        : GraphsResources.Extensions_CustomToString_Histogram;
                 case GraphTypeSummary.histogram2d:
-                    return GraphsResources.Extensions_CustomToString__2D_Histogram;
+                    return controller is AreaGraphController
+                        ? GraphsResources.Extensions_CustomToString_CV_2D_Histogram
+                        : GraphsResources.Extensions_CustomToString__2D_Histogram;
                 case GraphTypeSummary.detections:
                     return GraphsResources.Extensions_CustomToString_Detections_Replicates;
                 case GraphTypeSummary.detections_histogram:
