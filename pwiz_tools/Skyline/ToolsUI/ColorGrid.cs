@@ -185,26 +185,27 @@ namespace pwiz.Skyline.ToolsUI
             };
             dataGridViewColors.Columns.Insert(colorCol.Index + 1, col);
             _useColorColumnIndex = col.Index;
-            dataGridViewColors.CellValueChanged += dataGridViewColors_CellValueChanged;
+            dataGridViewColors.CellContentClick += dataGridViewColors_UseColorCellContentClick;
         }
 
-        private void dataGridViewColors_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        private void dataGridViewColors_UseColorCellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex != _useColorColumnIndex || e.RowIndex < 0 || e.RowIndex >= bindingSource1.Count)
                 return;
-
-            var newValue = (bool)(dataGridViewColors[e.ColumnIndex, e.RowIndex].Value ?? false);
+            // CellContentClick fires BEFORE the checkbox toggles, so Value is still the old (pre-click) state.
+            // If the checkbox is about to become checked and no color is set, assign gray now — before
+            // CurrentCellDirtyStateChanged calls CommitEdit and the binding round-trips through UseColor.get.
+            var currentlyChecked = (bool)(dataGridViewColors[e.ColumnIndex, e.RowIndex].Value ?? false);
             var colorRow = (T)bindingSource1[e.RowIndex];
-
-            if (newValue && colorRow.Color == Color.Empty)
+            if (!currentlyChecked && colorRow.Color == Color.Empty)
             {
-                // User checked "Use color" but no color is set yet — open the picker
                 colorPickerDlg.Color = Color.Red;
                 if (colorPickerDlg.ShowDialog() == DialogResult.OK)
                     changeRowColor(e.RowIndex, colorPickerDlg.Color);
-                else
-                    bindingSource1.ResetItem(e.RowIndex); // revert checkbox to unchecked
             }
+            // Commit manually here — CurrentCellDirtyStateChanged skips this column to prevent
+            // auto-commit while the color picker modal is open (which would revert the checkbox).
+            dataGridViewColors.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
 
         private void dataGridViewColors_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
@@ -244,7 +245,10 @@ namespace pwiz.Skyline.ToolsUI
         private void dataGridViewColors_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
             // https://stackoverflow.com/questions/5652957/what-event-catches-a-change-of-value-in-a-combobox-in-a-datagridviewcell
-            if (!(dataGridViewColors.CurrentCell is DataGridViewTextBoxCell) && dataGridViewColors.IsCurrentCellDirty)
+            // Skip the UseColor checkbox — it is committed manually in CellContentClick, after the color picker closes.
+            if (!(dataGridViewColors.CurrentCell is DataGridViewTextBoxCell) &&
+                dataGridViewColors.IsCurrentCellDirty &&
+                dataGridViewColors.CurrentCell?.ColumnIndex != _useColorColumnIndex)
                 dataGridViewColors.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
 
