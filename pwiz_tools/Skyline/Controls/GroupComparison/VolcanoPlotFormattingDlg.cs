@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private readonly DataGridViewComboBoxColumn _symbolCombo;
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
+        private readonly Font _symbolDropdownFont = new Font(SystemFonts.DefaultFont.FontFamily, 16f);
 
         public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
             FoldChangeRow[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph) : 
@@ -169,6 +170,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             regexColorRowGrid1.AddUseColorColumn(GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Color);
             regexColorRowGrid1.Owner = this;
+            regexColorRowGrid1.DataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
             if (!hasFoldChangeResults)
             {
                 Text = GroupComparisonResources.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
@@ -214,8 +216,35 @@ namespace pwiz.Skyline.Controls.GroupComparison
         protected override void OnHandleDestroyed(EventArgs e)
         {
             _bindingList.ListChanged -= _bindingList_ListChanged;
-
+            _symbolDropdownFont.Dispose();
             base.OnHandleDestroyed(e);
+        }
+
+        private void DataGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            if (((DataGridView)sender).CurrentCell?.ColumnIndex != _symbolCombo.Index)
+                return;
+            if (e.Control is ComboBox cb)
+            {
+                cb.DrawMode = DrawMode.OwnerDrawFixed;
+                cb.ItemHeight = _symbolDropdownFont.Height + 4;
+                cb.DrawItem -= SymbolCombo_DrawItem;
+                cb.DrawItem += SymbolCombo_DrawItem;
+            }
+        }
+
+        private void SymbolCombo_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0)
+                return;
+            e.DrawBackground();
+            var cb = (ComboBox)sender;
+            var text = cb.GetItemText(cb.Items[e.Index]);
+            // Use normal font for the closed-state display (edit portion); large font for dropdown items.
+            var isEditPortion = (e.State & DrawItemState.ComboBoxEdit) != 0;
+            var font = isEditPortion ? cb.Font : _symbolDropdownFont;
+            TextRenderer.DrawText(e.Graphics, text, font, e.Bounds, SystemColors.WindowText,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
         }
 
         public void Select(IdentityPath identityPath)
