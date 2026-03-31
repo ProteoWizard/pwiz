@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brian Pratt <bspratt .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -194,18 +194,13 @@ namespace pwiz.Skyline.Model.DocSettings
             var ionMobility = GetIonMobilityFilter(ion, mz, ionMobilityFunctionsProvider);
             if (ionMobility != null)
             {
-                double? ionMobilityWindowWidth;
+                IonMobilityWindow ionMobilityWindow = IonMobilityWindow.EMPTY;
                 if (ionMobility.IonMobility.HasValue)
                 {
-                    ionMobilityWindowWidth =
-                        FilterWindowWidthCalculator.WidthAt(ionMobility.IonMobility.Mobility.Value, ionMobilityRangeMax);
+                    ionMobilityWindow =
+                        FilterWindowWidthCalculator.WidthAt(ionMobility.IonMobility, ionMobilityRangeMax);
                 }
-                else
-                {
-                    ionMobilityWindowWidth = null;
-                }
-
-                return IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityWindowWidth);
+                return IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityWindow);
             }
             else
             {
@@ -446,23 +441,29 @@ namespace pwiz.Skyline.Model.DocSettings
         // For Agilent "high resolution demultiplexing"
         [Track] public double FixedWindowWidth { get; private set; }
 
-        public double WidthAt(double ionMobility, double ionMobilityMax)
+        public IonMobilityWindow WidthAt(IonMobilityValue ionMobilityValue, double ionMobilityMax)
         {
+            if (ionMobilityValue.Units == eIonMobilityUnits.compensation_V)
+            {
+                return IonMobilityWindow.EMPTY; // Expect exact value match for FAIMS
+            }
+
+            var ionMobility = ionMobilityValue.Mobility.Value;
             switch (WindowWidthMode)
             {
                 case IonMobilityWindowWidthType.resolving_power:
-                    return Math.Abs((ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) *
-                                    ionMobility); // 2.0*ionMobility/resolvingPower
+                    return IonMobilityWindow.FromWidthAndOffset((ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) *
+                                                                ionMobility, null); // 2.0*ionMobility/resolvingPower
                 case IonMobilityWindowWidthType.fixed_width:
-                    return FixedWindowWidth;
+                    return IonMobilityWindow.FromWidthAndOffset(FixedWindowWidth, null);
                 case IonMobilityWindowWidthType.linear_range:
                     Assume.IsTrue(ionMobilityMax != 0,
                         @"Expected ionMobilityMax value != 0 for linear range ion mobility window calculation");
-                    return PeakWidthAtIonMobilityValueZero +
-                           Math.Abs(ionMobility * (PeakWidthAtIonMobilityValueMax - PeakWidthAtIonMobilityValueZero) /
-                                    ionMobilityMax);
+                    return IonMobilityWindow.FromWidthAndOffset(PeakWidthAtIonMobilityValueZero +
+                                                                Math.Abs(ionMobility * (PeakWidthAtIonMobilityValueMax - PeakWidthAtIonMobilityValueZero) /
+                                                                         ionMobilityMax), null);
             }
-            return 0;
+            return IonMobilityWindow.EMPTY;
         }
 
         public string Validate()
@@ -876,11 +877,86 @@ namespace pwiz.Skyline.Model.DocSettings
 
 
     /// <summary>
+    /// Width and offset from center of the ion mobility window used to filter scans,
+    /// </summary>
+    public class IonMobilityWindow : Immutable, IEquatable<IonMobilityWindow>, IComparable
+    {
+        public static IonMobilityWindow EMPTY = new IonMobilityWindow(null, null);
+        public static bool IsNullOrEmpty(IonMobilityWindow imWindow) => imWindow == null || imWindow.IsEmpty;
+        public bool IsEmpty => (Width??0) == 0;
+
+        private IonMobilityWindow(double? width, double? offset)
+        {
+            Width = width;
+            Offset = offset;
+        }
+
+        public static IonMobilityWindow FromWidthAndOffset(double? width, double? offset)
+        {
+            if ((width ?? 0) == 0)
+            {
+                return EMPTY;
+            }
+
+            return new IonMobilityWindow(width, offset);
+        }
+
+        public void GetBounds(double? ionMobilityPeak, out double boundsLow, out double boundsHigh)
+        {
+            var w = Width ?? 0;
+            boundsLow = (ionMobilityPeak??0) - (w / 2) + (Offset??0);
+            boundsHigh = boundsLow + w;
+        }
+
+        public bool Contains(double im, double ionMobilityPeak)
+        {
+            if (IsEmpty)
+                return false;
+            var low = ionMobilityPeak - (Width/2) + (Offset??0);
+            if (im < low)
+                return false;
+            if (im > low + Width) 
+                return false;
+            return true;
+        }
+
+        public double? Width { get; private set; }
+        public double? Offset { get; private set; }
+
+        public bool Equals(IonMobilityWindow other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Width.Equals(other.Width) && Offset.Equals(other.Offset);
+        }
+
+        public int CompareTo(IonMobilityWindow other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+            var widthComparison = Nullable.Compare(Width, other.Width);
+            return widthComparison != 0 ? widthComparison : Nullable.Compare(Offset, other.Offset);
+        }
+
+        public int CompareTo(object obj)
+        {
+            return CompareTo(obj as IonMobilityWindow);
+        }
+
+        public override string ToString()
+        {
+            return $@"({Width:F04}:{Offset:F04})";
+        }
+
+
+    }
+
+    /// <summary>
     /// Contains the ion mobility and window used to filter scans
     /// </summary>
     public class IonMobilityFilter : Immutable, IComparable, IEquatable<IonMobilityFilter>
     {
-        public static readonly IonMobilityFilter EMPTY = new IonMobilityFilter(IonMobilityAndCCS.EMPTY, null);
+        public static readonly IonMobilityFilter EMPTY = new IonMobilityFilter(IonMobilityAndCCS.EMPTY, IonMobilityWindow.EMPTY);
         public const double DoubleToIntEpsilon = 0.001; // Allow for a little rounding in double<->int conversion in SONAR use
 
         public static bool IsNullOrEmpty(IonMobilityFilter filter)
@@ -889,46 +965,58 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static IonMobilityFilter GetIonMobilityFilter(IonMobilityAndCCS ionMobility,
-            double? ionMobilityExtractionWindowWidth)
+            IonMobilityWindow ionMobilityExtractionWindow)
+        {
+            if (ionMobility.IsEmpty || // Nothing to filter
+                (IonMobilityWindow.IsNullOrEmpty(ionMobilityExtractionWindow) && 
+                 ionMobility.IonMobility.Units != eIonMobilityUnits.compensation_V)) // No window set, or zero window (OL for FAIMS)
+            {
+                return EMPTY;
+            }
+            return new IonMobilityFilter(ionMobility, ionMobilityExtractionWindow);
+        }
+
+        public static IonMobilityFilter GetIonMobilityFilter(IonMobilityAndCCS ionMobility,
+            double? ionMobilityExtractionWindowWidth, double? ionMobilityExtractionWindowOffset)
         {
             if (ionMobility.IsEmpty || // Nothing to filter
                 (ionMobilityExtractionWindowWidth??0) == 0) // No window set, or zero window
             {
                 return EMPTY;
             }
-            return new IonMobilityFilter(ionMobility,
-                ionMobilityExtractionWindowWidth);
+
+            var window =
+                IonMobilityWindow.FromWidthAndOffset(ionMobilityExtractionWindowWidth, ionMobilityExtractionWindowOffset);
+            return new IonMobilityFilter(ionMobility, window);
         }
 
         public static IonMobilityFilter GetIonMobilityFilter(double? ionMobility,
             eIonMobilityUnits units,
-            double? ionMobilityExtractionWindowWidth,
+            IonMobilityWindow ionMobilityExtractionWindow,
             double? collisionalCrossSectionSqA)
         {
             if (!ionMobility.HasValue
-                && !ionMobilityExtractionWindowWidth.HasValue)
+                && IonMobilityWindow.IsNullOrEmpty(ionMobilityExtractionWindow))
             {
                 return EMPTY;
             }
             return new IonMobilityFilter(IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, units, collisionalCrossSectionSqA, null),
-                ionMobilityExtractionWindowWidth);
+                ionMobilityExtractionWindow);
         }
 
         public static IonMobilityFilter GetIonMobilityFilter(IonMobilityValue ionMobility,
-            double? ionMobilityExtractionWindowWidth,
+            IonMobilityWindow ionMobilityExtractionWindow,
             double? collisionalCrossSectionSqA)
         {
             if (IonMobilityValue.IsNullOrEmpty(ionMobility)
-                && !ionMobilityExtractionWindowWidth.HasValue)
+                || IonMobilityWindow.IsNullOrEmpty(ionMobilityExtractionWindow))
             {
                 return EMPTY;
             }
             return new IonMobilityFilter(IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, collisionalCrossSectionSqA, null),
-                ionMobilityExtractionWindowWidth);
+                ionMobilityExtractionWindow);
         }
-
-
-
+        
         public IonMobilityFilter ChangeIonMobilityUnits(eIonMobilityUnits units)
         {
             if (Equals(IonMobilityUnits, units))
@@ -943,25 +1031,47 @@ namespace pwiz.Skyline.Model.DocSettings
                 ChangeProp(ImClone(this), im => im.IonMobilityAndCCS = IonMobilityAndCCS.ChangeCollisionalCrossSection(ccs));
         }
 
+        public void GetBounds(out double low, out double high)
+        {
+            IonMobilityWindow.GetBounds(IonMobility.Mobility, out low, out high);
+        }
+
+        public void GetBounds(out double? low, out double? high)
+        {
+            if (IsEmpty)
+            {
+                low = null;
+                high = null;
+            }
+            else
+            {
+                GetBounds(out double dLow, out double dHigh);
+                low = dLow;
+                high = dHigh;
+            }
+        }
+
         private IonMobilityFilter(IonMobilityAndCCS ionMobilityAndCCS,
-            double? ionMobilityExtractionWindowWidth)
+            IonMobilityWindow ionMobilityExtractionWindow)
         {
             IonMobilityAndCCS = ionMobilityAndCCS;
-            IonMobilityExtractionWindowWidth = ionMobilityExtractionWindowWidth;
+            IonMobilityWindow = ionMobilityExtractionWindow ?? IonMobilityWindow.EMPTY;
             // Sanity check for SONAR filters - bounds should evaluate as integers since they're bins
             Assume.IsTrue(IonMobilityUnits != eIonMobilityUnits.waters_sonar || 
                           !IonMobilityAndCCS.HasCollisionalCrossSection &&
                           !IonMobilityAndCCS.HighEnergyIonMobilityValueOffset.HasValue &&
-                          Math.Abs(IonMobilityAndCCS.IonMobility.Mobility.Value - 0.5 * IonMobilityExtractionWindowWidth.Value - 
-                                   Math.Round(IonMobilityAndCCS.IonMobility.Mobility.Value - 0.5 * IonMobilityExtractionWindowWidth.Value)) <= DoubleToIntEpsilon,
+                          Math.Abs((IonMobilityWindow.Width??0) - 
+                              Math.Round(IonMobilityWindow.Width??0)) <= DoubleToIntEpsilon*1.01,
                 @"unexpected values for Waters SONAR filtering");
         }
         public IonMobilityAndCCS IonMobilityAndCCS { get; private set; }
         public double? CollisionalCrossSectionSqA => IonMobilityAndCCS.CollisionalCrossSectionSqA; // The CCS value used to get the ion mobility, if known
-        public double? IonMobilityExtractionWindowWidth { get; private set; }
+        public IonMobilityWindow IonMobilityWindow { get; private set; }
+
         public double? HighEnergyIonMobilityOffset => IonMobilityAndCCS.HighEnergyIonMobilityValueOffset; // As in Waters MsE, where ions move a bit faster due to more energetic collision in the high energy part of the cycle
         public eIonMobilityUnits IonMobilityUnits { get { return HasIonMobilityValue ? IonMobilityAndCCS.IonMobility.Units : eIonMobilityUnits.none; } }
         public IonMobilityValue IonMobility => IonMobilityAndCCS.IonMobility;
+        public double? IonMobilityExtractionWindowWidth => IonMobilityWindow.Width;
         public bool HasIonMobilityValue => IonMobilityAndCCS.HasIonMobilityValue;
         public bool IsEmpty { get { return IonMobilityAndCCS.IsEmpty; } }
 
@@ -980,8 +1090,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 // may be in the process of re-import with a different filter setting.
                 if (!Equals(other.IonMobilityAndCCS, val.IonMobilityAndCCS))
                     val = ChangeProp(ImClone(val), im => im.IonMobilityAndCCS = other.IonMobilityAndCCS);
-                if (!Equals(other.IonMobilityExtractionWindowWidth, IonMobilityExtractionWindowWidth))
-                    val = ChangeProp(ImClone(this), im => im.IonMobilityExtractionWindowWidth = other.IonMobilityExtractionWindowWidth);
+                if (!Equals(other.IonMobilityWindow, IonMobilityWindow))
+                    val = ChangeProp(ImClone(this), im => im.IonMobilityWindow = other.IonMobilityWindow);
             }
             else
             {
@@ -996,8 +1106,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    val = ChangeProp(ImClone(val), im => im.IonMobilityAndCCS = IonMobilityAndCCS.ChangeHighEnergyIonMobilityOffset(otherHighEnergyIonMobility- IonMobilityAndCCS.IonMobility.Mobility.Value));
             }
 
-            if (!IonMobilityExtractionWindowWidth.HasValue && other.IonMobilityExtractionWindowWidth.HasValue)
-                val = ChangeProp(ImClone(this), im => im.IonMobilityExtractionWindowWidth = other.IonMobilityExtractionWindowWidth);
+            if (IonMobilityWindow == null && other.IonMobilityWindow != null)
+                val = ChangeProp(ImClone(this), im => im.IonMobilityWindow = other.IonMobilityWindow);
             if (other.CollisionalCrossSectionSqA.HasValue && !Equals(other.CollisionalCrossSectionSqA, val.CollisionalCrossSectionSqA))
                 val = ChangeProp(ImClone(val), im => im.IonMobilityAndCCS = IonMobilityAndCCS.ChangeCollisionalCrossSection(other.CollisionalCrossSectionSqA));
             return val;
@@ -1022,11 +1132,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (IsEmpty)
                 return true; // It doesn't NOT include it
-            var im = useHighEnergyOffset ? val - HighEnergyIonMobilityOffset : val;
-            var lo = IonMobilityAndCCS.IonMobility.Mobility.Value - IonMobilityExtractionWindowWidth.Value / 2;
-            if (im < lo)
-                return false;
-            return im <= lo + IonMobilityExtractionWindowWidth.Value;
+            var im = useHighEnergyOffset ? val - (HighEnergyIonMobilityOffset??0) : val;
+            return IonMobilityWindow.Contains(im, IonMobilityAndCCS.IonMobility.Mobility??0);
         }
 
         public static string IonMobilityUnitsL10NString(eIonMobilityUnits units)
@@ -1163,7 +1270,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 if ((IonMobilityAndCCS.HighEnergyIonMobilityValueOffset ?? 0) != 0)
                     writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_high_energy_offset, IonMobilityAndCCS.HighEnergyIonMobilityValueOffset);
             }
-            writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window, IonMobilityExtractionWindowWidth);
+            if (!IonMobilityWindow.IsNullOrEmpty(IonMobilityWindow))
+            {
+                if (skylineVersion < DocumentFormat.ION_MOBILITY_WINDOW_BOUNDS)
+                {
+                    writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window, IonMobilityWindow.Width);
+                }
+            }
             writer.WriteAttributeNullable(DocumentSerializer.ATTR.ccs, CollisionalCrossSectionSqA);
             writer.WriteAttributeString(DocumentSerializer.ATTR.ion_mobility_type, IonMobilityUnits.ToString());
         }
@@ -1179,14 +1292,18 @@ namespace pwiz.Skyline.Model.DocSettings
                 var highEnergyOffset = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ion_mobility_high_energy_offset);
                 var im = IonMobilityAndCCS.GetIonMobilityAndCCS(driftTime.Value,
                     eIonMobilityUnits.drift_time_msec, ccs, highEnergyOffset);
-                ionMobilityFilter = GetIonMobilityFilter(im , driftTimeWindow);
+                var imWindow = driftTimeWindow.HasValue
+                    ? IonMobilityWindow.FromWidthAndOffset(driftTimeWindow.Value, 0)
+                    : null;
+                ionMobilityFilter = GetIonMobilityFilter(im , imWindow);
             }
             else
             {
                 var ionMobility = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ion_mobility);
                 if (ionMobility.HasValue)
                 {
-                    var ionMobilityWindow = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ion_mobility_window);
+                    var ionMobilityWindowWidth = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ion_mobility_window);
+                    var ionMobilityWindowOffset = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ion_mobility_window_offset);
                     string ionMobilityUnitsString = reader.GetAttribute(DocumentSerializer.ATTR.ion_mobility_type);
                     var ionMobilityUnits = string.IsNullOrEmpty(ionMobilityUnitsString) ? eIonMobilityUnits.unknown :
                         SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(ionMobilityUnitsString);
@@ -1194,6 +1311,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     var im = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(
                         ionMobility.Value,
                         ionMobilityUnits), ccs, highEnergyOffset);
+                    var ionMobilityWindow = IonMobilityWindow.FromWidthAndOffset(ionMobilityWindowWidth, ionMobilityWindowOffset);
                     ionMobilityFilter = GetIonMobilityFilter(im, ionMobilityWindow);
                 }
             }
@@ -1211,7 +1329,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(IonMobilityAndCCS, other.IonMobilityAndCCS) && Nullable.Equals(IonMobilityExtractionWindowWidth, other.IonMobilityExtractionWindowWidth);
+            return Equals(IonMobilityAndCCS, other.IonMobilityAndCCS) && Equals(IonMobilityWindow, other.IonMobilityWindow);
         }
 
         public static bool operator ==(IonMobilityFilter left, IonMobilityFilter right)
@@ -1228,7 +1346,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                return ((IonMobilityAndCCS != null ? IonMobilityAndCCS.GetHashCode() : 0) * 397) ^ IonMobilityExtractionWindowWidth.GetHashCode();
+                return ((IonMobilityAndCCS != null ? IonMobilityAndCCS.GetHashCode() : 0) * 397) ^ IonMobilityWindow.GetHashCode();
             }
         }
 
@@ -1243,7 +1361,7 @@ namespace pwiz.Skyline.Model.DocSettings
             val = Nullable.Compare(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA);
             if (val != 0)
                 return val;
-            return Nullable.Compare(IonMobilityExtractionWindowWidth, other.IonMobilityExtractionWindowWidth);
+            return IonMobilityWindow.CompareTo(other.IonMobilityWindow);
         }
 
         public override string ToString()

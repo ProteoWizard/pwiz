@@ -1819,8 +1819,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 new[]
                 {
                     new ChromTransition(chromData.Mz, 0,
-                        (float) (ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility ?? 0),
-                        (float) (ionMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
+                        ionMobilityFilter,
                         ChromSource.unknown, transitionChromInfo.OptimizationStep),
                 }, peaks, TimeIntensitiesGroup.Singleton(timeIntensities));
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);

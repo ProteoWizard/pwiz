@@ -410,8 +410,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return new ChromTransition(Key.Product,
                 Key.ExtractionWidth,
-                (float) (Key.IonMobilityFilter.IonMobility.Mobility ?? 0),
-                (float) (Key.IonMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
+                Key.IonMobilityFilter,
                 Key.Source,
                 (short) OptimizationStep);
         }

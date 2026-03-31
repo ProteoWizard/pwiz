@@ -1362,7 +1362,7 @@ namespace pwiz.Skyline.Model.Results
                         IonMobilityValue.GetIonMobilityValue(tranInfo.IonMobilityValue, units) :
                         ionMobilityValue.ChangeIonMobility(tranInfo.IonMobilityValue); // This likely doesn't change from transition to transition, so reuse it
                     ChromKey key = new ChromKey(GetChromatogramGroupId(groupInfo),
-                        groupInfo.Precursor, IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue, tranInfo.IonMobilityExtractionWidth, groupInfo.CollisionalCrossSection), product, 
+                        groupInfo.Precursor, IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue, tranInfo.IonMobilityWindow, groupInfo.CollisionalCrossSection), product, 
                         tranInfo.OptimizationStep, 0, extractionWidth, source, groupInfo.Extractor);
 
                     int id = i;

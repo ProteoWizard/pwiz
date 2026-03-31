@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check ion mobility details display
             var expectedIonMobility =
-                IonMobilityFilter.GetIonMobilityFilter(3.48, eIonMobilityUnits.drift_time_msec, 0, null);
+                IonMobilityFilter.GetIonMobilityFilter(3.48, eIonMobilityUnits.drift_time_msec, null, null);
             for (var loop = 0; loop < 4; loop++)
             {
                 bool wantCCS = loop < 2;

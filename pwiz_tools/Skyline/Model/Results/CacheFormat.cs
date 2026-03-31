@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -44,7 +44,8 @@ namespace pwiz.Skyline.Model.Results
         Seventeen = 17, // Adds optimization step to ChromTransition
         Eighteen = 18, // Add Spectrum Class Filter to ChromGroupHeaderInfo
         Nineteen = 19, // Add max peak score to ChromGroupHeaderInfo
-        CURRENT = Nineteen,
+        Twenty = 20, // Add ion mobility window bounds to ChromTransition
+        CURRENT = Twenty,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]

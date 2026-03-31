@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestData.Results
                                 var centerDriftTime = document2.Settings.GetIonMobilityFilter(
                                     pep, nodeGroup, null, im, null, driftTimeMax);
                                 AssertEx.AreEqual(3.86124, centerDriftTime.IonMobilityAndCCS.IonMobility.Mobility.Value, .0001, testModeStr + " ccs");
-                                AssertEx.AreEqual(expectedWidth, centerDriftTime.IonMobilityExtractionWindowWidth.Value, .0001, testModeStr + " dtWidth");
+                                AssertEx.AreEqual(expectedWidth, centerDriftTime.IonMobilityWindow.Width, .0001, testModeStr + " dtWidth");
                             }
                         }
                     }

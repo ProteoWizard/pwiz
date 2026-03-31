@@ -274,6 +274,9 @@ maximum intensity for the precursor.</value>
   <data name="ChromatogramIonMobility">
     <value>Center of the ion mobility window that was used to filter spectra during chromatogram extraction</value>
   </data>
+  <data name="ChromatogramIonMobilityExtractionOffset">
+    <value>Offset from nominal ion mobility of the window that was used to filter spectra during chromatogram extraction</value>
+  </data>
   <data name="ChromatogramIonMobilityExtractionWidth">
     <value>Full width of the ion mobility window that was used to filter spectra during chromatogram extraction</value>
   </data>
@@ -624,6 +627,9 @@ between the peak integration boundaries.</value>
   </data>
   <data name="IonMobilityWindow">
     <value>Width of the ion mobility filter window used in chromatogram extraction.</value>
+  </data>
+  <data name="IonMobilityWindowOffset">
+    <value>Offset of the ion mobility filter window used in chromatogram extraction from nominal ion mobility.</value>
   </data>
   <data name="IonName">
     <value>The name of the precursor.</value>

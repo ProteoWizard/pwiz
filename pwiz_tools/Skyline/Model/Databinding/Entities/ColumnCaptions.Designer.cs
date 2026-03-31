@@ -556,6 +556,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Ion Mobility Extraction Offset.
+        /// </summary>
+        public static string ChromatogramIonMobilityExtractionOffset {
+            get {
+                return ResourceManager.GetString("ChromatogramIonMobilityExtractionOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chromatogram Ion Mobility Extraction Width.
         /// </summary>
         public static string ChromatogramIonMobilityExtractionWidth {
@@ -1551,6 +1560,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string IonMobilityWindow {
             get {
                 return ResourceManager.GetString("IonMobilityWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Window Offset.
+        /// </summary>
+        public static string IonMobilityWindowOffset {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowOffset", resourceCulture);
             }
         }
         

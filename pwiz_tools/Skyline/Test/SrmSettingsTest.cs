@@ -1211,8 +1211,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, pred.FilterWindowWidthCalculator.FixedWindowWidth);
             Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
             var driftTimeMax = 5000;
-            var driftTime = 2000;
-            Assert.AreEqual(40, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
+            var driftTime = IonMobilityValue.GetIonMobilityValue(2000, eIonMobilityUnits.drift_time_msec);
+            Assert.AreEqual(40, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax).Width.Value);
             CheckIonMobilitySettingsBackwardCompatibility(predictorV19.Replace("100", "0")); // Contains no trained values, so resolving power isn't checked
 
             // Check using drift time predictor with only measured drift times, and no high energy drift offset
@@ -1249,7 +1249,7 @@ namespace pwiz.SkylineTest
                 "<predict_drift_time name=\"test\" peak_width_calc_type=\"resolving_power\" resolving_power=\"100\" width_at_dt_zero=\"20\" width_at_dt_max=\"500\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" /> </predict_drift_time>";
             pred = CheckIonMobilitySettingsBackwardCompatibility(predictor3);
             Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred.FilterWindowWidthCalculator.WindowWidthMode);
-            Assert.AreEqual(40, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
+            Assert.AreEqual(40, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax).Width.Value);
             var widthAtDt0 = 20;
             var widthAtDtMax = 500;
             Assert.AreEqual(widthAtDt0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
@@ -1266,7 +1266,8 @@ namespace pwiz.SkylineTest
             CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("20", "-1"),Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
             CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("500", "-1"), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
             // ReSharper disable once PossibleLossOfFraction
-            Assert.AreEqual(widthAtDt0 + (widthAtDtMax-widthAtDt0)*driftTime/driftTimeMax, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
+            Assert.AreEqual(widthAtDt0 + (widthAtDtMax-widthAtDt0)*driftTime.Mobility/driftTimeMax, 
+                pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax).Width.Value);
 
             // Test ability to roundtrip to older doc formats
             var xml = SETTINGS_V19.Replace("</peptide_prediction>", predictor3 + "\n</peptide_prediction>");

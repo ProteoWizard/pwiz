@@ -775,17 +775,19 @@ namespace pwiz.Skyline.Model.Results
     }
 
     /// <summary>
-    /// Version 8 of ChromTransition adds ion mobility information
+    /// This is maintained as the current version of ChromTransition - any new members must be added to the end
+    /// You will need to update ChromTransition.GetStructSize() if you add to this
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack=4)]
     public struct ChromTransition
     {
         private double _product;
         private float _extractionWidth;
-        private float _ionMobilityValue;
-        private float _ionMobilityExtractionWidth;
+        private float _ionMobilityValue; // Nominal ion mobility value
+        private float _ionMobilityExtractionWidth; // Width of the ion mobility range used (see also _ionMobilityExtractionOffset)
         private ushort _flagBits;
         private short _optimizationStep;
+        private float _ionMobilityExtractionOffset; // Ion mobility extraction window is not necessarily centered on the nominal IM value
         [Flags]
         public enum FlagValues
         {
@@ -799,13 +801,14 @@ namespace pwiz.Skyline.Model.Results
 
         const FlagValues MASK_SOURCE = (FlagValues) 0x03;
 
-        public ChromTransition(double product, float extractionWidth, float ionMobilityValue,
-            float ionMobilityExtractionWidth, ChromSource source, short optimizationStep) : this()
+        public ChromTransition(double product, float extractionWidth, IonMobilityFilter ionMobilityValue,
+            ChromSource source, short optimizationStep) : this()
         {
             _product = product;
             _extractionWidth = extractionWidth;
-            _ionMobilityValue = ionMobilityValue;
-            _ionMobilityExtractionWidth = ionMobilityExtractionWidth;
+            _ionMobilityValue = (float)(ionMobilityValue.IonMobility.Mobility??0);
+            _ionMobilityExtractionWidth = (float) (ionMobilityValue.IonMobilityWindow.Width??0);
+            _ionMobilityExtractionOffset = (float) (ionMobilityValue.IonMobilityWindow.Offset ??0);
             Source = source;
             _optimizationStep = optimizationStep;
         }
@@ -816,19 +819,19 @@ namespace pwiz.Skyline.Model.Results
             // the next version of this struct in the May, 2014. So considering the source unknown
             // for these older files seems safest, since we are moving to paying attention to the
             // source for chromatogram to transition matching.
-            chromTransition5.ExtractionWidth, 0, 0, ChromSource.unknown, 0)
+            chromTransition5.ExtractionWidth, IonMobilityFilter.EMPTY, ChromSource.unknown, 0)
         {            
         }
 
         public ChromTransition(ChromTransition4 chromTransition4)
-            : this(chromTransition4.Product, 0, 0, 0, ChromSource.unknown, 0)
+            : this(chromTransition4.Product, 0, IonMobilityFilter.EMPTY, ChromSource.unknown, 0)
         {
         }
 
         public double Product { get { return _product; } }
         public float ExtractionWidth { get { return _extractionWidth; }}  // In m/z
         public float IonMobilityValue { get { return _ionMobilityValue; } } // Units depend on ion mobility type
-        public float IonMobilityExtractionWidth { get { return _ionMobilityExtractionWidth; } } // Units depend on ion mobility type
+        public IonMobilityWindow IonMobilityWindow { get { return IonMobilityWindow.FromWidthAndOffset(_ionMobilityExtractionWidth, _ionMobilityExtractionOffset); } } // Units depend on ion mobility type
         public short OptimizationStep { get { return _optimizationStep; } }
 
         public FlagValues Flags
@@ -938,7 +941,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 16;
             }
-            return 24;
+            if (cacheFormatVersion <= CacheFormatVersion.Eighteen)
+            {
+                return 24;
+            }
+            return 28; // As of version 19
         }
 
         //
@@ -2728,7 +2735,12 @@ namespace pwiz.Skyline.Model.Results
 
         public double? IonMobilityExtractionWidth
         {
-            get { return FloatToNullableDouble(ChromTransition.IonMobilityExtractionWidth); }
+            get { return ChromTransition.IonMobilityWindow.Width; }
+        }
+
+        public double? IonMobilityExtractionOffset
+        {
+            get { return ChromTransition.IonMobilityWindow.Offset; }
         }
 
         public eIonMobilityUnits IonMobilityUnits
@@ -2741,7 +2753,7 @@ namespace pwiz.Skyline.Model.Results
             return IonMobilityFilter.GetIonMobilityFilter(
                 IonMobilityAndCCS.GetIonMobilityAndCCS(
                     IonMobilityValue.GetIonMobilityValue(IonMobility, Header.IonMobilityUnits),
-                    _groupInfo.PrecursorCollisionalCrossSection, null), IonMobilityExtractionWidth);
+                    _groupInfo.PrecursorCollisionalCrossSection, null), ChromTransition.IonMobilityWindow);
         }
 
         private static double? FloatToNullableDouble(float value)

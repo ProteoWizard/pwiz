@@ -662,7 +662,11 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteAttributeNullable(ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
                 writer.WriteAttributeNullable(ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);
-                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityWindow);
+                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityWindow.Width);
+                if (SkylineVersion.SrmDocumentVersion >= DocumentFormat.ION_MOBILITY_WINDOW_BOUNDS)
+                {
+                    writer.WriteAttributeNullable(ATTR.ion_mobility_window_offset, chromInfo.IonMobilityInfo.IonMobilityWindow.Offset);
+                }
                 writer.WriteAttribute(ATTR.ion_mobility_type, chromInfo.IonMobilityInfo.IonMobilityUnits.ToString());
             }
             writer.WriteAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
@@ -913,8 +917,23 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
                 writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobility.CollisionalCrossSectionSqA);
-                writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
-                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
+                var ionMobilityExtractionWindow = chromInfo.IonMobility.IonMobilityWindow;
+                if (!IonMobilityWindow.IsNullOrEmpty(ionMobilityExtractionWindow))
+                {
+                    if (SkylineVersion.SrmDocumentVersion < DocumentFormat.ION_MOBILITY_WINDOW_BOUNDS)
+                    {
+                        // No sense of window that's not centered on IM, so declare window center as IM even if window was actually assymetrical
+                        var centerIM = (ionMobilityExtractionWindow.Offset??0) + chromInfo.IonMobility.IonMobility.Mobility;
+                        writer.WriteAttribute(ATTR.ion_mobility, centerIM);
+                        writer.WriteAttribute(ATTR.ion_mobility_window, ionMobilityExtractionWindow.Width);
+                    }
+                    else
+                    {
+                        writer.WriteAttribute(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
+                        writer.WriteAttribute(ATTR.ion_mobility_window, ionMobilityExtractionWindow.Width);
+                        writer.WriteAttributeNullable(ATTR.ion_mobility_window_offset, ionMobilityExtractionWindow.Offset);
+                    }
+                }
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);
                 writer.WriteAttribute(ATTR.background, chromInfo.BackgroundArea);
                 writer.WriteAttribute(ATTR.height, chromInfo.Height);

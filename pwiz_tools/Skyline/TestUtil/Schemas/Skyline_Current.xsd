@@ -1942,6 +1942,7 @@
         <xs:attribute name="ion_mobility_ms1" type="xs:double" use="optional"/>
         <xs:attribute name="ion_mobility_fragment" type="xs:double" use="optional"/>
         <xs:attribute name="ion_mobility_window" type="xs:double" use="optional"/>
+        <xs:attribute name="ion_mobility_window_offset" type="xs:double" use="optional"/>
         <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>
         <xs:attribute name="fwhm" type="xs:double"/>
         <xs:attribute name="area" type="xs:double"/>
@@ -1974,6 +1975,7 @@
         <xs:attribute name="ccs" type="xs:double" use="optional"/>
         <xs:attribute name="ion_mobility" type="xs:double" use="optional"/>
         <xs:attribute name="ion_mobility_window" type="xs:double" use="optional"/>
+        <xs:attribute name="ion_mobility_window_offset" type="xs:double" use="optional"/>
         <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>
         <xs:attribute name="fwhm" type="xs:double"/>
         <xs:attribute name="fwhm_degenerate" type="xs:boolean"/>

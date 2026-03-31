@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -125,6 +125,13 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat ELECTRON_IONIZATION = VERSION_25_11; // Adds Electron Ionization support
         public static readonly DocumentFormat VERSION_26_1 = new DocumentFormat(26.1); // Release format
         public static readonly DocumentFormat CURRENT = VERSION_26_1;
+
+
+        public static readonly DocumentFormat VERSION_26_1 = new DocumentFormat(26.1); // Release format
+        public static readonly DocumentFormat VERSION_26_2 = new DocumentFormat(26.21);
+        public static readonly DocumentFormat ION_MOBILITY_WINDOW_BOUNDS = VERSION_26_2; // ion mobility filter windows are not assumed symmetrical
+
+        public static readonly DocumentFormat CURRENT = VERSION_26_2;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

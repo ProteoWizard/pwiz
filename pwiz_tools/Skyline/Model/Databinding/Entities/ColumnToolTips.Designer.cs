@@ -568,6 +568,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Offset from nominal ion mobility of the window that was used to filter spectra during chromatogram extraction.
+        /// </summary>
+        public static string ChromatogramIonMobilityExtractionOffset {
+            get {
+                return ResourceManager.GetString("ChromatogramIonMobilityExtractionOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Full width of the ion mobility window that was used to filter spectra during chromatogram extraction.
         /// </summary>
         public static string ChromatogramIonMobilityExtractionWidth {
@@ -1580,6 +1589,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string IonMobilityWindow {
             get {
                 return ResourceManager.GetString("IonMobilityWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Offset of the ion mobility filter window used in chromatogram extraction from nominal ion mobility..
+        /// </summary>
+        public static string IonMobilityWindowOffset {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowOffset", resourceCulture);
             }
         }
         

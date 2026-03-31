@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model
             CollisionalCrossSection = null,
             IonMobilityMS1 = null,
             IonMobilityFragment = null,
-            IonMobilityWindow = null,
+            IonMobilityWindow = IonMobilityWindow.EMPTY,
             IonMobilityUnits = eIonMobilityUnits.none
         };
         private TransitionGroupIonMobilityInfo() { } // This is private to force use of GetTransitionGroupIonMobilityInfo (for memory efficiency, as most uses are empty)
@@ -42,9 +42,9 @@ namespace pwiz.Skyline.Model
 
         // Serialization support
         public static TransitionGroupIonMobilityInfo GetTransitionGroupIonMobilityInfo(double? ccs, double? ionMobilityMS1,
-            double? ionMobilityFragment, double? ionMobilityWindow, eIonMobilityUnits units)
+            double? ionMobilityFragment, IonMobilityWindow ionMobilityWindow, eIonMobilityUnits units)
         {
-            if (ccs.HasValue || ionMobilityMS1.HasValue || ionMobilityFragment.HasValue || ionMobilityWindow.HasValue)
+            if (ccs.HasValue || ionMobilityMS1.HasValue || ionMobilityFragment.HasValue || !IonMobilityWindow.IsNullOrEmpty(ionMobilityWindow))
                 return new TransitionGroupIonMobilityInfo()
                 {
                     CollisionalCrossSection = ccs,
@@ -60,19 +60,19 @@ namespace pwiz.Skyline.Model
         public double? CollisionalCrossSection { get; private set; }
         public double? IonMobilityMS1 { get; private set; }
         public double? IonMobilityFragment { get; private set; }
-        public double? IonMobilityWindow { get; private set; }
+        public IonMobilityWindow IonMobilityWindow { get; private set; }
 
         public bool IsEmpty { get { return Equals(EMPTY); } }
 
         public double? DriftTimeMS1 { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityMS1 : null; } }
         public double? DriftTimeFragment { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityFragment : null; } }
-        public double? DriftTimeWindow { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityWindow : null; } }
+        public double? DriftTimeWindow { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityWindow.Width : (double?)null; } }
 
 
         // Used by TransitionGroupDocNode.AddChromInfo to aggregate ion mobility information from all transitions
         public TransitionGroupIonMobilityInfo AddIonMobilityFilterInfo(IonMobilityFilter ionMobility, bool isMs1)
         {
-            var val = Equals(ionMobility.IonMobilityExtractionWindowWidth, IonMobilityWindow) ? this : ChangeProp(ImClone(this), im => im.IonMobilityWindow = ionMobility.IonMobilityExtractionWindowWidth);
+            var val = Equals(ionMobility.IonMobilityWindow, IonMobilityWindow) ? this : ChangeProp(ImClone(this), im => im.IonMobilityWindow = ionMobility.IonMobilityWindow);
 
             if (ionMobility.IonMobility.Units != IonMobilityUnits &&  ionMobility.IonMobility.Units != eIonMobilityUnits.none)
                val = ChangeProp(ImClone(val), im => im.IonMobilityUnits = ionMobility.IonMobility.Units);

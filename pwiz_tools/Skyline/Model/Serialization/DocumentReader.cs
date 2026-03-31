@@ -109,15 +109,16 @@ namespace pwiz.Skyline.Model.Serialization
             float? ccs = reader.GetNullableFloatAttribute(ATTR.ccs);
             float? ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.drift_time_ms1);
             float? ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.drift_time_fragment);
-            float? ionMobilityWindow = reader.GetNullableFloatAttribute(ATTR.drift_time_window);
+            float? ionMobilityWindowWidth = reader.GetNullableFloatAttribute(ATTR.drift_time_window);
             var ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
-            if (!ionMobilityWindow.HasValue)
+            if (!ionMobilityWindowWidth.HasValue)
             {
                 ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
-                ionMobilityWindow = reader.GetNullableFloatAttribute(ATTR.ion_mobility_window);
+                ionMobilityWindowWidth = reader.GetNullableFloatAttribute(ATTR.ion_mobility_window);
                 ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.ion_mobility_ms1);
                 ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.ion_mobility_fragment);
             }
+            float? ionMobilityWindowOffset = reader.GetNullableFloatAttribute(ATTR.ion_mobility_window_offset); // As of 23.11, IM windows are not assumed centered on peak IM
             float? fwhm = reader.GetNullableFloatAttribute(ATTR.fwhm);
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
@@ -144,7 +145,9 @@ namespace pwiz.Skyline.Model.Serialization
             // from the child transitions.  Otherwise inconsistency is possible.
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const UserSet userSet = UserSet.FALSE;
-            var transitionGroupIonMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
+            var ionMobilityWindow =
+                IonMobilityWindow.FromWidthAndOffset(ionMobilityWindowWidth, ionMobilityWindowOffset);
+            var ionMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
                 ionMobilityMS1, ionMobilityFragment, ionMobilityWindow, ionMobilityUnits);
             var transitionGroupChromInfo = new TransitionGroupChromInfo(fileInfo.FileId,
                 optimizationStep,
@@ -152,7 +155,7 @@ namespace pwiz.Skyline.Model.Serialization
                 retentionTime,
                 startTime,
                 endTime,
-                transitionGroupIonMobilityInfo,
+                ionMobilityInfo,
                 fwhm,
                 area, null, null, // Ms1 and Fragment values calculated later
                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
@@ -504,8 +507,10 @@ namespace pwiz.Skyline.Model.Serialization
                     ionMobility = reader.GetNullableDoubleAttribute(ATTR.ion_mobility);
                     ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
                 }
-                double? ionMobilityWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
-                                            reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window);
+                var ionMobilityWindow = IonMobilityWindow.FromWidthAndOffset(
+                    reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
+                    reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window),
+                    reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window_offset));
                 double? ccs = reader.GetNullableDoubleAttribute(ATTR.ccs);
                 var annotations = Annotations.EMPTY;
                 bool forcedIntegration = reader.GetBoolAttribute(ATTR.forced_integration, false);
