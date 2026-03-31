@@ -431,7 +431,9 @@
     <Compile Include="Controls\Graphs\Calibration\CalibrationGraphControl.Designer.cs">
       <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AreaAbundanceComparisonGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaRelativeAbundanceGraphPane.cs" />
+    <Compile Include="Controls\Graphs\BoxPlotBarItem.cs" />
     <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
@@ -1443,6 +1445,7 @@
     </Compile>
     <Compile Include="Controls\Graphs\MassErrorHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\MassErrorHistogramGraphPane.cs" />
+    <Compile Include="Controls\Graphs\MassErrorBinFinder.cs" />
     <Compile Include="Controls\Graphs\PeptideAnnotationPairFinder.cs" />
     <Compile Include="Controls\Graphs\PeptidesAndTransitionGroups.cs" />
     <Compile Include="Controls\Graphs\RunToRunRegressionToolbar.cs">
@@ -1497,6 +1500,7 @@
     <Compile Include="Controls\Graphs\AsyncRenderControl.Designer.cs">
       <DependentUpon>AsyncRenderControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\CursorTrackingTip.cs" />
     <Compile Include="Controls\Graphs\GraphFullScan.cs">
       <SubType>Form</SubType>
     </Compile>
