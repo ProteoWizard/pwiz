@@ -881,6 +881,24 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CV 2D Histogram.
+        /// </summary>
+        public static string Extensions_CustomToString_CV_2D_Histogram {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_CV_2D_Histogram", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to CV Histogram.
+        /// </summary>
+        public static string Extensions_CustomToString_CV_Histogram {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_CV_Histogram", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Histogram.
         /// </summary>
         public static string Extensions_CustomToString_Detections_Histogram {
