@@ -44,7 +44,12 @@ namespace pwiz.Skyline.Model.GroupComparison
         Diamond,
         XCross,
         Plus,
-        Star
+        Star,
+        OutlineCircle,
+        OutlineSquare,
+        OutlineTriangle,
+        OutlineTriangleDown,
+        OutlineDiamond
     }
 
     [XmlRoot(XML_ROOT)]

@@ -206,6 +206,7 @@ namespace pwiz.Skyline.ToolsUI
             // Commit manually here — CurrentCellDirtyStateChanged skips this column to prevent
             // auto-commit while the color picker modal is open (which would revert the checkbox).
             dataGridViewColors.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            bindingSource1.ResetItem(e.RowIndex);
         }
 
         private void dataGridViewColors_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)

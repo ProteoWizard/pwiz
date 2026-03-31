@@ -467,7 +467,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var symbolType = DotPlotUtil.PointSymbolToSymbolType(pointSymbol);
 
             LineItem lineItem;
-            if (DotPlotUtil.HasOutline(pointSymbol))
+            if (DotPlotUtil.IsOutlineVariant(pointSymbol))
+            {
+                lineItem = new LineItem(null, points, Color.Black, symbolType)
+                {
+                    Line = { IsVisible = false },
+                    Symbol = { Border = { IsVisible = true, Color = color }, Fill = new Fill(Color.Transparent), Size = size, IsAntiAlias = true }
+                };
+            }
+            else if (DotPlotUtil.HasOutline(pointSymbol))
             {
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {

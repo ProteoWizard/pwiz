@@ -73,6 +73,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     return SymbolType.Plus;
                 case PointSymbol.Star:
                     return SymbolType.Star;
+                case PointSymbol.OutlineCircle:
+                    return SymbolType.Circle;
+                case PointSymbol.OutlineSquare:
+                    return SymbolType.Square;
+                case PointSymbol.OutlineTriangle:
+                    return SymbolType.Triangle;
+                case PointSymbol.OutlineTriangleDown:
+                    return SymbolType.TriangleDown;
+                case PointSymbol.OutlineDiamond:
+                    return SymbolType.Diamond;
                 default:
                     return SymbolType.Circle;
             }
@@ -83,6 +93,13 @@ namespace pwiz.Skyline.Controls.Graphs
             return pointSymbol == PointSymbol.Circle || pointSymbol == PointSymbol.Square ||
                    pointSymbol == PointSymbol.Triangle || pointSymbol == PointSymbol.TriangleDown ||
                    pointSymbol == PointSymbol.Diamond;
+        }
+
+        public static bool IsOutlineVariant(PointSymbol pointSymbol)
+        {
+            return pointSymbol == PointSymbol.OutlineCircle || pointSymbol == PointSymbol.OutlineSquare ||
+                   pointSymbol == PointSymbol.OutlineTriangle || pointSymbol == PointSymbol.OutlineTriangleDown ||
+                   pointSymbol == PointSymbol.OutlineDiamond;
         }
 
         public static float PointSizeToFloat(PointSize pointSize)

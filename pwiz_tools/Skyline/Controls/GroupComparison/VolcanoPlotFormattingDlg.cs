@@ -122,7 +122,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 new PointSymbolStringPair(PointSymbol.Plus,
                     GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus),
                 new PointSymbolStringPair(PointSymbol.Star,
-                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star)
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star),
+                new PointSymbolStringPair(PointSymbol.OutlineCircle,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineCircle),
+                new PointSymbolStringPair(PointSymbol.OutlineSquare,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineSquare),
+                new PointSymbolStringPair(PointSymbol.OutlineTriangle,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangle),
+                new PointSymbolStringPair(PointSymbol.OutlineTriangleDown,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangleDown),
+                new PointSymbolStringPair(PointSymbol.OutlineDiamond,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineDiamond)
             );
             regexColorRowGrid1.Columns.Insert(6, _symbolCombo);
 
