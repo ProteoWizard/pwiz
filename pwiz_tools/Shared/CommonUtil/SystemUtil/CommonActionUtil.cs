@@ -24,19 +24,28 @@ namespace pwiz.Common.SystemUtil
 {
     public static class CommonActionUtil
     {
-        public static Thread RunAsync(Action action)
+        /// <summary>
+        /// Callback for reporting unhandled exceptions from background threads.
+        /// Set by the host application (e.g. Skyline sets this to Program.ReportException)
+        /// to surface exceptions in the UI instead of swallowing them.
+        /// </summary>
+        public static Action<Exception> ExceptionReporter { get; set; }
+
+        public static Thread RunAsync(Action action, string threadName = null)
         {
-            var thread = new Thread(() => RunNow(action));
+            var thread = new Thread(() => RunNow(action, threadName));
             thread.Start();
             return thread;
         }
 
-        public static void RunNow(Action action)
+        public static void RunNow(Action action, string threadName = null)
         {
             try
             {
+                LocalizationHelper.InitThread(threadName);
                 action();
             }
+            catch (OperationCanceledException) {}
             catch (Exception e)
             {
                 HandleException(e);
@@ -46,10 +55,12 @@ namespace pwiz.Common.SystemUtil
         public static void HandleException(Exception exception)
         {
             if (exception == null)
-            {
                 return;
-            }
-            Messages.WriteAsyncDebugMessage(@"Unhandled Exception: {0}", exception); // N.B. see TraceWarningListener for output details
+
+            if (ExceptionReporter != null)
+                ExceptionReporter(exception);
+            else
+                Messages.WriteAsyncDebugMessage(@"Unhandled Exception: {0}", exception); // N.B. see TraceWarningListener for output details
         }
 
         /// <summary>
@@ -82,7 +93,7 @@ namespace pwiz.Common.SystemUtil
 
             try
             {
-                control.BeginInvoke(action);    // TIME-OF-USE
+                control.BeginInvoke(new Action(() => RunNow(action)));    // TIME-OF-USE
                 return true;
             }
             catch (Exception)

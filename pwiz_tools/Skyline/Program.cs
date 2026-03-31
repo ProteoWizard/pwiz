@@ -173,6 +173,7 @@ namespace pwiz.Skyline
 
             CommonApplicationSettings.ProgramName = Name;
             CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
+            CommonActionUtil.ExceptionReporter = ReportException;
             SkylineRemoteAccountServices.Initialize();
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
