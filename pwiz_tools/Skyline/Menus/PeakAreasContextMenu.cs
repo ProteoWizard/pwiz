@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Menus
             {
                 SkylineWindow.EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SkylineWindow.SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
             }
-            else if (graphType != GraphTypeSummary.abundance)
+            else if (graphType != GraphTypeSummary.abundance && graphType != GraphTypeSummary.abundance_comparison)
             {
                 AddTransitionContextMenu(menuStrip, iInsert++);
             }
@@ -193,9 +193,17 @@ namespace pwiz.Skyline.Menus
                 menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
                 menuStrip.Items.Insert(iInsert++, removeAboveCVCutoffToolStripMenuItem);
             }
+            else if (graphType == GraphTypeSummary.abundance_comparison)
+            {
+                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert,
+                    Settings.Default.AbundanceComparisonGroupByAnnotation,
+                    GroupByAbundanceComparisonMenuItem);
+                menuStrip.Items.Insert(iInsert++, relativeAbundanceLogScaleContextMenuItem);
+                relativeAbundanceLogScaleContextMenuItem.Checked = set.RelativeAbundanceLogScale;
+            }
             else
             {
-                if (graphType == GraphTypeSummary.peptide || graphType == GraphTypeSummary.abundance || !string.IsNullOrEmpty(Settings.Default.GroupByReplicateAnnotation))
+                if (graphType == GraphTypeSummary.peptide || !string.IsNullOrEmpty(Settings.Default.GroupByReplicateAnnotation))
                 {
                     menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
                     peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
@@ -235,16 +243,24 @@ namespace pwiz.Skyline.Menus
                 }
             }
 
-            menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
-            if(graphType != GraphTypeSummary.abundance)
-                menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
+            if (graphType == GraphTypeSummary.abundance)
+            {
+                menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
+                menuStrip.Items.Insert(iInsert++, relativeAbundanceFormattingMenuItem);
+                menuStrip.Items.Insert(iInsert, new ToolStripSeparator());
+            }
+            else if (graphType == GraphTypeSummary.abundance_comparison)
+            {
+                menuStrip.Items.Insert(iInsert, new ToolStripSeparator());
+            }
             else
             {
-                menuStrip.Items.Insert(iInsert++, relativeAbundanceFormattingMenuItem);
+                menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
+                menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
+                menuStrip.Items.Insert(iInsert, new ToolStripSeparator());
             }
-            menuStrip.Items.Insert(iInsert, new ToolStripSeparator());
 
-            if (!isHistogram && graphType != GraphTypeSummary.abundance)
+            if (!isHistogram && graphType != GraphTypeSummary.abundance && graphType != GraphTypeSummary.abundance_comparison)
             {
                 var isotopeLabelType = graphSummary.GraphPaneFromPoint(mousePt) != null
                     ? graphSummary.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
@@ -381,6 +397,7 @@ namespace pwiz.Skyline.Menus
             areaReplicateComparisonContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.replicate);
             areaPeptideComparisonContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.peptide);
             areaRelativeAbundanceContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance);
+            areaAbundanceComparisonContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance_comparison);
             areaCVHistogramContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
@@ -393,6 +410,9 @@ namespace pwiz.Skyline.Menus
 
         private void areaRelativeAbundanceMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();
+
+        private void areaAbundanceComparisonMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.ShowPeakAreaAbundanceComparisonGraph();
 
         private void areaCVHistogramToolStripMenuItem1_Click(object sender, EventArgs e)
             => SkylineWindow.ShowPeakAreaCVHistogram();
@@ -510,6 +530,22 @@ namespace pwiz.Skyline.Menus
             SkylineWindow.UpdateSummaryGraphs();
         }
 
+        private ToolStripMenuItem GroupByAbundanceComparisonMenuItem(ReplicateValue replicateValue, bool isChecked)
+        {
+            return new ToolStripMenuItem(
+                replicateValue?.Title ?? groupByReplicateContextMenuItem.Text, null,
+                (sender, eventArgs) => GroupByAbundanceComparisonAnnotation(replicateValue))
+            {
+                Checked = isChecked
+            };
+        }
+
+        private void GroupByAbundanceComparisonAnnotation(ReplicateValue replicateValue)
+        {
+            Settings.Default.AbundanceComparisonGroupByAnnotation = replicateValue?.ToPersistedString();
+            SkylineWindow.UpdateSummaryGraphs();
+        }
+
         #region Moved from SkylineGraphs
 
         private void ShowRelativeAbundanceFormatting()
@@ -526,8 +562,7 @@ namespace pwiz.Skyline.Menus
 
         private void ShowRelativeAbundanceLogScale(bool isChecked)
         {
-            Settings.Default.RelativeAbundanceLogScale = isChecked;
-            SkylineWindow.UpdateRelativeAbundanceGraphs();
+            SkylineWindow.ShowRelativeAbundanceLogScale(isChecked);
         }
 
         private void EnableAreaCVLogScale(bool enabled)

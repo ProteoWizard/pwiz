@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Menus
             this.areaReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaRelativeAbundanceContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaAbundanceComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -88,6 +89,7 @@ namespace pwiz.Skyline.Menus
             this.areaReplicateComparisonContextMenuItem,
             this.areaPeptideComparisonContextMenuItem,
             this.areaRelativeAbundanceContextMenuItem,
+            this.areaAbundanceComparisonContextMenuItem,
             this.areaCVHistogramContextMenuItem,
             this.areaCVHistogram2DContextMenuItem});
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
@@ -111,9 +113,15 @@ namespace pwiz.Skyline.Menus
             this.areaRelativeAbundanceContextMenuItem.Name = "areaRelativeAbundanceContextMenuItem";
             resources.ApplyResources(this.areaRelativeAbundanceContextMenuItem, "areaRelativeAbundanceContextMenuItem");
             this.areaRelativeAbundanceContextMenuItem.Click += new System.EventHandler(this.areaRelativeAbundanceMenuItem_Click);
-            // 
+            //
+            // areaAbundanceComparisonContextMenuItem
+            //
+            this.areaAbundanceComparisonContextMenuItem.Name = "areaAbundanceComparisonContextMenuItem";
+            resources.ApplyResources(this.areaAbundanceComparisonContextMenuItem, "areaAbundanceComparisonContextMenuItem");
+            this.areaAbundanceComparisonContextMenuItem.Click += new System.EventHandler(this.areaAbundanceComparisonMenuItem_Click);
+            //
             // areaCVHistogramContextMenuItem
-            // 
+            //
             this.areaCVHistogramContextMenuItem.Name = "areaCVHistogramContextMenuItem";
             resources.ApplyResources(this.areaCVHistogramContextMenuItem, "areaCVHistogramContextMenuItem");
             this.areaCVHistogramContextMenuItem.Click += new System.EventHandler(this.areaCVHistogramToolStripMenuItem1_Click);
@@ -392,6 +400,7 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaRelativeAbundanceContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaAbundanceComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogramContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogram2DContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem graphTypeToolStripMenuItem;

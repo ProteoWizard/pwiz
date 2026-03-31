@@ -183,7 +183,16 @@ namespace pwiz.Skyline.Menus
 
         protected int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
-            ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
+            return AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert,
+                SummaryReplicateGraphPane.GroupByReplicateAnnotation,
+                GroupByReplicateAnnotationMenuItem);
+        }
+
+        protected int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert,
+            string currentGroupByAnnotation,
+            Func<ReplicateValue, bool, ToolStripMenuItem> getGroupByMenuItem)
+        {
+            var currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, currentGroupByAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
 
             var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
@@ -211,12 +220,12 @@ namespace pwiz.Skyline.Menus
             {
                 menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
                 groupReplicatesByContextMenuItem.DropDownItems.Clear();
-                groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked = currentGroupBy == null;
+                groupReplicatesByContextMenuItem.DropDownItems.Add(
+                    getGroupByMenuItem(null, currentGroupBy == null));
                 foreach (var replicateValue in groupByValues)
                 {
                     groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, Equals(replicateValue, currentGroupBy)));
+                        .Add(getGroupByMenuItem(replicateValue, Equals(replicateValue, currentGroupBy)));
                 }
             }
             return iInsert;
@@ -224,6 +233,11 @@ namespace pwiz.Skyline.Menus
 
         private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, bool isChecked)
         {
+            if (replicateValue == null)
+            {
+                groupByReplicateContextMenuItem.Checked = isChecked;
+                return groupByReplicateContextMenuItem;
+            }
             return new ToolStripMenuItem(replicateValue.Title, null,
                 (sender, eventArgs) => SkylineWindow.GroupByReplicateValue(replicateValue))
             {

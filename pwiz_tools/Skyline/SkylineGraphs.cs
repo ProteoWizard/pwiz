@@ -2327,19 +2327,17 @@ namespace pwiz.Skyline
                     graphs.Insert(0, graph);
                     graph.Controller.GraphTypes.Insert(0, type);
 
-                    if (graphs.Count > 1 && !graphs[1].IsHidden)
-                        graph.Show(FindPane(graphs[1]), null);
-                    else
-                        graph.Activate();
+                    graph.Activate();
                 }
                 else
                 {
                     if (graph == null)
                         graph = createGraph(type);
 
-                    if (graphs.Count > 1 && !graphs[1].IsHidden)
+                    var colocateWith = FindColocateGraph(graphs, graph, type);
+                    if (colocateWith != null)
                     {
-                        graph.Show(FindPane(graphs[1]), null);
+                        graph.Show(FindPane(colocateWith), null);
                     }
                     else
                     {
@@ -2352,6 +2350,41 @@ namespace pwiz.Skyline
             else if (graph != null)
             {
                 graph.Hide();
+            }
+        }
+
+        /// <summary>
+        /// Find the best visible graph to co-locate with. For types that have a
+        /// defined sibling (e.g., abundance and abundance_comparison), only co-locate
+        /// with the sibling -- if it's not visible, float independently so the two
+        /// abundance graphs end up in their own shared pane. For types without a
+        /// sibling, fall back to the first visible graph in the list.
+        /// </summary>
+        private static GraphSummary FindColocateGraph(List<GraphSummary> graphs, GraphSummary exclude, GraphTypeSummary type)
+        {
+            var siblingType = GetSiblingGraphType(type);
+            if (siblingType != GraphTypeSummary.invalid)
+            {
+                // Only co-locate with the sibling, not with unrelated graphs
+                return graphs.FirstOrDefault(g => g != exclude && g.Type == siblingType && !g.IsHidden);
+            }
+            return graphs.FirstOrDefault(g => g != exclude && !g.IsHidden);
+        }
+
+        private static GraphTypeSummary GetSiblingGraphType(GraphTypeSummary type)
+        {
+            switch (type)
+            {
+                case GraphTypeSummary.abundance:
+                    return GraphTypeSummary.abundance_comparison;
+                case GraphTypeSummary.abundance_comparison:
+                    return GraphTypeSummary.abundance;
+                case GraphTypeSummary.histogram:
+                    return GraphTypeSummary.histogram2d;
+                case GraphTypeSummary.histogram2d:
+                    return GraphTypeSummary.histogram;
+                default:
+                    return GraphTypeSummary.invalid;
             }
         }
 
@@ -2974,7 +3007,6 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-
         public void SetAreaGraphDisplayType(AreaGraphDisplayType displayType)
         {
             AreaGraphController.GraphDisplayType = displayType;
@@ -3044,6 +3076,7 @@ namespace pwiz.Skyline
 
         // AddReplicateOrderAndGroupByMenuItems, ReplicateOrderContextMenuItem, ReplicateGroupByContextMenuItem,
         // GroupByReplicateAnnotationMenuItem, OrderByReplicateAnnotationMenuItem moved to ContextMenuControl
+        // GroupByAbundanceComparisonMenuItem moved to PeakAreasContextMenu
 
         public void RemoveAboveCVCutoff(GraphSummary graphSummary)
         {
@@ -3177,6 +3210,13 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
+        public void ShowPeakAreaAbundanceComparisonGraph()
+        {
+            Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.abundance_comparison);
+            ShowGraphPeakArea(true, GraphTypeSummary.abundance_comparison);
+            UpdatePeakAreaGraph();
+        }
+
         public void ShowPeakAreaCVHistogram()
         {
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.histogram);
@@ -3201,6 +3241,14 @@ namespace pwiz.Skyline
         }
 
         // groupByReplicateContextMenuItem_Click moved to ContextMenuControl
+
+        public void GroupByAbundanceComparisonAnnotation(string annotationName)
+        {
+            Settings.Default.AbundanceComparisonGroupByAnnotation = annotationName != null
+                ? DocumentAnnotations.ANNOTATION_PREFIX + annotationName
+                : null;
+            UpdateSummaryGraphs();
+        }
 
         public void GroupByReplicateValue(ReplicateValue replicateValue)
         {
@@ -3332,9 +3380,16 @@ namespace pwiz.Skyline
             _listGraphPeakArea.ForEach(g => g.UpdateUI());
         }
 
+        public void ShowRelativeAbundanceLogScale(bool logScale)
+        {
+            Settings.Default.RelativeAbundanceLogScale = logScale;
+            UpdateRelativeAbundanceGraphs();
+        }
+
         public void UpdateRelativeAbundanceGraphs()
         {
-            _listGraphPeakArea.FindAll(g => g.Type == GraphTypeSummary.abundance).ForEach(g => g.UpdateUI());
+            _listGraphPeakArea.FindAll(g => g.Type == GraphTypeSummary.abundance ||
+                                            g.Type == GraphTypeSummary.abundance_comparison).ForEach(g => g.UpdateUI());
         }
         internal void UpdateSummaryGraphs()
         {
