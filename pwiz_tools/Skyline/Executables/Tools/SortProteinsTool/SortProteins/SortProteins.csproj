@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\..\..\SkylineTool\IJsonToolService.cs" Link="IJsonToolService.cs" />
+    <Compile Include="..\..\..\..\SkylineTool\JsonToolConstants.cs" Link="JsonToolConstants.cs" />
+    <Compile Include="..\..\..\..\SkylineTool\JsonToolModels.cs" Link="JsonToolModels.cs" />
+    <Compile Include="..\..\..\..\SkylineTool\SkylineJsonToolClient.cs" Link="SkylineJsonToolClient.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="CommandLine">
       <HintPath>..\lib\CommandLine.dll</HintPath>
     </Reference>

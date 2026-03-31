@@ -1,17 +1,12 @@
 using System.Globalization;
-using System.Text.Json;
 using CsvHelper;
 using CsvHelper.Configuration;
+using SkylineTool;
 
 namespace SortProteins
 {
-    public class ProteinSorter(JsonClient client)
+    public class ProteinSorter(IJsonToolService client)
     {
-        private static readonly JsonSerializerOptions _snakeCaseOptions = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
-        };
-
         public IEnumerable<string> GetProteinLocators(string? orderBy)
         {
             var rows = ReadRows(orderBy).ToList();
@@ -49,7 +44,7 @@ namespace SortProteins
             tempFile = Path.ChangeExtension(tempFile, ".csv");
             try
             {
-                client.Call("ExportReportFromDefinition", definition, tempFile, "invariant");
+                client.ExportReportFromDefinition(definition, tempFile, JsonToolConstants.CULTURE_INVARIANT);
                 var csvText = File.ReadAllText(tempFile);
                 return ParseCsv(csvText, column);
             }
@@ -97,20 +92,13 @@ namespace SortProteins
 
         public void SetProteinOrder(IEnumerable<string> newOrder)
         {
-            client.Call("ReorderElements", [newOrder.ToArray()]);
+            client.ReorderElements(newOrder.ToArray());
         }
 
         private record Row(string Locator)
         {
             public string? TextValue { get; init; }
             public double? NumberValue { get; init; }
-        }
-
-        private class ReportDefinition
-        {
-            public string[]? Select { get; set; }
-            public string? Uimode { get; set; }
-            public string? DataSource { get; set; }
         }
     }
 }

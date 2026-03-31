@@ -1,5 +1,7 @@
+using System.IO.Pipes;
 using CommandLine;
 using JetBrains.Annotations;
+using SkylineTool;
 
 namespace SortProteins;
 
@@ -29,7 +31,11 @@ public static class Program
 
     private static void Run(Options options)
     {
-        using var client = new JsonClient(options.ConnectionName);
+        var pipeName = JsonToolConstants.GetJsonPipeName(options.ConnectionName);
+        var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut);
+        pipe.Connect(5000);
+        pipe.ReadMode = PipeTransmissionMode.Message;
+        using var client = new SkylineJsonToolClient(pipe);
         var proteinSorter = new ProteinSorter(client);
         var locators = proteinSorter.GetProteinLocators(options.OrderBy);
         if (options.Random)
