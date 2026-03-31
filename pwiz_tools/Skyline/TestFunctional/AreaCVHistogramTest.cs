@@ -206,6 +206,43 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(pane.HasToolbar);
             AssertDataCorrect(pane, statsStartIndex++);
 
+            // Verify Copy Data output for 2D histogram produces clean 3-column format
+            if (typeof(T) == typeof(AreaCVHistogram2DGraphPane))
+            {
+                RunUI(() =>
+                {
+                    var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(graph.GraphControl.MasterPane);
+                    AssertEx.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
+                    AssertEx.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
+                    var dataFrame = graphData.Panes[0].DataFrames[0];
+                    AssertEx.AreEqual(3, dataFrame.ColumnCount, "Heatmap Copy Data should have 3 columns");
+                    var info2D = (IAreaCVHistogramInfo)pane;
+                    AssertEx.AreEqual(info2D.Items, dataFrame.RowCount, "Row count should match heatmap point count");
+
+                    // Verify column headers match expected axis labels
+                    var headers = dataFrame.GetColumnHeaders();
+                    AssertEx.AreEqual(GraphsResources.AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area, headers[0, 0]?.ToString());
+                    AssertEx.AreEqual(GraphsResources.AreaCVHistogram2DGraphPane_UpdateGraph_CV + @" (%)", headers[0, 1]?.ToString());
+                    AssertEx.AreEqual(GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Frequency, headers[0, 2]?.ToString());
+
+                    // Spot-check that values are non-negative
+                    foreach (var i in new[] { 0, dataFrame.RowCount / 2, dataFrame.RowCount - 1 })
+                    {
+                        var row = dataFrame.GetRow(i);
+                        AssertEx.AreEqual(3, row.Length);
+                        AssertEx.IsTrue((double)row[0] >= 0, "Log10 Mean Area should be non-negative");
+                        AssertEx.IsTrue((double)row[1] >= 0, "CV should be non-negative");
+                        AssertEx.IsTrue((double)row[2] >= 1, "Frequency should be at least 1");
+                    }
+
+                    var row44 = dataFrame.GetRow(44);
+                    AssertEx.AreEqual(5.44999, (double)row44[0], 0.0001);
+                    AssertEx.AreEqual(42, (double)row44[1]);
+                    AssertEx.AreEqual(2, (double)row44[2]);
+
+                });
+            }
+
             var histogramInfo = (IAreaCVHistogramInfo) pane;
             var itemCount = 0;
             // Verify that removing CV's above cutoff works

@@ -169,6 +169,10 @@ namespace pwiz.Skyline.Controls
             {
                 DisplayTip();
             }
+            catch (ObjectDisposedException)
+            {
+                // In case of a tip trying to display while the window is closing, just ignore
+            }
             catch (Exception exception)
             {
                 ExceptionUtil.DisplayOrReportException(this, exception, ControlsResources.NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_);

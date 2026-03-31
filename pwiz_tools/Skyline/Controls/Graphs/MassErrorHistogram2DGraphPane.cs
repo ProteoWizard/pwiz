@@ -25,12 +25,13 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class MassErrorHistogram2DGraphPane : SummaryGraphPane
+    public class MassErrorHistogram2DGraphPane : SummaryGraphPane, IHeatMapDataProvider
     {
         public static ReplicateDisplay ShowReplicate
         {
@@ -296,6 +297,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     Settings.Default.MassErrorHistogram2DLogScale, 5);
             }
         }
+
+        public HeatMapData HeatMapData => Data?._heatMapData;
+        public string HeatMapZAxisName => GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count;
 
         public int GetPoints()
         {

@@ -1781,7 +1781,8 @@ namespace pwiz.Skyline
             public string Text { get; private set;}
         }
 
-        public void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description, ImportFastaInfo importInfo)
+        public void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description,
+            ImportFastaInfo importInfo, bool? keepEmptyProteins = null)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath selectPath = null;
@@ -1857,7 +1858,16 @@ namespace pwiz.Skyline
 
             var entryCreatorList = new AuditLogEntryCreatorList();
             // If importing the FASTA produced any childless proteins
-            docNew = ImportFastaHelper.HandleEmptyPeptideGroups(this, emptyPeptideGroups, docNew, entryCreatorList);
+            if (keepEmptyProteins.HasValue)
+            {
+                // Caller pre-specified the answer - skip the dialog
+                if (!keepEmptyProteins.Value && emptyPeptideGroups > 0)
+                    docNew = ImportPeptideSearch.RemoveProteinsByPeptideCount(docNew, 1);
+            }
+            else
+            {
+                docNew = ImportFastaHelper.HandleEmptyPeptideGroups(this, emptyPeptideGroups, docNew, entryCreatorList);
+            }
             if (docNew == null || Equals(docCurrent, docNew))
                 return;
 

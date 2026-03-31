@@ -245,6 +245,7 @@ pwiz.CommonUtil.pdb
 pwiz_data_cli.dll
 PanoramaClient.dll
 PanoramaClient.pdb
+ParquetNet.dll
 QTFLDebugLog.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 QTFLProtoCS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Remotion.Linq.dll
@@ -275,6 +276,7 @@ sv\ZedGraph.resources.dll
 System.Data.SQLite.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 System.Interactive.Async.dll
 System.Memory.dll
+System.Reflection.Emit.Lightweight.dll
 System.Runtime.Caching.Generic.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 System.Runtime.CompilerServices.Unsafe.dll
 ThermoFisher.CommonCore.Data.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)

@@ -145,7 +145,7 @@
     <value>filesTree</value>
   </data>
   <data name="&gt;&gt;filesTree.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.FilesTree.FilesTree, Skyline-daily, Version=24.1.1.449, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.FilesTree.FilesTree, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;filesTree.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -310,7 +310,7 @@
     <value>ModeUIExtender</value>
   </data>
   <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.449, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;libraryExplorerMenuItem.Name" xml:space="preserve">
     <value>libraryExplorerMenuItem</value>
@@ -388,6 +388,6 @@
     <value>FilesTreeForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=24.1.1.449, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

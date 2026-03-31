@@ -50,12 +50,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!Settings.Default.AutoZoomAllChromatograms)
             {
-                SynchronizedDisplayState = null;
                 SynchronizedZoomState = null;
                 return;
             }
 
-            SynchronizedDisplayState = sender.GetDisplayState();
             SynchronizedZoomState = sender.GetZoomStates();
             foreach (var graphHelper in _graphs.ToList())
             {
@@ -66,7 +64,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public GraphHelper.DisplayState SynchronizedDisplayState { get; private set; }
         public Dictionary<PaneKey, ZoomStateStack> SynchronizedZoomState { get; private set; }
     }
 }

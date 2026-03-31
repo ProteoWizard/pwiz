@@ -395,6 +395,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
                 _dataChanged = false;
             }
+            else
+            {
+                // Only cutoff settings changed; AxisChange() was not called so reposition
+                // the reference lines manually to span the current axis range (issue #4052).
+                AdjustLocations(zedGraphControl.GraphPane);
+            }
 
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
@@ -947,9 +953,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 return null;
             }
 
-            needsUpdate =
-                filter.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)) !=
-                operand.ToString(CultureInfo.CurrentCulture);
+            var operandValue = (filter.Predicate.GetOperandValue(_bindingListSource.ViewInfo.DataSchema, typeof(double)) as PrecisionNumber?)?.ToDouble();
+            needsUpdate = !operand.Equals(operandValue);
 
             return filter;
         }
@@ -964,7 +969,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private RowFilter.ColumnFilter CreateColumnFilter(ColumnId columnId, IFilterOperation filterOp, double operand)
         {
-            var op = FilterPredicate.CreateFilterPredicate(_bindingListSource.ViewInfo.DataSchema,
+            var op = FilterPredicate.Parse(_bindingListSource.ViewInfo.DataSchema,
                 typeof(double), filterOp,
                 operand.ToString(CultureInfo.CurrentCulture));
 

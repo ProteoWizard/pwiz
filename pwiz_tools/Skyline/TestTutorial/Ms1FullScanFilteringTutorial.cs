@@ -738,12 +738,16 @@ namespace pwiz.SkylineTestTutorial
             {
                 // TODO: Figure out why the minimize fails to unlock the .skyd file, if not minimized to current file
                 RunUI(() => SkylineWindow.SaveDocument(minimizedFile));
+                WaitForDocumentLoaded(); // Save As triggers reload of libraries and .skyd from new paths
 
                 var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                 var minimizeResultsDlg = ShowDialog<MinimizeResultsDlg>(manageResultsDlg.MinimizeResults);
                 RunUI(() => minimizeResultsDlg.SetNoiseLimit(true, 2));
                 WaitForConditionUI(() => minimizeResultsDlg.IsComplete);
-                RunUI(() => Assert.AreEqual(55, minimizeResultsDlg.PercentOfTotalCompression));
+                // Compression ratio differs: .wiff files extend to 118.8 min while mzML is truncated
+                // at 50 min (see PreferWiff), so noise trimming removes different proportions
+                int expectedCompression = PreferWiff ? 55 : 36;
+                RunUI(() => Assert.AreEqual(expectedCompression, minimizeResultsDlg.PercentOfTotalCompression, 1));
                 PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form");   // old p. 23
 
                 OkDialog(minimizeResultsDlg, () => minimizeResultsDlg.MinimizeToFile(minimizedFile));

@@ -79,6 +79,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_XML = () => GetPathToFile(DataSourceUtil.EXT_XML);
         public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
+        public static readonly Func<string> PATH_TO_SKYS = () => GetPathToFile(SrmSettingsList.EXT_SETTINGS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
         public static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
         public static readonly Func<string> BOOL_VALUE = () => string.Format(CommandArgUsage.CommandArgs_BOOL_VALUE__0__or__1_, bool.TrueString, bool.FalseString);
@@ -122,8 +123,8 @@ namespace pwiz.Skyline
 
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
-            PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
-            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_XML, PATH_TO_PROTDB
+            PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_SKYS, PATH_TO_TSV,
+            PATH_TO_IMSDB, PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_XML, PATH_TO_PROTDB
         };
 
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
@@ -173,16 +174,27 @@ namespace pwiz.Skyline
 
         public static readonly Argument ARG_IN = new DocArgument(@"in", PATH_TO_DOCUMENT,
             (c, p) => c.SkylineFile = p.ValueFullPath);
+        // Synonym for --in
+        public static readonly Argument ARG_OPEN = new DocArgument(@"open", PATH_TO_DOCUMENT,
+            (c, p) => c.SkylineFile = p.ValueFullPath);
         public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => { c.Saving = true; });
         public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
             (c, p) => { c.SaveFile = p.ValueFullPath; });
+        // Synonym for --out
+        public static readonly Argument ARG_SAVE_AS = new DocArgument(@"save-as", PATH_TO_DOCUMENT,
+            (c, p) => { c.SaveFile = p.ValueFullPath; });
         public static readonly Argument ARG_NEW = new DocArgument(@"new", PATH_TO_DOCUMENT, (c, p) =>
         {
             c.CreateNewFile = true;
-            c.SaveFile = p.ValueFullPath;
-            c.SkylineFile = p.ValueFullPath;
-        });
+            if (!p.IsNameOnly)
+            {
+                c.SaveFile = p.ValueFullPath;
+                c.SkylineFile = p.ValueFullPath;
+            }
+        }) { OptionalValue = true };
+        public static readonly Argument ARG_DISCARD_CHANGES = new Argument(@"discard-changes",
+            (c, p) => c.DiscardChanges = true);
         public static readonly Argument ARG_OVERWRITE = new DocArgument(@"overwrite", (c, p) =>
         {
             c.OverwriteExisting = p.ValueBool;
@@ -221,16 +233,18 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_MEMSTAMP = new Argument(@"memstamp", (c, p) => c._out.IsMemStamped = true);
         public static readonly Argument ARG_LOG_FILE = new Argument(@"log-file", PATH_TO_FILE, (c, p) => c.LogFile = p.Value);
         public static readonly Argument ARG_HELP = new Argument(@"help",
-            new[] { ARG_VALUE_ASCII, ARG_VALUE_NO_BORDERS },
-            (c, p) => c.Usage(p.Value)) {OptionalValue = true};
+            new[] { ARG_VALUE_ASCII, ARG_VALUE_NO_BORDERS, ARG_VALUE_SECTIONS },
+            (c, p) => c.Usage(p.Value)) {OptionalValue = true, HasValueChecking = true};
         public const string ARG_VALUE_ASCII = "ascii";
         public const string ARG_VALUE_NO_BORDERS = "no-borders";
+        public const string ARG_VALUE_SECTIONS = "sections";
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
         public static readonly Argument ARG_VERBOSE_ERRORS =
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
-            ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_NEW, ARG_OVERWRITE, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
+            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_NEW, ARG_OVERWRITE,
+            ARG_DISCARD_CHANGES, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
             ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
             Validate = c => c.ValidateGeneralArgs()
@@ -251,7 +265,8 @@ namespace pwiz.Skyline
         private bool ValidateGeneralArgs()
         {
             // If SkylineFile isn't set and one of the commands that requires --in is called, complain.
-            if (string.IsNullOrEmpty(SkylineFile) && RequiresSkylineDocument && !_isDocumentLoaded)
+            // The argument --in without a file is now allowed and caught later as an error in command-line use (not inside GUI)
+            if (string.IsNullOrEmpty(SkylineFile) && !CreateNewFile && RequiresSkylineDocument && !_isDocumentLoaded)
             {
                 WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_);
                 return false;
@@ -269,6 +284,7 @@ namespace pwiz.Skyline
         public string LogFile { get; private set; }
         public string SkylineFile { get; private set; }
         public bool CreateNewFile { get; private set; }
+        public bool DiscardChanges { get; private set; }
         public bool OverwriteExisting { get; private set; }
         public string SaveFile { get; private set; }
         private bool _saving;
@@ -278,6 +294,19 @@ namespace pwiz.Skyline
             set { _saving = value; }
         }
         public bool SaveSettings { get; private set; }
+        public string SettingsName { get; private set; }
+        public string SettingsAddPath { get; private set; }
+        public bool? ResolveSettingsConflictsBySkipping { get; private set; }
+
+        public bool ApplyingSettings
+        {
+            get { return !string.IsNullOrEmpty(SettingsName); }
+        }
+
+        public bool AddingSettings
+        {
+            get { return !string.IsNullOrEmpty(SettingsAddPath); }
+        }
 
         // For sharing zip file
         public bool SharingZipFile { get; private set; }
@@ -1028,7 +1057,7 @@ namespace pwiz.Skyline
             ARG_REPORT_INVARIANT);
 
         public string ReportName { get; private set; }
-        public char ReportColumnSeparator { get; private set; }
+        public char? ReportColumnSeparator { get; private set; }
         public string ReportFile { get; private set; }
         public bool IsReportInvariant { get; private set; }
         public bool ExportingReport
@@ -1131,6 +1160,19 @@ namespace pwiz.Skyline
         public bool MProphetTargetsOnly { get; private set; }
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
+
+        // For applying and importing document settings presets
+        public static readonly Argument ARG_DOC_SETTINGS_NAME = new DocArgument(@"doc-settings-name", NAME_VALUE,
+            (c, p) => c.SettingsName = p.Value);
+        public static readonly Argument ARG_DOC_SETTINGS_ADD = new Argument(@"doc-settings-add", PATH_TO_SKYS,
+            (c, p) => c.SettingsAddPath = p.ValueFullPath);
+        public static readonly Argument ARG_DOC_SETTINGS_CONFLICT_RESOLUTION = new Argument(@"doc-settings-conflict-resolution",
+            new[] { ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP },
+            (c, p) => c.ResolveSettingsConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP));
+
+        private static readonly ArgumentGroup GROUP_SETTINGS_PRESETS = new ArgumentGroup(
+            () => CommandArgUsage.CommandArgs_GROUP_SETTINGS_PRESETS, false,
+            ARG_DOC_SETTINGS_NAME, ARG_DOC_SETTINGS_ADD, ARG_DOC_SETTINGS_CONFLICT_RESOLUTION);
 
         // For adding annotations
         public static readonly Argument ARG_ADD_ANNOTATIONS_FILE = new DocArgument(@"annotation-file",
@@ -2411,6 +2453,7 @@ namespace pwiz.Skyline
                     GROUP_EXP_GENERAL,
                     GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
+                    GROUP_SETTINGS_PRESETS,
                     GROUP_DOCUMENT_SETTINGS,
                     GROUP_PEPTIDE_SETTINGS,
                     GROUP_TRANSITION_SETTINGS,
@@ -2458,11 +2501,34 @@ namespace pwiz.Skyline
                 if (formatType == ARG_VALUE_ASCII)
                     CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;  // Use invariant culture for ascii output
                 UsageShown = true;
-                foreach (var block in UsageBlocks)
-                    _out.Write(block.ToString(_usageWidth, formatType));
+
+                if (formatType == ARG_VALUE_SECTIONS)
+                {
+                    // List section names only
+                    foreach (var block in SectionGroups)
+                        _out.WriteLine(block.Title);
+                }
+                else if (formatType == null || formatType == ARG_VALUE_ASCII || formatType == ARG_VALUE_NO_BORDERS)
+                {
+                    foreach (var block in UsageBlocks)
+                        _out.Write(block.ToString(_usageWidth, formatType));
+                }
+                else
+                {
+                    // Treat as a section name filter — show matching sections
+                    var group = SectionGroups.FirstOrDefault(
+                        g => g.Title.IndexOf(formatType, StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (group == null)
+                        _out.WriteLine(CommandArgUsage.CommandArgs_Usage_No_help_section_matching___0___found__Use___help_sections_to_list_available_sections_, formatType);
+                    else
+                        _out.Write(group.ToString(_usageWidth, ARG_VALUE_NO_BORDERS));
+                }
             }
             return false;   // End argument processing
         }
+
+        private IEnumerable<ArgumentGroup> SectionGroups =>
+            UsageBlocks.OfType<ArgumentGroup>().Where(g => g.IncludeInUsage);
 
         private int _usageWidth = 78;
 
@@ -2477,7 +2543,6 @@ namespace pwiz.Skyline
             _out = output;
             _isDocumentLoaded = isDocumentLoaded;
 
-            ReportColumnSeparator = TextUtil.CsvSeparator;
             MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             ImportOptimizeType = OPT_NONE;
             ExportOptimizeType = OPT_NONE;
@@ -2699,7 +2764,7 @@ namespace pwiz.Skyline
             public string AppliesTo { get; set; }
             public string Description
             {
-                get { return CommandArgUsage.ResourceManager.GetString("_" + Name.Replace('-', '_')); }
+                get { return CommandArgUsage.ResourceManager.GetString(@"_" + Name.Replace('-', '_')); }
             }
             public Func<string> ValueExample { get; private set; }
             public string[] Values
@@ -2732,6 +2797,11 @@ namespace pwiz.Skyline
             public static string operator +(Argument arg, string value)
             {
                 return arg.GetArgumentTextWithValue(value);
+            }
+
+            public static implicit operator string(Argument arg)
+            {
+                return arg.ArgumentText;
             }
 
             public string ArgumentDescription
@@ -3255,7 +3325,7 @@ namespace pwiz.Skyline
 
             // Regular expression for an argument: a hyphen surrounded by zero or more word characters
             // (i.e. letters, numbers or UnicodeCategory.ConnectorPunctuation) or hyphens
-            private static readonly Regex REGEX_ARGUMENT = new Regex("[\\w-]*-[\\w-]*",
+            private static readonly Regex REGEX_ARGUMENT = new Regex(@"[\w-]*-[\w-]*",
                 RegexOptions.Compiled | RegexOptions.CultureInvariant);
             /// <summary>
             /// HTML encodes the string.

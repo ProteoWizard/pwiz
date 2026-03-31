@@ -160,8 +160,8 @@ namespace pwiz.Common.SystemUtil
             var offscreenPoint = new Point(0, 0);
             foreach (var screen in Screen.AllScreens)
             {
-                offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Right);
-                offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Bottom);
+                offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Left);
+                offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Top);
             }
             return offscreenPoint - Screen.PrimaryScreen.Bounds.Size;    // position one screen away to top left
         }

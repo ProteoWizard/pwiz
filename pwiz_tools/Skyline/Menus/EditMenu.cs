@@ -810,6 +810,8 @@ namespace pwiz.Skyline.Menus
 
         private void ApplyPeakWithLongWait(bool subsequent, bool group)
         {
+            if (!SkylineWindow.EnsureLibrariesLoadedForPeakIntegration())
+                return;
             var resultsIndex = SelectedResultsIndex;
             var document = SkylineWindow.Document;
             var chromSet = DocumentUI.MeasuredResults.Chromatograms[resultsIndex];
@@ -1897,8 +1899,8 @@ namespace pwiz.Skyline.Menus
             if (precursorCount == 1)
             {
                 var transitionGroupDocNode = (TransitionGroupDocNode) document.FindNode(transitionGroupIdentityPaths.First());
-                var precursorDescription = TransitionGroupTreeNode.GetLabel(transitionGroupDocNode.TransitionGroup,
-                    transitionGroupDocNode.PrecursorMz, string.Empty);
+                var precursorDescription = transitionGroupDocNode.TransitionGroup
+                    .GetLabel(transitionGroupDocNode.PrecursorMz, string.Empty);
                 if (editing)
                 {
                     return string.Format(MenusResources.EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_, precursorDescription);

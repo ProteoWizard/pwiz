@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
@@ -33,37 +33,14 @@ namespace pwiz.Common.DataBinding
         string ShortDisplayName { get; }
         string OpSymbol { get; }
         bool IsValidFor(ColumnDescriptor columnDescriptor);
-        bool IsValidFor(DataSchema dataSchema, Type columnType);
-        Type GetOperandType(ColumnDescriptor columnDescriptor);
-        Type GetOperandType(DataSchema dataSchema, Type columnType);
-        bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue);
+        bool IsValidFor(IFilterHandler filterHandler);
+        bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue);
+        bool HasOperand();
+        bool UsesEquality();
     }
 
     public static class FilterOperations
     {
-        /// <summary>
-        /// Given a column type, this Dictionary gives what type the operands of a filter operation should
-        /// be converted to.  Number columns get converted to "double" so that "less than 3.5" gives the user
-        /// the expected result, even if the column type is integer.
-        /// </summary>
-        private static readonly IDictionary<Type, Type> convertibleTypes = new Dictionary<Type, Type>
-        {
-            {typeof (char), typeof (char)},
-            {typeof (sbyte), typeof (double)},
-            {typeof (byte), typeof (double)},
-            {typeof (short), typeof (double)},
-            {typeof (ushort), typeof (double)},
-            {typeof (int), typeof (double)},
-            {typeof (uint), typeof (double)},
-            {typeof (long), typeof (double)},
-            {typeof (ulong), typeof (double)},
-            {typeof (float), typeof (double)},
-            {typeof (double), typeof (double)},
-            {typeof (Decimal), typeof (double)},
-            {typeof (DateTime), typeof (DateTime)},
-            {typeof (bool), typeof(bool)},
-        };
-
         public static readonly IFilterOperation OP_HAS_ANY_VALUE = new OpHasAnyValue();
 
         public static readonly IFilterOperation OP_EQUALS = new OpEquals();
@@ -129,42 +106,6 @@ namespace pwiz.Common.DataBinding
             return LstFilterOperations;
         }
 
-        public static Type GetTypeToConvertOperandTo(DataSchema dataSchema, Type columnType)
-        {
-            if (null == columnType)
-            {
-                return typeof (string);
-            }
-            columnType = dataSchema.GetWrappedValueType(columnType);
-            columnType = Nullable.GetUnderlyingType(columnType) ?? columnType;
-            var filterableAttribute = columnType.GetCustomAttributes(typeof(FilterableAttribute), false)
-                .Cast<FilterableAttribute>().FirstOrDefault();
-            if (filterableAttribute != null)
-            {
-                return columnType;
-            }
-            if (convertibleTypes.TryGetValue(columnType, out Type typeToConvertTo))
-            {
-                return typeToConvertTo;
-            }
-
-            return typeof(string);
-        }
-
-        public static object ConvertValue(DataSchema dataSchema, Type columnType, object value)
-        {
-            if (value == null)
-            {
-                return null;
-            }
-            var type = GetTypeToConvertOperandTo(dataSchema, columnType);
-            if (type == typeof (string))
-            {
-                return value.ToString();
-            }
-            return Convert.ChangeType(value, type);
-        }
-
         abstract class FilterOperation : IFilterOperation
         {
             protected FilterOperation(string opName)
@@ -185,24 +126,17 @@ namespace pwiz.Common.DataBinding
 
             public bool IsValidFor(ColumnDescriptor columnDescriptor)
             {
-                return IsValidFor(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
+                return IsValidFor(columnDescriptor.DataSchema.GetFilterHandler(columnDescriptor.PropertyType));
             }
 
-            public virtual bool IsValidFor(DataSchema dataSchema, Type columnType)
+            public abstract bool IsValidFor(IFilterHandler filterHandler);
+            public abstract bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue);
+            public virtual bool HasOperand()
             {
                 return true;
             }
 
-            public virtual Type GetOperandType(DataSchema dataSchema, Type columnType)
-            {
-                return GetTypeToConvertOperandTo(dataSchema, columnType);
-            }
-            public Type GetOperandType(ColumnDescriptor columnDescriptor)
-            {
-                return GetOperandType(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
-            }
-
-            public abstract bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue);
+            public abstract bool UsesEquality();
         }
         abstract class StringFilterOperation : FilterOperation
         {
@@ -210,42 +144,27 @@ namespace pwiz.Common.DataBinding
                 : base(opName)
             {
             }
-            public override bool IsValidFor(DataSchema dataSchema, Type columnType)
+
+            public override bool IsValidFor(IFilterHandler filterHandler)
             {
-                var type = dataSchema.GetWrappedValueType(columnType);
-                if (typeof(IFormattable).IsAssignableFrom(type))
+                return filterHandler is IFilterHandler.IContains;
+            }
+
+            public sealed override bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue)
+            {
+                if (filterHandler is IFilterHandler.IContains containsHandler)
                 {
-                    return false;
+                    return Matches(containsHandler, columnValue, operandValue);
                 }
-                if (type.IsPrimitive)
-                {
-                    return false;
-                }
+
+                return false;
+            }
+
+            protected abstract bool Matches(IFilterHandler.IContains filterHandler, object columnValue,
+                object operandValue);
+            public override bool UsesEquality()
+            {
                 return true;
-            }
-
-            public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
-            {
-                DataSchemaLocalizer dataSchemaLocalizer = dataSchema.DataSchemaLocalizer;
-                String strColumnValue = ValueToString(dataSchemaLocalizer, columnValue);
-                String strOperandValue = ValueToString(dataSchemaLocalizer, operandValue);
-                return StringMatches(strColumnValue, strOperandValue);
-            }
-
-            public abstract bool StringMatches(string columnValue, string operandValue);
-
-            protected string ValueToString(DataSchemaLocalizer dataSchemaLocalizer, object value)
-            {
-                if (value == null)
-                {
-                    return string.Empty;
-                }
-                var formattable = value as IFormattable;
-                if (formattable != null)
-                {
-                    return formattable.ToString(null, dataSchemaLocalizer.FormatProvider);
-                }
-                return value.ToString();
             }
         }
 
@@ -260,14 +179,11 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Contains; }
             }
 
-            public override bool StringMatches(string columnValue, string operandValue)
+            protected override bool Matches(IFilterHandler.IContains filterHandler, object columnValue, object operandValue)
             {
-                if (string.IsNullOrEmpty(columnValue))
-                {
-                    return false;
-                }
-                return columnValue.Contains(operandValue);
+                return filterHandler.Contains(columnValue, operandValue);
             }
+
         }
 
         class OpNotContains : StringFilterOperation
@@ -281,13 +197,9 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Does_Not_Contain; }
             }
 
-            public override bool StringMatches(string columnValue, string operandValue)
+            protected override bool Matches(IFilterHandler.IContains filterHandler, object columnValue, object operandValue)
             {
-                if (string.IsNullOrEmpty(columnValue))
-                {
-                    return true;
-                }
-                return !columnValue.Contains(operandValue);
+                return !filterHandler.Contains(columnValue, operandValue);
             }
         }
 
@@ -302,13 +214,9 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Starts_With; }
             }
 
-            public override bool StringMatches(string columnValue, string operandValue)
+            protected override bool Matches(IFilterHandler.IContains filterHandler, object columnValue, object operandValue)
             {
-                if (string.IsNullOrEmpty(columnValue))
-                {
-                    return false;
-                }
-                return columnValue.StartsWith(operandValue);
+                return filterHandler.StartsWith(columnValue, operandValue);
             }
         }
 
@@ -323,13 +231,9 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Does_Not_Start_With; }
             }
 
-            public override bool StringMatches(string columnValue, string operandValue)
+            protected override bool Matches(IFilterHandler.IContains filterHandler, object columnValue, object operandValue)
             {
-                if (string.IsNullOrEmpty(columnValue))
-                {
-                    return true;
-                }
-                return !columnValue.StartsWith(operandValue);
+                return !filterHandler.StartsWith(columnValue, operandValue);
             }
         }
 
@@ -354,13 +258,19 @@ namespace pwiz.Common.DataBinding
                 get { return @"="; }
             }
 
-            public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
+            public override bool IsValidFor(IFilterHandler filterHandler)
             {
-                return Equals(
-                    ConvertValue(dataSchema, columnType, columnValue),
-                    operandValue);
+                return true;
             }
 
+            public override bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue)
+            {
+                return filterHandler.ValueEqualsOperand(columnValue, operandValue);
+            }
+            public override bool UsesEquality()
+            {
+                return true;
+            }
 
         }
 
@@ -375,9 +285,20 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Does_Not_Equal; }
             }
 
-            public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
+            public override bool IsValidFor(IFilterHandler filterHandler)
             {
-                return !Equals(ConvertValue(dataSchema, columnType, columnValue), operandValue);
+                return true;
+            }
+
+
+
+            public override bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue)
+            {
+                return !filterHandler.ValueEqualsOperand(columnValue, operandValue);
+            }
+            public override bool UsesEquality()
+            {
+                return true;
             }
         }
 
@@ -393,13 +314,18 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Is_Blank; }
             }
 
-            protected override bool Matches(object columnValue)
+            protected override bool Matches(IFilterHandler filterHandler, object columnValue)
             {
-                return columnValue == null || Equals(string.Empty, columnValue);
+                return filterHandler.IsBlank(columnValue);
+            }
+
+            public override bool IsValidFor(IFilterHandler filterHandler)
+            {
+                return filterHandler.CanBeBlank;
             }
         }
 
-        class OpIsNotBlank : FilterOperation
+        class OpIsNotBlank : UnaryFilterOperation
         {
             public OpIsNotBlank() : base(@"isnotnullorblank")
             {
@@ -411,9 +337,14 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Is_Not_Blank; }
             }
 
-            public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
+            protected override bool Matches(IFilterHandler filterHandler, object columnValue)
             {
-                return null != columnValue && !Equals(columnValue, string.Empty);
+                return !filterHandler.IsBlank(columnValue);
+            }
+
+            public override bool IsValidFor(IFilterHandler filterHandler)
+            {
+                return filterHandler.CanBeBlank;
             }
         }
 
@@ -421,7 +352,7 @@ namespace pwiz.Common.DataBinding
         {
             public OpIsGreaterThan() : base(@">")
             {
-                
+
             }
 
             public override string DisplayName
@@ -439,7 +370,7 @@ namespace pwiz.Common.DataBinding
         {
             public OpIsGreaterThanOrEqual() : base(@">=")
             {
-                
+
             }
 
             public override string DisplayName
@@ -457,7 +388,7 @@ namespace pwiz.Common.DataBinding
         {
             public OpIsLessThan() : base(@"<")
             {
-                
+
             }
 
             public override string DisplayName
@@ -500,28 +431,22 @@ namespace pwiz.Common.DataBinding
                 get { return OpName; }
             }
 
-            public override bool IsValidFor(DataSchema dataSchema, Type propertyType)
-            {
-                if (null == propertyType)
-                {
-                    return false;
-                }
-                var columnType = dataSchema.GetWrappedValueType(propertyType);
-                columnType = Nullable.GetUnderlyingType(columnType) ?? columnType;
-                return convertibleTypes.ContainsKey(columnType) && columnType != typeof (string) && columnType != typeof(bool);
-            }
-
-            public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
-            {
-                if (columnValue == null)
-                {
-                    return false;
-                }
-                columnValue = Convert.ChangeType(columnValue, GetTypeToConvertOperandTo(dataSchema, columnType));
-                return ComparisonMatches(dataSchema.Compare(columnValue, operandValue));
-            }
-
             protected abstract bool ComparisonMatches(int comparisonResult);
+
+            public override bool IsValidFor(IFilterHandler filterHandler)
+            {
+                return filterHandler is IFilterHandler.IComparison;
+            }
+
+            public override bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue)
+            {
+                int? comparisonValue = (filterHandler as IFilterHandler.IComparison)?.Compare(columnValue, operandValue);
+                return comparisonValue.HasValue && ComparisonMatches(comparisonValue.Value);
+            }
+            public override bool UsesEquality()
+            {
+                return ComparisonMatches(0);
+            }
         }
 
         abstract class UnaryFilterOperation : FilterOperation
@@ -532,17 +457,25 @@ namespace pwiz.Common.DataBinding
                 
             }
 
-            public override Type GetOperandType(DataSchema dataSchema, Type columnType)
+            public sealed override bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue)
             {
-                return null;
+                return Matches(filterHandler, columnValue);
             }
 
-            public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
+            protected abstract bool Matches(IFilterHandler filterHandler, object columnValue);
+            public override bool IsValidFor(IFilterHandler filterHandler)
             {
-                return Matches(columnValue);
+                return true;
             }
-
-            protected abstract bool Matches(object columnValue);
+            
+            public override bool HasOperand()
+            {
+                return false;
+            }
+            public override bool UsesEquality()
+            {
+                return false;
+            }
         }
 
         class OpHasAnyValue : UnaryFilterOperation
@@ -556,7 +489,7 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Has_Any_Value; }
             }
 
-            protected override bool Matches(object columnValue)
+            protected override bool Matches(IFilterHandler filterHandler, object columnValue)
             {
                 return true;
             }

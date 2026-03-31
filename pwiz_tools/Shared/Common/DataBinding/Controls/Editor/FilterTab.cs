@@ -69,6 +69,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             else
             {
+                var filterHandler = filterInfo.ColumnDescriptor.GetFilterHandler();
                 row.Cells[colFilterColumn.Index].Value = filterInfo.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
                 row.Cells[colFilterColumn.Index].Style.Font = dataGridViewFilter.Font;
                 row.Cells[colFilterColumn.Index].ToolTipText = null;
@@ -83,7 +84,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 .Select(filterOp => filterOp.DisplayName)
                 .ToArray();
             filterOpCell.DataSource = filterOpItems;
-            if (filterInfo.FilterSpec.Operation.GetOperandType(filterInfo.ColumnDescriptor) == null)
+            if (!filterInfo.FilterSpec.Operation.HasOperand())
             {
                 row.Cells[colFilterOperand.Index].ReadOnly = true;
                 row.Cells[colFilterOperand.Index].Style.BackColor = Color.DarkGray;
@@ -204,11 +205,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             try
             {
-                return FilterPredicate.CreateFilterPredicate(dataSchema, columnType, filterOperation, operand);
+                return FilterPredicate.Parse(dataSchema, columnType, filterOperation, operand);
             }
             catch
             {
-                return FilterPredicate.CreateFilterPredicate(dataSchema, typeof(string), filterOperation, operand);
+                return FilterPredicate.Create(filterOperation, operand);
             }
         }
 
@@ -281,9 +282,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             var newFilters = ViewSpec.Filters.ToArray();
             var columnDescriptor = ViewInfo.Filters[rowIndex].ColumnDescriptor;
-            newFilters[rowIndex] = newFilters[rowIndex].SetPredicate(
-                FilterPredicate.CreateFilterPredicate(columnDescriptor.DataSchema, columnDescriptor.PropertyType, filterOperation,
-                    dataGridViewFilter.CurrentRow.Cells[colFilterOperand.Index].Value as string));
+            newFilters[rowIndex] = newFilters[rowIndex].SetPredicate(FilterPredicate.SafeParse(
+                columnDescriptor.DataSchema, columnDescriptor.PropertyType, filterOperation,
+                dataGridViewFilter.CurrentRow.Cells[colFilterOperand.Index].Value as string));
             ViewSpec = ViewSpec.SetFilters(newFilters);
         }
 

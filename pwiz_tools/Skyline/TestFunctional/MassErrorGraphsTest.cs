@@ -265,6 +265,40 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(-23.2, pane.GetMin(), 0.1);
             });
 
+            // Verify Copy Data output for 2D histogram produces clean 3-column format
+            RunUI(() =>
+            {
+                var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(SkylineWindow.GraphMassError.GraphControl.MasterPane);
+                AssertEx.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
+                AssertEx.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
+                var dataFrame = graphData.Panes[0].DataFrames[0];
+                AssertEx.AreEqual(3, dataFrame.ColumnCount, "Heatmap Copy Data should have 3 columns");
+                AssertEx.AreEqual(458, dataFrame.RowCount, "Row count should match heatmap point count");
+
+                // Verify column headers match expected axis labels
+                var headers = dataFrame.GetColumnHeaders();
+                AssertEx.AreEqual(GraphsResources.MassErrorHistogram2DGraphPane_Graph_Retention_Time, headers[0, 0]?.ToString());
+                AssertEx.AreEqual(GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error, headers[0, 1]?.ToString());
+                AssertEx.AreEqual(GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count, headers[0, 2]?.ToString());
+
+                // Spot-check that mass error values span a reasonable range
+                double minY = double.MaxValue, maxY = double.MinValue;
+                foreach (var i in new[] { 0, dataFrame.RowCount / 2, dataFrame.RowCount - 1 })
+                {
+                    var row = dataFrame.GetRow(i);
+                    AssertEx.AreEqual(3, row.Length);
+                    var yVal = (double)row[1];
+                    minY = System.Math.Min(minY, yVal);
+                    maxY = System.Math.Max(maxY, yVal);
+                    AssertEx.IsTrue((double)row[2] >= 1, "Count should be at least 1");
+                }
+                AssertEx.IsTrue(maxY - minY > 1, "Mass error values should span a reasonable range");
+                var row31 = dataFrame.GetRow(31);
+                AssertEx.AreEqual(20.8418, (double)row31[0], 0.0001);
+                AssertEx.AreEqual(-11.2000, (double)row31[1], 0.0001);
+                AssertEx.AreEqual(2, (double)row31[2]);
+            });
+
             //alter the bin size from 2.0 to 0.5
             RunUI(() => SkylineWindow.UpdateBinSize(0.5));
             WaitForGraphs();

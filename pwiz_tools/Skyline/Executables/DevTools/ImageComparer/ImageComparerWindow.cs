@@ -26,6 +26,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using ImageComparer.Core;
 using ImageComparer.Properties;
 
 namespace ImageComparer
@@ -1047,12 +1048,14 @@ namespace ImageComparer
                     Directory.CreateDirectory(aiTmpFolder);
                 }
 
+                // Save what the user is currently viewing (respects diff-only and amplify settings)
+                var imageToSave = GetDisplayImage(diff, new ScreenshotInfo(new MemoryStream(File.ReadAllBytes(file.Path))));
                 var fileName = file.GetDiffFileName(diff.PixelCount);
                 var fullPath = Path.Combine(aiTmpFolder, fileName);
 
-                lock (diff.HighlightedImage)
+                lock (imageToSave)
                 {
-                    diff.HighlightedImage.Save(fullPath, ImageFormat.Png);
+                    imageToSave.Save(fullPath, ImageFormat.Png);
                 }
 
                 ShowMessage($"Diff image saved to:\n{fullPath}");

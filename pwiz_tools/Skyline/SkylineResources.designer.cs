@@ -386,6 +386,54 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to add settings from the file {0}.
+        /// </summary>
+        public static string CommandLine_AddSettings_Error__Failed_attempting_to_add_settings_from_the_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Error__Failed_attempting_to_add_settings_from_the_file__0" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The following settings names already exist. Use --settings-conflict-resolution to specify overwrite or skip..
+        /// </summary>
+        public static string CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___" +
+                        "settings_conflict_resolution_to_specify_overwrite_or_skip_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The settings file {0} does not exist..
+        /// </summary>
+        public static string CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The settings name &apos;{0}&apos; already exists. Use --settings-conflict-resolution to specify overwrite or skip..
+        /// </summary>
+        public static string CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___sett" +
+                        "ings_conflict_resolution_to_specify_overwrite_or_skip_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings imported from {0}..
+        /// </summary>
+        public static string CommandLine_AddSettings_Settings_imported_from__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddSettings_Settings_imported_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: {0} does not match the regular expression..
         /// </summary>
         public static string CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_ {
@@ -411,6 +459,25 @@ namespace pwiz.Skyline {
             get {
                 return ResourceManager.GetString("CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1" +
                         "____Ignoring__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The settings &apos;{0}&apos; could not be found. Use --settings-name with a name from the Settings menu..
+        /// </summary>
+        public static string CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___set" +
+                        "tings_name_with_a_name_from_the_Settings_menu_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings &apos;{0}&apos; applied to document..
+        /// </summary>
+        public static string CommandLine_ApplySettings_Settings___0___applied_to_document_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ApplySettings_Settings___0___applied_to_document_", resourceCulture);
             }
         }
         
@@ -1117,6 +1184,16 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The --new argument requires a file path in command-line mode..
+        /// </summary>
+        public static string CommandLine_NewDocument_The___new_argument_requires_a_file_path_in_command_line_mode_ {
+            get {
+                return ResourceManager.GetString("CommandLine_NewDocument_The___new_argument_requires_a_file_path_in_command_line_m" +
+                        "ode_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: No new results added. Skipping Panorama import..
         /// </summary>
         public static string CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_ {
@@ -1290,6 +1367,25 @@ namespace pwiz.Skyline {
             get {
                 return ResourceManager.GetString("CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_comm" +
                         "and_failed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document has unsaved changes. Use --save, --out, or --discard-changes before --new or --in..
+        /// </summary>
+        public static string CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__or___discard_changes_before___new_or___in_ {
+            get {
+                return ResourceManager.GetString("CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__" +
+                        "or___discard_changes_before___new_or___in_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File {0} save canceled.
+        /// </summary>
+        public static string CommandLine_SaveFile_File__0__save_canceled {
+            get {
+                return ResourceManager.GetString("CommandLine_SaveFile_File__0__save_canceled", resourceCulture);
             }
         }
         
@@ -2053,6 +2149,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak integration cannot be changed until library loading is complete. Please wait for the libraries to finish loading..
+        /// </summary>
+        public static string SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded {
+            get {
+                return ResourceManager.GetString("SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Pick peak {0:F01}.
         /// </summary>
         public static string SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_ {
@@ -2750,6 +2855,26 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to add the server to your settings..
+        /// </summary>
+        public static string SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_server_to_your_settings_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_s" +
+                        "erver_to_your_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server {0} is not in your list of Panorama servers..
+        /// </summary>
+        public static string SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_servers_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_se" +
+                        "rvers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This file was last uploaded to: {0}.
         /// </summary>
         public static string SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_ {
@@ -2773,26 +2898,6 @@ namespace pwiz.Skyline {
         public static string SkylineWindow_PublishToSavedUri_Validating_saved_folder {
             get {
                 return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Validating_saved_folder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The server {0} is not in your list of Panorama servers..
-        /// </summary>
-        public static string SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_servers_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_s" +
-                        "ervers_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to add the server to your settings..
-        /// </summary>
-        public static string SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_server_to_your_settings_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_" +
-                        "server_to_your_settings_", resourceCulture);
             }
         }
         

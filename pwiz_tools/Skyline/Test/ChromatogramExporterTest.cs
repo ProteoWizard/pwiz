@@ -94,11 +94,12 @@ namespace pwiz.SkylineTest
                 SaveChrom(docResults, fileActual2, FILE_NAMES_2.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_2, SOURCES_2);
                 SaveChrom(docResults, fileActualAll, FILE_NAMES_ALL.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_ALL, SOURCES_ALL);
 
-                var tolerance = new Dictionary<int, double>{{3,.0001}}; // Allow a little wiggle in mz column since we tweak the calculation with Adduct work
+                var columnTolerances = new AssertEx.ColumnTolerances();
+                columnTolerances.AddTolerance(3, 0.0001); // Allow a little wiggle in mz column since we tweak the calculation with Adduct work
 
-                AssertEx.FileEquals(fileExpected1, fileActual1, tolerance);
-                AssertEx.FileEquals(fileExpected2, fileActual2, tolerance);
-                AssertEx.FileEquals(fileExpectedAll, fileActualAll, tolerance);
+                AssertEx.FileEquals(fileExpected1, fileActual1, columnTolerances);
+                AssertEx.FileEquals(fileExpected2, fileActual2, columnTolerances);
+                AssertEx.FileEquals(fileExpectedAll, fileActualAll, columnTolerances);
             }
         }
 

@@ -22,12 +22,11 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
-using pwiz.Common.Spectra;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
@@ -44,14 +43,14 @@ namespace pwiz.SkylineTest
         {
             double precursorMz = 422.5;
             var expectedSpectrumPrecursors =
-                new SpectrumPrecursors(ImmutableList.Singleton(new SpectrumPrecursor(new SignedMz(precursorMz))));
-            var dataSchema = new DataSchema(new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentCulture));
-            var filterPredicate = FilterPredicate.CreateFilterPredicate(dataSchema, typeof(SpectrumPrecursors),
-                FilterOperations.OP_EQUALS, expectedSpectrumPrecursors.ToString(null, CultureInfo.CurrentCulture));
+                ListColumnValue.FromItems(new object[] { PrecisionNumber.WithDecimalPlaces((decimal)precursorMz, 1) });
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(new SrmDocument(SrmSettingsList.GetDefault()),
+                SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var filterPredicate = FilterPredicate.Parse(dataSchema, typeof(SpectrumPrecursors),
+                FilterOperations.OP_EQUALS, precursorMz.ToString(null, CultureInfo.CurrentCulture));
             var operandValue = filterPredicate.GetOperandValue(dataSchema, typeof(SpectrumPrecursors));
-            Assert.IsInstanceOfType(operandValue, typeof(SpectrumPrecursors));
-            var spectrumPrecursors = operandValue as SpectrumPrecursors;
-            Assert.AreEqual(expectedSpectrumPrecursors, spectrumPrecursors);
+            Assert.IsInstanceOfType(operandValue, typeof(ListColumnValue<object>));
+            Assert.AreEqual(expectedSpectrumPrecursors, operandValue);
         }
 
         [TestMethod]
@@ -84,16 +83,12 @@ namespace pwiz.SkylineTest
             var filterSpecs = new[]
             {
                 new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, new SpectrumPrecursors(new[]
-                    {
-                        new SpectrumPrecursor(new SignedMz(422.5)),
-                        new SpectrumPrecursor(new SignedMz(475.7))
-                    }))),
+                    FilterPredicate.Create(FilterOperations.OP_EQUALS, "422.5,475.7")),
                 new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath,
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1)),
-                new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath, FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1)),
-                new FilterSpec(SpectrumClassColumn.PresetScanConfiguration.PropertyPath, FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_BLANK, null as object)),
-                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath, FilterPredicate.CreateFilterPredicate(FilterOperations.OP_CONTAINS, "hello"))
+                    FilterPredicate.Create(FilterOperations.OP_EQUALS, 1)),
+                new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath, FilterPredicate.Create(FilterOperations.OP_IS_GREATER_THAN, 1)),
+                new FilterSpec(SpectrumClassColumn.PresetScanConfiguration.PropertyPath, new FilterPredicate(FilterOperations.OP_IS_BLANK, null )),
+                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath, new FilterPredicate(FilterOperations.OP_CONTAINS, "hello"))
             };
             var clauses = Enumerable.Range(1, filterSpecs.Length - 1).SelectMany(count => new[]
             {
@@ -142,17 +137,10 @@ namespace pwiz.SkylineTest
 
         private SpectrumClassFilter CreateTestSpectrumClassFilter()
         {
-            var spectrumPrecursors = new SpectrumPrecursors(new[]
-            {
-                new SpectrumPrecursor(new SignedMz(422.5)),
-                new SpectrumPrecursor(new SignedMz(475.7))
-            });
             var filterSpecs = new[]
             {
-                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, spectrumPrecursors)),
-                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath,
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_CONTAINS, "SCAN"))
+                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,FilterOperations.OP_EQUALS, "422.5,475.7"),
+                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath, FilterOperations.OP_CONTAINS, "SCAN")
             };
             return new SpectrumClassFilter(new FilterClause(filterSpecs));
         }

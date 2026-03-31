@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Util;
+using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -86,7 +86,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 items.Add(string.Format(ScoringResources.AlignedFile_AlignLibraryRetentionTimes__0__1__, part.Key, part.Value.ToString(format, formatProvider)));
             }
-            return new FormattableList<string>(items).ToString(format, formatProvider);
+
+            return ListColumnValue.ItemsToString(formatProvider, items);
         }
 
         protected bool Equals(FeatureScores other)

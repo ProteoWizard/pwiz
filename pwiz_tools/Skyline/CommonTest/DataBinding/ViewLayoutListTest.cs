@@ -49,7 +49,7 @@ namespace CommonTest.DataBinding
                         }),
                     new RowFilter("filterText", true, new[]
                     {
-                        new RowFilter.ColumnFilter(new ColumnId("column1"),FilterPredicate.CreateFilterPredicate(dataSchema, typeof(string), FilterOperations.OP_CONTAINS, "contains1"))
+                        new RowFilter.ColumnFilter(new ColumnId("column1"),FilterPredicate.Parse(dataSchema, typeof(string), FilterOperations.OP_CONTAINS, "contains1"))
 
                     }).SetColumnSorts(new[]
                     {

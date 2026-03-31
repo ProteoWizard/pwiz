@@ -70,6 +70,9 @@
     <Reference Include="NHibernate">
       <HintPath>..\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
+    <Reference Include="Sprache">
+      <HintPath>..\Lib\Sprache.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -165,7 +168,7 @@
     <Compile Include="DataBinding\AnnotatedValue.cs" />
     <Compile Include="DataBinding\Attributes\ColumnCaptionAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\FilterableAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\FilterHandlerAttribute.cs" />
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
@@ -173,6 +176,7 @@
     <Compile Include="DataBinding\Attributes\DataTypeSpecifierAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\RowSourceAttribute.cs" />
     <Compile Include="DataBinding\Attributes\UiModeAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HiddenAttribute.cs" />
     <Compile Include="DataBinding\CaptionedValues.cs" />
@@ -297,11 +301,15 @@
     <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataBinding\Filtering\FilterClauseSerializer.cs" />
+    <Compile Include="DataBinding\Filtering\FilterHandler.cs" />
     <Compile Include="DataBinding\Filtering\FilterClause.cs" />
     <Compile Include="DataBinding\Filtering\FilterPage.cs" />
     <Compile Include="DataBinding\Filtering\FilterPages.cs" />
     <Compile Include="DataBinding\Filtering\IFilterAutoComplete.cs" />
     <Compile Include="DataBinding\Internal\WrappedDataPropertyDescriptor.cs" />
+    <Compile Include="DataBinding\ReportExporter.cs" />
+    <Compile Include="DataBinding\ListColumnValue.cs" />
     <Compile Include="DataBinding\RowItemEnumerator.cs" />
     <Compile Include="DataBinding\TabularFileFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />

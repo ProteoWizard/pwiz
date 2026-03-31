@@ -49,7 +49,7 @@ class PWIZ_API_DECL BinaryDataEncoder
 
     enum Precision {Precision_32, Precision_64};
     enum ByteOrder {ByteOrder_LittleEndian, ByteOrder_BigEndian};
-    enum Compression {Compression_None, Compression_Zlib};
+    enum Compression {Compression_None, Compression_Zlib, Compression_Zstd, Compression_ByteShuffleZstd, Compression_DictZstd};
     enum Numpress {Numpress_None, Numpress_Linear, Numpress_Pic, Numpress_Slof}; // lossy numerical representations
 
     enum Prediction {Prediction_None, Prediction_Delta, Prediction_Linear};
@@ -73,6 +73,7 @@ class PWIZ_API_DECL BinaryDataEncoder
         Type type;
         int truncation; // how many bits mantissa to truncate (and hence not store)      
 
+        std::map<cv::CVID, Compression> compressionOverrides;
         std::map<cv::CVID, Precision> precisionOverrides;
         std::map<cv::CVID, Numpress> numpressOverrides;
         std::map<cv::CVID, Prediction> predictionOverrides;

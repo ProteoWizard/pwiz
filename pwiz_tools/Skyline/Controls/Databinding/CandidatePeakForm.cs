@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     .Property(nameof(PeakGroupScore.PeakQValue))),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakScores))
                     .Property(nameof(PeakGroupScore.WeightedFeatures)).DictionaryValues())
-            });
+            }).SetRowType(typeof(CandidatePeakGroup));
             return viewSpec;
         }
 

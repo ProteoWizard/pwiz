@@ -1615,7 +1615,7 @@ namespace pwiz.SkylineTestTutorial
                 });
                 RunUI(() =>
                 {
-                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL);
+                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN);
                     quickFilterForm.SetFilterOperand(0, 0.01.ToString(CultureInfo.CurrentCulture));
                 });
                 OkDialog(quickFilterForm, quickFilterForm.OkDialog);

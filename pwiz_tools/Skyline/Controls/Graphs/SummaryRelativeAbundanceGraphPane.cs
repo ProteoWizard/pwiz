@@ -550,7 +550,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
                 AdjustLabelSpacings(_labeledPoints, _labelsLayout);
-                _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
+                _labelsLayout = GraphSummary.GraphControl.GraphPane?.Layout?.PointsLayout;
             }
             else
             {

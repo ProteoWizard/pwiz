@@ -18,12 +18,14 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
+using Microsoft.Diagnostics.Runtime;
 using Timer = System.Timers.Timer;
 
 namespace SkylineNightly
@@ -189,6 +191,7 @@ namespace SkylineNightly
                                 message.Append(_logTail);
                                 message.AppendLine();
                             }
+                            AppendTestRunnerStacks(message);
                             SendEmailNotification(subject, message.ToString());
                         }
                         return;
@@ -246,6 +249,63 @@ namespace SkylineNightly
         private void Log(string message)
         {
             Nightly.Log(_nightlyLog, message);
+        }
+
+        private void AppendTestRunnerStacks(StringBuilder message)
+        {
+            try
+            {
+                var testRunnerProcesses = Process.GetProcessesByName("TestRunner");
+                if (testRunnerProcesses.Length == 0)
+                {
+                    message.AppendLine("No TestRunner processes found for stack trace capture.");
+                    return;
+                }
+
+                foreach (var process in testRunnerProcesses)
+                {
+                    message.AppendLine();
+                    message.AppendLine("========================================");
+                    message.AppendFormat("Thread stacks for TestRunner.exe (PID {0}):", process.Id);
+                    message.AppendLine();
+                    message.AppendLine("========================================");
+
+                    try
+                    {
+                        using (var dataTarget = DataTarget.AttachToProcess(process.Id, 5000, AttachFlag.Passive))
+                        {
+                            var runtime = dataTarget.ClrVersions[0].CreateRuntime();
+                            foreach (var thread in runtime.Threads)
+                            {
+                                if (!thread.IsAlive)
+                                    continue;
+
+                                message.AppendFormat("Thread {0:X} (Managed ID: {1})", thread.OSThreadId, thread.ManagedThreadId);
+                                message.AppendLine();
+
+                                foreach (var frame in thread.EnumerateStackTrace())
+                                {
+                                    message.AppendFormat("  {0}.{1}", frame.Method?.Type?.Name ?? "[Unknown]",
+                                        frame.Method?.Name ?? "[Unknown]");
+                                    message.AppendLine();
+                                }
+
+                                message.AppendLine();
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        message.AppendFormat("Failed to capture stacks for PID {0}: {1}", process.Id, ex);
+                        message.AppendLine();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                message.AppendFormat("Stack trace capture failed: {0}", ex.Message);
+                message.AppendLine();
+            }
         }
 
         private static void SendEmailNotification(string subject, string message)
