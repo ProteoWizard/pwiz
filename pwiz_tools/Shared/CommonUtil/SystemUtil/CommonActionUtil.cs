@@ -52,15 +52,23 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
+        // CONSIDER: Currently silently swallows unhandled exceptions for processes that
+        // don't set an ExceptionReporter. All EXEs using CommonActionUtil should be required
+        // to explicitly set an ExceptionReporter (even a silent one) before calling RunAsync.
+        // See https://github.com/ProteoWizard/pwiz/issues/4128
         public static void HandleException(Exception exception)
         {
             if (exception == null)
                 return;
 
-            if (ExceptionReporter != null)
-                ExceptionReporter(exception);
-            else
-                Messages.WriteAsyncDebugMessage(@"Unhandled Exception: {0}", exception); // N.B. see TraceWarningListener for output details
+            try
+            {
+                ExceptionReporter?.Invoke(exception);
+            }
+            catch (Exception)
+            {
+                // Prevent failures in the reporter from crashing the background thread
+            }
         }
 
         /// <summary>

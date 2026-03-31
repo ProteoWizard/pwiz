@@ -637,6 +637,7 @@ namespace pwiz.Skyline
             if (!_initialized)
             {
                 _initialized = true;
+                CommonActionUtil.ExceptionReporter = ReportException;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
