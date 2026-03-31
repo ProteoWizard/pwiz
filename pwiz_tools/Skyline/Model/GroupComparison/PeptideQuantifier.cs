@@ -182,15 +182,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return Array.Empty<double?>();
             }
-            int replicateCount = settings.MeasuredResults.Chromatograms.Count;
 
+            var replicateValues = new List<IDictionary<IdentityPath, double>>();
+            int replicateCount = settings.MeasuredResults.Chromatograms.Count;
             // Collect transition data for ALL replicates
-            var transitionsByReplicate = new Dictionary<int, Dictionary<IdentityPath, double>>();
-            var subsetTransitions = new HashSet<IdentityPath>();
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
                 var transitionIntensities = GetTransitionIntensities(settings, iReplicate, false);
-                var intensities = new Dictionary<IdentityPath, double>();
+                var abundances = new Dictionary<IdentityPath, double>();
                 foreach (var entry in transitionIntensities)
                 {
                     if (!entry.Value.Truncated)
@@ -199,98 +198,14 @@ namespace pwiz.Skyline.Model.GroupComparison
                             entry.Value.Intensity, entry.Value.Denominator);
                         if (!double.IsNaN(log2Abundance) && !double.IsInfinity(log2Abundance))
                         {
-                            intensities[entry.Key] = log2Abundance;
-                            // Only count transitions from subset replicates for feature selection
-                            if (replicateIndexes.Contains(iReplicate))
-                            {
-                                subsetTransitions.Add(entry.Key);
-                            }
+                            abundances[entry.Key] = log2Abundance;
                         }
                     }
                 }
-                if (intensities.Count > 0)
-                {
-                    transitionsByReplicate[iReplicate] = intensities;
-                }
+                replicateValues.Add(abundances);
             }
 
-            // Filter transitions: require at least 2 non-missing values among subset replicates
-            var subsetReplicates = transitionsByReplicate
-                .Where(kvp => replicateIndexes.Contains(kvp.Key)).ToList();
-            var validTransitions = subsetTransitions
-                .Where(t => subsetReplicates.Count(kvp => kvp.Value.ContainsKey(t)) > 1)
-                .ToList();
-            int featureCount = validTransitions.Count;
-            if (featureCount == 0)
-            {
-                return null;
-            }
-
-            var sampleAbundances = new double?[replicateCount];
-            if (featureCount == 1)
-            {
-                var transition = validTransitions[0];
-                foreach (var kvp in transitionsByReplicate)
-                {
-                    if (kvp.Value.TryGetValue(transition, out double val))
-                    {
-                        sampleAbundances[kvp.Key] = val;
-                    }
-                }
-            }
-            else
-            {
-                // Build feature(row) x subset-replicate(col) matrix for the polish
-                var subsetIndices = subsetReplicates.Select(kvp => kvp.Key).OrderBy(i => i).ToList();
-                int subsetCount = subsetIndices.Count;
-                var matrix = new double?[featureCount, subsetCount];
-                for (int iFeature = 0; iFeature < featureCount; iFeature++)
-                {
-                    var transition = validTransitions[iFeature];
-                    for (int iCol = 0; iCol < subsetCount; iCol++)
-                    {
-                        if (transitionsByReplicate.TryGetValue(subsetIndices[iCol], out var intensities) &&
-                            intensities.TryGetValue(transition, out double val))
-                        {
-                            matrix[iFeature, iCol] = val;
-                        }
-                    }
-                }
-                var mp = MedianPolish.GetMedianPolish(matrix);
-                double scaleFactor = Math.Log(featureCount, 2);
-
-                // Assign abundances for subset replicates from the polish
-                for (int iCol = 0; iCol < subsetCount; iCol++)
-                {
-                    sampleAbundances[subsetIndices[iCol]] =
-                        mp.OverallConstant + mp.ColumnEffects[iCol] + scaleFactor;
-                }
-
-                // For excluded replicates, project onto the fitted model:
-                // their column effect = median(value - rowEffect) across valid transitions
-                foreach (var kvp in transitionsByReplicate)
-                {
-                    if (replicateIndexes.Contains(kvp.Key))
-                    {
-                        var deviations = new List<double>();
-                        for (int iFeature = 0; iFeature < featureCount; iFeature++)
-                        {
-                            if (kvp.Value.TryGetValue(validTransitions[iFeature], out double val))
-                            {
-                                deviations.Add(val - mp.RowEffects[iFeature]);
-                            }
-                        }
-                        if (deviations.Count > 0)
-                        {
-                            deviations.Sort();
-                            double median = deviations[deviations.Count / 2];
-                            sampleAbundances[kvp.Key] = median + scaleFactor;
-                        }
-                    }
-                }
-            }
-
-            return sampleAbundances;
+            return new MedianPolisher() { IncludeScaleFactor = true }.Polish(replicateValues, replicateIndexes);
         }
 
         public double GetIsotopologArea(SrmSettings settings, int replicateIndex, IsotopeLabelType labelType)

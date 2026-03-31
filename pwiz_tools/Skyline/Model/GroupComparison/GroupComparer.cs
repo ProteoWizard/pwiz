@@ -373,52 +373,45 @@ namespace pwiz.Skyline.Model.GroupComparison
             // ReSharper restore HeuristicUnreachableCode
 #pragma warning restore 162
 
-            var featureCount = dataRowsByFeature.Count;
-            if (featureCount == 0)
+            if (dataRowsByFeature.Count == 0)
             {
                 return ImmutableList.Empty<RunAbundance>();
             }
-            var rows = new List<double?[]>();
-            IDictionary<int, int> replicateRowIndexes = new Dictionary<int, int>();
-            for (int iFeature = 0; iFeature < dataRowsByFeature.Count; iFeature++)
+
+            var replicateToPosition = new Dictionary<int, int>();
+            var values = new List<IDictionary<IdentityPath, double>>();
+            foreach (var group in dataRowsByFeature)
             {
-                foreach (DataRowDetails dataRowDetails in dataRowsByFeature[iFeature])
+                foreach (DataRowDetails dataRowDetails in group)
                 {
-                    int rowIndex;
-                    if (!replicateRowIndexes.TryGetValue(dataRowDetails.ReplicateIndex, out rowIndex))
+                    if (!replicateToPosition.TryGetValue(dataRowDetails.ReplicateIndex, out int position))
                     {
-                        rowIndex = rows.Count;
-                        rows.Add(new double?[featureCount]);
-                        replicateRowIndexes.Add(dataRowDetails.ReplicateIndex, rowIndex);
+                        position = values.Count;
+                        replicateToPosition[dataRowDetails.ReplicateIndex] = position;
+                        values.Add(new Dictionary<IdentityPath, double>());
                     }
-                    var row = rows[rowIndex];
-                    row[iFeature] = dataRowDetails.GetLog2Abundance();
+                    ((Dictionary<IdentityPath, double>)values[position])[group.Key] = dataRowDetails.GetLog2Abundance();
                 }
             }
-            var matrix = new double?[rows.Count, featureCount];
-            for (int iRow = 0; iRow < rows.Count; iRow++)
-            {
-                for (int iCol = 0; iCol < featureCount; iCol++)
-                {
-                    matrix[iRow, iCol] = rows[iRow][iCol];
-                }
-            }
-            var medianPolish = MedianPolish.GetMedianPolish(matrix);
+
+            var polished = new MedianPolisher().Polish(values, null);
             List<RunAbundance> runAbundances = new List<RunAbundance>();
             foreach (var replicateIndexDetails in _replicateIndexes)
             {
-                int rowIndex;
-                if (!replicateRowIndexes.TryGetValue(replicateIndexDetails.Key, out rowIndex))
+                if (!replicateToPosition.TryGetValue(replicateIndexDetails.Key, out int position))
                 {
                     continue;
                 }
-                double value = medianPolish.OverallConstant + medianPolish.RowEffects[rowIndex];
+                if (polished[position] == null)
+                {
+                    continue;
+                }
                 runAbundances.Add(new RunAbundance()
                 {
                     ReplicateIndex = replicateIndexDetails.Key,
                     BioReplicate = replicateIndexDetails.Value.BioReplicate,
                     Control = replicateIndexDetails.Value.IsControl,
-                    Log2Abundance = value
+                    Log2Abundance = polished[position].Value
                 });
             }
             return runAbundances;
