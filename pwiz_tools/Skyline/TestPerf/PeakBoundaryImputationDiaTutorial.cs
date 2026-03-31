@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace TestPerf
 {
@@ -214,6 +215,40 @@ namespace TestPerf
                 WaitForRelativeAbundanceComplete();
                 TakeCoverShot();
             }
+
+            if (!IsPauseForScreenShots)
+            {
+                RunUI(() => SkylineWindow.ShowPeakAreaAbundanceComparisonGraph());
+                WaitForConditionUI(() =>
+                {
+                    var plotPane = FindBoxPlotPane();
+                    return plotPane != null && plotPane.IsComplete;
+                });
+                RunUI(() =>
+                {
+                    var plotPane = FindBoxPlotPane();
+                    Assert.IsNotNull(plotPane);
+                    var boxPlotCurves = plotPane.CurveList.OfType<BoxPlotBarItem>().ToList();
+                    Assert.AreEqual(1, boxPlotCurves.Count);
+                    int replicateCount = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count;
+                    Assert.AreEqual(replicateCount, boxPlotCurves[0].Points.Count);
+
+                    var outlierCurve = plotPane.CurveList.OfType<LineItem>().FirstOrDefault(c =>
+                        c.Label.Text == GraphsResources.AreaAbundanceComparisonGraphPane_Outliers);
+                    Assert.IsNotNull(outlierCurve, "Outlier curve should be present");
+                    AssertEx.IsTrue(outlierCurve.Points.Count > 400, "Should have many outlier points");
+                });
+            }
+        }
+
+        private AreaAbundanceComparisonGraphPane FindBoxPlotPane()
+        {
+            foreach (var graphSummary in SkylineWindow.ListGraphPeakArea)
+            {
+                if (graphSummary.TryGetGraphPane<AreaAbundanceComparisonGraphPane>(out var pane))
+                    return pane;
+            }
+            return null;
         }
 
         private void DeleteNodes(TreeNode nodeProtTree, int start, int count)

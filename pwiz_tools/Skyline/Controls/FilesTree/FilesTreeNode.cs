@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Controls.FilesTree
     public enum FileState { available, missing, not_initialized, in_memory }
 
     // CONSIDER: customize behavior in subclasses. Overloading FilesTreeNode won't scale long-term.
-    public class FilesTreeNode : TreeNodeMS, ITipProviderWithText
+    public class FilesTreeNode : TreeNodeMS, ITipProviderWithText, ITipProviderWithTable
     {
         private FileModel _model;
 
@@ -221,6 +221,12 @@ namespace pwiz.Skyline.Controls.FilesTree
                 using var rt = new RenderTools();
                 return GetTipTable(rt).ToString();
             }
+        }
+
+        public TableDesc GetTooltipTable()
+        {
+            using var rt = new RenderTools();
+            return GetTipTable(rt);
         }
 
         private TableDesc GetTipTable(RenderTools rt)

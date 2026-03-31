@@ -26,13 +26,29 @@ using ZedGraph;
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
+    /// Implement on a <see cref="SummaryGraphPane"/> subclass to get an automatically-managed
+    /// <see cref="CursorTrackingTip"/>. The base class creates the tip in its constructor and
+    /// disposes it in <see cref="SummaryGraphPane.OnClose"/>.
+    /// </summary>
+    internal interface ICursorTrackingTooltipProvider
+    {
+        TableDesc GetTooltipTable(Point pt);
+    }
+
+    /// <summary>
     /// Base class for GraphPanes that are shown on the RetentionTime graph
     /// </summary>
     public abstract class SummaryGraphPane : GraphPane, ITipDisplayer
     {
+        private CursorTrackingTip _cursorTip; // For use with ICursorTrackingTooltipProvider
+
         protected SummaryGraphPane(GraphSummary graphSummary)
         {
             GraphSummary = graphSummary;
+            if (this is ICursorTrackingTooltipProvider provider)
+            {
+                _cursorTip = new CursorTrackingTip(graphSummary.GraphControl, provider.GetTooltipTable);
+            }
             PaneKey = PaneKey.DEFAULT;
             Border.IsVisible = false;
             Title.IsVisible = true;
@@ -97,9 +113,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public virtual bool HasToolbar { get { return false; } }
 
+        internal RenderTools CursorTipRenderTools => _cursorTip?.RenderTools;
+
         public virtual void OnClose(EventArgs e)
         {
-            
+            _cursorTip?.Dispose();
+            _cursorTip = null;
         }
 
         public virtual bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
