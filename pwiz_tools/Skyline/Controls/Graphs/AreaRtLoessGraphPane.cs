@@ -86,9 +86,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         var pointPairList = new PointPairList();
                         for (int j = 0; j < curveInfo.RtGrid.Length; j++)
                         {
-                            double y = curveInfo.FittedValues[j];
-                            if (showNormalized && globalFittedValues != null)
-                                y -= globalFittedValues[j];
+                            // After normalization: subtract the adjustment (sample - median)
+                            // from the original, yielding the median curve for every sample
+                            double y = showNormalized && globalFittedValues != null
+                                ? globalFittedValues[j]
+                                : curveInfo.FittedValues[j];
                             pointPairList.Add(curveInfo.RtGrid[j], y);
                         }
 
@@ -106,7 +108,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            if (!showNormalized && globalRtGrid != null && globalFittedValues != null)
+            if (globalRtGrid != null && globalFittedValues != null)
             {
                 var medianPoints = new PointPairList();
                 for (int j = 0; j < globalRtGrid.Length; j++)
@@ -124,9 +126,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             XAxis.Title.Text = GraphsResources.AreaRtLoessGraphPane_Retention_Time__min_;
-            YAxis.Title.Text = showNormalized
-                ? GraphsResources.AreaRtLoessGraphPane_Log2_Adjustment
-                : GraphsResources.AreaRtLoessGraphPane_Log2_Abundance;
+            YAxis.Title.Text = GraphsResources.AreaRtLoessGraphPane_Log2_Abundance;
             Title.Text = showNormalized
                 ? GraphsResources.AreaRtLoessGraphPane_RT_LOESS_Curves_Normalized
                 : GraphsResources.AreaRtLoessGraphPane_RT_LOESS_Curves;
