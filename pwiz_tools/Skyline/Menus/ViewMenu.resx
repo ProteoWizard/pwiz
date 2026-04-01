@@ -792,6 +792,12 @@
   <data name="areaCVHistogram2DMenuItem.Text" xml:space="preserve">
     <value>CV 2&amp;D Histogram</value>
   </data>
+  <data name="areaRtLoessMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="areaRtLoessMenuItem.Text" xml:space="preserve">
+    <value>RT &amp;LOESS Curves</value>
+  </data>
   <data name="peakAreasMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -1492,6 +1498,12 @@
     <value>areaCVHistogram2DMenuItem</value>
   </data>
   <data name="&gt;&gt;areaCVHistogram2DMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaRtLoessMenuItem.Name" xml:space="preserve">
+    <value>areaRtLoessMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaRtLoessMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;detectionsPlotsMenuItem.Name" xml:space="preserve">

@@ -125,6 +125,7 @@ namespace pwiz.Skyline.Menus
             this.areaRelativeAbundanceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaRtLoessMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsPlotsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsHistogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -803,7 +804,8 @@ namespace pwiz.Skyline.Menus
             this.areaPeptideComparisonMenuItem,
             this.areaRelativeAbundanceMenuItem,
             this.areaCVHistogramMenuItem,
-            this.areaCVHistogram2DMenuItem});
+            this.areaCVHistogram2DMenuItem,
+            this.areaRtLoessMenuItem});
             resources.ApplyResources(this.peakAreasMenuItem, "peakAreasMenuItem");
             this.peakAreasMenuItem.Name = "peakAreasMenuItem";
             this.peakAreasMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
@@ -837,7 +839,13 @@ namespace pwiz.Skyline.Menus
             this.areaCVHistogram2DMenuItem.Name = "areaCVHistogram2DMenuItem";
             resources.ApplyResources(this.areaCVHistogram2DMenuItem, "areaCVHistogram2DMenuItem");
             this.areaCVHistogram2DMenuItem.Click += new System.EventHandler(this.areaCVHistogram2DToolStripMenuItem1_Click);
-            // 
+            //
+            // areaRtLoessMenuItem
+            //
+            this.areaRtLoessMenuItem.Name = "areaRtLoessMenuItem";
+            resources.ApplyResources(this.areaRtLoessMenuItem, "areaRtLoessMenuItem");
+            this.areaRtLoessMenuItem.Click += new System.EventHandler(this.areaRtLoessMenuItem_Click);
+            //
             // detectionsPlotsMenuItem
             // 
             this.detectionsPlotsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1019,6 +1027,7 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem areaRelativeAbundanceMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogramMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogram2DMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaRtLoessMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsPlotsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsReplicateComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsHistogramMenuItem;

@@ -432,6 +432,7 @@
       <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaRelativeAbundanceGraphPane.cs" />
+    <Compile Include="Controls\Graphs\AreaRtLoessGraphPane.cs" />
     <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>

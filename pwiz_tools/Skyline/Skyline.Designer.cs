@@ -158,6 +158,8 @@ namespace pwiz.Skyline
             this.areaRelativeAbundanceContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaRtLoessContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowNormalizedContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.barAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lineAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1218,7 +1220,8 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonContextMenuItem,
             this.areaRelativeAbundanceContextMenuItem,
             this.areaCVHistogramContextMenuItem,
-            this.areaCVHistogram2DContextMenuItem});
+            this.areaCVHistogram2DContextMenuItem,
+            this.areaRtLoessContextMenuItem});
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
             resources.ApplyResources(this.areaGraphContextMenuItem, "areaGraphContextMenuItem");
             this.areaGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
@@ -1252,7 +1255,19 @@ namespace pwiz.Skyline
             this.areaCVHistogram2DContextMenuItem.Name = "areaCVHistogram2DContextMenuItem";
             resources.ApplyResources(this.areaCVHistogram2DContextMenuItem, "areaCVHistogram2DContextMenuItem");
             this.areaCVHistogram2DContextMenuItem.Click += new System.EventHandler(this.areaCVHistogram2DToolStripMenuItem1_Click);
-            // 
+            //
+            // areaRtLoessContextMenuItem
+            //
+            this.areaRtLoessContextMenuItem.Name = "areaRtLoessContextMenuItem";
+            resources.ApplyResources(this.areaRtLoessContextMenuItem, "areaRtLoessContextMenuItem");
+            this.areaRtLoessContextMenuItem.Click += new System.EventHandler(this.areaRtLoessMenuItem_Click);
+            //
+            // rtLoessShowNormalizedContextMenuItem
+            //
+            this.rtLoessShowNormalizedContextMenuItem.Name = "rtLoessShowNormalizedContextMenuItem";
+            resources.ApplyResources(this.rtLoessShowNormalizedContextMenuItem, "rtLoessShowNormalizedContextMenuItem");
+            this.rtLoessShowNormalizedContextMenuItem.Click += new System.EventHandler(this.rtLoessShowNormalizedMenuItem_Click);
+            //
             // graphTypeToolStripMenuItem
             // 
             this.graphTypeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -2842,6 +2857,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaRelativeAbundanceContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaRtLoessContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowNormalizedContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideLogScaleContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem relativeAbundanceLogScaleContextMenuItem;

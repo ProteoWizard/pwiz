@@ -3800,7 +3800,8 @@ namespace pwiz.Skyline
                     areaPeptideComparisonContextMenuItem,
                     areaRelativeAbundanceContextMenuItem,
                     areaCVHistogramContextMenuItem,
-                    areaCVHistogram2DContextMenuItem
+                    areaCVHistogram2DContextMenuItem,
+                    areaRtLoessContextMenuItem
                 });
             }
             var graphType = graphSummary.Type;
@@ -3825,6 +3826,11 @@ namespace pwiz.Skyline
             if (isHistogram)
             {
                 EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
+            }
+            else if (graphType == GraphTypeSummary.rt_loess)
+            {
+                rtLoessShowNormalizedContextMenuItem.Checked = Settings.Default.RtLoessShowNormalized;
+                menuStrip.Items.Insert(iInsert++, rtLoessShowNormalizedContextMenuItem);
             }
             else if(graphType != GraphTypeSummary.abundance)
             {
@@ -4431,6 +4437,7 @@ namespace pwiz.Skyline
             areaRelativeAbundanceContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.abundance);
             areaCVHistogramContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram2d);
+            areaRtLoessContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.rt_loess);
         }
 
         public bool GraphChecked(GraphTypeSummary type)
@@ -4443,6 +4450,7 @@ namespace pwiz.Skyline
                 case GraphTypeSummary.peptide:
                 case GraphTypeSummary.histogram:
                 case GraphTypeSummary.histogram2d:
+                case GraphTypeSummary.rt_loess:
                     types = Settings.Default.AreaGraphTypes;
                     list = _listGraphPeakArea;
                     break;
@@ -4588,6 +4596,24 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.histogram2d);
             ShowGraphPeakArea(true, GraphTypeSummary.histogram2d);
+            UpdatePeakAreaGraph();
+        }
+
+        private void areaRtLoessMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPeakAreaRtLoessGraph();
+        }
+
+        public void ShowPeakAreaRtLoessGraph()
+        {
+            Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.rt_loess);
+            ShowGraphPeakArea(true, GraphTypeSummary.rt_loess);
+            UpdatePeakAreaGraph();
+        }
+
+        private void rtLoessShowNormalizedMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.RtLoessShowNormalized = !Settings.Default.RtLoessShowNormalized;
             UpdatePeakAreaGraph();
         }
 

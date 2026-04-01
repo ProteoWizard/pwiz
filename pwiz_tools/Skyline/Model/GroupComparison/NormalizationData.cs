@@ -318,6 +318,46 @@ namespace pwiz.Skyline.Model.GroupComparison
             return sampleValue - globalValue;
         }
 
+        public bool HasRtLoessCurves => _rtLoessCurves != null && _rtLoessCurves.Count > 0;
+
+        public IEnumerable<RtLoessCurveInfo> GetRtLoessCurves()
+        {
+            if (_rtLoessCurves == null)
+                yield break;
+            foreach (var kvp in _rtLoessCurves)
+            {
+                yield return new RtLoessCurveInfo(kvp.Key.ReplicateIndex, kvp.Key.ChromFileInfoId,
+                    kvp.Value.RtGrid, kvp.Value.FittedValues);
+            }
+        }
+
+        public double[] GetGlobalMedianRtGrid()
+        {
+            return _globalMedianCurve.RtGrid;
+        }
+
+        public double[] GetGlobalMedianFittedValues()
+        {
+            return _globalMedianCurve.FittedValues;
+        }
+
+        public readonly struct RtLoessCurveInfo
+        {
+            public RtLoessCurveInfo(int replicateIndex, ChromFileInfoId chromFileInfoId,
+                double[] rtGrid, double[] fittedValues)
+            {
+                ReplicateIndex = replicateIndex;
+                ChromFileInfoId = chromFileInfoId;
+                RtGrid = rtGrid;
+                FittedValues = fittedValues;
+            }
+
+            public int ReplicateIndex { get; }
+            public ChromFileInfoId ChromFileInfoId { get; }
+            public double[] RtGrid { get; }
+            public double[] FittedValues { get; }
+        }
+
         public static Lazy<NormalizationData> LazyNormalizationData(SrmDocument document)
         {
             return new Lazy<NormalizationData>(()=> GetNormalizationData(document, false, null));

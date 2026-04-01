@@ -755,6 +755,7 @@ namespace pwiz.Skyline.Menus
             areaRelativeAbundanceMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance);
             areaCVHistogramMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
+            areaRtLoessMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.rt_loess);
         }
         private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)
         {
@@ -775,6 +776,10 @@ namespace pwiz.Skyline.Menus
         private void areaCVHistogram2DToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowPeakAreaCVHistogram2D();
+        }
+        private void areaRtLoessMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowPeakAreaRtLoessGraph();
         }
         #endregion
         #region Detections
@@ -973,6 +978,7 @@ namespace pwiz.Skyline.Menus
                 areaRelativeAbundanceMenuItem.Enabled = enable;
                 areaCVHistogramMenuItem.Enabled = enable;
                 areaCVHistogram2DMenuItem.Enabled = enable;
+                areaRtLoessMenuItem.Enabled = enable;
 
                 if (!deserialized)
                 {
