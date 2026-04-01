@@ -1602,7 +1602,19 @@ namespace pwiz.Skyline.Properties {
                 this["GroupByReplicateAnnotation"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string AbundanceComparisonGroupByAnnotation {
+            get {
+                return ((string)(this["AbundanceComparisonGroupByAnnotation"]));
+            }
+            set {
+                this["AbundanceComparisonGroupByAnnotation"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]

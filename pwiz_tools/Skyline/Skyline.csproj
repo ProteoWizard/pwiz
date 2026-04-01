@@ -431,8 +431,10 @@
     <Compile Include="Controls\Graphs\Calibration\CalibrationGraphControl.Designer.cs">
       <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AreaAbundanceComparisonGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaRtLoessGraphPane.cs" />
+    <Compile Include="Controls\Graphs\BoxPlotBarItem.cs" />
     <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
@@ -570,6 +572,11 @@
     <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Databinding\CandidatePeakGroupFactory.cs" />
     <Compile Include="Model\Databinding\Collections\ResultMap.cs" />
     <Compile Include="Model\Databinding\ReportExporters.cs" />
@@ -581,6 +588,7 @@
     <Compile Include="ToolsUI\ReportDefinitionReader.cs" />
     <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
+    <Compile Include="Model\ElementReorderer.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRowFactory.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRows.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
@@ -588,11 +596,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>EnumNames.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AuditLogStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
       <SubType>UserControl</SubType>
@@ -1444,6 +1447,7 @@
     </Compile>
     <Compile Include="Controls\Graphs\MassErrorHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\MassErrorHistogramGraphPane.cs" />
+    <Compile Include="Controls\Graphs\MassErrorBinFinder.cs" />
     <Compile Include="Controls\Graphs\PeptideAnnotationPairFinder.cs" />
     <Compile Include="Controls\Graphs\PeptidesAndTransitionGroups.cs" />
     <Compile Include="Controls\Graphs\RunToRunRegressionToolbar.cs">
@@ -1498,6 +1502,7 @@
     <Compile Include="Controls\Graphs\AsyncRenderControl.Designer.cs">
       <DependentUpon>AsyncRenderControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\CursorTrackingTip.cs" />
     <Compile Include="Controls\Graphs\GraphFullScan.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -3353,6 +3358,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\RefineMenu.resx">
       <DependentUpon>RefineMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\RefineMenu.zh-CHS.resx">
       <DependentUpon>RefineMenu.cs</DependentUpon>

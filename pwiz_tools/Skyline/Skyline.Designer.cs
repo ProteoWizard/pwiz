@@ -206,6 +206,7 @@ namespace pwiz.Skyline
             this.areaCVLogScaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeAboveCVCutoffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator57 = new System.Windows.Forms.ToolStripSeparator();
+            this.areaAbundanceComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abundanceTargetsProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abundanceTargetsPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.excludeTargetsPeptideListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1219,6 +1220,7 @@ namespace pwiz.Skyline
             this.areaReplicateComparisonContextMenuItem,
             this.areaPeptideComparisonContextMenuItem,
             this.areaRelativeAbundanceContextMenuItem,
+            this.areaAbundanceComparisonContextMenuItem,
             this.areaCVHistogramContextMenuItem,
             this.areaCVHistogram2DContextMenuItem,
             this.areaRtLoessContextMenuItem});
@@ -1565,6 +1567,12 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator57.Name = "toolStripSeparator57";
             resources.ApplyResources(this.toolStripSeparator57, "toolStripSeparator57");
+            // 
+            // areaAbundanceComparisonContextMenuItem
+            // 
+            this.areaAbundanceComparisonContextMenuItem.Name = "areaAbundanceComparisonContextMenuItem";
+            resources.ApplyResources(this.areaAbundanceComparisonContextMenuItem, "areaAbundanceComparisonContextMenuItem");
+            this.areaAbundanceComparisonContextMenuItem.Click += new System.EventHandler(this.areaAbundanceComparisonMenuItem_Click);
             // 
             // abundanceTargetsProteinsMenuItem
             // 
@@ -2859,6 +2867,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaRelativeAbundanceContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaRtLoessContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem rtLoessShowNormalizedContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaAbundanceComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideLogScaleContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem relativeAbundanceLogScaleContextMenuItem;
