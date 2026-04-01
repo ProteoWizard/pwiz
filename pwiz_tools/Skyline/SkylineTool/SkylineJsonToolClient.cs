@@ -152,6 +152,7 @@ namespace SkylineTool
         public void SetUndoRedoPosition(int index) { Call(nameof(SetUndoRedoPosition), index); }
         public string GetDocumentSettings(string filePath) { return Call(nameof(GetDocumentSettings), filePath); }
         public string GetDefaultSettings(string filePath) { return Call(nameof(GetDefaultSettings), filePath); }
+        public void ReorderElements(string[] elementLocators) { Call(nameof(ReorderElements), (object) elementLocators); }
 
         // 2-arg methods
         public LocationEntry[] GetLocations(string level, string rootLocator = null)
