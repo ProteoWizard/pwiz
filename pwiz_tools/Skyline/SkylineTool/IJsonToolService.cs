@@ -239,6 +239,11 @@ namespace SkylineTool
         /// <param name="filePath">Output file path.</param>
         /// <returns>The file path written to.</returns>
         string GetDefaultSettings(string filePath);
+        /// <summary>
+        /// Changes the order of nodes in the Targets tree and Replicates based on the
+        /// order of <paramref name="elementLocators"/>. Elements which are not included in
+        /// elementLocators will be moved to the end of their parent's list of children.
+        /// </summary>
         void ReorderElements(string[] elementLocators);
 
         // --- UI mode ---
