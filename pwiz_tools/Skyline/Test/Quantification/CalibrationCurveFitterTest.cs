@@ -96,6 +96,8 @@ namespace pwiz.SkylineTest.Quantification
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
                 Assert.IsNotNull(metrics.Slope);
                 Assert.IsNotNull(metrics.RSquared);
+                Assert.IsNotNull(metrics.FittedParameters);
+                Assert.IsNotNull(metrics.RelativeStandardError);
                 double expectedConcentration = calibrationCurve.GetX(expectedY).Value;
                 Assert.AreEqual(expectedConcentration,
                     curveFitter.GetCalculatedXValue(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
@@ -138,6 +140,8 @@ namespace pwiz.SkylineTest.Quantification
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
                 Assert.IsNotNull(metrics.Slope);
                 Assert.IsNotNull(metrics.RSquared);
+                Assert.IsNotNull(metrics.FittedParameters);
+                Assert.IsNotNull(metrics.RelativeStandardError);
                 double expectedConcentration = calibrationCurve.GetX(expectedY).Value;
                 Assert.AreEqual(expectedConcentration,
                     curveFitter.GetCalculatedXValue(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
@@ -183,8 +187,10 @@ namespace pwiz.SkylineTest.Quantification
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
                 Assert.IsNotNull(metrics.Slope);
                 Assert.IsNotNull(metrics.RSquared);
-                double expectedConcentration = calibrationCurve.GetX(expectedY).Value*internalStandardConcentration;
-                Assert.AreEqual(expectedConcentration/internalStandardConcentration,
+                Assert.IsNotNull(metrics.FittedParameters);
+                Assert.IsNotNull(metrics.RelativeStandardError);
+                double expectedConcentration = calibrationCurve.GetX(expectedY).Value * internalStandardConcentration;
+                Assert.AreEqual(expectedConcentration / internalStandardConcentration,
                     curveFitter.GetCalculatedXValue(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
                 Assert.AreEqual(expectedConcentration,
                     curveFitter.GetCalculatedConcentration(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
@@ -302,7 +308,7 @@ namespace pwiz.SkylineTest.Quantification
             PeptideDocNode peptide = protein.Peptides.First();
             peptide = peptide.ChangeInternalStandardConcentration(internalStandardConcentration);
             CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(srmDocument, protein, peptide);
-            Assert.AreEqual(CalibrationCurveFitter.ConcentrationRatioText(IsotopeLabelType.light, IsotopeLabelType.heavy), 
+            Assert.AreEqual(CalibrationCurveFitter.ConcentrationRatioText(IsotopeLabelType.light, IsotopeLabelType.heavy),
                 curveFitter.GetXAxisTitle());
             Assert.AreEqual(CalibrationCurveFitter.PeakAreaRatioText(IsotopeLabelType.light, IsotopeLabelType.heavy), curveFitter.GetYAxisTitle());
             var chromatograms = srmDocument.Settings.MeasuredResults.Chromatograms;
@@ -316,8 +322,8 @@ namespace pwiz.SkylineTest.Quantification
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
                 Assert.AreEqual(1, metrics.PointCount);
-                var expectedConcentration = expectedY*internalStandardConcentration/ metrics.Slope.Value;
-                Assert.AreEqual(expectedConcentration/internalStandardConcentration,
+                var expectedConcentration = expectedY * internalStandardConcentration / metrics.Slope.Value;
+                Assert.AreEqual(expectedConcentration / internalStandardConcentration,
                     curveFitter.GetCalculatedXValue(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
                 Assert.AreEqual(expectedConcentration,
                     curveFitter.GetCalculatedConcentration(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
@@ -325,7 +331,7 @@ namespace pwiz.SkylineTest.Quantification
                 if (Equals(chromatogramSet.SampleType, SampleType.STANDARD) && chromatogramSet.AnalyteConcentration.HasValue)
                 {
                     // Since there was only one standard, the regression line goes exactly through this sample.
-                    Assert.AreEqual(expectedConcentration, chromatogramSet.AnalyteConcentration.Value*peptide.ConcentrationMultiplier.GetValueOrDefault(1.0), epsilon);
+                    Assert.AreEqual(expectedConcentration, chromatogramSet.AnalyteConcentration.Value * peptide.ConcentrationMultiplier.GetValueOrDefault(1.0), epsilon);
                 }
             }
         }
@@ -345,16 +351,16 @@ namespace pwiz.SkylineTest.Quantification
                     .Select(c => c.AnalyteConcentration.HasValue ? c : c.ChangeAnalyteConcentration(10)).ToList()));
             var baseCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(baseDocument,
                 baseDocument.MoleculeGroups.First(), baseDocument.Molecules.First());
-            var baseCurve = (CalibrationCurve.Linear) baseCurveFitter.GetCalibrationCurve();
+            var baseCurve = (CalibrationCurve.Linear)baseCurveFitter.GetCalibrationCurve();
             // Set the dilution factor of each external standard to 2.0, and each unknown to 3.0
             var docWithDilutionFactor = baseDocument.ChangeMeasuredResults(
                 baseDocument.MeasuredResults.ChangeChromatograms(baseDocument.MeasuredResults.Chromatograms.Select(
-                    chrom => Equals(chrom.SampleType, SampleType.STANDARD) ? chrom.ChangeDilutionFactor(2.0) : 
+                    chrom => Equals(chrom.SampleType, SampleType.STANDARD) ? chrom.ChangeDilutionFactor(2.0) :
                         chrom.ChangeDilutionFactor(3.0)).ToArray()));
             var dilutionFactorCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(
                 docWithDilutionFactor, docWithDilutionFactor.MoleculeGroups.First(),
                 docWithDilutionFactor.Molecules.First());
-            var dilutionFactorCurve = (CalibrationCurve.Linear) dilutionFactorCurveFitter.GetCalibrationCurve();
+            var dilutionFactorCurve = (CalibrationCurve.Linear)dilutionFactorCurveFitter.GetCalibrationCurve();
             Assert.AreEqual(2.0 * baseCurve.Slope, dilutionFactorCurve.Slope);
             Assert.AreEqual(baseCurve.Intercept, dilutionFactorCurve.Intercept);
             for (int replicateIndex = 0; replicateIndex < baseDocument.MeasuredResults.Chromatograms.Count; replicateIndex++)
@@ -475,13 +481,13 @@ namespace pwiz.SkylineTest.Quantification
         private SrmDocument LoadTestDocument()
         {
             using (var stream =
-                    typeof (CalibrationCurveFitterTest).Assembly.GetManifestResourceStream(
-                        typeof (CalibrationCurveFitterTest),
+                    typeof(CalibrationCurveFitterTest).Assembly.GetManifestResourceStream(
+                        typeof(CalibrationCurveFitterTest),
                         "CalibrationCurveFitterTest.sky"))
             {
                 Assert.IsNotNull(stream);
-                var serializer = new XmlSerializer(typeof (SrmDocument));
-                return (SrmDocument) serializer.Deserialize(stream);
+                var serializer = new XmlSerializer(typeof(SrmDocument));
+                return (SrmDocument)serializer.Deserialize(stream);
             }
         }
     }
