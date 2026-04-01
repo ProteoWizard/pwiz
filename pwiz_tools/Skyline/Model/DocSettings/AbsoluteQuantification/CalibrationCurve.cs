@@ -89,14 +89,21 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             foreach (var point in points)
             {
                 double? xFitted = GetX(point.Y);
-                relativeErrors.Add((xFitted.Value - point.X) / point.X);
+                if (xFitted.HasValue && point.X != 0 && !double.IsNaN(xFitted.Value)) 
+                {
+                    relativeErrors.Add((xFitted.Value - point.X) / point.X);
+                }
+                
             }
             if (!relativeErrors.Any())
             {
                 return null;
             }
-            int n = points.Count;
-            int degreesOfFreedom = n - fittedParameters.Value;
+            int degreesOfFreedom = relativeErrors.Count - fittedParameters.Value;
+            if (degreesOfFreedom <= 0) 
+            {
+                return null;
+            }
             double sumOfSquaresOfResiduals = relativeErrors.Sum(r => r * r);
             double relStdError = Math.Sqrt(sumOfSquaresOfResiduals / degreesOfFreedom);
             return relStdError;
@@ -207,7 +214,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     .ChangeSlope(Slope)
                     .ChangeQuadraticCoefficient(QuadraticCoefficient)
                     .ChangeFittedParameters(3); // 2 if intercept forced to 0
-                ;
             }
 
             public override string ToString()
@@ -337,7 +343,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     .ChangeSlope(Slope)
                     .ChangeIntercept(Intercept)
                     .ChangeTurningPoint(TurningPoint)
-                    .ChangeFittedParameters(2); // 1 if intercept forced to 0 - I don't believe the turning point counts as a degree of freedom
+                    .ChangeFittedParameters(3); // Bilinear turning point counts as fitted parameter
             }
 
             public override string ToString()

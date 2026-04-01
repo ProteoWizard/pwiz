@@ -97,6 +97,7 @@ namespace pwiz.SkylineTest.Quantification
                 Assert.IsNotNull(metrics.Slope);
                 Assert.IsNotNull(metrics.RSquared);
                 Assert.IsNotNull(metrics.FittedParameters);
+                Assert.AreEqual(2, metrics.FittedParameters);
                 Assert.IsNotNull(metrics.RelativeStandardError);
                 double expectedConcentration = calibrationCurve.GetX(expectedY).Value;
                 Assert.AreEqual(expectedConcentration,
@@ -141,6 +142,7 @@ namespace pwiz.SkylineTest.Quantification
                 Assert.IsNotNull(metrics.Slope);
                 Assert.IsNotNull(metrics.RSquared);
                 Assert.IsNotNull(metrics.FittedParameters);
+                Assert.AreEqual(2, metrics.FittedParameters);
                 Assert.IsNotNull(metrics.RelativeStandardError);
                 double expectedConcentration = calibrationCurve.GetX(expectedY).Value;
                 Assert.AreEqual(expectedConcentration,
@@ -188,6 +190,7 @@ namespace pwiz.SkylineTest.Quantification
                 Assert.IsNotNull(metrics.Slope);
                 Assert.IsNotNull(metrics.RSquared);
                 Assert.IsNotNull(metrics.FittedParameters);
+                Assert.AreEqual(2, metrics.FittedParameters);
                 Assert.IsNotNull(metrics.RelativeStandardError);
                 double expectedConcentration = calibrationCurve.GetX(expectedY).Value * internalStandardConcentration;
                 Assert.AreEqual(expectedConcentration / internalStandardConcentration,
@@ -230,6 +233,9 @@ namespace pwiz.SkylineTest.Quantification
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
                 Assert.AreEqual(1, metrics.PointCount);
+                Assert.IsNotNull(metrics.FittedParameters);
+                Assert.AreEqual(1, metrics.FittedParameters);
+                Assert.IsNull(metrics.RelativeStandardError); // deg freedom becomes 0 with a single point and we return null
                 var expectedConcentration = expectedY / metrics.Slope.Value;
                 Assert.AreEqual(expectedConcentration,
                     curveFitter.GetCalculatedXValue(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
@@ -275,6 +281,9 @@ namespace pwiz.SkylineTest.Quantification
                 Assert.AreEqual(expectedY, actualY.Value, epsilon, msg);
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
+                Assert.IsNotNull(metrics.FittedParameters);
+                Assert.AreEqual(1, metrics.FittedParameters);
+                Assert.IsNull(metrics.RelativeStandardError);
                 var expectedConcentration = expectedY / metrics.Slope.Value;
                 Assert.AreEqual(expectedConcentration,
                     curveFitter.GetCalculatedXValue(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
@@ -322,6 +331,9 @@ namespace pwiz.SkylineTest.Quantification
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
                 Assert.AreEqual(1, metrics.PointCount);
+                Assert.IsNotNull(metrics.FittedParameters);
+                Assert.AreEqual(1, metrics.FittedParameters);
+                Assert.IsNull(metrics.RelativeStandardError);
                 var expectedConcentration = expectedY * internalStandardConcentration / metrics.Slope.Value;
                 Assert.AreEqual(expectedConcentration / internalStandardConcentration,
                     curveFitter.GetCalculatedXValue(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
@@ -429,6 +441,9 @@ namespace pwiz.SkylineTest.Quantification
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
                 Assert.AreEqual(1 / internalStandardConcentration, metrics.Slope);
                 Assert.IsNull(metrics.RSquared);
+                Assert.IsNotNull(metrics.FittedParameters);
+                Assert.AreEqual(metrics.FittedParameters, 1);
+                Assert.IsNull(metrics.RelativeStandardError);
                 Assert.AreEqual(expectedY * internalStandardConcentration,
                     curveFitter.GetCalculatedXValue(calibrationCurve, iReplicate).GetValueOrDefault(double.NaN), epsilon, msg);
                 Assert.AreEqual(expectedY * internalStandardConcentration,
