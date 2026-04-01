@@ -83,13 +83,16 @@ namespace pwiz.Common.SystemUtil
 
         public static void SafeDelete(string path, bool ignoreExceptions = false)
         {
+            if (path == null || File.Exists(path))
+            {
+                return;
+            }
             var hint = $@"File.Delete({path})";
             if (ignoreExceptions)
             {
                 try
                 {
-                    if (path != null && File.Exists(path))
-                        TryHelper.TryTwice(() => File.Delete(path), hint);
+                    TryHelper.TryTwice(() => File.Delete(path), hint);
                 }
 // ReSharper disable EmptyGeneralCatchClause
                 catch (Exception)
