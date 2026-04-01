@@ -83,7 +83,7 @@ namespace pwiz.Common.SystemUtil
 
         public static void SafeDelete(string path, bool ignoreExceptions = false)
         {
-            if (path == null || File.Exists(path))
+            if (path == null || !File.Exists(path))
             {
                 return;
             }
