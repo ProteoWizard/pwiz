@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -129,6 +130,61 @@ namespace pwiz.SkylineTest
                 seen++;
             }
         }
+
+        /// <summary>
+        /// Tests that importing a transition list with a row containing fewer columns
+        /// than expected produces a meaningful error rather than a raw
+        /// IndexOutOfRangeException. Reproduces the crash reported in exception #74264
+        /// (GeneralRowReader.CalcTransitionInfo).
+        /// </summary>
+        [TestMethod]
+        public void MassListShortRowTest()
+        {
+            // Header-based transition list where the last data row is truncated.
+            // Uses PEPTIDER with known-good m/z values from the existing test data.
+            var text = SHORT_ROW_TRANSITION_LIST
+                .Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+
+            var settings = SrmSettingsList.GetDefault();
+            var doc = new SrmDocument(settings);
+
+            var inputs = new MassListInputs(text, true);
+            var progressMonitor = new SilentProgressMonitor();
+            inputs.ReadLines(progressMonitor);
+            var importer = new MassListImporter(doc, inputs, true);
+
+            Assert.IsTrue(importer.PreImport(progressMonitor, null));
+
+            var errorList = new List<TransitionImportErrorInfo>();
+            var peptideList = importer.DoImport(progressMonitor, new Dictionary<string, FastaSequence>(),
+                new List<MeasuredRetentionTime>(), new List<SpectrumMzInfo>(), errorList).ToList();
+
+            var errorDetail = string.Join(" | ", errorList.Select(e =>
+                string.Format("line {0}: {1}", e.LineNum, e.ErrorMessage)));
+            // The good rows should import successfully
+            AssertEx.IsTrue(peptideList.Count > 0,
+                string.Format("Expected good rows to import, got {0} groups and {1} errors: {2}",
+                    peptideList.Count, errorList.Count, errorDetail));
+            // The short row should produce an import error
+            AssertEx.IsTrue(errorList.Count > 0,
+                "Expected an error for the truncated row");
+            // The error should be the user-friendly short-row message
+            var shortRowError = errorList.Last();
+            AssertEx.Contains(shortRowError.ErrorMessage,
+                string.Format(ModelResources.MassListRowReader_NextRow_Row_has__0__fields_but__1__are_required, 2, 4));
+        }
+
+        // Header-based transition list with the last data row truncated.
+        // Good rows use PEPTIDER y6 and y5 fragment ions with m/z values that match
+        // default SRM settings (from TRANSITION_LIST_TEST).
+        // The Protein Name column (index 3) triggers the bug: CalcTransitionInfo
+        // accesses Fields[ProteinColumn] directly without bounds checking.
+        // The truncated row has only 2 fields, so Fields[3] throws IndexOutOfRangeException.
+        private const string SHORT_ROW_TRANSITION_LIST =
+            @"Peptide Modified Sequence	Precursor Mz	Product Mz	Protein Name
+PEPTIDER	478.737814	730.372994	TestProtein
+PEPTIDER	478.737814	633.32023	TestProtein
+PEPTIDER	478.737814";
 
         private const string TRANSITION_LIST_TEST =
             @"Protein Name	Peptide Modified Sequence	Precursor Mz	Precursor Charge	Collision Energy	Product Mz	Product Charge	Fragment Ion	Fragment Ion Type	Fragment Ion Ordinal	Loss Neutral Mass	Losses	Library Rank	Library Intensity	Isotope Dist Index	Isotope Dist Rank	Isotope Dist Proportion	Full Scan Filter Width	Transition Is Decoy	Product Decoy Mz Shift

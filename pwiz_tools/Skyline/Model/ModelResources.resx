@@ -427,6 +427,9 @@
   <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified" xml:space="preserve">
     <value>No peptide modified sequence column specified</value>
   </data>
+  <data name="MassListRowReader_NextRow_Row_has__0__fields_but__1__are_required" xml:space="preserve">
+    <value>Row has {0} fields but {1} are required</value>
+  </data>
   <data name="MethodExporter_ExportMethod_Exporting_method__0__" xml:space="preserve">
     <value>Exporting method {0}...</value>
   </data>

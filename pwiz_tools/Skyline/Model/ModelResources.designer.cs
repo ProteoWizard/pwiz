@@ -1219,7 +1219,16 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("MassListRowReader_NextRow_No_peptide_sequence_column_specified", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Row has {0} fields but {1} are required.
+        /// </summary>
+        public static string MassListRowReader_NextRow_Row_has__0__fields_but__1__are_required {
+            get {
+                return ResourceManager.GetString("MassListRowReader_NextRow_Row_has__0__fields_but__1__are_required", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Exporting method {0}....
         /// </summary>

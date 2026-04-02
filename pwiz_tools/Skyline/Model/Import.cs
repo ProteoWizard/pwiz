@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
@@ -639,7 +640,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!ExceptionUtil.IsProgrammingDefect(exception))
                 {
                     errorList.Add(new TransitionImportErrorInfo(exception.Message, null, _linesSeen, row));
                     continue;
@@ -1096,6 +1097,15 @@ namespace pwiz.Skyline.Model
 
                 if (PeptideColumn == -1)
                     return new TransitionImportErrorInfo(ModelResources.MassListRowReader_NextRow_No_peptide_sequence_column_specified, null, lineNum, line);
+
+                int maxColumn = Indices.MaxColumnIndex;
+                if (maxColumn >= Fields.Length)
+                {
+                    return new TransitionImportErrorInfo(
+                        string.Format(ModelResources.MassListRowReader_NextRow_Row_has__0__fields_but__1__are_required,
+                            Fields.Length, maxColumn + 1),
+                        null, lineNum, line);
+                }
 
                 ExTransitionInfo info;
                 try
@@ -2567,13 +2577,33 @@ namespace pwiz.Skyline.Model
         public ColumnIndices()
         {
             // Iterates through the column indices and initializes them all to -1
-            foreach (var property in GetType().GetProperties())
+            foreach (var property in GetColumnProperties())
+                property.SetValue(this, -1);
+        }
+
+        /// <summary>
+        /// The highest assigned column index across all column properties, or -1 if none assigned.
+        /// Used to validate that data rows have enough fields before accessing Fields[].
+        /// </summary>
+        public int MaxColumnIndex
+        {
+            get
             {
-                if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
+                int max = -1;
+                foreach (var property in GetColumnProperties())
                 {
-                    property.SetValue(this, -1);
+                    int value = (int)property.GetValue(this);
+                    if (value > max)
+                        max = value;
                 }
+                return max;
             }
+        }
+
+        private IEnumerable<PropertyInfo> GetColumnProperties()
+        {
+            return GetType().GetProperties()
+                .Where(p => p.Name.EndsWith(@"Column") && p.PropertyType == typeof(int));
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
