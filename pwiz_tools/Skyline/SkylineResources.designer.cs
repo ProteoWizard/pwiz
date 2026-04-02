@@ -1681,6 +1681,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline failed to load a required native library....
+        /// </summary>
+        public static string Program_CheckNativeLibraries_Failed_to_load_required_native_libraries {
+            get {
+                return ResourceManager.GetString("Program_CheckNativeLibraries_Failed_to_load_required_native_libraries", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Troubleshooting Installation Issues.
+        /// </summary>
+        public static string Program_CheckNativeLibraries_Troubleshooting {
+            get {
+                return ResourceManager.GetString("Program_CheckNativeLibraries_Troubleshooting", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Copying external tools from a previous installation.
         /// </summary>
         public static string Program_Main_Copying_external_tools_from_a_previous_installation {

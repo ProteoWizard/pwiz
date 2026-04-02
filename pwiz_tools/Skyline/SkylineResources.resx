@@ -589,6 +589,16 @@
   <data name="Program_CopyOldTools_Error_copying_external_tools_from_previous_installation" xml:space="preserve">
     <value>Error copying external tools from previous installation</value>
   </data>
+  <data name="Program_CheckNativeLibraries_Failed_to_load_required_native_libraries" xml:space="preserve">
+    <value>Skyline failed to load a required native library. This may be caused by a Windows security policy (Application Control) blocking the file, or by a broken installation.
+
+{0}
+
+Try uninstalling and reinstalling Skyline, or contact your IT department if the problem persists.</value>
+  </data>
+  <data name="Program_CheckNativeLibraries_Troubleshooting" xml:space="preserve">
+    <value>Recovering From a Broken Installation</value>
+  </data>
   <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
     <value>Copying external tools from a previous installation</value>
   </data>
