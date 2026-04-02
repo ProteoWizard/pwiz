@@ -1455,6 +1455,12 @@ namespace pwiz.Skyline.Controls.Graphs {
             }
         }
 
+        public static string GraphFullScan_ToolTip_Summed_Intensity {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_Summed_Intensity", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0:0.0000}.
         /// </summary>

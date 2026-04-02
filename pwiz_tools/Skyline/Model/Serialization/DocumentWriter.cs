@@ -924,13 +924,13 @@ namespace pwiz.Skyline.Model.Serialization
                     {
                         // No sense of window that's not centered on IM, so declare window center as IM even if window was actually assymetrical
                         var centerIM = (ionMobilityExtractionWindow.Offset??0) + chromInfo.IonMobility.IonMobility.Mobility;
-                        writer.WriteAttribute(ATTR.ion_mobility, centerIM);
-                        writer.WriteAttribute(ATTR.ion_mobility_window, ionMobilityExtractionWindow.Width);
+                        writer.WriteAttributeNullable(ATTR.ion_mobility, centerIM);
+                        writer.WriteAttributeNullable(ATTR.ion_mobility_window, ionMobilityExtractionWindow.Width);
                     }
                     else
                     {
-                        writer.WriteAttribute(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
-                        writer.WriteAttribute(ATTR.ion_mobility_window, ionMobilityExtractionWindow.Width);
+                        writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
+                        writer.WriteAttributeNullable(ATTR.ion_mobility_window, ionMobilityExtractionWindow.Width);
                         writer.WriteAttributeNullable(ATTR.ion_mobility_window_offset, ionMobilityExtractionWindow.Offset);
                     }
                 }

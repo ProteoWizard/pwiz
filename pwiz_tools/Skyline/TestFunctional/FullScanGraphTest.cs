@@ -161,7 +161,6 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(wantCCS, annotation.Contains(ChromGraphItem.FormatCollisionCrossSectionValue(expectedIonMobility)),
                     " did not find expected CCS information display");
             }
-
             // Simulate click on a peak in GraphChromatogram form.
             ClickChromatogram(32.95, 134.6);
             TestScale(452, 456, 0, 250);
@@ -202,11 +201,13 @@ namespace pwiz.SkylineTestFunctional
             SetSpectrum(false);
             TestScale(452, 456, 2.61, 4.34);
             WaitForOpenForm<GraphFullScan>();   // For localization testing
-            PauseTest(); // Heatmap without mobilogram
 
             // Show mobilogram overlay alongside heatmap.
             SetMobilogram(true);
-            PauseTest(); // Heatmap with mobilogram overlay
+            // Test mobilogram tooltip structure (2 rows: ion mobility + summed intensity).
+            TestMobilogramTooltip();
+            // Verify a point inside the filter band (3.152-3.651) has non-zero summed intensity.
+            TestMobilogramTooltip(3.4);
             SetMobilogram(false);
 
             // Test Copy Data output for heatmap - should have 3 columns (m/z, ion mobility, intensity)
@@ -485,6 +486,35 @@ namespace pwiz.SkylineTestFunctional
         private static void SetMobilogram(bool isChecked)
         {
             RunUI(() => SkylineWindow.GraphFullScan.SetMobilogram(isChecked));
+        }
+
+        /// <summary>
+        /// Verifies mobilogram tooltip produces a 2-row table with correct labels and parseable values.
+        /// </summary>
+        private static void TestMobilogramTooltip()
+        {
+            TableDesc table = null;
+            RunUI(() => table = SkylineWindow.GraphFullScan.TestGetMobilogramTooltipTable());
+            Assert.IsNotNull(table, "Mobilogram tooltip returned null");
+            Assert.AreEqual(2, table.Count, string.Format("Expected 2 rows, got: {0}", table));
+            Assert.IsTrue(double.TryParse(table[0][1].Text, out _),
+                "Ion mobility value not parseable: " + table[0][1].Text);
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, table[1][0].Text);
+            Assert.IsTrue(double.TryParse(table[1][1].Text, out _),
+                "Summed intensity not parseable: " + table[1][1].Text);
+        }
+
+        /// <summary>
+        /// Verifies mobilogram tooltip at a specific ion mobility value returns non-zero intensity.
+        /// </summary>
+        private static void TestMobilogramTooltip(double imValue)
+        {
+            TableDesc table = null;
+            RunUI(() => table = SkylineWindow.GraphFullScan.TestGetMobilogramTooltipTable(imValue));
+            Assert.IsNotNull(table, string.Format("Mobilogram tooltip returned null at IM={0}", imValue));
+            Assert.IsTrue(double.TryParse(table[1][1].Text, out var intensity));
+            Assert.IsTrue(intensity > 0,
+                string.Format("Expected non-zero summed intensity near IM={0}", imValue));
         }
 
         private void TestSpecialIonsAnnotations()

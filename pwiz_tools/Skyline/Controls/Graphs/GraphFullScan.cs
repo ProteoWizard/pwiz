@@ -53,6 +53,7 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private const int MIN_DOT_RADIUS = 4;
         private const int MAX_DOT_RADIUS = 13;
+        private const float MOBILOGRAM_LINE_WIDTH = 1.5f;
 
         private readonly IDocumentUIContainer _documentContainer;
         private readonly GraphHelper _graphHelper;
@@ -514,7 +515,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         points.Add(new Point3D(scan.Mzs[j],  mobilityValue, scan.Intensities[j]));
                     }
                 }
-                _heatMapData = new HeatMapData(points, mobilogramBtn.Checked);
+                _heatMapData = new HeatMapData(points, mobilogramBtn.Checked,
+                    ((IHeatMapDataProvider)_heatMapPane).HeatMapZAxisName);
             }
 
             double minDrift;
@@ -1770,7 +1772,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (polyPoints.Count > 3)
                 {
                     var linePoints = polyPoints.GetRange(1, polyPoints.Count - 2).ToArray();
-                    using (var linePen = new Pen(Color.DarkBlue, 1.5f))
+                    using (var linePen = new Pen(Color.DarkBlue, MOBILOGRAM_LINE_WIDTH))
                         g.DrawLines(linePen, linePoints);
                 }
 
@@ -1787,41 +1789,42 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 g.SetClip(savedClip);
 
-                // Draw X-axis major and minor ticks straddling the border, and labels below
+                // Draw X-axis major and minor ticks protruding downward (matching ZedGraph bottom-axis style),
+                // with labels positioned using ZedGraph's standard LabelGap (Scale.Default.LabelGap = 0.3f).
+                var xMajorTicSize = xAxis.MajorTic.ScaledTic(scaleFactor);
+                var xMinorTicSize = xAxis.MinorTic.ScaledTic(scaleFactor);
                 using (var majorPen = new Pen(axisColor, axisPenWidth))
                 using (var minorPen = new Pen(axisColor, minorPenWidth))
                 {
                     float tickY = plotBottom;
-                    float labelY = tickY + majorTicSize + xLabelFontSpec.GetHeight(scaleFactor) * 0.1f;
+                    float labelY = tickY + xMajorTicSize + charHeight * 0.3f;
                     string tickFormat = scaledMax >= 10 ? @"0" :
                         scaledMax >= 1 ? @"0.#" : @"0.##";
 
-                    // Draw minor ticks (straddling the axis)
+                    // Draw minor ticks protruding downward
                     if (xMinorStep > 0 && scaledMax / xMinorStep < 100)
                     {
                         for (double val = xMinorStep; val < scaledMax; val += xMinorStep)
                         {
                             float px = mobLeft + (float)(val / scaledMax) * mobWidth;
-                            g.DrawLine(minorPen, px, tickY - minorTicSize, px, tickY + minorTicSize);
+                            g.DrawLine(minorPen, px, tickY, px, tickY + xMinorTicSize);
                         }
                     }
 
-                    // Draw major ticks with labels (straddling the axis, all labels centered)
+                    // Draw major ticks protruding downward with labels centered below
                     for (double val = 0; val <= scaledMax + xMajorStep * 0.001; val += xMajorStep)
                     {
                         float px = mobLeft + (float)(val / scaledMax) * mobWidth;
 
-                        // Major tick straddling the axis
-                        g.DrawLine(majorPen, px, tickY - majorTicSize, px, tickY + majorTicSize);
+                        g.DrawLine(majorPen, px, tickY, px, tickY + xMajorTicSize);
 
-                        // Label centered on tick
                         string label = val.ToString(tickFormat);
                         xLabelFontSpec.Draw(g, paneBase, label, px, labelY,
                             AlignH.Center, AlignV.Top, scaleFactor);
                     }
 
                     // Draw axis title with magnitude indicator, bold to match heatmap axis titles
-                    float titleY = labelY + charHeight + charHeight * 0.1f;
+                    float titleY = labelY + charHeight + charHeight * 0.3f;
                     float titleX = (mobLeft + mobRight) / 2;
                     string title = mag > 0
                         ? string.Format(@"{0} (10^{1})",
@@ -2003,6 +2006,16 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool graphControl_MouseMove(ZedGraphControl sender, MouseEventArgs e)
         {
             var pt = new PointF(e.X, e.Y);
+
+            // In the mobilogram area, show the same crosshair cursor as the heatmap.
+            // ZedGraph only sets Cross when FindChartRect returns non-null, but the mobilogram
+            // lives in the right margin outside the chart rect, so we must set it explicitly.
+            if (IsMobilogramVisible && IsInMobilogramArea(pt))
+            {
+                graphControl.Cursor = Cursors.Cross;
+                return true;
+            }
+
             var nearestLabel = GetNearestLabel(pt);
             if (nearestLabel == null || nearestLabel.Tag == null)
                 return false;
@@ -2019,8 +2032,68 @@ namespace pwiz.Skyline.Controls.Graphs
         // For use with CursorTrackingTip _cursorTip
         private TableDesc GetTooltipTable(PointF pt)
         {
+            // Only show tooltip when the cursor is the crosshair — this naturally suppresses
+            // tooltips near (but outside) the chart area, e.g. near the legend.
+            if (graphControl.Cursor != Cursors.Cross)
+                return null;
+            if (IsMobilogramVisible && IsInMobilogramArea(pt))
+                return GetMobilogramTooltipTable(pt);
             bool isHeatMap = spectrumBtn.Visible && !spectrumBtn.Checked;
             return isHeatMap ? GetHeatMapTooltipTable(pt) : GetSpectrumTooltipTable(pt);
+        }
+
+        private bool IsInMobilogramArea(PointF pt)
+        {
+            var chartRect = _heatMapPane.Chart.Rect;
+            float scaleFactor = _heatMapPane.CalcScaleFactor();
+            float gapWidth = 6 * scaleFactor;
+            float mobLeft = chartRect.Right + gapWidth;
+            float mobRight = _heatMapPane.Rect.Right - 18 * scaleFactor;
+            return pt.X >= mobLeft && pt.X <= mobRight &&
+                   pt.Y >= chartRect.Top && pt.Y <= chartRect.Bottom;
+        }
+
+        private TableDesc GetMobilogramTooltipTable(PointF pt)
+        {
+            if (_heatMapData?.PlotY2D == null || _heatMapData.PlotY2D.Count == 0)
+                return null;
+
+            double x, imValue;
+            GraphPane.ReverseTransform(pt, out x, out imValue);
+
+            // Find nearest point in the mobilogram by ion mobility
+            var nearest = _heatMapData.PlotY2D
+                .OrderBy(kvp => Math.Abs(kvp.Key - imValue))
+                .First();
+
+            // Compute the curve's pixel X for the nearest point to check proximity
+            var chartRect = _heatMapPane.Chart.Rect;
+            float scaleFactor = _heatMapPane.CalcScaleFactor();
+            float mobLeft = chartRect.Right + 6 * scaleFactor;
+            float mobRight = _heatMapPane.Rect.Right - 18 * scaleFactor;
+            float mobWidth = mobRight - mobLeft;
+            double maxIntensity = _heatMapData.PlotY2D.Max(kvp => kvp.Value);
+            float curveX = maxIntensity > 0
+                ? mobLeft + (float)(nearest.Value / maxIntensity) * mobWidth
+                : mobLeft;
+
+            // Show tooltip only if cursor is within the filter band, or within 3x the line width of the curve tip.
+            // The filled area already provides a generous hit zone; this tolerance just covers
+            // rendering slop at the curve edge (unlike the heatmap's 10px which searches a point cloud).
+            float searchPixels = 3f * MOBILOGRAM_LINE_WIDTH * scaleFactor;
+            double filterMin, filterMax;
+            _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out filterMin, out filterMax, _msDataFileScanHelper.Source);
+            bool inFilterBand = filterMin > 0 && filterMax < double.MaxValue &&
+                                imValue >= filterMin && imValue <= filterMax;
+            if (!inFilterBand && pt.X > curveX + searchPixels)
+                return null;
+
+            var rt = _cursorTip.RenderTools;
+            string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
+            var table = new TableDesc();
+            table.AddDetailRow(yAxisLabel, nearest.Key.ToString(Formats.IonMobility), rt);
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, nearest.Value.ToString(@"F0"), rt);
+            return table;
         }
 
         private TableDesc GetHeatMapTooltipTable(PointF pt)
@@ -2275,6 +2348,28 @@ namespace pwiz.Skyline.Controls.Graphs
         public string TestGetTooltipText(double x = double.NaN, double y = double.NaN)
         {
             return TestGetTooltipTable(x, y)?.ToString();
+        }
+
+        /// <summary>
+        /// Returns the mobilogram tooltip table for the nearest PlotY2D point to the given ion
+        /// mobility value. Skips the screen-coordinate proximity check used during interaction.
+        /// </summary>
+        public TableDesc TestGetMobilogramTooltipTable(double imValue = double.NaN)
+        {
+            if (!IsMobilogramVisible || _heatMapData?.PlotY2D == null || _heatMapData.PlotY2D.Count == 0)
+                return null;
+            double searchIm = double.IsNaN(imValue)
+                ? _heatMapData.PlotY2D[_heatMapData.PlotY2D.Count / 2].Key
+                : imValue;
+            var nearest = _heatMapData.PlotY2D
+                .OrderBy(kvp => Math.Abs(kvp.Key - searchIm))
+                .First();
+            var rt = _cursorTip.RenderTools;
+            string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
+            var table = new TableDesc();
+            table.AddDetailRow(yAxisLabel, nearest.Key.ToString(Formats.IonMobility), rt);
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, nearest.Value.ToString(@"F0"), rt);
+            return table;
         }
 
         public string TitleText { get { return GraphPane.Title.Text; } }
