@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Model.Serialization
                 ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.ion_mobility_ms1);
                 ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.ion_mobility_fragment);
             }
-            float? ionMobilityWindowOffset = reader.GetNullableFloatAttribute(ATTR.ion_mobility_window_offset); // As of 23.11, IM windows are not assumed centered on peak IM
+            float? ionMobilityWindowOffset = reader.GetNullableFloatAttribute(ATTR.ion_mobility_window_offset); // IM filter windows are not assumed centered on peak IM
             float? fwhm = reader.GetNullableFloatAttribute(ATTR.fwhm);
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Model.Serialization
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const UserSet userSet = UserSet.FALSE;
             var ionMobilityWindow =
-                IonMobilityWindow.FromWidthAndOffset(ionMobilityWindowWidth, ionMobilityWindowOffset);
+                IonMobilityFilterWindow.FromWidthAndOffset(ionMobilityWindowWidth, ionMobilityWindowOffset);
             var ionMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
                 ionMobilityMS1, ionMobilityFragment, ionMobilityWindow, ionMobilityUnits);
             var transitionGroupChromInfo = new TransitionGroupChromInfo(fileInfo.FileId,
@@ -507,7 +507,7 @@ namespace pwiz.Skyline.Model.Serialization
                     ionMobility = reader.GetNullableDoubleAttribute(ATTR.ion_mobility);
                     ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
                 }
-                var ionMobilityWindow = IonMobilityWindow.FromWidthAndOffset(
+                var ionMobilityWindow = IonMobilityFilterWindow.FromWidthAndOffset(
                     reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
                     reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window),
                     reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window_offset));

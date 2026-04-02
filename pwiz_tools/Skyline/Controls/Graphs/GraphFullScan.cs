@@ -59,15 +59,14 @@ namespace pwiz.Skyline.Controls.Graphs
         private HeatMapData _heatMapData;
         private HeatMapGraphPane _heatMapPane;
         /// <summary>
-        /// Compute right margin so mobilogram is approximately 1/3 the width of the heatmap chart area.
-        /// Setting margin to ~1/4 of pane width gives mobilogram ≈ 1/3 of the remaining chart width.
+        /// Compute right margin so mobilogram is approximately 1/5 of the window width.
         /// </summary>
         private float MobilogramMargin
         {
             get
             {
                 float scaleFactor = _heatMapPane.CalcScaleFactor();
-                return scaleFactor > 0 ? graphControl.Width / (4f * scaleFactor) : 150f;
+                return scaleFactor > 0 ? graphControl.Width / (5f * scaleFactor) : 150f;
             }
         }
         private double _maxMz;
@@ -98,7 +97,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
-            graphControl.GraphPane = new FullScanHeatMapGraphPane
+            _heatMapPane = new FullScanHeatMapGraphPane
             {
                 MinDotRadius = MIN_DOT_RADIUS,
                 MaxDotRadius = MAX_DOT_RADIUS,
@@ -559,7 +558,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
                 if (imFilter != null && imFilter.HasIonMobilityValue)
                 {
-                    double peakCenter = imFilter.IonMobility.Mobility.Value;
+                    // Use window center as the effective IM (accounts for high-energy offset)
+                    double peakCenter = imFilter.IonMobility.Mobility.Value +
+                                        (imFilter.IonMobilityFilterWindow.Offset ?? 0);
                     var centerLine = new LineObj(
                         Color.FromArgb(180, Color.DarkViolet),
                         0.0, peakCenter, 1.0, peakCenter)
@@ -608,8 +609,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var imAndCss = transition.IonMobilityInfo.IonMobilityAndCCS;
                         if (imAndCss.HasIonMobilityValue)
-                            spectrumProperties.IonMobility = TextUtil.SpaceSeparate(imAndCss.IonMobility.Mobility.Value.ToString(Formats.IonMobility),
+                        {
+                            // Use window center as the effective IM (accounts for high-energy offset in product transitions)
+                            var mobility = imAndCss.IonMobility.Mobility.Value +
+                                           (transition.IonMobilityInfo.IonMobilityFilterWindow.Offset ?? 0);
+                            spectrumProperties.IonMobility = TextUtil.SpaceSeparate(mobility.ToString(Formats.IonMobility),
                                 imAndCss.IonMobility.UnitsString);
+                        }
                         if(imAndCss.HasCollisionalCrossSection)
                             spectrumProperties.CCS = imAndCss.CollisionalCrossSectionSqA.Value.ToString(Formats.CCS);
                     }
@@ -1626,7 +1632,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
                 if (imFilter != null && imFilter.HasIonMobilityValue)
-                    filterPeak = imFilter.IonMobility.Mobility.Value;
+                    filterPeak = imFilter.IonMobility.Mobility.Value +
+                                 (imFilter.IonMobilityFilterWindow.Offset ?? 0);
             }
 
             var overlay = new MobilogramOverlay(_heatMapData.PlotY2D, filterMin, filterMax, filterPeak)

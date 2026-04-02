@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model.Results
                     maxIonMobility = Math.Max(maxIonMobility, mzHigh); 
                     hasIonMobilityInfo = true; // Well, not really ion mobility info - the drift time dimension is really precursor m/z space
                 }
-                else if (!transition.IonMobilityInfo.HasIonMobilityValue || IonMobilityWindow.IsNullOrEmpty(transition.IonMobilityInfo.IonMobilityWindow))
+                else if (!transition.IonMobilityInfo.HasIonMobilityValue || IonMobilityFilterWindow.IsNullOrEmpty(transition.IonMobilityInfo.IonMobilityFilterWindow))
                 {
                     // Accept all values
                     minIonMobility = double.MinValue;

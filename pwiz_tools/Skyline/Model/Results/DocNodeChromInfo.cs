@@ -995,7 +995,7 @@ namespace pwiz.Skyline.Model.Results
             IonMobilityFilter ionMobility;
             if (ionMobilityValue.HasValue)
             {
-                var ionMobilityWindow = IonMobilityWindow.FromWidthAndOffset(transitionPeak.IonMobilityWindow, transitionPeak.IonMobilityWindowOffset);
+                var ionMobilityWindow = IonMobilityFilterWindow.FromWidthAndOffset(transitionPeak.IonMobilityWindow, transitionPeak.IonMobilityWindowOffset);
                 var ionMobilityUnits = msDataFileInfo.IonMobilityUnits;
                 ionMobility = IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue.Value, ionMobilityUnits, ionMobilityWindow, ccs);
             }

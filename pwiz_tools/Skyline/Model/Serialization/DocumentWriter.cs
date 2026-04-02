@@ -662,10 +662,10 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteAttributeNullable(ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
                 writer.WriteAttributeNullable(ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);
-                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityWindow.Width);
-                if (SkylineVersion.SrmDocumentVersion >= DocumentFormat.ION_MOBILITY_WINDOW_BOUNDS)
+                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityFilterWindow.Width);
+                if (SkylineVersion.SrmDocumentVersion >= DocumentFormat.ION_MOBILITY_FILTER_SKEW)
                 {
-                    writer.WriteAttributeNullable(ATTR.ion_mobility_window_offset, chromInfo.IonMobilityInfo.IonMobilityWindow.Offset);
+                    writer.WriteAttributeNullable(ATTR.ion_mobility_window_offset, chromInfo.IonMobilityInfo.IonMobilityFilterWindow.Offset);
                 }
                 writer.WriteAttribute(ATTR.ion_mobility_type, chromInfo.IonMobilityInfo.IonMobilityUnits.ToString());
             }
@@ -917,10 +917,10 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
                 writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobility.CollisionalCrossSectionSqA);
-                var ionMobilityExtractionWindow = chromInfo.IonMobility.IonMobilityWindow;
-                if (!IonMobilityWindow.IsNullOrEmpty(ionMobilityExtractionWindow))
+                var ionMobilityExtractionWindow = chromInfo.IonMobility.IonMobilityFilterWindow;
+                if (!IonMobilityFilterWindow.IsNullOrEmpty(ionMobilityExtractionWindow))
                 {
-                    if (SkylineVersion.SrmDocumentVersion < DocumentFormat.ION_MOBILITY_WINDOW_BOUNDS)
+                    if (SkylineVersion.SrmDocumentVersion < DocumentFormat.ION_MOBILITY_FILTER_SKEW)
                     {
                         // No sense of window that's not centered on IM, so declare window center as IM even if window was actually assymetrical
                         var centerIM = (ionMobilityExtractionWindow.Offset??0) + chromInfo.IonMobility.IonMobility.Mobility;

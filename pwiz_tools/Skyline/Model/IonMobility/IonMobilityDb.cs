@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
     public class DbLibInfo
     {
-        public const int SCHEMA_VERSION_CURRENT = 1;
+        public const int SCHEMA_VERSION_CURRENT = 2;
         public virtual int Id { get; set; }
         public virtual string LibLSID { get; set; }
         public virtual string CreateTime { get; set; }
@@ -148,7 +148,8 @@ namespace pwiz.Skyline.Model.IonMobility
                 foreach (var im in pim.IonMobilities)
                 {
                     list.Add(new DbPrecursorAndIonMobility(new DbPrecursorIon(pim.Precursor),
-                        im.CollisionalCrossSectionSqA, im.IonMobility.Mobility, im.IonMobility.Units, im.HighEnergyIonMobilityValueOffset));
+                        im.CollisionalCrossSectionSqA, im.IonMobility.Mobility, im.IonMobility.Units, im.HighEnergyIonMobilityValueOffset,
+                        im.IonMobilitySkewness));
                 }
             }
 
@@ -322,7 +323,8 @@ namespace pwiz.Skyline.Model.IonMobility
                         var dbPrecursorIonWithId = oldPrecursorsSet.FirstOrDefault(p => p.EqualsIgnoreId(mobility.DbPrecursorIon));
                         var mobilityWithPrecursorId = new DbPrecursorAndIonMobility(dbPrecursorIonWithId,
                             mobility.CollisionalCrossSectionSqA, mobility.IonMobilityNullable,
-                            mobility.IonMobilityUnits, mobility.HighEnergyIonMobilityOffset);
+                            mobility.IonMobilityUnits, mobility.HighEnergyIonMobilityOffset,
+                            mobility.IonMobilitySkewness);
                         if (oldMobilitiesSet.Any(m => m.EqualsIgnoreId(mobility)))
                         {
                             session.SaveOrUpdate(mobilityWithPrecursorId);
@@ -481,6 +483,25 @@ namespace pwiz.Skyline.Model.IonMobility
         }
 
         /// <summary>
+        /// Migrate schema v1 databases to v2 by adding the IonMobilitySkewness column
+        /// </summary>
+        private static void MigrateSchema(string path)
+        {
+            using (var connection = new System.Data.SQLite.SQLiteConnection(string.Format(@"Data Source=""{0}"";Version=3", path)))
+            {
+                connection.Open();
+                if (!Common.Database.SqliteOperations.ColumnExists(connection, @"ionMobilityValues", @"IonMobilitySkewness"))
+                {
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = @"ALTER TABLE ionMobilityValues ADD COLUMN IonMobilitySkewness REAL NOT NULL DEFAULT 0";
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Maintains a single string globally for each path, in order to keep from
         /// having two threads accessing the same database at the same time.
         /// </summary>
@@ -512,6 +533,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 {
                     //Check for a valid SQLite file and that it has our schema
                     //Allow only one thread at a time to read from the same path
+                    MigrateSchema(path); // Add any columns missing from older schema versions
                     using (var sessionFactory = GetSessionFactory(path))
                     {
                         lock (sessionFactory)

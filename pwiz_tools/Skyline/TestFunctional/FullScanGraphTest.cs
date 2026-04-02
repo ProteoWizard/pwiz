@@ -202,6 +202,12 @@ namespace pwiz.SkylineTestFunctional
             SetSpectrum(false);
             TestScale(452, 456, 2.61, 4.34);
             WaitForOpenForm<GraphFullScan>();   // For localization testing
+            PauseTest(); // Heatmap without mobilogram
+
+            // Show mobilogram overlay alongside heatmap.
+            SetMobilogram(true);
+            PauseTest(); // Heatmap with mobilogram overlay
+            SetMobilogram(false);
 
             // Test Copy Data output for heatmap - should have 3 columns (m/z, ion mobility, intensity)
             // not 100+ columns from separate intensity curves (issue #3953)
@@ -474,6 +480,11 @@ namespace pwiz.SkylineTestFunctional
         private static void SetSpectrum(bool isChecked)
         {
             RunUI(() => SkylineWindow.GraphFullScan.SetSpectrum(isChecked));
+        }
+
+        private static void SetMobilogram(bool isChecked)
+        {
+            RunUI(() => SkylineWindow.GraphFullScan.SetMobilogram(isChecked));
         }
 
         private void TestSpecialIonsAnnotations()

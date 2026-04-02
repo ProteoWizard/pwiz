@@ -60,16 +60,21 @@ namespace pwiz.MSGraph
         /// <summary>
         /// Construct the quad-tree from a given list of 3D data points.
         /// </summary>
-        public HeatMapData(List<Point3D> points, string zAxisName = null)
+        public HeatMapData(List<Point3D> points, bool showSummedY2D, string zAxisName = null)
         {
-            _cell = new Cell(points);
+            var tagged = points.Select(p => new TaggedPoint3D(p, null)).ToList();
+            _cell = new Cell(tagged);
             ZAxisName = zAxisName;
+            if (showSummedY2D)
+                ComputePlotY2D(tagged);
         }
 
-        public HeatMapData(List<TaggedPoint3D> points, string zAxisName = null)
+        public HeatMapData(List<TaggedPoint3D> points, bool showSummedY2D, string zAxisName = null)
         {
             _cell = new Cell(points);
             ZAxisName = zAxisName;
+            if (showSummedY2D)
+                ComputePlotY2D(points);
         }
 
         private void ComputePlotY2D(List<TaggedPoint3D> points)

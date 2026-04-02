@@ -807,8 +807,8 @@ namespace pwiz.Skyline.Model.Results
             _product = product;
             _extractionWidth = extractionWidth;
             _ionMobilityValue = (float)(ionMobilityValue.IonMobility.Mobility??0);
-            _ionMobilityExtractionWidth = (float) (ionMobilityValue.IonMobilityWindow.Width??0);
-            _ionMobilityExtractionOffset = (float) (ionMobilityValue.IonMobilityWindow.Offset ??0);
+            _ionMobilityExtractionWidth = (float) (ionMobilityValue.IonMobilityFilterWindow.Width??0);
+            _ionMobilityExtractionOffset = (float) (ionMobilityValue.IonMobilityFilterWindow.Offset ??0);
             Source = source;
             _optimizationStep = optimizationStep;
         }
@@ -831,7 +831,7 @@ namespace pwiz.Skyline.Model.Results
         public double Product { get { return _product; } }
         public float ExtractionWidth { get { return _extractionWidth; }}  // In m/z
         public float IonMobilityValue { get { return _ionMobilityValue; } } // Units depend on ion mobility type
-        public IonMobilityWindow IonMobilityWindow { get { return IonMobilityWindow.FromWidthAndOffset(_ionMobilityExtractionWidth, _ionMobilityExtractionOffset); } } // Units depend on ion mobility type
+        public IonMobilityFilterWindow IonMobilityFilterWindow { get { return IonMobilityFilterWindow.FromWidthAndOffset(_ionMobilityExtractionWidth, _ionMobilityExtractionOffset); } } // Units depend on ion mobility type
         public short OptimizationStep { get { return _optimizationStep; } }
 
         public FlagValues Flags
@@ -2735,12 +2735,12 @@ namespace pwiz.Skyline.Model.Results
 
         public double? IonMobilityExtractionWidth
         {
-            get { return ChromTransition.IonMobilityWindow.Width; }
+            get { return ChromTransition.IonMobilityFilterWindow.Width; }
         }
 
         public double? IonMobilityExtractionOffset
         {
-            get { return ChromTransition.IonMobilityWindow.Offset; }
+            get { return ChromTransition.IonMobilityFilterWindow.Offset; }
         }
 
         public eIonMobilityUnits IonMobilityUnits
@@ -2753,7 +2753,7 @@ namespace pwiz.Skyline.Model.Results
             return IonMobilityFilter.GetIonMobilityFilter(
                 IonMobilityAndCCS.GetIonMobilityAndCCS(
                     IonMobilityValue.GetIonMobilityValue(IonMobility, Header.IonMobilityUnits),
-                    _groupInfo.PrecursorCollisionalCrossSection, null), ChromTransition.IonMobilityWindow);
+                    _groupInfo.PrecursorCollisionalCrossSection, null), ChromTransition.IonMobilityFilterWindow);
         }
 
         private static double? FloatToNullableDouble(float value)

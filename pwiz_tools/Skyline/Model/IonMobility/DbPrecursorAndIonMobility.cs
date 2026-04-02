@@ -50,25 +50,27 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public DbPrecursorAndIonMobility(DbPrecursorAndIonMobility other) :
             this(other.DbPrecursorIon, other.CollisionalCrossSectionSqA, other.IonMobilityNullable,
-                other.IonMobilityUnits, other.HighEnergyIonMobilityOffset)
+                other.IonMobilityUnits, other.HighEnergyIonMobilityOffset, other.IonMobilitySkewness)
         {
             Id = other.Id;
         }
 
         public DbPrecursorAndIonMobility(DbPrecursorIon precursor, double? collisionalCrossSection, double? ionMobility, eIonMobilityUnits units,
-            double? highEnergyOffset)
+            double? highEnergyOffset, double? skewness = null)
         {
             DbPrecursorIon = precursor;
             CollisionalCrossSectionSqA = collisionalCrossSection ?? 0;
             IonMobility = ionMobility ?? 0;
             IonMobilityUnits = units;
             HighEnergyIonMobilityOffset = highEnergyOffset ?? 0;
+            IonMobilitySkewness = skewness ?? 0;
         }
 
         public virtual IonMobilityAndCCS GetIonMobilityAndCCS()
         {
-            return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(IonMobilityNullable, 
-                IonMobilityUnits), CollisionalCrossSectionNullable, HighEnergyIonMobilityOffset);
+            return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(IonMobilityNullable,
+                IonMobilityUnits), CollisionalCrossSectionNullable, HighEnergyIonMobilityOffset,
+                IonMobilitySkewnessNullable);
         }
 
         public virtual Target PeptideModSeq // For DataGridView use
@@ -127,6 +129,14 @@ namespace pwiz.Skyline.Model.IonMobility
             set { HighEnergyIonMobilityOffset = value ?? 0; }
         }
 
+        public virtual double IonMobilitySkewness { get; set; } // Skewness of the ion mobility peak, used to shift extraction window for asymmetric peaks
+
+        public virtual double? IonMobilitySkewnessNullable
+        {
+            get { return IonMobilitySkewness == 0 ? (double?)null : IonMobilitySkewness; }
+            set { IonMobilitySkewness = value ?? 0; }
+        }
+
         public virtual eIonMobilityUnits IonMobilityUnits { get; set; }
 
         public virtual bool EqualsIgnoreId(DbPrecursorAndIonMobility other)
@@ -135,6 +145,7 @@ namespace pwiz.Skyline.Model.IonMobility
                    CollisionalCrossSectionSqA.Equals(other.CollisionalCrossSectionSqA) &&
                    IonMobility.Equals(other.IonMobility) &&
                    HighEnergyIonMobilityOffset.Equals(other.HighEnergyIonMobilityOffset) &&
+                   IonMobilitySkewness.Equals(other.IonMobilitySkewness) &&
                    IonMobilityUnits == other.IonMobilityUnits;
         }
 
@@ -163,6 +174,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 hashCode = (hashCode * 397) ^ CollisionalCrossSectionSqA.GetHashCode();
                 hashCode = (hashCode * 397) ^ IonMobility.GetHashCode();
                 hashCode = (hashCode * 397) ^ HighEnergyIonMobilityOffset.GetHashCode();
+                hashCode = (hashCode * 397) ^ IonMobilitySkewness.GetHashCode();
                 hashCode = (hashCode * 397) ^ (int) IonMobilityUnits;
                 return hashCode;
             }
@@ -170,8 +182,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public override string ToString() // For debugging convenience
         {
-            return string.Format(@"{0}/ccs{1}/im{2}/he{3}/{4}", DbPrecursorIon, CollisionalCrossSectionNullable,
-                IonMobilityNullable, HighEnergyIonMobilityOffsetNullable, IonMobilityUnits);
+            return string.Format(@"{0}/ccs{1}/im{2}/he{3}/sk{4}/{5}", DbPrecursorIon, CollisionalCrossSectionNullable,
+                IonMobilityNullable, HighEnergyIonMobilityOffsetNullable, IonMobilitySkewnessNullable, IonMobilityUnits);
         }
 
         public virtual int CompareTo(object obj)
@@ -187,7 +199,9 @@ namespace pwiz.Skyline.Model.IonMobility
             if (ionMobilityUnitsComparison != 0) return ionMobilityUnitsComparison;
             var ionMobilityComparison = IonMobility.CompareTo(other.IonMobility);
             if (ionMobilityComparison != 0) return ionMobilityComparison;
-            return HighEnergyIonMobilityOffset.CompareTo(other.HighEnergyIonMobilityOffset);
+            var highEnergyComparison = HighEnergyIonMobilityOffset.CompareTo(other.HighEnergyIonMobilityOffset);
+            if (highEnergyComparison != 0) return highEnergyComparison;
+            return IonMobilitySkewness.CompareTo(other.IonMobilitySkewness);
         }
     }
 

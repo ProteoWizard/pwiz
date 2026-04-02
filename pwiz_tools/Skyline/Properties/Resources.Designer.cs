@@ -943,15 +943,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap ImsDB {
-            get {
-                object obj = ResourceManager.GetObject("ImsDB", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
 
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
@@ -959,36 +950,6 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Mobilogram {
             get {
                 object obj = ResourceManager.GetObject("Mobilogram", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap IrtCalculator {
-            get {
-                object obj = ResourceManager.GetObject("IrtCalculator", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap OptDB {
-            get {
-                object obj = ResourceManager.GetObject("OptDB", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap ProtDB {
-            get {
-                object obj = ResourceManager.GetObject("ProtDB", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
