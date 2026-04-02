@@ -102,14 +102,17 @@ namespace MSConvertGUI.TestConnected
 
         #region Waters Connect Tests
 
+        private const string DEV_SERVER_URL = @"https://devconnect.waters.com:48444";
+
         private static WatersConnectAccount GetWatersConnectTestAccount()
         {
             var password = Environment.GetEnvironmentVariable("WC_PASSWORD");
             if (string.IsNullOrWhiteSpace(password))
                 return null;
             var username = Environment.GetEnvironmentVariable("WC_USERNAME") ?? "skyline";
-            return (WatersConnectAccount) WatersConnectAccount.DEV_DEFAULT
-                .ChangeUsername(username).ChangePassword(password);
+            // Use the same creation path as the dialog to verify the URL is applied correctly
+            return RemoteAccountDetailForm.CreateWatersConnectAccount(
+                DEV_SERVER_URL, username, password, isDevEnvironment: true);
         }
 
         [TestMethod]
@@ -160,6 +163,40 @@ namespace MSConvertGUI.TestConnected
             // Cleanup
             services.RemoveAccount(account);
             Assert.AreEqual(originalCount, services.GetRemoteAccountList().Count);
+        }
+
+        [TestMethod]
+        public void WatersConnectAccountCreationTest()
+        {
+            // Use a URL that differs from both DEV_DEFAULT and DEFAULT to prove the
+            // parameter is used, not a hardcoded default.
+            string customUrl = @"https://custom-test-server:48444";
+            string username = "testuser";
+            string password = "testpass";
+
+            // Dev environment should use DEV_DEFAULT client settings
+            var devAccount = RemoteAccountDetailForm.CreateWatersConnectAccount(
+                customUrl, username, password, isDevEnvironment: true);
+            Assert.AreEqual(customUrl, devAccount.ServerUrl, "Dev: ServerUrl should match user input");
+            Assert.AreEqual(username, devAccount.Username);
+            Assert.AreEqual(password, devAccount.Password);
+            Assert.AreEqual(WatersConnectAccount.DEV_DEFAULT.ClientScope, devAccount.ClientScope, "Dev: ClientScope");
+            Assert.AreEqual(WatersConnectAccount.DEV_DEFAULT.ClientSecret, devAccount.ClientSecret, "Dev: ClientSecret");
+            Assert.AreEqual(WatersConnectAccount.DEV_DEFAULT.ClientId, devAccount.ClientId, "Dev: ClientId");
+            Assert.AreEqual(@"https://custom-test-server:48333", devAccount.IdentityServer,
+                "Dev: IdentityServer should be derived from serverUrl");
+
+            // Non-dev environment should use DEFAULT client settings
+            var prodAccount = RemoteAccountDetailForm.CreateWatersConnectAccount(
+                customUrl, username, password, isDevEnvironment: false);
+            Assert.AreEqual(customUrl, prodAccount.ServerUrl, "Prod: ServerUrl should match user input");
+            Assert.AreEqual(username, prodAccount.Username);
+            Assert.AreEqual(password, prodAccount.Password);
+            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientScope, prodAccount.ClientScope, "Prod: ClientScope");
+            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientSecret, prodAccount.ClientSecret, "Prod: ClientSecret");
+            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientId, prodAccount.ClientId, "Prod: ClientId");
+            Assert.AreEqual(@"https://custom-test-server:48333", prodAccount.IdentityServer,
+                "Prod: IdentityServer should be derived from serverUrl");
         }
 
         [TestMethod]

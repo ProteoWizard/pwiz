@@ -274,6 +274,21 @@ namespace MSConvertGUI
             Controls.AddRange(new Control[] { _okButton, _cancelButton });
         }
 
+        /// <summary>
+        /// Creates a WatersConnectAccount from user-provided values. The constructor derives
+        /// IdentityServer from serverUrl; client settings come from DEV_DEFAULT or DEFAULT
+        /// depending on the environment.
+        /// </summary>
+        public static WatersConnectAccount CreateWatersConnectAccount(
+            string serverUrl, string username, string password, bool isDevEnvironment)
+        {
+            var defaults = isDevEnvironment ? WatersConnectAccount.DEV_DEFAULT : WatersConnectAccount.DEFAULT;
+            return new WatersConnectAccount(serverUrl, username, password)
+                .ChangeClientScope(defaults.ClientScope)
+                .ChangeClientSecret(defaults.ClientSecret)
+                .ChangeClientId(defaults.ClientId);
+        }
+
         private void OkButton_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(_serverUrlBox.Text))
@@ -291,14 +306,7 @@ namespace MSConvertGUI
             if (_typeCombo.SelectedIndex == 0) // UNIFI
                 account = new UnifiAccount(serverUrl, username, password);
             else // Waters Connect
-            {
-                // Follow same pattern as WatersConnectTestUtil: start from DEV_DEFAULT
-                // (which has correct ClientId/ClientScope/ClientSecret/IdentityServer)
-                // and only override username and password.
-                account = WatersConnectAccount.DEV_DEFAULT
-                    .ChangeUsername(username)
-                    .ChangePassword(password);
-            }
+                account = CreateWatersConnectAccount(serverUrl, username, password, IsDevEnvironment());
 
             if (!string.IsNullOrEmpty(alias))
                 account.AccountAlias = alias;
