@@ -38,6 +38,7 @@ namespace pwiz.Skyline.FileUI
             DataSourceUtil.TYPE_MZML,
             DataSourceUtil.TYPE_MZXML,
             DataSourceUtil.TYPE_MZ5,
+            DataSourceUtil.TYPE_MZMLB,
             DataSourceUtil.TYPE_UIMF
         };
 

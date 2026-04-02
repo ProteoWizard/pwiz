@@ -173,11 +173,13 @@ namespace pwiz.Skyline
 
             CommonApplicationSettings.ProgramName = Name;
             CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
+            CommonActionUtil.ExceptionReporter = ReportException;
             SkylineRemoteAccountServices.Initialize();
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             // For testing and debugging Skyline command-line interface
-            bool openDoc = args != null && args.Length > 0 && args[0] == OPEN_DOCUMENT_ARG;
+            bool openDoc = args != null && args.Length > 0 &&
+                           (args[0] == OPEN_DOCUMENT_ARG || args[0].StartsWith(OPEN_DOCUMENT_ARG + @"="));
             if (args != null && args.Length > 0 && !openDoc) 
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))
@@ -352,8 +354,16 @@ namespace pwiz.Skyline
                     SendAnalyticsHitAsync();
 
                 MainToolServiceName = Guid.NewGuid().ToString();
+                if (Settings.Default.EnableMcpAutoConnect)
+                {
+                    StartToolService();
+                    MainJsonToolServer.WriteConnectionInfo();
+                }
+                // NOTE: Nothing after Application.Run() reliably executes.
+                // SkylineWindow.OnHandleDestroyed calls Process.Kill() to avoid native
+                // vendor DLL errors. All shutdown cleanup must happen before that point.
                 Application.Run(MainWindow);
-                StopToolService();
+                // Do not add code here. It will never run.
             }
             catch (Exception x)
             {
@@ -511,6 +521,9 @@ namespace pwiz.Skyline
                 MainToolService = new ToolService(MainToolServiceName, MainWindow);
                 MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
                 MainToolService.RunAsync();
+
+                MainJsonToolServer = new JsonToolServer(MainToolService, MainToolServiceName);
+                MainJsonToolServer.Start();
             }
         }
 
@@ -518,6 +531,12 @@ namespace pwiz.Skyline
         {
             if (MainToolService != null)
             {
+                if (MainJsonToolServer != null)
+                {
+                    MainJsonToolServer.Dispose();
+                    MainJsonToolServer = null;
+                }
+
                 MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
                 MainToolService.Stop();
                 MainToolService = null;
@@ -618,6 +637,7 @@ namespace pwiz.Skyline
             if (!_initialized)
             {
                 _initialized = true;
+                CommonActionUtil.ExceptionReporter = ReportException;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -637,6 +657,7 @@ namespace pwiz.Skyline
 
         private static readonly object _unhandledExceptionLock = new object();
         public static ToolService MainToolService;
+        public static JsonToolServer MainJsonToolServer;
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {

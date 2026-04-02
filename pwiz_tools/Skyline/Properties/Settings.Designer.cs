@@ -1602,7 +1602,19 @@ namespace pwiz.Skyline.Properties {
                 this["GroupByReplicateAnnotation"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string AbundanceComparisonGroupByAnnotation {
+            get {
+                return ((string)(this["AbundanceComparisonGroupByAnnotation"]));
+            }
+            set {
+                this["AbundanceComparisonGroupByAnnotation"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
@@ -3642,6 +3654,30 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["MaxGridRowCount"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AllowMcpScreenCapture {
+            get {
+                return ((bool)(this["AllowMcpScreenCapture"]));
+            }
+            set {
+                this["AllowMcpScreenCapture"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EnableMcpAutoConnect {
+            get {
+                return ((bool)(this["EnableMcpAutoConnect"]));
+            }
+            set {
+                this["EnableMcpAutoConnect"] = value;
             }
         }
     }

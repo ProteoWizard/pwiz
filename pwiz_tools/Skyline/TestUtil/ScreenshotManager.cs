@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -31,6 +30,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Util;
 using TestRunnerLib.PInvoke;
 using ZedGraph;
 
@@ -42,121 +42,42 @@ namespace pwiz.SkylineTestUtil
         private readonly string _tutorialSourcePath;
         private readonly string _tutorialDestPath;
 
-        public class PointFactor
+        // Delegate to ScreenCapture types for backward compatibility
+        public class PointFactor : ScreenCapture.PointFactor
         {
-            private float _factor;
-
-            public PointFactor(float pFactor) { _factor = pFactor; }
-            
-            public static Point operator *(Point pt, PointFactor pFactor) => new Point((int)Math.Round(pt.X * pFactor._factor), (int)Math.Round(pt.Y * pFactor._factor));
-            public static Size operator *(Size sz, PointFactor pFactor) => new Size((int)Math.Round(sz.Width * pFactor._factor), (int)Math.Round(sz.Height * pFactor._factor));
-            public static Rectangle operator *(Rectangle rect, PointFactor pFactor) => new Rectangle(rect.Location * pFactor, rect.Size * pFactor);
+            public PointFactor(float pFactor) : base(pFactor) { }
         }
 
-        public class PointAdditive
+        // Delegate to ScreenCapture types for backward compatibility
+        public class PointAdditive : ScreenCapture.PointAdditive
         {
-            private Point _add;
-            public PointAdditive(Point pAdd) { _add = pAdd; }
-            public PointAdditive(int pX, int pY) { _add = new Point(pX, pY); }
-            public static PointAdditive operator +(Point pt, PointAdditive pAdd) => new PointAdditive(new Point(pt.X + pAdd._add.X, pt.Y + pAdd._add.Y));
-            public static Size operator +(Size sz, PointAdditive pAdd) => new Size(sz.Width + pAdd._add.X, sz.Height + pAdd._add.Y);
-
-            public static implicit operator Point(PointAdditive add) => add._add;
+            public PointAdditive(Point pAdd) : base(pAdd) { }
+            public PointAdditive(int pX, int pY) : base(pX, pY) { }
         }
 
         public static Rectangle GetWindowRectangle(Control ctrl, bool fullScreen = false, bool scale = true)
         {
-            var snapshotBounds = Rectangle.Empty;
-
-            var dockedStates = new[] { DockState.DockBottom, DockState.DockLeft, DockState.DockRight, DockState.DockTop, DockState.Document };
-            var dockableForm = ctrl as DockableForm;
-            if (dockableForm != null && dockedStates.Any(state => dockableForm.DockState == state))
-            {
-                snapshotBounds = GetDockedFormBounds(dockableForm);
-            }
-            else if (fullScreen)
-            {
-                snapshotBounds = (Rectangle)ctrl.Invoke((Func<Rectangle>) (() => Screen.FromControl(ctrl).Bounds));
-            }
-            else
-            {
-                snapshotBounds = GetFramedWindowBounds(ctrl);
-            }
-            return scale ? snapshotBounds * GetScalingFactor() : snapshotBounds;
+            return ScreenCapture.GetWindowRectangle(ctrl, fullScreen, scale);
         }
 
         public static Rectangle GetDockedFormBounds(DockableForm ctrl)
         {
-            return ctrl.InvokeRequired
-                ? (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => GetDockedFormBoundsInternal(ctrl)))
-                : GetDockedFormBoundsInternal(ctrl);
+            return ScreenCapture.GetDockedFormBounds(ctrl);
         }
 
-        public static Rectangle GetDockedFormBoundsInternal(DockableForm dockedForm)
-        {
-            var parentRelativeVBounds = dockedForm.Pane.Bounds;
-            // The pane bounds do not include the border for Document state
-            if (dockedForm.DockState == DockState.Document)
-                parentRelativeVBounds.Inflate(SystemInformation.BorderSize.Width, SystemInformation.BorderSize.Width);
-            return dockedForm.Pane.Parent.RectangleToScreen(parentRelativeVBounds);
-        }
-        
         public static Rectangle GetFramedWindowBounds(Control ctrl)
         {
-            ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
-            return ctrl.InvokeRequired 
-                ? (Rectangle) ctrl.Invoke((Func<Rectangle>)(() => GetFramedWindowBoundsInternal(ctrl)))
-                : GetFramedWindowBoundsInternal(ctrl);
-        }
-
-        private static Rectangle GetFramedWindowBoundsInternal(Control ctrl)
-        {
-            int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
-            // The drop shadow + border are 1/2 the difference between the window width and the client rect width
-            // A border width is removed to keep the border around the window
-            int borderOutsideClient = SystemInformation.BorderSize.Width;
-            if (ctrl is FloatingWindow || ctrl.Size == ctrl.ClientRectangle.Size)
-                borderOutsideClient = 0;
-            int dropShadowWidth = (width - ctrl.ClientRectangle.Width) / 2 - borderOutsideClient;
-            Size imageSize;
-            Point sourcePoint;
-            if (ctrl is Form)
-            {
-                // The snapshot size then removes the shadow width on both sides and from only the bottom
-                imageSize = ctrl.Size + new PointAdditive(-2 * dropShadowWidth, -dropShadowWidth);
-                // And the origin is shifted one shadow width to the right
-                sourcePoint = ctrl.Location + new PointAdditive(dropShadowWidth, 0);
-            }
-            else
-            {
-                // Otherwise, it is just a control on a form without a drop shadow
-                imageSize = ctrl.Size;
-                sourcePoint = ctrl.Parent.PointToScreen(ctrl.Location);
-            }
-            return new Rectangle(sourcePoint, imageSize);
+            return ScreenCapture.GetFramedWindowBounds(ctrl);
         }
 
         public static TParent FindParent<TParent>(Control ctrl) where TParent : Control
         {
-            while (ctrl != null)
-            {
-                if (ctrl is TParent parent)
-                    return parent;
-                ctrl = ctrl.Parent;
-            }
-
-            return null;
+            return ScreenCapture.FindParent<TParent>(ctrl);
         }
 
-        public static PointFactor GetScalingFactor()
+        public static ScreenCapture.PointFactor GetScalingFactor()
         {
-            using var g = Graphics.FromHwnd(IntPtr.Zero);
-            IntPtr desktop = g.GetHdc();
-            int LogicalScreenHeight = Gdi32Test.GetDeviceCaps(desktop, Gdi32Test.GDCFlags.VERTRES);
-            int PhysicalScreenHeight = Gdi32Test.GetDeviceCaps(desktop, Gdi32Test.GDCFlags.DESKTOPVERTRES);
-            float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
-
-            return new PointFactor(ScreenScalingFactor); // 1.25 = 125%
+            return ScreenCapture.GetScalingFactor();
         }
 
         private abstract class SkylineScreenshot
@@ -185,7 +106,7 @@ namespace pwiz.SkylineTestUtil
         {
             private readonly Control _activeWindow;
             private readonly bool _fullscreen;
-            
+
             public ActiveWindowShot(Control activeWindow, bool fullscreen)
             {
                 _activeWindow = activeWindow;
@@ -195,7 +116,7 @@ namespace pwiz.SkylineTestUtil
             [NotNull]
             public override Bitmap Take()
             {
-                var shotRect = GetWindowRectangle(_activeWindow, _fullscreen);
+                var shotRect = ScreenCapture.GetWindowRectangle(_activeWindow, _fullscreen);
                 var bmpCapture = new Bitmap(shotRect.Width, shotRect.Height, PixelFormat.Format32bppArgb);
                 using var g = Graphics.FromImage(bmpCapture);
                 while (!CaptureFromScreen(g, shotRect))
@@ -232,7 +153,7 @@ namespace pwiz.SkylineTestUtil
             [NotNull]
             public override Bitmap Take()
             {
-                var scaledRect = _screenRect * GetScalingFactor();
+                var scaledRect = _screenRect * ScreenCapture.GetScalingFactor();
                 var bmpCapture = new Bitmap(scaledRect.Width, scaledRect.Height, PixelFormat.Format32bppArgb);
                 using var g = Graphics.FromImage(bmpCapture);
                 g.CopyFromScreen(scaledRect.Location, Point.Empty, scaledRect.Size);
@@ -505,7 +426,7 @@ namespace pwiz.SkylineTestUtil
 
             if (pathToSave != null)
             {
-                SaveToFile(pathToSave, shotPic);
+                ScreenCapture.SaveToFile(pathToSave, shotPic);
             }
 
             // CopyBitmapToClipboard(shotPic);
@@ -520,7 +441,7 @@ namespace pwiz.SkylineTestUtil
         {
             var shotPic = new RectangleShot(screenRect).Take();
             if (pathToSave != null)
-                SaveToFile(pathToSave, shotPic);
+                ScreenCapture.SaveToFile(pathToSave, shotPic);
             return shotPic;
         }
 
@@ -538,17 +459,6 @@ namespace pwiz.SkylineTestUtil
             clipThread.Join();
         }
 
-        private void SaveToFile(string filePath, Bitmap bmp)
-        {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-            var dirPath = Path.GetDirectoryName(filePath);
-            if (dirPath != null && !Directory.Exists(dirPath))
-                Directory.CreateDirectory(dirPath);
-
-            bmp.Save(filePath, ImageFormat.Png);
-        }
-
         public MemoryStream SaveToMemory(Bitmap bmp)
         {
             var ms = new MemoryStream();
@@ -557,4 +467,3 @@ namespace pwiz.SkylineTestUtil
         }
     }
 }
-

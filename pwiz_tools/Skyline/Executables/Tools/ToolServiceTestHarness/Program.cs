@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace ToolServiceTestHarness
 {
     internal static class Program

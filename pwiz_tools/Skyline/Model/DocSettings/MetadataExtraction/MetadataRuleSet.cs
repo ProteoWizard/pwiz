@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             return null;
         }
 
-        string IKeyContainer<string>.GetKey()
+        public string GetKey()
         {
             return Name;
         }

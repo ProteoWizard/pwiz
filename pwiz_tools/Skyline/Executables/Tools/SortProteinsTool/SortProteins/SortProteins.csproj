@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\..\SkylineTool\IJsonToolService.cs" Link="IJsonToolService.cs" />
+    <Compile Include="..\..\..\..\SkylineTool\JsonToolConstants.cs" Link="JsonToolConstants.cs" />
+    <Compile Include="..\..\..\..\SkylineTool\JsonToolModels.cs" Link="JsonToolModels.cs" />
+    <Compile Include="..\..\..\..\SkylineTool\SkylineJsonToolClient.cs" Link="SkylineJsonToolClient.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CommandLine">
+      <HintPath>..\lib\CommandLine.dll</HintPath>
+    </Reference>
+    <Reference Include="CsvHelper">
+      <HintPath>..\lib\CsvHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\..\..\..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="&quot;$(ProjectDir)..\..\..\..\..\..\libraries\7za.exe&quot; a &quot;$(ProjectDir)..\SortProteinsTool.zip&quot; &quot;$(TargetDir)*&quot;" />
+    <Exec Command="&quot;$(ProjectDir)..\..\..\..\..\..\libraries\7za.exe&quot; a &quot;$(ProjectDir)..\SortProteinsTool.zip&quot; &quot;$(ProjectDir)..\tool-inf&quot;" />
+  </Target>
+
+</Project>

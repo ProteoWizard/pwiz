@@ -467,7 +467,7 @@ namespace TestPerf
             });
             RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
             {
-                importRangesDlg.CurrentDirectory = new MsDataFilePath(diaDir);
+                importRangesDlg.SetCurrentDirectory(new MsDataFilePath(diaDir));
                 importRangesDlg.SelectFile(DiaFiles[0]);
                 importRangesDlg.Open();
             });

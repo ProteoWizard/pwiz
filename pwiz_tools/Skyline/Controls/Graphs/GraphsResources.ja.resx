@@ -380,6 +380,12 @@
   <data name="Extensions_CustomToString__2D_Histogram" xml:space="preserve">
     <value>2Dヒストグラム</value>
   </data>
+  <data name="Extensions_CustomToString_CV_2D_Histogram" xml:space="preserve">
+    <value>CV 2Dヒストグラム</value>
+  </data>
+  <data name="Extensions_CustomToString_CV_Histogram" xml:space="preserve">
+    <value>CVヒストグラム</value>
+  </data>
   <data name="Extensions_CustomToString_Detections_Histogram" xml:space="preserve">
     <value>ヒストグラム</value>
   </data>

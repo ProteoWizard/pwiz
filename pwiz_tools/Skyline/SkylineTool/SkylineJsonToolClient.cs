@@ -1,0 +1,322 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4.6) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.IO;
+using System.IO.Pipes;
+using System.Text;
+using System.Text.Json;
+using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
+// ReSharper disable InvalidXmlDocComment (for direct link into .NET 8.0)
+
+namespace SkylineTool
+{
+    /// <summary>
+    /// JSON-RPC 2.0 client for the Skyline JSON tool service. Connects to a
+    /// running Skyline instance via named pipe and provides a fully typed
+    /// <see cref="IJsonToolService"/> implementation. Replaces
+    /// <see cref="SkylineToolClient"/> (which uses the deprecated BinaryFormatter
+    /// transport) with modern JSON-RPC.
+    ///
+    /// <para><b>.NET Framework 4.7.2 tools</b>: Reference SkylineTool.dll.
+    /// The System.Text.Json dependency is included. Create a
+    /// <see cref="System.IO.Pipes.NamedPipeClientStream"/> connected to the
+    /// Skyline pipe and pass it to the constructor.</para>
+    ///
+    /// <para><b>.NET 8.0+ tools</b>: Link-compile IJsonToolService.cs,
+    /// JsonToolConstants.cs, JsonToolModels.cs, and SkylineJsonToolClient.cs
+    /// into your project. System.Text.Json is built into .NET 8.0.</para>
+    ///
+    /// <para><b>Usage</b>:</para>
+    /// <code>
+    /// var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut);
+    /// pipe.Connect(5000);
+    /// pipe.ReadMode = PipeTransmissionMode.Message;
+    /// using (var client = new SkylineJsonToolClient(pipe))
+    /// {
+    ///     string path = client.GetDocumentPath();
+    ///     var status = client.GetDocumentStatus();
+    ///     var report = client.ExportReport("Peak Area", "output.csv", "invariant");
+    /// }
+    /// </code>
+    /// </summary>
+    public class SkylineJsonToolClient : IJsonToolService, IDisposable
+    {
+        private static readonly JsonSerializerOptions _snakeCaseOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            PropertyNameCaseInsensitive = true
+        };
+
+        private readonly NamedPipeClientStream _pipe;
+
+        /// <summary>
+        /// When true, requests include "_log": true to enable diagnostic logging.
+        /// The server returns timing and internal step details in the response.
+        /// </summary>
+        public bool LoggingEnabled { get; set; }
+
+        /// <summary>
+        /// Diagnostic log content from the most recent response, or null if absent.
+        /// </summary>
+        public string LastLog { get; private set; }
+
+        public SkylineJsonToolClient(NamedPipeClientStream pipe)
+        {
+            _pipe = pipe;
+        }
+
+        // --- IJsonToolService implementation ---
+
+        // 0-arg methods
+        public string GetDocumentPath() { return Call(nameof(GetDocumentPath)); }
+        public string GetVersion() { return Call(nameof(GetVersion)); }
+        public SelectionInfo GetSelection() { return CallTyped<SelectionInfo>(nameof(GetSelection)); }
+        public string GetSelectionText() { return Call(nameof(GetSelectionText)); }
+        public string GetReplicateName() { return Call(nameof(GetReplicateName)); }
+        public string[] GetReplicateNames() { return CallTyped<string[]>(nameof(GetReplicateNames)); }
+        public DocumentStatus GetDocumentStatus() { return CallTyped<DocumentStatus>(nameof(GetDocumentStatus)); }
+        public string[] GetSettingsListTypes() { return CallTyped<string[]>(nameof(GetSettingsListTypes)); }
+        public TutorialListItem[] GetAvailableTutorials() { return CallTyped<TutorialListItem[]>(nameof(GetAvailableTutorials)); }
+        public string GetProcessId() { return Call(nameof(GetProcessId)); }
+        public FormInfo[] GetOpenForms() { return CallTyped<FormInfo[]>(nameof(GetOpenForms)); }
+        public string GetUiMode() { return Call(nameof(GetUiMode)); }
+        public UndoRedoEntry[] GetUndoRedo() { return CallTyped<UndoRedoEntry[]>(nameof(GetUndoRedo)); }
+
+        public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null)
+        {
+            return dataSource == null
+                ? CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics))
+                : CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), dataSource);
+        }
+
+        // 1-arg methods
+        public string GetSelectedElementLocator(string elementType)
+        {
+            return Call(nameof(GetSelectedElementLocator), elementType);
+        }
+        public string RunCommand(string[] args)
+        {
+            return Call(nameof(RunCommand), (object) args);
+        }
+        public string RunCommandSilent(string[] args)
+        {
+            return Call(nameof(RunCommandSilent), (object) args);
+        }
+        public string[] GetSettingsListNames(string listType, string groupName = null)
+        {
+            return groupName == null
+                ? CallTyped<string[]>(nameof(GetSettingsListNames), listType)
+                : CallTyped<string[]>(nameof(GetSettingsListNames), listType, groupName);
+        }
+        public string[] GetSettingsListSelectedItems(string listType)
+        {
+            return CallTyped<string[]>(nameof(GetSettingsListSelectedItems), listType);
+        }
+
+        public ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null)
+        {
+            return dataSource == null
+                ? CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName)
+                : CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName, dataSource);
+        }
+
+        public void AddReportFromDefinition(ReportDefinition definition)
+        {
+            Call(nameof(AddReportFromDefinition), definition);
+        }
+
+        public void InsertSmallMoleculeTransitionList(string textCSV)
+        {
+            Call(nameof(InsertSmallMoleculeTransitionList), textCSV);
+        }
+        public void ImportProperties(string csvText) { Call(nameof(ImportProperties), csvText); }
+        public void SetReplicate(string replicateName) { Call(nameof(SetReplicate), replicateName); }
+        public void SetUiMode(string mode) { Call(nameof(SetUiMode), mode); }
+        public void SetUndoRedoPosition(int index) { Call(nameof(SetUndoRedoPosition), index); }
+        public string GetDocumentSettings(string filePath) { return Call(nameof(GetDocumentSettings), filePath); }
+        public string GetDefaultSettings(string filePath) { return Call(nameof(GetDefaultSettings), filePath); }
+        public void ReorderElements(string[] elementLocators) { Call(nameof(ReorderElements), (object) elementLocators); }
+
+        // 2-arg methods
+        public LocationEntry[] GetLocations(string level, string rootLocator = null)
+        {
+            return rootLocator == null
+                ? CallTyped<LocationEntry[]>(nameof(GetLocations), level)
+                : CallTyped<LocationEntry[]>(nameof(GetLocations), level, rootLocator);
+        }
+
+        public void SetSelectedElement(string elementLocator, string additionalLocators = null)
+        {
+            if (additionalLocators == null)
+                Call(nameof(SetSelectedElement), elementLocator);
+            else
+                Call(nameof(SetSelectedElement), elementLocator, additionalLocators);
+        }
+
+        public string GetGraphData(string graphId, string filePath = null)
+        {
+            return filePath == null
+                ? Call(nameof(GetGraphData), graphId)
+                : Call(nameof(GetGraphData), graphId, filePath);
+        }
+
+        public string GetGraphImage(string graphId, string filePath = null)
+        {
+            return filePath == null
+                ? Call(nameof(GetGraphImage), graphId)
+                : Call(nameof(GetGraphImage), graphId, filePath);
+        }
+
+        public string GetFormImage(string formId, string filePath = null)
+        {
+            return filePath == null
+                ? Call(nameof(GetFormImage), formId)
+                : Call(nameof(GetFormImage), formId, filePath);
+        }
+
+        public string GetSettingsListItem(string listType, string itemName)
+        {
+            return Call(nameof(GetSettingsListItem), listType, itemName);
+        }
+
+        public void SelectSettingsListItems(string listType, string[] itemNames)
+        {
+            Call(nameof(SelectSettingsListItems), listType, itemNames);
+        }
+
+        public void ImportFasta(string textFasta, string keepEmptyProteins = null)
+        {
+            if (keepEmptyProteins == null)
+                Call(nameof(ImportFasta), textFasta);
+            else
+                Call(nameof(ImportFasta), textFasta, keepEmptyProteins);
+        }
+
+        // 3-arg methods
+        public ReportMetadata ExportReport(string reportName, string filePath, string culture)
+        {
+            return CallTyped<ReportMetadata>(nameof(ExportReport), reportName, filePath, culture);
+        }
+
+        public ReportMetadata ExportReportFromDefinition(ReportDefinition definition,
+            string filePath, string culture)
+        {
+            return CallTyped<ReportMetadata>(nameof(ExportReportFromDefinition),
+                definition, filePath, culture);
+        }
+
+        public TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null)
+        {
+            return CallTyped<TutorialMetadata>(nameof(GetTutorial), name, language, filePath);
+        }
+
+        public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false)
+        {
+            if (overwrite)
+                Call(nameof(AddSettingsListItem), listType, itemXml, true);
+            else
+                Call(nameof(AddSettingsListItem), listType, itemXml);
+        }
+
+        // 4-arg methods
+        public TutorialImageMetadata GetTutorialImage(string name, string imageFilename,
+            string language = "en", string filePath = null)
+        {
+            return CallTyped<TutorialImageMetadata>(nameof(GetTutorialImage),
+                name, imageFilename, language, filePath);
+        }
+
+        // --- JSON-RPC 2.0 transport ---
+
+        private string Call(string method, params object[] args)
+        {
+            // Build JSON-RPC 2.0 request
+            object request = LoggingEnabled
+                // ReSharper disable once RedundantCast (for .NET 8.0)
+                ? (object) new { jsonrpc = JsonToolConstants.JSONRPC_VERSION, method, @params = args, id = 1, _log = true }
+                : new { jsonrpc = JsonToolConstants.JSONRPC_VERSION, method, @params = args, id = 1 };
+            byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request, _snakeCaseOptions));
+            _pipe.Write(requestBytes, 0, requestBytes.Length);
+            _pipe.Flush();
+            _pipe.WaitForPipeDrain();
+
+            byte[] responseBytes = ReadAllBytes(_pipe);
+            string responseJson = Encoding.UTF8.GetString(responseBytes);
+
+            using (var doc = JsonDocument.Parse(responseJson))
+            {
+                var root = doc.RootElement;
+
+                LastLog = root.TryGetProperty(nameof(JSON_RPC._log), out var logElement)
+                    ? logElement.GetString()
+                    : null;
+
+                if (root.TryGetProperty(nameof(JSON_RPC.error), out var errorElement))
+                {
+                    string message = errorElement.TryGetProperty(nameof(JSON_RPC.message), out var msgElement)
+                        ? msgElement.GetString()
+                        : "Unknown error from Skyline";
+                    throw new InvalidOperationException(message);
+                }
+
+                if (root.TryGetProperty(nameof(JSON_RPC.result), out var resultElement))
+                {
+                    if (resultElement.ValueKind == JsonValueKind.Null)
+                        return null;
+                    if (resultElement.ValueKind == JsonValueKind.Number)
+                        return resultElement.GetRawText();
+                    if (resultElement.ValueKind == JsonValueKind.Object ||
+                        resultElement.ValueKind == JsonValueKind.Array)
+                        return resultElement.GetRawText();
+                    return resultElement.GetString();
+                }
+
+                return null;
+            }
+        }
+
+        private T CallTyped<T>(string method, params object[] args)
+        {
+            string json = Call(method, args);
+            if (string.IsNullOrEmpty(json))
+                return default(T);
+            return JsonSerializer.Deserialize<T>(json, _snakeCaseOptions);
+        }
+
+        public void Dispose()
+        {
+            _pipe.Dispose();
+        }
+
+        private static byte[] ReadAllBytes(PipeStream stream)
+        {
+            var memoryStream = new MemoryStream();
+            do
+            {
+                var buffer = new byte[65536];
+                int count = stream.Read(buffer, 0, buffer.Length);
+                if (count == 0)
+                    return memoryStream.ToArray();
+                memoryStream.Write(buffer, 0, count);
+            } while (!stream.IsMessageComplete);
+            return memoryStream.ToArray();
+        }
+    }
+}

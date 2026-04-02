@@ -296,6 +296,9 @@
   <data name="added_peptide_decoys" xml:space="preserve">
     <value>Added {0} peptide decoys using {1} method</value>
   </data>
+  <data name="ran_command_line" xml:space="preserve">
+    <value>Ran command: {0}</value>
+  </data>
   <data name="refined_targets" xml:space="preserve">
     <value>Refined targets</value>
   </data>
@@ -725,5 +728,8 @@ For reference, the audit log is located here: "{0}"</value>
   </data>
   <data name="files_tree_spectral_library_update" xml:space="preserve">
     <value>Edited spectral library named {0} from the Files window</value>
+  </data>
+  <data name="reordered_elements" xml:space="preserve">
+    <value>Ordering of elements in document changed</value>
   </data>
 </root>

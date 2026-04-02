@@ -56,7 +56,31 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline
 {
-    public class CommandLine : IDisposable/*, IRemoteAccountUserInteraction*/
+    /// <summary>
+    /// Abstraction for document-level file operations (open, new, save) used by
+    /// CommandLine. Default implementation wraps existing CommandLine methods.
+    /// Override for SkylineWindow-hosted execution (MCP) to delegate to UI methods
+    /// with LongWaitDlg progress.
+    /// </summary>
+    public interface IDocumentOperations
+    {
+        /// <summary>
+        /// True if the host has unsaved changes that would be lost by opening
+        /// or creating a new document. Always false for CLI mode (no dirty tracking).
+        /// </summary>
+        bool Dirty { get; }
+
+        SrmDocument OpenDocument(string skylineFile);
+        SrmDocument NewDocument(string skylineFile, bool overwrite);
+
+        /// <summary>
+        /// Returns false if operation is canceled by the user. Otherwise, it throws
+        /// an exception if there is a true failure, like an IOException.
+        /// </summary>
+        bool SaveDocument(SrmDocument doc, string saveFile);
+    }
+
+    public class CommandLine : IDisposable, IDocumentOperations/*, IRemoteAccountUserInteraction*/
     {
         private CommandStatusWriter _out;
 
@@ -70,13 +94,17 @@ namespace pwiz.Skyline
         /// </summary>
         private bool _importedResults;
 
-        public CommandLine(CommandStatusWriter output)
+        public CommandLine(CommandStatusWriter output, SrmDocument doc = null, string skylineFile = null)
         {
             _out = output;
+            _doc = doc;
+            _skylineFile = skylineFile;
+            DocumentOperations = this;
         }
 
         public SrmDocument Document { get { return _doc; } }
         public ImportPeptideSearch ImportPeptideSearch { get; private set; }
+        public IDocumentOperations DocumentOperations { get; set; }
 
         public CommandLine()
             : this(new CommandStatusWriter(new StringWriter()))
@@ -189,6 +217,12 @@ namespace pwiz.Skyline
                     return Program.EXIT_CODE_RAN_WITH_ERRORS;
                 anyAction = true;
             }
+            if (commandArgs.AddingSettings)
+            {
+                if (!AddSettings(commandArgs))
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                anyAction = true;
+            }
             if (!commandArgs.RequiresSkylineDocument)
             {
                 if (!anyAction && !withoutUsage)
@@ -199,16 +233,43 @@ namespace pwiz.Skyline
             }
 
             var skylineFile = commandArgs.SkylineFile;
-            if ((skylineFile != null && (commandArgs.CreateNewFile && !NewSkyFile(skylineFile, commandArgs.OverwriteExisting)) ||
-                (skylineFile != null && (!commandArgs.CreateNewFile && !OpenSkyFile(skylineFile))) ||
-                (skylineFile == null && _doc == null)))
+            bool switchingDocument = skylineFile != null || commandArgs.CreateNewFile;
+            if (switchingDocument && !commandArgs.DiscardChanges && DocumentOperations.Dirty)
             {
-                _out.WriteLine(SkylineResources.CommandLine_Run_Exiting___);
+                _out.WriteLine(SkylineResources.CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__or___discard_changes_before___new_or___in_);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
 
             if (skylineFile != null)
+            {
+                if (!commandArgs.CreateNewFile)
+                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
+                _doc = commandArgs.CreateNewFile
+                    ? DocumentOperations.NewDocument(skylineFile, commandArgs.OverwriteExisting)
+                    : DocumentOperations.OpenDocument(skylineFile);
+                if (_doc == null)
+                {
+                    _out.WriteLine(SkylineResources.CommandLine_Run_Exiting___);
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                }
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
                 _skylineFile = skylineFile;
+            }
+            else if (commandArgs.CreateNewFile)
+            {
+                // --new without a path: only valid when running against a live Skyline instance
+                _doc = DocumentOperations.NewDocument(null, false);
+                if (_doc == null)
+                {
+                    _out.WriteLine(SkylineResources.CommandLine_Run_Exiting___);
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                }
+            }
+            else if (_doc == null)
+            {
+                _out.WriteLine(SkylineResources.CommandLine_Run_Exiting___);
+                return Program.EXIT_CODE_RAN_WITH_ERRORS;
+            }
 
             TraceWarningListener traceWarningListener = new TraceWarningListener(_out);
             try
@@ -249,6 +310,11 @@ namespace pwiz.Skyline
 
         private bool ProcessDocument(CommandArgs commandArgs)
         {
+            if (commandArgs.ApplyingSettings)
+            {
+                if (!ApplySettings(commandArgs))
+                    return false;
+            }
             if (commandArgs.PredictTranSettings)
             {
                 if (!SetPredictTranSettings(commandArgs))
@@ -987,13 +1053,20 @@ namespace pwiz.Skyline
         public void ModifyDocumentWithLogging(Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
             var setSeenEntries = GetSeenAuditLogEntries();
-            var docBefore = Document;
-            if (!docBefore.Settings.DataSettings.AuditLogging)
+            var docOriginal = _doc;
+            if (!docOriginal.Settings.DataSettings.AuditLogging)
                 _doc = AuditLogList.ToggleAuditLogging(_doc, true);
+            var docBefore = _doc;
             ModifyDocument(act, logFunc);
+            if (ReferenceEquals(_doc, docBefore))
+            {
+                _doc = docOriginal;
+                _out.WriteLine(Resources.CommandLine_LogNewEntries_Document_unchanged);
+                return;
+            }
             LogNewEntries(Document.AuditLog.AuditLogEntries, setSeenEntries);
-            LogDocumentDelta(docBefore, Document);
-            if (!docBefore.Settings.DataSettings.AuditLogging)
+            LogDocumentDelta(docOriginal, Document);
+            if (!docOriginal.Settings.DataSettings.AuditLogging)
                 _doc = AuditLogList.ToggleAuditLogging(_doc, false);
         }
 
@@ -1391,8 +1464,6 @@ namespace pwiz.Skyline
                 if (_doc == null)
                     return false;
 
-                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-
                 // Update settings for this file
                 _doc.Settings.UpdateLists(skylineFile);
 
@@ -1428,13 +1499,11 @@ namespace pwiz.Skyline
                     new XmlReaderSettings { IgnoreWhitespace = true }, 
                     skylineFile);  
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
                 SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
                 if (_doc == null)
                     return false;
 
-                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
                 var hash = hashingStream.Done();
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
@@ -3306,6 +3375,85 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public bool AddSettings(CommandArgs commandArgs)
+        {
+            var path = commandArgs.SettingsAddPath;
+            if (!File.Exists(path))
+            {
+                _out.WriteLine(SkylineResources.CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_, path);
+                return false;
+            }
+
+            return HandleExceptions(commandArgs, () =>
+            {
+                Func<IList<string>, IList<string>> conflictResolver;
+                if (commandArgs.ResolveSettingsConflictsBySkipping == false)
+                    conflictResolver = existing => Array.Empty<string>(); // Overwrite all
+                else if (commandArgs.ResolveSettingsConflictsBySkipping == true)
+                    conflictResolver = existing => existing; // Skip all
+                else
+                    conflictResolver = existing =>
+                    {
+                        if (existing.Count == 1)
+                        {
+                            _out.WriteLine(SkylineResources.CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_, existing.First());
+                        }
+                        else
+                        {
+                            _out.WriteLine(TextUtil.LineSeparate(
+                                SkylineResources.CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_,
+                                string.Empty,
+                                TextUtil.LineSeparate(existing)));
+                        }
+                        return null; // Abort
+                    };
+
+                if (!Settings.Default.SrmSettingsList.ImportFile(path, conflictResolver))
+                    return false;
+
+                _out.WriteLine(SkylineResources.CommandLine_AddSettings_Settings_imported_from__0__, Path.GetFileName(path));
+                return true;
+            }, x => _out.WriteException(SkylineResources.CommandLine_AddSettings_Error__Failed_attempting_to_add_settings_from_the_file__0_, path, x, true));
+        }
+
+        public bool ApplySettings(CommandArgs commandArgs)
+        {
+            var settingsName = commandArgs.SettingsName;
+            SrmSettings settings = null;
+
+            // Check for built-in default - match both the localized name and the
+            // invariant English name "Default" so the CLI works in all locales.
+            var defaultSettings = SrmSettingsList.GetDefault();
+            if (string.Equals(settingsName, defaultSettings.Name, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(settingsName, @"Default", StringComparison.OrdinalIgnoreCase))
+            {
+                settings = defaultSettings;
+            }
+            else
+            {
+                // Search saved settings by localized name
+                foreach (var s in Settings.Default.SrmSettingsList)
+                {
+                    if (string.Equals(s.Name, settingsName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        settings = s;
+                        break;
+                    }
+                }
+            }
+
+            if (settings == null)
+            {
+                _out.WriteLine(SkylineResources.CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_, settingsName);
+                return false;
+            }
+
+            ModifyDocumentWithLogging(doc => doc.ChangeSettings(settings),
+                AuditLogEntry.SettingsLogFunction);
+            _out.WriteLine(SkylineResources.CommandLine_ApplySettings_Settings___0___applied_to_document_, settingsName);
+            return true;
+        }
+
         public bool SetLibrary(string name, string path, bool append = true)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -3361,8 +3509,10 @@ namespace pwiz.Skyline
             _out.WriteLine(SkylineResources.CommandLine_SaveFile_Saving_file___);
             return HandleExceptions(commandArgs, () =>
                 {
-                    SaveDocument(_doc, saveFile, _out);
-                    _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
+                    if (DocumentOperations.SaveDocument(_doc, saveFile))
+                        _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
+                    else
+                        _out.WriteLine(SkylineResources.CommandLine_SaveFile_File__0__save_canceled, Path.GetFileName(saveFile));
                 },
                 string.Format(
                     Resources
@@ -4654,6 +4804,35 @@ namespace pwiz.Skyline
                     throw new NotImplementedException();
             }
         }*/
+
+        #region IDocumentOperations
+
+        // CLI mode never has unsaved changes to lose
+        bool IDocumentOperations.Dirty => false;
+
+        SrmDocument IDocumentOperations.OpenDocument(string skylineFile)
+        {
+            return OpenSkyFile(skylineFile) ? _doc : null;
+        }
+
+        SrmDocument IDocumentOperations.NewDocument(string skylineFile, bool overwrite)
+        {
+            if (skylineFile == null)
+            {
+                // Mimic the usage error before --new was allowed inside running Skyline UI
+                _out.WriteLine(Resources.Error___0_, new CommandArgs.ValueMissingException(CommandArgs.ARG_NEW).Message);
+                return null;
+            }
+            return NewSkyFile(skylineFile, overwrite) ? _doc : null;
+        }
+
+        bool IDocumentOperations.SaveDocument(SrmDocument doc, string saveFile)
+        {
+            SaveDocument(doc, saveFile, _out);
+            return true;    // It didn't throw an exception and there is no user cancellation with the command-line.
+        }
+
+        #endregion
     }
 
     public class CommandStatusWriter : TextWriter
@@ -4698,14 +4877,25 @@ namespace pwiz.Skyline
             _writer.Write(value);
         }
 
+        public override void Write(string value)
+        {
+            _writer.Write(value);
+        }
+
         public override void WriteLine()
         {
             WriteLine(string.Empty);
         }
 
-        public void WriteException(string formatMessage, string string0, Exception x1)
+        public void WriteException(string formatMessage, string string0, Exception x1, bool lineSeparate = false)
         {
-            WriteLine(formatMessage, string0, ExceptionString(x1));
+            if (!lineSeparate)
+                WriteLine(formatMessage, string0, ExceptionString(x1));
+            else
+            {
+                WriteLine(formatMessage, string0);
+                WriteException(x1);
+            }
         }
         public void WriteException(string formatMessage, Exception x, bool lineSeparate = false)
         {
