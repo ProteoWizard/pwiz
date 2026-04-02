@@ -2261,12 +2261,12 @@ namespace pwiz.Skyline.Model
             var documentWriter = new DocumentWriter(document, skylineVersion);
             if (progressMonitor != null)
             {
-                int transitionsWritten = 0;
-                int totalTransitionCount = MoleculeTransitionCount;
-                documentWriter.WroteTransitions += count =>
+                int peptidesWritten = 0;
+                int totalPeptideCount = MoleculeCount;
+                documentWriter.WrotePeptide += () =>
                 {
-                    transitionsWritten += count;
-                    progressStatus = progressStatus.UpdatePercentCompleteProgress(progressMonitor, transitionsWritten, totalTransitionCount);
+                    peptidesWritten++;
+                    progressStatus = progressStatus.UpdatePercentCompleteProgress(progressMonitor, peptidesWritten, totalPeptideCount);
                 };
             }
             documentWriter.WriteXml(writer);

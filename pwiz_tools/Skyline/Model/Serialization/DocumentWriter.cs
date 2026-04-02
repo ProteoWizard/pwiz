@@ -21,7 +21,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml;
+using System.Xml.Linq;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -51,7 +53,7 @@ namespace pwiz.Skyline.Model.Serialization
         public SrmDocument Document { get; private set; }
         public CompactFormatOption CompactFormatOption { get; set; }
 
-        public event Action<int> WroteTransitions;
+        public event Action WrotePeptide;
 
         public void WriteXml(XmlWriter writer)
         {
@@ -59,18 +61,49 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttribute(ATTR.software_version, SkylineVersion.InvariantVersionName);
 
             writer.WriteElement(Settings.RemoveUnsupportedFeatures(SkylineVersion.SrmDocumentVersion));
-            foreach (PeptideGroupDocNode nodeGroup in Document.Children)
+
+            // Enqueue all peptides from all groups upfront so workers can get ahead
+            var groupWorkItems = new PeptideGroupWorkItem[Document.Children.Count];
+            using (var processor = new PeptideProcessor(this))
             {
-                if (nodeGroup.Id is FastaSequenceGroup &&
-                    SkylineVersion.SrmDocumentVersion >= DocumentFormat.PROTEIN_GROUPS)
-                    writer.WriteStartElement(EL.protein_group);
-                else if (nodeGroup.Id is FastaSequence)
-                    writer.WriteStartElement(EL.protein);
-                else
-                    writer.WriteStartElement(EL.peptide_list);
-                WritePeptideGroupXml(writer, nodeGroup);
-                writer.WriteEndElement();
+                for (int g = 0; g < Document.Children.Count; g++)
+                {
+                    var nodeGroup = (PeptideGroupDocNode)Document.Children[g];
+                    groupWorkItems[g] = processor.EnqueueGroup(nodeGroup);
+                }
+
+                // Write each group, waiting for peptide XElements one at a time
+                for (int g = 0; g < Document.Children.Count; g++)
+                {
+                    var nodeGroup = (PeptideGroupDocNode)Document.Children[g];
+                    if (nodeGroup.Id is FastaSequenceGroup &&
+                        SkylineVersion.SrmDocumentVersion >= DocumentFormat.PROTEIN_GROUPS)
+                        writer.WriteStartElement(EL.protein_group);
+                    else if (nodeGroup.Id is FastaSequence)
+                        writer.WriteStartElement(EL.protein);
+                    else
+                        writer.WriteStartElement(EL.peptide_list);
+
+                    WritePeptideGroupXml(writer, nodeGroup, groupWorkItems[g]);
+                    writer.WriteEndElement();
+                }
             }
+        }
+
+        /// <summary>
+        /// Creates a complete XElement for a PeptideDocNode by writing to a
+        /// temporary XDocument. Called on worker threads during parallel saving.
+        /// </summary>
+        private XElement CreatePeptideXElement(PeptideDocNode node)
+        {
+            var doc = new XDocument();
+            using (var writer = doc.CreateWriter())
+            {
+                writer.WriteStartDocument();
+                WritePeptideXml(writer, node);
+                writer.WriteEndDocument();
+            }
+            return doc.Root;
         }
 
         private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription)
@@ -94,11 +127,10 @@ namespace pwiz.Skyline.Model.Serialization
         }
         /// <summary>
         /// Serializes the contents of a single <see cref="PeptideGroupDocNode"/>
-        /// to XML.
+        /// to XML. The <paramref name="groupWorkItem"/> provides pre-built XElements
+        /// for the peptide children, created in parallel on worker threads.
         /// </summary>
-        /// <param name="writer">The XML writer</param>
-        /// <param name="node">The peptide group document node</param>
-        private void WritePeptideGroupXml(XmlWriter writer, PeptideGroupDocNode node)
+        private void WritePeptideGroupXml(XmlWriter writer, PeptideGroupDocNode node, PeptideGroupWorkItem groupWorkItem)
         {
             // save the identity info
             if (node.PeptideGroup.Name != null)
@@ -174,9 +206,11 @@ namespace pwiz.Skyline.Model.Serialization
                     writeFastaSequence(seq);
             }
 
-            foreach (PeptideDocNode nodePeptide in node.Children)
+            XElement peptideXElement;
+            while ((peptideXElement = groupWorkItem.GetNextXElement()) != null)
             {
-                WritePeptideXml(writer, nodePeptide);
+                peptideXElement.WriteTo(writer);
+                WrotePeptide?.Invoke();
             }
         }
 
@@ -633,10 +667,8 @@ namespace pwiz.Skyline.Model.Serialization
                 var transitionData = new SkylineDocumentProto.Types.TransitionData();
                 transitionData.Transitions.AddRange(node.Transitions.Select(transition => transition.ToTransitionProto(Settings, nodePep, node)));
                 byte[] bytes = transitionData.ToByteArray();
-                writer.WriteBase64(bytes, 0, bytes.Length);
+                writer.WriteString(Convert.ToBase64String(bytes));
                 writer.WriteEndElement();
-                if (WroteTransitions != null)
-                    WroteTransitions(node.TransitionCount);
             }
             else
             {
@@ -819,7 +851,7 @@ namespace pwiz.Skyline.Model.Serialization
                     protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
                     byte[] bytes = protoResults.ToByteArray();
                     writer.WriteStartElement(EL.results_data);
-                    writer.WriteBase64(bytes, 0, bytes.Length);
+                    writer.WriteString(Convert.ToBase64String(bytes));
                     writer.WriteEndElement();
                 }
                 else
@@ -829,8 +861,6 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            if (WroteTransitions != null)
-                WroteTransitions(1);
         }
 
         private void WriteTransitionLosses(XmlWriter writer, TransitionLosses losses)
@@ -1010,6 +1040,128 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteEndElement();
         }
 
+        /// <summary>
+        /// Maintains a work queue for building the XML for peptides and molecules
+        /// in parallel. Analogous to <see cref="DocumentReader.PeptideProcessor"/>
+        /// but for writing instead of reading.
+        /// </summary>
+        private class PeptideProcessor : IDisposable
+        {
+            private readonly DocumentWriter _documentWriter;
+            private readonly QueueWorker<PeptideWorkItem> _queue;
+            private List<Exception> _exceptions = new List<Exception>();
 
+            public PeptideProcessor(DocumentWriter documentWriter)
+            {
+                _documentWriter = documentWriter;
+                _queue = new QueueWorker<PeptideWorkItem>(null, ConsumePeptideWorkItem);
+                _queue.RunAsync(ParallelEx.GetThreadCount(), @"Save Document XML");
+            }
+
+            private void ConsumePeptideWorkItem(PeptideWorkItem item, int threadIndex)
+            {
+                try
+                {
+                    item.Result = _documentWriter.CreatePeptideXElement(item.Node);
+                }
+                catch (Exception ex)
+                {
+                    lock (_exceptions)
+                    {
+                        _exceptions.Add(ex);
+                    }
+                }
+                finally
+                {
+                    item.Signal.Set();
+                }
+            }
+
+            /// <summary>
+            /// Enqueues all peptide children of a peptide group for parallel XElement
+            /// building. Returns a <see cref="PeptideGroupWorkItem"/> that provides
+            /// the results one at a time in document order.
+            /// </summary>
+            public PeptideGroupWorkItem EnqueueGroup(PeptideGroupDocNode nodeGroup)
+            {
+                var children = nodeGroup.Children;
+                var items = new PeptideWorkItem[children.Count];
+                for (int i = 0; i < children.Count; i++)
+                {
+                    items[i] = new PeptideWorkItem((PeptideDocNode)children[i]);
+                    _queue.Add(items[i]);
+                }
+                return new PeptideGroupWorkItem(items, this);
+            }
+
+            public void CheckForErrors()
+            {
+                lock (_exceptions)
+                {
+                    if (_exceptions.Count > 0)
+                    {
+                        if (_exceptions.Count == 1)
+                        {
+                            var singleException = _exceptions[0];
+                            throw new AggregateException(singleException.Message, singleException);
+                        }
+                        throw new AggregateException(_exceptions);
+                    }
+                }
+            }
+
+            public void Dispose()
+            {
+                _queue.DoneAdding(true);
+                _queue.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Holds the work items for all peptides in a single peptide group and
+        /// provides them one at a time in document order as they complete.
+        /// </summary>
+        private class PeptideGroupWorkItem
+        {
+            private readonly PeptideWorkItem[] _items;
+            private readonly PeptideProcessor _processor;
+            private int _nextIndex;
+
+            public PeptideGroupWorkItem(PeptideWorkItem[] items, PeptideProcessor processor)
+            {
+                _items = items;
+                _processor = processor;
+            }
+
+            /// <summary>
+            /// Waits for the next peptide XElement to be ready and returns it,
+            /// or returns null if all peptides have been consumed.
+            /// </summary>
+            public XElement GetNextXElement()
+            {
+                if (_nextIndex >= _items.Length)
+                    return null;
+                var item = _items[_nextIndex];
+                _items[_nextIndex] = null; // Allow GC
+                _nextIndex++;
+                item.Signal.Wait();
+                item.Signal.Dispose();
+                _processor.CheckForErrors();
+                return item.Result;
+            }
+        }
+
+        private class PeptideWorkItem
+        {
+            public PeptideWorkItem(PeptideDocNode node)
+            {
+                Node = node;
+                Signal = new ManualResetEventSlim(false);
+            }
+
+            public PeptideDocNode Node { get; }
+            public ManualResetEventSlim Signal { get; }
+            public XElement Result { get; set; }
+        }
     }
 }
