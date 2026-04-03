@@ -40,6 +40,9 @@ namespace ToolServiceTestHarness
             btnInvokeMethod = new Button();
             lblResult = new Label();
             tbxResult = new TextBox();
+            btnUpdateMethods = new Button();
+            radioClassic = new RadioButton();
+            radioJson = new RadioButton();
             SuspendLayout();
             // 
             // comboMethod
@@ -102,10 +105,32 @@ namespace ToolServiceTestHarness
             resources.ApplyResources(tbxResult, "tbxResult");
             tbxResult.Name = "tbxResult";
             // 
-            // ToolServiceTestHarnessForm
+            // btnUpdateMethods
             // 
+            resources.ApplyResources(btnUpdateMethods, "btnUpdateMethods");
+            btnUpdateMethods.Name = "btnUpdateMethods";
+            btnUpdateMethods.UseVisualStyleBackColor = true;
+            btnUpdateMethods.Click += btnUpdateMethods_Click;
+            //
+            // radioClassic
+            //
+            resources.ApplyResources(radioClassic, "radioClassic");
+            radioClassic.Name = "radioClassic";
+            radioClassic.CheckedChanged += radioInterface_CheckedChanged;
+            //
+            // radioJson
+            //
+            resources.ApplyResources(radioJson, "radioJson");
+            radioJson.Name = "radioJson";
+            radioJson.CheckedChanged += radioInterface_CheckedChanged;
+            //
+            // ToolServiceTestHarnessForm
+            //
             resources.ApplyResources(this, "$this");
             AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(radioJson);
+            Controls.Add(radioClassic);
+            Controls.Add(btnUpdateMethods);
             Controls.Add(tbxResult);
             Controls.Add(lblResult);
             Controls.Add(btnInvokeMethod);
@@ -135,5 +160,8 @@ namespace ToolServiceTestHarness
         private Button btnInvokeMethod;
         private Label lblResult;
         private TextBox tbxResult;
+        private Button btnUpdateMethods;
+        private RadioButton radioClassic;
+        private RadioButton radioJson;
     }
 }
