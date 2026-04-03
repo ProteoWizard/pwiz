@@ -1672,15 +1672,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error copying external tools from previous installation.
-        /// </summary>
-        public static string Program_CopyOldTools_Error_copying_external_tools_from_previous_installation {
-            get {
-                return ResourceManager.GetString("Program_CopyOldTools_Error_copying_external_tools_from_previous_installation", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Skyline failed to load a required native library....
         /// </summary>
         public static string Program_CheckNativeLibraries_Failed_to_load_required_native_libraries {
@@ -1690,11 +1681,20 @@ namespace pwiz.Skyline {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Troubleshooting Installation Issues.
+        ///   Looks up a localized string similar to Recovering From a Broken Installation.
         /// </summary>
         public static string Program_CheckNativeLibraries_Troubleshooting {
             get {
                 return ResourceManager.GetString("Program_CheckNativeLibraries_Troubleshooting", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error copying external tools from previous installation.
+        /// </summary>
+        public static string Program_CopyOldTools_Error_copying_external_tools_from_previous_installation {
+            get {
+                return ResourceManager.GetString("Program_CopyOldTools_Error_copying_external_tools_from_previous_installation", resourceCulture);
             }
         }
 

@@ -661,9 +661,10 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Verifies that native libraries (pwiz_data_cli.dll) can load. When Windows
-        /// Application Control (WDAC/AppLocker) blocks the DLL, a FileLoadException
-        /// occurs at JIT time. NoInlining ensures the JIT trigger is isolated here
-        /// so the caller's try/catch can handle it.
+        /// Application Control (WDAC/AppLocker) blocks the DLL, a load exception
+        /// can occur at JIT time. NoInlining ensures the JIT-triggering reference in
+        /// TryLoadNativeLibraries remains isolated so this method can catch and report
+        /// the failure.
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static bool CheckNativeLibraries()
