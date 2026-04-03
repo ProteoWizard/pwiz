@@ -92,7 +92,7 @@ namespace SortProteins
 
         public void SetProteinOrder(IEnumerable<string> newOrder)
         {
-            client.ReorderElements(newOrder.Distinct().ToArray());
+            client.ReorderElements(newOrder.ToArray());
         }
 
         private record Row(string Locator)
