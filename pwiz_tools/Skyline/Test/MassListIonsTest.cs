@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -140,14 +139,22 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void MassListShortRowTest()
         {
-            // Header-based transition list where the last data row is truncated.
-            // Uses PEPTIDER with known-good m/z values from the existing test data.
-            var text = SHORT_ROW_TRANSITION_LIST
-                .Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-
             var settings = SrmSettingsList.GetDefault();
             var doc = new SrmDocument(settings);
 
+            // With headers: all 4 columns detected (peptide, precursor, product, protein)
+            var text = SHORT_ROW_TRANSITION_LIST
+                .Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            VerifyShortRowError(doc, text, 4);
+
+            // Without headers: 3 columns auto-detected (peptide, precursor, product)
+            // Protein column is not auto-detected without a header
+            var textNoHeader = TextUtil.LineSeparate(text.ReadLines().Skip(1));
+            VerifyShortRowError(doc, textNoHeader, 3);
+        }
+
+        private static void VerifyShortRowError(SrmDocument doc, string text, int expectedFields)
+        {
             var inputs = new MassListInputs(text, true);
             var progressMonitor = new SilentProgressMonitor();
             inputs.ReadLines(progressMonitor);
@@ -159,19 +166,18 @@ namespace pwiz.SkylineTest
             var peptideList = importer.DoImport(progressMonitor, new Dictionary<string, FastaSequence>(),
                 new List<MeasuredRetentionTime>(), new List<SpectrumMzInfo>(), errorList).ToList();
 
-            var errorDetail = string.Join(" | ", errorList.Select(e =>
+            var errorDetail = TextUtil.LineSeparate(errorList.Select(e =>
                 string.Format("line {0}: {1}", e.LineNum, e.ErrorMessage)));
             // The good rows should import successfully
             AssertEx.IsTrue(peptideList.Count > 0,
                 string.Format("Expected good rows to import, got {0} groups and {1} errors: {2}",
                     peptideList.Count, errorList.Count, errorDetail));
-            // The short row should produce an import error
-            AssertEx.IsTrue(errorList.Count > 0,
-                "Expected an error for the truncated row");
-            // The error should be the user-friendly short-row message
-            var shortRowError = errorList.Last();
-            AssertEx.Contains(shortRowError.ErrorMessage,
-                string.Format(ModelResources.MassListRowReader_NextRow_Row_has__0__fields_but__1__are_required, 2, 4));
+            // The short row should produce an import error with the field count message
+            AssertEx.AreEqual(1, errorList.Count, errorDetail);
+            AssertEx.AreEqual(
+                string.Format(ModelResources.MassListRowReader_NextRow_Line_has__0__fields_but__1__are_expected,
+                    2, expectedFields),
+                errorList[0].ErrorMessage);
         }
 
         // Header-based transition list with the last data row truncated.

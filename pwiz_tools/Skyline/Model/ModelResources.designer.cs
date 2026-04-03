@@ -1221,11 +1221,11 @@ namespace pwiz.Skyline.Model {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Row has {0} fields but {1} are required.
+        ///   Looks up a localized string similar to Line has {0} fields but {1} are expected.
         /// </summary>
-        public static string MassListRowReader_NextRow_Row_has__0__fields_but__1__are_required {
+        public static string MassListRowReader_NextRow_Line_has__0__fields_but__1__are_expected {
             get {
-                return ResourceManager.GetString("MassListRowReader_NextRow_Row_has__0__fields_but__1__are_required", resourceCulture);
+                return ResourceManager.GetString("MassListRowReader_NextRow_Line_has__0__fields_but__1__are_expected", resourceCulture);
             }
         }
 
