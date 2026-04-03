@@ -1062,18 +1062,16 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 try
                 {
-                    item.Result = _documentWriter.CreatePeptideXElement(item.Node);
+                    var result = _documentWriter.CreatePeptideXElement(item.Node);
+                    item.PeptideGroupWorkItem.SetResult(item.Node, result);
                 }
                 catch (Exception ex)
                 {
-                    lock (_exceptions)
+                    lock (this)
                     {
                         _exceptions.Add(ex);
+                        Monitor.PulseAll(this);
                     }
-                }
-                finally
-                {
-                    item.Signal.Set();
                 }
             }
 
@@ -1084,19 +1082,18 @@ namespace pwiz.Skyline.Model.Serialization
             /// </summary>
             public PeptideGroupWorkItem EnqueueGroup(PeptideGroupDocNode nodeGroup)
             {
-                var children = nodeGroup.Children;
-                var items = new PeptideWorkItem[children.Count];
-                for (int i = 0; i < children.Count; i++)
+                var peptideGroupWorkItem = new PeptideGroupWorkItem(this, nodeGroup);
+                foreach (var peptideDocNode in nodeGroup.Molecules)
                 {
-                    items[i] = new PeptideWorkItem((PeptideDocNode)children[i]);
-                    _queue.Add(items[i]);
+                    _queue.Add(new PeptideWorkItem(peptideGroupWorkItem, peptideDocNode));
                 }
-                return new PeptideGroupWorkItem(items, this);
+
+                return peptideGroupWorkItem;
             }
 
             public void CheckForErrors()
             {
-                lock (_exceptions)
+                lock (this)
                 {
                     if (_exceptions.Count > 0)
                     {
@@ -1123,15 +1120,18 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private class PeptideGroupWorkItem
         {
-            private readonly PeptideWorkItem[] _items;
+            private readonly XElement[] _items;
             private readonly PeptideProcessor _processor;
             private int _nextIndex;
 
-            public PeptideGroupWorkItem(PeptideWorkItem[] items, PeptideProcessor processor)
+            public PeptideGroupWorkItem(PeptideProcessor processor, PeptideGroupDocNode peptideGroupDocNode)
             {
-                _items = items;
+                PeptideGroupDocNode = peptideGroupDocNode;
                 _processor = processor;
+                _items = new XElement[peptideGroupDocNode.Children.Count];
             }
+
+            public PeptideGroupDocNode PeptideGroupDocNode { get; }
 
             /// <summary>
             /// Waits for the next peptide XElement to be ready and returns it,
@@ -1139,29 +1139,47 @@ namespace pwiz.Skyline.Model.Serialization
             /// </summary>
             public XElement GetNextXElement()
             {
-                if (_nextIndex >= _items.Length)
-                    return null;
-                var item = _items[_nextIndex];
-                _items[_nextIndex] = null; // Allow GC
-                _nextIndex++;
-                item.Signal.Wait();
-                item.Signal.Dispose();
-                _processor.CheckForErrors();
-                return item.Result;
+                lock (_processor)
+                {
+                    if (_nextIndex >= _items.Length)
+                        return null;
+                    while (true)
+                    {
+                        _processor.CheckForErrors();
+                        var item = _items[_nextIndex];
+                        if (item != null)
+                        {
+                            _items[_nextIndex] = null;
+                            _nextIndex++;
+                            return item;
+                        }
+                        Monitor.Wait(_processor);
+                    }
+                }
+            }
+
+            public void SetResult(PeptideDocNode peptideDocNode, XElement result)
+            {
+                lock (_processor)
+                {
+                    int index = PeptideGroupDocNode.FindNodeIndex(peptideDocNode.Peptide);
+                    Assume.IsNull(_items[index]);
+                    _items[index] = result;
+                    Monitor.PulseAll(_processor);
+                }
             }
         }
 
         private class PeptideWorkItem
         {
-            public PeptideWorkItem(PeptideDocNode node)
+            public PeptideWorkItem(PeptideGroupWorkItem peptideGroup, PeptideDocNode peptideDocNode)
             {
-                Node = node;
-                Signal = new ManualResetEventSlim(false);
+                PeptideGroupWorkItem = peptideGroup;
+                Node = peptideDocNode;
             }
 
+            public PeptideGroupWorkItem PeptideGroupWorkItem { get; }
             public PeptideDocNode Node { get; }
-            public ManualResetEventSlim Signal { get; }
-            public XElement Result { get; set; }
         }
     }
 }
