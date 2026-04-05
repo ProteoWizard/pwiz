@@ -66,6 +66,18 @@ namespace pwiz.Common.SystemUtil
             _worker.Add(new WorkItem(index, source));
         }
 
+        public void AddAll(IEnumerable<TSource> sources)
+        {
+            CommonActionUtil.RunAsync(() =>
+            {
+                foreach (var source in sources)
+                {
+                    Add(source);
+                }
+                DoneAdding();
+            }, CommonTextUtil.SpaceSeparate(GetThreadName(), nameof(AddAll)));
+        }
+
         public void SetException(Exception ex)
         {
             lock (_results)

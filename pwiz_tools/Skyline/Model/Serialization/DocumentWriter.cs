@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteElement(Settings.RemoveUnsupportedFeatures(SkylineVersion.SrmDocumentVersion));
 
             using var processor = new PeptideProcessor(this);
-            CommonActionUtil.RunAsync(processor.EnqueuePeptides, nameof(processor.EnqueuePeptides));
+            processor.AddAll(Document.Molecules);
 
             // Write each group, waiting for peptide XElements one at a time
             for (int g = 0; g < Document.Children.Count; g++)
@@ -1064,18 +1064,6 @@ namespace pwiz.Skyline.Model.Serialization
                 }
 
                 return result.Item2;
-            }
-
-            public void EnqueuePeptides()
-            {
-                foreach (var peptideGroup in _documentWriter.Document.PeptideGroups)
-                {
-                    foreach (var peptide in peptideGroup.Molecules)
-                    {
-                        Add(peptide);
-                    }
-                }
-                DoneAdding();
             }
         }
     }
