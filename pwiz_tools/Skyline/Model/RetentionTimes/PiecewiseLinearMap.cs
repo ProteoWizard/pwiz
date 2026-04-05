@@ -232,6 +232,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             i = ~i;
+            if (i <= 0)
+            {
+                return GetValueForExtremeLeft(key, keys, values);
+            }
+
+            if (i >= keys.Length)
+            {
+                return GetValueForExtremeRight(key, keys, values);
+            }
+
             return (values[i] * (key - keys[i - 1]) + values[i - 1] * (keys[i] - key)) / (keys[i] - keys[i - 1]);
         }
 
