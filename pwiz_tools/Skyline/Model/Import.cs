@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
@@ -640,7 +641,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!ExceptionUtil.IsProgrammingDefect(exception))
                 {
                     errorList.Add(new TransitionImportErrorInfo(exception.Message, null, _linesSeen, row));
                     continue;
@@ -882,11 +883,14 @@ namespace pwiz.Skyline.Model
                 FormatProvider = provider;
                 Separator = separator;
                 Indices = indices;
+                _maxColumnIndex = indices.CalcMaxColumnIndex();
                 Lines = lines;
                 Settings = settings;
                 ModMatcher = CreateModificationMatcher(settings, sequences, lines.Count, progressMonitor, status);
                 NodeDictionary = new Dictionary<string, PeptideDocNode>();
             }
+
+            private readonly int _maxColumnIndex;
 
             private static ModificationMatcher CreateModificationMatcher(SrmSettings settings, IEnumerable<string> sequences,
                 int expectedCount = 0, IProgressMonitor progressMonitor = null, IProgressStatus status = null)
@@ -1108,6 +1112,14 @@ namespace pwiz.Skyline.Model
 
                 if (PeptideColumn == -1)
                     return new TransitionImportErrorInfo(ModelResources.MassListRowReader_NextRow_No_peptide_sequence_column_specified, null, lineNum, line);
+
+                if (_maxColumnIndex >= Fields.Length)
+                {
+                    return new TransitionImportErrorInfo(
+                        string.Format(ModelResources.MassListRowReader_NextRow_Line_has__0__fields_but__1__are_expected,
+                            Fields.Length, _maxColumnIndex + 1),
+                        null, lineNum, line);
+                }
 
                 ExTransitionInfo info;
                 try
@@ -2584,13 +2596,24 @@ namespace pwiz.Skyline.Model
         public ColumnIndices()
         {
             // Iterates through the column indices and initializes them all to -1
-            foreach (var property in GetType().GetProperties())
-            {
-                if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
-                {
-                    property.SetValue(this, -1);
-                }
-            }
+            foreach (var property in GetColumnProperties())
+                property.SetValue(this, -1);
+        }
+
+        /// <summary>
+        /// Calculates the highest assigned column index across all column properties,
+        /// or -1 if none assigned. Uses reflection, so callers that need the value
+        /// repeatedly (e.g. per-row validation) should cache the result.
+        /// </summary>
+        public int CalcMaxColumnIndex()
+        {
+            return GetColumnProperties().Select(p => (int)p.GetValue(this)).Prepend(-1).Max();
+        }
+
+        private IEnumerable<PropertyInfo> GetColumnProperties()
+        {
+            return GetType().GetProperties()
+                .Where(p => p.Name.EndsWith(@"Column") && p.PropertyType == typeof(int));
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)

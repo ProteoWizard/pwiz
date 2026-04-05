@@ -29,44 +29,25 @@ namespace pwiz.Skyline.Util.Extensions
     /// </summary>
     public static class ActionUtil
     {
-        // Run async method, no arguments.
-
         /// <summary>
-        /// Run an action asynchronously, with an optional callback.  This is preferred to
-        /// calling BeginInvoke directly on the action, because then you have to worry about
-        /// calling EndInvoke.  It's not optional, according to a number of articles on the
-        /// web, like http://blog.aggregatedintelligence.com/2010/06/c-asynchronous-programming-using.html
-        /// 
-        /// It's easy to call a method with no arguments:  ActionUtil.RunAsync(MyMethod);
-        /// For methods with arguments, use a lambda:  ActionUtil.RunAsync(() => MyMethodWithArgs(1, true));
+        /// Run an action asynchronously with locale initialization and exception handling.
+        /// Delegates to <see cref="CommonActionUtil.RunAsync"/> which handles thread init,
+        /// OperationCanceledException, and exception reporting via the injected reporter.
         /// </summary>
-        /// <param name="action">Action to be executed on a thread from the thread pool</param>
-        public static Thread RunAsyncNoExceptionHandling(Action action)
-        {
-//            action.BeginInvoke(action.EndInvoke, null);
-            // Method invoking in the thread pool turned out to cause unpredictable impacts on memory use in nightly tests
-            // Avoiding thread pool use may have performance impacts, but in may cases this is just fine.
-            var thread = new Thread(() => action());
-            thread.Start();
-            return thread;
-        }
-
         public static Thread RunAsync(Action action, string threadName = null)
         {
-            return RunAsyncNoExceptionHandling(() =>
+            return CommonActionUtil.RunAsync(() =>
             {
                 try
                 {
-                    LocalizationHelper.InitThread(threadName);
                     action();
                 }
-                catch (OperationCanceledException) {}
+                // LoadCanceledException extends IOException (not OperationCanceledException)
+                // and carries an IProgressStatus used by the results loading pipeline.
+                // It cannot be unified with OperationCanceledException without refactoring
+                // how ChromCacheBuilder and other callers extract status from the exception.
                 catch (LoadCanceledException) {}
-                catch (Exception e)
-                {
-                    Program.ReportException(e);
-                }
-            });
+            }, threadName);
         }
     }
 }
