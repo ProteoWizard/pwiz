@@ -114,18 +114,6 @@ namespace pwiz.Skyline.Menus
             menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
             menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
             menuStrip.Items.Insert(iInsert++, transformChromContextMenuItem);
-            // Sometimes child menuitems are stripped from the parent
-            if (transformChromContextMenuItem.DropDownItems.Count == 0)
-            {
-                transformChromContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    transformChromNoneContextMenuItem,
-                    transformChromInterpolatedContextMenuItem,
-                    secondDerivativeContextMenuItem,
-                    smoothSGChromContextMenuItem,
-                    cwtContextMenuItem
-                });
-            }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator17);
             menuStrip.Items.Insert(iInsert++, autoZoomContextMenuItem);
             lockYChromContextMenuItem.Checked = set.LockYChrom;
