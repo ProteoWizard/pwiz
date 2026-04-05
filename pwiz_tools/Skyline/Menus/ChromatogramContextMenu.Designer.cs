@@ -77,6 +77,7 @@ namespace pwiz.Skyline.Menus
             this.transformChromInterpolatedContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cwtContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator17 = new System.Windows.Forms.ToolStripSeparator();
             this.autoZoomContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -408,7 +409,8 @@ namespace pwiz.Skyline.Menus
             this.transformChromNoneContextMenuItem,
             this.transformChromInterpolatedContextMenuItem,
             this.secondDerivativeContextMenuItem,
-            this.smoothSGChromContextMenuItem});
+            this.smoothSGChromContextMenuItem,
+            this.cwtContextMenuItem});
             this.transformChromContextMenuItem.Name = "transformChromContextMenuItem";
             resources.ApplyResources(this.transformChromContextMenuItem, "transformChromContextMenuItem");
             this.transformChromContextMenuItem.DropDownOpening += new System.EventHandler(this.transformChromMenuItem_DropDownOpening);
@@ -436,7 +438,13 @@ namespace pwiz.Skyline.Menus
             this.smoothSGChromContextMenuItem.Name = "smoothSGChromContextMenuItem";
             resources.ApplyResources(this.smoothSGChromContextMenuItem, "smoothSGChromContextMenuItem");
             this.smoothSGChromContextMenuItem.Click += new System.EventHandler(this.smoothSGChromMenuItem_Click);
-            // 
+            //
+            // cwtContextMenuItem
+            //
+            this.cwtContextMenuItem.Name = "cwtContextMenuItem";
+            resources.ApplyResources(this.cwtContextMenuItem, "cwtContextMenuItem");
+            this.cwtContextMenuItem.Click += new System.EventHandler(this.cwtMenuItem_Click);
+            //
             // toolStripSeparator17
             // 
             this.toolStripSeparator17.Name = "toolStripSeparator17";
@@ -581,6 +589,7 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem transformChromInterpolatedContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem secondDerivativeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem smoothSGChromContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cwtContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator17;
         private System.Windows.Forms.ToolStripMenuItem autoZoomContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomNoneContextMenuItem;
