@@ -317,6 +317,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void UpdateUIWithoutToolbar(bool selectionChanged = true)
         {
             UpdateGraph(selectionChanged);
+            // Set title with awareness of UI mode (may translate "peptide" to "molecule" etc)
             Text = Helpers.PeptideToMoleculeTextMapper.Translate(Controller.Text + @" - " + Type.CustomToString(), _documentContainer.Document.DocumentType);
         }
 
