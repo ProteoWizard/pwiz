@@ -1296,6 +1296,68 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(currentDoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name, "test");
         }
 
+        [TestMethod]
+        public void TestIonMobilityFilterWindowSkew()
+        {
+            // Symmetric window (offset=0): centered on peak IM
+            var symmetric = IonMobilityFilterWindow.FromWidthAndOffset(10.0, 0);
+            Assert.AreEqual(10.0, symmetric.Width);
+            Assert.AreEqual(0.0, symmetric.Offset);
+            symmetric.GetBounds(100.0, out double low, out double high);
+            Assert.AreEqual(95.0, low, 0.0001);
+            Assert.AreEqual(105.0, high, 0.0001);
+            Assert.IsTrue(symmetric.Contains(100.0, 100.0));
+            Assert.IsTrue(symmetric.Contains(95.0, 100.0));
+            Assert.IsFalse(symmetric.Contains(94.9, 100.0));
+
+            // Asymmetric window (offset=-2): shifted lower
+            var skewed = IonMobilityFilterWindow.FromWidthAndOffset(10.0, -2.0);
+            Assert.AreEqual(10.0, skewed.Width);
+            Assert.AreEqual(-2.0, skewed.Offset);
+            skewed.GetBounds(100.0, out low, out high);
+            Assert.AreEqual(93.0, low, 0.0001); // 100 - 5 + (-2) = 93
+            Assert.AreEqual(103.0, high, 0.0001); // 93 + 10 = 103
+            Assert.IsTrue(skewed.Contains(93.0, 100.0));
+            Assert.IsFalse(skewed.Contains(92.9, 100.0));
+            Assert.IsTrue(skewed.Contains(103.0, 100.0));
+            Assert.IsFalse(skewed.Contains(103.1, 100.0));
+
+            // Null/empty cases
+            Assert.IsTrue(IonMobilityFilterWindow.IsNullOrEmpty(null));
+            Assert.IsTrue(IonMobilityFilterWindow.IsNullOrEmpty(IonMobilityFilterWindow.EMPTY));
+            Assert.IsFalse(IonMobilityFilterWindow.IsNullOrEmpty(symmetric));
+
+            // IonMobilityFilter.ApplyOffset should shift center and window
+            var imFilter = IonMobilityFilter.GetIonMobilityFilter(
+                22.1, eIonMobilityUnits.drift_time_msec,
+                IonMobilityFilterWindow.FromWidthAndOffset(4.0, 0), null);
+            Assert.AreEqual(22.1, imFilter.IonMobility.Mobility.Value, 0.0001);
+            imFilter.GetBounds(out low, out high);
+            Assert.AreEqual(20.1, low, 0.0001);
+            Assert.AreEqual(24.1, high, 0.0001);
+
+            // Apply symmetric offset (e.g. high energy drift offset of -0.2 on both edges)
+            var shifted = imFilter.ApplyOffset(-0.2, -0.2);
+            Assert.AreEqual(21.9, shifted.IonMobility.Mobility.Value, 0.0001);
+            shifted.GetBounds(out low, out high);
+            Assert.AreEqual(19.9, low, 0.0001);
+            Assert.AreEqual(23.9, high, 0.0001);
+
+            // Apply asymmetric offset (lower edge shifts more than upper)
+            var asymShifted = imFilter.ApplyOffset(-0.5, -0.1);
+            asymShifted.GetBounds(out low, out high);
+            Assert.AreEqual(19.6, low, 0.0001); // 20.1 - 0.5
+            Assert.AreEqual(24.0, high, 0.0001); // 24.1 - 0.1
+            // Center should be midpoint of new bounds
+            Assert.AreEqual(21.8, asymShifted.IonMobility.Mobility.Value, 0.0001);
+            // Width should reflect the asymmetric shift
+            Assert.AreEqual(4.4, asymShifted.IonMobilityFilterWindow.Width.Value, 0.0001);
+
+            // ApplyOffset with zero offset returns same filter
+            var unchanged = imFilter.ApplyOffset(0, 0);
+            Assert.AreSame(imFilter, unchanged);
+        }
+
         private const string VALID_ISOTOPE_ENRICHMENT_XML =
             "<isotope_enrichments name=\"Cambridge Isotope Labs\">" +
             "<atom_percent_enrichment symbol=\"H&apos;\">0.9</atom_percent_enrichment>" +

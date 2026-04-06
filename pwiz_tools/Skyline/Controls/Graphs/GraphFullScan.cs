@@ -2058,8 +2058,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_heatMapData?.PlotY2D == null || _heatMapData.PlotY2D.Count == 0)
                 return null;
 
-            double x, imValue;
-            GraphPane.ReverseTransform(pt, out x, out imValue);
+            double imValue;
+            GraphPane.ReverseTransform(pt, out _, out imValue);
 
             // Find nearest point in the mobilogram by ion mobility
             var nearest = _heatMapData.PlotY2D

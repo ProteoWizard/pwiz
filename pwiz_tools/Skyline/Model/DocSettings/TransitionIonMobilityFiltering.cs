@@ -1182,10 +1182,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             var width = Math.Abs(boundsHigh - boundsLow);
             var center = boundsLow + width / 2;
-            // ReSharper disable once PossibleInvalidOperationException
-            var offset = center - IonMobility.Mobility.Value;
-            var imWindow = IonMobilityFilterWindow.FromWidthAndOffset(width, offset);
-            return GetIonMobilityFilter(IonMobilityAndCCS, imWindow);
+            var imWindow = IonMobilityFilterWindow.FromWidthAndOffset(width, 0);
+            return GetIonMobilityFilter(center, IonMobilityUnits, imWindow, CollisionalCrossSectionSqA);
         }
 
         public bool ContainsIonMobility(double val, bool useHighEnergyOffset)
