@@ -574,10 +574,7 @@ namespace pwiz.Skyline.Model
                 }
                 if (!foundSample)
                 {
-                    if (chargeSpecified)
-                        UnrecognizedChargeStates.Add(new UnrecognizedChargeState(charge, fileName, modifiedPeptideString));
-                    else
-                        UnrecognizedPeptides.Add(modifiedPeptideString);
+                    UnrecognizedChargeStates.Add(new UnrecognizedChargeState(charge, fileName, modifiedPeptideString));
                 }
             }
             // Remove peaks from the document that weren't in the file.
