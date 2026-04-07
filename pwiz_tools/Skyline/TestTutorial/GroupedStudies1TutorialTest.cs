@@ -1247,7 +1247,7 @@ namespace pwiz.SkylineTestTutorial
                     viewEditor.ActivatePropertyPath(pathTotalArea);
                     int iFilter = viewEditor.ViewInfo.Filters.Count;
                     viewEditor.FilterTab.AddSelectedColumn();
-                    viewEditor.FilterTab.SetFilterOperation(iFilter, FilterOperations.OP_IS_BLANK);
+                    Assert.IsTrue(viewEditor.FilterTab.SetFilterOperation(iFilter, FilterOperations.OP_IS_BLANK));
                     viewEditor.FilterTab.AvailableFieldsTree.SetScrollPos(Orientation.Horizontal, 60);
                 });
 
