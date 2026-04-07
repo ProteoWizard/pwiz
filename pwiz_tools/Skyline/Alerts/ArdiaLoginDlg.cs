@@ -451,6 +451,7 @@ namespace pwiz.Skyline.Alerts
                 Query = $"code={clientCode}&clientId={clientId}&clientName={clientName}"
             }.Uri;
 
+            // ReSharper disable once ShortLivedHttpClient
             using var httpClient = new HttpClient();
             using var clientCredentialsRequest = new HttpRequestMessage(HttpMethod.Get, credentialsValidationUri);
 
@@ -1327,6 +1328,7 @@ namespace pwiz.Skyline.Alerts
             };
             var newClientData = JsonConvert.SerializeObject(newClient);
 
+            // ReSharper disable once ShortLivedHttpClient
             using var httpClient = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, newClientUri);
             using var content = new StringContent(newClientData, Encoding.UTF8, @"application/json");
@@ -1362,6 +1364,7 @@ namespace pwiz.Skyline.Alerts
 
             var clientActivationInputData = JsonConvert.SerializeObject(clientActivationInput);
 
+            // ReSharper disable once ShortLivedHttpClient
             using var httpClient = new HttpClient();
             using var clientActivationRequest = new HttpRequestMessage(HttpMethod.Post, activateClientUri);
             using var clientActivationContent = new StringContent(clientActivationInputData, Encoding.UTF8, @"application/json");
