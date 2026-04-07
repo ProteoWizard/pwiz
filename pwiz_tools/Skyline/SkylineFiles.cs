@@ -1713,17 +1713,19 @@ namespace pwiz.Skyline
                     modifiedDocument =
                         peakBoundaryImporter.ModifyDocument(ModeUI, fileName, longWaitBroker, lineCount));
 
-                if (modifiedDocument == null)
-                    return;
                 if (longWaitDlg.IsCanceled)
                     return;
+                // Show unrecognized peptide/file/charge warnings even when the
+                // document was not changed, so the user knows why nothing happened
                 if (!peakBoundaryImporter.UnrecognizedPeptidesCancel(this))
+                    return;
+                if (modifiedDocument == null)
                     return;
                 if (longWaitDlg.IsDocumentChanged(docCurrent))
                 {
                     MessageDlg.Show(this, SkylineResources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
                     return;
-                }                
+                }
             }
 
             ModifyDocument(description, DocumentModifier.FromResult(docCurrent, modifiedDocument));

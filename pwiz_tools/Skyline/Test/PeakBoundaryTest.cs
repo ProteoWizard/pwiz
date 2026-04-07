@@ -302,6 +302,53 @@ namespace pwiz.SkylineTest
                 ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCombo)));
 
                 // Note: Importing with all 7 columns is tested as part of MProphetResultsHandlerTest
+
+                if (AsSmallMolecules)
+                {
+                    // These tests use "Molecule" header directly and bypass
+                    // UpdateReportForTestMode so that bare numeric charges
+                    // are not converted to adduct strings like [M+2H]
+                    string moleculeName = _peptides[0];
+                    string fileName = "Q_2012_0918_RJ_13.raw";
+
+                    // Bug fix: When no charge column is specified and a molecule is
+                    // not in the document, it should go to UnrecognizedPeptides
+                    var noChargeHeader = string.Join(csvSep, ColumnCaptions.Molecule,
+                        "FileName", "Apex", "MinStartTime", "MaxEndTime");
+                    var unknownRow = string.Join(csvSep, "NotAMolecule", fileName,
+                        (4.0).ToString(cult), (3.5).ToString(cult), (4.5).ToString(cult));
+                    var importerUnknown = DoImport(docResults,
+                        TextUtil.LineSeparate(noChargeHeader, unknownRow));
+                    AssertEx.AreEqual(1, importerUnknown.UnrecognizedPeptides.Count);
+                    AssertEx.AreEqual(0, importerUnknown.UnrecognizedChargeStates.Count);
+
+                    // Bug fix: A bare numeric charge (e.g. "2") should match small
+                    // molecule precursors by charge value even when the document
+                    // adduct is a charge-only formula like [M+2] rather than [M+2H].
+                    // Modify the first precursor's adduct from [M+2H] to [M+2] to
+                    // simulate a real small molecule with a non-protonated adduct.
+                    var chargeOnlyAdduct = Adduct.FromChargeNoMass(2);
+                    var firstPepPath = docResults.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+                    var firstPep = (PeptideDocNode)docResults.FindNode(firstPepPath);
+                    var firstGroup = (TransitionGroupDocNode)firstPep.Children[0];
+                    var newGroup = new TransitionGroup(firstGroup.TransitionGroup.Peptide,
+                        chargeOnlyAdduct, firstGroup.TransitionGroup.LabelType);
+                    var newGroupNode = firstGroup.ChangeTransitionGroupId(newGroup,
+                        firstGroup.Transitions.Select(t => t.ChangeTransitionGroup(newGroup)));
+                    var newChildren = new List<DocNode>(firstPep.Children) { [0] = newGroupNode };
+                    var newPep = (PeptideDocNode)firstPep.ChangeChildren(newChildren);
+                    var docChargeOnly = (SrmDocument)docResults.ReplaceChild(firstPepPath.Parent, newPep);
+
+                    var chargeHeader = string.Join(csvSep, ColumnCaptions.Molecule,
+                        "FileName", "Apex", "MinStartTime", "MaxEndTime", "Charge");
+                    var chargeRow = string.Join(csvSep, moleculeName, fileName,
+                        (4.0).ToString(cult), (3.5).ToString(cult), (4.5).ToString(cult),
+                        2.ToString(cult));
+                    var importerNumericCharge = DoImport(docChargeOnly,
+                        TextUtil.LineSeparate(chargeHeader, chargeRow));
+                    AssertEx.AreEqual(0, importerNumericCharge.UnrecognizedPeptides.Count);
+                    AssertEx.AreEqual(0, importerNumericCharge.UnrecognizedChargeStates.Count);
+                }
             }
 
             if (AsSmallMolecules)
@@ -510,6 +557,18 @@ namespace pwiz.SkylineTest
                     Assert.AreEqual(annotations.ListAnnotations().Length, 0); 
                 ++j;
             }
+        }
+
+        private PeakBoundaryImporter DoImport(SrmDocument docResults, string importText,
+            bool isMinutes = true)
+        {
+            var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
+            using (var readerPeakBoundaries = new StringReader(importText))
+            {
+                long lineCount = Helpers.CountLinesInString(importText);
+                peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount, isMinutes);
+            }
+            return peakBoundaryImporter;
         }
 
         private bool ApproxEqualNullable(double? a, double? b, double tol)
