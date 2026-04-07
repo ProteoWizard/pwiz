@@ -633,7 +633,7 @@ namespace pwiz.SkylineTestUtil
                     case ImageSource.web:
                     default:
                     {
-                        // ReSharper disable once ShortLivedHttpClient
+                        // ReSharper disable once ShortLivedHttpClient - low frequency use
                         using var httpClient = new HttpClient();
                         using var fileSaverTemp = new FileSaver(file.Path);  // Temporary. Never saved
                         var response = httpClient.GetAsync(file.UrlToDownload).Result;
