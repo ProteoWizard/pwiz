@@ -458,6 +458,21 @@
   <data name="EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue" xml:space="preserve">
     <value>This will reset the list to its default values. Continue?</value>
   </data>
+  <data name="EditListDlg_Share" xml:space="preserve">
+    <value>&amp;Share...</value>
+  </data>
+  <data name="EditListDlg_Import" xml:space="preserve">
+    <value>&amp;Import...</value>
+  </data>
+  <data name="EditListDlg_Rename" xml:space="preserve">
+    <value>Re&amp;name</value>
+  </data>
+  <data name="EditListDlg_RenameItem_An_item_with_the_name__0__already_exists" xml:space="preserve">
+    <value>An item with the name '{0}' already exists.</value>
+  </data>
+  <data name="EditListDlg_RenameItem_Enter_new_name" xml:space="preserve">
+    <value>Enter new name:</value>
+  </data>
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_" xml:space="preserve">
     <value>&amp;Monoisotopic mass:</value>
   </data>
@@ -921,6 +936,9 @@
   </data>
   <data name="SaveSettingsDlg_OnClosing_The_name__0__already_exists" xml:space="preserve">
     <value>The name {0} already exists.</value>
+  </data>
+  <data name="ShareListDlg_Select_items_to_share" xml:space="preserve">
+    <value>Select items to share:</value>
   </data>
   <data name="StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_" xml:space="preserve">
     <value>The settings have been reset to the default values.</value>

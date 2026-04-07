@@ -259,6 +259,21 @@
   <data name="ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_" xml:space="preserve">
     <value>The document must contain at least one precursor transition in order to proceed.</value>
   </data>
+  <data name="ImportPeptideSearchDlg_Import" xml:space="preserve">
+    <value>&lt;Import...&gt;</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Note_that_changing_preset_may_affect_settings_on_previous_pages" xml:space="preserve">
+    <value>Note that changing preset may affect settings on previous pages (for example, FASTA, workflow, modifications).</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Dont_show_this_warning_again" xml:space="preserve">
+    <value>Don't show this warning again</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_ImportPresetFromFile_Failed_to_import_settings_from_params_file" xml:space="preserve">
+    <value>Failed to import settings from params file.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_ImportPresetFromFile_Params_files" xml:space="preserve">
+    <value>Params files</value>
+  </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next" xml:space="preserve">
     <value>&amp;Next &gt;</value>
   </data>
@@ -342,6 +357,9 @@
   </data>
   <data name="SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_" xml:space="preserve">
     <value>Download {0}</value>
+  </data>
+  <data name="SearchSettingsControl_ImportFromParamsFile" xml:space="preserve">
+    <value>Import From params File...</value>
   </data>
   <data name="SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_" xml:space="preserve">
     <value>A settings preset named '{0}' already exists. Do you want to replace it?</value>

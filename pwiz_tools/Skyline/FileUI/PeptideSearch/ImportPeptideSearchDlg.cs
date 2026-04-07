@@ -73,12 +73,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             dia_raw
         }
 
+        // Alias for the model-layer SearchWorkflowType enum to avoid churn in existing references
         public enum Workflow
         {
-            dda,
-            prm,
-            dia,
-            feature_detection
+            dda = SearchWorkflowType.dda,
+            prm = SearchWorkflowType.prm,
+            dia = SearchWorkflowType.dia,
+            feature_detection = SearchWorkflowType.feature_detection
         }
 
         public class SpectraPage : IFormView { }
@@ -104,6 +105,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private SettingsListComboDriver<SearchSettingsPreset> _settingsPresetDriver;
         private SearchSettingsPreset _lastAppliedPreset;
+        private bool _suppressPresetWarning;
         private MsDataFileUri[] _originalDdaSearchDataSources;
 
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, bool isRunPeptideSearch, Workflow? workflowType, bool useExistingLibrary = false)
@@ -183,8 +185,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 SearchControl.SetProgressBarDisplayStyle(ProgressBarDisplayText.CustomText);
             }
 
-            // Initialize settings preset controls at the bottom-left of the dialog
-            if (!isFeatureDetection && !useExistingLibrary)
+            // Initialize settings preset controls at the bottom-left of the dialog (Run Peptide Search only)
+            if (isRunPeptideSearch && !isFeatureDetection && !useExistingLibrary)
             {
                 InitSettingsPresetControls();
             }
@@ -256,23 +258,84 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 cbSettingsPreset,
                 Settings.Default.SearchSettingsPresets,
                 true);
-            _settingsPresetDriver.LoadList(null);
+            LoadPresetList(null);
 
             cbSettingsPreset.SelectedIndexChanged += cbSettingsPreset_SelectedIndexChanged;
             btnSavePreset.Click += btnSavePreset_Click;
+            btnSavePreset.Enabled = false; // Enable once search settings page is reached
+        }
+
+        private static void EnsureDefaultPresets()
+        {
+            var presets = Settings.Default.SearchSettingsPresets;
+            foreach (var defaultPreset in presets.GetDefaults())
+            {
+                if (!presets.Any(p => p.Name == defaultPreset.Name))
+                    presets.Insert(0, defaultPreset);
+            }
+        }
+
+        private void LoadPresetList(string selectedName)
+        {
+            EnsureDefaultPresets();
+            _suppressPresetWarning = true;
+            try
+            {
+                _settingsPresetDriver.LoadList(selectedName);
+            }
+            finally
+            {
+                _suppressPresetWarning = false;
+            }
         }
 
         private void cbSettingsPreset_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (_settingsPresetDriver.SelectedIndexChangedEvent(sender, e))
             {
-                _settingsPresetDriver.LoadList(_settingsPresetDriver.SelectedItem?.Name);
+                LoadPresetList(_settingsPresetDriver.SelectedItem?.Name);
                 return;
             }
 
             var preset = _settingsPresetDriver.SelectedItem;
             if (preset != null)
+            {
+                // Warn when changing preset on a page other than the first
+                if (CurrentPage != Pages.spectra_page && !WarnAndConfirmPresetChange())
+                {
+                    // User cancelled - restore previous selection
+                    LoadPresetList(_lastAppliedPreset?.Name);
+                    return;
+                }
                 ApplyPreset(preset);
+            }
+        }
+
+        private bool WarnAndConfirmPresetChange()
+        {
+            if (!Settings.Default.WarnOnPresetChange || _suppressPresetWarning)
+                return true;
+
+            using (var dlg = new WarnOnPresetChangeDlg())
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return false;
+
+                if (dlg.DontShowAgain)
+                    Settings.Default.WarnOnPresetChange = false;
+
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Called by SearchSettingsControl when a params file is imported as a preset.
+        /// </summary>
+        public void AddImportedPreset(SearchSettingsPreset preset)
+        {
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            LoadPresetList(preset.Name);
+            ApplyPreset(preset);
         }
 
         private void ApplyPreset(SearchSettingsPreset preset)
@@ -282,11 +345,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Apply search engine settings
             SearchSettingsControl?.ApplySearchSettingsPreset(preset);
 
-            // Apply FASTA settings
+            // Apply FASTA settings (only clear if preset explicitly specifies empty path)
             if (!string.IsNullOrEmpty(preset.FastaFilePath))
                 ImportFastaControl.SetFastaContent(preset.FastaFilePath, true);
-            else
-                ImportFastaControl.ClearFastaContent();
             if (!string.IsNullOrEmpty(preset.EnzymeName))
             {
                 var enzyme = Settings.Default.GetEnzymeByName(preset.EnzymeName);
@@ -312,11 +373,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MatchModificationsControl.Initialize(Document, preset);
 
             // Apply workflow and IRT settings (null means reset to defaults)
-            if (!string.IsNullOrEmpty(preset.WorkflowType) &&
-                Enum.TryParse(preset.WorkflowType, out Workflow workflow))
-                BuildPepSearchLibControl.WorkflowType = workflow;
-            else
-                BuildPepSearchLibControl.WorkflowType = Workflow.dda;
+            BuildPepSearchLibControl.WorkflowType = preset.Workflow.HasValue
+                ? (Workflow)preset.Workflow.Value
+                : Workflow.dda;
             if (!string.IsNullOrEmpty(preset.IrtStandardName))
             {
                 var irtStandard = IrtStandard.ALL.FirstOrDefault(s => s.Name == preset.IrtStandardName);
@@ -359,7 +418,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             var preset = BuildPresetFromCurrentSettings(name);
             Settings.Default.SearchSettingsPresets.Add(preset);
-            _settingsPresetDriver.LoadList(name);
+            LoadPresetList(name);
         }
 
         private static MzTolerance GetToleranceSafe(Func<MzTolerance> getter)
@@ -414,7 +473,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 ImportFastaControl?.MaxMissedCleavages ?? 0,
                 structuralModifications: structuralMods,
                 heavyModifications: heavyMods,
-                workflowType: BuildPepSearchLibControl.WorkflowType.ToString(),
+                workflowType: (SearchWorkflowType)BuildPepSearchLibControl.WorkflowType,
                 irtStandardName: BuildPepSearchLibControl.IrtStandards?.Name,
                 hasExplicitModifications: true);
         }
@@ -457,6 +516,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         // Test helpers
         public bool SettingsPresetVisible => cbSettingsPreset?.Visible ?? false;
 
+        public void SelectEditList()
+        {
+            for (int i = 0; i < cbSettingsPreset.Items.Count; i++)
+            {
+                if (cbSettingsPreset.Items[i].ToString() ==
+                    Resources.SettingsListComboDriver_Edit_list)
+                {
+                    cbSettingsPreset.SelectedIndex = i;
+                    return;
+                }
+            }
+        }
+
         public string SelectedPresetName
         {
             get => _settingsPresetDriver?.SelectedItem?.Name;
@@ -469,9 +541,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (cbSettingsPreset.Items[i].ToString() == value)
                     {
                         cbSettingsPreset.SelectedIndex = i;
-                        var preset = _settingsPresetDriver.SelectedItem;
-                        if (preset != null)
-                            ApplyPreset(preset);
                         return;
                     }
                 }
@@ -490,7 +559,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             var preset = BuildPresetFromCurrentSettings(name);
             Settings.Default.SearchSettingsPresets.Add(preset);
-            _settingsPresetDriver?.LoadList(name);
+            LoadPresetList(name);
+        }
+
+        public void ImportSettingsPreset(string filePath, string presetName)
+        {
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == presetName);
+            if (existingPreset != null)
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+
+            var preset = SearchSettingsParamsFileParser.ImportFromFile(filePath, presetName);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            LoadPresetList(presetName);
+            ApplyPreset(preset);
         }
 
         public SearchSettingsPreset LastAppliedPreset => _lastAppliedPreset;
@@ -1411,6 +1492,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         _documents.Pop();
                         _modificationSettingsChanged = false;
                     }
+                    // Re-apply preset mods after document stack pop
+                    if (_lastAppliedPreset != null)
+                        MatchModificationsControl.Initialize(Document, _lastAppliedPreset);
                     break;
                 case Pages.transition_settings_page:
                     if (_transitionSettingsChanged)
@@ -1463,6 +1547,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Text = CurrentPage != LastPage
                 ? PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next
                 : PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Finish;
+
+            // Enable save button only once search settings have been configured
+            if (btnSavePreset.Visible)
+                btnSavePreset.Enabled = CurrentPage >= Pages.dda_search_settings_page;
         }
 
         private void UpdateMinimumSize()

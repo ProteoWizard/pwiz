@@ -376,6 +376,24 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to High resolution.
+        /// </summary>
+        public static string CometSearchEngine_Ms2Analyzer_High_resolution {
+            get {
+                return ResourceManager.GetString("CometSearchEngine_Ms2Analyzer_High_resolution", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Low resolution.
+        /// </summary>
+        public static string CometSearchEngine_Ms2Analyzer_Low_resolution {
+            get {
+                return ResourceManager.GetString("CometSearchEngine_Ms2Analyzer_Low_resolution", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Only MSFragger is currently supported for raw DIA searches. Enable DIA-Umpire to use other search engines..
         /// </summary>
         public static string SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported {

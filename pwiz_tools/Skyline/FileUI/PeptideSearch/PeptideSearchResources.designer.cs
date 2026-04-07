@@ -552,6 +552,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;Import...&gt;.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_Import {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_Import", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to import settings from params file..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ImportPresetFromFile_Failed_to_import_settings_from_params_file {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPresetFromFile_Failed_to_import_settings_from_params_file", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Params files.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ImportPresetFromFile_Params_files {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPresetFromFile_Params_files", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Next &gt;.
         /// </summary>
         public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next {
@@ -665,6 +692,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Don't show this warning again.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Dont_show_this_warning_again {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Dont_show_this_warning_again", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Note that changing preset may affect settings on previous pages (for example, FASTA, workflow, modifications)..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Note_that_changing_preset_may_affect_settings_on_previous_pages {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Note_that_changing_preset_may_af" +
+                        "fect_settings_on_previous_pages", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Import Peptide Search.
         /// </summary>
@@ -809,6 +855,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_ {
             get {
                 return ResourceManager.GetString("SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Import From params File....
+        /// </summary>
+        public static string SearchSettingsControl_ImportFromParamsFile {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_ImportFromParamsFile", resourceCulture);
             }
         }
 

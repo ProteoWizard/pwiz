@@ -158,9 +158,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 SearchEngine = SearchEngine.Comet,
                 FragmentIons = "b,y",
-                Ms2Analyzer = "Default",
+                Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution,
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
-                FragmentTolerance = new MzTolerance(1.0005),
                 AdditionalSettings = new Dictionary<string, string>(),
                 ExpectedResultsFinal = new ExpectedResults(145, 338, 392, 1176, 165)
             };
@@ -182,9 +181,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 SearchEngine = SearchEngine.Comet,
                 FragmentIons = "b,y",
-                Ms2Analyzer = "Default",
+                Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution,
                 PrecursorTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
-                FragmentTolerance = new MzTolerance(0.5),
                 AdditionalSettings = new Dictionary<string, string>
                 {
                     { "auto_fragment_bin_tol", "fail" },
@@ -322,9 +320,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 SearchEngine = SearchEngine.Comet,
                 FragmentIons = "b,y",
-                Ms2Analyzer = "Default",
+                Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution,
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
-                FragmentTolerance = new MzTolerance(1.0005),
                 AdditionalSettings = new Dictionary<string, string>(),
                 ExpectedResultsFinal = new ExpectedResults(145, 338, 392, 1176, 165),
                 TestDependencyErrors = true
@@ -340,6 +337,7 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
             RunFunctionalTest();
         }
+
 
         private void TestSettingsPreset()
         {
@@ -371,10 +369,8 @@ namespace pwiz.SkylineTestFunctional
             const SearchEngine PRESET_2_ENGINE = SearchEngine.Comet;
             const double PRESET_2_PRECURSOR_TOL = 25;
             const MzTolerance.Units PRESET_2_PRECURSOR_UNIT = MzTolerance.Units.ppm;
-            const double PRESET_2_FRAGMENT_TOL = 1.0005;
-            const MzTolerance.Units PRESET_2_FRAGMENT_UNIT = MzTolerance.Units.mz;
             const string PRESET_2_FRAGMENT_IONS = "b,y";
-            const string PRESET_2_MS2_ANALYZER = "Default";
+            string PRESET_2_MS2_ANALYZER = DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution;
             const double PRESET_2_CUTOFF = 0.01;
             const int PRESET_2_MISSED_CLEAVAGES = 1;
 
@@ -462,7 +458,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 searchSettingsControl.SelectedSearchEngine = PRESET_2_ENGINE;
                 searchSettingsControl.PrecursorTolerance = new MzTolerance(PRESET_2_PRECURSOR_TOL, PRESET_2_PRECURSOR_UNIT);
-                searchSettingsControl.FragmentTolerance = new MzTolerance(PRESET_2_FRAGMENT_TOL);
+                // Comet controls fragment tolerance via MS2 Analyzer selection
                 searchSettingsControl.FragmentIons = PRESET_2_FRAGMENT_IONS;
                 searchSettingsControl.Ms2Analyzer = PRESET_2_MS2_ANALYZER;
                 searchSettingsControl.CutoffScore = PRESET_2_CUTOFF;
@@ -496,12 +492,25 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.PresetNames.Contains(PRESET_2_NAME));
             });
 
-            // Navigate forward to search settings and scramble all settings
+            // Preset change on non-first page triggers warning dialog
+            // Test cancelling: should keep preset 2 selected
+            {
+                var warnDlg = ShowDialog<WarnOnPresetChangeDlg>(() =>
+                    importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME);
+                OkDialog(warnDlg, warnDlg.ClickCancel);
+            }
+            RunUI(() => AssertEx.AreEqual(PRESET_2_NAME, importPeptideSearchDlg.SelectedPresetName));
+
+            // Test OK with "don't show again": should switch to preset 1 and suppress future warnings
+            {
+                var warnDlg = ShowDialog<WarnOnPresetChangeDlg>(() =>
+                    importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME);
+                RunUI(() => warnDlg.DontShowAgain = true);
+                OkDialog(warnDlg, warnDlg.OkDialog);
+            }
+
             RunUI(() =>
             {
-                // We're on the mods page after saving preset 2; navigate forward
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
-                importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 9;
@@ -565,8 +574,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(PRESET_2_ENGINE, searchSettingsControl.SelectedSearchEngine);
                 Assert.AreEqual(PRESET_2_PRECURSOR_TOL, searchSettingsControl.PrecursorTolerance.Value, 0.001);
                 Assert.AreEqual(PRESET_2_PRECURSOR_UNIT, searchSettingsControl.PrecursorTolerance.Unit);
-                Assert.AreEqual(PRESET_2_FRAGMENT_TOL, searchSettingsControl.FragmentTolerance.Value, 0.0001);
-                Assert.AreEqual(PRESET_2_FRAGMENT_UNIT, searchSettingsControl.FragmentTolerance.Unit);
+                Assert.AreEqual(PRESET_2_MS2_ANALYZER, searchSettingsControl.Ms2Analyzer);
                 Assert.AreEqual(PRESET_2_CUTOFF, searchSettingsControl.CutoffScore, 0.001);
             });
 
@@ -718,8 +726,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SelectedPresetName = DEFAULT_PRESET_NAME;
                 Assert.AreEqual(DEFAULT_MISSED_CLEAVAGES, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages,
                     "Missed cleavages should update immediately when switching to Default on FASTA page");
-                Assert.IsTrue(string.IsNullOrEmpty(importPeptideSearchDlg.ImportFastaControl.FastaFile),
-                    "FASTA file should be cleared when switching to Default on FASTA page");
+                // FASTA file is NOT cleared when switching presets (only set if preset specifies one)
 
                 // Switch back to preset 1
                 importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
@@ -740,12 +747,8 @@ namespace pwiz.SkylineTestFunctional
                 // Switch to preset 1 - Carbamidomethyl should be unchecked
                 importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
                 var modsAfterPreset1 = importPeptideSearchDlg.MatchModificationsControl.CheckedModificationNames.ToList();
-                var allMods = importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.ToList();
-                var preset1 = Settings.Default.SearchSettingsPresets.First(p => p.Name == PRESET_1_NAME);
                 Assert.IsFalse(modsAfterPreset1.Contains(@"Carbamidomethyl (C)"),
-                    $"Preset 1 should have Carbamidomethyl unchecked. HasExplicit={preset1.HasExplicitModifications}, " +
-                    $"PresetStructMods=[{string.Join(", ", preset1.StructuralModifications.Select(m => m.Name))}], " +
-                    $"CheckedMods=[{string.Join(", ", modsAfterPreset1)}], AllMods=[{string.Join(", ", allMods)}]");
+                    "Preset 1 should have Carbamidomethyl unchecked");
 
                 // Switch to preset 2 - Carbamidomethyl should be checked
                 importPeptideSearchDlg.SelectedPresetName = PRESET_2_NAME;
@@ -795,6 +798,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards.IsEmpty,
                     "Default preset should reset IRT standard to None on spectra page");
 
+                // Switch to MSFragger DIA preset - should set DIA workflow
+                const string MSFRAGGER_DIA_PRESET = "MSFragger high-high DIA (Q-Exactive, Q-Tof)";
+                importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET;
+                Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dia, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
+                    "MSFragger DIA preset should set DIA workflow");
+
                 // Switch to preset 1 - should restore DDA and Auto IRT
                 importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
                 Assert.AreEqual(PRESET_1_WORKFLOW, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
@@ -803,8 +812,197 @@ namespace pwiz.SkylineTestFunctional
                     "Preset 1 should restore Auto IRT standard on spectra page");
             });
 
+            // Test importing presets from .params files
+            TestImportParamsFilePresets(importPeptideSearchDlg);
+
+            // Test Edit List dialog Import and Share functionality
+            TestEditListImportShare();
+
             OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
             Settings.Default.SearchSettingsPresets.Clear();
+        }
+
+        private void TestImportParamsFilePresets(ImportPeptideSearchDlg importPeptideSearchDlg)
+        {
+            const string COMET_PRESET_NAME = "Imported Comet";
+            const string MSFRAGGER_PRESET_NAME = "Imported MSFragger";
+
+            // Create a temp Comet .params file
+            var cometParamsPath = Path.Combine(TestContext.TestDir, "test_comet.params");
+            File.WriteAllText(cometParamsPath, string.Join("\r\n",
+                @"peptide_mass_tolerance = 20.0",
+                @"peptide_mass_units = 2",
+                @"fragment_bin_tol = 0.02",
+                @"fragment_bin_offset = 0.0",
+                @"search_enzyme_number = 1",
+                @"allowed_missed_cleavage = 2",
+                @"max_variable_mods_in_peptide = 3",
+                @"variable_mod1 = 15.9949 M 0 3",
+                @"variable_mod2 = 0.0 X 0 3",
+                @"add_C_cysteine = 57.021464",
+                @"add_G_glycine = 0.0",
+                @"isotope_error = 2",
+                @"theoretical_fragment_ions = 0",
+                @"spectrum_batch_size = 15000",
+                @"[COMET_ENZYME_INFO]",
+                @"0.  No_enzyme              0      -           -",
+                @"1.  Trypsin                1      KR          P"));
+
+            // Create a temp MSFragger .params file
+            var msFraggerParamsPath = Path.Combine(TestContext.TestDir, "test_fragger.params");
+            File.WriteAllText(msFraggerParamsPath, string.Join("\r\n",
+                @"precursor_true_tolerance = 20",
+                @"precursor_true_units = 1",
+                @"fragment_mass_tolerance = 20",
+                @"fragment_mass_units = 1",
+                @"search_enzyme_name_1 = stricttrypsin",
+                @"search_enzyme_cut_1 = KR",
+                @"search_enzyme_nocut_1 = ",
+                @"search_enzyme_sense_1 = C",
+                @"allowed_missed_cleavage_1 = 2",
+                @"num_enzyme_termini = 2",
+                @"max_variable_mods_per_peptide = 3",
+                @"variable_mod_01 = 15.9949 M 3",
+                @"variable_mod_02 = 42.0106 [^ 1",
+                @"add_C_cysteine = 57.02146",
+                @"add_G_glycine = 0.0",
+                @"fragment_ion_series = b,y",
+                @"calibrate_mass = 2",
+                @"deisotope = 1"));
+
+            // Test direct parser API (Comet)
+            var cometPreset = SearchSettingsParamsFileParser.ImportFromFile(cometParamsPath, COMET_PRESET_NAME);
+            AssertEx.AreEqual(SearchEngine.Comet, cometPreset.SearchEngine);
+            AssertEx.AreEqual(20.0, cometPreset.PrecursorToleranceValue);
+            AssertEx.AreEqual(MzTolerance.Units.ppm, cometPreset.PrecursorToleranceUnit);
+            AssertEx.AreEqual(0.0, cometPreset.FragmentToleranceValue); // Comet uses MS2 Analyzer instead
+            AssertEx.AreEqual(DdaSearchResources.CometSearchEngine_Ms2Analyzer_High_resolution, cometPreset.Ms2Analyzer);
+            AssertEx.AreEqual(@"Trypsin", cometPreset.EnzymeName);
+            AssertEx.AreEqual(2, cometPreset.MaxMissedCleavages);
+            AssertEx.AreEqual(3, cometPreset.MaxVariableMods);
+            Assert.IsTrue(cometPreset.HasExplicitModifications);
+            Assert.IsTrue(cometPreset.StructuralModifications.Any(m =>
+                m.Name.Contains(@"Oxid") || Math.Abs((m.MonoisotopicMass ?? 0) - 15.9949) < 0.01));
+            Assert.IsTrue(cometPreset.StructuralModifications.Any(m =>
+                m.Name.Contains(@"Carbamidomethyl") || Math.Abs((m.MonoisotopicMass ?? 0) - 57.021) < 0.01));
+            Assert.IsNotNull(cometPreset.AdditionalSettingsXml);
+            AssertEx.Contains(cometPreset.AdditionalSettingsXml, @"fragment_bin_tol");
+            AssertEx.Contains(cometPreset.AdditionalSettingsXml, @"isotope_error");
+
+            // Test direct parser API (MSFragger)
+            var msFraggerPreset = SearchSettingsParamsFileParser.ImportFromFile(msFraggerParamsPath, MSFRAGGER_PRESET_NAME);
+            AssertEx.AreEqual(SearchEngine.MSFragger, msFraggerPreset.SearchEngine);
+            AssertEx.AreEqual(20.0, msFraggerPreset.PrecursorToleranceValue);
+            AssertEx.AreEqual(MzTolerance.Units.ppm, msFraggerPreset.PrecursorToleranceUnit);
+            AssertEx.AreEqual(20.0, msFraggerPreset.FragmentToleranceValue);
+            AssertEx.AreEqual(MzTolerance.Units.ppm, msFraggerPreset.FragmentToleranceUnit);
+            AssertEx.AreEqual(@"Trypsin", msFraggerPreset.EnzymeName);
+            AssertEx.AreEqual(2, msFraggerPreset.MaxMissedCleavages);
+            AssertEx.AreEqual(3, msFraggerPreset.MaxVariableMods);
+            AssertEx.AreEqual(@"b,y", msFraggerPreset.FragmentIons);
+            Assert.IsTrue(msFraggerPreset.HasExplicitModifications);
+            Assert.IsTrue(msFraggerPreset.StructuralModifications.Any(m =>
+                m.Name.Contains(@"Oxid") || Math.Abs((m.MonoisotopicMass ?? 0) - 15.9949) < 0.01));
+            Assert.IsTrue(msFraggerPreset.StructuralModifications.Any(m =>
+                m.Name.Contains(@"Carbamidomethyl") || Math.Abs((m.MonoisotopicMass ?? 0) - 57.021) < 0.01));
+            // Acetylation on protein N-term
+            Assert.IsTrue(msFraggerPreset.StructuralModifications.Any(m =>
+                Math.Abs((m.MonoisotopicMass ?? 0) - 42.0106) < 0.01));
+
+            // Test UI import (on spectra page)
+            RunUI(() =>
+            {
+                // Import Comet params file
+                importPeptideSearchDlg.ImportSettingsPreset(cometParamsPath, COMET_PRESET_NAME);
+
+                // Verify preset was applied
+                AssertEx.AreEqual(COMET_PRESET_NAME, importPeptideSearchDlg.SelectedPresetName);
+                Assert.IsTrue(importPeptideSearchDlg.PresetNames.Contains(COMET_PRESET_NAME));
+
+                // Import MSFragger params file
+                importPeptideSearchDlg.ImportSettingsPreset(msFraggerParamsPath, MSFRAGGER_PRESET_NAME);
+
+                // Verify preset was applied
+                AssertEx.AreEqual(MSFRAGGER_PRESET_NAME, importPeptideSearchDlg.SelectedPresetName);
+                Assert.IsTrue(importPeptideSearchDlg.PresetNames.Contains(MSFRAGGER_PRESET_NAME));
+            });
+
+            // Clean up temp files
+            File.Delete(cometParamsPath);
+            File.Delete(msFraggerParamsPath);
+        }
+
+        private void TestEditListImportShare()
+        {
+            var sharePath = Path.Combine(TestContext.TestDir, "shared_presets.skysp");
+
+            // Open Edit List dialog from the preset combo's "Edit list..." option
+            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<SearchSettingsPreset>, SearchSettingsPreset>>(
+                () => FindOpenForm<ImportPeptideSearchDlg>().SelectEditList());
+
+            // Get names from the editable list (excludes built-in defaults)
+            IList<string> editableNames = null;
+            RunUI(() =>
+            {
+                editableNames = editListDlg.GetAllEdited().Select(p => p.Name).ToList();
+            });
+            Assert.IsTrue(editableNames.Count > 0);
+
+            // Share all items to file
+            RunUI(() => editListDlg.ShareItemsToFile(sharePath));
+            Assert.IsTrue(File.Exists(sharePath));
+
+            // Remove all user presets from the dialog
+            RunUI(() =>
+            {
+                while (editListDlg.ListCount > 0)
+                {
+                    editListDlg.SelectLastItem();
+                    editListDlg.RemoveItem();
+                }
+                AssertEx.AreEqual(0, editListDlg.ListCount);
+            });
+
+            // Import from the shared file
+            RunUI(() => editListDlg.ImportItemsFromFile(sharePath));
+
+            // Verify all editable presets were restored
+            RunUI(() =>
+            {
+                foreach (var name in editableNames)
+                {
+                    Assert.IsTrue(editListDlg.GetAllEdited().Any(p => p.Name == name),
+                        $"Preset '{name}' should exist after import");
+                }
+            });
+
+            // OK the dialog to apply changes
+            OkDialog(editListDlg, editListDlg.OkDialog);
+
+            // Verify presets are in the settings (both defaults and user presets)
+            foreach (var name in editableNames)
+            {
+                Assert.IsTrue(Settings.Default.SearchSettingsPresets.Any(p => p.Name == name),
+                    $"Preset '{name}' should be in settings after Edit List OK");
+            }
+
+            // Test that Edit List works after removing default presets from settings
+            // (regression: ReloadList assumed all defaults were present in the list)
+            Settings.Default.SearchSettingsPresets.Clear();
+            // Add back only one default (fewer than ExcludeDefaults expects)
+            var firstDefault = Settings.Default.SearchSettingsPresets.GetDefaults(0).First();
+            Settings.Default.SearchSettingsPresets.Add(firstDefault);
+
+            // Opening Edit List should not throw despite missing defaults
+            var editListDlg2 = ShowDialog<EditListDlg<SettingsListBase<SearchSettingsPreset>, SearchSettingsPreset>>(
+                () => FindOpenForm<ImportPeptideSearchDlg>().SelectEditList());
+            OkDialog(editListDlg2, editListDlg2.OkDialog);
+
+            // Restore defaults for cleanup
+            Settings.Default.SearchSettingsPresets.Clear();
+            Settings.Default.SearchSettingsPresets.AddDefaults();
+
+            File.Delete(sharePath);
         }
 
         protected override bool IsRecordMode => false;
@@ -975,7 +1173,8 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var setting in TestSettings.AdditionalSettings)
                     importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(setting.Key, setting.Value);
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = TestSettings.PrecursorTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = TestSettings.FragmentTolerance;
+                if (TestSettings.FragmentTolerance != null)
+                    importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = TestSettings.FragmentTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = TestSettings.FragmentIons;
                 importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = TestSettings.Ms2Analyzer;
                 importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.1;
