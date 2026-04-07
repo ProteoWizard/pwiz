@@ -1734,7 +1734,7 @@ namespace pwiz.Skyline.Properties
     }
 
 
-    public sealed class SearchSettingsPresetList : SettingsListBase<SearchSettingsPreset>
+    public sealed class SearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>
     {
         public const string DEFAULT_PRESET_NAME = @"Default";
         public const string DEFAULT_ENZYME_NAME = @"Trypsin";
@@ -1754,13 +1754,21 @@ namespace pwiz.Skyline.Properties
                 enzymeName: DEFAULT_ENZYME_NAME,
                 maxMissedCleavages: 0);
 
-            // Engine-specific presets
-            foreach (var preset in CometSearchEngine.GetDefaultPresets())
+            // Engine-specific presets, sorted alphabetically
+            foreach (var preset in CometSearchEngine.GetDefaultPresets()
+                         .Concat(MsFraggerSearchEngine.GetDefaultPresets())
+                         .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
                 yield return preset;
         }
 
+        public override int ExcludeDefaults => GetDefaults(RevisionIndexCurrent).Count();
+
         public override string Title => PropertiesResources.SearchSettingsPresetList_Title_Edit_Settings_Presets;
         public override string Label => PropertiesResources.SearchSettingsPresetList_Label_Settings_Presets;
+
+        public override Type SerialType => typeof(SearchSettingsPresetList);
+        public override ICollection<SearchSettingsPreset> CreateEmptyList() => new SearchSettingsPresetList();
+        public override string FileExtension => @".skysp";
     }
 
 
@@ -3723,6 +3731,8 @@ namespace pwiz.Skyline.Properties
             return new AnnotationDefList();
         }
 
+        public string FileExtension => @".xml";
+
         public bool SingleSelect => false;
 
         public string[] GetSelectedItems(SrmSettings settings) => GetKeys(settings.DataSettings.AnnotationDefs);
@@ -3885,6 +3895,8 @@ namespace pwiz.Skyline.Properties
         {
             return new ColorSchemeList();
         }
+
+        public string FileExtension => @".xml";
     }
 
     public abstract class SettingsListNotifying<TItem> : SettingsList<TItem>
@@ -3933,6 +3945,8 @@ namespace pwiz.Skyline.Properties
         public virtual Type DeserialType { get { return SerialType; } }
 
         public abstract ICollection<TItem> CreateEmptyList();
+
+        public virtual string FileExtension => @".xml";
 
         #endregion
 

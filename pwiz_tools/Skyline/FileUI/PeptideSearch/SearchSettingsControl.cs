@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -33,6 +34,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -42,7 +44,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly ImportPeptideSearchDlg _documentContainer;
         private readonly FullScanSettingsControl _hardklorInstrumentSettingsControl;
         private SearchEngine? _searchEngine;
-            public SearchSettingsControl(ImportPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
+
+        public SearchSettingsControl(ImportPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
         {
             InitializeComponent();
             ImportPeptideSearch = importPeptideSearch;
@@ -110,6 +113,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch.SearchEngine?.Dispose();
             ImportPeptideSearch.SearchEngine = InitSelectedSearchEngine();
             InitializeEngine();
+        }
+
+        private bool _initializingEngine;
+
+        private void cbMs2Analyzer_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!_initializingEngine && cbMs2Analyzer.SelectedIndex >= 0 && ImportPeptideSearch.SearchEngine != null)
+                ImportPeptideSearch.SearchEngine.SetMs2Analyzer(cbMs2Analyzer.SelectedItem.ToString());
         }
 
         public void UpdateControls()
@@ -368,11 +379,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void InitializeEngine()
         {
             //lblSearchEngineName.Text = ImportPeptideSearch.SearchEngine.EngineName;
+            _initializingEngine = true;
             LoadComboboxEntries();
+            _initializingEngine = false;
             pBLogo.Image = ImportPeptideSearch.SearchEngine.SearchEngineLogo;
             labelCutoff.Text = ImportPeptideSearch.SearchEngine.CutoffScoreLabel + @":";
             HandleSearchEngineBlurb();
             btnAdditionalSettings.Enabled = ImportPeptideSearch.SearchEngine.AdditionalSettings != null;
+            btnImportSettings.Visible = SearchSettingsParamsFileParser.SupportsImport(SelectedSearchEngine);
+
+            // Comet controls fragment tolerance via MS2 Analyzer (High/Low resolution)
+            bool cometFragmentTol = SelectedSearchEngine == SearchEngine.Comet;
+            lblMs2Tolerance.Enabled = !cometFragmentTol;
+            txtMS2Tolerance.Enabled = !cometFragmentTol;
+            label3.Enabled = !cometFragmentTol;
+            cbMS2TolUnit.Enabled = !cometFragmentTol;
+            if (cometFragmentTol)
+                txtMS2Tolerance.Text = string.Empty;
+
             ImportPeptideSearch.RemainingStepsInSearch = ImportPeptideSearch.IsFeatureDetection ? 2 : 1; // Hardklor is followed by one or more BullseyeSharp calls
         }
 
@@ -535,13 +559,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             ImportPeptideSearch.SearchEngine.SetPrecursorMassTolerance(PrecursorTolerance);
 
-            if (!helper.ValidateDecimalTextBox(txtMS2Tolerance, 0, 100, out _))
+            // Comet controls fragment tolerance via MS2 Analyzer selection, not text box
+            if (txtMS2Tolerance.Enabled)
             {
-                helper.ShowTextBoxError(txtMS2Tolerance, 
-                    PeptideSearchResources.DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect);
-                return false;
+                if (!helper.ValidateDecimalTextBox(txtMS2Tolerance, 0, 100, out _))
+                {
+                    helper.ShowTextBoxError(txtMS2Tolerance,
+                        PeptideSearchResources.DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect);
+                    return false;
+                }
+                ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(FragmentTolerance);
             }
-            ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(FragmentTolerance);
 
             string fragmentIons;
             if (!ValidateCombobox(cbFragmentIons, out fragmentIons))
@@ -607,23 +635,43 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public MzTolerance PrecursorTolerance
         {
-            get { return new MzTolerance(double.Parse(txtMS1Tolerance.Text), (MzTolerance.Units) cbMS1TolUnit.SelectedIndex); }
+            get
+            {
+                var unitTypes = ImportPeptideSearch.SearchEngine.PrecursorIonToleranceUnitTypes;
+                var unit = cbMS1TolUnit.SelectedIndex >= 0 && cbMS1TolUnit.SelectedIndex < unitTypes.Length
+                    ? unitTypes[cbMS1TolUnit.SelectedIndex].Unit
+                    : MzTolerance.Units.ppm;
+                return new MzTolerance(double.Parse(txtMS1Tolerance.Text), unit);
+            }
 
             set
             {
                 txtMS1Tolerance.Text = value.Value.ToString(LocalizationHelper.CurrentCulture);
-                cbMS1TolUnit.SelectedIndex = (int)value.Unit;
+                var unitTypes = ImportPeptideSearch.SearchEngine.PrecursorIonToleranceUnitTypes;
+                int unitIndex = Array.FindIndex(unitTypes, u => u.Unit == value.Unit);
+                cbMS1TolUnit.SelectedIndex = Math.Max(0, unitIndex);
             }
         }
 
         public MzTolerance FragmentTolerance
         {
-            get { return new MzTolerance(double.Parse(txtMS2Tolerance.Text), (MzTolerance.Units) cbMS2TolUnit.SelectedIndex); }
+            get
+            {
+                var unitTypes = ImportPeptideSearch.SearchEngine.FragmentIonToleranceUnitTypes;
+                var unit = cbMS2TolUnit.SelectedIndex >= 0 && cbMS2TolUnit.SelectedIndex < unitTypes.Length
+                    ? unitTypes[cbMS2TolUnit.SelectedIndex].Unit
+                    : MzTolerance.Units.mz;
+                if (!double.TryParse(txtMS2Tolerance.Text, out double value))
+                    value = 0;
+                return new MzTolerance(value, unit);
+            }
 
             set
             {
                 txtMS2Tolerance.Text = value.Value.ToString(LocalizationHelper.CurrentCulture);
-                cbMS2TolUnit.SelectedIndex = (int)value.Unit;
+                var unitTypes = ImportPeptideSearch.SearchEngine.FragmentIonToleranceUnitTypes;
+                int unitIndex = Array.FindIndex(unitTypes, u => u.Unit == value.Unit);
+                cbMS2TolUnit.SelectedIndex = Math.Max(0, unitIndex);
             }
         }
 
@@ -694,6 +742,47 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 setting => setting.ValidValues);
 
             InitializeControls();
+        }
+
+        private void btnImportSettings_Click(object sender, EventArgs e)
+        {
+            using (var openDlg = new OpenFileDialog())
+            {
+                openDlg.Filter = TextUtil.FileDialogFilterAll(
+                    PeptideSearchResources.ImportPeptideSearchDlg_ImportPresetFromFile_Params_files,
+                    @".params");
+                openDlg.Title = PeptideSearchResources.SearchSettingsControl_ImportFromParamsFile;
+                if (openDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                string filePath = openDlg.FileName;
+                string defaultName = Path.GetFileNameWithoutExtension(filePath);
+
+                try
+                {
+                    var preset = SearchSettingsParamsFileParser.ImportFromFile(filePath, defaultName);
+
+                    // Check for existing preset with same name
+                    var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == defaultName);
+                    if (existingPreset != null)
+                    {
+                        var result = MessageDlg.Show(this,
+                            string.Format(PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_, defaultName),
+                            false, MessageBoxButtons.YesNo);
+                        if (result != DialogResult.Yes)
+                            return;
+                        Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+                    }
+
+                    _documentContainer.AddImportedPreset(preset);
+                }
+                catch (Exception ex)
+                {
+                    MessageDlg.ShowWithException(this,
+                        PeptideSearchResources.ImportPeptideSearchDlg_ImportPresetFromFile_Failed_to_import_settings_from_params_file,
+                        ex);
+                }
+            }
         }
 
         private void btnEditSearchTools_Click(object sender, EventArgs e)

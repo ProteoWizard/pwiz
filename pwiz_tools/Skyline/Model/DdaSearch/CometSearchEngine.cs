@@ -71,6 +71,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("equal_I_and_L", 1, 0, 1));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("explicit_deltacn", "0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("fragment_bin_offset", 0.4, 0.0));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("fragment_bin_tol", 1.0005, 0.0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("isotope_error", 0, 0, 5)); // 0=off, 1=0/1 (C13 error), 2=0/1/2, 3=0/1/2/3, 4=--8/-4/0/4/8 (for +4/+8 labeling), 5=-1/0/1/2/3.
             AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_offsets", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_type_fragment", 1, 0, 1));
@@ -171,7 +172,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         };
 
         private MzTolerance _precursorMzTolerance;
-        private MzTolerance _fragmentMzTolerance;
+        // Fragment tolerance for Comet is controlled via AdditionalSettings["fragment_bin_tol"]
         private SortedSet<string> _fragmentIons;
         private Enzyme _enzyme;
         private int _ntt, _maxMissedCleavages;
@@ -202,7 +203,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         private bool KeepIntermediateFiles => (bool)AdditionalSettings[KEEP_INTERMEDIATE_FILES].Value;
 
         public override string[] FragmentIons => FRAGMENTATION_METHODS;
-        public override string[] Ms2Analyzers => new [] { @"Default" };
+        public override string[] Ms2Analyzers => new[]
+        {
+            DdaSearchResources.CometSearchEngine_Ms2Analyzer_High_resolution,
+            DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution
+        };
 
         public override MzToleranceUnits[] PrecursorIonToleranceUnitTypes
         {
@@ -249,7 +254,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 SetCometParam(paramsFileText, @"output_txtfile", 0);
                 SetCometParam(paramsFileText, @"peptide_mass_tolerance", _precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
                 SetCometParam(paramsFileText, @"peptide_mass_units", _precursorMzTolerance.Unit == MzTolerance.Units.ppm ? 2 : 0);
-                SetCometParam(paramsFileText, @"fragment_bin_tol", _fragmentMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
                 //SetCometParam(paramsFileText, @"fragment_ion_series", _fragmentIons);
                 SetCometParam(paramsFileText, @"num_enzyme_termini", _ntt);
                 SetCometParam(paramsFileText, @"allowed_missed_cleavage", _maxMissedCleavages);
@@ -698,7 +702,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void SetFragmentIonMassTolerance(MzTolerance mzTolerance)
         {
-            _fragmentMzTolerance = mzTolerance;
+            // Fragment tolerance is controlled by MS2 Analyzer selection (High/Low resolution)
         }
 
         public override void SetFragmentIons(string ions)
@@ -708,7 +712,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void SetMs2Analyzer(string ms2Analyzer)
         {
-            // not used by Comet
+            bool highRes = ms2Analyzer == DdaSearchResources.CometSearchEngine_Ms2Analyzer_High_resolution;
+            AdditionalSettings[@"fragment_bin_tol"].Value = highRes ? FRAGMENT_BIN_TOL_HIGH_RES : FRAGMENT_BIN_TOL_LOW_RES;
+            AdditionalSettings[@"fragment_bin_offset"].Value = highRes ? FRAGMENT_BIN_OFFSET_HIGH_RES : FRAGMENT_BIN_OFFSET_LOW_RES;
         }
 
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
@@ -783,6 +789,12 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string PRESET_LOW_LOW = @"Comet low-low (ion trap)";
         private const string ENZYME_TRYPSIN = @"Trypsin";
 
+        // Fragment bin settings for high vs low resolution MS2 analyzers
+        public const double FRAGMENT_BIN_TOL_HIGH_RES = 0.02;
+        public const double FRAGMENT_BIN_OFFSET_HIGH_RES = 0.0;
+        public const double FRAGMENT_BIN_TOL_LOW_RES = 1.0005;
+        public const double FRAGMENT_BIN_OFFSET_LOW_RES = 0.4;
+
         public static IEnumerable<SearchSettingsPreset> GetDefaultPresets()
         {
             // Settings that differ from Skyline's Comet defaults, shared by all presets
@@ -797,7 +809,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             // high-high: Q Exactive, Q-Tof
             var highHighSettings = new Dictionary<string, string>(commonSettings)
             {
-                { @"fragment_bin_offset", @"0" },
+                { @"fragment_bin_tol", FRAGMENT_BIN_TOL_HIGH_RES.ToString(CultureInfo.InvariantCulture) },
+                { @"fragment_bin_offset", FRAGMENT_BIN_OFFSET_HIGH_RES.ToString(CultureInfo.InvariantCulture) },
                 { @"isotope_error", @"2" },
                 { @"theoretical_fragment_ions", @"0" },
                 { @"minimum_intensity", @"0.001" },
@@ -806,10 +819,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                 PRESET_HIGH_HIGH,
                 SearchEngine.Comet,
                 new MzTolerance(20, MzTolerance.Units.ppm),
-                new MzTolerance(0.02),
+                new MzTolerance(),
                 maxVariableMods: 5,
                 fragmentIons: null,
-                ms2Analyzer: null,
+                ms2Analyzer: DdaSearchResources.CometSearchEngine_Ms2Analyzer_High_resolution,
                 cutoffScore: 0.01,
                 additionalSettings: highHighSettings,
                 enzymeName: ENZYME_TRYPSIN,
@@ -818,6 +831,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             // high-low: Velos-Orbitrap
             var highLowSettings = new Dictionary<string, string>(commonSettings)
             {
+                { @"fragment_bin_tol", FRAGMENT_BIN_TOL_LOW_RES.ToString(CultureInfo.InvariantCulture) },
+                { @"fragment_bin_offset", FRAGMENT_BIN_OFFSET_LOW_RES.ToString(CultureInfo.InvariantCulture) },
                 { @"isotope_error", @"2" },
                 { @"minimum_intensity", @"0.01" },
             };
@@ -825,10 +840,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                 PRESET_HIGH_LOW,
                 SearchEngine.Comet,
                 new MzTolerance(20, MzTolerance.Units.ppm),
-                new MzTolerance(1.0005),
+                new MzTolerance(),
                 maxVariableMods: 5,
                 fragmentIons: null,
-                ms2Analyzer: null,
+                ms2Analyzer: DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution,
                 cutoffScore: 0.01,
                 additionalSettings: highLowSettings,
                 enzymeName: ENZYME_TRYPSIN,
@@ -837,6 +852,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             // low-low: ion trap
             var lowLowSettings = new Dictionary<string, string>(commonSettings)
             {
+                { @"fragment_bin_tol", FRAGMENT_BIN_TOL_LOW_RES.ToString(CultureInfo.InvariantCulture) },
+                { @"fragment_bin_offset", FRAGMENT_BIN_OFFSET_LOW_RES.ToString(CultureInfo.InvariantCulture) },
                 { @"precursor_tolerance_type", @"0" },
                 { @"minimum_intensity", @"0.01" },
             };
@@ -844,10 +861,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                 PRESET_LOW_LOW,
                 SearchEngine.Comet,
                 new MzTolerance(3),
-                new MzTolerance(1.0005),
+                new MzTolerance(),
                 maxVariableMods: 5,
                 fragmentIons: null,
-                ms2Analyzer: null,
+                ms2Analyzer: DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution,
                 cutoffScore: 0.01,
                 additionalSettings: lowLowSettings,
                 enzymeName: ENZYME_TRYPSIN,
@@ -855,4 +872,3 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
     }
 }
- 

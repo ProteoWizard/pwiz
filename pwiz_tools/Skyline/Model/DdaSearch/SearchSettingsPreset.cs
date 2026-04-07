@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -41,9 +42,17 @@ namespace pwiz.Skyline.Model.DdaSearch
         Hardklor
     }
 
+    public enum SearchWorkflowType
+    {
+        dda,
+        prm,
+        dia,
+        feature_detection
+    }
+
 
     [XmlRoot("search_workflow")]
-    public sealed class SearchSettingsPreset : Immutable, IKeyContainer<string>, IXmlSerializable
+    public sealed class SearchSettingsPreset : Immutable, IKeyContainer<string>, IRenameable<SearchSettingsPreset>, IXmlSerializable
     {
         // Search engine settings
         public string Name { get; private set; }
@@ -72,7 +81,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public bool HasExplicitModifications { get; private set; }
 
         // Workflow settings
-        public string WorkflowType { get; private set; }
+        public SearchWorkflowType? Workflow { get; private set; }
         public string IrtStandardName { get; private set; }
 
         public SearchSettingsPreset(string name,
@@ -92,7 +101,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             bool autoTrain = false,
             IEnumerable<StaticMod> structuralModifications = null,
             IEnumerable<StaticMod> heavyModifications = null,
-            string workflowType = null,
+            SearchWorkflowType? workflowType = null,
             string irtStandardName = null,
             bool hasExplicitModifications = false)
             : this(name, searchEngine, precursorTolerance, fragmentTolerance, maxVariableMods,
@@ -119,7 +128,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             bool autoTrain = false,
             IEnumerable<StaticMod> structuralModifications = null,
             IEnumerable<StaticMod> heavyModifications = null,
-            string workflowType = null,
+            SearchWorkflowType? workflowType = null,
             string irtStandardName = null,
             bool hasExplicitModifications = false)
         {
@@ -143,7 +152,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             StructuralModifications = ImmutableList.ValueOfOrEmpty(structuralModifications);
             HeavyModifications = ImmutableList.ValueOfOrEmpty(heavyModifications);
             HasExplicitModifications = hasExplicitModifications;
-            WorkflowType = workflowType;
+            Workflow = workflowType;
             IrtStandardName = irtStandardName;
         }
 
@@ -155,7 +164,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return new SearchSettingsPreset(name, SearchEngine, PrecursorTolerance, FragmentTolerance,
                 MaxVariableMods, FragmentIons, Ms2Analyzer, CutoffScore, AdditionalSettingsXml,
                 FastaFilePath, EnzymeName, MaxMissedCleavages, DecoyGenerationMethod, NumDecoys, AutoTrain,
-                StructuralModifications, HeavyModifications, WorkflowType, IrtStandardName, HasExplicitModifications);
+                StructuralModifications, HeavyModifications, Workflow, IrtStandardName, HasExplicitModifications);
         }
 
         public string GetKey()
@@ -302,7 +311,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             DecoyGenerationMethod = reader.GetAttribute(ATTR.decoy_generation_method);
             NumDecoys = reader.GetNullableDoubleAttribute(ATTR.num_decoys);
             AutoTrain = reader.GetBoolAttribute(ATTR.auto_train, false);
-            WorkflowType = reader.GetAttribute(ATTR.workflow_type);
+            var workflowStr = reader.GetAttribute(ATTR.workflow_type);
+            Workflow = workflowStr != null && Enum.TryParse(workflowStr, out SearchWorkflowType wf) ? wf : (SearchWorkflowType?)null;
             IrtStandardName = reader.GetAttribute(ATTR.irt_standard_name);
             HasExplicitModifications = reader.GetBoolAttribute(ATTR.has_explicit_modifications, false);
 
@@ -367,7 +377,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             if (NumDecoys.HasValue)
                 writer.WriteAttribute(ATTR.num_decoys, NumDecoys.Value);
             writer.WriteAttribute(ATTR.auto_train, AutoTrain);
-            writer.WriteAttributeIfString(ATTR.workflow_type, WorkflowType);
+            writer.WriteAttributeIfString(ATTR.workflow_type, Workflow?.ToString());
             writer.WriteAttributeIfString(ATTR.irt_standard_name, IrtStandardName);
             writer.WriteAttribute(ATTR.has_explicit_modifications, HasExplicitModifications);
 
@@ -421,7 +431,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                    StructuralModifications.SequenceEqual(other.StructuralModifications) &&
                    HeavyModifications.SequenceEqual(other.HeavyModifications) &&
                    HasExplicitModifications == other.HasExplicitModifications &&
-                   WorkflowType == other.WorkflowType &&
+                   Workflow == other.Workflow &&
                    IrtStandardName == other.IrtStandardName;
         }
 
@@ -456,7 +466,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 hashCode = (hashCode * 397) ^ StructuralModifications.GetHashCode();
                 hashCode = (hashCode * 397) ^ HeavyModifications.GetHashCode();
                 hashCode = (hashCode * 397) ^ HasExplicitModifications.GetHashCode();
-                hashCode = (hashCode * 397) ^ WorkflowType.GetHashCode();
+                hashCode = (hashCode * 397) ^ Workflow.GetHashCode();
                 hashCode = (hashCode * 397) ^ (IrtStandardName?.GetHashCode() ?? 0);
                 return hashCode;
             }
