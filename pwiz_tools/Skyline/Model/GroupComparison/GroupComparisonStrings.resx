@@ -324,49 +324,28 @@
     <value>X-Large</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Square" xml:space="preserve">
-    <value>&#x25A0;</value>
+    <value>Square</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond" xml:space="preserve">
-    <value>&#x25C6;</value>
+    <value>Diamond</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Triangle" xml:space="preserve">
-    <value>&#x25B2;</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Color" xml:space="preserve">
-    <value>Color</value>
+    <value>Triangle</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle" xml:space="preserve">
-    <value>&#x25CF;</value>
+    <value>Circle</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_TriangleDown" xml:space="preserve">
-    <value>&#x25BC;</value>
+    <value>Triangle Down</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross" xml:space="preserve">
-    <value>&#x00D7;</value>
+    <value>X Cross</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus" xml:space="preserve">
-    <value>+</value>
+    <value>Plus</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
-    <value>&#x2605;</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineCircle" xml:space="preserve">
-    <value>&#x25CB;</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineSquare" xml:space="preserve">
-    <value>&#x25A1;</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangle" xml:space="preserve">
-    <value>&#x25B3;</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangleDown" xml:space="preserve">
-    <value>&#x25BD;</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineDiamond" xml:space="preserve">
-    <value>&#x25C7;</value>
+    <value>Star</value>
   </data>
   <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
     <value>Total Ion Current</value>

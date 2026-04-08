@@ -44,12 +44,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         Diamond,
         XCross,
         Plus,
-        Star,
-        OutlineCircle,
-        OutlineSquare,
-        OutlineTriangle,
-        OutlineTriangleDown,
-        OutlineDiamond
+        Star
     }
 
     [XmlRoot(XML_ROOT)]
@@ -60,16 +55,10 @@ namespace pwiz.Skyline.Model.GroupComparison
         public const string XML_ROOT = "format_detail";
         private string _expression;
         private bool _labeled;
-        private PointSymbol? _pointSymbol;
-        private PointSize? _pointSize;
+        private PointSymbol _pointSymbol;
+        private PointSize _pointSize;
 
-        /// <summary>
-        /// Creates a formatting rule. Pass null for <paramref name="pointSymbol"/> or
-        /// <paramref name="pointSize"/> to leave that trait unset so a later matching rule
-        /// can supply it independently.  Pass <see cref="Color.Empty"/> for
-        /// <paramref name="color"/> to leave the color unset.
-        /// </summary>
-        public MatchRgbHexColor(string expression, bool labeled, Color color, PointSymbol? pointSymbol = null, PointSize? pointSize = null)
+        public MatchRgbHexColor(string expression, bool labeled, Color color, PointSymbol pointSymbol, PointSize pointSize)
             : base(color)
         {
             Expression = expression;
@@ -79,8 +68,10 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public MatchRgbHexColor()
-            : this(string.Empty, false, Color.Empty)
+            // ReSharper disable once LocalizableElement
+            : this("", false, Color.Gray, PointSymbol.Circle, PointSize.normal)
         {
+
         }
 
         public MatchExpression MatchExpression { get; private set; }
@@ -124,7 +115,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         [Track]
-        public PointSize? PointSize
+        public PointSize PointSize
         {
             get { return _pointSize; }
             set
@@ -135,37 +126,13 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         [Track]
-        public PointSymbol? PointSymbol
+        public PointSymbol PointSymbol
         {
             get { return _pointSymbol; }
             set
             {
                 _pointSymbol = value;
                 NotifyPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        /// Computed binding helper: true when a color is set, false when Color.Empty (no color override).
-        /// Setting to false clears the color. Setting to true when color is already set is a no-op;
-        /// ColorGrid opens the picker when checked with an empty color.
-        /// </summary>
-        public bool UseColor
-        {
-            get { return Color != Color.Empty; }
-            set { if (!value) Color = Color.Empty; }
-        }
-
-        // Shadow the base Color property to also notify UseColor when the empty/non-empty state changes.
-        public new Color Color
-        {
-            get { return base.Color; }
-            set
-            {
-                var wasUseColor = base.Color != Color.Empty;
-                base.Color = value;
-                if (wasUseColor != (value != Color.Empty))
-                    NotifyPropertyChanged(nameof(UseColor));
             }
         }
 
@@ -182,7 +149,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         protected bool Equals(MatchRgbHexColor other)
         {
             return base.Equals(other) && string.Equals(_expression, other._expression) && _labeled == other._labeled &&
-                   Nullable.Equals(_pointSymbol, other._pointSymbol) && Nullable.Equals(_pointSize, other._pointSize);
+                   _pointSymbol == other._pointSymbol && _pointSize == other._pointSize;
         }
 
         public override bool Equals(object obj)
@@ -200,8 +167,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 int hashCode = base.GetHashCode();
                 hashCode = (hashCode * 397) ^ (_expression != null ? _expression.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ _labeled.GetHashCode();
-                hashCode = (hashCode * 397) ^ _pointSymbol.GetHashCode();
-                hashCode = (hashCode * 397) ^ _pointSize.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int) _pointSymbol;
+                hashCode = (hashCode * 397) ^ (int) _pointSize;
                 return hashCode;
             }
         }
@@ -228,10 +195,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             Labeled = reader.GetBoolAttribute(ATTR.labeled);
 
             var symbol = reader.GetAttribute(ATTR.symbol_type);
-            PointSymbol = symbol == null ? (PointSymbol?)null : Helpers.ParseEnum(symbol, Model.GroupComparison.PointSymbol.Circle);
+            PointSymbol = symbol == null ? PointSymbol.Circle : Helpers.ParseEnum(symbol, PointSymbol.Circle);
 
             var pointSize = reader.GetAttribute(ATTR.point_size);
-            PointSize = pointSize == null ? (PointSize?)null : Helpers.ParseEnum(pointSize, Model.GroupComparison.PointSize.normal);
+            PointSize = pointSize == null ? PointSize.normal : Helpers.ParseEnum(pointSize, PointSize.normal);
 
             reader.Read();
         }
@@ -241,10 +208,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             base.WriteXml(writer);
             writer.WriteAttribute(ATTR.expr, Expression);
             writer.WriteAttribute(ATTR.labeled, Labeled);
-            if (PointSymbol.HasValue)
-                writer.WriteAttribute(ATTR.symbol_type, PointSymbol.Value.ToString());
-            if (PointSize.HasValue)
-                writer.WriteAttribute(ATTR.point_size, PointSize.Value.ToString());
+            writer.WriteAttribute(ATTR.symbol_type, PointSymbol.ToString());
+            writer.WriteAttribute(ATTR.point_size, PointSize.ToString());
         }
 
         #endregion
