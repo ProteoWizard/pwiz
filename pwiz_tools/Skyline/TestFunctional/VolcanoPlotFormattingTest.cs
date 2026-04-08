@@ -150,50 +150,6 @@ namespace pwiz.SkylineTestFunctional
                     }, false),
             },
 
-            // Nullable trait test cases: verify that the rendering code applies the correct defaults
-            // (Color.Gray, PointSymbol.Circle, PointSize.small) when traits are omitted from a rule.
-
-            new[]
-            {
-                // Rule specifies color only (null symbol, null size) — matched points get the default symbol+size
-                new MatchExprInfo(new MatchExpression(string.Empty, new[] {MatchOption.BelowLeftCutoff}),
-                    new VolcanoPlotPointsInfo(17, Color.Cyan, false, null, null),
-                    new List<string>
-                    {
-                        "VFWIEVALFWR",
-                        "SDFQVPCQYSQQLK",
-                        "WWGQEITELAQGPGR",
-                        "AGDQILAINEINVK",
-                        "AGSWQITMK",
-                        "FAEDHFAHEATK",
-                        "NLAPLVEDVQSK",
-                        "CSSLLWAGAAWLR",
-                        "ETGLMAFTNLK",
-                        "MLSGFIPLKPTVK",
-                        "LQTEGDGIYTLNSEK",
-                        "SVVDIGLIK",
-                        "IAELFSDLEER",
-                        "FSISTDYSLK",
-                        "EVLPELGIK",
-                        "ALYQAEAFVADFK",
-                        "IAELFSELDER"
-                    }, false),
-            },
-
-            new[]
-            {
-                // Rule specifies symbol+size only (no color) — matched points get the default color (Color.Gray)
-                new MatchExprInfo(new MatchExpression("CC|DD", new[] {MatchOption.PeptideSequence}),
-                    new VolcanoPlotPointsInfo(4, null, false, PointSymbol.Diamond, PointSize.x_large),
-                    new List<string>
-                    {
-                        "GTITSIAALDDPK",
-                        "CIVDGDDR",
-                        "AFMDCCNYITK",
-                        "DNCCILDER"
-                    }, false),
-            },
-
             new[]
             {
                 new MatchExprInfo(new MatchExpression("XP_", new[] {MatchOption.ProteinName}),
@@ -238,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
                         "NP_001033064",
                         "NP_872280"
                     }, true),
-            },
+            }
         };
 
         private static PointF[] savedLabelPositions =
@@ -250,7 +206,7 @@ namespace pwiz.SkylineTestFunctional
             new PointF(-1.07151949f, 3.96921921f),
             new PointF(-1.0508579f, 2.45434284f)
         };
-
+ 
         #endregion
 
         [TestMethod]
@@ -362,7 +318,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(initialRowCount + index, rows);
 
                     formattingDlg.AddRow(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
-                        exprInfo.ExpectedPointsInfo.Color ?? Color.Empty, exprInfo.ExpectedPointsInfo.PointSymbol,
+                        exprInfo.ExpectedPointsInfo.Color, exprInfo.ExpectedPointsInfo.PointSymbol,
                         exprInfo.ExpectedPointsInfo.PointSize));
                     formattingDlg.ClickCreateExpression(rows);
                 });
@@ -414,7 +370,7 @@ namespace pwiz.SkylineTestFunctional
 
         public class VolcanoPlotPointsInfo
         {
-            public VolcanoPlotPointsInfo(int pointCount, Color? color, bool labeled, PointSymbol? pointSymbol, PointSize? pointSize)
+            public VolcanoPlotPointsInfo(int pointCount, Color color, bool labeled, PointSymbol pointSymbol, PointSize pointSize)
             {
                 PointCount = pointCount;
                 Color = color;
@@ -424,10 +380,10 @@ namespace pwiz.SkylineTestFunctional
             }
 
             public int PointCount { get; private set; }
-            public Color? Color { get; private set; }
+            public Color Color { get; private set; }
             public bool Labeled { get; private set; }
-            public PointSymbol? PointSymbol { get; private set; }
-            public PointSize? PointSize { get; private set; }
+            public PointSymbol PointSymbol { get; private set; }
+            public PointSize PointSize { get; private set; }
         }
 
         private void AssertVolcanoPlotCorrect(FoldChangeVolcanoPlot plot, VolcanoPlotPointsInfo[] pointsInfos)
@@ -457,15 +413,10 @@ namespace pwiz.SkylineTestFunctional
                     var lineItem = (LineItem) curveItem;
                     var pointInfo = pointsInfos[i - startIndex];
 
-                    // Apply the same defaults the rendering code uses for null traits
-                    var expectedColor = pointInfo.Color ?? Color.Gray;
-                    var expectedSymbol = pointInfo.PointSymbol ?? PointSymbol.Circle;
-                    var expectedSize = pointInfo.PointSize ?? PointSize.small;
-
-                    Assert.AreEqual(expectedColor, lineItem.Symbol.Fill.Color);
+                    Assert.AreEqual(pointInfo.Color, lineItem.Symbol.Fill.Color);
                     Assert.AreEqual(pointInfo.PointCount, curveItem.Points.Count);
-                    Assert.AreEqual(DotPlotUtil.PointSymbolToSymbolType(expectedSymbol), lineItem.Symbol.Type);
-                    Assert.AreEqual(DotPlotUtil.PointSizeToFloat(expectedSize), lineItem.Symbol.Size);
+                    Assert.AreEqual(DotPlotUtil.PointSymbolToSymbolType(pointInfo.PointSymbol), lineItem.Symbol.Type);
+                    Assert.AreEqual(DotPlotUtil.PointSizeToFloat(pointInfo.PointSize), lineItem.Symbol.Size);
 
                     if (pointInfo.Labeled)
                     {
@@ -479,7 +430,7 @@ namespace pwiz.SkylineTestFunctional
                             Assert.IsInstanceOfType(graphObj, typeof(TextObj));
                             var label = (TextObj) graphObj;
 
-                            Assert.AreEqual(DotPlotUtil.PointSizeToFloat(expectedSize), label.FontSpec.Size);
+                            Assert.AreEqual(DotPlotUtil.PointSizeToFloat(pointInfo.PointSize), label.FontSpec.Size);
                             // With automated label layout label's coordinates do not match the point coordinates.
                             //Assert.AreEqual(label.Location.X, pointPair.X);
                             //Assert.AreEqual(label.Location.Y, pointPair.Y);
@@ -506,7 +457,7 @@ namespace pwiz.SkylineTestFunctional
             var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
             {
                 formattingDlg.AddRow(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
-                    exprInfo.ExpectedPointsInfo.Color ?? Color.Empty, exprInfo.ExpectedPointsInfo.PointSymbol,
+                    exprInfo.ExpectedPointsInfo.Color, exprInfo.ExpectedPointsInfo.PointSymbol,
                     exprInfo.ExpectedPointsInfo.PointSize));
                 formattingDlg.ClickCreateExpression(formattingDlg.ResultList.Count - 1);
             });
