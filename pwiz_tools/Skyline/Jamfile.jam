@@ -191,7 +191,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Test /t:TestData /t:TestFunctional /t:TestConnected /t:TestTutorial /t:TestPerf /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
-        msbuild $(SKYLINE_PATH)/Executables/AssortResources/AssortResources.sln /p:Configuration=$(CONFIGURATION);Platform="Any CPU";OutDir=$(OUTPUT_PATH) /t:AssortResources /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Executables/DevTools/AssortResources/AssortResources.sln /p:Configuration=$(CONFIGURATION);Platform="Any CPU";OutDir=$(OUTPUT_PATH) /t:AssortResources /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
 

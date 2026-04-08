@@ -232,6 +232,24 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replicate.
+        /// </summary>
+        public static string AreaAbundanceComparisonGraphPane_XAxis_Replicate {
+            get {
+                return ResourceManager.GetString("AreaAbundanceComparisonGraphPane_XAxis_Replicate", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Outliers.
+        /// </summary>
+        public static string AreaAbundanceComparisonGraphPane_Outliers {
+            get {
+                return ResourceManager.GetString("AreaAbundanceComparisonGraphPane_Outliers", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Not enough data.
         /// </summary>
         public static string AreaCVHistogram2DGraphPane_Draw_Not_enough_data {
@@ -863,6 +881,24 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CV 2D Histogram.
+        /// </summary>
+        public static string Extensions_CustomToString_CV_2D_Histogram {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_CV_2D_Histogram", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to CV Histogram.
+        /// </summary>
+        public static string Extensions_CustomToString_CV_Histogram {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_CV_Histogram", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Histogram.
         /// </summary>
         public static string Extensions_CustomToString_Detections_Histogram {
@@ -906,7 +942,16 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("Extensions_CustomToString_Relative_Abundance", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Relative Abundance Comparison.
+        /// </summary>
+        public static string Extensions_CustomToString_Relative_Abundance_Comparison {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Relative_Abundance_Comparison", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Replicate Comparison.
         /// </summary>
@@ -1382,7 +1427,34 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("GraphFullScan_SetSpectraUI__peak_type_not_available", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Intensity.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_Intensity {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_Intensity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to m/z.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_mz {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_mz", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Transition.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_Transition {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_Transition", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0:0.0000}.
         /// </summary>
@@ -1455,6 +1527,23 @@ namespace pwiz.Skyline.Controls.Graphs {
             }
         }
         
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string MassErrorBinFinder_DisplayName_Peptides {
+            get {
+                return ResourceManager.GetString("MassErrorBinFinder_DisplayName_Peptides", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} ppm.
+        /// </summary>
+        public static string MassErrorBinFinder_GetDisplayText_Mass_Error {
+            get {
+                return ResourceManager.GetString("MassErrorBinFinder_GetDisplayText_Mass_Error", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to m/z.
         /// </summary>
@@ -1473,6 +1562,42 @@ namespace pwiz.Skyline.Controls.Graphs {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to {0} across {1} replicates.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_ToolTip_Count_Format {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_ToolTip_Count_Format", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_ToolTip_Peptides {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_ToolTip_Peptides", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to  +{0} more.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_ToolTip_Plus_N_More {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_ToolTip_Plus_N_More", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Transitions.
+        /// </summary>
+        public static string MassErrorHistogram2DGraphPane_ToolTip_Transitions {
+            get {
+                return ResourceManager.GetString("MassErrorHistogram2DGraphPane_ToolTip_Transitions", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Mass Errors Unavailable.
         /// </summary>
@@ -1671,6 +1796,15 @@ namespace pwiz.Skyline.Controls.Graphs {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string RelativeAbundanceGraph_ToolTip_Replicate_All {
+            get {
+                return ResourceManager.GetString("RelativeAbundanceGraph_ToolTip_Replicate_All", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Replicate.
         /// </summary>

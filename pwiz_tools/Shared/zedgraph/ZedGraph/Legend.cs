@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2004  John Champion
+//Copyright Â© 2004  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -104,6 +104,20 @@ namespace ZedGraph
 		/// </summary>
 		private float _legendItemHeight;
 
+        /// <summary>
+        /// Per-group column widths, indexed by group name. Valid only during a draw operation.
+        /// Groups are based on the optional use of curve._legendGroupName in items to be
+        /// shown in the legend. Items with identical legend group names will be grouped on
+        /// a single line in horizontally oriented display (so without any legend group names,
+        /// a one-line-tall display)
+        /// </summary>
+        private float[] _groupItemWidths = new float[0];
+
+		/// <summary>
+		/// Per-group horizontal stack counts, indexed by legend group. Valid only during a draw operation.
+		/// </summary>
+		private int[] _groupHStacks = new int[0];
+
 		/// <summary>
 		/// Private field to store the gap between the legend and the chart rectangle.
 		/// </summary>
@@ -127,6 +141,11 @@ namespace ZedGraph
 		/// legend.
 		/// </summary>
 		private bool _isShowLegendSymbols;
+
+		/// <summary>
+		/// Temp field: pixel width of the widest legend group name string including gap. Valid only during draw.
+		/// </summary>
+		private float _legendGroupNamesMaxWidth;
 
 	#endregion
 
@@ -582,6 +601,11 @@ namespace ZedGraph
 			int iEntry = 0;
 			float x, y;
 
+			string currentDesc = null; // null = no group started yet
+			int currentRow = 0;
+			int iWithinGroup = 0;
+			int groupIndex = 0;
+
 			// Get a brush for the legend label text
 			using ( SolidBrush brushB = new SolidBrush( Color.Black ) )
 			{
@@ -596,17 +620,35 @@ namespace ZedGraph
 
 						if ( curve._label._text != "" && curve._label._isVisible )
 						{
-							// Calculate the x,y (TopLeft) location of the current
-							// curve legend label
-							// assuming:
-							//  charHeight/2 for the left margin, plus legendWidth for each
-							//    horizontal column
-							//  legendHeight is the line spacing, with no extra margin above
+							// Group-aware positioning: check for legend group name change
+							string desc = curve._legendGroupName ?? string.Empty;
+							if ( desc != currentDesc )
+							{
+								if ( currentDesc != null )
+								{
+									int prevHStack = groupIndex < _groupHStacks.Length ? _groupHStacks[groupIndex] : _hStack;
+									currentRow += Math.Max( 1, (int)Math.Ceiling( (double)iWithinGroup / prevHStack ) );
+									groupIndex++;
+								}
+								iWithinGroup = 0;
+								currentDesc = desc;
+								if ( !string.IsNullOrEmpty( desc ) )
+								{
+									var descFont = (FontSpec)this.FontSpec.Clone();
+									descFont.IsBold = true;
+									descFont.Draw( g, pane, desc,
+										_rect.Left + halfGap / 2.0F,
+										_rect.Top + currentRow * _legendItemHeight + halfGap / 2.0F + _legendItemHeight / 2.0F,
+										AlignH.Left, AlignV.Center, scaleFactor );
+								}
+							}
 
-							x = _rect.Left + halfGap / 2.0F +
-								( iEntry % _hStack ) * _legendItemWidth;
-							y = _rect.Top + (int)( iEntry / _hStack ) * _legendItemHeight;
-                            y += 3; // Give 3-pixel margin to top of legend
+							int curHStack = groupIndex < _groupHStacks.Length ? _groupHStacks[groupIndex] : _hStack;
+							float curItemWidth = groupIndex < _groupItemWidths.Length ? _groupItemWidths[groupIndex] : _legendItemWidth;
+							x = _rect.Left + halfGap / 2.0F + _legendGroupNamesMaxWidth +
+								( iWithinGroup % curHStack ) * curItemWidth;
+							y = _rect.Top + ( currentRow + iWithinGroup / curHStack ) * _legendItemHeight;
+                            y += halfGap / 2.0F; // Give margin to top of legend
 
 							// Draw the legend label for the current curve
 							FontSpec tmpFont = ( curve._label._fontSpec != null ) ?
@@ -638,6 +680,7 @@ namespace ZedGraph
 
 							// maintain a curve count for positioning
 							iEntry++;
+							iWithinGroup++;
 						}
 					}
 					if ( pane is MasterPane && ( (MasterPane)pane ).IsUniformLegendEntries )
@@ -806,8 +849,18 @@ namespace ZedGraph
 
 			float halfGap = _tmpSize / 2.0F,
 					maxWidth = 0,
+					lastWidth = 0,
 					tmpWidth,
 					gapPix = _gap * _tmpSize;
+
+			_legendGroupNamesMaxWidth = 0;
+			var calcGroupSizes = new System.Collections.Generic.List<int>();
+			var calcGroupMaxWidths = new System.Collections.Generic.List<float>();
+			var calcGroupHasSymbols = new System.Collections.Generic.List<bool>();
+			string calcGroupName = null;
+			int calcGroupSize = 0;
+			float calcGroupMaxWidth = 0;
+			bool calcGroupHasSymbol = false;
 
 			foreach ( GraphPane tmpPane in paneList )
 			{
@@ -821,6 +874,32 @@ namespace ZedGraph
 					CurveItem curve = tmpPane.CurveList[_isReverse ? count - i - 1 : i];
 					if ( curve._label._text != string.Empty && curve._label._isVisible )
 					{
+						// Check for legend group name change BEFORE accumulating per-curve data,
+						// so the current curve's width goes into the correct (new) group.
+						string curveGroupName = curve._legendGroupName ?? string.Empty;
+						if ( curveGroupName != calcGroupName )
+						{
+							if ( calcGroupName != null )
+							{
+								calcGroupSizes.Add( calcGroupSize );
+								calcGroupMaxWidths.Add( calcGroupMaxWidth );
+								calcGroupHasSymbols.Add( calcGroupHasSymbol );
+							}
+							calcGroupSize = 0;
+							calcGroupMaxWidth = 0;
+							calcGroupHasSymbol = false;
+							calcGroupName = curveGroupName;
+							if ( !string.IsNullOrEmpty( curveGroupName ) )
+							{
+								var boldFont = (FontSpec)this.FontSpec.Clone();
+								boldFont.IsBold = true;
+								float dw = boldFont.GetWidth( g, curveGroupName, scaleFactor ) + halfGap;
+								if ( dw > _legendGroupNamesMaxWidth )
+									_legendGroupNamesMaxWidth = dw;
+							}
+						}
+						calcGroupSize++;
+
 						// Calculate the width of the label save the max width
 						FontSpec tmpFont = ( curve._label._fontSpec != null ) ?
 										curve._label._fontSpec : this.FontSpec;
@@ -830,11 +909,23 @@ namespace ZedGraph
 						if ( tmpWidth > maxWidth )
 							maxWidth = tmpWidth;
 
+                        // Use of legend grouping means that the maximum label width is tracked on a
+                        // per-group basis, so that the horizontal stacking can be optimized for each group
+                        if ( tmpWidth > calcGroupMaxWidth )
+							calcGroupMaxWidth = tmpWidth;
+
+						lastWidth = tmpWidth;
+
 						// Save the maximum symbol height for line-type curves
 						if ( curve is LineItem && ( (LineItem)curve ).Symbol.Size > _legendItemHeight )
 							_legendItemHeight = ( (LineItem)curve ).Symbol.Size;
 
 						nCurve++;
+
+						// Track whether group has visible symbols (dots) vs line-only (dashes)
+						var lineItemForSymbol = curve as LineItem;
+						if ( lineItemForSymbol != null && lineItemForSymbol.Symbol.Type != SymbolType.None && lineItemForSymbol.Symbol.IsVisible )
+							calcGroupHasSymbol = true;
 					}
 				}
 
@@ -842,7 +933,14 @@ namespace ZedGraph
 					break;
 			}
 
-			float widthAvail;
+			if ( calcGroupName != null )
+			{
+				calcGroupSizes.Add( calcGroupSize );
+				calcGroupMaxWidths.Add( calcGroupMaxWidth );
+				calcGroupHasSymbols.Add( calcGroupHasSymbol );
+			}
+
+			float widthAvail = 0;
 
 			// Is this legend horizontally stacked?
 
@@ -886,33 +984,33 @@ namespace ZedGraph
 						break;
 				}
 
-				// width of one legend entry
-				if ( _isShowLegendSymbols )
-					_legendItemWidth = 3.0f * _tmpSize + maxWidth;
-				else
-					_legendItemWidth = 0.5f * _tmpSize + maxWidth;
-
-				// Calculate the number of columns in the legend
-				// Normally, the legend is:
-				//     available width / ( max width of any entry + space for line&symbol )
-				if ( maxWidth > 0 )
-					_hStack = (int)( ( widthAvail - halfGap ) / _legendItemWidth );
-
-				// You can never have more columns than legend entries
-				if ( _hStack > nCurve )
-					_hStack = nCurve;
-
-				// a saftey check
-				if ( _hStack == 0 )
-					_hStack = 1;
 			}
-			else
+
+			// Compute per-group item widths and column counts
+			_groupItemWidths = new float[calcGroupSizes.Count];
+			_groupHStacks = new int[calcGroupSizes.Count];
+			float maxGroupRowWidth = 0;
+			for ( int gi = 0; gi < calcGroupSizes.Count; gi++ )
 			{
-				if ( _isShowLegendSymbols )
-					_legendItemWidth = 3.0F * _tmpSize + maxWidth;
-				else
-					_legendItemWidth = 0.5F * _tmpSize + maxWidth;
+				float gMaxW = gi < calcGroupMaxWidths.Count ? calcGroupMaxWidths[gi] : 0;
+				bool gHasSymbols = gi < calcGroupHasSymbols.Count && calcGroupHasSymbols[gi];
+				float gItemWidth = _isShowLegendSymbols ? ( gHasSymbols ? 3.0f : 4.5f ) * _tmpSize + gMaxW : 1.0f * _tmpSize + gMaxW;
+				int gHStack = 1;
+				if ( _isHStack && gMaxW > 0 && widthAvail > 0 )
+				{
+					gHStack = (int)( ( widthAvail - halfGap - _legendGroupNamesMaxWidth ) / gItemWidth );
+					if ( gHStack > calcGroupSizes[gi] ) gHStack = calcGroupSizes[gi];
+					if ( gHStack == 0 ) gHStack = 1;
+				}
+				_groupItemWidths[gi] = gItemWidth;
+				_groupHStacks[gi] = gHStack;
+				float gRowWidth = _legendGroupNamesMaxWidth + gHStack * gItemWidth;
+				if ( gRowWidth > maxGroupRowWidth ) maxGroupRowWidth = gRowWidth;
 			}
+
+			// Set scalar fields for FindPoint compatibility (use first group's values)
+			_legendItemWidth = _groupItemWidths.Length > 0 ? _groupItemWidths[0] : ( _isShowLegendSymbols ? 3.0f * _tmpSize : 0.5f * _tmpSize );
+			_hStack = _groupHStacks.Length > 0 ? _groupHStacks[0] : 1;
 
 			// legend is:
 			//   item:     space  line  space  text   space
@@ -924,16 +1022,20 @@ namespace ZedGraph
 			// The height of the legend is the actual height of the lines of text
 			//   (nCurve * hite) plus wid on top and wid on the bottom
 
-			// total legend width
-			float totLegWidth = _hStack * _legendItemWidth;
-
 			// The total legend height
 			_legendItemHeight = _legendItemHeight * (float)scaleFactor + halfGap;
 			if ( _tmpSize > _legendItemHeight )
 				_legendItemHeight = _tmpSize;
-			float totLegHeight = (float)Math.Ceiling( (double)nCurve / (double)_hStack )
-				* _legendItemHeight;
-            totLegHeight += 5;  // Give 2 or 3-pixel margin to top and bottom of legend
+
+			// Compute total rows from per-group hStacks
+			int totalRows = 0;
+			for ( int gi = 0; gi < calcGroupSizes.Count; gi++ )
+				totalRows += Math.Max( 1, (int)Math.Ceiling( (double)calcGroupSizes[gi] / _groupHStacks[gi] ) );
+			if ( totalRows == 0 ) totalRows = 1;
+			float totLegHeight = totalRows * _legendItemHeight;
+            totLegHeight += halfGap;  // Give margin to top and bottom of legend
+
+			float totLegWidth = maxGroupRowWidth > 0 ? maxGroupRowWidth : _legendItemWidth;
 
 			RectangleF newRect = new RectangleF();
 

@@ -313,7 +313,8 @@ public class SkylineConnection : IJsonToolService, IDisposable
         {
             var process = Process.GetProcessById(processId);
             return Program.FunctionalTest ||
-                   process.ProcessName.StartsWith("Skyline", StringComparison.OrdinalIgnoreCase);
+                   process.ProcessName.StartsWith("Skyline", StringComparison.OrdinalIgnoreCase) ||
+                   process.ProcessName.StartsWith("TestRunner", StringComparison.OrdinalIgnoreCase);
         }
         catch (ArgumentException)
         {

@@ -753,6 +753,7 @@ namespace pwiz.Skyline.Menus
             areaReplicateComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.replicate);
             areaPeptideComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.peptide);
             areaRelativeAbundanceMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance);
+            areaAbundanceComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance_comparison);
             areaCVHistogramMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
@@ -767,6 +768,10 @@ namespace pwiz.Skyline.Menus
         private void areaRelativeAbundanceMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();
+        }
+        private void areaAbundanceComparisonMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowPeakAreaAbundanceComparisonGraph();
         }
         private void areaCVHistogramToolStripMenuItem1_Click(object sender, EventArgs e)
         {
