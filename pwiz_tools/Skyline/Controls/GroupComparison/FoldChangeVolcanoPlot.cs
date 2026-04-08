@@ -363,7 +363,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var selectedSymbol = PointSymbol.Circle;
             if (selectedPoints.Count > 0)
             {
-                var firstRow = (FoldChangeRow)((PointPair)selectedPoints[0]).Tag;
+                var firstRow = (FoldChangeRow)(selectedPoints[0]).Tag;
                 selectedSymbol = DotPlotUtil.ResolvePointFormat(colorRows,
                     rule => rule.MatchExpression.Matches(Document, firstRow.Protein, firstRow.Peptide,
                         firstRow.FoldChangeResult, CutoffSettings))?.symbol ?? PointSymbol.Circle;
