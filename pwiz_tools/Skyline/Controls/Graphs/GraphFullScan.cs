@@ -1514,6 +1514,10 @@ namespace pwiz.Skyline.Controls.Graphs
             public override void SetScale(Graphics g)
             {
                 base.SetScale(g);
+                // AxisChange (called by base.SetScale) updates axis Min/Max but does not
+                // call SetupScaleData, so the pixel-to-data transform used by
+                // ReverseTransform can be stale from a previous zoom level.
+                XAxis.Scale.SetupScaleData(this, XAxis);
                 // Enforce a minimum rendered width of 1 pixel for extraction boxes so they
                 // remain visible when the m/z axis is zoomed out to a wide range.
                 double minWidth = Math.Abs(XAxis.Scale.ReverseTransform(1) - XAxis.Scale.ReverseTransform(0));
