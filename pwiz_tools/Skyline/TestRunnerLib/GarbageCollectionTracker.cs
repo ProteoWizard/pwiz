@@ -166,6 +166,15 @@ namespace TestRunnerLib
                 return null;
             }
 
+            // Skip on Windows Server where WinForms accessibility infrastructure creates
+            // ref-counted GCHandles on ComboBox/DataGridView controls that retain disposed
+            // forms and their SkylineWindow references. This does not occur on desktop Windows.
+            if (IsWindowsServer())
+            {
+                Clear();
+                return null;
+            }
+
             // Phase 1: Check for survivors without pinning
             var leakMessage = CheckForLeaks();
             if (leakMessage == null)
@@ -190,6 +199,24 @@ namespace TestRunnerLib
                 MemoryProfiler.Snapshot(snapshotName);
             }
             return leakMessage;
+        }
+
+        private static bool IsWindowsServer()
+        {
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
+                    @"SOFTWARE\Microsoft\Windows NT\CurrentVersion"))
+                {
+                    var productName = key?.GetValue("ProductName") as string;
+                    return productName != null && productName.IndexOf("Server",
+                        StringComparison.OrdinalIgnoreCase) >= 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private class TrackedObject

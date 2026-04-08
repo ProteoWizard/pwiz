@@ -43,7 +43,7 @@ namespace pwiz.Skyline.EditUI
     // CONSIDER bspratt: Checkbox for hiding and showing new protein columns
     public partial class PasteDlg : FormEx, IMultipleViewProvider
     {
-        private readonly StatementCompletionTextBox _statementCompletionEditBox;
+        private StatementCompletionTextBox _statementCompletionEditBox;
         private bool _noErrors;
         private readonly AuditLogEntryCreatorList _entryCreators;
 
@@ -101,6 +101,8 @@ namespace pwiz.Skyline.EditUI
         {
             base.OnHandleDestroyed(e);
             DocumentUiContainer.UnlistenUI(OnDocumentUIChanged);
+            DocumentUiContainer = null;
+            _statementCompletionEditBox = null;
         }
 
         private IdentityPath _selectedPath;

@@ -68,7 +68,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly Dictionary<TABS, TabWithPage> _tabPages;
 
-        private readonly SkylineWindow _parent;
+        private SkylineWindow _parent;
         private readonly LibraryManager _libraryManager;
         private PeptideSettings _peptideSettings;
         private IEnumerable<LibrarySpec> _eventChosenLibraries;
@@ -282,6 +282,7 @@ namespace pwiz.Skyline.SettingsUI
             if (_parent != null)
             {
                 _parent.DocumentUIChangedEvent -= ParentOnDocumentChangedEvent;
+                _parent = null;
             }
             base.OnHandleDestroyed(e);
         }
