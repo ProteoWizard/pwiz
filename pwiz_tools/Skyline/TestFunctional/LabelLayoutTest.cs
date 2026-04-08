@@ -34,14 +34,14 @@ namespace pwiz.SkylineTestFunctional
     public class LabelLayoutTest : AbstractFunctionalTestEx
     {
         private const float LABEL_TOLERANCE_PX = 2f;
-        private const int EXPECTED_POINT_COUNT = 32;
+        private const int EXPECTED_POINT_COUNT = 14;
         private static readonly ExpectedPointSnapshot[] EXPECTED_RANDOM_POINTS =
         {
-            new ExpectedPointSnapshot(9, "HTNNGMICLTSLLR", 53f, 560475.1f),
-            new ExpectedPointSnapshot(10, "IFPENNIK", 60f, 471769.7f),
-            new ExpectedPointSnapshot(24, "SQLQEGPPEWK", 6f, 11025796f),
-            new ExpectedPointSnapshot(30, "VLIVEPEGIK", 17f, 2936371f),
-            new ExpectedPointSnapshot(31, "WTNPDGTTSK", 84f, 199644.5f),
+            new ExpectedPointSnapshot(1, "EENGDFASFR", 55f, 545123.8f),
+            new ExpectedPointSnapshot(4, "HEEEVERPAVEK", 86f, 191400.8f),
+            new ExpectedPointSnapshot(7, "MLSGFIPLKPTVK", 98f, 138878.5f),
+            new ExpectedPointSnapshot(10, "TSDQIHFFFAK", 113f, 79212.3f),
+            new ExpectedPointSnapshot(13, "WTNPDGTTSK", 84f, 199644.5f),
         };
 
         [TestMethod]

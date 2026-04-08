@@ -34,8 +34,8 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private const int LABEL_LAYOUT_PROGRESS_INTERVAL_MS = 200;
         private const int LABEL_LAYOUT_DEBOUNCE_MS = 100;
-        private const int MAX_LABELS_PER_CELL = 2;
-        private const double MAX_LABEL_AREA_RATIO = 0.3;
+        private const double MAX_LABELS_PER_CELL = 4.0;
+        private const double MAX_LABEL_AREA_RATIO = 0.5;
 
         private Thread _labelLayoutWorkerThread;
         private CancellationTokenSource _labelLayoutCts;
@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var cellEntry in pointCells)
             {
                 var cellPointCount = labelLayout.CellFromPoint(cellEntry.Item2).PointCount;
-                var cutoff = cellPointCount > MAX_LABELS_PER_CELL ? MAX_LABELS_PER_CELL / (double)cellPointCount : 1.0;
+                var cutoff = cellPointCount > MAX_LABELS_PER_CELL ? MAX_LABELS_PER_CELL / cellPointCount : 1.0;
 
                 if (cellEntry.Item1.Point.IsSelected || (double)cellEntry.Item1.Hash / maxHash <= (cutoff * areaSamplingRate))
                 {
