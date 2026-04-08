@@ -259,6 +259,9 @@
   <data name="ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_" xml:space="preserve">
     <value>The document must contain at least one precursor transition in order to proceed.</value>
   </data>
+  <data name="ImportPeptideSearchDlg_ConfigureFullScanChromatogramExtraction" xml:space="preserve">
+    <value>Configure Full-Scan Chromatogram Extraction</value>
+  </data>
   <data name="ImportPeptideSearchDlg_Import" xml:space="preserve">
     <value>&lt;Import...&gt;</value>
   </data>
