@@ -159,6 +159,10 @@ namespace MSConvertGUI
         private TextBox _usernameBox;
         private TextBox _passwordBox;
         private TextBox _aliasBox;
+        private GroupBox _advancedGroup;
+        private TextBox _identityServerBox;
+        private TextBox _clientScopeBox;
+        private TextBox _clientSecretBox;
         private Button _okButton;
         private Button _cancelButton;
 
@@ -179,6 +183,19 @@ namespace MSConvertGUI
                 _usernameBox.Text = existing.Username ?? string.Empty;
                 _passwordBox.Text = existing.Password ?? string.Empty;
                 _aliasBox.Text = existing.AccountAlias ?? string.Empty;
+
+                if (existing is UnifiAccount unifiAccount)
+                {
+                    _identityServerBox.Text = unifiAccount.IdentityServer ?? string.Empty;
+                    _clientScopeBox.Text = unifiAccount.ClientScope ?? string.Empty;
+                    _clientSecretBox.Text = unifiAccount.ClientSecret ?? string.Empty;
+                }
+                else if (existing is WatersConnectAccount wcAccount)
+                {
+                    _identityServerBox.Text = wcAccount.IdentityServer ?? string.Empty;
+                    _clientScopeBox.Text = wcAccount.ClientScope ?? string.Empty;
+                    _clientSecretBox.Text = wcAccount.ClientSecret ?? string.Empty;
+                }
             }
             else if (IsDevEnvironment())
             {
@@ -211,6 +228,9 @@ namespace MSConvertGUI
                 _usernameBox.Text = Environment.GetEnvironmentVariable("UNIFI_USERNAME") ?? "msconvert";
                 _passwordBox.Text = Environment.GetEnvironmentVariable("UNIFI_PASSWORD") ?? string.Empty;
                 _aliasBox.Text = "UNIFI Demo";
+                _identityServerBox.Text = defaults.IdentityServer ?? string.Empty;
+                _clientScopeBox.Text = defaults.ClientScope ?? string.Empty;
+                _clientSecretBox.Text = defaults.ClientSecret ?? string.Empty;
             }
             else if (_typeCombo.SelectedIndex == 1) // Waters Connect
             {
@@ -219,13 +239,16 @@ namespace MSConvertGUI
                 _usernameBox.Text = Environment.GetEnvironmentVariable("WC_USERNAME") ?? "skyline";
                 _passwordBox.Text = Environment.GetEnvironmentVariable("WC_PASSWORD") ?? string.Empty;
                 _aliasBox.Text = "Waters Connect Dev";
+                _identityServerBox.Text = defaults.IdentityServer ?? string.Empty;
+                _clientScopeBox.Text = defaults.ClientScope ?? string.Empty;
+                _clientSecretBox.Text = defaults.ClientSecret ?? string.Empty;
             }
         }
 
         private void InitializeComponents()
         {
             Text = "Add Account";
-            Size = new Size(400, 260);
+            Size = new Size(400, 370);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -263,7 +286,33 @@ namespace MSConvertGUI
             Controls.Add(new Label { Text = "Alias:", Location = new Point(labelX, y + 3), AutoSize = true });
             _aliasBox = new TextBox { Location = new Point(fieldX, y), Size = new Size(260, 22) };
             Controls.Add(_aliasBox);
-            y += rowHeight + 10;
+            y += rowHeight + 5;
+
+            // Advanced options group
+            int advLabelX = 10, advFieldX = 98, advY = 18, advRowHeight = 26;
+            _advancedGroup = new GroupBox
+            {
+                Text = "Advanced",
+                Location = new Point(labelX, y),
+                Size = new Size(358, 20 + advRowHeight * 3 + 5)
+            };
+
+            _advancedGroup.Controls.Add(new Label { Text = "Identity Server:", Location = new Point(advLabelX, advY + 3), AutoSize = true });
+            _identityServerBox = new TextBox { Location = new Point(advFieldX, advY), Size = new Size(248, 22) };
+            _advancedGroup.Controls.Add(_identityServerBox);
+            advY += advRowHeight;
+
+            _advancedGroup.Controls.Add(new Label { Text = "Client Scope:", Location = new Point(advLabelX, advY + 3), AutoSize = true });
+            _clientScopeBox = new TextBox { Location = new Point(advFieldX, advY), Size = new Size(248, 22) };
+            _advancedGroup.Controls.Add(_clientScopeBox);
+            advY += advRowHeight;
+
+            _advancedGroup.Controls.Add(new Label { Text = "Client Secret:", Location = new Point(advLabelX, advY + 3), AutoSize = true });
+            _clientSecretBox = new TextBox { Location = new Point(advFieldX, advY), Size = new Size(248, 22) };
+            _advancedGroup.Controls.Add(_clientSecretBox);
+
+            Controls.Add(_advancedGroup);
+            y += _advancedGroup.Height + 10;
 
             _okButton = new Button { Text = "OK", Location = new Point(210, y), Size = new Size(75, 28) };
             _okButton.Click += OkButton_Click;
@@ -276,17 +325,21 @@ namespace MSConvertGUI
 
         /// <summary>
         /// Creates a WatersConnectAccount from user-provided values. The constructor derives
-        /// IdentityServer from serverUrl; client settings come from DEV_DEFAULT or DEFAULT
-        /// depending on the environment.
+        /// IdentityServer from serverUrl by default; client settings come from DEV_DEFAULT or DEFAULT
+        /// depending on the environment, but can be overridden by non-empty parameter values.
         /// </summary>
         public static WatersConnectAccount CreateWatersConnectAccount(
-            string serverUrl, string username, string password, bool isDevEnvironment)
+            string serverUrl, string username, string password, bool isDevEnvironment,
+            string identityServer = null, string clientScope = null, string clientSecret = null)
         {
             var defaults = isDevEnvironment ? WatersConnectAccount.DEV_DEFAULT : WatersConnectAccount.DEFAULT;
-            return new WatersConnectAccount(serverUrl, username, password)
-                .ChangeClientScope(defaults.ClientScope)
-                .ChangeClientSecret(defaults.ClientSecret)
+            var account = new WatersConnectAccount(serverUrl, username, password)
+                .ChangeClientScope(string.IsNullOrWhiteSpace(clientScope) ? defaults.ClientScope : clientScope)
+                .ChangeClientSecret(string.IsNullOrWhiteSpace(clientSecret) ? defaults.ClientSecret : clientSecret)
                 .ChangeClientId(defaults.ClientId);
+            if (!string.IsNullOrWhiteSpace(identityServer))
+                account = account.ChangeIdentityServer(identityServer);
+            return account;
         }
 
         private void OkButton_Click(object sender, EventArgs e)
@@ -302,11 +355,27 @@ namespace MSConvertGUI
             string password = _passwordBox.Text;
             string alias = _aliasBox.Text.Trim();
 
+            string identityServer = _identityServerBox.Text.Trim();
+            string clientScope = _clientScopeBox.Text.Trim();
+            string clientSecret = _clientSecretBox.Text.Trim();
+
             RemoteAccount account;
             if (_typeCombo.SelectedIndex == 0) // UNIFI
-                account = new UnifiAccount(serverUrl, username, password);
+            {
+                var unifiAccount = new UnifiAccount(serverUrl, username, password);
+                if (!string.IsNullOrEmpty(identityServer))
+                    unifiAccount = unifiAccount.ChangeIdentityServer(identityServer);
+                if (!string.IsNullOrEmpty(clientScope))
+                    unifiAccount = unifiAccount.ChangeClientScope(clientScope);
+                if (!string.IsNullOrEmpty(clientSecret))
+                    unifiAccount = unifiAccount.ChangeClientSecret(clientSecret);
+                account = unifiAccount;
+            }
             else // Waters Connect
-                account = CreateWatersConnectAccount(serverUrl, username, password, IsDevEnvironment());
+            {
+                account = CreateWatersConnectAccount(serverUrl, username, password, IsDevEnvironment(),
+                    identityServer, clientScope, clientSecret);
+            }
 
             if (!string.IsNullOrEmpty(alias))
                 account.AccountAlias = alias;
