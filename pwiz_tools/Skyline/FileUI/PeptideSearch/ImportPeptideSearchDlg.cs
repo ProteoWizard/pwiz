@@ -223,6 +223,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 label14.Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search; // Was "Spectral Library"
             }
+
+            if (isRunPeptideSearch)
+            {
+                label19.Text = PeptideSearchResources.ImportPeptideSearchDlg_ConfigureFullScanChromatogramExtraction;
+            }
         }
 
         private void MakeFullScanSettingsControl(Workflow? workflowType)

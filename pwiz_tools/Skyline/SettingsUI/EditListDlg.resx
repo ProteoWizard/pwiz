@@ -129,7 +129,7 @@
     <value>9, 29</value>
   </data>
   <data name="listBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>140, 303</value>
+    <value>140, 368</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="listBox.TabIndex" type="System.Int32, mscorlib">
@@ -151,7 +151,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>74, 357</value>
+    <value>74, 424</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -352,7 +352,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>160, 356</value>
+    <value>160, 423</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -517,7 +517,7 @@
     <value>156, 29</value>
   </data>
   <data name="pnlButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 304</value>
+    <value>79, 371</value>
   </data>
   <data name="pnlButtons.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -541,10 +541,10 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>242, 389</value>
+    <value>242, 456</value>
   </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>258, 495</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

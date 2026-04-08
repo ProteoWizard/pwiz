@@ -103,7 +103,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private static Panel CreateButtonGroupSpacer()
         {
-            return new Panel { Height = 6, Margin = new Padding(0) };
+            return new Panel { Width = 75, Height = 17, Margin = new Padding(0) };
         }
 
         private void ReloadList()

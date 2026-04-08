@@ -552,6 +552,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Configure Full-Scan Chromatogram Extraction.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ConfigureFullScanChromatogramExtraction {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ConfigureFullScanChromatogramExtraction", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to &lt;Import...&gt;.
         /// </summary>
         public static string ImportPeptideSearchDlg_Import {
