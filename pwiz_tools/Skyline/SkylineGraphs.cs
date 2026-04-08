@@ -2519,6 +2519,8 @@ namespace pwiz.Skyline
                 detectionsContextMenu.BuildDetectionsGraphMenu(controller.GraphSummary, menuStrip);
             }
 
+            // Translate "Peptide" to "Molecule" etc. based on UI mode (recurses into submenus)
+            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, Program.ModeUI, null, recurse: true);
         }
 
         /// <summary>
