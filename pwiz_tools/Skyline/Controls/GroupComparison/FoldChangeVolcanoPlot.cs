@@ -592,7 +592,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     using (var g = Graphics.FromHwnd(IntPtr.Zero))
                     {
                         zedGraphControl.GraphPane.FindNearestObject(point, g, out var nearestObj, out _);
-                        if (nearestObj is TextObj nearestText)
+                        if (nearestObj is TextObj { IsVisible: true } nearestText)
                         {
                             var labels = LabeledPoints.FindAll(lp => lp.Label.Equals(nearestText));
                             if (labels.Any())
