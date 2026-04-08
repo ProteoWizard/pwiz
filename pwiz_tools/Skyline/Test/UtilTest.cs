@@ -526,5 +526,18 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(ExceptionUtil.IsProgrammingDefect(
                 new PanoramaImportErrorException(testUri, testUri, "Import failed")));
         }
+
+        [TestMethod]
+        public void TestTryMatchUnicode()
+        {
+            // Test TryMatch with case-insensitive filename matching (Issue #4142)
+            // On Windows, filenames are case-insensitive, so "µ-Sample.mzML" should match "µ-sample.mzML"
+            var ips = new ImportPeptideSearch();
+            ips.SpectrumSourceFiles.Add(@"µ-sample.mzML",
+                new ImportPeptideSearch.FoundResultsFilePossibilities(@"µ-sample"));
+            ips.TryMatch(@"C:\Data\µ-Experiment\µ-Sample.mzML", false);
+            Assert.IsTrue(ips.SpectrumSourceFiles[@"µ-sample.mzML"].HasExactMatch,
+                "TryMatch should find case-insensitive match for Unicode filename");
+        }
     }
 }
