@@ -310,13 +310,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void UpdateUI(bool selectionChanged = true)
         {
-            UpdateGraph(selectionChanged);
+            UpdateUIWithoutToolbar(selectionChanged);
             UpdateToolbar();
         }
 
         public void UpdateUIWithoutToolbar(bool selectionChanged = true)
         {
             UpdateGraph(selectionChanged);
+            // Set title with awareness of UI mode (may translate "peptide" to "molecule" etc)
+            Text = Helpers.PeptideToMoleculeTextMapper.Translate(Controller.Text + @" - " + Type.CustomToString(), _documentContainer.Document.DocumentType);
         }
 
         private bool SplitterDistanceValid(double distance)
