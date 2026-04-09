@@ -40,8 +40,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IItemEditor<TItem> _editor;
 
         private readonly List<TItem> _list;
-        private readonly Panel _spacerAfterEdit;
-        private readonly Panel _spacerAfterDown;
 
         public EditListDlg(TList model, object tag)
         {
@@ -57,13 +55,13 @@ namespace pwiz.Skyline.SettingsUI
             // Group 1 (CRUD): Add, Remove, Rename, Edit
             // Group 2 (Reorder): Up, Down
             // Group 3 (Manage): Reset, Copy, Import, Share
-            _spacerAfterEdit = CreateButtonGroupSpacer();
-            pnlButtons.Controls.Add(_spacerAfterEdit);
-            pnlButtons.Controls.SetChildIndex(_spacerAfterEdit, pnlButtons.Controls.IndexOf(btnUp));
+            var spacerAfterEdit = CreateButtonGroupSpacer();
+            pnlButtons.Controls.Add(spacerAfterEdit);
+            pnlButtons.Controls.SetChildIndex(spacerAfterEdit, pnlButtons.Controls.IndexOf(btnUp));
 
-            _spacerAfterDown = CreateButtonGroupSpacer();
-            pnlButtons.Controls.Add(_spacerAfterDown);
-            pnlButtons.Controls.SetChildIndex(_spacerAfterDown, pnlButtons.Controls.IndexOf(btnReset));
+            var spacerAfterDown = CreateButtonGroupSpacer();
+            pnlButtons.Controls.Add(spacerAfterDown);
+            pnlButtons.Controls.SetChildIndex(spacerAfterDown, pnlButtons.Controls.IndexOf(btnReset));
 
             Icon = Resources.Skyline;
             Text = model.Title;
@@ -86,10 +84,15 @@ namespace pwiz.Skyline.SettingsUI
             else
                 btnRename.Enabled = false;
 
+<<<<<<< HEAD
             // Import/Share available only for lists whose SerialType represents a collection
             // (SerializableSettingsList has correct semantics; other IListSerializer implementers use item types)
             bool canSerialize = model is IListSerializer<TItem> serializer &&
                                 typeof(ICollection<TItem>).IsAssignableFrom(serializer.SerialType);
+=======
+            // Import/Export available when list supports serialization
+            bool canSerialize = model is IListSerializer<TItem>;
+>>>>>>> 48121822d (Fix EditListDlg.cs: convert _spacerAfterEdit and _spacerAfterDown from fields to local variables)
             if (!canSerialize)
             {
                 pnlButtons.Controls.Remove(btnImport);
