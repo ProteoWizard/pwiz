@@ -31,6 +31,7 @@ using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Common.Chemistry;
+using pwiz.Common.GUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DdaSearch;
@@ -499,8 +500,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 var label = new Label { Left = 10, Top = 15, Text = PeptideSearchResources.SearchSettingsControl_SettingsPreset, AutoSize = true };
                 var textBox = new TextBox { Left = 10, Top = 35, Width = 310, Text = defaultValue };
                 textBox.SelectionStart = textBox.Text.Length;
-                var btnOk = new Button { Text = @"OK", Left = 150, Width = 80, Top = 65, DialogResult = DialogResult.OK };
-                var btnCancelDlg = new Button { Text = @"Cancel", Left = 240, Width = 80, Top = 65, DialogResult = DialogResult.Cancel };
+                var btnOk = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.OK), Left = 150, Width = 80, Top = 65, DialogResult = DialogResult.OK };
+                var btnCancelDlg = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.Cancel), Left = 240, Width = 80, Top = 65, DialogResult = DialogResult.Cancel };
 
                 form.Controls.Add(label);
                 form.Controls.Add(textBox);

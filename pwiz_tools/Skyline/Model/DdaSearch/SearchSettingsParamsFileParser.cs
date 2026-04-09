@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     return ParseMsFraggerParams(presetName, parseResult.Settings);
                 default:
                     throw new InvalidDataException(
-                        string.Format(@"Unable to detect search engine from params file: {0}", filePath));
+                        string.Format(DdaSearchResources.SearchSettingsParamsFileParser_ImportFromFile_Unable_to_detect_search_engine_from_params_file__0_, filePath));
             }
         }
 
@@ -78,6 +78,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 settings.ContainsKey(@"peptide_mass_units") ||
                 settings.ContainsKey(@"fragment_bin_tol"))
                 return SearchEngine.Comet;
+            // .params files without specific engine markers are assumed to be Comet format
+            // since Comet's format is the most generic key=value params file
             return SearchEngine.Comet;
         }
 

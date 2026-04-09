@@ -86,8 +86,10 @@ namespace pwiz.Skyline.SettingsUI
             else
                 btnRename.Enabled = false;
 
-            // Import/Export available when list supports serialization
-            bool canSerialize = model is IListSerializer<TItem>;
+            // Import/Share available only for lists whose SerialType represents a collection
+            // (SerializableSettingsList has correct semantics; other IListSerializer implementers use item types)
+            bool canSerialize = model is IListSerializer<TItem> serializer &&
+                                typeof(ICollection<TItem>).IsAssignableFrom(serializer.SerialType);
             if (!canSerialize)
             {
                 pnlButtons.Controls.Remove(btnImport);
