@@ -311,7 +311,7 @@ namespace pwiz.Skyline.SettingsUI
 
             using (var form = new Form())
             {
-                form.Text = SettingsUIResources.EditListDlg_Rename.Replace(@"&", string.Empty);
+                form.Text = SettingsUIResources.EditListDlg_Rename.Replace("&", string.Empty);
                 form.FormBorderStyle = FormBorderStyle.FixedDialog;
                 form.StartPosition = FormStartPosition.CenterParent;
                 form.MaximizeBox = false;
