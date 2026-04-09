@@ -18,8 +18,8 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(()=>
             {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("OneReplicate.sky"));
-                Settings.Default.RTCalculatorName = "Native_Human_Glycopeptides_GradOpt";
+                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RtRegressionBugSmall.sky"));
+                Settings.Default.RTCalculatorName = "TTOF_64w_iRT-C18";
             });
             WaitForDocumentLoaded();
             RunUI(()=>SkylineWindow.ShowRTRegressionGraphScoreToRun());
