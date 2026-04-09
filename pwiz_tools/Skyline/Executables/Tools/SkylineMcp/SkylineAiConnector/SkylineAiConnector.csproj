@@ -71,6 +71,7 @@
 
     <!-- Create ZIP (delete existing first) -->
     <Delete Files="$(_ToolZipPath)" Condition="Exists('$(_ToolZipPath)')" />
+    <!-- ReSharper disable once UnknownTask -->
     <ZipDirectory SourceDirectory="$(_ToolZipDir)" DestinationFile="$(_ToolZipPath)" />
 
     <Message Importance="high" Text="Tool ZIP created: $(_ToolZipPath)" />

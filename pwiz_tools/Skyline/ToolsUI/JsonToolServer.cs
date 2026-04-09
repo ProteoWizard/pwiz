@@ -23,8 +23,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
-using System.Linq;
+using System.IO.Pipes;using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -47,7 +46,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
-using JSON = SkylineTool.JsonToolConstants.JSON;
+using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -60,18 +59,64 @@ namespace pwiz.Skyline.ToolsUI
     {
 
         /// <summary>
-        /// Shared Newtonsoft.Json serializer configured with snake_case naming.
+        /// Shared Newtonsoft.Json settings configured with snake_case naming.
         /// Used for POCO serialization/deserialization in the dispatch layer so
         /// PascalCase C# properties map to snake_case JSON keys.
         /// </summary>
-        private static readonly JsonSerializer _snakeCaseSerializer = JsonSerializer.Create(
+        private static readonly JsonSerializerSettings _snakeCaseSettings =
             new JsonSerializerSettings
             {
                 ContractResolver = new DefaultContractResolver
                 {
                     NamingStrategy = new SnakeCaseNamingStrategy()
                 }
-            });
+            };
+
+        // JSON-RPC 2.0 request/response POCOs for typed deserialization
+
+        private class JsonRpcRequest
+        {
+            [JsonProperty(nameof(JSON_RPC.method))]
+            public string Method { get; set; }
+            [JsonProperty(nameof(JSON_RPC.@params))]
+            public JToken[] Params { get; set; }
+            [JsonProperty(nameof(JSON_RPC.id))]
+            public int Id { get; set; }
+            [JsonProperty(nameof(JSON_RPC._log))]
+            public bool Log { get; set; }
+        }
+
+        private class JsonRpcResponse
+        {
+            [JsonProperty(nameof(JSON_RPC.jsonrpc))]
+            public string Jsonrpc { get; set; } = JsonToolConstants.JSONRPC_VERSION;
+            [JsonProperty(nameof(JSON_RPC.result))]
+            public object Result { get; set; }
+            [JsonProperty(nameof(JSON_RPC.error))]
+            public JsonRpcError Error { get; set; }
+            [JsonProperty(nameof(JSON_RPC.id))]
+            public int Id { get; set; }
+            [JsonProperty(nameof(JSON_RPC._log), NullValueHandling = NullValueHandling.Ignore)]
+            public string Log { get; set; }
+
+            // JSON-RPC 2.0: result present only on success, error present only on failure
+            public bool ShouldSerializeResult() { return Error == null; }
+            public bool ShouldSerializeError() { return Error != null; }
+        }
+
+        private class JsonRpcError
+        {
+            [JsonProperty(nameof(JSON_RPC.code))]
+            public int Code { get; set; }
+            [JsonProperty(nameof(JSON_RPC.message))]
+            public string Message { get; set; }
+        }
+
+        private class JsonRpcException : Exception
+        {
+            public int Code { get; }
+            public JsonRpcException(int code, string message) : base(message) { Code = code; }
+        }
 
         private readonly ToolService _toolService;
         private readonly string _pipeName;
@@ -120,14 +165,15 @@ namespace pwiz.Skyline.ToolsUI
         {
             string dir = JsonToolConstants.GetConnectionDirectory();
             Directory.CreateDirectory(dir);
-            var obj = new JObject
+            var info = new
             {
-                [nameof(JSON.pipe_name)] = _pipeName,
-                [nameof(JSON.process_id)] = Process.GetCurrentProcess().Id,
-                [nameof(JSON.connected_at)] = DateTime.UtcNow.ToString(@"o"),
-                [nameof(JSON.skyline_version)] = Install.ProgramNameAndVersion
+                pipe_name = _pipeName,
+                process_id = Process.GetCurrentProcess().Id,
+                connected_at = DateTime.UtcNow.ToString(@"o"),
+                skyline_version = Install.ProgramNameAndVersion
             };
-            File.WriteAllText(JsonToolConstants.GetConnectionFilePath(_pipeName), obj.ToString());
+            File.WriteAllText(JsonToolConstants.GetConnectionFilePath(_pipeName),
+                JsonConvert.SerializeObject(info, Newtonsoft.Json.Formatting.Indented));
 
             // Clean up stale files from dead instances
             CleanupStaleConnectionFiles(dir);
@@ -155,8 +201,8 @@ namespace pwiz.Skyline.ToolsUI
                 try
                 {
                     string json = File.ReadAllText(file);
-                    var obj = JObject.Parse(json);
-                    int pid = (int)obj[nameof(JSON.process_id)];
+                    var obj = JsonConvert.DeserializeAnonymousType(json, new { process_id = 0 });
+                    int pid = obj.process_id;
                     if (!IsSkylineProcess(pid))
                         File.Delete(file);
                 }
@@ -227,33 +273,44 @@ namespace pwiz.Skyline.ToolsUI
 
         public string HandleRequest(byte[] requestBytes)
         {
+            int id = 0;
             try
             {
                 string json = Encoding.UTF8.GetString(requestBytes);
-                var root = JObject.Parse(json);
-                string method = (string) root[nameof(JSON.method)];
-                string[] args = ParseArgs(root[nameof(JSON.args)]);
+                var request = JsonConvert.DeserializeObject<JsonRpcRequest>(json);
+                if (request?.Method == null)
+                {
+                    return SerializeError(
+                        new JsonRpcException(JsonToolConstants.ERROR_INVALID_REQUEST,
+                            @"Invalid JSON-RPC request: missing method"),
+                        id, JsonToolConstants.ERROR_INVALID_REQUEST);
+                }
+                id = request.Id;
+                JToken[] args = request.Params ?? Array.Empty<JToken>();
 
-                bool logRequested = root[nameof(JSON.log)]?.Value<bool>() == true;
-                _currentLog = logRequested ? new ToolLog() : null;
+                _currentLog = request.Log ? new ToolLog() : null;
 
                 try
                 {
-                    object result = Dispatch(method, args);
-                    return SerializeResult(result);
+                    object result = Dispatch(request.Method, args);
+                    return SerializeResult(result, id);
                 }
                 finally
                 {
                     _currentLog = null;
                 }
             }
+            catch (JsonReaderException ex)
+            {
+                return SerializeError(ex, id, JsonToolConstants.ERROR_PARSE);
+            }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
-                return SerializeError(ex.InnerException);
+                return SerializeError(ex.InnerException, id, GetErrorCode(ex.InnerException));
             }
             catch (Exception ex)
             {
-                return SerializeError(ex);
+                return SerializeError(ex, id, GetErrorCode(ex));
             }
         }
 
@@ -266,20 +323,24 @@ namespace pwiz.Skyline.ToolsUI
             _currentLog?.Write(message);
         }
 
-        private object Dispatch(string method, string[] args)
+        private object Dispatch(string method, JToken[] args)
         {
             if (method == @"QueryAvailableMethods")
                 return string.Join(@",", _methods.Keys.OrderBy(k => k));
 
             if (!_methods.TryGetValue(method, out var methodInfo))
-                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Unknown method:", method));
+            {
+                throw new JsonRpcException(JsonToolConstants.ERROR_METHOD_NOT_FOUND,
+                    LlmInstruction.SpaceSeparate(@"Unknown method:", method));
+            }
 
             var parameters = methodInfo.GetParameters();
             int requiredCount = parameters.Count(p => !p.HasDefaultValue);
             if (args.Length < requiredCount)
             {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"{0} requires at least {1} argument(s)", method, requiredCount.ToString()));
+                throw new JsonRpcException(JsonToolConstants.ERROR_INVALID_PARAMS,
+                    LlmInstruction.Format(@"{0} requires at least {1} argument(s)",
+                        method, requiredCount.ToString()));
             }
 
             var invokeArgs = new object[parameters.Length];
@@ -287,21 +348,23 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (i >= args.Length)
                     invokeArgs[i] = parameters[i].DefaultValue;
-                else if (parameters[i].ParameterType == typeof(string))
-                    invokeArgs[i] = args[i];
                 else
-                    invokeArgs[i] = DeserializeArg(args[i], parameters[i].ParameterType);
+                    invokeArgs[i] = ConvertArg(args[i], parameters[i].ParameterType);
             }
 
             return methodInfo.Invoke(this, invokeArgs);
         }
 
-        private static object DeserializeArg(string json, Type targetType)
+        private static object ConvertArg(JToken token, Type targetType)
         {
-            if (string.IsNullOrEmpty(json))
+            if (token == null || token.Type == JTokenType.Null)
                 return null;
-            return JToken.Parse(json).ToObject(targetType, _snakeCaseSerializer);
+            if (targetType == typeof(string))
+                return token.Type == JTokenType.String ? token.Value<string>() : token.ToString();
+            return token.ToObject(targetType, _snakeCaseSerializer);
         }
+
+        private static readonly JsonSerializer _snakeCaseSerializer = JsonSerializer.Create(_snakeCaseSettings);
 
         // 0-arg methods
 
@@ -320,7 +383,7 @@ namespace pwiz.Skyline.ToolsUI
             return _toolService.GetDocumentLocationName();
         }
 
-        public string GetSelection()
+        public SelectionInfo GetSelection()
         {
             return JsonUiService.GetSelection();
         }
@@ -330,20 +393,13 @@ namespace pwiz.Skyline.ToolsUI
             return _toolService.GetReplicateName();
         }
 
-        public string GetReplicateNames()
+        public string[] GetReplicateNames()
         {
             var doc = Program.MainWindow.Document;
             var measuredResults = doc.Settings.MeasuredResults;
             if (measuredResults == null)
-                return string.Empty;
-            var sb = new StringBuilder();
-            foreach (var chromSet in measuredResults.Chromatograms)
-            {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-                sb.Append(chromSet.Name);
-            }
-            return sb.ToString();
+                return Array.Empty<string>();
+            return measuredResults.Chromatograms.Select(c => c.Name).ToArray();
         }
 
         public string GetProcessId()
@@ -351,71 +407,139 @@ namespace pwiz.Skyline.ToolsUI
             return _toolService.GetProcessId().ToString();
         }
 
-        public string GetSettingsListTypes()
+        public string[] GetSettingsListTypes()
         {
-            return TextUtil.LineSeparate(LlmNameMap.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase));
+            return LlmNameMap.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
-        public string GetDocumentStatus()
+        public DocumentStatus GetDocumentStatus()
         {
-            // All labels in this method are LLM-facing (not localizable)
             var doc = Program.MainWindow.Document;
-            string mode = doc.DocumentType.ToString();
-            int groups = doc.MoleculeGroupCount;
-            int molecules = doc.MoleculeCount;
-            int precursors = doc.MoleculeTransitionGroupCount;
-            int transitions = doc.MoleculeTransitionCount;
-            int replicates = doc.Settings.MeasuredResults?.Chromatograms.Count ?? 0;
             string docPath = _toolService.GetDocumentPath();
-            string docDisplay = string.IsNullOrEmpty(docPath)
-                ? new LlmInstruction(@"(unsaved)")
-                : docPath.ToForwardSlashPath();
 
-            LlmInstruction groupsLabel, moleculesLabel;
+            string groupsLabel, moleculesLabel;
             if (doc.DocumentType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
-                groupsLabel = new LlmInstruction(@"Lists");
-                moleculesLabel = new LlmInstruction(@"Molecules");
+                groupsLabel = @"Lists";
+                moleculesLabel = @"Molecules";
             }
             else
             {
-                // proteomic and mixed both support proteins and free-form peptide lists
-                groupsLabel = new LlmInstruction(@"Proteins/Lists");
+                groupsLabel = @"Proteins/Lists";
                 moleculesLabel = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.mixed
-                    ? new LlmInstruction(@"Peptides/Molecules")
-                    : new LlmInstruction(@"Peptides");
+                    ? @"Peptides/Molecules"
+                    : @"Peptides";
             }
 
-            bool dirty = Program.MainWindow.Dirty;
-
-            return TextUtil.LineSeparate($@"Mode: {mode}",
-                $@"{groupsLabel}: {groups}",
-                $@"{moleculesLabel}: {molecules}",
-                $@"Precursors: {precursors}",
-                $@"Transitions: {transitions}",
-                $@"Replicates: {replicates}",
-                $@"Document: {docDisplay}",
-                $@"Saved: {(dirty ? new LlmInstruction(@"no (unsaved changes)") : new LlmInstruction(@"yes"))}");
-        }
-
-        public string GetAvailableTutorials()
-        {
-            return JsonTutorialCatalog.FormatCatalog();
-        }
-
-        public string GetReportDocTopics(string scope = null)
-        {
-            var topics = GetTopicList(scope);
-            var sb = new StringBuilder();
-            foreach (var topic in topics)
+            return new DocumentStatus
             {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-                sb.Append(topic.DisplayName);
-                sb.Append(TextUtil.SEPARATOR_TSV);
-                sb.Append(topic.Columns.Count);
+                DocumentPath = string.IsNullOrEmpty(docPath) ? null : docPath.ToForwardSlashPath(),
+                DocumentType = doc.DocumentType.ToString(),
+                Groups = doc.MoleculeGroupCount,
+                GroupsLabel = groupsLabel,
+                Molecules = doc.MoleculeCount,
+                MoleculesLabel = moleculesLabel,
+                Precursors = doc.MoleculeTransitionGroupCount,
+                Transitions = doc.MoleculeTransitionCount,
+                Replicates = doc.Settings.MeasuredResults?.Chromatograms.Count ?? 0,
+                HasUnsavedChanges = Program.MainWindow.Dirty,
+            };
+        }
+
+        public string GetUiMode()
+        {
+            // Access on UI thread since Program.ModeUI may read Settings.Default
+            string mode = null;
+            Program.MainWindow.Invoke(new Action(() => mode = Program.ModeUI.ToString()));
+            return mode;
+        }
+
+        public void SetUiMode(string mode)
+        {
+            if (!Enum.TryParse(mode, true, out SrmDocument.DOCUMENT_TYPE docType) ||
+                docType == SrmDocument.DOCUMENT_TYPE.none)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Invalid UI mode '{0}'. Must be 'proteomic', 'small_molecules', or 'mixed'.", mode));
             }
-            return sb.ToString();
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                Program.MainWindow.SetUIMode(docType);
+            }));
+        }
+
+        public UndoRedoEntry[] GetUndoRedo()
+        {
+            // Capture undo/redo descriptions on the UI thread to avoid concurrent
+            // enumeration of the UndoManager stacks which are not thread-safe.
+            List<string> undoDescriptions = null;
+            List<string> redoDescriptions = null;
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                var undoMgr = Program.MainWindow.GetUndoManager();
+                undoDescriptions = undoMgr.UndoDescriptions.ToList();
+                redoDescriptions = undoMgr.RedoDescriptions.ToList();
+            }));
+
+            var entries = new List<UndoRedoEntry>();
+
+            // Undo entries: index -1 = most recent undoable change, -2 = next, etc.
+            int undoIndex = -1;
+            foreach (var desc in undoDescriptions)
+                entries.Add(new UndoRedoEntry { Index = undoIndex--, Description = desc });
+
+            // Redo entries: index +1 = most recent redoable change, +2 = next, etc.
+            int redoIndex = 1;
+            foreach (var desc in redoDescriptions)
+                entries.Add(new UndoRedoEntry { Index = redoIndex++, Description = desc });
+
+            return entries.ToArray();
+        }
+
+        public void SetUndoRedoPosition(int index)
+        {
+            if (index == 0)
+                return; // Already at current state
+
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                var undoMgr = Program.MainWindow.GetUndoManager();
+                if (index < 0)
+                {
+                    // Undo: index -1 = undo top (stack index 0), -2 = undo 2 deep, etc.
+                    int stackIndex = -index - 1;
+                    if (stackIndex >= undoMgr.UndoCount)
+                        throw new ArgumentOutOfRangeException(nameof(index),
+                            LlmInstruction.Format(@"Undo index {0} is out of range. Only {1} undo steps available.",
+                                index, undoMgr.UndoCount));
+                    undoMgr.UndoRestore(stackIndex);
+                }
+                else
+                {
+                    // Redo: index +1 = redo top (stack index 0), +2 = redo 2 deep, etc.
+                    int stackIndex = index - 1;
+                    if (stackIndex >= undoMgr.RedoCount)
+                        throw new ArgumentOutOfRangeException(nameof(index),
+                            LlmInstruction.Format(@"Redo index {0} is out of range. Only {1} redo steps available.",
+                                index, undoMgr.RedoCount));
+                    undoMgr.RedoRestore(stackIndex);
+                }
+            }));
+        }
+
+        public TutorialListItem[] GetAvailableTutorials()
+        {
+            return JsonTutorialCatalog.GetCatalog();
+        }
+
+        public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null)
+        {
+            var topics = GetTopicList(dataSource);
+            return topics.Select(t => new ReportDocTopicSummary
+            {
+                Name = t.DisplayName,
+                ColumnCount = t.Columns.Count,
+            }).ToArray();
         }
 
         // 1-arg methods
@@ -425,21 +549,17 @@ namespace pwiz.Skyline.ToolsUI
             return _toolService.GetSelectedElementLocator(elementType);
         }
 
-        public string RunCommand(string commandArgs)
-        {
-            return RunCommandImpl(commandArgs, false);
-        }
+        string IJsonToolService.RunCommand(string[] args) => RunCommandImpl(args, false);
+        string IJsonToolService.RunCommandSilent(string[] args) => RunCommandImpl(args, true);
 
-        public string RunCommandSilent(string commandArgs)
-        {
-            return RunCommandImpl(commandArgs, true);
-        }
+        public string RunCommand(params string[] args) => RunCommandImpl(args, false);
+        public string RunCommandSilent(params string[] args) => RunCommandImpl(args, true);
 
-        public string GetSettingsListNames(string listType)
+        public string[] GetSettingsListNames(string listType, string groupName = null)
         {
             string propName = ResolveLlmListType(listType);
             if (propName == nameof(PersistedViews))
-                return GetPersistedViewNames();
+                return GetPersistedViewNames(groupName);
 
             var prop = typeof(Settings).GetProperty(propName);
             if (prop == null)
@@ -447,32 +567,33 @@ namespace pwiz.Skyline.ToolsUI
             var value = prop.GetValue(Settings.Default);
             if (value == null)
                 throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Settings list is null:", listType));
-            var sb = new StringBuilder();
+            var names = new List<string>();
             foreach (var item in (IEnumerable)value)
             {
                 var keyContainer = item as IKeyContainer<string>;
                 if (keyContainer != null)
-                    sb.AppendLine(keyContainer.GetKey());
+                    names.Add(keyContainer.GetKey());
             }
-            return sb.ToString();
+            return names.ToArray();
         }
 
-        public string GetReportDocTopic(string topicName, string scope = null)
+        public ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null)
         {
-            var topics = GetTopicList(scope);
+            var topics = GetTopicList(dataSource);
             var matchedTopic = FindMatchingTopic(topicName, topics);
             if (matchedTopic == null)
                 return null;
 
-            var sb = new StringBuilder();
-            sb.AppendLine(matchedTopic.DisplayName);
-            sb.AppendLine();
-            sb.AppendLine(LlmInstruction.TabSeparate(@"Name", @"Description", @"Type"));
-            foreach (var col in matchedTopic.Columns)
-                sb.AppendLine(col.InvariantName + TextUtil.SEPARATOR_TSV +
-                              col.Description.FlattenToSingleLine() + TextUtil.SEPARATOR_TSV +
-                              col.TypeName);
-            return sb.ToString();
+            return new ReportDocTopicDetail
+            {
+                Name = matchedTopic.DisplayName,
+                Columns = matchedTopic.Columns.Select(col => new ColumnDefinition
+                {
+                    Name = col.InvariantName,
+                    Description = col.Description.FlattenToSingleLine(),
+                    Type = col.TypeName,
+                }).ToArray(),
+            };
         }
 
         private IList<ColumnResolver.TopicInfo> GetTopicList(string scope)
@@ -505,7 +626,7 @@ namespace pwiz.Skyline.ToolsUI
             return null;
         }
 
-        public string GetLocations(string level, string rootLocator = null)
+        public LocationEntry[] GetLocations(string level, string rootLocator = null)
         {
             var document = Program.MainWindow.Document;
             var elementRefs = new ElementRefs(document);
@@ -563,16 +684,16 @@ namespace pwiz.Skyline.ToolsUI
                     @"Level '{0}' must be deeper than the root element.", level));
             }
 
-            var sb = new StringBuilder();
+            var results = new List<LocationEntry>();
             EnumerateAtDepth(document, elementRefs,
                 (DocNodeParent)document.FindNode(rootPath),
-                rootPath, rootDepth, targetDepth, sb);
-            return sb.ToString();
+                rootPath, rootDepth, targetDepth, results);
+            return results.ToArray();
         }
 
         private static void EnumerateAtDepth(SrmDocument document, ElementRefs elementRefs,
             DocNodeParent currentNode, IdentityPath currentPath,
-            int currentDepth, int targetDepth, StringBuilder sb)
+            int currentDepth, int targetDepth, List<LocationEntry> results)
         {
             if (currentNode == null)
                 return;
@@ -586,11 +707,11 @@ namespace pwiz.Skyline.ToolsUI
                     var nodeRef = elementRefs.GetNodeRef(childPath);
                     if (nodeRef == null)
                         continue;
-                    if (sb.Length > 0)
-                        sb.AppendLine();
-                    sb.Append(nodeRef.Name);
-                    sb.Append('\t');
-                    sb.Append(nodeRef);
+                    results.Add(new LocationEntry
+                    {
+                        Name = nodeRef.Name,
+                        Locator = nodeRef.ToString(),
+                    });
                 }
             }
             else
@@ -602,12 +723,12 @@ namespace pwiz.Skyline.ToolsUI
                         continue;
                     var childPath = new IdentityPath(currentPath, child.Id);
                     EnumerateAtDepth(document, elementRefs, childParent,
-                        childPath, currentDepth + 1, targetDepth, sb);
+                        childPath, currentDepth + 1, targetDepth, results);
                 }
             }
         }
 
-        public string AddReportFromDefinition(ReportDefinition definition)
+        public void AddReportFromDefinition(ReportDefinition definition)
         {
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT, Program.MainWindow.ModeUI);
@@ -625,21 +746,50 @@ namespace pwiz.Skyline.ToolsUI
             viewSpecList = viewSpecList.ReplaceView(viewSpec.Name, layout);
             Settings.Default.PersistedViews.SetViewSpecList(groupId, viewSpecList);
             Log(string.Format(@"Saved report '{0}' to {1}", viewSpec.Name, groupId));
-
-            return LlmInstruction.Format(@"Report {0} has been added to Skyline.", viewSpec.Name.SingleQuote());
         }
 
-        public string InsertSmallMoleculeTransitionList(string textCSV)
+        public void ReorderElements(string[] elementLocators)
         {
-            return JsonUiService.InvokeOnUiThread(() =>
+            JsonUiService.InvokeOnUiThread(() =>
+            {
+                var orderedElements = elementLocators.Select(locator =>
+                    ElementRefs.FromObjectReference(ElementLocator.Parse(locator))).ToList();
+                lock (Program.MainWindow.GetDocumentChangeLock())
+                {
+                    var originalDocument = Program.MainWindow.Document;
+                    var reorderer = new ElementReorderer(CancellationToken.None, originalDocument);
+                    var newDocument = reorderer.SetNewOrder(orderedElements);
+                    if (!ReferenceEquals(newDocument, originalDocument))
+                    {
+                        Program.MainWindow.ModifyDocument(
+                            ToolsUIResources.ToolService_ReorderElements_Elements_reordered_by_external_tool,
+                            doc =>
+                            {
+                                if (!ReferenceEquals(doc, originalDocument))
+                                {
+                                    throw new InvalidOperationException(Resources
+                                        .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                                }
+                                return newDocument;
+                            },
+                            pair => AuditLogEntry.CreateSingleMessageEntry(
+                                new MessageInfo(MessageType.reordered_elements, newDocument.DocumentType)));
+                    }
+                }
+            });
+        }
+
+        public void InsertSmallMoleculeTransitionList(string textCSV)
+        {
+            JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.InsertSmallMoleculeTransitionList(textCSV,
                     @"Insert small molecule transition list"));
         }
 
-        public string ImportFasta(string textFasta, string keepEmptyProteins = null)
+        public void ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
             bool? keepEmpty = keepEmptyProteins == null ? (bool?)null : bool.Parse(keepEmptyProteins);
-            return JsonUiService.InvokeOnUiThread(() =>
+            JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.ImportFasta(new StringReader(textFasta),
                     Helpers.CountLinesInString(textFasta), false,
                     @"Import FASTA from MCP",
@@ -647,26 +797,26 @@ namespace pwiz.Skyline.ToolsUI
                     keepEmpty));
         }
 
-        public string ImportProperties(string csvText)
+        public void ImportProperties(string csvText)
         {
-            return JsonUiService.InvokeOnUiThread(() =>
+            JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations,
                         Program.MainWindow.Document.DocumentType,
                         @"Import properties from MCP")));
         }
 
-        public string SetSelectedElement(string elementLocatorString, string additionalLocators = null)
+        public void SetSelectedElement(string elementLocatorString, string additionalLocators = null)
         {
-            return JsonUiService.SetSelection(elementLocatorString, additionalLocators);
+            JsonUiService.SetSelection(elementLocatorString, additionalLocators);
         }
 
-        public string SetReplicate(string replicateName)
+        public void SetReplicate(string replicateName)
         {
-            return JsonUiService.SetReplicate(replicateName);
+            JsonUiService.SetReplicate(replicateName);
         }
 
-        public string GetOpenForms()
+        public FormInfo[] GetOpenForms()
         {
             return JsonUiService.GetOpenForms();
         }
@@ -720,7 +870,7 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Item not found:", itemName));
         }
 
-        public string AddSettingsListItem(string listType, string itemXml, bool overwrite = false)
+        public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false)
         {
             string propName = ResolveLlmListType(listType);
             if (propName == nameof(PersistedViews))
@@ -767,21 +917,16 @@ namespace pwiz.Skyline.ToolsUI
             if (addMethod == null)
                 throw new InvalidOperationException(LlmInstruction.SpaceSeparate(@"No Add method found on:", value.GetType().Name));
             addMethod.Invoke(value, new[] { item });
-
-            return exists
-                ? LlmInstruction.Format(@"Replaced {0} in {1}.", itemName.SingleQuote(), listType)
-                : LlmInstruction.Format(@"Added {0} to {1}.", itemName.SingleQuote(), listType);
         }
 
-        public string GetSettingsListSelectedItems(string listType)
+        public string[] GetSettingsListSelectedItems(string listType)
         {
             var selector = ResolveDocumentSelector(listType);
             var settings = Program.MainWindow.Document.Settings;
-            string[] selected = selector.GetSelectedItems(settings);
-            return TextUtil.LineSeparate(selected);
+            return selector.GetSelectedItems(settings);
         }
 
-        public string SelectSettingsListItems(string listType, string[] itemNames)
+        public void SelectSettingsListItems(string listType, string[] itemNames)
         {
             var selector = ResolveDocumentSelector(listType);
 
@@ -791,9 +936,9 @@ namespace pwiz.Skyline.ToolsUI
                     @"{0} requires exactly one item.", listType));
             }
 
-            try
+            JsonUiService.InvokeOnUiThread(() =>
             {
-                return JsonUiService.InvokeOnUiThread(() =>
+                try
                 {
                     Program.MainWindow.ModifyDocument(
                         LlmInstruction.Format(@"Select {0} items", listType),
@@ -802,19 +947,14 @@ namespace pwiz.Skyline.ToolsUI
                             MessageType.ran_command_line,
                             docPair.NewDocumentType,
                             string.Join(@", ", itemNames)));
-                    return LlmInstruction.Format(@"Selected {0} item(s) in {1}: {2}",
-                        itemNames.Length.ToString(), listType,
-                        itemNames.Length > 0
-                            ? string.Join(@", ", itemNames.Select(n => n.SingleQuote()))
-                            : @"(none)");
-                });
-            }
-            catch (SettingsListItemNotFoundException ex)
-            {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Item {0} not found in {1}. Use skyline_add_settings_list_item to add it first.",
-                    ex.ItemKey.SingleQuote(), listType));
-            }
+                }
+                catch (SettingsListItemNotFoundException ex)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Item {0} not found in {1}. Use skyline_add_settings_list_item to add it first.",
+                        ex.ItemKey.SingleQuote(), listType));
+                }
+            });
         }
 
         private ISettingsListDocumentSelection ResolveDocumentSelector(string listType)
@@ -953,7 +1093,7 @@ namespace pwiz.Skyline.ToolsUI
                 definition.Select != null ? string.Join(@", ", definition.Select) : string.Empty));
 
             var reader = new ReportDefinitionReader(dataSchema);
-            var viewSpec = reader.CreateViewSpec(definition, definition.Scope);
+            var viewSpec = reader.CreateViewSpec(definition, definition.DataSource);
             Log(string.Format(@"Resolved via {0} row source", viewSpec.RowSource));
             return viewSpec;
         }
@@ -1054,46 +1194,35 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Report not found:", reportName));
         }
 
-        private string SerializeResult(object result)
+        private string SerializeResult(object result, int id)
         {
-            var obj = new JObject();
-            if (result == null)
-                obj[nameof(JSON.result)] = null;
-            else if (result is string s)
-                obj[nameof(JSON.result)] = s;
-            else
-                obj[nameof(JSON.result)] = JToken.FromObject(result, _snakeCaseSerializer);
-            AppendLog(obj);
-            return obj.ToString();
-        }
-
-        private string SerializeError(Exception ex)
-        {
-            var obj = new JObject
+            var response = new JsonRpcResponse
             {
-                [nameof(JSON.error)] = ex.ToString()
+                Result = result,
+                Id = id,
+                Log = _currentLog?.HasContent == true ? _currentLog.ToString() : null,
             };
-            AppendLog(obj);
-            return obj.ToString();
+            return JsonConvert.SerializeObject(response, _snakeCaseSettings);
         }
 
-        private void AppendLog(JObject obj)
+        private string SerializeError(Exception ex, int id, int code)
         {
-            if (_currentLog != null && _currentLog.HasContent)
-                obj[nameof(JSON.log)] = _currentLog.ToString();
-        }
-
-        private static string[] ParseArgs(JToken argsToken)
-        {
-            if (argsToken == null || argsToken.Type != JTokenType.Array)
-                return Array.Empty<string>();
-            var array = (JArray)argsToken;
-            var args = new string[array.Count];
-            for (int i = 0; i < array.Count; i++)
+            var response = new JsonRpcResponse
             {
-                args[i] = (string)array[i];
-            }
-            return args;
+                Error = new JsonRpcError { Code = code, Message = ex.Message },
+                Id = id,
+                Log = _currentLog?.HasContent == true ? _currentLog.ToString() : null,
+            };
+            return JsonConvert.SerializeObject(response);
+        }
+
+        private static int GetErrorCode(Exception ex)
+        {
+            if (ex is JsonRpcException rpcEx)
+                return rpcEx.Code;
+            if (ex is ArgumentException || ex is FormatException)
+                return JsonToolConstants.ERROR_INVALID_PARAMS;
+            return JsonToolConstants.ERROR_INTERNAL;
         }
 
         private static byte[] ReadAllBytes(PipeStream stream)
@@ -1127,19 +1256,20 @@ namespace pwiz.Skyline.ToolsUI
             return filePath.ToForwardSlashPath();
         }
 
-        private string RunCommandImpl(string args, bool silent)
+        private string RunCommandImpl(string[] args, bool silent)
         {
             var capture = new StringWriter();
+            string argsDisplay = string.Join(@" ", args);
             TextWriter output;
 
             if (silent)
                 output = capture;
             else
-                output = JsonUiService.CreateImmediateWindowTee(capture, args);
+                output = JsonUiService.CreateImmediateWindowTee(capture, argsDisplay);
 
             // Run on the current thread (already a background pipe server thread).
             // The Immediate Window writer handles cross-thread writes via BeginInvoke.
-            var parsedArgs = CommandLine.ParseArgs(args);
+            var parsedArgs = args;
             var docBefore = Program.MainWindow.Document;
             var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore,
                 Program.MainWindow.DocumentFilePath);
@@ -1180,6 +1310,16 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private class SkylineWindowDocumentOperations : IDocumentOperations
         {
+            public bool Dirty
+            {
+                get
+                {
+                    bool dirty = false;
+                    Program.MainWindow.Invoke(new Action(() => dirty = Program.MainWindow.Dirty));
+                    return dirty;
+                }
+            }
+
             public SrmDocument OpenDocument(string skylineFile)
             {
                 bool success = false;
@@ -1196,15 +1336,20 @@ namespace pwiz.Skyline.ToolsUI
             {
                 Program.MainWindow.Invoke(new Action(() =>
                 {
-                    if (overwrite)
+                    if (skylineFile != null && overwrite)
                     {
                         FileEx.SafeDelete(skylineFile);
                         FileEx.SafeDelete(Path.ChangeExtension(skylineFile, ChromatogramCache.EXT));
                     }
+                    // Forced — dirty check is handled by the CLI layer
+                    // before reaching this point via --discard-changes.
                     Program.MainWindow.NewDocument(true);
-                    // Save empty document to set DocumentFilePath so subsequent
-                    // --save commands know the correct path
-                    Program.MainWindow.SaveDocument(skylineFile);
+                    if (skylineFile != null)
+                    {
+                        // Save empty document to set DocumentFilePath so subsequent
+                        // --save commands know the correct path
+                        Program.MainWindow.SaveDocument(skylineFile);
+                    }
                 }));
                 return WaitForDocumentLoaded();
             }
@@ -1323,17 +1468,26 @@ namespace pwiz.Skyline.ToolsUI
             return LlmNameMap.TryGetValue(listType, out string propName) ? propName : listType;
         }
 
-        private static string GetPersistedViewNames()
+        private static string[] GetPersistedViewNames(string groupName)
         {
             var persistedViews = Settings.Default.PersistedViews;
-            var sb = new StringBuilder();
-            sb.AppendLine(new LlmInstruction(@"# Main"));
-            foreach (var viewSpec in persistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).ViewSpecs)
-                sb.AppendLine(viewSpec.Name);
-            sb.AppendLine(new LlmInstruction(@"# External Tools"));
-            foreach (var viewSpec in persistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).ViewSpecs)
-                sb.AppendLine(viewSpec.Name);
-            return sb.ToString();
+            var groups = new[] { PersistedViews.MainGroup, PersistedViews.ExternalToolsGroup };
+            if (groupName != null)
+            {
+                var match = groups.FirstOrDefault(g =>
+                    string.Equals(g.Id.Name, groupName, StringComparison.OrdinalIgnoreCase));
+                if (match == null)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown report group: {0}. Valid groups: main, external_tools", groupName));
+                }
+                groups = new[] { match };
+            }
+            var names = new List<string>();
+            foreach (var group in groups)
+                foreach (var viewSpec in persistedViews.GetViewSpecList(group.Id).ViewSpecs)
+                    names.Add(viewSpec.Name);
+            return names.ToArray();
         }
 
         private static string GetPersistedViewItem(string itemName)

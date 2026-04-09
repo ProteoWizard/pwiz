@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="massErrorReplicateComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>&#x91CD;&#x590D;&#x6D4B;&#x5B9A;&#x6BD4;&#x8F83;</value>
+  </data>
+  <data name="massErrorPeptideComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>&#x80BD;&#x6BB5;&#x6BD4;&#x8F83;</value>
+  </data>
+  <data name="massErrorHistogramContextMenuItem.Text" xml:space="preserve">
+    <value>&#x76F4;&#x65B9;&#x56FE;</value>
+  </data>
+  <data name="massErrorHistogram2DContextMenuItem.Text" xml:space="preserve">
+    <value>2D &#x76F4;&#x65B9;&#x56FE;</value>
+  </data>
+  <data name="massErrorGraphContextMenuItem.Text" xml:space="preserve">
+    <value>&#x56FE;</value>
+  </data>
+  <data name="massErrorPropsContextMenuItem.Text" xml:space="preserve">
+    <value>&#x5C5E;&#x6027;&#x2026;</value>
+  </data>
+  <data name="showMassErrorLegendContextMenuItem.Text" xml:space="preserve">
+    <value>&#x56FE;&#x4F8B;</value>
+  </data>
+  <data name="massErrorTargetsContextMenuItem.Text" xml:space="preserve">
+    <value>&#x76EE;&#x6807;</value>
+  </data>
+  <data name="massErrorTargets1FDRContextMenuItem.Text" xml:space="preserve">
+    <value>1% FDR &#x65F6;&#x7684;&#x76EE;&#x6807;</value>
+  </data>
+  <data name="massErrorDecoysContextMenuItem.Text" xml:space="preserve">
+    <value>&#x8BF1;&#x9975;</value>
+  </data>
+  <data name="massErrorPointsContextMenuItem.Text" xml:space="preserve">
+    <value>&#x70B9;</value>
+  </data>
+  <data name="ppm05ContextMenuItem.Text" xml:space="preserve">
+    <value>0.5 ppm</value>
+  </data>
+  <data name="ppm10ContextMenuItem.Text" xml:space="preserve">
+    <value>1.0 ppm</value>
+  </data>
+  <data name="ppm15ContextMenuItem.Text" xml:space="preserve">
+    <value>1.5 ppm</value>
+  </data>
+  <data name="ppm20ContextMenuItem.Text" xml:space="preserve">
+    <value>2.0 ppm</value>
+  </data>
+  <data name="binCountContextMenuItem.Text" xml:space="preserve">
+    <value>Bin &#x5BBD;&#x5EA6;</value>
+  </data>
+  <data name="massErrorAllTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>&#x5168;&#x90E8;</value>
+  </data>
+  <data name="massErrorBestTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>&#x6700;&#x4F73;</value>
+  </data>
+  <data name="MassErrorPrecursorsContextMenuItem.Text" xml:space="preserve">
+    <value>&#x6BCD;&#x79BB;&#x5B50;</value>
+  </data>
+  <data name="MassErrorProductsContextMenuItem.Text" xml:space="preserve">
+    <value>&#x5B50;&#x79BB;&#x5B50;</value>
+  </data>
+  <data name="massErrorTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>&#x79BB;&#x5B50;&#x5BF9;</value>
+  </data>
+  <data name="massErorrRetentionTimeContextMenuItem.Text" xml:space="preserve">
+    <value>&#x4FDD;&#x7559;&#x65F6;&#x95F4;</value>
+  </data>
+  <data name="massErrorMassToChargContextMenuItem.Text" xml:space="preserve">
+    <value>&#x8D28;&#x8377;&#x6BD4;</value>
+  </data>
+  <data name="massErrorXAxisContextMenuItem.Text" xml:space="preserve">
+    <value>X &#x8F74;</value>
+  </data>
+  <data name="massErrorlogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>&#x5BF9;&#x6570;&#x5C3A;&#x5EA6;</value>
+  </data>
+</root>

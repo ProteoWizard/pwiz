@@ -168,6 +168,19 @@ namespace pwiz.SkylineTestFunctional
             // IsFileInDirectory returns true because the base file IS in the directory.
             Assert.IsTrue(FileSystemUtil.IsFileInDirectory(@"c:\Users\foobar", @"c:\Users\foobar\file.zip:Zone.Identifier"));
             Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar", @"c:\Users\foobar\sub:Stream"));
+
+            // Normalize returns null for invalid paths instead of the original invalid path (issue #4098)
+            Assert.IsNull(FileSystemUtil.Normalize(null));
+            Assert.IsNull(FileSystemUtil.Normalize("C:\\invalid<path>\\file.txt"));
+            Assert.IsNull(FileSystemUtil.Normalize("C:\\invalid|path\\file.txt"));
+            Assert.IsNotNull(FileSystemUtil.Normalize(@"c:\Users\foobar\file.txt"));
+
+            // ADS path with invalid characters should still return null (ArgumentException before NotSupportedException)
+            Assert.IsNull(FileSystemUtil.Normalize("C:\\invalid<path>\\file.txt:Zone.Identifier"));
+
+            // Invalid paths should not crash IsFileInDirectory or IsInOrSubdirectoryOf
+            Assert.IsFalse(FileSystemUtil.IsFileInDirectory(@"c:\Users\foobar", "C:\\invalid<path>\\file.txt"));
+            Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar", "C:\\invalid<path>\\sub"));
         }
 
         protected void TestEmptyDocument()

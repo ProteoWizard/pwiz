@@ -31,6 +31,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using pwiz.Common;
+using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
 using pwiz.Common.Mock;
 using pwiz.Common.SystemUtil;
@@ -173,6 +174,7 @@ namespace pwiz.Skyline
 
             CommonApplicationSettings.ProgramName = Name;
             CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
+            CommonActionUtil.ExceptionReporter = ReportException;
             SkylineRemoteAccountServices.Initialize();
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
@@ -242,6 +244,9 @@ namespace pwiz.Skyline
                     }
                 }
                 LocalizationHelper.InitThread(Thread.CurrentThread);
+
+                if (!FunctionalTest && !CheckNativeLibraries())
+                    return EXIT_CODE_FAILURE_TO_START;
 
                 // Make sure the user has agreed to the current license version
                 // or one more recent.
@@ -636,6 +641,7 @@ namespace pwiz.Skyline
             if (!_initialized)
             {
                 _initialized = true;
+                CommonActionUtil.ExceptionReporter = ReportException;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -651,6 +657,44 @@ namespace pwiz.Skyline
                     Settings.Default.Save();
                 }
             }
+        }
+
+        /// <summary>
+        /// Verifies that native libraries (pwiz_data_cli.dll) can load. When Windows
+        /// Application Control (WDAC/AppLocker) blocks the DLL, a load exception
+        /// can occur at JIT time. NoInlining ensures the JIT-triggering reference in
+        /// TryLoadNativeLibraries remains isolated so this method can catch and report
+        /// the failure.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static bool CheckNativeLibraries()
+        {
+            try
+            {
+                TryLoadNativeLibraries();
+                return true;
+            }
+            catch (Exception x)
+            {
+                AlertLinkDlg.Show(null,
+                    string.Format(SkylineResources.Program_CheckNativeLibraries_Failed_to_load_required_native_libraries,
+                        x.Message),
+                    SkylineResources.Program_CheckNativeLibraries_Troubleshooting,
+                    @"https://skyline.ms/home/software/Skyline/wiki-page.view?name=tip_recover_install");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Separate method to isolate the JIT trigger for pwiz_data_cli.dll.
+        /// NoInlining prevents the CLR from inlining this into CheckNativeLibraries,
+        /// which would cause the FileLoadException at the caller's JIT boundary.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void TryLoadNativeLibraries()
+        {
+            // Accessing InstalledVersion forces pwiz_data_cli.dll to load
+            var unused = MsDataFileImpl.InstalledVersion;
         }
 
         private static readonly object _unhandledExceptionLock = new object();
