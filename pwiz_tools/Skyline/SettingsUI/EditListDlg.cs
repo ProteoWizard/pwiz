@@ -40,8 +40,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IItemEditor<TItem> _editor;
 
         private readonly List<TItem> _list;
-        private readonly Panel _spacerAfterEdit;
-        private readonly Panel _spacerAfterDown;
 
         public EditListDlg(TList model, object tag)
         {
@@ -57,13 +55,13 @@ namespace pwiz.Skyline.SettingsUI
             // Group 1 (CRUD): Add, Remove, Rename, Edit
             // Group 2 (Reorder): Up, Down
             // Group 3 (Manage): Reset, Copy, Import, Share
-            _spacerAfterEdit = CreateButtonGroupSpacer();
-            pnlButtons.Controls.Add(_spacerAfterEdit);
-            pnlButtons.Controls.SetChildIndex(_spacerAfterEdit, pnlButtons.Controls.IndexOf(btnUp));
+            var spacerAfterEdit = CreateButtonGroupSpacer();
+            pnlButtons.Controls.Add(spacerAfterEdit);
+            pnlButtons.Controls.SetChildIndex(spacerAfterEdit, pnlButtons.Controls.IndexOf(btnUp));
 
-            _spacerAfterDown = CreateButtonGroupSpacer();
-            pnlButtons.Controls.Add(_spacerAfterDown);
-            pnlButtons.Controls.SetChildIndex(_spacerAfterDown, pnlButtons.Controls.IndexOf(btnReset));
+            var spacerAfterDown = CreateButtonGroupSpacer();
+            pnlButtons.Controls.Add(spacerAfterDown);
+            pnlButtons.Controls.SetChildIndex(spacerAfterDown, pnlButtons.Controls.IndexOf(btnReset));
 
             Icon = Resources.Skyline;
             Text = model.Title;
@@ -315,7 +313,7 @@ namespace pwiz.Skyline.SettingsUI
 
             using (var form = new Form())
             {
-                form.Text = SettingsUIResources.EditListDlg_Rename.Replace(@"&", string.Empty);
+                form.Text = SettingsUIResources.EditListDlg_Rename.Replace("&", string.Empty);
                 form.FormBorderStyle = FormBorderStyle.FixedDialog;
                 form.StartPosition = FormStartPosition.CenterParent;
                 form.MaximizeBox = false;
