@@ -472,7 +472,7 @@ namespace pwiz.Skyline.SettingsUI
             catch (Exception ex)
             {
                 MessageDlg.ShowWithException(this,
-                    string.Format(Resources.SerializableSettingsList_ImportFile_Failure_loading__0__, filePath), ex);
+                    string.Format(SettingsUIResources.EditListDlg_ShareItemsToFile_Failure_saving__0_, filePath), ex);
             }
         }
 

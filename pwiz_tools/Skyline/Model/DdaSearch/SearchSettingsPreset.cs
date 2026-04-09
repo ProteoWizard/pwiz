@@ -330,7 +330,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     if (reader.IsStartElement(EL.additional_settings))
                     {
-                        AdditionalSettingsXml = reader.ReadOuterXml();
+                        AdditionalSettingsXml = reader.ReadInnerXml();
                     }
                     else if (reader.IsStartElement(EL.structural_modifications))
                     {
