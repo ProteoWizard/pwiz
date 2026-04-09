@@ -358,4 +358,7 @@
     <value>{0} ({1})</value>
     <comment>Example: Standard (MyMolecule)</comment>
   </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_RelativeStandardError" xml:space="preserve">
+    <value>RSE = </value>
+  </data>
 </root>

@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         private void Settings_OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Properties.Settings.Default.CalibrationCurveOptions ))
+            if (e.PropertyName == nameof(Properties.Settings.Default.CalibrationCurveOptions))
             {
                 Update(DisplaySettings);
             }
@@ -355,6 +355,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     labelLines.Add(CalibrationCurveMetrics.RSquaredDisplayText(CalibrationCurveMetrics.RSquared.Value));
                 }
 
+                if (CalibrationCurveMetrics.RelativeStandardError.HasValue)
+                {
+                    labelLines.Add(CalibrationCurveMetrics.RelativeStandardErrorDisplayText(CalibrationCurveMetrics.RelativeStandardError.Value));
+                }
+
                 if (!Equals(curveFitter.QuantificationSettings.RegressionWeighting, RegressionWeighting.NONE))
                 {
                     labelLines.Add(string.Format(@"{0}: {1}",
@@ -406,7 +411,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         {
                             ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Raw, xSelected.Value,
                                     ySelected.Raw)
-                                { Line = { Color = GraphSummary.ColorSelected } };
+                            { Line = { Color = GraphSummary.ColorSelected } };
                             zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                             var verticalLine = new LineObj(xSelected.Value, ySelected.Raw, xSelected.Value,
                                 options.LogYAxis ? minY / 10 : 0)
@@ -439,7 +444,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                                 // If the point has a specified concentration, then use that.
                                 ArrowObj arrow = new ArrowObj(xSpecified.Value, ySelected.Raw, xSpecified.Value,
                                         ySelected.Raw)
-                                    { Line = { Color = GraphSummary.ColorSelected } };
+                                { Line = { Color = GraphSummary.ColorSelected } };
                                 zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                             }
                             else
@@ -726,7 +731,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 menuStrip.Items.Insert(index++, moreDisplayOptionsContextMenuItem);
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
             }
-            
+
         }
         private bool IsEnableIsotopologResponseCurve()
         {
