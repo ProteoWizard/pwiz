@@ -935,10 +935,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     // This assumes that the values for the current target peptide are already
                     // cached in the statistics object.
-                    if (!Equals(variableTargetPeptides[i].PeptideSequence.InvariantName, statistics.Peptides[iNextStat].InvariantName))
-                    {
-                        DumpRecalcRegressionMismatch(i, iNextStat, requiredPeptides, variableTargetPeptides, variableOrigPeptides, statistics, outIndexes);
-                    }
                     Assume.AreEqual(variableTargetPeptides[i].PeptideSequence.InvariantName, statistics.Peptides[iNextStat].InvariantName);
                     delta = listHydroScores[iNextStat] != unknownScore && !zeroRt
                         ? Math.Abs(listPredictions[iNextStat] - listTimes[iNextStat])
@@ -957,6 +953,16 @@ namespace pwiz.Skyline.Model.DocSettings
                         double? predictedTime = GetRetentionTime(score);
                         if (predictedTime.HasValue)
                             delta = Math.Abs(predictedTime.Value - peptideTime.RetentionTime);
+                    }
+
+                    // Sometimes outlier indices get added after statistics are calculated.
+                    // So, if the target peptide matches the current statistic advance the
+                    // statistics index.
+                    if (iNextStat < listPredictions.Count &&
+                        Equals(variableTargetPeptides[i].PeptideSequence.InvariantName,
+                            statistics.Peptides[iNextStat].InvariantName))
+                    {
+                        iNextStat++;
                     }
                 }
 
@@ -989,59 +995,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
             return CalcSingleRegression(Name, calculator, peptidesTimesTry, scoreCache, true, regressionMethod,
                                       out statisticsResult, out _, token);
-        }
-
-        private void DumpRecalcRegressionMismatch(int i, int iNextStat,
-            IEnumerable<MeasuredRetentionTime> requiredPeptides,
-            IList<MeasuredRetentionTime> variableTargetPeptides,
-            IList<MeasuredRetentionTime> variableOrigPeptides,
-            RetentionTimeStatistics statistics,
-            HashSet<int> outIndexes)
-        {
-            Console.Out.WriteLine("=== RecalcRegression mismatch at i={0}, iNextStat={1} ===", i, iNextStat);
-            Console.Out.WriteLine("variableTargetPeptides[i]={0}", variableTargetPeptides[i].PeptideSequence.InvariantName);
-            Console.Out.WriteLine("statistics.Peptides[iNextStat]={0}", statistics.Peptides[iNextStat].InvariantName);
-            Console.Out.WriteLine("variableTargetPeptides.Count={0}, statistics.Peptides.Count={1}, outIndexes.Count={2}",
-                variableTargetPeptides.Count, statistics.Peptides.Count, outIndexes.Count);
-            double unknownScore = Calculator.UnknownScore;
-
-            // Build the sequence of variable peptides expected to appear in statistics, walking the same way the loop does
-            Console.Out.WriteLine("--- variableTargetPeptides (idx | inOut | rt | origRt | name) ---");
-            for (int j = 0; j < variableTargetPeptides.Count; j++)
-            {
-                var name = variableTargetPeptides[j].PeptideSequence.InvariantName;
-                var rt = variableTargetPeptides[j].RetentionTime;
-                var origRt = variableOrigPeptides != null ? variableOrigPeptides[j].RetentionTime.ToString("R") : "(null)";
-                Console.Out.WriteLine("  [{0}] out={1} rt={2} origRt={3} {4}", j, outIndexes.Contains(j) ? "Y" : "n", rt, origRt, name);
-            }
-
-            Console.Out.WriteLine("--- statistics.Peptides (idx | predicted | time | hydroScore | name) ---");
-            for (int j = 0; j < statistics.Peptides.Count; j++)
-            {
-                var name = statistics.Peptides[j].InvariantName;
-                var pred = j < statistics.ListPredictions.Count ? statistics.ListPredictions[j].ToString("R") : "?";
-                var time = j < statistics.ListRetentionTimes.Count ? statistics.ListRetentionTimes[j].ToString("R") : "?";
-                var score = j < statistics.ListHydroScores.Count ? statistics.ListHydroScores[j].ToString("R") : "?";
-                Console.Out.WriteLine("  [{0}] pred={1} time={2} score={3} {4}", j, pred, time, score, name);
-            }
-
-            // Set difference (which peptides are in one list but not the other)
-            var targetNames = new HashSet<string>(variableTargetPeptides.Where((_, idx) => !outIndexes.Contains(idx))
-                .Select(p => p.PeptideSequence.InvariantName));
-            var statNames = new HashSet<string>(statistics.Peptides.Select(p => p.InvariantName));
-            Console.Out.WriteLine("--- In variableTargetPeptides (non-outlier) but NOT in statistics.Peptides ---");
-            foreach (var n in targetNames.Except(statNames))
-                Console.Out.WriteLine("  + {0}", n);
-            Console.Out.WriteLine("--- In statistics.Peptides but NOT in variableTargetPeptides (non-outlier) ---");
-            foreach (var n in statNames.Except(targetNames))
-                Console.Out.WriteLine("  - {0}", n);
-
-            Console.Out.WriteLine("--- requiredPeptides ---");
-            foreach (var rp in requiredPeptides)
-                Console.Out.WriteLine("  {0} rt={1}", rp.PeptideSequence.InvariantName, rp.RetentionTime);
-
-            Console.Out.WriteLine("=== end mismatch dump ===");
-            Console.Out.Flush();
         }
 
         public static int ThresholdPrecision { get { return 4; } }
