@@ -380,8 +380,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             //lblSearchEngineName.Text = ImportPeptideSearch.SearchEngine.EngineName;
             _initializingEngine = true;
-            LoadComboboxEntries();
-            _initializingEngine = false;
+            try
+            {
+                LoadComboboxEntries();
+            }
+            finally
+            {
+                _initializingEngine = false;
+            }
             pBLogo.Image = ImportPeptideSearch.SearchEngine.SearchEngineLogo;
             labelCutoff.Text = ImportPeptideSearch.SearchEngine.CutoffScoreLabel + @":";
             HandleSearchEngineBlurb();

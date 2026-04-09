@@ -2755,6 +2755,15 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failure saving {0}..
+        /// </summary>
+        public static string EditListDlg_ShareItemsToFile_Failure_saving__0_ {
+            get {
+                return ResourceManager.GetString("EditListDlg_ShareItemsToFile_Failure_saving__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Select items to share:.
         /// </summary>
         public static string ShareListDlg_Select_items_to_share {

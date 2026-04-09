@@ -937,6 +937,9 @@
   <data name="SaveSettingsDlg_OnClosing_The_name__0__already_exists" xml:space="preserve">
     <value>The name {0} already exists.</value>
   </data>
+  <data name="EditListDlg_ShareItemsToFile_Failure_saving__0_" xml:space="preserve">
+    <value>Failure saving {0}.</value>
+  </data>
   <data name="ShareListDlg_Select_items_to_share" xml:space="preserve">
     <value>Select items to share:</value>
   </data>
