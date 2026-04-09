@@ -103,24 +103,25 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Validates that FormatCatalog produces non-empty output with expected structure.
+        /// Validates that GetCatalog produces non-empty output with expected structure.
         /// </summary>
         [TestMethod]
         public void TestTutorialCatalogFormat()
         {
-            string catalog = JsonTutorialCatalog.FormatCatalog();
-            Assert.IsFalse(string.IsNullOrEmpty(catalog));
+            var catalog = JsonTutorialCatalog.GetCatalog();
+            Assert.IsTrue(catalog.Length > 0);
+            Assert.AreEqual(TutorialCatalog.Tutorials.Length, catalog.Length,
+                @"GetCatalog count should match tutorial count");
 
-            var lines = catalog.Split('\n').Where(l => !string.IsNullOrWhiteSpace(l)).ToArray();
-            Assert.AreEqual(TutorialCatalog.Tutorials.Length, lines.Length,
-                "FormatCatalog line count should match tutorial count");
-
-            // Each line should have 6 tab-separated fields
-            foreach (var line in lines)
+            // Each entry should have non-null required properties
+            foreach (var item in catalog)
             {
-                var fields = line.Split('\t');
-                Assert.AreEqual(6, fields.Length,
-                    string.Format("Expected 6 tab-separated fields, got {0} in: {1}", fields.Length, line.TrimEnd()));
+                Assert.IsFalse(string.IsNullOrEmpty(item.Name),
+                    @"Tutorial Name should not be null or empty");
+                Assert.IsFalse(string.IsNullOrEmpty(item.Title),
+                    @"Tutorial Title should not be null or empty");
+                Assert.IsFalse(string.IsNullOrEmpty(item.Category),
+                    @"Tutorial Category should not be null or empty");
             }
         }
 

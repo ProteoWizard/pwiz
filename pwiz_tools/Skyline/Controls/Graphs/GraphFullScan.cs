@@ -74,6 +74,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool _showIonSeriesAnnotations;
 
+        // Tooltip shows realtime info about what's under the cursor
+        // as it moves, goes away after a few seconds of no movement
+        private readonly CursorTrackingTip _cursorTip;
+
         private MSGraphControl graphControl => graphControlExtension.Graph;
 
         public GraphFullScan(IDocumentUIContainer documentUIContainer)
@@ -129,6 +133,10 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeLocalizedName(peakType);
             this.comboBoxPeakType.SelectedIndexChanged += this.comboBoxPeakType_SelectedIndexChanged;
             graphControlExtension.RestorePropertiesSheet();
+
+            // Tooltip shows realtime info about what's under the cursor
+            _cursorTip = new CursorTrackingTip(graphControl, pt =>
+                _msDataFileScanHelper.MsDataSpectra != null ? GetTooltipTable(new PointF(pt.X, pt.Y)) : null);
         }
 
         public ZedGraphControl ZedGraphControl
@@ -404,6 +412,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Fill = new Fill(color1, color2, 90),
                     IsClippedToChartRect = true,
                 };
+                extractionBox.Tag = new ExtractionBoxInfo(transition.ProductMz, transition.ExtractionWidth.Value);
                 GraphPane.GraphObjList.Add(extractionBox);
             }
 
@@ -1358,8 +1367,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 leftButton.Enabled = (_msDataFileScanHelper.ScanIndex > 0);
                 rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Count-1);
                 lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString(@"D");
-                if (!spectrumBtn.Checked)
-                    GraphPane.SetScale(CreateGraphics());
+                GraphPane.SetScale(CreateGraphics());
                 if (_msDataFileScanHelper.IsWatersSonarData)
                 {
                     filterBtn.ToolTipText = GraphsResources.GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range;
@@ -1382,6 +1390,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void OnClosed(EventArgs e)
         {
+            _cursorTip.Dispose();
             graphControlExtension.PropertiesSheet.SelectedObject = null;
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
             _msDataFileScanHelper.Dispose();
@@ -1481,6 +1490,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private HeatMapGraphPane HeatMapGraphPane { get { return (HeatMapGraphPane) GraphPane; } }
 
+        private struct ExtractionBoxInfo
+        {
+            public readonly double CenterMz;
+            public readonly double OriginalWidth;
+
+            public ExtractionBoxInfo(double centerMz, double originalWidth)
+            {
+                CenterMz = centerMz;
+                OriginalWidth = originalWidth;
+            }
+        }
+
         /// <summary>
         /// Extends <see cref="HeatMapGraphPane"/> with <see cref="IHeatMapDataProvider"/> so that
         /// Copy Data produces clean 3-column output instead of per-curve data.
@@ -1489,6 +1510,24 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public HeatMapData HeatMapData => ShowHeatMap ? _heatMapData : null;
             public string HeatMapZAxisName => GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+
+            public override void SetScale(Graphics g)
+            {
+                base.SetScale(g);
+                // Enforce a minimum rendered width of 1 pixel for extraction boxes so they
+                // remain visible when the m/z axis is zoomed out to a wide range.
+                double minWidth = Math.Abs(XAxis.Scale.ReverseTransform(1) - XAxis.Scale.ReverseTransform(0));
+                if (double.IsNaN(minWidth) || double.IsInfinity(minWidth) || minWidth <= 0)
+                    return;
+                foreach (var obj in GraphObjList.OfType<BoxObj>())
+                {
+                    if (!(obj.Tag is ExtractionBoxInfo info))
+                        continue;
+                    double w = Math.Max(info.OriginalWidth, minWidth);
+                    obj.Location.X = info.CenterMz - w / 2;
+                    obj.Location.Width = w;
+                }
+            }
         }
 
         private void filterBtn_CheckedChanged(object sender, EventArgs e)
@@ -1611,6 +1650,159 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
+        // For use with CursorTrackingTip _cursorTip
+        private TableDesc GetTooltipTable(PointF pt)
+        {
+            bool isHeatMap = spectrumBtn.Visible && !spectrumBtn.Checked;
+            return isHeatMap ? GetHeatMapTooltipTable(pt) : GetSpectrumTooltipTable(pt);
+        }
+
+        private TableDesc GetHeatMapTooltipTable(PointF pt)
+        {
+            if (_heatMapData == null)
+                return null;
+
+            double x, y;
+            GraphPane.ReverseTransform(pt, out x, out y);
+
+            // Search radius in data coordinates: use a small pixel neighborhood
+            const float searchPixels = 10f;
+            double xLo, xHi, yLo, yHi;
+            GraphPane.ReverseTransform(new PointF(pt.X - searchPixels, pt.Y - searchPixels), out xLo, out yHi);
+            GraphPane.ReverseTransform(new PointF(pt.X + searchPixels, pt.Y + searchPixels), out xHi, out yLo);
+
+            double searchRadiusX = Math.Abs(xHi - xLo) / 2;
+            double searchRadiusY = Math.Abs(yHi - yLo) / 2;
+
+            // Use a small cell size to get individual points from the quad-tree
+            var candidates = _heatMapData.GetPoints(
+                x - searchRadiusX, x + searchRadiusX,
+                y - searchRadiusY, y + searchRadiusY,
+                searchRadiusX / 2, searchRadiusY / 2);
+
+            var nearest = FindNearestHeatMapPoint(candidates, x, y, searchRadiusX, searchRadiusY);
+            if (nearest == null)
+                return null;
+
+            var rt = _cursorTip.RenderTools;
+            string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
+            var table = new TableDesc();
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_mz, nearest.Point.X.ToString(Formats.Mz), rt);
+            table.AddDetailRow(yAxisLabel, nearest.Point.Y.ToString(Formats.IonMobility), rt);
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity, nearest.Point.Z.ToString(@"F0"), rt);
+            return table;
+        }
+
+        private TableDesc GetSpectrumTooltipTable(PointF pt)
+        {
+            StickItem nearestCurve;
+            int nearestIndex;
+            double mz, intensity;
+
+            if (GraphPane.FindNearestStick(pt, out nearestCurve, out nearestIndex))
+            {
+                mz = nearestCurve[nearestIndex].X;
+                intensity = nearestCurve[nearestIndex].Y;
+            }
+            else
+            {
+                // Cursor may be over an annotation label rather than the stick body itself.
+                // The label's X is the predicted m/z; find the closest observed stick nearby.
+                var label = GetNearestLabel(pt);
+                if (label == null)
+                    return null;
+                var stickPoint = FindStickPointNearMz(label.Location.X);
+                if (stickPoint == null)
+                    return null;
+                mz = stickPoint.X;
+                intensity = stickPoint.Y;
+            }
+
+            var rt = _cursorTip.RenderTools;
+            var table = new TableDesc();
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_mz, mz.ToString(Formats.Mz), rt);
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity, intensity.ToString(@"F0"), rt);
+            // Look up matched ion info; used both to suppress the redundant Transition row and to build the table.
+            LibraryRankedSpectrumInfo.RankedMI rmi = null;
+            if (_rmis != null)
+                rmi = _rmis.Peaks.FirstOrDefault(p => p.ObservedMz == mz);
+            bool hasMatchedIons = rmi != null && rmi.MatchedIons != null && rmi.MatchedIons.Count > 0;
+
+            // In non-annotation mode, show the transition name when the peak falls within a transition's
+            // extraction window — but skip it when the Matched Ions section already names the same ion.
+            if (!_showIonSeriesAnnotations && !hasMatchedIons && _msDataFileScanHelper.ScanProvider != null)
+            {
+                var matchedTransition = _msDataFileScanHelper.ScanProvider.Transitions.FirstOrDefault(
+                    t => t.Source == _msDataFileScanHelper.Source && t.MatchMz(mz));
+                if (matchedTransition != null)
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, matchedTransition.Name, rt);
+            }
+            // Show matched ion info whenever available (explains ion-series coloring in annotation mode,
+            // and provides predicted m/z and mass error context in non-annotation mode too).
+            if (hasMatchedIons)
+            {
+                table.AddDetailRowNoBold(@"  ", @"  ", rt); // blank separator line
+                table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons,
+                    GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass, rt, true);
+                foreach (var mfi in rmi.MatchedIons)
+                    table.AddDetailRowNoBold(AbstractSpectrumGraphItem.GetLabel(mfi, rmi.Rank, false, !_showIonSeriesAnnotations),
+                        mfi.PredictedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture) + @"  " +
+                        AbstractSpectrumGraphItem.GetMassErrorString(rmi, mfi), rt);
+            }
+            return table;
+        }
+
+        private static HeatMapData.TaggedPoint3D FindNearestHeatMapPoint(
+            List<HeatMapData.TaggedPoint3D> candidates,
+            double x, double y, double searchRadiusX, double searchRadiusY)
+        {
+            if (candidates == null || candidates.Count == 0)
+                return null;
+
+            HeatMapData.TaggedPoint3D nearest = null;
+            double minDist = double.MaxValue;
+            foreach (var candidate in candidates)
+            {
+                // Normalize by search radius so m/z and ion mobility scales are comparable
+                double dx = (candidate.Point.X - x) / searchRadiusX;
+                double dy = (candidate.Point.Y - y) / searchRadiusY;
+                double dist = dx * dx + dy * dy;
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    nearest = candidate;
+                }
+            }
+
+            return nearest;
+        }
+
+        /// <summary>
+        /// Finds the closest StickItem point to the given m/z, within a 1 Da tolerance.
+        /// Used to resolve the observed m/z and intensity from a label's predicted m/z.
+        /// </summary>
+        private PointPair FindStickPointNearMz(double mz)
+        {
+            PointPair best = null;
+            double bestDist = double.MaxValue;
+            foreach (var curve in GraphPane.CurveList)
+            {
+                var stick = curve as StickItem;
+                if (stick == null)
+                    continue;
+                for (int i = 0; i < stick.Points.Count; i++)
+                {
+                    double dist = Math.Abs(stick[i].X - mz);
+                    if (dist < bestDist)
+                    {
+                        bestDist = dist;
+                        best = stick[i];
+                    }
+                }
+            }
+            return bestDist <= 1.0 ? best : null;
+        }
+
         private TextObj GetNearestLabel(PointF mousePoint)
         {
             using (Graphics g = CreateGraphics())
@@ -1640,6 +1832,83 @@ namespace pwiz.Skyline.Controls.Graphs
         public PointF TransformCoordinates(double x, double y, CoordType coordType = CoordType.AxisXYScale)
         {
             return GraphPane.GeneralTransform(new PointF((float)x, (float)y), coordType);
+        }
+
+        /// <summary>
+        /// Returns the tooltip text for a data point nearest to the given coordinates,
+        /// for testing. Bypasses pixel-based search (FindNearestPoint) which can fail
+        /// in offscreen mode where the graph is too small for the 7-pixel threshold.
+        /// For spectrum mode, x is m/z (y is ignored). For heatmap, x is m/z and y is
+        /// ion mobility. Pass no arguments to use a representative midpoint.
+        /// </summary>
+        public TableDesc TestGetTooltipTable(double x = double.NaN, double y = double.NaN)
+        {
+            bool isHeatMap = spectrumBtn.Visible && !spectrumBtn.Checked;
+            var rt = _cursorTip.RenderTools;
+            var table = new TableDesc();
+
+            if (isHeatMap)
+            {
+                if (_heatMapData == null)
+                    return null;
+                double searchX = double.IsNaN(x)
+                    ? (GraphPane.XAxis.Scale.Min + GraphPane.XAxis.Scale.Max) / 2 : x;
+                double searchY = double.IsNaN(y)
+                    ? (GraphPane.YAxis.Scale.Min + GraphPane.YAxis.Scale.Max) / 2 : y;
+                // Search a generous range around the target point
+                double rangeX = (GraphPane.XAxis.Scale.Max - GraphPane.XAxis.Scale.Min) / 2;
+                double rangeY = (GraphPane.YAxis.Scale.Max - GraphPane.YAxis.Scale.Min) / 2;
+                double searchRadiusX = double.IsNaN(x) ? rangeX : rangeX / 10;
+                double searchRadiusY = double.IsNaN(y) ? rangeY : rangeY / 10;
+                var candidates = _heatMapData.GetPoints(
+                    searchX - searchRadiusX, searchX + searchRadiusX,
+                    searchY - searchRadiusY, searchY + searchRadiusY,
+                    searchRadiusX / 4, searchRadiusY / 4);
+                var nearest = FindNearestHeatMapPoint(candidates, searchX, searchY,
+                    searchRadiusX, searchRadiusY);
+                if (nearest == null)
+                    return null;
+                string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
+                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_mz,
+                    nearest.Point.X.ToString(Formats.Mz), rt);
+                table.AddDetailRow(yAxisLabel,
+                    nearest.Point.Y.ToString(Formats.IonMobility), rt);
+                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity,
+                    nearest.Point.Z.ToString(@"F0"), rt);
+            }
+            else
+            {
+                if (GraphPane.CurveList.Count == 0)
+                    return null;
+                var curve = GraphPane.CurveList[0];
+                if (curve.Points.Count == 0)
+                    return null;
+                // Find curve point nearest to target m/z (or use midpoint)
+                double targetMz = double.IsNaN(x)
+                    ? curve.Points[curve.Points.Count / 2].X : x;
+                int bestIndex = 0;
+                double bestDist = double.MaxValue;
+                for (int i = 0; i < curve.Points.Count; i++)
+                {
+                    double dist = Math.Abs(curve.Points[i].X - targetMz);
+                    if (dist < bestDist)
+                    {
+                        bestDist = dist;
+                        bestIndex = i;
+                    }
+                }
+                var dataPoint = curve.Points[bestIndex];
+                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_mz,
+                    dataPoint.X.ToString(Formats.Mz), rt);
+                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity,
+                    dataPoint.Y.ToString(@"F0"), rt);
+            }
+            return table;
+        }
+
+        public string TestGetTooltipText(double x = double.NaN, double y = double.NaN)
+        {
+            return TestGetTooltipTable(x, y)?.ToString();
         }
 
         public string TitleText { get { return GraphPane.Title.Text; } }

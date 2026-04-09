@@ -146,19 +146,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Executables\AssortResources\CsProjFile.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\CsProjFile.cs">
       <Link>CsProjFile.cs</Link>
     </Compile>
-    <Compile Include="..\Executables\AssortResources\ResourceAssorter.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\ResourceAssorter.cs">
       <Link>ResourceAssorter.cs</Link>
     </Compile>
-    <Compile Include="..\Executables\AssortResources\ResourceFile.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\ResourceFile.cs">
       <Link>ResourceFile.cs</Link>
     </Compile>
-    <Compile Include="..\Executables\AssortResources\ResourceIdentifiers.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\ResourceIdentifiers.cs">
       <Link>ResourceIdentifiers.cs</Link>
     </Compile>
-    <Compile Include="..\Executables\AssortResources\ResourceReference.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\ResourceReference.cs">
       <Link>ResourceReference.cs</Link>
     </Compile>
     <Compile Include="AbstractLibraryBuilderModificationSupportTest.cs" />
@@ -349,6 +349,10 @@
     <ProjectReference Include="..\Skyline.csproj">
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SkylineTool\SkylineTool.csproj">
+      <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
+      <Name>SkylineTool</Name>
     </ProjectReference>
     <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
       <Project>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</Project>

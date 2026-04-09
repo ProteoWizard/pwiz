@@ -398,6 +398,9 @@
     <Setting Name="GroupByReplicateAnnotation" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="AbundanceComparisonGroupByAnnotation" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
     <Setting Name="OrderByReplicateAnnotation" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

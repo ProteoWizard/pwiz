@@ -41,7 +41,7 @@ namespace AutoQC
 {
     public class Program
     {
-        private static Version _version;
+        private static readonly Install _install = Install.FromAssembly();
         private static string _lastInstalledVersion;
 
         public const string AUTO_QC_STARTER = "AutoQCStarter";
@@ -51,7 +51,6 @@ namespace AutoQC
         public static MainForm MainWindow { get; private set; } 
         public static List<Exception> TestExceptions { get; set; }
         public static bool FunctionalTest { get; set; } // Set to true by AbstractFunctionalTest
-        public static readonly string TEST_VERSION = "1000.0.0.0";
 
 
         [STAThread]
@@ -223,73 +222,29 @@ namespace AutoQC
                 Settings.Default.Reload();
             }
             GetCurrentAndLastInstalledVersions();
-            Settings.Default.UpdateIfNecessary(_version.ToString(), ConfigMigrationRequired());
+            Settings.Default.UpdateIfNecessary(_install.BareVersion, ConfigMigrationRequired());
         }
 
         private static void GetCurrentAndLastInstalledVersions()
         {
-            if (ApplicationDeployment.IsNetworkDeployed) // clickOnce installation
-            {
-                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion;
-            }
-            else // developer build
-            {
-                // copied from Skyline Install.cs GetVersion()
-                try
-                {
-                    string productVersion = null;
-
-                    Assembly entryAssembly = Assembly.GetEntryAssembly();
-                    if (entryAssembly != null)
-                    {
-                        // custom attribute
-                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
-                        // Play it safe with a null check no matter what ReSharper thinks
-                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                        if (attrs != null && attrs.Length > 0)
-                        {
-                            productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
-                        }
-                        else
-                        {
-                            // win32 version info
-                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
-                        }
-                    }
-
-                    _version = productVersion != null ? new Version(productVersion) : null;
-                }
-                catch (Exception)
-                {
-                    _version = null;
-                }
-            }
-
             _lastInstalledVersion = Settings.Default.InstalledVersion ?? string.Empty;
 
-            if (_version != null && !_version.ToString().Equals(_lastInstalledVersion))
+            var bareVersion = _install.BareVersion;
+            if (!string.IsNullOrEmpty(bareVersion) && !bareVersion.Equals(_lastInstalledVersion))
             {
                 ProgramLog.Info(string.Empty.Equals(_lastInstalledVersion)
-                    ? $"This is a first install and run of version: {_version}."
-                    : $"Current version: {_version} is newer than the last installed version: {_lastInstalledVersion}.");
+                    ? $"This is a first install and run of version: {bareVersion}."
+                    : $"Current version: {bareVersion} is newer than the last installed version: {_lastInstalledVersion}.");
 
                 return;
             }
 
-            var currentVerStr = _version != null ? _version.ToString() : string.Empty;
-            if (FunctionalTest)
-            {
-                _version = new Version(TEST_VERSION);
-                _lastInstalledVersion = TEST_VERSION;
-            }
-
-            ProgramLog.Info($"Current version: '{currentVerStr}' is the same as last installed version: '{_lastInstalledVersion}'.");
-            
+            ProgramLog.Info($"Current version: '{bareVersion}' is the same as last installed version: '{_lastInstalledVersion}'.");
         }
 
         private static bool ConfigMigrationRequired()
         {
-            if (_version != null)
+            if (!string.IsNullOrEmpty(_install.Version))
             {
                 if (string.IsNullOrEmpty(_lastInstalledVersion))
                 {
@@ -299,8 +254,6 @@ namespace AutoQC
 
                 if (System.Version.TryParse(_lastInstalledVersion, out var lastVersion))
                 {
-                    // ProgramLog.Info($"Current Version: {_version.Major}-{_version.MajorRevision}-{_version.Minor}-{_version.MinorRevision}");
-                    // ProgramLog.Info($"Previous Version: {lastVersion.Major}-{lastVersion.MajorRevision}-{lastVersion.Minor}-{lastVersion.MinorRevision}");
                     if (lastVersion.Major == 1 && lastVersion.Minor == 1 && lastVersion.MinorRevision <= 20237)
                     {
                         ProgramLog.Info($"Last installed version was {_lastInstalledVersion}. Config migration is required.");
@@ -411,7 +364,7 @@ namespace AutoQC
 
             if (ApplicationDeployment.IsNetworkDeployed)
             {
-                if (_version != null && !_version.ToString().Equals(_lastInstalledVersion))
+                if (!string.IsNullOrEmpty(_install.Version) && !_install.BareVersion.Equals(_lastInstalledVersion))
                 {
                     // First time running a newer version of the application
                     ProgramLog.Info($"Updating {AutoQcStarterExe} shortcut.");
@@ -441,7 +394,7 @@ namespace AutoQC
 
         public static string Version()
         {
-            return $"{AppName} {_version}";
+            return $"{AppName} {_install.BareVersion}";
         }
 
         public static string AppName => CommonApplicationSettings.ProgramName;
@@ -465,6 +418,91 @@ namespace AutoQC
             {
                 TestExceptions.Add(exception);
             }
+        }
+    }
+
+    /// <summary>
+    /// Version information parsed from assembly attributes.
+    /// Follows the same pattern as Skyline's Install class (pwiz_tools/Skyline/Util/Install.cs).
+    /// </summary>
+    public class Install
+    {
+        private const string DEVELOPER_BUILD_SUFFIX = "(developer build)";
+        private const string AUTOMATED_BUILD_SUFFIX = "(automated build)";
+
+        public Install(string versionString)
+        {
+            if (versionString == null)
+            {
+                Version = string.Empty;
+                return;
+            }
+
+            if (versionString.Contains(DEVELOPER_BUILD_SUFFIX))
+            {
+                IsDeveloperInstall = true;
+                versionString = versionString.Replace(DEVELOPER_BUILD_SUFFIX, string.Empty).Trim();
+            }
+            else if (versionString.Contains(AUTOMATED_BUILD_SUFFIX))
+            {
+                IsAutomatedBuild = true;
+                versionString = versionString.Replace(AUTOMATED_BUILD_SUFFIX, string.Empty).Trim();
+            }
+
+            Version = versionString;
+        }
+
+        /// <summary>
+        /// Full version string including git hash, e.g. "26.1.1.077-f92ae680ca"
+        /// </summary>
+        public string Version { get; }
+
+        /// <summary>
+        /// Numeric version only, e.g. "26.1.1.077"
+        /// </summary>
+        public string BareVersion => Version.Split('-')[0];
+
+        public string GitHash
+        {
+            get
+            {
+                var parts = Version.Split('-');
+                return parts.Length > 1 ? parts[1] : string.Empty;
+            }
+        }
+
+        public bool IsDeveloperInstall { get; }
+        public bool IsAutomatedBuild { get; }
+
+        public override string ToString() => BareVersion;
+
+        public static Install FromAssembly()
+        {
+            string productVersion = null;
+            if (ApplicationDeployment.IsNetworkDeployed)
+            {
+                productVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            }
+            else
+            {
+                try
+                {
+                    var assembly = typeof(Program).Assembly;
+                    var attrs = assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                    // Play it safe with a null check no matter what ReSharper thinks
+                    // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                    if (attrs != null && attrs.Length > 0)
+                        productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                    else
+                        productVersion = FileVersionInfo.GetVersionInfo(assembly.Location).ProductVersion?.Trim();
+                }
+                catch (Exception)
+                {
+                    // Version will remain null
+                }
+            }
+
+            return new Install(productVersion);
         }
     }
 }

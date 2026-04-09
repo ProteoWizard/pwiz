@@ -17,12 +17,15 @@
  * limitations under the License.
  */
 
+using System;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -70,6 +73,11 @@ namespace pwiz.SkylineTestFunctional
             TryWaitForConditionUI(() => 6 == SkylineWindow.GraphPeakArea.CurveCount);   // Improve information from failing test
             RunUI(() => Assert.AreEqual(6, SkylineWindow.GraphPeakArea.CurveCount));
 
+            if (_asSmallMolecules)
+            {
+                VerifySmallMoleculeGraphText();
+            }
+
             // Test selecting each node down to the peptide/precursor level
             foreach (var node in SkylineWindow.SequenceTree.Nodes)
             {
@@ -102,6 +110,67 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
         }
+        /// <summary>
+        /// Verify that graph window titles and context menu items use "Molecule"
+        /// terminology instead of "Peptide"/"Protein" when in small molecule UI mode.
+        /// Uses localized resource strings so this works in all UI languages.
+        /// </summary>
+        private void VerifySmallMoleculeGraphText()
+        {
+            // Localized proteomic terms that should not appear in small molecule mode
+            var forbiddenTerms = new[]
+            {
+                Resources.PeptideToMoleculeText_Peptide,
+                Resources.PeptideToMoleculeText_Protein
+            };
+
+            // Show retention time graph too
+            RunUI(() => SkylineWindow.ShowGraphRetentionTime(true));
+            WaitForGraphs();
+
+            // Verify graph window titles
+            RunUI(() =>
+            {
+                AssertTextDoesNotContain(SkylineWindow.GraphPeakArea.Text,
+                    forbiddenTerms, "Peak area graph title");
+                AssertTextDoesNotContain(SkylineWindow.GraphRetentionTime.Text,
+                    forbiddenTerms, "Retention time graph title");
+            });
+
+            // Verify context menu items including submenus
+            foreach (var graph in new[] { SkylineWindow.GraphPeakArea, SkylineWindow.GraphRetentionTime })
+            {
+                RunUI(() => graph.GraphControl.ContextMenuStrip.Show(graph.GraphControl, new Point(1, 1)));
+                RunUI(() =>
+                {
+                    AssertNoMenuItemContains(graph.GraphControl.ContextMenuStrip.Items,
+                        forbiddenTerms, "Context menu for " + graph.Text);
+                    graph.GraphControl.ContextMenuStrip.Hide();
+                });
+            }
+        }
+
+        private static void AssertTextDoesNotContain(string text, string[] forbiddenTerms, string context)
+        {
+            foreach (var term in forbiddenTerms)
+            {
+                Assert.IsFalse(text.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0,
+                    context + " should not contain '" + term + "' in small molecule mode: " + text);
+            }
+        }
+
+        private static void AssertNoMenuItemContains(ToolStripItemCollection items, string[] forbiddenTerms, string context)
+        {
+            foreach (var item in items.OfType<ToolStripMenuItem>())
+            {
+                if (!item.Visible)
+                    continue;
+                AssertTextDoesNotContain(item.Text, forbiddenTerms, context);
+                if (item.HasDropDownItems)
+                    AssertNoMenuItemContains(item.DropDownItems, forbiddenTerms, context + " > " + item.Text);
+            }
+        }
+
         private void SelectNode(TreeNode node)
         {
             RunUI(() =>

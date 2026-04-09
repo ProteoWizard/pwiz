@@ -191,6 +191,7 @@
     <Compile Include="OriginalPeakScoreTest.cs" />
     <Compile Include="PivotIsotopeLabelTest.cs" />
     <Compile Include="RemovePeakFromAllTest.cs" />
+    <Compile Include="ReorderElementsTest.cs" />
     <Compile Include="ReportsHelpDocumentationTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />
@@ -249,6 +250,7 @@
     <Compile Include="ChangeDocumentGuidTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="PanoramaClientPublishTest.cs" />
+    <Compile Include="PeakAreaAbundanceComparisonGraphTest.cs" />
     <Compile Include="PeakAreaRelativeAbundanceGraphTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
     <Compile Include="PeakImputationImportTest.cs" />

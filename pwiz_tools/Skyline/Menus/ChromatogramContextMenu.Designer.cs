@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Menus
             this.onlyQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorSplitGraph = new System.Windows.Forms.ToolStripSeparator();
             this.splitGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.relativeAbundanceFormattingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
             this.transformChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromInterpolatedContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -115,7 +115,6 @@ namespace pwiz.Skyline.Menus
             this.peptideIDTimesContextMenuItem,
             this.toolStripSeparator16,
             this.transitionsContextMenuItem,
-            this.relativeAbundanceFormattingMenuItem,
             this.transformChromContextMenuItem,
             this.toolStripSeparator17,
             this.autoZoomContextMenuItem,
@@ -395,13 +394,7 @@ namespace pwiz.Skyline.Menus
             this.splitGraphContextMenuItem.Name = "splitGraphContextMenuItem";
             resources.ApplyResources(this.splitGraphContextMenuItem, "splitGraphContextMenuItem");
             this.splitGraphContextMenuItem.Click += new System.EventHandler(this.splitChromGraphMenuItem_Click);
-            // 
-            // relativeAbundanceFormattingMenuItem
-            // 
-            this.relativeAbundanceFormattingMenuItem.Name = "relativeAbundanceFormattingMenuItem";
-            resources.ApplyResources(this.relativeAbundanceFormattingMenuItem, "relativeAbundanceFormattingMenuItem");
-            this.relativeAbundanceFormattingMenuItem.Click += new System.EventHandler(this.relativeAbundanceFormattingMenuItem_Click);
-            // 
+            //
             // transformChromContextMenuItem
             // 
             this.transformChromContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -562,7 +555,6 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem idTimesOtherContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator16;
         private System.Windows.Forms.ToolStripMenuItem transitionsContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem relativeAbundanceFormattingMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allTranContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorsTranContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem productsTranContextMenuItem;

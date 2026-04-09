@@ -1792,7 +1792,7 @@ namespace pwiz.ProteowizardWrapper
             return count == 0 ? (double?) null : total;
         }
 
-        private double? GetSourceOffsetVoltage(Spectrum spectrum)
+        private double GetSourceOffsetVoltage(Spectrum spectrum)
         {
             foreach (var scan in spectrum.scanList.scans)
             {
@@ -1803,7 +1803,7 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
 
-            return null;
+            return 0;
         }
 
         private double? GetConstantNeutralLoss(Spectrum spectrum) // If return value < 0, it's actually a neutral gain

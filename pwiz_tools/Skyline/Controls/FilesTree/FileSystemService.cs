@@ -215,6 +215,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         public bool IsFileAvailable(string fullPath)
         {
             fullPath = FileSystemUtil.Normalize(fullPath);
+            if (fullPath == null)
+                return false;
 
             return Cache.TryGetValue(fullPath, out var isAvailable) && isAvailable;
         }
@@ -285,6 +287,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                     if (localFilePath != null)
                     {
                         localFilePath = FileSystemUtil.Normalize(localFilePath);
+                        if (localFilePath == null)
+                            return;
 
                         // Use GetDirectoryOrRoot to handle cases where localFilePath is in a root directory - ex: C:\sample-file-123.raw
                         var directoryPath = FileSystemUtil.GetDirectoryOrRoot(localFilePath);
@@ -298,6 +302,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                     else if(filePath != null)
                     {
                         var fullFilePath = FileSystemUtil.Normalize(filePath);
+                        if (fullFilePath == null)
+                            return;
 
                         Cache[fullFilePath] = false;
                     }

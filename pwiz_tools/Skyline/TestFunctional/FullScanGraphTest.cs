@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -192,6 +193,11 @@ namespace pwiz.SkylineTestFunctional
             SetZoom(true);
             TestScale(452, 456, 0, 400);
 
+            // Test cursor-tracking tooltip on spectrum (2 lines: m/z + intensity).
+            TestTooltip(false);
+            // Verify a specific m/z value in the zoomed spectrum (452-456 range).
+            TestTooltip(453.3, null, 453.2979, 18);
+
             // Check zoomed heatmap.
             SetSpectrum(false);
             TestScale(452, 456, 2.61, 4.34);
@@ -237,6 +243,11 @@ namespace pwiz.SkylineTestFunctional
             TestScale(0, 2000, 3.2, 3.8);
             SetFilter(false);
             TestScale(0, 2000, 0, 15);
+
+            // Test cursor-tracking tooltip on heatmap (3 lines: m/z + drift time + intensity).
+            TestTooltip(true);
+            // Verify a specific (m/z, ion mobility) in the unzoomed heatmap.
+            TestTooltip(447, 3.5, 447.2277, 3.45, 21);
             SetZoom(true);
             TestScale(452, 456, 2.61, 4.34);
 
@@ -318,6 +329,73 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             ClickChromatogram(32.96, 17, PaneKey.PRODUCTS);
             TestPropertySheet(expectedPropertiesProduct2);
+        }
+
+        /// <summary>
+        /// Verifies cursor-tracking tooltip produces correctly structured output
+        /// with the expected labels and parseable numeric values.
+        /// </summary>
+        private static void TestTooltip(bool isHeatMap)
+        {
+            TableDesc table = null;
+            int expectedRows = isHeatMap ? 3 : 2;
+            RunUI(() => table = SkylineWindow.GraphFullScan.TestGetTooltipTable());
+            Assert.IsNotNull(table, "Tooltip returned null");
+            Assert.AreEqual(expectedRows, table.Count,
+                string.Format("Expected {0} rows, got: {1}", expectedRows, table));
+
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_mz, table[0][0].Text);
+            Assert.IsTrue(double.TryParse(table[0][1].Text, out _), "m/z value not parseable: " + table[0][1].Text);
+
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Intensity, table[expectedRows - 1][0].Text);
+            Assert.IsTrue(double.TryParse(table[expectedRows - 1][1].Text, out _),
+                "Intensity value not parseable: " + table[expectedRows - 1][1].Text);
+
+            if (isHeatMap)
+                Assert.IsTrue(double.TryParse(table[1][1].Text, out _),
+                    "Ion mobility value not parseable: " + table[1][1].Text);
+        }
+
+        /// <summary>
+        /// Verifies tooltip for a specific data coordinate returns expected values.
+        /// For spectrum: x is m/z, y is ignored (pass null for imExpected).
+        /// For heatmap: x is m/z, y is ion mobility (pass non-null imExpected).
+        /// </summary>
+        private static void TestTooltip(double searchX, double? searchY,
+            double mzExpected, double intensityExpected)
+        {
+            TestTooltip(searchX, searchY, mzExpected, null, intensityExpected);
+        }
+
+        private static void TestTooltip(double searchX, double? searchY,
+            double mzExpected, double? imExpected, double intensityExpected)
+        {
+            TableDesc table = null;
+            double sy = searchY ?? double.NaN;
+            RunUI(() => table = SkylineWindow.GraphFullScan.TestGetTooltipTable(searchX, sy));
+            Assert.IsNotNull(table,
+                string.Format("Tooltip returned null at ({0}, {1})", searchX, sy));
+
+            int expectedRows = imExpected.HasValue ? 3 : 2;
+            Assert.AreEqual(expectedRows, table.Count,
+                string.Format("Expected {0} rows, got: {1}", expectedRows, table));
+
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_mz, table[0][0].Text);
+            Assert.IsTrue(double.TryParse(table[0][1].Text, out var mz));
+            AssertEx.AreEqual(mzExpected, mz, 0.01,
+                string.Format("m/z (full tooltip: {0})", table));
+
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Intensity, table[expectedRows - 1][0].Text);
+            Assert.IsTrue(double.TryParse(table[expectedRows - 1][1].Text, out var intensity));
+            AssertEx.AreEqual(intensityExpected, intensity, 1,
+                string.Format("Intensity (full tooltip: {0})", table));
+
+            if (imExpected.HasValue)
+            {
+                Assert.IsTrue(double.TryParse(table[1][1].Text, out var im));
+                AssertEx.AreEqual(imExpected.Value, im, 0.01,
+                    string.Format("Ion mobility (full tooltip: {0})", table));
+            }
         }
 
         private static void ClickFullScan(double x, double y)

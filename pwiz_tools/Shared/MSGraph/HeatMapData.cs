@@ -32,6 +32,7 @@ namespace pwiz.MSGraph
     public class HeatMapData
     {
         private readonly Cell _cell;
+        public string ZAxisName { get; private set; }
 
         public class TaggedPoint3D
         {
@@ -53,14 +54,16 @@ namespace pwiz.MSGraph
         /// <summary>
         /// Construct the quad-tree from a given list of 3D data points.
         /// </summary>
-        public HeatMapData(List<Point3D> points)
+        public HeatMapData(List<Point3D> points, string zAxisName = null)
         {
             _cell = new Cell(points);
+            ZAxisName = zAxisName;
         }
 
-        public HeatMapData(List<TaggedPoint3D> points)
+        public HeatMapData(List<TaggedPoint3D> points, string zAxisName = null)
         {
             _cell = new Cell(points);
+            ZAxisName = zAxisName;
         }
 
         /// <summary>

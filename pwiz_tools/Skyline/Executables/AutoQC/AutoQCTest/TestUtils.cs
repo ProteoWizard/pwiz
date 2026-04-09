@@ -37,30 +37,37 @@ namespace AutoQCTest
         public const string PANORAMAWEB_TEST_FOLDER = "SkylineTest/AutoQcTest";
 
         /// <summary>
-        /// Environment variables for Panorama test credentials.
+        /// Environment variables for Panorama test credentials and internet access.
         /// Set these to use your own credentials instead of the shared test account.
         /// This is safer than editing code, which can be accidentally committed.
-        /// 
+        ///
         /// RECOMMENDED: Set persistent User-level environment variables (PowerShell - no admin needed):
         ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_USERNAME", "your.name@yourdomain.edu", "User")
         ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_PASSWORD", "your_password", "User")
+        ///   [Environment]::SetEnvironmentVariable("ACCESS_INTERNET", "True", "User")
         ///   Then restart Visual Studio to pick up the new environment variables.
-        /// 
+        ///
+        /// ACCESS_INTERNET controls whether tests marked [TestCategory("Connected")] will
+        /// run or short-circuit. When not set or "False", connected tests return immediately
+        /// without accessing the network. In CI (bjam AutoQCTest), connected tests are also
+        /// excluded by vstest /TestCaseFilter, so the guard serves as defense-in-depth.
+        ///
         /// ALTERNATIVE: Use Windows GUI (no PowerShell needed):
         ///   Windows Search > "Environment Variables" > "Edit environment variables for your account"
-        ///   Add both variables under "User variables" (NOT System variables)
+        ///   Add variables under "User variables" (NOT System variables)
         ///   Restart Visual Studio
-        /// 
+        ///
         /// To clear when done (PowerShell - no admin needed):
         ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_USERNAME", $null, "User")
         ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_PASSWORD", $null, "User")
+        ///   [Environment]::SetEnvironmentVariable("ACCESS_INTERNET", $null, "User")
         ///   Then restart Visual Studio
-        /// 
+        ///
         /// IMPORTANT: Use "User" level, NOT "Machine" level. User-level variables:
         ///   - Don't require admin privileges
         ///   - Only affect your user account
         ///   - Persist across PowerShell sessions after restart
-        /// 
+        ///
         /// If not set, falls back to DEFAULT_PANORAMAWEB_USER and PASSWORD must be set.
         /// </summary>
         private const string USERNAME_ENVT_VAR = "PANORAMAWEB_USERNAME";
@@ -154,6 +161,11 @@ namespace AutoQCTest
         {
             if (SkylineInstallations.FindSkyline())
             {
+                // Use Local type when a local SkylineCmd.exe exists, since
+                // SkylineSettings.ReadXml always overrides to Local in this case.
+                // Using a different type here would cause round-trip equality failures.
+                if (SkylineInstallations.HasLocalSkylineCmd)
+                    return new SkylineSettings(SkylineType.Local, null);
                 if (SkylineInstallations.HasSkyline)
                     return new SkylineSettings(SkylineType.Skyline, null);
                 if (SkylineInstallations.HasSkylineDaily)

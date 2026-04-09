@@ -44,6 +44,23 @@ namespace SharedBatchTest
         public TestContext TestContext { get; set; }
 
         /// <summary>
+        /// When false, tests should not access resources on the internet.
+        /// Checked via TestContext property (set by Skyline's TestRunner with internet=on)
+        /// or ACCESS_INTERNET environment variable (for vstest.console.exe scenarios).
+        /// </summary>
+        protected bool AllowInternetAccess
+        {
+            get
+            {
+                var value = TestContext?.Properties["AccessInternet"];
+                if (value != null)
+                    return string.Equals(value.ToString(), bool.TrueString, StringComparison.OrdinalIgnoreCase);
+                var envValue = Environment.GetEnvironmentVariable("ACCESS_INTERNET");
+                return string.Equals(envValue, bool.TrueString, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        /// <summary>
         /// Waits for a condition to become true, polling at regular intervals.
         /// This is useful for tests that need to wait for asynchronous operations to complete.
         /// Throws an assertion failure if the timeout is exceeded.
