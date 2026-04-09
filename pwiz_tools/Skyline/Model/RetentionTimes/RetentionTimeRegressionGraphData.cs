@@ -252,9 +252,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     pointInfos.Add(new PointInfo(identityPath, nodePeptide.ModifiedTarget, rtOrig, rtTarget));
                 }
 
-                bool includeMissingValues = IncludeMissingValuesInRegression &&
-                                            RegressionSettings.RegressionMethod == RegressionMethodRT.linear;
-                var targetTimes = pointInfos.Where(pt => includeMissingValues || pt.Y.HasValue)
+                var targetTimes = pointInfos.Where(pt => pt.Y.HasValue)
                     .Select(pt => new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y ?? 0)).ToList();
 
                 if (IsRunToRun)
@@ -425,10 +423,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     if (pt.X.HasValue && pt.Y.HasValue)
                     {
                         validPoints.Add(pt);
-                    }
-                    else if (IncludeMissingValuesInRegression)
-                    {
-                        validPoints.Add(pt.ChangeX(pt.X ?? _calculator?.UnknownScore ?? 0).ChangeY(pt.Y ?? 0));
                     }
                     else
                     {
