@@ -10,7 +10,7 @@ using pwiz.OspreySharp.IO;
 namespace pwiz.OspreySharp.Test
 {
     /// <summary>
-    /// Tests for OspreySharp.IO types: BlibWriter and SpectraCache.
+    /// Tests for OspreySharp.IO types: BlibWriter, SpectraCache, MzmlReader, and ParquetScoreCache.
     /// Ported from osprey-io Rust tests.
     /// </summary>
     [TestClass]
@@ -970,6 +970,418 @@ namespace pwiz.OspreySharp.Test
             }
 
             Assert.AreEqual(0, entries.Count); // should be skipped (only 2 fragments)
+        }
+
+        #endregion
+
+        #region MzmlReader Tests
+
+        /// <summary>
+        /// Verifies that isolation window CVs are parsed correctly from a minimal mzML snippet.
+        /// </summary>
+        [TestMethod]
+        public void TestMzmlIsolationWindowParsing()
+        {
+            string mzml = BuildMinimalMzml(
+                msLevel: 2,
+                retentionTimeMinutes: 5.5,
+                precursorMz: 500.25,
+                isoTarget: 500.25,
+                isoLower: 12.5,
+                isoUpper: 12.5,
+                mzValues: new double[] { 200.0, 300.0, 400.0 },
+                intensityValues: new float[] { 100.0f, 200.0f, 300.0f });
+
+            string path = Path.GetTempFileName() + ".mzML";
+            try
+            {
+                File.WriteAllText(path, mzml);
+                var result = MzmlReader.LoadAllSpectra(path);
+
+                Assert.AreEqual(1, result.Ms2Spectra.Count);
+                Assert.AreEqual(0, result.Ms1Spectra.Count);
+
+                var spectrum = result.Ms2Spectra[0];
+                Assert.AreEqual(500.25, spectrum.PrecursorMz, 0.001);
+                Assert.AreEqual(500.25, spectrum.IsolationWindow.Center, 0.001);
+                Assert.AreEqual(12.5, spectrum.IsolationWindow.LowerOffset, 0.001);
+                Assert.AreEqual(12.5, spectrum.IsolationWindow.UpperOffset, 0.001);
+                Assert.AreEqual(5.5, spectrum.RetentionTime, 0.001);
+                Assert.AreEqual(3, spectrum.Mzs.Length);
+                Assert.AreEqual(3, spectrum.Intensities.Length);
+                Assert.AreEqual(200.0, spectrum.Mzs[0], 0.001);
+                Assert.AreEqual(300.0, spectrum.Mzs[1], 0.001);
+                Assert.AreEqual(100.0f, spectrum.Intensities[0], 0.01f);
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that MS1 and MS2 spectra are separated correctly.
+        /// </summary>
+        [TestMethod]
+        public void TestMzmlMs1Ms2Separation()
+        {
+            // Build mzML with one MS1 and one MS2
+            string ms1Block = BuildSpectrumElement(
+                index: 0,
+                msLevel: 1,
+                retentionTimeMinutes: 1.0,
+                precursorMz: 0,
+                isoTarget: 0,
+                isoLower: 0,
+                isoUpper: 0,
+                mzValues: new double[] { 100.0, 200.0 },
+                intensityValues: new float[] { 50.0f, 60.0f },
+                hasPrecursor: false);
+
+            string ms2Block = BuildSpectrumElement(
+                index: 1,
+                msLevel: 2,
+                retentionTimeMinutes: 1.1,
+                precursorMz: 500.0,
+                isoTarget: 500.0,
+                isoLower: 10.0,
+                isoUpper: 10.0,
+                mzValues: new double[] { 300.0 },
+                intensityValues: new float[] { 150.0f },
+                hasPrecursor: true);
+
+            string mzml = WrapInMzml(ms1Block + "\n" + ms2Block);
+
+            string path = Path.GetTempFileName() + ".mzML";
+            try
+            {
+                File.WriteAllText(path, mzml);
+                var result = MzmlReader.LoadAllSpectra(path);
+
+                Assert.AreEqual(1, result.Ms1Spectra.Count);
+                Assert.AreEqual(1, result.Ms2Spectra.Count);
+
+                Assert.AreEqual(1.0, result.Ms1Spectra[0].RetentionTime, 0.001);
+                Assert.AreEqual(2, result.Ms1Spectra[0].Mzs.Length);
+                Assert.AreEqual(500.0, result.Ms2Spectra[0].PrecursorMz, 0.001);
+                Assert.AreEqual(10.0, result.Ms2Spectra[0].IsolationWindow.LowerOffset, 0.001);
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that retention time in seconds (MS:1000894) is converted to minutes.
+        /// </summary>
+        [TestMethod]
+        public void TestMzmlRetentionTimeSeconds()
+        {
+            // Build mzML with RT in seconds using MS:1000894
+            string spectrumBlock = @"
+      <spectrum index=""0"" defaultArrayLength=""1"" id=""scan=1"">
+        <cvParam cvRef=""MS"" accession=""MS:1000511"" value=""2"" />
+        <scanList count=""1"">
+          <scan>
+            <cvParam cvRef=""MS"" accession=""MS:1000894"" value=""330.0"" unitName=""second"" />
+          </scan>
+        </scanList>
+        <precursorList count=""1"">
+          <precursor>
+            <isolationWindow>
+              <cvParam cvRef=""MS"" accession=""MS:1000827"" value=""500.0"" />
+              <cvParam cvRef=""MS"" accession=""MS:1000828"" value=""12.5"" />
+              <cvParam cvRef=""MS"" accession=""MS:1000829"" value=""12.5"" />
+            </isolationWindow>
+            <selectedIonList count=""1"">
+              <selectedIon>
+                <cvParam cvRef=""MS"" accession=""MS:1000744"" value=""500.0"" />
+              </selectedIon>
+            </selectedIonList>
+          </precursor>
+        </precursorList>
+        <binaryDataArrayList count=""2"">
+          <binaryDataArray>
+            <cvParam cvRef=""MS"" accession=""MS:1000514"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000523"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000576"" />
+            <binary>" + EncodeDoublesBase64(new double[] { 300.0 }) + @"</binary>
+          </binaryDataArray>
+          <binaryDataArray>
+            <cvParam cvRef=""MS"" accession=""MS:1000515"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000521"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000576"" />
+            <binary>" + EncodeFloatsBase64(new float[] { 100.0f }) + @"</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </spectrum>";
+
+            string mzml = WrapInMzml(spectrumBlock);
+            string path = Path.GetTempFileName() + ".mzML";
+            try
+            {
+                File.WriteAllText(path, mzml);
+                var result = MzmlReader.LoadAllSpectra(path);
+
+                Assert.AreEqual(1, result.Ms2Spectra.Count);
+                // 330 seconds = 5.5 minutes
+                Assert.AreEqual(5.5, result.Ms2Spectra[0].RetentionTime, 0.001);
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        #endregion
+
+        #region ParquetScoreCache Tests
+
+        /// <summary>
+        /// Write scored entries to Parquet, then read back FDR stubs and PIN features,
+        /// verifying round-trip data integrity.
+        /// </summary>
+        [TestMethod]
+        public void TestParquetScoreCacheRoundTrip()
+        {
+            string path = Path.GetTempFileName() + ".parquet";
+            try
+            {
+                // Create test entries
+                var entries = new List<CoelutionScoredEntry>();
+                for (int i = 0; i < 3; i++)
+                {
+                    var entry = new CoelutionScoredEntry
+                    {
+                        EntryId = (uint)(100 + i),
+                        IsDecoy = (i == 1),
+                        Sequence = "PEPTIDE",
+                        ModifiedSequence = "PEPTIDE",
+                        Charge = (byte)(2 + i % 2),
+                        PrecursorMz = 500.0 + i,
+                        ScanNumber = (uint)(1000 + i),
+                        ApexRt = 5.0 + i * 0.5,
+                        FileName = "test.mzML",
+                        PeakBounds = new XICPeakBounds
+                        {
+                            StartRt = 4.5 + i * 0.5,
+                            EndRt = 5.5 + i * 0.5,
+                        },
+                        Features = new CoelutionFeatureSet
+                        {
+                            CoelutionSum = 0.9 + i * 0.01,
+                            CoelutionMax = 0.95,
+                            NCoelutingFragments = 5,
+                            PeakApex = 1000.0 + i,
+                            PeakArea = 5000.0,
+                            PeakSharpness = 0.8,
+                            Xcorr = 2.5 + i * 0.1,
+                            ConsecutiveIons = 3,
+                            ExplainedIntensity = 0.75,
+                            MassAccuracyMean = -0.5,
+                            AbsMassAccuracyMean = 0.5,
+                            RtDeviation = 0.1,
+                            AbsRtDeviation = 0.1,
+                            Ms1PrecursorCoelution = 0.85,
+                            Ms1IsotopeCosine = 0.92,
+                            MedianPolishCosine = 0.88,
+                            MedianPolishResidualRatio = 0.15,
+                            SgWeightedXcorr = 2.3,
+                            SgWeightedCosine = 0.87,
+                            MedianPolishMinFragmentR2 = 0.7,
+                            MedianPolishResidualCorrelation = 0.3,
+                        },
+                    };
+                    entries.Add(entry);
+                }
+
+                var metadata = new Dictionary<string, string>
+                {
+                    { "osprey.version", "1.0.0" },
+                    { "osprey.search_hash", "abc123" },
+                };
+
+                // Write
+                ParquetScoreCache.WriteScoresParquet(path, entries, metadata);
+                Assert.IsTrue(File.Exists(path), "Parquet file should exist");
+
+                // Read FDR stubs
+                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
+                Assert.AreEqual(3, stubs.Count);
+                Assert.AreEqual(100u, stubs[0].EntryId);
+                Assert.AreEqual(101u, stubs[1].EntryId);
+                Assert.AreEqual(102u, stubs[2].EntryId);
+                Assert.IsFalse(stubs[0].IsDecoy);
+                Assert.IsTrue(stubs[1].IsDecoy);
+                Assert.IsFalse(stubs[2].IsDecoy);
+                Assert.AreEqual(2, stubs[0].Charge);
+                Assert.AreEqual(5.0, stubs[0].ApexRt, 0.001);
+                Assert.AreEqual(4.5, stubs[0].StartRt, 0.001);
+                Assert.AreEqual(5.5, stubs[0].EndRt, 0.001);
+                Assert.AreEqual(0.9, stubs[0].CoelutionSum, 0.001);
+                Assert.AreEqual("PEPTIDE", stubs[0].ModifiedSequence);
+                Assert.AreEqual(0u, stubs[0].ParquetIndex);
+                Assert.AreEqual(1u, stubs[1].ParquetIndex);
+
+                // Read PIN features
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
+                Assert.AreEqual(3, features.Count);
+                Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES, features[0].Length);
+                // Check first entry features
+                Assert.AreEqual(0.9, features[0][0], 0.001); // coelution_sum
+                Assert.AreEqual(0.95, features[0][1], 0.001); // coelution_max
+                Assert.AreEqual(5.0, features[0][2], 0.001); // n_coeluting_fragments
+                Assert.AreEqual(2.5, features[0][6], 0.001); // xcorr
+                // Check second entry xcorr
+                Assert.AreEqual(2.6, features[1][6], 0.001);
+
+                // Validate metadata
+                Assert.IsTrue(ParquetScoreCache.ValidateMetadata(path, metadata));
+                var wrongMeta = new Dictionary<string, string>
+                {
+                    { "osprey.version", "2.0.0" },
+                };
+                Assert.IsFalse(ParquetScoreCache.ValidateMetadata(path, wrongMeta));
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        /// <summary>
+        /// Verifies GetScoresPath returns the expected path.
+        /// </summary>
+        [TestMethod]
+        public void TestGetScoresPath()
+        {
+            string result = ParquetScoreCache.GetScoresPath(@"C:\data\sample1.mzML");
+            Assert.AreEqual(@"C:\data\sample1.scores.parquet", result);
+
+            result = ParquetScoreCache.GetScoresPath(@"D:\runs\experiment.raw.mzML");
+            Assert.AreEqual(@"D:\runs\experiment.raw.scores.parquet", result);
+        }
+
+        /// <summary>
+        /// Verifies that writing an empty list does not create a file.
+        /// </summary>
+        [TestMethod]
+        public void TestParquetScoreCacheEmptyWrite()
+        {
+            string path = Path.GetTempFileName() + ".parquet";
+            try
+            {
+                ParquetScoreCache.WriteScoresParquet(path, new List<CoelutionScoredEntry>(), null);
+                Assert.IsFalse(File.Exists(path), "Empty entry list should not create a file");
+
+                ParquetScoreCache.WriteScoresParquet(path, null, null);
+                Assert.IsFalse(File.Exists(path), "Null entry list should not create a file");
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        #endregion
+
+        #region MzML Test Helpers
+
+        private static string BuildMinimalMzml(int msLevel, double retentionTimeMinutes,
+            double precursorMz, double isoTarget, double isoLower, double isoUpper,
+            double[] mzValues, float[] intensityValues)
+        {
+            string specBlock = BuildSpectrumElement(0, msLevel, retentionTimeMinutes,
+                precursorMz, isoTarget, isoLower, isoUpper,
+                mzValues, intensityValues, msLevel == 2);
+            return WrapInMzml(specBlock);
+        }
+
+        private static string BuildSpectrumElement(int index, int msLevel,
+            double retentionTimeMinutes, double precursorMz,
+            double isoTarget, double isoLower, double isoUpper,
+            double[] mzValues, float[] intensityValues, bool hasPrecursor)
+        {
+            string mzBase64 = EncodeDoublesBase64(mzValues);
+            string intBase64 = EncodeFloatsBase64(intensityValues);
+
+            string precursorBlock = string.Empty;
+            if (hasPrecursor)
+            {
+                precursorBlock = string.Format(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    @"
+        <precursorList count=""1"">
+          <precursor>
+            <isolationWindow>
+              <cvParam cvRef=""MS"" accession=""MS:1000827"" value=""{0}"" />
+              <cvParam cvRef=""MS"" accession=""MS:1000828"" value=""{1}"" />
+              <cvParam cvRef=""MS"" accession=""MS:1000829"" value=""{2}"" />
+            </isolationWindow>
+            <selectedIonList count=""1"">
+              <selectedIon>
+                <cvParam cvRef=""MS"" accession=""MS:1000744"" value=""{3}"" />
+              </selectedIon>
+            </selectedIonList>
+          </precursor>
+        </precursorList>",
+                    isoTarget, isoLower, isoUpper, precursorMz);
+            }
+
+            return string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                @"
+      <spectrum index=""{0}"" defaultArrayLength=""{1}"" id=""scan={0}"">
+        <cvParam cvRef=""MS"" accession=""MS:1000511"" value=""{2}"" />
+        <scanList count=""1"">
+          <scan>
+            <cvParam cvRef=""MS"" accession=""MS:1000016"" value=""{3}"" unitName=""minute"" />
+          </scan>
+        </scanList>{4}
+        <binaryDataArrayList count=""2"">
+          <binaryDataArray>
+            <cvParam cvRef=""MS"" accession=""MS:1000514"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000523"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000576"" />
+            <binary>{5}</binary>
+          </binaryDataArray>
+          <binaryDataArray>
+            <cvParam cvRef=""MS"" accession=""MS:1000515"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000521"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000576"" />
+            <binary>{6}</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </spectrum>",
+                index, mzValues.Length, msLevel, retentionTimeMinutes,
+                precursorBlock, mzBase64, intBase64);
+        }
+
+        private static string WrapInMzml(string spectrumElements)
+        {
+            return @"<?xml version=""1.0"" encoding=""utf-8""?>
+<mzML xmlns=""http://psi.hupo.org/ms/mzml"">
+  <run>
+    <spectrumList count=""1"" defaultDataProcessingRef=""dp"">"
+                + spectrumElements + @"
+    </spectrumList>
+  </run>
+</mzML>";
+        }
+
+        private static string EncodeDoublesBase64(double[] values)
+        {
+            byte[] bytes = new byte[values.Length * 8];
+            Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
+            return Convert.ToBase64String(bytes);
+        }
+
+        private static string EncodeFloatsBase64(float[] values)
+        {
+            byte[] bytes = new byte[values.Length * 4];
+            Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
+            return Convert.ToBase64String(bytes);
         }
 
         #endregion

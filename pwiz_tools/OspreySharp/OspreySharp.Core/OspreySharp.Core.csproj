@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="BinConfig.cs" />
     <Compile Include="CoelutionFeatureSet.cs" />
+    <Compile Include="CoelutionScoredEntry.cs" />
     <Compile Include="CwtCandidate.cs" />
     <Compile Include="DecoyMethod.cs" />
     <Compile Include="FdrEntry.cs" />

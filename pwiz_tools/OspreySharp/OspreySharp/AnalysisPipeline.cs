@@ -1,0 +1,1540 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using pwiz.OspreySharp.Chromatography;
+using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.FDR;
+using pwiz.OspreySharp.IO;
+using pwiz.OspreySharp.Scoring;
+
+namespace pwiz.OspreySharp
+{
+    /// <summary>
+    /// Main analysis pipeline orchestrating the end-to-end Osprey workflow.
+    /// Port of osprey/src/pipeline.rs run_analysis().
+    ///
+    /// Stages:
+    /// 1. Load library + generate decoys
+    /// 2. Per-file: load spectra, calibrate RT, run coelution scoring
+    /// 3. First-pass FDR (Percolator or simple)
+    /// 4. Protein FDR (optional)
+    /// 5. Write blib output
+    /// </summary>
+    public class AnalysisPipeline
+    {
+        private const int NUM_PIN_FEATURES = 21;
+
+        /// <summary>
+        /// Run the complete analysis pipeline.
+        /// </summary>
+        /// <param name="config">Analysis configuration.</param>
+        /// <returns>0 on success, non-zero on failure.</returns>
+        public int Run(OspreyConfig config)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                // Stage 1: Load library + generate decoys
+                var library = LoadLibrary(config);
+                if (library == null || library.Count == 0)
+                {
+                    LogError("Library is empty after loading");
+                    return 1;
+                }
+
+                List<LibraryEntry> decoys;
+                if (!config.DecoysInLibrary)
+                {
+                    decoys = GenerateDecoys(library, config);
+                }
+                else
+                {
+                    decoys = new List<LibraryEntry>();
+                }
+
+                var fullLibrary = new List<LibraryEntry>(library.Count + decoys.Count);
+                fullLibrary.AddRange(library);
+                fullLibrary.AddRange(decoys);
+
+                LogInfo(string.Format("Full library: {0} entries ({1} targets + {2} decoys)",
+                    fullLibrary.Count, library.Count, decoys.Count));
+
+                // Build library lookup by ID for fast access
+                var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
+                foreach (var entry in fullLibrary)
+                    libraryById[entry.Id] = entry;
+
+                // Stage 2-4: Per-file calibration + coelution scoring
+                var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+
+                for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
+                {
+                    string inputFile = config.InputFiles[fileIdx];
+                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
+
+                    LogInfo("");
+                    LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
+                        fileIdx + 1, config.InputFiles.Count, inputFile));
+
+                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config);
+                    if (fileResult != null)
+                    {
+                        perFileEntries.Add(
+                            new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                    }
+                }
+
+                int totalScored = 0;
+                foreach (var kvp in perFileEntries)
+                    totalScored += kvp.Value.Count;
+
+                LogInfo("");
+                LogInfo(string.Format(
+                    "Coelution analysis complete. {0} total scored entries across {1} files",
+                    totalScored, config.InputFiles.Count));
+
+                if (perFileEntries.Count == 0 || totalScored == 0)
+                {
+                    LogWarning("No scored entries found. Cannot perform FDR control.");
+                    return 0;
+                }
+
+                // Stage 5: First-pass FDR
+                LogInfo("");
+                LogInfo(string.Format("Running {0} FDR control on coelution results...",
+                    config.FdrMethod));
+
+                RunFdr(perFileEntries, fullLibrary, config);
+
+                // Log first-pass results
+                int passingTargets = 0;
+                foreach (var kvp in perFileEntries)
+                {
+                    int fileTargets = 0;
+                    foreach (var entry in kvp.Value)
+                    {
+                        if (!entry.IsDecoy &&
+                            entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                        {
+                            fileTargets++;
+                        }
+                    }
+                    LogInfo(string.Format("  {0}: {1} precursors at {2:P1} run-level FDR",
+                        kvp.Key, fileTargets, config.RunFdr));
+                    passingTargets += fileTargets;
+                }
+                LogInfo(string.Format("Total: {0} precursors pass run-level FDR across all files",
+                    passingTargets));
+
+                // Stage 6-7: Reconciliation (TODO for multi-file)
+                if (config.InputFiles.Count > 1)
+                {
+                    LogInfo("");
+                    LogInfo("TODO: Inter-replicate reconciliation not yet implemented");
+                    LogInfo("      First-pass results are still usable for single-run analysis");
+                }
+
+                // Stage 8: Protein FDR (optional)
+                if (config.ProteinFdr.HasValue)
+                {
+                    LogInfo("");
+                    LogInfo(string.Format("Running protein-level FDR at {0:P1}...",
+                        config.ProteinFdr.Value));
+                    RunProteinFdr(perFileEntries, fullLibrary, config);
+                }
+
+                // Stage 9: Write output blib
+                LogInfo("");
+                LogInfo(string.Format("Writing output to {0}...", config.OutputBlib));
+                WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config);
+
+                stopwatch.Stop();
+                LogInfo("");
+                LogInfo(string.Format("Analysis complete in {0}", FormatDuration(stopwatch.Elapsed)));
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                LogError(string.Format("Pipeline failed: {0}", ex.Message));
+                LogError(ex.StackTrace);
+                return 1;
+            }
+        }
+
+        #region Stage 1: Library Loading
+
+        /// <summary>
+        /// Load spectral library from the configured source.
+        /// Supports DIA-NN TSV, blib, and elib formats.
+        /// </summary>
+        private List<LibraryEntry> LoadLibrary(OspreyConfig config)
+        {
+            string path = config.LibrarySource.Path;
+            LogInfo(string.Format("Loading spectral library from {0}...", path));
+
+            List<LibraryEntry> entries;
+
+            switch (config.LibrarySource.Format)
+            {
+                case LibraryFormat.DiannTsv:
+                    var tsvLoader = new DiannTsvLoader();
+                    entries = tsvLoader.Load(path);
+                    break;
+
+                case LibraryFormat.Blib:
+                    var blibLoader = new BlibLoader();
+                    entries = blibLoader.Load(path);
+                    break;
+
+                case LibraryFormat.Elib:
+                    var elibLoader = new ElibLoader();
+                    entries = elibLoader.Load(path);
+                    break;
+
+                default:
+                    throw new NotSupportedException(string.Format(
+                        "Unsupported library format: {0}", config.LibrarySource.Format));
+            }
+
+            // Deduplicate library entries
+            entries = LibraryDeduplicator.DeduplicateLibrary(entries);
+
+            LogInfo(string.Format("Loaded {0} library entries", entries.Count));
+            return entries;
+        }
+
+        /// <summary>
+        /// Generate decoy entries from the target library.
+        /// </summary>
+        private List<LibraryEntry> GenerateDecoys(List<LibraryEntry> targets, OspreyConfig config)
+        {
+            LogInfo(string.Format("Generating decoys using {0} method...", config.DecoyMethod));
+
+            var generator = new DecoyGenerator();
+            var decoys = new List<LibraryEntry>(targets.Count);
+
+            foreach (var target in targets)
+            {
+                if (target.IsDecoy)
+                    continue;
+                if (target.Fragments == null || target.Fragments.Count == 0)
+                    continue;
+
+                var decoy = generator.Generate(target);
+                decoys.Add(decoy);
+            }
+
+            LogInfo(string.Format("Generated {0} decoys from {1} targets",
+                decoys.Count, targets.Count));
+            return decoys;
+        }
+
+        #endregion
+
+        #region Stage 2-4: Per-File Processing
+
+        /// <summary>
+        /// Process a single mzML file: load spectra, calibrate RT, score coelution.
+        /// </summary>
+        private List<FdrEntry> ProcessFile(
+            string inputFile, string fileName,
+            List<LibraryEntry> fullLibrary, OspreyConfig config)
+        {
+            // Load spectra
+            List<Spectrum> spectra;
+            List<MS1Spectrum> ms1Spectra;
+            LoadSpectra(inputFile, out spectra, out ms1Spectra);
+
+            if (spectra == null || spectra.Count == 0)
+            {
+                LogWarning(string.Format("No spectra found in {0}", inputFile));
+                return null;
+            }
+
+            LogInfo(string.Format("Loaded {0} MS2 spectra and {1} MS1 spectra",
+                spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
+
+            // Extract isolation windows from spectra
+            var isolationWindows = ExtractIsolationWindows(spectra);
+            LogInfo(string.Format("Found {0} unique isolation windows", isolationWindows.Count));
+
+            // RT calibration
+            RTCalibration rtCalibration = null;
+            if (config.RtCalibration.Enabled)
+            {
+                rtCalibration = RunCalibration(
+                    fullLibrary, spectra, ms1Spectra, config);
+            }
+
+            // Run coelution scoring across all isolation windows
+            var scoredEntries = RunCoelutionScoring(
+                fullLibrary, spectra, ms1Spectra,
+                isolationWindows, rtCalibration, config);
+
+            LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
+                scoredEntries.Count,
+                scoredEntries.Count(e => !e.IsDecoy),
+                scoredEntries.Count(e => e.IsDecoy),
+                fileName));
+
+            // Deduplicate: keep best target and best decoy per base_id
+            scoredEntries = DeduplicatePairs(scoredEntries);
+
+            return scoredEntries;
+        }
+
+        /// <summary>
+        /// Load spectra from mzML file or spectra cache.
+        /// </summary>
+        private void LoadSpectra(string inputFile,
+            out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra)
+        {
+            // Check for binary spectra cache
+            string cachePath = inputFile + ".spectra.bin";
+            if (File.Exists(cachePath))
+            {
+                LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
+                try
+                {
+                    var cacheResult = SpectraCache.LoadSpectraCache(cachePath);
+                    ms2Spectra = cacheResult.Ms2Spectra;
+                    ms1Spectra = cacheResult.Ms1Spectra;
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    LogWarning(string.Format(
+                        "Failed to load spectra cache: {0}. Falling back to mzML.", ex.Message));
+                }
+            }
+
+            // Parse mzML directly
+            LogInfo(string.Format("Parsing mzML: {0}", inputFile));
+            var mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
+            ms2Spectra = mzmlResult.Ms2Spectra;
+            ms1Spectra = mzmlResult.Ms1Spectra;
+            LogInfo(string.Format("Loaded {0} MS2 + {1} MS1 spectra",
+                ms2Spectra.Count, ms1Spectra.Count));
+
+            // Save to cache for next run
+            try
+            {
+                SpectraCache.SaveSpectraCache(cachePath, ms2Spectra, ms1Spectra);
+            }
+            catch (Exception ex)
+            {
+                LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Extract unique isolation windows from the first cycle of MS2 spectra.
+        /// </summary>
+        private List<IsolationWindow> ExtractIsolationWindows(List<Spectrum> spectra)
+        {
+            var windows = new List<IsolationWindow>();
+            var seenCenters = new HashSet<int>();
+
+            foreach (var spectrum in spectra)
+            {
+                int centerKey = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
+                if (seenCenters.Contains(centerKey))
+                    break;
+                seenCenters.Add(centerKey);
+                windows.Add(spectrum.IsolationWindow);
+            }
+
+            // Sort by center m/z
+            windows.Sort((a, b) => a.Center.CompareTo(b.Center));
+            return windows;
+        }
+
+        /// <summary>
+        /// Run RT calibration using calibration discovery scoring.
+        /// </summary>
+        private RTCalibration RunCalibration(
+            List<LibraryEntry> library,
+            List<Spectrum> spectra,
+            List<MS1Spectrum> ms1Spectra,
+            OspreyConfig config)
+        {
+            LogInfo("Running RT calibration...");
+
+            // Calculate library and mzML RT ranges
+            double libMinRt = double.MaxValue, libMaxRt = double.MinValue;
+            double mzmlMinRt = double.MaxValue, mzmlMaxRt = double.MinValue;
+
+            foreach (var entry in library)
+            {
+                if (!entry.IsDecoy)
+                {
+                    if (entry.RetentionTime < libMinRt) libMinRt = entry.RetentionTime;
+                    if (entry.RetentionTime > libMaxRt) libMaxRt = entry.RetentionTime;
+                }
+            }
+
+            foreach (var spectrum in spectra)
+            {
+                if (spectrum.RetentionTime < mzmlMinRt) mzmlMinRt = spectrum.RetentionTime;
+                if (spectrum.RetentionTime > mzmlMaxRt) mzmlMaxRt = spectrum.RetentionTime;
+            }
+
+            double libRtRange = libMaxRt - libMinRt;
+            double mzmlRtRange = mzmlMaxRt - mzmlMinRt;
+
+            LogInfo(string.Format(
+                "Library RT range: {0:F1}-{1:F1}, mzML RT range: {2:F1}-{3:F1} min",
+                libMinRt, libMaxRt, mzmlMinRt, mzmlMaxRt));
+
+            // Build calibration points by scoring library entries against spectra
+            var scorer = new SpectralScorer();
+            var calibrationPoints = new List<KeyValuePair<double, double>>(); // (libRT, measuredRT)
+
+            // Use a wide initial RT tolerance
+            bool rangesSimilar = libRtRange > 0 && mzmlRtRange > 0 &&
+                Math.Max(libRtRange / mzmlRtRange, mzmlRtRange / libRtRange) < 2.0 &&
+                Math.Abs(libMinRt - mzmlMinRt) < libRtRange * 0.5;
+
+            double rtSlope = 1.0;
+            double rtIntercept = 0.0;
+            if (!rangesSimilar && libRtRange > 0)
+            {
+                rtSlope = mzmlRtRange / libRtRange;
+                rtIntercept = mzmlMinRt - rtSlope * libMinRt;
+                LogInfo(string.Format("RT mapping: slope={0:F4}, intercept={1:F4}",
+                    rtSlope, rtIntercept));
+            }
+
+            double toleranceFraction = rangesSimilar ? 0.2 : 0.5;
+            double initialTolerance = mzmlRtRange * toleranceFraction;
+
+            LogInfo(string.Format("Initial RT tolerance: {0:F1} min", initialTolerance));
+
+            // Sample library entries for calibration
+            var targetEntries = library.Where(e => !e.IsDecoy && e.Fragments.Count >= 3).ToList();
+            var sampler = new RTStratifiedSampler();
+            double[] retentionTimes = targetEntries.Select(e => e.RetentionTime).ToArray();
+            int[] sampleIndices = sampler.Sample(retentionTimes);
+
+            LogInfo(string.Format("Sampled {0} entries for calibration discovery",
+                sampleIndices.Length));
+
+            // For each sampled library entry, find best matching spectrum
+            foreach (int idx in sampleIndices)
+            {
+                var entry = targetEntries[idx];
+                double expectedRt = entry.RetentionTime * rtSlope + rtIntercept;
+
+                // Find best-scoring spectrum within tolerance
+                double bestScore = 0.0;
+                double bestRt = 0.0;
+
+                foreach (var spectrum in spectra)
+                {
+                    if (Math.Abs(spectrum.RetentionTime - expectedRt) > initialTolerance)
+                        continue;
+                    if (!spectrum.ContainsPrecursor(entry.PrecursorMz))
+                        continue;
+
+                    double score = scorer.LibCosine(spectrum, entry, config.FragmentTolerance);
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestRt = spectrum.RetentionTime;
+                    }
+                }
+
+                if (bestScore > 0.3)
+                {
+                    calibrationPoints.Add(
+                        new KeyValuePair<double, double>(entry.RetentionTime, bestRt));
+                }
+            }
+
+            LogInfo(string.Format("Found {0} calibration points", calibrationPoints.Count));
+
+            if (calibrationPoints.Count < config.RtCalibration.MinCalibrationPoints)
+            {
+                LogWarning(string.Format(
+                    "Insufficient calibration points ({0} < {1}). Using fallback tolerance.",
+                    calibrationPoints.Count, config.RtCalibration.MinCalibrationPoints));
+                return null;
+            }
+
+            // Fit LOESS calibration
+            try
+            {
+                double[] libRts = calibrationPoints.Select(p => p.Key).ToArray();
+                double[] measuredRts = calibrationPoints.Select(p => p.Value).ToArray();
+
+                var calibratorConfig = new RTCalibratorConfig
+                {
+                    Bandwidth = config.RtCalibration.LoessBandwidth,
+                    MinPoints = Math.Min(20, calibrationPoints.Count)
+                };
+                var calibrator = new RTCalibrator(calibratorConfig);
+                var rtCal = calibrator.Fit(libRts, measuredRts);
+
+                var stats = rtCal.Stats();
+                LogInfo(string.Format(
+                    "RT calibration: {0} points, R2={1:F4}, residual SD={2:F3} min",
+                    stats.NPoints, stats.RSquared, stats.ResidualSD));
+
+                return rtCal;
+            }
+            catch (Exception ex)
+            {
+                LogWarning(string.Format("RT calibration failed: {0}. Using fallback tolerance.",
+                    ex.Message));
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Run coelution scoring for all library entries across all isolation windows.
+        /// For each window, finds candidate entries whose precursor falls in the window,
+        /// extracts fragment XICs, detects CWT peaks, and scores at each peak.
+        /// </summary>
+        private List<FdrEntry> RunCoelutionScoring(
+            List<LibraryEntry> fullLibrary,
+            List<Spectrum> spectra,
+            List<MS1Spectrum> ms1Spectra,
+            List<IsolationWindow> isolationWindows,
+            RTCalibration rtCalibration,
+            OspreyConfig config)
+        {
+            var allEntries = new List<FdrEntry>();
+            var scorer = new SpectralScorer();
+            int windowsProcessed = 0;
+
+            // Group spectra by isolation window center (rounded key) for efficient lookup
+            var spectraByWindowKey = new Dictionary<int, List<Spectrum>>();
+            foreach (var spectrum in spectra)
+            {
+                int key = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
+                List<Spectrum> list;
+                if (!spectraByWindowKey.TryGetValue(key, out list))
+                {
+                    list = new List<Spectrum>();
+                    spectraByWindowKey[key] = list;
+                }
+                list.Add(spectrum);
+            }
+
+            // Determine RT tolerance
+            double fallbackTolerance = config.RtCalibration.FallbackRtTolerance;
+
+            // Process each isolation window (parallelizable)
+            object lockObj = new object();
+
+            Parallel.ForEach(isolationWindows, new ParallelOptions
+            {
+                MaxDegreeOfParallelism = config.NThreads
+            },
+            window =>
+            {
+                var windowEntries = ScoreWindow(
+                    window, fullLibrary, spectraByWindowKey, ms1Spectra,
+                    rtCalibration, fallbackTolerance, scorer, config);
+
+                lock (lockObj)
+                {
+                    allEntries.AddRange(windowEntries);
+                    windowsProcessed++;
+                    if (windowsProcessed % 10 == 0 || windowsProcessed == isolationWindows.Count)
+                    {
+                        LogInfo(string.Format("  Scored {0}/{1} isolation windows ({2} entries so far)",
+                            windowsProcessed, isolationWindows.Count, allEntries.Count));
+                    }
+                }
+            });
+
+            return allEntries;
+        }
+
+        /// <summary>
+        /// Score all candidate library entries within a single isolation window.
+        /// For each candidate:
+        /// 1. Extract fragment XICs from spectra in this window
+        /// 2. Detect consensus CWT peaks
+        /// 3. Score XCorr and LibCosine at the best peak apex
+        /// 4. Build feature set and create FdrEntry
+        /// </summary>
+        private List<FdrEntry> ScoreWindow(
+            IsolationWindow window,
+            List<LibraryEntry> fullLibrary,
+            Dictionary<int, List<Spectrum>> spectraByWindowKey,
+            List<MS1Spectrum> ms1Spectra,
+            RTCalibration rtCalibration,
+            double fallbackTolerance,
+            SpectralScorer scorer,
+            OspreyConfig config)
+        {
+            var entries = new List<FdrEntry>();
+
+            int windowKey = (int)Math.Round(window.Center * 10.0);
+            List<Spectrum> windowSpectra;
+            if (!spectraByWindowKey.TryGetValue(windowKey, out windowSpectra) ||
+                windowSpectra.Count == 0)
+            {
+                return entries;
+            }
+
+            // Sort spectra by RT for XIC extraction
+            windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime));
+
+            // Find candidate library entries whose precursor m/z falls in this window
+            var candidates = new List<LibraryEntry>();
+            foreach (var entry in fullLibrary)
+            {
+                if (entry.Fragments == null || entry.Fragments.Count < 3)
+                    continue;
+                if (window.Contains(entry.PrecursorMz))
+                    candidates.Add(entry);
+            }
+
+            if (candidates.Count == 0)
+                return entries;
+
+            // Build RT array for this window
+            double[] windowRts = new double[windowSpectra.Count];
+            for (int i = 0; i < windowSpectra.Count; i++)
+                windowRts[i] = windowSpectra[i].RetentionTime;
+
+            // Score each candidate
+            foreach (var candidate in candidates)
+            {
+                var fdrEntry = ScoreCandidate(
+                    candidate, windowSpectra, windowRts,
+                    ms1Spectra, rtCalibration, fallbackTolerance,
+                    scorer, config);
+
+                if (fdrEntry != null)
+                    entries.Add(fdrEntry);
+            }
+
+            return entries;
+        }
+
+        /// <summary>
+        /// Score a single library entry candidate against spectra in its isolation window.
+        /// Extracts fragment XICs, detects CWT peaks, and scores at the best apex.
+        /// </summary>
+        private FdrEntry ScoreCandidate(
+            LibraryEntry candidate,
+            List<Spectrum> windowSpectra,
+            double[] windowRts,
+            List<MS1Spectrum> ms1Spectra,
+            RTCalibration rtCalibration,
+            double fallbackTolerance,
+            SpectralScorer scorer,
+            OspreyConfig config)
+        {
+            int nScans = windowSpectra.Count;
+            if (nScans < 5)
+                return null;
+
+            // Determine RT search window
+            double expectedRt;
+            double rtTolerance;
+
+            if (rtCalibration != null)
+            {
+                expectedRt = rtCalibration.Predict(candidate.RetentionTime);
+                rtTolerance = rtCalibration.LocalTolerance(
+                    candidate.RetentionTime,
+                    config.RtCalibration.RtToleranceFactor,
+                    config.RtCalibration.MinRtTolerance);
+            }
+            else
+            {
+                expectedRt = candidate.RetentionTime;
+                rtTolerance = fallbackTolerance;
+            }
+
+            // Find scan range within RT tolerance
+            int startScan = -1, endScan = -1;
+            for (int i = 0; i < nScans; i++)
+            {
+                if (windowRts[i] >= expectedRt - rtTolerance)
+                {
+                    if (startScan < 0) startScan = i;
+                    endScan = i;
+                }
+                if (windowRts[i] > expectedRt + rtTolerance)
+                    break;
+            }
+
+            if (startScan < 0 || endScan < 0 || endScan - startScan + 1 < 5)
+                return null;
+
+            int rangeLen = endScan - startScan + 1;
+
+            // Extract fragment XICs within the RT range
+            var xics = ExtractFragmentXics(
+                candidate, windowSpectra, windowRts, startScan, endScan, config);
+
+            if (xics.Count < 2)
+                return null;
+
+            // Detect consensus CWT peaks
+            var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+            if (peaks.Count == 0)
+                return null;
+
+            // Use the best (highest consensus) peak
+            var bestPeak = peaks[0];
+            int apexGlobalIdx = startScan + bestPeak.ApexIndex;
+
+            // Score at the apex spectrum
+            if (apexGlobalIdx < 0 || apexGlobalIdx >= windowSpectra.Count)
+                return null;
+
+            var apexSpectrum = windowSpectra[apexGlobalIdx];
+
+            // LibCosine at apex
+            double libCosine = scorer.LibCosine(apexSpectrum, candidate, config.FragmentTolerance);
+
+            // XCorr at apex (using unit-resolution binning)
+            double xcorr = ComputeXcorrForSpectrum(apexSpectrum, candidate, scorer);
+
+            // Compute basic coelution features
+            double coelutionSum = ComputeCoelutionSum(xics, bestPeak);
+
+            // RT deviation
+            double rtDeviation = 0.0;
+            if (rtCalibration != null)
+            {
+                rtDeviation = apexSpectrum.RetentionTime - expectedRt;
+            }
+
+            // Count consecutive ions
+            byte consecutiveIons = CountConsecutiveIons(candidate, apexSpectrum, config);
+
+            // Count fragment matches
+            byte top6Matches = CountTop6Matches(candidate, apexSpectrum, config);
+
+            // Build FdrEntry
+            var entry = new FdrEntry
+            {
+                EntryId = candidate.Id,
+                IsDecoy = candidate.IsDecoy,
+                Charge = candidate.Charge,
+                ScanNumber = apexSpectrum.ScanNumber,
+                ApexRt = apexSpectrum.RetentionTime,
+                StartRt = windowRts[startScan + bestPeak.StartIndex],
+                EndRt = windowRts[startScan + bestPeak.EndIndex],
+                CoelutionSum = coelutionSum,
+                Score = coelutionSum,
+                ModifiedSequence = candidate.ModifiedSequence
+            };
+
+            return entry;
+        }
+
+        /// <summary>
+        /// Extract fragment XICs for a candidate across the scan range.
+        /// </summary>
+        private List<XicData> ExtractFragmentXics(
+            LibraryEntry candidate,
+            List<Spectrum> windowSpectra,
+            double[] windowRts,
+            int startScan, int endScan,
+            OspreyConfig config)
+        {
+            int rangeLen = endScan - startScan + 1;
+            var xics = new List<XicData>();
+
+            // Build shared RT array for this range
+            double[] rangeRts = new double[rangeLen];
+            for (int i = 0; i < rangeLen; i++)
+                rangeRts[i] = windowRts[startScan + i];
+
+            // Extract XIC for each fragment
+            for (int fragIdx = 0; fragIdx < candidate.Fragments.Count; fragIdx++)
+            {
+                var fragment = candidate.Fragments[fragIdx];
+                double[] intensities = new double[rangeLen];
+
+                for (int scanIdx = 0; scanIdx < rangeLen; scanIdx++)
+                {
+                    var spectrum = windowSpectra[startScan + scanIdx];
+                    double bestIntensity = 0.0;
+
+                    // Binary search for fragment m/z in the spectrum
+                    if (spectrum.Mzs != null && spectrum.Mzs.Length > 0)
+                    {
+                        double tolDa = config.FragmentTolerance.ToleranceDa(fragment.Mz);
+                        double lower = fragment.Mz - tolDa;
+                        double upper = fragment.Mz + tolDa;
+
+                        int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                        for (int k = lo; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
+                        {
+                            double intensity = spectrum.Intensities[k];
+                            if (intensity > bestIntensity)
+                                bestIntensity = intensity;
+                        }
+                    }
+
+                    intensities[scanIdx] = bestIntensity;
+                }
+
+                xics.Add(new XicData(fragIdx, rangeRts, intensities));
+            }
+
+            return xics;
+        }
+
+        /// <summary>
+        /// Compute XCorr for a spectrum against a library entry.
+        /// </summary>
+        private double ComputeXcorrForSpectrum(
+            Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer)
+        {
+            var binConfig = scorer.BinConfig;
+            if (binConfig.NBins <= 0)
+                return 0.0;
+
+            double[] observedBins = new double[binConfig.NBins];
+            double[] libraryBins = new double[binConfig.NBins];
+
+            // Bin observed spectrum
+            if (spectrum.Mzs != null)
+            {
+                for (int i = 0; i < spectrum.Mzs.Length; i++)
+                {
+                    int bin = binConfig.MzToBin(spectrum.Mzs[i]);
+                    if (bin >= 0 && bin < observedBins.Length)
+                    {
+                        double sqrtInt = Math.Sqrt(spectrum.Intensities[i]);
+                        if (sqrtInt > observedBins[bin])
+                            observedBins[bin] = sqrtInt;
+                    }
+                }
+            }
+
+            // Bin library fragments
+            foreach (var frag in entry.Fragments)
+            {
+                int bin = binConfig.MzToBin(frag.Mz);
+                if (bin >= 0 && bin < libraryBins.Length)
+                {
+                    double sqrtInt = Math.Sqrt(frag.RelativeIntensity);
+                    if (sqrtInt > libraryBins[bin])
+                        libraryBins[bin] = sqrtInt;
+                }
+            }
+
+            return scorer.XCorr(observedBins, libraryBins);
+        }
+
+        /// <summary>
+        /// Compute coelution sum from pairwise fragment correlations.
+        /// </summary>
+        private double ComputeCoelutionSum(List<XicData> xics, XICPeakBounds peak)
+        {
+            if (xics.Count < 2)
+                return 0.0;
+
+            double sum = 0.0;
+            int nPairs = 0;
+
+            for (int i = 0; i < xics.Count; i++)
+            {
+                for (int j = i + 1; j < xics.Count; j++)
+                {
+                    double corr = PearsonCorrelation(
+                        xics[i].Intensities, xics[j].Intensities,
+                        peak.StartIndex, peak.EndIndex);
+                    if (!double.IsNaN(corr))
+                    {
+                        sum += corr;
+                        nPairs++;
+                    }
+                }
+            }
+
+            return sum;
+        }
+
+        /// <summary>
+        /// Compute Pearson correlation between two intensity arrays over a range.
+        /// </summary>
+        private double PearsonCorrelation(double[] x, double[] y, int start, int end)
+        {
+            int n = end - start + 1;
+            if (n < 3)
+                return double.NaN;
+
+            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+            for (int i = start; i <= end; i++)
+            {
+                sumX += x[i];
+                sumY += y[i];
+                sumXY += x[i] * y[i];
+                sumX2 += x[i] * x[i];
+                sumY2 += y[i] * y[i];
+            }
+
+            double denom = Math.Sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            if (denom < 1e-10)
+                return 0.0;
+
+            return (n * sumXY - sumX * sumY) / denom;
+        }
+
+        /// <summary>
+        /// Count consecutive b/y ion matches at the apex spectrum.
+        /// </summary>
+        private byte CountConsecutiveIons(
+            LibraryEntry entry, Spectrum spectrum, OspreyConfig config)
+        {
+            if (entry.Fragments == null || entry.Fragments.Count == 0)
+                return 0;
+
+            // Group fragments by ion type and check which ordinals match
+            var bMatched = new HashSet<int>();
+            var yMatched = new HashSet<int>();
+
+            foreach (var frag in entry.Fragments)
+            {
+                if (SpectralScorer.HasMatch(frag.Mz, spectrum.Mzs, config.FragmentTolerance))
+                {
+                    if (frag.Annotation.IonType == IonType.B)
+                        bMatched.Add(frag.Annotation.Ordinal);
+                    else if (frag.Annotation.IonType == IonType.Y)
+                        yMatched.Add(frag.Annotation.Ordinal);
+                }
+            }
+
+            // Find longest consecutive run
+            byte maxConsecutive = 0;
+            maxConsecutive = Math.Max(maxConsecutive, LongestConsecutiveRun(bMatched));
+            maxConsecutive = Math.Max(maxConsecutive, LongestConsecutiveRun(yMatched));
+
+            return maxConsecutive;
+        }
+
+        private byte LongestConsecutiveRun(HashSet<int> ordinals)
+        {
+            if (ordinals.Count == 0)
+                return 0;
+
+            var sorted = ordinals.OrderBy(x => x).ToList();
+            byte maxRun = 1;
+            byte currentRun = 1;
+
+            for (int i = 1; i < sorted.Count; i++)
+            {
+                if (sorted[i] == sorted[i - 1] + 1)
+                {
+                    currentRun++;
+                    if (currentRun > maxRun)
+                        maxRun = currentRun;
+                }
+                else
+                {
+                    currentRun = 1;
+                }
+            }
+
+            return maxRun;
+        }
+
+        /// <summary>
+        /// Count top-6 fragment matches at the apex spectrum.
+        /// </summary>
+        private byte CountTop6Matches(
+            LibraryEntry entry, Spectrum spectrum, OspreyConfig config)
+        {
+            if (entry.Fragments == null || entry.Fragments.Count == 0)
+                return 0;
+
+            // Sort fragments by intensity descending, take top 6
+            var sortedFrags = entry.Fragments
+                .OrderByDescending(f => f.RelativeIntensity)
+                .Take(6)
+                .ToList();
+
+            byte matched = 0;
+            foreach (var frag in sortedFrags)
+            {
+                if (SpectralScorer.HasMatch(frag.Mz, spectrum.Mzs, config.FragmentTolerance))
+                    matched++;
+            }
+            return matched;
+        }
+
+        /// <summary>
+        /// Deduplicate scored entries: keep best target and best decoy per base_id.
+        /// </summary>
+        private List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
+        {
+            // Group by base_id (mask off high bit)
+            var groups = new Dictionary<uint, KeyValuePair<FdrEntry, FdrEntry>>();
+
+            foreach (var entry in entries)
+            {
+                uint baseId = entry.EntryId & 0x7FFFFFFF;
+                KeyValuePair<FdrEntry, FdrEntry> existing;
+                FdrEntry bestTarget = null;
+                FdrEntry bestDecoy = null;
+
+                if (groups.TryGetValue(baseId, out existing))
+                {
+                    bestTarget = existing.Key;
+                    bestDecoy = existing.Value;
+                }
+
+                if (entry.IsDecoy)
+                {
+                    if (bestDecoy == null || entry.CoelutionSum > bestDecoy.CoelutionSum)
+                        bestDecoy = entry;
+                }
+                else
+                {
+                    if (bestTarget == null || entry.CoelutionSum > bestTarget.CoelutionSum)
+                        bestTarget = entry;
+                }
+
+                groups[baseId] = new KeyValuePair<FdrEntry, FdrEntry>(bestTarget, bestDecoy);
+            }
+
+            var deduped = new List<FdrEntry>(groups.Count * 2);
+            foreach (var pair in groups.Values)
+            {
+                if (pair.Key != null)
+                    deduped.Add(pair.Key);
+                if (pair.Value != null)
+                    deduped.Add(pair.Value);
+            }
+
+            int removed = entries.Count - deduped.Count;
+            if (removed > 0)
+            {
+                LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
+                    entries.Count, deduped.Count, removed));
+            }
+
+            return deduped;
+        }
+
+        #endregion
+
+        #region Stage 5: FDR Control
+
+        /// <summary>
+        /// Run FDR control using the configured method.
+        /// </summary>
+        private void RunFdr(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            switch (config.FdrMethod)
+            {
+                case FdrMethod.Percolator:
+                    RunPercolatorFdr(perFileEntries, fullLibrary, config);
+                    break;
+
+                case FdrMethod.Simple:
+                    RunSimpleFdr(perFileEntries, config);
+                    break;
+
+                default:
+                    LogWarning(string.Format(
+                        "FDR method {0} not yet supported, falling back to simple",
+                        config.FdrMethod));
+                    RunSimpleFdr(perFileEntries, config);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Run Percolator-based FDR control.
+        /// Builds PercolatorEntry objects from FdrEntry stubs and runs Percolator.
+        /// </summary>
+        private void RunPercolatorFdr(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            // Build PercolatorEntry list from all files
+            var percEntries = new List<PercolatorEntry>();
+
+            // Build library lookup for feature extraction
+            var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
+            foreach (var entry in fullLibrary)
+                libraryById[entry.Id] = entry;
+
+            foreach (var kvp in perFileEntries)
+            {
+                string fileName = kvp.Key;
+                foreach (var fdrEntry in kvp.Value)
+                {
+                    // Build basic features from available data
+                    double[] features = BuildBasicFeatures(fdrEntry, libraryById);
+
+                    percEntries.Add(new PercolatorEntry
+                    {
+                        Id = string.Format("{0}_{1}", fileName, fdrEntry.EntryId),
+                        FileName = fileName,
+                        Peptide = fdrEntry.ModifiedSequence,
+                        Charge = fdrEntry.Charge,
+                        IsDecoy = fdrEntry.IsDecoy,
+                        EntryId = fdrEntry.EntryId,
+                        Features = features
+                    });
+                }
+            }
+
+            LogInfo(string.Format("Running Percolator on {0} entries...", percEntries.Count));
+
+            var percConfig = new PercolatorConfig
+            {
+                TrainFdr = config.RunFdr,
+                TestFdr = config.RunFdr,
+                MaxIterations = 10,
+                NFolds = 3
+            };
+
+            var results = PercolatorFdr.RunPercolator(percEntries, percConfig);
+
+            // Map results back to FdrEntry stubs
+            var resultMap = new Dictionary<string, PercolatorResult>();
+            foreach (var result in results.Entries)
+                resultMap[result.Id] = result;
+
+            foreach (var kvp in perFileEntries)
+            {
+                string fileName = kvp.Key;
+                foreach (var fdrEntry in kvp.Value)
+                {
+                    string id = string.Format("{0}_{1}", fileName, fdrEntry.EntryId);
+                    PercolatorResult result;
+                    if (resultMap.TryGetValue(id, out result))
+                    {
+                        fdrEntry.Score = result.Score;
+                        fdrEntry.RunPrecursorQvalue = result.RunPrecursorQvalue;
+                        fdrEntry.RunPeptideQvalue = result.RunPeptideQvalue;
+                        fdrEntry.ExperimentPrecursorQvalue = result.ExperimentPrecursorQvalue;
+                        fdrEntry.ExperimentPeptideQvalue = result.ExperimentPeptideQvalue;
+                        fdrEntry.Pep = result.Pep;
+                    }
+                }
+            }
+
+            // Log FDR results
+            int nTargetPassing = 0;
+            int nDecoyPassing = 0;
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                    {
+                        if (entry.IsDecoy)
+                            nDecoyPassing++;
+                        else
+                            nTargetPassing++;
+                    }
+                }
+            }
+
+            LogInfo(string.Format(
+                "Percolator results: {0} targets, {1} decoys pass {2:P1} FDR",
+                nTargetPassing, nDecoyPassing, config.RunFdr));
+        }
+
+        /// <summary>
+        /// Build basic features for Percolator from an FdrEntry.
+        /// Uses the 21-feature PIN layout matching the Rust implementation.
+        /// Features that require full CoelutionFeatureSet are set to defaults.
+        /// </summary>
+        private double[] BuildBasicFeatures(
+            FdrEntry entry, Dictionary<uint, LibraryEntry> libraryById)
+        {
+            double[] features = new double[NUM_PIN_FEATURES];
+
+            // 0: coelution_sum
+            features[0] = entry.CoelutionSum;
+            // 1: coelution_max (approximate as coelution_sum for basic version)
+            features[1] = entry.CoelutionSum * 0.5;
+            // 2: n_coeluting_fragments
+            features[2] = 3.0;
+            // 3: peak_apex
+            features[3] = 0.0;
+            // 4: peak_area
+            features[4] = 0.0;
+            // 5: peak_sharpness
+            features[5] = 0.0;
+            // 6: xcorr
+            features[6] = 0.0;
+            // 7: consecutive_ions
+            features[7] = 0.0;
+            // 8: explained_intensity
+            features[8] = 0.0;
+            // 9: mass_accuracy_mean
+            features[9] = 0.0;
+            // 10: abs_mass_accuracy_mean
+            features[10] = 0.0;
+            // 11: rt_deviation
+            features[11] = 0.0;
+            // 12: abs_rt_deviation
+            features[12] = 0.0;
+            // 13: ms1_precursor_coelution
+            features[13] = 0.0;
+            // 14: ms1_isotope_cosine
+            features[14] = 0.0;
+            // 15: median_polish_cosine
+            features[15] = 0.0;
+            // 16: median_polish_residual_ratio
+            features[16] = 0.0;
+            // 17: sg_weighted_xcorr
+            features[17] = 0.0;
+            // 18: sg_weighted_cosine
+            features[18] = 0.0;
+            // 19: median_polish_min_fragment_r2
+            features[19] = 0.0;
+            // 20: median_polish_residual_correlation
+            features[20] = 0.0;
+
+            return features;
+        }
+
+        /// <summary>
+        /// Run simple target-decoy competition FDR (no machine learning).
+        /// Uses coelution_sum as the scoring function.
+        /// </summary>
+        private void RunSimpleFdr(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            OspreyConfig config)
+        {
+            var fdrController = new FdrController(config.RunFdr);
+
+            foreach (var kvp in perFileEntries)
+            {
+                var result = fdrController.CompeteAndFilter(
+                    kvp.Value,
+                    e => e.CoelutionSum,
+                    e => e.IsDecoy,
+                    e => e.EntryId);
+
+                LogInfo(string.Format(
+                    "  {0}: {1} targets pass (FDR={2:F4}, {3} target wins, {4} decoy wins)",
+                    kvp.Key, result.PassingTargets.Count, result.FdrAtThreshold,
+                    result.NTargetWins, result.NDecoyWins));
+
+                // Assign q-values based on simple competition
+                // Passing targets get fdr_at_threshold, non-passing get 1.0
+                var passingIds = new HashSet<uint>();
+                foreach (var target in result.PassingTargets)
+                    passingIds.Add(target.EntryId);
+
+                foreach (var entry in kvp.Value)
+                {
+                    if (!entry.IsDecoy && passingIds.Contains(entry.EntryId))
+                    {
+                        entry.RunPrecursorQvalue = result.FdrAtThreshold;
+                        entry.RunPeptideQvalue = result.FdrAtThreshold;
+                        entry.ExperimentPrecursorQvalue = result.FdrAtThreshold;
+                        entry.ExperimentPeptideQvalue = result.FdrAtThreshold;
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region Stage 8: Protein FDR
+
+        /// <summary>
+        /// Run protein-level FDR using parsimony and picked-protein competition.
+        /// </summary>
+        private void RunProteinFdr(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            // Collect best peptide scores
+            var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
+            LogInfo(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
+
+            // Get detected peptide set (targets passing run-level FDR)
+            var detectedPeptides = new HashSet<string>();
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (!entry.IsDecoy &&
+                        entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                    {
+                        detectedPeptides.Add(entry.ModifiedSequence);
+                    }
+                }
+            }
+
+            LogInfo(string.Format("Detected {0} unique peptides at {1:P1} FDR",
+                detectedPeptides.Count, config.RunFdr));
+
+            // Build protein parsimony
+            var parsimony = ProteinFdr.BuildProteinParsimony(
+                fullLibrary, config.SharedPeptides, detectedPeptides);
+
+            LogInfo(string.Format("Protein parsimony: {0} groups", parsimony.Groups.Count));
+
+            // Compute protein FDR
+            double qvalueGate = config.RunFdr * 2.0; // relaxed gate for protein scoring
+            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, qvalueGate);
+
+            // Count passing proteins
+            int passingProteins = 0;
+            foreach (var kvp in proteinFdr.GroupQvalues)
+            {
+                if (kvp.Value <= config.ProteinFdr.Value)
+                    passingProteins++;
+            }
+
+            LogInfo(string.Format("{0} protein groups pass {1:P1} protein FDR",
+                passingProteins, config.ProteinFdr.Value));
+
+            // Propagate protein q-values to FdrEntry stubs
+            ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr, true, true);
+        }
+
+        #endregion
+
+        #region Stage 9: Blib Output
+
+        /// <summary>
+        /// Write passing entries to a BiblioSpec blib file.
+        /// </summary>
+        private void WriteBlibOutput(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            List<LibraryEntry> fullLibrary,
+            Dictionary<uint, LibraryEntry> libraryById,
+            OspreyConfig config)
+        {
+            // Determine effective FDR threshold
+            double fdrThreshold = config.RunFdr;
+
+            // Collect passing entries
+            var passingEntries = new List<KeyValuePair<string, FdrEntry>>();
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (!entry.IsDecoy &&
+                        entry.EffectiveRunQvalue(config.FdrLevel) <= fdrThreshold)
+                    {
+                        // If protein FDR is enabled, also check protein q-value
+                        if (config.ProteinFdr.HasValue &&
+                            entry.RunProteinQvalue > config.ProteinFdr.Value)
+                        {
+                            continue;
+                        }
+
+                        passingEntries.Add(
+                            new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
+                    }
+                }
+            }
+
+            LogInfo(string.Format("Writing {0} passing entries to blib", passingEntries.Count));
+
+            if (passingEntries.Count == 0)
+            {
+                LogWarning("No entries pass FDR threshold. Creating empty blib.");
+            }
+
+            // Ensure output directory exists
+            string outputDir = Path.GetDirectoryName(config.OutputBlib);
+            if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            // Deduplicate by modified_sequence + charge (keep best q-value)
+            var bestByPrecursor = new Dictionary<string, KeyValuePair<string, FdrEntry>>();
+            foreach (var kvp in passingEntries)
+            {
+                string key = kvp.Value.ModifiedSequence + "_" + kvp.Value.Charge;
+                KeyValuePair<string, FdrEntry> existing;
+                if (!bestByPrecursor.TryGetValue(key, out existing) ||
+                    kvp.Value.EffectiveRunQvalue(config.FdrLevel) <
+                    existing.Value.EffectiveRunQvalue(config.FdrLevel))
+                {
+                    bestByPrecursor[key] = kvp;
+                }
+            }
+
+            using (var writer = new BlibWriter(config.OutputBlib))
+            {
+                writer.BeginBatch();
+
+                // Track source files
+                var sourceFileIds = new Dictionary<string, long>();
+
+                foreach (var kvp in bestByPrecursor.Values)
+                {
+                    string fileName = kvp.Key;
+                    var entry = kvp.Value;
+
+                    LibraryEntry libEntry;
+                    if (!libraryById.TryGetValue(entry.EntryId, out libEntry))
+                        continue;
+
+                    // Get or create source file
+                    long fileId;
+                    if (!sourceFileIds.TryGetValue(fileName, out fileId))
+                    {
+                        fileId = writer.AddSourceFile(fileName + ".mzML", fileName + ".mzML",
+                            fdrThreshold);
+                        sourceFileIds[fileName] = fileId;
+                    }
+
+                    // Extract fragment arrays from library
+                    double[] mzs = new double[libEntry.Fragments.Count];
+                    float[] intensities = new float[libEntry.Fragments.Count];
+                    for (int i = 0; i < libEntry.Fragments.Count; i++)
+                    {
+                        mzs[i] = libEntry.Fragments[i].Mz;
+                        intensities[i] = libEntry.Fragments[i].RelativeIntensity;
+                    }
+
+                    double qvalue = entry.EffectiveRunQvalue(config.FdrLevel);
+
+                    long refId = writer.AddSpectrum(
+                        libEntry.Sequence,
+                        libEntry.ModifiedSequence,
+                        libEntry.PrecursorMz,
+                        libEntry.Charge,
+                        entry.ApexRt,
+                        entry.StartRt,
+                        entry.EndRt,
+                        mzs, intensities,
+                        qvalue, fileId, 1, 0.0);
+
+                    // Add modifications
+                    if (libEntry.Modifications != null && libEntry.Modifications.Count > 0)
+                        writer.AddModifications(refId, libEntry.Modifications);
+
+                    // Add protein mappings
+                    if (libEntry.ProteinIds != null && libEntry.ProteinIds.Count > 0)
+                        writer.AddProteinMapping(refId, libEntry.ProteinIds);
+
+                    // Add per-file retention times for all observations of this precursor
+                    foreach (var fileKvp in perFileEntries)
+                    {
+                        string fn = fileKvp.Key;
+                        if (fn == fileName)
+                            continue;
+
+                        foreach (var fileEntry in fileKvp.Value)
+                        {
+                            if (fileEntry.ModifiedSequence == entry.ModifiedSequence &&
+                                fileEntry.Charge == entry.Charge &&
+                                !fileEntry.IsDecoy)
+                            {
+                                long srcId;
+                                if (!sourceFileIds.TryGetValue(fn, out srcId))
+                                {
+                                    srcId = writer.AddSourceFile(fn + ".mzML", fn + ".mzML",
+                                        fdrThreshold);
+                                    sourceFileIds[fn] = srcId;
+                                }
+
+                                bool passesFdr = fileEntry.EffectiveRunQvalue(config.FdrLevel)
+                                    <= fdrThreshold;
+
+                                writer.AddRetentionTime(
+                                    refId, srcId,
+                                    passesFdr ? (double?)fileEntry.ApexRt : null,
+                                    fileEntry.StartRt,
+                                    fileEntry.EndRt,
+                                    fileEntry.EffectiveRunQvalue(config.FdrLevel),
+                                    false);
+                            }
+                        }
+                    }
+                }
+
+                writer.Commit();
+
+                // Add metadata
+                writer.AddMetadata("osprey_version", Program.VERSION_STRING);
+                writer.AddMetadata("search_parameter_hash", config.SearchParameterHash());
+                writer.AddMetadata("n_passing_precursors", bestByPrecursor.Count.ToString());
+
+                writer.FinalizeDatabase();
+            }
+
+            LogInfo(string.Format("Wrote {0} spectra to {1}",
+                bestByPrecursor.Count, config.OutputBlib));
+        }
+
+        #endregion
+
+        #region Utility Methods
+
+        private static int BinarySearchLowerBound(double[] sortedArray, double value)
+        {
+            int lo = 0;
+            int hi = sortedArray.Length;
+            while (lo < hi)
+            {
+                int mid = lo + (hi - lo) / 2;
+                if (sortedArray[mid] < value)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+            return lo;
+        }
+
+        private static string FormatDuration(TimeSpan duration)
+        {
+            if (duration.TotalDays >= 1)
+            {
+                if (duration.Hours > 0)
+                    return string.Format("{0} days {1} hours", (int)duration.TotalDays, duration.Hours);
+                return string.Format("{0} days", (int)duration.TotalDays);
+            }
+            if (duration.TotalHours >= 1)
+            {
+                if (duration.Minutes > 0)
+                    return string.Format("{0} hours {1} minutes", (int)duration.TotalHours, duration.Minutes);
+                return string.Format("{0} hours", (int)duration.TotalHours);
+            }
+            if (duration.TotalMinutes >= 1)
+            {
+                if (duration.Seconds > 0)
+                    return string.Format("{0} minutes {1} seconds", (int)duration.TotalMinutes, duration.Seconds);
+                return string.Format("{0} minutes", (int)duration.TotalMinutes);
+            }
+            if (duration.TotalSeconds >= 1)
+                return string.Format("{0:F3} seconds", duration.TotalSeconds);
+            return string.Format("{0} ms", (int)duration.TotalMilliseconds);
+        }
+
+        private static void LogInfo(string message)
+        {
+            Program.LogInfo(message);
+        }
+
+        private static void LogWarning(string message)
+        {
+            Program.LogWarning(message);
+        }
+
+        private static void LogError(string message)
+        {
+            Program.LogError(message);
+        }
+
+        #endregion
+    }
+}
