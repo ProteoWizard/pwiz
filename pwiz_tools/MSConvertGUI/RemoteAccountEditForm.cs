@@ -154,6 +154,14 @@ namespace MSConvertGUI
     /// </summary>
     public class RemoteAccountDetailForm : Form
     {
+        /// <summary>
+        /// MSConvertGUI's Waters Connect defaults. Same as <see cref="WatersConnectAccount.DEFAULT"/>
+        /// except ClientId uses the resource-owner client from DEV_DEFAULT — MSConvertGUI is
+        /// browse-only and doesn't need the "method-develop" client that gates method development.
+        /// </summary>
+        public static readonly WatersConnectAccount MSCONVERT_WATERS_CONNECT_DEFAULT =
+            WatersConnectAccount.DEFAULT.ChangeClientId(WatersConnectAccount.DEV_DEFAULT.ClientId);
+
         private ComboBox _typeCombo;
         private TextBox _serverUrlBox;
         private TextBox _usernameBox;
@@ -216,13 +224,10 @@ namespace MSConvertGUI
             // Non-dev new accounts: only pre-populate ClientId. IdentityServer is derived
             // from the server URL at save time if blank; ClientScope/ClientSecret are
             // environment-specific and should be explicitly entered by the user.
-            // WatersConnectAccount.DEFAULT.ClientId is "method-develop" because that client
-            // gates SupportsMethodDevelopment(); MSConvertGUI is browse-only so prefer the
-            // resource-owner client from DEV_DEFAULT which is available on standard installs.
             if (_typeCombo.SelectedIndex == 0) // UNIFI
                 _clientIdBox.Text = UnifiAccount.DEFAULT.ClientId ?? string.Empty;
             else if (_typeCombo.SelectedIndex == 1) // Waters Connect
-                _clientIdBox.Text = WatersConnectAccount.DEV_DEFAULT.ClientId ?? string.Empty;
+                _clientIdBox.Text = MSCONVERT_WATERS_CONNECT_DEFAULT.ClientId ?? string.Empty;
         }
 
         /// <summary>
@@ -361,7 +366,7 @@ namespace MSConvertGUI
             string serverUrl, string username, string password, bool isDevEnvironment,
             string identityServer = null, string clientScope = null, string clientSecret = null, string clientId = null)
         {
-            var defaults = isDevEnvironment ? WatersConnectAccount.DEV_DEFAULT : WatersConnectAccount.DEFAULT;
+            var defaults = isDevEnvironment ? WatersConnectAccount.DEV_DEFAULT : MSCONVERT_WATERS_CONNECT_DEFAULT;
             var account = new WatersConnectAccount(serverUrl, username, password)
                 .ChangeClientScope(string.IsNullOrWhiteSpace(clientScope) ? defaults.ClientScope : clientScope)
                 .ChangeClientSecret(string.IsNullOrWhiteSpace(clientSecret) ? defaults.ClientSecret : clientSecret)

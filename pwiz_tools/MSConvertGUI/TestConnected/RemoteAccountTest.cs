@@ -192,9 +192,10 @@ namespace MSConvertGUI.TestConnected
             Assert.AreEqual(customUrl, prodAccount.ServerUrl, "Prod: ServerUrl should match user input");
             Assert.AreEqual(username, prodAccount.Username);
             Assert.AreEqual(password, prodAccount.Password);
-            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientScope, prodAccount.ClientScope, "Prod: ClientScope");
-            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientSecret, prodAccount.ClientSecret, "Prod: ClientSecret");
-            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientId, prodAccount.ClientId, "Prod: ClientId");
+            var mscDefault = RemoteAccountDetailForm.MSCONVERT_WATERS_CONNECT_DEFAULT;
+            Assert.AreEqual(mscDefault.ClientScope, prodAccount.ClientScope, "Prod: ClientScope");
+            Assert.AreEqual(mscDefault.ClientSecret, prodAccount.ClientSecret, "Prod: ClientSecret");
+            Assert.AreEqual(mscDefault.ClientId, prodAccount.ClientId, "Prod: ClientId");
             Assert.AreEqual(@"https://custom-test-server:48333", prodAccount.IdentityServer,
                 "Prod: IdentityServer should be derived from serverUrl");
 
@@ -223,11 +224,11 @@ namespace MSConvertGUI.TestConnected
                 clientId: "   ");
             Assert.AreEqual(@"https://custom-test-server:48333", fallbackAccount.IdentityServer,
                 "Fallback: IdentityServer should be derived from serverUrl when override is blank");
-            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientScope, fallbackAccount.ClientScope,
+            Assert.AreEqual(mscDefault.ClientScope, fallbackAccount.ClientScope,
                 "Fallback: ClientScope should use default when override is blank");
-            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientSecret, fallbackAccount.ClientSecret,
+            Assert.AreEqual(mscDefault.ClientSecret, fallbackAccount.ClientSecret,
                 "Fallback: ClientSecret should use default when override is null");
-            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientId, fallbackAccount.ClientId,
+            Assert.AreEqual(mscDefault.ClientId, fallbackAccount.ClientId,
                 "Fallback: ClientId should use default when override is blank");
         }
 
