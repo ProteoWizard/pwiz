@@ -47,6 +47,14 @@ namespace pwiz.OspreySharp.IO
         private Dictionary<string, long> _proteinCache;
         private bool _disposed;
 
+        // Prepared statements - reused across all inserts to avoid per-row SQL recompilation
+        private SQLiteCommand _cmdInsertRefSpectra;
+        private SQLiteCommand _cmdInsertRefSpectraPeaks;
+        private SQLiteCommand _cmdInsertModification;
+        private SQLiteCommand _cmdInsertProtein;
+        private SQLiteCommand _cmdInsertRefSpectraProtein;
+        private SQLiteCommand _cmdInsertRetentionTime;
+
         /// <summary>
         /// Creates a new blib file at the given path. If the file already exists, it is removed first.
         /// </summary>
@@ -67,6 +75,92 @@ namespace pwiz.OspreySharp.IO
             _proteinCache = new Dictionary<string, long>();
 
             CreateSchema();
+            PrepareStatements();
+        }
+
+        /// <summary>
+        /// Prepare reusable SQL commands for high-volume inserts.
+        /// Each command is parsed and compiled once, then reused with new parameter
+        /// values for every row. This avoids the per-row overhead of constructing,
+        /// parsing, and disposing SQLiteCommand objects in tight insert loops.
+        /// </summary>
+        private void PrepareStatements()
+        {
+            _cmdInsertRefSpectra = new SQLiteCommand(_conn);
+            _cmdInsertRefSpectra.CommandText = @"INSERT INTO RefSpectra (
+                peptideSeq, precursorMZ, precursorCharge, peptideModSeq,
+                prevAA, nextAA, copies, numPeaks, ionMobility,
+                collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType,
+                retentionTime, startTime, endTime, totalIonCurrent,
+                moleculeName, chemicalFormula, precursorAdduct, inchiKey, otherKeys,
+                fileID, SpecIDinFile, score, scoreType
+            ) VALUES (
+                @seq, @mz, @charge, @modseq,
+                '-', '-', @copies, @numPeaks, 0.0,
+                0.0, 0.0, 0,
+                @rt, @startTime, @endTime, @tic,
+                '', '', '', '', '',
+                @fileId, @specId, @score, @scoreType
+            )";
+            _cmdInsertRefSpectra.Parameters.Add("@seq", System.Data.DbType.String);
+            _cmdInsertRefSpectra.Parameters.Add("@mz", System.Data.DbType.Double);
+            _cmdInsertRefSpectra.Parameters.Add("@charge", System.Data.DbType.Int32);
+            _cmdInsertRefSpectra.Parameters.Add("@modseq", System.Data.DbType.String);
+            _cmdInsertRefSpectra.Parameters.Add("@copies", System.Data.DbType.Int32);
+            _cmdInsertRefSpectra.Parameters.Add("@numPeaks", System.Data.DbType.Int32);
+            _cmdInsertRefSpectra.Parameters.Add("@rt", System.Data.DbType.Double);
+            _cmdInsertRefSpectra.Parameters.Add("@startTime", System.Data.DbType.Double);
+            _cmdInsertRefSpectra.Parameters.Add("@endTime", System.Data.DbType.Double);
+            _cmdInsertRefSpectra.Parameters.Add("@tic", System.Data.DbType.Double);
+            _cmdInsertRefSpectra.Parameters.Add("@fileId", System.Data.DbType.Int64);
+            _cmdInsertRefSpectra.Parameters.Add("@specId", System.Data.DbType.String);
+            _cmdInsertRefSpectra.Parameters.Add("@score", System.Data.DbType.Double);
+            _cmdInsertRefSpectra.Parameters.Add("@scoreType", System.Data.DbType.Int32);
+            _cmdInsertRefSpectra.Prepare();
+
+            _cmdInsertRefSpectraPeaks = new SQLiteCommand(_conn);
+            _cmdInsertRefSpectraPeaks.CommandText =
+                "INSERT INTO RefSpectraPeaks (RefSpectraID, peakMZ, peakIntensity) VALUES (@id, @mz, @int)";
+            _cmdInsertRefSpectraPeaks.Parameters.Add("@id", System.Data.DbType.Int64);
+            _cmdInsertRefSpectraPeaks.Parameters.Add("@mz", System.Data.DbType.Binary);
+            _cmdInsertRefSpectraPeaks.Parameters.Add("@int", System.Data.DbType.Binary);
+            _cmdInsertRefSpectraPeaks.Prepare();
+
+            _cmdInsertModification = new SQLiteCommand(_conn);
+            _cmdInsertModification.CommandText =
+                "INSERT INTO Modifications (RefSpectraID, position, mass) VALUES (@id, @pos, @mass)";
+            _cmdInsertModification.Parameters.Add("@id", System.Data.DbType.Int64);
+            _cmdInsertModification.Parameters.Add("@pos", System.Data.DbType.Int32);
+            _cmdInsertModification.Parameters.Add("@mass", System.Data.DbType.Double);
+            _cmdInsertModification.Prepare();
+
+            _cmdInsertProtein = new SQLiteCommand(_conn);
+            _cmdInsertProtein.CommandText = "INSERT INTO Proteins (accession) VALUES (@acc)";
+            _cmdInsertProtein.Parameters.Add("@acc", System.Data.DbType.String);
+            _cmdInsertProtein.Prepare();
+
+            _cmdInsertRefSpectraProtein = new SQLiteCommand(_conn);
+            _cmdInsertRefSpectraProtein.CommandText =
+                "INSERT INTO RefSpectraProteins (RefSpectraID, ProteinID) VALUES (@refId, @protId)";
+            _cmdInsertRefSpectraProtein.Parameters.Add("@refId", System.Data.DbType.Int64);
+            _cmdInsertRefSpectraProtein.Parameters.Add("@protId", System.Data.DbType.Int64);
+            _cmdInsertRefSpectraProtein.Prepare();
+
+            _cmdInsertRetentionTime = new SQLiteCommand(_conn);
+            _cmdInsertRetentionTime.CommandText = @"INSERT INTO RetentionTimes (
+                RefSpectraID, RedundantRefSpectraID, SpectrumSourceID,
+                ionMobility, collisionalCrossSectionSqA,
+                ionMobilityHighEnergyOffset, ionMobilityType,
+                retentionTime, startTime, endTime, score, bestSpectrum
+            ) VALUES (@refId, 0, @srcId, 0.0, 0.0, 0.0, 0, @rt, @start, @end, @score, @best)";
+            _cmdInsertRetentionTime.Parameters.Add("@refId", System.Data.DbType.Int64);
+            _cmdInsertRetentionTime.Parameters.Add("@srcId", System.Data.DbType.Int64);
+            _cmdInsertRetentionTime.Parameters.Add("@rt", System.Data.DbType.Double);
+            _cmdInsertRetentionTime.Parameters.Add("@start", System.Data.DbType.Double);
+            _cmdInsertRetentionTime.Parameters.Add("@end", System.Data.DbType.Double);
+            _cmdInsertRetentionTime.Parameters.Add("@score", System.Data.DbType.Double);
+            _cmdInsertRetentionTime.Parameters.Add("@best", System.Data.DbType.Int32);
+            _cmdInsertRetentionTime.Prepare();
         }
 
         /// <summary>
@@ -126,50 +220,28 @@ namespace pwiz.OspreySharp.IO
             string specIdInFile = _nextSpecId.ToString();
             _nextSpecId++;
 
-            using (var cmd = new SQLiteCommand(_conn))
-            {
-                cmd.CommandText = @"INSERT INTO RefSpectra (
-                    peptideSeq, precursorMZ, precursorCharge, peptideModSeq,
-                    prevAA, nextAA, copies, numPeaks, ionMobility,
-                    collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType,
-                    retentionTime, startTime, endTime, totalIonCurrent,
-                    moleculeName, chemicalFormula, precursorAdduct, inchiKey, otherKeys,
-                    fileID, SpecIDinFile, score, scoreType
-                ) VALUES (
-                    @seq, @mz, @charge, @modseq,
-                    '-', '-', @copies, @numPeaks, 0.0,
-                    0.0, 0.0, 0,
-                    @rt, @startTime, @endTime, @tic,
-                    '', '', '', '', '',
-                    @fileId, @specId, @score, @scoreType
-                )";
-                cmd.Parameters.AddWithValue("@seq", cleanSeq);
-                cmd.Parameters.AddWithValue("@mz", precursorMz);
-                cmd.Parameters.AddWithValue("@charge", precursorCharge);
-                cmd.Parameters.AddWithValue("@modseq", cleanModSeq);
-                cmd.Parameters.AddWithValue("@copies", copies);
-                cmd.Parameters.AddWithValue("@numPeaks", mzs.Length);
-                cmd.Parameters.AddWithValue("@rt", retentionTime);
-                cmd.Parameters.AddWithValue("@startTime", startTime);
-                cmd.Parameters.AddWithValue("@endTime", endTime);
-                cmd.Parameters.AddWithValue("@tic", totalIonCurrent);
-                cmd.Parameters.AddWithValue("@fileId", fileId);
-                cmd.Parameters.AddWithValue("@specId", specIdInFile);
-                cmd.Parameters.AddWithValue("@score", score);
-                cmd.Parameters.AddWithValue("@scoreType", SCORE_TYPE_GENERIC_QVALUE);
-                cmd.ExecuteNonQuery();
-            }
+            _cmdInsertRefSpectra.Parameters["@seq"].Value = cleanSeq;
+            _cmdInsertRefSpectra.Parameters["@mz"].Value = precursorMz;
+            _cmdInsertRefSpectra.Parameters["@charge"].Value = precursorCharge;
+            _cmdInsertRefSpectra.Parameters["@modseq"].Value = cleanModSeq;
+            _cmdInsertRefSpectra.Parameters["@copies"].Value = copies;
+            _cmdInsertRefSpectra.Parameters["@numPeaks"].Value = mzs.Length;
+            _cmdInsertRefSpectra.Parameters["@rt"].Value = retentionTime;
+            _cmdInsertRefSpectra.Parameters["@startTime"].Value = startTime;
+            _cmdInsertRefSpectra.Parameters["@endTime"].Value = endTime;
+            _cmdInsertRefSpectra.Parameters["@tic"].Value = totalIonCurrent;
+            _cmdInsertRefSpectra.Parameters["@fileId"].Value = fileId;
+            _cmdInsertRefSpectra.Parameters["@specId"].Value = specIdInFile;
+            _cmdInsertRefSpectra.Parameters["@score"].Value = score;
+            _cmdInsertRefSpectra.Parameters["@scoreType"].Value = SCORE_TYPE_GENERIC_QVALUE;
+            _cmdInsertRefSpectra.ExecuteNonQuery();
 
             long refId = _conn.LastInsertRowId;
 
-            using (var cmd = new SQLiteCommand(_conn))
-            {
-                cmd.CommandText = "INSERT INTO RefSpectraPeaks (RefSpectraID, peakMZ, peakIntensity) VALUES (@id, @mz, @int)";
-                cmd.Parameters.AddWithValue("@id", refId);
-                cmd.Parameters.AddWithValue("@mz", mzBlob);
-                cmd.Parameters.AddWithValue("@int", intBlob);
-                cmd.ExecuteNonQuery();
-            }
+            _cmdInsertRefSpectraPeaks.Parameters["@id"].Value = refId;
+            _cmdInsertRefSpectraPeaks.Parameters["@mz"].Value = mzBlob;
+            _cmdInsertRefSpectraPeaks.Parameters["@int"].Value = intBlob;
+            _cmdInsertRefSpectraPeaks.ExecuteNonQuery();
 
             return refId;
         }
@@ -209,14 +281,10 @@ namespace pwiz.OspreySharp.IO
             foreach (var mod in modifications)
             {
                 int position1Based = mod.Position + 1;
-                using (var cmd = new SQLiteCommand(_conn))
-                {
-                    cmd.CommandText = "INSERT INTO Modifications (RefSpectraID, position, mass) VALUES (@id, @pos, @mass)";
-                    cmd.Parameters.AddWithValue("@id", refId);
-                    cmd.Parameters.AddWithValue("@pos", position1Based);
-                    cmd.Parameters.AddWithValue("@mass", mod.MassDelta);
-                    cmd.ExecuteNonQuery();
-                }
+                _cmdInsertModification.Parameters["@id"].Value = refId;
+                _cmdInsertModification.Parameters["@pos"].Value = position1Based;
+                _cmdInsertModification.Parameters["@mass"].Value = mod.MassDelta;
+                _cmdInsertModification.ExecuteNonQuery();
             }
         }
 
@@ -231,29 +299,17 @@ namespace pwiz.OspreySharp.IO
                     continue;
 
                 long proteinId;
-                if (_proteinCache.ContainsKey(accession))
+                if (!_proteinCache.TryGetValue(accession, out proteinId))
                 {
-                    proteinId = _proteinCache[accession];
-                }
-                else
-                {
-                    using (var cmd = new SQLiteCommand(_conn))
-                    {
-                        cmd.CommandText = "INSERT INTO Proteins (accession) VALUES (@acc)";
-                        cmd.Parameters.AddWithValue("@acc", accession);
-                        cmd.ExecuteNonQuery();
-                    }
+                    _cmdInsertProtein.Parameters["@acc"].Value = accession;
+                    _cmdInsertProtein.ExecuteNonQuery();
                     proteinId = _conn.LastInsertRowId;
                     _proteinCache[accession] = proteinId;
                 }
 
-                using (var cmd = new SQLiteCommand(_conn))
-                {
-                    cmd.CommandText = "INSERT INTO RefSpectraProteins (RefSpectraID, ProteinID) VALUES (@refId, @protId)";
-                    cmd.Parameters.AddWithValue("@refId", refId);
-                    cmd.Parameters.AddWithValue("@protId", proteinId);
-                    cmd.ExecuteNonQuery();
-                }
+                _cmdInsertRefSpectraProtein.Parameters["@refId"].Value = refId;
+                _cmdInsertRefSpectraProtein.Parameters["@protId"].Value = proteinId;
+                _cmdInsertRefSpectraProtein.ExecuteNonQuery();
             }
         }
 
@@ -265,26 +321,15 @@ namespace pwiz.OspreySharp.IO
             double? retentionTime, double startTime, double endTime,
             double score, bool bestSpectrum)
         {
-            using (var cmd = new SQLiteCommand(_conn))
-            {
-                cmd.CommandText = @"INSERT INTO RetentionTimes (
-                    RefSpectraID, RedundantRefSpectraID, SpectrumSourceID,
-                    ionMobility, collisionalCrossSectionSqA,
-                    ionMobilityHighEnergyOffset, ionMobilityType,
-                    retentionTime, startTime, endTime, score, bestSpectrum
-                ) VALUES (@refId, 0, @srcId, 0.0, 0.0, 0.0, 0, @rt, @start, @end, @score, @best)";
-                cmd.Parameters.AddWithValue("@refId", refId);
-                cmd.Parameters.AddWithValue("@srcId", sourceFileId);
-                if (retentionTime.HasValue)
-                    cmd.Parameters.AddWithValue("@rt", retentionTime.Value);
-                else
-                    cmd.Parameters.AddWithValue("@rt", DBNull.Value);
-                cmd.Parameters.AddWithValue("@start", startTime);
-                cmd.Parameters.AddWithValue("@end", endTime);
-                cmd.Parameters.AddWithValue("@score", score);
-                cmd.Parameters.AddWithValue("@best", bestSpectrum ? 1 : 0);
-                cmd.ExecuteNonQuery();
-            }
+            _cmdInsertRetentionTime.Parameters["@refId"].Value = refId;
+            _cmdInsertRetentionTime.Parameters["@srcId"].Value = sourceFileId;
+            _cmdInsertRetentionTime.Parameters["@rt"].Value =
+                retentionTime.HasValue ? (object)retentionTime.Value : DBNull.Value;
+            _cmdInsertRetentionTime.Parameters["@start"].Value = startTime;
+            _cmdInsertRetentionTime.Parameters["@end"].Value = endTime;
+            _cmdInsertRetentionTime.Parameters["@score"].Value = score;
+            _cmdInsertRetentionTime.Parameters["@best"].Value = bestSpectrum ? 1 : 0;
+            _cmdInsertRetentionTime.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -353,6 +398,12 @@ namespace pwiz.OspreySharp.IO
                     catch { /* best effort */ }
                     _inTransaction = false;
                 }
+                if (_cmdInsertRefSpectra != null) { _cmdInsertRefSpectra.Dispose(); _cmdInsertRefSpectra = null; }
+                if (_cmdInsertRefSpectraPeaks != null) { _cmdInsertRefSpectraPeaks.Dispose(); _cmdInsertRefSpectraPeaks = null; }
+                if (_cmdInsertModification != null) { _cmdInsertModification.Dispose(); _cmdInsertModification = null; }
+                if (_cmdInsertProtein != null) { _cmdInsertProtein.Dispose(); _cmdInsertProtein = null; }
+                if (_cmdInsertRefSpectraProtein != null) { _cmdInsertRefSpectraProtein.Dispose(); _cmdInsertRefSpectraProtein = null; }
+                if (_cmdInsertRetentionTime != null) { _cmdInsertRetentionTime.Dispose(); _cmdInsertRetentionTime = null; }
                 if (_conn != null)
                 {
                     _conn.Close();

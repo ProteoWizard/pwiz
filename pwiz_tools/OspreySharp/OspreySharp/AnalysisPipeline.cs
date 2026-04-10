@@ -1879,12 +1879,41 @@ namespace pwiz.OspreySharp
                 }
             }
 
+            // Pre-index all per-file target entries by (ModifiedSequence, Charge) for O(1)
+            // lookup of cross-file observations. Without this, the inner loop below is
+            // O(N_passing * N_total) which is ~70 billion ops for typical experiments.
+            var entriesByPrecursor =
+                new Dictionary<string, List<KeyValuePair<string, FdrEntry>>>(
+                    StringComparer.Ordinal);
+            foreach (var fileKvp in perFileEntries)
+            {
+                string fn = fileKvp.Key;
+                foreach (var fileEntry in fileKvp.Value)
+                {
+                    if (fileEntry.IsDecoy)
+                        continue;
+                    string key = fileEntry.ModifiedSequence + "|" + fileEntry.Charge;
+                    List<KeyValuePair<string, FdrEntry>> list;
+                    if (!entriesByPrecursor.TryGetValue(key, out list))
+                    {
+                        list = new List<KeyValuePair<string, FdrEntry>>(perFileEntries.Count);
+                        entriesByPrecursor[key] = list;
+                    }
+                    list.Add(new KeyValuePair<string, FdrEntry>(fn, fileEntry));
+                }
+            }
+
             using (var writer = new BlibWriter(config.OutputBlib))
             {
                 writer.BeginBatch();
 
-                // Track source files
+                // Pre-create source file IDs once (instead of lazily inside the loop)
                 var sourceFileIds = new Dictionary<string, long>();
+                foreach (var kvp in perFileEntries)
+                {
+                    sourceFileIds[kvp.Key] = writer.AddSourceFile(
+                        kvp.Key + ".mzML", kvp.Key + ".mzML", fdrThreshold);
+                }
 
                 foreach (var kvp in bestByPrecursor.Values)
                 {
@@ -1895,14 +1924,7 @@ namespace pwiz.OspreySharp
                     if (!libraryById.TryGetValue(entry.EntryId, out libEntry))
                         continue;
 
-                    // Get or create source file
-                    long fileId;
-                    if (!sourceFileIds.TryGetValue(fileName, out fileId))
-                    {
-                        fileId = writer.AddSourceFile(fileName + ".mzML", fileName + ".mzML",
-                            fdrThreshold);
-                        sourceFileIds[fileName] = fileId;
-                    }
+                    long fileId = sourceFileIds[fileName];
 
                     // Extract fragment arrays from library
                     double[] mzs = new double[libEntry.Fragments.Count];
@@ -1934,38 +1956,29 @@ namespace pwiz.OspreySharp
                     if (libEntry.ProteinIds != null && libEntry.ProteinIds.Count > 0)
                         writer.AddProteinMapping(refId, libEntry.ProteinIds);
 
-                    // Add per-file retention times for all observations of this precursor
-                    foreach (var fileKvp in perFileEntries)
+                    // Add per-file retention times for cross-file observations.
+                    // Use the pre-built index for O(1) lookup by (modseq, charge).
+                    string lookupKey = entry.ModifiedSequence + "|" + entry.Charge;
+                    List<KeyValuePair<string, FdrEntry>> observations;
+                    if (entriesByPrecursor.TryGetValue(lookupKey, out observations))
                     {
-                        string fn = fileKvp.Key;
-                        if (fn == fileName)
-                            continue;
-
-                        foreach (var fileEntry in fileKvp.Value)
+                        foreach (var obs in observations)
                         {
-                            if (fileEntry.ModifiedSequence == entry.ModifiedSequence &&
-                                fileEntry.Charge == entry.Charge &&
-                                !fileEntry.IsDecoy)
-                            {
-                                long srcId;
-                                if (!sourceFileIds.TryGetValue(fn, out srcId))
-                                {
-                                    srcId = writer.AddSourceFile(fn + ".mzML", fn + ".mzML",
-                                        fdrThreshold);
-                                    sourceFileIds[fn] = srcId;
-                                }
+                            if (obs.Key == fileName)
+                                continue;
 
-                                bool passesFdr = fileEntry.EffectiveRunQvalue(config.FdrLevel)
-                                    <= fdrThreshold;
+                            long srcId = sourceFileIds[obs.Key];
+                            var fileEntry = obs.Value;
+                            bool passesFdr = fileEntry.EffectiveRunQvalue(config.FdrLevel)
+                                <= fdrThreshold;
 
-                                writer.AddRetentionTime(
-                                    refId, srcId,
-                                    passesFdr ? (double?)fileEntry.ApexRt : null,
-                                    fileEntry.StartRt,
-                                    fileEntry.EndRt,
-                                    fileEntry.EffectiveRunQvalue(config.FdrLevel),
-                                    false);
-                            }
+                            writer.AddRetentionTime(
+                                refId, srcId,
+                                passesFdr ? (double?)fileEntry.ApexRt : null,
+                                fileEntry.StartRt,
+                                fileEntry.EndRt,
+                                fileEntry.EffectiveRunQvalue(config.FdrLevel),
+                                false);
                         }
                     }
                 }
