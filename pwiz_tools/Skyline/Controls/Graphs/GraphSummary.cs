@@ -168,9 +168,13 @@ namespace pwiz.Skyline.Controls.Graphs
                              new DefaultStateProvider();
 
             Type = type;
-            Text = Controller.Text + @" - " + Type.CustomToString();
+            Text = Controller.Text + @" - " + Type.CustomToString(Controller);
             Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
 
+            // Clear ZedGraph's default pane so the control paints blank until
+            // the controller creates the real pane in the first UpdateGraph call.
+            // This prevents the jarring "Title / Y Axis / X Axis" default appearance.
+            graphControl.MasterPane.PaneList.Clear();
             UpdateUI();
         }
 
@@ -307,13 +311,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void UpdateUI(bool selectionChanged = true)
         {
-            UpdateGraph(selectionChanged);
+            UpdateUIWithoutToolbar(selectionChanged);
             UpdateToolbar();
         }
 
         public void UpdateUIWithoutToolbar(bool selectionChanged = true)
         {
             UpdateGraph(selectionChanged);
+            // Set title with awareness of UI mode (may translate "peptide" to "molecule" etc)
+            Text = Helpers.PeptideToMoleculeTextMapper.Translate(Controller.Text + @" - " + Type.CustomToString(), _documentContainer.Document.DocumentType);
         }
 
         private bool SplitterDistanceValid(double distance)
@@ -597,12 +603,13 @@ namespace pwiz.Skyline.Controls.Graphs
         histogram2d = 1 << 6,
         detections = 1 << 7,
         detections_histogram = 1 << 8,
-        abundance = 1 << 9
+        abundance = 1 << 9,
+        abundance_comparison = 1 << 10
     }
 
     public static class Extensions
     {
-        public static string CustomToString(this GraphTypeSummary type)
+        public static string CustomToString(this GraphTypeSummary type, GraphSummary.IController controller = null)
         {
             switch (type)
             {
@@ -614,6 +621,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     return GraphsResources.Extensions_CustomToString_Peptide_Comparison;
                 case GraphTypeSummary.abundance:
                     return GraphsResources.Extensions_CustomToString_Relative_Abundance;
+                case GraphTypeSummary.abundance_comparison:
+                    return GraphsResources.Extensions_CustomToString_Relative_Abundance_Comparison;
                 case GraphTypeSummary.score_to_run_regression:
                     return GraphsResources.Extensions_CustomToString_Score_To_Run_Regression;
                 case GraphTypeSummary.schedule:
@@ -621,9 +630,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.run_to_run_regression:
                     return GraphsResources.Extensions_CustomToString_Run_To_Run_Regression;
                 case GraphTypeSummary.histogram:
-                    return GraphsResources.Extensions_CustomToString_Histogram;
+                    return controller is AreaGraphController
+                        ? GraphsResources.Extensions_CustomToString_CV_Histogram
+                        : GraphsResources.Extensions_CustomToString_Histogram;
                 case GraphTypeSummary.histogram2d:
-                    return GraphsResources.Extensions_CustomToString__2D_Histogram;
+                    return controller is AreaGraphController
+                        ? GraphsResources.Extensions_CustomToString_CV_2D_Histogram
+                        : GraphsResources.Extensions_CustomToString__2D_Histogram;
                 case GraphTypeSummary.detections:
                     return GraphsResources.Extensions_CustomToString_Detections_Replicates;
                 case GraphTypeSummary.detections_histogram:

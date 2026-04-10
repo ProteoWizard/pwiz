@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Entries that survive cleaning but have a different document reference will be used
         /// as prior data for incremental updates.
         /// </summary>
-        private static IEnumerable<int> CleanCacheForIncrementalUpdates(
+        internal static IEnumerable<int> CleanCacheForIncrementalUpdates(
             SrmDocument currentDoc, IReadOnlyDictionary<int, SrmDocument> cachedEntries)
         {
             var keysToRemove = new List<int>();
@@ -406,7 +406,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var goalPoint = _graphData.PointPairList.FirstOrDefault(pp => identity.Equals((pp.Tag as GraphPointData)?.IdentityPath));
                 if (_toolTip == null)
                     _toolTip = new NodeTip(this) { Parent = GraphSummary.GraphControl };
-                _toolTip.SetTipProvider(new RelativeAbundanceTipProvider(goalPoint), new Rectangle(e.Location, new Size()), e.Location);
+                string replicateName = GetReplicateDisplayName();
+                _toolTip.SetTipProvider(new RelativeAbundanceTipProvider(goalPoint, replicateName), new Rectangle(e.Location, new Size()), e.Location);
                 return true;
             }
             else
@@ -414,6 +415,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 _toolTip?.HideTip();
                 return base.HandleMouseMoveEvent(sender, e);
             }
+        }
+
+        private string GetReplicateDisplayName()
+        {
+            if (_graphData == null)
+                return null;
+            if (_graphData.ShowReplicate == ReplicateDisplay.single)
+            {
+                var measuredResults = GraphSummary.DocumentUIContainer.DocumentUI.Settings.MeasuredResults;
+                if (measuredResults != null && _graphData.ResultsIndex >= 0 &&
+                    _graphData.ResultsIndex < measuredResults.Chromatograms.Count)
+                    return measuredResults.Chromatograms[_graphData.ResultsIndex].Name;
+            }
+            return GraphsResources.RelativeAbundanceGraph_ToolTip_Replicate_All;
         }
 
         private void ChangeSelection(IdentityPath identityPath, bool ctrl)
@@ -471,15 +486,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         out newGraphData))
                 {
                     // Keep showing previous graph while calculating new data (stale-while-revalidate)
-                    // Set initial X-axis scale estimate based on document counts
                     if (_graphData == null)
-                    {
-                        int estimatedCount = graphSettings.AreaProteinTargets
-                            ? document.MoleculeGroupCount
-                            : document.MoleculeCount;
-                        XAxis.Scale.Max = estimatedCount;
-                        AxisChange();
-                    }
+                        InitializeEmptyGraph(document, graphSettings);
                     return;
                 }
             }
@@ -749,6 +757,44 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            AxisChange();
+        }
+
+        /// <summary>
+        /// Set axis labels and a reasonable default scale before data arrives from the
+        /// background computation, so the graph shows meaningful axes immediately.
+        /// </summary>
+        private void InitializeEmptyGraph(SrmDocument document, GraphSettings graphSettings)
+        {
+            int estimatedCount = graphSettings.AreaProteinTargets
+                ? document.MoleculeGroupCount
+                : document.MoleculeCount;
+            XAxis.Scale.Max = estimatedCount;
+
+            if (document.HasSmallMolecules)
+                XAxis.Title.Text = GraphsResources.SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank;
+            else
+                XAxis.Title.Text = graphSettings.AreaProteinTargets
+                    ? GraphsResources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank
+                    : GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peptide_Rank;
+
+            var yTitle = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+            var normMethod = document.Settings.PeptideSettings.Quantification.NormalizationMethod;
+            if (normMethod != null && !Equals(normMethod, NormalizationMethod.NONE))
+                yTitle = normMethod.GetAxisTitle(yTitle);
+            if (Settings.Default.RelativeAbundanceLogScale)
+            {
+                YAxis.Title.Text = GraphValues.AnnotateLogAxisTitle(yTitle);
+                YAxis.Type = AxisType.Log;
+                YAxis.Scale.Min = 1e2;
+                YAxis.Scale.Max = 1e9;
+                YAxis.Scale.MinAuto = false;
+                YAxis.Scale.MaxAuto = false;
+            }
+            else
+            {
+                YAxis.Title.Text = yTitle;
+            }
             AxisChange();
         }
 
@@ -1469,9 +1515,11 @@ namespace pwiz.Skyline.Controls.Graphs
         class RelativeAbundanceTipProvider : ITipProvider
         {
             private PointPair _pp;
-            public RelativeAbundanceTipProvider(PointPair pp)
+            private string _replicateName;
+            public RelativeAbundanceTipProvider(PointPair pp, string replicateName)
             {
                 _pp = pp;
+                _replicateName = replicateName;
             }
 
             public bool HasTip
@@ -1498,10 +1546,14 @@ namespace pwiz.Skyline.Controls.Graphs
                             table.AddDetailRow(
                                 Helpers.PeptideToMoleculeTextMapper.Translate(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Protein, pd.Protein.IsNonProteomic()),
                                 ProteinMetadataManager.ProteinModalDisplayText(pd.Protein.DocNode), rt);
+                        if (_replicateName != null)
+                            table.AddDetailRow(
+                                GraphsResources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate,
+                                _replicateName, rt);
                         if (_pp != null )
                         {
                             table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_PeakArea,
-                                _pp.Y.ToString(Formats.PEAK_AREA, CultureInfo.CurrentCulture), rt);
+                                _pp.Y.ToString(Formats.CalibrationCurve, CultureInfo.CurrentCulture), rt);
                             table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_LogPeakArea,
                                 Math.Log10(_pp.Y).ToString(Formats.FoldChange, CultureInfo.CurrentCulture), rt);
                             table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_Rank,
