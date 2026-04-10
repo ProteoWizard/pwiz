@@ -58,7 +58,11 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BatchScorer.cs" />
+    <Compile Include="CalibrationScorer.cs" />
     <Compile Include="DecoyGenerator.cs" />
+    <Compile Include="PearsonCorrelation.cs" />
+    <Compile Include="SpectralScorer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

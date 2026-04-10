@@ -63,7 +63,9 @@
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="ChromatographyTest.cs" />
     <Compile Include="CoreTypesTest.cs" />
+    <Compile Include="FdrTest.cs" />
     <Compile Include="MLTest.cs" />
+    <Compile Include="ScoringTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
