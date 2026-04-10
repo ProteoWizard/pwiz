@@ -27,6 +27,13 @@ namespace pwiz.OspreySharp.Core
         public double Pep { get; set; }
         public string ModifiedSequence { get; set; }
 
+        /// <summary>
+        /// Full PIN feature vector (21 features) computed during coelution scoring.
+        /// Used by Percolator FDR. Null if features have not been computed yet
+        /// (e.g., for stubs loaded from a Parquet cache without features).
+        /// </summary>
+        public double[] Features { get; set; }
+
         public FdrEntry()
         {
             RunPrecursorQvalue = 1.0;

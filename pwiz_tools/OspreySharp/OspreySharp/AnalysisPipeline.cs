@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -39,6 +40,7 @@ namespace pwiz.OspreySharp
             try
             {
                 // Stage 1: Load library + generate decoys
+                var swLibrary = Stopwatch.StartNew();
                 var library = LoadLibrary(config);
                 if (library == null || library.Count == 0)
                 {
@@ -55,6 +57,9 @@ namespace pwiz.OspreySharp
                 {
                     decoys = new List<LibraryEntry>();
                 }
+                swLibrary.Stop();
+                LogInfo(string.Format("[TIMING] Library loading + decoys: {0:F1}s",
+                    swLibrary.Elapsed.TotalSeconds));
 
                 var fullLibrary = new List<LibraryEntry>(library.Count + decoys.Count);
                 fullLibrary.AddRange(library);
@@ -71,6 +76,7 @@ namespace pwiz.OspreySharp
                 // Stage 2-4: Per-file calibration + coelution scoring
                 var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
 
+                var swAllFiles = Stopwatch.StartNew();
                 for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
                 {
                     string inputFile = config.InputFiles[fileIdx];
@@ -87,6 +93,9 @@ namespace pwiz.OspreySharp
                             new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                     }
                 }
+                swAllFiles.Stop();
+                LogInfo(string.Format("[TIMING] All files processed: {0:F1}s",
+                    swAllFiles.Elapsed.TotalSeconds));
 
                 int totalScored = 0;
                 foreach (var kvp in perFileEntries)
@@ -108,7 +117,11 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("Running {0} FDR control on coelution results...",
                     config.FdrMethod));
 
+                var swFdr = Stopwatch.StartNew();
                 RunFdr(perFileEntries, fullLibrary, config);
+                swFdr.Stop();
+                LogInfo(string.Format("[TIMING] Percolator/Simple FDR: {0:F1}s",
+                    swFdr.Elapsed.TotalSeconds));
 
                 // Log first-pass results
                 int passingTargets = 0;
@@ -144,16 +157,26 @@ namespace pwiz.OspreySharp
                     LogInfo("");
                     LogInfo(string.Format("Running protein-level FDR at {0:P1}...",
                         config.ProteinFdr.Value));
+                    var swProtein = Stopwatch.StartNew();
                     RunProteinFdr(perFileEntries, fullLibrary, config);
+                    swProtein.Stop();
+                    LogInfo(string.Format("[TIMING] Protein FDR: {0:F1}s",
+                        swProtein.Elapsed.TotalSeconds));
                 }
 
                 // Stage 9: Write output blib
                 LogInfo("");
                 LogInfo(string.Format("Writing output to {0}...", config.OutputBlib));
+                var swBlib = Stopwatch.StartNew();
                 WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config);
+                swBlib.Stop();
+                LogInfo(string.Format("[TIMING] Blib output: {0:F1}s",
+                    swBlib.Elapsed.TotalSeconds));
 
                 stopwatch.Stop();
                 LogInfo("");
+                LogInfo(string.Format("[TIMING] Total pipeline: {0:F1}s",
+                    stopwatch.Elapsed.TotalSeconds));
                 LogInfo(string.Format("Analysis complete in {0}", FormatDuration(stopwatch.Elapsed)));
                 return 0;
             }
@@ -244,10 +267,35 @@ namespace pwiz.OspreySharp
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, OspreyConfig config)
         {
-            // Load spectra
+            // Load spectra (from mzML or .spectra.bin cache)
             List<Spectrum> spectra;
             List<MS1Spectrum> ms1Spectra;
+            var swParse = Stopwatch.StartNew();
             LoadSpectra(inputFile, out spectra, out ms1Spectra);
+            swParse.Stop();
+
+            long inputBytes = 0;
+            try
+            {
+                if (File.Exists(inputFile))
+                    inputBytes = new FileInfo(inputFile).Length;
+            }
+            catch
+            {
+                inputBytes = 0;
+            }
+
+            double parseSeconds = swParse.Elapsed.TotalSeconds;
+            if (inputBytes > 0 && parseSeconds > 0.001)
+            {
+                double mbPerSec = (inputBytes / 1024.0 / 1024.0) / parseSeconds;
+                LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s ({1:F1} MB/s)",
+                    parseSeconds, mbPerSec));
+            }
+            else
+            {
+                LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s", parseSeconds));
+            }
 
             if (spectra == null || spectra.Count == 0)
             {
@@ -266,14 +314,29 @@ namespace pwiz.OspreySharp
             RTCalibration rtCalibration = null;
             if (config.RtCalibration.Enabled)
             {
+                var swCal = Stopwatch.StartNew();
                 rtCalibration = RunCalibration(
                     fullLibrary, spectra, ms1Spectra, config);
+                swCal.Stop();
+                int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
+                LogInfo(string.Format(
+                    "[TIMING] RT calibration: {0:F1}s ({1} calibration points)",
+                    swCal.Elapsed.TotalSeconds, nPoints));
             }
 
             // Run coelution scoring across all isolation windows
+            var swScoring = Stopwatch.StartNew();
             var scoredEntries = RunCoelutionScoring(
                 fullLibrary, spectra, ms1Spectra,
                 isolationWindows, rtCalibration, config);
+            swScoring.Stop();
+            double scoringSeconds = swScoring.Elapsed.TotalSeconds;
+            double ratePerSec = scoringSeconds > 0.001
+                ? scoredEntries.Count / scoringSeconds
+                : 0.0;
+            LogInfo(string.Format(
+                "[TIMING] Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
+                scoringSeconds, scoredEntries.Count, ratePerSec));
 
             LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
                 scoredEntries.Count,
@@ -528,6 +591,9 @@ namespace pwiz.OspreySharp
             // Determine RT tolerance
             double fallbackTolerance = config.RtCalibration.FallbackRtTolerance;
 
+            // Per-window timings collected thread-safely for post-summary.
+            var windowTimings = new ConcurrentBag<WindowTiming>();
+
             // Process each isolation window (parallelizable)
             object lockObj = new object();
 
@@ -537,9 +603,18 @@ namespace pwiz.OspreySharp
             },
             window =>
             {
+                var swWindow = Stopwatch.StartNew();
                 var windowEntries = ScoreWindow(
                     window, fullLibrary, spectraByWindowKey, ms1Spectra,
                     rtCalibration, fallbackTolerance, scorer, config);
+                swWindow.Stop();
+
+                windowTimings.Add(new WindowTiming
+                {
+                    CenterMz = window.Center,
+                    Seconds = swWindow.Elapsed.TotalSeconds,
+                    CandidateCount = windowEntries.Count
+                });
 
                 lock (lockObj)
                 {
@@ -553,7 +628,39 @@ namespace pwiz.OspreySharp
                 }
             });
 
+            // Summarize per-window timings.
+            LogWindowTimingSummary(windowTimings);
+
             return allEntries;
+        }
+
+        /// <summary>
+        /// Per-window timing record for diagnostic summarization.
+        /// </summary>
+        private class WindowTiming
+        {
+            public double CenterMz { get; set; }
+            public double Seconds { get; set; }
+            public int CandidateCount { get; set; }
+        }
+
+        /// <summary>
+        /// Log min/median/max per-window scoring times and the slowest window's candidate count.
+        /// </summary>
+        private static void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings)
+        {
+            if (timings == null || timings.Count == 0)
+                return;
+
+            var sorted = timings.OrderBy(t => t.Seconds).ToList();
+            int n = sorted.Count;
+            double minS = sorted[0].Seconds;
+            double maxS = sorted[n - 1].Seconds;
+            double medS = sorted[n / 2].Seconds;
+            var slowest = sorted[n - 1];
+            LogInfo(string.Format(
+                "[TIMING] Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
+                minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
         }
 
         /// <summary>
@@ -702,21 +809,69 @@ namespace pwiz.OspreySharp
             // XCorr at apex (using unit-resolution binning)
             double xcorr = ComputeXcorrForSpectrum(apexSpectrum, candidate, scorer);
 
-            // Compute basic coelution features
-            double coelutionSum = ComputeCoelutionSum(xics, bestPeak);
+            // Compute pairwise coelution features (sum, min, max, n_positive)
+            double coelutionSum, coelutionMin, coelutionMax;
+            int nCoelutingFragments;
+            ComputeCoelutionStats(xics, bestPeak,
+                out coelutionSum, out coelutionMin, out coelutionMax,
+                out nCoelutingFragments);
 
-            // RT deviation
-            double rtDeviation = 0.0;
-            if (rtCalibration != null)
-            {
-                rtDeviation = apexSpectrum.RetentionTime - expectedRt;
-            }
+            // Peak shape features: apex, area, sharpness
+            double peakApex, peakArea, peakSharpness;
+            ComputePeakShapeFeatures(xics, bestPeak,
+                out peakApex, out peakArea, out peakSharpness);
+
+            // RT deviation (absolute even if calibration disabled — measured vs library RT)
+            double rtDeviation = apexSpectrum.RetentionTime - expectedRt;
+            double absRtDeviation = Math.Abs(rtDeviation);
 
             // Count consecutive ions
             byte consecutiveIons = CountConsecutiveIons(candidate, apexSpectrum, config);
 
             // Count fragment matches
             byte top6Matches = CountTop6Matches(candidate, apexSpectrum, config);
+
+            // Explained intensity, mass accuracy at apex
+            double explainedIntensity, massAccuracyMean, absMassAccuracyMean;
+            ComputeApexMatchFeatures(candidate, apexSpectrum, config,
+                out explainedIntensity, out massAccuracyMean, out absMassAccuracyMean);
+
+            // MS1 features: precursor coelution, isotope cosine
+            double ms1PrecursorCoelution = 0.0;
+            double ms1IsotopeCosine = 0.0;
+            if (ms1Spectra != null && ms1Spectra.Count > 0)
+            {
+                ComputeMs1Features(
+                    candidate, xics, bestPeak,
+                    windowRts, startScan,
+                    ms1Spectra, config,
+                    out ms1PrecursorCoelution, out ms1IsotopeCosine);
+            }
+
+            // Build full 21-element PIN feature vector
+            double[] features = new double[NUM_PIN_FEATURES];
+            features[0] = coelutionSum;
+            features[1] = coelutionMax;
+            features[2] = nCoelutingFragments;
+            features[3] = peakApex;
+            features[4] = peakArea;
+            features[5] = peakSharpness;
+            features[6] = xcorr;
+            features[7] = consecutiveIons;
+            features[8] = explainedIntensity;
+            features[9] = massAccuracyMean;
+            features[10] = absMassAccuracyMean;
+            features[11] = rtDeviation;
+            features[12] = absRtDeviation;
+            features[13] = ms1PrecursorCoelution;
+            features[14] = ms1IsotopeCosine;
+            // Proxies for features we don't compute in this first pass
+            features[15] = libCosine;       // median_polish_cosine <- dot_product proxy
+            features[16] = 0.0;             // median_polish_residual_ratio
+            features[17] = xcorr;           // sg_weighted_xcorr <- xcorr proxy
+            features[18] = libCosine;       // sg_weighted_cosine <- libcosine proxy
+            features[19] = coelutionMin;    // median_polish_min_fragment_r2 <- coelution_min proxy
+            features[20] = 0.0;             // median_polish_residual_correlation
 
             // Build FdrEntry
             var entry = new FdrEntry
@@ -730,7 +885,8 @@ namespace pwiz.OspreySharp
                 EndRt = windowRts[startScan + bestPeak.EndIndex],
                 CoelutionSum = coelutionSum,
                 Score = coelutionSum,
-                ModifiedSequence = candidate.ModifiedSequence
+                ModifiedSequence = candidate.ModifiedSequence,
+                Features = features
             };
 
             return entry;
@@ -834,15 +990,27 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
-        /// Compute coelution sum from pairwise fragment correlations.
+        /// Compute coelution sum/min/max and count of positively-correlated fragments
+        /// from pairwise fragment correlations.
         /// </summary>
-        private double ComputeCoelutionSum(List<XicData> xics, XICPeakBounds peak)
+        private void ComputeCoelutionStats(
+            List<XicData> xics, XICPeakBounds peak,
+            out double sum, out double min, out double max, out int nCoeluting)
         {
-            if (xics.Count < 2)
-                return 0.0;
+            sum = 0.0;
+            min = 0.0;
+            max = 0.0;
+            nCoeluting = 0;
 
-            double sum = 0.0;
-            int nPairs = 0;
+            if (xics.Count < 2)
+                return;
+
+            // Per-fragment best positive correlation — a fragment is "coeluting" if any
+            // of its pairwise correlations is > 0.
+            bool[] anyPositive = new bool[xics.Count];
+            bool haveAny = false;
+            double minCorr = double.PositiveInfinity;
+            double maxCorr = double.NegativeInfinity;
 
             for (int i = 0; i < xics.Count; i++)
             {
@@ -851,15 +1019,333 @@ namespace pwiz.OspreySharp
                     double corr = PearsonCorrelation(
                         xics[i].Intensities, xics[j].Intensities,
                         peak.StartIndex, peak.EndIndex);
-                    if (!double.IsNaN(corr))
+                    if (double.IsNaN(corr))
+                        continue;
+
+                    sum += corr;
+                    if (corr < minCorr) minCorr = corr;
+                    if (corr > maxCorr) maxCorr = corr;
+                    haveAny = true;
+
+                    if (corr > 0.0)
                     {
-                        sum += corr;
-                        nPairs++;
+                        anyPositive[i] = true;
+                        anyPositive[j] = true;
                     }
                 }
             }
 
-            return sum;
+            if (haveAny)
+            {
+                min = minCorr;
+                max = maxCorr;
+            }
+
+            for (int i = 0; i < anyPositive.Length; i++)
+            {
+                if (anyPositive[i])
+                    nCoeluting++;
+            }
+        }
+
+        /// <summary>
+        /// Compute peak shape features at the detected peak boundaries: summed XIC
+        /// apex intensity, area under the summed XIC, and sharpness (apex / mean edge).
+        /// </summary>
+        private void ComputePeakShapeFeatures(
+            List<XicData> xics, XICPeakBounds peak,
+            out double peakApex, out double peakArea, out double peakSharpness)
+        {
+            peakApex = 0.0;
+            peakArea = 0.0;
+            peakSharpness = 0.0;
+
+            if (xics.Count == 0)
+                return;
+
+            int len = xics[0].Intensities.Length;
+            if (len == 0)
+                return;
+
+            int start = Math.Max(0, peak.StartIndex);
+            int end = Math.Min(len - 1, peak.EndIndex);
+            int apex = Math.Max(start, Math.Min(end, peak.ApexIndex));
+
+            if (start > end)
+                return;
+
+            // Sum across fragments per scan to get the composite XIC.
+            double apexSum = 0.0;
+            double area = 0.0;
+            for (int scan = start; scan <= end; scan++)
+            {
+                double s = 0.0;
+                for (int f = 0; f < xics.Count; f++)
+                {
+                    double[] inten = xics[f].Intensities;
+                    if (scan < inten.Length)
+                        s += inten[scan];
+                }
+                area += s;
+                if (scan == apex)
+                    apexSum = s;
+            }
+
+            peakApex = apexSum;
+            peakArea = area;
+
+            // Sharpness: apex divided by mean of the two edge intensities.
+            double leftSum = 0.0, rightSum = 0.0;
+            for (int f = 0; f < xics.Count; f++)
+            {
+                double[] inten = xics[f].Intensities;
+                if (start < inten.Length) leftSum += inten[start];
+                if (end < inten.Length) rightSum += inten[end];
+            }
+            double edgeMean = (leftSum + rightSum) * 0.5;
+            if (edgeMean > 1e-12)
+                peakSharpness = apexSum / edgeMean;
+        }
+
+        /// <summary>
+        /// Compute apex-level match features: explained intensity fraction, and mean
+        /// signed / absolute mass error (in the tolerance unit, typically ppm).
+        /// </summary>
+        private void ComputeApexMatchFeatures(
+            LibraryEntry candidate, Spectrum apexSpectrum, OspreyConfig config,
+            out double explainedIntensity,
+            out double massAccuracyMean,
+            out double absMassAccuracyMean)
+        {
+            explainedIntensity = 0.0;
+            massAccuracyMean = 0.0;
+            absMassAccuracyMean = 0.0;
+
+            if (apexSpectrum.Mzs == null || apexSpectrum.Mzs.Length == 0 ||
+                candidate.Fragments == null || candidate.Fragments.Count == 0)
+                return;
+
+            double totalIntensity = 0.0;
+            for (int i = 0; i < apexSpectrum.Intensities.Length; i++)
+                totalIntensity += apexSpectrum.Intensities[i];
+
+            double matchedIntensity = 0.0;
+            double massErrSum = 0.0;
+            double absMassErrSum = 0.0;
+            int nMatched = 0;
+
+            foreach (var frag in candidate.Fragments)
+            {
+                double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
+                double lower = frag.Mz - tolDa;
+                double upper = frag.Mz + tolDa;
+
+                int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                double bestIntensity = 0.0;
+                double bestMz = 0.0;
+                bool found = false;
+
+                for (int k = lo; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
+                {
+                    double intensity = apexSpectrum.Intensities[k];
+                    if (intensity > bestIntensity)
+                    {
+                        bestIntensity = intensity;
+                        bestMz = apexSpectrum.Mzs[k];
+                        found = true;
+                    }
+                }
+
+                if (found)
+                {
+                    matchedIntensity += bestIntensity;
+                    double err = config.FragmentTolerance.MassError(frag.Mz, bestMz);
+                    massErrSum += err;
+                    absMassErrSum += Math.Abs(err);
+                    nMatched++;
+                }
+            }
+
+            if (totalIntensity > 1e-12)
+                explainedIntensity = matchedIntensity / totalIntensity;
+
+            if (nMatched > 0)
+            {
+                massAccuracyMean = massErrSum / nMatched;
+                absMassAccuracyMean = absMassErrSum / nMatched;
+            }
+        }
+
+        /// <summary>
+        /// Compute MS1 features: correlation between the summed fragment XIC and the
+        /// precursor MS1 XIC, and cosine similarity between the observed isotope envelope
+        /// at the apex MS1 scan and the theoretical averagine envelope.
+        /// </summary>
+        private void ComputeMs1Features(
+            LibraryEntry candidate,
+            List<XicData> xics,
+            XICPeakBounds peak,
+            double[] windowRts, int startScan,
+            List<MS1Spectrum> ms1Spectra,
+            OspreyConfig config,
+            out double ms1PrecursorCoelution,
+            out double ms1IsotopeCosine)
+        {
+            ms1PrecursorCoelution = 0.0;
+            ms1IsotopeCosine = 0.0;
+
+            if (xics.Count == 0 || ms1Spectra == null || ms1Spectra.Count == 0)
+                return;
+
+            int len = xics[0].Intensities.Length;
+            if (len == 0)
+                return;
+
+            int start = Math.Max(0, peak.StartIndex);
+            int end = Math.Min(len - 1, peak.EndIndex);
+            if (end - start + 1 < 3)
+                return;
+
+            // MS1 tolerance (use precursor tolerance from config if provided).
+            double precursorTolPpm = config.PrecursorTolerance != null &&
+                                     config.PrecursorTolerance.Unit == ToleranceUnit.Ppm
+                ? config.PrecursorTolerance.Tolerance
+                : 20.0;
+
+            // Summed fragment XIC over the peak window and matching MS1 precursor XIC
+            // sampled at the nearest MS1 scan for each MS2 RT. peak.Start/End/ApexIndex are
+            // relative to the XIC range (which starts at startScan in windowRts).
+            int n = end - start + 1;
+            double[] fragSum = new double[n];
+            double[] ms1Xic = new double[n];
+
+            for (int i = 0; i < n; i++)
+            {
+                int xicIdx = start + i;
+                double rt = windowRts[startScan + xicIdx];
+
+                double s = 0.0;
+                for (int f = 0; f < xics.Count; f++)
+                {
+                    double[] inten = xics[f].Intensities;
+                    if (xicIdx < inten.Length)
+                        s += inten[xicIdx];
+                }
+                fragSum[i] = s;
+
+                var ms1 = FindNearestMs1(ms1Spectra, rt);
+                if (ms1 != null)
+                {
+                    var peakInfo = ms1.FindPeakPpm(candidate.PrecursorMz, precursorTolPpm);
+                    if (peakInfo.HasValue)
+                        ms1Xic[i] = peakInfo.Value.Intensity;
+                }
+            }
+
+            ms1PrecursorCoelution = PearsonCorrelation(fragSum, ms1Xic, 0, n - 1);
+            if (double.IsNaN(ms1PrecursorCoelution))
+                ms1PrecursorCoelution = 0.0;
+
+            // Isotope cosine at apex MS1 scan
+            int apex = Math.Max(start, Math.Min(end, peak.ApexIndex));
+            double apexRt = windowRts[startScan + apex];
+            var apexMs1 = FindNearestMs1(ms1Spectra, apexRt);
+            if (apexMs1 != null)
+            {
+                int charge = candidate.Charge > 0 ? candidate.Charge : 1;
+                var envelope = IsotopeEnvelope.Extract(
+                    apexMs1, candidate.PrecursorMz, charge, precursorTolPpm);
+
+                // Theoretical envelope approximation (averagine-like): [M-1, M, M+1, M+2, M+3]
+                // We use a simple decaying envelope scaled by precursor mass.
+                double[] theoretical = TheoreticalIsotopeEnvelope(
+                    candidate.PrecursorMz, charge);
+
+                ms1IsotopeCosine = CosineSimilarity(envelope.Intensities, theoretical);
+            }
+        }
+
+        /// <summary>
+        /// Find the MS1 spectrum with retention time closest to the given RT.
+        /// Assumes MS1 spectra are sorted by RT.
+        /// </summary>
+        private static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
+        {
+            if (ms1Spectra == null || ms1Spectra.Count == 0)
+                return null;
+
+            int lo = 0;
+            int hi = ms1Spectra.Count;
+            while (lo < hi)
+            {
+                int mid = lo + (hi - lo) / 2;
+                if (ms1Spectra[mid].RetentionTime < rt)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+
+            if (lo >= ms1Spectra.Count)
+                return ms1Spectra[ms1Spectra.Count - 1];
+            if (lo == 0)
+                return ms1Spectra[0];
+
+            var prev = ms1Spectra[lo - 1];
+            var next = ms1Spectra[lo];
+            return Math.Abs(prev.RetentionTime - rt) <= Math.Abs(next.RetentionTime - rt)
+                ? prev
+                : next;
+        }
+
+        /// <summary>
+        /// Build an approximate averagine theoretical isotope envelope at 5 positions
+        /// [M-1, M+0, M+1, M+2, M+3]. Uses a simple mass-dependent decay model —
+        /// sufficient for cosine-similarity comparison with the observed envelope.
+        /// </summary>
+        private static double[] TheoreticalIsotopeEnvelope(double precursorMz, int charge)
+        {
+            // Approximate neutral mass (ignores proton mass precisely — good enough here).
+            double mass = precursorMz * charge;
+
+            // Rough averagine ratios anchored to M+0 = 1.0.
+            // For a 1500 Da peptide M+1/M+0 ~ 0.7, M+2/M+0 ~ 0.25, M+3/M+0 ~ 0.06.
+            // Scale linearly with mass to capture heavier peptides having taller isotopes.
+            double r1 = Math.Min(2.0, 0.00045 * mass);           // M+1/M+0
+            double r2 = Math.Min(2.0, 0.00015 * mass * mass / 1000.0); // M+2/M+0
+            double r3 = Math.Min(1.0, 0.00003 * mass * mass / 1000.0); // M+3/M+0
+
+            double[] env = new double[5];
+            env[0] = 0.0;    // M-1
+            env[1] = 1.0;    // M+0
+            env[2] = r1;
+            env[3] = r2;
+            env[4] = r3;
+            return env;
+        }
+
+        /// <summary>
+        /// Cosine similarity between two equal-length arrays (sqrt-intensity preprocessing).
+        /// </summary>
+        private static double CosineSimilarity(double[] a, double[] b)
+        {
+            if (a == null || b == null || a.Length != b.Length || a.Length == 0)
+                return 0.0;
+
+            double dot = 0.0, normA = 0.0, normB = 0.0;
+            for (int i = 0; i < a.Length; i++)
+            {
+                double av = Math.Sqrt(Math.Max(0.0, a[i]));
+                double bv = Math.Sqrt(Math.Max(0.0, b[i]));
+                dot += av * bv;
+                normA += av * av;
+                normB += bv * bv;
+            }
+
+            double denom = Math.Sqrt(normA) * Math.Sqrt(normB);
+            if (denom < 1e-12)
+                return 0.0;
+
+            return Math.Max(0.0, Math.Min(1.0, dot / denom));
         }
 
         /// <summary>
@@ -1072,13 +1558,29 @@ namespace pwiz.OspreySharp
             foreach (var entry in fullLibrary)
                 libraryById[entry.Id] = entry;
 
+            int nWithFeatures = 0;
+            int nWithoutFeatures = 0;
             foreach (var kvp in perFileEntries)
             {
                 string fileName = kvp.Key;
                 foreach (var fdrEntry in kvp.Value)
                 {
-                    // Build basic features from available data
-                    double[] features = BuildBasicFeatures(fdrEntry, libraryById);
+                    // Prefer the 21-feature vector computed during coelution scoring.
+                    // Fall back to an all-zeros vector only for stub entries (e.g. loaded
+                    // from a Parquet cache without features) so the PercolatorEntry is
+                    // well-formed.
+                    double[] features;
+                    if (fdrEntry.Features != null &&
+                        fdrEntry.Features.Length == NUM_PIN_FEATURES)
+                    {
+                        features = fdrEntry.Features;
+                        nWithFeatures++;
+                    }
+                    else
+                    {
+                        features = BuildBasicFeatures(fdrEntry, libraryById);
+                        nWithoutFeatures++;
+                    }
 
                     percEntries.Add(new PercolatorEntry
                     {
@@ -1092,6 +1594,10 @@ namespace pwiz.OspreySharp
                     });
                 }
             }
+
+            LogInfo(string.Format(
+                "Percolator feature source: {0} entries with computed PIN features, {1} fallback",
+                nWithFeatures, nWithoutFeatures));
 
             LogInfo(string.Format("Running Percolator on {0} entries...", percEntries.Count));
 
@@ -1152,9 +1658,11 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
-        /// Build basic features for Percolator from an FdrEntry.
-        /// Uses the 21-feature PIN layout matching the Rust implementation.
-        /// Features that require full CoelutionFeatureSet are set to defaults.
+        /// Build a minimal PIN feature vector from an FdrEntry.
+        /// Used as a fallback ONLY when <see cref="FdrEntry.Features"/> has not been
+        /// populated (e.g. stubs loaded from a Parquet cache). In normal operation the
+        /// 21-feature vector is computed during coelution scoring in
+        /// <see cref="ScoreCandidate"/> and stored on the entry.
         /// </summary>
         private double[] BuildBasicFeatures(
             FdrEntry entry, Dictionary<uint, LibraryEntry> libraryById)
