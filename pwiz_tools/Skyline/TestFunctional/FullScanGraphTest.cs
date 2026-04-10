@@ -197,9 +197,9 @@ namespace pwiz.SkylineTestFunctional
             // Verify a specific m/z value in the zoomed spectrum (452-456 range).
             TestTooltip(453.3, null, 453.2979, 18);
 
-            // Check zoomed heatmap.
+            // Switch to dual-pane mode (stick + heatmap) and check heatmap Y-axis (ion mobility).
             SetSpectrum(false);
-            TestScale(452, 456, 2.61, 4.34);
+            TestHeatMapScale(452, 456, 2.61, 4.34);
             WaitForOpenForm<GraphFullScan>();   // For localization testing
 
             // Show mobilogram overlay alongside heatmap.
@@ -212,10 +212,13 @@ namespace pwiz.SkylineTestFunctional
 
             // Test Copy Data output for heatmap - should have 3 columns (m/z, ion mobility, intensity)
             // not 100+ columns from separate intensity curves (issue #3953)
+            // In dual-pane mode (stick+heatmap), find the heatmap pane (last pane)
             var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(SkylineWindow.GraphFullScan.ZedGraphControl.MasterPane);
-            AssertEx.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
-            AssertEx.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
-            var dataFrame = graphData.Panes[0].DataFrames[0];
+            AssertEx.IsTrue(graphData.Panes.Count >= 1, "Expected at least 1 pane");
+            // Heatmap pane is the last one (in dual-pane: index 1; in single-pane: index 0)
+            var heatmapPaneData = graphData.Panes[graphData.Panes.Count - 1];
+            AssertEx.AreEqual(1, heatmapPaneData.DataFrames.Count, "Expected 1 DataFrame in heatmap pane");
+            var dataFrame = heatmapPaneData.DataFrames[0];
             AssertEx.AreEqual(3, dataFrame.ColumnCount, "Heatmap Copy Data should have 3 columns");
             AssertEx.IsTrue(dataFrame.RowCount > 100, "Heatmap should have substantial data rows");
 
@@ -245,18 +248,18 @@ namespace pwiz.SkylineTestFunctional
 
             // Check filtered heatmap.
             SetFilter(true);
-            TestScale(452, 456, 3.2, 3.8);
+            TestHeatMapScale(452, 456, 3.2, 3.8);
             SetZoom(false);
-            TestScale(0, 2000, 3.2, 3.8);
+            TestHeatMapScale(0, 2000, 3.2, 3.8);
             SetFilter(false);
-            TestScale(0, 2000, 0, 15);
+            TestHeatMapScale(0, 2000, 0, 15);
 
             // Test cursor-tracking tooltip on heatmap (3 lines: m/z + drift time + intensity).
             TestTooltip(true);
             // Verify a specific (m/z, ion mobility) in the unzoomed heatmap.
             TestTooltip(447, 3.5, 447.2277, 3.45, 21);
             SetZoom(true);
-            TestScale(452, 456, 2.61, 4.34);
+            TestHeatMapScale(452, 456, 2.61, 4.34);
 
             // Regression: switching scan type from MS1 to MS/MS in heatmap+magnify mode used
             // to leave the Y axis inverted (yMin > yMax) and the IM filter band missing,
@@ -275,7 +278,7 @@ namespace pwiz.SkylineTestFunctional
             });
             // Restore precursor view for the remaining tests.
             SetScanType(ChromSource.ms1, 33.23, 27.9);
-            TestScale(452, 456, 2.61, 4.34);
+            TestHeatMapScale(452, 456, 2.61, 4.34);
 
             // Check click on ion label.
             SetSpectrum(true);
@@ -429,14 +432,48 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.GraphFullScan.TestMouseClick(x, y));
         }
 
+        /// <summary>
+        /// Test x-axis (m/z) and y-axis scale. In dual-pane mode, y-axis checks use the stick
+        /// pane (intensity). Use TestHeatMapScale for heatmap y-axis (ion mobility) checks.
+        /// </summary>
         private static void TestScale(double xMin, double xMax, double yMin, double yMax)
         {
             RunUI(() =>
             {
-                double xAxisMin = SkylineWindow.GraphFullScan.XAxisMin;
-                double xAxisMax = SkylineWindow.GraphFullScan.XAxisMax;
-                double yAxisMin = SkylineWindow.GraphFullScan.YAxisMin;
-                double yAxisMax = SkylineWindow.GraphFullScan.YAxisMax;
+                var graph = SkylineWindow.GraphFullScan;
+                double xAxisMin = graph.XAxisMin;
+                double xAxisMax = graph.XAxisMax;
+                // In dual-pane, check stick pane Y (intensity); in single-pane, check GraphPane Y
+                double yAxisMin = graph.IsDualPaneMode ? graph.StickYAxisMin : graph.YAxisMin;
+                double yAxisMax = graph.IsDualPaneMode ? graph.StickYAxisMax : graph.YAxisMax;
+
+                Assert.IsTrue(xMin - xAxisMin >= 0 &&
+                              xMin - xAxisMin < (xMax - xMin)/4,
+                              "Expected x minimum {0}, got {1}", xMin, xAxisMin);
+                Assert.IsTrue(xAxisMax - xMax >= 0 &&
+                              xAxisMax - xMax < (xMax - xMin)/4,
+                              "Expected x maximum {0}, got {1}", xMax, xAxisMax);
+                Assert.IsTrue(yMin - yAxisMin >= 0 &&
+                              yMin - yAxisMin < (yMax - yMin)/4,
+                              "Expected y minimum {0}, got {1}", yMin, yAxisMin);
+                Assert.IsTrue(yAxisMax - yMax >= 0 &&
+                              yAxisMax - yMax < (yMax - yMin)/4,
+                              "Expected y maximum {0}, got {1}", yMax, yAxisMax);
+            });
+        }
+
+        /// <summary>
+        /// Test heatmap pane y-axis (ion mobility) scale in dual-pane mode.
+        /// </summary>
+        private static void TestHeatMapScale(double xMin, double xMax, double yMin, double yMax)
+        {
+            RunUI(() =>
+            {
+                var graph = SkylineWindow.GraphFullScan;
+                double xAxisMin = graph.XAxisMin;
+                double xAxisMax = graph.XAxisMax;
+                double yAxisMin = graph.YAxisMin;
+                double yAxisMax = graph.YAxisMax;
 
                 Assert.IsTrue(xMin - xAxisMin >= 0 &&
                               xMin - xAxisMin < (xMax - xMin)/4,

@@ -217,7 +217,7 @@
     <value>23, 22</value>
   </data>
   <data name="spectrumBtn.ToolTipText" xml:space="preserve">
-    <value>Show 2D Spectrum</value>
+    <value>Toggle Heatmap</value>
   </data>
   <data name="filterBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
