@@ -18,8 +18,10 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -43,12 +45,32 @@ namespace pwiz.SkylineTestFunctional
                 Settings.Default.RTCalculatorName = "TTOF_64w_iRT-C18";
             });
             WaitForDocumentLoaded();
-            RunUI(()=>SkylineWindow.ShowRTRegressionGraphScoreToRun());
-            WaitForRegression();
-            var outliers = SkylineWindow.RTGraphController.Outliers;
-            // I expect only two outliers, but currently, three get reported.
-            // The peptide "GAGSSEPVTGLDAK" is not supposed to be an outlier.
-            Assert.AreEqual(2, outliers.Length);
+            // Verify the score to run regression graph
+            RunLongDlg<GraphSummary>(SkylineWindow.ShowRTRegressionGraphScoreToRun, _ =>
+            {
+                WaitForRegression();
+                var outliers = SkylineWindow.RTGraphController.Outliers;
+                // I expect only two outliers, but currently, three get reported.
+                // The peptide "GAGSSEPVTGLDAK" is not supposed to be an outlier.
+                Assert.AreEqual(2, outliers.Length);
+            }, graphSummary=>OkDialog(graphSummary, graphSummary.Close));
+
+            // Verify the run to run regression graph
+            RunLongDlg<GraphSummary>(SkylineWindow.ShowRTRegressionGraphRunToRun, graphSummary =>
+            {
+                RunUI(() =>
+                {
+                    SkylineWindow.SelectedResultsIndex = 0;
+                    graphSummary.SetResultIndexes(0, 1);
+                });
+                WaitForRegression();
+                RunUI(() =>
+                {
+                    SkylineWindow.SelectedResultsIndex = 1;
+                    graphSummary.SetResultIndexes(1, 0);
+                });
+                WaitForRegression();
+            }, graphSummary=>graphSummary.Close());
         }
     }
 }
