@@ -197,6 +197,38 @@ namespace MSConvertGUI.TestConnected
             Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientId, prodAccount.ClientId, "Prod: ClientId");
             Assert.AreEqual(@"https://custom-test-server:48333", prodAccount.IdentityServer,
                 "Prod: IdentityServer should be derived from serverUrl");
+
+            // Custom advanced overrides: verify each parameter flows through to the account.
+            const string customIdentityServer = @"https://custom-identity:48333";
+            const string customScope = "custom-scope";
+            const string customSecret = "custom-secret";
+            const string customClientId = "custom-client-id";
+            var customAccount = RemoteAccountDetailForm.CreateWatersConnectAccount(
+                customUrl, username, password, isDevEnvironment: false,
+                identityServer: customIdentityServer,
+                clientScope: customScope,
+                clientSecret: customSecret,
+                clientId: customClientId);
+            Assert.AreEqual(customIdentityServer, customAccount.IdentityServer, "Custom: IdentityServer override");
+            Assert.AreEqual(customScope, customAccount.ClientScope, "Custom: ClientScope override");
+            Assert.AreEqual(customSecret, customAccount.ClientSecret, "Custom: ClientSecret override");
+            Assert.AreEqual(customClientId, customAccount.ClientId, "Custom: ClientId override");
+
+            // Blank/whitespace overrides should fall back to defaults (not overwrite with empty).
+            var fallbackAccount = RemoteAccountDetailForm.CreateWatersConnectAccount(
+                customUrl, username, password, isDevEnvironment: false,
+                identityServer: "  ",
+                clientScope: "",
+                clientSecret: null,
+                clientId: "   ");
+            Assert.AreEqual(@"https://custom-test-server:48333", fallbackAccount.IdentityServer,
+                "Fallback: IdentityServer should be derived from serverUrl when override is blank");
+            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientScope, fallbackAccount.ClientScope,
+                "Fallback: ClientScope should use default when override is blank");
+            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientSecret, fallbackAccount.ClientSecret,
+                "Fallback: ClientSecret should use default when override is null");
+            Assert.AreEqual(WatersConnectAccount.DEFAULT.ClientId, fallbackAccount.ClientId,
+                "Fallback: ClientId should use default when override is blank");
         }
 
         [TestMethod]

@@ -163,6 +163,7 @@ namespace MSConvertGUI
         private TextBox _identityServerBox;
         private TextBox _clientScopeBox;
         private TextBox _clientSecretBox;
+        private TextBox _clientIdBox;
         private Button _okButton;
         private Button _cancelButton;
 
@@ -189,18 +190,39 @@ namespace MSConvertGUI
                     _identityServerBox.Text = unifiAccount.IdentityServer ?? string.Empty;
                     _clientScopeBox.Text = unifiAccount.ClientScope ?? string.Empty;
                     _clientSecretBox.Text = unifiAccount.ClientSecret ?? string.Empty;
+                    _clientIdBox.Text = unifiAccount.ClientId ?? string.Empty;
                 }
                 else if (existing is WatersConnectAccount wcAccount)
                 {
                     _identityServerBox.Text = wcAccount.IdentityServer ?? string.Empty;
                     _clientScopeBox.Text = wcAccount.ClientScope ?? string.Empty;
                     _clientSecretBox.Text = wcAccount.ClientSecret ?? string.Empty;
+                    _clientIdBox.Text = wcAccount.ClientId ?? string.Empty;
                 }
             }
-            else if (IsDevEnvironment())
+            else
             {
-                PrepopulateDevDefaults();
+                // New account: always pre-populate advanced fields with defaults for the
+                // currently-selected type, and update them when the user changes type.
+                _typeCombo.SelectedIndexChanged += TypeCombo_AdvancedDefaultsChanged;
+                TypeCombo_AdvancedDefaultsChanged(null, EventArgs.Empty);
+                if (IsDevEnvironment())
+                    PrepopulateDevDefaults();
             }
+        }
+
+        private void TypeCombo_AdvancedDefaultsChanged(object sender, EventArgs e)
+        {
+            // Non-dev new accounts: only pre-populate ClientId. IdentityServer is derived
+            // from the server URL at save time if blank; ClientScope/ClientSecret are
+            // environment-specific and should be explicitly entered by the user.
+            // WatersConnectAccount.DEFAULT.ClientId is "method-develop" because that client
+            // gates SupportsMethodDevelopment(); MSConvertGUI is browse-only so prefer the
+            // resource-owner client from DEV_DEFAULT which is available on standard installs.
+            if (_typeCombo.SelectedIndex == 0) // UNIFI
+                _clientIdBox.Text = UnifiAccount.DEFAULT.ClientId ?? string.Empty;
+            else if (_typeCombo.SelectedIndex == 1) // Waters Connect
+                _clientIdBox.Text = WatersConnectAccount.DEV_DEFAULT.ClientId ?? string.Empty;
         }
 
         /// <summary>
@@ -231,6 +253,7 @@ namespace MSConvertGUI
                 _identityServerBox.Text = defaults.IdentityServer ?? string.Empty;
                 _clientScopeBox.Text = defaults.ClientScope ?? string.Empty;
                 _clientSecretBox.Text = defaults.ClientSecret ?? string.Empty;
+                _clientIdBox.Text = defaults.ClientId ?? string.Empty;
             }
             else if (_typeCombo.SelectedIndex == 1) // Waters Connect
             {
@@ -242,13 +265,14 @@ namespace MSConvertGUI
                 _identityServerBox.Text = defaults.IdentityServer ?? string.Empty;
                 _clientScopeBox.Text = defaults.ClientScope ?? string.Empty;
                 _clientSecretBox.Text = defaults.ClientSecret ?? string.Empty;
+                _clientIdBox.Text = defaults.ClientId ?? string.Empty;
             }
         }
 
         private void InitializeComponents()
         {
             Text = "Add Account";
-            Size = new Size(400, 370);
+            Size = new Size(400, 400);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -294,7 +318,7 @@ namespace MSConvertGUI
             {
                 Text = "Advanced",
                 Location = new Point(labelX, y),
-                Size = new Size(358, 20 + advRowHeight * 3 + 5)
+                Size = new Size(358, 20 + advRowHeight * 4 + 5)
             };
 
             _advancedGroup.Controls.Add(new Label { Text = "Identity Server:", Location = new Point(advLabelX, advY + 3), AutoSize = true });
@@ -305,6 +329,11 @@ namespace MSConvertGUI
             _advancedGroup.Controls.Add(new Label { Text = "Client Scope:", Location = new Point(advLabelX, advY + 3), AutoSize = true });
             _clientScopeBox = new TextBox { Location = new Point(advFieldX, advY), Size = new Size(248, 22) };
             _advancedGroup.Controls.Add(_clientScopeBox);
+            advY += advRowHeight;
+
+            _advancedGroup.Controls.Add(new Label { Text = "Client ID:", Location = new Point(advLabelX, advY + 3), AutoSize = true });
+            _clientIdBox = new TextBox { Location = new Point(advFieldX, advY), Size = new Size(248, 22) };
+            _advancedGroup.Controls.Add(_clientIdBox);
             advY += advRowHeight;
 
             _advancedGroup.Controls.Add(new Label { Text = "Client Secret:", Location = new Point(advLabelX, advY + 3), AutoSize = true });
@@ -330,13 +359,13 @@ namespace MSConvertGUI
         /// </summary>
         public static WatersConnectAccount CreateWatersConnectAccount(
             string serverUrl, string username, string password, bool isDevEnvironment,
-            string identityServer = null, string clientScope = null, string clientSecret = null)
+            string identityServer = null, string clientScope = null, string clientSecret = null, string clientId = null)
         {
             var defaults = isDevEnvironment ? WatersConnectAccount.DEV_DEFAULT : WatersConnectAccount.DEFAULT;
             var account = new WatersConnectAccount(serverUrl, username, password)
                 .ChangeClientScope(string.IsNullOrWhiteSpace(clientScope) ? defaults.ClientScope : clientScope)
                 .ChangeClientSecret(string.IsNullOrWhiteSpace(clientSecret) ? defaults.ClientSecret : clientSecret)
-                .ChangeClientId(defaults.ClientId);
+                .ChangeClientId(string.IsNullOrWhiteSpace(clientId) ? defaults.ClientId : clientId);
             if (!string.IsNullOrWhiteSpace(identityServer))
                 account = account.ChangeIdentityServer(identityServer);
             return account;
@@ -358,6 +387,7 @@ namespace MSConvertGUI
             string identityServer = _identityServerBox.Text.Trim();
             string clientScope = _clientScopeBox.Text.Trim();
             string clientSecret = _clientSecretBox.Text.Trim();
+            string clientId = _clientIdBox.Text.Trim();
 
             RemoteAccount account;
             if (_typeCombo.SelectedIndex == 0) // UNIFI
@@ -369,12 +399,14 @@ namespace MSConvertGUI
                     unifiAccount = unifiAccount.ChangeClientScope(clientScope);
                 if (!string.IsNullOrEmpty(clientSecret))
                     unifiAccount = unifiAccount.ChangeClientSecret(clientSecret);
+                if (!string.IsNullOrEmpty(clientId))
+                    unifiAccount = unifiAccount.ChangeClientId(clientId);
                 account = unifiAccount;
             }
             else // Waters Connect
             {
                 account = CreateWatersConnectAccount(serverUrl, username, password, IsDevEnvironment(),
-                    identityServer, clientScope, clientSecret);
+                    identityServer, clientScope, clientSecret, clientId);
             }
 
             if (!string.IsNullOrEmpty(alias))
