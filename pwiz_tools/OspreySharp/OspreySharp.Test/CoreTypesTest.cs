@@ -353,6 +353,116 @@ namespace pwiz.OspreySharp.Test
 
         #endregion
 
+        #region OspreyConfig Tests
+
+        [TestMethod]
+        public void TestDefaultConfig()
+        {
+            var config = new OspreyConfig();
+
+            Assert.AreEqual(0.01, config.RunFdr, TOLERANCE);
+            Assert.IsTrue(config.RtCalibration.Enabled);
+            Assert.AreEqual(10.0, config.FragmentTolerance.Tolerance, TOLERANCE);
+            Assert.AreEqual(ToleranceUnit.Ppm, config.FragmentTolerance.Unit);
+            Assert.AreEqual(ResolutionMode.Auto, config.ResolutionMode);
+            Assert.AreEqual(DecoyMethod.Reverse, config.DecoyMethod);
+            Assert.IsTrue(config.PrefilterEnabled);
+            Assert.AreEqual(0.01, config.ExperimentFdr, TOLERANCE);
+            Assert.AreEqual(FdrMethod.Percolator, config.FdrMethod);
+            Assert.AreEqual(FdrLevel.Both, config.FdrLevel);
+            Assert.AreEqual(SharedPeptideMode.All, config.SharedPeptides);
+        }
+
+        [TestMethod]
+        public void TestFragmentTolerancePpm()
+        {
+            var config = FragmentToleranceConfig.Hram(10.0);
+
+            Assert.AreEqual(10.0, config.Tolerance, TOLERANCE);
+            Assert.AreEqual(ToleranceUnit.Ppm, config.Unit);
+
+            // 10 ppm of 500 = 0.005 Da
+            Assert.AreEqual(0.005, config.ToleranceDa(500.0), TOLERANCE);
+
+            // At exactly 10 ppm boundary
+            Assert.IsTrue(config.WithinTolerance(500.0, 500.005));
+
+            // Mass error: (500.005 - 500.0) / 500.0 * 1e6 = 10.0 ppm
+            Assert.AreEqual(10.0, config.MassError(500.0, 500.005), 0.1);
+        }
+
+        [TestMethod]
+        public void TestFragmentToleranceDa()
+        {
+            var config = FragmentToleranceConfig.UnitResolution(0.3);
+
+            Assert.AreEqual(0.3, config.Tolerance, TOLERANCE);
+            Assert.AreEqual(ToleranceUnit.Mz, config.Unit);
+
+            // Da tolerance is constant across m/z
+            Assert.AreEqual(0.3, config.ToleranceDa(500.0), TOLERANCE);
+            Assert.AreEqual(0.3, config.ToleranceDa(1000.0), TOLERANCE);
+
+            // Within tolerance
+            Assert.IsTrue(config.WithinTolerance(500.0, 500.29));
+            Assert.IsFalse(config.WithinTolerance(500.0, 500.31));
+        }
+
+        [TestMethod]
+        public void TestSearchHashDeterministic()
+        {
+            var config = new OspreyConfig();
+            string hash1 = config.SearchParameterHash();
+            string hash2 = config.SearchParameterHash();
+
+            Assert.AreEqual(hash1, hash2);
+            Assert.AreEqual(64, hash1.Length); // SHA-256 hex is 64 chars
+        }
+
+        [TestMethod]
+        public void TestSearchHashChangesWithTolerance()
+        {
+            var config = new OspreyConfig();
+            string hash1 = config.SearchParameterHash();
+            config.FragmentTolerance.Tolerance = 20.0;
+            string hash2 = config.SearchParameterHash();
+
+            Assert.AreNotEqual(hash1, hash2);
+        }
+
+        [TestMethod]
+        public void TestLibrarySourceFromPath()
+        {
+            var tsv = LibrarySource.FromPath("library.tsv");
+            Assert.AreEqual(LibraryFormat.DiannTsv, tsv.Format);
+
+            var blib = LibrarySource.FromPath("library.blib");
+            Assert.AreEqual(LibraryFormat.Blib, blib.Format);
+
+            var elib = LibrarySource.FromPath("library.elib");
+            Assert.AreEqual(LibraryFormat.Elib, elib.Format);
+        }
+
+        [TestMethod]
+        public void TestRtCalibrationConfig()
+        {
+            var config = new RTCalibrationConfig();
+            Assert.IsTrue(config.Enabled);
+            Assert.AreEqual(0.3, config.LoessBandwidth, TOLERANCE);
+            Assert.AreEqual(200, config.MinCalibrationPoints);
+            Assert.AreEqual(3.0, config.RtToleranceFactor, TOLERANCE);
+            Assert.AreEqual(2.0, config.FallbackRtTolerance, TOLERANCE);
+            Assert.AreEqual(0.5, config.MinRtTolerance, TOLERANCE);
+            Assert.AreEqual(100000, config.CalibrationSampleSize);
+            Assert.AreEqual(2.0, config.CalibrationRetryFactor, TOLERANCE);
+            Assert.AreEqual(3.0, config.MaxRtTolerance, TOLERANCE);
+
+            var disabled = RTCalibrationConfig.CreateDisabled();
+            Assert.IsFalse(disabled.Enabled);
+        }
+
+        #endregion
+
         #region Helpers
 
         private static MS1Spectrum CreateMs1WithIsotopePeaks(double precursorMz, double gap,

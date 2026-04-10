@@ -58,7 +58,13 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GaussSolver.cs" />
+    <Compile Include="LinearDiscriminant.cs" />
     <Compile Include="LinearSvmClassifier.cs" />
+    <Compile Include="Matrix.cs" />
+    <Compile Include="MlMath.cs" />
+    <Compile Include="PepEstimator.cs" />
+    <Compile Include="QValueCalculator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
