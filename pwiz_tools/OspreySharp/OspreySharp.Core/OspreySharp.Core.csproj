@@ -55,9 +55,29 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="OspreyConfig.cs" />
+    <Compile Include="BinConfig.cs" />
+    <Compile Include="CoelutionFeatureSet.cs" />
+    <Compile Include="CwtCandidate.cs" />
+    <Compile Include="DecoyMethod.cs" />
+    <Compile Include="FdrEntry.cs" />
+    <Compile Include="FdrLevel.cs" />
+    <Compile Include="FdrMethod.cs" />
+    <Compile Include="FragmentAnnotation.cs" />
+    <Compile Include="IonType.cs" />
+    <Compile Include="IsolationWindow.cs" />
+    <Compile Include="IsotopeEnvelope.cs" />
     <Compile Include="LibraryEntry.cs" />
+    <Compile Include="LibraryFragment.cs" />
+    <Compile Include="Modification.cs" />
+    <Compile Include="MS1Spectrum.cs" />
+    <Compile Include="NeutralLoss.cs" />
+    <Compile Include="OspreyConfig.cs" />
+    <Compile Include="PeakBoundaries.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResolutionMode.cs" />
+    <Compile Include="SharedPeptideMode.cs" />
+    <Compile Include="Spectrum.cs" />
+    <Compile Include="XICPeakBounds.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
