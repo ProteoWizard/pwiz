@@ -51,11 +51,20 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CalibrationIO.cs" />
+    <Compile Include="CalibrationParams.cs" />
+    <Compile Include="CwtPeakDetector.cs" />
+    <Compile Include="LoessRegression.cs" />
+    <Compile Include="MzCalibration.cs" />
     <Compile Include="PeakDetector.cs" />
+    <Compile Include="RTCalibration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

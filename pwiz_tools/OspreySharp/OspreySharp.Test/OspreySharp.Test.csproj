@@ -53,10 +53,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CalibrationTest.cs" />
+    <Compile Include="ChromatographyTest.cs" />
     <Compile Include="CoreTypesTest.cs" />
     <Compile Include="MLTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
