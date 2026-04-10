@@ -21,7 +21,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
-using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
