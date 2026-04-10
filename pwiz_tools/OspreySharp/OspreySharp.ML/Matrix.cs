@@ -24,6 +24,7 @@ namespace pwiz.OspreySharp.ML
 
         /// <summary>
         /// Create a new Matrix from flat row-major data.
+        /// The data array is defensively cloned so callers can safely reuse their buffer.
         /// </summary>
         public Matrix(double[] data, int rows, int cols)
         {
@@ -31,6 +32,27 @@ namespace pwiz.OspreySharp.ML
                 throw new ArgumentException(
                     string.Format("data length {0} does not match shape ({1}, {2})", data.Length, rows, cols));
             _data = (double[])data.Clone();
+            _rows = rows;
+            _cols = cols;
+        }
+
+        /// <summary>
+        /// Internal constructor that takes ownership of the data array without cloning.
+        /// Used by hot-path operations (e.g., ExtractRows in Percolator) where the caller
+        /// has just allocated a fresh array and is not going to mutate it. Avoiding the
+        /// clone halves allocations in tight SVM training loops.
+        /// </summary>
+        internal static Matrix WrapNoClone(double[] data, int rows, int cols)
+        {
+            if (data.Length != rows * cols)
+                throw new ArgumentException(
+                    string.Format("data length {0} does not match shape ({1}, {2})", data.Length, rows, cols));
+            return new Matrix(data, rows, cols, takeOwnership: true);
+        }
+
+        private Matrix(double[] data, int rows, int cols, bool takeOwnership)
+        {
+            _data = data;
             _rows = rows;
             _cols = cols;
         }

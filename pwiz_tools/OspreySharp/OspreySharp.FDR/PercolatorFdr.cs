@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using pwiz.OspreySharp.ML;
 
@@ -172,6 +173,8 @@ namespace pwiz.OspreySharp.FDR
             int n = entries.Count;
             int nFeatures = entries[0].Features.Length;
 
+            var swSetup = Stopwatch.StartNew();
+
             // 1. Build feature matrix
             var featureData = new double[n * nFeatures];
             var labels = new bool[n];
@@ -184,11 +187,15 @@ namespace pwiz.OspreySharp.FDR
                 entryIds[i] = entries[i].EntryId;
                 peptides[i] = entries[i].Peptide;
             }
-            var features = new Matrix(featureData, n, nFeatures);
+            var features = Matrix.WrapNoClone(featureData, n, nFeatures);
 
             // 2. Standardize features
             Matrix stdFeatures;
             var standardizer = FeatureStandardizer.FitTransform(features, out stdFeatures);
+            swSetup.Stop();
+            Console.Error.WriteLine(string.Format(
+                "[TIMING]   Percolator setup + standardize: {0:F1}s ({1} entries x {2} features)",
+                swSetup.Elapsed.TotalSeconds, n, nFeatures));
 
             // 3. Subsample by peptide groups if needed
             int[] trainSubset = null;
@@ -258,22 +265,47 @@ namespace pwiz.OspreySharp.FDR
 
             var foldModels = new LinearSvmClassifier[config.NFolds];
             var foldIterations = new int[config.NFolds];
+            var foldElapsed = new double[config.NFolds];
 
+            // Pre-compute training indices for each fold (cheap, single-threaded).
+            var foldTrainIndices = new int[config.NFolds][];
             for (int fold = 0; fold < config.NFolds; fold++)
             {
-                var trainIndices = new List<int>();
+                var list = new List<int>(subN - subN / config.NFolds);
                 for (int i = 0; i < subN; i++)
                 {
                     if (foldAssignments[i] != fold)
-                        trainIndices.Add(i);
+                        list.Add(i);
                 }
+                foldTrainIndices[fold] = list.ToArray();
+            }
 
+            // Train all folds in parallel. Each fold reads from the shared
+            // subFeatures matrix (read-only) and produces an independent model.
+            // Matches the Rust implementation's into_par_iter() over folds.
+            var swTrain = Stopwatch.StartNew();
+            System.Threading.Tasks.Parallel.For(0, config.NFolds, fold =>
+            {
+                var swFold = Stopwatch.StartNew();
                 int iters;
                 foldModels[fold] = TrainFold(
                     subFeatures, subLabels, subEntryIds, subPeptides,
-                    trainIndices.ToArray(), initialScores, config, trainFdr, out iters);
+                    foldTrainIndices[fold], initialScores, config, trainFdr, out iters);
                 foldIterations[fold] = iters;
+                swFold.Stop();
+                foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
+            });
+            swTrain.Stop();
+
+            for (int fold = 0; fold < config.NFolds; fold++)
+            {
+                Console.Error.WriteLine(string.Format(
+                    "[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
+                    fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]));
             }
+            Console.Error.WriteLine(string.Format(
+                "[TIMING]   Percolator train all folds (parallel): {0:F1}s",
+                swTrain.Elapsed.TotalSeconds));
 
             // Score ALL entries with trained models
             if (trainSubset != null)
@@ -1374,13 +1406,19 @@ namespace pwiz.OspreySharp.FDR
         private static Matrix ExtractRows(Matrix matrix, int[] rowIndices)
         {
             int nCols = matrix.Cols;
-            var data = new double[rowIndices.Length * nCols];
-            for (int i = 0; i < rowIndices.Length; i++)
+            int nRows = rowIndices.Length;
+            var data = new double[nRows * nCols];
+            // Direct array access avoids property accessor overhead and the
+            // bounds-check on every cell. This loop is the hottest path in
+            // Percolator: called ~540 times per file with 200K x 21 matrices.
+            double[] src = matrix.Data;
+            for (int i = 0; i < nRows; i++)
             {
-                for (int c = 0; c < nCols; c++)
-                    data[i * nCols + c] = matrix[rowIndices[i], c];
+                int srcOffset = rowIndices[i] * nCols;
+                int dstOffset = i * nCols;
+                Array.Copy(src, srcOffset, data, dstOffset, nCols);
             }
-            return new Matrix(data, rowIndices.Length, nCols);
+            return Matrix.WrapNoClone(data, nRows, nCols);
         }
     }
 }

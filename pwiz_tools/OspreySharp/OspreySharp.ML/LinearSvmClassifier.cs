@@ -189,6 +189,12 @@ namespace pwiz.OspreySharp.ML
             if (n == 0 || p == 0)
                 return new LinearSvmClassifier(new double[p], 0.0);
 
+            // Hoist hot-path locals out of the inner loop. The JIT can sometimes
+            // CSE these but explicit locals guarantee no per-iteration property
+            // dispatch and let the JIT keep them in registers.
+            double[] data = features.Data;
+            int cols = p;
+
             // Convert labels: target (false) -> +1, decoy (true) -> -1
             var y = new double[n];
             for (int i = 0; i < n; i++)
@@ -201,10 +207,10 @@ namespace pwiz.OspreySharp.ML
             for (int i = 0; i < n; i++)
             {
                 double normSq = 0.0;
-                int rowStart = features.Cols * i;
-                for (int k = 0; k < p; k++)
+                int rowStart = cols * i;
+                for (int k = 0; k < cols; k++)
                 {
-                    double v = features.Data[rowStart + k];
+                    double v = data[rowStart + k];
                     normSq += v * v;
                 }
                 diag[i] = normSq + 1.0 + inv2c;
@@ -232,12 +238,12 @@ namespace pwiz.OspreySharp.ML
                 for (int idx = 0; idx < n; idx++)
                 {
                     int i = indices[idx];
-                    int rowStart = features.Cols * i;
+                    int rowStart = cols * i;
 
                     // w . x_i (augmented: includes bias w[p] * 1.0)
                     double wx = 0.0;
-                    for (int k = 0; k < p; k++)
-                        wx += w[k] * features.Data[rowStart + k];
+                    for (int k = 0; k < cols; k++)
+                        wx += w[k] * data[rowStart + k];
                     wx += w[p];
 
                     // Gradient: g = y_i * (w . x_i) - 1 + alpha_i/(2C)
@@ -246,17 +252,19 @@ namespace pwiz.OspreySharp.ML
                     // Projected gradient for convergence check
                     double pg = (alpha[i] == 0.0) ? Math.Min(g, 0.0) : g;
 
-                    maxPgViolation = Math.Max(maxPgViolation, Math.Abs(pg));
+                    double absPg = Math.Abs(pg);
+                    if (absPg > maxPgViolation)
+                        maxPgViolation = absPg;
 
-                    if (Math.Abs(pg) > 1e-12)
+                    if (absPg > 1e-12)
                     {
                         double alphaOld = alpha[i];
                         alpha[i] = Math.Max(alpha[i] - g / diag[i], 0.0);
                         double d = (alpha[i] - alphaOld) * y[i];
 
                         // Update w += d * x_i (augmented)
-                        for (int k = 0; k < p; k++)
-                            w[k] += d * features.Data[rowStart + k];
+                        for (int k = 0; k < cols; k++)
+                            w[k] += d * data[rowStart + k];
                         w[p] += d; // bias feature = 1.0
                     }
                 }
