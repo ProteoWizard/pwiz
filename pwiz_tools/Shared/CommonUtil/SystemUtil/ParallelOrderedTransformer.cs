@@ -40,6 +40,7 @@ namespace pwiz.Common.SystemUtil
         {
             _maxTransformedItems = maxTransformedItems;
             _worker = new QueueWorker<WorkItem>(null, ConsumeWorkItem);
+            // ReSharper disable once VirtualMemberCallInConstructor
             _worker.RunAsync(ParallelEx.GetThreadCount(), GetThreadName(), maxQueueSize);
         }
 

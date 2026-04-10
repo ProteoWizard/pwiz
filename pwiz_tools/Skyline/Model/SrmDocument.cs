@@ -2311,7 +2311,9 @@ namespace pwiz.Skyline.Model
         {
             writer.WriteStartDocument();
             writer.WriteStartElement(@"srm_settings");
-            SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
+            var progressStatus = new ProgressStatus(Path.GetFileName(displayName)).ChangePercentComplete(0);
+            progressMonitor?.UpdateProgress(progressStatus);
+            SerializeToXmlWriter(writer, skylineVersion, progressMonitor, progressStatus);
             writer.WriteEndElement();
             writer.WriteEndDocument();
             writer.Flush();
