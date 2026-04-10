@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(()=>
+            RunUI(() =>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RtRegressionBugSmall.sky"));
                 SkylineWindow.SelectedResultsIndex = 1;
@@ -49,10 +49,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 WaitForRegression();
                 var outliers = SkylineWindow.RTGraphController.Outliers;
-                // I expect only two outliers, but currently, three get reported.
-                // The peptide "GAGSSEPVTGLDAK" is not supposed to be an outlier.
+                // There are two outlier PeptideDocNode's with the same peptide sequence.
+                // One has a chosen peak boundary far from its predicted time, and the other
+                // has a missing peak
                 Assert.AreEqual(2, outliers.Length);
-            }, graphSummary=>OkDialog(graphSummary, graphSummary.Close));
+                Assert.AreEqual("SVDKTEK", outliers[0].Peptide.Sequence);
+                Assert.AreEqual("SVDKTEK", outliers[1].Peptide.Sequence);
+            }, graphSummary => OkDialog(graphSummary, graphSummary.Close));
 
             // Verify the run to run regression graph
             RunLongDlg<GraphSummary>(SkylineWindow.ShowRTRegressionGraphRunToRun, graphSummary =>
@@ -69,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
                     graphSummary.SetResultIndexes(1, 0);
                 });
                 WaitForRegression();
-            }, graphSummary=>graphSummary.Close());
+            }, graphSummary => graphSummary.Close());
         }
     }
 }
