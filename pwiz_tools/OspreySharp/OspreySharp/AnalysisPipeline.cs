@@ -48,6 +48,13 @@ namespace pwiz.OspreySharp
                     return 1;
                 }
 
+                int nLibraryTargets = 0;
+                foreach (var entry in library)
+                {
+                    if (!entry.IsDecoy) nLibraryTargets++;
+                }
+                LogInfo(string.Format("[COUNT] Library targets loaded: {0}", nLibraryTargets));
+
                 List<LibraryEntry> decoys;
                 if (!config.DecoysInLibrary)
                 {
@@ -61,11 +68,15 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("[TIMING] Library loading + decoys: {0:F1}s",
                     swLibrary.Elapsed.TotalSeconds));
 
+                LogInfo(string.Format("[COUNT] Library decoys generated: {0}", decoys.Count));
+
                 var fullLibrary = new List<LibraryEntry>(library.Count + decoys.Count);
                 fullLibrary.AddRange(library);
                 fullLibrary.AddRange(decoys);
 
                 LogInfo(string.Format("Full library: {0} entries ({1} targets + {2} decoys)",
+                    fullLibrary.Count, library.Count, decoys.Count));
+                LogInfo(string.Format("[COUNT] Full library: {0} ({1} targets + {2} decoys)",
                     fullLibrary.Count, library.Count, decoys.Count));
 
                 // Build library lookup by ID for fast access
@@ -305,10 +316,14 @@ namespace pwiz.OspreySharp
 
             LogInfo(string.Format("Loaded {0} MS2 spectra and {1} MS1 spectra",
                 spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
+            LogInfo(string.Format("[COUNT] mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
+                fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
 
             // Extract isolation windows from spectra
             var isolationWindows = ExtractIsolationWindows(spectra);
             LogInfo(string.Format("Found {0} unique isolation windows", isolationWindows.Count));
+            LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
+                fileName, isolationWindows.Count));
 
             // RT calibration
             RTCalibration rtCalibration = null;
@@ -316,7 +331,7 @@ namespace pwiz.OspreySharp
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = RunCalibration(
-                    fullLibrary, spectra, ms1Spectra, config);
+                    fullLibrary, spectra, ms1Spectra, config, fileName);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
                 LogInfo(string.Format(
@@ -338,14 +353,24 @@ namespace pwiz.OspreySharp
                 "[TIMING] Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
                 scoringSeconds, scoredEntries.Count, ratePerSec));
 
+            int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
+            int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
             LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
                 scoredEntries.Count,
-                scoredEntries.Count(e => !e.IsDecoy),
-                scoredEntries.Count(e => e.IsDecoy),
+                nScoredTargets,
+                nScoredDecoys,
                 fileName));
+            LogInfo(string.Format(
+                "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
+                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
 
             // Deduplicate: keep best target and best decoy per base_id
+            int nBeforeDedup = scoredEntries.Count;
             scoredEntries = DeduplicatePairs(scoredEntries);
+            int nAfterDedup = scoredEntries.Count;
+            LogInfo(string.Format(
+                "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
+                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
 
             return scoredEntries;
         }
@@ -437,7 +462,8 @@ namespace pwiz.OspreySharp
             List<LibraryEntry> library,
             List<Spectrum> spectra,
             List<MS1Spectrum> ms1Spectra,
-            OspreyConfig config)
+            OspreyConfig config,
+            string fileName)
         {
             LogInfo("Running RT calibration...");
 
@@ -560,6 +586,9 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[TIMING] Calibration scoring: {0:F2}s ({1} matches)",
                 swScoring.Elapsed.TotalSeconds, matches.Count));
+            LogInfo(string.Format(
+                "[COUNT] Calibration matches scored [{0}]: {1}",
+                fileName, matches.Count));
 
             if (matches.Count == 0)
             {
@@ -595,6 +624,9 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[TIMING] Calibration LDA: {0:F2}s ({1} target wins, {2} decoy wins at 1% FDR)",
                 swLda.Elapsed.TotalSeconds, nTargetWins, nDecoyWins));
+            LogInfo(string.Format(
+                "[COUNT] Calibration LDA winners [{0}]: {1} target wins, {2} decoy wins at 1% FDR",
+                fileName, nTargetWins, nDecoyWins));
             LogInfo(string.Format(
                 "Calibration LDA passing count: {0} (returned by TrainAndScoreCalibration)",
                 nPassing));
@@ -632,6 +664,9 @@ namespace pwiz.OspreySharp
                     nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
             }
 
+            LogInfo(string.Format(
+                "[COUNT] Calibration high-quality (S/N>=5) [{0}]: {1}",
+                fileName, libRtsDetected.Count));
             LogInfo(string.Format("Found {0} calibration points", libRtsDetected.Count));
 
             if (libRtsDetected.Count < config.RtCalibration.MinCalibrationPoints)
@@ -2037,6 +2072,8 @@ namespace pwiz.OspreySharp
 
             int nWithFeatures = 0;
             int nWithoutFeatures = 0;
+            int nInputTargets = 0;
+            int nInputDecoys = 0;
             foreach (var kvp in perFileEntries)
             {
                 string fileName = kvp.Key;
@@ -2059,6 +2096,9 @@ namespace pwiz.OspreySharp
                         nWithoutFeatures++;
                     }
 
+                    if (fdrEntry.IsDecoy) nInputDecoys++;
+                    else nInputTargets++;
+
                     percEntries.Add(new PercolatorEntry
                     {
                         Id = string.Format("{0}_{1}", fileName, fdrEntry.EntryId),
@@ -2073,7 +2113,10 @@ namespace pwiz.OspreySharp
             }
 
             LogInfo(string.Format(
-                "Percolator feature source: {0} entries with computed PIN features, {1} fallback",
+                "[COUNT] Percolator input: {0} entries ({1} targets, {2} decoys, {3} features)",
+                percEntries.Count, nInputTargets, nInputDecoys, NUM_PIN_FEATURES));
+            LogInfo(string.Format(
+                "[COUNT] Percolator features computed: {0} entries with PIN features, {1} fallback",
                 nWithFeatures, nWithoutFeatures));
 
             LogInfo(string.Format("Running Percolator on {0} entries...", percEntries.Count));
@@ -2083,7 +2126,8 @@ namespace pwiz.OspreySharp
                 TrainFdr = config.RunFdr,
                 TestFdr = config.RunFdr,
                 MaxIterations = 10,
-                NFolds = 3
+                NFolds = 3,
+                FeatureNames = ParquetScoreCache.PIN_FEATURE_NAMES
             };
 
             var results = PercolatorFdr.RunPercolator(percEntries, percConfig);
@@ -2117,21 +2161,50 @@ namespace pwiz.OspreySharp
             int nDecoyPassing = 0;
             foreach (var kvp in perFileEntries)
             {
+                int fileTargets = 0;
+                int fileDecoys = 0;
                 foreach (var entry in kvp.Value)
                 {
                     if (entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
                     {
                         if (entry.IsDecoy)
-                            nDecoyPassing++;
+                            fileDecoys++;
                         else
-                            nTargetPassing++;
+                            fileTargets++;
                     }
                 }
+                LogInfo(string.Format(
+                    "[COUNT] Percolator pass [{0}]: {1} targets, {2} decoys at {3:P0} FDR",
+                    kvp.Key, fileTargets, fileDecoys, config.RunFdr));
+                nTargetPassing += fileTargets;
+                nDecoyPassing += fileDecoys;
             }
 
             LogInfo(string.Format(
                 "Percolator results: {0} targets, {1} decoys pass {2:P1} FDR",
                 nTargetPassing, nDecoyPassing, config.RunFdr));
+            LogInfo(string.Format(
+                "[COUNT] First-pass total across files: {0}",
+                nTargetPassing));
+
+            // Compute unique precursors across files (best q-value per modseq+charge)
+            var bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (entry.IsDecoy) continue;
+                    if (entry.EffectiveRunQvalue(config.FdrLevel) > config.RunFdr) continue;
+                    string pkey = entry.ModifiedSequence + "|" + entry.Charge;
+                    double q = entry.EffectiveRunQvalue(config.FdrLevel);
+                    double existing;
+                    if (!bestQByPrecursor.TryGetValue(pkey, out existing) || q < existing)
+                        bestQByPrecursor[pkey] = q;
+                }
+            }
+            LogInfo(string.Format(
+                "[COUNT] First-pass unique precursors (best q across files): {0}",
+                bestQByPrecursor.Count));
         }
 
         /// <summary>
@@ -2266,12 +2339,17 @@ namespace pwiz.OspreySharp
 
             LogInfo(string.Format("Detected {0} unique peptides at {1:P1} FDR",
                 detectedPeptides.Count, config.RunFdr));
+            LogInfo(string.Format(
+                "[COUNT] Detected peptides for protein FDR: {0} unique",
+                detectedPeptides.Count));
 
             // Build protein parsimony
             var parsimony = ProteinFdr.BuildProteinParsimony(
                 fullLibrary, config.SharedPeptides, detectedPeptides);
 
             LogInfo(string.Format("Protein parsimony: {0} groups", parsimony.Groups.Count));
+            LogInfo(string.Format(
+                "[COUNT] Protein parsimony groups: {0}", parsimony.Groups.Count));
 
             // Compute protein FDR
             double qvalueGate = config.RunFdr * 2.0; // relaxed gate for protein scoring
@@ -2286,6 +2364,9 @@ namespace pwiz.OspreySharp
             }
 
             LogInfo(string.Format("{0} protein groups pass {1:P1} protein FDR",
+                passingProteins, config.ProteinFdr.Value));
+            LogInfo(string.Format(
+                "[COUNT] Protein groups passing FDR: {0} at {1:P0}",
                 passingProteins, config.ProteinFdr.Value));
 
             // Propagate protein q-values to FdrEntry stubs
@@ -2356,12 +2437,16 @@ namespace pwiz.OspreySharp
                 }
             }
 
+            LogInfo(string.Format(
+                "[COUNT] Best-per-precursor for blib: {0}", bestByPrecursor.Count));
+
             // Pre-index all per-file target entries by (ModifiedSequence, Charge) for O(1)
             // lookup of cross-file observations. Without this, the inner loop below is
             // O(N_passing * N_total) which is ~70 billion ops for typical experiments.
             var entriesByPrecursor =
                 new Dictionary<string, List<KeyValuePair<string, FdrEntry>>>(
                     StringComparer.Ordinal);
+            int nCrossFileObservations = 0;
             foreach (var fileKvp in perFileEntries)
             {
                 string fn = fileKvp.Key;
@@ -2377,8 +2462,12 @@ namespace pwiz.OspreySharp
                         entriesByPrecursor[key] = list;
                     }
                     list.Add(new KeyValuePair<string, FdrEntry>(fn, fileEntry));
+                    nCrossFileObservations++;
                 }
             }
+
+            LogInfo(string.Format(
+                "[COUNT] Cross-file observations to write: {0}", nCrossFileObservations));
 
             using (var writer = new BlibWriter(config.OutputBlib))
             {

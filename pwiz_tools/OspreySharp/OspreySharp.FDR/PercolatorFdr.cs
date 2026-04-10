@@ -206,6 +206,26 @@ namespace pwiz.OspreySharp.FDR
             }
 
             int subN = trainSubset != null ? trainSubset.Length : n;
+            int subTargets = 0, subDecoys = 0;
+            if (trainSubset != null)
+            {
+                for (int i = 0; i < trainSubset.Length; i++)
+                {
+                    if (labels[trainSubset[i]]) subDecoys++;
+                    else subTargets++;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    if (labels[i]) subDecoys++;
+                    else subTargets++;
+                }
+            }
+            Console.Error.WriteLine(string.Format(
+                "[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} total",
+                subN, subTargets, subDecoys, n));
 
             // Build subset-local arrays
             bool[] subLabels;
@@ -252,6 +272,15 @@ namespace pwiz.OspreySharp.FDR
                 if (bestFeatPassing > 0)
                     trainFdr = relaxedFdr;
             }
+
+            string bestFeatName = (config.FeatureNames != null &&
+                                   bestFeatIdx >= 0 &&
+                                   bestFeatIdx < config.FeatureNames.Length)
+                ? config.FeatureNames[bestFeatIdx]
+                : string.Format("feature_{0}", bestFeatIdx);
+            Console.Error.WriteLine(string.Format(
+                "[COUNT] Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
+                bestFeatName, bestFeatPassing, trainFdr * 100.0));
 
             var initialScores = new double[subN];
             for (int i = 0; i < subN; i++)
