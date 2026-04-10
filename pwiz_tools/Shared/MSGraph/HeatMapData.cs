@@ -199,6 +199,15 @@ namespace pwiz.MSGraph
                 if (_cells == null)
                     _cells = CreateCells();
 
+                // If subdivision made no progress (all points share the same
+                // coordinates), treat this cell as a leaf.
+                if (_cells[0] == null && _cells[1] == null &&
+                    _cells[2] == null && _cells[3] == null)
+                {
+                    returnedPoints.Add(_maxPoint);
+                    return;
+                }
+
                 // Add the maximum intensity points from each of the 4 cells inside this cell (and recurse to
                 // the right cell size).
                 for (int i = 0; i < 4; i++)
@@ -235,9 +244,13 @@ namespace pwiz.MSGraph
                     if (pointLists[i].Count > 0)
                     {
                         var newCell = new Cell(pointLists[i]);
-                        // Make sure there was a maximum point, or the boundaries
-                        // will end up float.MinValue and float.MaxValue
-                        if (newCell.MaxPoint != null)
+                        // Skip cells with no positive-Z points (bounds would be
+                        // float.MinValue/MaxValue), and skip cells whose bounds
+                        // match the parent exactly (no spatial progress was made,
+                        // which would cause infinite recursion).
+                        if (newCell.MaxPoint != null &&
+                            !(newCell._xMin == _xMin && newCell._xMax == _xMax &&
+                              newCell._yMin == _yMin && newCell._yMax == _yMax))
                             cells[i] = newCell;
                     }
                 }

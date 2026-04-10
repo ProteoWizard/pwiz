@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>083</ApplicationRevision>
-    <ApplicationVersion>26.1.1.083</ApplicationVersion>
+    <ApplicationRevision>097</ApplicationRevision>
+    <ApplicationVersion>26.1.1.097</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -210,6 +210,12 @@
     <Compile Include="Controls\FilesTree\ManagedFileSystemWatcher.cs" />
     <Compile Include="Controls\Databinding\BuiltInReports.cs" />
     <Compile Include="Controls\Graphs\ZoomSynchronizer.cs" />
+    <Compile Include="Menus\ContextMenuControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\ContextMenuControl.Designer.cs">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -571,6 +577,11 @@
     <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Databinding\CandidatePeakGroupFactory.cs" />
     <Compile Include="Model\Databinding\Collections\ResultMap.cs" />
     <Compile Include="Model\Databinding\ReportExporters.cs" />
@@ -581,6 +592,7 @@
     <Compile Include="ToolsUI\ReportDefinitionReader.cs" />
     <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
+    <Compile Include="Model\ElementReorderer.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRowFactory.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRows.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
@@ -588,11 +600,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>EnumNames.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AuditLogStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
       <SubType>UserControl</SubType>
@@ -715,6 +722,42 @@
     </Compile>
     <Compile Include="Menus\ChromatogramContextMenu.Designer.cs">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\DetectionsContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\DetectionsContextMenu.Designer.cs">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\MassErrorsContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\MassErrorsContextMenu.Designer.cs">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\PeakAreasContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\PeakAreasContextMenu.Designer.cs">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\TreeNodeContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\TreeNodeContextMenu.Designer.cs">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\RetentionTimesContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\RetentionTimesContextMenu.Designer.cs">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\SpectrumContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\SpectrumContextMenu.Designer.cs">
+      <DependentUpon>SpectrumContextMenu.cs</DependentUpon>
     </Compile>
     <Compile Include="Menus\EditMenu.cs">
       <SubType>UserControl</SubType>
@@ -3341,6 +3384,81 @@
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.zh-CHS.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ContextMenuControl.resx">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ContextMenuControl.ja.resx">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ContextMenuControl.zh-CHS.resx">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\DetectionsContextMenu.ja.resx">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\DetectionsContextMenu.resx">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\DetectionsContextMenu.zh-CHS.resx">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\MassErrorsContextMenu.ja.resx">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\MassErrorsContextMenu.resx">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\MassErrorsContextMenu.zh-CHS.resx">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\PeakAreasContextMenu.ja.resx">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\PeakAreasContextMenu.resx">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\PeakAreasContextMenu.zh-CHS.resx">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\TreeNodeContextMenu.ja.resx">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\TreeNodeContextMenu.resx">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\TreeNodeContextMenu.zh-CHS.resx">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RetentionTimesContextMenu.ja.resx">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RetentionTimesContextMenu.resx">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RetentionTimesContextMenu.zh-CHS.resx">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\SpectrumContextMenu.ja.resx">
+      <DependentUpon>SpectrumContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\SpectrumContextMenu.resx">
+      <DependentUpon>SpectrumContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\SpectrumContextMenu.zh-CHS.resx">
+      <DependentUpon>SpectrumContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Menus\EditMenu.ja.resx">
       <DependentUpon>EditMenu.cs</DependentUpon>
     </EmbeddedResource>
@@ -3355,6 +3473,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\RefineMenu.resx">
       <DependentUpon>RefineMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\RefineMenu.zh-CHS.resx">
       <DependentUpon>RefineMenu.cs</DependentUpon>
