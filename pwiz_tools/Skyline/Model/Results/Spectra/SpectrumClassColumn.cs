@@ -27,7 +27,6 @@ using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
