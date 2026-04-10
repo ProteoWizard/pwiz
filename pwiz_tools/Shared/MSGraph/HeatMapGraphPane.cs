@@ -44,6 +44,12 @@ namespace pwiz.MSGraph
                 return;
             }
             GraphHeatMap(this,_heatMapData,MaxDotRadius,MinDotRadius,_yMin,_yMax,true,0);
+            // GraphHeatMap may early-return without populating CurveList if cell dimensions
+            // are degenerate (e.g. axis Min == Max because the data range collapsed). In
+            // that case, fall back to base.SetScale so the axes still get drawn instead
+            // of leaving an entirely blank graph.
+            if (CurveList.Count == 0)
+                base.SetScale(g);
         }
 
         public static void GraphHeatMap(GraphPane graphPane, HeatMapData heatMapData, int maxDotRadius, int minDotRadius, float yMin, float yMax, bool logScale, int cutoff)
