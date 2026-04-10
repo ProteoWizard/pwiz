@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, outliers.Length);
                 Assert.AreEqual("SVDKTEK", outliers[0].Peptide.Sequence);
                 Assert.AreEqual("SVDKTEK", outliers[1].Peptide.Sequence);
-            }, graphSummary => OkDialog(graphSummary, graphSummary.Close));
+            }, graphSummary => graphSummary.Close());
 
             // Verify the run to run regression graph
             RunLongDlg<GraphSummary>(SkylineWindow.ShowRTRegressionGraphRunToRun, graphSummary =>
