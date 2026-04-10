@@ -53,12 +53,19 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
+      <HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlibLoader.cs" />
+    <Compile Include="BlibWriter.cs" />
     <Compile Include="DiannTsvLoader.cs" />
+    <Compile Include="ElibLoader.cs" />
+    <Compile Include="LibraryCache.cs" />
+    <Compile Include="LibraryDeduplicator.cs" />
+    <Compile Include="SpectraCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
