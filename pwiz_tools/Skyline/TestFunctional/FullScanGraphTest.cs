@@ -251,6 +251,25 @@ namespace pwiz.SkylineTestFunctional
             SetZoom(true);
             TestScale(452, 456, 2.61, 4.34);
 
+            // Regression: switching scan type from MS1 to MS/MS in heatmap+magnify mode used
+            // to leave the Y axis inverted (yMin > yMax) and the IM filter band missing,
+            // because GetIonMobilityFilterRange only matched the originally-clicked transition
+            // index, which pointed to a precursor (ms1) rather than any fragment transition.
+            // After the fix, the Y axis should be a valid range and the IM band should be drawn.
+            SetScanType(ChromSource.fragment, 33.24, 27.9);
+            RunUI(() =>
+            {
+                Assert.IsTrue(SkylineWindow.GraphFullScan.YAxisMin < SkylineWindow.GraphFullScan.YAxisMax,
+                    "Heatmap Y axis is inverted/degenerate after switching to MS/MS in magnify mode " +
+                    "(yMin={0}, yMax={1})",
+                    SkylineWindow.GraphFullScan.YAxisMin, SkylineWindow.GraphFullScan.YAxisMax);
+                Assert.IsTrue(SkylineWindow.GraphFullScan.HasIonMobilityFilterBand,
+                    "IM filter band not drawn in MS/MS heatmap with magnify on");
+            });
+            // Restore precursor view for the remaining tests.
+            SetScanType(ChromSource.ms1, 33.23, 27.9);
+            TestScale(452, 456, 2.61, 4.34);
+
             // Check click on ion label.
             SetSpectrum(true);
             SetZoom(false);

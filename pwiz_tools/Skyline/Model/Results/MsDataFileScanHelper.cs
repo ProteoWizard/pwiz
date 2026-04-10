@@ -173,6 +173,14 @@ namespace pwiz.Skyline.Model.Results
             minIonMobility = double.MaxValue;
             maxIonMobility = double.MinValue;
             var hasIonMobilityInfo = false;
+            // When the originally clicked transition matches the requested source type, use only
+            // that specific transition's IM range (per-transition high-energy offsets can give
+            // different fragments different IM ranges, and we want to show the one the user
+            // clicked on). Otherwise (e.g. user clicked on a precursor and then switched scan
+            // type to fragment via the combo box), fall back to using any matching transition.
+            bool clickedTransitionMatchesSource = sourceType != ChromSource.unknown &&
+                TransitionIndex >= 0 && TransitionIndex < ScanProvider.Transitions.Length &&
+                ScanProvider.Transitions[TransitionIndex].Source == sourceType;
             int i = 0;
             foreach (var transition in ScanProvider.Transitions)
             {
@@ -194,7 +202,9 @@ namespace pwiz.Skyline.Model.Results
                     minIonMobility = double.MinValue;
                     maxIonMobility = double.MaxValue;
                 }
-                else if (sourceType == ChromSource.unknown || (transition.Source == sourceType && i == TransitionIndex))
+                else if (sourceType == ChromSource.unknown ||
+                         (transition.Source == sourceType &&
+                          (!clickedTransitionMatchesSource || i == TransitionIndex)))
                 {
                     // Products and precursors may have different expected ion mobility values in Waters MsE
                     double startIM = transition.IonMobilityInfo.IonMobility.Mobility.Value -
