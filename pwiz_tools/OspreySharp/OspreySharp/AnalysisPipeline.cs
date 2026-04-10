@@ -416,8 +416,22 @@ namespace pwiz.OspreySharp
             return windows;
         }
 
+        private const double MIN_SNR_FOR_RT_CAL = 5.0;
+        private const double MIN_COELUTION_CORR_SCORE = 0.5;
+        private const int CAL_TOP_N_FRAGMENTS = 6;
+        private const int MIN_COELUTION_SPECTRA = 5;
+        private const double CAL_FDR_THRESHOLD = 0.01;
+
         /// <summary>
         /// Run RT calibration using calibration discovery scoring.
+        /// Ports osprey/src/pipeline.rs run_calibration_discovery_windowed:
+        ///   1. Sample target + paired decoy library entries (stratified by RT/m/z).
+        ///   2. For each sample, extract fragment XICs, detect the best co-eluting
+        ///      peak, then compute 4 features at the apex: mean pairwise correlation,
+        ///      LibCosine, top-6 matched, and XCorr.
+        ///   3. Train LDA with non-negative weights + 1% FDR target-decoy competition.
+        ///   4. Apply S/N >= 5.0 quality filter on surviving targets.
+        ///   5. Fit LOESS on the (libRt, measuredRt) pairs.
         /// </summary>
         private RTCalibration RunCalibration(
             List<LibraryEntry> library,
@@ -453,11 +467,7 @@ namespace pwiz.OspreySharp
                 "Library RT range: {0:F1}-{1:F1}, mzML RT range: {2:F1}-{3:F1} min",
                 libMinRt, libMaxRt, mzmlMinRt, mzmlMaxRt));
 
-            // Build calibration points by scoring library entries against spectra
-            var scorer = new SpectralScorer();
-            var calibrationPoints = new List<KeyValuePair<double, double>>(); // (libRT, measuredRT)
-
-            // Use a wide initial RT tolerance
+            // Linear RT mapping when library and mzML scales differ significantly.
             bool rangesSimilar = libRtRange > 0 && mzmlRtRange > 0 &&
                 Math.Max(libRtRange / mzmlRtRange, mzmlRtRange / libRtRange) < 2.0 &&
                 Math.Abs(libMinRt - mzmlMinRt) < libRtRange * 0.5;
@@ -477,72 +487,183 @@ namespace pwiz.OspreySharp
 
             LogInfo(string.Format("Initial RT tolerance: {0:F1} min", initialTolerance));
 
-            // Sample library entries for calibration
-            var targetEntries = library.Where(e => !e.IsDecoy && e.Fragments.Count >= 3).ToList();
-            var sampler = new RTStratifiedSampler();
-            double[] retentionTimes = targetEntries.Select(e => e.RetentionTime).ToArray();
-            int[] sampleIndices = sampler.Sample(retentionTimes);
-
-            LogInfo(string.Format("Sampled {0} entries for calibration discovery",
-                sampleIndices.Length));
-
-            // For each sampled library entry, find best matching spectrum
-            foreach (int idx in sampleIndices)
+            // Sample library entries (paired target+decoy, stratified on RT).
+            var swSample = Stopwatch.StartNew();
+            var sampledEntries = SampleLibraryForCalibration(
+                library, config.RtCalibration.CalibrationSampleSize);
+            swSample.Stop();
+            int nSampledTargets = 0;
+            int nSampledDecoys = 0;
+            foreach (var e in sampledEntries)
             {
-                var entry = targetEntries[idx];
-                double expectedRt = entry.RetentionTime * rtSlope + rtIntercept;
-
-                // Find best-scoring spectrum within tolerance
-                double bestScore = 0.0;
-                double bestRt = 0.0;
-
-                foreach (var spectrum in spectra)
-                {
-                    if (Math.Abs(spectrum.RetentionTime - expectedRt) > initialTolerance)
-                        continue;
-                    if (!spectrum.ContainsPrecursor(entry.PrecursorMz))
-                        continue;
-
-                    double score = scorer.LibCosine(spectrum, entry, config.FragmentTolerance);
-                    if (score > bestScore)
-                    {
-                        bestScore = score;
-                        bestRt = spectrum.RetentionTime;
-                    }
-                }
-
-                if (bestScore > 0.3)
-                {
-                    calibrationPoints.Add(
-                        new KeyValuePair<double, double>(entry.RetentionTime, bestRt));
-                }
+                if (e.IsDecoy) nSampledDecoys++;
+                else nSampledTargets++;
             }
+            LogInfo(string.Format(
+                "[TIMING] Calibration sampling: {0:F2}s ({1} targets + {2} decoys)",
+                swSample.Elapsed.TotalSeconds, nSampledTargets, nSampledDecoys));
 
-            LogInfo(string.Format("Found {0} calibration points", calibrationPoints.Count));
-
-            if (calibrationPoints.Count < config.RtCalibration.MinCalibrationPoints)
+            if (nSampledTargets == 0)
             {
-                LogWarning(string.Format(
-                    "Insufficient calibration points ({0} < {1}). Using fallback tolerance.",
-                    calibrationPoints.Count, config.RtCalibration.MinCalibrationPoints));
+                LogWarning("No target entries available for calibration sampling.");
                 return null;
             }
 
-            // Fit LOESS calibration
+            // Group spectra by isolation window center for O(1) window lookup per candidate.
+            var spectraByWindowKey = new Dictionary<int, List<Spectrum>>();
+            foreach (var spectrum in spectra)
+            {
+                int key = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
+                List<Spectrum> list;
+                if (!spectraByWindowKey.TryGetValue(key, out list))
+                {
+                    list = new List<Spectrum>();
+                    spectraByWindowKey[key] = list;
+                }
+                list.Add(spectrum);
+            }
+            // Sort each window's spectra by RT for deterministic XIC extraction.
+            foreach (var list in spectraByWindowKey.Values)
+                list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime));
+
+            // Parallel score each sampled entry.
+            var swScoring = Stopwatch.StartNew();
+            var matches = new ConcurrentBag<CalibrationMatch>();
+            var snrByEntryId = new ConcurrentDictionary<uint, double>();
+            var matchRts = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
+
+            Parallel.ForEach(sampledEntries, new ParallelOptions
+            {
+                MaxDegreeOfParallelism = config.NThreads
+            },
+            () => new SpectralScorer(),
+            (entry, loopState, localScorer) =>
+            {
+                double entrySnr;
+                double entryLibRt;
+                double entryMeasuredRt;
+                var match = ScoreCalibrationEntry(
+                    entry, spectraByWindowKey, config,
+                    rtSlope, rtIntercept, initialTolerance, localScorer,
+                    out entrySnr, out entryLibRt, out entryMeasuredRt);
+                if (match != null)
+                {
+                    matches.Add(match);
+                    snrByEntryId[entry.Id] = entrySnr;
+                    matchRts[entry.Id] = new KeyValuePair<double, double>(
+                        entryLibRt, entryMeasuredRt);
+                }
+                return localScorer;
+            },
+            localScorer => { });
+            swScoring.Stop();
+            LogInfo(string.Format(
+                "[TIMING] Calibration scoring: {0:F2}s ({1} matches)",
+                swScoring.Elapsed.TotalSeconds, matches.Count));
+
+            if (matches.Count == 0)
+            {
+                LogWarning("No calibration matches could be scored.");
+                return null;
+            }
+
+            // Train LDA + 1% FDR target-decoy competition.
+            var swLda = Stopwatch.StartNew();
+            var matchArray = matches.ToArray();
+            // Sort deterministically by (base_id, entry_id) so LDA sees a stable order.
+            Array.Sort(matchArray, (a, b) =>
+            {
+                uint baseA = a.EntryId & 0x7FFFFFFF;
+                uint baseB = b.EntryId & 0x7FFFFFFF;
+                int cmp = baseA.CompareTo(baseB);
+                if (cmp != 0) return cmp;
+                return a.EntryId.CompareTo(b.EntryId);
+            });
+            int nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false);
+            swLda.Stop();
+
+            int nTargetWins = 0;
+            int nDecoyWins = 0;
+            foreach (var m in matchArray)
+            {
+                if (m.QValue <= CAL_FDR_THRESHOLD)
+                {
+                    if (m.IsDecoy) nDecoyWins++;
+                    else nTargetWins++;
+                }
+            }
+            LogInfo(string.Format(
+                "[TIMING] Calibration LDA: {0:F2}s ({1} target wins, {2} decoy wins at 1% FDR)",
+                swLda.Elapsed.TotalSeconds, nTargetWins, nDecoyWins));
+            LogInfo(string.Format(
+                "Calibration LDA passing count: {0} (returned by TrainAndScoreCalibration)",
+                nPassing));
+
+            // Collect high-confidence target matches that also meet the S/N quality gate.
+            var libRtsDetected = new List<double>();
+            var measuredRtsDetected = new List<double>();
+            int nSnrFiltered = 0;
+            foreach (var m in matchArray)
+            {
+                if (m.IsDecoy) continue;
+                if (m.QValue > CAL_FDR_THRESHOLD) continue;
+
+                KeyValuePair<double, double> rtPair;
+                if (!matchRts.TryGetValue(m.EntryId, out rtPair)) continue;
+
+                double snr;
+                if (!snrByEntryId.TryGetValue(m.EntryId, out snr))
+                    snr = 0.0;
+
+                if (snr < MIN_SNR_FOR_RT_CAL)
+                {
+                    nSnrFiltered++;
+                    continue;
+                }
+
+                libRtsDetected.Add(rtPair.Key);
+                measuredRtsDetected.Add(rtPair.Value);
+            }
+
+            if (nSnrFiltered > 0)
+            {
+                LogInfo(string.Format(
+                    "  RT quality filter: {0} -> {1} peptides (removed {2} with S/N < {3:F1})",
+                    nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
+            }
+
+            LogInfo(string.Format("Found {0} calibration points", libRtsDetected.Count));
+
+            if (libRtsDetected.Count < config.RtCalibration.MinCalibrationPoints)
+            {
+                LogWarning(string.Format(
+                    "Insufficient calibration points ({0} < {1}). Using fallback tolerance.",
+                    libRtsDetected.Count, config.RtCalibration.MinCalibrationPoints));
+                return null;
+            }
+
+            // Fit LOESS calibration.
+            var swLoess = Stopwatch.StartNew();
             try
             {
-                double[] libRts = calibrationPoints.Select(p => p.Key).ToArray();
-                double[] measuredRts = calibrationPoints.Select(p => p.Value).ToArray();
+                double[] libRts = libRtsDetected.ToArray();
+                double[] measuredRts = measuredRtsDetected.ToArray();
 
                 var calibratorConfig = new RTCalibratorConfig
                 {
                     Bandwidth = config.RtCalibration.LoessBandwidth,
-                    MinPoints = Math.Min(20, calibrationPoints.Count)
+                    Degree = 1,
+                    MinPoints = Math.Min(20, libRts.Length),
+                    RobustnessIterations = 2,
+                    OutlierRetention = 1.0 // LDA + S/N already filtered
                 };
                 var calibrator = new RTCalibrator(calibratorConfig);
                 var rtCal = calibrator.Fit(libRts, measuredRts);
+                swLoess.Stop();
 
                 var stats = rtCal.Stats();
+                LogInfo(string.Format("[TIMING] Calibration LOESS fit: {0:F2}s",
+                    swLoess.Elapsed.TotalSeconds));
                 LogInfo(string.Format(
                     "RT calibration: {0} points, R2={1:F4}, residual SD={2:F3} min",
                     stats.NPoints, stats.RSquared, stats.ResidualSD));
@@ -551,10 +672,366 @@ namespace pwiz.OspreySharp
             }
             catch (Exception ex)
             {
+                swLoess.Stop();
                 LogWarning(string.Format("RT calibration failed: {0}. Using fallback tolerance.",
                     ex.Message));
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Sample library entries for calibration discovery, keeping paired target-decoy
+        /// pairs together (matched by base_id = entry_id &amp; 0x7FFFFFFF).
+        /// Uses RT stratification through <see cref="RTStratifiedSampler"/> so the
+        /// sample is representative across the full gradient.
+        /// </summary>
+        private static List<LibraryEntry> SampleLibraryForCalibration(
+            List<LibraryEntry> library, int sampleSize)
+        {
+            // Build target list (eligible for scoring) and decoy lookup by base_id.
+            var targets = new List<LibraryEntry>();
+            var decoyByBaseId = new Dictionary<uint, LibraryEntry>();
+
+            foreach (var entry in library)
+            {
+                if (entry.Fragments == null || entry.Fragments.Count < 2)
+                    continue;
+                if (entry.IsDecoy)
+                    decoyByBaseId[entry.Id & 0x7FFFFFFF] = entry;
+                else
+                    targets.Add(entry);
+            }
+
+            if (targets.Count == 0)
+                return new List<LibraryEntry>();
+
+            // If requested sample size is 0 or >= targets, use all target+decoy entries.
+            bool useAll = sampleSize <= 0 || targets.Count <= sampleSize;
+
+            List<LibraryEntry> selectedTargets;
+            if (useAll)
+            {
+                selectedTargets = targets;
+            }
+            else
+            {
+                // Stratified sample by RT so calibration points cover the full gradient.
+                var sampler = new RTStratifiedSampler
+                {
+                    NBins = 20,
+                    PeptidesPerBin = Math.Max(1, sampleSize / 20)
+                };
+                double[] rts = new double[targets.Count];
+                for (int i = 0; i < targets.Count; i++)
+                    rts[i] = targets[i].RetentionTime;
+                int[] sampledIdx = sampler.Sample(rts);
+                selectedTargets = new List<LibraryEntry>(sampledIdx.Length);
+                foreach (int idx in sampledIdx)
+                    selectedTargets.Add(targets[idx]);
+            }
+
+            // Emit selected targets together with their paired decoys.
+            var result = new List<LibraryEntry>(selectedTargets.Count * 2);
+            foreach (var t in selectedTargets)
+            {
+                result.Add(t);
+                LibraryEntry decoy;
+                if (decoyByBaseId.TryGetValue(t.Id & 0x7FFFFFFF, out decoy))
+                    result.Add(decoy);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Score a single library entry for calibration: extract fragment XICs across
+        /// spectra in the entry's isolation window that fall within the initial RT
+        /// tolerance, detect the best co-eluting peak, and compute the four LDA
+        /// features at the apex (correlation, LibCosine, top-6 matched, XCorr).
+        /// Returns null if the entry has no viable peak.
+        /// </summary>
+        private CalibrationMatch ScoreCalibrationEntry(
+            LibraryEntry entry,
+            Dictionary<int, List<Spectrum>> spectraByWindowKey,
+            OspreyConfig config,
+            double rtSlope, double rtIntercept, double initialTolerance,
+            SpectralScorer scorer,
+            out double signalToNoise,
+            out double libraryRt,
+            out double measuredRt)
+        {
+            signalToNoise = 0.0;
+            libraryRt = entry.RetentionTime;
+            measuredRt = 0.0;
+
+            if (entry.Fragments == null || entry.Fragments.Count < 2)
+                return null;
+
+            // Find spectra in the entry's isolation window.
+            int windowKey = (int)Math.Round(entry.PrecursorMz * 10.0);
+            List<Spectrum> windowSpectra;
+            if (!spectraByWindowKey.TryGetValue(windowKey, out windowSpectra))
+            {
+                // Try neighbouring window keys (handles off-by-one due to rounding).
+                if (!spectraByWindowKey.TryGetValue(windowKey - 1, out windowSpectra) &&
+                    !spectraByWindowKey.TryGetValue(windowKey + 1, out windowSpectra))
+                {
+                    // Fall back to linear scan across windows that contain this precursor.
+                    windowSpectra = null;
+                    foreach (var kvp in spectraByWindowKey)
+                    {
+                        var first = kvp.Value[0];
+                        if (first.IsolationWindow.Contains(entry.PrecursorMz))
+                        {
+                            windowSpectra = kvp.Value;
+                            break;
+                        }
+                    }
+                    if (windowSpectra == null)
+                        return null;
+                }
+            }
+            else if (!windowSpectra[0].IsolationWindow.Contains(entry.PrecursorMz))
+            {
+                // Key collision where the actual isolation window doesn't contain this precursor.
+                return null;
+            }
+
+            // Filter by RT tolerance and top-6 fragment prefilter.
+            double expectedRt = entry.RetentionTime * rtSlope + rtIntercept;
+            var candidateSpectra = new List<Spectrum>();
+            foreach (var spec in windowSpectra)
+            {
+                if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
+                    continue;
+                if (CountTop6Matches(entry, spec, config) < 2)
+                    continue;
+                candidateSpectra.Add(spec);
+            }
+
+            if (candidateSpectra.Count < MIN_COELUTION_SPECTRA)
+                return null;
+
+            // Build shared RT axis for XIC extraction.
+            int nScans = candidateSpectra.Count;
+            double[] rts = new double[nScans];
+            for (int i = 0; i < nScans; i++)
+                rts[i] = candidateSpectra[i].RetentionTime;
+
+            // Extract XICs for the top-N most intense library fragments.
+            var xics = ExtractTopNFragmentXics(
+                entry, candidateSpectra, rts, CAL_TOP_N_FRAGMENTS, config);
+            if (xics.Count < 2)
+                return null;
+
+            // Detect consensus CWT peaks and score by pairwise correlation sum.
+            var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+            if (peaks.Count == 0)
+                return null;
+
+            XICPeakBounds bestPeak = null;
+            double bestCorrSum = double.NegativeInfinity;
+
+            foreach (var peak in peaks)
+            {
+                int si = peak.StartIndex;
+                int ei = peak.EndIndex;
+                if (ei - si + 1 < 3)
+                    continue;
+
+                double corrSum = 0.0;
+                for (int i = 0; i < xics.Count; i++)
+                {
+                    double[] inti = xics[i].Intensities;
+                    for (int j = i + 1; j < xics.Count; j++)
+                    {
+                        double[] intj = xics[j].Intensities;
+                        double corr = PearsonOverRange(inti, intj, si, ei);
+                        if (!double.IsNaN(corr))
+                            corrSum += corr;
+                    }
+                }
+
+                if (corrSum > bestCorrSum)
+                {
+                    bestCorrSum = corrSum;
+                    bestPeak = peak;
+                }
+            }
+
+            if (bestPeak == null || bestCorrSum < MIN_COELUTION_CORR_SCORE)
+                return null;
+
+            // Determine the apex within the best peak: the scan with the highest
+            // summed fragment intensity that also matches at least 2 of the top-6
+            // library fragments.
+            int apexLocalIdx = -1;
+            double apexSum = -1.0;
+            for (int scan = bestPeak.StartIndex; scan <= bestPeak.EndIndex; scan++)
+            {
+                double sumInt = 0.0;
+                for (int f = 0; f < xics.Count; f++)
+                {
+                    double[] inten = xics[f].Intensities;
+                    if (scan < inten.Length)
+                        sumInt += inten[scan];
+                }
+
+                if (sumInt > apexSum)
+                {
+                    // Require >= 2 of the top-6 library fragments to be matched at this scan.
+                    if (CountTop6Matches(entry, candidateSpectra[scan], config) >= 2)
+                    {
+                        apexSum = sumInt;
+                        apexLocalIdx = scan;
+                    }
+                }
+            }
+
+            if (apexLocalIdx < 0)
+                return null;
+
+            var apexSpectrum = candidateSpectra[apexLocalIdx];
+            measuredRt = apexSpectrum.RetentionTime;
+
+            // S/N on the composite summed XIC within the peak boundaries.
+            double[] compositeXic = new double[nScans];
+            for (int scan = 0; scan < nScans; scan++)
+            {
+                double s = 0.0;
+                for (int f = 0; f < xics.Count; f++)
+                {
+                    double[] inten = xics[f].Intensities;
+                    if (scan < inten.Length)
+                        s += inten[scan];
+                }
+                compositeXic[scan] = s;
+            }
+            signalToNoise = PeakDetector.ComputeSnr(
+                compositeXic, apexLocalIdx, bestPeak.StartIndex, bestPeak.EndIndex);
+
+            // Compute the four LDA features at the apex.
+            double libCosineApex = scorer.LibCosine(
+                apexSpectrum, entry, config.FragmentTolerance);
+            double xcorrApex = ComputeXcorrForSpectrum(apexSpectrum, entry, scorer);
+            byte top6Matched = CountTop6Matches(entry, apexSpectrum, config);
+
+            return new CalibrationMatch
+            {
+                EntryId = entry.Id,
+                IsDecoy = entry.IsDecoy,
+                Sequence = entry.Sequence,
+                CorrelationScore = bestCorrSum,
+                LibcosineApex = libCosineApex,
+                Top6MatchedApex = top6Matched,
+                XcorrScore = xcorrApex,
+                IsotopeCosine = 0.0,
+                DiscriminantScore = bestCorrSum,
+                QValue = 1.0
+            };
+        }
+
+        /// <summary>
+        /// Extract XICs for the top N most intense library fragments across the
+        /// supplied (pre-filtered) spectra list. Returns only fragments that have
+        /// at least one non-zero intensity point.
+        /// </summary>
+        private List<XicData> ExtractTopNFragmentXics(
+            LibraryEntry entry,
+            List<Spectrum> candidateSpectra,
+            double[] rts,
+            int maxFragments,
+            OspreyConfig config)
+        {
+            var xics = new List<XicData>();
+            if (entry.Fragments == null || entry.Fragments.Count == 0)
+                return xics;
+
+            // Select top N fragment indices by descending relative intensity.
+            int nFrags = entry.Fragments.Count;
+            int nTop = Math.Min(nFrags, maxFragments);
+            int[] topIndices;
+            if (nFrags <= maxFragments)
+            {
+                topIndices = new int[nFrags];
+                for (int i = 0; i < nFrags; i++)
+                    topIndices[i] = i;
+            }
+            else
+            {
+                var indexed = new List<KeyValuePair<int, float>>(nFrags);
+                for (int i = 0; i < nFrags; i++)
+                    indexed.Add(new KeyValuePair<int, float>(i, entry.Fragments[i].RelativeIntensity));
+                indexed.Sort((a, b) => b.Value.CompareTo(a.Value));
+                topIndices = new int[nTop];
+                for (int i = 0; i < nTop; i++)
+                    topIndices[i] = indexed[i].Key;
+            }
+
+            int nScans = candidateSpectra.Count;
+            foreach (int fragIdx in topIndices)
+            {
+                var fragment = entry.Fragments[fragIdx];
+                double tolDa = config.FragmentTolerance.ToleranceDa(fragment.Mz);
+                double lower = fragment.Mz - tolDa;
+                double upper = fragment.Mz + tolDa;
+
+                double[] intensities = new double[nScans];
+                bool anyNonZero = false;
+
+                for (int scanIdx = 0; scanIdx < nScans; scanIdx++)
+                {
+                    var spectrum = candidateSpectra[scanIdx];
+                    if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+                        continue;
+
+                    int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                    double bestIntensity = 0.0;
+                    for (int k = lo; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
+                    {
+                        double intensity = spectrum.Intensities[k];
+                        if (intensity > bestIntensity)
+                            bestIntensity = intensity;
+                    }
+                    intensities[scanIdx] = bestIntensity;
+                    if (bestIntensity > 0.0)
+                        anyNonZero = true;
+                }
+
+                if (anyNonZero)
+                    xics.Add(new XicData(fragIdx, rts, intensities));
+            }
+
+            return xics;
+        }
+
+        /// <summary>
+        /// Pearson correlation over an inclusive index range. Returns NaN if either
+        /// subrange has no variance or the range is too short.
+        /// </summary>
+        private static double PearsonOverRange(double[] x, double[] y, int start, int end)
+        {
+            int n = end - start + 1;
+            if (n < 3)
+                return double.NaN;
+
+            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+            for (int i = start; i <= end; i++)
+            {
+                double xi = x[i];
+                double yi = y[i];
+                sumX += xi;
+                sumY += yi;
+                sumXY += xi * yi;
+                sumX2 += xi * xi;
+                sumY2 += yi * yi;
+            }
+
+            double dn = n;
+            double denom = (dn * sumX2 - sumX * sumX) * (dn * sumY2 - sumY * sumY);
+            if (denom < 1e-30)
+                return 0.0;
+
+            return (dn * sumXY - sumX * sumY) / Math.Sqrt(denom);
         }
 
         /// <summary>
