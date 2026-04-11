@@ -744,7 +744,7 @@ namespace pwiz.Skyline
                 else if (controllerTypeName == typeof(DetectionsGraphController).Name)
                     graphSummary = _listGraphDetections.FirstOrDefault(g => g.Type == type) ?? CreateGraphDetections(type);
                 if (graphSummary != null && splitLength > 3)
-                    graphSummary.LabelLayoutString = Uri.UnescapeDataString(split[3]);
+                    graphSummary.LabelLayoutString = TextUtil.UnescapePipe(split[3]);
                 return graphSummary;
             }
 
@@ -2519,6 +2519,8 @@ namespace pwiz.Skyline
                 detectionsContextMenu.BuildDetectionsGraphMenu(controller.GraphSummary, menuStrip);
             }
 
+            // Translate "Peptide" to "Molecule" etc. based on UI mode (recurses into submenus)
+            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, Program.ModeUI, null, recurse: true);
         }
 
         /// <summary>
