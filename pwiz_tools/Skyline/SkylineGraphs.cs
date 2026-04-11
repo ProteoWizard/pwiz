@@ -744,7 +744,7 @@ namespace pwiz.Skyline
                 else if (controllerTypeName == typeof(DetectionsGraphController).Name)
                     graphSummary = _listGraphDetections.FirstOrDefault(g => g.Type == type) ?? CreateGraphDetections(type);
                 if (graphSummary != null && splitLength > 3)
-                    graphSummary.LabelLayoutString = Uri.UnescapeDataString(split[3]);
+                    graphSummary.LabelLayoutString = TextUtil.UnescapePipe(split[3]);
                 return graphSummary;
             }
 
