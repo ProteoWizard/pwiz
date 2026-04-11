@@ -712,16 +712,28 @@ namespace pwiz.Skyline.Controls.Graphs
                 };
                 GraphPane.GraphObjList.Add(driftTimeOutline);
 
-                // Add dashed line at peak center ion mobility
-                var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
-                if (imFilter != null && imFilter.HasIonMobilityValue)
+                // Add dashed line at peak center
+                double? peakCenter = null;
+                if (isWatersSonarData)
                 {
-                    // Use window center as the effective IM (accounts for high-energy offset)
-                    double peakCenter = imFilter.IonMobility.Mobility.Value +
-                                        (imFilter.IonMobilityFilterWindow.Offset ?? 0);
+                    // For SONAR, the Y-axis is precursor m/z — show the selected precursor's m/z
+                    var currentTransition = _msDataFileScanHelper.CurrentTransition;
+                    if (currentTransition != null)
+                        peakCenter = currentTransition.PrecursorMz;
+                }
+                else
+                {
+                    // For IM data, show the ion mobility center (accounts for high-energy offset)
+                    var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
+                    if (imFilter != null && imFilter.HasIonMobilityValue)
+                        peakCenter = imFilter.IonMobility.Mobility.Value +
+                                     (imFilter.IonMobilityFilterWindow.Offset ?? 0);
+                }
+                if (peakCenter.HasValue)
+                {
                     var centerLine = new LineObj(
                         Color.FromArgb(180, Color.DarkViolet),
-                        0.0, peakCenter, 1.0, peakCenter)
+                        0.0, peakCenter.Value, 1.0, peakCenter.Value)
                     {
                         Location = { CoordinateFrame = CoordType.XChartFractionYScale },
                         ZOrder = ZOrder.C_BehindChartBorder,
@@ -1949,10 +1961,20 @@ namespace pwiz.Skyline.Controls.Graphs
             // Peak center is only meaningful when the filter band is shown
             if (!double.IsNaN(filterMin))
             {
-                var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
-                if (imFilter != null && imFilter.HasIonMobilityValue)
-                    filterPeak = imFilter.IonMobility.Mobility.Value +
-                                 (imFilter.IonMobilityFilterWindow.Offset ?? 0);
+                if (_msDataFileScanHelper.IsWatersSonarData)
+                {
+                    // For SONAR, the Y-axis is precursor m/z
+                    var currentTransition = _msDataFileScanHelper.CurrentTransition;
+                    if (currentTransition != null)
+                        filterPeak = currentTransition.PrecursorMz;
+                }
+                else
+                {
+                    var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
+                    if (imFilter != null && imFilter.HasIonMobilityValue)
+                        filterPeak = imFilter.IonMobility.Mobility.Value +
+                                     (imFilter.IonMobilityFilterWindow.Offset ?? 0);
+                }
             }
 
             var overlay = new MobilogramOverlay(_heatMapData.PlotY2D, filterMin, filterMax, filterPeak)
