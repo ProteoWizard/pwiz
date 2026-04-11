@@ -1317,9 +1317,73 @@ namespace pwiz.OspreySharp
             for (int i = 0; i < nScans; i++)
                 rts[i] = candidateSpectra[i].RetentionTime;
 
+            // Per-entry chromatogram diagnostic. Dump candidates + extracted XICs.
+            string diagXicEnv = Environment.GetEnvironmentVariable("OSPREY_DIAG_XIC_ENTRY_ID");
+            uint diagXicEntryId;
+            bool isDiagXic = !string.IsNullOrEmpty(diagXicEnv) &&
+                uint.TryParse(diagXicEnv, out diagXicEntryId) && diagXicEntryId == entry.Id;
+            string diagXicPath = isDiagXic ? "cs_xic_entry_" + entry.Id + ".txt" : null;
+            if (isDiagXic)
+            {
+                using (var dw = new StreamWriter(diagXicPath))
+                {
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# C# per-entry chromatogram dump for entry_id={0}", entry.Id));
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# {0} ({1}, charge={2}, lib_rt={3:F6}, mz={4:F6})",
+                        entry.ModifiedSequence, entry.Sequence, entry.Charge,
+                        entry.RetentionTime, entry.PrecursorMz));
+                    dw.WriteLine("# n_post_prefilter_candidates=" + candidateSpectra.Count);
+                    dw.WriteLine("# CANDIDATES (post-prefilter, sorted by RT)");
+                    dw.WriteLine("candidate\tscan_idx\tscan_number\trt");
+                    for (int i = 0; i < candidateSpectra.Count; i++)
+                    {
+                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "candidate\t{0}\t{1}\t{2:F6}",
+                            i, candidateSpectra[i].ScanNumber, candidateSpectra[i].RetentionTime));
+                    }
+
+                    // Top-6 fragments
+                    var sortedByIntensity = new List<KeyValuePair<int, float>>(entry.Fragments.Count);
+                    for (int fi = 0; fi < entry.Fragments.Count; fi++)
+                        sortedByIntensity.Add(new KeyValuePair<int, float>(fi, entry.Fragments[fi].RelativeIntensity));
+                    sortedByIntensity.Sort((a, b) => b.Value.CompareTo(a.Value));
+                    int topN = Math.Min(6, sortedByIntensity.Count);
+
+                    dw.WriteLine("# TOP-6 FRAGMENTS (selected by intensity desc)");
+                    dw.WriteLine("topfrag\ttop_idx\tlib_idx\tlib_mz\tlib_intensity");
+                    for (int rank = 0; rank < topN; rank++)
+                    {
+                        int fi = sortedByIntensity[rank].Key;
+                        var fobj = entry.Fragments[fi];
+                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "topfrag\t{0}\t{1}\t{2:F6}\t{3:F6}",
+                            rank, fi, fobj.Mz, fobj.RelativeIntensity));
+                    }
+                }
+            }
+
             // Extract XICs for the top-N most intense library fragments.
             var xics = ExtractTopNFragmentXics(
                 entry, candidateSpectra, rts, CAL_TOP_N_FRAGMENTS, config);
+
+            if (isDiagXic)
+            {
+                using (var dw = new StreamWriter(diagXicPath, true))
+                {
+                    dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
+                    dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
+                    foreach (var xic in xics)
+                    {
+                        for (int i = 0; i < xic.RetentionTimes.Length; i++)
+                        {
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "xic\t{0}\t{1}\t{2:F6}\t{3:F6}",
+                                xic.FragmentIndex, i, xic.RetentionTimes[i], xic.Intensities[i]));
+                        }
+                    }
+                }
+            }
 
             if (xics.Count < 2)
                 return null;
@@ -1478,7 +1542,6 @@ namespace pwiz.OspreySharp
                 double upper = fragment.Mz + tolDa;
 
                 double[] intensities = new double[nScans];
-                bool anyNonZero = false;
 
                 for (int scanIdx = 0; scanIdx < nScans; scanIdx++)
                 {
@@ -1487,20 +1550,28 @@ namespace pwiz.OspreySharp
                         continue;
 
                     int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
-                    double bestIntensity = 0.0;
-                    for (int k = lo; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
+                    if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
+                        continue;
+
+                    // Pick CLOSEST peak by m/z (not most intense). Matches
+                    // Rust extract_fragment_xics in osprey-scoring/src/batch.rs.
+                    double bestDiff = Math.Abs(spectrum.Mzs[lo] - fragment.Mz);
+                    double bestIntensity = spectrum.Intensities[lo];
+                    for (int k = lo + 1; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
                     {
-                        double intensity = spectrum.Intensities[k];
-                        if (intensity > bestIntensity)
-                            bestIntensity = intensity;
+                        double diff = Math.Abs(spectrum.Mzs[k] - fragment.Mz);
+                        if (diff < bestDiff)
+                        {
+                            bestDiff = diff;
+                            bestIntensity = spectrum.Intensities[k];
+                        }
                     }
                     intensities[scanIdx] = bestIntensity;
-                    if (bestIntensity > 0.0)
-                        anyNonZero = true;
                 }
 
-                if (anyNonZero)
-                    xics.Add(new XicData(fragIdx, rts, intensities));
+                // Always include the fragment XIC, even all-zero. Rust:
+                // "Dropping all-zero fragments biases decoys to higher R^2".
+                xics.Add(new XicData(fragIdx, rts, intensities));
             }
 
             return xics;
