@@ -125,6 +125,7 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             ((T) bindingSource1[rowIndex]).Color = newColor;
+            dataGridViewColors.InvalidateRow(rowIndex);
         }
 
         public void UpdateBindingSource()
@@ -167,6 +168,47 @@ namespace pwiz.Skyline.ToolsUI
             BindingList<T> GetCurrentBindingList();
         }
 
+        private int _useColorColumnIndex = -1;
+
+        /// <summary>
+        /// Adds a "Use color" checkbox column bound to <c>UseColor</c> immediately after the color swatch column.
+        /// When the user checks it with no color set the color picker opens automatically.
+        /// </summary>
+        public void AddUseColorColumn(string headerText)
+        {
+            var col = new DataGridViewCheckBoxColumn
+            {
+                DataPropertyName = @"UseColor",
+                HeaderText = headerText,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells,
+                SortMode = DataGridViewColumnSortMode.Automatic
+            };
+            dataGridViewColors.Columns.Insert(colorCol.Index + 1, col);
+            _useColorColumnIndex = col.Index;
+            dataGridViewColors.CellContentClick += dataGridViewColors_UseColorCellContentClick;
+        }
+
+        private void dataGridViewColors_UseColorCellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex != _useColorColumnIndex || e.RowIndex < 0 || e.RowIndex >= bindingSource1.Count)
+                return;
+            // CellContentClick fires BEFORE the checkbox toggles, so Value is still the old (pre-click) state.
+            // If the checkbox is about to become checked and no color is set, assign gray now — before
+            // CurrentCellDirtyStateChanged calls CommitEdit and the binding round-trips through UseColor.get.
+            var currentlyChecked = (bool)(dataGridViewColors[e.ColumnIndex, e.RowIndex].Value ?? false);
+            var colorRow = (T)bindingSource1[e.RowIndex];
+            if (!currentlyChecked && colorRow.Color == Color.Empty)
+            {
+                colorPickerDlg.Color = Color.Red;
+                if (colorPickerDlg.ShowDialog() == DialogResult.OK)
+                    changeRowColor(e.RowIndex, colorPickerDlg.Color);
+            }
+            // Commit manually here — CurrentCellDirtyStateChanged skips this column to prevent
+            // auto-commit while the color picker modal is open (which would revert the checkbox).
+            dataGridViewColors.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            bindingSource1.ResetItem(e.RowIndex);
+        }
+
         private void dataGridViewColors_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             if (e.ColumnIndex != colorCol.Index || _owner == null)
@@ -195,19 +237,19 @@ namespace pwiz.Skyline.ToolsUI
             {
                 var rowIndex = e.RowIndex;
                 var oldColor = ((T)bindingSource1[rowIndex]).Color;
-                colorPickerDlg.Color = oldColor;
-
+                colorPickerDlg.Color = oldColor == Color.Empty ? Color.Red : oldColor;
                 if (colorPickerDlg.ShowDialog() == DialogResult.OK)
-                {
                     changeRowColor(rowIndex, colorPickerDlg.Color);
-                }
             }
         }
 
         private void dataGridViewColors_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
             // https://stackoverflow.com/questions/5652957/what-event-catches-a-change-of-value-in-a-combobox-in-a-datagridviewcell
-            if (!(dataGridViewColors.CurrentCell is DataGridViewTextBoxCell) && dataGridViewColors.IsCurrentCellDirty)
+            // Skip the UseColor checkbox — it is committed manually in CellContentClick, after the color picker closes.
+            if (!(dataGridViewColors.CurrentCell is DataGridViewTextBoxCell) &&
+                dataGridViewColors.IsCurrentCellDirty &&
+                dataGridViewColors.CurrentCell?.ColumnIndex != _useColorColumnIndex)
                 dataGridViewColors.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
 

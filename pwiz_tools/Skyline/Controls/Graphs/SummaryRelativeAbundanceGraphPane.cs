@@ -506,6 +506,10 @@ namespace pwiz.Skyline.Controls.Graphs
             bool dataChanged = _graphData.MinY != oldGraphData?.MinY || _graphData.MaxY != oldGraphData?.MaxY;
 
             // For proper z-order, add the selected points, then the matched points, then the unmatched points
+            // Resolve formatting traits per-point independently: for each trait (color, symbol, size,
+            // labeled), the first matching rule that has that trait set (non-null / non-Empty) wins.
+            var colorRows = (_formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting).ColorRows
+                .Where(r => r.MatchExpression != null).ToList();
             var selectedPoints = new PointPairList();
             var unmatchedPoints = new List<PointPair>();
             if (ShowSelection)
@@ -514,7 +518,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _graphData.PointPairList.Select(point => point.Tag).OfType<GraphPointData>()
                         .Select(graphPointData => graphPointData.IdentityPath)).ToHashSet();
 
-                foreach (var point in _graphData.PointPairList) 
+                foreach (var point in _graphData.PointPairList)
                 {
                     var pointData = (GraphPointData)point.Tag;
                     if (selectedPaths.Contains(pointData.IdentityPath) && selectedPoints.Count < MAX_SELECTED)
@@ -526,34 +530,51 @@ namespace pwiz.Skyline.Controls.Graphs
                         unmatchedPoints.Add(point);
                     }
                 }
-                AddPoints(new PointPairList(selectedPoints), GraphSummary.ColorSelected, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
+                // Selected points keep the selection color but preserve the marker shape from the matching rule
+                foreach (var symbolGroup in selectedPoints.GroupBy(point =>
+                {
+                    var pointData = (GraphPointData)point.Tag;
+                    return DotPlotUtil.ResolvePointFormat(colorRows,
+                        rule => rule.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null))
+                        ?.symbol ?? PointSymbol.Circle;
+                }))
+                {
+                    AddPoints(new PointPairList(symbolGroup.ToList()), GraphSummary.ColorSelected,
+                        DotPlotUtil.PointSizeToFloat(PointSize.large), true, symbolGroup.Key, true);
+                }
             }
             else
             {
                 unmatchedPoints.AddRange(_graphData.PointPairList);
             }
-
-            // For each valid match expression specified by the user
-            var colorRows = (_formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting).ColorRows;
-            foreach (var colorRow in colorRows.Where(r => r.MatchExpression != null))
+            var unmatchedOtherPoints = new PointPairList(); // points that matched no rule
+            var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
+            foreach (var point in unmatchedPoints)
             {
-                var matchedPoints = new List<PointPair>();
-                foreach (var point in unmatchedPoints)
-                {
-                    var pointData = (GraphPointData)point.Tag;
-                    if (colorRow.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null))
-                    {
-                        matchedPoints.Add(point);
-                    }
-                }
-
-                if (matchedPoints.Any())
-                {
-                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(colorRow.PointSize), colorRow.Labeled, colorRow.PointSymbol);
-                    unmatchedPoints = unmatchedPoints.Except(matchedPoints).ToList();
-                }
+                var pointData = (GraphPointData)point.Tag;
+                var resolved = DotPlotUtil.ResolvePointFormat(colorRows,
+                    rule => rule.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null));
+                if (resolved == null)
+                    unmatchedOtherPoints.Add(point);
+                else
+                    pointFormats.Add((point,
+                        resolved.Value.color ?? Color.Gray,
+                        resolved.Value.symbol ?? PointSymbol.Circle,
+                        resolved.Value.size ?? PointSize.normal,
+                        resolved.Value.labeled,
+                        resolved.Value.firstRuleIndex));
             }
-            AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
+
+            foreach (var group in pointFormats
+                .GroupBy(pf => (pf.color, pf.symbol, pf.size, pf.labeled))
+                .OrderBy(g => g.Min(pf => pf.firstRuleIndex)))
+            {
+                var fmt = group.Key;
+                AddPoints(new PointPairList(group.Select(pf => pf.point).ToList()),
+                    fmt.color, DotPlotUtil.PointSizeToFloat(fmt.size), fmt.labeled, fmt.symbol);
+            }
+
+            AddPoints(unmatchedOtherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
             if(dataChanged || Settings.Default.RelativeAbundanceLogScale != YAxis.Scale.IsLog)
                 UpdateAxes();
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
@@ -641,7 +662,15 @@ namespace pwiz.Skyline.Controls.Graphs
             var symbolType = DotPlotUtil.PointSymbolToSymbolType(pointSymbol);
 
             LineItem lineItem;
-            if (DotPlotUtil.HasOutline(pointSymbol))
+            if (DotPlotUtil.IsOutlineVariant(pointSymbol))
+            {
+                lineItem = new LineItem(null, points, Color.Black, symbolType)
+                {
+                    Line = { IsVisible = false },
+                    Symbol = { Border = { IsVisible = true, Color = color }, Fill = new Fill(Color.Transparent), Size = size, IsAntiAlias = true }
+                };
+            }
+            else if (DotPlotUtil.HasOutline(pointSymbol))
             {
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {
