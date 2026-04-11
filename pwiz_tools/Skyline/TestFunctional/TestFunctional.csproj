@@ -191,6 +191,7 @@
     <Compile Include="OriginalPeakScoreTest.cs" />
     <Compile Include="PivotIsotopeLabelTest.cs" />
     <Compile Include="RemovePeakFromAllTest.cs" />
+    <Compile Include="ReorderElementsTest.cs" />
     <Compile Include="ReportsHelpDocumentationTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />

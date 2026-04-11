@@ -69,7 +69,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             else
             {
-                var filterHandler = filterInfo.ColumnDescriptor.GetFilterHandler();
                 row.Cells[colFilterColumn.Index].Value = filterInfo.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
                 row.Cells[colFilterColumn.Index].Style.Font = dataGridViewFilter.Font;
                 row.Cells[colFilterColumn.Index].ToolTipText = null;

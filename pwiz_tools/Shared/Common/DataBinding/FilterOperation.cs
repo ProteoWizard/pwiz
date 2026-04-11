@@ -124,7 +124,7 @@ namespace pwiz.Common.DataBinding
                 get { return OpName; }
             }
 
-            public bool IsValidFor(ColumnDescriptor columnDescriptor)
+            public virtual bool IsValidFor(ColumnDescriptor columnDescriptor)
             {
                 return IsValidFor(columnDescriptor.DataSchema.GetFilterHandler(columnDescriptor.PropertyType));
             }
@@ -323,6 +323,11 @@ namespace pwiz.Common.DataBinding
             {
                 return filterHandler.CanBeBlank;
             }
+
+            public override bool IsValidFor(ColumnDescriptor columnDescriptor)
+            {
+                return columnDescriptor.CanBeBlank();
+            }
         }
 
         class OpIsNotBlank : UnaryFilterOperation
@@ -345,6 +350,11 @@ namespace pwiz.Common.DataBinding
             public override bool IsValidFor(IFilterHandler filterHandler)
             {
                 return filterHandler.CanBeBlank;
+            }
+
+            public override bool IsValidFor(ColumnDescriptor columnDescriptor)
+            {
+                return columnDescriptor.CanBeBlank();
             }
         }
 
