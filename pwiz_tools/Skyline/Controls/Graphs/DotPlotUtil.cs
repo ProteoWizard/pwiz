@@ -26,6 +26,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using ZedGraph;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
+// ReSharper disable PossibleMultipleEnumeration
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -72,6 +73,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     return SymbolType.Plus;
                 case PointSymbol.Star:
                     return SymbolType.Star;
+                case PointSymbol.OutlineCircle:
+                    return SymbolType.Circle;
+                case PointSymbol.OutlineSquare:
+                    return SymbolType.Square;
+                case PointSymbol.OutlineTriangle:
+                    return SymbolType.Triangle;
+                case PointSymbol.OutlineTriangleDown:
+                    return SymbolType.TriangleDown;
+                case PointSymbol.OutlineDiamond:
+                    return SymbolType.Diamond;
                 default:
                     return SymbolType.Circle;
             }
@@ -82,6 +93,13 @@ namespace pwiz.Skyline.Controls.Graphs
             return pointSymbol == PointSymbol.Circle || pointSymbol == PointSymbol.Square ||
                    pointSymbol == PointSymbol.Triangle || pointSymbol == PointSymbol.TriangleDown ||
                    pointSymbol == PointSymbol.Diamond;
+        }
+
+        public static bool IsOutlineVariant(PointSymbol pointSymbol)
+        {
+            return pointSymbol == PointSymbol.OutlineCircle || pointSymbol == PointSymbol.OutlineSquare ||
+                   pointSymbol == PointSymbol.OutlineTriangle || pointSymbol == PointSymbol.OutlineTriangleDown ||
+                   pointSymbol == PointSymbol.OutlineDiamond;
         }
 
         public static float PointSizeToFloat(PointSize pointSize)
@@ -206,6 +224,52 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var docNode = peptide ?? (SkylineDocNode)protein;
             return skylineWindow != null && GetSelectedPath(skylineWindow, docNode.IdentityPath) != null;
+        }
+
+        /// <summary>
+        /// Resolves per-trait formatting for a single data point by scanning the ordered rule list.
+        /// Each trait (color, symbol, size, labeled=true) is set by the first matching rule that
+        /// explicitly provides that trait. <c>Labeled=false</c> is treated as "not set" so a later
+        /// rule can still enable labeling.
+        /// Returns <c>null</c> when no rule contributes any trait — the caller should add the point
+        /// to the default "other" collection rather than a matched curve.
+        /// </summary>
+        public static (Color? color, PointSymbol? symbol, PointSize? size, bool labeled, int firstRuleIndex)?
+            ResolvePointFormat(IList<MatchRgbHexColor> colorRows, Func<MatchRgbHexColor, bool> matches)
+        {
+            Color? resolvedColor = null;
+            PointSymbol? resolvedSymbol = null;
+            PointSize? resolvedSize = null;
+            var resolvedLabeled = false;
+            var firstRuleIndex = -1;
+
+            for (var i = 0; i < colorRows.Count; i++)
+            {
+                var rule = colorRows[i];
+                if (!matches(rule))
+                    continue;
+
+                var contributed = false;
+                if (resolvedColor == null && rule.Color != Color.Empty)
+                    { resolvedColor = rule.Color; contributed = true; }
+                if (resolvedSymbol == null && rule.PointSymbol.HasValue)
+                    { resolvedSymbol = rule.PointSymbol; contributed = true; }
+                if (resolvedSize == null && rule.PointSize.HasValue)
+                    { resolvedSize = rule.PointSize; contributed = true; }
+                if (!resolvedLabeled && rule.Labeled)
+                    { resolvedLabeled = true; contributed = true; }
+
+                if (contributed && firstRuleIndex < 0)
+                    firstRuleIndex = i;
+
+                if (resolvedColor != null && resolvedSymbol != null && resolvedSize != null && resolvedLabeled)
+                    break;
+            }
+
+            if (firstRuleIndex < 0)
+                return null;
+
+            return (resolvedColor, resolvedSymbol, resolvedSize, resolvedLabeled, firstRuleIndex);
         }
     }
 }

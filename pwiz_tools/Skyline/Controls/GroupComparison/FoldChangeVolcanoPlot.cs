@@ -352,26 +352,52 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
-            AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
+            // Resolve formatting traits per-point independently using DotPlotUtil.ResolvePointFormat.
+            // Each trait (color, symbol, size, labeled=true) is set by the first matching rule that
+            // explicitly provides it — separate rules can control different traits independently.
+            var colorRows = GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null).ToList();
 
-            foreach (var colorRow in GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null))
+            // Selected points keep the selection color but preserve the marker shape from the first
+            // selected point's matching rule. Exactly one selected curve must always be added at
+            // index 0 so that the cutoff-line insertion indices and MatchedPointsStartIndex stay valid.
+            var selectedSymbol = PointSymbol.Circle;
+            if (selectedPoints.Count > 0)
             {
-                var row = colorRow;
-                var matchedPoints = otherPoints.Where(p =>
-                {
-                    var foldChangeRow = (FoldChangeRow) p.Tag;
-                    return row.MatchExpression.Matches(Document, foldChangeRow.Protein, foldChangeRow.Peptide,
-                        foldChangeRow.FoldChangeResult, CutoffSettings);
-                }).ToArray();
-
-                if (matchedPoints.Any())
-                {
-                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(row.PointSize), row.Labeled, row.PointSymbol);
-                    otherPoints = new PointPairList(otherPoints.Except(matchedPoints).ToArray());
-                }
+                var firstRow = (FoldChangeRow)(selectedPoints[0]).Tag;
+                selectedSymbol = DotPlotUtil.ResolvePointFormat(colorRows,
+                    rule => rule.MatchExpression.Matches(Document, firstRow.Protein, firstRow.Peptide,
+                        firstRow.FoldChangeResult, CutoffSettings))?.symbol ?? PointSymbol.Circle;
+            }
+            AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, selectedSymbol, true);
+            var unmatchedOtherPoints = new PointPairList();
+            var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
+            foreach (var point in otherPoints)
+            {
+                var foldChangeRow = (FoldChangeRow)point.Tag;
+                var resolved = DotPlotUtil.ResolvePointFormat(colorRows,
+                    rule => rule.MatchExpression.Matches(Document, foldChangeRow.Protein,
+                        foldChangeRow.Peptide, foldChangeRow.FoldChangeResult, CutoffSettings));
+                if (resolved == null)
+                    unmatchedOtherPoints.Add(point);
+                else
+                    pointFormats.Add((point,
+                        resolved.Value.color ?? Color.Gray,
+                        resolved.Value.symbol ?? PointSymbol.Circle,
+                        resolved.Value.size ?? PointSize.small,
+                        resolved.Value.labeled,
+                        resolved.Value.firstRuleIndex));
             }
 
-            AddPoints(otherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
+            foreach (var group in pointFormats
+                .GroupBy(pf => (pf.color, pf.symbol, pf.size, pf.labeled))
+                .OrderBy(g => g.Min(pf => pf.firstRuleIndex)))
+            {
+                var fmt = group.Key;
+                AddPoints(new PointPairList(group.Select(pf => pf.point).ToList()),
+                    fmt.color, DotPlotUtil.PointSizeToFloat(fmt.size), fmt.labeled, fmt.symbol);
+            }
+
+            AddPoints(unmatchedOtherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
 
             // The coordinates that depend on the axis scale don't matter here, the AxisChangeEvent will fix those
             // Insert after selected items, but before all other items
@@ -441,7 +467,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var symbolType = DotPlotUtil.PointSymbolToSymbolType(pointSymbol);
 
             LineItem lineItem;
-            if (DotPlotUtil.HasOutline(pointSymbol))
+            if (DotPlotUtil.IsOutlineVariant(pointSymbol))
+            {
+                lineItem = new LineItem(null, points, Color.Black, symbolType)
+                {
+                    Line = { IsVisible = false },
+                    Symbol = { Border = { IsVisible = true, Color = color }, Fill = new Fill(Color.Transparent), Size = size, IsAntiAlias = true }
+                };
+            }
+            else if (DotPlotUtil.HasOutline(pointSymbol))
             {
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {
@@ -1020,18 +1054,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var outCount = 0;
             var inCount = 0;
 
-            var otherPoints = curveList[MatchedPointsStartIndex].Points;
-            for (var i = 0; i < otherPoints.Count; ++i)
+            // Iterate all non-selected, non-cutoff-line curves (formatted groups + unmatched "other").
+            // Formatted rule curves occupy MatchedPointsStartIndex..Count-2; the unmatched curve is last.
+            for (var curveIndex = MatchedPointsStartIndex; curveIndex < curveList.Count; curveIndex++)
             {
-                var pair = otherPoints[i];
-                var row = (FoldChangeRow) pair.Tag;
-                var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
+                var points = curveList[curveIndex].Points;
+                for (var i = 0; i < points.Count; ++i)
+                {
+                    var pair = points[i];
+                    var row = (FoldChangeRow) pair.Tag;
+                    var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
 
-                if ((!CutoffSettings.FoldChangeCutoffValid || row.FoldChangeResult.AbsLog2FoldChange > CutoffSettings.Log2FoldChangeCutoff) &&
-                    (!CutoffSettings.PValueCutoffValid || pvalue > CutoffSettings.PValueCutoff))
-                    ++outCount;
-                else
-                    ++inCount;
+                    if ((!CutoffSettings.FoldChangeCutoffValid || row.FoldChangeResult.AbsLog2FoldChange > CutoffSettings.Log2FoldChangeCutoff) &&
+                        (!CutoffSettings.PValueCutoffValid || pvalue > CutoffSettings.PValueCutoff))
+                        ++outCount;
+                    else
+                        ++inCount;
+                }
             }
 
             return new CurveCounts(curveList.Count, selectedCount,

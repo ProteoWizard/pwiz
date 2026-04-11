@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private readonly DataGridViewComboBoxColumn _symbolCombo;
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
+        private readonly Font _symbolDropdownFont = new Font(SystemFonts.DefaultFont.FontFamily, 16f);
 
         public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
             FoldChangeRow[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph) : 
@@ -105,6 +106,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             _symbolCombo.DisplayMember = @"DisplayString";
             _symbolCombo.ValueMember = @"PointSymbol";
             _symbolCombo.Items.AddRange(
+                new PointSymbolStringPair(null,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None),
                 new PointSymbolStringPair(PointSymbol.Circle,
                     GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle),
                 new PointSymbolStringPair(PointSymbol.Square,
@@ -120,7 +123,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 new PointSymbolStringPair(PointSymbol.Plus,
                     GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus),
                 new PointSymbolStringPair(PointSymbol.Star,
-                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star)
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star),
+                new PointSymbolStringPair(PointSymbol.OutlineCircle,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineCircle),
+                new PointSymbolStringPair(PointSymbol.OutlineSquare,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineSquare),
+                new PointSymbolStringPair(PointSymbol.OutlineTriangle,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangle),
+                new PointSymbolStringPair(PointSymbol.OutlineTriangleDown,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangleDown),
+                new PointSymbolStringPair(PointSymbol.OutlineDiamond,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineDiamond)
             );
             regexColorRowGrid1.Columns.Insert(6, _symbolCombo);
 
@@ -131,6 +144,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             _pointSizeCombo.DisplayMember = @"DisplayString";
             _pointSizeCombo.ValueMember = @"PointSize";
             _pointSizeCombo.Items.AddRange(
+                new PointSizeStringPair(null,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None),
                 new PointSizeStringPair(PointSize.x_small,
                     GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small),
                 new PointSizeStringPair(PointSize.small,
@@ -153,7 +168,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             advancedCheckBox.Checked = Settings.Default.ShowAdvancedVolcanoPlotFormatting;
             UpdateAdvancedColumns();
 
+            regexColorRowGrid1.AddUseColorColumn(GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Color);
             regexColorRowGrid1.Owner = this;
+            regexColorRowGrid1.DataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
             if (!hasFoldChangeResults)
             {
                 Text = GroupComparisonResources.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
@@ -164,7 +181,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public class PointSizeStringPair
         {
-            public PointSizeStringPair(PointSize pointSize, string displayString)
+            public PointSizeStringPair(PointSize? pointSize, string displayString)
             {
                 PointSize = pointSize;
                 DisplayString = displayString;
@@ -172,7 +189,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // These are actually used by the combo box
             // ReSharper disable once MemberCanBePrivate.Local
-            public PointSize PointSize { get; set; }
+            public PointSize? PointSize { get; set; }
 
             // ReSharper disable once UnusedAutoPropertyAccessor.Local
             // ReSharper disable once MemberCanBePrivate.Local
@@ -181,7 +198,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public class PointSymbolStringPair
         {
-            public PointSymbolStringPair(PointSymbol pointSymbol, string displayString)
+            public PointSymbolStringPair(PointSymbol? pointSymbol, string displayString)
             {
                 PointSymbol = pointSymbol;
                 DisplayString = displayString;
@@ -189,7 +206,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // These are actually used by the combo box
             // ReSharper disable once MemberCanBePrivate.Local
-            public PointSymbol PointSymbol { get; set; }
+            public PointSymbol? PointSymbol { get; set; }
 
             // ReSharper disable once UnusedAutoPropertyAccessor.Local
             // ReSharper disable once MemberCanBePrivate.Local
@@ -199,8 +216,40 @@ namespace pwiz.Skyline.Controls.GroupComparison
         protected override void OnHandleDestroyed(EventArgs e)
         {
             _bindingList.ListChanged -= _bindingList_ListChanged;
-
+            _symbolDropdownFont.Dispose();
             base.OnHandleDestroyed(e);
+        }
+
+        private void DataGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            if (!(e.Control is ComboBox cb))
+                return;
+
+            cb.DrawItem -= SymbolCombo_DrawItem;
+            cb.DrawMode = DrawMode.Normal;
+            cb.ItemHeight = cb.Font.Height;
+
+            if (((DataGridView) sender).CurrentCell?.ColumnIndex != _symbolCombo.Index)
+                return;
+
+            cb.DrawMode = DrawMode.OwnerDrawFixed;
+            cb.ItemHeight = _symbolDropdownFont.Height + 4;
+            cb.DrawItem += SymbolCombo_DrawItem;
+        }
+
+        private void SymbolCombo_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0)
+                return;
+            e.DrawBackground();
+            var cb = (ComboBox)sender;
+            var text = cb.GetItemText(cb.Items[e.Index]);
+            // Use normal font for the closed-state display (edit portion); large font for dropdown items.
+            var isEditPortion = (e.State & DrawItemState.ComboBoxEdit) != 0;
+            var font = isEditPortion ? cb.Font : _symbolDropdownFont;
+            TextRenderer.DrawText(e.Graphics, text, font, e.Bounds, e.ForeColor,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+            e.DrawFocusRectangle();
         }
 
         public void Select(IdentityPath identityPath)
@@ -421,12 +470,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private bool IsLastRowEmpty => Equals(_bindingList.LastOrDefault(), MatchRgbHexColor.EMPTY);
 
-        public PointSymbol GetRowPointSymbol(int rowIndex)
+        public PointSymbol? GetRowPointSymbol(int rowIndex)
         {
             return _bindingList[rowIndex].PointSymbol;
         }
 
-        public void SetRowPointSymbol(int rowIndex, PointSymbol pointSymbol)
+        public void SetRowPointSymbol(int rowIndex, PointSymbol? pointSymbol)
         {
             _bindingList[rowIndex].PointSymbol = pointSymbol;
         }
