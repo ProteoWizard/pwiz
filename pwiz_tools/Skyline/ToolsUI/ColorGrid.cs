@@ -193,7 +193,7 @@ namespace pwiz.Skyline.ToolsUI
             if (e.ColumnIndex != _useColorColumnIndex || e.RowIndex < 0 || e.RowIndex >= bindingSource1.Count)
                 return;
             // CellContentClick fires BEFORE the checkbox toggles, so Value is still the old (pre-click) state.
-            // If the checkbox is about to become checked and no color is set, assign gray now — before
+            // If the checkbox is about to become checked and no color is set, open the color picker before
             // CurrentCellDirtyStateChanged calls CommitEdit and the binding round-trips through UseColor.get.
             var currentlyChecked = (bool)(dataGridViewColors[e.ColumnIndex, e.RowIndex].Value ?? false);
             var colorRow = (T)bindingSource1[e.RowIndex];
