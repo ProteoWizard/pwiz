@@ -61,6 +61,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj">
       <Project>{8F831B88-8AAB-405E-8569-D94B7F292518}</Project>
       <Name>OspreySharp.Core</Name>

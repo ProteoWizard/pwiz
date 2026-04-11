@@ -197,35 +197,59 @@ namespace pwiz.OspreySharp.FDR
                 "[TIMING]   Percolator setup + standardize: {0:F1}s ({1} entries x {2} features)",
                 swSetup.Elapsed.TotalSeconds, n, nFeatures));
 
-            // 3. Subsample by peptide groups if needed
-            int[] trainSubset = null;
-            if (config.MaxTrainSize > 0 && n > config.MaxTrainSize)
-            {
-                trainSubset = SubsampleByPeptideGroup(
-                    labels, entryIds, peptides, config.MaxTrainSize, config.Seed);
-            }
+            // 3a. Best-per-precursor: pick the single best-scoring observation per
+            //     (base_id, isDecoy) tuple across all files. With N files per peptide,
+            //     this avoids the SVM seeing the same precursor's target/decoy pair
+            //     N times, which would inflate apparent target/decoy separation and
+            //     cause the SVM to learn file-specific noise rather than peptide
+            //     discriminating features. Matches the Rust streaming Percolator path.
+            int[] bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries);
 
-            int subN = trainSubset != null ? trainSubset.Length : n;
-            int subTargets = 0, subDecoys = 0;
-            if (trainSubset != null)
+            int dedupTargets = 0, dedupDecoys = 0;
+            for (int i = 0; i < bestPerPrecursor.Length; i++)
             {
-                for (int i = 0; i < trainSubset.Length; i++)
-                {
-                    if (labels[trainSubset[i]]) subDecoys++;
-                    else subTargets++;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < n; i++)
-                {
-                    if (labels[i]) subDecoys++;
-                    else subTargets++;
-                }
+                if (labels[bestPerPrecursor[i]]) dedupDecoys++;
+                else dedupTargets++;
             }
             Console.Error.WriteLine(string.Format(
-                "[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} total",
-                subN, subTargets, subDecoys, n));
+                "[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
+                bestPerPrecursor.Length, dedupTargets, dedupDecoys, n));
+
+            // 3b. If still > MaxTrainSize, subsample by peptide groups
+            //     (so target/decoy pairs and same-peptide multi-charge stay together).
+            int[] trainSubset = bestPerPrecursor;
+            if (config.MaxTrainSize > 0 && bestPerPrecursor.Length > config.MaxTrainSize)
+            {
+                var dedupLabels = new bool[bestPerPrecursor.Length];
+                var dedupEntryIds = new uint[bestPerPrecursor.Length];
+                var dedupPeptides = new string[bestPerPrecursor.Length];
+                for (int i = 0; i < bestPerPrecursor.Length; i++)
+                {
+                    int gi = bestPerPrecursor[i];
+                    dedupLabels[i] = labels[gi];
+                    dedupEntryIds[i] = entryIds[gi];
+                    dedupPeptides[i] = peptides[gi];
+                }
+
+                int[] localSelected = SubsampleByPeptideGroup(
+                    dedupLabels, dedupEntryIds, dedupPeptides,
+                    config.MaxTrainSize, config.Seed);
+
+                trainSubset = new int[localSelected.Length];
+                for (int i = 0; i < localSelected.Length; i++)
+                    trainSubset[i] = bestPerPrecursor[localSelected[i]];
+            }
+
+            int subN = trainSubset.Length;
+            int subTargets = 0, subDecoys = 0;
+            for (int i = 0; i < trainSubset.Length; i++)
+            {
+                if (labels[trainSubset[i]]) subDecoys++;
+                else subTargets++;
+            }
+            Console.Error.WriteLine(string.Format(
+                "[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
+                subN, subTargets, subDecoys, bestPerPrecursor.Length));
 
             // Build subset-local arrays
             bool[] subLabels;
@@ -1354,6 +1378,50 @@ namespace pwiz.OspreySharp.FDR
         // ============================================================
         // Subsampling
         // ============================================================
+
+        /// <summary>
+        /// Pick the best-scoring observation per (base_id, isDecoy) tuple across all
+        /// entries. Used to deduplicate multi-file observations of the same precursor
+        /// before SVM training, so the SVM doesn't see the same peptide N times.
+        ///
+        /// Score for ranking is taken from PercolatorEntry.Features[0], which is
+        /// coelution_sum (matches Rust's selection criterion in pipeline.rs).
+        /// </summary>
+        public static int[] SelectBestPerPrecursor(
+            bool[] labels, uint[] entryIds, IList<PercolatorEntry> entries)
+        {
+            int n = labels.Length;
+            // Map base_id to best target index, separately for targets and decoys
+            var bestTarget = new Dictionary<uint, int>();
+            var bestDecoy = new Dictionary<uint, int>();
+
+            for (int i = 0; i < n; i++)
+            {
+                uint baseId = entryIds[i] & BASE_ID_MASK;
+                double score = entries[i].Features[0];
+
+                Dictionary<uint, int> map = labels[i] ? bestDecoy : bestTarget;
+                int existing;
+                if (map.TryGetValue(baseId, out existing))
+                {
+                    if (score > entries[existing].Features[0])
+                        map[baseId] = i;
+                }
+                else
+                {
+                    map[baseId] = i;
+                }
+            }
+
+            var result = new int[bestTarget.Count + bestDecoy.Count];
+            int idx = 0;
+            foreach (int i in bestTarget.Values)
+                result[idx++] = i;
+            foreach (int i in bestDecoy.Values)
+                result[idx++] = i;
+            Array.Sort(result); // deterministic order for downstream subsampling
+            return result;
+        }
 
         /// <summary>
         /// Subsample entries by peptide group, keeping target-decoy pairs and charge states together.
