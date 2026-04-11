@@ -612,6 +612,14 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        public static string EscapePipe(string str)
+        {
+            return str.Replace(@"|", @"\pipe");
+        }
+        public static string UnescapePipe(string str)
+        {
+            return str.Replace(@"\pipe", @"|");
+        }
         /// <summary>
         /// Replaces tabs, carriage returns, and newlines with spaces, collapsing
         /// consecutive whitespace into a single space. Useful for embedding

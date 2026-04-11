@@ -23,8 +23,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
-using System.Linq;
+using System.IO.Pipes;using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -747,6 +746,37 @@ namespace pwiz.Skyline.ToolsUI
             viewSpecList = viewSpecList.ReplaceView(viewSpec.Name, layout);
             Settings.Default.PersistedViews.SetViewSpecList(groupId, viewSpecList);
             Log(string.Format(@"Saved report '{0}' to {1}", viewSpec.Name, groupId));
+        }
+
+        public void ReorderElements(string[] elementLocators)
+        {
+            JsonUiService.InvokeOnUiThread(() =>
+            {
+                var orderedElements = elementLocators.Select(locator =>
+                    ElementRefs.FromObjectReference(ElementLocator.Parse(locator))).ToList();
+                lock (Program.MainWindow.GetDocumentChangeLock())
+                {
+                    var originalDocument = Program.MainWindow.Document;
+                    var reorderer = new ElementReorderer(CancellationToken.None, originalDocument);
+                    var newDocument = reorderer.SetNewOrder(orderedElements);
+                    if (!ReferenceEquals(newDocument, originalDocument))
+                    {
+                        Program.MainWindow.ModifyDocument(
+                            ToolsUIResources.ToolService_ReorderElements_Elements_reordered_by_external_tool,
+                            doc =>
+                            {
+                                if (!ReferenceEquals(doc, originalDocument))
+                                {
+                                    throw new InvalidOperationException(Resources
+                                        .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                                }
+                                return newDocument;
+                            },
+                            pair => AuditLogEntry.CreateSingleMessageEntry(
+                                new MessageInfo(MessageType.reordered_elements, newDocument.DocumentType)));
+                    }
+                }
+            });
         }
 
         public void InsertSmallMoleculeTransitionList(string textCSV)
