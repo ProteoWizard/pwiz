@@ -1360,6 +1360,39 @@ namespace pwiz.OspreySharp
                     out ms1PrecursorCoelution, out ms1IsotopeCosine);
             }
 
+            // Tukey median polish features (15, 16, 19, 20).
+            // Crop XICs to the peak range so the polish operates only on signal,
+            // not the wider RT search window. Matches Rust pipeline.rs:5198-5212.
+            double mpCosine = 0.0;
+            double mpResidualRatio = 1.0;
+            double mpMinFragmentR2 = 0.0;
+            double mpResidualCorr = 0.0;
+            int peakLen = bestPeak.EndIndex - bestPeak.StartIndex + 1;
+            if (peakLen >= 3)
+            {
+                var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
+                var peakRts = new double[peakLen];
+                for (int s = 0; s < peakLen; s++)
+                    peakRts[s] = xics[0].RetentionTimes[bestPeak.StartIndex + s];
+                for (int xi = 0; xi < xics.Count; xi++)
+                {
+                    var src = xics[xi].Intensities;
+                    var slice = new double[peakLen];
+                    for (int s = 0; s < peakLen; s++)
+                        slice[s] = src[bestPeak.StartIndex + s];
+                    peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
+                }
+
+                var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
+                if (polish != null)
+                {
+                    mpCosine = TukeyMedianPolish.LibCosine(polish, candidate.Fragments);
+                    mpResidualRatio = TukeyMedianPolish.ResidualRatio(polish);
+                    mpMinFragmentR2 = TukeyMedianPolish.MinFragmentR2(polish);
+                    mpResidualCorr = TukeyMedianPolish.ResidualCorrelation(polish);
+                }
+            }
+
             // Build full 21-element PIN feature vector
             double[] features = new double[NUM_PIN_FEATURES];
             features[0] = coelutionSum;
@@ -1377,17 +1410,15 @@ namespace pwiz.OspreySharp
             features[12] = absRtDeviation;
             features[13] = ms1PrecursorCoelution;
             features[14] = ms1IsotopeCosine;
-            // Features 15-20 are not yet computed in this first-pass port (they require
-            // Tukey median polish and Savitzky-Golay weighted multi-scan scoring).
-            // Set to 0 rather than aliasing other features - aliasing causes the SVM to
-            // weight the same signal multiple times, which inflates target/decoy
-            // separation and causes too many entries to pass at a given FDR threshold.
-            features[15] = 0.0;             // median_polish_cosine
-            features[16] = 0.0;             // median_polish_residual_ratio
+            features[15] = mpCosine;
+            features[16] = mpResidualRatio;
+            // sg_weighted_xcorr (17) and sg_weighted_cosine (18) require multi-scan
+            // Savitzky-Golay weighted scoring which is not yet ported. Leave at 0
+            // rather than aliasing xcorr/libcosine (which would inflate SVM separation).
             features[17] = 0.0;             // sg_weighted_xcorr
             features[18] = 0.0;             // sg_weighted_cosine
-            features[19] = 0.0;             // median_polish_min_fragment_r2
-            features[20] = 0.0;             // median_polish_residual_correlation
+            features[19] = mpMinFragmentR2;
+            features[20] = mpResidualCorr;
 
             // Build FdrEntry
             var entry = new FdrEntry
@@ -1418,44 +1449,79 @@ namespace pwiz.OspreySharp
             int startScan, int endScan,
             OspreyConfig config)
         {
+            // Port of Rust extract_fragment_xics (osprey-scoring/src/lib.rs:505).
+            // Differences from the previous C# implementation:
+            //   1. Use top-6 fragments by relative intensity (not all fragments)
+            //   2. Pick the closest peak by m/z within tolerance (not most intense)
+            //   3. Always include all selected fragments, even all-zero XICs
+            //      (dropping all-zero fragments biases decoys to higher R²)
             int rangeLen = endScan - startScan + 1;
             var xics = new List<XicData>();
+            if (candidate.Fragments == null || candidate.Fragments.Count == 0)
+                return xics;
+
+            int nFrags = candidate.Fragments.Count;
+            int nTop = Math.Min(nFrags, CAL_TOP_N_FRAGMENTS);
+            int[] topIndices;
+            if (nFrags <= CAL_TOP_N_FRAGMENTS)
+            {
+                topIndices = new int[nFrags];
+                for (int i = 0; i < nFrags; i++)
+                    topIndices[i] = i;
+            }
+            else
+            {
+                var indexed = new List<KeyValuePair<int, float>>(nFrags);
+                for (int i = 0; i < nFrags; i++)
+                    indexed.Add(new KeyValuePair<int, float>(i, candidate.Fragments[i].RelativeIntensity));
+                indexed.Sort((a, b) => b.Value.CompareTo(a.Value));
+                topIndices = new int[nTop];
+                for (int i = 0; i < nTop; i++)
+                    topIndices[i] = indexed[i].Key;
+            }
 
             // Build shared RT array for this range
             double[] rangeRts = new double[rangeLen];
             for (int i = 0; i < rangeLen; i++)
                 rangeRts[i] = windowRts[startScan + i];
 
-            // Extract XIC for each fragment
-            for (int fragIdx = 0; fragIdx < candidate.Fragments.Count; fragIdx++)
+            foreach (int fragIdx in topIndices)
             {
                 var fragment = candidate.Fragments[fragIdx];
+                double tolDa = config.FragmentTolerance.ToleranceDa(fragment.Mz);
+                double lower = fragment.Mz - tolDa;
+                double upper = fragment.Mz + tolDa;
+
                 double[] intensities = new double[rangeLen];
 
                 for (int scanIdx = 0; scanIdx < rangeLen; scanIdx++)
                 {
                     var spectrum = windowSpectra[startScan + scanIdx];
-                    double bestIntensity = 0.0;
+                    if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+                        continue;
 
-                    // Binary search for fragment m/z in the spectrum
-                    if (spectrum.Mzs != null && spectrum.Mzs.Length > 0)
+                    int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                    if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
+                        continue;
+
+                    // Find closest peak by m/z within tolerance (matches Rust).
+                    double bestDiff = Math.Abs(spectrum.Mzs[lo] - fragment.Mz);
+                    double bestIntensity = spectrum.Intensities[lo];
+                    for (int k = lo + 1; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
                     {
-                        double tolDa = config.FragmentTolerance.ToleranceDa(fragment.Mz);
-                        double lower = fragment.Mz - tolDa;
-                        double upper = fragment.Mz + tolDa;
-
-                        int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
-                        for (int k = lo; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
+                        double diff = Math.Abs(spectrum.Mzs[k] - fragment.Mz);
+                        if (diff < bestDiff)
                         {
-                            double intensity = spectrum.Intensities[k];
-                            if (intensity > bestIntensity)
-                                bestIntensity = intensity;
+                            bestDiff = diff;
+                            bestIntensity = spectrum.Intensities[k];
                         }
                     }
-
                     intensities[scanIdx] = bestIntensity;
                 }
 
+                // Always include the fragment XIC, even if all zero. Zero intensities
+                // are valid data (no centroided peak found) and dropping all-zero
+                // fragments biases decoys to higher R^2. Matches Rust behavior.
                 xics.Add(new XicData(fragIdx, rangeRts, intensities));
             }
 
