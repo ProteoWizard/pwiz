@@ -448,6 +448,11 @@ namespace pwiz.Skyline.Model
                 }
                 Adduct charge;
                 bool chargeSpecified = dataFields.TryGetCharge(linesRead, out charge, lineIsProteomic);
+                // When the charge column contains a bare integer (e.g. "2"), match
+                // by charge value rather than exact adduct formula, since the user
+                // just wants to specify the charge state, not a specific adduct
+                bool chargeIsNumeric = chargeSpecified &&
+                    int.TryParse(dataFields.GetField(Field.charge), out _);
                 string sampleName = dataFields.GetField(Field.sample_name);
 
                 double? apexTime = dataFields.GetTime(Field.apex_time, timeConversionFactor,
@@ -528,8 +533,20 @@ namespace pwiz.Skyline.Model
 
                     foreach (TransitionGroupDocNode groupNode in nodePep.Children)
                     {
-                        if (chargeSpecified && charge != groupNode.TransitionGroup.PrecursorAdduct)
-                            continue;
+                        if (chargeSpecified)
+                        {
+                            var precursorAdduct = groupNode.TransitionGroup.PrecursorAdduct;
+                            if (chargeIsNumeric)
+                            {
+                                // Bare numeric charge: match by charge value only
+                                if (charge.AdductCharge != precursorAdduct.AdductCharge)
+                                    continue;
+                            }
+                            else if (charge != precursorAdduct)
+                            {
+                                continue;
+                            }
+                        }
 
                         // Loop over the files in this groupNode to find the correct sample
                         // Change peak boundaries for the transition group
