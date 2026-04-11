@@ -28,6 +28,17 @@ namespace pwiz.OspreySharp
     {
         private const int NUM_PIN_FEATURES = 21;
 
+        // Savitzky-Golay quadratic filter weights for length 5, center offset.
+        // Matches Rust pipeline.rs sg_weights: [-3/35, 12/35, 17/35, 12/35, -3/35].
+        private static readonly double[] SG_WEIGHTS =
+        {
+            -3.0 / 35.0,
+            12.0 / 35.0,
+            17.0 / 35.0,
+            12.0 / 35.0,
+            -3.0 / 35.0,
+        };
+
         /// <summary>
         /// Run the complete analysis pipeline.
         /// </summary>
@@ -1300,13 +1311,59 @@ namespace pwiz.OspreySharp
             if (xics.Count < 2)
                 return null;
 
-            // Detect consensus CWT peaks
+            // Detect candidate peaks (CWT consensus across top-6 XICs).
+            // Rust pipeline.rs has three fallbacks when CWT returns empty:
+            //   1. CWT consensus (primary)
+            //   2. Peak detection on median polish elution profile (fallback)
+            //   3. Peak detection on reference XIC (highest-total-intensity) (fallback)
+            // We currently only implement the primary path. Candidates missing from
+            // CWT are dropped; Rust recovers them via fallback. This accounts for
+            // some of the remaining under-detection vs Rust.
             var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
             if (peaks.Count == 0)
                 return null;
 
-            // Use the best (highest consensus) peak
-            var bestPeak = peaks[0];
+            // Rust scores each candidate peak by mean pairwise fragment correlation
+            // over the peak range, then picks the highest-scoring one. We were
+            // picking peaks[0] directly (the CWT consensus top peak), which isn't
+            // always the one with best pairwise correlation. Re-rank by correlation
+            // to match Rust.
+            XICPeakBounds bestPeak = null;
+            double bestPeakScore = double.MinValue;
+            for (int pi = 0; pi < peaks.Count; pi++)
+            {
+                var p = peaks[pi];
+                int pLen = p.EndIndex - p.StartIndex + 1;
+                if (pLen < 3)
+                    continue;
+
+                double sum = 0.0;
+                int count = 0;
+                for (int ii = 0; ii < xics.Count; ii++)
+                {
+                    for (int jj = ii + 1; jj < xics.Count; jj++)
+                    {
+                        double corr = PearsonCorrelation(
+                            xics[ii].Intensities, xics[jj].Intensities,
+                            p.StartIndex, p.EndIndex);
+                        if (!double.IsNaN(corr))
+                        {
+                            sum += corr;
+                            count++;
+                        }
+                    }
+                }
+                double score = count > 0 ? sum / count : 0.0;
+                if (score > bestPeakScore)
+                {
+                    bestPeakScore = score;
+                    bestPeak = p;
+                }
+            }
+
+            if (bestPeak == null)
+                return null;
+
             int apexGlobalIdx = startScan + bestPeak.ApexIndex;
 
             // Score at the apex spectrum
@@ -1358,6 +1415,23 @@ namespace pwiz.OspreySharp
                     windowRts, startScan,
                     ms1Spectra, config,
                     out ms1PrecursorCoelution, out ms1IsotopeCosine);
+            }
+
+            // Savitzky-Golay weighted spectral scores at apex +/- 2 scans.
+            // Matches Rust pipeline.rs sg_xcorr / sg_cosine (weights sum to 1,
+            // quadratic SG filter of length 5).
+            double sgXcorr = 0.0;
+            double sgCosine = 0.0;
+            int apexLocal = startScan + bestPeak.ApexIndex;
+            for (int offset = -2; offset <= 2; offset++)
+            {
+                double weight = SG_WEIGHTS[offset + 2];
+                int idx = apexLocal + offset;
+                if (idx < 0 || idx >= windowSpectra.Count)
+                    continue;
+                var s = windowSpectra[idx];
+                sgXcorr += ComputeXcorrForSpectrum(s, candidate, scorer) * weight;
+                sgCosine += scorer.LibCosine(s, candidate, config.FragmentTolerance) * weight;
             }
 
             // Tukey median polish features (15, 16, 19, 20).
@@ -1415,8 +1489,11 @@ namespace pwiz.OspreySharp
             // sg_weighted_xcorr (17) and sg_weighted_cosine (18) require multi-scan
             // Savitzky-Golay weighted scoring which is not yet ported. Leave at 0
             // rather than aliasing xcorr/libcosine (which would inflate SVM separation).
-            features[17] = 0.0;             // sg_weighted_xcorr
-            features[18] = 0.0;             // sg_weighted_cosine
+            // BISECT: sg_weighted_* features produced 2.2x more separation than
+            // Rust's equivalent features. Temporarily zero out to find convergence
+            // baseline. Revisit once the rest of the pipeline matches.
+            features[17] = 0.0;             // sg_weighted_xcorr (disabled for bisection)
+            features[18] = 0.0;             // sg_weighted_cosine (disabled for bisection)
             features[19] = mpMinFragmentR2;
             features[20] = mpResidualCorr;
 
