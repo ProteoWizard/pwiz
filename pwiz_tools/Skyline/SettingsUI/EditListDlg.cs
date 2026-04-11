@@ -18,13 +18,17 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -47,6 +51,18 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
+            // Add spacers between button groups in the FlowLayoutPanel:
+            // Group 1 (CRUD): Add, Remove, Rename, Edit
+            // Group 2 (Reorder): Up, Down
+            // Group 3 (Manage): Reset, Copy, Import, Share
+            var spacerAfterEdit = CreateButtonGroupSpacer();
+            pnlButtons.Controls.Add(spacerAfterEdit);
+            pnlButtons.Controls.SetChildIndex(spacerAfterEdit, pnlButtons.Controls.IndexOf(btnUp));
+
+            var spacerAfterDown = CreateButtonGroupSpacer();
+            pnlButtons.Controls.Add(spacerAfterDown);
+            pnlButtons.Controls.SetChildIndex(spacerAfterDown, pnlButtons.Controls.IndexOf(btnReset));
+
             Icon = Resources.Skyline;
             Text = model.Title;
             labelListName.Text = model.Label;
@@ -54,29 +70,47 @@ namespace pwiz.Skyline.SettingsUI
             if (_editor == null)
             {
                 // Hide the Add and edit buttons.
-                btnAdd.Visible = false;
-                btnCopy.Visible = false;
-                btnEdit.Visible = false;
-
-                // Move other vertically aligned buttons up.
-                int delta = btnRemove.Top - btnAdd.Top;
-                btnRemove.Top -= delta;
-                btnUp.Top -= delta;
-                btnDown.Top -= delta;
-                btnReset.Top -= delta;
+                pnlButtons.Controls.Remove(btnAdd);
+                pnlButtons.Controls.Remove(btnCopy);
+                pnlButtons.Controls.Remove(btnEdit);
             }
             if (!model.AllowReset)
-                btnReset.Visible = false;
+                pnlButtons.Controls.Remove(btnReset);
+
+            // Rename is available when items implement IRenameable<T>
+            bool canRename = typeof(IRenameable<TItem>).IsAssignableFrom(typeof(TItem));
+            if (!canRename)
+                pnlButtons.Controls.Remove(btnRename);
+            else
+                btnRename.Enabled = false;
+
+            // Import/Share available only for lists whose SerialType represents a collection
+            // (SerializableSettingsList has correct semantics; other IListSerializer implementers use item types)
+            bool canSerialize = model is IListSerializer<TItem> serializer &&
+                                typeof(ICollection<TItem>).IsAssignableFrom(serializer.SerialType);
+            if (!canSerialize)
+            {
+                pnlButtons.Controls.Remove(btnImport);
+                pnlButtons.Controls.Remove(btnShare);
+            }
 
             ReloadList();
         }
 
         public object TagEx { get; private set; }
 
+        public int ListCount => listBox.Items.Count;
+
+        private static Panel CreateButtonGroupSpacer()
+        {
+            return new Panel { Width = 75, Height = 17, Margin = new Padding(0) };
+        }
+
         private void ReloadList()
         {
-            // Remove the default settings item before reloading.
-            int countExclude = _model.ExcludeDefaults;
+            // Remove the default settings items before reloading.
+            // The list may have fewer items than ExcludeDefaults if some defaults were removed.
+            int countExclude = Math.Min(_model.ExcludeDefaults, _list.Count);
             for (int i = 0; i < countExclude; i++)
                 _list.RemoveAt(0);
 
@@ -118,6 +152,7 @@ namespace pwiz.Skyline.SettingsUI
             bool enable = (listBox.SelectedIndex != -1);
             btnCopy.Enabled = enable;
             btnEdit.Enabled = enable;
+            btnRename.Enabled = enable;
             btnRemove.Enabled = enable;
             btnUp.Enabled = enable;
             btnDown.Enabled = enable;
@@ -259,6 +294,185 @@ namespace pwiz.Skyline.SettingsUI
                 listBox.Items[i] = itemListBox;
 
                 listBox.SelectedIndex = i;
+            }
+        }
+
+        private void btnRename_Click(object sender, EventArgs e)
+        {
+            RenameItem();
+        }
+
+        public void RenameItem()
+        {
+            int i = listBox.SelectedIndex;
+            if (i < 0)
+                return;
+
+            var item = _list[i];
+            string currentName = item.GetKey();
+
+            using (var form = new Form())
+            {
+                form.Text = SettingsUIResources.EditListDlg_Rename.Replace("&", string.Empty);
+                form.FormBorderStyle = FormBorderStyle.FixedDialog;
+                form.StartPosition = FormStartPosition.CenterParent;
+                form.MaximizeBox = false;
+                form.MinimizeBox = false;
+                form.Width = 350;
+                form.Height = 130;
+
+                var lblName = new Label { Left = 10, Top = 15, Text = SettingsUIResources.EditListDlg_RenameItem_Enter_new_name, AutoSize = true };
+                var textBox = new TextBox { Left = 10, Top = 35, Width = 310, Text = currentName };
+                textBox.SelectionStart = textBox.Text.Length;
+                var okButton = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.OK), Left = 150, Width = 80, Top = 65, DialogResult = DialogResult.OK };
+                var cancelButton = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.Cancel), Left = 240, Width = 80, Top = 65, DialogResult = DialogResult.Cancel };
+
+                form.Controls.AddRange(new Control[] { lblName, textBox, okButton, cancelButton });
+                form.AcceptButton = okButton;
+                form.CancelButton = cancelButton;
+
+                if (form.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                string newName = textBox.Text?.Trim();
+                if (string.IsNullOrEmpty(newName) || newName == currentName)
+                    return;
+
+                // Check for duplicate names
+                if (_list.Any(existing => existing.GetKey() == newName))
+                {
+                    MessageDlg.Show(this,
+                        string.Format(SettingsUIResources.EditListDlg_RenameItem_An_item_with_the_name__0__already_exists, newName));
+                    return;
+                }
+
+                var renameable = (IRenameable<TItem>)item;
+                _list[i] = renameable.ChangeName(newName);
+                listBox.Items[i] = newName;
+            }
+        }
+
+        private void btnImport_Click(object sender, EventArgs e)
+        {
+            ImportItems();
+        }
+
+        public void ImportItems()
+        {
+            var serializer = _model as IListSerializer<TItem>;
+            if (serializer == null)
+                return;
+
+            using (var openDlg = new OpenFileDialog())
+            {
+                openDlg.Filter = TextUtil.FileDialogFilterAll(_model.Title, serializer.FileExtension);
+                if (openDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                ImportItemsFromFile(openDlg.FileName);
+            }
+        }
+
+        public void ImportItemsFromFile(string filePath)
+        {
+            var serializer = _model as IListSerializer<TItem>;
+            if (serializer == null)
+                return;
+
+            IList<TItem> loadedItems;
+            try
+            {
+                using (var stream = File.OpenRead(filePath))
+                {
+                    var xmlSerializer = new XmlSerializer(serializer.DeserialType);
+                    loadedItems = ((ICollection<TItem>)xmlSerializer.Deserialize(stream)).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(Resources.SerializableSettingsList_ImportFile_Failure_loading__0__, filePath), ex);
+                return;
+            }
+
+            foreach (var item in loadedItems)
+            {
+                string key = item.GetKey();
+                int existingIndex = _list.FindIndex(x => x.GetKey() == key);
+                if (existingIndex >= 0)
+                {
+                    _list[existingIndex] = item;
+                    listBox.Items[existingIndex] = _model.GetDisplayName(item);
+                }
+                else
+                {
+                    _list.Add(item);
+                    listBox.Items.Add(_model.GetDisplayName(item));
+                }
+            }
+
+            if (listBox.Items.Count > 0 && listBox.SelectedIndex < 0)
+                listBox.SelectedIndex = 0;
+        }
+
+        private void btnShare_Click(object sender, EventArgs e)
+        {
+            ShareItems();
+        }
+
+        public void ShareItems()
+        {
+            var serializer = _model as IListSerializer<TItem>;
+            if (serializer == null)
+                return;
+
+            // Let user select which items to share
+            using (var selectDlg = new ShareListDlg<TItem>(_list, _model.Title))
+            {
+                if (selectDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                var selectedNames = selectDlg.CheckedItemNames;
+                if (selectedNames.Count == 0)
+                    return;
+
+                using (var saveDlg = new SaveFileDialog())
+                {
+                    saveDlg.Filter = TextUtil.FileDialogFilterAll(_model.Title, serializer.FileExtension);
+                    saveDlg.DefaultExt = serializer.FileExtension;
+                    if (saveDlg.ShowDialog(this) != DialogResult.OK)
+                        return;
+
+                    ShareItemsToFile(saveDlg.FileName, selectedNames);
+                }
+            }
+        }
+
+        public void ShareItemsToFile(string filePath, IList<string> itemNames = null)
+        {
+            var serializer = _model as IListSerializer<TItem>;
+            if (serializer == null)
+                return;
+
+            try
+            {
+                var exportList = serializer.CreateEmptyList();
+                foreach (var item in _list)
+                {
+                    if (itemNames == null || itemNames.Contains(item.GetKey()))
+                        exportList.Add(item);
+                }
+
+                using (var stream = File.Create(filePath))
+                {
+                    var xmlSerializer = new XmlSerializer(serializer.SerialType);
+                    xmlSerializer.Serialize(stream, exportList);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(SettingsUIResources.EditListDlg_ShareItemsToFile_Failure_saving__0_, filePath), ex);
             }
         }
 

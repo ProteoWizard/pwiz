@@ -552,6 +552,42 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Configure Full-Scan Chromatogram Extraction.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ConfigureFullScanChromatogramExtraction {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ConfigureFullScanChromatogramExtraction", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;Import...&gt;.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_Import {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_Import", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to import settings from params file..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ImportPresetFromFile_Failed_to_import_settings_from_params_file {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPresetFromFile_Failed_to_import_settings_from_params_file", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Params files.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ImportPresetFromFile_Params_files {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPresetFromFile_Params_files", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Next &gt;.
         /// </summary>
         public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next {
@@ -665,6 +701,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Don't show this warning again.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Dont_show_this_warning_again {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Dont_show_this_warning_again", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Note that changing preset may affect settings on previous pages (for example, FASTA, workflow, modifications)..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Note_that_changing_preset_may_affect_settings_on_previous_pages {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_WarnAndConfirmPresetChange_Note_that_changing_preset_may_af" +
+                        "fect_settings_on_previous_pages", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Import Peptide Search.
         /// </summary>
@@ -811,7 +866,53 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
                 return ResourceManager.GetString("SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Import From params File....
+        /// </summary>
+        public static string SearchSettingsControl_ImportFromParamsFile {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_ImportFromParamsFile", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A settings preset named &apos;{0}&apos; already exists. Do you want to replace it?.
+        /// </summary>
+        public static string SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_ {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already" +
+                        "_exists__Do_you_want_to_replace_it_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Save Config.
+        /// </summary>
+        public static string SearchSettingsControl_SaveConfig {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_SaveConfig", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Save Settings Preset.
+        /// </summary>
+        public static string SearchSettingsControl_SaveSettingsPreset {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_SaveSettingsPreset", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Settings Preset:.
+        /// </summary>
+        public static string SearchSettingsControl_SettingsPreset {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_SettingsPreset", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Max m/z {0} must not be less than min m/z {1}..
         /// </summary>

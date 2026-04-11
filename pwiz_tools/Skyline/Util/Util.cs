@@ -127,6 +127,8 @@ namespace pwiz.Skyline.Util
         ICollection<TItem> CreateEmptyList();
 
         bool ContainsKey(string key);
+
+        string FileExtension { get; }
     }
 
     /// <summary>

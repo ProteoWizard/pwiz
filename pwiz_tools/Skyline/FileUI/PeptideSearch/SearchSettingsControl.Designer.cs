@@ -39,6 +39,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.lblFragmentIons = new System.Windows.Forms.Label();
             this.cbFragmentIons = new System.Windows.Forms.ComboBox();
             this.btnAdditionalSettings = new System.Windows.Forms.Button();
+            this.btnImportSettings = new System.Windows.Forms.Button();
             this.pBLogo = new System.Windows.Forms.PictureBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -118,6 +119,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnAdditionalSettings.UseVisualStyleBackColor = true;
             this.btnAdditionalSettings.Click += new System.EventHandler(this.btnAdditionalSettings_Click);
             // 
+            // btnImportSettings
+            // 
+            resources.ApplyResources(this.btnImportSettings, "btnImportSettings");
+            this.btnImportSettings.Name = "btnImportSettings";
+            this.btnImportSettings.UseVisualStyleBackColor = true;
+            this.btnImportSettings.Click += new System.EventHandler(this.btnImportSettings_Click);
+            // 
             // pBLogo
             // 
             resources.ApplyResources(this.pBLogo, "pBLogo");
@@ -181,6 +189,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbMs2Analyzer.FormattingEnabled = true;
             resources.ApplyResources(this.cbMs2Analyzer, "cbMs2Analyzer");
             this.cbMs2Analyzer.Name = "cbMs2Analyzer";
+            this.cbMs2Analyzer.SelectedIndexChanged += new System.EventHandler(this.cbMs2Analyzer_SelectedIndexChanged);
             // 
             // lblMs2Analyzer
             // 
@@ -278,6 +287,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.pBLogo);
+            this.Controls.Add(this.btnImportSettings);
             this.Controls.Add(this.btnAdditionalSettings);
             this.Controls.Add(this.cbFragmentIons);
             this.Controls.Add(this.lblFragmentIons);
@@ -306,6 +316,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Label lblFragmentIons;
         private System.Windows.Forms.ComboBox cbFragmentIons;
         private System.Windows.Forms.Button btnAdditionalSettings;
+        private System.Windows.Forms.Button btnImportSettings;
         private System.Windows.Forms.PictureBox pBLogo;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;

@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -134,11 +135,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        public IEnumerable<string> CheckedModificationNames =>
+            (from ListBoxModification item in modificationsListBox.CheckedItems select item.Mod.Name);
+
         public IEnumerable<string> MatchedModifications => (from ListBoxModification item in modificationsListBox.Items select item.Mod.Name);
 
         public IEnumerable<string> UnmatchedModifications => unmatchedListBox.Items.Cast<string>();
 
-        public bool Initialize(SrmDocument document)
+        public bool Initialize(SrmDocument document, SearchSettingsPreset preset = null)
         {
             Document = document;
 
@@ -152,8 +156,35 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 menuItemAddHeavyModification.Text = PeptideSearchResources.MatchModificationsControl_Initialize_Edit__heavy_modifications___;
             }
 
+            // Add any missing mods from the preset to the global settings lists
+            if (preset != null)
+            {
+                foreach (var mod in preset.StructuralModifications)
+                {
+                    if (!Settings.Default.StaticModList.Any(m => m.Name == mod.Name))
+                        Settings.Default.StaticModList.Add(mod);
+                }
+                foreach (var mod in preset.HeavyModifications)
+                {
+                    if (!Settings.Default.HeavyModList.Any(m => m.Name == mod.Name))
+                        Settings.Default.HeavyModList.Add(mod);
+                }
+            }
+
             ImportPeptideSearch.InitializeModifications(document);
             FillLists(document);
+
+            // Check mods from the preset after populating the list
+            // HasExplicitModifications means the user saved this preset with specific mod choices
+            // (even if 0 mods were checked); without it, keep the document's default mod selections
+            if (preset != null && preset.HasExplicitModifications)
+            {
+                var presetModNames = preset.StructuralModifications.Select(m => m.Name)
+                    .Concat(preset.HeavyModifications.Select(m => m.Name))
+                    .ToHashSet();
+                CheckedModifications = presetModNames;
+            }
+
             return modificationsListBox.Items.Count > 0 || unmatchedListBox.Items.Count > 0;
         }
 

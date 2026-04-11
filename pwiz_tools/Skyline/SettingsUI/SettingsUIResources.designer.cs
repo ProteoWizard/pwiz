@@ -1131,6 +1131,51 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Share....
+        /// </summary>
+        public static string EditListDlg_Share {
+            get {
+                return ResourceManager.GetString("EditListDlg_Share", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Import....
+        /// </summary>
+        public static string EditListDlg_Import {
+            get {
+                return ResourceManager.GetString("EditListDlg_Import", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Re&amp;name.
+        /// </summary>
+        public static string EditListDlg_Rename {
+            get {
+                return ResourceManager.GetString("EditListDlg_Rename", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to An item with the name &apos;{0}&apos; already exists..
+        /// </summary>
+        public static string EditListDlg_RenameItem_An_item_with_the_name__0__already_exists {
+            get {
+                return ResourceManager.GetString("EditListDlg_RenameItem_An_item_with_the_name__0__already_exists", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Enter new name:.
+        /// </summary>
+        public static string EditListDlg_RenameItem_Enter_new_name {
+            get {
+                return ResourceManager.GetString("EditListDlg_RenameItem_Enter_new_name", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Monoisotopic mass:.
         /// </summary>
         public static string EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_ {
@@ -2709,6 +2754,24 @@ namespace pwiz.Skyline.SettingsUI {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Failure saving {0}..
+        /// </summary>
+        public static string EditListDlg_ShareItemsToFile_Failure_saving__0_ {
+            get {
+                return ResourceManager.GetString("EditListDlg_ShareItemsToFile_Failure_saving__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Select items to share:.
+        /// </summary>
+        public static string ShareListDlg_Select_items_to_share {
+            get {
+                return ResourceManager.GetString("ShareListDlg_Select_items_to_share", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The settings have been reset to the default values..
         /// </summary>
