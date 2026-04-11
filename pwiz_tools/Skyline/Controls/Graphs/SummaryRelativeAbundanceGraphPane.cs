@@ -646,11 +646,11 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
-                    AdjustLabelSpacings(_labeledPoints);
+                    StartLabelLayoutAsync(_labeledPoints);
                 }
                 else
                 {
-                    AdjustLabelSpacings(_labeledPoints, _labelsLayout);
+                    StartLabelLayoutAsync(_labeledPoints, _labelsLayout);
                 }
                 if (_labeledPoints.Any())
                     _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
