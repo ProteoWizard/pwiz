@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.Chromatography
@@ -260,6 +261,310 @@ namespace pwiz.OspreySharp.Chromatography
                 area += avgHeight * dt;
             }
             return area;
+        }
+
+        /// <summary>
+        /// Smooth a time series with a 5-point Savitzky-Golay quadratic filter.
+        /// Coefficients: [-3, 12, 17, 12, -3] / 35. Endpoints (first 2 and last 2
+        /// points) are left unsmoothed. Negative values from the filter are
+        /// clamped to zero. Series shorter than 5 points are returned unsmoothed.
+        /// Direct port of Rust smooth_savitzky_golay (osprey-chromatography/src/lib.rs:191).
+        /// </summary>
+        public static double[] SmoothSavitzkyGolay(double[] values)
+        {
+            int n = values.Length;
+            if (n < 5)
+            {
+                double[] copy = new double[n];
+                Array.Copy(values, copy, n);
+                return copy;
+            }
+            double[] outArr = new double[n];
+            outArr[0] = values[0];
+            outArr[1] = values[1];
+            outArr[n - 2] = values[n - 2];
+            outArr[n - 1] = values[n - 1];
+            for (int i = 2; i < n - 2; i++)
+            {
+                double v = (-3.0 * values[i - 2]
+                    + 12.0 * values[i - 1]
+                    + 17.0 * values[i]
+                    + 12.0 * values[i + 1]
+                    + -3.0 * values[i + 2]) / 35.0;
+                outArr[i] = Math.Max(v, 0.0);
+            }
+            return outArr;
+        }
+
+        /// <summary>
+        /// Detect ALL candidate peaks in a XIC, returning them sorted by apex
+        /// intensity descending. Each local maximum above minHeight produces a
+        /// candidate peak with its own boundaries (valley detection + FWHM
+        /// capping). The caller should evaluate each candidate using coelution
+        /// scoring and pick the best one. Direct port of Rust detect_all_xic_peaks
+        /// (osprey-chromatography/src/lib.rs:437).
+        /// </summary>
+        /// <param name="rts">Retention times (length = xic length).</param>
+        /// <param name="intensities">Intensities (length = xic length).</param>
+        /// <param name="minHeight">Minimum apex intensity after smoothing.</param>
+        /// <param name="peakBoundary">Intensity divisor for boundary threshold (5.0 → 20% of apex).</param>
+        public static List<XICPeakBounds> DetectAllXicPeaks(
+            double[] rts, double[] intensities,
+            double minHeight, double peakBoundary)
+        {
+            var peaks = new List<XICPeakBounds>();
+            int n = intensities.Length;
+            if (n < 3)
+                return peaks;
+
+            double[] smoothed = SmoothSavitzkyGolay(intensities);
+
+            // Collect local maxima above threshold. Interior first, then endpoints
+            // — matches Rust ordering in detect_all_xic_peaks.
+            var apexCandidates = new List<KeyValuePair<int, double>>();
+            for (int i = 1; i < n - 1; i++)
+            {
+                if (smoothed[i] >= minHeight
+                    && smoothed[i] >= smoothed[i - 1]
+                    && smoothed[i] >= smoothed[i + 1])
+                {
+                    apexCandidates.Add(new KeyValuePair<int, double>(i, smoothed[i]));
+                }
+            }
+            if (n >= 2 && smoothed[0] >= minHeight && smoothed[0] >= smoothed[1])
+                apexCandidates.Add(new KeyValuePair<int, double>(0, smoothed[0]));
+            if (n >= 2 && smoothed[n - 1] >= minHeight && smoothed[n - 1] >= smoothed[n - 2])
+                apexCandidates.Add(new KeyValuePair<int, double>(n - 1, smoothed[n - 1]));
+
+            // Sort by intensity descending. Rust uses `sort_by(b.1.total_cmp(&a.1))`
+            // which is a STABLE sort — ties keep their insertion order. .NET's
+            // List<T>.Sort is unstable (introsort); LINQ's OrderByDescending is
+            // stable, so use that to match Rust exactly.
+            apexCandidates = apexCandidates.OrderByDescending(kv => kv.Value).ToList();
+
+            // Background = min(smoothed), clamped to >= 0.
+            double background = double.PositiveInfinity;
+            for (int i = 0; i < n; i++)
+                if (smoothed[i] < background)
+                    background = smoothed[i];
+            if (background < 0.0 || double.IsInfinity(background))
+                background = 0.0;
+
+            foreach (var kv in apexCandidates)
+            {
+                int apexIdx = kv.Key;
+                double apexIntensity = kv.Value;
+
+                double signalAboveBg = Math.Max(apexIntensity - background, 0.0);
+                double boundaryThreshold = background + signalAboveBg / peakBoundary;
+
+                int startIdx = WalkBoundaryLeft(smoothed, apexIdx, apexIntensity, boundaryThreshold);
+                int endIdx = WalkBoundaryRight(smoothed, apexIdx, apexIntensity, boundaryThreshold);
+
+                // FWHM capping: cap boundaries at apex ± 2 * half-width
+                double leftHw, rightHw;
+                if (ComputeAsymmetricHalfWidths(smoothed, rts, apexIdx, out leftHw, out rightHw))
+                {
+                    const double capFactor = 2.0;
+                    double apexRt = rts[apexIdx];
+
+                    double minStartRt = apexRt - capFactor * leftHw;
+                    if (rts[startIdx] < minStartRt)
+                    {
+                        for (int i = startIdx; i < apexIdx; i++)
+                        {
+                            if (rts[i] >= minStartRt)
+                            {
+                                startIdx = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    double maxEndRt = apexRt + capFactor * rightHw;
+                    if (rts[endIdx] > maxEndRt)
+                    {
+                        for (int i = endIdx; i >= apexIdx; i--)
+                        {
+                            if (rts[i] <= maxEndRt)
+                            {
+                                endIdx = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (endIdx - startIdx + 1 < 3)
+                    continue;
+
+                double area = TrapezoidalArea(rts, intensities, startIdx, endIdx);
+                double snr = ComputeSnr(intensities, apexIdx, startIdx, endIdx);
+
+                peaks.Add(new XICPeakBounds
+                {
+                    ApexRt = rts[apexIdx],
+                    ApexIntensity = apexIntensity,
+                    ApexIndex = apexIdx,
+                    StartRt = rts[startIdx],
+                    EndRt = rts[endIdx],
+                    StartIndex = startIdx,
+                    EndIndex = endIdx,
+                    Area = area,
+                    SignalToNoise = snr,
+                });
+            }
+
+            return peaks;
+        }
+
+        /// <summary>
+        /// Walk left from apex to find start boundary using DIA-NN-style valley
+        /// detection. Stops at whichever comes first:
+        /// - Intensity drops below boundaryThreshold
+        /// - Valley detected: local minimum is &lt;50% of apex AND &lt;50% of the next rising neighbor
+        /// Direct port of Rust walk_boundary_left (osprey-chromatography/src/lib.rs:544).
+        /// </summary>
+        private static int WalkBoundaryLeft(
+            double[] smoothed, int apexIdx, double apexIntensity, double boundaryThreshold)
+        {
+            double valley = smoothed[apexIdx];
+            int valleyPos = apexIdx;
+
+            for (int i = apexIdx - 1; i >= 0; i--)
+            {
+                if (smoothed[i] < valley)
+                {
+                    valley = smoothed[i];
+                    valleyPos = i;
+                }
+                else if (valley < apexIntensity / 2.0 && valley < smoothed[i] / 2.0)
+                {
+                    return valleyPos;
+                }
+
+                if (smoothed[i] < boundaryThreshold)
+                    return i;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Walk right from apex to find end boundary using DIA-NN-style valley
+        /// detection. Direct port of Rust walk_boundary_right.
+        /// </summary>
+        private static int WalkBoundaryRight(
+            double[] smoothed, int apexIdx, double apexIntensity, double boundaryThreshold)
+        {
+            int n = smoothed.Length;
+            double valley = smoothed[apexIdx];
+            int valleyPos = apexIdx;
+
+            for (int i = apexIdx + 1; i < n; i++)
+            {
+                double val = smoothed[i];
+                if (val < valley)
+                {
+                    valley = val;
+                    valleyPos = i;
+                }
+                else if (valley < apexIntensity / 2.0 && valley < val / 2.0)
+                {
+                    return valleyPos;
+                }
+
+                if (val < boundaryThreshold)
+                    return i;
+            }
+            return n - 1;
+        }
+
+        /// <summary>
+        /// Compute asymmetric half-widths at half-maximum on a smoothed intensity
+        /// series. Returns separate left and right half-widths (minutes), which
+        /// naturally captures chromatographic peak tailing. Uses linear
+        /// interpolation at the half-height crossing. If one side is missing,
+        /// the found side is used for both (assume roughly symmetric). Returns
+        /// false if neither side can be found.
+        /// Direct port of Rust compute_asymmetric_half_widths.
+        /// </summary>
+        private static bool ComputeAsymmetricHalfWidths(
+            double[] smoothed, double[] rts, int apexIdx,
+            out double leftHw, out double rightHw)
+        {
+            leftHw = 0.0;
+            rightHw = 0.0;
+
+            double apexVal = smoothed[apexIdx];
+            if (apexVal <= 0.0) return false;
+
+            double half = apexVal / 2.0;
+            double apexRt = rts[apexIdx];
+
+            // Scan left from apex to find half-height crossing
+            double? left = null;
+            for (int i = apexIdx; i >= 1; i--)
+            {
+                if (smoothed[i] >= half && smoothed[i - 1] < half)
+                {
+                    double denom = smoothed[i] - smoothed[i - 1];
+                    double crossingRt;
+                    if (denom > 1e-30)
+                    {
+                        double frac = (smoothed[i] - half) / denom;
+                        crossingRt = rts[i] - frac * (rts[i] - rts[i - 1]);
+                    }
+                    else
+                    {
+                        crossingRt = rts[i];
+                    }
+                    left = apexRt - crossingRt;
+                    break;
+                }
+            }
+
+            // Scan right from apex to find half-height crossing
+            double? right = null;
+            for (int i = apexIdx; i < smoothed.Length - 1; i++)
+            {
+                if (smoothed[i] >= half && smoothed[i + 1] < half)
+                {
+                    double denom = smoothed[i] - smoothed[i + 1];
+                    double crossingRt;
+                    if (denom > 1e-30)
+                    {
+                        double frac = (smoothed[i] - half) / denom;
+                        crossingRt = rts[i] + frac * (rts[i + 1] - rts[i]);
+                    }
+                    else
+                    {
+                        crossingRt = rts[i];
+                    }
+                    right = crossingRt - apexRt;
+                    break;
+                }
+            }
+
+            if (left.HasValue && right.HasValue && left.Value > 0.0 && right.Value > 0.0)
+            {
+                leftHw = left.Value;
+                rightHw = right.Value;
+                return true;
+            }
+            // One side found: use it for both
+            if (left.HasValue && left.Value > 0.0)
+            {
+                leftHw = left.Value;
+                rightHw = left.Value;
+                return true;
+            }
+            if (right.HasValue && right.Value > 0.0)
+            {
+                leftHw = right.Value;
+                rightHw = right.Value;
+                return true;
+            }
+            return false;
         }
     }
 }

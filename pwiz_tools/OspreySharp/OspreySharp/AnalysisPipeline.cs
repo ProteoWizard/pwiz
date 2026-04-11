@@ -634,8 +634,11 @@ namespace pwiz.OspreySharp
         private const double MIN_SNR_FOR_RT_CAL = 5.0;
         private const double MIN_COELUTION_CORR_SCORE = 0.5;
         private const int CAL_TOP_N_FRAGMENTS = 6;
-        private const int MIN_COELUTION_SPECTRA = 5;
+        private const int MIN_COELUTION_SPECTRA = 3;
         private const double CAL_FDR_THRESHOLD = 0.01;
+        // Hard floor for LOESS refit in the two-pass calibration refinement.
+        // Matches Rust's ABSOLUTE_MIN_CALIBRATION_POINTS in pipeline.rs:652.
+        private const int ABSOLUTE_MIN_CALIBRATION_POINTS = 50;
 
         /// <summary>
         /// Run RT calibration using calibration discovery scoring.
@@ -773,6 +776,119 @@ namespace pwiz.OspreySharp
             foreach (var list in spectraByWindowKey.Values)
                 list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime));
 
+            // Pass 1: score all sampled entries with the linear pre-fit RT mapping
+            // and the wide initial tolerance. Fits a LOESS RTCalibration from the
+            // LDA + S/N surviving targets.
+            var pass1 = RunCalibrationScoringPass(
+                1,
+                sampledEntries, spectraByWindowKey, config,
+                rtSlope, rtIntercept, initialTolerance,
+                null /* calibrationModel: pass 1 uses linear mapping */,
+                fileName,
+                config.RtCalibration.MinCalibrationPoints);
+
+            if (pass1 == null)
+            {
+                LogWarning("Calibration pass 1 failed. Using fallback tolerance.");
+                return null;
+            }
+
+            // === Iterative calibration refinement (2-pass) ===
+            // Mirrors Rust pipeline.rs:714-839.
+            // MAD × 1.4826 ≈ SD for a normal distribution; 3× that covers ~99.7%.
+            double madTolerance = pass1.Stats.MAD * 1.4826 * 3.0;
+            double pass1Tolerance = Math.Max(
+                config.RtCalibration.MinRtTolerance,
+                Math.Min(config.RtCalibration.MaxRtTolerance, madTolerance));
+
+            LogInfo(string.Format(
+                "First-pass RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R²={5:F4})",
+                pass1Tolerance,
+                pass1.Stats.MAD,
+                pass1.Stats.MAD * 1.4826,
+                pass1.Stats.ResidualSD,
+                pass1.Stats.NPoints,
+                pass1.Stats.RSquared));
+
+            // Only refine if the tolerance narrowed at least 2× tighter than the
+            // initial wide window.
+            if (pass1Tolerance < initialTolerance * 0.5)
+            {
+                LogInfo(string.Format(
+                    "Calibration refinement: re-scoring with {0:F2} min tolerance (was {1:F1} min)",
+                    pass1Tolerance, initialTolerance));
+
+                var pass2 = RunCalibrationScoringPass(
+                    2,
+                    sampledEntries, spectraByWindowKey, config,
+                    rtSlope, rtIntercept, pass1Tolerance,
+                    pass1.Calibration /* pass 2 predicts RT via the LOESS fit */,
+                    fileName,
+                    ABSOLUTE_MIN_CALIBRATION_POINTS);
+
+                if (pass2 != null)
+                {
+                    double refinedMadTolerance = pass2.Stats.MAD * 1.4826 * 3.0;
+                    double refinedTolerance = Math.Max(
+                        config.RtCalibration.MinRtTolerance,
+                        Math.Min(config.RtCalibration.MaxRtTolerance, refinedMadTolerance));
+
+                    LogInfo(string.Format(
+                        "Refined RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R²={5:F4})",
+                        refinedTolerance,
+                        pass2.Stats.MAD,
+                        pass2.Stats.MAD * 1.4826,
+                        pass2.Stats.ResidualSD,
+                        pass2.Stats.NPoints,
+                        pass2.Stats.RSquared));
+
+                    // Accept the refined calibration only if R² didn't degrade
+                    // by more than 1% (matches Rust pipeline.rs:811).
+                    if (pass2.Stats.RSquared >= pass1.Stats.RSquared * 0.99)
+                    {
+                        return pass2.Calibration;
+                    }
+                    LogInfo(string.Format(
+                        "Refined calibration not better (R² {0:F4} vs {1:F4}), keeping original",
+                        pass2.Stats.RSquared, pass1.Stats.RSquared));
+                }
+                else
+                {
+                    LogInfo(string.Format(
+                        "Refinement pass: insufficient points (need {0}), keeping original calibration",
+                        ABSOLUTE_MIN_CALIBRATION_POINTS));
+                }
+            }
+
+            return pass1.Calibration;
+        }
+
+        /// <summary>
+        /// Result of one calibration scoring pass (scoring + LDA + S/N filter + LOESS fit).
+        /// </summary>
+        private class CalibrationPassResult
+        {
+            public RTCalibration Calibration;
+            public RTCalibrationStats Stats;
+        }
+
+        /// <summary>
+        /// Run one calibration scoring pass: score each sampled entry, train LDA,
+        /// apply S/N filter, and fit LOESS on the surviving (libRt, measuredRt) pairs.
+        /// Returns null if the pass has fewer than minLoessPoints survivors or the
+        /// LOESS fit fails. This helper is called twice by RunCalibration to
+        /// implement the two-pass refinement (pipeline.rs:714-839).
+        /// </summary>
+        private CalibrationPassResult RunCalibrationScoringPass(
+            int passNumber,
+            List<LibraryEntry> sampledEntries,
+            Dictionary<int, List<Spectrum>> spectraByWindowKey,
+            OspreyConfig config,
+            double rtSlope, double rtIntercept, double tolerance,
+            RTCalibration calibrationModel,
+            string fileName,
+            int minLoessPoints)
+        {
             // Activate per-entry window dump if requested. Cleared after the
             // matching loop completes (file written below).
             bool dumpWindows = Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_WINDOWS") == "1";
@@ -798,7 +914,9 @@ namespace pwiz.OspreySharp
                 double entryMeasuredRt;
                 var match = ScoreCalibrationEntry(
                     entry, spectraByWindowKey, config,
-                    rtSlope, rtIntercept, initialTolerance, localScorer,
+                    rtSlope, rtIntercept, tolerance,
+                    calibrationModel,
+                    localScorer,
                     out entrySnr, out entryLibRt, out entryMeasuredRt);
                 if (match != null)
                 {
@@ -812,13 +930,15 @@ namespace pwiz.OspreySharp
             localScorer => { });
             swScoring.Stop();
             LogInfo(string.Format(
-                "[TIMING] Calibration scoring: {0:F2}s ({1} matches)",
-                swScoring.Elapsed.TotalSeconds, matches.Count));
+                "[TIMING] Calibration pass {0} scoring: {1:F2}s ({2} matches)",
+                passNumber, swScoring.Elapsed.TotalSeconds, matches.Count));
             LogInfo(string.Format(
-                "[COUNT] Calibration matches scored [{0}]: {1}",
-                fileName, matches.Count));
+                "[COUNT] Calibration pass {0} matches scored [{1}]: {2}",
+                passNumber, fileName, matches.Count));
 
-            // Write per-entry window dump if requested.
+            // Write per-entry window dump if requested. When two passes run, the
+            // pass 2 dump overwrites pass 1 — same behaviour as Rust's
+            // run_coelution_calibration_scoring dumping on every invocation.
             if (s_calWindowDump != null)
             {
                 var rows = new List<string>(s_calWindowDump);
@@ -829,8 +949,8 @@ namespace pwiz.OspreySharp
                     foreach (var r in rows) w.WriteLine(r);
                 }
                 LogInfo(string.Format(
-                    "[COUNT] Wrote calibration windows dump: cs_cal_windows.txt ({0} rows)",
-                    rows.Count));
+                    "[COUNT] Wrote calibration windows dump (pass {0}): cs_cal_windows.txt ({1} rows)",
+                    passNumber, rows.Count));
                 s_calWindowDump = null;
 
                 if (Environment.GetEnvironmentVariable("OSPREY_CAL_WINDOWS_ONLY") == "1")
@@ -857,12 +977,15 @@ namespace pwiz.OspreySharp
                 int nMatched = 0, nUnmatched = 0;
                 using (var w = new StreamWriter(dumpPath))
                 {
-                    // Column layout matches Rust's rust_cal_match.txt. C# doesn't
-                    // track the apex scan number in CalibrationMatch, so we only
-                    // write the measured_rt and feature values. For the
-                    // cross-tool diff, RT match is the proxy for peak match
-                    // (~1.8s DIA cycles, so RT diff < 0.01 min means same peak).
-                    w.WriteLine("entry_id\tis_decoy\tcharge\thas_match\tscan\tapex_rt\tcorrelation\tlibcosine\ttop6\txcorr");
+                    // 11-column layout matching rust_cal_match.txt.
+                    // C# doesn't track scan number in CalibrationMatch, so that
+                    // column is emitted empty for matched rows. RT match is the
+                    // proxy for peak identity (~1.8s DIA cycles, so |dRT| < 0.01
+                    // min means same peak). snr is the signal-to-noise feeding
+                    // the S/N filter (gating which matches enter LOESS).
+                    // Uses F10 for all float columns to avoid banker's-vs-round-
+                    // half-up formatting mismatch with Rust.
+                    w.WriteLine("entry_id\tis_decoy\tcharge\thas_match\tscan\tapex_rt\tcorrelation\tlibcosine\ttop6\txcorr\tsnr");
                     foreach (var entry in sortedSampled)
                     {
                         CalibrationMatch m;
@@ -870,23 +993,27 @@ namespace pwiz.OspreySharp
                         {
                             KeyValuePair<double, double> rtPair;
                             matchRts.TryGetValue(entry.Id, out rtPair);
+                            double snr;
+                            if (!snrByEntryId.TryGetValue(entry.Id, out snr))
+                                snr = 0.0;
                             w.WriteLine(string.Format(
                                 System.Globalization.CultureInfo.InvariantCulture,
-                                "{0}\t{1}\t{2}\t1\t\t{3:F6}\t{4}\t{5}\t{6}\t{7}",
+                                "{0}\t{1}\t{2}\t1\t\t{3:F10}\t{4:F10}\t{5:F10}\t{6}\t{7:F10}\t{8:F10}",
                                 entry.Id,
                                 entry.IsDecoy ? 1 : 0,
                                 entry.Charge,
                                 rtPair.Value,
-                                m.CorrelationScore.ToString("R", System.Globalization.CultureInfo.InvariantCulture),
-                                m.LibcosineApex.ToString("R", System.Globalization.CultureInfo.InvariantCulture),
+                                m.CorrelationScore,
+                                m.LibcosineApex,
                                 m.Top6MatchedApex,
-                                m.XcorrScore.ToString("R", System.Globalization.CultureInfo.InvariantCulture)));
+                                m.XcorrScore,
+                                snr));
                             nMatched++;
                         }
                         else
                         {
                             w.WriteLine(string.Format(
-                                "{0}\t{1}\t{2}\t0\t\t\t\t\t\t",
+                                "{0}\t{1}\t{2}\t0\t\t\t\t\t\t\t",
                                 entry.Id,
                                 entry.IsDecoy ? 1 : 0,
                                 entry.Charge));
@@ -895,8 +1022,8 @@ namespace pwiz.OspreySharp
                     }
                 }
                 LogInfo(string.Format(
-                    "[COUNT] Wrote calibration match dump: {0} ({1} matched, {2} unmatched)",
-                    dumpPath, nMatched, nUnmatched));
+                    "[COUNT] Wrote calibration match dump (pass {0}): {1} ({2} matched, {3} unmatched)",
+                    passNumber, dumpPath, nMatched, nUnmatched));
 
                 if (Environment.GetEnvironmentVariable("OSPREY_CAL_MATCH_ONLY") == "1")
                 {
@@ -907,7 +1034,8 @@ namespace pwiz.OspreySharp
 
             if (matches.Count == 0)
             {
-                LogWarning("No calibration matches could be scored.");
+                LogWarning(string.Format(
+                    "No calibration matches could be scored in pass {0}.", passNumber));
                 return null;
             }
 
@@ -937,14 +1065,14 @@ namespace pwiz.OspreySharp
                 }
             }
             LogInfo(string.Format(
-                "[TIMING] Calibration LDA: {0:F2}s ({1} target wins, {2} decoy wins at 1% FDR)",
-                swLda.Elapsed.TotalSeconds, nTargetWins, nDecoyWins));
+                "[TIMING] Calibration pass {0} LDA: {1:F2}s ({2} target wins, {3} decoy wins at 1% FDR)",
+                passNumber, swLda.Elapsed.TotalSeconds, nTargetWins, nDecoyWins));
             LogInfo(string.Format(
-                "[COUNT] Calibration LDA winners [{0}]: {1} target wins, {2} decoy wins at 1% FDR",
-                fileName, nTargetWins, nDecoyWins));
+                "[COUNT] Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
+                passNumber, fileName, nTargetWins, nDecoyWins));
             LogInfo(string.Format(
-                "Calibration LDA passing count: {0} (returned by TrainAndScoreCalibration)",
-                nPassing));
+                "Calibration pass {0} LDA passing count: {1} (returned by TrainAndScoreCalibration)",
+                passNumber, nPassing));
 
             // Collect high-confidence target matches that also meet the S/N quality gate.
             var libRtsDetected = new List<double>();
@@ -975,20 +1103,21 @@ namespace pwiz.OspreySharp
             if (nSnrFiltered > 0)
             {
                 LogInfo(string.Format(
-                    "  RT quality filter: {0} -> {1} peptides (removed {2} with S/N < {3:F1})",
-                    nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
+                    "  RT quality filter (pass {0}): {1} -> {2} peptides (removed {3} with S/N < {4:F1})",
+                    passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
             }
 
             LogInfo(string.Format(
-                "[COUNT] Calibration high-quality (S/N>=5) [{0}]: {1}",
-                fileName, libRtsDetected.Count));
-            LogInfo(string.Format("Found {0} calibration points", libRtsDetected.Count));
+                "[COUNT] Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
+                passNumber, fileName, libRtsDetected.Count));
+            LogInfo(string.Format("Pass {0} found {1} calibration points",
+                passNumber, libRtsDetected.Count));
 
-            if (libRtsDetected.Count < config.RtCalibration.MinCalibrationPoints)
+            if (libRtsDetected.Count < minLoessPoints)
             {
                 LogWarning(string.Format(
-                    "Insufficient calibration points ({0} < {1}). Using fallback tolerance.",
-                    libRtsDetected.Count, config.RtCalibration.MinCalibrationPoints));
+                    "Insufficient calibration points in pass {0} ({1} < {2}).",
+                    passNumber, libRtsDetected.Count, minLoessPoints));
                 return null;
             }
 
@@ -1012,19 +1141,23 @@ namespace pwiz.OspreySharp
                 swLoess.Stop();
 
                 var stats = rtCal.Stats();
-                LogInfo(string.Format("[TIMING] Calibration LOESS fit: {0:F2}s",
-                    swLoess.Elapsed.TotalSeconds));
+                LogInfo(string.Format("[TIMING] Calibration pass {0} LOESS fit: {1:F2}s",
+                    passNumber, swLoess.Elapsed.TotalSeconds));
                 LogInfo(string.Format(
-                    "RT calibration: {0} points, R2={1:F4}, residual SD={2:F3} min",
-                    stats.NPoints, stats.RSquared, stats.ResidualSD));
+                    "RT calibration pass {0}: {1} points, R2={2:F4}, residual SD={3:F3} min, MAD={4:F3}",
+                    passNumber, stats.NPoints, stats.RSquared, stats.ResidualSD, stats.MAD));
 
-                return rtCal;
+                return new CalibrationPassResult
+                {
+                    Calibration = rtCal,
+                    Stats = stats,
+                };
             }
             catch (Exception ex)
             {
                 swLoess.Stop();
-                LogWarning(string.Format("RT calibration failed: {0}. Using fallback tolerance.",
-                    ex.Message));
+                LogWarning(string.Format("RT calibration pass {0} failed: {1}",
+                    passNumber, ex.Message));
                 return null;
             }
         }
@@ -1223,12 +1356,18 @@ namespace pwiz.OspreySharp
         /// tolerance, detect the best co-eluting peak, and compute the four LDA
         /// features at the apex (correlation, LibCosine, top-6 matched, XCorr).
         /// Returns null if the entry has no viable peak.
+        ///
+        /// On pass 1 (calibrationModel == null), expectedRt is computed from the
+        /// linear (rtSlope * library_rt + rtIntercept) mapping. On pass 2, the
+        /// LOESS-fitted RTCalibration is used to predict expected_rt and the
+        /// (refined) tolerance is much tighter.
         /// </summary>
         private CalibrationMatch ScoreCalibrationEntry(
             LibraryEntry entry,
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
             OspreyConfig config,
             double rtSlope, double rtIntercept, double initialTolerance,
+            RTCalibration calibrationModel,
             SpectralScorer scorer,
             out double signalToNoise,
             out double libraryRt,
@@ -1271,6 +1410,16 @@ namespace pwiz.OspreySharp
                 return null;
             }
 
+            // Compute expected RT for this library entry.
+            // Pass 1 (calibrationModel == null): use the linear pre-fit mapping
+            //     rtSlope * library_rt + rtIntercept
+            // Pass 2 (calibrationModel != null): use the LOESS-fitted prediction
+            //     rtCalibration.Predict(library_rt)
+            // Matches Rust's predict_fn pattern in pipeline.rs:740.
+            double expectedRt = calibrationModel != null
+                ? calibrationModel.Predict(entry.RetentionTime)
+                : entry.RetentionTime * rtSlope + rtIntercept;
+
             // Diagnostic: record per-entry m/z + RT window selection.
             // C# selects ONE window per entry (the first match in dictionary order),
             // unlike Rust which scores in ALL matching windows. Capturing this here
@@ -1278,9 +1427,8 @@ namespace pwiz.OspreySharp
             if (s_calWindowDump != null)
             {
                 var iso = windowSpectra[0].IsolationWindow;
-                double expRt = entry.RetentionTime * rtSlope + rtIntercept;
-                double rtLo = expRt - initialTolerance;
-                double rtHi = expRt + initialTolerance;
+                double rtLo = expectedRt - initialTolerance;
+                double rtHi = expectedRt + initialTolerance;
                 s_calWindowDump.Add(string.Format(
                     System.Globalization.CultureInfo.InvariantCulture,
                     "{0}\t{1}\t{2}\t{3:F6}\t{4:F6}\t{5:F6}\t{6:F6}\t{7:F6}\t{8:F6}\t{9:F6}",
@@ -1291,13 +1439,12 @@ namespace pwiz.OspreySharp
                     entry.RetentionTime,
                     iso.LowerBound,
                     iso.UpperBound,
-                    expRt,
+                    expectedRt,
                     rtLo,
                     rtHi));
             }
 
             // Filter by RT tolerance and top-6 fragment prefilter.
-            double expectedRt = entry.RetentionTime * rtSlope + rtIntercept;
             var candidateSpectra = new List<Spectrum>();
             foreach (var spec in windowSpectra)
             {
@@ -1318,9 +1465,20 @@ namespace pwiz.OspreySharp
                 rts[i] = candidateSpectra[i].RetentionTime;
 
             // Per-entry chromatogram diagnostic. Dump candidates + extracted XICs.
+            // OSPREY_DIAG_XIC_ENTRY_ID selects which entry to dump; OSPREY_DIAG_XIC_PASS
+            // selects the pass (default pass 1). We default to pass 1 because the
+            // cross-tool bisection walks downstream: until pass 1 chromatograms
+            // match, there's no point comparing pass 2 (which depends on pass 1's
+            // LOESS fit).
             string diagXicEnv = Environment.GetEnvironmentVariable("OSPREY_DIAG_XIC_ENTRY_ID");
+            string diagXicPassEnv = Environment.GetEnvironmentVariable("OSPREY_DIAG_XIC_PASS");
+            int diagXicPass = 1;
+            if (!string.IsNullOrEmpty(diagXicPassEnv))
+                int.TryParse(diagXicPassEnv, out diagXicPass);
+            int currentPass = calibrationModel != null ? 2 : 1;
             uint diagXicEntryId;
-            bool isDiagXic = !string.IsNullOrEmpty(diagXicEnv) &&
+            bool isDiagXic = currentPass == diagXicPass &&
+                !string.IsNullOrEmpty(diagXicEnv) &&
                 uint.TryParse(diagXicEnv, out diagXicEntryId) && diagXicEntryId == entry.Id;
             string diagXicPath = isDiagXic ? "cs_xic_entry_" + entry.Id + ".txt" : null;
             if (isDiagXic)
@@ -1328,18 +1486,76 @@ namespace pwiz.OspreySharp
                 using (var dw = new StreamWriter(diagXicPath))
                 {
                     dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# C# per-entry chromatogram dump for entry_id={0}", entry.Id));
+                        "# per-entry chromatogram dump for entry_id={0} (pass {1})",
+                        entry.Id, currentPass));
                     dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# {0} ({1}, charge={2}, lib_rt={3:F6}, mz={4:F6})",
+                        "# {0} ({1}, charge={2}, lib_rt={3:F10}, mz={4:F10})",
                         entry.ModifiedSequence, entry.Sequence, entry.Charge,
                         entry.RetentionTime, entry.PrecursorMz));
+
+                    // Pass 2 calculations block: dump the inputs that feed into XIC
+                    // extraction so if the XICs don't match, we already have the
+                    // intermediate values to localize the divergence (LOESS model
+                    // stats, predicted RT, refined tolerance, selection window).
+                    if (calibrationModel != null)
+                    {
+                        var loessStats = calibrationModel.Stats();
+                        dw.WriteLine("# LOESS MODEL (pass 2 RT calibration)");
+                        dw.WriteLine(string.Format(
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            "# loess.n_points={0}", loessStats.NPoints));
+                        dw.WriteLine(string.Format(
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            "# loess.r_squared={0:F10}", loessStats.RSquared));
+                        dw.WriteLine(string.Format(
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            "# loess.residual_sd={0:F10}", loessStats.ResidualSD));
+                        dw.WriteLine(string.Format(
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            "# loess.mean_residual={0:F10}", loessStats.MeanResidual));
+                        dw.WriteLine(string.Format(
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            "# loess.max_residual={0:F10}", loessStats.MaxResidual));
+                        dw.WriteLine(string.Format(
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            "# loess.p20_abs_residual={0:F10}", loessStats.P20AbsResidual));
+                        dw.WriteLine(string.Format(
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            "# loess.p80_abs_residual={0:F10}", loessStats.P80AbsResidual));
+                        dw.WriteLine(string.Format(
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            "# loess.mad={0:F10}", loessStats.MAD));
+                    }
+                    dw.WriteLine("# PASS CALCULATIONS");
+                    dw.WriteLine(string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "# pass.library_rt={0:F10}", entry.RetentionTime));
+                    dw.WriteLine(string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "# pass.expected_rt={0:F10}", expectedRt));
+                    dw.WriteLine(string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "# pass.tolerance={0:F10}", initialTolerance));
+                    dw.WriteLine(string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "# pass.rt_window_lo={0:F10}", expectedRt - initialTolerance));
+                    dw.WriteLine(string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "# pass.rt_window_hi={0:F10}", expectedRt + initialTolerance));
+                    dw.WriteLine(string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "# pass.rt_slope={0:F10}", rtSlope));
+                    dw.WriteLine(string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "# pass.rt_intercept={0:F10}", rtIntercept));
+
                     dw.WriteLine("# n_post_prefilter_candidates=" + candidateSpectra.Count);
                     dw.WriteLine("# CANDIDATES (post-prefilter, sorted by RT)");
                     dw.WriteLine("candidate\tscan_idx\tscan_number\trt");
                     for (int i = 0; i < candidateSpectra.Count; i++)
                     {
                         dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "candidate\t{0}\t{1}\t{2:F6}",
+                            "candidate\t{0}\t{1}\t{2:F10}",
                             i, candidateSpectra[i].ScanNumber, candidateSpectra[i].RetentionTime));
                     }
 
@@ -1357,7 +1573,7 @@ namespace pwiz.OspreySharp
                         int fi = sortedByIntensity[rank].Key;
                         var fobj = entry.Fragments[fi];
                         dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "topfrag\t{0}\t{1}\t{2:F6}\t{3:F6}",
+                            "topfrag\t{0}\t{1}\t{2:F10}\t{3:F10}",
                             rank, fi, fobj.Mz, fobj.RelativeIntensity));
                     }
                 }
@@ -1373,16 +1589,28 @@ namespace pwiz.OspreySharp
                 {
                     dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
                     dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
+                    // Use F10 — wide enough that half-way rounding on values
+                    // like 1756.6640625 (exact f32 mantissa) doesn't diverge
+                    // between Rust's banker's rounding and C#'s round-half-up.
                     foreach (var xic in xics)
                     {
                         for (int i = 0; i < xic.RetentionTimes.Length; i++)
                         {
                             dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "xic\t{0}\t{1}\t{2:F6}\t{3:F6}",
+                                "xic\t{0}\t{1}\t{2:F10}\t{3:F10}",
                                 xic.FragmentIndex, i, xic.RetentionTimes[i], xic.Intensities[i]));
                         }
                     }
                 }
+                // Hard-exit immediately after dumping. We only care about the
+                // diff between rust_xic_entry_<ID>.txt and cs_xic_entry_<ID>.txt;
+                // no need to let the 200K-entry scoring loop finish (~minutes)
+                // or continue to pass 2 / downstream FDR.
+                // Other Parallel.ForEach workers will be killed by Exit(0).
+                LogInfo(string.Format(
+                    "[BISECT] OSPREY_DIAG_XIC_ENTRY_ID matched on pass {0} - wrote {1} and exiting",
+                    currentPass, diagXicPath));
+                Environment.Exit(0);
             }
 
             if (xics.Count < 2)
@@ -1390,6 +1618,36 @@ namespace pwiz.OspreySharp
 
             // Detect consensus CWT peaks and score by pairwise correlation sum.
             var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+
+            // Fallback: when CWT returns no consensus peaks, run DetectAllXicPeaks
+            // on the reference fragment XIC alone. This rescues entries where
+            // cross-fragment consensus is weak (one dominant fragment, noisy
+            // others) but the reference has a clean peak shape. Matches Rust
+            // batch.rs:2744-2751: the `cwt_candidates.is_empty()` branch.
+            if (peaks.Count == 0)
+            {
+                // Pick the reference fragment (highest total intensity). Uses `>=`
+                // so ties resolve to the LAST fragment, matching Rust's max_by.
+                int refFallbackIdx = 0;
+                double refTotal = -1.0;
+                for (int i = 0; i < xics.Count; i++)
+                {
+                    double total = 0.0;
+                    double[] inten = xics[i].Intensities;
+                    for (int k = 0; k < inten.Length; k++) total += inten[k];
+                    if (total >= refTotal)
+                    {
+                        refTotal = total;
+                        refFallbackIdx = i;
+                    }
+                }
+                var fallbackXic = xics[refFallbackIdx];
+                peaks = PeakDetector.DetectAllXicPeaks(
+                    fallbackXic.RetentionTimes,
+                    fallbackXic.Intensities,
+                    0.01, // min_height
+                    5.0); // peak_boundary
+            }
 
             if (peaks.Count == 0)
                 return null;
@@ -1417,7 +1675,8 @@ namespace pwiz.OspreySharp
                     }
                 }
 
-                if (corrSum > bestCorrSum)
+                // Use >= to match Rust's max_by tie-break (last wins on ties).
+                if (corrSum >= bestCorrSum)
                 {
                     bestCorrSum = corrSum;
                     bestPeak = peak;
@@ -1427,58 +1686,78 @@ namespace pwiz.OspreySharp
             if (bestPeak == null || bestCorrSum < MIN_COELUTION_CORR_SCORE)
                 return null;
 
-            // Determine the apex within the best peak: the scan with the highest
-            // summed fragment intensity that also matches at least 2 of the top-6
-            // library fragments.
-            int apexLocalIdx = -1;
-            double apexSum = -1.0;
+            // Identify the reference XIC — the single fragment with the highest
+            // total intensity across the extracted XICs. This is the signal that
+            // feeds SNR computation and the apex selection. Direct port of
+            // Rust's `ref_idx = xics.max_by(total intensity)` in batch.rs:~2718.
+            //
+            // Note: Rust's `Iterator::max_by` returns the LAST element on ties,
+            // so we use `>=` (not `>`) here to match. Without this, fragments
+            // with identical total intensities would select different reference
+            // XICs between the two tools, causing downstream apex divergence.
+            int refIdx = 0;
+            double bestTotalIntensity = -1.0;
+            for (int i = 0; i < xics.Count; i++)
+            {
+                double total = 0.0;
+                double[] inten = xics[i].Intensities;
+                for (int k = 0; k < inten.Length; k++)
+                    total += inten[k];
+                if (total >= bestTotalIntensity)
+                {
+                    bestTotalIntensity = total;
+                    refIdx = i;
+                }
+            }
+            var refXic = xics[refIdx];
+            double[] refIntensities = refXic.Intensities;
+
+            // Apex is the highest-intensity point within the peak boundaries of
+            // the reference XIC. No top-6 constraint: Rust's batch.rs:2797-2802
+            // is a straight argmax over `ref_xic[ref_start..=ref_end]`. Uses `>=`
+            // so ties resolve to the LAST index, matching Rust `max_by`.
+            int apexLocalIdx = bestPeak.StartIndex;
+            double apexVal = refIntensities[Math.Min(apexLocalIdx, refIntensities.Length - 1)];
             for (int scan = bestPeak.StartIndex; scan <= bestPeak.EndIndex; scan++)
             {
-                double sumInt = 0.0;
-                for (int f = 0; f < xics.Count; f++)
+                if (scan >= refIntensities.Length) break;
+                if (refIntensities[scan] >= apexVal)
                 {
-                    double[] inten = xics[f].Intensities;
-                    if (scan < inten.Length)
-                        sumInt += inten[scan];
-                }
-
-                if (sumInt > apexSum)
-                {
-                    // Require >= 2 of the top-6 library fragments to be matched at this scan.
-                    if (CountTop6Matches(entry, candidateSpectra[scan], config) >= 2)
-                    {
-                        apexSum = sumInt;
-                        apexLocalIdx = scan;
-                    }
+                    apexVal = refIntensities[scan];
+                    apexLocalIdx = scan;
                 }
             }
 
-            if (apexLocalIdx < 0)
-                return null;
+            // Apex RT from the reference XIC (shared time axis across fragments).
+            double apexRt = refXic.RetentionTimes[apexLocalIdx];
+            measuredRt = apexRt;
 
-            var apexSpectrum = candidateSpectra[apexLocalIdx];
-            measuredRt = apexSpectrum.RetentionTime;
-
-            // S/N on the composite summed XIC within the peak boundaries.
-            double[] compositeXic = new double[nScans];
-            for (int scan = 0; scan < nScans; scan++)
-            {
-                double s = 0.0;
-                for (int f = 0; f < xics.Count; f++)
-                {
-                    double[] inten = xics[f].Intensities;
-                    if (scan < inten.Length)
-                        s += inten[scan];
-                }
-                compositeXic[scan] = s;
-            }
+            // SNR is computed on the reference fragment's raw intensities
+            // (NOT the composite sum). Direct port of Rust batch.rs:2803-2806.
             signalToNoise = PeakDetector.ComputeSnr(
-                compositeXic, apexLocalIdx, bestPeak.StartIndex, bestPeak.EndIndex);
+                refIntensities, apexLocalIdx, bestPeak.StartIndex, bestPeak.EndIndex);
+
+            // Map the apex RT to the candidate spectrum with the closest RT
+            // for feature computation. In practice this returns apexLocalIdx
+            // since the XIC time axis is built directly from candidate spectrum
+            // RTs, but we port Rust's lookup verbatim for parity.
+            int apexSpecLocalIdx = 0;
+            double bestDt = Math.Abs(candidateSpectra[0].RetentionTime - apexRt);
+            for (int i = 1; i < candidateSpectra.Count; i++)
+            {
+                double dt = Math.Abs(candidateSpectra[i].RetentionTime - apexRt);
+                if (dt < bestDt)
+                {
+                    bestDt = dt;
+                    apexSpecLocalIdx = i;
+                }
+            }
+            var apexSpectrum = candidateSpectra[apexSpecLocalIdx];
 
             // Compute the four LDA features at the apex.
             double libCosineApex = scorer.LibCosine(
                 apexSpectrum, entry, config.FragmentTolerance);
-            double xcorrApex = ComputeXcorrForSpectrum(apexSpectrum, entry, scorer);
+            double xcorrApex = scorer.XcorrAtScan(apexSpectrum, entry);
             byte top6Matched = CountTop6Matches(entry, apexSpectrum, config);
 
             return new CalibrationMatch
@@ -1980,7 +2259,7 @@ namespace pwiz.OspreySharp
             double libCosine = scorer.LibCosine(apexSpectrum, candidate, config.FragmentTolerance);
 
             // XCorr at apex (using unit-resolution binning)
-            double xcorr = ComputeXcorrForSpectrum(apexSpectrum, candidate, scorer);
+            double xcorr = scorer.XcorrAtScan(apexSpectrum, candidate);
 
             // Compute pairwise coelution features (sum, min, max, n_positive)
             double coelutionSum, coelutionMin, coelutionMax;
@@ -2034,7 +2313,7 @@ namespace pwiz.OspreySharp
                 if (idx < 0 || idx >= windowSpectra.Count)
                     continue;
                 var s = windowSpectra[idx];
-                sgXcorr += ComputeXcorrForSpectrum(s, candidate, scorer) * weight;
+                sgXcorr += scorer.XcorrAtScan(s, candidate) * weight;
                 sgCosine += scorer.LibCosine(s, candidate, config.FragmentTolerance) * weight;
             }
 
@@ -2207,49 +2486,6 @@ namespace pwiz.OspreySharp
             }
 
             return xics;
-        }
-
-        /// <summary>
-        /// Compute XCorr for a spectrum against a library entry.
-        /// </summary>
-        private double ComputeXcorrForSpectrum(
-            Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer)
-        {
-            var binConfig = scorer.BinConfig;
-            if (binConfig.NBins <= 0)
-                return 0.0;
-
-            double[] observedBins = new double[binConfig.NBins];
-            double[] libraryBins = new double[binConfig.NBins];
-
-            // Bin observed spectrum
-            if (spectrum.Mzs != null)
-            {
-                for (int i = 0; i < spectrum.Mzs.Length; i++)
-                {
-                    int bin = binConfig.MzToBin(spectrum.Mzs[i]);
-                    if (bin >= 0 && bin < observedBins.Length)
-                    {
-                        double sqrtInt = Math.Sqrt(spectrum.Intensities[i]);
-                        if (sqrtInt > observedBins[bin])
-                            observedBins[bin] = sqrtInt;
-                    }
-                }
-            }
-
-            // Bin library fragments
-            foreach (var frag in entry.Fragments)
-            {
-                int bin = binConfig.MzToBin(frag.Mz);
-                if (bin >= 0 && bin < libraryBins.Length)
-                {
-                    double sqrtInt = Math.Sqrt(frag.RelativeIntensity);
-                    if (sqrtInt > libraryBins[bin])
-                        libraryBins[bin] = sqrtInt;
-                }
-            }
-
-            return scorer.XCorr(observedBins, libraryBins);
         }
 
         /// <summary>

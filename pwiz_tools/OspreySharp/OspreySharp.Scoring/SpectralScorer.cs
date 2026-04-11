@@ -29,9 +29,13 @@ namespace pwiz.OspreySharp.Scoring
         public SpectralScorer() : this(BinConfig.UnitResolution()) { }
 
         /// <summary>
-        /// Compute XCorr between preprocessed observed spectrum bins and library fragment bins.
-        /// Preprocessing: subtract local average (+/- 75 bins) from observed spectrum,
-        /// then dot product with library spectrum bins.
+        /// Compute XCorr between pre-binned observed spectrum bins and library bins.
+        /// Applies the full Comet-style fast-XCorr preprocessing to the observed
+        /// spectrum (windowing normalization + sliding window subtraction) then
+        /// computes a dot product with the library bins. This entry point is used
+        /// by unit tests; production callers should use <see cref="XcorrAtScan"/>
+        /// which bins the observed spectrum internally and sums at fragment bin
+        /// positions (the actual Comet scoring form).
         /// </summary>
         /// <param name="observedBins">Binned observed spectrum (length = BinConfig.NBins).</param>
         /// <param name="libraryBins">Binned library spectrum (length = BinConfig.NBins).</param>
@@ -40,30 +44,147 @@ namespace pwiz.OspreySharp.Scoring
         {
             int n = observedBins.Length;
 
-            // Build prefix sum for O(n) sliding window
-            double[] prefix = new double[n + 1];
-            for (int i = 0; i < n; i++)
-                prefix[i + 1] = prefix[i] + observedBins[i];
+            // Apply windowing normalization + sliding window in f64.
+            double[] windowed = ApplyWindowingNormalization(observedBins);
+            double[] preprocessed = ApplySlidingWindow(windowed);
 
-            double normFactor = 1.0 / (2 * XCORR_WINDOW_OFFSET);
-
-            // Preprocess observed: subtract local average
-            double[] preprocessed = new double[n];
-            for (int i = 0; i < n; i++)
-            {
-                int left = Math.Max(0, i - XCORR_WINDOW_OFFSET);
-                int right = Math.Min(n, i + XCORR_WINDOW_OFFSET + 1);
-                double windowSum = prefix[right] - prefix[left];
-                double sumExcludingCenter = windowSum - observedBins[i];
-                preprocessed[i] = observedBins[i] - sumExcludingCenter * normFactor;
-            }
-
-            // Dot product of preprocessed observed with library spectrum
+            // Dot product of preprocessed observed with library bins.
             double score = 0.0;
             for (int i = 0; i < n; i++)
                 score += preprocessed[i] * libraryBins[i];
 
             return score * XCORR_SCALING;
+        }
+
+        /// <summary>
+        /// Compute XCorr at a single spectrum against a library entry. Direct port
+        /// of Rust's <c>SpectralScorer::xcorr_at_scan</c> / <c>xcorr()</c> in
+        /// osprey-scoring/src/lib.rs. Performs:
+        /// (1) bin observed spectrum with sum-accumulated sqrt intensities;
+        /// (2) windowing normalization (Comet MakeCorrData: 10 windows, normalize
+        /// to 50.0, drop values below 5% of global max);
+        /// (3) sliding window subtraction with offset=75;
+        /// (4) sum preprocessed values at library fragment bin positions;
+        /// (5) scale by 0.005.
+        /// This is the authoritative Comet fast-XCorr form used by Rust Osprey.
+        /// </summary>
+        public double XcorrAtScan(Spectrum spectrum, LibraryEntry entry)
+        {
+            if (_binConfig.NBins <= 0) return 0.0;
+            if (entry == null || entry.Fragments == null || entry.Fragments.Count == 0)
+                return 0.0;
+            if (spectrum == null || spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+                return 0.0;
+
+            int n = _binConfig.NBins;
+
+            // Use double[] throughout. Rust's xcorr pipeline also uses f64
+            // (see osprey-scoring/src/lib.rs — changed from Vec<f32> to Vec<f64>
+            // for cross-implementation bit-identical alignment with C#).
+
+            // (1) Bin observed spectrum — ACCUMULATE sqrt intensities in each bin
+            // (matches Rust obs_binned[bin] += (intensity as f64).sqrt()).
+            double[] binned = new double[n];
+            for (int i = 0; i < spectrum.Mzs.Length; i++)
+            {
+                int bin = _binConfig.MzToBin(spectrum.Mzs[i]);
+                if (bin >= 0 && bin < n)
+                    binned[bin] += Math.Sqrt(spectrum.Intensities[i]);
+            }
+
+            // (2) Windowing normalization.
+            double[] windowed = ApplyWindowingNormalization(binned);
+
+            // (3) Sliding window subtraction.
+            double[] preprocessed = ApplySlidingWindow(windowed);
+
+            // (4) Sum preprocessed values at library fragment bin positions.
+            // Comet uses unit intensity at each fragment's bin (library is NOT
+            // binned into a separate array).
+            double xcorrRaw = 0.0;
+            for (int f = 0; f < entry.Fragments.Count; f++)
+            {
+                int bin = _binConfig.MzToBin(entry.Fragments[f].Mz);
+                if (bin >= 0 && bin < n)
+                    xcorrRaw += preprocessed[bin];
+            }
+
+            // (5) Scale.
+            return xcorrRaw * XCORR_SCALING;
+        }
+
+        /// <summary>
+        /// Apply Comet MakeCorrData windowing normalization: split the spectrum
+        /// into 10 equal-width m/z windows, normalize each window so the max
+        /// in that window becomes 50.0, and zero out any value below 5% of the
+        /// global max. Direct port of Rust apply_windowing_normalization.
+        /// </summary>
+        private static double[] ApplyWindowingNormalization(double[] spectrum)
+        {
+            int n = spectrum.Length;
+            double[] result = new double[n];
+            const int numWindows = 10;
+            int windowSize = (n / numWindows) + 1;
+
+            // Global max → threshold
+            double globalMax = 0.0;
+            for (int i = 0; i < n; i++)
+                if (spectrum[i] > globalMax)
+                    globalMax = spectrum[i];
+            double threshold = globalMax * 0.05;
+
+            for (int w = 0; w < numWindows; w++)
+            {
+                int start = w * windowSize;
+                int end = Math.Min((w + 1) * windowSize, n);
+                if (start >= end) break;
+
+                // Find max in this window
+                double windowMax = 0.0;
+                for (int i = start; i < end; i++)
+                    if (spectrum[i] > windowMax)
+                        windowMax = spectrum[i];
+
+                // Normalize to 50.0 (skipping values below the global threshold).
+                if (windowMax > 0.0)
+                {
+                    double normFactor = 50.0 / windowMax;
+                    for (int i = start; i < end; i++)
+                    {
+                        if (spectrum[i] > threshold)
+                            result[i] = spectrum[i] * normFactor;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Comet-style fast-XCorr sliding window subtraction with offset=75.
+        /// result[i] = spectrum[i] - (sum of window excluding center) / 150.
+        /// O(n) via prefix sum. Direct port of Rust apply_sliding_window.
+        /// </summary>
+        private static double[] ApplySlidingWindow(double[] spectrum)
+        {
+            int n = spectrum.Length;
+            const int offset = XCORR_WINDOW_OFFSET;
+            double normFactor = 1.0 / (2 * offset);
+
+            double[] prefix = new double[n + 1];
+            for (int i = 0; i < n; i++)
+                prefix[i + 1] = prefix[i] + spectrum[i];
+
+            double[] result = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                int left = Math.Max(0, i - offset);
+                int right = Math.Min(n, i + offset + 1);
+                double windowSum = prefix[right] - prefix[left];
+                double sumExcludingCenter = windowSum - spectrum[i];
+                result[i] = spectrum[i] - sumExcludingCenter * normFactor;
+            }
+            return result;
         }
 
         /// <summary>
