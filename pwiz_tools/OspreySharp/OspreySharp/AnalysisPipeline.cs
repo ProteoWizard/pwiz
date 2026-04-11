@@ -1377,12 +1377,16 @@ namespace pwiz.OspreySharp
             features[12] = absRtDeviation;
             features[13] = ms1PrecursorCoelution;
             features[14] = ms1IsotopeCosine;
-            // Proxies for features we don't compute in this first pass
-            features[15] = libCosine;       // median_polish_cosine <- dot_product proxy
+            // Features 15-20 are not yet computed in this first-pass port (they require
+            // Tukey median polish and Savitzky-Golay weighted multi-scan scoring).
+            // Set to 0 rather than aliasing other features - aliasing causes the SVM to
+            // weight the same signal multiple times, which inflates target/decoy
+            // separation and causes too many entries to pass at a given FDR threshold.
+            features[15] = 0.0;             // median_polish_cosine
             features[16] = 0.0;             // median_polish_residual_ratio
-            features[17] = xcorr;           // sg_weighted_xcorr <- xcorr proxy
-            features[18] = libCosine;       // sg_weighted_cosine <- libcosine proxy
-            features[19] = coelutionMin;    // median_polish_min_fragment_r2 <- coelution_min proxy
+            features[17] = 0.0;             // sg_weighted_xcorr
+            features[18] = 0.0;             // sg_weighted_cosine
+            features[19] = 0.0;             // median_polish_min_fragment_r2
             features[20] = 0.0;             // median_polish_residual_correlation
 
             // Build FdrEntry
