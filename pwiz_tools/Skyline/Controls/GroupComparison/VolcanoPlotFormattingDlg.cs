@@ -222,15 +222,19 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void DataGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
-            if (((DataGridView)sender).CurrentCell?.ColumnIndex != _symbolCombo.Index)
+            if (!(e.Control is ComboBox cb))
                 return;
-            if (e.Control is ComboBox cb)
-            {
-                cb.DrawMode = DrawMode.OwnerDrawFixed;
-                cb.ItemHeight = _symbolDropdownFont.Height + 4;
-                cb.DrawItem -= SymbolCombo_DrawItem;
-                cb.DrawItem += SymbolCombo_DrawItem;
-            }
+
+            cb.DrawItem -= SymbolCombo_DrawItem;
+            cb.DrawMode = DrawMode.Normal;
+            cb.ItemHeight = cb.Font.Height;
+
+            if (((DataGridView) sender).CurrentCell?.ColumnIndex != _symbolCombo.Index)
+                return;
+
+            cb.DrawMode = DrawMode.OwnerDrawFixed;
+            cb.ItemHeight = _symbolDropdownFont.Height + 4;
+            cb.DrawItem += SymbolCombo_DrawItem;
         }
 
         private void SymbolCombo_DrawItem(object sender, DrawItemEventArgs e)
