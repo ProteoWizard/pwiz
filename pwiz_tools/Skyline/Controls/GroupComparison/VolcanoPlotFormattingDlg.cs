@@ -247,8 +247,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // Use normal font for the closed-state display (edit portion); large font for dropdown items.
             var isEditPortion = (e.State & DrawItemState.ComboBoxEdit) != 0;
             var font = isEditPortion ? cb.Font : _symbolDropdownFont;
-            TextRenderer.DrawText(e.Graphics, text, font, e.Bounds, SystemColors.WindowText,
+            TextRenderer.DrawText(e.Graphics, text, font, e.Bounds, e.ForeColor,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+            e.DrawFocusRectangle();
         }
 
         public void Select(IdentityPath identityPath)
