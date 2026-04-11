@@ -33,19 +33,26 @@ if [ modules.peek : NT ]
 
     rule do_msconvert_build ( targets + : sources * : properties * )
     {
+        local config ;
         if <variant>debug in $(properties) ||
            <debug-symbols>on in $(properties)
         {
-            CONFIGURATION on $(<[1]) = "Debug" ;
+            config = "Debug" ;
         }
         else
         {
-            CONFIGURATION on $(<[1]) = "Release" ;
+            config = "Release" ;
         }
+        CONFIGURATION on $(<[1]) = $(config) ;
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
-        OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
-        INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
+        local output_path = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+        OUTPUT_PATH on $(<[1]) = $(output_path) ;
+        local intermediate_path = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
+        local native_deps_path = [ path.native $(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/$(config)/ ] ;
+        # PwizCli properties must use separate /p: args to avoid cmd.exe misinterpreting \; in paths
+        # PwizCliHintPath points to install-native-dependencies location, not OutDir (they may differ)
+        MSBUILD_PARAMETERS on $(<[1]) = "/p:Configuration=$(config);Platform=$(PLATFORM);$(intermediate_path);OutDir=$(output_path) /p:PwizCliAssembly=pwiz_bindings_cli /p:PwizCliHintPath=$(native_deps_path)pwiz_bindings_cli.dll" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
         MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
     }
@@ -54,7 +61,7 @@ if [ modules.peek : NT ]
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building MSConvertGUI in $(CONFIGURATION:L) configuration...
-        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI /restore $(MSBUILD_PARAMETERS) /nologo /verbosity:minimal
     }
 
 
@@ -82,6 +89,27 @@ if [ modules.peek : NT ]
     }
 
 
+    # Shared rule for setting build properties on test targets (same as do_msconvert_build).
+    rule build-properties ( targets + : sources * : properties * )
+    {
+        do_msconvert_build $(targets) : $(sources) : $(properties) ;
+    }
+
+    install install-native-dependencies
+        : # sources
+            ../../pwiz_tools/commandline//msconvert
+            ../../pwiz_tools/commandline//msdiff
+            ../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
+        : # requirements
+            <location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Release
+            <variant>debug:<location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Debug
+            <install-type>EXE
+            <install-type>CONFIG
+            <install-type>SHARED_LIB
+            <install-type>MANIFEST
+            <install-dependencies>on
+        ;
+
     make MSConvertGUI.exe
         : # sources
         : # actions
@@ -90,5 +118,66 @@ if [ modules.peek : NT ]
             <conditional>@msvc-dotnet-requirement
             <conditional>@pwiz-bindings-dependency
             <conditional>@build-location
+            <dependency>install-native-dependencies
         ;
+
+
+    rule do_msconvert_test ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_msconvert_test
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building and testing MSConvertGUI Test in $(CONFIGURATION:L) configuration...
+        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI;Test /restore $(MSBUILD_PARAMETERS) /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        vstest.console.exe $(OUTPUT_PATH)MSConvertGUITest.dll /InIsolation /Settings:$(MSCONVERT_PATH)/TestSettings_x64.runsettings
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
+    make MSConvertGUITest
+        : # sources
+        : # actions
+            @do_msconvert_test
+        : # requirements
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@pwiz-bindings-dependency
+            <conditional>@build-location
+            <dependency>MSConvertGUI.exe
+        ;
+    explicit MSConvertGUITest ;
+
+
+    rule do_msconvert_test_connected ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_msconvert_test_connected
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building and testing MSConvertGUI TestConnected in $(CONFIGURATION:L) configuration...
+        msbuild $(MSCONVERT_PATH)/MSConvertGUI.sln /t:MSConvertGUI;TestConnected /restore $(MSBUILD_PARAMETERS) /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        vstest.console.exe $(OUTPUT_PATH)MSConvertGUI.TestConnected.dll /InIsolation /Settings:$(MSCONVERT_PATH)/TestSettings_x64.runsettings
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
+    make MSConvertGUITestConnected
+        : # sources
+        : # actions
+            @do_msconvert_test_connected
+        : # requirements
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@pwiz-bindings-dependency
+            <conditional>@build-location
+            <dependency>MSConvertGUI.exe
+        ;
+    explicit MSConvertGUITestConnected ;
 }

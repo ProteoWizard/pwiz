@@ -314,6 +314,10 @@
     <Compile Include="ZedGraphTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
+      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
+      <Name>CommonFileDialogs</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
       <Project>{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}</Project>
       <Name>CommonMsData</Name>

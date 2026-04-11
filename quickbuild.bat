@@ -34,7 +34,7 @@ REM # Build local copy of bjam
 IF EXIST "%PWIZ_BJAM%" GOTO SKIP_BJAM
 echo Building bjam for %ADDRESS_MODEL%-bit build...
 pushd %BOOST_BUILD_PATH%\src\engine
-call build.bat --UPDATE -sLOCATE_TARGET=bin.nt
+call ./build.bat --UPDATE -sLOCATE_TARGET=bin.nt
 @echo off
 setlocal
 @echo off
