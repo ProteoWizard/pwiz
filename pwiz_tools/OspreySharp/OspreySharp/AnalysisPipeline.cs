@@ -28,6 +28,12 @@ namespace pwiz.OspreySharp
     {
         private const int NUM_PIN_FEATURES = 21;
 
+        // Diagnostic: per-entry calibration window dump (one row per scored entry).
+        // Set during RunCalibration when OSPREY_DUMP_CAL_WINDOWS=1, then read by
+        // ScoreCalibrationEntry running in parallel. Cleared and written at the end
+        // of RunCalibration.
+        private static System.Collections.Concurrent.ConcurrentBag<string> s_calWindowDump;
+
         // Savitzky-Golay quadratic filter weights for length 5, center offset.
         // Matches Rust pipeline.rs sg_weights: [-3/35, 12/35, 17/35, 12/35, -3/35].
         private static readonly double[] SG_WEIGHTS =
@@ -767,6 +773,13 @@ namespace pwiz.OspreySharp
             foreach (var list in spectraByWindowKey.Values)
                 list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime));
 
+            // Activate per-entry window dump if requested. Cleared after the
+            // matching loop completes (file written below).
+            bool dumpWindows = Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_WINDOWS") == "1";
+            s_calWindowDump = dumpWindows
+                ? new System.Collections.Concurrent.ConcurrentBag<string>()
+                : null;
+
             // Parallel score each sampled entry.
             var swScoring = Stopwatch.StartNew();
             var matches = new ConcurrentBag<CalibrationMatch>();
@@ -804,6 +817,93 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[COUNT] Calibration matches scored [{0}]: {1}",
                 fileName, matches.Count));
+
+            // Write per-entry window dump if requested.
+            if (s_calWindowDump != null)
+            {
+                var rows = new List<string>(s_calWindowDump);
+                rows.Sort(StringComparer.Ordinal);
+                using (var w = new StreamWriter("cs_cal_windows.txt"))
+                {
+                    w.WriteLine("entry_id\tis_decoy\tcharge\tprecursor_mz\tlibrary_rt\tiso_lower\tiso_upper\texpected_rt\trt_window_start\trt_window_end");
+                    foreach (var r in rows) w.WriteLine(r);
+                }
+                LogInfo(string.Format(
+                    "[COUNT] Wrote calibration windows dump: cs_cal_windows.txt ({0} rows)",
+                    rows.Count));
+                s_calWindowDump = null;
+
+                if (Environment.GetEnvironmentVariable("OSPREY_CAL_WINDOWS_ONLY") == "1")
+                {
+                    LogInfo("[BISECT] OSPREY_CAL_WINDOWS_ONLY set - aborting after window dump");
+                    Environment.Exit(0);
+                }
+            }
+
+            // Cross-implementation diagnostic: dump per-entry calibration match info
+            // for direct diff with Rust. Writes a row for EVERY sampled entry
+            // (matched or not), sorted by entry_id for stable diff.
+            if (Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_MATCH") == "1")
+            {
+                string dumpPath = "cs_cal_match.txt";
+                var matchById = new Dictionary<uint, CalibrationMatch>(matches.Count);
+                foreach (var m in matches)
+                    matchById[m.EntryId] = m;
+
+                // sampledEntries is the full set (targets + decoys) passed to scoring
+                var sortedSampled = new List<LibraryEntry>(sampledEntries);
+                sortedSampled.Sort((a, b) => a.Id.CompareTo(b.Id));
+
+                int nMatched = 0, nUnmatched = 0;
+                using (var w = new StreamWriter(dumpPath))
+                {
+                    // Column layout matches Rust's rust_cal_match.txt. C# doesn't
+                    // track the apex scan number in CalibrationMatch, so we only
+                    // write the measured_rt and feature values. For the
+                    // cross-tool diff, RT match is the proxy for peak match
+                    // (~1.8s DIA cycles, so RT diff < 0.01 min means same peak).
+                    w.WriteLine("entry_id\tis_decoy\tcharge\thas_match\tscan\tapex_rt\tcorrelation\tlibcosine\ttop6\txcorr");
+                    foreach (var entry in sortedSampled)
+                    {
+                        CalibrationMatch m;
+                        if (matchById.TryGetValue(entry.Id, out m))
+                        {
+                            KeyValuePair<double, double> rtPair;
+                            matchRts.TryGetValue(entry.Id, out rtPair);
+                            w.WriteLine(string.Format(
+                                System.Globalization.CultureInfo.InvariantCulture,
+                                "{0}\t{1}\t{2}\t1\t\t{3:F6}\t{4}\t{5}\t{6}\t{7}",
+                                entry.Id,
+                                entry.IsDecoy ? 1 : 0,
+                                entry.Charge,
+                                rtPair.Value,
+                                m.CorrelationScore.ToString("R", System.Globalization.CultureInfo.InvariantCulture),
+                                m.LibcosineApex.ToString("R", System.Globalization.CultureInfo.InvariantCulture),
+                                m.Top6MatchedApex,
+                                m.XcorrScore.ToString("R", System.Globalization.CultureInfo.InvariantCulture)));
+                            nMatched++;
+                        }
+                        else
+                        {
+                            w.WriteLine(string.Format(
+                                "{0}\t{1}\t{2}\t0\t\t\t\t\t\t",
+                                entry.Id,
+                                entry.IsDecoy ? 1 : 0,
+                                entry.Charge));
+                            nUnmatched++;
+                        }
+                    }
+                }
+                LogInfo(string.Format(
+                    "[COUNT] Wrote calibration match dump: {0} ({1} matched, {2} unmatched)",
+                    dumpPath, nMatched, nUnmatched));
+
+                if (Environment.GetEnvironmentVariable("OSPREY_CAL_MATCH_ONLY") == "1")
+                {
+                    LogInfo("[BISECT] OSPREY_CAL_MATCH_ONLY set - aborting after match dump");
+                    Environment.Exit(0);
+                }
+            }
 
             if (matches.Count == 0)
             {
@@ -1171,6 +1271,31 @@ namespace pwiz.OspreySharp
                 return null;
             }
 
+            // Diagnostic: record per-entry m/z + RT window selection.
+            // C# selects ONE window per entry (the first match in dictionary order),
+            // unlike Rust which scores in ALL matching windows. Capturing this here
+            // before the RT/2-of-6 filter so it matches Rust's pre-filter dump.
+            if (s_calWindowDump != null)
+            {
+                var iso = windowSpectra[0].IsolationWindow;
+                double expRt = entry.RetentionTime * rtSlope + rtIntercept;
+                double rtLo = expRt - initialTolerance;
+                double rtHi = expRt + initialTolerance;
+                s_calWindowDump.Add(string.Format(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    "{0}\t{1}\t{2}\t{3:F6}\t{4:F6}\t{5:F6}\t{6:F6}\t{7:F6}\t{8:F6}\t{9:F6}",
+                    entry.Id,
+                    entry.IsDecoy ? 1 : 0,
+                    entry.Charge,
+                    entry.PrecursorMz,
+                    entry.RetentionTime,
+                    iso.LowerBound,
+                    iso.UpperBound,
+                    expRt,
+                    rtLo,
+                    rtHi));
+            }
+
             // Filter by RT tolerance and top-6 fragment prefilter.
             double expectedRt = entry.RetentionTime * rtSlope + rtIntercept;
             var candidateSpectra = new List<Spectrum>();
@@ -1195,11 +1320,13 @@ namespace pwiz.OspreySharp
             // Extract XICs for the top-N most intense library fragments.
             var xics = ExtractTopNFragmentXics(
                 entry, candidateSpectra, rts, CAL_TOP_N_FRAGMENTS, config);
+
             if (xics.Count < 2)
                 return null;
 
             // Detect consensus CWT peaks and score by pairwise correlation sum.
             var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+
             if (peaks.Count == 0)
                 return null;
 
