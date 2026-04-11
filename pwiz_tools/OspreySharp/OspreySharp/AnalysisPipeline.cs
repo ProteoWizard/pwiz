@@ -69,7 +69,13 @@ namespace pwiz.OspreySharp
                 List<LibraryEntry> decoys;
                 if (!config.DecoysInLibrary)
                 {
-                    decoys = GenerateDecoys(library, config);
+                    // Collision detection can exclude targets whose decoys collide
+                    // with other target sequences. Replace `library` with only the
+                    // targets that produced valid decoys, matching Rust's
+                    // library = valid_targets; library.extend(decoys) pattern.
+                    List<LibraryEntry> validTargets;
+                    decoys = GenerateDecoys(library, config, out validTargets);
+                    library = validTargets;
                 }
                 else
                 {
@@ -253,29 +259,122 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
-        /// Generate decoy entries from the target library.
+        /// Generate decoy entries from the target library with collision detection.
+        /// Matches Rust DecoyGenerator.generate_all_with_collision_detection:
+        ///   1. Build set of target sequences (stripped) for collision detection
+        ///   2. For each target, try reversing
+        ///   3. If reversed collides or is palindromic, try cycling with lengths 1..10
+        ///   4. If all methods fail, exclude the target-decoy pair
+        /// Modifies <paramref name="validTargets"/> to contain only targets that
+        /// produced valid decoys (Rust: library = valid_targets; library.extend(decoys)).
         /// </summary>
-        private List<LibraryEntry> GenerateDecoys(List<LibraryEntry> targets, OspreyConfig config)
+        private List<LibraryEntry> GenerateDecoys(
+            List<LibraryEntry> targets, OspreyConfig config,
+            out List<LibraryEntry> validTargets)
         {
             LogInfo(string.Format("Generating decoys using {0} method...", config.DecoyMethod));
 
+            // Build set of all target (stripped) sequences for collision detection.
+            var targetSequences = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var t in targets)
+            {
+                if (!t.IsDecoy) targetSequences.Add(t.Sequence);
+            }
+
             var generator = new DecoyGenerator();
+            validTargets = new List<LibraryEntry>(targets.Count);
             var decoys = new List<LibraryEntry>(targets.Count);
+            int nReversed = 0, nCycled = 0, nExcluded = 0, nSkipped = 0;
 
             foreach (var target in targets)
             {
                 if (target.IsDecoy)
                     continue;
                 if (target.Fragments == null || target.Fragments.Count == 0)
+                {
+                    nSkipped++;
                     continue;
+                }
 
-                var decoy = generator.Generate(target);
-                decoys.Add(decoy);
+                // Try reversal first
+                int[] mapping;
+                string reversedSeq = generator.ReverseSequence(target.Sequence, out mapping);
+
+                bool foundValid = false;
+                LibraryEntry decoy = null;
+
+                if (reversedSeq != target.Sequence && !targetSequences.Contains(reversedSeq))
+                {
+                    decoy = BuildDecoyFromSequence(target, reversedSeq, mapping);
+                    if (decoy != null)
+                    {
+                        nReversed++;
+                        foundValid = true;
+                    }
+                }
+
+                // Fallback: cycling with lengths 1..min(len, 10)
+                if (!foundValid)
+                {
+                    int maxRetries = Math.Min(target.Sequence.Length, 10);
+                    for (int cycleLength = 1; cycleLength <= maxRetries; cycleLength++)
+                    {
+                        string cycledSeq = generator.CycleSequence(target.Sequence, cycleLength, out mapping);
+                        if (cycledSeq != target.Sequence && !targetSequences.Contains(cycledSeq))
+                        {
+                            decoy = BuildDecoyFromSequence(target, cycledSeq, mapping);
+                            if (decoy != null)
+                            {
+                                nCycled++;
+                                foundValid = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (foundValid)
+                {
+                    validTargets.Add(target);
+                    decoys.Add(decoy);
+                }
+                else
+                {
+                    nExcluded++;
+                }
             }
 
-            LogInfo(string.Format("Generated {0} decoys from {1} targets",
-                decoys.Count, targets.Count));
+            LogInfo(string.Format(
+                "Generated {0} decoys from {1} targets ({2} excluded due to collisions)",
+                decoys.Count, targets.Count, nExcluded));
             return decoys;
+        }
+
+        /// <summary>
+        /// Build a decoy LibraryEntry from a decoy sequence and position mapping.
+        /// Mirrors DecoyGenerator.Generate's construction but takes an already-chosen sequence.
+        /// </summary>
+        private static LibraryEntry BuildDecoyFromSequence(
+            LibraryEntry target, string decoySequence, int[] positionMapping)
+        {
+            var decoy = new LibraryEntry(
+                target.Id | 0x80000000u,
+                decoySequence,
+                "DECOY_" + target.ModifiedSequence,
+                target.Charge,
+                target.PrecursorMz,
+                target.RetentionTime);
+            decoy.RtCalibrated = target.RtCalibrated;
+            decoy.IsDecoy = true;
+            decoy.Modifications = DecoyGenerator.RemapModificationsStatic(
+                target.Modifications, positionMapping);
+            decoy.Fragments = DecoyGenerator.RecalculateFragmentsStatic(
+                target, positionMapping, decoySequence);
+            decoy.ProteinIds = new List<string>();
+            foreach (string p in target.ProteinIds)
+                decoy.ProteinIds.Add("DECOY_" + p);
+            decoy.GeneNames = new List<string>(target.GeneNames);
+            return decoy;
         }
 
         #endregion
@@ -383,7 +482,81 @@ namespace pwiz.OspreySharp
                 "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
                 fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
 
+            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
+            if (config.WritePin)
+            {
+                WriteFeatureDump(inputFile, fileName, scoredEntries, fullLibrary);
+            }
+
             return scoredEntries;
+        }
+
+        /// <summary>
+        /// Write a TSV dump of per-entry feature values for direct comparison with
+        /// the Rust implementation's PIN output. Format matches Rust's PIN columns:
+        /// psm_id, label, scan, + 21 features. Sorted by (modified_sequence, charge,
+        /// scan_number) for stable diffing against Rust's output.
+        /// </summary>
+        private void WriteFeatureDump(
+            string inputFile, string fileName,
+            List<FdrEntry> scoredEntries,
+            List<LibraryEntry> fullLibrary)
+        {
+            string dumpPath = Path.Combine(
+                Path.GetDirectoryName(inputFile) ?? ".",
+                fileName + ".cs_features.tsv");
+
+            // Build lookup from entry id -> library entry for mod sequence / protein info
+            var libById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
+            foreach (var le in fullLibrary)
+                libById[le.Id] = le;
+
+            var header = new string[]
+            {
+                "SpecId", "Label", "ScanNr", "Charge",
+                "fragment_coelution_sum", "fragment_coelution_max", "n_coeluting_fragments",
+                "peak_apex", "peak_area", "peak_sharpness",
+                "xcorr", "consecutive_ions", "explained_intensity",
+                "mass_accuracy_deviation_mean", "abs_mass_accuracy_deviation_mean",
+                "rt_deviation", "abs_rt_deviation",
+                "ms1_precursor_coelution", "ms1_isotope_cosine",
+                "median_polish_cosine", "median_polish_residual_ratio",
+                "sg_weighted_xcorr", "sg_weighted_cosine",
+                "median_polish_min_fragment_r2", "median_polish_residual_correlation",
+                "Peptide"
+            };
+
+            var sorted = scoredEntries
+                .Where(e => e.Features != null && e.Features.Length == NUM_PIN_FEATURES)
+                .OrderBy(e => e.ModifiedSequence, StringComparer.Ordinal)
+                .ThenBy(e => e.Charge)
+                .ThenBy(e => e.ScanNumber)
+                .ToList();
+
+            using (var writer = new StreamWriter(dumpPath))
+            {
+                writer.WriteLine(string.Join("\t", header));
+                foreach (var e in sorted)
+                {
+                    string psmId = string.Format("{0}_{1}_{2}_{3}",
+                        fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
+                    int label = e.IsDecoy ? -1 : 1;
+                    var cols = new List<string>(26)
+                    {
+                        psmId,
+                        label.ToString(),
+                        e.ScanNumber.ToString(),
+                        e.Charge.ToString()
+                    };
+                    for (int i = 0; i < NUM_PIN_FEATURES; i++)
+                        cols.Add(e.Features[i].ToString("G17"));
+                    cols.Add(e.ModifiedSequence ?? "");
+                    writer.WriteLine(string.Join("\t", cols));
+                }
+            }
+
+            LogInfo(string.Format("[COUNT] Wrote feature dump: {0} ({1} entries)",
+                dumpPath, sorted.Count));
         }
 
         /// <summary>
@@ -524,11 +697,42 @@ namespace pwiz.OspreySharp
 
             LogInfo(string.Format("Initial RT tolerance: {0:F1} min", initialTolerance));
 
-            // Sample library entries (paired target+decoy, stratified on RT).
+            // Sample library entries (paired target+decoy). Use seed 43 to match
+            // Rust's sample_library_for_calibration(..., 42 + attempt=1) on the
+            // first calibration attempt.
             var swSample = Stopwatch.StartNew();
             var sampledEntries = SampleLibraryForCalibration(
-                library, config.RtCalibration.CalibrationSampleSize);
+                library, config.RtCalibration.CalibrationSampleSize, 43UL);
             swSample.Stop();
+
+            // Diagnostic: dump sorted sampled entry IDs + (modseq, charge) for
+            // direct comparison with Rust. Abort after dump if CAL_SAMPLE_ONLY
+            // env var is set (bisection mode - stop once we agree here).
+            if (config.WritePin || Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_SAMPLE") == "1")
+            {
+                string dumpPath = fileName + ".cs_cal_sample.txt";
+                var tuples = new List<string>();
+                foreach (var e in sampledEntries)
+                {
+                    if (e.IsDecoy) continue;
+                    tuples.Add(string.Format("{0}\t{1}\t{2}\t{3:F4}\t{4:F4}",
+                        e.Id, e.ModifiedSequence, e.Charge, e.PrecursorMz, e.RetentionTime));
+                }
+                tuples.Sort(StringComparer.Ordinal);
+                using (var w = new StreamWriter(dumpPath))
+                {
+                    w.WriteLine("id\tmodseq\tcharge\tmz\trt");
+                    foreach (var t in tuples) w.WriteLine(t);
+                }
+                LogInfo(string.Format("[COUNT] Wrote calibration sample: {0} ({1} targets)",
+                    dumpPath, tuples.Count));
+
+                if (Environment.GetEnvironmentVariable("OSPREY_CAL_SAMPLE_ONLY") == "1")
+                {
+                    LogInfo("[BISECT] OSPREY_CAL_SAMPLE_ONLY set - aborting after sample dump");
+                    Environment.Exit(0);
+                }
+            }
             int nSampledTargets = 0;
             int nSampledDecoys = 0;
             foreach (var e in sampledEntries)
@@ -728,64 +932,189 @@ namespace pwiz.OspreySharp
         /// <summary>
         /// Sample library entries for calibration discovery, keeping paired target-decoy
         /// pairs together (matched by base_id = entry_id &amp; 0x7FFFFFFF).
-        /// Uses RT stratification through <see cref="RTStratifiedSampler"/> so the
-        /// sample is representative across the full gradient.
+        /// Direct port of Rust sample_library_for_calibration (osprey-scoring/src/batch.rs:1450).
+        /// Uses a 2D (RT x m/z) stratified grid with deterministic stride sampling.
+        /// This is the first randomized/selected step in the pipeline, so it must match
+        /// Rust exactly for the two tools to process the same calibration peptides.
         /// </summary>
         private static List<LibraryEntry> SampleLibraryForCalibration(
-            List<LibraryEntry> library, int sampleSize)
+            List<LibraryEntry> library, int sampleSize, ulong seed)
         {
-            // Build target list (eligible for scoring) and decoy lookup by base_id.
-            var targets = new List<LibraryEntry>();
-            var decoyByBaseId = new Dictionary<uint, LibraryEntry>();
+            if (sampleSize == 0)
+                return new List<LibraryEntry>(library);
 
+            var targets = new List<LibraryEntry>();
+            var decoys = new List<LibraryEntry>();
             foreach (var entry in library)
             {
-                if (entry.Fragments == null || entry.Fragments.Count < 2)
-                    continue;
-                if (entry.IsDecoy)
-                    decoyByBaseId[entry.Id & 0x7FFFFFFF] = entry;
-                else
-                    targets.Add(entry);
+                if (entry.IsDecoy) decoys.Add(entry);
+                else targets.Add(entry);
             }
 
-            if (targets.Count == 0)
-                return new List<LibraryEntry>();
+            if (targets.Count <= sampleSize)
+                return new List<LibraryEntry>(library);
 
-            // If requested sample size is 0 or >= targets, use all target+decoy entries.
-            bool useAll = sampleSize <= 0 || targets.Count <= sampleSize;
+            // Build target_id -> decoy map (decoy_id = target_id | 0x80000000)
+            var decoyMap = new Dictionary<uint, LibraryEntry>(decoys.Count);
+            foreach (var d in decoys)
+                decoyMap[d.Id & 0x7FFFFFFF] = d;
 
-            List<LibraryEntry> selectedTargets;
-            if (useAll)
+            // 2D stratified sampling: divide RT x m/z space into a grid.
+            // ~sqrt(sample_size)/2 bins per axis for good 2D coverage.
+            int binsPerAxis = (int)Math.Max(5, Math.Ceiling(Math.Sqrt(sampleSize) / 2.0));
+
+            double rtMin = double.MaxValue, rtMax = double.MinValue;
+            double mzMin = double.MaxValue, mzMax = double.MinValue;
+            for (int i = 0; i < targets.Count; i++)
             {
-                selectedTargets = targets;
+                var t = targets[i];
+                if (t.RetentionTime < rtMin) rtMin = t.RetentionTime;
+                if (t.RetentionTime > rtMax) rtMax = t.RetentionTime;
+                if (t.PrecursorMz < mzMin) mzMin = t.PrecursorMz;
+                if (t.PrecursorMz > mzMax) mzMax = t.PrecursorMz;
             }
-            else
+            double rtRange = Math.Max(1e-6, rtMax - rtMin);
+            double mzRange = Math.Max(1e-6, mzMax - mzMin);
+            double rtBinWidth = rtRange / binsPerAxis;
+            double mzBinWidth = mzRange / binsPerAxis;
+
+            // Assign each target to a 2D grid cell
+            var grid = new List<int>[binsPerAxis, binsPerAxis];
+            for (int i = 0; i < binsPerAxis; i++)
+                for (int j = 0; j < binsPerAxis; j++)
+                    grid[i, j] = new List<int>();
+
+            for (int i = 0; i < targets.Count; i++)
             {
-                // Stratified sample by RT so calibration points cover the full gradient.
-                var sampler = new RTStratifiedSampler
+                var t = targets[i];
+                int rtBin = (int)Math.Floor((t.RetentionTime - rtMin) / rtBinWidth);
+                int mzBin = (int)Math.Floor((t.PrecursorMz - mzMin) / mzBinWidth);
+                if (rtBin >= binsPerAxis) rtBin = binsPerAxis - 1;
+                if (mzBin >= binsPerAxis) mzBin = binsPerAxis - 1;
+                grid[rtBin, mzBin].Add(i);
+            }
+
+            // Count non-empty cells and compute per-cell quota
+            int nOccupied = 0;
+            for (int i = 0; i < binsPerAxis; i++)
+                for (int j = 0; j < binsPerAxis; j++)
+                    if (grid[i, j].Count > 0) nOccupied++;
+
+            int perCell = nOccupied > 0 ? sampleSize / nOccupied : 1;
+            if (perCell < 1) perCell = 1;
+
+            // Diagnostic dump: scalar parameters + full grid contents,
+            // matching Rust's dump format for direct diff.
+            if (Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_SAMPLE") == "1")
+            {
+                using (var w = new StreamWriter("cs_cal_scalars.txt"))
                 {
-                    NBins = 20,
-                    PeptidesPerBin = Math.Max(1, sampleSize / 20)
-                };
-                double[] rts = new double[targets.Count];
-                for (int i = 0; i < targets.Count; i++)
-                    rts[i] = targets[i].RetentionTime;
-                int[] sampledIdx = sampler.Sample(rts);
-                selectedTargets = new List<LibraryEntry>(sampledIdx.Length);
-                foreach (int idx in sampledIdx)
-                    selectedTargets.Add(targets[idx]);
+                    w.WriteLine("n_targets\t" + targets.Count);
+                    w.WriteLine("n_decoys\t" + decoys.Count);
+                    w.WriteLine("bins_per_axis\t" + binsPerAxis);
+                    w.WriteLine("rt_min\t" + rtMin.ToString("R"));
+                    w.WriteLine("rt_max\t" + rtMax.ToString("R"));
+                    w.WriteLine("mz_min\t" + mzMin.ToString("R"));
+                    w.WriteLine("mz_max\t" + mzMax.ToString("R"));
+                    w.WriteLine("rt_range\t" + rtRange.ToString("R"));
+                    w.WriteLine("mz_range\t" + mzRange.ToString("R"));
+                    w.WriteLine("rt_bin_width\t" + rtBinWidth.ToString("R"));
+                    w.WriteLine("mz_bin_width\t" + mzBinWidth.ToString("R"));
+                    w.WriteLine("n_occupied\t" + nOccupied);
+                    w.WriteLine("per_cell\t" + perCell);
+                    w.WriteLine("seed\t" + seed);
+                }
+                using (var w = new StreamWriter("cs_cal_grid.txt"))
+                {
+                    w.WriteLine("rt_bin\tmz_bin\tcount\ttarget_ids");
+                    for (int r = 0; r < binsPerAxis; r++)
+                    {
+                        for (int c = 0; c < binsPerAxis; c++)
+                        {
+                            var cell = grid[r, c];
+                            if (cell.Count == 0) continue;
+                            var ids = new List<uint>(cell.Count);
+                            foreach (int ti in cell)
+                                ids.Add(targets[ti].Id);
+                            ids.Sort();
+                            var sb = new System.Text.StringBuilder();
+                            for (int k = 0; k < ids.Count; k++)
+                            {
+                                if (k > 0) sb.Append(',');
+                                sb.Append(ids[k]);
+                            }
+                            w.WriteLine("{0}\t{1}\t{2}\t{3}", r, c, cell.Count, sb.ToString());
+                        }
+                    }
+                }
             }
 
-            // Emit selected targets together with their paired decoys.
-            var result = new List<LibraryEntry>(selectedTargets.Count * 2);
-            foreach (var t in selectedTargets)
+            // Deterministic stride sampling from each cell.
+            int offset = (int)(seed & 0x7FFFFFFF);
+            var sampledIds = new HashSet<uint>();
+            var sampled = new List<LibraryEntry>(sampleSize * 2);
+
+            for (int ri = 0; ri < binsPerAxis; ri++)
             {
-                result.Add(t);
-                LibraryEntry decoy;
-                if (decoyByBaseId.TryGetValue(t.Id & 0x7FFFFFFF, out decoy))
-                    result.Add(decoy);
+                for (int ci = 0; ci < binsPerAxis; ci++)
+                {
+                    var cell = grid[ri, ci];
+                    if (cell.Count == 0) continue;
+
+                    int nTake = Math.Min(cell.Count, perCell);
+                    int stride = Math.Max(1, cell.Count / nTake);
+                    int cellOffset = offset % Math.Max(1, cell.Count);
+
+                    for (int j = 0; j < nTake; j++)
+                    {
+                        int idx = (cellOffset + j * stride) % cell.Count;
+                        var target = targets[cell[idx]];
+
+                        if (sampledIds.Contains(target.Id)) continue;
+                        sampledIds.Add(target.Id);
+                        sampled.Add(target);
+
+                        LibraryEntry decoy;
+                        if (decoyMap.TryGetValue(target.Id, out decoy))
+                            sampled.Add(decoy);
+                    }
+                }
             }
-            return result;
+
+            // Second pass: if under-sampled, add more from occupied cells.
+            if (sampledIds.Count < sampleSize)
+            {
+                int remaining = sampleSize - sampledIds.Count;
+                int extraPerCell = Math.Max(1, remaining / Math.Max(1, nOccupied));
+
+                bool done = false;
+                for (int ri = 0; ri < binsPerAxis && !done; ri++)
+                {
+                    for (int ci = 0; ci < binsPerAxis && !done; ci++)
+                    {
+                        var cell = grid[ri, ci];
+                        if (cell.Count == 0) continue;
+
+                        int added = 0;
+                        foreach (int targetIdx in cell)
+                        {
+                            if (added >= extraPerCell) break;
+                            var target = targets[targetIdx];
+                            if (sampledIds.Contains(target.Id)) continue;
+                            sampledIds.Add(target.Id);
+                            sampled.Add(target);
+                            LibraryEntry decoy;
+                            if (decoyMap.TryGetValue(target.Id, out decoy))
+                                sampled.Add(decoy);
+                            added++;
+                        }
+
+                        if (sampledIds.Count >= sampleSize) { done = true; break; }
+                    }
+                }
+            }
+
+            return sampled;
         }
 
         /// <summary>
@@ -1250,6 +1579,11 @@ namespace pwiz.OspreySharp
             return entries;
         }
 
+        // Diagnostic: log detailed trace for a specific peptide. Set this to a
+        // peptide modified sequence to dump its RT window, XICs, CWT peaks, and
+        // winning peak selection. Used for bisecting divergences with Rust.
+        private const string DIAG_PEPTIDE = "AAAAAAAAAAAAAAAGAGAGAK";
+
         /// <summary>
         /// Score a single library entry candidate against spectra in its isolation window.
         /// Extracts fragment XICs, detects CWT peaks, and scores at the best apex.
@@ -1264,6 +1598,8 @@ namespace pwiz.OspreySharp
             SpectralScorer scorer,
             OspreyConfig config)
         {
+            bool diag = !candidate.IsDecoy && candidate.ModifiedSequence == DIAG_PEPTIDE
+                && candidate.Charge == 2;
             int nScans = windowSpectra.Count;
             if (nScans < 5)
                 return null;
@@ -1286,6 +1622,18 @@ namespace pwiz.OspreySharp
                 rtTolerance = fallbackTolerance;
             }
 
+            if (diag)
+            {
+                LogInfo(string.Format(
+                    "[DIAG] {0} charge {1}: library_rt={2:F3}, expected_rt={3:F3}, tolerance={4:F3}",
+                    candidate.ModifiedSequence, candidate.Charge,
+                    candidate.RetentionTime, expectedRt, rtTolerance));
+                LogInfo(string.Format(
+                    "[DIAG] {0}: window m/z={1:F3}, fragments={2}, window_spectra={3}",
+                    candidate.ModifiedSequence, candidate.PrecursorMz,
+                    candidate.Fragments.Count, nScans));
+            }
+
             // Find scan range within RT tolerance
             int startScan = -1, endScan = -1;
             for (int i = 0; i < nScans; i++)
@@ -1297,6 +1645,30 @@ namespace pwiz.OspreySharp
                 }
                 if (windowRts[i] > expectedRt + rtTolerance)
                     break;
+            }
+
+            if (diag)
+            {
+                if (startScan >= 0 && endScan >= 0)
+                {
+                    LogInfo(string.Format(
+                        "[DIAG] {0}: scan range [{1}..{2}] RT [{3:F3}..{4:F3}] ({5} scans)",
+                        candidate.ModifiedSequence, startScan, endScan,
+                        windowRts[startScan], windowRts[endScan],
+                        endScan - startScan + 1));
+                    LogInfo(string.Format(
+                        "[DIAG] {0}: spectrum scan_numbers in range: first={1}, last={2}",
+                        candidate.ModifiedSequence,
+                        windowSpectra[startScan].ScanNumber,
+                        windowSpectra[endScan].ScanNumber));
+                }
+                else
+                {
+                    LogInfo(string.Format(
+                        "[DIAG] {0}: no scans in RT window [{1:F3}..{2:F3}]",
+                        candidate.ModifiedSequence, expectedRt - rtTolerance,
+                        expectedRt + rtTolerance));
+                }
             }
 
             if (startScan < 0 || endScan < 0 || endScan - startScan + 1 < 5)
@@ -1320,6 +1692,23 @@ namespace pwiz.OspreySharp
             // CWT are dropped; Rust recovers them via fallback. This accounts for
             // some of the remaining under-detection vs Rust.
             var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+            if (diag)
+            {
+                LogInfo(string.Format(
+                    "[DIAG] {0}: xics extracted={1}, CWT peaks={2}",
+                    candidate.ModifiedSequence, xics.Count, peaks.Count));
+                for (int i = 0; i < peaks.Count; i++)
+                {
+                    var p = peaks[i];
+                    int apexAbsIdx = startScan + p.ApexIndex;
+                    double apexRt = windowRts[apexAbsIdx];
+                    uint apexScanNum = windowSpectra[apexAbsIdx].ScanNumber;
+                    LogInfo(string.Format(
+                        "[DIAG] {0}: peak[{1}] apex_local={2} apex_rt={3:F3} scan#={4} range=[{5}..{6}]",
+                        candidate.ModifiedSequence, i, p.ApexIndex,
+                        apexRt, apexScanNum, p.StartIndex, p.EndIndex));
+                }
+            }
             if (peaks.Count == 0)
                 return null;
 
@@ -1330,6 +1719,7 @@ namespace pwiz.OspreySharp
             // to match Rust.
             XICPeakBounds bestPeak = null;
             double bestPeakScore = double.MinValue;
+            int bestPeakIdx = -1;
             for (int pi = 0; pi < peaks.Count; pi++)
             {
                 var p = peaks[pi];
@@ -1354,11 +1744,27 @@ namespace pwiz.OspreySharp
                     }
                 }
                 double score = count > 0 ? sum / count : 0.0;
+                if (diag)
+                {
+                    LogInfo(string.Format(
+                        "[DIAG] {0}: peak[{1}] pairwise_corr_mean={2:F4}",
+                        candidate.ModifiedSequence, pi, score));
+                }
                 if (score > bestPeakScore)
                 {
                     bestPeakScore = score;
                     bestPeak = p;
+                    bestPeakIdx = pi;
                 }
+            }
+
+            if (diag && bestPeak != null)
+            {
+                int apexAbsIdx = startScan + bestPeak.ApexIndex;
+                LogInfo(string.Format(
+                    "[DIAG] {0}: WINNER peak[{1}] apex_rt={2:F3} scan#={3}",
+                    candidate.ModifiedSequence, bestPeakIdx,
+                    windowRts[apexAbsIdx], windowSpectra[apexAbsIdx].ScanNumber));
             }
 
             if (bestPeak == null)

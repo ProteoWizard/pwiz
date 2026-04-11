@@ -239,6 +239,18 @@ namespace pwiz.OspreySharp.Scoring
             return new string(cycled);
         }
 
+        /// <summary>
+        /// Public static wrapper for <see cref="RemapModifications"/> so that
+        /// AnalysisPipeline can build decoys using a collision-checked sequence
+        /// while reusing the remapping logic.
+        /// </summary>
+        public static List<Modification> RemapModificationsStatic(
+            List<Modification> modifications, int[] positionMapping)
+        {
+            var instance = new DecoyGenerator();
+            return instance.RemapModifications(modifications, positionMapping);
+        }
+
         private List<Modification> RemapModifications(List<Modification> modifications, int[] positionMapping)
         {
             // Create reverse mapping: old_pos -> new_pos
@@ -264,6 +276,17 @@ namespace pwiz.OspreySharp.Scoring
                 }
             }
             return remapped;
+        }
+
+        /// <summary>
+        /// Public static wrapper for <see cref="RecalculateFragments"/> so that
+        /// AnalysisPipeline can rebuild fragments for a collision-checked decoy.
+        /// </summary>
+        public static List<LibraryFragment> RecalculateFragmentsStatic(
+            LibraryEntry target, int[] positionMapping, string decoySequence)
+        {
+            var instance = new DecoyGenerator();
+            return instance.RecalculateFragments(target, positionMapping, decoySequence);
         }
 
         private List<LibraryFragment> RecalculateFragments(
