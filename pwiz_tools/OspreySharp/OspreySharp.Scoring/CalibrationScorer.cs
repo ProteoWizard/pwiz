@@ -13,6 +13,7 @@ namespace pwiz.OspreySharp.Scoring
         public uint EntryId { get; set; }
         public bool IsDecoy { get; set; }
         public string Sequence { get; set; }
+        public uint ScanNumber { get; set; }
         public double CorrelationScore { get; set; }
         public double LibcosineApex { get; set; }
         public byte Top6MatchedApex { get; set; }

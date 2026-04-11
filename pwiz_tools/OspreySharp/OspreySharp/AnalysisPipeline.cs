@@ -978,11 +978,11 @@ namespace pwiz.OspreySharp
                 using (var w = new StreamWriter(dumpPath))
                 {
                     // 11-column layout matching rust_cal_match.txt.
-                    // C# doesn't track scan number in CalibrationMatch, so that
-                    // column is emitted empty for matched rows. RT match is the
-                    // proxy for peak identity (~1.8s DIA cycles, so |dRT| < 0.01
-                    // min means same peak). snr is the signal-to-noise feeding
-                    // the S/N filter (gating which matches enter LOESS).
+                    // scan is the MS2 scan number of the apex spectrum (the
+                    // candidate spectrum whose RT is closest to the XIC apex
+                    // RT, matching Rust's apex_spec_local_idx lookup).
+                    // snr is the signal-to-noise feeding the S/N filter
+                    // (gating which matches enter LOESS).
                     // Uses F10 for all float columns to avoid banker's-vs-round-
                     // half-up formatting mismatch with Rust.
                     w.WriteLine("entry_id\tis_decoy\tcharge\thas_match\tscan\tapex_rt\tcorrelation\tlibcosine\ttop6\txcorr\tsnr");
@@ -998,10 +998,11 @@ namespace pwiz.OspreySharp
                                 snr = 0.0;
                             w.WriteLine(string.Format(
                                 System.Globalization.CultureInfo.InvariantCulture,
-                                "{0}\t{1}\t{2}\t1\t\t{3:F10}\t{4:F10}\t{5:F10}\t{6}\t{7:F10}\t{8:F10}",
+                                "{0}\t{1}\t{2}\t1\t{3}\t{4:F10}\t{5:F10}\t{6:F10}\t{7}\t{8:F10}\t{9:F10}",
                                 entry.Id,
                                 entry.IsDecoy ? 1 : 0,
                                 entry.Charge,
+                                m.ScanNumber,
                                 rtPair.Value,
                                 m.CorrelationScore,
                                 m.LibcosineApex,
@@ -1765,6 +1766,7 @@ namespace pwiz.OspreySharp
                 EntryId = entry.Id,
                 IsDecoy = entry.IsDecoy,
                 Sequence = entry.Sequence,
+                ScanNumber = apexSpectrum.ScanNumber,
                 CorrelationScore = bestCorrSum,
                 LibcosineApex = libCosineApex,
                 Top6MatchedApex = top6Matched,
