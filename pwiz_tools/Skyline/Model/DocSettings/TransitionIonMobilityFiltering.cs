@@ -1161,8 +1161,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    val = ChangeProp(ImClone(val), im => im.IonMobilityAndCCS = IonMobilityAndCCS.ChangeHighEnergyIonMobilityOffset(otherHighEnergyIonMobility- IonMobilityAndCCS.IonMobility.Mobility.Value));
             }
 
-            if (IonMobilityFilterWindow == null && other.IonMobilityFilterWindow != null)
-                val = ChangeProp(ImClone(this), im => im.IonMobilityFilterWindow = other.IonMobilityFilterWindow);
+            if (IonMobilityFilterWindow.IsNullOrEmpty(IonMobilityFilterWindow) && !IonMobilityFilterWindow.IsNullOrEmpty(other.IonMobilityFilterWindow))
+                val = ChangeProp(ImClone(val), im => im.IonMobilityFilterWindow = other.IonMobilityFilterWindow);
             if (other.CollisionalCrossSectionSqA.HasValue && !Equals(other.CollisionalCrossSectionSqA, val.CollisionalCrossSectionSqA))
                 val = ChangeProp(ImClone(val), im => im.IonMobilityAndCCS = IonMobilityAndCCS.ChangeCollisionalCrossSection(other.CollisionalCrossSectionSqA));
             return val;

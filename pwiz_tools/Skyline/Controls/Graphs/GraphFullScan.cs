@@ -54,6 +54,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private const int MIN_DOT_RADIUS = 4;
         private const int MAX_DOT_RADIUS = 13;
         private const float MOBILOGRAM_LINE_WIDTH = 1.5f;
+        private const float MOBILOGRAM_GAP = 18f;
+        private const float MOBILOGRAM_RIGHT_PAD = 18f;
         private const string TAG_IM_FILTER_BAND = "IMFilterBand";
 
         private readonly IDocumentUIContainer _documentContainer;
@@ -2015,11 +2017,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
 
                 // Gap between heatmap chart edge and mobilogram plot area
-                float gapWidth = 18 * scaleFactor;
+                float gapWidth = MOBILOGRAM_GAP * scaleFactor;
 
                 // Mobilogram plot area: right margin space, vertically aligned with chart rect
                 // Reserve space on right so rightmost tick label can be centered on its tick
-                float rightLabelPad = 18 * scaleFactor;
+                float rightLabelPad = MOBILOGRAM_RIGHT_PAD * scaleFactor;
                 float mobLeft = chartRect.Right + gapWidth;
                 float mobRight = paneBase.Rect.Right - rightLabelPad;
                 float mobTop = chartRect.Top;
@@ -2053,7 +2055,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 double scaledMax = xMajorStep * Math.Ceiling(scaledRawMax / xMajorStep);
                 double displayMax = scaledMax * scaleMult; // unscaled max for curve drawing
 
-                var savedClip = g.ClipBounds;
+                var savedState = g.Save();
 
                 // Get axis styling from the heatmap pane for consistent appearance
                 var yAxis = pane.YAxis;
@@ -2130,7 +2132,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
-                g.SetClip(savedClip);
+                g.Restore(savedState);
 
                 // Draw X-axis major and minor ticks protruding downward (matching ZedGraph bottom-axis style),
                 // with labels positioned using ZedGraph's standard LabelGap (Scale.Default.LabelGap = 0.3f).
@@ -2173,7 +2175,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         ? string.Format(@"{0} (10^{1})",
                             GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity, mag)
                         : GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
-                    var titleFontSpec = xAxis.Title.FontSpec;
+                    var titleFontSpec = (FontSpec)xAxis.Title.FontSpec.Clone();
                     titleFontSpec.IsItalic = false; // Override italic (only m/z is italic)
                     titleFontSpec.Draw(g, paneBase, title,
                         titleX, titleY, AlignH.Center, AlignV.Top, scaleFactor);
@@ -2410,9 +2412,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var chartRect = _heatMapPane.Chart.Rect;
             float scaleFactor = _heatMapPane.CalcScaleFactor();
-            float gapWidth = 6 * scaleFactor;
+            float gapWidth = MOBILOGRAM_GAP * scaleFactor;
             float mobLeft = chartRect.Right + gapWidth;
-            float mobRight = _heatMapPane.Rect.Right - 18 * scaleFactor;
+            float mobRight = _heatMapPane.Rect.Right - MOBILOGRAM_RIGHT_PAD * scaleFactor;
             return pt.X >= mobLeft && pt.X <= mobRight &&
                    pt.Y >= chartRect.Top && pt.Y <= chartRect.Bottom;
         }
@@ -2434,7 +2436,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var chartRect = _heatMapPane.Chart.Rect;
             float scaleFactor = _heatMapPane.CalcScaleFactor();
             float mobLeft = chartRect.Right + 6 * scaleFactor;
-            float mobRight = _heatMapPane.Rect.Right - 18 * scaleFactor;
+            float mobRight = _heatMapPane.Rect.Right - MOBILOGRAM_RIGHT_PAD * scaleFactor;
             float mobWidth = mobRight - mobLeft;
             double maxIntensity = _heatMapData.PlotY2D.Max(kvp => kvp.Value);
             float curveX = maxIntensity > 0
