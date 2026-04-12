@@ -114,6 +114,55 @@ namespace pwiz.OspreySharp.Scoring
                 }
             }
 
+            // XCorr diagnostic for bisection
+            string diagXcorrScan = System.Environment.GetEnvironmentVariable("OSPREY_DIAG_XCORR_SCAN");
+            if (!string.IsNullOrEmpty(diagXcorrScan) &&
+                spectrum.ScanNumber.ToString() == diagXcorrScan)
+            {
+                using (var dw = new System.IO.StreamWriter("cs_xcorr_diag.txt", true))
+                {
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# XCORR DIAG scan={0} entry={1}", spectrum.ScanNumber, entry.ModifiedSequence));
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# nbins={0} xcorr_raw={1:G17} xcorr_scaled={2:G17}", n, xcorrRaw, xcorrRaw * XCORR_SCALING));
+                    double bsum = 0; int bnz = 0;
+                    for (int di = 0; di < n; di++) { bsum += binned[di]; if (binned[di] > 0) bnz++; }
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# binned_sum={0:G17} nonzero={1}", bsum, bnz));
+                    double wsum = 0;
+                    for (int di = 0; di < n; di++) wsum += windowed[di];
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# windowed_sum={0:G17}", wsum));
+                    double psum = 0;
+                    for (int di = 0; di < n; di++) psum += preprocessed[di];
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# preprocessed_sum={0:G17}", psum));
+                    // Dump first 20 nonzero preprocessed bins
+                    int dumped = 0;
+                    for (int di = 0; di < n && dumped < 20; di++)
+                        if (preprocessed[di] != 0.0)
+                        {
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "pre\t{0}\t{1:G17}", di, preprocessed[di]));
+                            dumped++;
+                        }
+                    // Fragment bin lookups
+                    dw.WriteLine("# fragment_bins (with dedup)");
+                    var visited2 = new bool[n];
+                    for (int f = 0; f < entry.Fragments.Count; f++)
+                    {
+                        int fb = _binConfig.MzToBin(entry.Fragments[f].Mz);
+                        bool dup = (fb >= 0 && fb < n) ? visited2[fb] : false;
+                        if (fb >= 0 && fb < n) visited2[fb] = true;
+                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "frag\t{0}\tmz={1:G17}\tbin={2}\tval={3}\tdup={4}",
+                            f, entry.Fragments[f].Mz, fb,
+                            (fb >= 0 && fb < n) ? preprocessed[fb].ToString("G17") : "OOB",
+                            dup));
+                    }
+                }
+            }
+
             // (5) Scale.
             return xcorrRaw * XCORR_SCALING;
         }

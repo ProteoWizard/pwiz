@@ -2672,20 +2672,22 @@ namespace pwiz.OspreySharp
             }
 
             // Savitzky-Golay weighted spectral scores at apex +/- 2 scans.
-            // Matches Rust pipeline.rs sg_xcorr / sg_cosine (weights sum to 1,
-            // quadratic SG filter of length 5).
+            // Matches Rust pipeline.rs sg_xcorr / sg_cosine. Uses candidate-local
+            // indices (within startScan..endScan) not global window indices, matching
+            // Rust's cand_spectra bounds. Cosine uses mass-range-filtered matching
+            // (compute_cosine_at_scan) not LibCosine.
             double sgXcorr = 0.0;
             double sgCosine = 0.0;
-            int apexLocal = startScan + bestPeak.ApexIndex;
             for (int offset = -2; offset <= 2; offset++)
             {
                 double weight = SG_WEIGHTS[offset + 2];
-                int idx = apexLocal + offset;
-                if (idx < 0 || idx >= windowSpectra.Count)
+                int candIdx = bestPeak.ApexIndex + offset;
+                if (candIdx < 0 || candIdx >= rangeLen)
                     continue;
-                var s = windowSpectra[idx];
+                int globalIdx = startScan + candIdx;
+                var s = windowSpectra[globalIdx];
                 sgXcorr += scorer.XcorrAtScan(s, candidate) * weight;
-                sgCosine += scorer.LibCosine(s, candidate, config.FragmentTolerance) * weight;
+                sgCosine += ComputeCosineAtScan(candidate, s, config) * weight;
             }
 
             // Tukey median polish features (15, 16, 19, 20).
@@ -3041,6 +3043,71 @@ namespace pwiz.OspreySharp
                     rightSlope = (apexVal - refInten[end]) / dt;
             }
             peakSharpness = (leftSlope + rightSlope) * 0.5;
+        }
+
+        /// <summary>
+        /// Compute cosine similarity at a single scan, filtering fragments to the
+        /// spectrum's observed m/z range. Matches Rust compute_cosine_at_scan in
+        /// osprey-scoring/src/lib.rs:382. Unlike LibCosine, fragments outside the
+        /// spectrum's mass range are excluded (not treated as zero-intensity pairs).
+        /// </summary>
+        private static double ComputeCosineAtScan(
+            LibraryEntry candidate, Spectrum spectrum, OspreyConfig config)
+        {
+            if (candidate.Fragments == null || candidate.Fragments.Count == 0 ||
+                spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+                return 0.0;
+
+            double specMzMin = spectrum.Mzs[0];
+            double specMzMax = spectrum.Mzs[spectrum.Mzs.Length - 1];
+
+            var libPre = new System.Collections.Generic.List<double>();
+            var obsPre = new System.Collections.Generic.List<double>();
+
+            foreach (var frag in candidate.Fragments)
+            {
+                // Skip fragments outside the spectrum's mass range
+                if (frag.Mz < specMzMin || frag.Mz > specMzMax)
+                    continue;
+
+                double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
+                double lower = frag.Mz - tolDa;
+                double upper = frag.Mz + tolDa;
+
+                int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                double bestIntensity = 0.0;
+                double bestDiff = double.MaxValue;
+
+                for (int k = lo; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
+                {
+                    double diff = Math.Abs(spectrum.Mzs[k] - frag.Mz);
+                    if (diff < bestDiff)
+                    {
+                        bestDiff = diff;
+                        bestIntensity = spectrum.Intensities[k];
+                    }
+                }
+
+                libPre.Add(Math.Sqrt(frag.RelativeIntensity));
+                obsPre.Add(Math.Sqrt(bestIntensity));
+            }
+
+            if (libPre.Count == 0)
+                return 0.0;
+
+            // L2 normalize and dot product
+            double libNorm = 0, obsNorm = 0, dot = 0;
+            for (int i = 0; i < libPre.Count; i++)
+            {
+                libNorm += libPre[i] * libPre[i];
+                obsNorm += obsPre[i] * obsPre[i];
+                dot += libPre[i] * obsPre[i];
+            }
+            libNorm = Math.Sqrt(libNorm);
+            obsNorm = Math.Sqrt(obsNorm);
+            if (libNorm < 1e-12 || obsNorm < 1e-12)
+                return 0.0;
+            return dot / (libNorm * obsNorm);
         }
 
         /// <summary>
