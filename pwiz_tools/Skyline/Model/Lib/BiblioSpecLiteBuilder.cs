@@ -73,19 +73,32 @@ namespace pwiz.Skyline.Model.Lib
 
         private ReadOnlyCollection<string> _inputFiles;
 
+        public SrmDocument Document { get; }
+        public string ToolName { get; }
+
         public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<Target> targetSequences = null, bool useExplicitPeakBounds = true)
         {
             LibrarySpec = new BiblioSpecLiteSpec(name, outputPath, useExplicitPeakBounds);
 
             InputFiles = inputFiles;
-
+           
+            Document = null;
+            ToolName = @"bibliospeclite";
             // FUTURE(bspratt) small molecule workflows
             if (targetSequences != null)
                 TargetSequences = targetSequences.Where(t => t.IsProteomic).Select(t => t.Sequence).ToList();
         }
-
         public LibrarySpec LibrarySpec { get; private set; }
-        public string OutputPath { get { return LibrarySpec.FilePath; } }
+        public string ProductLibraryPath()
+        {
+            return "";
+        }
+
+        public string OutputPath
+        {
+            get { return LibrarySpec.FilePath; }
+            set => throw new NotImplementedException();
+        }
 
         public LibraryBuildAction Action { get; set; }
         public bool KeepRedundant { get; set; }
@@ -120,6 +133,9 @@ namespace pwiz.Skyline.Model.Lib
 
         public string BuildCommandArgs { get { return _buildCommandArgs; } }
         public string BuildOutput { get { return _buildOutput; } }
+
+        public string BuilderLibraryPath => BuildOutput;
+
 
         private string[] _ambiguousMatches;
         private string _buildCommandArgs;
@@ -239,7 +255,7 @@ namespace pwiz.Skyline.Model.Lib
 
             return true;
         }
-
+        
         public static bool HasEmbeddedSpectra(string libraryInputFilepath)
         {
             return libraryInputFilepath.EndsWith(EXT_MAX_QUANT);

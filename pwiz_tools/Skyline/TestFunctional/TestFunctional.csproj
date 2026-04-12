@@ -182,6 +182,7 @@
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
+    <Compile Include="CarafeEmptyNameTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="ExportHugeParquetReportTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
