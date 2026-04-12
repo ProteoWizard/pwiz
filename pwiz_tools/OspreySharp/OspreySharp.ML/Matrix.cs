@@ -266,6 +266,26 @@ namespace pwiz.OspreySharp.ML
         }
 
         /// <summary>
+        /// Extract a submatrix containing only the specified rows, in the order given.
+        /// Direct port of osprey-scoring/calibration_ml.rs `extract_rows`. Used by LDA
+        /// cross-validation training to build train/test matrices from index arrays.
+        /// Uses Array.Copy for each row and WrapNoClone to avoid the defensive clone in
+        /// the public constructor (this is called inside tight CV loops over ~200K rows).
+        /// </summary>
+        public Matrix ExtractRows(int[] rowIndices)
+        {
+            int nRows = rowIndices.Length;
+            var data = new double[nRows * _cols];
+            for (int i = 0; i < nRows; i++)
+            {
+                int srcOffset = rowIndices[i] * _cols;
+                int dstOffset = i * _cols;
+                Array.Copy(_data, srcOffset, data, dstOffset, _cols);
+            }
+            return WrapNoClone(data, nRows, _cols);
+        }
+
+        /// <summary>
         /// Calculate mean of each column.
         /// </summary>
         public double[] Mean()
