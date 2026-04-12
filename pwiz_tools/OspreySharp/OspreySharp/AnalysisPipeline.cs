@@ -1168,6 +1168,42 @@ namespace pwiz.OspreySharp
                     RobustnessIterations = 2,
                     OutlierRetention = 1.0 // LDA + S/N already filtered
                 };
+
+                // Cross-implementation diagnostic: dump the (lib_rt, measured_rt) pairs
+                // fed to LOESS, sorted by lib_rt ascending, at "R" (round-trip) precision.
+                // Gated by OSPREY_DUMP_LOESS_INPUT. Used to verify Rust and C# see
+                // identical inputs before LOESS fitting.
+                if (Environment.GetEnvironmentVariable("OSPREY_DUMP_LOESS_INPUT") == "1")
+                {
+                    var pairs = new List<KeyValuePair<double, double>>(libRts.Length);
+                    for (int i = 0; i < libRts.Length; i++)
+                        pairs.Add(new KeyValuePair<double, double>(libRts[i], measuredRts[i]));
+                    pairs.Sort((a, b) =>
+                    {
+                        int c = a.Key.CompareTo(b.Key);
+                        if (c != 0) return c;
+                        return a.Value.CompareTo(b.Value);
+                    });
+                    using (var w = new StreamWriter("cs_loess_input.txt"))
+                    {
+                        w.WriteLine("idx\tlib_rt\tmeasured_rt");
+                        var inv = System.Globalization.CultureInfo.InvariantCulture;
+                        for (int i = 0; i < pairs.Count; i++)
+                        {
+                            w.WriteLine(string.Format(inv, "{0}\t{1:R}\t{2:R}",
+                                i, pairs[i].Key, pairs[i].Value));
+                        }
+                    }
+                    LogInfo(string.Format(
+                        "[COUNT] Wrote LOESS input dump (pass {0}): cs_loess_input.txt ({1} pairs)",
+                        passNumber, pairs.Count));
+                    if (Environment.GetEnvironmentVariable("OSPREY_LOESS_INPUT_ONLY") == "1")
+                    {
+                        LogInfo("[BISECT] OSPREY_LOESS_INPUT_ONLY set - aborting after LOESS input dump");
+                        Environment.Exit(0);
+                    }
+                }
+
                 var calibrator = new RTCalibrator(calibratorConfig);
                 var rtCal = calibrator.Fit(libRts, measuredRts);
                 swLoess.Stop();

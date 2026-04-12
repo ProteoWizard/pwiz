@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.OspreySharp.Chromatography
 {
@@ -74,12 +75,14 @@ namespace pwiz.OspreySharp.Chromatography
                     "Need at least {0} calibration points, got {1}",
                     _config.MinPoints, libraryRts.Length));
 
-            // Sort by library RT
+            // Sort by library RT (stable). Rust's slice::sort_by is stable; C#
+            // Array.Sort with a Comparison<T> is introsort, which is UNSTABLE
+            // and reorders duplicate keys. Multi-charge peptides share a library
+            // RT, so an unstable sort drops a different y-value into position
+            // for each duplicate and the subsequent LOESS fit diverges from
+            // Rust. LINQ OrderBy is stable and matches Rust.
             int n = libraryRts.Length;
-            int[] order = new int[n];
-            for (int i = 0; i < n; i++)
-                order[i] = i;
-            Array.Sort(order, (a, b) => libraryRts[a].CompareTo(libraryRts[b]));
+            int[] order = Enumerable.Range(0, n).OrderBy(i => libraryRts[i]).ToArray();
 
             double[] x = new double[n];
             double[] y = new double[n];

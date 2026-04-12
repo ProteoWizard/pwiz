@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.OspreySharp.Chromatography
 {
@@ -213,12 +214,13 @@ namespace pwiz.OspreySharp.Chromatography
             if (x.Length < 2)
                 throw new ArgumentException("Need at least 2 data points");
 
-            // Sort by x
+            // Sort by x (stable, matching Rust's slice::sort_by). Array.Sort
+            // with Comparison<T> is unstable (introsort) and reorders ties
+            // differently than Rust for duplicate x values, causing LOESS
+            // divergence on data with repeated x (e.g. multi-charge peptides
+            // sharing a library RT).
             int n = x.Length;
-            int[] order = new int[n];
-            for (int i = 0; i < n; i++)
-                order[i] = i;
-            Array.Sort(order, (a, b) => x[a].CompareTo(x[b]));
+            int[] order = Enumerable.Range(0, n).OrderBy(i => x[i]).ToArray();
 
             double[] sortedX = new double[n];
             double[] sortedY = new double[n];
@@ -231,20 +233,30 @@ namespace pwiz.OspreySharp.Chromatography
             // Initial fit
             double[] fitted = LoessFitInternal(sortedX, sortedY, bandwidth, degree, null);
 
+            // Compute absolute residuals from the INITIAL fit ONCE. Rust's
+            // osprey-chromatography/src/calibration/rt.rs RTCalibrator::fit
+            // captures `residuals` before the robustness loop and reuses the
+            // same vector across every iteration, never refreshing it from
+            // the current fit. That makes each iteration compute the same
+            // bisquare weights and produce the same refined fit, so the
+            // effective behavior is a single robustness refinement regardless
+            // of robustness_iter >= 1. Match Rust exactly: pre-compute
+            // absResiduals here and leave them untouched in the loop below.
+            double[] absResiduals = new double[n];
+            for (int i = 0; i < n; i++)
+                absResiduals[i] = Math.Abs(sortedY[i] - fitted[i]);
+
             // Robustness iterations
-            double[] weights = null;
+            double[] weights = new double[n];
+            for (int i = 0; i < n; i++)
+                weights[i] = 1.0;
             for (int iter = 0; iter < robustnessIterations; iter++)
             {
-                double[] absResiduals = new double[n];
-                for (int i = 0; i < n; i++)
-                    absResiduals[i] = Math.Abs(sortedY[i] - fitted[i]);
-
                 double medianAbsResidual = Median(absResiduals);
                 double s = 6.0 * medianAbsResidual;
 
                 if (s > 1e-10)
                 {
-                    weights = new double[n];
                     for (int i = 0; i < n; i++)
                     {
                         double u = absResiduals[i] / s;
