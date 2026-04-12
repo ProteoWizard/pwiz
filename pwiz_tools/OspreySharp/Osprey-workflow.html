@@ -59,8 +59,8 @@
   <p class="sub">
     Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
     output. Color indicates port status of the OspreySharp (C#) implementation
-    against the Osprey (Rust) reference. Current bisection focus sits in the
-    calibration phase.
+    against the Osprey (Rust) reference. Stages 1-4 (through main search
+    features) are proven bit-identical. Current focus: first-pass FDR.
   </p>
 </header>
 
@@ -130,7 +130,7 @@
 <g transform="translate(40, 40)">
   <text class="title">Osprey / OspreySharp DIA search pipeline</text>
   <text class="subtitle" y="22">
-    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-11, Session 8 (post-LOESS fix)
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-12, Session 9 (21 PIN features matched)
   </text>
 </g>
 
@@ -222,8 +222,7 @@
 <!-- STAGE 3 CALIBRATION (YOU ARE HERE)                                 -->
 <!-- ================================================================= -->
 <g transform="translate(0, 520)">
-  <!-- Active phase container -->
-  <rect class="phase-bg-active" x="40" y="0" width="1120" height="600" rx="8"/>
+  <rect class="phase-bg" x="40" y="0" width="1120" height="600" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 3</text>
   <text class="phase-title" x="60" y="42">Calibration (a.k.a. recalibration)</text>
   <text class="phase-note"  x="60" y="58">
@@ -255,12 +254,12 @@
   <!-- Pass-2 substages -->
   <text class="phase-label" x="80" y="390" fill="#ef6c00">pass 2</text>
 
-  <rect class="st-partial" x="80" y="400" width="1040" height="62" rx="4"/>
+  <rect class="st-done" x="80" y="400" width="1040" height="62" rx="4"/>
   <text class="stage-title" x="600" y="420" text-anchor="middle">Pass-2 re-score with refined RT tolerance</text>
   <text class="stage-desc"  x="600" y="436" text-anchor="middle">tolerance = clamp(MAD x 1.4826 x 3, [min, max]); expected_rt from pass-1 LOESS; re-extract XICs + peaks</text>
-  <text class="stage-desc"  x="600" y="450" text-anchor="middle">verified only on entry 0 so far; needs broad cross-impl diff across entries</text>
+  <text class="stage-desc"  x="600" y="450" text-anchor="middle">MS2 m/z calibration (offset correction + calibrated fragment tolerance) proven bit-identical</text>
 
-  <rect class="st-partial" x="80" y="480" width="1040" height="42" rx="4"/>
+  <rect class="st-done" x="80" y="480" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="500" text-anchor="middle">Pass-2 LDA + LOESS (accept only if R&#178; doesn't degrade &gt;1%)</text>
   <text class="stage-desc"  x="600" y="514" text-anchor="middle">falls back to pass-1 calibration if the pass-2 fit is worse</text>
 
@@ -271,13 +270,7 @@
   <path class="flow" d="M 600 362 L 600 398" marker-end="url(#arrow)"/>
   <path class="flow" d="M 600 462 L 600 478" marker-end="url(#arrow)"/>
 
-  <!-- "You are here" callout - pointing at pass-2 (partial but calibration
-       phase is essentially done; main search is the next frontier) -->
-  <g transform="translate(820, 475)">
-    <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
-    <text class="you-are-here" x="136" y="10">YOU ARE</text>
-    <text class="you-are-here" x="136" y="26">HERE</text>
-  </g>
+  <!-- Stage 3 fully proven in Sessions 6-9 -->
 </g>
 
 <!-- Arrow from calibration to main search -->
@@ -295,13 +288,13 @@
     21 PIN features. Uses the calibrated RT from Stage 3 to pick the right spectra window.
   </text>
 
-  <rect class="st-unverif" x="80" y="80" width="1040" height="42" rx="4"/>
+  <rect class="st-done" x="80" y="80" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="100" text-anchor="middle">Per-entry XIC extraction + CWT candidate peaks</text>
-  <text class="stage-desc"  x="600" y="114" text-anchor="middle">multiple CWT candidates per entry, ranked by mean pairwise fragment correlation</text>
+  <text class="stage-desc"  x="600" y="114" text-anchor="middle">XICs proven bit-identical (9 entries); CWT peaks + boundaries match; 311K entries verified</text>
 
-  <rect class="st-unverif" x="80" y="140" width="1040" height="42" rx="4"/>
+  <rect class="st-done" x="80" y="140" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="160" text-anchor="middle">21 PIN features per entry</text>
-  <text class="stage-desc"  x="600" y="174" text-anchor="middle">fragment coelution (3) + peak shape (3) + spectral (3) + mass accuracy (2) + RT (2) + MS1 (2) + median polish (2) + SG-weighted (4)</text>
+  <text class="stage-desc"  x="600" y="174" text-anchor="middle">all 21 features at 0.00% divergence with shared calibration (10 bugs fixed in Session 9)</text>
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
 </g>
@@ -312,7 +305,7 @@
 <path class="flow" d="M 600 1360 L 600 1400" marker-end="url(#arrow)"/>
 
 <g transform="translate(0, 1400)">
-  <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="6"/>
+  <rect class="phase-bg-active" x="40" y="0" width="1120" height="260" rx="8"/>
   <text class="phase-label" x="60" y="24">stage 5</text>
   <text class="phase-title" x="60" y="42">First-pass FDR (Percolator SVM)</text>
   <text class="phase-note"  x="60" y="58">
@@ -334,6 +327,13 @@
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
   <path class="flow" d="M 600 200 L 600 216" marker-end="url(#arrow)"/>
+
+  <!-- "You are here" callout -->
+  <g transform="translate(820, 75)">
+    <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
+    <text class="you-are-here" x="136" y="10">YOU ARE</text>
+    <text class="you-are-here" x="136" y="26">HERE</text>
+  </g>
 </g>
 
 <!-- ================================================================= -->
@@ -400,19 +400,19 @@
 
 <footer>
   <p>
-    <strong>Evidence (Stellar file 20 as the reference benchmark):</strong>
-    Calibration phase (Stage 3) is essentially complete. Pass-1 scoring,
-    LDA, S/N filter, and LOESS fit are all proven bit-identical: 192,289
-    calibration matches, 11,937/11,937 target 1% FDR pass, 6,423/6,423
-    LOESS input points, and all 10 LOESS MODEL stats match at F10
-    precision. Pass-2 entry 0 LOESS MODEL also bit-identical. Both tools
-    support a classical robust LOESS toggle (OSPREY_LOESS_CLASSICAL_ROBUST)
-    for potential upstream improvement.
+    <strong>Evidence (Stellar file 20, <code>--resolution unit</code>):</strong>
+    Stages 1-4 are fully proven. Session 9 validated all 21 PIN features
+    across 311,176 matched entries with shared calibration: 0.00% divergence
+    at 1e-6 threshold for 19 of 21 features, with only 4 entries from
+    different CWT peak selection and 191 consecutive_ions differences.
+    Session 9 fixed 10 bugs: peak shape (ref XIC + trapezoidal), xcorr
+    bin dedup, n_coeluting (mean not any), MS1 HRAM gate, fragment
+    matching (closest-by-mz), median polish convergence, MS2 calibration
+    (tolerance + offset), global RT tolerance, and scan boundary.
   </p>
   <p>
-    Next target: broader pass-2 XIC verification, then Stage 4 (main
-    first-pass search with 21 PIN features). Status colors show the port
-    state as of Session 8 continuation (2026-04-11) on branch
+    Next target: Stage 5 (first-pass Percolator SVM FDR). Status colors
+    show the port state as of Session 9 (2026-04-12) on branch
     <code>Skyline/work/20260409_osprey_sharp</code>.
   </p>
   <p>
