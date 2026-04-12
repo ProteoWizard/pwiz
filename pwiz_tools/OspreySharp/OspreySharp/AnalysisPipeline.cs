@@ -2555,6 +2555,8 @@ namespace pwiz.OspreySharp
             // XCorr at apex (using unit-resolution binning)
             double xcorr = scorer.XcorrAtScan(apexSpectrum, candidate);
 
+
+
             // Compute pairwise coelution features (sum, min, max, n_positive)
             double coelutionSum, coelutionMin, coelutionMax;
             int nCoelutingFragments;
@@ -2867,37 +2869,68 @@ namespace pwiz.OspreySharp
             if (start > end)
                 return;
 
-            // Sum across fragments per scan to get the composite XIC.
-            double apexSum = 0.0;
-            double area = 0.0;
-            for (int scan = start; scan <= end; scan++)
-            {
-                double s = 0.0;
-                for (int f = 0; f < xics.Count; f++)
-                {
-                    double[] inten = xics[f].Intensities;
-                    if (scan < inten.Length)
-                        s += inten[scan];
-                }
-                area += s;
-                if (scan == apex)
-                    apexSum = s;
-            }
-
-            peakApex = apexSum;
-            peakArea = area;
-
-            // Sharpness: apex divided by mean of the two edge intensities.
-            double leftSum = 0.0, rightSum = 0.0;
+            // Use reference XIC (highest total intensity), matching Rust pipeline.rs.
+            // Rust computes peak_apex, peak_area, peak_sharpness from ref_xic only.
+            int refIdx = 0;
+            double bestTotal = 0.0;
             for (int f = 0; f < xics.Count; f++)
             {
+                double total = 0.0;
                 double[] inten = xics[f].Intensities;
-                if (start < inten.Length) leftSum += inten[start];
-                if (end < inten.Length) rightSum += inten[end];
+                for (int i = 0; i < inten.Length; i++)
+                    total += inten[i];
+                if (total > bestTotal)
+                {
+                    bestTotal = total;
+                    refIdx = f;
+                }
             }
-            double edgeMean = (leftSum + rightSum) * 0.5;
-            if (edgeMean > 1e-12)
-                peakSharpness = apexSum / edgeMean;
+
+            double[] refInten = xics[refIdx].Intensities;
+            double[] refRts = xics[refIdx].RetentionTimes;
+
+            // Apex: max intensity in the reference XIC over the peak range.
+            // Matches Rust: ref_xic[si..=ei].max_by(intensity).
+            double apexVal = 0.0;
+            int apexIdx = start;
+            for (int i = start; i <= end; i++)
+            {
+                if (refInten[i] > apexVal)
+                {
+                    apexVal = refInten[i];
+                    apexIdx = i;
+                }
+            }
+            peakApex = apexVal;
+
+            // Area: trapezoidal integration on the reference XIC.
+            // Matches Rust trapezoidal_area(ref_xic[si..=ei]).
+            double area = 0.0;
+            for (int i = start; i < end; i++)
+            {
+                double dt = refRts[i + 1] - refRts[i];
+                double avgHeight = (refInten[i] + refInten[i + 1]) * 0.5;
+                area += avgHeight * dt;
+            }
+            peakArea = area;
+
+            // Sharpness: mean of left and right slopes on the reference XIC.
+            // Matches Rust pipeline.rs:5212-5234.
+            double leftSlope = 0.0;
+            if (apexIdx > start)
+            {
+                double dt = refRts[apexIdx] - refRts[start];
+                if (dt > 1e-10)
+                    leftSlope = (apexVal - refInten[start]) / dt;
+            }
+            double rightSlope = 0.0;
+            if (end > apexIdx)
+            {
+                double dt = refRts[end] - refRts[apexIdx];
+                if (dt > 1e-10)
+                    rightSlope = (apexVal - refInten[end]) / dt;
+            }
+            peakSharpness = (leftSlope + rightSlope) * 0.5;
         }
 
         /// <summary>

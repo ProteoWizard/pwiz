@@ -99,14 +99,19 @@ namespace pwiz.OspreySharp.Scoring
             double[] preprocessed = ApplySlidingWindow(windowed);
 
             // (4) Sum preprocessed values at library fragment bin positions.
-            // Comet uses unit intensity at each fragment's bin (library is NOT
-            // binned into a separate array).
+            // Matches Rust preprocess_library_for_xcorr: set 1.0 at each
+            // fragment bin (assignment, not accumulation). If two fragments
+            // map to the same bin, the bin contributes once, not twice.
             double xcorrRaw = 0.0;
+            var visitedBins = new bool[n];
             for (int f = 0; f < entry.Fragments.Count; f++)
             {
                 int bin = _binConfig.MzToBin(entry.Fragments[f].Mz);
-                if (bin >= 0 && bin < n)
+                if (bin >= 0 && bin < n && !visitedBins[bin])
+                {
+                    visitedBins[bin] = true;
                     xcorrRaw += preprocessed[bin];
+                }
             }
 
             // (5) Scale.
