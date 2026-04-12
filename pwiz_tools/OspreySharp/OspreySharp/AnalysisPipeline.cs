@@ -443,11 +443,13 @@ namespace pwiz.OspreySharp
 
             // RT calibration
             RTCalibration rtCalibration = null;
+            MzCalibrationResult ms2Cal = MzCalibrationResult.Uncalibrated();
             if (config.RtCalibration.Enabled)
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = RunCalibration(
-                    fullLibrary, spectra, ms1Spectra, config, fileName);
+                    fullLibrary, spectra, ms1Spectra, config, fileName,
+                    out ms2Cal);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
                 LogInfo(string.Format(
@@ -459,7 +461,9 @@ namespace pwiz.OspreySharp
             var swScoring = Stopwatch.StartNew();
             var scoredEntries = RunCoelutionScoring(
                 fullLibrary, spectra, ms1Spectra,
-                isolationWindows, rtCalibration, config);
+                isolationWindows, rtCalibration,
+                ms2Cal,
+                config);
             swScoring.Stop();
             double scoringSeconds = swScoring.Elapsed.TotalSeconds;
             double ratePerSec = scoringSeconds > 0.001
@@ -656,7 +660,8 @@ namespace pwiz.OspreySharp
             List<Spectrum> spectra,
             List<MS1Spectrum> ms1Spectra,
             OspreyConfig config,
-            string fileName)
+            string fileName,
+            out MzCalibrationResult ms2Calibration)
         {
             LogInfo("Running RT calibration...");
 
@@ -756,6 +761,7 @@ namespace pwiz.OspreySharp
             if (nSampledTargets == 0)
             {
                 LogWarning("No target entries available for calibration sampling.");
+                ms2Calibration = MzCalibrationResult.Uncalibrated();
                 return null;
             }
 
@@ -790,6 +796,7 @@ namespace pwiz.OspreySharp
             if (pass1 == null)
             {
                 LogWarning("Calibration pass 1 failed. Using fallback tolerance.");
+                ms2Calibration = MzCalibrationResult.Uncalibrated();
                 return null;
             }
 
@@ -846,6 +853,7 @@ namespace pwiz.OspreySharp
                     // by more than 1% (matches Rust pipeline.rs:811).
                     if (pass2.Stats.RSquared >= pass1.Stats.RSquared * 0.99)
                     {
+                        ms2Calibration = pass2.Ms2Calibration;
                         return pass2.Calibration;
                     }
                     LogInfo(string.Format(
@@ -860,6 +868,7 @@ namespace pwiz.OspreySharp
                 }
             }
 
+            ms2Calibration = pass1.Ms2Calibration;
             return pass1.Calibration;
         }
 
@@ -870,6 +879,7 @@ namespace pwiz.OspreySharp
         {
             public RTCalibration Calibration;
             public RTCalibrationStats Stats;
+            public MzCalibrationResult Ms2Calibration;
         }
 
         /// <summary>
@@ -1153,6 +1163,26 @@ namespace pwiz.OspreySharp
                 return null;
             }
 
+            // Aggregate MS2 fragment mass errors from passing targets only.
+            // Rust pipeline.rs:605 collects errors from passing_targets (those
+            // surviving LDA + competition + S/N >= 5.0 filter). This is the same
+            // set used for RT calibration points.
+            var allMs2Errors = new List<double>();
+            foreach (var m in matchArray)
+            {
+                if (m.Ms2MassErrors == null || m.IsDecoy || m.QValue > CAL_FDR_THRESHOLD)
+                    continue;
+                double snr;
+                if (!snrByEntryId.TryGetValue(m.EntryId, out snr) || snr < MIN_SNR_FOR_RT_CAL)
+                    continue;
+                allMs2Errors.AddRange(m.Ms2MassErrors);
+            }
+            string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
+            var ms2Cal = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
+            LogInfo(string.Format(
+                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
+                passNumber, ms2Cal.Mean, unitStr, ms2Cal.SD, 3.0 * ms2Cal.SD, allMs2Errors.Count));
+
             // Fit LOESS calibration.
             var swLoess = Stopwatch.StartNew();
             try
@@ -1221,6 +1251,7 @@ namespace pwiz.OspreySharp
                 {
                     Calibration = rtCal,
                     Stats = stats,
+                    Ms2Calibration = ms2Cal,
                 };
             }
             catch (Exception ex)
@@ -1830,6 +1861,58 @@ namespace pwiz.OspreySharp
             double xcorrApex = scorer.XcorrAtScan(apexSpectrum, entry);
             byte top6Matched = CountTop6Matches(entry, apexSpectrum, config);
 
+            // Collect MS2 fragment mass errors at apex for m/z calibration.
+            // Matches Rust topn_fragment_match_with_errors: uses TOP-6 fragments
+            // by intensity, not all fragments.
+            var ms2Errors = new System.Collections.Generic.List<double>();
+            {
+                // Select top-6 fragment indices by descending intensity
+                int nFragsForErrors = entry.Fragments.Count;
+                int nTopForErrors = Math.Min(nFragsForErrors, CAL_TOP_N_FRAGMENTS);
+                int[] topErrorIndices;
+                if (nFragsForErrors <= CAL_TOP_N_FRAGMENTS)
+                {
+                    topErrorIndices = new int[nFragsForErrors];
+                    for (int ti = 0; ti < nFragsForErrors; ti++)
+                        topErrorIndices[ti] = ti;
+                }
+                else
+                {
+                    var indexed = new List<KeyValuePair<int, float>>(nFragsForErrors);
+                    for (int ti = 0; ti < nFragsForErrors; ti++)
+                        indexed.Add(new KeyValuePair<int, float>(ti, entry.Fragments[ti].RelativeIntensity));
+                    indexed.Sort((a, b) => b.Value.CompareTo(a.Value));
+                    topErrorIndices = new int[nTopForErrors];
+                    for (int ti = 0; ti < nTopForErrors; ti++)
+                        topErrorIndices[ti] = indexed[ti].Key;
+                }
+
+                foreach (int fragIdx in topErrorIndices)
+                {
+                    var frag = entry.Fragments[fragIdx];
+                    double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
+                    double lower = frag.Mz - tolDa;
+                    double upper = frag.Mz + tolDa;
+
+                    int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                    if (lo < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[lo] <= upper)
+                    {
+                        double bestMz = apexSpectrum.Mzs[lo];
+                        double bestDiff = Math.Abs(bestMz - frag.Mz);
+                        for (int k = lo + 1; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
+                        {
+                            double diff = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
+                            if (diff < bestDiff)
+                            {
+                                bestDiff = diff;
+                                bestMz = apexSpectrum.Mzs[k];
+                            }
+                        }
+                        ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, bestMz));
+                    }
+                }
+            }
+
             return new CalibrationMatch
             {
                 EntryId = entry.Id,
@@ -1842,7 +1925,8 @@ namespace pwiz.OspreySharp
                 XcorrScore = xcorrApex,
                 IsotopeCosine = 0.0,
                 DiscriminantScore = bestCorrSum,
-                QValue = 1.0
+                QValue = 1.0,
+                Ms2MassErrors = ms2Errors.ToArray()
             };
         }
 
@@ -1968,6 +2052,7 @@ namespace pwiz.OspreySharp
             List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             RTCalibration rtCalibration,
+            MzCalibrationResult ms2Calibration,
             OspreyConfig config)
         {
             var allEntries = new List<FdrEntry>();
@@ -1988,8 +2073,105 @@ namespace pwiz.OspreySharp
                 list.Add(spectrum);
             }
 
-            // Determine RT tolerance
-            double fallbackTolerance = config.RtCalibration.FallbackRtTolerance;
+            // Determine RT tolerance — global, matching Rust's run_search.
+            // Rust computes one tolerance for ALL entries: 3 * MAD * 1.4826,
+            // clamped to [min, max]. C# was using per-entry LocalTolerance
+            // (interpolated residuals), which produces different scan ranges.
+            double rtToleranceGlobal;
+            if (rtCalibration != null)
+            {
+                var stats = rtCalibration.Stats();
+                double madTolerance = stats.MAD * 1.4826 * 3.0;
+                rtToleranceGlobal = Math.Max(
+                    config.RtCalibration.MinRtTolerance,
+                    Math.Min(config.RtCalibration.MaxRtTolerance, madTolerance));
+                LogInfo(string.Format(
+                    "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3})",
+                    rtToleranceGlobal, stats.MAD));
+            }
+            else
+            {
+                rtToleranceGlobal = config.RtCalibration.FallbackRtTolerance;
+            }
+
+            // Apply MS2 calibration: calibrated fragment tolerance + m/z offset.
+            // Matches Rust run_search which applies calibrated_tolerance() and
+            // apply_spectrum_calibration() before scoring.
+            FragmentToleranceConfig searchFragTol = config.FragmentTolerance;
+            if (ms2Calibration.Calibrated)
+            {
+                double calTol;
+                ToleranceUnit calUnit;
+                MzCalibration.CalibratedTolerance(ms2Calibration,
+                    config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit,
+                    out calTol, out calUnit);
+                searchFragTol = new FragmentToleranceConfig
+                {
+                    Tolerance = calTol,
+                    Unit = calUnit
+                };
+                string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
+                LogInfo(string.Format(
+                    "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
+                    calTol, unitStr));
+
+                // Use calibrated tolerance for all downstream scoring
+                config.FragmentTolerance = searchFragTol;
+
+                // Apply m/z offset correction to all spectra
+                LogInfo(string.Format(
+                    "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
+                    ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
+                for (int si = 0; si < spectra.Count; si++)
+                {
+                    var s = spectra[si];
+                    double[] correctedMzs = new double[s.Mzs.Length];
+                    for (int mi = 0; mi < s.Mzs.Length; mi++)
+                        correctedMzs[mi] = MzCalibration.ApplyCalibration(s.Mzs[mi], ms2Calibration);
+                    spectra[si] = new Spectrum
+                    {
+                        ScanNumber = s.ScanNumber,
+                        RetentionTime = s.RetentionTime,
+                        PrecursorMz = s.PrecursorMz,
+                        IsolationWindow = s.IsolationWindow,
+                        Mzs = correctedMzs,
+                        Intensities = s.Intensities
+                    };
+                }
+
+                // Rebuild the window lookup after m/z correction
+                spectraByWindowKey.Clear();
+                foreach (var spectrum in spectra)
+                {
+                    int key = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
+                    List<Spectrum> list;
+                    if (!spectraByWindowKey.TryGetValue(key, out list))
+                    {
+                        list = new List<Spectrum>();
+                        spectraByWindowKey[key] = list;
+                    }
+                    list.Add(spectrum);
+                }
+            }
+
+            // Per-entry search XIC diagnostic. Dumps XIC data for specified entries
+            // during the main search (does NOT exit — collects all in one run).
+            // Usage: OSPREY_DIAG_SEARCH_ENTRY_IDS=0,100,5000,50000
+            HashSet<uint> diagSearchEntryIds = null;
+            string diagSearchEnv = Environment.GetEnvironmentVariable("OSPREY_DIAG_SEARCH_ENTRY_IDS");
+            if (!string.IsNullOrEmpty(diagSearchEnv))
+            {
+                diagSearchEntryIds = new HashSet<uint>();
+                foreach (string part in diagSearchEnv.Split(','))
+                {
+                    uint id;
+                    if (uint.TryParse(part.Trim(), out id))
+                        diagSearchEntryIds.Add(id);
+                }
+                LogInfo(string.Format(
+                    "[BISECT] OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
+                    diagSearchEntryIds.Count));
+            }
 
             // Per-window timings collected thread-safely for post-summary.
             var windowTimings = new ConcurrentBag<WindowTiming>();
@@ -2006,7 +2188,8 @@ namespace pwiz.OspreySharp
                 var swWindow = Stopwatch.StartNew();
                 var windowEntries = ScoreWindow(
                     window, fullLibrary, spectraByWindowKey, ms1Spectra,
-                    rtCalibration, fallbackTolerance, scorer, config);
+                    rtCalibration, rtToleranceGlobal, scorer, config,
+                    diagSearchEntryIds);
                 swWindow.Stop();
 
                 windowTimings.Add(new WindowTiming
@@ -2077,9 +2260,10 @@ namespace pwiz.OspreySharp
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
             List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
-            double fallbackTolerance,
+            double globalRtTolerance,
             SpectralScorer scorer,
-            OspreyConfig config)
+            OspreyConfig config,
+            HashSet<uint> diagSearchEntryIds)
         {
             var entries = new List<FdrEntry>();
 
@@ -2117,8 +2301,8 @@ namespace pwiz.OspreySharp
             {
                 var fdrEntry = ScoreCandidate(
                     candidate, windowSpectra, windowRts,
-                    ms1Spectra, rtCalibration, fallbackTolerance,
-                    scorer, config);
+                    ms1Spectra, rtCalibration, globalRtTolerance,
+                    scorer, config, diagSearchEntryIds);
 
                 if (fdrEntry != null)
                     entries.Add(fdrEntry);
@@ -2142,9 +2326,10 @@ namespace pwiz.OspreySharp
             double[] windowRts,
             List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
-            double fallbackTolerance,
+            double globalRtTolerance,
             SpectralScorer scorer,
-            OspreyConfig config)
+            OspreyConfig config,
+            HashSet<uint> diagSearchEntryIds)
         {
             bool diag = !candidate.IsDecoy && candidate.ModifiedSequence == DIAG_PEPTIDE
                 && candidate.Charge == 2;
@@ -2152,23 +2337,13 @@ namespace pwiz.OspreySharp
             if (nScans < 5)
                 return null;
 
-            // Determine RT search window
-            double expectedRt;
-            double rtTolerance;
-
-            if (rtCalibration != null)
-            {
-                expectedRt = rtCalibration.Predict(candidate.RetentionTime);
-                rtTolerance = rtCalibration.LocalTolerance(
-                    candidate.RetentionTime,
-                    config.RtCalibration.RtToleranceFactor,
-                    config.RtCalibration.MinRtTolerance);
-            }
-            else
-            {
-                expectedRt = candidate.RetentionTime;
-                rtTolerance = fallbackTolerance;
-            }
+            // Determine RT search window.
+            // Use the global tolerance passed from RunCoelutionScoring (matches
+            // Rust's single rt_tolerance for all entries in run_search).
+            double expectedRt = rtCalibration != null
+                ? rtCalibration.Predict(candidate.RetentionTime)
+                : candidate.RetentionTime;
+            double rtTolerance = globalRtTolerance;
 
             if (diag)
             {
@@ -2182,17 +2357,18 @@ namespace pwiz.OspreySharp
                     candidate.Fragments.Count, nScans));
             }
 
-            // Find scan range within RT tolerance
+            // Find scan range within RT tolerance.
+            // Match Rust's abs(rt - expected_rt) <= tolerance (closed interval).
             int startScan = -1, endScan = -1;
             for (int i = 0; i < nScans; i++)
             {
+                if (windowRts[i] > expectedRt + rtTolerance)
+                    break;
                 if (windowRts[i] >= expectedRt - rtTolerance)
                 {
                     if (startScan < 0) startScan = i;
                     endScan = i;
                 }
-                if (windowRts[i] > expectedRt + rtTolerance)
-                    break;
             }
 
             if (diag)
@@ -2227,6 +2403,53 @@ namespace pwiz.OspreySharp
             // Extract fragment XICs within the RT range
             var xics = ExtractFragmentXics(
                 candidate, windowSpectra, windowRts, startScan, endScan, config);
+
+            // Per-entry search XIC diagnostic (thread-safe: unique file per entry_id)
+            if (diagSearchEntryIds != null && diagSearchEntryIds.Contains(candidate.Id))
+            {
+                string dumpPath = "cs_search_xic_entry_" + candidate.Id + ".txt";
+                using (var dw = new StreamWriter(dumpPath))
+                {
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# search XIC dump for entry_id={0}", candidate.Id));
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# {0} ({1}, charge={2}, lib_rt={3:F10}, mz={4:F10})",
+                        candidate.ModifiedSequence, candidate.Sequence, candidate.Charge,
+                        candidate.RetentionTime, candidate.PrecursorMz));
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# is_decoy={0}", candidate.IsDecoy ? 1 : 0));
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# expected_rt={0:F10}", expectedRt));
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# rt_tolerance={0:F10}", rtTolerance));
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# scan_range=[{0}..{1}] n_scans={2}",
+                        startScan, endScan, rangeLen));
+                    dw.WriteLine("# CANDIDATES (scan_idx, scan_number, rt)");
+                    dw.WriteLine("candidate\tscan_idx\tscan_number\trt");
+                    for (int i = startScan; i <= endScan; i++)
+                    {
+                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "candidate\t{0}\t{1}\t{2:F10}",
+                            i - startScan, windowSpectra[i].ScanNumber,
+                            windowSpectra[i].RetentionTime));
+                    }
+                    dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
+                    dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
+                    foreach (var xic in xics)
+                    {
+                        for (int i = 0; i < xic.RetentionTimes.Length; i++)
+                        {
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "xic\t{0}\t{1}\t{2:F10}\t{3:F10}",
+                                xic.FragmentIndex, i, xic.RetentionTimes[i], xic.Intensities[i]));
+                        }
+                    }
+                }
+                LogInfo(string.Format(
+                    "[BISECT] Search XIC dump for entry {0}: {1} xics, {2} scans -> {3}",
+                    candidate.Id, xics.Count, rangeLen, dumpPath));
+            }
 
             if (xics.Count < 2)
                 return null;

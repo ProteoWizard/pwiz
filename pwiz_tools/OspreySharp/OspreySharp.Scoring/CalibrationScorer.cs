@@ -22,6 +22,8 @@ namespace pwiz.OspreySharp.Scoring
         public double IsotopeCosine { get; set; }
         public double DiscriminantScore { get; set; }
         public double QValue { get; set; }
+        /// <summary>MS2 fragment mass errors at apex spectrum (in config units).</summary>
+        public double[] Ms2MassErrors { get; set; }
     }
 
     /// <summary>

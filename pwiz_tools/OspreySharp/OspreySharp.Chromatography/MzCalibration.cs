@@ -204,6 +204,15 @@ namespace pwiz.OspreySharp.Chromatography
             return Math.Abs(errorPpm) <= baseTolerancePpm;
         }
 
+        /// <summary>
+        /// Calculate calibration from raw error values with string unit.
+        /// </summary>
+        public static MzCalibrationResult CalculateSingleLevel(double[] errors, string unitStr)
+        {
+            ToleranceUnit unit = unitStr == "Th" ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
+            return CalculateSingleCalibration(errors, unit);
+        }
+
         private static MzCalibrationResult CalculateSingleCalibration(double[] errors,
             ToleranceUnit unit)
         {
