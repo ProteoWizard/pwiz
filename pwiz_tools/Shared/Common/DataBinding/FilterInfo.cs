@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using pwiz.Common.DataBinding.Filtering;
 
 namespace pwiz.Common.DataBinding
 {
@@ -27,7 +28,8 @@ namespace pwiz.Common.DataBinding
         {
             FilterSpec = filterSpec;
             ColumnDescriptor = columnDescriptor;
-            CollectionColumn = collectionColumn; 
+            CollectionColumn = collectionColumn;
+            FilterHandler = columnDescriptor.GetFilterHandler();
             try
             {
                 Predicate = MakePredicate();
@@ -40,6 +42,7 @@ namespace pwiz.Common.DataBinding
         public FilterSpec FilterSpec { get; private set; }
         public ColumnDescriptor ColumnDescriptor { get; private set; }
         public ColumnDescriptor CollectionColumn { get; private set; }
+        public IFilterHandler FilterHandler { get; private set; }
         private Predicate<object> Predicate { get; set; }
         public String Error { get; private set; }
         public RowItem ApplyFilter(RowItem rowItem)
@@ -89,6 +92,11 @@ namespace pwiz.Common.DataBinding
         private Predicate<object> MakePredicate()
         {
             return FilterSpec.Predicate.MakePredicate(ColumnDescriptor.DataSchema, ColumnDescriptor.PropertyType);
+        }
+
+        public string GetOperandDisplayText()
+        {
+            return FilterSpec.Predicate.GetOperandDisplayText(ColumnDescriptor);
         }
     }
 }

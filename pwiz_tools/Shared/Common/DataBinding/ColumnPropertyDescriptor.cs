@@ -110,6 +110,11 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+        public override bool CanBeFiltered(IFilterOperation filterOperation)
+        {
+            return filterOperation.IsValidFor(DisplayColumn.ColumnDescriptor);
+        }
+
         #region Equality Members
         protected bool Equals(ColumnPropertyDescriptor other)
         {

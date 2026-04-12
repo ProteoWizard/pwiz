@@ -56,7 +56,7 @@ namespace CommonTest.DataBinding
                 new ViewSpec().SetColumns(new[]
                 {new ColumnSpec(PropertyPath.Parse("Code")), new ColumnSpec(PropertyPath.Parse("Molecule!*.Key")),})
                     .SetFilters(new[]
-                    {new FilterSpec(PropertyPath.Parse("Molecule!*.Key"), FilterPredicate.CreateFilterPredicate(dataSchema, typeof(string), FilterOperations.OP_EQUALS, "S"))});
+                    {new FilterSpec(PropertyPath.Parse("Molecule!*.Key"), FilterPredicate.Create(FilterOperations.OP_EQUALS, "S"))});
             var bindingListSource = new BindingListSource();
             bindingListSource.SetView(new ViewInfo(dataSchema, typeof(AminoAcid), viewSpec), new StaticRowSource(AminoAcid.AMINO_ACIDS));
             Assert.AreEqual(2, bindingListSource.Count);
