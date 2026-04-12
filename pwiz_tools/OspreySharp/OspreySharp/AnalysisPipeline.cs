@@ -1075,6 +1075,37 @@ namespace pwiz.OspreySharp
                 "Calibration pass {0} LDA passing count: {1} (returned by TrainAndScoreCalibration)",
                 passNumber, nPassing));
 
+            // Cross-implementation diagnostic: dump per-entry LDA discriminant + q-value
+            // sorted by entry_id for stable diff with rust_lda_scores.txt. Gated by
+            // OSPREY_DUMP_LDA_SCORES; exits after write when OSPREY_LDA_SCORES_ONLY is set.
+            // Uses F10 to avoid banker's-vs-half-up text rounding mismatches with Rust.
+            if (Environment.GetEnvironmentVariable("OSPREY_DUMP_LDA_SCORES") == "1")
+            {
+                var sortedByEntry = matchArray.OrderBy(m => m.EntryId).ToArray();
+                using (var w = new StreamWriter("cs_lda_scores.txt"))
+                {
+                    w.WriteLine("entry_id\tis_decoy\tdiscriminant\tq_value");
+                    foreach (var m in sortedByEntry)
+                    {
+                        w.WriteLine(string.Format(
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            "{0}\t{1}\t{2:F10}\t{3:F10}",
+                            m.EntryId,
+                            m.IsDecoy ? 1 : 0,
+                            m.DiscriminantScore,
+                            m.QValue));
+                    }
+                }
+                LogInfo(string.Format(
+                    "[COUNT] Wrote LDA scores dump (pass {0}): cs_lda_scores.txt ({1} entries)",
+                    passNumber, matchArray.Length));
+                if (Environment.GetEnvironmentVariable("OSPREY_LDA_SCORES_ONLY") == "1")
+                {
+                    LogInfo("[BISECT] OSPREY_LDA_SCORES_ONLY set - aborting after LDA dump");
+                    Environment.Exit(0);
+                }
+            }
+
             // Collect high-confidence target matches that also meet the S/N quality gate.
             var libRtsDetected = new List<double>();
             var measuredRtsDetected = new List<double>();
