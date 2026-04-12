@@ -487,9 +487,8 @@ namespace pwiz.Skyline.Model.IonMobility
         /// </summary>
         private static void MigrateSchema(string path)
         {
-            using (var connection = new System.Data.SQLite.SQLiteConnection(string.Format(@"Data Source=""{0}"";Version=3", path)))
+            using (var connection = Common.Database.SqliteOperations.OpenConnection(path))
             {
-                connection.Open();
                 if (!Common.Database.SqliteOperations.ColumnExists(connection, @"ionMobilityValues", @"IonMobilitySkewness"))
                 {
                     using (var cmd = connection.CreateCommand())
