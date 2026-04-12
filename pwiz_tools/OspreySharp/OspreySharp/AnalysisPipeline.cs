@@ -444,7 +444,41 @@ namespace pwiz.OspreySharp
             // RT calibration
             RTCalibration rtCalibration = null;
             MzCalibrationResult ms2Cal = MzCalibrationResult.Uncalibrated();
-            if (config.RtCalibration.Enabled)
+
+            // BISECT: load Rust's calibration JSON instead of computing our own.
+            // This eliminates calibration noise from the feature comparison.
+            // Usage: OSPREY_LOAD_CALIBRATION=Ste-...20.calibration.json
+            string loadCalPath = Environment.GetEnvironmentVariable("OSPREY_LOAD_CALIBRATION");
+            if (!string.IsNullOrEmpty(loadCalPath) && System.IO.File.Exists(loadCalPath))
+            {
+                LogInfo(string.Format("[BISECT] Loading calibration from: {0}", loadCalPath));
+                var calParams = CalibrationIO.LoadCalibration(loadCalPath);
+                if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                {
+                    var mp = calParams.RtCalibration.ModelParams;
+                    rtCalibration = RTCalibration.FromModelParams(
+                        mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                        calParams.RtCalibration.ResidualSD);
+                    LogInfo(string.Format("Loaded RT calibration: {0} points, R2={1:F4}",
+                        calParams.RtCalibration.NPoints, calParams.RtCalibration.RSquared));
+                }
+                if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
+                {
+                    ms2Cal = new MzCalibrationResult
+                    {
+                        Mean = calParams.Ms2Calibration.Mean,
+                        Median = calParams.Ms2Calibration.Median,
+                        SD = calParams.Ms2Calibration.SD,
+                        Count = calParams.Ms2Calibration.Count,
+                        Unit = calParams.Ms2Calibration.Unit,
+                        AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
+                        Calibrated = true
+                    };
+                    LogInfo(string.Format("Loaded MS2 calibration: mean={0:F4} {1}, SD={2:F4}",
+                        ms2Cal.Mean, ms2Cal.Unit, ms2Cal.SD));
+                }
+            }
+            else if (config.RtCalibration.Enabled)
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = RunCalibration(
@@ -2538,6 +2572,45 @@ namespace pwiz.OspreySharp
                     windowRts[apexAbsIdx], windowSpectra[apexAbsIdx].ScanNumber));
             }
 
+            // Append peak boundaries to search XIC diagnostic dump
+            if (diagSearchEntryIds != null && diagSearchEntryIds.Contains(candidate.Id))
+            {
+                string peakDumpPath = "cs_search_xic_entry_" + candidate.Id + ".txt";
+                using (var dw = new StreamWriter(peakDumpPath, true))
+                {
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# CWT PEAKS: {0} candidates", peaks.Count));
+                    dw.WriteLine("peak\tidx\tstart\tapex\tend\tcorr_score");
+                    for (int pi = 0; pi < peaks.Count; pi++)
+                    {
+                        var p = peaks[pi];
+                        int pLen = p.EndIndex - p.StartIndex + 1;
+                        double corrScore = 0.0;
+                        if (pLen >= 3)
+                        {
+                            double psum = 0.0; int pcnt = 0;
+                            for (int ii = 0; ii < xics.Count; ii++)
+                                for (int jj = ii + 1; jj < xics.Count; jj++)
+                                {
+                                    double c = PearsonCorrelation(xics[ii].Intensities, xics[jj].Intensities,
+                                        p.StartIndex, p.EndIndex);
+                                    if (!double.IsNaN(c)) { psum += c; pcnt++; }
+                                }
+                            corrScore = pcnt > 0 ? psum / pcnt : 0.0;
+                        }
+                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "peak\t{0}\t{1}\t{2}\t{3}\t{4:F10}",
+                            pi, p.StartIndex, p.ApexIndex, p.EndIndex, corrScore));
+                    }
+                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "# BEST PEAK: idx={0} start={1} apex={2} end={3}",
+                        bestPeakIdx,
+                        bestPeak != null ? bestPeak.StartIndex : -1,
+                        bestPeak != null ? bestPeak.ApexIndex : -1,
+                        bestPeak != null ? bestPeak.EndIndex : -1));
+                }
+            }
+
             if (bestPeak == null)
                 return null;
 
@@ -2584,10 +2657,12 @@ namespace pwiz.OspreySharp
             ComputeApexMatchFeatures(candidate, apexSpectrum, config,
                 out explainedIntensity, out massAccuracyMean, out absMassAccuracyMean);
 
-            // MS1 features: precursor coelution, isotope cosine
+            // MS1 features: precursor coelution, isotope cosine (HRAM only).
+            // Rust pipeline.rs:5148 gates on is_hram — unit resolution skips MS1.
             double ms1PrecursorCoelution = 0.0;
             double ms1IsotopeCosine = 0.0;
-            if (ms1Spectra != null && ms1Spectra.Count > 0)
+            bool isHram = config.ResolutionMode == Core.ResolutionMode.HRAM;
+            if (isHram && ms1Spectra != null && ms1Spectra.Count > 0)
             {
                 ComputeMs1Features(
                     candidate, xics, bestPeak,
@@ -2643,6 +2718,46 @@ namespace pwiz.OspreySharp
                     mpResidualRatio = TukeyMedianPolish.ResidualRatio(polish);
                     mpMinFragmentR2 = TukeyMedianPolish.MinFragmentR2(polish);
                     mpResidualCorr = TukeyMedianPolish.ResidualCorrelation(polish);
+
+                    // Median polish diagnostic for bisection
+                    string diagMpScan = Environment.GetEnvironmentVariable("OSPREY_DIAG_MP_SCAN");
+                    if (!string.IsNullOrEmpty(diagMpScan) &&
+                        apexSpectrum.ScanNumber.ToString() == diagMpScan &&
+                        candidate.ModifiedSequence != null &&
+                        candidate.ModifiedSequence.StartsWith("DECOY_ALQFAQWWK"))
+                    {
+                        using (var dw = new StreamWriter("cs_mp_diag.txt"))
+                        {
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "# Median polish diagnostic for {0} scan={1}", candidate.ModifiedSequence, apexSpectrum.ScanNumber));
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "# peak range: start={0} apex={1} end={2} len={3}",
+                                bestPeak.StartIndex, bestPeak.ApexIndex, bestPeak.EndIndex, peakLen));
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "# mp_cosine={0:F10} mp_rr={1:F10} mp_r2={2:F10} mp_rc={3:F10}",
+                                mpCosine, mpResidualRatio, mpMinFragmentR2, mpResidualCorr));
+                            // Dump elution profile
+                            dw.WriteLine("# ELUTION PROFILE (ColEffects)");
+                            for (int ep = 0; ep < polish.ColEffects.Length; ep++)
+                                dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                    "elution\t{0}\t{1:F10}", ep, polish.ColEffects[ep]));
+                            dw.WriteLine("# FRAGMENT EFFECTS (RowEffects)");
+                            for (int fe = 0; fe < polish.RowEffects.Length; fe++)
+                                dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                    "frag_effect\t{0}\t{1:F10}", fe, polish.RowEffects[fe]));
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "# grand_mean={0:F10}", polish.Overall));
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "# n_iterations={0} converged={1}", polish.NIterations, polish.Converged));
+                            // Dump input matrix (first fragment)
+                            dw.WriteLine("# INPUT MATRIX (frag_idx, scan_idx, value)");
+                            for (int xi = 0; xi < peakXics.Count; xi++)
+                                for (int s = 0; s < peakXics[xi].Value.Length; s++)
+                                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                        "input\t{0}\t{1}\t{2:F10}", xi, s, peakXics[xi].Value[s]));
+                        }
+                        LogInfo(string.Format("[BISECT] Wrote median polish diagnostic: cs_mp_diag.txt"));
+                    }
                 }
             }
 
@@ -2665,14 +2780,8 @@ namespace pwiz.OspreySharp
             features[14] = ms1IsotopeCosine;
             features[15] = mpCosine;
             features[16] = mpResidualRatio;
-            // sg_weighted_xcorr (17) and sg_weighted_cosine (18) require multi-scan
-            // Savitzky-Golay weighted scoring which is not yet ported. Leave at 0
-            // rather than aliasing xcorr/libcosine (which would inflate SVM separation).
-            // BISECT: sg_weighted_* features produced 2.2x more separation than
-            // Rust's equivalent features. Temporarily zero out to find convergence
-            // baseline. Revisit once the rest of the pipeline matches.
-            features[17] = 0.0;             // sg_weighted_xcorr (disabled for bisection)
-            features[18] = 0.0;             // sg_weighted_cosine (disabled for bisection)
+            features[17] = sgXcorr;
+            features[18] = sgCosine;
             features[19] = mpMinFragmentR2;
             features[20] = mpResidualCorr;
 
@@ -2800,9 +2909,11 @@ namespace pwiz.OspreySharp
             if (xics.Count < 2)
                 return;
 
-            // Per-fragment best positive correlation — a fragment is "coeluting" if any
-            // of its pairwise correlations is > 0.
-            bool[] anyPositive = new bool[xics.Count];
+            // Per-fragment mean pairwise correlation. A fragment is "coeluting" if
+            // its mean pairwise correlation is > 0. Matches Rust pipeline.rs:5049-5058
+            // which averages per_frag_corr_sum[i]/count and checks > 0.
+            double[] fragCorrSum = new double[xics.Count];
+            int[] fragCorrCount = new int[xics.Count];
             bool haveAny = false;
             double minCorr = double.PositiveInfinity;
             double maxCorr = double.NegativeInfinity;
@@ -2822,11 +2933,10 @@ namespace pwiz.OspreySharp
                     if (corr > maxCorr) maxCorr = corr;
                     haveAny = true;
 
-                    if (corr > 0.0)
-                    {
-                        anyPositive[i] = true;
-                        anyPositive[j] = true;
-                    }
+                    fragCorrSum[i] += corr;
+                    fragCorrCount[i]++;
+                    fragCorrSum[j] += corr;
+                    fragCorrCount[j]++;
                 }
             }
 
@@ -2836,9 +2946,9 @@ namespace pwiz.OspreySharp
                 max = maxCorr;
             }
 
-            for (int i = 0; i < anyPositive.Length; i++)
+            for (int i = 0; i < xics.Count; i++)
             {
-                if (anyPositive[i])
+                if (fragCorrCount[i] > 0 && fragCorrSum[i] / fragCorrCount[i] > 0.0)
                     nCoeluting++;
             }
         }
@@ -2967,16 +3077,20 @@ namespace pwiz.OspreySharp
                 double upper = frag.Mz + tolDa;
 
                 int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                double bestError = double.MaxValue;
                 double bestIntensity = 0.0;
                 double bestMz = 0.0;
                 bool found = false;
 
+                // Match closest peak by m/z (not most intense).
+                // Matches Rust SpectralScorer::match_fragments in lib.rs:2239.
                 for (int k = lo; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
                 {
-                    double intensity = apexSpectrum.Intensities[k];
-                    if (intensity > bestIntensity)
+                    double errorDa = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
+                    if (errorDa < bestError)
                     {
-                        bestIntensity = intensity;
+                        bestError = errorDa;
+                        bestIntensity = apexSpectrum.Intensities[k];
                         bestMz = apexSpectrum.Mzs[k];
                         found = true;
                     }

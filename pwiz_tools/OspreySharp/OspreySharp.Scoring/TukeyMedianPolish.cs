@@ -123,13 +123,20 @@ namespace pwiz.OspreySharp.Scoring
             for (int iteration = 0; iteration < maxIter; iteration++)
             {
                 nIter = iteration + 1;
-                double maxChange = 0.0;
+
+                // Save old residuals for convergence check (matches Rust).
+                // Rust checks max|new - old| AFTER both sweeps complete,
+                // not incrementally during each sweep.
+                double[][] oldResiduals = new double[nFrags][];
+                for (int f = 0; f < nFrags; f++)
+                {
+                    oldResiduals[f] = new double[nScans];
+                    Array.Copy(residuals[f], oldResiduals[f], nScans);
+                }
 
                 // Row sweep: subtract nanmedian of each row
                 for (int f = 0; f < nFrags; f++)
-                {
                     rowMedians[f] = NanMedian(residuals[f]);
-                }
 
                 for (int f = 0; f < nFrags; f++)
                 {
@@ -138,16 +145,8 @@ namespace pwiz.OspreySharp.Scoring
                     {
                         var row = residuals[f];
                         for (int s = 0; s < nScans; s++)
-                        {
-                            double val = row[s];
-                            if (IsFinite(val))
-                            {
-                                double newVal = val - rm;
-                                double diff = Math.Abs(newVal - val);
-                                if (diff > maxChange) maxChange = diff;
-                                row[s] = newVal;
-                            }
-                        }
+                            if (IsFinite(row[s]))
+                                row[s] -= rm;
                     }
                 }
 
@@ -175,15 +174,9 @@ namespace pwiz.OspreySharp.Scoring
                     var row = residuals[f];
                     for (int s = 0; s < nScans; s++)
                     {
-                        double val = row[s];
                         double cm = colMedians[s];
-                        if (IsFinite(val) && IsFinite(cm))
-                        {
-                            double newVal = val - cm;
-                            double diff = Math.Abs(newVal - val);
-                            if (diff > maxChange) maxChange = diff;
-                            row[s] = newVal;
-                        }
+                        if (IsFinite(row[s]) && IsFinite(cm))
+                            row[s] -= cm;
                     }
                 }
 
@@ -197,6 +190,20 @@ namespace pwiz.OspreySharp.Scoring
                     }
                     overall += medianOfColMedians;
                 }
+
+                // Convergence: max|new_residual - old_residual| after both sweeps
+                double maxChange = 0.0;
+                for (int f = 0; f < nFrags; f++)
+                    for (int s = 0; s < nScans; s++)
+                    {
+                        double n = residuals[f][s];
+                        double o = oldResiduals[f][s];
+                        if (IsFinite(n) && IsFinite(o))
+                        {
+                            double d = Math.Abs(n - o);
+                            if (d > maxChange) maxChange = d;
+                        }
+                    }
 
                 if (maxChange < tol)
                 {
