@@ -78,7 +78,8 @@ namespace pwiz.Skyline.Model.Results
 
         private class IonMobilityFit
         {
-            public IonMobilityFit(int fileIndex, double rt, double im, double? ccs, double iDotP, double intensityM0, double intensityMminus1)
+            public IonMobilityFit(int fileIndex, double rt, double im, double? ccs, double iDotP, double intensityM0, double intensityMminus1,
+                double ionMobilitySkewness = 0)
             {
                 FileIndex = fileIndex;
                 RetentionTime = rt;
@@ -87,15 +88,17 @@ namespace pwiz.Skyline.Model.Results
                 IdotP = iDotP;
                 IntensityM0 = intensityM0;
                 IntensityMminus1 = intensityMminus1;
+                IonMobilitySkewness = ionMobilitySkewness;
             }
 
             public int FileIndex { get; }
             public double RetentionTime { get; } // RT at which this mobility was measured
-            public double IonMobility { get; } 
+            public double IonMobility { get; }
             public double? CCS { get; set; }
             public double IdotP { get; }
             public double IntensityM0 { get; } // M0 intensity
             public double IntensityMminus1 { get; } //M-1 intensity
+            public double IonMobilitySkewness { get; } // Skewness of the ion mobility peak within the extraction window
 
             private double RatioMm1ToM0 => IntensityM0 == 0 ? double.MaxValue : (IntensityMminus1/IntensityM0);
 
@@ -244,7 +247,8 @@ namespace pwiz.Skyline.Model.Results
                         }
                         highEnergyIonMobilityValueOffset = ms2IonMobilityFit == null ? 0 : Math.Round(ms2IonMobilityFit.IonMobility - ms1IonMobilityFit.IonMobility, 6); // Excessive precision is just distracting noise TODO(bspratt) ask vendors what "excessive" means here
                     }
-                    var value =  IonMobilityAndCCS.GetIonMobilityAndCCS(ms1IonMobilityFit.IonMobility, _ionMobilityUnits, ms1IonMobilityFit.CCS, highEnergyIonMobilityValueOffset);
+                    double? skewness = ms1IonMobilityFit.IonMobilitySkewness != 0 ? ms1IonMobilityFit.IonMobilitySkewness : (double?)null;
+                    var value =  IonMobilityAndCCS.GetIonMobilityAndCCS(ms1IonMobilityFit.IonMobility, _ionMobilityUnits, ms1IonMobilityFit.CCS, highEnergyIonMobilityValueOffset, skewness);
                     measured[fitMS1.Key] = value;
                 }
                 // Check for data for which we have only MS2 to go on
@@ -263,7 +267,8 @@ namespace pwiz.Skyline.Model.Results
                                 ccs = _msDataFileScanHelper.CCSFromIonMobility(bestFit.IonMobility,
                                     mz, im.Key.Charge);
                             }
-                            measured[im.Key] = IonMobilityAndCCS.GetIonMobilityAndCCS(bestFit.IonMobility, _ionMobilityUnits, ccs, null);
+                            double? skewness = bestFit.IonMobilitySkewness != 0 ? bestFit.IonMobilitySkewness : (double?)null;
+                            measured[im.Key] = IonMobilityAndCCS.GetIonMobilityAndCCS(bestFit.IonMobility, _ionMobilityUnits, ccs, null, skewness);
                         }
                     }
                 }
@@ -617,13 +622,14 @@ namespace pwiz.Skyline.Model.Results
 
             // Use the same IM window size as in chromatogram extraction
             var windowedIsotopeIntensitiesPerIM = new List<KeyValuePair<double, double[]>>();
+            var skewnessPerIM = new List<double>(); // Skewness of the ion mobility peak within the extraction window
             var observedIMs = isotopeIntensitiesPerIM.Keys.ToArray();
             observedIMs.Sort();
             var imMax = observedIMs.LastOrDefault();
             for (var indexIM = 0; indexIM < observedIMs.Length; indexIM++)
             {
                 var observedIM = observedIMs[indexIM];
-                var ionMobilityHalfWindow = _filterWindowWidthCalculator.WidthAt(observedIM, imMax)/2;
+                var ionMobilityHalfWindow = (_filterWindowWidthCalculator.WidthAt(observedIM, imMax).Width??0.0)/2;
                 if (ionMobilityHalfWindow <= 0)
                 {
                     throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_, 
@@ -644,9 +650,10 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Note the IM of the most intense point within the window (these peaks are not symmetrical)
-                // TODO:(bspratt) preserve that asymmetry information
                 var peakIM = observedIM;
                 var intensityAtPeakIM = isotopeIntensities.Skip(indexM0).Sum();
+                var windowIMs = new List<double> { observedIM };
+                var windowIntensities = new List<double> { intensityAtPeakIM };
 
                 for (var indexNeighborIM = indexLeft + 1; indexNeighborIM < indexRight; indexNeighborIM++)
                 {
@@ -659,6 +666,8 @@ namespace pwiz.Skyline.Model.Results
                             windowedIsotopeIntensities[isotopeIndex] += isotopeIntensitiesNeighbor[isotopeIndex];
                         }
                         var intensityAtNeighborIM = isotopeIntensitiesNeighbor.Skip(indexM0).Sum();
+                        windowIMs.Add(neighborIM);
+                        windowIntensities.Add(Math.Max(0, intensityAtNeighborIM));
                         if (intensityAtNeighborIM > intensityAtPeakIM)
                         {
                             intensityAtPeakIM = intensityAtNeighborIM;
@@ -667,14 +676,26 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
+                // Compute skewness of the IM peak within the extraction window
+                // Sort by IM for PeakShapeStatistics which expects ordered "times"
+                var sortedIndices = Enumerable.Range(0, windowIMs.Count).OrderBy(i => windowIMs[i]).ToArray();
+                var sortedIMs = sortedIndices.Select(i => windowIMs[i]).ToList();
+                var sortedIntensities = sortedIndices.Select(i => windowIntensities[i]).ToList();
+                var peakStats = PeakShapeStatistics.Calculate(sortedIMs, sortedIntensities);
+                double skewness = peakStats != null && !double.IsNaN(peakStats.Skewness) && !double.IsInfinity(peakStats.Skewness)
+                    ? Math.Round(peakStats.Skewness, 4)
+                    : 0;
+
                 windowedIsotopeIntensitiesPerIM.Add(new KeyValuePair<double, double[]>(peakIM, windowedIsotopeIntensities));
+                skewnessPerIM.Add(skewness);
             }
 
 
             if (statExpectedIsotopeProportions.Sum() != 0)
             {
-                foreach (var isotopeIntensitiesThisIM in windowedIsotopeIntensitiesPerIM)
+                for (var iWin = 0; iWin < windowedIsotopeIntensitiesPerIM.Count; iWin++)
                 {
+                    var isotopeIntensitiesThisIM = windowedIsotopeIntensitiesPerIM[iWin];
                     // Reject anything with no signal where at least 10% of the distribution is expected
                     // (It's hard to pick apart excessive signal from interference, but lack of signal is an obvious hint)
                     if (!expectedIsotopeProportions.Where((proportion, i) => proportion >= 0.10 &&
@@ -686,7 +707,8 @@ namespace pwiz.Skyline.Model.Results
                         if (!double.IsNaN(isotopeDotProduct) && isotopeDotProduct >= 0)
                         {
                             var fit = new IonMobilityFit(fileIndex, rt, isotopeIntensitiesThisIM.Key, null, // We'll calculate CCS later
-                                isotopeDotProduct, isotopeIntensitiesThisIM.Value[indexM0], indexM0 > 0 ? isotopeIntensitiesThisIM.Value[indexM0-1] : 0);
+                                isotopeDotProduct, isotopeIntensitiesThisIM.Value[indexM0], indexM0 > 0 ? isotopeIntensitiesThisIM.Value[indexM0-1] : 0,
+                                skewnessPerIM[iWin]);
                             if (fit.BetterThan(bestFit)) // IonMobilityFit.Compare sorts best->worst
                             {
                                 bestFit = fit; // This is a better fit than whatever we had, if any

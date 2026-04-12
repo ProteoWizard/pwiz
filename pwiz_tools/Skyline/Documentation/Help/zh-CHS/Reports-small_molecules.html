@@ -558,6 +558,7 @@ td {
 <tr><td class="ColumnCaption">离子迁移 MS1</td><td class="ColumnDescription">在母离子色谱图提取中使用的离子迁移过滤器窗口的中心。</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">离子迁移碎片</td><td class="ColumnDescription">在子离子色谱图提取中使用的离子迁移过滤器窗口的中心。这可能不同于母离子的值，因为子离子可能由于能量碰撞更多而移动得更快，</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">离子迁移窗口</td><td class="ColumnDescription">在色谱图提取中使用的离子迁移过滤器窗口的宽度。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ion Mobility Window Offset</td><td class="ColumnDescription">Offset of the ion mobility filter window used in chromatogram extraction from nominal ion mobility.</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">离子迁移单位</td><td class="ColumnDescription">在色谱图提取中使用的离子迁移的单位。</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">母离子定量</td><td class="ColumnDescription">与使用同位素响应曲线来量化母离子结果相关的值。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult">PrecursorQuantificationResult</a></td></tr>
 <tr><td class="ColumnCaption">液相色谱峰离子指标 MS1</td><td class="ColumnDescription">在峰积分边界间采集 MS1 谱图时，质谱仪内离子数量的相关数值</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.LcPeakIonMetrics">LcPeakIonMetrics</a></td></tr>
@@ -746,6 +747,7 @@ td {
 <tr><td class="ColumnCaption">色谱图结束时间</td><td class="ColumnDescription">色谱图中的最后保留时间</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">色谱图离子迁移</td><td class="ColumnDescription">在色谱图提取过程中用于过滤谱图的离子迁移窗口中心</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">色谱图离子迁移提取宽度</td><td class="ColumnDescription">在色谱图提取过程中用于过滤谱图的离子迁移窗口全宽</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Chromatogram Ion Mobility Extraction Offset</td><td class="ColumnDescription">Offset from nominal ion mobility of the window that was used to filter spectra during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">色谱图离子迁移单位</td><td class="ColumnDescription">色谱图离子迁移和色谱图离子迁移提取宽度的单位</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">色谱图源</td><td class="ColumnDescription">提取色谱图所用的扫描类型：“片段”、“sim”、“ms1”或“未知”之一</td><td class="ColumnType">ChromSource</td></tr>
 <tr><td class="ColumnCaption">原始数据</td><td class="ColumnDescription">原始（未内插）的色谱图数据。色谱图的间隔时间不均匀，每个离子对的色谱图可能具有不同的点数。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram+Data">Data</a></td></tr>

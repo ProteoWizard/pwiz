@@ -926,6 +926,9 @@
   <data name="IonMobilityAndCCS_HighEnergyIonMobilityValueOffset" xml:space="preserve">
     <value>Offset ion mobility values for high energy spectra</value>
   </data>
+  <data name="IonMobilityAndCCS_IonMobilitySkewness" xml:space="preserve">
+    <value>Ion mobility peak skewness</value>
+  </data>
   <data name="IonMobilityAndCCS_Units" xml:space="preserve">
     <value>Ion mobility units</value>
   </data>

@@ -43,6 +43,7 @@
     <property name="IonMobility"/>
     <property name="IonMobilityUnits"/>
     <property name="HighEnergyIonMobilityOffset"/>
+    <property name="IonMobilitySkewness"/>
   </class>
 
 

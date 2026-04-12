@@ -412,7 +412,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if(_documentContainer is ISpectrumScaleProvider scaleProvider)
                     requestedRange = scaleProvider.GetMzRange(SpectrumControlType.FullScanViewer) ?? requestedRange;
-            } 
+            }
 
             ZoomXAxis(axis, requestedRange.Min, requestedRange.Max);
         }
@@ -1652,7 +1652,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void FireZoomEvent(ZoomState zoomState = null)
         {
-            if (ZoomEvent != null && Settings.Default.SyncMZScale)
+            if (ZoomEvent != null)
             {
                 if (zoomState == null)
                     zoomState = new ZoomState(GraphPane, ZoomState.StateType.Zoom);
@@ -1819,8 +1819,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 new[]
                 {
                     new ChromTransition(chromData.Mz, 0,
-                        (float) (ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility ?? 0),
-                        (float) (ionMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
+                        ionMobilityFilter,
                         ChromSource.unknown, transitionChromInfo.OptimizationStep),
                 }, peaks, TimeIntensitiesGroup.Singleton(timeIntensities));
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);

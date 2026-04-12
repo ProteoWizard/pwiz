@@ -1038,7 +1038,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (imAndCCS.IonMobility.Mobility.HasValue) // Did CCS conversion succeed?
                 {
                     // Now get the window width
-                    var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
+                    var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility, ionMobilityMax);
                     return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
                 }
             }
@@ -1056,7 +1056,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     imAndCCS = imAndCCS.ChangeCollisionalCrossSection(ccs);
                 }
                 // Now get the window width
-                var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
+                var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility, ionMobilityMax);
                 return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
             }
             // Use library values
@@ -1074,7 +1074,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var binRange = instrumentInfo.SonarMzToBinRange(mz, windowMz / 2); // Convert to SONAR bin range
             return IonMobilityFilter.GetIonMobilityFilter( IonMobilityAndCCS.GetIonMobilityAndCCS(0.5 * (binRange.Item1 + binRange.Item2),
                     eIonMobilityUnits.waters_sonar, null, null),
-                (binRange.Item2 - binRange.Item1) + IonMobilityFilter.DoubleToIntEpsilon); // Add a tiny bit to window size to account for double->int rounding in center value
+                IonMobilityFilterWindow.FromWidthAndOffset(binRange.Item2 - binRange.Item1 + IonMobilityFilter.DoubleToIntEpsilon, null)); // Add a tiny bit to window size to account for double->int rounding in center value
         }
 
         /// <summary>
@@ -1102,7 +1102,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     var imAndCCS = libraryIonMobilityInfo.GetLibraryMeasuredIonMobilityAndCCS(chargedPeptide, nodeGroup.PrecursorMz, ionMobilityFunctionsProvider);
                     if (imAndCCS.IonMobility.HasValue && TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues)
                     {
-                        var ionMobilityWindow = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
+                        var ionMobilityWindow = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility, ionMobilityMax);
                         result = IonMobilityFilter.GetIonMobilityFilter(imAndCCS, ionMobilityWindow);
                         break;
                     }

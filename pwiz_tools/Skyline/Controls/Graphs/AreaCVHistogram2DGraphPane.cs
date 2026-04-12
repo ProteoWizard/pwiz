@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 .Select(d => new HeatMapData.TaggedPoint3D(new Point3D(d.MeanArea, d.CV * factor, d.Frequency), d))
                 .ToList();
             Items = points.Count; // Because heatmaps can't be trusted to have a consistent number of points on all monitors
-            _heatMapData = new HeatMapData(points, HeatMapZAxisName);
+            _heatMapData = new HeatMapData(points, false, HeatMapZAxisName);
             HeatMapGraphPane.GraphHeatMap(this, _heatMapData, 17, 2, (float)(_areaCVGraphData.MinCV * factor), (float)(_areaCVGraphData.MaxCV * factor), Settings.Default.AreaCVLogScale, 0);
 
             var unit = _percentage ? @"%" : string.Empty;

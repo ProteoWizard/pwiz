@@ -64,8 +64,9 @@ namespace pwiz.Skyline.Model.Results
             OptStep = precursorTextId.OptStep;
             CollisionEnergy = precursorTextId.CollisionEnergy;
             IonMobilityInfo = precursorTextId.IonMobility;
-            MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
-            MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
+            precursorTextId.IonMobility.GetBounds(out double? imWinLow, out double? imWinHigh);
+            MinIonMobilityValue = imWinLow;
+            MaxIonMobilityValue = imWinHigh;
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
@@ -103,7 +104,7 @@ namespace pwiz.Skyline.Model.Results
         private int _knownWindowGroupsBitField; // For DIA PASEF
         public int? OptStep { get; }
         private double? CollisionEnergy { get; }
-        private IonMobilityFilter IonMobilityInfo { get; set; }
+        public IonMobilityFilter IonMobilityInfo { get; private set; }
         private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
         internal SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
@@ -401,7 +402,7 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < targetCount; i++)
                     extractedIntensities[i] *= scale;
             }
-            var dtFilter = GetIonMobilityWindow();
+            var dtFilter = IonMobilityInfo;
             var result = new ExtractedSpectrum(ChromatogramGroupId,
                 PeptideColor,
                 Q1,
@@ -454,7 +455,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (null != productFilters)
             {
-                var ionMobilityFilter = GetIonMobilityWindow();
+                var ionMobilityFilter = IonMobilityInfo;
                 foreach (var spectrumProductFilter in productFilters)
                 {
                     spectrumProductFilter.FilterId = listChromKeys.Count;
@@ -492,21 +493,6 @@ namespace pwiz.Skyline.Model.Results
         {
             return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value + highEnergyOffsetLow <= ionMobilityValue) &&
                    (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value + highEnergyOffsetHigh >= ionMobilityValue);
-        }
-
-        public IonMobilityFilter GetIonMobilityWindow()
-        {
-            if (MinIonMobilityValue.HasValue && MaxIonMobilityValue.HasValue)
-            {
-                // High energy (product ion) scans may have a faster ion mobility, as in Waters MsE, that gets applied elsewhere
-                var width = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
-                var center = MinIonMobilityValue.Value + 0.5*width;
-                return IonMobilityFilter.GetIonMobilityFilter(center, IonMobilityInfo.IonMobility.Units, width, IonMobilityInfo.CollisionalCrossSectionSqA);
-            }
-            else
-            {
-                return IonMobilityFilter.EMPTY;
-            }
         }
 
         public bool GetIsKnownWindowGroup(int windowGroup)

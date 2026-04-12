@@ -566,7 +566,7 @@ namespace pwiz.SkylineTestFunctional
                 null, null, driftTimeMax);
             Assert.AreEqual(TESTVALUES_GROUP.IonMobility.Value, centerDriftTime.IonMobilityAndCCS.IonMobility.Mobility.Value, .0001);
             Assert.AreEqual(TESTVALUES_TRAN.IonMobilityHighEnergyOffset.Value, centerDriftTime.HighEnergyIonMobilityOffset ?? 0, .0001);
-            Assert.AreEqual(0.156, centerDriftTime.IonMobilityExtractionWindowWidth??0, .0001);
+            Assert.AreEqual(0.156, centerDriftTime.IonMobilityFilterWindow.Width??0, .0001);
 
             // Verify that tree selection doesn't change just because we changed an ID object
             // (formerly the tree node would collapse and focus would jump up a level)

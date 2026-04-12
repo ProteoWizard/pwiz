@@ -282,6 +282,9 @@
   <data name="ChromatogramIonMobility">
     <value>Chromatogram Ion Mobility</value>
   </data>
+  <data name="ChromatogramIonMobilityExtractionOffset">
+    <value>Chromatogram Ion Mobility Extraction Offset</value>
+  </data>
   <data name="ChromatogramIonMobilityExtractionWidth">
     <value>Chromatogram Ion Mobility Extraction Width</value>
   </data>
@@ -614,6 +617,9 @@
   </data>
   <data name="IonMobilityWindow">
     <value>Ion Mobility Window</value>
+  </data>
+  <data name="IonMobilityWindowOffset">
+    <value>Ion Mobility Window Offset</value>
   </data>
   <data name="IonName">
     <value>Ion Name</value>

@@ -341,7 +341,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // For FAIMS chromatogram extraction is a special case for non-contiguous scans, so create convenient subsets of filters
                 foreach (var cv in _filterMzValues.Where(f => f.HasIonMobilityFAIMS())
-                    .Select(f => f.GetIonMobilityWindow().IonMobility.Mobility.Value).Distinct())
+                    .Select(f => f.IonMobilityInfo.IonMobility.Mobility.Value).Distinct())
                 {
                     if (_filterMzValuesFAIMSDict == null)
                     {
@@ -349,7 +349,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     var filterCV = _filterMzValues.Where(f =>
                         !f.HasIonMobilityFAIMS() || // TIC, base peak
-                        Equals(cv, f.GetIonMobilityWindow().IonMobility.Mobility.Value))
+                        Equals(cv, f.IonMobilityInfo.IonMobility.Mobility.Value))
                         .ToArray();
                     _filterMzValuesFAIMSDict.Add(cv, filterCV);
                 }
@@ -456,7 +456,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!filter.HasBestWindowGroup)
                         {
                             // No actual overlap in [isolation,IM] space
-                            Messages.WriteAsyncUserMessage(string.Format(ResultsResources.SpectrumFilter_No_Isolation_Window_Found_For_Precursor_, msDataFileUri.GetFileName(), filter.ChromatogramGroupId.Target, filter.Q1, filter.GetIonMobilityWindow()));
+                            Messages.WriteAsyncUserMessage(string.Format(ResultsResources.SpectrumFilter_No_Isolation_Window_Found_For_Precursor_, msDataFileUri.GetFileName(), filter.ChromatogramGroupId.Target, filter.Q1, filter.IonMobilityInfo.IonMobilityFilterWindow));
                             filter.ProposeBestWindowGroup(WINDOWGROUP_NONE,float.Epsilon, double.MaxValue);
                         }
                         else

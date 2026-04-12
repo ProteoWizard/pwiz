@@ -25,6 +25,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -196,7 +197,7 @@ namespace pwiz.Skyline.Model.Results
                     maxIonMobility = Math.Max(maxIonMobility, mzHigh); 
                     hasIonMobilityInfo = true; // Well, not really ion mobility info - the drift time dimension is really precursor m/z space
                 }
-                else if (!transition.IonMobilityInfo.HasIonMobilityValue || !transition.IonMobilityInfo.IonMobilityExtractionWindowWidth.HasValue)
+                else if (!transition.IonMobilityInfo.HasIonMobilityValue || IonMobilityFilterWindow.IsNullOrEmpty(transition.IonMobilityInfo.IonMobilityFilterWindow))
                 {
                     // Accept all values
                     minIonMobility = double.MinValue;
@@ -207,9 +208,7 @@ namespace pwiz.Skyline.Model.Results
                           (!clickedTransitionMatchesSource || i == TransitionIndex)))
                 {
                     // Products and precursors may have different expected ion mobility values in Waters MsE
-                    double startIM = transition.IonMobilityInfo.IonMobility.Mobility.Value -
-                                        transition.IonMobilityInfo.IonMobilityExtractionWindowWidth.Value / 2;
-                    double endIM = startIM + transition.IonMobilityInfo.IonMobilityExtractionWindowWidth.Value;
+                    transition.IonMobilityInfo.GetBounds(out double startIM, out double endIM);
                     minIonMobility = Math.Min(minIonMobility, startIM);
                     maxIonMobility = Math.Max(maxIonMobility, endIM);
                     hasIonMobilityInfo = true;

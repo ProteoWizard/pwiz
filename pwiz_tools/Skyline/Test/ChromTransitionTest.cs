@@ -18,6 +18,7 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -82,7 +83,8 @@ namespace pwiz.SkylineTest
         {
             Assert.AreEqual(4, sizeof(ChromTransition4));
             Assert.AreEqual(16, sizeof(ChromTransition5));
-            Assert.AreEqual(24, ChromTransition.GetStructSize(CacheFormatVersion.CURRENT));
+            Assert.AreEqual(24, ChromTransition.GetStructSize(CacheFormatVersion.Eighteen));
+            Assert.AreEqual(28, ChromTransition.GetStructSize(CacheFormatVersion.CURRENT));
         }
 
         /// <summary>
@@ -110,7 +112,7 @@ namespace pwiz.SkylineTest
 
         private ChromTransition MakeChromTransition(ChromSource chromSource)
         {
-            return new ChromTransition(0, 0, 0, 0, chromSource, 0);
+            return new ChromTransition(0, 0, IonMobilityFilter.EMPTY, chromSource, 0);
         }
     }
 }

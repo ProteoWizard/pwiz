@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model
         [Category("PrecursorInfo")] public string IsolationWindow { get; set; }
         [Category("PrecursorInfo")] public string DissociationMethod { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityRange { get; set; }
-        [Category("AcquisitionInfo")] public string IonMobilityFilterRange { get; set; }
+        [Category("PrecursorInfo")] public string IonMobilityFilterRange { get; set; }
         [Category("PrecursorInfo")] public string HighEnergyOffset { get; set; }
         [Category("AcquisitionInfo")] public string ScanId { get; set; }
         [Category("AcquisitionInfo")] public string CE { get; set; }

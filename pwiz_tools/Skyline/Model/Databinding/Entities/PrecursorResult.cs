@@ -190,7 +190,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
         public double? IonMobilityFragment { get { return ChromInfo.IonMobilityInfo.IonMobilityFragment; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? IonMobilityWindow { get { return ChromInfo.IonMobilityInfo.IonMobilityWindow; } }
+        public double? IonMobilityWindow { get { return ChromInfo.IonMobilityInfo.IonMobilityFilterWindow.Width; } }
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? IonMobilityWindowOffset { get { return ChromInfo.IonMobilityInfo.IonMobilityFilterWindow.Offset; } }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public string IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnitsL10NString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }

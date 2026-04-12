@@ -53,7 +53,7 @@ message SkylineDocumentProto {
 		float startRetentionTime = 5;
 		float endRetentionTime = 6;
 		google.protobuf.DoubleValue ionMobility = 7;
-		google.protobuf.DoubleValue ionMobilityWindow = 8;
+		google.protobuf.DoubleValue ionMobilityWindow = 8; // Width of ion mobility filter - see also ionMobilityWindowLow = 28;
 		float area = 9;
 		float backgroundArea = 10;
 		float height = 11;
@@ -76,6 +76,7 @@ message SkylineDocumentProto {
 			float kurtosis = 3;
 			float shapeCorrelation = 4;
 		}
+		google.protobuf.DoubleValue ionMobilityWindowOffset = 28; // Ion mobility extraction window is not necessarily centered on the nominal IM value
 	}
 	message TransitionResults {
 		repeated TransitionPeak peaks = 1;

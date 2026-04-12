@@ -124,7 +124,11 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat PEAK_IMPUTATION = VERSION_25_11;
         public static readonly DocumentFormat ELECTRON_IONIZATION = VERSION_25_11; // Adds Electron Ionization support
         public static readonly DocumentFormat VERSION_26_1 = new DocumentFormat(26.1); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_26_1;
+
+        public static readonly DocumentFormat VERSION_26_11 = new DocumentFormat(26.11); // ion_mobility_window_offset: filter windows are not assumed symmetrical
+        public static readonly DocumentFormat ION_MOBILITY_FILTER_SKEW = VERSION_26_11;
+
+        public static readonly DocumentFormat CURRENT = VERSION_26_11;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)
