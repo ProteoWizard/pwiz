@@ -2553,7 +2553,19 @@ namespace pwiz.Skyline.Properties {
                 this["AreaCVLogScale"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RtLoessShowNormalized {
+            get {
+                return ((bool)(this["RtLoessShowNormalized"]));
+            }
+            set {
+                this["RtLoessShowNormalized"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("NaN")]

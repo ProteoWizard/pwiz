@@ -485,6 +485,69 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Global Median.
+        /// </summary>
+        public static string AreaRtLoessGraphPane_Global_Median {
+            get {
+                return ResourceManager.GetString("AreaRtLoessGraphPane_Global_Median", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Log2 Abundance.
+        /// </summary>
+        public static string AreaRtLoessGraphPane_Log2_Abundance {
+            get {
+                return ResourceManager.GetString("AreaRtLoessGraphPane_Log2_Abundance", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Log2 Adjustment.
+        /// </summary>
+        public static string AreaRtLoessGraphPane_Log2_Adjustment {
+            get {
+                return ResourceManager.GetString("AreaRtLoessGraphPane_Log2_Adjustment", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No RT LOESS data available.
+        /// </summary>
+        public static string AreaRtLoessGraphPane_No_RT_LOESS_Data {
+            get {
+                return ResourceManager.GetString("AreaRtLoessGraphPane_No_RT_LOESS_Data", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time (min).
+        /// </summary>
+        public static string AreaRtLoessGraphPane_Retention_Time__min_ {
+            get {
+                return ResourceManager.GetString("AreaRtLoessGraphPane_Retention_Time__min_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to RT LOESS Curves.
+        /// </summary>
+        public static string AreaRtLoessGraphPane_RT_LOESS_Curves {
+            get {
+                return ResourceManager.GetString("AreaRtLoessGraphPane_RT_LOESS_Curves", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to RT LOESS Curves (Normalized).
+        /// </summary>
+        public static string AreaRtLoessGraphPane_RT_LOESS_Curves_Normalized {
+            get {
+                return ResourceManager.GetString("AreaRtLoessGraphPane_RT_LOESS_Curves_Normalized", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Intensity.
         /// </summary>
         public static string AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity {
@@ -960,7 +1023,16 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("Extensions_CustomToString_Replicate_Comparison", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to RT LOESS Curves.
+        /// </summary>
+        public static string Extensions_CustomToString_RT_LOESS_Curves {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_RT_LOESS_Curves", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Run To Run Regression.
         /// </summary>

@@ -61,6 +61,11 @@ namespace pwiz.Skyline.Menus
             {
                 SkylineWindow.EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SkylineWindow.SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
             }
+            else if (graphType == GraphTypeSummary.rt_loess)
+            {
+                rtLoessShowNormalizedContextMenuItem.Checked = Settings.Default.RtLoessShowNormalized;
+                menuStrip.Items.Insert(iInsert++, rtLoessShowNormalizedContextMenuItem);
+            }
             else if (graphType != GraphTypeSummary.abundance && graphType != GraphTypeSummary.abundance_comparison)
             {
                 AddTransitionContextMenu(menuStrip, iInsert++);
@@ -400,6 +405,7 @@ namespace pwiz.Skyline.Menus
             areaAbundanceComparisonContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance_comparison);
             areaCVHistogramContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
+            areaRtLoessContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.rt_loess);
         }
 
         private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)
@@ -419,6 +425,15 @@ namespace pwiz.Skyline.Menus
 
         private void areaCVHistogram2DToolStripMenuItem1_Click(object sender, EventArgs e)
             => SkylineWindow.ShowPeakAreaCVHistogram2D();
+
+        private void areaRtLoessMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.ShowPeakAreaRtLoessGraph();
+
+        private void rtLoessShowNormalizedMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.RtLoessShowNormalized = !Settings.Default.RtLoessShowNormalized;
+            SkylineWindow.UpdatePeakAreaGraph();
+        }
 
         private void barAreaGraphTypeMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.SetAreaGraphDisplayType(AreaGraphDisplayType.bars);

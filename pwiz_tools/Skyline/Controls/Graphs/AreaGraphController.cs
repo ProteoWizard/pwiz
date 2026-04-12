@@ -234,6 +234,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!(pane is AreaCVHistogram2DGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaCVHistogram2DGraphPane(GraphSummary)  };
                     break;
+                case GraphTypeSummary.rt_loess:
+                    if (!(pane is AreaRtLoessGraphPane))
+                        GraphSummary.GraphPanes = new[] { new AreaRtLoessGraphPane(GraphSummary) };
+                    break;
             }
 
             if (!ReferenceEquals(GraphSummary.GraphPanes.FirstOrDefault(), pane))

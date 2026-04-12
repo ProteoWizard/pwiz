@@ -90,17 +90,17 @@ namespace pwiz.Common.DataAnalysis
         public double[] ColumnEffects { get; set; }
         public double?[,] Residuals { get; set; }
 
-        public static IEnumerable<double?> GetRow(double?[,] matrix, int rowIndex)
+        private static IEnumerable<double?> GetRow(double?[,] matrix, int rowIndex)
         {
             return Enumerable.Range(0, matrix.GetLength(1)).Select(colIndex => matrix[rowIndex, colIndex]);
         }
 
-        public static IEnumerable<double?> GetColumn(double?[,] matrix, int columnIndex)
+        private static IEnumerable<double?> GetColumn(double?[,] matrix, int columnIndex)
         {
             return Enumerable.Range(0, matrix.GetLength(0)).Select(rowIndex => matrix[rowIndex, columnIndex]);
         }
 
-        public static void SetRow(double?[,] matrix, int rowIndex, IEnumerable<double?> values)
+        private static void SetRow(double?[,] matrix, int rowIndex, IEnumerable<double?> values)
         {
             int iCol = 0;
             foreach (var value in values)
@@ -110,7 +110,7 @@ namespace pwiz.Common.DataAnalysis
             }
         }
 
-        public static void SetColumn(double?[,] matrix, int colIndex, IEnumerable<double?> values)
+        private static void SetColumn(double?[,] matrix, int colIndex, IEnumerable<double?> values)
         {
             int iRow = 0;
             foreach (var value in values)

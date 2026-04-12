@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NHibernate.Hql.Ast.ANTLR.Tree;
 using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
@@ -159,6 +161,51 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
             return quantities;
+        }
+
+        public static bool IncludeInMedianPolish(SampleType sampleType)
+        {
+            return SampleType.STANDARD.Equals(sampleType) || SampleType.QC.Equals(sampleType) ||
+                   SampleType.UNKNOWN.Equals(sampleType);
+        }
+
+        public static HashSet<int> GetMedianPolishReplicates(SrmSettings settings)
+        {
+            return Enumerable.Range(0, settings.MeasuredResults?.Chromatograms.Count ?? 0)
+                .Where(i => IncludeInMedianPolish(settings.MeasuredResults.Chromatograms[i].SampleType))
+                .ToHashSet();
+        }
+
+        public double?[] GetMedianPolishQuantities(SrmSettings settings, HashSet<int> replicateIndexes)
+        {
+            if (settings.MeasuredResults == null)
+            {
+                return Array.Empty<double?>();
+            }
+
+            var replicateValues = new List<IDictionary<IdentityPath, double>>();
+            int replicateCount = settings.MeasuredResults.Chromatograms.Count;
+            // Collect transition data for ALL replicates
+            for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+            {
+                var transitionIntensities = GetTransitionIntensities(settings, iReplicate, false);
+                var abundances = new Dictionary<IdentityPath, double>();
+                foreach (var entry in transitionIntensities)
+                {
+                    if (!entry.Value.Truncated)
+                    {
+                        double log2Abundance = GroupComparer.CalcLog2Abundance(
+                            entry.Value.Intensity, entry.Value.Denominator);
+                        if (!double.IsNaN(log2Abundance) && !double.IsInfinity(log2Abundance))
+                        {
+                            abundances[entry.Key] = log2Abundance;
+                        }
+                    }
+                }
+                replicateValues.Add(abundances);
+            }
+
+            return new MedianPolisher() { IncludeScaleFactor = true }.Polish(replicateValues, replicateIndexes);
         }
 
         public double GetIsotopologArea(SrmSettings settings, int replicateIndex, IsotopeLabelType labelType)
@@ -373,6 +420,21 @@ namespace pwiz.Skyline.Model.GroupComparison
                         return null;
                     }
                     denominator = factor.Value;
+                }
+                else if (Equals(normalizationMethod, NormalizationMethod.RT_LOESS))
+                {
+                    var normalizationData = _normalizationData.Value;
+                    if (null == normalizationData)
+                    {
+                        throw new InvalidOperationException(string.Format(@"Normalization method '{0}' is not supported here.", NormalizationMethod));
+                    }
+                    double? rtLoessAdjustment = normalizationData.GetRtLoessAdjustment(
+                        replicateIndex, chromInfo.FileId, chromInfo.RetentionTime);
+                    if (!rtLoessAdjustment.HasValue)
+                    {
+                        return null;
+                    }
+                    normalizedArea /= Math.Pow(2.0, rtLoessAdjustment.Value);
                 }
             }
             return new Quantity(normalizedArea.Value, denominator, truncated);

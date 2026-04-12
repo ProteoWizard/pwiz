@@ -3137,6 +3137,7 @@ namespace pwiz.Skyline
                 case GraphTypeSummary.peptide:
                 case GraphTypeSummary.histogram:
                 case GraphTypeSummary.histogram2d:
+                case GraphTypeSummary.rt_loess:
                     types = Settings.Default.AreaGraphTypes;
                     list = _listGraphPeakArea;
                     break;
@@ -3230,6 +3231,13 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.histogram2d);
             ShowGraphPeakArea(true, GraphTypeSummary.histogram2d);
+            UpdatePeakAreaGraph();
+        }
+
+        public void ShowPeakAreaRtLoessGraph()
+        {
+            Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.rt_loess);
+            ShowGraphPeakArea(true, GraphTypeSummary.rt_loess);
             UpdatePeakAreaGraph();
         }
 

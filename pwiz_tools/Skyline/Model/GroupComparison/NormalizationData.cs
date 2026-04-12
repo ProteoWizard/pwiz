@@ -23,9 +23,13 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
@@ -39,10 +43,21 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static readonly NormalizationData EMPTY = new NormalizationData(new Dictionary<FileDataKey, FileDataValue>());
         private readonly IDictionary<FileDataKey, FileDataValue> _data;
         private readonly double _medianMedians;
+        private readonly IDictionary<FileDataKey, LoessCurve> _rtLoessCurves;
+        private readonly LoessCurve _globalMedianCurve;
 
         private NormalizationData(IDictionary<FileDataKey, FileDataValue> data)
+            : this(data, null, default)
+        {
+        }
+
+        private NormalizationData(IDictionary<FileDataKey, FileDataValue> data,
+            IDictionary<FileDataKey, LoessCurve> rtLoessCurves,
+            LoessCurve globalMedianCurve)
         {
             _data = data;
+            _rtLoessCurves = rtLoessCurves;
+            _globalMedianCurve = globalMedianCurve;
             if (data.Count > 0)
             {
                 _medianMedians = data.Values.Select(value => value.Median).Median();
@@ -122,7 +137,12 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                 }
             });
-            return new NormalizationData(allFileData);
+
+            // Compute RT LOESS normalization curves
+            var rtAreaData = CollectRtAreaData(cancellationToken, parameters);
+            ComputeRtLoessCurves(cancellationToken, rtAreaData, out var rtLoessCurves, out var globalMedianCurve);
+
+            return new NormalizationData(allFileData, rtLoessCurves, globalMedianCurve);
         }
 
         public double? NormalizeQuantile(int replicateIndex, ChromFileInfoId chromFileInfoId, double value)
@@ -275,6 +295,69 @@ namespace pwiz.Skyline.Model.GroupComparison
             return (index - 1 + fraction) / (sortedValues.Count - 1);
         }
 
+        /// <summary>
+        /// Returns the log2 adjustment for RT LOESS normalization at a given retention time.
+        /// The adjustment is: sample_curve(RT) - global_median_curve(RT).
+        /// To normalize, divide the area by 2^adjustment.
+        /// </summary>
+        public double? GetRtLoessAdjustment(int replicateIndex, ChromFileInfoId chromFileInfoId, double retentionTime)
+        {
+            if (_rtLoessCurves == null || _globalMedianCurve.RtGrid == null)
+            {
+                return null;
+            }
+
+            var dataKey = new FileDataKey(replicateIndex, chromFileInfoId);
+            if (!_rtLoessCurves.TryGetValue(dataKey, out var sampleCurve))
+            {
+                return null;
+            }
+
+            double sampleValue = LoessInterpolator.Interpolate(retentionTime, sampleCurve.RtGrid, sampleCurve.FittedValues);
+            double globalValue = LoessInterpolator.Interpolate(retentionTime, _globalMedianCurve.RtGrid, _globalMedianCurve.FittedValues);
+            return sampleValue - globalValue;
+        }
+
+        public bool HasRtLoessCurves => _rtLoessCurves != null && _rtLoessCurves.Count > 0;
+
+        public IEnumerable<RtLoessCurveInfo> GetRtLoessCurves()
+        {
+            if (_rtLoessCurves == null)
+                yield break;
+            foreach (var kvp in _rtLoessCurves)
+            {
+                yield return new RtLoessCurveInfo(kvp.Key.ReplicateIndex, kvp.Key.ChromFileInfoId,
+                    kvp.Value.RtGrid, kvp.Value.FittedValues);
+            }
+        }
+
+        public double[] GetGlobalMedianRtGrid()
+        {
+            return _globalMedianCurve.RtGrid;
+        }
+
+        public double[] GetGlobalMedianFittedValues()
+        {
+            return _globalMedianCurve.FittedValues;
+        }
+
+        public readonly struct RtLoessCurveInfo
+        {
+            public RtLoessCurveInfo(int replicateIndex, ChromFileInfoId chromFileInfoId,
+                double[] rtGrid, double[] fittedValues)
+            {
+                ReplicateIndex = replicateIndex;
+                ChromFileInfoId = chromFileInfoId;
+                RtGrid = rtGrid;
+                FittedValues = fittedValues;
+            }
+
+            public int ReplicateIndex { get; }
+            public ChromFileInfoId ChromFileInfoId { get; }
+            public double[] RtGrid { get; }
+            public double[] FittedValues { get; }
+        }
+
         public static Lazy<NormalizationData> LazyNormalizationData(SrmDocument document)
         {
             return new Lazy<NormalizationData>(()=> GetNormalizationData(document, false, null));
@@ -332,6 +415,189 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             return PeptideQuantifier.GetArea(parameters.TreatMissingValuesAsZero, parameters.QValueCutoff,
                 false, transitionGroup, transition, replicateIndex, chromInfo);
+        }
+
+        private static Dictionary<FileDataKey, List<RtAreaPoint>> CollectRtAreaData(
+            CancellationToken cancellationToken, Parameters parameters)
+        {
+            var document = parameters.Document;
+            var rtAreaData = new Dictionary<FileDataKey, List<RtAreaPoint>>();
+            if (!document.Settings.HasResults)
+            {
+                return rtAreaData;
+            }
+
+            ParallelEx.ForEach(document.Molecules, peptide =>
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+                if (peptide.IsDecoy)
+                    return;
+                if (PeptideDocNode.STANDARD_TYPE_IRT == peptide.GlobalStandardType)
+                    return;
+
+                foreach (var transitionGroup in peptide.TransitionGroups)
+                {
+                    if (transitionGroup.Results == null)
+                        continue;
+                    for (int iResult = 0; iResult < transitionGroup.Results.Count; iResult++)
+                    {
+                        if (transitionGroup.Results[iResult].IsEmpty)
+                            continue;
+                        foreach (var groupChromInfo in transitionGroup.Results[iResult])
+                        {
+                            if (groupChromInfo.OptimizationStep != 0)
+                                continue;
+                            if (!groupChromInfo.RetentionTime.HasValue || !groupChromInfo.Area.HasValue)
+                                continue;
+                            if (groupChromInfo.Area.Value <= 0)
+                                continue;
+
+                            var dataKey = new FileDataKey(iResult, groupChromInfo.FileId);
+                            var point = new RtAreaPoint(groupChromInfo.RetentionTime.Value,
+                                Math.Log(groupChromInfo.Area.Value, 2.0));
+                            lock (rtAreaData)
+                            {
+                                if (!rtAreaData.TryGetValue(dataKey, out var list))
+                                {
+                                    list = new List<RtAreaPoint>();
+                                    rtAreaData.Add(dataKey, list);
+                                }
+                                list.Add(point);
+                            }
+                        }
+                    }
+                }
+            });
+            return rtAreaData;
+        }
+
+        private const int RT_GRID_POINTS = 100;
+        private const double LOESS_BANDWIDTH = 0.3;
+
+        private static void ComputeRtLoessCurves(CancellationToken cancellationToken,
+            Dictionary<FileDataKey, List<RtAreaPoint>> rtAreaData,
+            out Dictionary<FileDataKey, LoessCurve> rtLoessCurves,
+            out LoessCurve globalMedianCurve)
+        {
+            rtLoessCurves = new Dictionary<FileDataKey, LoessCurve>();
+            globalMedianCurve = default;
+
+            if (rtAreaData.Count == 0)
+                return;
+
+            // Find global RT range
+            double rtMin = double.MaxValue;
+            double rtMax = double.MinValue;
+            foreach (var points in rtAreaData.Values)
+            {
+                foreach (var point in points)
+                {
+                    if (point.RetentionTime < rtMin)
+                        rtMin = point.RetentionTime;
+                    if (point.RetentionTime > rtMax)
+                        rtMax = point.RetentionTime;
+                }
+            }
+
+            if (rtMax <= rtMin)
+                return;
+
+            // Create common RT grid
+            var rtGrid = new double[RT_GRID_POINTS];
+            for (int i = 0; i < RT_GRID_POINTS; i++)
+            {
+                rtGrid[i] = rtMin + (rtMax - rtMin) * i / (RT_GRID_POINTS - 1);
+            }
+
+            // Fit LOWESS per file and evaluate on grid
+            int binCount = Settings.Default.RtRegressionBinCount;
+            var allCurves = new Dictionary<FileDataKey, LoessCurve>();
+
+            foreach (var kvp in rtAreaData)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var points = kvp.Value;
+                if (points.Count < 20)
+                    continue;
+
+                // Downsample and sort by RT
+                var weightedPoints = points.Select(p => new WeightedPoint(p.RetentionTime, p.Log2Area)).ToList();
+                if (binCount > 0)
+                {
+                    weightedPoints = AlignmentTarget.DownsamplePoints(weightedPoints, binCount).ToList();
+                }
+                weightedPoints = weightedPoints.OrderBy(pt => pt.X).ToList();
+                if (weightedPoints.Count < 3)
+                    continue;
+
+                try
+                {
+                    var loess = new LoessInterpolator(
+                        Math.Max(LOESS_BANDWIDTH, 2.0 / weightedPoints.Count),
+                        LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS);
+                    var xArray = weightedPoints.Select(pt => pt.X).ToArray();
+                    var smoothed = loess.Smooth(xArray,
+                        weightedPoints.Select(pt => pt.Y).ToArray(),
+                        weightedPoints.Select(pt => pt.Weight).ToArray(),
+                        cancellationToken);
+                    // Interpolate onto grid
+                    var gridValues = new double[RT_GRID_POINTS];
+                    for (int i = 0; i < RT_GRID_POINTS; i++)
+                    {
+                        gridValues[i] = LoessInterpolator.Interpolate(rtGrid[i], xArray, smoothed);
+                    }
+
+                    allCurves[kvp.Key] = new LoessCurve(rtGrid, gridValues);
+                }
+                catch (Exception)
+                {
+                    // Skip files where LOWESS fitting fails
+                }
+            }
+
+            if (allCurves.Count == 0)
+                return;
+
+            // Compute global median curve
+            var medianValues = new double[RT_GRID_POINTS];
+            var valuesAtPoint = new double[allCurves.Count];
+            for (int i = 0; i < RT_GRID_POINTS; i++)
+            {
+                int j = 0;
+                foreach (var curve in allCurves.Values)
+                {
+                    valuesAtPoint[j++] = curve.FittedValues[i];
+                }
+                medianValues[i] = valuesAtPoint.Median();
+            }
+
+            rtLoessCurves = allCurves;
+            globalMedianCurve = new LoessCurve(rtGrid, medianValues);
+        }
+
+        private readonly struct RtAreaPoint
+        {
+            public RtAreaPoint(double retentionTime, double log2Area)
+            {
+                RetentionTime = retentionTime;
+                Log2Area = log2Area;
+            }
+
+            public double RetentionTime { get; }
+            public double Log2Area { get; }
+        }
+
+        private readonly struct LoessCurve
+        {
+            public LoessCurve(double[] rtGrid, double[] fittedValues)
+            {
+                RtGrid = rtGrid;
+                FittedValues = fittedValues;
+            }
+
+            public double[] RtGrid { get; }
+            public double[] FittedValues { get; }
         }
 
         public class Parameters

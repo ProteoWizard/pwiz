@@ -98,6 +98,16 @@ namespace pwiz.Skyline.Model.Results
                 return transitionChromInfo.Area / denominator;
             }
 
+            if (Equals(normalizationMethod, NormalizationMethod.RT_LOESS))
+            {
+                var normalizationData = _normalizationData.Value;
+                var rtLoessAdjustment = normalizationData.GetRtLoessAdjustment(replicateIndex,
+                    transitionChromInfo.FileId, transitionChromInfo.RetentionTime);
+                if (!rtLoessAdjustment.HasValue)
+                    return null;
+                return transitionChromInfo.Area / Math.Pow(2.0, rtLoessAdjustment.Value);
+            }
+
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
                 if (!transitionDocNode.IsQuantitative(Document.Settings))
@@ -175,6 +185,18 @@ namespace pwiz.Skyline.Model.Results
             if (TryGetDenominator(normalizationMethod, replicateIndex, transitionGroupChromInfo.FileId, out double? denominator))
             {
                 return transitionGroupChromInfo.Area / denominator;
+            }
+
+            if (Equals(normalizationMethod, NormalizationMethod.RT_LOESS))
+            {
+                if (!transitionGroupChromInfo.RetentionTime.HasValue)
+                    return null;
+                var normalizationData = _normalizationData.Value;
+                var rtLoessAdjustment = normalizationData.GetRtLoessAdjustment(replicateIndex,
+                    transitionGroupChromInfo.FileId, transitionGroupChromInfo.RetentionTime.Value);
+                if (!rtLoessAdjustment.HasValue)
+                    return null;
+                return transitionGroupChromInfo.Area / Math.Pow(2.0, rtLoessAdjustment.Value);
             }
 
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
@@ -552,13 +574,20 @@ namespace pwiz.Skyline.Model.Results
             {
                 var normalizeOption = workParameter.NormalizeOption;
                 SrmDocument document = workParameter.Document;
-                
-                if (Equals(NormalizationMethod.EQUALIZE_MEDIANS, normalizeOption?.NormalizationMethod) || Equals(NormalizationMethod.EQUALIZE_MEDIANS, document.Settings.PeptideSettings.Quantification.NormalizationMethod))
+
+                if (NeedsNormalizationData(normalizeOption?.NormalizationMethod) ||
+                    NeedsNormalizationData(document.Settings.PeptideSettings.Quantification.NormalizationMethod))
                 {
                     return ImmutableList.Singleton(NormalizationData.PRODUCER.MakeWorkOrder(new NormalizationData.Parameters(document)));
                 }
 
                 return Array.Empty<WorkOrder>();
+            }
+
+            private static bool NeedsNormalizationData(NormalizationMethod normalizationMethod)
+            {
+                return Equals(NormalizationMethod.EQUALIZE_MEDIANS, normalizationMethod) ||
+                       Equals(NormalizationMethod.RT_LOESS, normalizationMethod);
             }
         }
 
