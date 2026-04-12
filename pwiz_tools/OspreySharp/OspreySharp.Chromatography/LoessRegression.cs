@@ -203,9 +203,19 @@ namespace pwiz.OspreySharp.Chromatography
         /// <param name="bandwidth">Fraction of data to use for each local fit (0.0-1.0).</param>
         /// <param name="degree">Polynomial degree for local fits (0 = constant, 1 = linear).</param>
         /// <param name="robustnessIterations">Number of bisquare robustness iterations.</param>
+        /// <param name="classicalRobust">
+        /// When false (default), absolute residuals are computed ONCE from the initial
+        /// fit and reused across all robustness iterations, matching the current
+        /// Rust calibration_ml.rs behavior (which captures `residuals` before the
+        /// loop and never refreshes them). When true, residuals are recomputed from
+        /// the current fit on each iteration, which is the classical Cleveland (1979)
+        /// robust LOESS algorithm. Default matches Rust so OspreySharp stays
+        /// bit-identical out of the box.
+        /// </param>
         /// <returns>A fitted LoessModel for prediction.</returns>
         public static LoessModel Fit(double[] x, double[] y, double bandwidth = 0.3,
-            int degree = 1, int robustnessIterations = 2)
+            int degree = 1, int robustnessIterations = 2,
+            bool classicalRobust = false)
         {
             if (x == null || y == null)
                 throw new ArgumentNullException(x == null ? "x" : "y");
@@ -233,15 +243,14 @@ namespace pwiz.OspreySharp.Chromatography
             // Initial fit
             double[] fitted = LoessFitInternal(sortedX, sortedY, bandwidth, degree, null);
 
-            // Compute absolute residuals from the INITIAL fit ONCE. Rust's
-            // osprey-chromatography/src/calibration/rt.rs RTCalibrator::fit
-            // captures `residuals` before the robustness loop and reuses the
-            // same vector across every iteration, never refreshing it from
-            // the current fit. That makes each iteration compute the same
-            // bisquare weights and produce the same refined fit, so the
-            // effective behavior is a single robustness refinement regardless
-            // of robustness_iter >= 1. Match Rust exactly: pre-compute
-            // absResiduals here and leave them untouched in the loop below.
+            // Compute absolute residuals from the INITIAL fit. In the default
+            // (Rust-compat) mode these residuals are reused across every
+            // robustness iteration, matching Rust's osprey-chromatography
+            // calibration_ml.rs which captures `residuals` before the loop and
+            // never refreshes them (so all iterations compute the same bisquare
+            // weights and the same refined fit). In classical mode they are
+            // refreshed from the current fit at the top of each iteration, which
+            // is the Cleveland (1979) robust LOESS algorithm.
             double[] absResiduals = new double[n];
             for (int i = 0; i < n; i++)
                 absResiduals[i] = Math.Abs(sortedY[i] - fitted[i]);
@@ -252,6 +261,13 @@ namespace pwiz.OspreySharp.Chromatography
                 weights[i] = 1.0;
             for (int iter = 0; iter < robustnessIterations; iter++)
             {
+                if (classicalRobust && iter > 0)
+                {
+                    // Refresh residuals from the CURRENT fit (classical mode)
+                    for (int i = 0; i < n; i++)
+                        absResiduals[i] = Math.Abs(sortedY[i] - fitted[i]);
+                }
+
                 double medianAbsResidual = Median(absResiduals);
                 double s = 6.0 * medianAbsResidual;
 

@@ -1166,7 +1166,9 @@ namespace pwiz.OspreySharp
                     Degree = 1,
                     MinPoints = Math.Min(20, libRts.Length),
                     RobustnessIterations = 2,
-                    OutlierRetention = 1.0 // LDA + S/N already filtered
+                    OutlierRetention = 1.0, // LDA + S/N already filtered
+                    ClassicalRobustIterations =
+                        Environment.GetEnvironmentVariable("OSPREY_LOESS_CLASSICAL_ROBUST") == "1"
                 };
 
                 // Cross-implementation diagnostic: dump the (lib_rt, measured_rt) pairs
