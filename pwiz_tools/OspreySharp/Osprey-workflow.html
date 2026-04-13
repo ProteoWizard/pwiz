@@ -59,8 +59,8 @@
   <p class="sub">
     Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
     output. Color indicates port status of the OspreySharp (C#) implementation
-    against the Osprey (Rust) reference. Stages 1-4 (through main search
-    features) are proven bit-identical. Current focus: first-pass FDR.
+    against the Osprey (Rust) reference. Stages 1-4 are proven bit-identical
+    (21 features, 317K entries). Green badges = regression tests; purple badges = C#/Rust perf ratio.
   </p>
 </header>
 
@@ -121,6 +121,12 @@
 
     /* Input pill */
     .input-pill { fill: #e8eaf6; stroke: #3949ab; stroke-width: 2; }
+
+    /* Test coverage and performance badges */
+    .badge-test { font-size: 9px; font-weight: 600; fill: #1b5e20; }
+    .badge-perf { font-size: 9px; font-weight: 600; fill: #4a148c; }
+    .badge-bg-test { fill: #e8f5e9; stroke: #4caf50; stroke-width: 1; rx: 3; }
+    .badge-bg-perf { fill: #f3e5f5; stroke: #9c27b0; stroke-width: 1; rx: 3; }
   </style>
 </defs>
 
@@ -130,7 +136,7 @@
 <g transform="translate(40, 40)">
   <text class="title">Osprey / OspreySharp DIA search pipeline</text>
   <text class="subtitle" y="22">
-    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-12, Session 9 (21 PIN features matched)
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-13, Session 10 (1.9x perf, 185 C# tests, 18 regression tests)
   </text>
 </g>
 
@@ -189,12 +195,18 @@
   <text class="phase-title" x="60"  y="48">Library preparation</text>
 
   <rect class="st-done" x="80" y="70" width="460" height="42" rx="4"/>
-  <text class="stage-title" x="310" y="90" text-anchor="middle">Load + dedup</text>
-  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, sequential IDs</text>
+  <text class="stage-title" x="310" y="90" text-anchor="middle">Load + dedup + binary cache</text>
+  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, sequential IDs, .libcache for fast reload</text>
 
   <rect class="st-done" x="80" y="130" width="460" height="42" rx="4"/>
-  <text class="stage-title" x="310" y="150" text-anchor="middle">Decoy generation</text>
-  <text class="stage-desc"  x="310" y="164" text-anchor="middle">enzyme-aware reverse, collision detection</text>
+  <text class="stage-title" x="310" y="150" text-anchor="middle">Decoy generation (parallel)</text>
+  <text class="stage-desc"  x="310" y="164" text-anchor="middle">enzyme-aware reverse, collision detection, Parallel.For</text>
+
+  <!-- Stage 1 badges -->
+  <rect class="badge-bg-test" x="80" y="180" width="120" height="14"/>
+  <text class="badge-test" x="140" y="190" text-anchor="middle">36 tests + 2 regression</text>
+  <rect class="badge-bg-perf" x="210" y="180" width="90" height="14"/>
+  <text class="badge-perf" x="255" y="190" text-anchor="middle">2.1s / 0.4x Rust</text>
 
   <path class="flow" d="M 310 112 L 310 128" marker-end="url(#arrow)"/>
 
@@ -205,11 +217,17 @@
 
   <rect class="st-done" x="660" y="70" width="460" height="42" rx="4"/>
   <text class="stage-title" x="890" y="90" text-anchor="middle">Parse spectra</text>
-  <text class="stage-desc"  x="890" y="104" text-anchor="middle">ProteoWizardWrapper (COM bridge)</text>
+  <text class="stage-desc"  x="890" y="104" text-anchor="middle">Native C# XmlReader (base64 + zlib), not COM bridge</text>
 
   <rect class="st-done" x="660" y="130" width="460" height="42" rx="4"/>
   <text class="stage-title" x="890" y="150" text-anchor="middle">Isolation window grouping</text>
   <text class="stage-desc"  x="890" y="164" text-anchor="middle">deterministic, 125 windows on Stellar</text>
+
+  <!-- Stage 2 badges -->
+  <rect class="badge-bg-test" x="660" y="180" width="60" height="14"/>
+  <text class="badge-test" x="690" y="190" text-anchor="middle">3 tests</text>
+  <rect class="badge-bg-perf" x="730" y="180" width="100" height="14"/>
+  <text class="badge-perf" x="780" y="190" text-anchor="middle">15.5s / 2.6x Rust</text>
 
   <path class="flow" d="M 890 112 L 890 128" marker-end="url(#arrow)"/>
 </g>
@@ -270,7 +288,11 @@
   <path class="flow" d="M 600 362 L 600 398" marker-end="url(#arrow)"/>
   <path class="flow" d="M 600 462 L 600 478" marker-end="url(#arrow)"/>
 
-  <!-- Stage 3 fully proven in Sessions 6-9 -->
+  <!-- Stage 3 badges -->
+  <rect class="badge-bg-test" x="80" y="535" width="220" height="14"/>
+  <text class="badge-test" x="190" y="545" text-anchor="middle">31 tests + 10 regression (xcorr dedup, apex tie-break, SNR, LOESS, LDA, f64)</text>
+  <rect class="badge-bg-perf" x="310" y="535" width="100" height="14"/>
+  <text class="badge-perf" x="360" y="545" text-anchor="middle">19.3s / 2.1x Rust</text>
 </g>
 
 <!-- Arrow from calibration to main search -->
@@ -293,8 +315,14 @@
   <text class="stage-desc"  x="600" y="114" text-anchor="middle">XICs proven bit-identical (9 entries); CWT peaks + boundaries match; 311K entries verified</text>
 
   <rect class="st-done" x="80" y="140" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="160" text-anchor="middle">21 PIN features per entry</text>
-  <text class="stage-desc"  x="600" y="174" text-anchor="middle">all 21 features at 0.00% divergence with shared calibration (10 bugs fixed in Session 9)</text>
+  <text class="stage-title" x="600" y="160" text-anchor="middle">21 PIN features per entry (pre-preprocessed XCorr, signal prefilter, CWT fallback)</text>
+  <text class="stage-desc"  x="600" y="174" text-anchor="middle">0.00% divergence on 317K entries; 466K entries match Rust within 23</text>
+
+  <!-- Stage 4 badges -->
+  <rect class="badge-bg-test" x="80" y="185" width="260" height="14"/>
+  <text class="badge-test" x="210" y="195" text-anchor="middle">2 tests + 8 regression (bin dedup, closest-mz, coelution, median polish, sharpness, boundary)</text>
+  <rect class="badge-bg-perf" x="350" y="185" width="100" height="14"/>
+  <text class="badge-perf" x="400" y="195" text-anchor="middle">9.6s / 1.9x Rust</text>
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
 </g>
@@ -401,24 +429,23 @@
 <footer>
   <p>
     <strong>Evidence (Stellar file 20, <code>--resolution unit</code>):</strong>
-    Stages 1-4 are fully proven. Session 9 validated all 21 PIN features
-    across 311,176 matched entries with shared calibration: 0.00% divergence
-    at 1e-6 threshold for 19 of 21 features, with only 4 entries from
-    different CWT peak selection and 191 consecutive_ions differences.
-    Session 9 fixed 10 bugs: peak shape (ref XIC + trapezoidal), xcorr
-    bin dedup, n_coeluting (mean not any), MS1 HRAM gate, fragment
-    matching (closest-by-mz), median polish convergence, MS2 calibration
-    (tolerance + offset), global RT tolerance, and scan boundary.
+    Stages 1-4 fully proven. 21 PIN features at 0.00% divergence across
+    317,630 matched entries. Entry count parity: 466,175 C# vs 466,198 Rust
+    (delta 23). 185 C# unit tests (18 regression tests for Sessions 5-9 bug
+    classes) + 5 Rust cross-implementation regression tests.
   </p>
   <p>
-    Next target: Stage 5 (first-pass Percolator SVM FDR). Status colors
-    show the port state as of Session 9 (2026-04-12) on branch
-    <code>Skyline/work/20260409_osprey_sharp</code>.
+    <strong>Performance (Session 10, <code>Bench-Scoring.ps1</code>):</strong>
+    C# Stages 1-4 = 46.2s vs Rust 24.1s = <strong>1.9x</strong>.
+    Stage 1: 2.1s (0.4x), Stage 2: 15.5s (2.6x), Stage 3: 19.3s (2.1x),
+    Stage 4: 9.6s (1.9x). Key optimizations: library binary cache,
+    pre-preprocessed XCorr per window, signal prefilter, CWT fallback
+    peak detection, parallel decoy generation.
   </p>
   <p>
-    Open this file directly in a browser to view the SVG at full
-    resolution. The inline SVG has no external dependencies and can be
-    copied into a publication figure workflow.
+    Next targets: Stage 2 parallel mzML decompression, Stage 3 calibration
+    scoring optimization, then Stage 5 (Percolator SVM FDR).
+    Branch <code>Skyline/work/20260409_osprey_sharp</code>.
   </p>
 </footer>
 </body>
