@@ -1653,12 +1653,35 @@ namespace pwiz.OspreySharp
                     rtHi));
             }
 
+            // Resolve the actual window key that was used (may differ from primary
+            // due to neighbour-key or linear-scan fallback).
+            int resolvedWindowKey = windowKey;
+            if (!spectraByWindowKey.ContainsKey(windowKey))
+            {
+                if (spectraByWindowKey.ContainsKey(windowKey - 1))
+                    resolvedWindowKey = windowKey - 1;
+                else if (spectraByWindowKey.ContainsKey(windowKey + 1))
+                    resolvedWindowKey = windowKey + 1;
+                else
+                {
+                    // Linear scan fallback — find the key that matched
+                    foreach (var kvp in spectraByWindowKey)
+                    {
+                        if (kvp.Value == windowSpectra)
+                        {
+                            resolvedWindowKey = kvp.Key;
+                            break;
+                        }
+                    }
+                }
+            }
+
             // Filter by RT tolerance and top-6 fragment prefilter.
             // Track window indices for preprocessed XCorr lookup.
             var candidateSpectra = new List<Spectrum>();
             var candidateWindowIndices = new List<int>();
             double[][] windowPreprocessed = null;
-            preprocessedByWindowKey.TryGetValue(windowKey, out windowPreprocessed);
+            preprocessedByWindowKey.TryGetValue(resolvedWindowKey, out windowPreprocessed);
             for (int si = 0; si < windowSpectra.Count; si++)
             {
                 var spec = windowSpectra[si];
