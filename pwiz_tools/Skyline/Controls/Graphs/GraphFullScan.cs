@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly IDocumentUIContainer _documentContainer;
         private readonly GraphHelper _graphHelper;
         private HeatMapData _heatMapData;
+        private List<MobilogramTransitionData> _mobilogramTransitions;
         private HeatMapGraphPane _heatMapPane;
         private MSGraphPane _stickSpectrumPane;
         private bool IsDualPane => _stickSpectrumPane != null && graphControl.MasterPane.PaneList.Count == 2;
@@ -1944,8 +1945,24 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        private struct MobilogramTransitionData
+        {
+            public readonly string Name;
+            public readonly Dictionary<float, double> IntensityByIM; // Raw data points
+            public readonly List<KeyValuePair<float, double>> DrawnCurve; // With zero-bookends, as rendered
+
+            public MobilogramTransitionData(string name, Dictionary<float, double> intensityByIM,
+                List<KeyValuePair<float, double>> drawnCurve)
+            {
+                Name = name;
+                IntensityByIM = intensityByIM;
+                DrawnCurve = drawnCurve;
+            }
+        }
+
         private void CreateMobilogram()
         {
+            _mobilogramTransitions = null;
             if (_heatMapData?.PlotY2D == null)
                 return;
 
@@ -1979,7 +1996,79 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var overlay = new MobilogramOverlay(_heatMapData.PlotY2D, filterMin, filterMax, filterPeak)
+            // Compute per-transition Y projections for colored curves
+            var transitionCurves = new List<MobilogramOverlay.TransitionCurve>();
+            var transitions = _msDataFileScanHelper.ScanProvider.Transitions;
+            if (transitions.Length > 0)
+            {
+                // Build a dictionary of IM -> summed intensity for each transition
+                var perTransition = new Dictionary<int, Dictionary<float, double>>();
+                for (int t = 0; t < transitions.Length; t++)
+                {
+                    if (transitions[t].Source != _msDataFileScanHelper.Source)
+                        continue;
+                    perTransition[t] = new Dictionary<float, double>();
+                }
+
+                if (perTransition.Count > 0)
+                {
+                    foreach (var pt in _heatMapData.GetAllPoints())
+                    {
+                        double mz = pt.Point.X;
+                        float im = (float)pt.Point.Y;
+                        double intensity = pt.Point.Z;
+                        foreach (var kvp in perTransition)
+                        {
+                            if (transitions[kvp.Key].MatchMz(mz))
+                            {
+                                if (kvp.Value.ContainsKey(im))
+                                    kvp.Value[im] += intensity;
+                                else
+                                    kvp.Value[im] = intensity;
+                            }
+                        }
+                    }
+
+                    // Build sorted IM grid from summed curve for gap detection
+                    var imGridSet = new HashSet<float>(_heatMapData.PlotY2D.Select(p => p.Key));
+                    var imGrid = _heatMapData.PlotY2D.Select(p => p.Key).ToList(); // already sorted
+
+                    _mobilogramTransitions = new List<MobilogramTransitionData>();
+                    foreach (var kvp in perTransition)
+                    {
+                        if (kvp.Value.Count > 0)
+                        {
+                            // Build curve with zero-bookends at gaps
+                            var sorted = kvp.Value.OrderBy(p => p.Key).ToList();
+                            var curve = new List<KeyValuePair<float, double>>();
+                            for (int j = 0; j < sorted.Count; j++)
+                            {
+                                float im = sorted[j].Key;
+                                int gridIdx = imGrid.BinarySearch(im);
+                                if (gridIdx < 0) gridIdx = ~gridIdx;
+
+                                bool isGap = j == 0 || (gridIdx > 0 &&
+                                    !kvp.Value.ContainsKey(imGrid[gridIdx - 1]));
+                                if (isGap && gridIdx > 0)
+                                    curve.Add(new KeyValuePair<float, double>(imGrid[gridIdx - 1], 0));
+
+                                curve.Add(new KeyValuePair<float, double>(im, sorted[j].Value));
+
+                                bool isEndGap = j == sorted.Count - 1 || (gridIdx < imGrid.Count - 1 &&
+                                    !kvp.Value.ContainsKey(imGrid[gridIdx + 1]));
+                                if (isEndGap && gridIdx < imGrid.Count - 1)
+                                    curve.Add(new KeyValuePair<float, double>(imGrid[gridIdx + 1], 0));
+                            }
+                            _mobilogramTransitions.Add(new MobilogramTransitionData(
+                                transitions[kvp.Key].Name, kvp.Value, curve));
+                            transitionCurves.Add(new MobilogramOverlay.TransitionCurve(
+                                curve, GetTransitionColor(transitions[kvp.Key])));
+                        }
+                    }
+                }
+            }
+
+            var overlay = new MobilogramOverlay(_heatMapData.PlotY2D, filterMin, filterMax, filterPeak, transitionCurves)
             {
                 ZOrder = ZOrder.A_InFront
             };
@@ -1995,15 +2084,30 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private readonly List<KeyValuePair<float, double>> _plotData;
             private readonly double _filterMin, _filterMax, _filterPeak;
+            private readonly List<TransitionCurve> _transitionCurves;
+
+            public struct TransitionCurve
+            {
+                public readonly List<KeyValuePair<float, double>> Data;
+                public readonly Color Color;
+
+                public TransitionCurve(List<KeyValuePair<float, double>> data, Color color)
+                {
+                    Data = data;
+                    Color = color;
+                }
+            }
 
             public MobilogramOverlay(List<KeyValuePair<float, double>> plotData,
-                double filterMin, double filterMax, double filterPeak)
+                double filterMin, double filterMax, double filterPeak,
+                List<TransitionCurve> transitionCurves = null)
                 : base(0, 0)
             {
                 _plotData = plotData;
                 _filterMin = filterMin;
                 _filterMax = filterMax;
                 _filterPeak = filterPeak;
+                _transitionCurves = transitionCurves;
             }
 
             public override void Draw(Graphics g, PaneBase paneBase, float scaleFactor)
@@ -2033,12 +2137,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (mobWidth < 10 || plotHeight < 10)
                     return;
 
-                // Find max intensity for X scaling
+                // Find max intensity for X scaling — use per-transition max when available
+                bool hasTransitionCurves = _transitionCurves != null && _transitionCurves.Count > 0;
                 double maxIntensity = 0;
-                foreach (var kvp in _plotData)
+                if (hasTransitionCurves)
                 {
-                    if (kvp.Value > maxIntensity)
-                        maxIntensity = kvp.Value;
+                    foreach (var tc in _transitionCurves)
+                        foreach (var kvp in tc.Data)
+                            if (kvp.Value > maxIntensity)
+                                maxIntensity = kvp.Value;
+                }
+                else
+                {
+                    foreach (var kvp in _plotData)
+                        if (kvp.Value > maxIntensity)
+                            maxIntensity = kvp.Value;
                 }
                 if (maxIntensity <= 0)
                     return;
@@ -2079,6 +2192,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 // Clip to plot area for data drawing
                 g.SetClip(plotRect);
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
                 // Draw filter region (behind curve)
                 if (!double.IsNaN(_filterMin) && !double.IsNaN(_filterMax))
@@ -2095,30 +2209,35 @@ namespace pwiz.Skyline.Controls.Graphs
                             filterRect.Width, filterRect.Height);
                 }
 
-                // Build polygon points for filled curve (scaled to displayMax for nice round axis)
-                var polyPoints = new List<PointF>(_plotData.Count + 2);
-                polyPoints.Add(new PointF(mobLeft, yAxis.Scale.Transform(_plotData[0].Key)));
-
-                foreach (var kvp in _plotData)
+                if (hasTransitionCurves)
                 {
-                    float px = mobLeft + (float)(kvp.Value / displayMax) * mobWidth;
-                    float py = yAxis.Scale.Transform(kvp.Key);
-                    polyPoints.Add(new PointF(px, py));
+                    // Draw per-transition curves only (no summed curve)
+                    int lineWidth = Settings.Default.ChromatogramLineWidth;
+                    foreach (var tc in _transitionCurves)
+                    {
+                        var curvePoints = BuildCurvePoints(tc.Data, mobLeft, mobWidth, displayMax, yAxis);
+                        if (curvePoints.Length > 1)
+                        {
+                            using (var linePen = new Pen(tc.Color, lineWidth))
+                                g.DrawLines(linePen, curvePoints);
+                        }
+                    }
                 }
-
-                polyPoints.Add(new PointF(mobLeft,
-                    yAxis.Scale.Transform(_plotData[_plotData.Count - 1].Key)));
-
-                // Fill under curve
-                using (var fillBrush = new SolidBrush(Color.FromArgb(40, Color.DarkBlue)))
-                    g.FillPolygon(fillBrush, polyPoints.ToArray());
-
-                // Draw curve line
-                if (polyPoints.Count > 3)
+                else
                 {
-                    var linePoints = polyPoints.GetRange(1, polyPoints.Count - 2).ToArray();
-                    using (var linePen = new Pen(Color.DarkBlue, MOBILOGRAM_LINE_WIDTH))
-                        g.DrawLines(linePen, linePoints);
+                    // Summed curve with fill (no transitions to show)
+                    var summedPoints = BuildCurvePoints(_plotData, mobLeft, mobWidth, displayMax, yAxis);
+                    if (summedPoints.Length > 1)
+                    {
+                        var polyPoints = new PointF[summedPoints.Length + 2];
+                        polyPoints[0] = new PointF(mobLeft, summedPoints[0].Y);
+                        Array.Copy(summedPoints, 0, polyPoints, 1, summedPoints.Length);
+                        polyPoints[polyPoints.Length - 1] = new PointF(mobLeft, summedPoints[summedPoints.Length - 1].Y);
+                        using (var fillBrush = new SolidBrush(Color.FromArgb(40, Color.DarkBlue)))
+                            g.FillPolygon(fillBrush, polyPoints);
+                        using (var linePen = new Pen(Color.DarkBlue, Settings.Default.ChromatogramLineWidth))
+                            g.DrawLines(linePen, summedPoints);
+                    }
                 }
 
                 // Draw peak center line
@@ -2216,6 +2335,19 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
                 }
+            }
+
+            private static PointF[] BuildCurvePoints(List<KeyValuePair<float, double>> data,
+                float mobLeft, float mobWidth, double displayMax, Axis yAxis)
+            {
+                var points = new PointF[data.Count];
+                for (int i = 0; i < data.Count; i++)
+                {
+                    float px = mobLeft + (float)(data[i].Value / displayMax) * mobWidth;
+                    float py = yAxis.Scale.Transform(data[i].Key);
+                    points[i] = new PointF(px, py);
+                }
+                return points;
             }
 
             /// <summary>
@@ -2435,31 +2567,108 @@ namespace pwiz.Skyline.Controls.Graphs
             // Compute the curve's pixel X for the nearest point to check proximity
             var chartRect = _heatMapPane.Chart.Rect;
             float scaleFactor = _heatMapPane.CalcScaleFactor();
-            float mobLeft = chartRect.Right + 6 * scaleFactor;
+            float mobLeft = chartRect.Right + MOBILOGRAM_GAP * scaleFactor;
             float mobRight = _heatMapPane.Rect.Right - MOBILOGRAM_RIGHT_PAD * scaleFactor;
             float mobWidth = mobRight - mobLeft;
-            double maxIntensity = _heatMapData.PlotY2D.Max(kvp => kvp.Value);
-            float curveX = maxIntensity > 0
-                ? mobLeft + (float)(nearest.Value / maxIntensity) * mobWidth
-                : mobLeft;
 
-            // Show tooltip only if cursor is within the filter band, or within 3x the line width of the curve tip.
-            // The filled area already provides a generous hit zone; this tolerance just covers
-            // rendering slop at the curve edge (unlike the heatmap's 10px which searches a point cloud).
-            float searchPixels = 3f * MOBILOGRAM_LINE_WIDTH * scaleFactor;
-            double filterMin, filterMax;
-            _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out filterMin, out filterMax, _msDataFileScanHelper.Source);
-            bool inFilterBand = filterMin > 0 && filterMax < double.MaxValue &&
-                                imValue >= filterMin && imValue <= filterMax;
-            if (!inFilterBand && pt.X > curveX + searchPixels)
-                return null;
+            // IsInMobilogramArea already confirmed we're in the mobilogram region
 
             var rt = _cursorTip.RenderTools;
             string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
             var table = new TableDesc();
             table.AddDetailRow(yAxisLabel, nearest.Key.ToString(Formats.IonMobility), rt);
-            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, nearest.Value.ToString(@"F0"), rt);
+
+            // When per-transition curves are shown, find which transition's curve
+            // is closest to the cursor's X position at this IM value
+            if (_mobilogramTransitions != null && _mobilogramTransitions.Count > 0)
+            {
+                // Compute max intensity across per-transition curves for scaling
+                double transMaxIntensity = 0;
+                foreach (var mt in _mobilogramTransitions)
+                    foreach (var val in mt.IntensityByIM.Values)
+                        if (val > transMaxIntensity)
+                            transMaxIntensity = val;
+
+                string bestName = null;
+                double bestIntensity = 0;
+                float bestDist = float.MaxValue;
+                float imFloat = (float)imValue;
+                const float maxProximityPixels = 10f;
+                float maxDist = maxProximityPixels * scaleFactor;
+                foreach (var mt in _mobilogramTransitions)
+                {
+                    // Interpolate using the drawn curve (with zero-bookends) for detection
+                    double interpIntensity = InterpolateCurveAtIM(mt.DrawnCurve, imFloat);
+                    // X distance from cursor to the curve at this IM
+                    float curveXPos = transMaxIntensity > 0
+                        ? mobLeft + (float)(interpIntensity / transMaxIntensity) * mobWidth
+                        : mobLeft;
+                    float xDist = Math.Abs(pt.X - curveXPos);
+
+                    if (xDist < bestDist)
+                    {
+                        // Find nearest actual data point for reporting
+                        double nearestVal = 0;
+                        float nearestKeyDist = float.MaxValue;
+                        foreach (var kvp in mt.IntensityByIM)
+                        {
+                            float d = Math.Abs(kvp.Key - imFloat);
+                            if (d < nearestKeyDist)
+                            {
+                                nearestKeyDist = d;
+                                nearestVal = kvp.Value;
+                            }
+                        }
+                        bestDist = xDist;
+                        bestIntensity = nearestVal;
+                        bestName = mt.Name;
+                    }
+                }
+                if (bestDist > maxDist)
+                    return null;
+                if (bestName != null)
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, bestName, rt);
+                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, bestIntensity.ToString(@"F0"), rt);
+            }
+            else
+            {
+                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, nearest.Value.ToString(@"F0"), rt);
+            }
             return table;
+        }
+
+        /// <summary>
+        /// Linearly interpolate a curve's intensity at a given IM value,
+        /// using the two bracketing points in the sorted curve data.
+        /// </summary>
+        private static double InterpolateCurveAtIM(List<KeyValuePair<float, double>> curveData, float im)
+        {
+            float lowerKey = float.MinValue, upperKey = float.MaxValue;
+            double lowerVal = 0, upperVal = 0;
+            foreach (var kvp in curveData)
+            {
+                if (kvp.Key <= im && kvp.Key > lowerKey)
+                {
+                    lowerKey = kvp.Key;
+                    lowerVal = kvp.Value;
+                }
+                if (kvp.Key >= im && kvp.Key < upperKey)
+                {
+                    upperKey = kvp.Key;
+                    upperVal = kvp.Value;
+                }
+            }
+            if (lowerKey == float.MinValue && upperKey == float.MaxValue)
+                return 0;
+            if (lowerKey == float.MinValue)
+                return upperVal;
+            if (upperKey == float.MaxValue)
+                return lowerVal;
+            if (Math.Abs(upperKey - lowerKey) < float.Epsilon)
+                return lowerVal;
+            // Linear interpolation
+            double frac = (im - lowerKey) / (upperKey - lowerKey);
+            return lowerVal + frac * (upperVal - lowerVal);
         }
 
         private TableDesc GetHeatMapTooltipTable(PointF pt)
