@@ -3427,6 +3427,11 @@ namespace pwiz.Skyline
             ShowEncyclopeDiaSearchDlg();
         }
 
+        private void diannSearchMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowDiannSearchDlg();
+        }
+
         private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
         {
             ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
@@ -3509,6 +3514,27 @@ namespace pwiz.Skyline
             }
 
             using (var dlg = new EncyclopeDiaSearchDlg(this, _libraryManager))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
+            }
+        }
+
+        public void ShowDiannSearchDlg()
+        {
+            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                return;
+            }
+
+            using (var dlg = new DiannSearchDlg(this, _libraryManager))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {

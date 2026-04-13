@@ -605,6 +605,12 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\DiannSearchDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\DiannSearchDlg.Designer.cs">
+      <DependentUpon>DiannSearchDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -897,6 +903,7 @@
     <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\LegacyCrosslinkConverter.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
+    <Compile Include="Model\Lib\DiannHelpers.cs" />
     <Compile Include="Model\Lib\EncyclopeDiaHelpers.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
@@ -3319,6 +3326,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\DiannSearchDlg.resx">
+      <DependentUpon>DiannSearchDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.ja.resx">
       <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
