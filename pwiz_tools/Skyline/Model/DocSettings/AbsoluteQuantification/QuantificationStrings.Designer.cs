@@ -269,6 +269,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
                 return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to RSE = .
+        /// </summary>
+        public static string CalibrationForm_DisplayCalibrationCurve_RelativeStandardError {
+            get {
+                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_RelativeStandardError", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to No results available.
