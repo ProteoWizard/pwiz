@@ -33,14 +33,6 @@ namespace pwiz.Common.Collections
         TKey GetKey();
     }
 
-    /// <summary>
-    /// Implement on an element to support renaming in Edit List dialogs.
-    /// </summary>
-    public interface IRenameable<out T>
-    {
-        T ChangeName(string newName);
-    }
-
     public interface IEquivalenceTestable<in T>
     {
         bool IsEquivalent(T other);
