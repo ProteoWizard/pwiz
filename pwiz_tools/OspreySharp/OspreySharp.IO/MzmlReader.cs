@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using pwiz.OspreySharp.Core;
 
@@ -38,18 +41,41 @@ namespace pwiz.OspreySharp.IO
         #endregion
 
         /// <summary>
-        /// Load all MS1 and MS2 spectra from an mzML file in a single pass.
-        /// Uses a two-phase approach for parallel decompression:
-        ///   1. Sequential XML parse: extract metadata + raw base64 strings
-        ///   2. Parallel decode: base64 + zlib decompression across all cores
+        /// Load all MS1 and MS2 spectra from an mzML file using a
+        /// producer-consumer pipeline for maximum throughput:
+        ///   Producer: sequential XML parse pushes raw base64 blocks
+        ///   Consumers: parallel base64 + zlib decompression
+        /// XML parsing and decompression overlap completely.
+        /// Pattern matches Skyline's CommonUtil.ProducerConsumerWorker.
         /// </summary>
         public static MzmlResult LoadAllSpectra(string path)
         {
-            // Phase 1: Sequential XML parse - extract raw data
-            var rawSpectra = new List<RawSpectrumData>();
+            // Producer-consumer pipeline: XML parse overlaps with decompression.
+            // Producer (main thread): sequential XML parse -> push raw blocks
+            // Consumers (thread pool): parallel base64 + zlib decode as blocks arrive
+            // Results collected in ConcurrentDictionary keyed by index for ordering.
 
+            var queue = new BlockingCollection<(int index, RawSpectrumData raw)>(
+                boundedCapacity: 512);
+            var results = new ConcurrentDictionary<int, DecodedSpectrum>();
+            int totalCount = 0;
+
+            // Consumer: decode items as they arrive from the queue
+            var consumerTask = Task.Run(() =>
+            {
+                Parallel.ForEach(queue.GetConsumingEnumerable(),
+                    new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                    item =>
+                    {
+                        var d = DecodeSpectrum(item.raw);
+                        if (d != null)
+                            results[item.index] = d;
+                    });
+            });
+
+            // Producer: sequential XML parse, push to queue
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
-                FileShare.Read, 1024 * 1024)) // 1 MB buffer
+                FileShare.Read, 1024 * 1024))
             {
                 var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
                 using (var reader = XmlReader.Create(stream, settings))
@@ -66,25 +92,24 @@ namespace pwiz.OspreySharp.IO
 
                         var raw = ParseSpectrumRaw(reader, spectrumIndex);
                         if (raw != null)
-                            rawSpectra.Add(raw);
+                        {
+                            queue.Add((totalCount, raw));
+                            totalCount++;
+                        }
                     }
                 }
             }
+            queue.CompleteAdding();
+            consumerTask.Wait();
 
-            // Phase 2: Parallel decode - base64 + zlib decompression
-            var decoded = new DecodedSpectrum[rawSpectra.Count];
-            System.Threading.Tasks.Parallel.For(0, rawSpectra.Count, i =>
-            {
-                decoded[i] = DecodeSpectrum(rawSpectra[i]);
-            });
-
-            // Phase 3: Collect into typed lists (sequential, fast)
+            // Collect into typed lists in original order
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
-            for (int i = 0; i < decoded.Length; i++)
+            for (int i = 0; i < totalCount; i++)
             {
-                var d = decoded[i];
-                if (d == null) continue;
+                DecodedSpectrum d;
+                if (!results.TryGetValue(i, out d) || d == null)
+                    continue;
                 if (d.MsLevel == 1)
                     ms1Spectra.Add(d.ToMs1Spectrum());
                 else if (d.MsLevel == 2)
