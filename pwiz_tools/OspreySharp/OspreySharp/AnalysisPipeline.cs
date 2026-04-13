@@ -1687,7 +1687,7 @@ namespace pwiz.OspreySharp
                 var spec = windowSpectra[si];
                 if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
                     continue;
-                if (!HasTopNFragmentMatch(entry.Fragments, spec.Mzs,
+                if (!HasTopNFragmentMatch(entry, spec.Mzs,
                     config.FragmentTolerance.ToleranceDa(entry.PrecursorMz)))
                     continue;
                 candidateSpectra.Add(spec);
@@ -2568,7 +2568,7 @@ namespace pwiz.OspreySharp
                 for (int i = startScan; i <= endScan; i++)
                 {
                     bool passes = HasTopNFragmentMatch(
-                        candidate.Fragments, windowSpectra[i].Mzs, tolDa);
+                        candidate, windowSpectra[i].Mzs, tolDa);
                     int slot = (i - startScan) % WIN;
                     if (window[slot]) winSum--;
                     window[slot] = passes;
@@ -2993,40 +2993,69 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
+        /// Get cached top-6 fragment m/z values for an entry. Computed once,
+        /// reused across all prefilter calls for the same entry. Thread-safe
+        /// via ConcurrentDictionary.
+        /// </summary>
+        private static readonly ConcurrentDictionary<uint, double[]> _top6MzCache =
+            new ConcurrentDictionary<uint, double[]>();
+
+        private static double[] GetTop6FragmentMzs(LibraryEntry entry)
+        {
+            return _top6MzCache.GetOrAdd(entry.Id, _ =>
+            {
+                var frags = entry.Fragments;
+                if (frags == null || frags.Count == 0)
+                    return new double[0];
+
+                int nTop = Math.Min(frags.Count, 6);
+                if (frags.Count <= 6)
+                {
+                    var mzs = new double[frags.Count];
+                    for (int i = 0; i < frags.Count; i++)
+                        mzs[i] = frags[i].Mz;
+                    return mzs;
+                }
+
+                // Find top 6 by intensity
+                var indices = new int[frags.Count];
+                for (int i = 0; i < indices.Length; i++) indices[i] = i;
+                Array.Sort(indices, (a, b) =>
+                    frags[b].RelativeIntensity.CompareTo(frags[a].RelativeIntensity));
+                var result = new double[nTop];
+                for (int i = 0; i < nTop; i++)
+                    result[i] = frags[indices[i]].Mz;
+                return result;
+            });
+        }
+
+        /// <summary>
         /// Check if at least 2 of the top 6 library fragments have matching peaks
-        /// in the spectrum. Port of has_topn_fragment_match in osprey-scoring/src/lib.rs:112.
+        /// in the spectrum. Uses cached top-6 m/z values (no allocation per call).
+        /// Port of has_topn_fragment_match in osprey-scoring/src/lib.rs:112.
         /// </summary>
         private static bool HasTopNFragmentMatch(
-            List<LibraryFragment> fragments, double[] spectrumMzs, double toleranceDa)
+            LibraryEntry entry, double[] spectrumMzs, double toleranceDa)
         {
-            if (fragments == null || fragments.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
-                return true; // conservative: don't filter if no data
+            var frags = entry.Fragments;
+            if (frags == null || frags.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
+                return true;
 
-            // Get top 6 by intensity
-            int nTop = Math.Min(fragments.Count, 6);
+            double[] top6Mzs = GetTop6FragmentMzs(entry);
+            int nTop = top6Mzs.Length;
             int requiredMatches = nTop <= 1 ? 1 : 2;
             int matchCount = 0;
 
-            // Sort indices by descending intensity to get top 6
-            var indices = new int[fragments.Count];
-            for (int i = 0; i < indices.Length; i++) indices[i] = i;
-            Array.Sort(indices, (a, b) => fragments[b].RelativeIntensity.CompareTo(fragments[a].RelativeIntensity));
-
             for (int t = 0; t < nTop; t++)
             {
-                double libMz = fragments[indices[t]].Mz;
-                double lower = libMz - toleranceDa;
-                double upper = libMz + toleranceDa;
-
-                // Binary search for first m/z >= lower
+                double lower = top6Mzs[t] - toleranceDa;
+                double upper = top6Mzs[t] + toleranceDa;
                 int lo = 0, hi = spectrumMzs.Length;
                 while (lo < hi) { int mid = (lo + hi) / 2; if (spectrumMzs[mid] < lower) lo = mid + 1; else hi = mid; }
-
                 if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
                 {
                     matchCount++;
-                    if (matchCount >= requiredMatches)
-                        return true;
+                    if (matchCount >= requiredMatches) return true;
                 }
             }
             return false;
