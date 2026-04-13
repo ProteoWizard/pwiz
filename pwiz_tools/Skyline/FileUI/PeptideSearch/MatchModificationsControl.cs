@@ -161,12 +161,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 foreach (var mod in preset.StructuralModifications)
                 {
-                    if (!Settings.Default.StaticModList.Any(m => m.Name == mod.Name))
+                    if (!Settings.Default.StaticModList.ContainsKey(mod.Name))
                         Settings.Default.StaticModList.Add(mod);
                 }
                 foreach (var mod in preset.HeavyModifications)
                 {
-                    if (!Settings.Default.HeavyModList.Any(m => m.Name == mod.Name))
+                    if (!Settings.Default.HeavyModList.ContainsKey(mod.Name))
                         Settings.Default.HeavyModList.Add(mod);
                 }
             }

@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
-using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -52,10 +51,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
 
     [XmlRoot("search_workflow")]
-    public sealed class SearchSettingsPreset : Immutable, IKeyContainer<string>, IRenameable<SearchSettingsPreset>, IXmlSerializable
+    public sealed class SearchSettingsPreset : XmlNamedElement
     {
         // Search engine settings
-        public string Name { get; private set; }
         public SearchEngine SearchEngine { get; private set; }
         public double PrecursorToleranceValue { get; private set; }
         public MzTolerance.Units PrecursorToleranceUnit { get; private set; }
@@ -131,8 +129,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             SearchWorkflowType? workflowType = null,
             string irtStandardName = null,
             bool hasExplicitModifications = false)
+            : base(name)
         {
-            Name = name;
             SearchEngine = searchEngine;
             PrecursorToleranceValue = precursorTolerance.Value;
             PrecursorToleranceUnit = precursorTolerance.Unit;
@@ -158,19 +156,6 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public MzTolerance PrecursorTolerance => new MzTolerance(PrecursorToleranceValue, PrecursorToleranceUnit);
         public MzTolerance FragmentTolerance => new MzTolerance(FragmentToleranceValue, FragmentToleranceUnit);
-
-        public SearchSettingsPreset ChangeName(string name)
-        {
-            return new SearchSettingsPreset(name, SearchEngine, PrecursorTolerance, FragmentTolerance,
-                MaxVariableMods, FragmentIons, Ms2Analyzer, CutoffScore, AdditionalSettingsXml,
-                FastaFilePath, EnzymeName, MaxMissedCleavages, DecoyGenerationMethod, NumDecoys, AutoTrain,
-                StructuralModifications, HeavyModifications, Workflow, IrtStandardName, HasExplicitModifications);
-        }
-
-        public string GetKey()
-        {
-            return Name;
-        }
 
         /// <summary>
         /// Apply the additional settings from this workflow to a search engine instance.
@@ -249,13 +234,12 @@ namespace pwiz.Skyline.Model.DdaSearch
         /// <summary>
         /// For serialization
         /// </summary>
-        private SearchSettingsPreset()
+        private SearchSettingsPreset() : base()
         {
         }
 
         private enum ATTR
         {
-            name,
             search_engine,
             precursor_tolerance_value,
             precursor_tolerance_unit,
@@ -288,14 +272,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             return reader.Deserialize(new SearchSettingsPreset());
         }
 
-        public XmlSchema GetSchema()
+        public override void ReadXml(XmlReader reader)
         {
-            return null;
-        }
-
-        public void ReadXml(XmlReader reader)
-        {
-            Name = reader.GetAttribute(ATTR.name);
+            base.ReadXml(reader);
             SearchEngine = reader.GetEnumAttribute(ATTR.search_engine, SearchEngine.MSFragger);
             PrecursorToleranceValue = reader.GetDoubleAttribute(ATTR.precursor_tolerance_value, 10.0);
             PrecursorToleranceUnit = reader.GetEnumAttribute(ATTR.precursor_tolerance_unit, MzTolerance.Units.ppm);
@@ -358,9 +337,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             HeavyModifications = ImmutableList.ValueOfOrEmpty(heavyMods);
         }
 
-        public void WriteXml(XmlWriter writer)
+        public override void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttribute(ATTR.name, Name);
+            base.WriteXml(writer);
             writer.WriteAttribute(ATTR.search_engine, SearchEngine);
             writer.WriteAttribute(ATTR.precursor_tolerance_value, PrecursorToleranceValue);
             writer.WriteAttribute(ATTR.precursor_tolerance_unit, PrecursorToleranceUnit);

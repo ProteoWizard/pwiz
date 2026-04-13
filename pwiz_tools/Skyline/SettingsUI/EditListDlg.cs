@@ -26,6 +26,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -77,8 +78,8 @@ namespace pwiz.Skyline.SettingsUI
             if (!model.AllowReset)
                 pnlButtons.Controls.Remove(btnReset);
 
-            // Rename is available when items implement IRenameable<T>
-            bool canRename = typeof(IRenameable<TItem>).IsAssignableFrom(typeof(TItem));
+            // Rename is available when items extend XmlNamedElement (which provides ChangeName)
+            bool canRename = typeof(XmlNamedElement).IsAssignableFrom(typeof(TItem));
             if (!canRename)
                 pnlButtons.Controls.Remove(btnRename);
             else
@@ -313,7 +314,7 @@ namespace pwiz.Skyline.SettingsUI
 
             using (var form = new Form())
             {
-                form.Text = SettingsUIResources.EditListDlg_Rename.Replace("&", string.Empty);
+                form.Text = SettingsUIResources.EditListDlg_Rename.Replace(@"&", string.Empty);
                 form.FormBorderStyle = FormBorderStyle.FixedDialog;
                 form.StartPosition = FormStartPosition.CenterParent;
                 form.MaximizeBox = false;
@@ -346,8 +347,8 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 }
 
-                var renameable = (IRenameable<TItem>)item;
-                _list[i] = renameable.ChangeName(newName);
+                var namedElement = (XmlNamedElement)(object)item;
+                _list[i] = (TItem)(object)namedElement.ChangeName(newName);
                 listBox.Items[i] = newName;
             }
         }

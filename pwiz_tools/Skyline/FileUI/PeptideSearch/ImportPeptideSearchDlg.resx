@@ -1406,7 +1406,7 @@ injected into the mass spectrometer.</value>
     <value>12</value>
   </data>
   <data name="btnSavePreset.Text" xml:space="preserve">
-    <value>Save</value>
+    <value>Save...</value>
   </data>
   <data name="&gt;&gt;btnSavePreset.Name" xml:space="preserve">
     <value>btnSavePreset</value>

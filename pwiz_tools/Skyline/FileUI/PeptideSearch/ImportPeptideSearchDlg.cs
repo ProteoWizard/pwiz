@@ -31,7 +31,6 @@ using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Common.Chemistry;
-using pwiz.Common.GUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DdaSearch;
@@ -405,8 +404,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ? $@"{SearchSettingsControl.SelectedSearchEngine} - "
                     : string.Empty;
 
-            if (!ShowPresetNameInputDialog(PeptideSearchResources.SearchSettingsControl_SaveSettingsPreset, suggestedName, out string name))
-                return;
+            string name;
+            using (var dlg = new PresetNameDlg(suggestedName))
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                name = dlg.PresetName;
+            }
 
             if (string.IsNullOrWhiteSpace(name))
                 return;
@@ -482,41 +486,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 workflowType: (SearchWorkflowType)BuildPepSearchLibControl.WorkflowType,
                 irtStandardName: BuildPepSearchLibControl.IrtStandards?.Name,
                 hasExplicitModifications: true);
-        }
-
-        private bool ShowPresetNameInputDialog(string title, string defaultValue, out string result)
-        {
-            result = null;
-            using (var form = new Form())
-            {
-                form.Text = title;
-                form.FormBorderStyle = FormBorderStyle.FixedDialog;
-                form.StartPosition = FormStartPosition.CenterParent;
-                form.MaximizeBox = false;
-                form.MinimizeBox = false;
-                form.Width = 350;
-                form.Height = 130;
-
-                var label = new Label { Left = 10, Top = 15, Text = PeptideSearchResources.SearchSettingsControl_SettingsPreset, AutoSize = true };
-                var textBox = new TextBox { Left = 10, Top = 35, Width = 310, Text = defaultValue };
-                textBox.SelectionStart = textBox.Text.Length;
-                var btnOk = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.OK), Left = 150, Width = 80, Top = 65, DialogResult = DialogResult.OK };
-                var btnCancelDlg = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.Cancel), Left = 240, Width = 80, Top = 65, DialogResult = DialogResult.Cancel };
-
-                form.Controls.Add(label);
-                form.Controls.Add(textBox);
-                form.Controls.Add(btnOk);
-                form.Controls.Add(btnCancelDlg);
-                form.AcceptButton = btnOk;
-                form.CancelButton = btnCancelDlg;
-
-                if (form.ShowDialog(this) == DialogResult.OK)
-                {
-                    result = textBox.Text;
-                    return true;
-                }
-                return false;
-            }
         }
 
         // Test helpers
