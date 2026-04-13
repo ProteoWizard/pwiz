@@ -997,6 +997,22 @@ namespace pwiz.OspreySharp
                 ? new System.Collections.Concurrent.ConcurrentBag<string>()
                 : null;
 
+            // Pre-preprocess all window spectra for XCorr. Each spectrum is
+            // preprocessed once; calibration entry scoring uses O(n_frags) bin
+            // lookups. Matches the main search optimization.
+            var preprocessedByWindowKey = new Dictionary<int, double[][]>();
+            {
+                var tempScorer = new SpectralScorer();
+                foreach (var kvp in spectraByWindowKey)
+                {
+                    var spectra = kvp.Value;
+                    var pp = new double[spectra.Count][];
+                    for (int i = 0; i < spectra.Count; i++)
+                        pp[i] = tempScorer.PreprocessSpectrumForXcorr(spectra[i]);
+                    preprocessedByWindowKey[kvp.Key] = pp;
+                }
+            }
+
             // Parallel score each sampled entry.
             var swScoring = Stopwatch.StartNew();
             var matches = new ConcurrentBag<CalibrationMatch>();
@@ -1014,7 +1030,7 @@ namespace pwiz.OspreySharp
                 double entryLibRt;
                 double entryMeasuredRt;
                 var match = ScoreCalibrationEntry(
-                    entry, spectraByWindowKey, config,
+                    entry, spectraByWindowKey, preprocessedByWindowKey, config,
                     rtSlope, rtIntercept, tolerance,
                     calibrationModel,
                     localScorer,
@@ -1557,6 +1573,7 @@ namespace pwiz.OspreySharp
         private CalibrationMatch ScoreCalibrationEntry(
             LibraryEntry entry,
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
+            Dictionary<int, double[][]> preprocessedByWindowKey,
             OspreyConfig config,
             double rtSlope, double rtIntercept, double initialTolerance,
             RTCalibration calibrationModel,
@@ -1637,14 +1654,20 @@ namespace pwiz.OspreySharp
             }
 
             // Filter by RT tolerance and top-6 fragment prefilter.
+            // Track window indices for preprocessed XCorr lookup.
             var candidateSpectra = new List<Spectrum>();
-            foreach (var spec in windowSpectra)
+            var candidateWindowIndices = new List<int>();
+            double[][] windowPreprocessed = null;
+            preprocessedByWindowKey.TryGetValue(windowKey, out windowPreprocessed);
+            for (int si = 0; si < windowSpectra.Count; si++)
             {
+                var spec = windowSpectra[si];
                 if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
                     continue;
                 if (CountTop6Matches(entry, spec, config) < 2)
                     continue;
                 candidateSpectra.Add(spec);
+                candidateWindowIndices.Add(si);
             }
 
             if (candidateSpectra.Count < MIN_COELUTION_SPECTRA)
@@ -1949,7 +1972,11 @@ namespace pwiz.OspreySharp
             // Compute the four LDA features at the apex.
             double libCosineApex = scorer.LibCosine(
                 apexSpectrum, entry, config.FragmentTolerance);
-            double xcorrApex = scorer.XcorrAtScan(apexSpectrum, entry);
+            // XCorr from pre-preprocessed spectrum (O(n_frags) bin lookups only)
+            int apexWindowIdx = candidateWindowIndices[apexSpecLocalIdx];
+            double xcorrApex = (windowPreprocessed != null && apexWindowIdx < windowPreprocessed.Length)
+                ? scorer.XcorrFromPreprocessed(windowPreprocessed[apexWindowIdx], entry)
+                : scorer.XcorrAtScan(apexSpectrum, entry);
             byte top6Matched = CountTop6Matches(entry, apexSpectrum, config);
 
             // Collect MS2 fragment mass errors at apex for m/z calibration.
