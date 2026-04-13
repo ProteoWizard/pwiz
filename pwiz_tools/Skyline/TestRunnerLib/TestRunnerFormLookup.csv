@@ -192,6 +192,7 @@ RefineDlg.ResultsTab,TestMethodRefinementTutorial
 RefineListDlg,TestRefineListDlg
 RefineProteinListDlg,TestRefineProteinListDlg
 RegressionRTThresholdDlg,TestIrtTutorial
+PresetNameDlg,TestDdaSearchSettingsPreset
 ReintegrateDlg,TestReintegrateDlg
 RenameProteinsDlg,TestRenameProteins
 RenameResultDlg,TestManageResults
