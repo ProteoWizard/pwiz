@@ -102,6 +102,19 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("[COUNT] Full library: {0} ({1} targets + {2} decoys)",
                     fullLibrary.Count, library.Count, decoys.Count));
 
+                // Count entries with few fragments (diagnostic for entry count parity)
+                int nZeroFrag = 0, nOneFrag = 0, nTwoFrag = 0;
+                foreach (var entry in fullLibrary)
+                {
+                    int fc = entry.Fragments != null ? entry.Fragments.Count : 0;
+                    if (fc == 0) nZeroFrag++;
+                    else if (fc == 1) nOneFrag++;
+                    else if (fc == 2) nTwoFrag++;
+                }
+                if (nZeroFrag + nOneFrag + nTwoFrag > 0)
+                    LogInfo(string.Format("[COUNT] Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
+                        nZeroFrag + nOneFrag + nTwoFrag, nZeroFrag, nOneFrag, nTwoFrag));
+
                 // Build library lookup by ID for fast access
                 var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
                 foreach (var entry in fullLibrary)
@@ -143,6 +156,14 @@ namespace pwiz.OspreySharp
                 if (perFileEntries.Count == 0 || totalScored == 0)
                 {
                     LogWarning("No scored entries found. Cannot perform FDR control.");
+                    return 0;
+                }
+
+                // Optional early exit after Stage 4 (scoring only, no FDR).
+                // Used for benchmarking Stages 1-4 without Stage 5+ overhead.
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OSPREY_EXIT_AFTER_SCORING")))
+                {
+                    LogInfo(string.Format("[BENCH] OSPREY_EXIT_AFTER_SCORING set - exiting after Stage 4 ({0} entries)", totalScored));
                     return 0;
                 }
 
@@ -2312,11 +2333,12 @@ namespace pwiz.OspreySharp
             // Sort spectra by RT for XIC extraction
             windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime));
 
-            // Find candidate library entries whose precursor m/z falls in this window
+            // Find candidate library entries whose precursor m/z falls in this window.
+            // No minimum fragment count filter - matches Rust which scores all entries.
             var candidates = new List<LibraryEntry>();
             foreach (var entry in fullLibrary)
             {
-                if (entry.Fragments == null || entry.Fragments.Count < 3)
+                if (entry.Fragments == null || entry.Fragments.Count == 0)
                     continue;
                 if (window.Contains(entry.PrecursorMz))
                     candidates.Add(entry);
@@ -2434,6 +2456,36 @@ namespace pwiz.OspreySharp
 
             int rangeLen = endScan - startScan + 1;
 
+            // Signal pre-filter: require at least 2 of top 6 fragments present
+            // in at least 3 of 4 consecutive scans. Matches Rust pipeline.rs:6032-6066.
+            // Skips noise-only candidates before the expensive XIC extraction.
+            if (config.PrefilterEnabled)
+            {
+                double tolDa = config.FragmentTolerance.ToleranceDa(candidate.PrecursorMz);
+                const int WIN = 4;
+                const int MIN_PASS = 3;
+                bool[] window = new bool[WIN];
+                int winSum = 0;
+                bool hasSignal = false;
+
+                for (int i = startScan; i <= endScan; i++)
+                {
+                    bool passes = HasTopNFragmentMatch(
+                        candidate.Fragments, windowSpectra[i].Mzs, tolDa);
+                    int slot = (i - startScan) % WIN;
+                    if (window[slot]) winSum--;
+                    window[slot] = passes;
+                    if (passes) winSum++;
+                    if (i - startScan + 1 >= WIN && winSum >= MIN_PASS)
+                    {
+                        hasSignal = true;
+                        break;
+                    }
+                }
+                if (!hasSignal)
+                    return null;
+            }
+
             // Extract fragment XICs within the RT range
             var xics = ExtractFragmentXics(
                 candidate, windowSpectra, windowRts, startScan, endScan, config);
@@ -2488,19 +2540,56 @@ namespace pwiz.OspreySharp
             if (xics.Count < 2)
                 return null;
 
-            // Detect candidate peaks (CWT consensus across top-6 XICs).
-            // Rust pipeline.rs has three fallbacks when CWT returns empty:
+            // Detect candidate peaks with three-tier fallback matching Rust pipeline.rs:6244-6259.
             //   1. CWT consensus (primary)
-            //   2. Peak detection on median polish elution profile (fallback)
-            //   3. Peak detection on reference XIC (highest-total-intensity) (fallback)
-            // We currently only implement the primary path. Candidates missing from
-            // CWT are dropped; Rust recovers them via fallback. This accounts for
-            // some of the remaining under-detection vs Rust.
+            //   2. Peak detection on median polish elution profile (fallback 1)
+            //   3. Peak detection on reference XIC (fallback 2)
             var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+
+            if (peaks.Count == 0)
+            {
+                // Fallback 1: detect peaks on the median polish elution profile.
+                // Rust: detect_all_xic_peaks(&mp.elution_profile, 0.01, 5.0)
+                var polishXics = new List<KeyValuePair<int, double[]>>();
+                for (int f = 0; f < xics.Count; f++)
+                    polishXics.Add(new KeyValuePair<int, double[]>(
+                        xics[f].FragmentIndex, xics[f].Intensities));
+                double[] polishRts = xics[0].RetentionTimes;
+
+                var fullPolish = TukeyMedianPolish.Compute(polishXics, polishRts, 10, 0.01);
+                if (fullPolish != null && fullPolish.ElutionProfileRts != null &&
+                    fullPolish.ElutionProfileIntensities != null)
+                {
+                    peaks = PeakDetector.DetectAllXicPeaks(
+                        fullPolish.ElutionProfileRts,
+                        fullPolish.ElutionProfileIntensities,
+                        0.01, 5.0);
+                }
+            }
+
+            if (peaks.Count == 0)
+            {
+                // Fallback 2: detect peaks on the reference XIC (highest total intensity).
+                // Rust: detect_all_xic_peaks(ref_xic, 0.01, 5.0)
+                int refIdx = 0;
+                double bestTotal = 0.0;
+                for (int f = 0; f < xics.Count; f++)
+                {
+                    double total = 0.0;
+                    for (int i = 0; i < xics[f].Intensities.Length; i++)
+                        total += xics[f].Intensities[i];
+                    if (total > bestTotal) { bestTotal = total; refIdx = f; }
+                }
+                peaks = PeakDetector.DetectAllXicPeaks(
+                    xics[refIdx].RetentionTimes,
+                    xics[refIdx].Intensities,
+                    0.01, 5.0);
+            }
+
             if (diag)
             {
                 LogInfo(string.Format(
-                    "[DIAG] {0}: xics extracted={1}, CWT peaks={2}",
+                    "[DIAG] {0}: xics extracted={1}, peaks={2}",
                     candidate.ModifiedSequence, xics.Count, peaks.Count));
                 for (int i = 0; i < peaks.Count; i++)
                 {
@@ -2804,6 +2893,46 @@ namespace pwiz.OspreySharp
             };
 
             return entry;
+        }
+
+        /// <summary>
+        /// Check if at least 2 of the top 6 library fragments have matching peaks
+        /// in the spectrum. Port of has_topn_fragment_match in osprey-scoring/src/lib.rs:112.
+        /// </summary>
+        private static bool HasTopNFragmentMatch(
+            List<LibraryFragment> fragments, double[] spectrumMzs, double toleranceDa)
+        {
+            if (fragments == null || fragments.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
+                return true; // conservative: don't filter if no data
+
+            // Get top 6 by intensity
+            int nTop = Math.Min(fragments.Count, 6);
+            int requiredMatches = nTop <= 1 ? 1 : 2;
+            int matchCount = 0;
+
+            // Sort indices by descending intensity to get top 6
+            var indices = new int[fragments.Count];
+            for (int i = 0; i < indices.Length; i++) indices[i] = i;
+            Array.Sort(indices, (a, b) => fragments[b].RelativeIntensity.CompareTo(fragments[a].RelativeIntensity));
+
+            for (int t = 0; t < nTop; t++)
+            {
+                double libMz = fragments[indices[t]].Mz;
+                double lower = libMz - toleranceDa;
+                double upper = libMz + toleranceDa;
+
+                // Binary search for first m/z >= lower
+                int lo = 0, hi = spectrumMzs.Length;
+                while (lo < hi) { int mid = (lo + hi) / 2; if (spectrumMzs[mid] < lower) lo = mid + 1; else hi = mid; }
+
+                if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
+                {
+                    matchCount++;
+                    if (matchCount >= requiredMatches)
+                        return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
