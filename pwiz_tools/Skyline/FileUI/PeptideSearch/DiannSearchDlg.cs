@@ -145,7 +145,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly LibraryManager _libraryManager;
         private readonly Stack<SrmDocument> _documents;
 
-        public SrmDocument Document => _documents.Peek();
+        public SrmDocument Document => _documents.Count == 0 ? null : _documents.Peek();
 
         public string DocumentFilePath
         {

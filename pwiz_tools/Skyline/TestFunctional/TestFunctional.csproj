@@ -286,6 +286,7 @@
     <Compile Include="SpectrumGridTest.cs" />
     <Compile Include="ToolServiceTestSharedClasses.cs" />
     <Compile Include="EditSpectrumFilterTest.cs" />
+    <Compile Include="DiannSearchTest.cs" />
     <Compile Include="EncyclopeDiaSearchTest.cs" />
     <Compile Include="UnalignedRetentionTimesTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
