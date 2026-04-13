@@ -3947,7 +3947,7 @@ namespace pwiz.Skyline.Model
                 {
                     ionMobility = result.IonMobility.Mobility.Value;
                     windowIM = Document.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator
-                        .WidthAt(result.IonMobility, _oneOverK0UpperLimit).Width??0;
+                        .WidthAt(result.IonMobility, _oneOverK0UpperLimit).Width;
                 }
             }
 
@@ -3956,6 +3956,7 @@ namespace pwiz.Skyline.Model
                 _missingIonMobility.Add(nodeTranGroup.GetLibKey(Document.Settings, nodePep));
             }
 
+            // TODO(bspratt) - add IM window asymmetry sense
             target.one_over_k0_lower_limit = (ionMobility ?? 1.0) - windowIM / 2;
             target.one_over_k0_upper_limit = (ionMobility ?? 1.0) + windowIM / 2;
             if (ionMobility.HasValue &&

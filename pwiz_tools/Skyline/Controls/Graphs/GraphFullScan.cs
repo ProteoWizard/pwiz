@@ -729,7 +729,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
                     if (imFilter != null && imFilter.HasIonMobilityValue)
                         peakCenter = imFilter.IonMobility.Mobility.Value +
-                                     (imFilter.IonMobilityFilterWindow.Offset ?? 0);
+                                     (imFilter.IonMobilityFilterWindow.Offset);
                 }
                 if (peakCenter.HasValue)
                 {
@@ -784,7 +784,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             // Use window center as the effective IM (accounts for high-energy offset in product transitions)
                             var mobility = imAndCss.IonMobility.Mobility.Value +
-                                           (transition.IonMobilityInfo.IonMobilityFilterWindow.Offset ?? 0);
+                                           (transition.IonMobilityInfo.IonMobilityFilterWindow.Offset);
                             spectrumProperties.IonMobility = TextUtil.SpaceSeparate(mobility.ToString(Formats.IonMobility),
                                 imAndCss.IonMobility.UnitsString);
                         }
@@ -1975,7 +1975,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
                     if (imFilter != null && imFilter.HasIonMobilityValue)
                         filterPeak = imFilter.IonMobility.Mobility.Value +
-                                     (imFilter.IonMobilityFilterWindow.Offset ?? 0);
+                                     (imFilter.IonMobilityFilterWindow.Offset);
                 }
             }
 

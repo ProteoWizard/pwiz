@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (ionMobility.IonMobilitySkewness.HasValue && ionMobility.IonMobilitySkewness.Value != 0)
                     {
                         // Scale skewness by half-width to get a physical offset in IM units
-                        var halfWidth = (ionMobilityFilterWindow.Width ?? 0) / 2;
+                        var halfWidth = ionMobilityFilterWindow.Width / 2;
                         if (halfWidth > 0)
                         {
                             var offset = ionMobility.IonMobilitySkewness.Value * halfWidth;
@@ -936,11 +936,11 @@ namespace pwiz.Skyline.Model.DocSettings
     /// </summary>
     public class IonMobilityFilterWindow : Immutable, IEquatable<IonMobilityFilterWindow>, IComparable
     {
-        public static IonMobilityFilterWindow EMPTY = new IonMobilityFilterWindow(null, null);
+        public static IonMobilityFilterWindow EMPTY = new IonMobilityFilterWindow(0, 0);
         public static bool IsNullOrEmpty(IonMobilityFilterWindow imFilterWindow) => imFilterWindow == null || imFilterWindow.IsEmpty;
-        public bool IsEmpty => (Width??0) == 0;
+        public bool IsEmpty => Width == 0;
 
-        private IonMobilityFilterWindow(double? width, double? offset)
+        private IonMobilityFilterWindow(double width, double offset)
         {
             Width = width;
             Offset = offset;
@@ -948,35 +948,30 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static IonMobilityFilterWindow FromWidthAndOffset(double? width, double? offset)
         {
-            if ((width ?? 0) == 0)
+            if (!width.HasValue || width.Value == 0)
             {
                 return EMPTY;
             }
 
-            return new IonMobilityFilterWindow(width, offset);
+            return new IonMobilityFilterWindow(width.Value, offset ?? 0);
         }
 
         public void GetBounds(double? ionMobilityPeak, out double boundsLow, out double boundsHigh)
         {
-            var w = Width ?? 0;
-            boundsLow = (ionMobilityPeak??0) - (w / 2) + (Offset??0);
-            boundsHigh = boundsLow + w;
+            boundsLow = (ionMobilityPeak ?? 0) - (Width / 2) + Offset;
+            boundsHigh = boundsLow + Width;
         }
 
         public bool Contains(double im, double ionMobilityPeak)
         {
             if (IsEmpty)
                 return false;
-            var low = ionMobilityPeak - (Width/2) + (Offset??0);
-            if (im < low)
-                return false;
-            if (im > low + Width) 
-                return false;
-            return true;
+            var low = ionMobilityPeak - (Width / 2) + Offset;
+            return im >= low && im <= low + Width;
         }
 
-        public double? Width { get; private set; }
-        public double? Offset { get; private set; }
+        public double Width { get; private set; }
+        public double Offset { get; private set; }
 
         public bool Equals(IonMobilityFilterWindow other)
         {
@@ -989,8 +984,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(this, other)) return 0;
             if (ReferenceEquals(null, other)) return 1;
-            var widthComparison = Nullable.Compare(Width, other.Width);
-            return widthComparison != 0 ? widthComparison : Nullable.Compare(Offset, other.Offset);
+            var widthComparison = Width.CompareTo(other.Width);
+            return widthComparison != 0 ? widthComparison : Offset.CompareTo(other.Offset);
         }
 
         public int CompareTo(object obj)
@@ -1115,8 +1110,8 @@ namespace pwiz.Skyline.Model.DocSettings
             Assume.IsTrue(IonMobilityUnits != eIonMobilityUnits.waters_sonar || 
                           !IonMobilityAndCCS.HasCollisionalCrossSection &&
                           !IonMobilityAndCCS.HighEnergyIonMobilityValueOffset.HasValue &&
-                          Math.Abs((IonMobilityFilterWindow.Width??0) - 
-                              Math.Round(IonMobilityFilterWindow.Width??0)) <= DoubleToIntEpsilon*1.01,
+                          Math.Abs(IonMobilityFilterWindow.Width -
+                              Math.Round(IonMobilityFilterWindow.Width)) <= DoubleToIntEpsilon*1.01,
                 @"unexpected values for Waters SONAR filtering");
         }
         public IonMobilityAndCCS IonMobilityAndCCS { get; private set; }
@@ -1331,7 +1326,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!IonMobilityFilterWindow.IsNullOrEmpty(IonMobilityFilterWindow))
             {
                 writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window, IonMobilityFilterWindow.Width);
-                if ((IonMobilityFilterWindow.Offset ?? 0) != 0)
+                if (IonMobilityFilterWindow.Offset != 0)
                     writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window_offset, IonMobilityFilterWindow.Offset);
             }
             writer.WriteAttributeNullable(DocumentSerializer.ATTR.ccs, CollisionalCrossSectionSqA);

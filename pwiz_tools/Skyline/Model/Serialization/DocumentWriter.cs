@@ -923,7 +923,7 @@ namespace pwiz.Skyline.Model.Serialization
                     if (SkylineVersion.SrmDocumentVersion < DocumentFormat.ION_MOBILITY_FILTER_SKEW)
                     {
                         // No sense of window that's not centered on IM, so declare window center as IM even if window was actually asymmetrical
-                        var centerIM = (ionMobilityExtractionWindow.Offset??0) + chromInfo.IonMobility.IonMobility.Mobility;
+                        var centerIM = ionMobilityExtractionWindow.Offset + chromInfo.IonMobility.IonMobility.Mobility;
                         writer.WriteAttributeNullable(ATTR.ion_mobility, centerIM);
                         writer.WriteAttributeNullable(ATTR.ion_mobility_window, ionMobilityExtractionWindow.Width);
                     }

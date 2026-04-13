@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model
 
         public double? DriftTimeMS1 { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityMS1 : null; } }
         public double? DriftTimeFragment { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityFragment : null; } }
-        public double? DriftTimeWindow { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityFilterWindow.Width : null; } }
+        public double? DriftTimeWindow { get { return IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? IonMobilityFilterWindow?.Width : null; } }
 
 
         // Used by TransitionGroupDocNode.AddChromInfo to aggregate ion mobility information from all transitions

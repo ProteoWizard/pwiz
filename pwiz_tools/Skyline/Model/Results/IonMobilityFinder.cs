@@ -629,7 +629,7 @@ namespace pwiz.Skyline.Model.Results
             for (var indexIM = 0; indexIM < observedIMs.Length; indexIM++)
             {
                 var observedIM = observedIMs[indexIM];
-                var ionMobilityHalfWindow = (_filterWindowWidthCalculator.WidthAt(observedIM, imMax).Width??0.0)/2;
+                var ionMobilityHalfWindow = _filterWindowWidthCalculator.WidthAt(observedIM, imMax).Width / 2;
                 if (ionMobilityHalfWindow <= 0)
                 {
                     throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_, 

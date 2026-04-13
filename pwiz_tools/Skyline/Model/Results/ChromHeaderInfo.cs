@@ -807,8 +807,8 @@ namespace pwiz.Skyline.Model.Results
             _product = product;
             _extractionWidth = extractionWidth;
             _ionMobilityValue = (float)(ionMobilityValue.IonMobility.Mobility??0);
-            _ionMobilityExtractionWidth = (float) (ionMobilityValue.IonMobilityFilterWindow.Width??0);
-            _ionMobilityExtractionOffset = (float) (ionMobilityValue.IonMobilityFilterWindow.Offset ??0);
+            _ionMobilityExtractionWidth = (float) ionMobilityValue.IonMobilityFilterWindow.Width;
+            _ionMobilityExtractionOffset = (float) ionMobilityValue.IonMobilityFilterWindow.Offset;
             Source = source;
             _optimizationStep = optimizationStep;
         }
