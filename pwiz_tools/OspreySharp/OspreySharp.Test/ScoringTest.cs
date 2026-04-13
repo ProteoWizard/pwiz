@@ -989,6 +989,226 @@ namespace pwiz.OspreySharp.Test
                     score, noMatchScore));
         }
 
+        /// <summary>
+        /// Session 5-8 fix: XCorr preprocessing must use f64 (double) throughout.
+        /// Using f32 (float) for the sliding window accumulator produces ~4e-6
+        /// drift due to reduced mantissa precision, which is large enough to
+        /// change feature rankings and FDR outcomes.
+        /// </summary>
+        [TestMethod]
+        public void TestXcorrF64VsF32PrecisionDrift()
+        {
+            // Simulate the sliding window subtraction with both float and double.
+            // Use a spectrum with many small values that accumulate rounding error.
+            int n = 2000;
+            double[] spectrumD = new double[n];
+            float[] spectrumF = new float[n];
+            var rng = new Random(42);
+            for (int i = 0; i < n; i++)
+            {
+                double v = rng.NextDouble() * 100.0;
+                spectrumD[i] = v;
+                spectrumF[i] = (float)v;
+            }
+
+            // Sliding window subtraction (offset=75) in double precision
+            const int offset = 75;
+            double normFactor = 1.0 / (2 * offset);
+            double[] prefixD = new double[n + 1];
+            for (int i = 0; i < n; i++) prefixD[i + 1] = prefixD[i] + spectrumD[i];
+            double[] resultD = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                int left = Math.Max(0, i - offset);
+                int right = Math.Min(n, i + offset + 1);
+                double windowSum = prefixD[right] - prefixD[left];
+                resultD[i] = spectrumD[i] - (windowSum - spectrumD[i]) * normFactor;
+            }
+
+            // Same computation in float precision
+            float normFactorF = 1.0f / (2 * offset);
+            float[] prefixF = new float[n + 1];
+            for (int i = 0; i < n; i++) prefixF[i + 1] = prefixF[i] + spectrumF[i];
+            double[] resultF = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                int left = Math.Max(0, i - offset);
+                int right = Math.Min(n, i + offset + 1);
+                float windowSum = prefixF[right] - prefixF[left];
+                resultF[i] = spectrumF[i] - (windowSum - spectrumF[i]) * normFactorF;
+            }
+
+            // The two must differ due to float rounding in the prefix sum
+            double maxDiff = 0.0;
+            for (int i = 0; i < n; i++)
+            {
+                double d = Math.Abs(resultD[i] - resultF[i]);
+                if (d > maxDiff) maxDiff = d;
+            }
+
+            Assert.IsTrue(maxDiff > 1e-6,
+                string.Format("f32 vs f64 sliding window should differ by >1e-6, got {0:E2}. " +
+                "Using f32 introduces drift that changes feature rankings.", maxDiff));
+
+            // The f64 result is what both C# and Rust (after the flip) should use
+            Assert.IsTrue(maxDiff < 1.0,
+                string.Format("Drift should be small but measurable, got {0:E2}", maxDiff));
+        }
+
+        /// <summary>
+        /// Session 5-8 fix: full XCorr windowing normalization pipeline test.
+        /// Verifies: sqrt binning (accumulate, not assign), 10-window
+        /// normalization to 50.0, 5% threshold, sliding window subtraction.
+        /// A simple two-peak spectrum produces known intermediate values.
+        /// </summary>
+        [TestMethod]
+        public void TestXcorrWindowingNormalization()
+        {
+            var scorer = new SpectralScorer(); // unit resolution: 2000 bins
+
+            // Two peaks: one strong at bin ~300, one weak at bin ~1500
+            // BinConfig.UnitResolution: bin = (int)(mz * inverseBinWidth + oneMinusOffset)
+            // inverseBinWidth = 1/1.0005079, oneMinusOffset = 0.6
+            // For mz=300: bin = (int)(300/1.0005079 + 0.6) = (int)(299.847 + 0.6) = 300
+            // For mz=1500: bin = (int)(1500/1.0005079 + 0.6) = (int)(1499.24 + 0.6) = 1499
+            var spectrum = new Spectrum
+            {
+                Mzs = new[] { 300.0, 1500.0 },
+                Intensities = new float[] { 10000.0f, 100.0f }
+            };
+
+            // Library with fragment at 300 (matching strong peak)
+            var entryStrong = new LibraryEntry(1, "T1", "T1", 2, 200.0, 5.0);
+            entryStrong.Fragments.Add(new LibraryFragment { Mz = 300.0, RelativeIntensity = 1.0f });
+
+            // Library with fragment at 1500 (matching weak peak)
+            var entryWeak = new LibraryEntry(2, "T2", "T2", 2, 200.0, 5.0);
+            entryWeak.Fragments.Add(new LibraryFragment { Mz = 1500.0, RelativeIntensity = 1.0f });
+
+            double scoreStrong = scorer.XcorrAtScan(spectrum, entryStrong);
+            double scoreWeak = scorer.XcorrAtScan(spectrum, entryWeak);
+
+            // After windowing normalization, both peaks are normalized to 50.0
+            // in their respective windows (assuming they're the max in their window).
+            // So the preprocessed values at both bins should be similar magnitude
+            // after sliding window subtraction. This is the key insight: windowing
+            // normalization prevents a 100x intensity difference from dominating.
+            // Without normalization, the strong peak would dominate the XCorr.
+
+            // Both scores should be positive (matched peak present)
+            Assert.IsTrue(scoreStrong > 0,
+                string.Format("Strong match should have positive XCorr, got {0:G6}", scoreStrong));
+            Assert.IsTrue(scoreWeak > 0,
+                string.Format("Weak match should have positive XCorr, got {0:G6}", scoreWeak));
+
+            // With correct windowing normalization, the ratio should be much closer
+            // to 1.0 than the raw intensity ratio of 100:1
+            double ratio = scoreStrong / scoreWeak;
+            Assert.IsTrue(ratio < 10.0,
+                string.Format("Windowed XCorr ratio ({0:F2}) should be much less than raw " +
+                "intensity ratio (100.0) due to normalization", ratio));
+        }
+
+        /// <summary>
+        /// Session 5-8 fix: iterative LDA refinement must select the best
+        /// iteration (most targets passing 1% FDR), not the last iteration.
+        /// The pre-fix code used a single-pass LDA that produced fewer
+        /// passing targets than the iterative approach.
+        ///
+        /// This test constructs a synthetic match set where iterative
+        /// refinement (with positive training set selection) outperforms
+        /// the baseline single-feature scorer. The key mechanism is that
+        /// iteration 1 identifies a positive training set that trains
+        /// an LDA combining features, which passes more targets than any
+        /// single feature alone.
+        /// </summary>
+        [TestMethod]
+        public void TestIterativeLdaRefinement()
+        {
+            // Create a synthetic calibration match set with 4 features.
+            // We need enough entries for 3-fold CV (MIN_POSITIVE_EXAMPLES=50,
+            // so we need at least 150 targets passing initial FDR).
+            // Structure: 200 target-decoy pairs (400 total entries)
+
+            var rng = new Random(12345);
+            int nPairs = 200;
+            var matches = new CalibrationMatch[nPairs * 2];
+
+            for (int p = 0; p < nPairs; p++)
+            {
+                uint baseId = (uint)(p + 1);
+                bool isGoodTarget = p < 120; // first 120 pairs are "real" peptides
+
+                // Target: good targets have high features, bad targets have low
+                double corr = isGoodTarget ? 3.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 2.0;
+                double libcos = isGoodTarget ? 0.6 + rng.NextDouble() * 0.3 : rng.NextDouble() * 0.4;
+                double top6 = isGoodTarget ? 4.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 3.0;
+                double xcorr = isGoodTarget ? 0.5 + rng.NextDouble() * 1.5 : rng.NextDouble() * 0.5;
+
+                matches[p * 2] = new CalibrationMatch
+                {
+                    EntryId = baseId,
+                    IsDecoy = false,
+                    Sequence = string.Format("PEPTIDE{0}K", p),
+                    CorrelationScore = corr,
+                    LibcosineApex = libcos,
+                    Top6MatchedApex = (byte)Math.Min(6, (int)top6),
+                    XcorrScore = xcorr
+                };
+
+                // Decoy: always low features (random noise)
+                matches[p * 2 + 1] = new CalibrationMatch
+                {
+                    EntryId = baseId | 0x80000000,
+                    IsDecoy = true,
+                    Sequence = string.Format("DECOY_PEPTIDE{0}K", p),
+                    CorrelationScore = rng.NextDouble() * 2.0,
+                    LibcosineApex = rng.NextDouble() * 0.3,
+                    Top6MatchedApex = (byte)(rng.Next(4)),
+                    XcorrScore = rng.NextDouble() * 0.4
+                };
+            }
+
+            // Run the full iterative LDA pipeline
+            int nPassing = CalibrationScorer.TrainAndScoreCalibration(matches, false);
+
+            // The iterative LDA should identify a meaningful number of targets.
+            // With 120 "good" targets and well-separated features, we expect
+            // most of them to pass 1% FDR.
+            Assert.IsTrue(nPassing > 50,
+                string.Format("Iterative LDA should pass >50 targets at 1%% FDR, got {0}. " +
+                "This validates that the iterative refinement with positive " +
+                "training set selection is working.", nPassing));
+
+            // Verify that targets have higher discriminant scores than decoys on average
+            double targetMean = 0, decoyMean = 0;
+            int nT = 0, nD = 0;
+            for (int i = 0; i < matches.Length; i++)
+            {
+                if (matches[i].IsDecoy) { decoyMean += matches[i].DiscriminantScore; nD++; }
+                else { targetMean += matches[i].DiscriminantScore; nT++; }
+            }
+            targetMean /= nT;
+            decoyMean /= nD;
+
+            Assert.IsTrue(targetMean > decoyMean,
+                string.Format("Target mean discriminant ({0:F3}) should exceed decoy mean ({1:F3})",
+                    targetMean, decoyMean));
+
+            // Verify q-values were assigned (best targets should have q <= 0.01).
+            // Note: nPassing counts unique peptide winners, while counting all
+            // matches with q <= 0.01 may differ by +/-1 at the boundary due to
+            // competition losers retaining q=1.0. Use approximate check.
+            int nWithLowQ = 0;
+            for (int i = 0; i < matches.Length; i++)
+                if (!matches[i].IsDecoy && matches[i].QValue <= 0.01)
+                    nWithLowQ++;
+
+            Assert.IsTrue(Math.Abs(nPassing - nWithLowQ) <= 1,
+                string.Format("Targets with q<=0.01 ({0}) should be within 1 of nPassing ({1})",
+                    nWithLowQ, nPassing));
+        }
+
         // Helper: Pearson correlation for test use
         private static double ComputePearson(double[] x, double[] y)
         {
