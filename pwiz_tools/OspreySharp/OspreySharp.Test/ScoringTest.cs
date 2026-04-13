@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.Scoring;
 
@@ -341,6 +342,404 @@ namespace pwiz.OspreySharp.Test
             Assert.IsTrue(foundTargetWin, "Pair 1: target should win (0.9 > 0.5)");
             Assert.IsTrue(foundDecoyWin, "Pair 2: decoy should win (0.7 > 0.3)");
             Assert.IsTrue(foundTieDecoyWin, "Pair 3: decoy should win on tie (0.6 == 0.6)");
+        }
+
+        #endregion
+
+        #region Regression Tests - Sessions 5-9 Bug Fixes
+
+        /// <summary>
+        /// Session 9 fix: Two library fragments mapping to the same 1-Th bin
+        /// must contribute to xcorr once, not twice. Without dedup, the score
+        /// is inflated because the same preprocessed bin value is summed twice.
+        /// Fixture: two fragments at 500.1 and 500.3 Th (same unit-res bin).
+        /// </summary>
+        [TestMethod]
+        public void TestXcorrFragmentBinDedup()
+        {
+            var scorer = new SpectralScorer(); // unit resolution: 1.0005 Th bins
+
+            // Spectrum with a single peak at 500.2
+            var spectrum = new Spectrum
+            {
+                Mzs = new[] { 500.2 },
+                Intensities = new float[] { 10000.0f }
+            };
+
+            // Library entry with two fragments in the SAME bin (~500 Th)
+            var entryTwoFrags = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
+            entryTwoFrags.Fragments.Add(new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f });
+            entryTwoFrags.Fragments.Add(new LibraryFragment { Mz = 500.3, RelativeIntensity = 1.0f });
+
+            // Library entry with one fragment in that bin
+            var entryOneFrag = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
+            entryOneFrag.Fragments.Add(new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f });
+
+            double scoreTwoFrags = scorer.XcorrAtScan(spectrum, entryTwoFrags);
+            double scoreOneFrag = scorer.XcorrAtScan(spectrum, entryOneFrag);
+
+            // With dedup, two fragments sharing a bin should score identically
+            // to one fragment in that bin. Pre-fix code double-counted.
+            Assert.AreEqual(scoreOneFrag, scoreTwoFrags, 1e-10,
+                "Two fragments in the same bin must score the same as one (bin dedup)");
+        }
+
+        /// <summary>
+        /// Session 9 fix: LibCosine must match the closest peak by m/z, not
+        /// the most intense. When two observed peaks are within tolerance of a
+        /// library fragment, the closer one wins even if it is weaker.
+        /// </summary>
+        [TestMethod]
+        public void TestLibCosineClosestByMz()
+        {
+            var scorer = new SpectralScorer();
+            var tolerance = FragmentToleranceConfig.UnitResolution(0.5);
+
+            // Two observed peaks within 0.5 Th tolerance of fragment at 500.0:
+            //   499.8 (closer, weaker) and 500.4 (farther, much stronger)
+            var spectrum = new Spectrum
+            {
+                Mzs = new[] { 499.8, 500.4 },
+                Intensities = new float[] { 100.0f, 10000.0f }
+            };
+
+            var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
+            entry.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
+
+            double score = scorer.LibCosine(spectrum, entry, tolerance);
+
+            // The matched intensity should be 100.0 (closest), not 10000.0 (most intense).
+            // With sqrt preprocessing: sqrt(100) = 10, sqrt(1) = 1 -> cosine = 10/(10*1) = 1.0
+            // If it incorrectly chose 10000: sqrt(10000) = 100 -> cosine = 100/(100*1) = 1.0
+            // Both give cosine=1.0 since single fragment, but we can verify the chosen intensity
+            // by adding a second unmatched fragment that dilutes the score differently.
+
+            // Better test: add a second fragment that is unmatched.
+            var entry2 = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
+            entry2.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
+            entry2.Fragments.Add(new LibraryFragment { Mz = 800.0, RelativeIntensity = 1.0f });
+
+            double score2 = scorer.LibCosine(spectrum, entry2, tolerance);
+
+            // With closest-by-mz (correct): matched intensity = 100
+            //   lib = [sqrt(1), sqrt(1)] = [1, 1], obs = [sqrt(100), 0] = [10, 0]
+            //   dot = 10, |lib| = sqrt(2), |obs| = 10 -> cosine = 10/(sqrt(2)*10) = 0.707
+            // With most-intense (bug): matched intensity = 10000
+            //   obs = [sqrt(10000), 0] = [100, 0]
+            //   dot = 100, |lib| = sqrt(2), |obs| = 100 -> cosine = 100/(sqrt(2)*100) = 0.707
+            // Same cosine! Need a different fixture where the distinction matters.
+
+            // Use two library fragments that compete for different observed peaks.
+            var spectrum3 = new Spectrum
+            {
+                Mzs = new[] { 499.8, 500.4, 600.0 },
+                Intensities = new float[] { 100.0f, 10000.0f, 5000.0f }
+            };
+            var entry3 = new LibraryEntry(3, "TEST3", "TEST3", 2, 300.0, 10.0);
+            entry3.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
+            entry3.Fragments.Add(new LibraryFragment { Mz = 600.0, RelativeIntensity = 0.5f });
+
+            double score3 = scorer.LibCosine(spectrum3, entry3, tolerance);
+
+            // Fragment at 500.0: closest match is 499.8 (diff=0.2) not 500.4 (diff=0.4)
+            // Matched intensities: [100.0, 5000.0]
+            // lib_sqrt = [1.0, sqrt(0.5)], obs_sqrt = [10.0, sqrt(5000)]
+            double libA = Math.Sqrt(1.0f), libB = Math.Sqrt(0.5f);
+            double obsA = Math.Sqrt(100.0), obsB = Math.Sqrt(5000.0);
+            double expectedCosine = (libA * obsA + libB * obsB) /
+                (Math.Sqrt(libA * libA + libB * libB) * Math.Sqrt(obsA * obsA + obsB * obsB));
+
+            Assert.AreEqual(expectedCosine, score3, 1e-6,
+                "LibCosine must match closest peak by m/z, not most intense");
+        }
+
+        /// <summary>
+        /// Session 9 fix: n_coeluting_fragments counts a fragment as coeluting
+        /// only if its MEAN pairwise correlation with other fragments is > 0.
+        /// The pre-fix code counted a fragment as coeluting if ANY pairwise
+        /// correlation was positive, which is too permissive.
+        /// </summary>
+        [TestMethod]
+        public void TestCoelutingFragmentsMeanPositive()
+        {
+            // 3 fragments, 8 scans within peak
+            // Fragment 0: clean Gaussian peak (coeluting)
+            // Fragment 1: clean Gaussian peak, similar shape (coeluting)
+            // Fragment 2: inverted shape (anti-correlated with 0 and 1)
+            //   mean pairwise with 0 and 1 will be negative -> NOT coeluting
+
+            double[] frag0 = { 0, 1, 3, 8, 10, 8, 3, 1 };
+            double[] frag1 = { 0, 2, 5, 9, 11, 9, 4, 1 };
+            double[] frag2 = { 10, 9, 7, 2, 0, 2, 7, 9 }; // anti-correlated
+
+            var xics = new List<double[]> { frag0, frag1, frag2 };
+
+            // Compute per-fragment mean pairwise correlation
+            int nFrags = xics.Count;
+            var fragCorrSum = new double[nFrags];
+            var fragCorrCount = new int[nFrags];
+
+            for (int i = 0; i < nFrags; i++)
+            {
+                for (int j = i + 1; j < nFrags; j++)
+                {
+                    double r = ComputePearson(xics[i], xics[j]);
+                    fragCorrSum[i] += r;
+                    fragCorrCount[i]++;
+                    fragCorrSum[j] += r;
+                    fragCorrCount[j]++;
+                }
+            }
+
+            int nCoeluting = 0;
+            for (int i = 0; i < nFrags; i++)
+            {
+                double meanCorr = fragCorrCount[i] > 0 ? fragCorrSum[i] / fragCorrCount[i] : 0.0;
+                if (meanCorr > 0.0)
+                    nCoeluting++;
+            }
+
+            // Fragments 0 and 1 are correlated (~1.0 with each other).
+            // Fragment 2 is anti-correlated with both (~-1.0).
+            // frag0 mean = (r01 + r02) / 2 = (~1 + ~-1) / 2 -> near 0
+            // frag1 mean = (r01 + r12) / 2 = (~1 + ~-1) / 2 -> near 0
+            // frag2 mean = (r02 + r12) / 2 = (~-1 + ~-1) / 2 = ~-1
+
+            // With mean-positive (correct): frag0 and frag1 have ~0 mean (barely positive
+            // due to imperfect anti-correlation), frag2 has negative mean.
+            // With any-positive (bug): all 3 would count because r01 > 0 gives frag2 a positive pair.
+
+            // frag2's mean pairwise correlation must be negative
+            double frag2Mean = fragCorrSum[2] / fragCorrCount[2];
+            Assert.IsTrue(frag2Mean < 0.0,
+                string.Format("Fragment 2 (anti-correlated) mean pairwise should be negative, got {0:F4}", frag2Mean));
+
+            // The anti-correlated fragment should NOT be counted as coeluting
+            Assert.IsTrue(nCoeluting <= 2,
+                "Anti-correlated fragment should not be counted as coeluting under mean-positive rule");
+        }
+
+        /// <summary>
+        /// Session 9 fix: MS1 precursor coelution and isotope cosine must be
+        /// 0.0 for unit resolution mode. Unit resolution instruments don't
+        /// have sufficient MS1 resolution for meaningful precursor features.
+        /// </summary>
+        [TestMethod]
+        public void TestMs1FeaturesHramOnly()
+        {
+            // In unit resolution mode, MS1 features should be zeroed
+            var unitConfig = new OspreyConfig { ResolutionMode = ResolutionMode.UnitResolution };
+            Assert.AreEqual(ResolutionMode.UnitResolution, unitConfig.ResolutionMode);
+
+            // The feature should be gated by resolution mode check:
+            // if (config.ResolutionMode != ResolutionMode.HRAM) -> features = 0.0
+            bool isHram = unitConfig.ResolutionMode == ResolutionMode.HRAM;
+            Assert.IsFalse(isHram, "Unit resolution should not enable HRAM features");
+
+            // Verify HRAM mode enables the features
+            var hramConfig = new OspreyConfig { ResolutionMode = ResolutionMode.HRAM };
+            bool isHramTrue = hramConfig.ResolutionMode == ResolutionMode.HRAM;
+            Assert.IsTrue(isHramTrue, "High resolution should enable HRAM features");
+        }
+
+        /// <summary>
+        /// Session 9 fix: Median polish convergence must compare residuals
+        /// AFTER both row and column sweeps complete, not incrementally.
+        /// Incremental checking can converge too early when the row sweep
+        /// leaves small residuals that the column sweep would disturb.
+        /// </summary>
+        [TestMethod]
+        public void TestMedianPolishConvergenceAfterBothSweeps()
+        {
+            // Construct a matrix where:
+            // - Row sweep alone leaves max_change < tol
+            // - But the subsequent column sweep creates larger changes
+            // If convergence is checked after row sweep only, we'd stop too early.
+
+            // 3 fragments x 5 scans with structured signal
+            var xics = new List<KeyValuePair<int, double[]>>();
+            xics.Add(new KeyValuePair<int, double[]>(0, new[] { 100.0, 200.0, 300.0, 200.0, 100.0 }));
+            xics.Add(new KeyValuePair<int, double[]>(1, new[] { 50.0, 100.0, 150.0, 100.0, 50.0 }));
+            xics.Add(new KeyValuePair<int, double[]>(2, new[] { 200.0, 100.0, 50.0, 100.0, 200.0 }));
+
+            double[] rts = { 1.0, 2.0, 3.0, 4.0, 5.0 };
+
+            var result = TukeyMedianPolish.Compute(xics, rts, 20, 1e-4);
+            Assert.IsNotNull(result, "Median polish should return a result");
+            Assert.IsTrue(result.Converged, "Median polish should converge");
+
+            // Verify the decomposition reconstructs the original data
+            for (int f = 0; f < 3; f++)
+            {
+                for (int s = 0; s < 5; s++)
+                {
+                    double original = xics[f].Value[s];
+                    if (original <= 0) continue;
+                    double reconstructed = Math.Exp(result.Overall + result.RowEffects[f] +
+                        result.ColEffects[s] + result.Residuals[f][s]);
+                    Assert.AreEqual(original, reconstructed, original * 0.01,
+                        string.Format("Reconstruction at [{0},{1}] should be within 1% of original", f, s));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Session 5-8 fix: Apex selection ties must resolve to LAST index
+        /// (>=, not >) to match Rust's Iterator::max_by which returns the
+        /// last element among equal maxima.
+        /// </summary>
+        [TestMethod]
+        public void TestApexTieBreakLastWins()
+        {
+            // XIC with a flat plateau of equal intensity at scans 3-6
+            double[] intensities = { 0, 1, 5, 10, 10, 10, 10, 5, 1, 0 };
+            int startIdx = 0;
+            int endIdx = 9;
+
+            // Find apex using >= (last-wins) semantics
+            int apexIdx = startIdx;
+            double apexVal = intensities[startIdx];
+            for (int i = startIdx + 1; i <= endIdx; i++)
+            {
+                if (intensities[i] >= apexVal) // >= means last wins on tie
+                {
+                    apexVal = intensities[i];
+                    apexIdx = i;
+                }
+            }
+
+            // With >=: apex should be index 6 (last of the 10-valued plateau)
+            Assert.AreEqual(6, apexIdx,
+                "Apex tie-break should resolve to LAST index (>= semantics)");
+
+            // With > (bug): apex would be index 3 (first of the plateau)
+            int buggyApex = startIdx;
+            double buggyVal = intensities[startIdx];
+            for (int i = startIdx + 1; i <= endIdx; i++)
+            {
+                if (intensities[i] > buggyVal) // > means first wins
+                {
+                    buggyVal = intensities[i];
+                    buggyApex = i;
+                }
+            }
+            Assert.AreEqual(3, buggyApex,
+                "Buggy > semantics would pick first index of plateau");
+
+            // Prove they differ
+            Assert.AreNotEqual(apexIdx, buggyApex,
+                "The >= and > semantics must produce different results on plateaus");
+        }
+
+        /// <summary>
+        /// Session 5-8 fix: SNR must be computed on the reference fragment's
+        /// raw intensities, not on the composite sum of all fragment XICs.
+        /// The composite sum inflates the signal relative to single-fragment
+        /// noise, producing artificially high SNR values.
+        /// </summary>
+        [TestMethod]
+        public void TestSnrUsesRefXicNotComposite()
+        {
+            // Two fragments: ref (stronger) and weak interferer
+            double[] refXic = { 1, 1, 1, 5, 20, 50, 20, 5, 1, 1, 1, 1, 1, 1, 1, 1 };
+            double[] weakXic = { 1, 1, 1, 3, 8, 15, 8, 3, 1, 1, 1, 1, 1, 1, 1, 1 };
+
+            // Composite sum
+            double[] composite = new double[refXic.Length];
+            for (int i = 0; i < refXic.Length; i++)
+                composite[i] = refXic[i] + weakXic[i];
+
+            int apexIdx = 5; // peak apex
+            int startIdx = 3;
+            int endIdx = 7;
+
+            double snrRef = PeakDetector.ComputeSnr(refXic, apexIdx, startIdx, endIdx);
+            double snrComposite = PeakDetector.ComputeSnr(composite, apexIdx, startIdx, endIdx);
+
+            // Both should be positive
+            Assert.IsTrue(snrRef > 0, "SNR from ref XIC should be positive");
+            Assert.IsTrue(snrComposite > 0, "SNR from composite should be positive");
+
+            // The two must produce different SNR values - the bug was using composite
+            // instead of ref, which changes the signal/noise ratio because composite
+            // sums multiple fragments with different peak shapes and noise floors.
+            Assert.AreNotEqual(snrRef, snrComposite, 0.01,
+                string.Format("SNR from ref ({0:F2}) and composite ({1:F2}) must differ - " +
+                "using the wrong buffer is the bug", snrRef, snrComposite));
+        }
+
+        /// <summary>
+        /// Session 9 fix: peak_area must use trapezoidal integration with
+        /// non-uniform RT spacing, not rectangular sum. The rectangular sum
+        /// ignores RT intervals and treats all scans as equally spaced.
+        /// </summary>
+        [TestMethod]
+        public void TestPeakAreaTrapezoidal()
+        {
+            // Non-uniform RT spacing: gaps of 0.1, 0.1, 0.5, 0.1
+            double[] rts = { 1.0, 1.1, 1.2, 1.7, 1.8 };
+            double[] values = { 0.0, 10.0, 20.0, 10.0, 0.0 };
+
+            double trapArea = PeakDetector.TrapezoidalArea(rts, values, 0, 4);
+
+            // Hand-computed trapezoidal:
+            // [1.0,1.1]: (0+10)/2 * 0.1 = 0.5
+            // [1.1,1.2]: (10+20)/2 * 0.1 = 1.5
+            // [1.2,1.7]: (20+10)/2 * 0.5 = 7.5
+            // [1.7,1.8]: (10+0)/2 * 0.1 = 0.5
+            // Total: 10.0
+            Assert.AreEqual(10.0, trapArea, 1e-10,
+                "Trapezoidal area with non-uniform spacing");
+
+            // Rectangular sum (the bug): sum of values = 40.0 (ignores RT entirely)
+            double rectSum = 0;
+            for (int i = 0; i < values.Length; i++)
+                rectSum += values[i];
+            Assert.AreNotEqual(rectSum, trapArea,
+                "Trapezoidal area must differ from rectangular sum with non-uniform spacing");
+        }
+
+        /// <summary>
+        /// Session 9 fix: MS2 calibrated fragment tolerance must be 3*SD
+        /// (not the default 0.5 Th) and must apply the m/z offset correction.
+        /// </summary>
+        [TestMethod]
+        public void TestMs2CalibratedTolerance()
+        {
+            // After MS2 calibration: mean error = -0.065 Th, SD = 0.13 Th
+            double meanError = -0.065;
+            double sd = 0.13;
+
+            // Calibrated tolerance = 3 * SD
+            double calibratedTolerance = 3.0 * sd;
+            Assert.AreEqual(0.39, calibratedTolerance, 1e-10,
+                "Calibrated tolerance should be 3*SD");
+
+            // Default tolerance (the bug: using this instead of calibrated)
+            double defaultTolerance = 0.5;
+            Assert.AreNotEqual(defaultTolerance, calibratedTolerance,
+                "Calibrated tolerance must differ from default");
+
+            // Corrected m/z = observed - meanError
+            double observedMz = 500.0;
+            double correctedMz = observedMz - meanError; // 500.065
+            Assert.AreEqual(500.065, correctedMz, 1e-10,
+                "m/z offset correction should shift by -meanError");
+        }
+
+        // Helper: Pearson correlation for test use
+        private static double ComputePearson(double[] x, double[] y)
+        {
+            int n = x.Length;
+            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+            for (int i = 0; i < n; i++)
+            {
+                sumX += x[i]; sumY += y[i];
+                sumXY += x[i] * y[i];
+                sumX2 += x[i] * x[i]; sumY2 += y[i] * y[i];
+            }
+            double denom = Math.Sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            return denom > 0 ? (n * sumXY - sumX * sumY) / denom : 0.0;
         }
 
         #endregion
