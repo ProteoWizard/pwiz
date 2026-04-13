@@ -1664,7 +1664,8 @@ namespace pwiz.OspreySharp
                 var spec = windowSpectra[si];
                 if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
                     continue;
-                if (CountTop6Matches(entry, spec, config) < 2)
+                if (!HasTopNFragmentMatch(entry.Fragments, spec.Mzs,
+                    config.FragmentTolerance.ToleranceDa(entry.PrecursorMz)))
                     continue;
                 candidateSpectra.Add(spec);
                 candidateWindowIndices.Add(si);
@@ -3644,23 +3645,45 @@ namespace pwiz.OspreySharp
         /// <summary>
         /// Count top-6 fragment matches at the apex spectrum.
         /// </summary>
+        /// <summary>
+        /// Count how many of the top 6 library fragments (by intensity) have
+        /// matching peaks in the spectrum. Used for the top6_matched feature
+        /// value (called once per scored entry, not in the hot prefilter loop).
+        /// The prefilter uses HasTopNFragmentMatch instead for speed.
+        /// </summary>
         private byte CountTop6Matches(
             LibraryEntry entry, Spectrum spectrum, OspreyConfig config)
         {
             if (entry.Fragments == null || entry.Fragments.Count == 0)
                 return 0;
 
-            // Sort fragments by intensity descending, take top 6
-            var sortedFrags = entry.Fragments
-                .OrderByDescending(f => f.RelativeIntensity)
-                .Take(6)
-                .ToList();
-
+            int nTop = Math.Min(entry.Fragments.Count, 6);
             byte matched = 0;
-            foreach (var frag in sortedFrags)
+
+            if (entry.Fragments.Count <= 6)
             {
-                if (SpectralScorer.HasMatch(frag.Mz, spectrum.Mzs, config.FragmentTolerance))
-                    matched++;
+                for (int i = 0; i < entry.Fragments.Count; i++)
+                {
+                    if (SpectralScorer.HasMatch(entry.Fragments[i].Mz,
+                        spectrum.Mzs, config.FragmentTolerance))
+                        matched++;
+                }
+            }
+            else
+            {
+                // Find top 6 indices by intensity
+                var indices = new int[entry.Fragments.Count];
+                for (int i = 0; i < indices.Length; i++) indices[i] = i;
+                Array.Sort(indices, (a, b) =>
+                    entry.Fragments[b].RelativeIntensity.CompareTo(
+                        entry.Fragments[a].RelativeIntensity));
+
+                for (int t = 0; t < nTop; t++)
+                {
+                    if (SpectralScorer.HasMatch(entry.Fragments[indices[t]].Mz,
+                        spectrum.Mzs, config.FragmentTolerance))
+                        matched++;
+                }
             }
             return matched;
         }
