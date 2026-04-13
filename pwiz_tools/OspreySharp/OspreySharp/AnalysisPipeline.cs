@@ -2388,11 +2388,20 @@ namespace pwiz.OspreySharp
             for (int i = 0; i < windowSpectra.Count; i++)
                 windowRts[i] = windowSpectra[i].RetentionTime;
 
+            // Pre-preprocess all window spectra for XCorr. Each spectrum is
+            // preprocessed once here (binning + windowing + sliding window);
+            // per-candidate scoring uses O(n_frags) bin lookups instead of
+            // re-preprocessing. Matches Rust pipeline.rs:5926.
+            var preprocessedXcorr = new double[windowSpectra.Count][];
+            for (int i = 0; i < windowSpectra.Count; i++)
+                preprocessedXcorr[i] = scorer.PreprocessSpectrumForXcorr(windowSpectra[i]);
+
             // Score each candidate
             foreach (var candidate in candidates)
             {
                 var fdrEntry = ScoreCandidate(
                     candidate, windowSpectra, windowRts,
+                    preprocessedXcorr,
                     ms1Spectra, rtCalibration, globalRtTolerance,
                     scorer, config, diagSearchEntryIds);
 
@@ -2416,6 +2425,7 @@ namespace pwiz.OspreySharp
             LibraryEntry candidate,
             List<Spectrum> windowSpectra,
             double[] windowRts,
+            double[][] preprocessedXcorr,
             List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
             double globalRtTolerance,
@@ -2750,8 +2760,8 @@ namespace pwiz.OspreySharp
             // LibCosine at apex
             double libCosine = scorer.LibCosine(apexSpectrum, candidate, config.FragmentTolerance);
 
-            // XCorr at apex (using unit-resolution binning)
-            double xcorr = scorer.XcorrAtScan(apexSpectrum, candidate);
+            // XCorr at apex from pre-preprocessed spectrum (O(n_frags) bin lookups only)
+            double xcorr = scorer.XcorrFromPreprocessed(preprocessedXcorr[apexGlobalIdx], candidate);
 
 
 
@@ -2811,7 +2821,7 @@ namespace pwiz.OspreySharp
                     continue;
                 int globalIdx = startScan + candIdx;
                 var s = windowSpectra[globalIdx];
-                sgXcorr += scorer.XcorrAtScan(s, candidate) * weight;
+                sgXcorr += scorer.XcorrFromPreprocessed(preprocessedXcorr[globalIdx], candidate) * weight;
                 sgCosine += ComputeCosineAtScan(candidate, s, config) * weight;
             }
 

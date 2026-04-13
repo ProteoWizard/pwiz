@@ -57,6 +57,57 @@ namespace pwiz.OspreySharp.Scoring
         }
 
         /// <summary>
+        /// Preprocess a spectrum for XCorr: bin with sqrt intensities, apply
+        /// windowing normalization, then sliding window subtraction. The result
+        /// can be reused across all library entries scored against this spectrum.
+        /// Matches Rust's <c>preprocess_spectrum_for_xcorr</c> in pipeline.rs.
+        /// </summary>
+        public double[] PreprocessSpectrumForXcorr(Spectrum spectrum)
+        {
+            if (_binConfig.NBins <= 0 || spectrum == null ||
+                spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+                return null;
+
+            int n = _binConfig.NBins;
+            double[] binned = new double[n];
+            for (int i = 0; i < spectrum.Mzs.Length; i++)
+            {
+                int bin = _binConfig.MzToBin(spectrum.Mzs[i]);
+                if (bin >= 0 && bin < n)
+                    binned[bin] += Math.Sqrt(spectrum.Intensities[i]);
+            }
+
+            double[] windowed = ApplyWindowingNormalization(binned);
+            return ApplySlidingWindow(windowed);
+        }
+
+        /// <summary>
+        /// Compute XCorr score from a pre-preprocessed spectrum and a library entry.
+        /// The preprocessed array is from <see cref="PreprocessSpectrumForXcorr"/>.
+        /// Only does O(n_fragments) bin lookups with dedup - no binning or windowing.
+        /// </summary>
+        public double XcorrFromPreprocessed(double[] preprocessed, LibraryEntry entry)
+        {
+            if (preprocessed == null || entry == null ||
+                entry.Fragments == null || entry.Fragments.Count == 0)
+                return 0.0;
+
+            int n = preprocessed.Length;
+            double xcorrRaw = 0.0;
+            var visitedBins = new bool[n];
+            for (int f = 0; f < entry.Fragments.Count; f++)
+            {
+                int bin = _binConfig.MzToBin(entry.Fragments[f].Mz);
+                if (bin >= 0 && bin < n && !visitedBins[bin])
+                {
+                    visitedBins[bin] = true;
+                    xcorrRaw += preprocessed[bin];
+                }
+            }
+            return xcorrRaw * XCORR_SCALING;
+        }
+
+        /// <summary>
         /// Compute XCorr at a single spectrum against a library entry. Direct port
         /// of Rust's <c>SpectralScorer::xcorr_at_scan</c> / <c>xcorr()</c> in
         /// osprey-scoring/src/lib.rs. Performs:
