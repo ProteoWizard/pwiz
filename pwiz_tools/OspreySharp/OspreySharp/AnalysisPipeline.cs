@@ -70,15 +70,12 @@ namespace pwiz.OspreySharp
                 {
                     if (!entry.IsDecoy) nLibraryTargets++;
                 }
+                double libLoadSec = swLibrary.Elapsed.TotalSeconds;
                 LogInfo(string.Format("[COUNT] Library targets loaded: {0}", nLibraryTargets));
 
                 List<LibraryEntry> decoys;
                 if (!config.DecoysInLibrary)
                 {
-                    // Collision detection can exclude targets whose decoys collide
-                    // with other target sequences. Replace `library` with only the
-                    // targets that produced valid decoys, matching Rust's
-                    // library = valid_targets; library.extend(decoys) pattern.
                     List<LibraryEntry> validTargets;
                     decoys = GenerateDecoys(library, config, out validTargets);
                     library = validTargets;
@@ -88,8 +85,9 @@ namespace pwiz.OspreySharp
                     decoys = new List<LibraryEntry>();
                 }
                 swLibrary.Stop();
-                LogInfo(string.Format("[TIMING] Library loading + decoys: {0:F1}s",
-                    swLibrary.Elapsed.TotalSeconds));
+                double totalSec = swLibrary.Elapsed.TotalSeconds;
+                LogInfo(string.Format("[TIMING] Library loading + decoys: {0:F1}s (load: {1:F1}s, decoys: {2:F1}s)",
+                    totalSec, libLoadSec, totalSec - libLoadSec));
 
                 LogInfo(string.Format("[COUNT] Library decoys generated: {0}", decoys.Count));
 
@@ -246,12 +244,36 @@ namespace pwiz.OspreySharp
         #region Stage 1: Library Loading
 
         /// <summary>
-        /// Load spectral library from the configured source.
-        /// Supports DIA-NN TSV, blib, and elib formats.
+        /// Load spectral library from the configured source, using binary cache
+        /// when available. Matches Rust's .libcache mechanism for fast reload.
         /// </summary>
         private List<LibraryEntry> LoadLibrary(OspreyConfig config)
         {
             string path = config.LibrarySource.Path;
+            string cachePath = path + ".libcache";
+
+            // Try loading from binary cache first
+            if (File.Exists(cachePath))
+            {
+                try
+                {
+                    var cached = LibraryCache.LoadCache(cachePath);
+                    if (cached != null && cached.Count > 0)
+                    {
+                        LogInfo(string.Format(
+                            "Loaded {0} library entries from cache '{1}'",
+                            cached.Count, cachePath));
+                        return cached;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogWarning(string.Format(
+                        "Failed to load library cache: {0}. Falling back to source.", ex.Message));
+                }
+            }
+
+            // Parse from source
             LogInfo(string.Format("Loading spectral library from {0}...", path));
 
             List<LibraryEntry> entries;
@@ -282,6 +304,20 @@ namespace pwiz.OspreySharp
             entries = LibraryDeduplicator.DeduplicateLibrary(entries);
 
             LogInfo(string.Format("Loaded {0} library entries", entries.Count));
+
+            // Save binary cache for next run
+            try
+            {
+                LibraryCache.SaveCache(cachePath, entries);
+                LogInfo(string.Format(
+                    "Saved library cache ({0} entries) to '{1}'",
+                    entries.Count, cachePath));
+            }
+            catch (Exception ex)
+            {
+                LogWarning(string.Format("Failed to save library cache: {0}", ex.Message));
+            }
+
             return entries;
         }
 
@@ -308,66 +344,66 @@ namespace pwiz.OspreySharp
                 if (!t.IsDecoy) targetSequences.Add(t.Sequence);
             }
 
-            var generator = new DecoyGenerator();
-            validTargets = new List<LibraryEntry>(targets.Count);
-            var decoys = new List<LibraryEntry>(targets.Count);
+            // Generate decoys in parallel (matches Rust's par_iter approach).
+            // Each target produces a (target, decoy) pair or is excluded.
             int nReversed = 0, nCycled = 0, nExcluded = 0, nSkipped = 0;
+            var results = new (LibraryEntry target, LibraryEntry decoy, int kind)[targets.Count];
+            // kind: 0=skip, 1=reversed, 2=cycled, 3=excluded
 
-            foreach (var target in targets)
+            Parallel.For(0, targets.Count, i =>
             {
-                if (target.IsDecoy)
-                    continue;
-                if (target.Fragments == null || target.Fragments.Count == 0)
+                var target = targets[i];
+                if (target.IsDecoy || target.Fragments == null || target.Fragments.Count == 0)
                 {
-                    nSkipped++;
-                    continue;
+                    results[i] = (null, null, 0);
+                    return;
                 }
 
-                // Try reversal first
+                // Each thread gets its own generator (DecoyGenerator is lightweight)
+                var gen = new DecoyGenerator();
                 int[] mapping;
-                string reversedSeq = generator.ReverseSequence(target.Sequence, out mapping);
-
-                bool foundValid = false;
-                LibraryEntry decoy = null;
+                string reversedSeq = gen.ReverseSequence(target.Sequence, out mapping);
 
                 if (reversedSeq != target.Sequence && !targetSequences.Contains(reversedSeq))
                 {
-                    decoy = BuildDecoyFromSequence(target, reversedSeq, mapping);
+                    var decoy = BuildDecoyFromSequence(target, reversedSeq, mapping);
                     if (decoy != null)
                     {
-                        nReversed++;
-                        foundValid = true;
+                        results[i] = (target, decoy, 1);
+                        return;
                     }
                 }
 
                 // Fallback: cycling with lengths 1..min(len, 10)
-                if (!foundValid)
+                int maxRetries = Math.Min(target.Sequence.Length, 10);
+                for (int cycleLength = 1; cycleLength <= maxRetries; cycleLength++)
                 {
-                    int maxRetries = Math.Min(target.Sequence.Length, 10);
-                    for (int cycleLength = 1; cycleLength <= maxRetries; cycleLength++)
+                    string cycledSeq = gen.CycleSequence(target.Sequence, cycleLength, out mapping);
+                    if (cycledSeq != target.Sequence && !targetSequences.Contains(cycledSeq))
                     {
-                        string cycledSeq = generator.CycleSequence(target.Sequence, cycleLength, out mapping);
-                        if (cycledSeq != target.Sequence && !targetSequences.Contains(cycledSeq))
+                        var decoy = BuildDecoyFromSequence(target, cycledSeq, mapping);
+                        if (decoy != null)
                         {
-                            decoy = BuildDecoyFromSequence(target, cycledSeq, mapping);
-                            if (decoy != null)
-                            {
-                                nCycled++;
-                                foundValid = true;
-                                break;
-                            }
+                            results[i] = (target, decoy, 2);
+                            return;
                         }
                     }
                 }
 
-                if (foundValid)
+                results[i] = (null, null, 3);
+            });
+
+            // Collect results (sequential, preserves order)
+            validTargets = new List<LibraryEntry>(targets.Count);
+            var decoys = new List<LibraryEntry>(targets.Count);
+            foreach (var r in results)
+            {
+                switch (r.kind)
                 {
-                    validTargets.Add(target);
-                    decoys.Add(decoy);
-                }
-                else
-                {
-                    nExcluded++;
+                    case 0: nSkipped++; break;
+                    case 1: nReversed++; validTargets.Add(r.target); decoys.Add(r.decoy); break;
+                    case 2: nCycled++; validTargets.Add(r.target); decoys.Add(r.decoy); break;
+                    case 3: nExcluded++; break;
                 }
             }
 
