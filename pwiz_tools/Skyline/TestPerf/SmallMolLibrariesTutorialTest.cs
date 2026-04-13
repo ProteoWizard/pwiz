@@ -365,7 +365,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(true));
             PauseForFullScanGraphScreenShot("2D plot");
 
-            //   • Click the Show 2D Spectrum button  to change the plot to a three-dimensional spectrum with drift time.
+            //   • Click the Toggle Heatmap button  to change the plot to a three-dimensional spectrum with drift time.
             RunUI(() => SkylineWindow.GraphFullScan.SetSpectrum(false));
             PauseForFullScanGraphScreenShot("3D plot");
 
