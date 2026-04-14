@@ -49,7 +49,7 @@ namespace pwiz.Common.Database
         {
             using (var cmd = connection.CreateCommand())
             {
-                cmd.CommandText = @"PRAGMA table_info(" + tableName + ")";
+                cmd.CommandText = @"PRAGMA table_info(" + tableName + @")";
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
