@@ -53,15 +53,11 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private const int MIN_DOT_RADIUS = 4;
         private const int MAX_DOT_RADIUS = 13;
-        private const float MOBILOGRAM_LINE_WIDTH = 1.5f;
-        private const float MOBILOGRAM_GAP = 18f;
-        private const float MOBILOGRAM_RIGHT_PAD = 18f;
         private const string TAG_IM_FILTER_BAND = "IMFilterBand";
 
         private readonly IDocumentUIContainer _documentContainer;
         private readonly GraphHelper _graphHelper;
         private HeatMapData _heatMapData;
-        private List<MobilogramTransitionData> _mobilogramTransitions;
         private HeatMapGraphPane _heatMapPane;
         private MSGraphPane _stickSpectrumPane;
         private MSGraphPane _mobilogramPane;
@@ -87,17 +83,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private SplitterDrag _activeDrag = SplitterDrag.None;
         private bool IsDualPane => _stickSpectrumPane != null;
         private bool IsMobilogramPaneVisible => _mobilogramPane != null;
-        /// <summary>
-        /// Compute right margin so mobilogram is approximately 1/5 of the window width.
-        /// </summary>
-        private float MobilogramMargin
-        {
-            get
-            {
-                float scaleFactor = _heatMapPane.CalcScaleFactor();
-                return scaleFactor > 0 ? graphControl.Width / (5f * scaleFactor) : 150f;
-            }
-        }
         private double _maxMz;
         private double _maxIntensity;
         private double _minIonMobility;
@@ -2364,24 +2349,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private struct MobilogramTransitionData
-        {
-            public readonly string Name;
-            public readonly Dictionary<float, double> IntensityByIM; // Raw data points
-            public readonly List<KeyValuePair<float, double>> DrawnCurve; // With zero-bookends, as rendered
-
-            public MobilogramTransitionData(string name, Dictionary<float, double> intensityByIM,
-                List<KeyValuePair<float, double>> drawnCurve)
-            {
-                Name = name;
-                IntensityByIM = intensityByIM;
-                DrawnCurve = drawnCurve;
-            }
-        }
-
         private void CreateMobilogram()
         {
-            _mobilogramTransitions = null;
             if (_heatMapData?.PlotY2D == null || _mobilogramPane == null)
                 return;
 
@@ -2449,10 +2418,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
 
                     // Build sorted IM grid from summed curve for gap detection
-                    var imGridSet = new HashSet<float>(_heatMapData.PlotY2D.Select(p => p.Key));
                     var imGrid = _heatMapData.PlotY2D.Select(p => p.Key).ToList(); // already sorted
 
-                    _mobilogramTransitions = new List<MobilogramTransitionData>();
                     foreach (var kvp in perTransition)
                     {
                         if (kvp.Value.Count > 0)
@@ -2478,8 +2445,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                 if (isEndGap && gridIdx < imGrid.Count - 1)
                                     curve.Add(new KeyValuePair<float, double>(imGrid[gridIdx + 1], 0));
                             }
-                            _mobilogramTransitions.Add(new MobilogramTransitionData(
-                                transitions[kvp.Key].Name, kvp.Value, curve));
                             transitionCurves.Add(new MobilogramCurveSpec(
                                 transitions[kvp.Key].Name, GetTransitionColor(transitions[kvp.Key]), curve));
                         }
@@ -2605,318 +2570,6 @@ namespace pwiz.Skyline.Controls.Graphs
             AlignMobilogramChartToHeatmap();
         }
 
-        /// <summary>
-        /// Custom GraphObj that draws a mobilogram (summed intensity vs ion mobility) in the
-        /// left margin area of the heatmap pane. Because it uses the pane's own Y-axis transform,
-        /// the Y-axes are guaranteed to align pixel-for-pixel.
-        /// </summary>
-        private class MobilogramOverlay : GraphObj
-        {
-            private readonly List<KeyValuePair<float, double>> _plotData;
-            private readonly double _filterMin, _filterMax, _filterPeak;
-            private readonly List<TransitionCurve> _transitionCurves;
-
-            public struct TransitionCurve
-            {
-                public readonly List<KeyValuePair<float, double>> Data;
-                public readonly Color Color;
-
-                public TransitionCurve(List<KeyValuePair<float, double>> data, Color color)
-                {
-                    Data = data;
-                    Color = color;
-                }
-            }
-
-            public MobilogramOverlay(List<KeyValuePair<float, double>> plotData,
-                double filterMin, double filterMax, double filterPeak,
-                List<TransitionCurve> transitionCurves = null)
-                : base(0, 0)
-            {
-                _plotData = plotData;
-                _filterMin = filterMin;
-                _filterMax = filterMax;
-                _filterPeak = filterPeak;
-                _transitionCurves = transitionCurves;
-            }
-
-            public override void Draw(Graphics g, PaneBase paneBase, float scaleFactor)
-            {
-                var pane = paneBase as GraphPane;
-                if (pane == null || _plotData == null || _plotData.Count == 0)
-                    return;
-
-                var chartRect = pane.Chart.Rect;
-                if (chartRect.Width <= 0 || chartRect.Height <= 0)
-                    return;
-
-                // Gap between heatmap chart edge and mobilogram plot area
-                float gapWidth = MOBILOGRAM_GAP * scaleFactor;
-
-                // Mobilogram plot area: right margin space, vertically aligned with chart rect
-                // Reserve space on right so rightmost tick label can be centered on its tick
-                float rightLabelPad = MOBILOGRAM_RIGHT_PAD * scaleFactor;
-                float mobLeft = chartRect.Right + gapWidth;
-                float mobRight = paneBase.Rect.Right - rightLabelPad;
-                float mobTop = chartRect.Top;
-                float mobBottom = chartRect.Bottom; // Same bottom as heatmap chart area
-                float mobWidth = mobRight - mobLeft;
-                float plotBottom = mobBottom;
-                float plotHeight = plotBottom - mobTop;
-
-                if (mobWidth < 10 || plotHeight < 10)
-                    return;
-
-                // Find max intensity for X scaling — use per-transition max when available
-                bool hasTransitionCurves = _transitionCurves != null && _transitionCurves.Count > 0;
-                double maxIntensity = 0;
-                if (hasTransitionCurves)
-                {
-                    foreach (var tc in _transitionCurves)
-                        foreach (var kvp in tc.Data)
-                            if (kvp.Value > maxIntensity)
-                                maxIntensity = kvp.Value;
-                }
-                else
-                {
-                    foreach (var kvp in _plotData)
-                        if (kvp.Value > maxIntensity)
-                            maxIntensity = kvp.Value;
-                }
-                if (maxIntensity <= 0)
-                    return;
-
-                // Compute magnitude and nice round max (same approach as ZedGraph LinearScale.PickScale)
-                int mag = (int)Math.Floor(Math.Log10(maxIntensity));
-                mag = Math.Max(0, (mag / 3) * 3);
-                double scaleMult = mag > 0 ? Math.Pow(10.0, mag) : 1.0;
-                double scaledRawMax = maxIntensity / scaleMult;
-                // Pick a nice step size targeting ~4 major divisions
-                double xMajorStep = CalcNiceStepSize(scaledRawMax, 4);
-                double xMinorStep = CalcNiceStepSize(xMajorStep, 5);
-                // Round max up to next major step
-                double scaledMax = xMajorStep * Math.Ceiling(scaledRawMax / xMajorStep);
-                double displayMax = scaledMax * scaleMult; // unscaled max for curve drawing
-
-                var savedState = g.Save();
-
-                // Get axis styling from the heatmap pane for consistent appearance
-                var yAxis = pane.YAxis;
-                var xAxis = pane.XAxis;
-                var axisColor = yAxis.Color;
-                var majorTicSize = yAxis.MajorTic.ScaledTic(scaleFactor);
-                var minorTicSize = yAxis.MinorTic.ScaledTic(scaleFactor);
-                var axisPenWidth = pane.ScaledPenWidth(yAxis.MajorTic.PenWidth, scaleFactor);
-                var minorPenWidth = pane.ScaledPenWidth(yAxis.MinorTic.PenWidth, scaleFactor);
-                var xLabelFontSpec = xAxis.Scale.FontSpec;
-                var charHeight = xLabelFontSpec.GetHeight(scaleFactor);
-
-                var plotRect = new RectangleF(mobLeft, mobTop, mobWidth, plotHeight);
-
-                // Draw left and bottom axis lines (L-shape, no full border box)
-                using (var framePen = new Pen(axisColor, axisPenWidth))
-                {
-                    g.DrawLine(framePen, mobLeft, mobTop, mobLeft, mobTop + plotHeight);
-                    g.DrawLine(framePen, mobLeft, mobTop + plotHeight, mobLeft + mobWidth, mobTop + plotHeight);
-                }
-
-                // Clip to plot area for data drawing
-                g.SetClip(plotRect);
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
-                // Draw filter region (behind curve)
-                if (!double.IsNaN(_filterMin) && !double.IsNaN(_filterMax))
-                {
-                    float filterTopPx = yAxis.Scale.Transform(_filterMax);
-                    float filterBottomPx = yAxis.Scale.Transform(_filterMin);
-                    var filterRect = new RectangleF(mobLeft, filterTopPx,
-                        mobWidth, filterBottomPx - filterTopPx);
-
-                    using (var fillBrush = new SolidBrush(Color.FromArgb(50, Color.Gray)))
-                        g.FillRectangle(fillBrush, filterRect);
-                    using (var borderPen = new Pen(Color.FromArgb(100, Color.DarkViolet), 2))
-                        g.DrawRectangle(borderPen, filterRect.X, filterRect.Y,
-                            filterRect.Width, filterRect.Height);
-                }
-
-                if (hasTransitionCurves)
-                {
-                    // Draw per-transition curves only (no summed curve)
-                    int lineWidth = Settings.Default.ChromatogramLineWidth;
-                    foreach (var tc in _transitionCurves)
-                    {
-                        var curvePoints = BuildCurvePoints(tc.Data, mobLeft, mobWidth, displayMax, yAxis);
-                        if (curvePoints.Length > 1)
-                        {
-                            using (var linePen = new Pen(tc.Color, lineWidth))
-                                g.DrawLines(linePen, curvePoints);
-                        }
-                    }
-                }
-                else
-                {
-                    // Summed curve with fill (no transitions to show)
-                    var summedPoints = BuildCurvePoints(_plotData, mobLeft, mobWidth, displayMax, yAxis);
-                    if (summedPoints.Length > 1)
-                    {
-                        var polyPoints = new PointF[summedPoints.Length + 2];
-                        polyPoints[0] = new PointF(mobLeft, summedPoints[0].Y);
-                        Array.Copy(summedPoints, 0, polyPoints, 1, summedPoints.Length);
-                        polyPoints[polyPoints.Length - 1] = new PointF(mobLeft, summedPoints[summedPoints.Length - 1].Y);
-                        using (var fillBrush = new SolidBrush(Color.FromArgb(40, Color.DarkBlue)))
-                            g.FillPolygon(fillBrush, polyPoints);
-                        using (var linePen = new Pen(Color.DarkBlue, Settings.Default.ChromatogramLineWidth))
-                            g.DrawLines(linePen, summedPoints);
-                    }
-                }
-
-                // Draw peak center line
-                if (!double.IsNaN(_filterPeak))
-                {
-                    float peakPx = yAxis.Scale.Transform(_filterPeak);
-                    using (var dashPen = new Pen(Color.FromArgb(180, Color.DarkViolet), 1.5f))
-                    {
-                        dashPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
-                        g.DrawLine(dashPen, mobLeft, peakPx, mobRight, peakPx);
-                    }
-                }
-
-                g.Restore(savedState);
-
-                // Draw X-axis major and minor ticks protruding downward (matching ZedGraph bottom-axis style),
-                // with labels positioned using ZedGraph's standard LabelGap (Scale.Default.LabelGap = 0.3f).
-                var xMajorTicSize = xAxis.MajorTic.ScaledTic(scaleFactor);
-                var xMinorTicSize = xAxis.MinorTic.ScaledTic(scaleFactor);
-                using (var majorPen = new Pen(axisColor, axisPenWidth))
-                using (var minorPen = new Pen(axisColor, minorPenWidth))
-                {
-                    float tickY = plotBottom;
-                    float labelY = tickY + xMajorTicSize + charHeight * 0.3f;
-                    string tickFormat = scaledMax >= 10 ? @"0" :
-                        scaledMax >= 1 ? @"0.#" : @"0.##";
-
-                    // Draw minor ticks protruding downward
-                    if (xMinorStep > 0 && scaledMax / xMinorStep < 100)
-                    {
-                        for (double val = xMinorStep; val < scaledMax; val += xMinorStep)
-                        {
-                            float px = mobLeft + (float)(val / scaledMax) * mobWidth;
-                            g.DrawLine(minorPen, px, tickY, px, tickY + xMinorTicSize);
-                        }
-                    }
-
-                    // Draw major ticks protruding downward with labels centered below
-                    for (double val = 0; val <= scaledMax + xMajorStep * 0.001; val += xMajorStep)
-                    {
-                        float px = mobLeft + (float)(val / scaledMax) * mobWidth;
-
-                        g.DrawLine(majorPen, px, tickY, px, tickY + xMajorTicSize);
-
-                        string label = val.ToString(tickFormat);
-                        xLabelFontSpec.Draw(g, paneBase, label, px, labelY,
-                            AlignH.Center, AlignV.Top, scaleFactor);
-                    }
-
-                    // Draw axis title with magnitude indicator, bold to match heatmap axis titles
-                    float titleY = labelY + charHeight + charHeight * 0.3f;
-                    float titleX = (mobLeft + mobRight) / 2;
-                    string title = mag > 0
-                        ? string.Format(@"{0} (10^{1})",
-                            GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity, mag)
-                        : GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
-                    var titleFontSpec = (FontSpec)xAxis.Title.FontSpec.Clone();
-                    titleFontSpec.IsItalic = false; // Override italic (only m/z is italic)
-                    titleFontSpec.Draw(g, paneBase, title,
-                        titleX, titleY, AlignH.Center, AlignV.Top, scaleFactor);
-                }
-
-                // Draw Y-axis major and minor ticks straddling the left border
-                var yScale = yAxis.Scale;
-                double yMin = yScale.Min;
-                double yMax = yScale.Max;
-                double yMajorStep = yScale.MajorStep;
-                double yMinorStep = yScale.MinorStep;
-                if (yMajorStep > 0 && (yMax - yMin) / yMajorStep < 100)
-                {
-                    using (var majorPen = new Pen(axisColor, axisPenWidth))
-                    using (var minorPen = new Pen(axisColor, minorPenWidth))
-                    {
-                        // Draw minor ticks protruding right only (into mobilogram area)
-                        if (yMinorStep > 0 && (yMax - yMin) / yMinorStep < 500)
-                        {
-                            double firstMinor = Math.Ceiling(yMin / yMinorStep) * yMinorStep;
-                            for (double val = firstMinor; val <= yMax; val += yMinorStep)
-                            {
-                                float py = yAxis.Scale.Transform(val);
-                                if (py < mobTop || py > plotBottom)
-                                    continue;
-                                g.DrawLine(minorPen, mobLeft, py, mobLeft + minorTicSize, py);
-                            }
-                        }
-
-                        // Draw major ticks protruding right only (into mobilogram area)
-                        double firstMajor = Math.Ceiling(yMin / yMajorStep) * yMajorStep;
-                        for (double val = firstMajor; val <= yMax; val += yMajorStep)
-                        {
-                            float py = yAxis.Scale.Transform(val);
-                            if (py < mobTop || py > plotBottom)
-                                continue;
-                            g.DrawLine(majorPen, mobLeft, py, mobLeft + majorTicSize, py);
-                        }
-                    }
-                }
-            }
-
-            private static PointF[] BuildCurvePoints(List<KeyValuePair<float, double>> data,
-                float mobLeft, float mobWidth, double displayMax, Axis yAxis)
-            {
-                var points = new PointF[data.Count];
-                for (int i = 0; i < data.Count; i++)
-                {
-                    float px = mobLeft + (float)(data[i].Value / displayMax) * mobWidth;
-                    float py = yAxis.Scale.Transform(data[i].Key);
-                    points[i] = new PointF(px, py);
-                }
-                return points;
-            }
-
-            /// <summary>
-            /// Calculate a nice step size for a given range and target number of steps.
-            /// Same algorithm as ZedGraph Scale.CalcStepSize: promotes MSD to 1, 2, or 5.
-            /// </summary>
-            private static double CalcNiceStepSize(double range, double targetSteps)
-            {
-                double tempStep = range / targetSteps;
-                double mag = Math.Floor(Math.Log10(tempStep));
-                double magPow = Math.Pow(10.0, mag);
-                double magMsd = (int)(tempStep / magPow + 0.5);
-
-                if (magMsd > 5.0)
-                    magMsd = 10.0;
-                else if (magMsd > 2.0)
-                    magMsd = 5.0;
-                else if (magMsd > 1.0)
-                    magMsd = 2.0;
-
-                return magMsd * magPow;
-            }
-
-            public override bool PointInBox(PointF pt, PaneBase pane, Graphics g, float scaleFactor)
-            {
-                return false;
-            }
-
-            public override void GetCoords(PaneBase pane, Graphics g, float scaleFactor,
-                out string shape, out string coords)
-            {
-                shape = string.Empty;
-                coords = string.Empty;
-            }
-
-            public override void GetObjectData(SerializationInfo info, StreamingContext context)
-            {
-            }
-        }
 
         // CONSIDER: This button is never visible and appears to be completely idle. Remove?
         private void btnIsolationWindow_Click(object sender, EventArgs e)
@@ -3144,40 +2797,6 @@ namespace pwiz.Skyline.Controls.Graphs
             float qx = ax + t * dx, qy = ay + t * dy;
             float ddx = px - qx, ddy = py - qy;
             return (float)Math.Sqrt(ddx * ddx + ddy * ddy);
-        }
-
-        /// <summary>
-        /// Linearly interpolate a curve's intensity at a given IM value,
-        /// using the two bracketing points in the sorted curve data.
-        /// </summary>
-        private static double InterpolateCurveAtIM(List<KeyValuePair<float, double>> curveData, float im)
-        {
-            float lowerKey = float.MinValue, upperKey = float.MaxValue;
-            double lowerVal = 0, upperVal = 0;
-            foreach (var kvp in curveData)
-            {
-                if (kvp.Key <= im && kvp.Key > lowerKey)
-                {
-                    lowerKey = kvp.Key;
-                    lowerVal = kvp.Value;
-                }
-                if (kvp.Key >= im && kvp.Key < upperKey)
-                {
-                    upperKey = kvp.Key;
-                    upperVal = kvp.Value;
-                }
-            }
-            if (lowerKey == float.MinValue && upperKey == float.MaxValue)
-                return 0;
-            if (lowerKey == float.MinValue)
-                return upperVal;
-            if (upperKey == float.MaxValue)
-                return lowerVal;
-            if (Math.Abs(upperKey - lowerKey) < float.Epsilon)
-                return lowerVal;
-            // Linear interpolation
-            double frac = (im - lowerKey) / (upperKey - lowerKey);
-            return lowerVal + frac * (upperVal - lowerVal);
         }
 
         private TableDesc GetHeatMapTooltipTable(PointF pt)
