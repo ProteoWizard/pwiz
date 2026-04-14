@@ -119,23 +119,41 @@ namespace pwiz.OspreySharp
                     libraryById[entry.Id] = entry;
 
                 // Stage 2-4: Per-file calibration + coelution scoring
+                // Process files in parallel when multiple files are provided.
                 var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
 
                 var swAllFiles = Stopwatch.StartNew();
-                for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
+                if (config.InputFiles.Count == 1)
                 {
-                    string inputFile = config.InputFiles[fileIdx];
+                    // Single file: process directly (no parallel overhead)
+                    string inputFile = config.InputFiles[0];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
-
                     LogInfo("");
-                    LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
-                        fileIdx + 1, config.InputFiles.Count, inputFile));
-
+                    LogInfo(string.Format("===== Processing file 1/1: {0} =====", inputFile));
                     var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config);
                     if (fileResult != null)
+                        perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                }
+                else
+                {
+                    // Multiple files: process in parallel
+                    var fileResults = new ConcurrentDictionary<int, KeyValuePair<string, List<FdrEntry>>>();
+                    Parallel.For(0, config.InputFiles.Count, fileIdx =>
                     {
-                        perFileEntries.Add(
-                            new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                        string inputFile = config.InputFiles[fileIdx];
+                        string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                        LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
+                            fileIdx + 1, config.InputFiles.Count, inputFile));
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config);
+                        if (fileResult != null)
+                            fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
+                    });
+                    // Collect in original order
+                    for (int i = 0; i < config.InputFiles.Count; i++)
+                    {
+                        KeyValuePair<string, List<FdrEntry>> result;
+                        if (fileResults.TryGetValue(i, out result))
+                            perFileEntries.Add(result);
                     }
                 }
                 swAllFiles.Stop();
