@@ -65,7 +65,7 @@
 </header>
 
 <main>
-<svg class="pipeline" viewBox="0 0 1200 2240" xmlns="http://www.w3.org/2000/svg">
+<svg class="pipeline" viewBox="0 0 1200 2180" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <!-- Arrowhead for control flow between stages -->
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
@@ -123,10 +123,10 @@
     .input-pill { fill: #e8eaf6; stroke: #3949ab; stroke-width: 2; }
 
     /* Test coverage and performance badges */
-    .badge-test { font-size: 9px; font-weight: 600; fill: #1b5e20; }
-    .badge-perf { font-size: 9px; font-weight: 600; fill: #4a148c; }
-    .badge-bg-test { fill: #e8f5e9; stroke: #4caf50; stroke-width: 1; rx: 3; }
-    .badge-bg-perf { fill: #f3e5f5; stroke: #9c27b0; stroke-width: 1; rx: 3; }
+    .badge-label { font-size: 11px; font-weight: 700; }
+    .badge-value { font-size: 11px; font-weight: 400; }
+    .badge-test  { fill: #1b5e20; }
+    .badge-perf  { fill: #4a148c; }
   </style>
 </defs>
 
@@ -203,8 +203,8 @@
   <text class="stage-desc"  x="310" y="164" text-anchor="middle">enzyme-aware reverse, collision detection, Parallel.For</text>
 
   <!-- Stage 1 badges (upper right of container) -->
-  <text class="badge-test" x="535" y="30" text-anchor="end">Testing: 36 + 2 regression</text>
-  <text class="badge-perf" x="535" y="42" text-anchor="end">Perf: 0.7s / 0.1x Rust</text>
+  <text x="535" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">36 + 2 regression (dedup, collision)</tspan></text>
+  <text x="535" y="44" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">0.7s (0.1x Rust)</tspan></text>
 
   <path class="flow" d="M 310 112 L 310 128" marker-end="url(#arrow)"/>
 
@@ -222,8 +222,8 @@
   <text class="stage-desc"  x="890" y="164" text-anchor="middle">deterministic, 125 windows on Stellar</text>
 
   <!-- Stage 2 badges (upper right of container) -->
-  <text class="badge-test" x="1115" y="30" text-anchor="end">Testing: 3 tests</text>
-  <text class="badge-perf" x="1115" y="42" text-anchor="end">Perf: 5.5s / 1.1x Rust</text>
+  <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">3 (mzML parsing, isolation windows)</tspan></text>
+  <text x="1115" y="44" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">5.5s (1.1x Rust)</tspan></text>
 
   <path class="flow" d="M 890 112 L 890 128" marker-end="url(#arrow)"/>
 </g>
@@ -236,7 +236,7 @@
 <!-- STAGE 3 CALIBRATION (YOU ARE HERE)                                 -->
 <!-- ================================================================= -->
 <g transform="translate(0, 520)">
-  <rect class="phase-bg" x="40" y="0" width="1120" height="600" rx="6"/>
+  <rect class="phase-bg" x="40" y="0" width="1120" height="540" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 3</text>
   <text class="phase-title" x="60" y="42">Calibration (a.k.a. recalibration)</text>
   <text class="phase-note"  x="60" y="58">
@@ -285,17 +285,17 @@
   <path class="flow" d="M 600 462 L 600 478" marker-end="url(#arrow)"/>
 
   <!-- Stage 3 badges (upper right of container) -->
-  <text class="badge-test" x="1115" y="24" text-anchor="end">Testing: 31 + 10 regression</text>
-  <text class="badge-perf" x="1115" y="36" text-anchor="end">Perf: 10.4s / 1.2x Rust</text>
+  <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">31 + 10 regression (xcorr, apex, SNR, LOESS, LDA, f64)</tspan></text>
+  <text x="1115" y="38" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">10.4s (1.2x Rust)</tspan></text>
 </g>
 
 <!-- Arrow from calibration to main search -->
-<path class="flow" d="M 600 1120 L 600 1160" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1060 L 600 1100" marker-end="url(#arrow)"/>
 
 <!-- ================================================================= -->
 <!-- STAGE 4 MAIN FIRST-PASS SEARCH                                     -->
 <!-- ================================================================= -->
-<g transform="translate(0, 1160)">
+<g transform="translate(0, 1100)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="200" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 4</text>
   <text class="phase-title" x="60" y="42">Main first-pass search</text>
@@ -313,8 +313,8 @@
   <text class="stage-desc"  x="600" y="174" text-anchor="middle">0.00% divergence on 317K entries; 466K entries match Rust within 23</text>
 
   <!-- Stage 4 badges (upper right of container) -->
-  <text class="badge-test" x="1115" y="24" text-anchor="end">Testing: 2 + 8 regression</text>
-  <text class="badge-perf" x="1115" y="36" text-anchor="end">Perf: 4.0s / 0.8x Rust</text>
+  <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">2 + 8 regression (bin dedup, coelution, median polish, boundary)</tspan></text>
+  <text x="1115" y="38" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">4.0s (0.8x Rust)</tspan></text>
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
 </g>
@@ -322,9 +322,9 @@
 <!-- ================================================================= -->
 <!-- STAGE 5 FIRST-PASS FDR                                             -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1360 L 600 1400" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1300 L 600 1340" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 1400)">
+<g transform="translate(0, 1340)">
   <rect class="phase-bg-active" x="40" y="0" width="1120" height="260" rx="8"/>
   <text class="phase-label" x="60" y="24">stage 5</text>
   <text class="phase-title" x="60" y="42">First-pass FDR (Percolator SVM)</text>
@@ -359,9 +359,9 @@
 <!-- ================================================================= -->
 <!-- STAGE 6 REFINEMENT                                                 -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1660 L 600 1700" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1600 L 600 1640" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 1700)">
+<g transform="translate(0, 1640)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 6</text>
   <text class="phase-title" x="60" y="42">Refinement (post-FDR)</text>
@@ -389,9 +389,9 @@
 <!-- ================================================================= -->
 <!-- STAGE 7 PROTEIN FDR                                                -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1960 L 600 2000" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1900 L 600 1940" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2000)">
+<g transform="translate(0, 1940)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="100" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 7</text>
   <text class="phase-title" x="60" y="42">Protein FDR</text>
@@ -404,9 +404,9 @@
 <!-- ================================================================= -->
 <!-- STAGE 8 OUTPUT                                                     -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2100 L 600 2140" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2040 L 600 2080" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2140)">
+<g transform="translate(0, 2080)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="90" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 8</text>
   <text class="phase-title" x="60" y="42">Output</text>
