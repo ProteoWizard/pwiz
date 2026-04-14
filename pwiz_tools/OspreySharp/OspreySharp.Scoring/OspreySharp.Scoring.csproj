@@ -62,6 +62,8 @@
     <Compile Include="CalibrationScorer.cs" />
     <Compile Include="DecoyGenerator.cs" />
     <Compile Include="PearsonCorrelation.cs" />
+    <Compile Include="ResolutionStrategy.cs" />
+    <Compile Include="ScoringContext.cs" />
     <Compile Include="SpectralScorer.cs" />
     <Compile Include="TukeyMedianPolish.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

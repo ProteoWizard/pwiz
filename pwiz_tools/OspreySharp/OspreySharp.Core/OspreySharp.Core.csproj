@@ -67,6 +67,7 @@
     <Compile Include="FragmentToleranceConfig.cs" />
     <Compile Include="IonType.cs" />
     <Compile Include="IsolationWindow.cs" />
+    <Compile Include="IsotopeDistribution.cs" />
     <Compile Include="IsotopeEnvelope.cs" />
     <Compile Include="LibraryEntry.cs" />
     <Compile Include="LibraryFragment.cs" />

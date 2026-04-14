@@ -37,6 +37,14 @@ namespace pwiz.OspreySharp.Core
         }
 
         /// <summary>
+        /// Creates the appropriate BinConfig for the given resolution mode.
+        /// </summary>
+        public static BinConfig ForResolution(ResolutionMode mode)
+        {
+            return mode == ResolutionMode.HRAM ? HRAM() : UnitResolution();
+        }
+
+        /// <summary>
         /// Creates a BinConfig for high-resolution accurate mass instruments.
         /// </summary>
         public static BinConfig HRAM()

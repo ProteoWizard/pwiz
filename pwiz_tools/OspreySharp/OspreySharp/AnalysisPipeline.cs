@@ -469,6 +469,8 @@ namespace pwiz.OspreySharp
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, OspreyConfig config)
         {
+            var context = new ScoringContext(config, fileName);
+
             // Load spectra (from mzML or .spectra.bin cache)
             List<Spectrum> spectra;
             List<MS1Spectrum> ms1Spectra;
@@ -519,6 +521,7 @@ namespace pwiz.OspreySharp
             // RT calibration
             RTCalibration rtCalibration = null;
             MzCalibrationResult ms2Cal = MzCalibrationResult.Uncalibrated();
+            MzCalibrationResult ms1Cal = MzCalibrationResult.Uncalibrated();
 
             // BISECT: load Rust's calibration JSON instead of computing our own.
             // This eliminates calibration noise from the feature comparison.
@@ -552,12 +555,27 @@ namespace pwiz.OspreySharp
                     LogInfo(string.Format("Loaded MS2 calibration: mean={0:F4} {1}, SD={2:F4}",
                         ms2Cal.Mean, ms2Cal.Unit, ms2Cal.SD));
                 }
+                if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
+                {
+                    ms1Cal = new MzCalibrationResult
+                    {
+                        Mean = calParams.Ms1Calibration.Mean,
+                        Median = calParams.Ms1Calibration.Median,
+                        SD = calParams.Ms1Calibration.SD,
+                        Count = calParams.Ms1Calibration.Count,
+                        Unit = calParams.Ms1Calibration.Unit,
+                        AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
+                        Calibrated = true
+                    };
+                    LogInfo(string.Format("Loaded MS1 calibration: mean={0:F4} {1}, SD={2:F4}",
+                        ms1Cal.Mean, ms1Cal.Unit, ms1Cal.SD));
+                }
             }
             else if (config.RtCalibration.Enabled)
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = RunCalibration(
-                    fullLibrary, spectra, ms1Spectra, config, fileName,
+                    fullLibrary, spectra, ms1Spectra, context,
                     out ms2Cal);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
@@ -571,8 +589,8 @@ namespace pwiz.OspreySharp
             var scoredEntries = RunCoelutionScoring(
                 fullLibrary, spectra, ms1Spectra,
                 isolationWindows, rtCalibration,
-                ms2Cal,
-                config);
+                ms2Cal, ms1Cal,
+                context);
             swScoring.Stop();
             double scoringSeconds = swScoring.Elapsed.TotalSeconds;
             double ratePerSec = scoringSeconds > 0.001
@@ -768,10 +786,10 @@ namespace pwiz.OspreySharp
             List<LibraryEntry> library,
             List<Spectrum> spectra,
             List<MS1Spectrum> ms1Spectra,
-            OspreyConfig config,
-            string fileName,
+            ScoringContext context,
             out MzCalibrationResult ms2Calibration)
         {
+            var config = context.Config;
             LogInfo("Running RT calibration...");
 
             // Calculate library and mzML RT ranges
@@ -833,7 +851,7 @@ namespace pwiz.OspreySharp
             // env var is set (bisection mode - stop once we agree here).
             if (config.WritePin || Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_SAMPLE") == "1")
             {
-                string dumpPath = fileName + ".cs_cal_sample.txt";
+                string dumpPath = context.FileName + ".cs_cal_sample.txt";
                 var tuples = new List<string>();
                 foreach (var e in sampledEntries)
                 {
@@ -896,10 +914,9 @@ namespace pwiz.OspreySharp
             // LDA + S/N surviving targets.
             var pass1 = RunCalibrationScoringPass(
                 1,
-                sampledEntries, spectraByWindowKey, config,
+                sampledEntries, spectraByWindowKey, context,
                 rtSlope, rtIntercept, initialTolerance,
                 null /* calibrationModel: pass 1 uses linear mapping */,
-                fileName,
                 config.RtCalibration.MinCalibrationPoints);
 
             if (pass1 == null)
@@ -936,10 +953,9 @@ namespace pwiz.OspreySharp
 
                 var pass2 = RunCalibrationScoringPass(
                     2,
-                    sampledEntries, spectraByWindowKey, config,
+                    sampledEntries, spectraByWindowKey, context,
                     rtSlope, rtIntercept, pass1Tolerance,
                     pass1.Calibration /* pass 2 predicts RT via the LOESS fit */,
-                    fileName,
                     ABSOLUTE_MIN_CALIBRATION_POINTS);
 
                 if (pass2 != null)
@@ -1002,12 +1018,14 @@ namespace pwiz.OspreySharp
             int passNumber,
             List<LibraryEntry> sampledEntries,
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
-            OspreyConfig config,
+            ScoringContext context,
             double rtSlope, double rtIntercept, double tolerance,
             RTCalibration calibrationModel,
-            string fileName,
             int minLoessPoints)
         {
+            var config = context.Config;
+            var resolution = context.Resolution;
+            var fileName = context.FileName;
             // Activate per-entry window dump if requested. Cleared after the
             // matching loop completes (file written below).
             bool dumpWindows = Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_WINDOWS") == "1";
@@ -1015,19 +1033,18 @@ namespace pwiz.OspreySharp
                 ? new System.Collections.Concurrent.ConcurrentBag<string>()
                 : null;
 
-            // Pre-preprocess all window spectra for XCorr. Each spectrum is
-            // preprocessed once; calibration entry scoring uses O(n_frags) bin
-            // lookups. Matches the main search optimization.
+            // Pre-preprocess all window spectra for XCorr via the resolution
+            // strategy. Unit resolution builds dense arrays for O(n_frags)
+            // scoring; HRAM returns null (100K bins per spectrum would consume
+            // ~160 GB for 204K Astral spectra, so it scores inline per scan).
             var preprocessedByWindowKey = new Dictionary<int, double[][]>();
             {
-                var tempScorer = new SpectralScorer();
+                var tempScorer = resolution.CreateScorer();
                 foreach (var kvp in spectraByWindowKey)
                 {
-                    var spectra = kvp.Value;
-                    var pp = new double[spectra.Count][];
-                    for (int i = 0; i < spectra.Count; i++)
-                        pp[i] = tempScorer.PreprocessSpectrumForXcorr(spectra[i]);
-                    preprocessedByWindowKey[kvp.Key] = pp;
+                    var pp = resolution.PreprocessWindowSpectra(kvp.Value, tempScorer);
+                    if (pp != null)
+                        preprocessedByWindowKey[kvp.Key] = pp;
                 }
             }
 
@@ -1041,14 +1058,14 @@ namespace pwiz.OspreySharp
             {
                 MaxDegreeOfParallelism = config.NThreads
             },
-            () => new SpectralScorer(),
+            () => resolution.CreateScorer(),
             (entry, loopState, localScorer) =>
             {
                 double entrySnr;
                 double entryLibRt;
                 double entryMeasuredRt;
                 var match = ScoreCalibrationEntry(
-                    entry, spectraByWindowKey, preprocessedByWindowKey, config,
+                    entry, spectraByWindowKey, preprocessedByWindowKey, context,
                     rtSlope, rtIntercept, tolerance,
                     calibrationModel,
                     localScorer,
@@ -1592,7 +1609,7 @@ namespace pwiz.OspreySharp
             LibraryEntry entry,
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
             Dictionary<int, double[][]> preprocessedByWindowKey,
-            OspreyConfig config,
+            ScoringContext context,
             double rtSlope, double rtIntercept, double initialTolerance,
             RTCalibration calibrationModel,
             SpectralScorer scorer,
@@ -1600,6 +1617,8 @@ namespace pwiz.OspreySharp
             out double libraryRt,
             out double measuredRt)
         {
+            var config = context.Config;
+            var resolution = context.Resolution;
             signalToNoise = 0.0;
             libraryRt = entry.RetentionTime;
             measuredRt = 0.0;
@@ -2014,11 +2033,10 @@ namespace pwiz.OspreySharp
             // Compute the four LDA features at the apex.
             double libCosineApex = scorer.LibCosine(
                 apexSpectrum, entry, config.FragmentTolerance);
-            // XCorr from pre-preprocessed spectrum (O(n_frags) bin lookups only)
+            // XCorr at apex via the resolution strategy.
             int apexWindowIdx = candidateWindowIndices[apexSpecLocalIdx];
-            double xcorrApex = (windowPreprocessed != null && apexWindowIdx < windowPreprocessed.Length)
-                ? scorer.XcorrFromPreprocessed(windowPreprocessed[apexWindowIdx], entry)
-                : scorer.XcorrAtScan(apexSpectrum, entry);
+            double xcorrApex = resolution.ScoreXcorr(
+                windowPreprocessed, apexWindowIdx, apexSpectrum, entry, scorer);
             byte top6Matched = CountTop6Matches(entry, apexSpectrum, config);
 
             // Collect MS2 fragment mass errors at apex for m/z calibration.
@@ -2213,10 +2231,12 @@ namespace pwiz.OspreySharp
             List<IsolationWindow> isolationWindows,
             RTCalibration rtCalibration,
             MzCalibrationResult ms2Calibration,
-            OspreyConfig config)
+            MzCalibrationResult ms1Calibration,
+            ScoringContext context)
         {
+            var config = context.Config;
             var allEntries = new List<FdrEntry>();
-            var scorer = new SpectralScorer();
+            var scorer = context.Resolution.CreateScorer();
             int windowsProcessed = 0;
 
             // Group spectra by isolation window center (rounded key) for efficient lookup
@@ -2348,7 +2368,7 @@ namespace pwiz.OspreySharp
                 var swWindow = Stopwatch.StartNew();
                 var windowEntries = ScoreWindow(
                     window, fullLibrary, spectraByWindowKey, ms1Spectra,
-                    rtCalibration, rtToleranceGlobal, scorer, config,
+                    rtCalibration, ms1Calibration, rtToleranceGlobal, scorer, context,
                     diagSearchEntryIds);
                 swWindow.Stop();
 
@@ -2420,11 +2440,13 @@ namespace pwiz.OspreySharp
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
             List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
+            MzCalibrationResult ms1Calibration,
             double globalRtTolerance,
             SpectralScorer scorer,
-            OspreyConfig config,
+            ScoringContext context,
             HashSet<uint> diagSearchEntryIds)
         {
+            var config = context.Config;
             var entries = new List<FdrEntry>();
 
             int windowKey = (int)Math.Round(window.Center * 10.0);
@@ -2457,13 +2479,11 @@ namespace pwiz.OspreySharp
             for (int i = 0; i < windowSpectra.Count; i++)
                 windowRts[i] = windowSpectra[i].RetentionTime;
 
-            // Pre-preprocess all window spectra for XCorr. Each spectrum is
-            // preprocessed once here (binning + windowing + sliding window);
-            // per-candidate scoring uses O(n_frags) bin lookups instead of
-            // re-preprocessing. Matches Rust pipeline.rs:5926.
-            var preprocessedXcorr = new double[windowSpectra.Count][];
-            for (int i = 0; i < windowSpectra.Count; i++)
-                preprocessedXcorr[i] = scorer.PreprocessSpectrumForXcorr(windowSpectra[i]);
+            // Pre-preprocess all window spectra for XCorr via the resolution
+            // strategy. Unit resolution: dense arrays for O(n_frags) scoring.
+            // HRAM: null (scores inline per scan; 100K bins per spectrum would
+            // consume ~160 GB of preprocessed arrays across all spectra).
+            var preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(windowSpectra, scorer);
 
             // Score each candidate
             foreach (var candidate in candidates)
@@ -2471,8 +2491,9 @@ namespace pwiz.OspreySharp
                 var fdrEntry = ScoreCandidate(
                     candidate, windowSpectra, windowRts,
                     preprocessedXcorr,
-                    ms1Spectra, rtCalibration, globalRtTolerance,
-                    scorer, config, diagSearchEntryIds);
+                    ms1Spectra, rtCalibration, ms1Calibration,
+                    globalRtTolerance,
+                    scorer, context, diagSearchEntryIds);
 
                 if (fdrEntry != null)
                     entries.Add(fdrEntry);
@@ -2497,11 +2518,14 @@ namespace pwiz.OspreySharp
             double[][] preprocessedXcorr,
             List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
+            MzCalibrationResult ms1Calibration,
             double globalRtTolerance,
             SpectralScorer scorer,
-            OspreyConfig config,
+            ScoringContext context,
             HashSet<uint> diagSearchEntryIds)
         {
+            var config = context.Config;
+            var resolution = context.Resolution;
             bool diag = !candidate.IsDecoy && candidate.ModifiedSequence == DIAG_PEPTIDE
                 && candidate.Charge == 2;
             int nScans = windowSpectra.Count;
@@ -2829,8 +2853,9 @@ namespace pwiz.OspreySharp
             // LibCosine at apex
             double libCosine = scorer.LibCosine(apexSpectrum, candidate, config.FragmentTolerance);
 
-            // XCorr at apex from pre-preprocessed spectrum (O(n_frags) bin lookups only)
-            double xcorr = scorer.XcorrFromPreprocessed(preprocessedXcorr[apexGlobalIdx], candidate);
+            // XCorr at apex via the resolution strategy.
+            double xcorr = resolution.ScoreXcorr(
+                preprocessedXcorr, apexGlobalIdx, apexSpectrum, candidate, scorer);
 
 
 
@@ -2861,17 +2886,28 @@ namespace pwiz.OspreySharp
             ComputeApexMatchFeatures(candidate, apexSpectrum, config,
                 out explainedIntensity, out massAccuracyMean, out absMassAccuracyMean);
 
-            // MS1 features: precursor coelution, isotope cosine (HRAM only).
-            // Rust pipeline.rs:5148 gates on is_hram — unit resolution skips MS1.
+            // MS1 features: precursor coelution, isotope cosine.
+            // Rust pipeline.rs:5362 gates on is_hram — unit resolution skips MS1.
             double ms1PrecursorCoelution = 0.0;
             double ms1IsotopeCosine = 0.0;
-            bool isHram = config.ResolutionMode == Core.ResolutionMode.HRAM;
-            if (isHram && ms1Spectra != null && ms1Spectra.Count > 0)
+            if (resolution.HasMs1Features && ms1Spectra != null && ms1Spectra.Count > 0)
             {
+                // Find reference XIC (highest total intensity) for MS1 coelution.
+                // Same selection as ComputePeakShapeFeatures and Rust pipeline.rs.
+                int ms1RefIdx = 0;
+                double ms1BestTotal = 0.0;
+                for (int f = 0; f < xics.Count; f++)
+                {
+                    double total = 0.0;
+                    double[] inten = xics[f].Intensities;
+                    for (int k = 0; k < inten.Length; k++)
+                        total += inten[k];
+                    if (total >= ms1BestTotal) { ms1BestTotal = total; ms1RefIdx = f; }
+                }
                 ComputeMs1Features(
-                    candidate, xics, bestPeak,
+                    candidate, xics, ms1RefIdx, bestPeak,
                     windowRts, startScan,
-                    ms1Spectra, config,
+                    ms1Spectra, ms1Calibration, config,
                     out ms1PrecursorCoelution, out ms1IsotopeCosine);
             }
 
@@ -2890,7 +2926,7 @@ namespace pwiz.OspreySharp
                     continue;
                 int globalIdx = startScan + candIdx;
                 var s = windowSpectra[globalIdx];
-                sgXcorr += scorer.XcorrFromPreprocessed(preprocessedXcorr[globalIdx], candidate) * weight;
+                sgXcorr += resolution.ScoreXcorr(preprocessedXcorr, globalIdx, s, candidate, scorer) * weight;
                 sgCosine += ComputeCosineAtScan(candidate, s, config) * weight;
             }
 
@@ -3464,9 +3500,11 @@ namespace pwiz.OspreySharp
         private void ComputeMs1Features(
             LibraryEntry candidate,
             List<XicData> xics,
+            int refXicIdx,
             XICPeakBounds peak,
             double[] windowRts, int startScan,
             List<MS1Spectrum> ms1Spectra,
+            MzCalibrationResult ms1Calibration,
             OspreyConfig config,
             out double ms1PrecursorCoelution,
             out double ms1IsotopeCosine)
@@ -3486,47 +3524,52 @@ namespace pwiz.OspreySharp
             if (end - start + 1 < 3)
                 return;
 
-            // MS1 tolerance (use precursor tolerance from config if provided).
-            double precursorTolPpm = config.PrecursorTolerance != null &&
-                                     config.PrecursorTolerance.Unit == ToleranceUnit.Ppm
-                ? config.PrecursorTolerance.Tolerance
-                : 20.0;
-
-            // Summed fragment XIC over the peak window and matching MS1 precursor XIC
-            // sampled at the nearest MS1 scan for each MS2 RT. peak.Start/End/ApexIndex are
-            // relative to the XIC range (which starts at startScan in windowRts).
-            int n = end - start + 1;
-            double[] fragSum = new double[n];
-            double[] ms1Xic = new double[n];
-
-            for (int i = 0; i < n; i++)
+            // MS1 calibration: reverse-calibrate search m/z and use calibrated tolerance.
+            // Matches Rust pipeline.rs:5363-5370 (reverse_calibrate_mz + calibrated_tolerance_ppm).
+            double baseTolPpm = 10.0;
+            double ms1TolPpm = baseTolPpm;
+            double searchMz = candidate.PrecursorMz;
+            if (ms1Calibration != null && ms1Calibration.Calibrated)
             {
-                int xicIdx = start + i;
-                double rt = windowRts[startScan + xicIdx];
+                // calibrated_tolerance_ppm: max(3*SD, 1.0) ppm
+                ms1TolPpm = Math.Max(3.0 * ms1Calibration.SD, 1.0);
+                // reverse_calibrate_mz: observed ~ theoretical + offset
+                if (ms1Calibration.Unit == "Th")
+                    searchMz = candidate.PrecursorMz + ms1Calibration.Mean;
+                else
+                    searchMz = candidate.PrecursorMz * (1.0 + ms1Calibration.Mean / 1e6);
+            }
 
-                double s = 0.0;
-                for (int f = 0; f < xics.Count; f++)
-                {
-                    double[] inten = xics[f].Intensities;
-                    if (xicIdx < inten.Length)
-                        s += inten[xicIdx];
-                }
-                fragSum[i] = s;
+            // Correlate MS1 precursor intensity with reference XIC (not summed fragment).
+            // Rust pipeline.rs:5373-5389: uses ref_xic[start..=end], skips missing MS1.
+            double[] refIntensities = xics[refXicIdx].Intensities;
+            var ms1Intensities = new System.Collections.Generic.List<double>();
+            var refValues = new System.Collections.Generic.List<double>();
 
+            for (int i = start; i <= end; i++)
+            {
+                double rt = windowRts[startScan + i];
                 var ms1 = FindNearestMs1(ms1Spectra, rt);
                 if (ms1 != null)
                 {
-                    var peakInfo = ms1.FindPeakPpm(candidate.PrecursorMz, precursorTolPpm);
-                    if (peakInfo.HasValue)
-                        ms1Xic[i] = peakInfo.Value.Intensity;
+                    var peakInfo = ms1.FindPeakPpm(searchMz, ms1TolPpm);
+                    double intensity = peakInfo.HasValue ? peakInfo.Value.Intensity : 0.0;
+                    ms1Intensities.Add(intensity);
+                    refValues.Add(i < refIntensities.Length ? refIntensities[i] : 0.0);
                 }
             }
 
-            ms1PrecursorCoelution = PearsonCorrelation(fragSum, ms1Xic, 0, n - 1);
-            if (double.IsNaN(ms1PrecursorCoelution))
-                ms1PrecursorCoelution = 0.0;
+            if (ms1Intensities.Count >= 3)
+            {
+                double[] ms1Arr = ms1Intensities.ToArray();
+                double[] refArr = refValues.ToArray();
+                ms1PrecursorCoelution = PearsonCorrelation(ms1Arr, refArr, 0, ms1Arr.Length - 1);
+                if (double.IsNaN(ms1PrecursorCoelution))
+                    ms1PrecursorCoelution = 0.0;
+            }
 
-            // Isotope cosine at apex MS1 scan
+            // Isotope cosine at apex MS1 scan.
+            // Rust pipeline.rs:5393-5404: gates on envelope.has_m0().
             int apex = Math.Max(start, Math.Min(end, peak.ApexIndex));
             double apexRt = windowRts[startScan + apex];
             var apexMs1 = FindNearestMs1(ms1Spectra, apexRt);
@@ -3534,14 +3577,19 @@ namespace pwiz.OspreySharp
             {
                 int charge = candidate.Charge > 0 ? candidate.Charge : 1;
                 var envelope = IsotopeEnvelope.Extract(
-                    apexMs1, candidate.PrecursorMz, charge, precursorTolPpm);
+                    apexMs1, searchMz, charge, ms1TolPpm);
 
-                // Theoretical envelope approximation (averagine-like): [M-1, M, M+1, M+2, M+3]
-                // We use a simple decaying envelope scaled by precursor mass.
-                double[] theoretical = TheoreticalIsotopeEnvelope(
-                    candidate.PrecursorMz, charge);
-
-                ms1IsotopeCosine = CosineSimilarity(envelope.Intensities, theoretical);
+                // Gate: skip if M0 peak is missing (matches Rust envelope.has_m0())
+                if (envelope.Intensities != null && envelope.Intensities.Length > 1
+                    && envelope.Intensities[1] > 0.0) // index 1 = M0 (M-1 at 0)
+                {
+                    // Sequence-based isotope distribution, matching Rust
+                    // pipeline.rs:5400 peptide_isotope_cosine.
+                    double score = IsotopeDistribution.PeptideIsotopeCosine(
+                        candidate.Sequence, envelope.Intensities);
+                    if (score >= 0.0)
+                        ms1IsotopeCosine = score;
+                }
             }
         }
 

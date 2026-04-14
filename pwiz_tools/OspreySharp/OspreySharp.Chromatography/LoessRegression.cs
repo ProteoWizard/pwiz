@@ -330,7 +330,11 @@ namespace pwiz.OspreySharp.Chromatography
                 return 0.0;
             double[] sorted = (double[])values.Clone();
             Array.Sort(sorted);
-            int idx = (int)Math.Round(p * (sorted.Length - 1));
+            // Round half away from zero to match Rust's f64::round(). The
+            // default Math.Round uses banker's rounding (round-to-even),
+            // which disagrees on exactly .5 values -- e.g. n=6398, p=0.50
+            // gives 3198.5 where Rust picks 3199 and banker's picks 3198.
+            int idx = (int)Math.Round(p * (sorted.Length - 1), MidpointRounding.AwayFromZero);
             idx = Math.Min(idx, sorted.Length - 1);
             return sorted[idx];
         }
