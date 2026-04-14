@@ -918,7 +918,9 @@ void calculateSourceFilePtrSHA1(const SourceFilePtr& sourceFilePtr)
 
 
 /// Writes an MSData object to a .partial file first, then renames to the final filename on success,
-/// so that incomplete output from a failed conversion is not mistaken for a valid file.
+/// so that incomplete output from a failed conversion is not mistaken for a valid file. If an output
+/// file already exists at outputFilename, it is preserved under a temporary backup name until the
+/// new file has been promoted, and restored if the final rename fails.
 void writeAtomically(const MSData& msd,
                      const string& outputFilename,
                      const MSDataFile::WriteConfig& writeConfig,
@@ -926,10 +928,29 @@ void writeAtomically(const MSData& msd,
 {
     string partialFilename = outputFilename + ".partial";
     MSDataFile::write(msd, partialFilename, writeConfig, pILR);
-    // bfs::rename fails on Windows if the destination already exists, so remove it first.
+
+    // bfs::rename fails on Windows if the destination already exists, so preserve any existing
+    // output under a temporary backup name until the new file has been promoted.
+    string backupFilename;
     if (bfs::exists(outputFilename))
-        bfs::remove(outputFilename);
-    bfs::rename(partialFilename, outputFilename);
+    {
+        backupFilename = outputFilename + ".backup-" + bfs::unique_path("%%%%-%%%%").string();
+        bfs::rename(outputFilename, backupFilename);
+    }
+
+    try
+    {
+        bfs::rename(partialFilename, outputFilename);
+    }
+    catch (...)
+    {
+        if (!backupFilename.empty())
+            bfs::rename(backupFilename, outputFilename); // restore old output
+        throw;
+    }
+
+    if (!backupFilename.empty())
+        bfs::remove(backupFilename);
 }
 
 
@@ -1011,11 +1032,16 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         else
             writeAtomically(msd, outputFilename, configCopy.writeConfig, pILR);
     }
-    catch (exception& e)
+    catch (pwiz::util::enumeration_error& e)
     {
         failedFileCount = (int)filenames.size();
         cerr << "Error merging files (aborting): " << e.what() << endl;
         cerr << "  To skip problematic spectra and write the remaining data, re-run with --continueOnError." << endl;
+    }
+    catch (exception& e)
+    {
+        failedFileCount = (int)filenames.size();
+        cerr << "Error merging files (aborting): " << e.what() << endl;
     }
 
     return failedFileCount;
@@ -1109,10 +1135,15 @@ void processFile(const string& filename, const Config& config, const ReaderList&
         {
             throw;
         }
-        catch (exception& e)
+        catch (pwiz::util::enumeration_error& e)
         {
             cerr << "Error writing run " << (i+1) << " (aborting conversion of this run): " << e.what() << endl;
             cerr << "  To skip problematic spectra and write the remaining data, re-run with --continueOnError." << endl;
+            ++failedRuns;
+        }
+        catch (exception& e)
+        {
+            cerr << "Error writing run " << (i+1) << " (aborting conversion of this run): " << e.what() << endl;
             ++failedRuns;
         }
     }
