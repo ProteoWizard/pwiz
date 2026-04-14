@@ -595,6 +595,15 @@ namespace pwiz.OspreySharp
                     swCal.Elapsed.TotalSeconds, nPoints));
             }
 
+            // Optional early exit after Stage 3 (calibration only, no main search).
+            // Used for Stage 1-3 perf benchmarking and walking up to the main
+            // search incrementally without paying the Stage 4 cost.
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OSPREY_EXIT_AFTER_CALIBRATION")))
+            {
+                LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
+                return new List<FdrEntry>();
+            }
+
             // Run coelution scoring across all isolation windows
             var swScoring = Stopwatch.StartNew();
             var scoredEntries = RunCoelutionScoring(
