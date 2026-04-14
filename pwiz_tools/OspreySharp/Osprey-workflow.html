@@ -202,11 +202,9 @@
   <text class="stage-title" x="310" y="150" text-anchor="middle">Decoy generation (parallel)</text>
   <text class="stage-desc"  x="310" y="164" text-anchor="middle">enzyme-aware reverse, collision detection, Parallel.For</text>
 
-  <!-- Stage 1 badges -->
-  <rect class="badge-bg-test" x="80" y="180" width="120" height="14"/>
-  <text class="badge-test" x="140" y="190" text-anchor="middle">36 tests + 2 regression</text>
-  <rect class="badge-bg-perf" x="210" y="180" width="90" height="14"/>
-  <text class="badge-perf" x="255" y="190" text-anchor="middle">0.7s / 0.1x Rust</text>
+  <!-- Stage 1 badges (upper right of container) -->
+  <text class="badge-test" x="535" y="30" text-anchor="end">Testing: 36 + 2 regression</text>
+  <text class="badge-perf" x="535" y="42" text-anchor="end">Perf: 0.7s / 0.1x Rust</text>
 
   <path class="flow" d="M 310 112 L 310 128" marker-end="url(#arrow)"/>
 
@@ -223,11 +221,9 @@
   <text class="stage-title" x="890" y="150" text-anchor="middle">Isolation window grouping</text>
   <text class="stage-desc"  x="890" y="164" text-anchor="middle">deterministic, 125 windows on Stellar</text>
 
-  <!-- Stage 2 badges -->
-  <rect class="badge-bg-test" x="660" y="180" width="60" height="14"/>
-  <text class="badge-test" x="690" y="190" text-anchor="middle">3 tests</text>
-  <rect class="badge-bg-perf" x="730" y="180" width="100" height="14"/>
-  <text class="badge-perf" x="780" y="190" text-anchor="middle">5.5s / 1.1x Rust</text>
+  <!-- Stage 2 badges (upper right of container) -->
+  <text class="badge-test" x="1115" y="30" text-anchor="end">Testing: 3 tests</text>
+  <text class="badge-perf" x="1115" y="42" text-anchor="end">Perf: 5.5s / 1.1x Rust</text>
 
   <path class="flow" d="M 890 112 L 890 128" marker-end="url(#arrow)"/>
 </g>
@@ -288,11 +284,9 @@
   <path class="flow" d="M 600 362 L 600 398" marker-end="url(#arrow)"/>
   <path class="flow" d="M 600 462 L 600 478" marker-end="url(#arrow)"/>
 
-  <!-- Stage 3 badges -->
-  <rect class="badge-bg-test" x="80" y="535" width="220" height="14"/>
-  <text class="badge-test" x="190" y="545" text-anchor="middle">31 tests + 10 regression (xcorr dedup, apex tie-break, SNR, LOESS, LDA, f64)</text>
-  <rect class="badge-bg-perf" x="310" y="535" width="100" height="14"/>
-  <text class="badge-perf" x="360" y="545" text-anchor="middle">10.4s / 1.2x Rust</text>
+  <!-- Stage 3 badges (upper right of container) -->
+  <text class="badge-test" x="1115" y="24" text-anchor="end">Testing: 31 + 10 regression</text>
+  <text class="badge-perf" x="1115" y="36" text-anchor="end">Perf: 10.4s / 1.2x Rust</text>
 </g>
 
 <!-- Arrow from calibration to main search -->
@@ -318,11 +312,9 @@
   <text class="stage-title" x="600" y="160" text-anchor="middle">21 PIN features per entry (pre-preprocessed XCorr, signal prefilter, CWT fallback)</text>
   <text class="stage-desc"  x="600" y="174" text-anchor="middle">0.00% divergence on 317K entries; 466K entries match Rust within 23</text>
 
-  <!-- Stage 4 badges -->
-  <rect class="badge-bg-test" x="80" y="185" width="260" height="14"/>
-  <text class="badge-test" x="210" y="195" text-anchor="middle">2 tests + 8 regression (bin dedup, closest-mz, coelution, median polish, sharpness, boundary)</text>
-  <rect class="badge-bg-perf" x="350" y="185" width="100" height="14"/>
-  <text class="badge-perf" x="400" y="195" text-anchor="middle">4.0s / 0.8x Rust</text>
+  <!-- Stage 4 badges (upper right of container) -->
+  <text class="badge-test" x="1115" y="24" text-anchor="end">Testing: 2 + 8 regression</text>
+  <text class="badge-perf" x="1115" y="36" text-anchor="end">Perf: 4.0s / 0.8x Rust</text>
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
 </g>
