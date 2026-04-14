@@ -45,6 +45,17 @@ namespace pwiz.OspreySharp
             -3.0 / 35.0,
         };
 
+        // Format a double with 10 decimal places using round-half-to-even
+        // (banker's) to match Rust's {:.10} formatter. .NET Framework's F10
+        // default is round-half-away-from-zero, which flips the last digit
+        // on exact .5 values (e.g. 4271.60400390625 -> 63 in F10 vs 62 in Rust).
+        // Use this helper in every cross-impl diagnostic dump.
+        private static string F10(double v)
+        {
+            return Math.Round(v, 10, MidpointRounding.ToEven)
+                .ToString("F10", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         /// <summary>
         /// Run the complete analysis pipeline.
         /// </summary>
@@ -1724,8 +1735,7 @@ namespace pwiz.OspreySharp
                 var spec = windowSpectra[si];
                 if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
                     continue;
-                if (!HasTopNFragmentMatch(entry, spec.Mzs,
-                    config.FragmentTolerance.ToleranceDa(entry.PrecursorMz)))
+                if (!HasTopNFragmentMatch(entry, spec.Mzs, config.FragmentTolerance))
                     continue;
                 candidateSpectra.Add(spec);
                 candidateWindowIndices.Add(si);
@@ -1827,12 +1837,15 @@ namespace pwiz.OspreySharp
 
                     dw.WriteLine("# n_post_prefilter_candidates=" + candidateSpectra.Count);
                     dw.WriteLine("# CANDIDATES (post-prefilter, sorted by RT)");
-                    dw.WriteLine("candidate\tscan_idx\tscan_number\trt");
+                    dw.WriteLine("candidate\tscan_idx\tscan_number\trt\tiso_lower\tiso_upper");
                     for (int i = 0; i < candidateSpectra.Count; i++)
                     {
+                        var iso = candidateSpectra[i].IsolationWindow;
                         dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "candidate\t{0}\t{1}\t{2:F10}",
-                            i, candidateSpectra[i].ScanNumber, candidateSpectra[i].RetentionTime));
+                            "candidate\t{0}\t{1}\t{2}\t{3}\t{4}",
+                            i, candidateSpectra[i].ScanNumber,
+                            F10(candidateSpectra[i].RetentionTime),
+                            F10(iso.LowerBound), F10(iso.UpperBound)));
                     }
 
                     // Top-6 fragments
@@ -1848,9 +1861,13 @@ namespace pwiz.OspreySharp
                     {
                         int fi = sortedByIntensity[rank].Key;
                         var fobj = entry.Fragments[fi];
+                        // Cast float to double and use banker's-rounded F10 helper so
+                        // the .NET Framework F10 formatter matches Rust's {:.10} on
+                        // last-digit .5 boundaries (shortest round-trip for float on
+                        // .NET Framework also hides f32 precision noise).
                         dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "topfrag\t{0}\t{1}\t{2:F10}\t{3:F10}",
-                            rank, fi, fobj.Mz, fobj.RelativeIntensity));
+                            "topfrag\t{0}\t{1}\t{2}\t{3}",
+                            rank, fi, F10(fobj.Mz), F10((double)fobj.RelativeIntensity)));
                     }
                 }
             }
@@ -1873,8 +1890,8 @@ namespace pwiz.OspreySharp
                         for (int i = 0; i < xic.RetentionTimes.Length; i++)
                         {
                             dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "xic\t{0}\t{1}\t{2:F10}\t{3:F10}",
-                                xic.FragmentIndex, i, xic.RetentionTimes[i], xic.Intensities[i]));
+                                "xic\t{0}\t{1}\t{2}\t{3}",
+                                xic.FragmentIndex, i, F10(xic.RetentionTimes[i]), F10(xic.Intensities[i])));
                         }
                     }
                 }
@@ -2600,7 +2617,6 @@ namespace pwiz.OspreySharp
             // Skips noise-only candidates before the expensive XIC extraction.
             if (config.PrefilterEnabled)
             {
-                double tolDa = config.FragmentTolerance.ToleranceDa(candidate.PrecursorMz);
                 const int WIN = 4;
                 const int MIN_PASS = 3;
                 bool[] window = new bool[WIN];
@@ -2610,7 +2626,7 @@ namespace pwiz.OspreySharp
                 for (int i = startScan; i <= endScan; i++)
                 {
                     bool passes = HasTopNFragmentMatch(
-                        candidate, windowSpectra[i].Mzs, tolDa);
+                        candidate, windowSpectra[i].Mzs, config.FragmentTolerance);
                     int slot = (i - startScan) % WIN;
                     if (window[slot]) winSum--;
                     window[slot] = passes;
@@ -2666,8 +2682,8 @@ namespace pwiz.OspreySharp
                         for (int i = 0; i < xic.RetentionTimes.Length; i++)
                         {
                             dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "xic\t{0}\t{1}\t{2:F10}\t{3:F10}",
-                                xic.FragmentIndex, i, xic.RetentionTimes[i], xic.Intensities[i]));
+                                "xic\t{0}\t{1}\t{2}\t{3}",
+                                xic.FragmentIndex, i, F10(xic.RetentionTimes[i]), F10(xic.Intensities[i])));
                         }
                     }
                 }
@@ -3089,7 +3105,7 @@ namespace pwiz.OspreySharp
         /// Port of has_topn_fragment_match in osprey-scoring/src/lib.rs:112.
         /// </summary>
         private static bool HasTopNFragmentMatch(
-            LibraryEntry entry, double[] spectrumMzs, double toleranceDa)
+            LibraryEntry entry, double[] spectrumMzs, FragmentToleranceConfig fragTol)
         {
             var frags = entry.Fragments;
             if (frags == null || frags.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
@@ -3100,10 +3116,14 @@ namespace pwiz.OspreySharp
             int requiredMatches = nTop <= 1 ? 1 : 2;
             int matchCount = 0;
 
+            // Per-fragment tolerance: in ppm mode, each fragment's Da window
+            // depends on its own m/z. Matches Rust has_topn_fragment_match.
             for (int t = 0; t < nTop; t++)
             {
-                double lower = top6Mzs[t] - toleranceDa;
-                double upper = top6Mzs[t] + toleranceDa;
+                double mz = top6Mzs[t];
+                double tolDa = fragTol.ToleranceDa(mz);
+                double lower = mz - tolDa;
+                double upper = mz + tolDa;
                 int lo = 0, hi = spectrumMzs.Length;
                 while (lo < hi) { int mid = (lo + hi) / 2; if (spectrumMzs[mid] < lower) lo = mid + 1; else hi = mid; }
                 if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
