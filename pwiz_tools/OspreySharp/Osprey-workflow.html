@@ -136,7 +136,7 @@
 <g transform="translate(40, 40)">
   <text class="title">Osprey / OspreySharp DIA search pipeline</text>
   <text class="subtitle" y="22">
-    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-13, Session 10 (1.9x perf, 185 C# tests, 18 regression tests)
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-13, Session 10 (0.9x single-file, 0.55x 3-file parallel with server GC)
   </text>
 </g>
 
@@ -206,7 +206,7 @@
   <rect class="badge-bg-test" x="80" y="180" width="120" height="14"/>
   <text class="badge-test" x="140" y="190" text-anchor="middle">36 tests + 2 regression</text>
   <rect class="badge-bg-perf" x="210" y="180" width="90" height="14"/>
-  <text class="badge-perf" x="255" y="190" text-anchor="middle">2.1s / 0.4x Rust</text>
+  <text class="badge-perf" x="255" y="190" text-anchor="middle">0.7s / 0.1x Rust</text>
 
   <path class="flow" d="M 310 112 L 310 128" marker-end="url(#arrow)"/>
 
@@ -227,7 +227,7 @@
   <rect class="badge-bg-test" x="660" y="180" width="60" height="14"/>
   <text class="badge-test" x="690" y="190" text-anchor="middle">3 tests</text>
   <rect class="badge-bg-perf" x="730" y="180" width="100" height="14"/>
-  <text class="badge-perf" x="780" y="190" text-anchor="middle">15.5s / 2.6x Rust</text>
+  <text class="badge-perf" x="780" y="190" text-anchor="middle">5.5s / 1.1x Rust</text>
 
   <path class="flow" d="M 890 112 L 890 128" marker-end="url(#arrow)"/>
 </g>
@@ -292,7 +292,7 @@
   <rect class="badge-bg-test" x="80" y="535" width="220" height="14"/>
   <text class="badge-test" x="190" y="545" text-anchor="middle">31 tests + 10 regression (xcorr dedup, apex tie-break, SNR, LOESS, LDA, f64)</text>
   <rect class="badge-bg-perf" x="310" y="535" width="100" height="14"/>
-  <text class="badge-perf" x="360" y="545" text-anchor="middle">19.3s / 2.1x Rust</text>
+  <text class="badge-perf" x="360" y="545" text-anchor="middle">10.4s / 1.2x Rust</text>
 </g>
 
 <!-- Arrow from calibration to main search -->
@@ -322,7 +322,7 @@
   <rect class="badge-bg-test" x="80" y="185" width="260" height="14"/>
   <text class="badge-test" x="210" y="195" text-anchor="middle">2 tests + 8 regression (bin dedup, closest-mz, coelution, median polish, sharpness, boundary)</text>
   <rect class="badge-bg-perf" x="350" y="185" width="100" height="14"/>
-  <text class="badge-perf" x="400" y="195" text-anchor="middle">9.6s / 1.9x Rust</text>
+  <text class="badge-perf" x="400" y="195" text-anchor="middle">4.0s / 0.8x Rust</text>
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
 </g>
@@ -435,16 +435,17 @@
     classes) + 5 Rust cross-implementation regression tests.
   </p>
   <p>
-    <strong>Performance (Session 10, <code>Bench-Scoring.ps1</code>):</strong>
-    C# Stages 1-4 = 46.2s vs Rust 24.1s = <strong>1.9x</strong>.
-    Stage 1: 2.1s (0.4x), Stage 2: 15.5s (2.6x), Stage 3: 19.3s (2.1x),
-    Stage 4: 9.6s (1.9x). Key optimizations: library binary cache,
-    pre-preprocessed XCorr per window, signal prefilter, CWT fallback
-    peak detection, parallel decoy generation.
+    <strong>Performance (Session 10, <code>Bench-Scoring.ps1</code>, server GC):</strong>
+    Single file: C# 21.9s vs Rust 24.5s = <strong>0.9x (C# faster)</strong>.
+    3-file parallel: C# 51.5s vs Rust 93.5s = <strong>0.55x (C# 1.8x faster)</strong>.
+    Stage breakdown (single file with server GC): S1 0.7s, S2 5.5s, S3 10.4s, S4 4.0s.
+    Key optimizations: server GC, pre-preprocessed XCorr per window, producer-consumer
+    mzML pipeline, parallel file processing, library binary cache, signal prefilter,
+    CWT fallback peak detection, cached prefilter top-6 m/z.
   </p>
   <p>
-    Next targets: Stage 2 parallel mzML decompression, Stage 3 calibration
-    scoring optimization, then Stage 5 (Percolator SVM FDR).
+    Next targets: Stage 5 (Percolator SVM FDR), Rust parallel file processing
+    (PR to maccoss/osprey), Skyline CommonUtil integration.
     Branch <code>Skyline/work/20260409_osprey_sharp</code>.
   </p>
 </footer>
