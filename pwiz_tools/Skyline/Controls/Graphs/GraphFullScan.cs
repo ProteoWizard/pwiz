@@ -66,8 +66,25 @@ namespace pwiz.Skyline.Controls.Graphs
         private MSGraphPane _stickSpectrumPane;
         private MSGraphPane _mobilogramPane;
         private MSGraphPane _emptySpacerPane;
-        // Fraction of MasterPane width used by the left (stick/heatmap) column in 4-pane layout
-        private const float MOBILOGRAM_COLUMN_FRACTION = 0.20f;
+        // Splitter geometry helpers (4-pane layout only)
+        private const float SPLITTER_HIT_PX = 4f; // cursor proximity threshold
+        private const float MIN_COL_FRACTION = 0.30f;
+        private const float MAX_COL_FRACTION = 0.95f;
+        private const float MIN_ROW_FRACTION = 0.15f;
+        private const float MAX_ROW_FRACTION = 0.85f;
+        // User-draggable fractions; persisted via Settings.Default
+        private float ColumnFraction
+        {
+            get => Math.Min(MAX_COL_FRACTION, Math.Max(MIN_COL_FRACTION, Settings.Default.FullScanMobilogramColumnFraction));
+            set => Settings.Default.FullScanMobilogramColumnFraction = Math.Min(MAX_COL_FRACTION, Math.Max(MIN_COL_FRACTION, value));
+        }
+        private float RowFraction
+        {
+            get => Math.Min(MAX_ROW_FRACTION, Math.Max(MIN_ROW_FRACTION, Settings.Default.FullScanStickRowFraction));
+            set => Settings.Default.FullScanStickRowFraction = Math.Min(MAX_ROW_FRACTION, Math.Max(MIN_ROW_FRACTION, value));
+        }
+        private enum SplitterDrag { None, Vertical, Horizontal, Both }
+        private SplitterDrag _activeDrag = SplitterDrag.None;
         private bool IsDualPane => _stickSpectrumPane != null;
         private bool IsMobilogramPaneVisible => _mobilogramPane != null;
         /// <summary>
@@ -129,7 +146,18 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (IsMobilogramPaneVisible)
                     RepinMobilogramIfDrifted();
+                else if (IsDualPane)
+                {
+                    var mpR = graphControl.MasterPane.Rect;
+                    if (mpR.Height > 0 && Math.Abs(_stickSpectrumPane.Rect.Height - mpR.Height * RowFraction) > 1f)
+                        AdjustTwoPaneRowHeights();
+                }
             };
+            // Use ZedGraph's intercepting events so we can suppress its default pan/zoom
+            // when the user is dragging the splitter.
+            graphControl.MouseDownEvent += graphControl_SplitterMouseDown;
+            graphControl.MouseMove += graphControl_SplitterMouseMove;
+            graphControl.MouseUpEvent += graphControl_SplitterMouseUp;
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -251,10 +279,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 _heatMapPane.Margin.Top = 10;
                 using (var g = graphControl.CreateGraphics())
                 {
+                    float topFrac = RowFraction;
                     if (includeMobilogram)
                     {
                         // 2 rows × 2 cols: stick+spacer on top, heatmap+mobilogram below
-                        mp.SetLayout(g, true, new[] { 2, 2 }, new[] { 0.45f, 0.55f });
+                        mp.SetLayout(g, true, new[] { 2, 2 }, new[] { topFrac, 1 - topFrac });
                         mp.Add(_stickSpectrumPane);
                         mp.Add(_emptySpacerPane);
                         mp.Add(_heatMapPane);
@@ -262,13 +291,15 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        mp.SetLayout(g, true, new[] { 1, 1 }, new[] { 0.45f, 0.55f });
+                        mp.SetLayout(g, true, new[] { 1, 1 }, new[] { topFrac, 1 - topFrac });
                         mp.Add(_stickSpectrumPane);
                         mp.Add(_heatMapPane);
                     }
                     mp.DoLayout(g);
                     if (includeMobilogram)
                         AdjustFourPaneColumnWidths();
+                    else
+                        AdjustTwoPaneRowHeights();
                 }
             }
             // Don't use ZedGraph's global X-axis sync — it would force the mobilogram's
@@ -288,25 +319,47 @@ namespace pwiz.Skyline.Controls.Graphs
                 _heatMapPane == null || _mobilogramPane == null)
                 return;
 
-            // Compute total horizontal span of each row from the current pane Rects.
-            float x0 = _stickSpectrumPane.Rect.X;
-            float totalW = _stickSpectrumPane.Rect.Width + _emptySpacerPane.Rect.Width;
-            float topY = _stickSpectrumPane.Rect.Y;
-            float topH = _stickSpectrumPane.Rect.Height;
-            float botY = _heatMapPane.Rect.Y;
-            float botH = _heatMapPane.Rect.Height;
+            // Use MasterPane.Rect as the authoritative source so we don't fold compressed
+            // pane Rects from a previous bad layout back into the math (would shrink each call).
+            var mpRect = graphControl.MasterPane.Rect;
+            float x0 = mpRect.X;
+            float y0 = mpRect.Y;
+            float totalW = mpRect.Width;
+            float totalH = mpRect.Height;
+            if (totalW <= 0 || totalH <= 0)
+                return;
 
-            float rightFrac = MOBILOGRAM_COLUMN_FRACTION;
-            float leftW = totalW * (1 - rightFrac);
+            float leftFrac = ColumnFraction;
+            float topFrac = RowFraction;
+            float leftW = totalW * leftFrac;
             float rightW = totalW - leftW;
+            float topH = totalH * topFrac;
+            float botH = totalH - topH;
             float xMid = x0 + leftW;
+            float yMid = y0 + topH;
 
-            _stickSpectrumPane.Rect = new RectangleF(x0, topY, leftW, topH);
-            _emptySpacerPane.Rect = new RectangleF(xMid, topY, rightW, topH);
-            _heatMapPane.Rect = new RectangleF(x0, botY, leftW, botH);
-            _mobilogramPane.Rect = new RectangleF(xMid, botY, rightW, botH);
+            _stickSpectrumPane.Rect = new RectangleF(x0, y0, leftW, topH);
+            _emptySpacerPane.Rect = new RectangleF(xMid, y0, rightW, topH);
+            _heatMapPane.Rect = new RectangleF(x0, yMid, leftW, botH);
+            _mobilogramPane.Rect = new RectangleF(xMid, yMid, rightW, botH);
 
             AlignMobilogramChartToHeatmap();
+        }
+
+        /// <summary>
+        /// Apply RowFraction to the 2-pane (no-mobilogram) layout so the horizontal
+        /// splitter still drives row heights when the mobilogram is hidden.
+        /// </summary>
+        private void AdjustTwoPaneRowHeights()
+        {
+            if (_stickSpectrumPane == null || _heatMapPane == null) return;
+            var mpRect = graphControl.MasterPane.Rect;
+            if (mpRect.Width <= 0 || mpRect.Height <= 0) return;
+            float topFrac = RowFraction;
+            float topH = mpRect.Height * topFrac;
+            float botH = mpRect.Height - topH;
+            _stickSpectrumPane.Rect = new RectangleF(mpRect.X, mpRect.Y, mpRect.Width, topH);
+            _heatMapPane.Rect = new RectangleF(mpRect.X, mpRect.Y + topH, mpRect.Width, botH);
         }
 
         /// <summary>
@@ -321,6 +374,19 @@ namespace pwiz.Skyline.Controls.Graphs
         private void RepinMobilogramIfDrifted()
         {
             if (!IsMobilogramPaneVisible) return;
+            // Only re-apply the 2x2 split if pane Rects don't match expected — calling
+            // every paint causes a repaint loop because Rect assignment invalidates.
+            var mpRect = graphControl.MasterPane.Rect;
+            if (mpRect.Width > 0 && mpRect.Height > 0)
+            {
+                float expectedLeftW = mpRect.Width * ColumnFraction;
+                float expectedTopH = mpRect.Height * RowFraction;
+                if (Math.Abs(_heatMapPane.Rect.Width - expectedLeftW) > 1f ||
+                    Math.Abs(_stickSpectrumPane.Rect.Height - expectedTopH) > 1f)
+                {
+                    AdjustFourPaneColumnWidths();
+                }
+            }
             var heat = _heatMapPane.Chart.Rect;
             if (heat.Height <= 0) return;
 
@@ -347,6 +413,90 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (yDrifted || rectDrifted)
                 graphControl.Invalidate();
+        }
+
+        // ---- Cruciform splitter for 2x2 pane resize ----
+
+        private SplitterDrag HitTestSplitter(Point pt)
+        {
+            if (!IsDualPane) return SplitterDrag.None;
+            float yMid = _heatMapPane.Rect.Y;
+            bool nearH = Math.Abs(pt.Y - yMid) <= SPLITTER_HIT_PX;
+            if (IsMobilogramPaneVisible)
+            {
+                float xMid = _emptySpacerPane.Rect.X;
+                bool nearV = Math.Abs(pt.X - xMid) <= SPLITTER_HIT_PX;
+                if (nearV && nearH) return SplitterDrag.Both;
+                if (nearV) return SplitterDrag.Vertical;
+            }
+            if (nearH) return SplitterDrag.Horizontal;
+            return SplitterDrag.None;
+        }
+
+        private void graphControl_SplitterMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_activeDrag != SplitterDrag.None)
+            {
+                ApplyDrag(e.Location);
+                return;
+            }
+            // Stick pane should always be X-only on wheel zoom — disable vertical zoom
+            // dynamically when the cursor is over it. (ZedGraph's wheel handler reads
+            // IsEnableVZoom at the moment the wheel event fires.)
+            if (IsDualPane)
+            {
+                var underCursor = graphControl.MasterPane.FindPane(e.Location);
+                bool vZoomOk = !ReferenceEquals(underCursor, _stickSpectrumPane);
+                if (graphControl.IsEnableVZoom != vZoomOk)
+                    graphControl.IsEnableVZoom = vZoomOk;
+            }
+            if (!IsDualPane) return;
+            var hit = HitTestSplitter(e.Location);
+            switch (hit)
+            {
+                case SplitterDrag.Vertical:
+                    graphControl.Cursor = Cursors.VSplit; break;
+                case SplitterDrag.Horizontal:
+                    graphControl.Cursor = Cursors.HSplit; break;
+                case SplitterDrag.Both:
+                    graphControl.Cursor = Cursors.SizeAll; break;
+            }
+        }
+
+        private bool graphControl_SplitterMouseDown(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left) return false;
+            var hit = HitTestSplitter(e.Location);
+            if (hit == SplitterDrag.None) return false;
+            _activeDrag = hit;
+            graphControl.Capture = true;
+            return true; // suppress ZedGraph pan/zoom while dragging splitter
+        }
+
+        private bool graphControl_SplitterMouseUp(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (_activeDrag == SplitterDrag.None) return false;
+            _activeDrag = SplitterDrag.None;
+            graphControl.Capture = false;
+            Settings.Default.Save();
+            return true;
+        }
+
+        private void ApplyDrag(Point pt)
+        {
+            var mpRect = graphControl.MasterPane.Rect;
+            if (mpRect.Width <= 0 || mpRect.Height <= 0) return;
+
+            if (_activeDrag == SplitterDrag.Vertical || _activeDrag == SplitterDrag.Both)
+                ColumnFraction = (pt.X - mpRect.X) / mpRect.Width;
+            if (_activeDrag == SplitterDrag.Horizontal || _activeDrag == SplitterDrag.Both)
+                RowFraction = (pt.Y - mpRect.Y) / mpRect.Height;
+
+            if (IsMobilogramPaneVisible)
+                AdjustFourPaneColumnWidths();
+            else
+                AdjustTwoPaneRowHeights();
+            graphControl.Invalidate();
         }
 
         private void AlignMobilogramChartToHeatmap()
@@ -724,7 +874,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     ZoomHeatMapYAxis();
                     CreateIonMobilityHeatmap();
                     if (showMobilogram)
+                    {
                         CreateMobilogram();
+                        // Force the 2x2 column/row split — earlier paths (toggle off/on +
+                        // magnify zoom) can leave panes at default 50/50 widths.
+                        AdjustFourPaneColumnWidths();
+                    }
 
                     // Sync stick pane X range from heatmap pane before populating
                     _stickSpectrumPane.XAxis.Scale.Min = _heatMapPane.XAxis.Scale.Min;
@@ -1762,19 +1917,28 @@ namespace pwiz.Skyline.Controls.Graphs
         private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
             SyncMobilogramYAxisFromHeatmap();
-            SyncStickXAxisFromHeatmap();
+            // Propagate X from whichever of stick/heatmap the user just zoomed in to the
+            // other one. Using the pane under the mouse keeps wheel zooms over the stick
+            // pane working without snapping back.
+            if (IsDualPane)
+            {
+                var src = graphControl.MasterPane.FindPane(Point.Truncate(mousePosition));
+                if (ReferenceEquals(src, _stickSpectrumPane))
+                    CopyXAxis(_heatMapPane, _stickSpectrumPane);
+                else if (ReferenceEquals(src, _heatMapPane))
+                    CopyXAxis(_stickSpectrumPane, _heatMapPane);
+            }
             FireZoomEvent(newState);
         }
 
-        private void SyncStickXAxisFromHeatmap()
+        private static void CopyXAxis(GraphPane target, GraphPane source)
         {
-            if (_stickSpectrumPane == null) return;
-            var heatX = _heatMapPane.XAxis.Scale;
-            var stickX = _stickSpectrumPane.XAxis.Scale;
-            stickX.Min = heatX.Min;
-            stickX.Max = heatX.Max;
-            stickX.MinAuto = false;
-            stickX.MaxAuto = false;
+            var dst = target.XAxis.Scale;
+            var src = source.XAxis.Scale;
+            dst.Min = src.Min;
+            dst.Max = src.Max;
+            dst.MinAuto = false;
+            dst.MaxAuto = false;
         }
 
         private void graphControl_Resize(object sender, EventArgs e)
@@ -1785,6 +1949,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphControl.MasterPane.DoLayout(g);
                 if (IsMobilogramPaneVisible)
                     AdjustFourPaneColumnWidths();
+                else
+                    AdjustTwoPaneRowHeights();
             }
             SyncMobilogramYAxisFromHeatmap();
         }
@@ -2917,37 +3083,67 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_mobilogramPane == null || _mobilogramPane.CurveList.Count == 0)
                 return null;
 
-            double imValue, intensityValue;
-            _mobilogramPane.ReverseTransform(pt, out intensityValue, out imValue);
+            // Find the curve whose nearest LINE SEGMENT (not just vertex) passes within
+            // a few pixels of the cursor. Tooltip itself reports the value at the nearer
+            // of the segment's two endpoints — no interpolation.
+            float scaleFactor = _mobilogramPane.CalcScaleFactor();
+            float maxDistPx = 10f * scaleFactor;
+            float bestDistPx = maxDistPx;
+            CurveItem bestCurve = null;
+            int bestEndpointIdx = -1;
+            foreach (var curve in _mobilogramPane.CurveList)
+            {
+                var pts = curve.Points;
+                if (pts == null || pts.Count < 2) continue;
+                float prevPxX = _mobilogramPane.XAxis.Scale.Transform(pts[0].X);
+                float prevPxY = _mobilogramPane.YAxis.Scale.Transform(pts[0].Y);
+                for (int i = 1; i < pts.Count; i++)
+                {
+                    float curPxX = _mobilogramPane.XAxis.Scale.Transform(pts[i].X);
+                    float curPxY = _mobilogramPane.YAxis.Scale.Transform(pts[i].Y);
+                    float dist = DistancePointToSegment(pt.X, pt.Y, prevPxX, prevPxY, curPxX, curPxY);
+                    if (dist < bestDistPx)
+                    {
+                        bestDistPx = dist;
+                        bestCurve = curve;
+                        // Report the closer of the two endpoints
+                        float dPrev = (pt.X - prevPxX) * (pt.X - prevPxX) + (pt.Y - prevPxY) * (pt.Y - prevPxY);
+                        float dCur  = (pt.X - curPxX)  * (pt.X - curPxX)  + (pt.Y - curPxY)  * (pt.Y - curPxY);
+                        bestEndpointIdx = dPrev <= dCur ? i - 1 : i;
+                    }
+                    prevPxX = curPxX;
+                    prevPxY = curPxY;
+                }
+            }
+            if (bestCurve == null) return null;
+
+            var endpointX = bestCurve.Points[bestEndpointIdx].X;
+            var endpointY = bestCurve.Points[bestEndpointIdx].Y;
 
             var rt = _cursorTip.RenderTools;
             string yAxisLabel = _heatMapPane.YAxis.Title.Text ?? string.Empty;
             var table = new TableDesc();
-            // Use ZedGraph's built-in nearest-point search
-            CurveItem nearestCurve;
-            int iNearest;
-            using (var g = graphControl.CreateGraphics())
-            {
-                if (!_mobilogramPane.FindNearestPoint(pt, _mobilogramPane.CurveList,
-                        out nearestCurve, out iNearest))
-                    return null;
-            }
-
-            // Proximity gate: require cursor within ~10 px of the nearest curve point.
-            var pointX = nearestCurve.Points[iNearest].X;
-            var pointY = nearestCurve.Points[iNearest].Y;
-            float ptPxX = _mobilogramPane.XAxis.Scale.Transform(pointX);
-            float ptPxY = _mobilogramPane.YAxis.Scale.Transform(pointY);
-            float scaleFactor = _mobilogramPane.CalcScaleFactor();
-            float maxDist = 10f * scaleFactor;
-            if (Math.Abs(pt.X - ptPxX) > maxDist || Math.Abs(pt.Y - ptPxY) > maxDist)
-                return null;
-
-            table.AddDetailRow(yAxisLabel, pointY.ToString(Formats.IonMobility), rt);
-            if (!string.IsNullOrEmpty(nearestCurve.Label?.Text))
-                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, nearestCurve.Label.Text, rt);
-            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, pointX.ToString(@"F0"), rt);
+            table.AddDetailRow(yAxisLabel, endpointY.ToString(Formats.IonMobility), rt);
+            if (!string.IsNullOrEmpty(bestCurve.Label?.Text))
+                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, bestCurve.Label.Text, rt);
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, endpointX.ToString(@"F0"), rt);
             return table;
+        }
+
+        private static float DistancePointToSegment(float px, float py, float ax, float ay, float bx, float by)
+        {
+            float dx = bx - ax, dy = by - ay;
+            float len2 = dx * dx + dy * dy;
+            if (len2 <= float.Epsilon)
+            {
+                float ex = px - ax, ey = py - ay;
+                return (float)Math.Sqrt(ex * ex + ey * ey);
+            }
+            float t = ((px - ax) * dx + (py - ay) * dy) / len2;
+            if (t < 0) t = 0; else if (t > 1) t = 1;
+            float qx = ax + t * dx, qy = ay + t * dy;
+            float ddx = px - qx, ddy = py - qy;
+            return (float)Math.Sqrt(ddx * ddx + ddy * ddy);
         }
 
         /// <summary>

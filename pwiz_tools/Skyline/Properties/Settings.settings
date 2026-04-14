@@ -488,6 +488,12 @@
     <Setting Name="ShowMobilogramFullScan" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="FullScanMobilogramColumnFraction" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.8</Value>
+    </Setting>
+    <Setting Name="FullScanStickRowFraction" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.45</Value>
+    </Setting>
     <Setting Name="ShowStartupForm" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
