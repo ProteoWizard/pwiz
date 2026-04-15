@@ -294,9 +294,10 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// After MasterPane.DoLayout (which assigns equal column widths), override the
-        /// per-pane Rects so the right column (spacer + mobilogram) occupies only
-        /// MOBILOGRAM_COLUMN_FRACTION of the total width.
+        /// After MasterPane.DoLayout, override the per-pane Rects so the left column
+        /// occupies ColumnFraction of the total width and the right column (spacer +
+        /// mobilogram) occupies the remaining width. Likewise, the top row occupies
+        /// RowFraction of the total height and the bottom row occupies the remainder.
         /// </summary>
         private void AdjustFourPaneColumnWidths()
         {
@@ -1973,6 +1974,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void FireZoomEvent(ZoomState zoomState = null)
         {
+            if (!Settings.Default.SyncMZScale)
+                return;
             if (ZoomEvent != null)
             {
                 if (zoomState == null)
@@ -2109,8 +2112,16 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 double minDriftTime, maxDriftTime;
-                _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out minDriftTime, out maxDriftTime, _msDataFileScanHelper.Source);
-                if (minDriftTime > double.MinValue && maxDriftTime < double.MaxValue)
+                bool validRange = _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out minDriftTime, out maxDriftTime,
+                    _msDataFileScanHelper.Source) &&
+                    !double.IsNaN(minDriftTime) &&
+                    !double.IsNaN(maxDriftTime) &&
+                    !double.IsInfinity(minDriftTime) &&
+                    !double.IsInfinity(maxDriftTime) &&
+                    minDriftTime > double.MinValue &&
+                    maxDriftTime < double.MaxValue &&
+                    minDriftTime < maxDriftTime;
+                if (validRange)
                 {
                     double range = filterBtn.Checked
                         ? (maxDriftTime - minDriftTime) / 2
@@ -2740,9 +2751,10 @@ namespace pwiz.Skyline.Controls.Graphs
         // For use with CursorTrackingTip _cursorTip
         private TableDesc GetTooltipTable(PointF pt)
         {
-            // Only show tooltip when the cursor is the crosshair — this naturally suppresses
-            // tooltips near (but outside) the chart area, e.g. near the legend.
-            if (graphControl.Cursor != Cursors.Cross)
+            // Only show tooltip when the cursor is over a chart area — suppresses tooltips
+            // near (but outside) the chart area, e.g. near the legend. Gate on hit-testing
+            // rather than cursor value, since the cursor becomes Hand over ion labels.
+            if (graphControl.MasterPane.FindChartRect(pt) == null)
                 return null;
             if (IsMobilogramVisible && IsInMobilogramArea(pt))
                 return GetMobilogramTooltipTable(pt);
