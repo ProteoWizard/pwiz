@@ -64,12 +64,17 @@ namespace pwiz.Common.DataBinding.Filtering
                 return string.Empty;
             }
 
-            if (clauses.Count == 1)
+            var parts = new List<string>();
+            foreach (var clause in clauses)
             {
-                return FormatClause(clauses[0]);
+                var part = FormatClause(clause);
+                if (clause.FilterSpecs.Count > 1 && clauses.Count > 1)
+                {
+                    part = @"(" + part + @")";
+                }
+                parts.Add(part);
             }
-
-            return string.Join(@" or ", clauses.Select(c => @"(" + FormatClause(c) + @")"));
+            return string.Join(@" or ", parts);
         }
 
         /// <summary>
@@ -93,17 +98,7 @@ namespace pwiz.Common.DataBinding.Filtering
 
         private string FormatClause(FilterClause clause)
         {
-            if (clause.FilterSpecs.Count == 0)
-            {
-                return string.Empty;
-            }
-
-            if (clause.FilterSpecs.Count == 1)
-            {
-                return FormatFilterSpec(clause.FilterSpecs[0]);
-            }
-
-            return string.Join(@" and ", clause.FilterSpecs.Select(s => @"(" + FormatFilterSpec(s) + @")"));
+            return string.Join(@" and ", clause.FilterSpecs.Select(FormatFilterSpec));
         }
 
         private string FormatFilterSpec(FilterSpec spec)
