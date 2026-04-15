@@ -2445,10 +2445,33 @@ namespace pwiz.OspreySharp
             // Per-window timings collected thread-safely for post-summary.
             var windowTimings = new ConcurrentBag<WindowTiming>();
 
+            // Short-circuit gate for profiling / fast iteration. Caps the
+            // number of windows actually scored. Set OSPREY_MAX_SCORING_
+            // WINDOWS=2 to capture a few representative windows under
+            // dotTrace without paying the full ~15 min Astral wall-clock.
+            var windowsToScore = isolationWindows;
+            string maxWindowsEnv = Environment.GetEnvironmentVariable("OSPREY_MAX_SCORING_WINDOWS");
+            if (!string.IsNullOrEmpty(maxWindowsEnv) &&
+                int.TryParse(maxWindowsEnv, out int maxWindows) &&
+                maxWindows > 0 &&
+                maxWindows < isolationWindows.Count)
+            {
+                windowsToScore = isolationWindows.Take(maxWindows).ToList();
+                LogInfo(string.Format(
+                    "[BENCH] OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
+                    maxWindows, isolationWindows.Count));
+            }
+
+            // Bracket the main-search parallel loop with the dotTrace Measure
+            // API and peak-memory logging. When no profiler is attached the
+            // ProfilerHooks calls are inexpensive no-ops.
+            ProfilerHooks.LogMemoryStats(LogInfo, "pre-main-search");
+            ProfilerHooks.StartMeasure();
+
             // Process each isolation window (parallelizable)
             object lockObj = new object();
 
-            Parallel.ForEach(isolationWindows, new ParallelOptions
+            Parallel.ForEach(windowsToScore, new ParallelOptions
             {
                 MaxDegreeOfParallelism = config.NThreads
             },
@@ -2472,13 +2495,16 @@ namespace pwiz.OspreySharp
                 {
                     allEntries.AddRange(windowEntries);
                     windowsProcessed++;
-                    if (windowsProcessed % 10 == 0 || windowsProcessed == isolationWindows.Count)
+                    if (windowsProcessed % 10 == 0 || windowsProcessed == windowsToScore.Count)
                     {
                         LogInfo(string.Format("  Scored {0}/{1} isolation windows ({2} entries so far)",
-                            windowsProcessed, isolationWindows.Count, allEntries.Count));
+                            windowsProcessed, windowsToScore.Count, allEntries.Count));
                     }
                 }
             });
+
+            ProfilerHooks.SaveAndStopMeasure();
+            ProfilerHooks.LogMemoryStats(LogInfo, "post-main-search");
 
             // Summarize per-window timings.
             LogWindowTimingSummary(windowTimings);
