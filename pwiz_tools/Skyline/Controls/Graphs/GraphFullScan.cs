@@ -349,9 +349,6 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Pin the mobilogram pane's Chart.Rect so it aligns vertically (and in height) with
-        /// the heatmap's Chart.Rect. Without this, the heatmap's legend/margins cause the
-        /// two chart areas to have different tops/bottoms, so IM values don't line up.
         /// If heatmap's actual chart rect no longer matches what we pinned, re-pin and
         /// invalidate so the next paint catches up. Called from the Paint handler.
         /// </summary>

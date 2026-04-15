@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -110,11 +111,10 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // FAIMS produces precursor_peak entries with ion_mobility_ms1 / ion_mobility_fragment
             // but no meaningful filter window. Verify DocumentWriter skips the redundant
             // ion_mobility_window and ion_mobility_window_offset attributes for FAIMS data.
-            var precursorPeaks = System.Text.RegularExpressions.Regex.Matches(skyText,
-                @"<precursor_peak\b[^>]*/?>");
+            var precursorPeaks = Regex.Matches(skyText, @"<precursor_peak\b[^>]*/?>");
             AssertEx.IsTrue(precursorPeaks.Count > 0, "Expected some <precursor_peak> entries");
             int faimsStyleCount = 0;
-            foreach (System.Text.RegularExpressions.Match m in precursorPeaks)
+            foreach (Match m in precursorPeaks)
             {
                 // No precursor_peak should serialize ion_mobility_window_offset="0"
                 AssertEx.IsFalse(m.Value.Contains(@"ion_mobility_window_offset=""0"""),
@@ -139,7 +139,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             var doc = SkylineWindow.Document;
             var firstChromInfo = doc.MoleculeTransitions
                 .SelectMany(t => t.ChromInfos)
-                .FirstOrDefault(ci => ci.IonMobility.IonMobility.Mobility.HasValue);
+                .FirstOrDefault(ci => ci.IonMobility.HasIonMobilityValue);
             AssertEx.IsNotNull(firstChromInfo, "Expected at least one chrom info with an IM value");
             AssertEx.IsTrue(IonMobilityFilterWindow.IsNullOrEmpty(firstChromInfo.IonMobility.IonMobilityFilterWindow),
                 "FAIMS chrom info should have an empty filter window");
