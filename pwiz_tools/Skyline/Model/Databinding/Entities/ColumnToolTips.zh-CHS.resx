@@ -514,6 +514,9 @@
     <value>肽段的第一个 (N-末端) 氨基酸在其包含的蛋白质序列中的位置，
 如果没有可用的蛋白质序列，则为 #N/A。</value>
   </data>
+  <data name="FittedParameters">
+    <value>校准曲线中拟合至校准数据的参数（例如斜率、截距）数量</value>
+  </data>
   <data name="FoldChange">
     <value>倍数变化值。倍数变化是试验组的归一化强度与对照组归一化强度的比率。</value>
   </data>
@@ -1529,6 +1532,9 @@
   </data>
   <data name="RSquared">
     <value>测定系数</value>
+  </data>
+  <data name="RelativeStandardError">
+    <value>相对标准误差</value>
   </data>
   <data name="SampleDilutionFactor">
     <value>在分析之前稀释样品的量。
