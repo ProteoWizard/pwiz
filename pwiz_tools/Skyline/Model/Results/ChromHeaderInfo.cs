@@ -941,11 +941,14 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 16;
             }
-            if (cacheFormatVersion <= CacheFormatVersion.Eighteen)
+            // Versions 7–19 store (product, extractionWidth, ionMobilityValue,
+            // ionMobilityExtractionWidth, flagBits, optimizationStep) = 24 bytes.
+            if (cacheFormatVersion <= CacheFormatVersion.Nineteen)
             {
                 return 24;
             }
-            return 28; // As of version 19
+            // Version 20 adds _ionMobilityExtractionOffset (float) = 28 bytes.
+            return 28;
         }
 
         //

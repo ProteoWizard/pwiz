@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -83,8 +85,48 @@ namespace pwiz.SkylineTest
         {
             Assert.AreEqual(4, sizeof(ChromTransition4));
             Assert.AreEqual(16, sizeof(ChromTransition5));
-            Assert.AreEqual(24, ChromTransition.GetStructSize(CacheFormatVersion.Eighteen));
-            Assert.AreEqual(28, ChromTransition.GetStructSize(CacheFormatVersion.CURRENT));
+
+            // Explicit per-version expected sizes. Update when adding a new
+            // CacheFormatVersion that changes ChromTransition — AND update
+            // ChromTransition.GetStructSize to match.
+            var expectedSizes = new Dictionary<CacheFormatVersion, int>
+            {
+                { CacheFormatVersion.Two, 4 },
+                { CacheFormatVersion.Three, 4 },
+                { CacheFormatVersion.Four, 4 },
+                { CacheFormatVersion.Five, 16 },
+                { CacheFormatVersion.Six, 16 },
+                { CacheFormatVersion.Seven, 24 },
+                { CacheFormatVersion.Eight, 24 },
+                { CacheFormatVersion.Nine, 24 },
+                { CacheFormatVersion.Ten, 24 },
+                { CacheFormatVersion.Eleven, 24 },
+                { CacheFormatVersion.Twelve, 24 },
+                { CacheFormatVersion.Thirteen, 24 },
+                { CacheFormatVersion.Fourteen, 24 },
+                { CacheFormatVersion.Fifteen, 24 },
+                { CacheFormatVersion.Sixteen, 24 },
+                { CacheFormatVersion.Seventeen, 24 },
+                { CacheFormatVersion.Eighteen, 24 },
+                { CacheFormatVersion.Nineteen, 24 },
+                { CacheFormatVersion.Twenty, 28 },
+            };
+            foreach (CacheFormatVersion v in Enum.GetValues(typeof(CacheFormatVersion)))
+            {
+                Assert.IsTrue(expectedSizes.TryGetValue(v, out var expected),
+                    "Add expected ChromTransition size for CacheFormatVersion." + v +
+                    " and update ChromTransition.GetStructSize to match.");
+                Assert.AreEqual(expected, ChromTransition.GetStructSize(v),
+                    "ChromTransition.GetStructSize(" + v + ") mismatch");
+            }
+
+            // Current struct layout must match whatever GetStructSize reports for CURRENT.
+            // If you add a field to ChromTransition, bump CacheFormatVersion.CURRENT and
+            // update GetStructSize together — this assert will fail if only one side moved.
+            Assert.AreEqual(sizeof(ChromTransition),
+                ChromTransition.GetStructSize(CacheFormatVersion.CURRENT),
+                "ChromTransition struct size doesn't match GetStructSize(CURRENT). " +
+                "Did you add a field without bumping the cache format version?");
         }
 
         /// <summary>
