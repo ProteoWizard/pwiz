@@ -28,6 +28,16 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
             Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer);
+
+        /// <summary>
+        /// Pool-aware variant of <see cref="ScoreXcorr"/> for hot-path callers
+        /// (main-search apex + SG-weighted neighbours). Unit-res strategies
+        /// that already use pre-preprocessed arrays ignore the pool; HRAM
+        /// uses it to skip per-call 100K-bin LOH allocation.
+        /// </summary>
+        double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
+            Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer,
+            XcorrScratchPool scratchPool);
     }
 
     /// <summary>
@@ -69,6 +79,15 @@ namespace pwiz.OspreySharp.Scoring
         {
             return scorer.XcorrFromPreprocessed(preprocessed[spectrumIndex], entry);
         }
+
+        public double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
+            Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer,
+            XcorrScratchPool scratchPool)
+        {
+            // Unit resolution already uses pre-preprocessed arrays — no
+            // scratch needed. Forward to the allocating overload.
+            return scorer.XcorrFromPreprocessed(preprocessed[spectrumIndex], entry);
+        }
     }
 
     /// <summary>
@@ -94,6 +113,24 @@ namespace pwiz.OspreySharp.Scoring
             Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer)
         {
             return scorer.XcorrAtScan(spectrum, entry);
+        }
+
+        public double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
+            Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer,
+            XcorrScratchPool scratchPool)
+        {
+            if (scratchPool == null)
+                return scorer.XcorrAtScan(spectrum, entry);
+
+            var scratch = scratchPool.Rent();
+            try
+            {
+                return scorer.XcorrAtScan(spectrum, entry, scratch);
+            }
+            finally
+            {
+                scratchPool.Return(scratch);
+            }
         }
     }
 }

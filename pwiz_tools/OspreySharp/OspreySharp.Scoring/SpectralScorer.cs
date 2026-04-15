@@ -121,6 +121,28 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         public double XcorrAtScan(Spectrum spectrum, LibraryEntry entry)
         {
+            // Allocating overload retained for calibration, tests, and
+            // diagnostics. Main-search hot path uses the scratch overload
+            // below to avoid per-call LOH allocation at HRAM NBins.
+            if (_binConfig.NBins <= 0) return 0.0;
+            if (entry == null || entry.Fragments == null || entry.Fragments.Count == 0)
+                return 0.0;
+            if (spectrum == null || spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+                return 0.0;
+
+            var scratch = new XcorrScratch(_binConfig.NBins);
+            return XcorrAtScan(spectrum, entry, scratch);
+        }
+
+        /// <summary>
+        /// Pool-aware XCorr at a single spectrum. Writes into the passed
+        /// scratch buffers instead of allocating new ones. The caller is
+        /// responsible for getting <paramref name="scratch"/> from an
+        /// <see cref="XcorrScratchPool"/> and returning it afterwards;
+        /// Return() re-zeros the fields that accumulate by +=.
+        /// </summary>
+        public double XcorrAtScan(Spectrum spectrum, LibraryEntry entry, XcorrScratch scratch)
+        {
             if (_binConfig.NBins <= 0) return 0.0;
             if (entry == null || entry.Fragments == null || entry.Fragments.Count == 0)
                 return 0.0;
@@ -128,14 +150,15 @@ namespace pwiz.OspreySharp.Scoring
                 return 0.0;
 
             int n = _binConfig.NBins;
-
-            // Use double[] throughout. Rust's xcorr pipeline also uses f64
-            // (see osprey-scoring/src/lib.rs — changed from Vec<f32> to Vec<f64>
-            // for cross-implementation bit-identical alignment with C#).
+            double[] binned = scratch.Binned;
+            double[] windowed = scratch.Windowed;
+            double[] prefix = scratch.Prefix;
+            double[] preprocessed = scratch.Preprocessed;
+            bool[] visitedBins = scratch.VisitedBins;
 
             // (1) Bin observed spectrum — ACCUMULATE sqrt intensities in each bin
             // (matches Rust obs_binned[bin] += (intensity as f64).sqrt()).
-            double[] binned = new double[n];
+            // Scratch.Binned arrives zeroed from Return().
             for (int i = 0; i < spectrum.Mzs.Length; i++)
             {
                 int bin = _binConfig.MzToBin(spectrum.Mzs[i]);
@@ -143,18 +166,15 @@ namespace pwiz.OspreySharp.Scoring
                     binned[bin] += Math.Sqrt(spectrum.Intensities[i]);
             }
 
-            // (2) Windowing normalization.
-            double[] windowed = ApplyWindowingNormalization(binned);
+            // (2) Windowing normalization (writes windowed in full).
+            ApplyWindowingNormalization(binned, windowed);
 
-            // (3) Sliding window subtraction.
-            double[] preprocessed = ApplySlidingWindow(windowed);
+            // (3) Sliding window subtraction (writes prefix + preprocessed in full).
+            ApplySlidingWindow(windowed, prefix, preprocessed);
 
             // (4) Sum preprocessed values at library fragment bin positions.
-            // Matches Rust preprocess_library_for_xcorr: set 1.0 at each
-            // fragment bin (assignment, not accumulation). If two fragments
-            // map to the same bin, the bin contributes once, not twice.
+            // Scratch.VisitedBins arrives zeroed from Return().
             double xcorrRaw = 0.0;
-            var visitedBins = new bool[n];
             for (int f = 0; f < entry.Fragments.Count; f++)
             {
                 int bin = _binConfig.MzToBin(entry.Fragments[f].Mz);
@@ -164,6 +184,13 @@ namespace pwiz.OspreySharp.Scoring
                     xcorrRaw += preprocessed[bin];
                 }
             }
+
+            // Dirty state: `binned` is accumulated and `visitedBins` is set
+            // at fragment positions. Both are cleared when the scratch is
+            // returned to the pool, so the caller must Return() before
+            // Rent()-ing again on the same logical task. `windowed`,
+            // `prefix`, `preprocessed` are fully overwritten by the next
+            // call and do not need zeroing.
 
             // XCorr diagnostic for bisection
             string diagXcorrScan = System.Environment.GetEnvironmentVariable("OSPREY_DIAG_XCORR_SCAN");
@@ -226,8 +253,20 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         private static double[] ApplyWindowingNormalization(double[] spectrum)
         {
+            double[] result = new double[spectrum.Length];
+            ApplyWindowingNormalization(spectrum, result);
+            return result;
+        }
+
+        /// <summary>
+        /// In-place variant used by the pool-aware XcorrAtScan. Writes into
+        /// the caller-supplied <paramref name="result"/> buffer which must
+        /// already be the right length. Fully overwrites result (zeros
+        /// windows that don't meet the threshold), so no pre-zeroing needed.
+        /// </summary>
+        private static void ApplyWindowingNormalization(double[] spectrum, double[] result)
+        {
             int n = spectrum.Length;
-            double[] result = new double[n];
             const int numWindows = 10;
             int windowSize = (n / numWindows) + 1;
 
@@ -237,6 +276,10 @@ namespace pwiz.OspreySharp.Scoring
                 if (spectrum[i] > globalMax)
                     globalMax = spectrum[i];
             double threshold = globalMax * 0.05;
+
+            // Fully overwrite: default to 0, then fill windows that qualify.
+            // Zero any cells left over from a previous scratch invocation.
+            Array.Clear(result, 0, n);
 
             for (int w = 0; w < numWindows; w++)
             {
@@ -261,8 +304,6 @@ namespace pwiz.OspreySharp.Scoring
                     }
                 }
             }
-
-            return result;
         }
 
         /// <summary>
@@ -272,15 +313,27 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         private static double[] ApplySlidingWindow(double[] spectrum)
         {
+            double[] prefix = new double[spectrum.Length + 1];
+            double[] result = new double[spectrum.Length];
+            ApplySlidingWindow(spectrum, prefix, result);
+            return result;
+        }
+
+        /// <summary>
+        /// In-place variant. Both <paramref name="prefix"/> (length n+1) and
+        /// <paramref name="result"/> (length n) are fully overwritten, so
+        /// neither needs pre-zeroing.
+        /// </summary>
+        private static void ApplySlidingWindow(double[] spectrum, double[] prefix, double[] result)
+        {
             int n = spectrum.Length;
             const int offset = XCORR_WINDOW_OFFSET;
             double normFactor = 1.0 / (2 * offset);
 
-            double[] prefix = new double[n + 1];
+            prefix[0] = 0.0;
             for (int i = 0; i < n; i++)
                 prefix[i + 1] = prefix[i] + spectrum[i];
 
-            double[] result = new double[n];
             for (int i = 0; i < n; i++)
             {
                 int left = Math.Max(0, i - offset);
@@ -289,7 +342,6 @@ namespace pwiz.OspreySharp.Scoring
                 double sumExcludingCenter = windowSum - spectrum[i];
                 result[i] = spectrum[i] - sumExcludingCenter * normFactor;
             }
-            return result;
         }
 
         /// <summary>

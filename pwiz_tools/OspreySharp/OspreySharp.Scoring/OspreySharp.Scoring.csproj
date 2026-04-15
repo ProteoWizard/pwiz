@@ -66,6 +66,7 @@
     <Compile Include="ScoringContext.cs" />
     <Compile Include="SpectralScorer.cs" />
     <Compile Include="TukeyMedianPolish.cs" />
+    <Compile Include="XcorrScratchPool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

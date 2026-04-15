@@ -12,11 +12,27 @@ namespace pwiz.OspreySharp.Scoring
         public IResolutionStrategy Resolution { get; }
         public string FileName { get; }
 
+        /// <summary>
+        /// Pool of per-spectrum XCorr scratch buffers reused across the
+        /// main search. Lazily created by the pipeline right before Stage 4
+        /// (<see cref="EnsureXcorrScratchPool"/>); null during calibration.
+        /// Keeping a single pool per scoring run lets gen-2 hold onto the
+        /// 100K-bin HRAM arrays instead of triggering LOH churn per scan.
+        /// </summary>
+        public XcorrScratchPool XcorrScratchPool { get; private set; }
+
         public ScoringContext(OspreyConfig config, string fileName)
         {
             Config = config;
             FileName = fileName;
             Resolution = ResolutionStrategy.Create(config.ResolutionMode);
+        }
+
+        public XcorrScratchPool EnsureXcorrScratchPool(int nBins)
+        {
+            if (XcorrScratchPool == null || XcorrScratchPool.NBins != nBins)
+                XcorrScratchPool = new XcorrScratchPool(nBins);
+            return XcorrScratchPool;
         }
     }
 }

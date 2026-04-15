@@ -2320,6 +2320,14 @@ namespace pwiz.OspreySharp
             var scorer = context.Resolution.CreateScorer();
             int windowsProcessed = 0;
 
+            // Pre-size the pool once per scoring run. Matters most for HRAM
+            // where each scratch set carries four 100K-bin LOH arrays; Unit
+            // resolution scratch is only ~16 KB per set so the pool overhead
+            // is negligible either way. The pool grows organically to its
+            // natural high-water mark (approximately NThreads sets) and
+            // never shrinks, so gen-2 keeps the arrays for the full run.
+            context.EnsureXcorrScratchPool(scorer.BinConfig.NBins);
+
             // Group spectra by isolation window center (rounded key) for efficient lookup
             var spectraByWindowKey = new Dictionary<int, List<Spectrum>>();
             foreach (var spectrum in spectra)
@@ -2933,9 +2941,11 @@ namespace pwiz.OspreySharp
             // LibCosine at apex
             double libCosine = scorer.LibCosine(apexSpectrum, candidate, config.FragmentTolerance);
 
-            // XCorr at apex via the resolution strategy.
+            // XCorr at apex via the resolution strategy. Pool avoids per-
+            // call 100K-bin LOH allocation on HRAM (no-op on Unit-res).
             double xcorr = resolution.ScoreXcorr(
-                preprocessedXcorr, apexGlobalIdx, apexSpectrum, candidate, scorer);
+                preprocessedXcorr, apexGlobalIdx, apexSpectrum, candidate, scorer,
+                context.XcorrScratchPool);
 
 
 
@@ -3006,7 +3016,8 @@ namespace pwiz.OspreySharp
                     continue;
                 int globalIdx = startScan + candIdx;
                 var s = windowSpectra[globalIdx];
-                sgXcorr += resolution.ScoreXcorr(preprocessedXcorr, globalIdx, s, candidate, scorer) * weight;
+                sgXcorr += resolution.ScoreXcorr(preprocessedXcorr, globalIdx, s, candidate, scorer,
+                    context.XcorrScratchPool) * weight;
                 sgCosine += ComputeCosineAtScan(candidate, s, config) * weight;
             }
 
