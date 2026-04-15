@@ -46,9 +46,11 @@ namespace pwiz.OspreySharp.Scoring
     /// </summary>
     public sealed class XcorrScratchPool
     {
-        private readonly ConcurrentBag<XcorrScratch> _bag = new ConcurrentBag<XcorrScratch>();
+        private readonly ConcurrentBag<XcorrScratch> _scratchBag = new ConcurrentBag<XcorrScratch>();
+        private readonly ConcurrentBag<double[]> _binsBag = new ConcurrentBag<double[]>();
         private readonly int _nBins;
-        private int _allocCount;
+        private int _scratchAllocCount;
+        private int _binsAllocCount;
 
         public XcorrScratchPool(int nBins)
         {
@@ -58,14 +60,17 @@ namespace pwiz.OspreySharp.Scoring
         public int NBins { get { return _nBins; } }
 
         /// <summary>Number of scratch sets ever allocated (high-water mark).</summary>
-        public int AllocCount { get { return _allocCount; } }
+        public int ScratchAllocCount { get { return _scratchAllocCount; } }
+
+        /// <summary>Number of single-buffer arrays ever allocated.</summary>
+        public int BinsAllocCount { get { return _binsAllocCount; } }
 
         public XcorrScratch Rent()
         {
             XcorrScratch s;
-            if (_bag.TryTake(out s))
+            if (_scratchBag.TryTake(out s))
                 return s;
-            Interlocked.Increment(ref _allocCount);
+            Interlocked.Increment(ref _scratchAllocCount);
             return new XcorrScratch(_nBins);
         }
 
@@ -79,7 +84,43 @@ namespace pwiz.OspreySharp.Scoring
             if (s == null) return;
             Array.Clear(s.Binned, 0, s.Binned.Length);
             Array.Clear(s.VisitedBins, 0, s.VisitedBins.Length);
-            _bag.Add(s);
+            _scratchBag.Add(s);
+        }
+
+        /// <summary>
+        /// Rent a single <c>double[NBins]</c> buffer used to hold a
+        /// preprocessed spectrum across the lifetime of one window. The
+        /// caller is responsible for fully overwriting the returned array
+        /// (the preprocessing pipeline does so); no zeroing happens on
+        /// rent or return. Used by <c>HramStrategy.PreprocessWindowSpectra</c>
+        /// to build the per-window <c>double[][]</c> cache without
+        /// allocating through the LOH on every window.
+        /// </summary>
+        public double[] RentBins()
+        {
+            double[] buf;
+            if (_binsBag.TryTake(out buf))
+                return buf;
+            Interlocked.Increment(ref _binsAllocCount);
+            return new double[_nBins];
+        }
+
+        public void ReturnBins(double[] buf)
+        {
+            if (buf == null || buf.Length != _nBins)
+                return;
+            _binsBag.Add(buf);
+        }
+
+        /// <summary>
+        /// Convenience: return every non-null entry of a preprocessed
+        /// window cache. Used by <c>ScoreWindow</c> in its finally block.
+        /// </summary>
+        public void ReturnBinsArray(double[][] arrays)
+        {
+            if (arrays == null) return;
+            foreach (var a in arrays)
+                ReturnBins(a);
         }
     }
 }

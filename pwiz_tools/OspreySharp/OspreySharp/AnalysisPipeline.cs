@@ -2595,26 +2595,39 @@ namespace pwiz.OspreySharp
                 windowRts[i] = windowSpectra[i].RetentionTime;
 
             // Pre-preprocess all window spectra for XCorr via the resolution
-            // strategy. Unit resolution: dense arrays for O(n_frags) scoring.
-            // HRAM: null (scores inline per scan; 100K bins per spectrum would
-            // consume ~160 GB of preprocessed arrays across all spectra).
-            var preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(windowSpectra, scorer);
+            // strategy. Both Unit-res and HRAM now produce a dense
+            // double[NSpectra][NBins] cache by renting from the scratch
+            // pool; per-candidate scoring then hits the O(n_fragments)
+            // XcorrFromPreprocessed fast path. Matches Rust pipeline.rs:
+            // 5954-5957 (preprocessed_xcorr per window). Release the rented
+            // bins arrays back to the pool once all candidates for this
+            // window are scored.
+            var preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(
+                windowSpectra, scorer, context.XcorrScratchPool);
 
-            // Score each candidate
-            foreach (var candidate in candidates)
+            try
             {
-                var fdrEntry = ScoreCandidate(
-                    candidate, windowSpectra, windowRts,
-                    preprocessedXcorr,
-                    ms1Spectra, rtCalibration, ms1Calibration,
-                    globalRtTolerance,
-                    scorer, context, diagSearchEntryIds);
+                // Score each candidate
+                foreach (var candidate in candidates)
+                {
+                    var fdrEntry = ScoreCandidate(
+                        candidate, windowSpectra, windowRts,
+                        preprocessedXcorr,
+                        ms1Spectra, rtCalibration, ms1Calibration,
+                        globalRtTolerance,
+                        scorer, context, diagSearchEntryIds);
 
-                if (fdrEntry != null)
-                    entries.Add(fdrEntry);
+                    if (fdrEntry != null)
+                        entries.Add(fdrEntry);
+                }
+
+                return entries;
             }
-
-            return entries;
+            finally
+            {
+                if (context.XcorrScratchPool != null)
+                    context.XcorrScratchPool.ReturnBinsArray(preprocessedXcorr);
+            }
         }
 
         // Diagnostic: log detailed trace for a specific peptide. Set this to a

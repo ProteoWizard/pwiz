@@ -82,6 +82,49 @@ namespace pwiz.OspreySharp.Scoring
         }
 
         /// <summary>
+        /// Pool-aware preprocessing that writes the final sliding-window
+        /// result into the caller-supplied <paramref name="output"/> buffer.
+        /// Uses <paramref name="scratch"/> for the three intermediate passes
+        /// (bin / windowing / prefix); the scratch's <c>Preprocessed</c>
+        /// field is not used. <paramref name="scratch"/>.Binned is zeroed on
+        /// entry here so callers can reuse one scratch across many spectra
+        /// in a single window without bouncing it back to the pool.
+        /// </summary>
+        public void PreprocessSpectrumForXcorrInto(
+            Spectrum spectrum, XcorrScratch scratch, double[] output)
+        {
+            if (scratch == null || output == null)
+                throw new System.ArgumentNullException();
+            int n = _binConfig.NBins;
+            if (output.Length < n)
+                throw new System.ArgumentException("output length < NBins");
+
+            double[] binned = scratch.Binned;
+            double[] windowed = scratch.Windowed;
+            double[] prefix = scratch.Prefix;
+
+            // Caller reuses scratch across spectra in the same window; zero
+            // the accumulator before binning the next spectrum.
+            Array.Clear(binned, 0, n);
+
+            if (spectrum == null || spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+            {
+                Array.Clear(output, 0, n);
+                return;
+            }
+
+            for (int i = 0; i < spectrum.Mzs.Length; i++)
+            {
+                int bin = _binConfig.MzToBin(spectrum.Mzs[i]);
+                if (bin >= 0 && bin < n)
+                    binned[bin] += Math.Sqrt(spectrum.Intensities[i]);
+            }
+
+            ApplyWindowingNormalization(binned, windowed);
+            ApplySlidingWindow(windowed, prefix, output);
+        }
+
+        /// <summary>
         /// Compute XCorr score from a pre-preprocessed spectrum and a library entry.
         /// The preprocessed array is from <see cref="PreprocessSpectrumForXcorr"/>.
         /// Only does O(n_fragments) bin lookups with dedup - no binning or windowing.
