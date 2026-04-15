@@ -507,6 +507,9 @@
   <data name="FirstPosition">
     <value>最初の位置</value>
   </data>
+  <data name="FittedParameters">
+    <value>推定パラメータ</value>
+  </data>
   <data name="FoldChange">
     <value>倍率変化</value>
   </data>
@@ -1427,6 +1430,9 @@
   </data>
   <data name="RSquared">
     <value>R平方</value>
+  </data>
+  <data name="RelativeStandardError">
+    <value>相対標準誤差</value>
   </data>
   <data name="SampleDilutionFactor">
     <value>試料希釈倍数</value>
