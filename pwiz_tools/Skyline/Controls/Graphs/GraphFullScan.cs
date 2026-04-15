@@ -2416,28 +2416,47 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Build a dictionary of IM -> summed intensity for each transition
                 var perTransition = new Dictionary<int, Dictionary<float, double>>();
+                // Precompute (low, high, transitionIndex) intervals for matching transitions,
+                // sorted by low edge, so we can binary-search instead of scanning every
+                // transition for every heatmap point.
+                var intervals = new List<(double low, double high, int idx)>();
                 for (int t = 0; t < transitions.Length; t++)
                 {
-                    if (transitions[t].Source != _msDataFileScanHelper.Source)
+                    var tr = transitions[t];
+                    if (tr.Source != _msDataFileScanHelper.Source || !tr.ExtractionWidth.HasValue)
                         continue;
+                    double halfWidth = tr.ExtractionWidth.Value / 2;
+                    intervals.Add((tr.ProductMz.Value - halfWidth, tr.ProductMz.Value + halfWidth, t));
                     perTransition[t] = new Dictionary<float, double>();
                 }
 
                 if (perTransition.Count > 0)
                 {
+                    intervals.Sort((a, b) => a.low.CompareTo(b.low));
+                    var lows = intervals.Select(v => v.low).ToArray();
+                    // Any candidate interval has low in (mz - maxWidth, mz]. Binary search
+                    // for that small window, then filter by `mz < high`. Typically O(1) per
+                    // point after the binary search.
+                    double maxWidth = intervals.Max(v => v.high - v.low);
+
                     foreach (var pt in _heatMapData.GetAllPoints())
                     {
                         double mz = pt.Point.X;
                         var im = pt.Point.Y;
                         double intensity = pt.Point.Z;
-                        foreach (var kvp in perTransition)
+                        // First index with low > mz - maxWidth (all earlier intervals can't reach mz)
+                        int start = Array.BinarySearch(lows, mz - maxWidth);
+                        if (start < 0) start = ~start;
+                        // Walk while low <= mz, adding matches
+                        for (int i = start; i < intervals.Count && intervals[i].low <= mz; i++)
                         {
-                            if (transitions[kvp.Key].MatchMz(mz))
+                            if (mz < intervals[i].high)
                             {
-                                if (kvp.Value.ContainsKey(im))
-                                    kvp.Value[im] += intensity;
+                                var dict = perTransition[intervals[i].idx];
+                                if (dict.ContainsKey(im))
+                                    dict[im] += intensity;
                                 else
-                                    kvp.Value[im] = intensity;
+                                    dict[im] = intensity;
                             }
                         }
                     }
