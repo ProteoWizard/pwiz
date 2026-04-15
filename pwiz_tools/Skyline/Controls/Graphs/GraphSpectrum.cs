@@ -1652,7 +1652,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void FireZoomEvent(ZoomState zoomState = null)
         {
-            if (ZoomEvent != null)
+            // Only propagate the zoom to SkylineGraphs.mzGraph_ZoomAllMz (which
+            // syncs m/z across spectrum viewers) when the user has opted into
+            // SyncMZScale — that consumer doesn't check the setting itself.
+            if (ZoomEvent != null && Settings.Default.SyncMZScale)
             {
                 if (zoomState == null)
                     zoomState = new ZoomState(GraphPane, ZoomState.StateType.Zoom);

@@ -980,6 +980,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return Width.Equals(other.Width) && Offset.Equals(other.Offset);
         }
 
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as IonMobilityFilterWindow);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Width.GetHashCode() * 397) ^ Offset.GetHashCode();
+            }
+        }
+
         public int CompareTo(IonMobilityFilterWindow other)
         {
             if (ReferenceEquals(this, other)) return 0;
