@@ -73,9 +73,12 @@ namespace pwiz.OspreySharp.IO
                     });
             });
 
-            // Producer: sequential XML parse, push to queue
+            // Producer: sequential XML parse, push to queue.
+            // 16 MB FileStream buffer amortizes per-Read overhead. Do NOT use
+            // FileOptions.SequentialScan -- on Windows that hint discards
+            // pages after read, defeating OS file cache reuse on repeat runs.
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
-                FileShare.Read, 1024 * 1024))
+                FileShare.Read, 16 * 1024 * 1024))
             {
                 var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
                 using (var reader = XmlReader.Create(stream, settings))
@@ -130,7 +133,8 @@ namespace pwiz.OspreySharp.IO
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
+                FileShare.Read, 16 * 1024 * 1024))
             {
                 var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
                 using (var reader = XmlReader.Create(stream, settings))

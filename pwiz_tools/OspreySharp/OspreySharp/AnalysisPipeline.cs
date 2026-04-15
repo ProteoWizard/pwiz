@@ -45,6 +45,16 @@ namespace pwiz.OspreySharp
             -3.0 / 35.0,
         };
 
+        // Calibration XCorr always uses unit-resolution bins (~2K) regardless of
+        // instrument resolution mode. Matches the intent in Rust's
+        // run_xcorr_calibration_scoring ("Always use unit resolution bins for
+        // calibration XCorr (fast: 2001 bins vs 100K for HRAM)") and avoids the
+        // LOH allocation pressure that 100K-bin arrays cause on .NET Framework's
+        // large-object heap. Main search XCorr still uses the resolution-mode
+        // bins via the IResolutionStrategy abstraction.
+        private static readonly SpectralScorer s_calXcorrScorer =
+            new SpectralScorer(BinConfig.UnitResolution());
+
         // Format a double with 10 decimal places using round-half-to-even
         // (banker's) to match Rust's {:.10} formatter. .NET Framework's F10
         // default is round-half-away-from-zero, which flips the last digit
@@ -1053,19 +1063,19 @@ namespace pwiz.OspreySharp
                 ? new System.Collections.Concurrent.ConcurrentBag<string>()
                 : null;
 
-            // Pre-preprocess all window spectra for XCorr via the resolution
-            // strategy. Unit resolution builds dense arrays for O(n_frags)
-            // scoring; HRAM returns null (100K bins per spectrum would consume
-            // ~160 GB for 204K Astral spectra, so it scores inline per scan).
+            // Pre-preprocess all window spectra for XCorr using the calibration
+            // unit-bin scorer (~2K bins per spectrum, ~16 KB per array).
+            // Independent of resolution mode -- HRAM 100K-bin arrays would
+            // consume ~160 GB of LOH for 204K Astral spectra, so we use the
+            // small unit-bin form for calibration regardless. Main search
+            // still uses the resolution-mode bins.
             var preprocessedByWindowKey = new Dictionary<int, double[][]>();
+            foreach (var kvp in spectraByWindowKey)
             {
-                var tempScorer = resolution.CreateScorer();
-                foreach (var kvp in spectraByWindowKey)
-                {
-                    var pp = resolution.PreprocessWindowSpectra(kvp.Value, tempScorer);
-                    if (pp != null)
-                        preprocessedByWindowKey[kvp.Key] = pp;
-                }
+                var pp = new double[kvp.Value.Count][];
+                for (int i = 0; i < kvp.Value.Count; i++)
+                    pp[i] = s_calXcorrScorer.PreprocessSpectrumForXcorr(kvp.Value[i]);
+                preprocessedByWindowKey[kvp.Key] = pp;
             }
 
             // Parallel score each sampled entry.
@@ -2059,10 +2069,12 @@ namespace pwiz.OspreySharp
             // Compute the four LDA features at the apex.
             double libCosineApex = scorer.LibCosine(
                 apexSpectrum, entry, config.FragmentTolerance);
-            // XCorr at apex via the resolution strategy.
+            // XCorr at apex always uses the calibration unit-bin scorer
+            // (matches the pre-preprocessed arrays built with s_calXcorrScorer).
             int apexWindowIdx = candidateWindowIndices[apexSpecLocalIdx];
-            double xcorrApex = resolution.ScoreXcorr(
-                windowPreprocessed, apexWindowIdx, apexSpectrum, entry, scorer);
+            double xcorrApex = (windowPreprocessed != null && apexWindowIdx < windowPreprocessed.Length)
+                ? s_calXcorrScorer.XcorrFromPreprocessed(windowPreprocessed[apexWindowIdx], entry)
+                : s_calXcorrScorer.XcorrAtScan(apexSpectrum, entry);
             byte top6Matched = CountTop6Matches(entry, apexSpectrum, config);
 
             // Collect MS2 fragment mass errors at apex for m/z calibration.
