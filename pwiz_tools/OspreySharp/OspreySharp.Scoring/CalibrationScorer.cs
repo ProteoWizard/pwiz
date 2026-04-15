@@ -24,6 +24,13 @@ namespace pwiz.OspreySharp.Scoring
         public double QValue { get; set; }
         /// <summary>MS2 fragment mass errors at apex spectrum (in config units).</summary>
         public double[] Ms2MassErrors { get; set; }
+        /// <summary>
+        /// MS1 precursor mass error at apex (M+0 observed - library precursor m/z, in
+        /// config fragment tolerance units). Null if no MS1 scan found near apex or the
+        /// M+0 peak was not detected within the precursor tolerance.
+        /// Matches Rust CalibrationMatch.ms1_error (osprey-scoring/src/batch.rs:871).
+        /// </summary>
+        public double? Ms1Error { get; set; }
     }
 
     /// <summary>

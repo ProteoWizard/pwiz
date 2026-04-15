@@ -597,7 +597,7 @@ namespace pwiz.OspreySharp
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = RunCalibration(
                     fullLibrary, spectra, ms1Spectra, context,
-                    out ms2Cal);
+                    out ms1Cal, out ms2Cal);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
                 LogInfo(string.Format(
@@ -817,6 +817,7 @@ namespace pwiz.OspreySharp
             List<Spectrum> spectra,
             List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
+            out MzCalibrationResult ms1Calibration,
             out MzCalibrationResult ms2Calibration)
         {
             var config = context.Config;
@@ -918,6 +919,7 @@ namespace pwiz.OspreySharp
             if (nSampledTargets == 0)
             {
                 LogWarning("No target entries available for calibration sampling.");
+                ms1Calibration = MzCalibrationResult.Uncalibrated();
                 ms2Calibration = MzCalibrationResult.Uncalibrated();
                 return null;
             }
@@ -944,7 +946,7 @@ namespace pwiz.OspreySharp
             // LDA + S/N surviving targets.
             var pass1 = RunCalibrationScoringPass(
                 1,
-                sampledEntries, spectraByWindowKey, context,
+                sampledEntries, spectraByWindowKey, ms1Spectra, context,
                 rtSlope, rtIntercept, initialTolerance,
                 null /* calibrationModel: pass 1 uses linear mapping */,
                 config.RtCalibration.MinCalibrationPoints);
@@ -952,6 +954,7 @@ namespace pwiz.OspreySharp
             if (pass1 == null)
             {
                 LogWarning("Calibration pass 1 failed. Using fallback tolerance.");
+                ms1Calibration = MzCalibrationResult.Uncalibrated();
                 ms2Calibration = MzCalibrationResult.Uncalibrated();
                 return null;
             }
@@ -983,7 +986,7 @@ namespace pwiz.OspreySharp
 
                 var pass2 = RunCalibrationScoringPass(
                     2,
-                    sampledEntries, spectraByWindowKey, context,
+                    sampledEntries, spectraByWindowKey, ms1Spectra, context,
                     rtSlope, rtIntercept, pass1Tolerance,
                     pass1.Calibration /* pass 2 predicts RT via the LOESS fit */,
                     ABSOLUTE_MIN_CALIBRATION_POINTS);
@@ -1008,6 +1011,7 @@ namespace pwiz.OspreySharp
                     // by more than 1% (matches Rust pipeline.rs:811).
                     if (pass2.Stats.RSquared >= pass1.Stats.RSquared * 0.99)
                     {
+                        ms1Calibration = pass2.Ms1Calibration;
                         ms2Calibration = pass2.Ms2Calibration;
                         return pass2.Calibration;
                     }
@@ -1023,6 +1027,7 @@ namespace pwiz.OspreySharp
                 }
             }
 
+            ms1Calibration = pass1.Ms1Calibration;
             ms2Calibration = pass1.Ms2Calibration;
             return pass1.Calibration;
         }
@@ -1034,6 +1039,7 @@ namespace pwiz.OspreySharp
         {
             public RTCalibration Calibration;
             public RTCalibrationStats Stats;
+            public MzCalibrationResult Ms1Calibration;
             public MzCalibrationResult Ms2Calibration;
         }
 
@@ -1048,6 +1054,7 @@ namespace pwiz.OspreySharp
             int passNumber,
             List<LibraryEntry> sampledEntries,
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
+            List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             double rtSlope, double rtIntercept, double tolerance,
             RTCalibration calibrationModel,
@@ -1095,7 +1102,7 @@ namespace pwiz.OspreySharp
                 double entryLibRt;
                 double entryMeasuredRt;
                 var match = ScoreCalibrationEntry(
-                    entry, spectraByWindowKey, preprocessedByWindowKey, context,
+                    entry, spectraByWindowKey, preprocessedByWindowKey, ms1Spectra, context,
                     rtSlope, rtIntercept, tolerance,
                     calibrationModel,
                     localScorer,
@@ -1335,10 +1342,11 @@ namespace pwiz.OspreySharp
                 return null;
             }
 
-            // Aggregate MS2 fragment mass errors from passing targets only.
-            // Rust pipeline.rs:605 collects errors from passing_targets (those
-            // surviving LDA + competition + S/N >= 5.0 filter). This is the same
-            // set used for RT calibration points.
+            // Aggregate MS1 + MS2 mass errors from passing targets only.
+            // Rust pipeline.rs:610-619 collects both MS1 and MS2 errors from
+            // passing_targets (those surviving LDA + competition + S/N >= 5.0
+            // filter). This is the same set used for RT calibration points.
+            var allMs1Errors = new List<double>();
             var allMs2Errors = new List<double>();
             foreach (var m in matchArray)
             {
@@ -1347,10 +1355,16 @@ namespace pwiz.OspreySharp
                 double snr;
                 if (!snrByEntryId.TryGetValue(m.EntryId, out snr) || snr < MIN_SNR_FOR_RT_CAL)
                     continue;
+                if (m.Ms1Error.HasValue)
+                    allMs1Errors.Add(m.Ms1Error.Value);
                 allMs2Errors.AddRange(m.Ms2MassErrors);
             }
             string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
+            var ms1Cal = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
             var ms2Cal = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
+            LogInfo(string.Format(
+                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
+                passNumber, ms1Cal.Mean, unitStr, ms1Cal.SD, 3.0 * ms1Cal.SD, allMs1Errors.Count));
             LogInfo(string.Format(
                 "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
                 passNumber, ms2Cal.Mean, unitStr, ms2Cal.SD, 3.0 * ms2Cal.SD, allMs2Errors.Count));
@@ -1423,6 +1437,7 @@ namespace pwiz.OspreySharp
                 {
                     Calibration = rtCal,
                     Stats = stats,
+                    Ms1Calibration = ms1Cal,
                     Ms2Calibration = ms2Cal,
                 };
             }
@@ -1639,6 +1654,7 @@ namespace pwiz.OspreySharp
             LibraryEntry entry,
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
             Dictionary<int, double[][]> preprocessedByWindowKey,
+            List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             double rtSlope, double rtIntercept, double initialTolerance,
             RTCalibration calibrationModel,
@@ -2129,6 +2145,32 @@ namespace pwiz.OspreySharp
                 }
             }
 
+            // MS1 precursor mass error at apex for MS1 mass calibration.
+            // Port of osprey-scoring/src/batch.rs:2912-2940 -- extract M+0 from the
+            // MS1 scan closest to the apex RT using the config precursor tolerance;
+            // report the error in fragment tolerance units so MS1 + MS2 errors
+            // share the same unit for the MzQCData aggregator.
+            double? ms1Error = null;
+            if (ms1Spectra != null && ms1Spectra.Count > 0)
+            {
+                int charge = entry.Charge > 0 ? entry.Charge : 1;
+                double precursorTolPpm = config.PrecursorTolerance != null
+                    && config.PrecursorTolerance.Unit == ToleranceUnit.Ppm
+                    ? config.PrecursorTolerance.Tolerance
+                    : 10.0;
+                var apexMs1 = FindNearestMs1(ms1Spectra, apexRt);
+                if (apexMs1 != null)
+                {
+                    var envelope = IsotopeEnvelope.Extract(
+                        apexMs1, entry.PrecursorMz, charge, precursorTolPpm);
+                    if (envelope.HasM0 && envelope.M0ObservedMz.HasValue)
+                    {
+                        ms1Error = config.FragmentTolerance.MassError(
+                            entry.PrecursorMz, envelope.M0ObservedMz.Value);
+                    }
+                }
+            }
+
             return new CalibrationMatch
             {
                 EntryId = entry.Id,
@@ -2142,7 +2184,8 @@ namespace pwiz.OspreySharp
                 IsotopeCosine = 0.0,
                 DiscriminantScore = bestCorrSum,
                 QValue = 1.0,
-                Ms2MassErrors = ms2Errors.ToArray()
+                Ms2MassErrors = ms2Errors.ToArray(),
+                Ms1Error = ms1Error
             };
         }
 
@@ -3530,6 +3573,16 @@ namespace pwiz.OspreySharp
             {
                 massAccuracyMean = massErrSum / nMatched;
                 absMassAccuracyMean = absMassErrSum / nMatched;
+            }
+            else
+            {
+                // No matched fragments: report worst-case (calibrated) tolerance
+                // as the absolute mass error, matching Rust compute_mass_accuracy
+                // which returns (0.0, tolerance, tolerance) on empty matches
+                // (osprey-scoring/src/lib.rs:462-465). This penalizes unmatched
+                // entries in FDR instead of giving them a spurious 0 error.
+                massAccuracyMean = 0.0;
+                absMassAccuracyMean = config.FragmentTolerance.Tolerance;
             }
         }
 
