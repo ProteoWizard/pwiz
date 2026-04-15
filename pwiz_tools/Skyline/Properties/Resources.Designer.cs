@@ -943,6 +943,17 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Mobilogram {
+            get {
+                object obj = ResourceManager.GetObject("Mobilogram", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Start value must be less than End value..
         /// </summary>

@@ -52,10 +52,37 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private const int MIN_DOT_RADIUS = 4;
         private const int MAX_DOT_RADIUS = 13;
+        private const string TAG_IM_FILTER_BAND = "IMFilterBand";
 
         private readonly IDocumentUIContainer _documentContainer;
         private readonly GraphHelper _graphHelper;
         private HeatMapData _heatMapData;
+        private HeatMapGraphPane _heatMapPane;
+        private MSGraphPane _stickSpectrumPane;
+        private MSGraphPane _mobilogramPane;
+        private MSGraphPane _emptySpacerPane;
+        // Splitter geometry helpers
+        private const float SPLITTER_HIT_PX = 6f;       // cursor proximity to a splitter line
+        private const float SPLITTER_CORNER_PX = 40f;   // corner grab-zone in the empty spacer pane
+        private const float MIN_COL_FRACTION = 0.30f;
+        private const float MAX_COL_FRACTION = 0.95f;
+        private const float MIN_ROW_FRACTION = 0.15f;
+        private const float MAX_ROW_FRACTION = 0.85f;
+        // User-draggable fractions; persisted via Settings.Default
+        private float ColumnFraction
+        {
+            get => Math.Min(MAX_COL_FRACTION, Math.Max(MIN_COL_FRACTION, Settings.Default.FullScanMobilogramColumnFraction));
+            set => Settings.Default.FullScanMobilogramColumnFraction = Math.Min(MAX_COL_FRACTION, Math.Max(MIN_COL_FRACTION, value));
+        }
+        private float RowFraction
+        {
+            get => Math.Min(MAX_ROW_FRACTION, Math.Max(MIN_ROW_FRACTION, Settings.Default.FullScanStickRowFraction));
+            set => Settings.Default.FullScanStickRowFraction = Math.Min(MAX_ROW_FRACTION, Math.Max(MIN_ROW_FRACTION, value));
+        }
+        private enum SplitterDrag { None, Vertical, Horizontal, Both }
+        private SplitterDrag _activeDrag = SplitterDrag.None;
+        private bool IsDualPane => _stickSpectrumPane != null;
+        private bool IsMobilogramPaneVisible => _mobilogramPane != null;
         private double _maxMz;
         private double _maxIntensity;
         private double _minIonMobility;
@@ -84,17 +111,38 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
-            graphControl.GraphPane = new FullScanHeatMapGraphPane
+            _heatMapPane = new FullScanHeatMapGraphPane
             {
                 MinDotRadius = MIN_DOT_RADIUS,
                 MaxDotRadius = MAX_DOT_RADIUS,
                 ShowHeatMap = !Settings.Default.SumScansFullScan
             };
+            graphControl.GraphPane = _heatMapPane;
             graphControl.GraphPane.AllowLabelOverlap = true;
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMoveEvent += graphControl_MouseMove;
             graphControl.MouseClick += graphControl_MouseClick;
             graphControl.ZoomEvent += graphControl_ZoomEvent;
+            graphControl.Resize += graphControl_Resize;
+            // Re-pin mobilogram chart rect on every paint using whatever chart rect
+            // heatmap actually ended up with. Initial layout paths can produce a stale
+            // heatmap rect at pin-time; catching it in Paint avoids that race.
+            graphControl.Paint += (sender, e) =>
+            {
+                if (IsMobilogramPaneVisible)
+                    RepinMobilogramIfDrifted();
+                else if (IsDualPane)
+                {
+                    var mpR = graphControl.MasterPane.Rect;
+                    if (mpR.Height > 0 && Math.Abs(_stickSpectrumPane.Rect.Height - mpR.Height * RowFraction) > 1f)
+                        AdjustTwoPaneRowHeights();
+                }
+            };
+            // Use ZedGraph's intercepting events so we can suppress its default pan/zoom
+            // when the user is dragging the splitter.
+            graphControl.MouseDownEvent += graphControl_SplitterMouseDown;
+            graphControl.MouseMove += graphControl_SplitterMouseMove;
+            graphControl.MouseUpEvent += graphControl_SplitterMouseUp;
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -116,14 +164,18 @@ namespace pwiz.Skyline.Controls.Graphs
             toolStripButtonShowAnnotations.Checked = Settings.Default.ShowFullScanAnnotations;
             _showIonSeriesAnnotations = Settings.Default.ShowFullScanAnnotations;
 
+            mobilogramBtn.Checked = Settings.Default.ShowMobilogramFullScan;
+
             magnifyBtn.CheckedChanged += magnifyBtn_CheckedChanged;
             spectrumBtn.CheckedChanged += spectrumBtn_CheckedChanged;
             filterBtn.CheckedChanged += filterBtn_CheckedChanged;
+            mobilogramBtn.CheckedChanged += mobilogramBtn_CheckedChanged;
             toolStripButtonShowAnnotations.CheckedChanged += toolStripButtonShowAnnotations_CheckedChanged;
 
 
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
+            mobilogramBtn.Visible = false;
             lblScanId.Visible = false; // you might want to show the scan index for debugging
             comboBoxPeakType.Items.Clear();
             comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.chromDefault));
@@ -142,6 +194,438 @@ namespace pwiz.Skyline.Controls.Graphs
         public ZedGraphControl ZedGraphControl
         {
             get { return graphControl; }
+        }
+
+        /// <summary>
+        /// Configure dual-pane layout: stick spectrum on top, heatmap on bottom.
+        /// When <paramref name="includeMobilogram"/> is true, adds a 4-pane 2x2 grid
+        /// (stick + empty spacer on row 0, heatmap + mobilogram on row 1).
+        /// </summary>
+        private void SetupDualPaneLayout(bool includeMobilogram)
+        {
+            if (_stickSpectrumPane == null)
+            {
+                _stickSpectrumPane = new FullScanStickSpectrumPane(new LabelBoundsCache())
+                {
+                    Title = { IsVisible = true },
+                    Legend = { IsVisible = false },
+                    AllowLabelOverlap = true,
+                    Border = { IsVisible = false }
+                };
+                AbstractMSGraphItem.SetAxisText(_stickSpectrumPane.XAxis,
+                    GraphsResources.AbstractMSGraphItem_CustomizeXAxis_MZ);
+                _stickSpectrumPane.YAxis.Title.Text =
+                    GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+                _stickSpectrumPane.XAxis.Title.IsVisible = false;
+            }
+
+            // Force both Y-axes to reserve the same width so chart areas align horizontally
+            const float yAxisMinSpace = 80f;
+            _stickSpectrumPane.YAxis.MinSpace = yAxisMinSpace;
+            _heatMapPane.YAxis.MinSpace = yAxisMinSpace;
+
+            if (includeMobilogram)
+            {
+                if (_mobilogramPane == null)
+                    _mobilogramPane = CreateMobilogramPane(_heatMapPane);
+                if (_emptySpacerPane == null)
+                    _emptySpacerPane = CreateEmptySpacerPane();
+            }
+            else
+            {
+                _mobilogramPane = null;
+                _emptySpacerPane = null;
+            }
+
+            var mp = graphControl.MasterPane;
+
+            bool alreadyConfigured;
+            if (includeMobilogram)
+            {
+                alreadyConfigured = mp.PaneList.Count == 4 &&
+                                    ReferenceEquals(mp.PaneList[0], _stickSpectrumPane) &&
+                                    ReferenceEquals(mp.PaneList[1], _emptySpacerPane) &&
+                                    ReferenceEquals(mp.PaneList[2], _heatMapPane) &&
+                                    ReferenceEquals(mp.PaneList[3], _mobilogramPane);
+            }
+            else
+            {
+                alreadyConfigured = mp.PaneList.Count == 2 &&
+                                    ReferenceEquals(mp.PaneList[0], _stickSpectrumPane) &&
+                                    ReferenceEquals(mp.PaneList[1], _heatMapPane);
+            }
+
+            if (!alreadyConfigured)
+            {
+                mp.PaneList.Clear();
+                mp.InnerPaneGap = 0;
+                // Tighten gap between panes while keeping enough room for Y-axis labels
+                _stickSpectrumPane.Margin.Bottom = 0;
+                _heatMapPane.Margin.Top = 10;
+                using (var g = graphControl.CreateGraphics())
+                {
+                    float topFrac = RowFraction;
+                    if (includeMobilogram)
+                    {
+                        // 2 rows × 2 cols: stick+spacer on top, heatmap+mobilogram below
+                        mp.SetLayout(g, true, new[] { 2, 2 }, new[] { topFrac, 1 - topFrac });
+                        mp.Add(_stickSpectrumPane);
+                        mp.Add(_emptySpacerPane);
+                        mp.Add(_heatMapPane);
+                        mp.Add(_mobilogramPane);
+                    }
+                    else
+                    {
+                        mp.SetLayout(g, true, new[] { 1, 1 }, new[] { topFrac, 1 - topFrac });
+                        mp.Add(_stickSpectrumPane);
+                        mp.Add(_heatMapPane);
+                    }
+                    mp.DoLayout(g);
+                    if (includeMobilogram)
+                        AdjustFourPaneColumnWidths();
+                    else
+                        AdjustTwoPaneRowHeights();
+                }
+            }
+            // Don't use ZedGraph's global X-axis sync — it would force the mobilogram's
+            // intensity X-axis to track the heatmap's m/z range. We sync stick↔heatmap X
+            // manually in the zoom handler instead.
+            graphControl.IsSynchronizeXAxes = false;
+        }
+
+        /// <summary>
+        /// After MasterPane.DoLayout (which assigns equal column widths), override the
+        /// per-pane Rects so the right column (spacer + mobilogram) occupies only
+        /// MOBILOGRAM_COLUMN_FRACTION of the total width.
+        /// </summary>
+        private void AdjustFourPaneColumnWidths()
+        {
+            if (_stickSpectrumPane == null || _emptySpacerPane == null ||
+                _heatMapPane == null || _mobilogramPane == null)
+                return;
+
+            // Use MasterPane.Rect as the authoritative source so we don't fold compressed
+            // pane Rects from a previous bad layout back into the math (would shrink each call).
+            var mpRect = graphControl.MasterPane.Rect;
+            float x0 = mpRect.X;
+            float y0 = mpRect.Y;
+            float totalW = mpRect.Width;
+            float totalH = mpRect.Height;
+            if (totalW <= 0 || totalH <= 0)
+                return;
+
+            float leftFrac = ColumnFraction;
+            float topFrac = RowFraction;
+            float leftW = totalW * leftFrac;
+            float rightW = totalW - leftW;
+            float topH = totalH * topFrac;
+            float botH = totalH - topH;
+            float xMid = x0 + leftW;
+            float yMid = y0 + topH;
+
+            _stickSpectrumPane.Rect = new RectangleF(x0, y0, leftW, topH);
+            _emptySpacerPane.Rect = new RectangleF(xMid, y0, rightW, topH);
+            _heatMapPane.Rect = new RectangleF(x0, yMid, leftW, botH);
+            _mobilogramPane.Rect = new RectangleF(xMid, yMid, rightW, botH);
+
+            AlignMobilogramChartToHeatmap();
+        }
+
+        /// <summary>
+        /// Apply RowFraction to the 2-pane (no-mobilogram) layout so the horizontal
+        /// splitter still drives row heights when the mobilogram is hidden.
+        /// </summary>
+        private void AdjustTwoPaneRowHeights()
+        {
+            if (_stickSpectrumPane == null || _heatMapPane == null) return;
+            var mpRect = graphControl.MasterPane.Rect;
+            if (mpRect.Width <= 0 || mpRect.Height <= 0)
+                return;
+            float topFrac = RowFraction;
+            float topH = mpRect.Height * topFrac;
+            float botH = mpRect.Height - topH;
+            _stickSpectrumPane.Rect = new RectangleF(mpRect.X, mpRect.Y, mpRect.Width, topH);
+            _heatMapPane.Rect = new RectangleF(mpRect.X, mpRect.Y + topH, mpRect.Width, botH);
+        }
+
+        /// <summary>
+        /// If heatmap's actual chart rect no longer matches what we pinned, re-pin and
+        /// invalidate so the next paint catches up. Called from the Paint handler.
+        /// </summary>
+        private void RepinMobilogramIfDrifted()
+        {
+            if (!IsMobilogramPaneVisible) return;
+            // Only re-apply the 2x2 split if pane Rects don't match expected — calling
+            // every paint causes a repaint loop because Rect assignment invalidates.
+            var mpRect = graphControl.MasterPane.Rect;
+            if (mpRect.Width > 0 && mpRect.Height > 0)
+            {
+                float expectedLeftW = mpRect.Width * ColumnFraction;
+                float expectedTopH = mpRect.Height * RowFraction;
+                if (Math.Abs(_heatMapPane.Rect.Width - expectedLeftW) > 1f ||
+                    Math.Abs(_stickSpectrumPane.Rect.Height - expectedTopH) > 1f)
+                {
+                    AdjustFourPaneColumnWidths();
+                }
+            }
+            var heat = _heatMapPane.Chart.Rect;
+            if (heat.Height <= 0)
+                return;
+
+            // Always resync Y-axis state from heatmap — scale limits, steps, and auto
+            // flags — so mobilogram Y values map to the exact same pixels as heatmap Y.
+            var heatY = _heatMapPane.YAxis.Scale;
+            var mobY = _mobilogramPane.YAxis.Scale;
+            bool yDrifted = mobY.Min != heatY.Min || mobY.Max != heatY.Max ||
+                            mobY.MajorStep != heatY.MajorStep || mobY.MinorStep != heatY.MinorStep;
+            if (yDrifted)
+                SyncMobilogramYAxisFromHeatmap();
+
+            var mob = _mobilogramPane.Chart.Rect;
+            bool rectDrifted = Math.Abs(mob.Y - heat.Y) >= 0.5f ||
+                               Math.Abs(mob.Height - heat.Height) >= 0.5f;
+            if (rectDrifted)
+            {
+                var paneRect = _mobilogramPane.Rect;
+                float chartX = paneRect.X + _mobilogramPane.YAxis.MinSpace;
+                float chartRight = paneRect.Right - 10;
+                float chartW = Math.Max(1, chartRight - chartX);
+                _mobilogramPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
+            }
+
+            if (yDrifted || rectDrifted)
+                graphControl.Invalidate();
+        }
+
+        // ---- Cruciform splitter for 2x2 pane resize ----
+
+        private SplitterDrag HitTestSplitter(Point pt)
+        {
+            if (!IsDualPane)
+                return SplitterDrag.None;
+            float yMid = _heatMapPane.Rect.Y;
+            bool nearH = Math.Abs(pt.Y - yMid) <= SPLITTER_HIT_PX;
+            if (IsMobilogramPaneVisible)
+            {
+                float xMid = _emptySpacerPane.Rect.X;
+                bool nearV = Math.Abs(pt.X - xMid) <= SPLITTER_HIT_PX;
+                // Bottom-left corner of the empty spacer pane is a generous grab-zone for
+                // the cruciform intersection — easier to hit than the 12px-wide cross.
+                var spacer = _emptySpacerPane.Rect;
+                bool inCorner = pt.X >= spacer.Left && pt.X <= spacer.Left + SPLITTER_CORNER_PX &&
+                                pt.Y >= spacer.Bottom - SPLITTER_CORNER_PX && pt.Y <= spacer.Bottom;
+                if (inCorner)
+                    return SplitterDrag.Both;
+                if (nearV && nearH)
+                    return SplitterDrag.Both;
+                if (nearV) return SplitterDrag.Vertical;
+            }
+            if (nearH) return SplitterDrag.Horizontal;
+            return SplitterDrag.None;
+        }
+
+        private void graphControl_SplitterMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_activeDrag != SplitterDrag.None)
+            {
+                // Keep the splitter cursor throughout the drag — ZedGraph's own mouse
+                // handling otherwise resets it to Default when the cursor leaves the
+                // original splitter-line hit zone.
+                graphControl.Cursor = CursorForDrag(_activeDrag);
+                ApplyDrag(e.Location);
+                return;
+            }
+            // Stick pane should always be X-only on wheel zoom — disable vertical zoom
+            // dynamically when the cursor is over it. (ZedGraph's wheel handler reads
+            // IsEnableVZoom at the moment the wheel event fires.)
+            if (IsDualPane)
+            {
+                var underCursor = graphControl.MasterPane.FindPane(e.Location);
+                bool vZoomOk = !ReferenceEquals(underCursor, _stickSpectrumPane);
+                if (graphControl.IsEnableVZoom != vZoomOk)
+                    graphControl.IsEnableVZoom = vZoomOk;
+            }
+            if (!IsDualPane) return;
+            var hit = HitTestSplitter(e.Location);
+            if (hit != SplitterDrag.None)
+                graphControl.Cursor = CursorForDrag(hit);
+        }
+
+        private static Cursor CursorForDrag(SplitterDrag d)
+        {
+            switch (d)
+            {
+                case SplitterDrag.Vertical:
+                    return Cursors.VSplit;
+                case SplitterDrag.Horizontal:
+                    return Cursors.HSplit;
+                case SplitterDrag.Both:
+                    return Cursors.SizeAll;
+                default:
+                    return Cursors.Default;
+            }
+        }
+
+        private bool graphControl_SplitterMouseDown(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+                return false;
+            var hit = HitTestSplitter(e.Location);
+            if (hit == SplitterDrag.None)
+                return false;
+            _activeDrag = hit;
+            graphControl.Capture = true;
+            return true; // suppress ZedGraph pan/zoom while dragging splitter
+        }
+
+        private bool graphControl_SplitterMouseUp(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (_activeDrag == SplitterDrag.None)
+                return false;
+            _activeDrag = SplitterDrag.None;
+            graphControl.Capture = false;
+            Settings.Default.Save();
+            return true;
+        }
+
+        private void ApplyDrag(Point pt)
+        {
+            var mpRect = graphControl.MasterPane.Rect;
+            if (mpRect.Width <= 0 || mpRect.Height <= 0)
+                return;
+
+            if (_activeDrag == SplitterDrag.Vertical || _activeDrag == SplitterDrag.Both)
+                ColumnFraction = (pt.X - mpRect.X) / mpRect.Width;
+            if (_activeDrag == SplitterDrag.Horizontal || _activeDrag == SplitterDrag.Both)
+                RowFraction = (pt.Y - mpRect.Y) / mpRect.Height;
+
+            if (IsMobilogramPaneVisible)
+                AdjustFourPaneColumnWidths();
+            else
+                AdjustTwoPaneRowHeights();
+            graphControl.Invalidate();
+        }
+
+        private void AlignMobilogramChartToHeatmap()
+        {
+            if (!IsMobilogramPaneVisible)
+                return;
+            // Compute the heatmap's chart rect live (CalcChartRect returns the rect but
+            // only assigns it to Chart.Rect inside GraphPane.Draw when IsRectAuto=true).
+            RectangleF heat;
+            using (var g = graphControl.CreateGraphics())
+            {
+                // AxisChange populates scale data so CalcChartRect returns what Draw will use
+                _heatMapPane.AxisChange(g);
+                heat = _heatMapPane.CalcChartRect(g);
+            }
+            if (heat.Height <= 0)
+                return;
+            var paneRect = _mobilogramPane.Rect;
+            // Offset chartX by Y-axis space so labels have room to render on the left
+            float chartX = paneRect.X + _mobilogramPane.YAxis.MinSpace;
+            float chartRight = paneRect.Right - 10;
+            float chartW = Math.Max(1, chartRight - chartX);
+            _mobilogramPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
+            // Setting Rect flips IsRectAuto to false automatically
+        }
+
+        private MSGraphPane CreateMobilogramPane(HeatMapGraphPane heatMap)
+        {
+            var pane = new MSGraphPane
+            {
+                Title = { IsVisible = false },
+                Legend = { IsVisible = false },
+                Border = { IsVisible = false },
+                AllowLabelOverlap = true,
+            };
+            // No top/right border — only the XAxis (bottom) and YAxis (left) lines show
+            pane.Chart.Border.IsVisible = false;
+            pane.XAxis.Title.IsVisible = true;
+            pane.XAxis.Title.Text = GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+            // MSGraphPane defaults this to true, which would snap Y.Min to 0 on AxisChange.
+            pane.LockYAxisMinAtZero = false;
+            CopyYAxisFromHeatmap(pane, heatMap);
+            // Hide Y-axis numbers (heatmap shows them — avoid redundancy) but keep tick marks
+            // on both sides of the axis line to match heatmap's visual style.
+            pane.YAxis.Title.IsVisible = false;
+            pane.YAxis.Scale.IsVisible = false;
+            pane.YAxis.MajorTic.IsOutside = true;
+            pane.YAxis.MajorTic.IsInside = true;
+            pane.YAxis.MinorTic.IsOutside = true;
+            pane.YAxis.MinorTic.IsInside = true;
+            pane.YAxis.MinSpace = 4; // small, just enough for tick marks
+            // Match heatmap pane's margins so Chart.Rect Y/Height auto-align
+            pane.Margin.Left = 0;
+            pane.Margin.Right = ZedGraph.Margin.Default.Right;
+            pane.Margin.Top = 10;
+            pane.Margin.Bottom = ZedGraph.Margin.Default.Bottom;
+            pane.XAxis.Scale.MinAuto = false;
+            pane.XAxis.Scale.MaxAuto = false;
+            return pane;
+        }
+
+        /// <summary>
+        /// Copy all Y-axis state from the heatmap onto the mobilogram pane. Called at
+        /// create time and every time heatmap Y changes, so mobilogram rows line up with
+        /// heatmap rows pixel-for-pixel.
+        /// </summary>
+        private static void CopyYAxisFromHeatmap(MSGraphPane target, HeatMapGraphPane heatMap)
+        {
+            var src = heatMap.YAxis.Scale;
+            var dst = target.YAxis.Scale;
+            dst.Min = src.Min;
+            dst.Max = src.Max;
+            dst.MinAuto = false;
+            dst.MaxAuto = false;
+            // Pin steps (not Auto) so mobilogram's AxisChange won't recompute them
+            // from its own data and produce denser ticks than heatmap's.
+            dst.MajorStep = src.MajorStep;
+            dst.MinorStep = src.MinorStep;
+            dst.MajorStepAuto = false;
+            dst.MinorStepAuto = false;
+        }
+
+        private MSGraphPane CreateEmptySpacerPane()
+        {
+            var pane = new MSGraphPane
+            {
+                Title = { IsVisible = false },
+                Legend = { IsVisible = false },
+                Border = { IsVisible = false },
+            };
+            pane.Chart.Border.IsVisible = false;
+            pane.XAxis.IsVisible = false;
+            pane.YAxis.IsVisible = false;
+            pane.X2Axis.IsVisible = false;
+            pane.Y2Axis.IsVisible = false;
+            pane.Margin.All = 0;
+            return pane;
+        }
+
+        /// <summary>
+        /// Restore single-pane layout (heatmap only or stick only).
+        /// </summary>
+        private void SetupSinglePaneLayout()
+        {
+            _stickSpectrumPane = null;
+            _mobilogramPane = null;
+            _emptySpacerPane = null;
+            graphControl.IsSynchronizeXAxes = false;
+            var mp = graphControl.MasterPane;
+            if (mp.PaneList.Count != 1 || !ReferenceEquals(mp.PaneList[0], _heatMapPane))
+            {
+                mp.PaneList.Clear();
+                mp.Add(_heatMapPane);
+            }
+            // Reset margins and force layout recalculation
+            _heatMapPane.Margin.Top = ZedGraph.Margin.Default.Top;
+            _heatMapPane.Margin.Right = ZedGraph.Margin.Default.Right;
+            using (var g = graphControl.CreateGraphics())
+            {
+                mp.SetLayout(g, PaneLayout.SingleColumn);
+                mp.DoLayout(g);
+            }
         }
 
         private void SetSpectra(MsDataSpectrum[] spectra)
@@ -191,7 +675,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if(_documentContainer is ISpectrumScaleProvider scaleProvider)
                     _requestedRange = scaleProvider.GetMzRange(SpectrumControlType.LibraryMatch) ?? _requestedRange;
-            } 
+            }
 
             if (_zoomXAxis)
             {
@@ -227,7 +711,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private MSGraphPane GraphPane
         {
-            get { return (MSGraphPane) graphControl.MasterPane[0]; }
+            get { return _heatMapPane; }
         }
 
         private Color GetTransitionColor(TransitionFullScanInfo t)
@@ -334,125 +818,221 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Create the heat map or single scan graph.
+        /// Create the heat map or single scan graph, or both in a dual-pane layout when ion mobility data is present.
         /// </summary>
         private void CreateGraph()
         {
             if (_msDataFileScanHelper.MsDataSpectra == null)
                 return;
 
-            GraphPane.CurveList.Clear();
-            GraphPane.GraphObjList.Clear();
             if(!toolStripButtonShowAnnotations.Checked)
                 _rmis = null;
 
             bool hasIonMobilityDimension = _msDataFileScanHelper.MsDataSpectra.Length > 1 ||
                                            _msDataFileScanHelper.MsDataSpectra.First().IonMobilities != null;
-            bool useHeatMap = hasIonMobilityDimension && !Settings.Default.SumScansFullScan;
 
-            filterBtn.Visible = spectrumBtn.Visible = hasIonMobilityDimension;
-            graphControl.IsEnableVPan = graphControl.IsEnableVZoom = useHeatMap;
-            GraphPane.Legend.IsVisible = useHeatMap;
-
-            if (spectrumBtn.Visible)
-                toolStripButtonShowAnnotations.Visible = (_msDataFileScanHelper.Source == ChromSource.fragment) &&
-                                                         (!spectrumBtn.Visible ||
-                                                          spectrumBtn.Visible && spectrumBtn.Checked);
-            else
-                toolStripButtonShowAnnotations.Visible = (_msDataFileScanHelper.Source == ChromSource.fragment);
-
+            toolStripButtonShowAnnotations.Visible = (_msDataFileScanHelper.Source == ChromSource.fragment);
             _showIonSeriesAnnotations = toolStripButtonShowAnnotations.Visible && Settings.Default.ShowFullScanAnnotations;
 
             if (hasIonMobilityDimension)
             {
                 // Is there actually any drift time filtering available?
                 double minIonMobilityFilter, maxIonMobilityFilter;
-                _msDataFileScanHelper.GetIonMobilityFilterRange(out minIonMobilityFilter, out maxIonMobilityFilter, ChromSource.unknown); // Get range of IM values for all products and precursors
+                _msDataFileScanHelper.GetIonMobilityFilterRange(out minIonMobilityFilter, out maxIonMobilityFilter, ChromSource.unknown);
 
-                if ((minIonMobilityFilter == double.MinValue) && (maxIonMobilityFilter == double.MaxValue))
+                spectrumBtn.Visible = true;
+                filterBtn.Visible = !spectrumBtn.Checked;
+                if (filterBtn.Visible && (minIonMobilityFilter == double.MinValue) && (maxIonMobilityFilter == double.MaxValue))
                 {
                     filterBtn.Visible = false;
                     filterBtn.Checked = false;
                 }
-            }
 
-            GetRankedSpectrum();
-            double[] massErrors = null;
-            if (useHeatMap)
-            {
-                ZoomYAxis(); // Call this again now that cues are there to indicate need for drift scale
-                CreateIonMobilityHeatmap();
+                bool showHeatMap = !spectrumBtn.Checked;
+
+                if (showHeatMap)
+                {
+                    // Dual-pane: stick spectrum on top, heatmap+mobilogram on bottom
+                    bool showMobilogram = mobilogramBtn.Checked;
+                    SetupDualPaneLayout(showMobilogram);
+
+                    mobilogramBtn.Visible = true;
+                    graphControl.IsEnableVPan = graphControl.IsEnableVZoom = true;
+                    _heatMapPane.Legend.IsVisible = true;
+                    _heatMapPane.Legend.Position = LegendPos.BottomCenter;
+                    _heatMapPane.ShowHeatMap = true;
+
+                    // Clear both panes
+                    _stickSpectrumPane.CurveList.Clear();
+                    _stickSpectrumPane.GraphObjList.Clear();
+                    _heatMapPane.CurveList.Clear();
+                    _heatMapPane.GraphObjList.Clear();
+                    if (_mobilogramPane != null)
+                    {
+                        _mobilogramPane.CurveList.Clear();
+                        _mobilogramPane.GraphObjList.Clear();
+                    }
+
+                    GetRankedSpectrum();
+
+                    // Tight right margin on heatmap so the heatmap chart butts close to the mobilogram
+                    _heatMapPane.Margin.Right = showMobilogram ? 2 : ZedGraph.Margin.Default.Right;
+                    _stickSpectrumPane.Margin.Right = showMobilogram ? 2 : ZedGraph.Margin.Default.Right;
+                    ZoomHeatMapYAxis();
+                    CreateIonMobilityHeatmap();
+                    if (showMobilogram)
+                    {
+                        CreateMobilogram();
+                        // Force the 2x2 column/row split — earlier paths (toggle off/on +
+                        // magnify zoom) can leave panes at default 50/50 widths.
+                        AdjustFourPaneColumnWidths();
+                    }
+
+                    // Sync stick pane X range from heatmap pane before populating
+                    _stickSpectrumPane.XAxis.Scale.Min = _heatMapPane.XAxis.Scale.Min;
+                    _stickSpectrumPane.XAxis.Scale.Max = _heatMapPane.XAxis.Scale.Max;
+                    _stickSpectrumPane.XAxis.Scale.MinAuto = false;
+                    _stickSpectrumPane.XAxis.Scale.MaxAuto = false;
+
+                    // Top pane: stick spectrum (summed across ion mobility)
+                    double[] massErrors;
+                    CreateSingleScanInPane(_stickSpectrumPane, out massErrors);
+                    ZoomStickYAxis();
+
+                    PopulateProperties();
+
+                    AddExtractionBoxes(_heatMapPane);
+                    AddExtractionBoxes(_stickSpectrumPane);
+
+                    if (!_showIonSeriesAnnotations)
+                        AddTransitionLabels(_stickSpectrumPane, massErrors);
+
+                    double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
+                    _stickSpectrumPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
+                    _stickSpectrumPane.Title.IsVisible = true;
+                    _heatMapPane.Title.IsVisible = false;
+
+                    FireSelectedScanChanged(retentionTime);
+                }
+                else
+                {
+                    // Heatmap off: single-pane stick spectrum (summed across ion mobility)
+                    SetupSinglePaneLayout();
+
+                    mobilogramBtn.Visible = false;
+                    GraphPane.CurveList.Clear();
+                    GraphPane.GraphObjList.Clear();
+                    graphControl.IsEnableVPan = graphControl.IsEnableVZoom = false;
+                    GraphPane.Legend.IsVisible = false;
+
+                    GetRankedSpectrum();
+                    double[] massErrors;
+                    CreateSingleScan(out massErrors);
+
+                    PopulateProperties();
+                    AddExtractionBoxes(GraphPane);
+                    if (!_showIonSeriesAnnotations)
+                        AddTransitionLabels(GraphPane, massErrors);
+
+                    double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
+                    GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
+
+                    FireSelectedScanChanged(retentionTime);
+                }
             }
             else
             {
+                // Single pane: stick spectrum only (no ion mobility data)
+                SetupSinglePaneLayout();
+
+                GraphPane.CurveList.Clear();
+                GraphPane.GraphObjList.Clear();
+
+                spectrumBtn.Visible = false;
+                filterBtn.Visible = false;
+                mobilogramBtn.Visible = false;
+                graphControl.IsEnableVPan = graphControl.IsEnableVZoom = false;
+                GraphPane.Legend.IsVisible = false;
+
+                GetRankedSpectrum();
+                double[] massErrors;
                 CreateSingleScan(out massErrors);
+
+                PopulateProperties();
+                AddExtractionBoxes(GraphPane);
+                if (!_showIonSeriesAnnotations)
+                    AddTransitionLabels(GraphPane, massErrors);
+
+                double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
+                GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
+
+                FireSelectedScanChanged(retentionTime);
             }
+        }
 
-            PopulateProperties();
+        private BoxObj CreateExtractionBox(TransitionFullScanInfo transition)
+        {
+            var color1 = GraphHelper.Blend(GetTransitionColor(transition), Color.White, 0.60);
+            var color2 = GraphHelper.Blend(GetTransitionColor(transition), Color.White, 0.95);
+            var extractionBox = new BoxObj(
+                transition.ProductMz - transition.ExtractionWidth.Value / 2,
+                0.0,
+                transition.ExtractionWidth.Value,
+                1.0,
+                Color.Transparent,
+                transition.Color,
+                Color.White)
+            {
+                Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                ZOrder = ZOrder.F_BehindGrid,
+                Fill = new Fill(color1, color2, 90),
+                IsClippedToChartRect = true,
+            };
+            extractionBox.Tag = new ExtractionBoxInfo(transition.ProductMz, transition.ExtractionWidth.Value);
+            return extractionBox;
+        }
 
-            // Add extraction boxes.
+        private void AddExtractionBoxes(MSGraphPane targetPane)
+        {
             for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
             {
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
                 if (transition.Source != _msDataFileScanHelper.Source)
                     continue;
-                var color1 = GraphHelper.Blend(GetTransitionColor(transition), Color.White, 0.60);
-                var color2 = GraphHelper.Blend(GetTransitionColor(transition), Color.White, 0.95);
-                var extractionBox = new BoxObj(
-                    transition.ProductMz - transition.ExtractionWidth.Value / 2,
-                    0.0,
-                    transition.ExtractionWidth.Value,
-                    1.0,
-                    Color.Transparent,
-                    transition.Color,
-                    Color.White)
-                {
-                    Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
-                    ZOrder = ZOrder.F_BehindGrid,
-                    Fill = new Fill(color1, color2, 90),
-                    IsClippedToChartRect = true,
-                };
-                extractionBox.Tag = new ExtractionBoxInfo(transition.ProductMz, transition.ExtractionWidth.Value);
-                GraphPane.GraphObjList.Add(extractionBox);
+                targetPane.GraphObjList.Add(CreateExtractionBox(transition));
             }
+        }
 
-            // Add labels.
-            if (!_showIonSeriesAnnotations)
+        private void AddTransitionLabels(MSGraphPane targetPane, double[] massErrors)
+        {
+            var showMassError = Settings.Default.ShowFullScanMassError;
+            for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
             {
-                var showMassError = Settings.Default.ShowFullScanMassError;
-                for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
+                var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
+                if (transition.Source != _msDataFileScanHelper.Source)
+                    continue;
+                var labelBuilder = new StringBuilder(transition.Name);
+                if (massErrors != null && showMassError)
                 {
-                    var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
-                    if (transition.Source != _msDataFileScanHelper.Source)
-                        continue;
-                    var labelBuilder = new StringBuilder(transition.Name);
-                    if (massErrors != null && showMassError)
-                    {
-                        var massError = SequenceMassCalc.GetPpm(transition.ProductMz, massErrors[i]);
-                        massError = Math.Round(massError, 1);
-                        labelBuilder.AppendLine().Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm,
-                            (massError > 0 ? @"+" : string.Empty), massError));
-                    }
-
-                    var label = new TextObj(labelBuilder.ToString(), transition.ProductMz, 0.02, CoordType.XScaleYChartFraction,
-                        AlignH.Center, AlignV.Top)
-                    {
-                        ZOrder = ZOrder.D_BehindAxis,
-                        IsClippedToChartRect = true,
-                        Tag = i
-                    };
-                    label.FontSpec.Border.IsVisible = false;
-                    label.FontSpec.FontColor = GraphHelper.Blend(GetTransitionColor(transition), Color.Black, 0.30);
-                    label.FontSpec.IsBold = true;
-                    label.FontSpec.Fill = new Fill(Color.FromArgb(180, Color.White));
-                    GraphPane.GraphObjList.Add(label);
+                    var massError = SequenceMassCalc.GetPpm(transition.ProductMz, massErrors[i]);
+                    massError = Math.Round(massError, 1);
+                    labelBuilder.AppendLine().Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm,
+                        (massError > 0 ? @"+" : string.Empty), massError));
                 }
+
+                var label = new TextObj(labelBuilder.ToString(), transition.ProductMz, 0.02, CoordType.XScaleYChartFraction,
+                    AlignH.Center, AlignV.Top)
+                {
+                    ZOrder = ZOrder.D_BehindAxis,
+                    IsClippedToChartRect = true,
+                    Tag = i
+                };
+                label.FontSpec.Border.IsVisible = false;
+                label.FontSpec.FontColor = GraphHelper.Blend(GetTransitionColor(transition), Color.Black, 0.30);
+                label.FontSpec.IsBold = true;
+                label.FontSpec.Fill = new Fill(Color.FromArgb(180, Color.White));
+                targetPane.GraphObjList.Add(label);
             }
-
-            double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
-            GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
-
-            FireSelectedScanChanged(retentionTime);
         }
 
         /// <summary>
@@ -487,7 +1067,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         points.Add(new Point3D(scan.Mzs[j],  mobilityValue, scan.Intensities[j]));
                     }
                 }
-                _heatMapData = new HeatMapData(points);
+                _heatMapData = new HeatMapData(points,
+                    ((IHeatMapDataProvider)_heatMapPane).HeatMapZAxisName,
+                    mobilogramBtn.Checked);
             }
 
             double minDrift;
@@ -508,6 +1090,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Location = {CoordinateFrame = CoordType.XChartFractionYScale},
                     ZOrder = ZOrder.F_BehindGrid,
                     IsClippedToChartRect = true,
+                    Tag = TAG_IM_FILTER_BAND
                 };
                 GraphPane.GraphObjList.Add(driftTimeBox);
 
@@ -523,9 +1106,44 @@ namespace pwiz.Skyline.Controls.Graphs
                     Location = {CoordinateFrame = CoordType.XChartFractionYScale},
                     ZOrder = ZOrder.C_BehindChartBorder,
                     IsClippedToChartRect = true,
-                    Border = new Border(Color.FromArgb(100, Color.DarkViolet), 2)
+                    Border = new Border(Color.FromArgb(100, Color.DarkViolet), 2),
+                    Tag = TAG_IM_FILTER_BAND
                 };
                 GraphPane.GraphObjList.Add(driftTimeOutline);
+
+                // Add dashed line at peak center
+                double? peakCenter = null;
+                if (isWatersSonarData)
+                {
+                    // For SONAR, the Y-axis is precursor m/z — show the selected precursor's m/z
+                    var currentTransition = _msDataFileScanHelper.CurrentTransition;
+                    if (currentTransition != null)
+                        peakCenter = currentTransition.PrecursorMz;
+                }
+                else
+                {
+                    // For IM data, show the ion mobility center
+                    var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
+                    if (imFilter != null && imFilter.HasIonMobilityValue)
+                        peakCenter = imFilter.IonMobility.Mobility.Value;
+                }
+                if (peakCenter.HasValue)
+                {
+                    var centerLine = new LineObj(
+                        Color.FromArgb(180, Color.DarkViolet),
+                        0.0, peakCenter.Value, 1.0, peakCenter.Value)
+                    {
+                        Location = { CoordinateFrame = CoordType.XChartFractionYScale },
+                        ZOrder = ZOrder.C_BehindChartBorder,
+                        IsClippedToChartRect = true,
+                        Line =
+                        {
+                            Style = System.Drawing.Drawing2D.DashStyle.Dash,
+                            Width = 1.5f
+                        }
+                    };
+                    GraphPane.GraphObjList.Add(centerLine);
+                }
             }
 
             if (!Settings.Default.FilterIonMobilityFullScan)
@@ -559,8 +1177,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var imAndCss = transition.IonMobilityInfo.IonMobilityAndCCS;
                         if (imAndCss.HasIonMobilityValue)
-                            spectrumProperties.IonMobility = TextUtil.SpaceSeparate(imAndCss.IonMobility.Mobility.Value.ToString(Formats.IonMobility),
+                        {
+                            var mobility = imAndCss.IonMobility.Mobility.Value;
+                            spectrumProperties.IonMobility = TextUtil.SpaceSeparate(mobility.ToString(Formats.IonMobility),
                                 imAndCss.IonMobility.UnitsString);
+                        }
                         if(imAndCss.HasCollisionalCrossSection)
                             spectrumProperties.CCS = imAndCss.CollisionalCrossSectionSqA.Value.ToString(Formats.CCS);
                     }
@@ -928,10 +1549,18 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Create stick graph of a single scan.
         /// </summary>
-        private void  CreateSingleScan(out double[] massErrors)
+        private void CreateSingleScan(out double[] massErrors)
         {
-            GraphPane.YAxis.Title.Text = GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+            CreateSingleScanInPane(GraphPane, out massErrors);
             graphControl.IsEnableVZoom = graphControl.IsEnableVPan = false;
+        }
+
+        /// <summary>
+        /// Create stick graph of a single scan in a specific pane.
+        /// </summary>
+        private void CreateSingleScanInPane(MSGraphPane targetPane, out double[] massErrors)
+        {
+            targetPane.YAxis.Title.Text = GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
             massErrors = null;
 
             // Create a point list for each transition, and a default point list for points not 
@@ -1010,14 +1639,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
                         selectionMatch ? selection.NodeTran : null);
-                    _graphHelper.AddSpectrum(graphItem, false);
+                    if (IsDualPane)
+                    {
+                        var curveItem = graphControl.AddGraphItem(targetPane, graphItem, false);
+                        curveItem.Label.IsVisible = false;
+                    }
+                    else
+                    {
+                        _graphHelper.AddSpectrum(graphItem, false);
+                    }
                 }
 
                 else
                 {
                     // No node to use for annotation so just show peaks in gray
                     var item = new SpectrumItem(allPointList, Color.Gray, @"unmatched");
-                    var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
+                    var curveItem = _graphHelper.GraphControl.AddGraphItem(targetPane, item, false);
                     curveItem.Label.IsVisible = false;
                 }
             }
@@ -1030,14 +1667,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (transition.Source != _msDataFileScanHelper.Source)
                         continue;
                     var item = new SpectrumItem(pointLists[i], GetTransitionColor(transition), _msDataFileScanHelper.ScanProvider.Transitions[i].Name, 2);
-                    var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
+                    var curveItem = _graphHelper.GraphControl.AddGraphItem(targetPane, item, false);
                     curveItem.Label.IsVisible = false;
                 }
 
                 // Add points that aren't associated with a transition.
                 {
                     var item = new SpectrumItem(defaultPointList, Color.Gray, @"unmatched");
-                    var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
+                    var curveItem = _graphHelper.GraphControl.AddGraphItem(targetPane, item, false);
                     curveItem.Label.IsVisible = false;
                 }
             }
@@ -1045,10 +1682,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.MsDataSpectra.Length > 0 && !_msDataFileScanHelper.MsDataSpectra[0].Centroided)
             {
                 var item = new SpectrumShadeItem(allPointList, Color.FromArgb(100, 225, 225, 150), @"all");
-                var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
+                var curveItem = _graphHelper.GraphControl.AddGraphItem(targetPane, item, false);
                 curveItem.Label.IsVisible = false;
             }
-            GraphPane.SetScale(CreateGraphics());
+            targetPane.SetScale(CreateGraphics());
 
             if (Settings.Default.ShowFullScanMassError)
             {
@@ -1157,7 +1794,7 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBoxScanType.Enabled = false;
             lblScanId.Text = string.Empty;
             leftButton.Enabled = rightButton.Enabled = false;
-            graphControl.GraphPane.Title.Text = _msDataFileScanHelper.FileName;
+            GraphPane.Title.Text = _msDataFileScanHelper.FileName;
         }
 
         [Browsable(true)]
@@ -1210,7 +1847,14 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
                 return;
 
-            var xScale = GraphPane.XAxis.Scale;
+            ApplyXZoomToPane(GraphPane);
+            if (IsDualPane)
+                ApplyXZoomToPane(_stickSpectrumPane);
+        }
+
+        private void ApplyXZoomToPane(GraphPane pane)
+        {
+            var xScale = pane.XAxis.Scale;
             xScale.MinAuto = xScale.MaxAuto = false;
 
             if (magnifyBtn.Checked)
@@ -1237,16 +1881,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 ZoomXAxis();
             _requestedRange = new MzRange(0, _maxMz * 1.1);
             using (var g = graphControl.CreateGraphics())
+            {
                 GraphPane.SetScale(g);
+                if (IsDualPane)
+                    _stickSpectrumPane.SetScale(g);
+            }
 
             graphControl.Refresh();
         }
 
         public void SetIntensityScale(double maxIntensity)
         {
-            GraphPane.YAxis.Scale.MaxAuto = false;
-            GraphPane.YAxis.Scale.Max = maxIntensity;
-            GraphPane.AxisChange();
+            var targetPane = IsDualPane ? _stickSpectrumPane : (GraphPane)_heatMapPane;
+            targetPane.YAxis.Scale.MaxAuto = false;
+            targetPane.YAxis.Scale.Max = maxIntensity;
+            targetPane.AxisChange();
         }
 
         public MzRange Range
@@ -1257,8 +1906,14 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ApplyMZZoomState(ZoomState newState)
         {
             newState.XAxis.ApplyScale(GraphPane.XAxis);
+            if (IsDualPane)
+                newState.XAxis.ApplyScale(_stickSpectrumPane.XAxis);
             using (var g = graphControl.CreateGraphics())
+            {
                 GraphPane.SetScale(g);
+                if (IsDualPane)
+                    _stickSpectrumPane.SetScale(g);
+            }
             graphControl.Refresh();
         }
 
@@ -1266,12 +1921,59 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
+            SyncMobilogramYAxisFromHeatmap();
+            // Propagate X from whichever of stick/heatmap the user just zoomed in to the
+            // other one. Using the pane under the mouse keeps wheel zooms over the stick
+            // pane working without snapping back.
+            if (IsDualPane)
+            {
+                var src = graphControl.MasterPane.FindPane(Point.Truncate(mousePosition));
+                if (ReferenceEquals(src, _stickSpectrumPane))
+                    CopyXAxis(_heatMapPane, _stickSpectrumPane);
+                else if (ReferenceEquals(src, _heatMapPane))
+                    CopyXAxis(_stickSpectrumPane, _heatMapPane);
+            }
             FireZoomEvent(newState);
+        }
+
+        private static void CopyXAxis(GraphPane target, GraphPane source)
+        {
+            var dst = target.XAxis.Scale;
+            var src = source.XAxis.Scale;
+            dst.Min = src.Min;
+            dst.Max = src.Max;
+            dst.MinAuto = false;
+            dst.MaxAuto = false;
+        }
+
+        private void graphControl_Resize(object sender, EventArgs e)
+        {
+            if (IsDualPane)
+            {
+                using (var g = graphControl.CreateGraphics())
+                    graphControl.MasterPane.DoLayout(g);
+                if (IsMobilogramPaneVisible)
+                    AdjustFourPaneColumnWidths();
+                else
+                    AdjustTwoPaneRowHeights();
+            }
+            SyncMobilogramYAxisFromHeatmap();
+        }
+
+        /// <summary>
+        /// Copy the heatmap's Y-axis (ion mobility) range to the mobilogram pane so
+        /// rows in the two panes stay visually aligned.
+        /// </summary>
+        private void SyncMobilogramYAxisFromHeatmap()
+        {
+            if (!IsMobilogramPaneVisible)
+                return;
+            CopyYAxisFromHeatmap(_mobilogramPane, _heatMapPane);
         }
 
         private void FireZoomEvent(ZoomState zoomState = null)
         {
-            if (ZoomEvent != null && Settings.Default.SyncMZScale)
+            if (ZoomEvent != null)
             {
                 if (zoomState == null)
                     zoomState = new ZoomState(GraphPane, ZoomState.StateType.Zoom);
@@ -1307,11 +2009,18 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
                 return;
 
+            if (IsDualPane)
+            {
+                ZoomStickYAxis();
+                ZoomHeatMapYAxis();
+                return;
+            }
+
             var yScale = GraphPane.YAxis.Scale;
             yScale.MinAuto = yScale.MaxAuto = false;
             bool isSpectrum = !spectrumBtn.Visible || spectrumBtn.Checked;
             GraphPane.LockYAxisMinAtZero = isSpectrum;
-            
+
             // Auto scale graph for spectrum view.
             if (isSpectrum)
             {
@@ -1353,15 +2062,82 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.AxisChange();
         }
 
+        private void ZoomStickYAxis()
+        {
+            if (_stickSpectrumPane == null) return;
+            var yScale = _stickSpectrumPane.YAxis.Scale;
+            yScale.MinAuto = yScale.MaxAuto = false;
+            _stickSpectrumPane.LockYAxisMinAtZero = true;
+            yScale.Min = 0;
+
+            if (magnifyBtn.Checked)
+            {
+                // Compute max intensity from visible data in the current X range
+                double xMin = _stickSpectrumPane.XAxis.Scale.Min;
+                double xMax = _stickSpectrumPane.XAxis.Scale.Max;
+                double maxY = 0;
+                foreach (var curve in _stickSpectrumPane.CurveList)
+                {
+                    for (int i = 0; i < curve.Points.Count; i++)
+                    {
+                        var pt = curve.Points[i];
+                        if (pt.X >= xMin && pt.X <= xMax && pt.Y > maxY)
+                            maxY = pt.Y;
+                    }
+                }
+                yScale.Max = maxY > 0 ? maxY * 1.1 : _maxIntensity * 1.1;
+            }
+            else
+            {
+                yScale.Max = _maxIntensity * 1.1;
+            }
+            _stickSpectrumPane.AxisChange();
+        }
+
+        private void ZoomHeatMapYAxis()
+        {
+            var yScale = _heatMapPane.YAxis.Scale;
+            yScale.MinAuto = yScale.MaxAuto = false;
+            _heatMapPane.LockYAxisMinAtZero = false;
+
+            if (!filterBtn.Checked && !magnifyBtn.Checked)
+            {
+                var margin = 0.1 * (_maxIonMobility - _minIonMobility);
+                yScale.Min = _minIonMobility - margin;
+                yScale.Max = _maxIonMobility + margin;
+            }
+            else
+            {
+                double minDriftTime, maxDriftTime;
+                _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out minDriftTime, out maxDriftTime, _msDataFileScanHelper.Source);
+                if (minDriftTime > double.MinValue && maxDriftTime < double.MaxValue)
+                {
+                    double range = filterBtn.Checked
+                        ? (maxDriftTime - minDriftTime) / 2
+                        : (maxDriftTime - minDriftTime) * 2;
+                    yScale.Min = minDriftTime - range;
+                    yScale.Max = maxDriftTime + range;
+                }
+                else
+                {
+                    yScale.Min = 0;
+                    yScale.Max = _maxIonMobility * 1.1;
+                }
+            }
+            _heatMapPane.AxisChange();
+        }
+
         public void UpdateUI(bool selectionChanged = true)
         {
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
             if (!Visible || IsDisposed || _msDataFileScanHelper.ScanProvider == null)
                 return;
-            GraphHelper.FormatGraphPane(graphControl.GraphPane);
-            comboBoxPeakType.Visible = spectrumBtn.Checked;
-            toolStripLabelPeakType.Visible = spectrumBtn.Checked;
+            GraphHelper.FormatGraphPane(GraphPane);
+            if (IsDualPane)
+                GraphHelper.FormatGraphPane(_stickSpectrumPane);
+            comboBoxPeakType.Visible = IsDualPane || spectrumBtn.Checked;
+            toolStripLabelPeakType.Visible = IsDualPane || spectrumBtn.Checked;
 
             if (selectionChanged)
                 CreateGraph();
@@ -1372,6 +2148,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Count-1);
                 lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString(@"D");
                 GraphPane.SetScale(CreateGraphics());
+                if (IsDualPane)
+                    _stickSpectrumPane.SetScale(CreateGraphics());
                 if (_msDataFileScanHelper.IsWatersSonarData)
                 {
                     filterBtn.ToolTipText = GraphsResources.GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range;
@@ -1487,12 +2265,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             HeatMapGraphPane.ShowHeatMap = show;
             Settings.Default.SumScansFullScan = spectrumBtn.Checked = !show;
+            mobilogramBtn.Visible = show && spectrumBtn.Visible;
             UpdateUI();
             ZoomYAxis();
             graphControl.Invalidate();
         }
 
-        private HeatMapGraphPane HeatMapGraphPane { get { return (HeatMapGraphPane) GraphPane; } }
+        private HeatMapGraphPane HeatMapGraphPane { get { return _heatMapPane; } }
 
         private struct ExtractionBoxInfo
         {
@@ -1503,6 +2282,21 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 CenterMz = centerMz;
                 OriginalWidth = originalWidth;
+            }
+        }
+
+        /// <summary>
+        /// MSGraphPane subclass that enforces minimum extraction box width during rendering,
+        /// matching the behavior of FullScanHeatMapGraphPane.
+        /// </summary>
+        private class FullScanStickSpectrumPane : MSGraphPane
+        {
+            public FullScanStickSpectrumPane(LabelBoundsCache cache) : base(cache) { }
+
+            public override void SetScale(Graphics g)
+            {
+                base.SetScale(g);
+                FullScanHeatMapGraphPane.EnforceMinExtractionBoxWidth(this);
             }
         }
 
@@ -1518,16 +2312,24 @@ namespace pwiz.Skyline.Controls.Graphs
             public override void SetScale(Graphics g)
             {
                 base.SetScale(g);
+                EnforceMinExtractionBoxWidth(this);
+            }
+
+            /// <summary>
+            /// Enforce a minimum rendered width of 1 pixel for extraction boxes so they
+            /// remain visible when the m/z axis is zoomed out to a wide range.
+            /// Can be applied to any GraphPane that has ExtractionBoxInfo-tagged BoxObjs.
+            /// </summary>
+            public static void EnforceMinExtractionBoxWidth(GraphPane pane)
+            {
                 // AxisChange (called by base.SetScale) updates axis Min/Max but does not
                 // call SetupScaleData, so the pixel-to-data transform used by
                 // ReverseTransform can be stale from a previous zoom level.
-                XAxis.Scale.SetupScaleData(this, XAxis);
-                // Enforce a minimum rendered width of 1 pixel for extraction boxes so they
-                // remain visible when the m/z axis is zoomed out to a wide range.
-                double minWidth = Math.Abs(XAxis.Scale.ReverseTransform(1) - XAxis.Scale.ReverseTransform(0));
+                pane.XAxis.Scale.SetupScaleData(pane, pane.XAxis);
+                double minWidth = Math.Abs(pane.XAxis.Scale.ReverseTransform(1) - pane.XAxis.Scale.ReverseTransform(0));
                 if (double.IsNaN(minWidth) || double.IsInfinity(minWidth) || minWidth <= 0)
                     return;
-                foreach (var obj in GraphObjList.OfType<BoxObj>())
+                foreach (var obj in pane.GraphObjList.OfType<BoxObj>())
                 {
                     if (!(obj.Tag is ExtractionBoxInfo info))
                         continue;
@@ -1549,6 +2351,263 @@ namespace pwiz.Skyline.Controls.Graphs
             _zoomYAxis = true;
             SetSpectraUI(_msDataFileScanHelper.MsDataSpectra);
         }
+
+        private void mobilogramBtn_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.ShowMobilogramFullScan = mobilogramBtn.Checked;
+            _heatMapData = null; // Force recompute with/without PlotY2D
+            // Preserve current axis ranges across the rebuild
+            double savedYMin = _heatMapPane.YAxis.Scale.Min;
+            double savedYMax = _heatMapPane.YAxis.Scale.Max;
+            UpdateUI();
+            // Restore heatmap Y range (mobilogram toggle shouldn't change the view)
+            if (IsDualPane)
+            {
+                _heatMapPane.YAxis.Scale.Min = savedYMin;
+                _heatMapPane.YAxis.Scale.Max = savedYMax;
+                graphControl.Invalidate();
+            }
+        }
+
+        private void CreateMobilogram()
+        {
+            if (_heatMapData?.PlotY2D == null || _mobilogramPane == null)
+                return;
+
+            // Use the same filter display range as the heatmap for the band
+            double filterMin = double.NaN, filterMax = double.NaN, filterPeak = double.NaN;
+            double minDrift, maxDrift;
+            _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(
+                out minDrift, out maxDrift, _msDataFileScanHelper.Source);
+            if (minDrift > 0 && maxDrift < double.MaxValue)
+            {
+                filterMin = minDrift;
+                filterMax = maxDrift;
+            }
+
+            // Peak center is only meaningful when the filter band is shown
+            if (!double.IsNaN(filterMin))
+            {
+                if (_msDataFileScanHelper.IsWatersSonarData)
+                {
+                    // For SONAR, the Y-axis is precursor m/z
+                    var currentTransition = _msDataFileScanHelper.CurrentTransition;
+                    if (currentTransition != null)
+                        filterPeak = currentTransition.PrecursorMz;
+                }
+                else
+                {
+                    var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
+                    if (imFilter != null && imFilter.HasIonMobilityValue)
+                        filterPeak = imFilter.IonMobility.Mobility.Value;
+                }
+            }
+
+            // Compute per-transition Y projections for colored curves
+            var transitionCurves = new List<MobilogramCurveSpec>();
+            var transitions = _msDataFileScanHelper.ScanProvider.Transitions;
+            if (transitions.Length > 0)
+            {
+                // Build a dictionary of IM -> summed intensity for each transition
+                var perTransition = new Dictionary<int, Dictionary<float, double>>();
+                // Precompute (low, high, transitionIndex) intervals for matching transitions,
+                // sorted by low edge, so we can binary-search instead of scanning every
+                // transition for every heatmap point.
+                var intervals = new List<(double low, double high, int idx)>();
+                for (int t = 0; t < transitions.Length; t++)
+                {
+                    var tr = transitions[t];
+                    if (tr.Source != _msDataFileScanHelper.Source || !tr.ExtractionWidth.HasValue)
+                        continue;
+                    double halfWidth = tr.ExtractionWidth.Value / 2;
+                    intervals.Add((tr.ProductMz.Value - halfWidth, tr.ProductMz.Value + halfWidth, t));
+                    perTransition[t] = new Dictionary<float, double>();
+                }
+
+                if (perTransition.Count > 0)
+                {
+                    intervals.Sort((a, b) => a.low.CompareTo(b.low));
+                    var lows = intervals.Select(v => v.low).ToArray();
+                    // Any candidate interval has low in (mz - maxWidth, mz]. Binary search
+                    // for that small window, then filter by `mz < high`. Typically O(1) per
+                    // point after the binary search.
+                    double maxWidth = intervals.Max(v => v.high - v.low);
+
+                    foreach (var pt in _heatMapData.GetAllPoints())
+                    {
+                        double mz = pt.Point.X;
+                        var im = pt.Point.Y;
+                        double intensity = pt.Point.Z;
+                        // First index with low > mz - maxWidth (all earlier intervals can't reach mz)
+                        int start = Array.BinarySearch(lows, mz - maxWidth);
+                        if (start < 0) start = ~start;
+                        // Walk while low <= mz, adding matches
+                        for (int i = start; i < intervals.Count && intervals[i].low <= mz; i++)
+                        {
+                            if (mz < intervals[i].high)
+                            {
+                                var dict = perTransition[intervals[i].idx];
+                                if (dict.ContainsKey(im))
+                                    dict[im] += intensity;
+                                else
+                                    dict[im] = intensity;
+                            }
+                        }
+                    }
+
+                    // Build sorted IM grid from summed curve for gap detection
+                    var imGrid = _heatMapData.PlotY2D.Select(p => p.Key).ToList(); // already sorted
+
+                    foreach (var kvp in perTransition)
+                    {
+                        if (kvp.Value.Count > 0)
+                        {
+                            // Build curve with zero-bookends at gaps
+                            var sorted = kvp.Value.OrderBy(p => p.Key).ToList();
+                            var curve = new List<KeyValuePair<float, double>>();
+                            for (int j = 0; j < sorted.Count; j++)
+                            {
+                                float im = sorted[j].Key;
+                                int gridIdx = imGrid.BinarySearch(im);
+                                if (gridIdx < 0) gridIdx = ~gridIdx;
+
+                                bool isGap = j == 0 || (gridIdx > 0 &&
+                                    !kvp.Value.ContainsKey(imGrid[gridIdx - 1]));
+                                if (isGap && gridIdx > 0)
+                                    curve.Add(new KeyValuePair<float, double>(imGrid[gridIdx - 1], 0));
+
+                                curve.Add(new KeyValuePair<float, double>(im, sorted[j].Value));
+
+                                bool isEndGap = j == sorted.Count - 1 || (gridIdx < imGrid.Count - 1 &&
+                                    !kvp.Value.ContainsKey(imGrid[gridIdx + 1]));
+                                if (isEndGap && gridIdx < imGrid.Count - 1)
+                                    curve.Add(new KeyValuePair<float, double>(imGrid[gridIdx + 1], 0));
+                            }
+                            transitionCurves.Add(new MobilogramCurveSpec(
+                                transitions[kvp.Key].Name, GetTransitionColor(transitions[kvp.Key]), curve));
+                        }
+                    }
+                }
+            }
+
+            PopulateMobilogramPane(transitionCurves, filterMin, filterMax, filterPeak);
+        }
+
+        private readonly struct MobilogramCurveSpec
+        {
+            public readonly string Name;
+            public readonly Color Color;
+            public readonly List<KeyValuePair<float, double>> Data;
+            public MobilogramCurveSpec(string name, Color color, List<KeyValuePair<float, double>> data)
+            {
+                Name = name;
+                Color = color;
+                Data = data;
+            }
+        }
+
+        private void PopulateMobilogramPane(List<MobilogramCurveSpec> transitionCurves,
+            double filterMin, double filterMax, double filterPeak)
+        {
+            if (_mobilogramPane == null)
+                return;
+            _mobilogramPane.CurveList.Clear();
+            _mobilogramPane.GraphObjList.Clear();
+
+            // Sync Y-axis to heatmap before computing anything
+            SyncMobilogramYAxisFromHeatmap();
+
+            // Compute max intensity for X-axis
+            double maxIntensity = 0;
+            if (transitionCurves.Count > 0)
+            {
+                foreach (var tc in transitionCurves)
+                    foreach (var kvp in tc.Data)
+                        if (kvp.Value > maxIntensity)
+                            maxIntensity = kvp.Value;
+            }
+            else
+            {
+                foreach (var kvp in _heatMapData.PlotY2D)
+                    if (kvp.Value > maxIntensity)
+                        maxIntensity = kvp.Value;
+            }
+            if (maxIntensity <= 0)
+                maxIntensity = 1;
+
+            var xScale = _mobilogramPane.XAxis.Scale;
+            xScale.Min = 0;
+            xScale.Max = maxIntensity * 1.05;
+
+            int lineWidth = Settings.Default.ChromatogramLineWidth;
+            if (transitionCurves.Count > 0)
+            {
+                foreach (var tc in transitionCurves)
+                {
+                    var xs = new double[tc.Data.Count];
+                    var ys = new double[tc.Data.Count];
+                    for (int i = 0; i < tc.Data.Count; i++)
+                    {
+                        xs[i] = tc.Data[i].Value;   // intensity on X
+                        ys[i] = tc.Data[i].Key;     // ion mobility on Y
+                    }
+                    var line = new LineItem(tc.Name ?? string.Empty, xs, ys, tc.Color, SymbolType.None, lineWidth);
+                    line.Line.IsAntiAlias = true;
+                    line.Symbol.IsVisible = false;
+                    _mobilogramPane.CurveList.Add(line);
+                }
+            }
+            else
+            {
+                var data = _heatMapData.PlotY2D;
+                var xs = new double[data.Count];
+                var ys = new double[data.Count];
+                for (int i = 0; i < data.Count; i++)
+                {
+                    xs[i] = data[i].Value;
+                    ys[i] = data[i].Key;
+                }
+                var line = new LineItem(string.Empty, xs, ys, Color.DarkBlue, SymbolType.None, lineWidth);
+                line.Line.IsAntiAlias = true;
+                line.Line.Fill = new Fill(Color.FromArgb(40, Color.DarkBlue));
+                line.Symbol.IsVisible = false;
+                _mobilogramPane.CurveList.Add(line);
+            }
+
+            // Filter band as a BoxObj spanning full X range between filterMin and filterMax
+            if (!double.IsNaN(filterMin) && !double.IsNaN(filterMax))
+            {
+                var band = new BoxObj(xScale.Min, filterMax, xScale.Max - xScale.Min, filterMax - filterMin,
+                    Color.FromArgb(100, Color.DarkViolet), Color.FromArgb(50, Color.Gray))
+                {
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.E_BehindCurves,
+                };
+                band.Border.Width = 2;
+                _mobilogramPane.GraphObjList.Add(band);
+            }
+
+            // Peak center as a dashed horizontal line
+            if (!double.IsNaN(filterPeak))
+            {
+                var peakLine = new LineObj(Color.FromArgb(180, Color.DarkViolet),
+                    xScale.Min, filterPeak, xScale.Max, filterPeak)
+                {
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.A_InFront,
+                };
+                peakLine.Line.Width = 1.5f;
+                peakLine.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
+                _mobilogramPane.GraphObjList.Add(peakLine);
+            }
+
+            using (var g = graphControl.CreateGraphics())
+                _mobilogramPane.AxisChange(g);
+            // AxisChange may recompute Y from data — resync to match heatmap Y range
+            SyncMobilogramYAxisFromHeatmap();
+            AlignMobilogramChartToHeatmap();
+        }
+
 
         // CONSIDER: This button is never visible and appears to be completely idle. Remove?
         private void btnIsolationWindow_Click(object sender, EventArgs e)
@@ -1621,7 +2680,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)
         {
-            var nearestLabel = GetNearestLabel(new PointF(e.X, e.Y));
+            MSGraphPane labelPane = IsDualPane ? _stickSpectrumPane : GraphPane;
+            var nearestLabel = GetNearestLabel(new PointF(e.X, e.Y), labelPane);
             if (nearestLabel == null)
                 return;
             //if the spectrum is annotated with ion series the label tags have peak rank, not transition index
@@ -1645,7 +2705,26 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool graphControl_MouseMove(ZedGraphControl sender, MouseEventArgs e)
         {
             var pt = new PointF(e.X, e.Y);
-            var nearestLabel = GetNearestLabel(pt);
+
+            // In the mobilogram area, show the same crosshair cursor as the heatmap.
+            // ZedGraph only sets Cross when FindChartRect returns non-null, but the mobilogram
+            // lives in the right margin outside the chart rect, so we must set it explicitly.
+            if (IsMobilogramVisible && IsInMobilogramArea(pt))
+            {
+                graphControl.Cursor = Cursors.Cross;
+                return true;
+            }
+
+            // Labels only exist on the stick pane
+            MSGraphPane labelPane = IsDualPane ? _stickSpectrumPane : GraphPane;
+            if (IsDualPane)
+            {
+                var pane = graphControl.MasterPane.FindChartRect(pt);
+                if (!ReferenceEquals(pane, _stickSpectrumPane))
+                    return false;
+            }
+
+            var nearestLabel = GetNearestLabel(pt, labelPane);
             if (nearestLabel == null || nearestLabel.Tag == null)
                 return false;
             var transition = (int) nearestLabel.Tag;
@@ -1661,8 +2740,101 @@ namespace pwiz.Skyline.Controls.Graphs
         // For use with CursorTrackingTip _cursorTip
         private TableDesc GetTooltipTable(PointF pt)
         {
+            // Only show tooltip when the cursor is the crosshair — this naturally suppresses
+            // tooltips near (but outside) the chart area, e.g. near the legend.
+            if (graphControl.Cursor != Cursors.Cross)
+                return null;
+            if (IsMobilogramVisible && IsInMobilogramArea(pt))
+                return GetMobilogramTooltipTable(pt);
+
+            if (IsDualPane)
+            {
+                var pane = graphControl.MasterPane.FindChartRect(pt);
+                if (ReferenceEquals(pane, _stickSpectrumPane))
+                    return GetSpectrumTooltipTable(pt, _stickSpectrumPane);
+                if (ReferenceEquals(pane, _heatMapPane))
+                    return GetHeatMapTooltipTable(pt);
+                return null;
+            }
+
             bool isHeatMap = spectrumBtn.Visible && !spectrumBtn.Checked;
             return isHeatMap ? GetHeatMapTooltipTable(pt) : GetSpectrumTooltipTable(pt);
+        }
+
+        private bool IsInMobilogramArea(PointF pt)
+        {
+            if (!IsMobilogramPaneVisible)
+                return false;
+            var chartRect = _mobilogramPane.Chart.Rect;
+            return chartRect.Contains(pt);
+        }
+
+        private TableDesc GetMobilogramTooltipTable(PointF pt)
+        {
+            if (_mobilogramPane == null || _mobilogramPane.CurveList.Count == 0)
+                return null;
+
+            // Find the curve whose nearest LINE SEGMENT (not just vertex) passes within
+            // a few pixels of the cursor. Tooltip itself reports the value at the nearer
+            // of the segment's two endpoints — no interpolation.
+            float scaleFactor = _mobilogramPane.CalcScaleFactor();
+            float maxDistPx = 10f * scaleFactor;
+            float bestDistPx = maxDistPx;
+            CurveItem bestCurve = null;
+            int bestEndpointIdx = -1;
+            foreach (var curve in _mobilogramPane.CurveList)
+            {
+                var pts = curve.Points;
+                if (pts == null || pts.Count < 2) continue;
+                float prevPxX = _mobilogramPane.XAxis.Scale.Transform(pts[0].X);
+                float prevPxY = _mobilogramPane.YAxis.Scale.Transform(pts[0].Y);
+                for (int i = 1; i < pts.Count; i++)
+                {
+                    float curPxX = _mobilogramPane.XAxis.Scale.Transform(pts[i].X);
+                    float curPxY = _mobilogramPane.YAxis.Scale.Transform(pts[i].Y);
+                    float dist = DistancePointToSegment(pt.X, pt.Y, prevPxX, prevPxY, curPxX, curPxY);
+                    if (dist < bestDistPx)
+                    {
+                        bestDistPx = dist;
+                        bestCurve = curve;
+                        // Report the closer of the two endpoints
+                        float dPrev = (pt.X - prevPxX) * (pt.X - prevPxX) + (pt.Y - prevPxY) * (pt.Y - prevPxY);
+                        float dCur  = (pt.X - curPxX)  * (pt.X - curPxX)  + (pt.Y - curPxY)  * (pt.Y - curPxY);
+                        bestEndpointIdx = dPrev <= dCur ? i - 1 : i;
+                    }
+                    prevPxX = curPxX;
+                    prevPxY = curPxY;
+                }
+            }
+            if (bestCurve == null) return null;
+
+            var endpointX = bestCurve.Points[bestEndpointIdx].X;
+            var endpointY = bestCurve.Points[bestEndpointIdx].Y;
+
+            var rt = _cursorTip.RenderTools;
+            string yAxisLabel = _heatMapPane.YAxis.Title.Text ?? string.Empty;
+            var table = new TableDesc();
+            table.AddDetailRow(yAxisLabel, endpointY.ToString(Formats.IonMobility), rt);
+            if (!string.IsNullOrEmpty(bestCurve.Label?.Text))
+                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, bestCurve.Label?.Text, rt);
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, endpointX.ToString(@"F0"), rt);
+            return table;
+        }
+
+        private static float DistancePointToSegment(float px, float py, float ax, float ay, float bx, float by)
+        {
+            float dx = bx - ax, dy = by - ay;
+            float len2 = dx * dx + dy * dy;
+            if (len2 <= float.Epsilon)
+            {
+                float ex = px - ax, ey = py - ay;
+                return (float)Math.Sqrt(ex * ex + ey * ey);
+            }
+            float t = ((px - ax) * dx + (py - ay) * dy) / len2;
+            if (t < 0) t = 0; else if (t > 1) t = 1;
+            float qx = ax + t * dx, qy = ay + t * dy;
+            float ddx = px - qx, ddy = py - qy;
+            return (float)Math.Sqrt(ddx * ddx + ddy * ddy);
         }
 
         private TableDesc GetHeatMapTooltipTable(PointF pt)
@@ -1701,13 +2873,14 @@ namespace pwiz.Skyline.Controls.Graphs
             return table;
         }
 
-        private TableDesc GetSpectrumTooltipTable(PointF pt)
+        private TableDesc GetSpectrumTooltipTable(PointF pt, MSGraphPane spectrumPane = null)
         {
+            spectrumPane = spectrumPane ?? GraphPane;
             StickItem nearestCurve;
             int nearestIndex;
             double mz, intensity;
 
-            if (GraphPane.FindNearestStick(pt, out nearestCurve, out nearestIndex))
+            if (spectrumPane.FindNearestStick(pt, out nearestCurve, out nearestIndex))
             {
                 mz = nearestCurve[nearestIndex].X;
                 intensity = nearestCurve[nearestIndex].Y;
@@ -1716,10 +2889,10 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Cursor may be over an annotation label rather than the stick body itself.
                 // The label's X is the predicted m/z; find the closest observed stick nearby.
-                var label = GetNearestLabel(pt);
+                var label = GetNearestLabel(pt, spectrumPane);
                 if (label == null)
                     return null;
-                var stickPoint = FindStickPointNearMz(label.Location.X);
+                var stickPoint = FindStickPointNearMz(label.Location.X, spectrumPane);
                 if (stickPoint == null)
                     return null;
                 mz = stickPoint.X;
@@ -1789,11 +2962,12 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Finds the closest StickItem point to the given m/z, within a 1 Da tolerance.
         /// Used to resolve the observed m/z and intensity from a label's predicted m/z.
         /// </summary>
-        private PointPair FindStickPointNearMz(double mz)
+        private PointPair FindStickPointNearMz(double mz, MSGraphPane spectrumPane = null)
         {
+            spectrumPane = spectrumPane ?? GraphPane;
             PointPair best = null;
             double bestDist = double.MaxValue;
-            foreach (var curve in GraphPane.CurveList)
+            foreach (var curve in spectrumPane.CurveList)
             {
                 var stick = curve as StickItem;
                 if (stick == null)
@@ -1811,12 +2985,13 @@ namespace pwiz.Skyline.Controls.Graphs
             return bestDist <= 1.0 ? best : null;
         }
 
-        private TextObj GetNearestLabel(PointF mousePoint)
+        private TextObj GetNearestLabel(PointF mousePoint, MSGraphPane spectrumPane = null)
         {
+            spectrumPane = spectrumPane ?? GraphPane;
             using (Graphics g = CreateGraphics())
             {
                 object nearestObject;
-                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out _))
+                if (spectrumPane.FindNearestObject(mousePoint, g, out nearestObject, out _))
                 {
                     var textObj = nearestObject as TextObj;
                     if (textObj != null)
@@ -1833,7 +3008,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void TestMouseClick(double x, double y)
         {
-            var mouse = TransformCoordinates(x, y);
+            // In dual-pane mode, transform against stick pane for label clicks
+            var pane = IsDualPane ? _stickSpectrumPane : GraphPane;
+            var mouse = pane.GeneralTransform(new PointF((float)x, (float)y), CoordType.AxisXYScale);
             graphControl_MouseClick(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
         }
 
@@ -1851,7 +3028,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public TableDesc TestGetTooltipTable(double x = double.NaN, double y = double.NaN)
         {
-            bool isHeatMap = spectrumBtn.Visible && !spectrumBtn.Checked;
+            // Heatmap tooltip when heatmap is showing (dual-pane or single-pane heatmap mode)
+            bool isHeatMap = IsDualPane || (spectrumBtn.Visible && !spectrumBtn.Checked);
             var rt = _cursorTip.RenderTools;
             var table = new TableDesc();
 
@@ -1886,9 +3064,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                if (GraphPane.CurveList.Count == 0)
+                var specPane = IsDualPane ? _stickSpectrumPane : GraphPane;
+                if (specPane.CurveList.Count == 0)
                     return null;
-                var curve = GraphPane.CurveList[0];
+                var curve = specPane.CurveList[0];
                 if (curve.Points.Count == 0)
                     return null;
                 // Find curve point nearest to target m/z (or use midpoint)
@@ -1919,13 +3098,39 @@ namespace pwiz.Skyline.Controls.Graphs
             return TestGetTooltipTable(x, y)?.ToString();
         }
 
-        public string TitleText { get { return GraphPane.Title.Text; } }
-        public double XAxisMin { get { return GraphPane.XAxis.Scale.Min; }}
-        public double XAxisMax { get { return GraphPane.XAxis.Scale.Max; }}
-        public double YAxisMin { get { return GraphPane.YAxis.Scale.Min; }}
-        public double YAxisMax { get { return GraphPane.YAxis.Scale.Max; }}
+        /// <summary>
+        /// Returns the mobilogram tooltip table for the nearest PlotY2D point to the given ion
+        /// mobility value. Skips the screen-coordinate proximity check used during interaction.
+        /// </summary>
+        public TableDesc TestGetMobilogramTooltipTable(double imValue = double.NaN)
+        {
+            if (!IsMobilogramVisible || _heatMapData?.PlotY2D == null || _heatMapData.PlotY2D.Count == 0)
+                return null;
+            double searchIm = double.IsNaN(imValue)
+                ? _heatMapData.PlotY2D[_heatMapData.PlotY2D.Count / 2].Key
+                : imValue;
+            var nearest = _heatMapData.PlotY2D
+                .OrderBy(kvp => Math.Abs(kvp.Key - searchIm))
+                .First();
+            var rt = _cursorTip.RenderTools;
+            string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
+            var table = new TableDesc();
+            table.AddDetailRow(yAxisLabel, nearest.Key.ToString(Formats.IonMobility), rt);
+            table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, nearest.Value.ToString(@"F0"), rt);
+            return table;
+        }
+
+        public string TitleText => IsDualPane ? _stickSpectrumPane.Title.Text : GraphPane.Title.Text;
+        public double XAxisMin => GraphPane.XAxis.Scale.Min;
+        public double XAxisMax => GraphPane.XAxis.Scale.Max;
+        public double YAxisMin => GraphPane.YAxis.Scale.Min;
+        public double YAxisMax => GraphPane.YAxis.Scale.Max;
+        // In dual-pane mode, expose stick pane's Y-axis (intensity) separately from heatmap Y-axis (ion mobility)
+        public double StickYAxisMin => _stickSpectrumPane?.YAxis.Scale.Min ?? GraphPane.YAxis.Scale.Min;
+        public double StickYAxisMax => _stickSpectrumPane?.YAxis.Scale.Max ?? GraphPane.YAxis.Scale.Max;
+        public bool IsDualPaneMode => IsDualPane;
         // True if the purple ion-mobility filter band is currently drawn on the heatmap.
-        public bool HasIonMobilityFilterBand { get { return GraphPane.GraphObjList.OfType<BoxObj>().Any(); } }
+        public bool HasIonMobilityFilterBand => GraphPane.GraphObjList.OfType<BoxObj>().Any(b => TAG_IM_FILTER_BAND.Equals(b.Tag));
 
         public bool IsScanTypeSelected(ChromSource source)
         {
@@ -1972,9 +3177,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
+                var labelPane = IsDualPane ? _stickSpectrumPane : GraphPane;
                 if (toolStripButtonShowAnnotations.Checked && Program.SkylineOffscreen)
                 {
-                    var annotationCurves = GraphPane.CurveList.FindAll(c => c is StickItem && c.Tag is SpectrumGraphItem);
+                    var annotationCurves = labelPane.CurveList.FindAll(c => c is StickItem && c.Tag is SpectrumGraphItem);
                     if (annotationCurves.Any())
                     {
                         var graphItem = annotationCurves.First().Tag as SpectrumGraphItem;
@@ -1985,12 +3191,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    return GraphPane.GraphObjList.OfType<TextObj>()
-                        .ToList().FindAll(txt => txt.Location.X >= XAxisMin && txt.Location.X <= XAxisMax)      //select only annotations visible in the current window)
+                    return labelPane.GraphObjList.OfType<TextObj>()
+                        .ToList().FindAll(txt => txt.Location.X >= XAxisMin && txt.Location.X <= XAxisMax)
                         .Select(label => label.Text).ToHashSet();
                 }
             }
         }
+
+        public void SetMobilogram(bool isChecked)
+        {
+            mobilogramBtn.Checked = isChecked;
+        }
+
+        public bool IsMobilogramVisible => mobilogramBtn.Visible && mobilogramBtn.Checked;
 
         public ToolStripButton PropertyButton => propertiesBtn;
         public ToolStripButton LeftButton => leftButton;
