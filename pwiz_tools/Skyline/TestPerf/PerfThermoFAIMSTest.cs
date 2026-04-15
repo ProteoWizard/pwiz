@@ -90,6 +90,59 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
 
             // First precursor area will be less than 7613528 @ RT47.4 if we aren't treating CV data properly (397369 @ RT47.52 instead)
             Assume.IsTrue(SkylineWindow.Document.MoleculeTransitions.First().GetPeakArea(-1) >= 7600000);
+
+            VerifyFaimsChromInfoSerialization(documentFile);
+        }
+
+        /// <summary>
+        /// FAIMS produces chrom_info entries with a point ion_mobility value but no
+        /// filter window. Verify DocumentWriter serializes those as `ion_mobility="..."`
+        /// without `ion_mobility_window`/`ion_mobility_window_offset`, and that reopening
+        /// the file round-trips the IM value.
+        /// </summary>
+        private void VerifyFaimsChromInfoSerialization(string documentFile)
+        {
+            RunUI(() => SkylineWindow.SaveDocument());
+            var skyPath = GetTestPath(documentFile);
+            Assert.IsTrue(File.Exists(skyPath));
+            var skyText = File.ReadAllText(skyPath);
+
+            // FAIMS produces precursor_peak entries with ion_mobility_ms1 / ion_mobility_fragment
+            // but no meaningful filter window. Verify DocumentWriter skips the redundant
+            // ion_mobility_window and ion_mobility_window_offset attributes for FAIMS data.
+            var precursorPeaks = System.Text.RegularExpressions.Regex.Matches(skyText,
+                @"<precursor_peak\b[^>]*/?>");
+            AssertEx.IsTrue(precursorPeaks.Count > 0, "Expected some <precursor_peak> entries");
+            int faimsStyleCount = 0;
+            foreach (System.Text.RegularExpressions.Match m in precursorPeaks)
+            {
+                // No precursor_peak should serialize ion_mobility_window_offset="0"
+                AssertEx.IsFalse(m.Value.Contains(@"ion_mobility_window_offset=""0"""),
+                    "precursor_peak should not serialize ion_mobility_window_offset=\"0\": " + m.Value);
+                // And FAIMS entries (which have ion_mobility_ms1 but no window) should
+                // now omit ion_mobility_window entirely (was being written as "0")
+                if (m.Value.Contains(@"ion_mobility_ms1=") && m.Value.Contains(@"ion_mobility_type=""compensation_V"""))
+                {
+                    AssertEx.IsFalse(m.Value.Contains(@"ion_mobility_window="),
+                        "FAIMS precursor_peak should not serialize ion_mobility_window: " + m.Value);
+                    faimsStyleCount++;
+                }
+            }
+            AssertEx.IsTrue(faimsStyleCount > 0,
+                "Expected at least one FAIMS compensation_V precursor_peak");
+
+            // Reopen and confirm a FAIMS transition chrom info has a Mobility value and
+            // an empty filter window.
+            RunUI(() => SkylineWindow.NewDocument());
+            RunUI(() => SkylineWindow.OpenFile(skyPath));
+            WaitForDocumentLoaded();
+            var doc = SkylineWindow.Document;
+            var firstChromInfo = doc.MoleculeTransitions
+                .SelectMany(t => t.ChromInfos)
+                .FirstOrDefault(ci => ci.IonMobility.IonMobility.Mobility.HasValue);
+            AssertEx.IsNotNull(firstChromInfo, "Expected at least one chrom info with an IM value");
+            AssertEx.IsTrue(IonMobilityFilterWindow.IsNullOrEmpty(firstChromInfo.IonMobility.IonMobilityFilterWindow),
+                "FAIMS chrom info should have an empty filter window");
         }
 
         private void TestPopulateDocumentFromLibrary()

@@ -1301,17 +1301,26 @@ namespace pwiz.Skyline.Model.DocSettings
             if (IsEmpty)
                 return;
 
+            bool isLegacyFilterFormat = skylineVersion < DocumentFormat.ION_MOBILITY_FILTER_SKEW;
+            bool hasWindow = !IonMobilityFilterWindow.IsNullOrEmpty(IonMobilityFilterWindow);
+            // Old formats have no sense of an asymmetric (offset) window. When writing to
+            // such a format, shift the reported ion_mobility to the window center so that
+            // the saved (ion_mobility, window) pair still identifies the same IM range.
+            var writeMobility = IonMobilityAndCCS.IonMobility.Mobility;
+            if (isLegacyFilterFormat && hasWindow && IonMobilityFilterWindow.Offset != 0 && writeMobility.HasValue)
+                writeMobility = writeMobility.Value + IonMobilityFilterWindow.Offset;
+
             if (serializationElementType == SerializationElementType.TransitionGroupChromInfo)
             {
                 // Express in terms of ms1 vs fragment
-                writer.WriteAttributeNullable(skylineVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY ? 
+                writer.WriteAttributeNullable(skylineVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY ?
                         DocumentSerializer.ATTR.ion_mobility_ms1 :
-                        DocumentSerializer.ATTR.ion_mobility, 
-                    IonMobilityAndCCS.IonMobility.Mobility);
+                        DocumentSerializer.ATTR.ion_mobility,
+                    writeMobility);
                 if (skylineVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY)
                 {
-                    var ion_mobility_fragment = IonMobilityAndCCS.IonMobility.Mobility.HasValue ?
-                        (double?) (IonMobilityAndCCS.IonMobility.Mobility.Value + (IonMobilityAndCCS.HighEnergyIonMobilityValueOffset ?? 0)) :
+                    var ion_mobility_fragment = writeMobility.HasValue ?
+                        (double?) (writeMobility.Value + (IonMobilityAndCCS.HighEnergyIonMobilityValueOffset ?? 0)) :
                         null;
                     writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_fragment, ion_mobility_fragment);
                 }
@@ -1319,14 +1328,16 @@ namespace pwiz.Skyline.Model.DocSettings
             else
             {
                 // Express in terms of mobility and high energy offset
-                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility, IonMobilityAndCCS.IonMobility.Mobility);
+                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility, writeMobility);
                 if ((IonMobilityAndCCS.HighEnergyIonMobilityValueOffset ?? 0) != 0)
                     writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_high_energy_offset, IonMobilityAndCCS.HighEnergyIonMobilityValueOffset);
             }
-            if (!IonMobilityFilterWindow.IsNullOrEmpty(IonMobilityFilterWindow))
+            if (hasWindow)
             {
                 writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window, IonMobilityFilterWindow.Width);
-                if (IonMobilityFilterWindow.Offset != 0)
+                // ion_mobility_window_offset only exists in formats >= ION_MOBILITY_FILTER_SKEW,
+                // and it's redundant when zero.
+                if (IonMobilityFilterWindow.Offset != 0 && !isLegacyFilterFormat)
                     writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window_offset, IonMobilityFilterWindow.Offset);
             }
             writer.WriteAttributeNullable(DocumentSerializer.ATTR.ccs, CollisionalCrossSectionSqA);
