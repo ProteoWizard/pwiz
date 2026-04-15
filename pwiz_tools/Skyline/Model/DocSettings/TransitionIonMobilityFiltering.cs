@@ -936,7 +936,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// </summary>
     public class IonMobilityFilterWindow : Immutable, IEquatable<IonMobilityFilterWindow>, IComparable
     {
-        public static IonMobilityFilterWindow EMPTY = new IonMobilityFilterWindow(0, 0);
+        public static readonly IonMobilityFilterWindow EMPTY = new IonMobilityFilterWindow(0, 0);
         public static bool IsNullOrEmpty(IonMobilityFilterWindow imFilterWindow) => imFilterWindow == null || imFilterWindow.IsEmpty;
         public bool IsEmpty => Width == 0;
 
