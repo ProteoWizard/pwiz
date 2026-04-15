@@ -204,6 +204,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Show mobilogram overlay alongside heatmap.
             SetMobilogram(true);
+            // PauseTest(@"4-pane mobilogram view — take screenshots as desired");
             // Test mobilogram tooltip structure (2 rows: ion mobility + summed intensity).
             TestMobilogramTooltip();
             // Verify a point inside the filter band (3.152-3.651) has non-zero summed intensity.
