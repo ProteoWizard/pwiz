@@ -349,7 +349,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         _maxCount = Math.Max(_maxCount, count);
                     }
                 }
-                _heatMapData = new HeatMapData(points, false, GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count);
+                _heatMapData = new HeatMapData(points, GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count);
             }
 
             private void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int replicateIndex,

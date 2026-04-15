@@ -1070,8 +1070,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         points.Add(new Point3D(scan.Mzs[j],  mobilityValue, scan.Intensities[j]));
                     }
                 }
-                _heatMapData = new HeatMapData(points, mobilogramBtn.Checked,
-                    ((IHeatMapDataProvider)_heatMapPane).HeatMapZAxisName);
+                _heatMapData = new HeatMapData(points,
+                    ((IHeatMapDataProvider)_heatMapPane).HeatMapZAxisName,
+                    mobilogramBtn.Checked);
             }
 
             double minDrift;
