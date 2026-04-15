@@ -1045,6 +1045,9 @@ namespace pwiz.Skyline.Model.DocSettings
             IonMobilityFilterWindow ionMobilityFilterWindow,
             double? collisionalCrossSectionSqA)
         {
+            // NOTE: this overload deliberately permits `ionMobility.HasValue` with an
+            // empty window for any units (not just compensation_V) — consumers
+            // construct filters this way and handle the missing window downstream.
             if (!ionMobility.HasValue
                 && IonMobilityFilterWindow.IsNullOrEmpty(ionMobilityFilterWindow))
             {
@@ -1058,12 +1061,8 @@ namespace pwiz.Skyline.Model.DocSettings
             IonMobilityFilterWindow ionMobilityFilterWindow,
             double? collisionalCrossSectionSqA)
         {
-            if (IonMobilityValue.IsNullOrEmpty(ionMobility)
-                || IonMobilityFilterWindow.IsNullOrEmpty(ionMobilityFilterWindow))
-            {
-                return EMPTY;
-            }
-            return new IonMobilityFilter(IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, collisionalCrossSectionSqA, null),
+            return GetIonMobilityFilter(
+                IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, collisionalCrossSectionSqA, null),
                 ionMobilityFilterWindow);
         }
         
