@@ -338,7 +338,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void AdjustTwoPaneRowHeights()
         {
-            if (_stickSpectrumPane == null || _heatMapPane == null) return;
+            if (_stickSpectrumPane == null || _heatMapPane == null)
+                return;
             var mpRect = graphControl.MasterPane.Rect;
             if (mpRect.Width <= 0 || mpRect.Height <= 0)
                 return;
@@ -355,7 +356,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void RepinMobilogramIfDrifted()
         {
-            if (!IsMobilogramPaneVisible) return;
+            if (!IsMobilogramPaneVisible)
+                return;
             // Only re-apply the 2x2 split if pane Rects don't match expected — calling
             // every paint causes a repaint loop because Rect assignment invalidates.
             var mpRect = graphControl.MasterPane.Rect;
@@ -446,7 +448,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (graphControl.IsEnableVZoom != vZoomOk)
                     graphControl.IsEnableVZoom = vZoomOk;
             }
-            if (!IsDualPane) return;
+            if (!IsDualPane)
+                return;
             var hit = HitTestSplitter(e.Location);
             if (hit != SplitterDrag.None)
                 graphControl.Cursor = CursorForDrag(hit);
@@ -2067,7 +2070,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ZoomStickYAxis()
         {
-            if (_stickSpectrumPane == null) return;
+            if (_stickSpectrumPane == null)
+                return;
             var yScale = _stickSpectrumPane.YAxis.Scale;
             yScale.MinAuto = yScale.MaxAuto = false;
             _stickSpectrumPane.LockYAxisMinAtZero = true;
@@ -2388,9 +2392,13 @@ namespace pwiz.Skyline.Controls.Graphs
             // Use the same filter display range as the heatmap for the band
             double filterMin = double.NaN, filterMax = double.NaN, filterPeak = double.NaN;
             double minDrift, maxDrift;
-            _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(
-                out minDrift, out maxDrift, _msDataFileScanHelper.Source);
-            if (minDrift > 0 && maxDrift < double.MaxValue)
+            bool validRange = _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(
+                    out minDrift, out maxDrift, _msDataFileScanHelper.Source) &&
+                !double.IsNaN(minDrift) && !double.IsNaN(maxDrift) &&
+                !double.IsInfinity(minDrift) && !double.IsInfinity(maxDrift) &&
+                minDrift > double.MinValue && maxDrift < double.MaxValue &&
+                minDrift < maxDrift;
+            if (validRange)
             {
                 filterMin = minDrift;
                 filterMax = maxDrift;
