@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -62,8 +61,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private MSGraphPane _stickSpectrumPane;
         private MSGraphPane _mobilogramPane;
         private MSGraphPane _emptySpacerPane;
-        // Splitter geometry helpers (4-pane layout only)
-        private const float SPLITTER_HIT_PX = 4f; // cursor proximity threshold
+        // Splitter geometry helpers
+        private const float SPLITTER_HIT_PX = 6f;       // cursor proximity to a splitter line
+        private const float SPLITTER_CORNER_PX = 40f;   // corner grab-zone in the empty spacer pane
         private const float MIN_COL_FRACTION = 0.30f;
         private const float MAX_COL_FRACTION = 0.95f;
         private const float MIN_ROW_FRACTION = 0.15f;
@@ -339,7 +339,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_stickSpectrumPane == null || _heatMapPane == null) return;
             var mpRect = graphControl.MasterPane.Rect;
-            if (mpRect.Width <= 0 || mpRect.Height <= 0) return;
+            if (mpRect.Width <= 0 || mpRect.Height <= 0)
+                return;
             float topFrac = RowFraction;
             float topH = mpRect.Height * topFrac;
             float botH = mpRect.Height - topH;
@@ -351,8 +352,6 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Pin the mobilogram pane's Chart.Rect so it aligns vertically (and in height) with
         /// the heatmap's Chart.Rect. Without this, the heatmap's legend/margins cause the
         /// two chart areas to have different tops/bottoms, so IM values don't line up.
-        /// </summary>
-        /// <summary>
         /// If heatmap's actual chart rect no longer matches what we pinned, re-pin and
         /// invalidate so the next paint catches up. Called from the Paint handler.
         /// </summary>
@@ -373,7 +372,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             var heat = _heatMapPane.Chart.Rect;
-            if (heat.Height <= 0) return;
+            if (heat.Height <= 0)
+                return;
 
             // Always resync Y-axis state from heatmap — scale limits, steps, and auto
             // flags — so mobilogram Y values map to the exact same pixels as heatmap Y.
@@ -404,14 +404,23 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SplitterDrag HitTestSplitter(Point pt)
         {
-            if (!IsDualPane) return SplitterDrag.None;
+            if (!IsDualPane)
+                return SplitterDrag.None;
             float yMid = _heatMapPane.Rect.Y;
             bool nearH = Math.Abs(pt.Y - yMid) <= SPLITTER_HIT_PX;
             if (IsMobilogramPaneVisible)
             {
                 float xMid = _emptySpacerPane.Rect.X;
                 bool nearV = Math.Abs(pt.X - xMid) <= SPLITTER_HIT_PX;
-                if (nearV && nearH) return SplitterDrag.Both;
+                // Bottom-left corner of the empty spacer pane is a generous grab-zone for
+                // the cruciform intersection — easier to hit than the 12px-wide cross.
+                var spacer = _emptySpacerPane.Rect;
+                bool inCorner = pt.X >= spacer.Left && pt.X <= spacer.Left + SPLITTER_CORNER_PX &&
+                                pt.Y >= spacer.Bottom - SPLITTER_CORNER_PX && pt.Y <= spacer.Bottom;
+                if (inCorner)
+                    return SplitterDrag.Both;
+                if (nearV && nearH)
+                    return SplitterDrag.Both;
                 if (nearV) return SplitterDrag.Vertical;
             }
             if (nearH) return SplitterDrag.Horizontal;
@@ -422,6 +431,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_activeDrag != SplitterDrag.None)
             {
+                // Keep the splitter cursor throughout the drag — ZedGraph's own mouse
+                // handling otherwise resets it to Default when the cursor leaves the
+                // original splitter-line hit zone.
+                graphControl.Cursor = CursorForDrag(_activeDrag);
                 ApplyDrag(e.Location);
                 return;
             }
@@ -437,22 +450,32 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (!IsDualPane) return;
             var hit = HitTestSplitter(e.Location);
-            switch (hit)
+            if (hit != SplitterDrag.None)
+                graphControl.Cursor = CursorForDrag(hit);
+        }
+
+        private static Cursor CursorForDrag(SplitterDrag d)
+        {
+            switch (d)
             {
                 case SplitterDrag.Vertical:
-                    graphControl.Cursor = Cursors.VSplit; break;
+                    return Cursors.VSplit;
                 case SplitterDrag.Horizontal:
-                    graphControl.Cursor = Cursors.HSplit; break;
+                    return Cursors.HSplit;
                 case SplitterDrag.Both:
-                    graphControl.Cursor = Cursors.SizeAll; break;
+                    return Cursors.SizeAll;
+                default:
+                    return Cursors.Default;
             }
         }
 
         private bool graphControl_SplitterMouseDown(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left) return false;
+            if (e.Button != MouseButtons.Left)
+                return false;
             var hit = HitTestSplitter(e.Location);
-            if (hit == SplitterDrag.None) return false;
+            if (hit == SplitterDrag.None)
+                return false;
             _activeDrag = hit;
             graphControl.Capture = true;
             return true; // suppress ZedGraph pan/zoom while dragging splitter
@@ -460,7 +483,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_SplitterMouseUp(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (_activeDrag == SplitterDrag.None) return false;
+            if (_activeDrag == SplitterDrag.None)
+                return false;
             _activeDrag = SplitterDrag.None;
             graphControl.Capture = false;
             Settings.Default.Save();
@@ -470,7 +494,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private void ApplyDrag(Point pt)
         {
             var mpRect = graphControl.MasterPane.Rect;
-            if (mpRect.Width <= 0 || mpRect.Height <= 0) return;
+            if (mpRect.Width <= 0 || mpRect.Height <= 0)
+                return;
 
             if (_activeDrag == SplitterDrag.Vertical || _activeDrag == SplitterDrag.Both)
                 ColumnFraction = (pt.X - mpRect.X) / mpRect.Width;
@@ -2403,7 +2428,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     foreach (var pt in _heatMapData.GetAllPoints())
                     {
                         double mz = pt.Point.X;
-                        float im = (float)pt.Point.Y;
+                        var im = pt.Point.Y;
                         double intensity = pt.Point.Z;
                         foreach (var kvp in perTransition)
                         {
@@ -2778,7 +2803,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var table = new TableDesc();
             table.AddDetailRow(yAxisLabel, endpointY.ToString(Formats.IonMobility), rt);
             if (!string.IsNullOrEmpty(bestCurve.Label?.Text))
-                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, bestCurve.Label.Text, rt);
+                table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, bestCurve.Label?.Text, rt);
             table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, endpointX.ToString(@"F0"), rt);
             return table;
         }
