@@ -136,7 +136,7 @@
 <g transform="translate(40, 40)">
   <text class="title">Osprey / OspreySharp DIA search pipeline</text>
   <text class="subtitle" y="22">
-    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-13, Session 10 (0.9x single-file, 0.55x 3-file parallel with server GC)
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-16, Session 14 (Stages 1-4 complete; 21 PIN features bit-identical on Stellar + Astral; C# 0.59x Rust 3-file parallel)
   </text>
 </g>
 
@@ -223,7 +223,7 @@
 
   <!-- Stage 2 badges (upper right of container) -->
   <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">3 (mzML parsing, isolation windows)</tspan></text>
-  <text x="1115" y="44" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">5.5s (1.1x Rust)</tspan></text>
+  <text x="1115" y="44" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">5.8s (1.2x Rust)</tspan></text>
 
   <path class="flow" d="M 890 112 L 890 128" marker-end="url(#arrow)"/>
 </g>
@@ -286,7 +286,7 @@
 
   <!-- Stage 3 badges (upper right of container) -->
   <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">31 + 10 regression (xcorr, apex, SNR, LOESS, LDA, f64)</tspan></text>
-  <text x="1115" y="38" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">10.4s (1.2x Rust)</tspan></text>
+  <text x="1115" y="38" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">11.7s (1.5x Rust)</tspan></text>
 </g>
 
 <!-- Arrow from calibration to main search -->
@@ -310,11 +310,11 @@
 
   <rect class="st-done" x="80" y="140" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="160" text-anchor="middle">21 PIN features per entry (pre-preprocessed XCorr, signal prefilter, CWT fallback)</text>
-  <text class="stage-desc"  x="600" y="174" text-anchor="middle">0.00% divergence on 317K entries; 466K entries match Rust within 23</text>
+  <text class="stage-desc"  x="600" y="174" text-anchor="middle">21/21 features ULP-identical on Stellar (466K entries); 21/21 pass on Astral (19 ULP, xcorr/sg_xcorr ~1e-7 from f32 HRAM cache)</text>
 
   <!-- Stage 4 badges (upper right of container) -->
   <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">2 + 8 regression (bin dedup, coelution, median polish, boundary)</tspan></text>
-  <text x="1115" y="38" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">4.0s (0.8x Rust)</tspan></text>
+  <text x="1115" y="38" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">4.5s (0.9x Rust)</tspan></text>
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
 </g>
@@ -420,24 +420,35 @@
 
 <footer>
   <p>
-    <strong>Evidence (Stellar file 20, <code>--resolution unit</code>):</strong>
-    Stages 1-4 fully proven. 21 PIN features at 0.00% divergence across
-    317,630 matched entries. Entry count parity: 466,175 C# vs 466,198 Rust
-    (delta 23). 185 C# unit tests (18 regression tests for Sessions 5-9 bug
-    classes) + 5 Rust cross-implementation regression tests.
+    <strong>Evidence (Stellar + Astral, <code>--resolution unit</code>):</strong>
+    Stages 1-4 fully proven on both datasets. 21 PIN features bit-identical at ULP
+    on Stellar (466K entries match, all 21 under 1e-10). On Astral 19 of 21 are ULP,
+    and xcorr / sg_weighted_xcorr drift at ~1e-7 from the intrinsic f32 HRAM
+    preprocessed-bin cache (matches upstream osprey-scoring). Per-file results are
+    bit-identical across sequential / 2-file parallel / 3-file parallel execution
+    modes after the <code>OspreyConfig.ShallowClone()</code> fix that isolated
+    per-file MS2-calibration tolerance.
   </p>
   <p>
-    <strong>Performance (Session 10, <code>Bench-Scoring.ps1</code>, server GC):</strong>
-    Single file: C# 21.9s vs Rust 24.5s = <strong>0.9x (C# faster)</strong>.
-    3-file parallel: C# 51.5s vs Rust 93.5s = <strong>0.55x (C# 1.8x faster)</strong>.
-    Stage breakdown (single file with server GC): S1 0.7s, S2 5.5s, S3 10.4s, S4 4.0s.
-    Key optimizations: server GC, pre-preprocessed XCorr per window, producer-consumer
-    mzML pipeline, parallel file processing, library binary cache, signal prefilter,
-    CWT fallback peak detection, cached prefilter top-6 m/z.
+    <strong>Performance (Session 14, <code>Bench-Scoring.ps1 -Dataset Stellar</code>,
+    median of 5 iterations):</strong>
+    Single file: C# 22.7s vs Rust 23.2s = <strong>1.0x (tied)</strong>.
+    3-file sequential: C# 63.9s vs Rust 83.4s = <strong>0.77x (C# 1.3x faster)</strong>.
+    3-file parallel: C# 49.5s vs Rust 83.4s = <strong>0.59x (C# 1.7x faster)</strong>.
+    Astral single-file end-to-end: C# 120.9s vs Rust 911.6s = <strong>0.13x
+    (C# 7.5x faster)</strong> after the Session 12-14 memory-pool stack.
+    Key optimizations: <code>XcorrScratchPool</code> (eliminates LOH churn on the
+    ~100K-bin HRAM scratch), per-window pre-preprocessed XCorr cache with f32
+    narrowing, pooled <code>visitedBins</code> for O(n_fragments) selective clear,
+    per-file thread scaling to avoid oversubscription when files run in parallel,
+    and a mzML read gate that serializes disk I/O across concurrent
+    <code>ProcessFile</code> calls.
   </p>
   <p>
-    Next targets: Stage 5 (Percolator SVM FDR), Rust parallel file processing
-    (PR to maccoss/osprey), Skyline CommonUtil integration.
+    Next targets: Stage 5 (Percolator SVM FDR), upstream the three Rust
+    bug fixes from Session 11 (XCorr fragment-bin dedup, DIA window-bounds
+    truncation, unit-bin calibration scorer) to maccoss/osprey,
+    Skyline CommonUtil integration.
     Branch <code>Skyline/work/20260409_osprey_sharp</code>.
   </p>
 </footer>
