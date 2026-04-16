@@ -528,13 +528,14 @@ namespace pwiz.Skyline.Model.Results
             bool WouldWith(SrmSettings probe) =>
                 WouldApplyIonMobilityFiltering(probe, libraryIonMobilityInfo, molecules, ionMobilityMax);
 
-            // Prefer the user's existing window if one is configured - probing with their real
-            // values keeps the "would this change fix it?" test faithful instead of substituting
-            // an arbitrary resolving power. Fall back to a default probe only when no window
-            // type is set at all.
+            // Prefer the user's existing window if one is both selected and usable - probing with
+            // their real values keeps the "would this change fix it?" test faithful instead of
+            // substituting an arbitrary resolving power. Fall back to a default probe if no
+            // window type is set OR the selected type has a zero-valued primary field
+            // (e.g., fixed_width=0, linear_range widths both 0), which would produce a
+            // zero-width filter and make the probe a silent no-op.
             var existingCalc = settings.TransitionSettings.IonMobilityFiltering?.FilterWindowWidthCalculator;
-            var probeWindow = existingCalc != null &&
-                              existingCalc.WindowWidthMode != IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none
+            var probeWindow = HasUsableWindow(existingCalc)
                 ? existingCalc
                 : new IonMobilityWindowWidthCalculator(PROBE_RESOLVING_POWER);
             SrmSettings WithWindow(SrmSettings s) => s.ChangeTransitionSettings(
@@ -566,6 +567,29 @@ namespace pwiz.Skyline.Model.Results
             {
                 var fileName = msDataFileUri?.GetFileName() ?? string.Empty;
                 Messages.WriteAsyncUserMessage(message, fileName);
+            }
+        }
+
+        // A calculator is "usable" as a probe only if its active mode has a non-zero primary
+        // field. A mode-selected-but-all-zero calculator produces a zero-width filter that makes
+        // the WithWindow probe a silent no-op, which would incorrectly suppress the warning.
+        private static bool HasUsableWindow(IonMobilityWindowWidthCalculator calc)
+        {
+            if (calc == null)
+            {
+                return false;
+            }
+            switch (calc.WindowWidthMode)
+            {
+                case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power:
+                    return calc.ResolvingPower > 0;
+                case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width:
+                    return calc.FixedWindowWidth > 0;
+                case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.linear_range:
+                    return calc.PeakWidthAtIonMobilityValueZero > 0 ||
+                           calc.PeakWidthAtIonMobilityValueMax > 0;
+                default:
+                    return false;
             }
         }
 

@@ -788,7 +788,7 @@ namespace pwiz.Skyline.Model.Results {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Note: ion mobility values are available for &quot;{0}&quot;, but no filter window is configured. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and set a window type (resolving power, fixed width, or linear range) with a tolerance..
+        ///   Looks up a localized string similar to Note: ion mobility values are available for &quot;{0}&quot;, but no effective filter window is configured. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and set a window type (resolving power, fixed width, or linear range) with a non-zero tolerance..
         /// </summary>
         public static string SpectrumFilter_IonMobilityFilteringDisabled_SetWindow {
             get {
