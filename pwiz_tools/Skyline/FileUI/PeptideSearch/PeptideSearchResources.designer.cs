@@ -397,6 +397,52 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DIA-NN search did not produce a spectral library output..
+        /// </summary>
+        public static string DiannSearchControl_Search_DIA_NN_search_did_not_produce_a_spectral_library_output_ {
+            get {
+                return ResourceManager.GetString("DiannSearchControl_Search_DIA_NN_search_did_not_produce_a_spectral_library_output_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A FASTA file is required for a DIA-NN search..
+        /// </summary>
+        public static string DiannSearchDlg_NextPage_A_FASTA_file_is_required_for_a_DIA_NN_search_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_NextPage_A_FASTA_file_is_required_for_a_DIA_NN_search_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN output spectral library not found..
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN executable not found at &apos;{0}&apos;. Please configure the path via Edit &gt; Search Tools..
+        /// </summary>
+        public static string DiannSearchDlg_NextPage_DIA_NN_executable_not_found_at___0____Please_configure_the_path_via_Edit___Search_Tools_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_NextPage_DIA_NN_executable_not_found_at___0____Please_configure_the" +
+                    "_path_via_Edit___Search_Tools_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Please add at least one DIA data file..
+        /// </summary>
+        public static string DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Reusing Koina predictions from: {0}.
         /// </summary>
         public static string EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_ {
