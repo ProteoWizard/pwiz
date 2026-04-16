@@ -3437,24 +3437,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating predicted spectral library from FASTA....
-        /// </summary>
-        public static string DiannHelpers_RunSearch_Generating_predicted_spectral_library_from_FASTA___ {
-            get {
-                return ResourceManager.GetString("DiannHelpers_RunSearch_Generating_predicted_spectral_library_from_FASTA___", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Searching DIA files against predicted library....
-        /// </summary>
-        public static string DiannHelpers_RunSearch_Searching_DIA_files_against_predicted_library___ {
-            get {
-                return ResourceManager.GetString("DiannHelpers_RunSearch_Searching_DIA_files_against_predicted_library___", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap directoryicon {
