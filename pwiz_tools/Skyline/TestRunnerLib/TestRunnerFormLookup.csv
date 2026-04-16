@@ -87,6 +87,7 @@ EditStaticModDlg.IsotopeModView,TestEditStaticMod
 EditStaticModDlg.StructuralModView,TestEditStaticMod
 DiannSearchDlg.DataFilesPage,TestDiannSearch
 DiannSearchDlg.FastaPage,TestDiannSearch
+DiannSearchDlg.ModificationsPage,TestDiannSearch
 DiannSearchDlg.SearchSettingsPage,TestDiannSearch
 DiannSearchDlg.RunPage,TestDiannSearch
 EmptyProteinsDlg,TestImportPeptideSearch

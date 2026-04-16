@@ -21,11 +21,12 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.FileUI;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -38,36 +39,34 @@ namespace pwiz.SkylineTestFunctional
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)]
         public void TestDiannSearch()
         {
-            TestFilesZip = @"Test\EncyclopeDiaHelpersTest.zip";
+            TestFilesZip = @"TestFunctional\DiannSearchTest.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            // Try to find DIA-NN - check configured path, DIANN_PATH env var, then common locations
-            string diannPath = DiannHelpers.DiannBinary;
-            if (!File.Exists(diannPath))
-                diannPath = Environment.GetEnvironmentVariable(@"DIANN_PATH");
-            if (diannPath == null || !File.Exists(diannPath))
-            {
-                Console.Error.WriteLine(@"NOTE: skipping DIA-NN test because DIA-NN is not installed (configure path via Edit > Search Tools)");
-                return;
-            }
-
-            // Configure the search tool path
-            Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN, diannPath, string.Empty, Path.GetDirectoryName(diannPath), false));
+            // Download DIA-NN from the Skyline tool testing mirror (cached across runs).
+            var progress = new SilentProgressMonitor();
+            Assert.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(DiannHelpers.FilesToDownload, progress),
+                @"Failed to download DIA-NN");
+            Assert.IsTrue(File.Exists(DiannHelpers.DiannBinary),
+                $@"DIA-NN binary not found at {DiannHelpers.DiannBinary} after download");
 
             PrepareDocument("DiannSearchTest.sky");
-            string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705.fasta");
+            string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library.fasta");
+            string[] diaFilePaths =
+            {
+                TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1c.mzML"),
+                TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1d.mzML")
+            };
 
             // Open DIA-NN search dialog
             var searchDlg = ShowDialog<DiannSearchDlg>(SkylineWindow.ShowDiannSearchDlg);
 
             // Page 0: Data files - add wide window DIA file
             RunUI(() => Assert.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.data_files_page));
-            var browseDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.DataFileResults.Browse());
-            RunUI(() => browseDlg.SelectFile("23aug2017_hela_serum_timecourse_wide_1d.mzML"));
-            OkDialog(browseDlg, browseDlg.Open);
+            RunUI(() => searchDlg.DataFileResults.FoundResultsFiles = diaFilePaths
+                .Select(p => new ImportPeptideSearch.FoundResultsFile(Path.GetFileName(p), p)).ToArray());
 
             // Page 1: FASTA
             RunUI(searchDlg.NextPage);
@@ -77,19 +76,24 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
             });
 
-            // Page 2: Search settings
+            // Page 2: Modifications (defaults: Carbamidomethyl C fixed, Oxidation M variable)
+            RunUI(searchDlg.NextPage);
+            RunUI(() => Assert.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.modifications_page));
+
+            // Page 3: Search settings
             RunUI(searchDlg.NextPage);
             RunUI(() =>
             {
                 Assert.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.search_settings_page);
-                // Use auto-detect tolerances (0), lower thread count for test
-                searchDlg.Ms1Tolerance = 0;
-                searchDlg.Ms2Tolerance = 0;
+                searchDlg.Ms1Tolerance = 10;
+                searchDlg.Ms2Tolerance = 20;
                 searchDlg.QValueThreshold = 0.01;
-                searchDlg.Threads = Math.Min(4, Environment.ProcessorCount);
+                searchDlg.Threads = Environment.ProcessorCount;
+                searchDlg.DiannSearchConfig.AdditionalSettings[@"MinPrecursorCharge"].Value = 2;
+                searchDlg.DiannSearchConfig.AdditionalSettings[@"MaxPrecursorCharge"].Value = 3;
             });
 
-            // Page 3: Start search
+            // Page 4: Start search
             RunUI(searchDlg.NextPage);
 
             // Wait for search to complete (DIA-NN can take a while)

@@ -42,6 +42,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.searchSettingsPage = new System.Windows.Forms.TabPage();
             this.lblSearchSettings = new System.Windows.Forms.Label();
             this.cbMetExcision = new System.Windows.Forms.CheckBox();
+            this.btnAdditionalSettings = new System.Windows.Forms.Button();
             this.numMissedCleavages = new System.Windows.Forms.NumericUpDown();
             this.lblMissedCleavages = new System.Windows.Forms.Label();
             this.numThreads = new System.Windows.Forms.NumericUpDown();
@@ -52,6 +53,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.lblMs2Tolerance = new System.Windows.Forms.Label();
             this.numMs1Tolerance = new System.Windows.Forms.NumericUpDown();
             this.lblMs1Tolerance = new System.Windows.Forms.Label();
+            this.modificationsPage = new System.Windows.Forms.TabPage();
+            this.lblModifications = new System.Windows.Forms.Label();
+            this.lblFixedMods = new System.Windows.Forms.Label();
+            this.listFixedMods = new System.Windows.Forms.ListBox();
+            this.btnAddFixedMod = new System.Windows.Forms.Button();
+            this.btnRemoveFixedMod = new System.Windows.Forms.Button();
+            this.lblVariableMods = new System.Windows.Forms.Label();
+            this.listVariableMods = new System.Windows.Forms.ListBox();
+            this.btnAddVariableMod = new System.Windows.Forms.Button();
+            this.btnRemoveVariableMod = new System.Windows.Forms.Button();
             this.runSearchPage = new System.Windows.Forms.TabPage();
             this.wizardPages.SuspendLayout();
             this.searchSettingsPage.SuspendLayout();
@@ -87,6 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.wizardPages, "wizardPages");
             this.wizardPages.Controls.Add(this.dataFilesPage);
             this.wizardPages.Controls.Add(this.fastaPage);
+            this.wizardPages.Controls.Add(this.modificationsPage);
             this.wizardPages.Controls.Add(this.searchSettingsPage);
             this.wizardPages.Controls.Add(this.runSearchPage);
             this.wizardPages.Name = "wizardPages";
@@ -116,8 +128,77 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.lblFasta, "lblFasta");
             this.lblFasta.Name = "lblFasta";
             //
+            // modificationsPage
+            //
+            this.modificationsPage.Controls.Add(this.lblModifications);
+            this.modificationsPage.Controls.Add(this.lblFixedMods);
+            this.modificationsPage.Controls.Add(this.listFixedMods);
+            this.modificationsPage.Controls.Add(this.btnAddFixedMod);
+            this.modificationsPage.Controls.Add(this.btnRemoveFixedMod);
+            this.modificationsPage.Controls.Add(this.lblVariableMods);
+            this.modificationsPage.Controls.Add(this.listVariableMods);
+            this.modificationsPage.Controls.Add(this.btnAddVariableMod);
+            this.modificationsPage.Controls.Add(this.btnRemoveVariableMod);
+            resources.ApplyResources(this.modificationsPage, "modificationsPage");
+            this.modificationsPage.Name = "modificationsPage";
+            this.modificationsPage.UseVisualStyleBackColor = true;
+            //
+            // lblModifications
+            //
+            resources.ApplyResources(this.lblModifications, "lblModifications");
+            this.lblModifications.Name = "lblModifications";
+            //
+            // lblFixedMods
+            //
+            resources.ApplyResources(this.lblFixedMods, "lblFixedMods");
+            this.lblFixedMods.Name = "lblFixedMods";
+            //
+            // listFixedMods
+            //
+            resources.ApplyResources(this.listFixedMods, "listFixedMods");
+            this.listFixedMods.Name = "listFixedMods";
+            //
+            // btnAddFixedMod
+            //
+            resources.ApplyResources(this.btnAddFixedMod, "btnAddFixedMod");
+            this.btnAddFixedMod.Name = "btnAddFixedMod";
+            this.btnAddFixedMod.UseVisualStyleBackColor = true;
+            this.btnAddFixedMod.Click += new System.EventHandler(this.btnAddFixedMod_Click);
+            //
+            // btnRemoveFixedMod
+            //
+            resources.ApplyResources(this.btnRemoveFixedMod, "btnRemoveFixedMod");
+            this.btnRemoveFixedMod.Name = "btnRemoveFixedMod";
+            this.btnRemoveFixedMod.UseVisualStyleBackColor = true;
+            this.btnRemoveFixedMod.Click += new System.EventHandler(this.btnRemoveFixedMod_Click);
+            //
+            // lblVariableMods
+            //
+            resources.ApplyResources(this.lblVariableMods, "lblVariableMods");
+            this.lblVariableMods.Name = "lblVariableMods";
+            //
+            // listVariableMods
+            //
+            resources.ApplyResources(this.listVariableMods, "listVariableMods");
+            this.listVariableMods.Name = "listVariableMods";
+            //
+            // btnAddVariableMod
+            //
+            resources.ApplyResources(this.btnAddVariableMod, "btnAddVariableMod");
+            this.btnAddVariableMod.Name = "btnAddVariableMod";
+            this.btnAddVariableMod.UseVisualStyleBackColor = true;
+            this.btnAddVariableMod.Click += new System.EventHandler(this.btnAddVariableMod_Click);
+            //
+            // btnRemoveVariableMod
+            //
+            resources.ApplyResources(this.btnRemoveVariableMod, "btnRemoveVariableMod");
+            this.btnRemoveVariableMod.Name = "btnRemoveVariableMod";
+            this.btnRemoveVariableMod.UseVisualStyleBackColor = true;
+            this.btnRemoveVariableMod.Click += new System.EventHandler(this.btnRemoveVariableMod_Click);
+            //
             // searchSettingsPage
             //
+            this.searchSettingsPage.Controls.Add(this.btnAdditionalSettings);
             this.searchSettingsPage.Controls.Add(this.cbMetExcision);
             this.searchSettingsPage.Controls.Add(this.numMissedCleavages);
             this.searchSettingsPage.Controls.Add(this.lblMissedCleavages);
@@ -206,6 +287,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbMetExcision.Name = "cbMetExcision";
             this.cbMetExcision.UseVisualStyleBackColor = true;
             //
+            // btnAdditionalSettings
+            //
+            resources.ApplyResources(this.btnAdditionalSettings, "btnAdditionalSettings");
+            this.btnAdditionalSettings.Name = "btnAdditionalSettings";
+            this.btnAdditionalSettings.UseVisualStyleBackColor = true;
+            this.btnAdditionalSettings.Click += new System.EventHandler(this.btnAdditionalSettings_Click);
+            //
             // runSearchPage
             //
             resources.ApplyResources(this.runSearchPage, "runSearchPage");
@@ -259,6 +347,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Label lblMissedCleavages;
         private System.Windows.Forms.NumericUpDown numMissedCleavages;
         private System.Windows.Forms.CheckBox cbMetExcision;
+        private System.Windows.Forms.Button btnAdditionalSettings;
+        private System.Windows.Forms.TabPage modificationsPage;
+        private System.Windows.Forms.Label lblModifications;
+        private System.Windows.Forms.Label lblFixedMods;
+        private System.Windows.Forms.ListBox listFixedMods;
+        private System.Windows.Forms.Button btnAddFixedMod;
+        private System.Windows.Forms.Button btnRemoveFixedMod;
+        private System.Windows.Forms.Label lblVariableMods;
+        private System.Windows.Forms.ListBox listVariableMods;
+        private System.Windows.Forms.Button btnAddVariableMod;
+        private System.Windows.Forms.Button btnRemoveVariableMod;
         private System.Windows.Forms.TabPage runSearchPage;
     }
 }

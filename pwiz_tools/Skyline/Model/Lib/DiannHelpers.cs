@@ -22,28 +22,57 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
     public static class DiannHelpers
     {
+        public const string DIANN_VERSION = @"2.5.0";
+        public static readonly string DIANN_FILENAME = $@"DIANN-{DIANN_VERSION}";
+        public static string DiannDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), DIANN_FILENAME);
         public static string DiannBinary =>
-            Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.DIANN, @"diann.exe");
+            Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.DIANN, Path.Combine(DiannDirectory, @"diann.exe"));
         public static string DiannArgs =>
             Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.DIANN, string.Empty);
 
         public static readonly Uri DIANN_DOWNLOAD_URL = new Uri(@"https://github.com/vdemichev/DiaNN/releases");
 
         /// <summary>
+        /// Mirrored DIA-NN 2.5.0 install on the Skyline tool testing S3 bucket, used by
+        /// functional tests. <see cref="SimpleFileDownloader.DownloadRequiredFiles"/> rewrites
+        /// this URL to the mirror when running under a unit test.
+        /// </summary>
+        private static readonly Uri DIANN_TEST_MIRROR_URL =
+            new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{DIANN_FILENAME}.zip");
+
+        public static FileDownloadInfo DiannDownloadInfo => new FileDownloadInfo
+        {
+            Filename = DIANN_FILENAME,
+            // The zip contains a top-level DIANN-<version>/ folder, so extract into the
+            // Tools directory (its parent) rather than DiannDirectory.
+            InstallPath = ToolDescriptionHelpers.GetToolsDirectory(),
+            CheckInstalledPath = DiannBinary,
+            DownloadUrl = DIANN_TEST_MIRROR_URL,
+            OverwriteExisting = true,
+            Unzip = true,
+            ToolType = SearchToolType.DIANN,
+            ToolPath = DiannBinary,
+            ToolExtraArgs = DiannArgs
+        };
+        public static FileDownloadInfo[] FilesToDownload => new[] { DiannDownloadInfo };
+
+        /// <summary>
         /// Maps Skyline enzyme names to DIA-NN --cut patterns.
-        /// DIA-NN cut syntax: letters followed by * mean "cut after this AA";
-        /// !*X means "don't cut if followed by X".
         /// </summary>
         private static readonly Dictionary<string, string> ENZYME_MAP = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -92,45 +121,19 @@ namespace pwiz.Skyline.Model.Lib
             if (unimodId.HasValue)
                 return string.Format(@"UniMod:{0},{1},{2}", unimodId.Value, massStr, aminoAcids);
 
-            // Fallback: use mass-only format with empty UniMod placeholder
+            // Fallback: use mass-only format
             return string.Format(@"{0},{1}", massStr, aminoAcids);
         }
 
         /// <summary>
-        /// Build the DIA-NN command-line arguments string.
+        /// Append common DIA-NN arguments (tolerances, enzyme, mods, etc.) to the command-line builder.
         /// </summary>
-        public static string BuildCommandLine(
-            IEnumerable<string> dataFiles,
-            string fastaFilepath,
-            string outputReportPath,
-            string outputLibPath,
-            DiannConfig config,
-            IEnumerable<StaticMod> fixedMods = null,
-            IEnumerable<StaticMod> variableMods = null,
-            Enzyme enzyme = null,
-            string inputLibPath = null)
+        private static void AppendCommonArgs(StringBuilder sb, DiannConfig config,
+            IEnumerable<StaticMod> fixedMods, IEnumerable<StaticMod> variableMods, Enzyme enzyme)
         {
-            var sb = new StringBuilder();
-
             // Extra args from search tool configuration
             if (!string.IsNullOrEmpty(DiannArgs))
                 sb.Append(DiannArgs).Append(' ');
-
-            // Input files
-            foreach (var file in dataFiles)
-                sb.AppendFormat(@"--f {0} ", file.Quote());
-
-            // FASTA and library
-            sb.AppendFormat(@"--fasta {0} ", fastaFilepath.Quote());
-            if (!string.IsNullOrEmpty(inputLibPath))
-                sb.AppendFormat(@"--lib {0} ", inputLibPath.Quote());
-            else
-                sb.Append(@"--fasta-search ");
-
-            // Output
-            sb.AppendFormat(@"--out {0} ", outputReportPath.Quote());
-            sb.AppendFormat(@"--out-lib {0} ", outputLibPath.Quote());
-            sb.Append(@"--gen-spec-lib ");
 
             // Tolerances (0 = auto-detect)
             if (config.Ms1Accuracy > 0)
@@ -179,8 +182,69 @@ namespace pwiz.Skyline.Model.Lib
                     sb.AppendFormat(@"--var-mod {0} ", FormatModification(mod));
             }
 
+            // Skyline builds its own library from the speclib, so skip DIA-NN's protein inference.
+            sb.Append(@"--no-prot-inf ");
+
             // Verbose output for progress tracking
             sb.Append(@"--verbose 1 ");
+        }
+
+        /// <summary>
+        /// Build command-line for Step 1: Generate a predicted spectral library from FASTA using deep learning.
+        /// No raw data files are provided in this step.
+        /// </summary>
+        public static string BuildLibraryGenerationCommandLine(
+            string fastaFilepath,
+            string predictedLibPath,
+            DiannConfig config,
+            IEnumerable<StaticMod> fixedMods = null,
+            IEnumerable<StaticMod> variableMods = null,
+            Enzyme enzyme = null)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendFormat(@"--fasta {0} ", fastaFilepath.Quote());
+            sb.Append(@"--fasta-search ");
+            sb.AppendFormat(@"--out-lib {0} ", predictedLibPath.Quote());
+            sb.Append(@"--predictor ");
+
+            AppendCommonArgs(sb, config, fixedMods, variableMods, enzyme);
+
+            return sb.ToString().TrimEnd();
+        }
+
+        /// <summary>
+        /// Build command-line for Step 2: Search raw DIA files against the predicted spectral library.
+        /// </summary>
+        public static string BuildSearchCommandLine(
+            IEnumerable<string> dataFiles,
+            string fastaFilepath,
+            string inputLibPath,
+            string outputReportPath,
+            string outputLibPath,
+            DiannConfig config,
+            IEnumerable<StaticMod> fixedMods = null,
+            IEnumerable<StaticMod> variableMods = null,
+            Enzyme enzyme = null)
+        {
+            var sb = new StringBuilder();
+
+            // Input files
+            foreach (var file in dataFiles)
+                sb.AppendFormat(@"--f {0} ", file.Quote());
+
+            // FASTA (for protein inference) and predicted library
+            sb.AppendFormat(@"--fasta {0} ", fastaFilepath.Quote());
+            sb.AppendFormat(@"--lib {0} ", inputLibPath.Quote());
+
+            // Output
+            sb.AppendFormat(@"--out {0} ", outputReportPath.Quote());
+            sb.AppendFormat(@"--out-lib {0} ", outputLibPath.Quote());
+            sb.Append(@"--gen-spec-lib ");
+            // MBR (--reanalyse) is required for DIA-NN to emit the .skyline.speclib file
+            sb.Append(@"--reanalyse ");
+
+            AppendCommonArgs(sb, config, fixedMods, variableMods, enzyme);
 
             return sb.ToString().TrimEnd();
         }
@@ -190,21 +254,111 @@ namespace pwiz.Skyline.Model.Lib
             return exitCode == 0 && !stdOut.Contains(@"Critical error");
         }
 
+        private static void RunDiannProcess(string args, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        {
+            var pr = new ProcessRunner();
+            var psi = new ProcessStartInfo(DiannBinary, args)
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+
+            status = status.ChangeMessage(string.Format(
+                Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                psi.FileName, psi.Arguments));
+            progressMonitor.UpdateProgress(status);
+
+            pr.Run(psi, null, progressMonitor, ref status, null,
+                ProcessPriorityClass.BelowNormal, true, IsGoodDiannOutput, false);
+        }
+
         /// <summary>
-        /// Run a DIA-NN search with the given configuration.
+        /// Step 1: Generate a predicted spectral library from FASTA.
+        /// DIA-NN uses deep learning to predict spectra and retention times.
         /// </summary>
-        /// <param name="dataFiles">Paths to DIA raw data files</param>
-        /// <param name="fastaFilepath">Path to FASTA database</param>
-        /// <param name="outputDir">Directory for output files</param>
-        /// <param name="config">DIA-NN configuration parameters</param>
-        /// <param name="progressMonitor">Progress monitor for UI updates</param>
-        /// <param name="status">Progress status</param>
-        /// <param name="cancelToken">Cancellation token</param>
-        /// <param name="fixedMods">Fixed modifications to apply</param>
-        /// <param name="variableMods">Variable modifications to apply</param>
-        /// <param name="enzyme">Enzyme for digestion</param>
-        /// <param name="inputLibPath">Optional input spectral library</param>
-        /// <returns>Path to the output spectral library (.speclib), or null on failure</returns>
+        /// <returns>Path to the predicted spectral library</returns>
+        public static string GeneratePredictedLibrary(
+            string fastaFilepath,
+            string outputDir,
+            DiannConfig config,
+            IProgressMonitor progressMonitor,
+            ref IProgressStatus status,
+            CancellationToken cancelToken,
+            IEnumerable<StaticMod> fixedMods = null,
+            IEnumerable<StaticMod> variableMods = null,
+            Enzyme enzyme = null)
+        {
+            // DIA-NN 2.5 outputs .predicted.speclib in the output directory
+            string predictedLibPath = Path.Combine(outputDir, @"diann-predicted.speclib");
+
+            if (cancelToken.IsCancellationRequested)
+                return null;
+
+            string args = BuildLibraryGenerationCommandLine(fastaFilepath, predictedLibPath, config,
+                fixedMods, variableMods, enzyme);
+            RunDiannProcess(args, progressMonitor, ref status);
+
+            // DIA-NN may output with a different extension (.parquet) — check both
+            if (File.Exists(predictedLibPath))
+                return predictedLibPath;
+
+            string parquetPath = Path.ChangeExtension(predictedLibPath, @".parquet");
+            if (File.Exists(parquetPath))
+                return parquetPath;
+
+            // Check for .predicted.speclib pattern that DIA-NN may generate
+            string altPath = Path.Combine(outputDir, @"diann-predicted.predicted.speclib");
+            if (File.Exists(altPath))
+                return altPath;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Step 2: Search DIA raw files against the predicted spectral library.
+        /// </summary>
+        /// <returns>Path to the output spectral library, or null on failure</returns>
+        public static string SearchFiles(
+            IEnumerable<string> dataFiles,
+            string fastaFilepath,
+            string predictedLibPath,
+            string outputDir,
+            DiannConfig config,
+            IProgressMonitor progressMonitor,
+            ref IProgressStatus status,
+            CancellationToken cancelToken,
+            IEnumerable<StaticMod> fixedMods = null,
+            IEnumerable<StaticMod> variableMods = null,
+            Enzyme enzyme = null)
+        {
+            string outputReportPath = Path.Combine(outputDir, @"diann-report.parquet");
+            string outputLibPath = Path.Combine(outputDir, @"diann-output-lib.parquet");
+
+            if (cancelToken.IsCancellationRequested)
+                return null;
+
+            string args = BuildSearchCommandLine(dataFiles, fastaFilepath, predictedLibPath,
+                outputReportPath, outputLibPath, config, fixedMods, variableMods, enzyme);
+            RunDiannProcess(args, progressMonitor, ref status);
+
+            // DIA-NN 2.x produces a Skyline-compatible speclib alongside the parquet library
+            // (requires --reanalyse and 2+ input files). Name: "<out-lib>.skyline.speclib".
+            string skylineSpeclib = outputLibPath + @".skyline.speclib";
+            if (File.Exists(skylineSpeclib))
+                return skylineSpeclib;
+
+            if (File.Exists(outputLibPath))
+                return outputLibPath;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Run the full two-step DIA-NN workflow:
+        /// 1. Generate predicted spectral library from FASTA
+        /// 2. Search DIA files against the predicted library
+        /// </summary>
+        /// <returns>Path to the output spectral library, or null on failure</returns>
         public static string RunSearch(
             IEnumerable<string> dataFiles,
             string fastaFilepath,
@@ -215,37 +369,32 @@ namespace pwiz.Skyline.Model.Lib
             CancellationToken cancelToken,
             IEnumerable<StaticMod> fixedMods = null,
             IEnumerable<StaticMod> variableMods = null,
-            Enzyme enzyme = null,
-            string inputLibPath = null)
+            Enzyme enzyme = null)
         {
-            string outputReportPath = Path.Combine(outputDir, @"diann-report.tsv");
-            string outputLibPath = Path.Combine(outputDir, @"diann-output.speclib");
+            status = status.ChangeSegments(0, 2);
 
-            string args = BuildCommandLine(dataFiles, fastaFilepath, outputReportPath, outputLibPath,
-                config, fixedMods, variableMods, enzyme, inputLibPath);
+            var fixedModsList = fixedMods?.ToList();
+            var variableModsList = variableMods?.ToList();
 
-            var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(DiannBinary, args)
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false
-            };
-
-            if (cancelToken.IsCancellationRequested)
-                return null;
-
-            status = status.ChangeMessage(string.Format(
-                Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
-                psi.FileName, psi.Arguments));
+            // Step 1: Generate predicted library from FASTA
+            status = status.ChangeMessage(@"Generating predicted spectral library from FASTA...");
             progressMonitor.UpdateProgress(status);
 
-            pr.Run(psi, null, progressMonitor, ref status, null,
-                ProcessPriorityClass.BelowNormal, true, IsGoodDiannOutput, false);
+            string predictedLibPath = GeneratePredictedLibrary(fastaFilepath, outputDir, config,
+                progressMonitor, ref status, cancelToken, fixedModsList, variableModsList, enzyme);
 
-            if (File.Exists(outputLibPath))
-                return outputLibPath;
+            if (predictedLibPath == null || cancelToken.IsCancellationRequested)
+                return null;
 
-            return null;
+            status = status.NextSegment();
+
+            // Step 2: Search data files against predicted library
+            status = status.ChangeMessage(@"Searching DIA files against predicted library...");
+            progressMonitor.UpdateProgress(status);
+
+            var dataFilesList = dataFiles.ToList();
+            return SearchFiles(dataFilesList, fastaFilepath, predictedLibPath, outputDir, config,
+                progressMonitor, ref status, cancelToken, fixedModsList, variableModsList, enzyme);
         }
     }
 
@@ -254,6 +403,13 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public class DiannConfig
     {
+        public DiannConfig()
+        {
+            AdditionalSettings = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultAdditionalSettings)
+                AdditionalSettings[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+        }
+
         public double Ms1Accuracy { get; set; }
         public double Ms2Accuracy { get; set; }
         public double QValue { get; set; } = 0.01;
@@ -264,6 +420,27 @@ namespace pwiz.Skyline.Model.Lib
         public int MaxPrCharge { get; set; } = 4;
         public int MaxMissedCleavages { get; set; } = 1;
         public bool MetExcision { get; set; } = true;
+
+        public IDictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings { get; }
+
+        // ReSharper disable LocalizableElement
+        public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultAdditionalSettings =
+            new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(new Dictionary<string, AbstractDdaSearchEngine.Setting>
+            {
+                { "MinPepLen", new AbstractDdaSearchEngine.Setting("MinPepLen", 7, 1, 100) },
+                { "MaxPepLen", new AbstractDdaSearchEngine.Setting("MaxPepLen", 30, 1, 100) },
+                { "MinPrecursorCharge", new AbstractDdaSearchEngine.Setting("MinPrecursorCharge", 1, 1, 10) },
+                { "MaxPrecursorCharge", new AbstractDdaSearchEngine.Setting("MaxPrecursorCharge", 4, 1, 10) },
+            });
+        // ReSharper restore LocalizableElement
+
+        public void ApplyAdditionalSettings()
+        {
+            MinPepLen = (int)AdditionalSettings[@"MinPepLen"].Value;
+            MaxPepLen = (int)AdditionalSettings[@"MaxPepLen"].Value;
+            MinPrCharge = (int)AdditionalSettings[@"MinPrecursorCharge"].Value;
+            MaxPrCharge = (int)AdditionalSettings[@"MaxPrecursorCharge"].Value;
+        }
 
         public static DiannConfig DEFAULT => new DiannConfig();
     }

@@ -28,6 +28,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -44,18 +45,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             data_files_page,
             fasta_page,
+            modifications_page,
             search_settings_page,
             run_page
         }
 
         public class DataFilesPage : IFormView { }
         public class FastaPage : IFormView { }
+        public class ModificationsPage : IFormView { }
         public class SearchSettingsPage : IFormView { }
         public class RunPage : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new DataFilesPage(), new FastaPage(), new SearchSettingsPage(), new RunPage()
+            new DataFilesPage(), new FastaPage(), new ModificationsPage(), new SearchSettingsPage(), new RunPage()
         };
 
         public DiannSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager)
@@ -84,6 +87,60 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             numMs1Tolerance.Value = 0; // auto-detect
             numMs2Tolerance.Value = 0; // auto-detect
             numThreads.Value = Math.Min(Environment.ProcessorCount, numThreads.Maximum);
+
+            // Populate modifications page with common defaults
+            InitializeModifications();
+        }
+
+        private void InitializeModifications()
+        {
+            // Default fixed mod: Carbamidomethyl (C)
+            var defaultFixed = UniMod.GetModification(@"Carbamidomethyl (C)", true);
+            if (defaultFixed != null)
+                listFixedMods.Items.Add(defaultFixed);
+
+            // Default variable mod: Oxidation (M)
+            var defaultVar = UniMod.GetModification(@"Oxidation (M)", true);
+            if (defaultVar != null)
+                listVariableMods.Items.Add(defaultVar);
+        }
+
+        public IEnumerable<StaticMod> FixedMods => listFixedMods.Items.Cast<StaticMod>();
+        public IEnumerable<StaticMod> VariableMods => listVariableMods.Items.Cast<StaticMod>();
+
+        private void btnAddFixedMod_Click(object sender, EventArgs e)
+        {
+            AddModification(listFixedMods);
+        }
+
+        private void btnAddVariableMod_Click(object sender, EventArgs e)
+        {
+            AddModification(listVariableMods);
+        }
+
+        private void btnRemoveFixedMod_Click(object sender, EventArgs e)
+        {
+            RemoveSelectedMod(listFixedMods);
+        }
+
+        private void btnRemoveVariableMod_Click(object sender, EventArgs e)
+        {
+            RemoveSelectedMod(listVariableMods);
+        }
+
+        private void AddModification(ListBox listBox)
+        {
+            var existing = new HashSet<string>(listFixedMods.Items.Cast<StaticMod>().Select(m => m.Name)
+                .Concat(listVariableMods.Items.Cast<StaticMod>().Select(m => m.Name)));
+            var newMod = Settings.Default.StaticModList.EditItem(this, null, Settings.Default.StaticModList, null);
+            if (newMod != null && !existing.Contains(newMod.Name))
+                listBox.Items.Add(newMod);
+        }
+
+        private static void RemoveSelectedMod(ListBox listBox)
+        {
+            if (listBox.SelectedIndex >= 0)
+                listBox.Items.RemoveAt(listBox.SelectedIndex);
         }
 
         public ImportResultsDIAControl DataFileResults { get; set; }
@@ -113,20 +170,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set => numThreads.Value = value;
         }
 
+        private readonly DiannConfig _diannConfig = new DiannConfig();
+
         public DiannConfig DiannSearchConfig
         {
             get
             {
-                return new DiannConfig
-                {
-                    Ms1Accuracy = Ms1Tolerance,
-                    Ms2Accuracy = Ms2Tolerance,
-                    QValue = QValueThreshold,
-                    Threads = Threads,
-                    MetExcision = cbMetExcision.Checked,
-                    MaxMissedCleavages = (int)numMissedCleavages.Value
-                };
+                _diannConfig.Ms1Accuracy = Ms1Tolerance;
+                _diannConfig.Ms2Accuracy = Ms2Tolerance;
+                _diannConfig.QValue = QValueThreshold;
+                _diannConfig.Threads = Threads;
+                _diannConfig.MetExcision = cbMetExcision.Checked;
+                _diannConfig.MaxMissedCleavages = (int)numMissedCleavages.Value;
+                _diannConfig.ApplyAdditionalSettings();
+                return _diannConfig;
             }
+        }
+
+        public void ShowAdditionalSettings()
+        {
+            KeyValueGridDlg.Show(this,
+                PeptideSearchResources.SearchSettingsControl_Additional_Settings,
+                _diannConfig.AdditionalSettings,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues);
         }
 
         #region IMultipleViewProvider
@@ -251,6 +320,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     SearchControl.DiannConfig = DiannSearchConfig;
                     SearchControl.FastaFilePath = ImportFastaControl.FastaFile;
                     SearchControl.DataFiles = DataFileResults.FoundResultsFiles.Select(f => f.Path).ToList();
+                    SearchControl.FixedMods = FixedMods.ToList();
+                    SearchControl.VariableMods = VariableMods.ToList();
                     SearchControl.RunSearch();
                     return;
             }
@@ -269,12 +340,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
-            // Launch Import Peptide Search dialog with the speclib as search file
+            // Launch Import Peptide Search dialog. The DIA-NN .parquet.skyline.speclib is
+            // passed as a search file so BiblioSpec builds a .blib from it.
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager,
-                ImportPeptideSearchDlg.Workflow.dia,
-                DataFileResults.FoundResultsFiles,
-                ImportFastaControl.ImportSettings,
-                new[] { specLibPath });
+                false, ImportPeptideSearchDlg.Workflow.dia);
+            importPeptideSearchDlg.BuildPepSearchLibControl.ForceWorkflow(ImportPeptideSearchDlg.Workflow.dia);
+            importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] { specLibPath });
+            importPeptideSearchDlg.ImportFastaControl.SetFastaContent(ImportFastaControl.ImportSettings.FastaFile.Path, true);
+            importPeptideSearchDlg.ImportFastaControl.Enzyme = ImportFastaControl.ImportSettings.Enzyme;
+            importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = ImportFastaControl.ImportSettings.MaxMissedCleavages;
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)
                 DialogResult = DialogResult.OK;
@@ -303,6 +377,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ControlBox = true;
             if (success)
                 btnNext.Enabled = true;
+        }
+
+        private void btnAdditionalSettings_Click(object sender, EventArgs e)
+        {
+            ShowAdditionalSettings();
         }
 
         private void btnNext_Click(object sender, EventArgs e)
@@ -338,6 +417,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public DiannConfig DiannConfig { get; set; }
         public string FastaFilePath { get; set; }
         public List<string> DataFiles { get; set; }
+        public List<StaticMod> FixedMods { get; set; }
+        public List<StaticMod> VariableMods { get; set; }
         public string OutputSpecLibPath { get; private set; }
 
         private bool Search(CancellationTokenSource token, IProgressStatus status)
@@ -348,7 +429,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 OutputSpecLibPath = DiannHelpers.RunSearch(
                     DataFiles, FastaFilePath, outputDir, DiannConfig,
-                    this, ref status, token.Token);
+                    this, ref status, token.Token,
+                    FixedMods, VariableMods);
 
                 if (OutputSpecLibPath == null)
                 {

@@ -157,6 +157,15 @@
   <data name="&gt;&gt;wizardPages.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
+  <data name="dataFilesPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="dataFilesPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="dataFilesPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
   <data name="dataFilesPage.Text" xml:space="preserve">
     <value>Data Files</value>
   </data>
@@ -180,6 +189,7 @@
   </data>
   <data name="lblDataFiles.Text" xml:space="preserve">
     <value>Add DIA data files to analyze with DIA-NN.
+DIA-NN requires 2 or more files. MBR (match-between-runs) is always enabled.
 Supported formats: Thermo .raw, Bruker .d, Sciex .wiff, .mzML</value>
   </data>
   <data name="&gt;&gt;lblDataFiles.Name" xml:space="preserve">
@@ -190,6 +200,15 @@ Supported formats: Thermo .raw, Bruker .d, Sciex .wiff, .mzML</value>
   </data>
   <data name="&gt;&gt;lblDataFiles.Parent" xml:space="preserve">
     <value>dataFilesPage</value>
+  </data>
+  <data name="fastaPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="fastaPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="fastaPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
   </data>
   <data name="fastaPage.Text" xml:space="preserve">
     <value>FASTA</value>
@@ -224,6 +243,201 @@ DIA-NN will use deep learning to predict a spectral library.</value>
   </data>
   <data name="&gt;&gt;lblFasta.Parent" xml:space="preserve">
     <value>fastaPage</value>
+  </data>
+  <data name="modificationsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="modificationsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="modificationsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="modificationsPage.Text" xml:space="preserve">
+    <value>Modifications</value>
+  </data>
+  <data name="&gt;&gt;modificationsPage.Name" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="&gt;&gt;modificationsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;modificationsPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblModifications.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblModifications.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblModifications.Size" type="System.Drawing.Size, System.Drawing">
+    <value>350, 13</value>
+  </data>
+  <data name="lblModifications.Text" xml:space="preserve">
+    <value>Configure fixed and variable modifications for the DIA-NN search.</value>
+  </data>
+  <data name="&gt;&gt;lblModifications.Name" xml:space="preserve">
+    <value>lblModifications</value>
+  </data>
+  <data name="&gt;&gt;lblModifications.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblModifications.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="lblFixedMods.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblFixedMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 45</value>
+  </data>
+  <data name="lblFixedMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>105, 13</value>
+  </data>
+  <data name="lblFixedMods.Text" xml:space="preserve">
+    <value>Fixed Modifications:</value>
+  </data>
+  <data name="&gt;&gt;lblFixedMods.Name" xml:space="preserve">
+    <value>lblFixedMods</value>
+  </data>
+  <data name="&gt;&gt;lblFixedMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblFixedMods.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="listFixedMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 65</value>
+  </data>
+  <data name="listFixedMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>450, 130</value>
+  </data>
+  <data name="&gt;&gt;listFixedMods.Name" xml:space="preserve">
+    <value>listFixedMods</value>
+  </data>
+  <data name="&gt;&gt;listFixedMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listFixedMods.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="btnAddFixedMod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>470, 65</value>
+  </data>
+  <data name="btnAddFixedMod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAddFixedMod.Text" xml:space="preserve">
+    <value>Add...</value>
+  </data>
+  <data name="&gt;&gt;btnAddFixedMod.Name" xml:space="preserve">
+    <value>btnAddFixedMod</value>
+  </data>
+  <data name="&gt;&gt;btnAddFixedMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddFixedMod.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="btnRemoveFixedMod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>470, 94</value>
+  </data>
+  <data name="btnRemoveFixedMod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnRemoveFixedMod.Text" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveFixedMod.Name" xml:space="preserve">
+    <value>btnRemoveFixedMod</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveFixedMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveFixedMod.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="lblVariableMods.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblVariableMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 210</value>
+  </data>
+  <data name="lblVariableMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 13</value>
+  </data>
+  <data name="lblVariableMods.Text" xml:space="preserve">
+    <value>Variable Modifications:</value>
+  </data>
+  <data name="&gt;&gt;lblVariableMods.Name" xml:space="preserve">
+    <value>lblVariableMods</value>
+  </data>
+  <data name="&gt;&gt;lblVariableMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblVariableMods.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="listVariableMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 230</value>
+  </data>
+  <data name="listVariableMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>450, 130</value>
+  </data>
+  <data name="&gt;&gt;listVariableMods.Name" xml:space="preserve">
+    <value>listVariableMods</value>
+  </data>
+  <data name="&gt;&gt;listVariableMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listVariableMods.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="btnAddVariableMod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>470, 230</value>
+  </data>
+  <data name="btnAddVariableMod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAddVariableMod.Text" xml:space="preserve">
+    <value>Add...</value>
+  </data>
+  <data name="&gt;&gt;btnAddVariableMod.Name" xml:space="preserve">
+    <value>btnAddVariableMod</value>
+  </data>
+  <data name="&gt;&gt;btnAddVariableMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddVariableMod.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="btnRemoveVariableMod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>470, 259</value>
+  </data>
+  <data name="btnRemoveVariableMod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnRemoveVariableMod.Text" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveVariableMod.Name" xml:space="preserve">
+    <value>btnRemoveVariableMod</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveVariableMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveVariableMod.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="searchSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="searchSettingsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="searchSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
   </data>
   <data name="searchSettingsPage.Text" xml:space="preserve">
     <value>Search Settings</value>
@@ -461,6 +675,36 @@ DIA-NN will use deep learning to predict a spectral library.</value>
   </data>
   <data name="&gt;&gt;cbMetExcision.Parent" xml:space="preserve">
     <value>searchSettingsPage</value>
+  </data>
+  <data name="btnAdditionalSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 250</value>
+  </data>
+  <data name="btnAdditionalSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 23</value>
+  </data>
+  <data name="btnAdditionalSettings.Text" xml:space="preserve">
+    <value>A&amp;dditional Settings</value>
+  </data>
+  <data name="btnAdditionalSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="&gt;&gt;btnAdditionalSettings.Name" xml:space="preserve">
+    <value>btnAdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;btnAdditionalSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAdditionalSettings.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="runSearchPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="runSearchPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="runSearchPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
   </data>
   <data name="runSearchPage.Text" xml:space="preserve">
     <value>Run Search</value>
