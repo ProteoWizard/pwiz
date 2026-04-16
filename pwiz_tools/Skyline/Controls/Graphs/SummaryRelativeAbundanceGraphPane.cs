@@ -592,7 +592,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 AddPoints(new PointPairList(group.Select(pf => pf.point).ToList()),
                     fmt.color, DotPlotUtil.PointSizeToFloat(fmt.size), fmt.labeled, fmt.symbol);
             }
-                AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
+                AddPoints(unmatchedOtherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
                 if(dataChanged || Settings.Default.RelativeAbundanceLogScale != YAxis.Scale.IsLog)
                     UpdateAxes();
                 if (Settings.Default.GroupComparisonAvoidLabelOverlap)
