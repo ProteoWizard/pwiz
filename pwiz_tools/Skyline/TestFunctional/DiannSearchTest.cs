@@ -47,10 +47,8 @@ namespace pwiz.SkylineTestFunctional
         {
             // Download DIA-NN from the Skyline tool testing mirror (cached across runs).
             var progress = new SilentProgressMonitor();
-            Assert.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(DiannHelpers.FilesToDownload, progress),
-                @"Failed to download DIA-NN");
-            Assert.IsTrue(File.Exists(DiannHelpers.DiannBinary),
-                $@"DIA-NN binary not found at {DiannHelpers.DiannBinary} after download");
+            AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(DiannHelpers.FilesToDownload, progress));
+            AssertEx.IsTrue(File.Exists(DiannHelpers.DiannBinary));
 
             PrepareDocument("DiannSearchTest.sky");
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library.fasta");
@@ -64,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
             var searchDlg = ShowDialog<DiannSearchDlg>(SkylineWindow.ShowDiannSearchDlg);
 
             // Page 0: Data files - add wide window DIA file
-            RunUI(() => Assert.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.data_files_page));
+            RunUI(() => AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.data_files_page));
             RunUI(() => searchDlg.DataFileResults.FoundResultsFiles = diaFilePaths
                 .Select(p => new ImportPeptideSearch.FoundResultsFile(Path.GetFileName(p), p)).ToArray());
 
@@ -72,19 +70,19 @@ namespace pwiz.SkylineTestFunctional
             RunUI(searchDlg.NextPage);
             RunUI(() =>
             {
-                Assert.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.fasta_page);
+                AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.fasta_page);
                 searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
             });
 
             // Page 2: Modifications (defaults: Carbamidomethyl C fixed, Oxidation M variable)
             RunUI(searchDlg.NextPage);
-            RunUI(() => Assert.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.modifications_page));
+            RunUI(() => AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.modifications_page));
 
             // Page 3: Search settings
             RunUI(searchDlg.NextPage);
             RunUI(() =>
             {
-                Assert.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.search_settings_page);
+                AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.search_settings_page);
                 searchDlg.Ms1Tolerance = 10;
                 searchDlg.Ms2Tolerance = 20;
                 searchDlg.QValueThreshold = 0.01;
@@ -102,7 +100,7 @@ namespace pwiz.SkylineTestFunctional
                 bool? searchSucceeded = null;
                 searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
                 WaitForConditionUI(300000, () => searchSucceeded.HasValue); // 5 minute timeout
-                RunUI(() => Assert.IsTrue(searchSucceeded.Value, searchDlg.SearchControl.LogText));
+                RunUI(() => AssertEx.IsTrue(searchSucceeded.Value, searchDlg.SearchControl.LogText));
             }
             finally
             {
@@ -110,8 +108,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify speclib was created
-            Assert.IsTrue(File.Exists(searchDlg.SearchControl.OutputSpecLibPath),
-                @"DIA-NN output spectral library not found");
+            AssertEx.IsTrue(File.Exists(searchDlg.SearchControl.OutputSpecLibPath));
 
             // Transition to Import Peptide Search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
@@ -120,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
             // Should be on spectra page with the speclib loaded
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
             });
 
             // Cancel out of the import wizard for now

@@ -279,7 +279,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.data_files_page:
                     if (!DataFileResults.FoundResultsFiles.Any())
                     {
-                        MessageDlg.Show(this, @"Please add at least one DIA data file.");
+                        MessageDlg.Show(this, PeptideSearchResources.DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_);
                         return;
                     }
                     break;
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (!File.Exists(DiannHelpers.DiannBinary))
                     {
                         MessageDlg.Show(this, string.Format(
-                            @"DIA-NN executable not found at '{0}'. Please configure the path via Edit > Search Tools.",
+                            PeptideSearchResources.DiannSearchDlg_NextPage_DIA_NN_executable_not_found_at___0____Please_configure_the_path_via_Edit___Search_Tools_,
                             DiannHelpers.DiannBinary));
                         wizardPages.SelectTab((int)Pages.search_settings_page);
                         return;
@@ -336,7 +336,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (string.IsNullOrEmpty(specLibPath) || !File.Exists(specLibPath))
             {
-                MessageDlg.Show(this, @"DIA-NN output spectral library not found.");
+                MessageDlg.Show(this, PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_);
                 return;
             }
 
@@ -435,7 +435,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (OutputSpecLibPath == null)
                 {
                     UpdateProgress(status.ChangeErrorException(
-                        new IOException(@"DIA-NN search did not produce a spectral library output.")));
+                        new IOException(PeptideSearchResources.DiannSearchControl_Search_DIA_NN_search_did_not_produce_a_spectral_library_output_)));
                     return false;
                 }
             }
