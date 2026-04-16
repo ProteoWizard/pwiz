@@ -4,6 +4,35 @@ using pwiz.OspreySharp.Core;
 namespace pwiz.OspreySharp.Scoring
 {
     /// <summary>
+    /// Opaque handle to a per-window pre-preprocessed XCorr cache.
+    /// Unit-res stores f64 (calibration-equivalent precision, small arrays);
+    /// HRAM stores f32 (halves the ~800 KB per-spectrum cost, within the
+    /// precision Rust upstream uses). The strategy owns the type; callers
+    /// pass the handle back to <see cref="IResolutionStrategy.ScoreXcorr"/>
+    /// and <see cref="IResolutionStrategy.ReleaseWindowCache"/>.
+    /// </summary>
+    public sealed class WindowXcorrCache
+    {
+        internal readonly double[][] Doubles;
+        internal readonly float[][] Floats;
+        internal readonly bool[] VisitedBins;
+
+        internal WindowXcorrCache(double[][] dd, int nBins)
+        {
+            Doubles = dd;
+            VisitedBins = new bool[nBins];
+        }
+
+        internal WindowXcorrCache(float[][] ff, int nBins)
+        {
+            Floats = ff;
+            VisitedBins = new bool[nBins];
+        }
+
+        public int Count { get { return Doubles != null ? Doubles.Length : Floats.Length; } }
+    }
+
+    /// <summary>
     /// Encapsulates all resolution-dependent behavior so pipeline code never
     /// checks ResolutionMode directly. Created once at pipeline start from
     /// <see cref="Create"/>.
@@ -17,32 +46,19 @@ namespace pwiz.OspreySharp.Scoring
         SpectralScorer CreateScorer();
 
         /// <summary>
-        /// Pre-preprocess all spectra in a window for XCorr. The pool-aware
-        /// overload rents a <c>double[NBins]</c> per spectrum from the
-        /// supplied pool; the returned <c>double[][]</c> must be handed
-        /// back via <see cref="XcorrScratchPool.ReturnBinsArray"/> when
-        /// the window is done scoring. Returns null when pre-preprocessing
-        /// is not supported (e.g. no pool available on HRAM before the
-        /// pool fix).
+        /// Pre-preprocess all spectra in a window for XCorr. Returns a
+        /// strategy-typed cache handle. Caller releases via
+        /// <see cref="ReleaseWindowCache"/> at end of window.
         /// </summary>
-        double[][] PreprocessWindowSpectra(IList<Spectrum> spectra,
+        WindowXcorrCache PreprocessWindowSpectra(IList<Spectrum> spectra,
             SpectralScorer scorer, XcorrScratchPool scratchPool);
 
-        /// <summary>
-        /// Score XCorr for a library entry against one spectrum. Uses pre-preprocessed
-        /// array when available, otherwise computes inline.
-        /// </summary>
-        double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
-            Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer);
+        /// <summary>Release rented buffers from a cache produced by
+        /// <see cref="PreprocessWindowSpectra"/>. Pass the same cache back.</summary>
+        void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool);
 
-        /// <summary>
-        /// Pool-aware variant of <see cref="ScoreXcorr"/> for hot-path callers
-        /// (main-search apex + SG-weighted neighbours). When
-        /// <paramref name="preprocessed"/> is non-null, routes to the
-        /// O(n_fragments) <c>XcorrFromPreprocessed</c> fast path. Otherwise
-        /// HRAM uses the pool to avoid per-call 100K-bin LOH allocation.
-        /// </summary>
-        double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
+        /// <summary>Pool-aware scoring for a library entry at one spectrum.</summary>
+        double ScoreXcorr(WindowXcorrCache preprocessed, int spectrumIndex,
             Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer,
             XcorrScratchPool scratchPool);
     }
@@ -61,8 +77,9 @@ namespace pwiz.OspreySharp.Scoring
     }
 
     /// <summary>
-    /// Unit resolution: small dense bin arrays (NBins ~2K), pre-preprocess
-    /// all spectra for O(n_frags) scoring. No MS1 features.
+    /// Unit resolution: small dense bin arrays (NBins ~2K). f64 throughout
+    /// keeps bit-identical parity with calibration; memory impact is
+    /// negligible (~16 KB per cache array).
     /// </summary>
     internal sealed class UnitStrategy : IResolutionStrategy
     {
@@ -73,50 +90,35 @@ namespace pwiz.OspreySharp.Scoring
             return new SpectralScorer(BinConfig.UnitResolution());
         }
 
-        public double[][] PreprocessWindowSpectra(IList<Spectrum> spectra,
+        public WindowXcorrCache PreprocessWindowSpectra(IList<Spectrum> spectra,
             SpectralScorer scorer, XcorrScratchPool scratchPool)
         {
             var pp = new double[spectra.Count][];
-            if (scratchPool != null)
-            {
-                var scratch = scratchPool.Rent();
-                try
-                {
-                    for (int i = 0; i < spectra.Count; i++)
-                    {
-                        pp[i] = scratchPool.RentBins();
-                        scorer.PreprocessSpectrumForXcorrInto(spectra[i], scratch, pp[i]);
-                    }
-                }
-                finally { scratchPool.Return(scratch); }
-                return pp;
-            }
-
             for (int i = 0; i < spectra.Count; i++)
                 pp[i] = scorer.PreprocessSpectrumForXcorr(spectra[i]);
-            return pp;
+            return new WindowXcorrCache(pp, scorer.BinConfig.NBins);
         }
 
-        public double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
-            Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer)
+        public void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool)
         {
-            return scorer.XcorrFromPreprocessed(preprocessed[spectrumIndex], entry);
+            // Unit-res arrays are small and short-lived; simply drop.
         }
 
-        public double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
+        public double ScoreXcorr(WindowXcorrCache preprocessed, int spectrumIndex,
             Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer,
             XcorrScratchPool scratchPool)
         {
-            // Unit resolution already uses pre-preprocessed arrays — no
-            // scratch needed. Forward to the allocating overload.
-            return scorer.XcorrFromPreprocessed(preprocessed[spectrumIndex], entry);
+            return scorer.XcorrFromPreprocessed(
+                preprocessed.Doubles[spectrumIndex], entry, preprocessed.VisitedBins);
         }
     }
 
     /// <summary>
-    /// HRAM resolution: dense bin arrays are too large (NBins ~100K, ~800KB
-    /// each). Skips pre-preprocessing; computes XCorr inline per scan.
-    /// Computes MS1 features (precursor coelution, isotope cosine).
+    /// HRAM resolution: dense bin arrays are large (NBins ~100K). Uses the
+    /// pool and an f32 cache to bring the Rust HRAM fast path
+    /// (pipeline.rs:5954 preprocessed_xcorr per window) while halving the
+    /// per-spectrum cost vs f64. Computation is still f64 internally; only
+    /// the final store narrows to f32.
     /// </summary>
     internal sealed class HramStrategy : IResolutionStrategy
     {
@@ -127,20 +129,13 @@ namespace pwiz.OspreySharp.Scoring
             return new SpectralScorer(BinConfig.HRAM());
         }
 
-        public double[][] PreprocessWindowSpectra(IList<Spectrum> spectra,
+        public WindowXcorrCache PreprocessWindowSpectra(IList<Spectrum> spectra,
             SpectralScorer scorer, XcorrScratchPool scratchPool)
         {
-            // Pre-preprocessing matches the Rust HRAM fast path
-            // (pipeline.rs:5954: preprocessed_xcorr per window). The pool
-            // makes it affordable by holding the 100K-bin arrays in gen-2
-            // across the whole run instead of allocating per window. Fall
-            // back to null when no pool is provided (e.g. during
-            // calibration paths that never score enough candidates to
-            // justify the preprocessing cost).
             if (scratchPool == null)
                 return null;
 
-            var pp = new double[spectra.Count][];
+            var pp = new float[spectra.Count][];
             var scratch = scratchPool.Rent();
             try
             {
@@ -151,33 +146,27 @@ namespace pwiz.OspreySharp.Scoring
                 }
             }
             finally { scratchPool.Return(scratch); }
-            return pp;
+            return new WindowXcorrCache(pp, scorer.BinConfig.NBins);
         }
 
-        public double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
-            Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer)
+        public void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool)
         {
-            return scorer.XcorrAtScan(spectrum, entry);
+            if (cache == null || scratchPool == null) return;
+            scratchPool.ReturnBinsArray(cache.Floats);
         }
 
-        public double ScoreXcorr(double[][] preprocessed, int spectrumIndex,
+        public double ScoreXcorr(WindowXcorrCache preprocessed, int spectrumIndex,
             Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer,
             XcorrScratchPool scratchPool)
         {
-            // Fast path: per-window pre-preprocessed array is available,
-            // reduce to an O(n_fragments) bin lookup with dedup. Matches
-            // Rust's main-search HRAM path (pipeline.rs:5273 uses
-            // xcorr_from_preprocessed against the per-window cache).
-            if (preprocessed != null && spectrumIndex >= 0 &&
-                spectrumIndex < preprocessed.Length &&
-                preprocessed[spectrumIndex] != null)
+            if (preprocessed != null && preprocessed.Floats != null &&
+                spectrumIndex >= 0 && spectrumIndex < preprocessed.Floats.Length &&
+                preprocessed.Floats[spectrumIndex] != null)
             {
-                return scorer.XcorrFromPreprocessed(preprocessed[spectrumIndex], entry);
+                return scorer.XcorrFromPreprocessed(
+                    preprocessed.Floats[spectrumIndex], entry, preprocessed.VisitedBins);
             }
 
-            // Fallback: inline preprocess + score via pool. Retained so the
-            // strategy stays robust when PreprocessWindowSpectra is skipped
-            // (e.g. no pool, or caller decides to stream).
             if (scratchPool == null)
                 return scorer.XcorrAtScan(spectrum, entry);
 

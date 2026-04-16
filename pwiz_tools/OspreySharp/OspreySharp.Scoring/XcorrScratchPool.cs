@@ -47,7 +47,7 @@ namespace pwiz.OspreySharp.Scoring
     public sealed class XcorrScratchPool
     {
         private readonly ConcurrentBag<XcorrScratch> _scratchBag = new ConcurrentBag<XcorrScratch>();
-        private readonly ConcurrentBag<double[]> _binsBag = new ConcurrentBag<double[]>();
+        private readonly ConcurrentBag<float[]> _binsBag = new ConcurrentBag<float[]>();
         private readonly int _nBins;
         private int _scratchAllocCount;
         private int _binsAllocCount;
@@ -88,24 +88,25 @@ namespace pwiz.OspreySharp.Scoring
         }
 
         /// <summary>
-        /// Rent a single <c>double[NBins]</c> buffer used to hold a
+        /// Rent a single <c>float[NBins]</c> buffer used to hold a
         /// preprocessed spectrum across the lifetime of one window. The
         /// caller is responsible for fully overwriting the returned array
         /// (the preprocessing pipeline does so); no zeroing happens on
         /// rent or return. Used by <c>HramStrategy.PreprocessWindowSpectra</c>
-        /// to build the per-window <c>double[][]</c> cache without
-        /// allocating through the LOH on every window.
+        /// to build the per-window <c>float[][]</c> cache without
+        /// allocating through the LOH on every window. f32 matches Rust
+        /// upstream maccoss/osprey to halve cache memory vs f64.
         /// </summary>
-        public double[] RentBins()
+        public float[] RentBins()
         {
-            double[] buf;
+            float[] buf;
             if (_binsBag.TryTake(out buf))
                 return buf;
             Interlocked.Increment(ref _binsAllocCount);
-            return new double[_nBins];
+            return new float[_nBins];
         }
 
-        public void ReturnBins(double[] buf)
+        public void ReturnBins(float[] buf)
         {
             if (buf == null || buf.Length != _nBins)
                 return;
@@ -116,7 +117,7 @@ namespace pwiz.OspreySharp.Scoring
         /// Convenience: return every non-null entry of a preprocessed
         /// window cache. Used by <c>ScoreWindow</c> in its finally block.
         /// </summary>
-        public void ReturnBinsArray(double[][] arrays)
+        public void ReturnBinsArray(float[][] arrays)
         {
             if (arrays == null) return;
             foreach (var a in arrays)

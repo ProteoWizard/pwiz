@@ -2506,6 +2506,14 @@ namespace pwiz.OspreySharp
             ProfilerHooks.SaveAndStopMeasure();
             ProfilerHooks.LogMemoryStats(LogInfo, "post-main-search");
 
+            if (context.XcorrScratchPool != null)
+            {
+                LogInfo(string.Format(
+                    "[POOL] scratch_allocs={0}, bins_allocs={1}",
+                    context.XcorrScratchPool.ScratchAllocCount,
+                    context.XcorrScratchPool.BinsAllocCount));
+            }
+
             // Summarize per-window timings.
             LogWindowTimingSummary(windowTimings);
 
@@ -2625,8 +2633,7 @@ namespace pwiz.OspreySharp
             }
             finally
             {
-                if (context.XcorrScratchPool != null)
-                    context.XcorrScratchPool.ReturnBinsArray(preprocessedXcorr);
+                context.Resolution.ReleaseWindowCache(preprocessedXcorr, context.XcorrScratchPool);
             }
         }
 
@@ -2643,7 +2650,7 @@ namespace pwiz.OspreySharp
             LibraryEntry candidate,
             List<Spectrum> windowSpectra,
             double[] windowRts,
-            double[][] preprocessedXcorr,
+            WindowXcorrCache preprocessedXcorr,
             List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
             MzCalibrationResult ms1Calibration,
