@@ -3141,6 +3141,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public string TitleText => IsDualPane ? _stickSpectrumPane.Title.Text : GraphPane.Title.Text;
+        public string HeatMapYAxisTitleText => _heatMapPane.YAxis.Title.Text;
         public double XAxisMin => GraphPane.XAxis.Scale.Min;
         public double XAxisMax => GraphPane.XAxis.Scale.Max;
         public double YAxisMin => GraphPane.YAxis.Scale.Min;
