@@ -141,23 +141,16 @@ namespace pwiz.Skyline.Model.Results
             // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't reliably share times with any ion mobility scheme
             if (instrumentInfo != null && instrumentInfo.IonMobilityUnits != eIonMobilityUnits.none)
             {
-                if ((libraryIonMobilityInfo != null && !libraryIonMobilityInfo.IsEmpty) || _isWatersSonar)
+                _isIonMobilityFiltered = WouldApplyIonMobilityFiltering(
+                    document.Settings, libraryIonMobilityInfo, moleculesThisPass, ionMobilityMax);
+
+                // Issue 4150: if filtering would not apply under current settings, probe simple
+                // settings variations to see whether a specific setting change would enable it,
+                // and warn the user about the specific change.
+                if (!_isIonMobilityFiltered)
                 {
-                    _isIonMobilityFiltered = true;
-                }
-                else
-                {
-                    foreach (var pair in moleculesThisPass.SelectMany(
-                        node => node.TransitionGroups.Select(nodeGroup => new PeptidePrecursorPair(node, nodeGroup))))
-                    {
-                        var ionMobility = document.Settings.GetIonMobilityFilter(
-                            pair.NodePep, pair.NodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax);
-                        _isIonMobilityFiltered = ionMobility.HasIonMobilityValue;
-                        if (_isIonMobilityFiltered)
-                        {
-                            break;
-                        }
-                    }
+                    WarnIfSettingsChangeWouldEnableFiltering(
+                        document.Settings, libraryIonMobilityInfo, moleculesThisPass, msDataFileUri, ionMobilityMax);
                 }
             }
 
@@ -488,6 +481,92 @@ namespace pwiz.Skyline.Model.Results
             }
 
             InitIonMobilityAndRTLimits();
+        }
+
+        // Representative window used solely to probe "would enabling a filter window turn
+        // filtering on for this data?" - value is arbitrary, just needs to be non-empty.
+        private const double PROBE_RESOLVING_POWER = 50;
+
+        /// <summary>
+        /// Returns true if ion mobility filtering would actually produce a filter for at least
+        /// one precursor in the document under the given settings. Used both to set
+        /// <see cref="_isIonMobilityFiltered"/> from real settings and to probe hypothetical
+        /// settings variations when diagnosing a "filtering disabled" warning (issue 4150).
+        /// </summary>
+        private bool WouldApplyIonMobilityFiltering(SrmSettings settings,
+            LibraryIonMobilityInfo libraryIonMobilityInfo,
+            IList<PeptideDocNode> molecules, double ionMobilityMax)
+        {
+            // Waters SONAR maps mz bins to IM; the "filter" is always derived from the mz filter.
+            if (_isWatersSonar)
+            {
+                return true;
+            }
+
+            foreach (var pair in molecules.SelectMany(
+                node => node.TransitionGroups.Select(nodeGroup => new PeptidePrecursorPair(node, nodeGroup))))
+            {
+                var ionMobility = settings.GetIonMobilityFilter(
+                    pair.NodePep, pair.NodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax);
+                if (ionMobility != null && ionMobility.HasIonMobilityValue)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Issue 4150: with current settings no precursor produces an ion mobility filter. Probe
+        // the obvious setting variations (add a window width, enable spectral-library IM, both)
+        // to see whether a specific change would enable filtering. If one would, emit a
+        // non-blocking notice that tells the user exactly which setting to flip. Spectral-library
+        // IM info is settings-invariant so can be reused across probes.
+        private void WarnIfSettingsChangeWouldEnableFiltering(SrmSettings settings,
+            LibraryIonMobilityInfo libraryIonMobilityInfo,
+            IList<PeptideDocNode> molecules, MsDataFileUri msDataFileUri, double ionMobilityMax)
+        {
+            bool WouldWith(SrmSettings probe) =>
+                WouldApplyIonMobilityFiltering(probe, libraryIonMobilityInfo, molecules, ionMobilityMax);
+
+            // Prefer the user's existing window if one is configured - probing with their real
+            // values keeps the "would this change fix it?" test faithful instead of substituting
+            // an arbitrary resolving power. Fall back to a default probe only when no window
+            // type is set at all.
+            var existingCalc = settings.TransitionSettings.IonMobilityFiltering?.FilterWindowWidthCalculator;
+            var probeWindow = existingCalc != null &&
+                              existingCalc.WindowWidthMode != IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none
+                ? existingCalc
+                : new IonMobilityWindowWidthCalculator(PROBE_RESOLVING_POWER);
+            SrmSettings WithWindow(SrmSettings s) => s.ChangeTransitionSettings(
+                s.TransitionSettings.ChangeIonMobilityFiltering(
+                    s.TransitionSettings.IonMobilityFiltering.ChangeFilterWindowWidthCalculator(probeWindow)));
+            SrmSettings WithSpectralLib(SrmSettings s) => s.ChangeTransitionSettings(
+                s.TransitionSettings.ChangeIonMobilityFiltering(
+                    s.TransitionSettings.IonMobilityFiltering.ChangeUseSpectralLibraryIonMobilityValues(true)));
+
+            string message = null;
+            if (WouldWith(WithWindow(settings)))
+            {
+                // Window alone is enough: IMSDB or explicit IM is present.
+                message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow;
+            }
+            else if (WouldWith(WithSpectralLib(settings)))
+            {
+                // Enabling spectral-lib IM alone is enough: window is already configured.
+                message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary;
+            }
+            else if (WouldWith(WithSpectralLib(WithWindow(settings))))
+            {
+                // Need both: no IMSDB or explicit IM, but spectral-lib IM is usable once enabled and a window is set.
+                message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary;
+            }
+            // else: no setting change would enable filtering, so there's no actionable warning.
+
+            if (message != null)
+            {
+                var fileName = msDataFileUri?.GetFileName() ?? string.Empty;
+                Messages.WriteAsyncUserMessage(message, fileName);
+            }
         }
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _ionMobilityFunctionsProvider != null;  } }
