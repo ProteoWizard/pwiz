@@ -72,6 +72,15 @@ namespace pwiz.OspreySharp.Core
         public int NThreads { get; set; } = Environment.ProcessorCount;
 
         /// <summary>
+        /// How many files will actually run concurrently in the current
+        /// invocation. Set by the pipeline before per-file ProcessFile()
+        /// calls; used to divide the inner main-search thread budget so
+        /// total thread demand stays near core count. Defaults to 1
+        /// (no scaling).
+        /// </summary>
+        public int EffectiveFileParallelism { get; set; } = 1;
+
+        /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
         /// mutates a few fields (notably <see cref="FragmentTolerance"/>
         /// after MS2 calibration); cloning at the top of ProcessFile

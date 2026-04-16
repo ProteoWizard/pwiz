@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
@@ -27,6 +28,15 @@ namespace pwiz.OspreySharp
     public class AnalysisPipeline
     {
         private const int NUM_PIN_FEATURES = 21;
+
+        // Serializes mzML reads across concurrent ProcessFile() calls.
+        // The producer inside MzmlReader.LoadAllSpectra is a sequential
+        // XmlReader over a FileStream, so 3 files parsing in parallel
+        // means 3 sequential disk scans fighting for the same head/cache.
+        // Gating the parse step funnels the disk-bound work into one
+        // stream at a time while leaving the subsequent main-search
+        // phase free to run in parallel across files.
+        private static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
         // Diagnostic: per-entry calibration window dump (one row per scored entry).
         // Set during RunCalibration when OSPREY_DUMP_CAL_WINDOWS=1, then read by
@@ -158,6 +168,17 @@ namespace pwiz.OspreySharp
                 string mpfEnv = Environment.GetEnvironmentVariable("OSPREY_MAX_PARALLEL_FILES");
                 if (!string.IsNullOrEmpty(mpfEnv))
                     int.TryParse(mpfEnv, out maxParallelFiles);
+
+                // Determine how many files will actually run concurrently so
+                // ProcessFile can divide the inner main-search thread budget
+                // and avoid oversubscription (see notes there). Stored on
+                // the config so the per-file clones inherit it.
+                if (config.InputFiles.Count == 1 || maxParallelFiles == 1)
+                    config.EffectiveFileParallelism = 1;
+                else if (maxParallelFiles > 1)
+                    config.EffectiveFileParallelism = Math.Min(maxParallelFiles, config.InputFiles.Count);
+                else
+                    config.EffectiveFileParallelism = Math.Min(config.InputFiles.Count, Environment.ProcessorCount);
 
                 var swAllFiles = Stopwatch.StartNew();
                 if (config.InputFiles.Count == 1)
@@ -544,13 +565,28 @@ namespace pwiz.OspreySharp
             // (foreign-file-calibrated) tolerance under -MaxParallelFiles>1.
             config = config.ShallowClone();
 
+            // Divide the inner main-search thread budget across concurrent
+            // files so total demand stays near core count. With 3 files x
+            // 32 threads on a 32-core box, the prior 96-way oversubscription
+            // produced 45-95s wall-time variance on Stellar; a fair share
+            // (10 threads each) holds the run near steady-state.
+            if (config.EffectiveFileParallelism > 1)
+            {
+                int perFileThreads = Math.Max(1, config.NThreads / config.EffectiveFileParallelism);
+                LogInfo(string.Format(
+                    "[BENCH] Per-file thread cap: {0} ({1} total / {2} files in parallel)",
+                    perFileThreads, config.NThreads, config.EffectiveFileParallelism));
+                config.NThreads = perFileThreads;
+            }
+
             var context = new ScoringContext(config, fileName);
 
             // Load spectra (from mzML or .spectra.bin cache)
             List<Spectrum> spectra;
             List<MS1Spectrum> ms1Spectra;
             var swParse = Stopwatch.StartNew();
-            LoadSpectra(inputFile, out spectra, out ms1Spectra);
+            LoadSpectra(inputFile, config.EffectiveFileParallelism > 1,
+                out spectra, out ms1Spectra);
             swParse.Stop();
 
             long inputBytes = 0;
@@ -781,9 +817,11 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
-        /// Load spectra from mzML file or spectra cache.
+        /// Load spectra from mzML file or spectra cache. When multiple
+        /// files are processed in parallel, the mzML parse is gated so
+        /// only one disk scan runs at a time (see s_mzmlReadGate).
         /// </summary>
-        private void LoadSpectra(string inputFile,
+        private void LoadSpectra(string inputFile, bool serializeMzmlRead,
             out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra)
         {
             // Check for binary spectra cache
@@ -805,9 +843,20 @@ namespace pwiz.OspreySharp
                 }
             }
 
-            // Parse mzML directly
+            // Parse mzML directly, optionally serialized across files.
             LogInfo(string.Format("Parsing mzML: {0}", inputFile));
-            var mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
+            MzmlResult mzmlResult;
+            if (serializeMzmlRead)
+                s_mzmlReadGate.Wait();
+            try
+            {
+                mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
+            }
+            finally
+            {
+                if (serializeMzmlRead)
+                    s_mzmlReadGate.Release();
+            }
             ms2Spectra = mzmlResult.Ms2Spectra;
             ms1Spectra = mzmlResult.Ms1Spectra;
             LogInfo(string.Format("Loaded {0} MS2 + {1} MS1 spectra",
