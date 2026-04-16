@@ -146,8 +146,11 @@ namespace pwiz.Skyline.Model.Results
 
                 // Issue 4150: if filtering would not apply under current settings, probe simple
                 // settings variations to see whether a specific setting change would enable it,
-                // and warn the user about the specific change.
-                if (!_isIonMobilityFiltered)
+                // and warn the user about the specific change. When a retention time predictor
+                // is in use, SpectrumFilter is constructed twice for the same file (first pass
+                // sees only first-pass peptides, second pass sees all molecules) - skip the
+                // first pass so the warning fires only once and with the complete molecule set.
+                if (!_isIonMobilityFiltered && (retentionTimePredictor == null || !firstPass))
                 {
                     WarnIfSettingsChangeWouldEnableFiltering(
                         document.Settings, libraryIonMobilityInfo, moleculesThisPass, msDataFileUri, ionMobilityMax);
