@@ -143,6 +143,22 @@ namespace pwiz.OspreySharp
                 // Process files in parallel when multiple files are provided.
                 var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
 
+                // File-level parallelism is configurable via
+                // OSPREY_MAX_PARALLEL_FILES:
+                //   1      = strictly sequential (one file at a time)
+                //   N > 1  = up to N files concurrently via Parallel.For
+                //            with MaxDegreeOfParallelism = N
+                //   unset/<=0 = Parallel.For default (all files at once,
+                //            bounded by the TPL thread pool)
+                // Memory-critical 3-file Astral runs on a 64 GB machine
+                // can cap this at 1 or 2 to keep the per-file pool +
+                // spectra under budget; Stellar stays on default for
+                // max throughput.
+                int maxParallelFiles = 0;
+                string mpfEnv = Environment.GetEnvironmentVariable("OSPREY_MAX_PARALLEL_FILES");
+                if (!string.IsNullOrEmpty(mpfEnv))
+                    int.TryParse(mpfEnv, out maxParallelFiles);
+
                 var swAllFiles = Stopwatch.StartNew();
                 if (config.InputFiles.Count == 1)
                 {
@@ -155,11 +171,40 @@ namespace pwiz.OspreySharp
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                 }
+                else if (maxParallelFiles == 1)
+                {
+                    // Strictly sequential: one file at a time. Matches the
+                    // memory envelope of the single-file path while still
+                    // sharing the library load. Useful for 3-file Astral
+                    // runs that would OOM in parallel.
+                    LogInfo(string.Format(
+                        "[BENCH] OSPREY_MAX_PARALLEL_FILES=1 - processing {0} files sequentially",
+                        config.InputFiles.Count));
+                    for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
+                    {
+                        string inputFile = config.InputFiles[fileIdx];
+                        string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                        LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
+                            fileIdx + 1, config.InputFiles.Count, inputFile));
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config);
+                        if (fileResult != null)
+                            perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                    }
+                }
                 else
                 {
-                    // Multiple files: process in parallel
+                    // Multiple files: process in parallel, optionally
+                    // capped via OSPREY_MAX_PARALLEL_FILES.
+                    var parallelOpts = new ParallelOptions();
+                    if (maxParallelFiles > 1)
+                    {
+                        parallelOpts.MaxDegreeOfParallelism = maxParallelFiles;
+                        LogInfo(string.Format(
+                            "[BENCH] OSPREY_MAX_PARALLEL_FILES={0} - capping parallel file count",
+                            maxParallelFiles));
+                    }
                     var fileResults = new ConcurrentDictionary<int, KeyValuePair<string, List<FdrEntry>>>();
-                    Parallel.For(0, config.InputFiles.Count, fileIdx =>
+                    Parallel.For(0, config.InputFiles.Count, parallelOpts, fileIdx =>
                     {
                         string inputFile = config.InputFiles[fileIdx];
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
@@ -490,6 +535,15 @@ namespace pwiz.OspreySharp
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, OspreyConfig config)
         {
+            // Per-file shallow clone so MS2 calibration's mutation of
+            // FragmentTolerance (and any future per-file overrides) does
+            // not leak between parallel ProcessFile() calls. Without this
+            // the shared OspreyConfig.FragmentTolerance gets clobbered
+            // by whichever calibration completes second, causing
+            // ~1000-2000 entries per file to score with the wrong
+            // (foreign-file-calibrated) tolerance under -MaxParallelFiles>1.
+            config = config.ShallowClone();
+
             var context = new ScoringContext(config, fileName);
 
             // Load spectra (from mzML or .spectra.bin cache)

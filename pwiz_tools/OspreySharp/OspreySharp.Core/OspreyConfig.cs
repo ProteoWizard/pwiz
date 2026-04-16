@@ -72,6 +72,19 @@ namespace pwiz.OspreySharp.Core
         public int NThreads { get; set; } = Environment.ProcessorCount;
 
         /// <summary>
+        /// Shallow clone for per-file ProcessFile() calls. The pipeline
+        /// mutates a few fields (notably <see cref="FragmentTolerance"/>
+        /// after MS2 calibration); cloning at the top of ProcessFile
+        /// isolates each parallel file from the others. References to
+        /// inner config objects (RtCalibration, Reconciliation, etc.)
+        /// are shared because nothing mutates them per-file.
+        /// </summary>
+        public OspreyConfig ShallowClone()
+        {
+            return (OspreyConfig)this.MemberwiseClone();
+        }
+
+        /// <summary>
         /// Compute SHA-256 hash of parameters that affect first-pass scoring.
         /// If this hash changes, cached .scores.parquet files are invalid.
         /// </summary>
