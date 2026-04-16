@@ -377,7 +377,7 @@ namespace pwiz.Skyline.Model.Lib
             var variableModsList = variableMods?.ToList();
 
             // Step 1: Generate predicted library from FASTA
-            status = status.ChangeMessage(@"Generating predicted spectral library from FASTA...");
+            status = status.ChangeMessage(Resources.DiannHelpers_RunSearch_Generating_predicted_spectral_library_from_FASTA___);
             progressMonitor.UpdateProgress(status);
 
             string predictedLibPath = GeneratePredictedLibrary(fastaFilepath, outputDir, config,
@@ -389,7 +389,7 @@ namespace pwiz.Skyline.Model.Lib
             status = status.NextSegment();
 
             // Step 2: Search data files against predicted library
-            status = status.ChangeMessage(@"Searching DIA files against predicted library...");
+            status = status.ChangeMessage(Resources.DiannHelpers_RunSearch_Searching_DIA_files_against_predicted_library___);
             progressMonitor.UpdateProgress(status);
 
             var dataFilesList = dataFiles.ToList();

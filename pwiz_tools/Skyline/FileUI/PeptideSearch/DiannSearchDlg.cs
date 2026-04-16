@@ -86,7 +86,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Set default config values
             numMs1Tolerance.Value = 0; // auto-detect
             numMs2Tolerance.Value = 0; // auto-detect
-            numThreads.Value = Math.Min(Environment.ProcessorCount, numThreads.Maximum);
+            numThreads.Maximum = MAX_THREAD_COUNT;
+            numThreads.Value = Math.Min(Environment.ProcessorCount, MAX_THREAD_COUNT);
 
             // Populate modifications page with common defaults
             InitializeModifications();
@@ -164,10 +165,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set => txtQValue.Text = value.ToString(@"G");
         }
 
+        public const int MAX_THREAD_COUNT = 24;
+
         public int Threads
         {
             get => (int)numThreads.Value;
-            set => numThreads.Value = value;
+            set => numThreads.Value = Math.Min(value, MAX_THREAD_COUNT);
         }
 
         private readonly DiannConfig _diannConfig = new DiannConfig();
@@ -231,20 +234,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return true;
         }
 
-        public void Listen(EventHandler<DocumentChangedEventArgs> listener)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Unlisten(EventHandler<DocumentChangedEventArgs> listener)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsClosing => throw new NotImplementedException();
-        public IEnumerable<BackgroundLoader> BackgroundLoaders => throw new NotImplementedException();
-        public void AddBackgroundLoader(BackgroundLoader loader) => throw new NotImplementedException();
-        public void RemoveBackgroundLoader(BackgroundLoader loader) => throw new NotImplementedException();
+        public void Listen(EventHandler<DocumentChangedEventArgs> listener) =>
+            ((IDocumentContainer)SkylineWindow).Listen(listener);
+        public void Unlisten(EventHandler<DocumentChangedEventArgs> listener) =>
+            ((IDocumentContainer)SkylineWindow).Unlisten(listener);
+        public bool IsClosing => ((IDocumentContainer)SkylineWindow).IsClosing;
+        public IEnumerable<BackgroundLoader> BackgroundLoaders =>
+            ((IDocumentContainer)SkylineWindow).BackgroundLoaders;
+        public void AddBackgroundLoader(BackgroundLoader loader) =>
+            ((IDocumentContainer)SkylineWindow).AddBackgroundLoader(loader);
+        public void RemoveBackgroundLoader(BackgroundLoader loader) =>
+            ((IDocumentContainer)SkylineWindow).RemoveBackgroundLoader(loader);
 
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
         {
@@ -286,7 +286,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.fasta_page:
                     if (!File.Exists(ImportFastaControl.FastaFile))
                     {
-                        MessageDlg.Show(this, PeptideSearchResources.EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Koina_search_);
+                        MessageDlg.Show(this, PeptideSearchResources.DiannSearchDlg_NextPage_A_FASTA_file_is_required_for_a_DIA_NN_search_);
                         return;
                     }
                     break;
