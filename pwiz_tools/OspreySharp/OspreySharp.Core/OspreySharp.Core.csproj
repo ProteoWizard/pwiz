@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.OspreySharp.Core</RootNamespace>
-    <AssemblyName>pwiz.OspreySharp.Core</AssemblyName>
+    <AssemblyName>OspreySharp.Core</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -59,13 +59,9 @@
     <Compile Include="CoelutionFeatureSet.cs" />
     <Compile Include="CoelutionScoredEntry.cs" />
     <Compile Include="CwtCandidate.cs" />
-    <Compile Include="DecoyMethod.cs" />
     <Compile Include="FdrEntry.cs" />
-    <Compile Include="FdrLevel.cs" />
-    <Compile Include="FdrMethod.cs" />
     <Compile Include="FragmentAnnotation.cs" />
     <Compile Include="FragmentToleranceConfig.cs" />
-    <Compile Include="IonType.cs" />
     <Compile Include="IsolationWindow.cs" />
     <Compile Include="IsotopeDistribution.cs" />
     <Compile Include="IsotopeEnvelope.cs" />
@@ -78,11 +74,8 @@
     <Compile Include="OspreyConfig.cs" />
     <Compile Include="PeakBoundaries.cs" />
     <Compile Include="ReconciliationConfig.cs" />
-    <Compile Include="ResolutionMode.cs" />
     <Compile Include="RTCalibrationConfig.cs" />
-    <Compile Include="SharedPeptideMode.cs" />
     <Compile Include="Spectrum.cs" />
-    <Compile Include="ToleranceUnit.cs" />
     <Compile Include="XICPeakBounds.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

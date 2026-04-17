@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
 [assembly: AssemblyProduct("OspreySharp.Chromatography")]
-[assembly: AssemblyCopyright("Copyright (c) University of Washington 2025")]
+[assembly: AssemblyCopyright("Copyright (c) University of Washington 2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

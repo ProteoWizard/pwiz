@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.OspreySharp.FDR</RootNamespace>
-    <AssemblyName>pwiz.OspreySharp.FDR</AssemblyName>
+    <AssemblyName>OspreySharp.FDR</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

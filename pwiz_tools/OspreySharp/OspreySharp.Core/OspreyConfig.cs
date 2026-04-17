@@ -152,4 +152,59 @@ namespace pwiz.OspreySharp.Core
             }
         }
     }
+
+    /// <summary>
+    /// Method used to generate decoy sequences.
+    /// Maps to osprey-core/src/types.rs DecoyMethod.
+    /// </summary>
+    public enum DecoyMethod
+    {
+        Reverse,
+        Shuffle,
+        FromLibrary
+    }
+
+    /// <summary>
+    /// Level at which FDR is controlled.
+    /// Maps to osprey-core/src/types.rs FdrLevel.
+    /// </summary>
+    public enum FdrLevel
+    {
+        Precursor,
+        Peptide,
+        Both
+    }
+
+    /// <summary>
+    /// Statistical method for FDR estimation.
+    /// Maps to osprey-core/src/types.rs FdrMethod.
+    /// </summary>
+    public enum FdrMethod
+    {
+        Percolator,
+        Mokapot,
+        Simple
+    }
+
+    /// <summary>
+    /// Mass spectrometer resolution mode.
+    /// Maps to osprey-core/src/types.rs ResolutionMode.
+    /// </summary>
+    public enum ResolutionMode
+    {
+        Auto,
+        UnitResolution,
+        HRAM
+    }
+
+    /// <summary>
+    /// How shared peptides are handled during protein inference.
+    /// Maps to osprey-core/src/types.rs SharedPeptideMode.
+    /// </summary>
+    public enum SharedPeptideMode
+    {
+        All,
+        Razor,
+        Unique
+    }
 }

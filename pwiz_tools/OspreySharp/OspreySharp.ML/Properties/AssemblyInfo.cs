@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
 [assembly: AssemblyProduct("OspreySharp.ML")]
-[assembly: AssemblyCopyright("Copyright (c) University of Washington 2025")]
+[assembly: AssemblyCopyright("Copyright (c) University of Washington 2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -35,5 +35,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
-[assembly: InternalsVisibleTo("pwiz.OspreySharp.FDR")]
-[assembly: InternalsVisibleTo("pwiz.OspreySharp.Test")]
+[assembly: InternalsVisibleTo("OspreySharp.FDR")]
+[assembly: InternalsVisibleTo("OspreySharp.Test")]

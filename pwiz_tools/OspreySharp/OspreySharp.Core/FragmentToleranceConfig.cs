@@ -76,4 +76,14 @@ namespace pwiz.OspreySharp.Core
                 : obsMz - libMz;
         }
     }
+
+    /// <summary>
+    /// Tolerance unit for m/z matching.
+    /// Maps to osprey-core/src/config.rs ToleranceUnit.
+    /// </summary>
+    public enum ToleranceUnit
+    {
+        Ppm,
+        Mz
+    }
 }

@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
 [assembly: AssemblyProduct("OspreySharp")]
-[assembly: AssemblyCopyright("Copyright (c) University of Washington 2025")]
+[assembly: AssemblyCopyright("Copyright (c) University of Washington 2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 
 // Expose internals to the test assembly so it can assert invariants on
 // static fields like s_calXcorrScorer.
-[assembly: InternalsVisibleTo("pwiz.OspreySharp.Test")]
+[assembly: InternalsVisibleTo("OspreySharp.Test")]
 
 // Version information for an assembly consists of the following four values:
 //

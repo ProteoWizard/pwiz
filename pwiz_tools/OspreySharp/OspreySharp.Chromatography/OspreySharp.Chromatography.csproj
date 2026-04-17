@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.OspreySharp.Chromatography</RootNamespace>
-    <AssemblyName>pwiz.OspreySharp.Chromatography</AssemblyName>
+    <AssemblyName>OspreySharp.Chromatography</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
