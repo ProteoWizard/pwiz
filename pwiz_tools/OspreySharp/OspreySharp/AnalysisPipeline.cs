@@ -124,7 +124,8 @@ namespace pwiz.OspreySharp
                 int nLibraryTargets = 0;
                 foreach (var entry in library)
                 {
-                    if (!entry.IsDecoy) nLibraryTargets++;
+                    if (!entry.IsDecoy)
+                        nLibraryTargets++;
                 }
                 double libLoadSec = swLibrary.Elapsed.TotalSeconds;
                 LogInfo(string.Format("[COUNT] Library targets loaded: {0}", nLibraryTargets));
@@ -161,9 +162,12 @@ namespace pwiz.OspreySharp
                 foreach (var entry in fullLibrary)
                 {
                     int fc = entry.Fragments != null ? entry.Fragments.Count : 0;
-                    if (fc == 0) nZeroFrag++;
-                    else if (fc == 1) nOneFrag++;
-                    else if (fc == 2) nTwoFrag++;
+                    if (fc == 0)
+                        nZeroFrag++;
+                    else if (fc == 1)
+                        nOneFrag++;
+                    else if (fc == 2)
+                        nTwoFrag++;
                 }
                 if (nZeroFrag + nOneFrag + nTwoFrag > 0)
                     LogInfo(string.Format("[COUNT] Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
@@ -471,7 +475,8 @@ namespace pwiz.OspreySharp
             var targetSequences = new HashSet<string>(StringComparer.Ordinal);
             foreach (var t in targets)
             {
-                if (!t.IsDecoy) targetSequences.Add(t.Sequence);
+                if (!t.IsDecoy)
+                    targetSequences.Add(t.Sequence);
             }
 
             // Generate decoys in parallel (matches Rust's par_iter approach).
@@ -953,15 +958,19 @@ namespace pwiz.OspreySharp
             {
                 if (!entry.IsDecoy)
                 {
-                    if (entry.RetentionTime < libMinRt) libMinRt = entry.RetentionTime;
-                    if (entry.RetentionTime > libMaxRt) libMaxRt = entry.RetentionTime;
+                    if (entry.RetentionTime < libMinRt)
+                        libMinRt = entry.RetentionTime;
+                    if (entry.RetentionTime > libMaxRt)
+                        libMaxRt = entry.RetentionTime;
                 }
             }
 
             foreach (var spectrum in spectra)
             {
-                if (spectrum.RetentionTime < mzmlMinRt) mzmlMinRt = spectrum.RetentionTime;
-                if (spectrum.RetentionTime > mzmlMaxRt) mzmlMaxRt = spectrum.RetentionTime;
+                if (spectrum.RetentionTime < mzmlMinRt)
+                    mzmlMinRt = spectrum.RetentionTime;
+                if (spectrum.RetentionTime > mzmlMaxRt)
+                    mzmlMaxRt = spectrum.RetentionTime;
             }
 
             double libRtRange = libMaxRt - libMinRt;
@@ -1008,7 +1017,8 @@ namespace pwiz.OspreySharp
                 var tuples = new List<string>();
                 foreach (var e in sampledEntries)
                 {
-                    if (e.IsDecoy) continue;
+                    if (e.IsDecoy)
+                        continue;
                     tuples.Add(string.Format("{0}\t{1}\t{2}\t{3:F4}\t{4:F4}",
                         e.Id, e.ModifiedSequence, e.Charge, e.PrecursorMz, e.RetentionTime));
                 }
@@ -1031,7 +1041,8 @@ namespace pwiz.OspreySharp
             int nSampledDecoys = 0;
             foreach (var e in sampledEntries)
             {
-                if (e.IsDecoy) nSampledDecoys++;
+                if (e.IsDecoy)
+                    nSampledDecoys++;
                 else nSampledTargets++;
             }
             LogInfo(string.Format(
@@ -1083,14 +1094,14 @@ namespace pwiz.OspreySharp
 
             // === Iterative calibration refinement (2-pass) ===
             // Mirrors Rust pipeline.rs:714-839.
-            // MAD × 1.4826 ≈ SD for a normal distribution; 3× that covers ~99.7%.
+            // MAD * 1.4826 ~ SD for a normal distribution; 3* that covers ~99.7%.
             double madTolerance = pass1.Stats.MAD * 1.4826 * 3.0;
             double pass1Tolerance = Math.Max(
                 config.RtCalibration.MinRtTolerance,
                 Math.Min(config.RtCalibration.MaxRtTolerance, madTolerance));
 
             LogInfo(string.Format(
-                "First-pass RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R²={5:F4})",
+                "First-pass RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4})",
                 pass1Tolerance,
                 pass1.Stats.MAD,
                 pass1.Stats.MAD * 1.4826,
@@ -1098,7 +1109,7 @@ namespace pwiz.OspreySharp
                 pass1.Stats.NPoints,
                 pass1.Stats.RSquared));
 
-            // Only refine if the tolerance narrowed at least 2× tighter than the
+            // Only refine if the tolerance narrowed at least 2* tighter than the
             // initial wide window.
             if (pass1Tolerance < initialTolerance * 0.5)
             {
@@ -1121,7 +1132,7 @@ namespace pwiz.OspreySharp
                         Math.Min(config.RtCalibration.MaxRtTolerance, refinedMadTolerance));
 
                     LogInfo(string.Format(
-                        "Refined RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R²={5:F4})",
+                        "Refined RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4})",
                         refinedTolerance,
                         pass2.Stats.MAD,
                         pass2.Stats.MAD * 1.4826,
@@ -1129,7 +1140,7 @@ namespace pwiz.OspreySharp
                         pass2.Stats.NPoints,
                         pass2.Stats.RSquared));
 
-                    // Accept the refined calibration only if R² didn't degrade
+                    // Accept the refined calibration only if R^2 didn't degrade
                     // by more than 1% (matches Rust pipeline.rs:811).
                     if (pass2.Stats.RSquared >= pass1.Stats.RSquared * 0.99)
                     {
@@ -1138,7 +1149,7 @@ namespace pwiz.OspreySharp
                         return pass2.Calibration;
                     }
                     LogInfo(string.Format(
-                        "Refined calibration not better (R² {0:F4} vs {1:F4}), keeping original",
+                        "Refined calibration not better (R^2 {0:F4} vs {1:F4}), keeping original",
                         pass2.Stats.RSquared, pass1.Stats.RSquared));
                 }
                 else
@@ -1248,7 +1259,7 @@ namespace pwiz.OspreySharp
                 passNumber, fileName, matches.Count));
 
             // Write per-entry window dump if requested. When two passes run, the
-            // pass 2 dump overwrites pass 1 — same behaviour as Rust's
+            // pass 2 dump overwrites pass 1 - same behaviour as Rust's
             // run_coelution_calibration_scoring dumping on every invocation.
             if (s_calWindowDump != null)
             {
@@ -1359,7 +1370,8 @@ namespace pwiz.OspreySharp
                 uint baseA = a.EntryId & 0x7FFFFFFF;
                 uint baseB = b.EntryId & 0x7FFFFFFF;
                 int cmp = baseA.CompareTo(baseB);
-                if (cmp != 0) return cmp;
+                if (cmp != 0)
+                    return cmp;
                 return a.EntryId.CompareTo(b.EntryId);
             });
             int nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false);
@@ -1371,7 +1383,8 @@ namespace pwiz.OspreySharp
             {
                 if (m.QValue <= CAL_FDR_THRESHOLD)
                 {
-                    if (m.IsDecoy) nDecoyWins++;
+                    if (m.IsDecoy)
+                        nDecoyWins++;
                     else nTargetWins++;
                 }
             }
@@ -1422,11 +1435,14 @@ namespace pwiz.OspreySharp
             int nSnrFiltered = 0;
             foreach (var m in matchArray)
             {
-                if (m.IsDecoy) continue;
-                if (m.QValue > CAL_FDR_THRESHOLD) continue;
+                if (m.IsDecoy)
+                    continue;
+                if (m.QValue > CAL_FDR_THRESHOLD)
+                    continue;
 
                 KeyValuePair<double, double> rtPair;
-                if (!matchRts.TryGetValue(m.EntryId, out rtPair)) continue;
+                if (!matchRts.TryGetValue(m.EntryId, out rtPair))
+                    continue;
 
                 double snr;
                 if (!snrByEntryId.TryGetValue(m.EntryId, out snr))
@@ -1520,7 +1536,8 @@ namespace pwiz.OspreySharp
                     pairs.Sort((a, b) =>
                     {
                         int c = a.Key.CompareTo(b.Key);
-                        if (c != 0) return c;
+                        if (c != 0)
+                            return c;
                         return a.Value.CompareTo(b.Value);
                     });
                     using (var w = new StreamWriter("cs_loess_input.txt"))
@@ -1589,7 +1606,8 @@ namespace pwiz.OspreySharp
             var decoys = new List<LibraryEntry>();
             foreach (var entry in library)
             {
-                if (entry.IsDecoy) decoys.Add(entry);
+                if (entry.IsDecoy)
+                    decoys.Add(entry);
                 else targets.Add(entry);
             }
 
@@ -1610,10 +1628,14 @@ namespace pwiz.OspreySharp
             for (int i = 0; i < targets.Count; i++)
             {
                 var t = targets[i];
-                if (t.RetentionTime < rtMin) rtMin = t.RetentionTime;
-                if (t.RetentionTime > rtMax) rtMax = t.RetentionTime;
-                if (t.PrecursorMz < mzMin) mzMin = t.PrecursorMz;
-                if (t.PrecursorMz > mzMax) mzMax = t.PrecursorMz;
+                if (t.RetentionTime < rtMin)
+                    rtMin = t.RetentionTime;
+                if (t.RetentionTime > rtMax)
+                    rtMax = t.RetentionTime;
+                if (t.PrecursorMz < mzMin)
+                    mzMin = t.PrecursorMz;
+                if (t.PrecursorMz > mzMax)
+                    mzMax = t.PrecursorMz;
             }
             double rtRange = Math.Max(1e-6, rtMax - rtMin);
             double mzRange = Math.Max(1e-6, mzMax - mzMin);
@@ -1631,8 +1653,10 @@ namespace pwiz.OspreySharp
                 var t = targets[i];
                 int rtBin = (int)Math.Floor((t.RetentionTime - rtMin) / rtBinWidth);
                 int mzBin = (int)Math.Floor((t.PrecursorMz - mzMin) / mzBinWidth);
-                if (rtBin >= binsPerAxis) rtBin = binsPerAxis - 1;
-                if (mzBin >= binsPerAxis) mzBin = binsPerAxis - 1;
+                if (rtBin >= binsPerAxis)
+                    rtBin = binsPerAxis - 1;
+                if (mzBin >= binsPerAxis)
+                    mzBin = binsPerAxis - 1;
                 grid[rtBin, mzBin].Add(i);
             }
 
@@ -1640,10 +1664,12 @@ namespace pwiz.OspreySharp
             int nOccupied = 0;
             for (int i = 0; i < binsPerAxis; i++)
                 for (int j = 0; j < binsPerAxis; j++)
-                    if (grid[i, j].Count > 0) nOccupied++;
+                    if (grid[i, j].Count > 0)
+                        nOccupied++;
 
             int perCell = nOccupied > 0 ? sampleSize / nOccupied : 1;
-            if (perCell < 1) perCell = 1;
+            if (perCell < 1)
+                perCell = 1;
 
             // Diagnostic dump: scalar parameters + full grid contents,
             // matching Rust's dump format for direct diff.
@@ -1674,7 +1700,8 @@ namespace pwiz.OspreySharp
                         for (int c = 0; c < binsPerAxis; c++)
                         {
                             var cell = grid[r, c];
-                            if (cell.Count == 0) continue;
+                            if (cell.Count == 0)
+                                continue;
                             var ids = new List<uint>(cell.Count);
                             foreach (int ti in cell)
                                 ids.Add(targets[ti].Id);
@@ -1682,7 +1709,8 @@ namespace pwiz.OspreySharp
                             var sb = new System.Text.StringBuilder();
                             for (int k = 0; k < ids.Count; k++)
                             {
-                                if (k > 0) sb.Append(',');
+                                if (k > 0)
+                                    sb.Append(',');
                                 sb.Append(ids[k]);
                             }
                             w.WriteLine("{0}\t{1}\t{2}\t{3}", r, c, cell.Count, sb.ToString());
@@ -1701,7 +1729,8 @@ namespace pwiz.OspreySharp
                 for (int ci = 0; ci < binsPerAxis; ci++)
                 {
                     var cell = grid[ri, ci];
-                    if (cell.Count == 0) continue;
+                    if (cell.Count == 0)
+                        continue;
 
                     int nTake = Math.Min(cell.Count, perCell);
                     int stride = Math.Max(1, cell.Count / nTake);
@@ -1712,7 +1741,8 @@ namespace pwiz.OspreySharp
                         int idx = (cellOffset + j * stride) % cell.Count;
                         var target = targets[cell[idx]];
 
-                        if (sampledIds.Contains(target.Id)) continue;
+                        if (sampledIds.Contains(target.Id))
+                            continue;
                         sampledIds.Add(target.Id);
                         sampled.Add(target);
 
@@ -1735,14 +1765,17 @@ namespace pwiz.OspreySharp
                     for (int ci = 0; ci < binsPerAxis; ci++)
                     {
                         var cell = grid[ri, ci];
-                        if (cell.Count == 0) continue;
+                        if (cell.Count == 0)
+                            continue;
 
                         int added = 0;
                         foreach (int targetIdx in cell)
                         {
-                            if (added >= extraPerCell) break;
+                            if (added >= extraPerCell)
+                                break;
                             var target = targets[targetIdx];
-                            if (sampledIds.Contains(target.Id)) continue;
+                            if (sampledIds.Contains(target.Id))
+                                continue;
                             sampledIds.Add(target.Id);
                             sampled.Add(target);
                             LibraryEntry decoy;
@@ -1868,7 +1901,7 @@ namespace pwiz.OspreySharp
                     resolvedWindowKey = windowKey + 1;
                 else
                 {
-                    // Linear scan fallback — find the key that matched
+                    // Linear scan fallback - find the key that matched
                     foreach (var kvp in spectraByWindowKey)
                     {
                         if (kvp.Value == windowSpectra)
@@ -2038,7 +2071,7 @@ namespace pwiz.OspreySharp
                 {
                     dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
                     dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
-                    // Use F10 — wide enough that half-way rounding on values
+                    // Use F10 - wide enough that half-way rounding on values
                     // like 1756.6640625 (exact f32 mantissa) doesn't diverge
                     // between Rust's banker's rounding and C#'s round-half-up.
                     foreach (var xic in xics)
@@ -2135,7 +2168,7 @@ namespace pwiz.OspreySharp
             if (bestPeak == null || bestCorrSum < MIN_COELUTION_CORR_SCORE)
                 return null;
 
-            // Identify the reference XIC — the single fragment with the highest
+            // Identify the reference XIC - the single fragment with the highest
             // total intensity across the extracted XICs. This is the signal that
             // feeds SNR computation and the apex selection. Direct port of
             // Rust's `ref_idx = xics.max_by(total intensity)` in batch.rs:~2718.
@@ -2169,7 +2202,8 @@ namespace pwiz.OspreySharp
             double apexVal = refIntensities[Math.Min(apexLocalIdx, refIntensities.Length - 1)];
             for (int scan = bestPeak.StartIndex; scan <= bestPeak.EndIndex; scan++)
             {
-                if (scan >= refIntensities.Length) break;
+                if (scan >= refIntensities.Length)
+                    break;
                 if (refIntensities[scan] >= apexVal)
                 {
                     apexVal = refIntensities[scan];
@@ -2463,7 +2497,7 @@ namespace pwiz.OspreySharp
                 list.Add(spectrum);
             }
 
-            // Determine RT tolerance — global, matching Rust's run_search.
+            // Determine RT tolerance - global, matching Rust's run_search.
             // Rust computes one tolerance for ALL entries: 3 * MAD * 1.4826,
             // clamped to [min, max]. C# was using per-entry LocalTolerance
             // (interpolated residuals), which produces different scan ranges.
@@ -2545,7 +2579,7 @@ namespace pwiz.OspreySharp
             }
 
             // Per-entry search XIC diagnostic. Dumps XIC data for specified entries
-            // during the main search (does NOT exit — collects all in one run).
+            // during the main search (does NOT exit - collects all in one run).
             // Usage: OSPREY_DIAG_SEARCH_ENTRY_IDS=0,100,5000,50000
             HashSet<uint> diagSearchEntryIds = null;
             string diagSearchEnv = Environment.GetEnvironmentVariable("OSPREY_DIAG_SEARCH_ENTRY_IDS");
@@ -2817,7 +2851,8 @@ namespace pwiz.OspreySharp
                     break;
                 if (windowRts[i] >= expectedRt - rtTolerance)
                 {
-                    if (startScan < 0) startScan = i;
+                    if (startScan < 0)
+                        startScan = i;
                     endScan = i;
                 }
             }
@@ -2867,9 +2902,11 @@ namespace pwiz.OspreySharp
                     bool passes = HasTopNFragmentMatch(
                         candidate, windowSpectra[i].Mzs, config.FragmentTolerance);
                     int slot = (i - startScan) % WIN;
-                    if (window[slot]) winSum--;
+                    if (window[slot])
+                        winSum--;
                     window[slot] = passes;
-                    if (passes) winSum++;
+                    if (passes)
+                        winSum++;
                     if (i - startScan + 1 >= WIN && winSum >= MIN_PASS)
                     {
                         hasSignal = true;
@@ -3127,7 +3164,7 @@ namespace pwiz.OspreySharp
             ComputePeakShapeFeatures(xics, bestPeak,
                 out peakApex, out peakArea, out peakSharpness);
 
-            // RT deviation (absolute even if calibration disabled — measured vs library RT)
+            // RT deviation (absolute even if calibration disabled - measured vs library RT)
             double rtDeviation = apexSpectrum.RetentionTime - expectedRt;
             double absRtDeviation = Math.Abs(rtDeviation);
 
@@ -3143,7 +3180,7 @@ namespace pwiz.OspreySharp
                 out explainedIntensity, out massAccuracyMean, out absMassAccuracyMean);
 
             // MS1 features: precursor coelution, isotope cosine.
-            // Rust pipeline.rs:5362 gates on is_hram — unit resolution skips MS1.
+            // Rust pipeline.rs:5362 gates on is_hram - unit resolution skips MS1.
             double ms1PrecursorCoelution = 0.0;
             double ms1IsotopeCosine = 0.0;
             if (resolution.HasMs1Features && ms1Spectra != null && ms1Spectra.Count > 0)
@@ -3370,7 +3407,8 @@ namespace pwiz.OspreySharp
                 if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
                 {
                     matchCount++;
-                    if (matchCount >= requiredMatches) return true;
+                    if (matchCount >= requiredMatches)
+                        return true;
                 }
             }
             return false;
@@ -3391,7 +3429,7 @@ namespace pwiz.OspreySharp
             //   1. Use top-6 fragments by relative intensity (not all fragments)
             //   2. Pick the closest peak by m/z within tolerance (not most intense)
             //   3. Always include all selected fragments, even all-zero XICs
-            //      (dropping all-zero fragments biases decoys to higher R²)
+            //      (dropping all-zero fragments biases decoys to higher R^2)
             int rangeLen = endScan - startScan + 1;
             var xics = new List<XicData>();
             if (candidate.Fragments == null || candidate.Fragments.Count == 0)
@@ -3499,7 +3537,8 @@ namespace pwiz.OspreySharp
                         continue;
 
                     sum += corr;
-                    if (corr > maxCorr) maxCorr = corr;
+                    if (corr > maxCorr)
+                        maxCorr = corr;
                     haveAny = true;
 
                     fragCorrSum[i] += corr;
@@ -3892,12 +3931,12 @@ namespace pwiz.OspreySharp
 
         /// <summary>
         /// Build an approximate averagine theoretical isotope envelope at 5 positions
-        /// [M-1, M+0, M+1, M+2, M+3]. Uses a simple mass-dependent decay model —
+        /// [M-1, M+0, M+1, M+2, M+3]. Uses a simple mass-dependent decay model -
         /// sufficient for cosine-similarity comparison with the observed envelope.
         /// </summary>
         private static double[] TheoreticalIsotopeEnvelope(double precursorMz, int charge)
         {
-            // Approximate neutral mass (ignores proton mass precisely — good enough here).
+            // Approximate neutral mass (ignores proton mass precisely - good enough here).
             double mass = precursorMz * charge;
 
             // Rough averagine ratios anchored to M+0 = 1.0.
@@ -4199,7 +4238,8 @@ namespace pwiz.OspreySharp
                         nWithoutFeatures++;
                     }
 
-                    if (fdrEntry.IsDecoy) nInputDecoys++;
+                    if (fdrEntry.IsDecoy)
+                        nInputDecoys++;
                     else nInputTargets++;
 
                     percEntries.Add(new PercolatorEntry
@@ -4296,8 +4336,10 @@ namespace pwiz.OspreySharp
             {
                 foreach (var entry in kvp.Value)
                 {
-                    if (entry.IsDecoy) continue;
-                    if (entry.EffectiveRunQvalue(config.FdrLevel) > config.RunFdr) continue;
+                    if (entry.IsDecoy)
+                        continue;
+                    if (entry.EffectiveRunQvalue(config.FdrLevel) > config.RunFdr)
+                        continue;
                     string pkey = entry.ModifiedSequence + "|" + entry.Charge;
                     double q = entry.EffectiveRunQvalue(config.FdrLevel);
                     double existing;

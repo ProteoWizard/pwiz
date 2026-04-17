@@ -469,8 +469,10 @@ namespace pwiz.OspreySharp.Chromatography
             double minRt = retentionTimes[0], maxRt = retentionTimes[0];
             for (int i = 1; i < retentionTimes.Length; i++)
             {
-                if (retentionTimes[i] < minRt) minRt = retentionTimes[i];
-                if (retentionTimes[i] > maxRt) maxRt = retentionTimes[i];
+                if (retentionTimes[i] < minRt)
+                    minRt = retentionTimes[i];
+                if (retentionTimes[i] > maxRt)
+                    maxRt = retentionTimes[i];
             }
 
             if (maxRt - minRt < 1e-10)

@@ -597,7 +597,8 @@ namespace pwiz.OspreySharp.Test
                 for (int s = 0; s < 5; s++)
                 {
                     double original = xics[f].Value[s];
-                    if (original <= 0) continue;
+                    if (original <= 0)
+                        continue;
                     double reconstructed = Math.Exp(result.Overall + result.RowEffects[f] +
                         result.ColEffects[s] + result.Residuals[f][s]);
                     Assert.AreEqual(original, reconstructed, original * 0.01,
@@ -1059,7 +1060,8 @@ namespace pwiz.OspreySharp.Test
             for (int i = 0; i < n; i++)
             {
                 double d = Math.Abs(resultD[i] - resultF[i]);
-                if (d > maxDiff) maxDiff = d;
+                if (d > maxDiff)
+                    maxDiff = d;
             }
 
             Assert.IsTrue(maxDiff > 1e-6,

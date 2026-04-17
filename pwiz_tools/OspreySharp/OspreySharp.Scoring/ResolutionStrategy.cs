@@ -174,7 +174,8 @@ namespace pwiz.OspreySharp.Scoring
 
         public void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool)
         {
-            if (cache == null || scratchPool == null) return;
+            if (cache == null || scratchPool == null)
+                return;
             scratchPool.ReturnBinsArray(cache.Floats);
         }
 

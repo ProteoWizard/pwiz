@@ -229,7 +229,8 @@ namespace pwiz.OspreySharp.FDR
             int dedupTargets = 0, dedupDecoys = 0;
             for (int i = 0; i < bestPerPrecursor.Length; i++)
             {
-                if (labels[bestPerPrecursor[i]]) dedupDecoys++;
+                if (labels[bestPerPrecursor[i]])
+                    dedupDecoys++;
                 else dedupTargets++;
             }
             Console.Error.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
@@ -264,7 +265,8 @@ namespace pwiz.OspreySharp.FDR
             int subTargets = 0, subDecoys = 0;
             for (int i = 0; i < trainSubset.Length; i++)
             {
-                if (labels[trainSubset[i]]) subDecoys++;
+                if (labels[trainSubset[i]])
+                    subDecoys++;
                 else subTargets++;
             }
             Console.Error.WriteLine("[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
@@ -730,7 +732,8 @@ namespace pwiz.OspreySharp.FDR
             winners.Sort((a, b) =>
             {
                 int cmp = b.Item2.CompareTo(a.Item2);
-                if (cmp != 0) return cmp;
+                if (cmp != 0)
+                    return cmp;
                 return a.Item4.CompareTo(b.Item4);
             });
 

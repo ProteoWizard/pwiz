@@ -104,7 +104,8 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         public void Return(XcorrScratch s)
         {
-            if (s == null) return;
+            if (s == null)
+                return;
             Array.Clear(s.Binned, 0, s.Binned.Length);
             Array.Clear(s.VisitedBins, 0, s.VisitedBins.Length);
             _scratchBag.Add(s);
@@ -142,7 +143,8 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         public void ReturnBinsArray(float[][] arrays)
         {
-            if (arrays == null) return;
+            if (arrays == null)
+                return;
             foreach (var a in arrays)
                 ReturnBins(a);
         }

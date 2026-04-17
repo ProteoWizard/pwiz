@@ -224,7 +224,8 @@ namespace pwiz.OspreySharp.Scoring
                         if (IsFinite(n) && IsFinite(o))
                         {
                             double d = Math.Abs(n - o);
-                            if (d > maxChange) maxChange = d;
+                            if (d > maxChange)
+                                maxChange = d;
                         }
                     }
 
@@ -249,7 +250,8 @@ namespace pwiz.OspreySharp.Scoring
                         break;
                     }
                 }
-                if (any) nFragmentsUsed++;
+                if (any)
+                    nFragmentsUsed++;
             }
 
             if (nFragmentsUsed < 2)
@@ -290,9 +292,11 @@ namespace pwiz.OspreySharp.Scoring
             TukeyMedianPolishResult polish,
             IList<LibraryFragment> libraryFragments)
         {
-            if (polish == null) return 0.0;
+            if (polish == null)
+                return 0.0;
             int n = polish.FragmentIndices.Length;
-            if (n < 2) return 0.0;
+            if (n < 2)
+                return 0.0;
 
             var rowVec = new List<double>(n);
             var libVec = new List<double>(n);
@@ -339,10 +343,12 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         public static double ResidualRatio(TukeyMedianPolishResult polish)
         {
-            if (polish == null) return 1.0;
+            if (polish == null)
+                return 1.0;
             int nFrags = polish.RowEffects.Length;
             int nScans = nFrags > 0 ? polish.ColEffects.Length : 0;
-            if (nFrags < 2 || nScans < 3) return 1.0;
+            if (nFrags < 2 || nScans < 3)
+                return 1.0;
 
             double sumAbsResidual = 0.0;
             double sumObserved = 0.0;
@@ -367,20 +373,23 @@ namespace pwiz.OspreySharp.Scoring
                 }
             }
 
-            if (sumObserved < 1e-30) return 1.0;
+            if (sumObserved < 1e-30)
+                return 1.0;
             return sumAbsResidual / sumObserved;
         }
 
         /// <summary>
-        /// Minimum per-fragment R² (sqrt-preprocessed) between predicted and observed
+        /// Minimum per-fragment R^2 (sqrt-preprocessed) between predicted and observed
         /// intensities across scans. Identifies the weakest-correlating fragment.
         /// </summary>
         public static double MinFragmentR2(TukeyMedianPolishResult polish)
         {
-            if (polish == null) return 0.0;
+            if (polish == null)
+                return 0.0;
             int nFrags = polish.RowEffects.Length;
             int nScans = polish.ColEffects.Length;
-            if (nFrags < 1 || nScans < 3) return 0.0;
+            if (nFrags < 1 || nScans < 3)
+                return 0.0;
 
             double minR2 = double.MaxValue;
             var pred = new List<double>(nScans);
@@ -393,7 +402,8 @@ namespace pwiz.OspreySharp.Scoring
 
                 for (int s = 0; s < nScans; s++)
                 {
-                    if (!IsFinite(polish.Residuals[f][s])) continue;
+                    if (!IsFinite(polish.Residuals[f][s]))
+                        continue;
                     double predicted = Math.Exp(polish.Overall + polish.RowEffects[f] + polish.ColEffects[s]);
                     double observed = Math.Exp(polish.Overall + polish.RowEffects[f] + polish.ColEffects[s] + polish.Residuals[f][s]);
                     pred.Add(Math.Sqrt(predicted));
@@ -401,10 +411,12 @@ namespace pwiz.OspreySharp.Scoring
                 }
 
                 double r2 = pred.Count < 3 ? 0.0 : ComputeR2(pred, obs);
-                if (r2 < minR2) minR2 = r2;
+                if (r2 < minR2)
+                    minR2 = r2;
             }
 
-            if (minR2 == double.MaxValue) return 0.0;
+            if (minR2 == double.MaxValue)
+                return 0.0;
             return Math.Max(0.0, minR2);
         }
 
@@ -415,10 +427,12 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         public static double ResidualCorrelation(TukeyMedianPolishResult polish)
         {
-            if (polish == null) return 0.0;
+            if (polish == null)
+                return 0.0;
             int nFrags = polish.RowEffects.Length;
             int nScans = polish.ColEffects.Length;
-            if (nFrags < 2 || nScans < 3) return 0.0;
+            if (nFrags < 2 || nScans < 3)
+                return 0.0;
 
             double corrSum = 0.0;
             int nPairs = 0;
@@ -469,7 +483,8 @@ namespace pwiz.OspreySharp.Scoring
                 if (IsFinite(values[i]))
                     finite.Add(values[i]);
             }
-            if (finite.Count == 0) return double.NaN;
+            if (finite.Count == 0)
+                return double.NaN;
             finite.Sort();
             int mid = finite.Count / 2;
             if (finite.Count % 2 == 0)
@@ -487,17 +502,21 @@ namespace pwiz.OspreySharp.Scoring
                 normA += a[i] * a[i];
                 normB += b[i] * b[i];
             }
-            if (normA < 1e-30 || normB < 1e-30) return 0.0;
+            if (normA < 1e-30 || normB < 1e-30)
+                return 0.0;
             double v = dot / (Math.Sqrt(normA) * Math.Sqrt(normB));
-            if (v < 0.0) return 0.0;
-            if (v > 1.0) return 1.0;
+            if (v < 0.0)
+                return 0.0;
+            if (v > 1.0)
+                return 1.0;
             return v;
         }
 
         private static double ComputeR2(List<double> predicted, List<double> observed)
         {
             int n = predicted.Count;
-            if (n < 2) return 0.0;
+            if (n < 2)
+                return 0.0;
             double obsMean = 0.0;
             for (int i = 0; i < n; i++) obsMean += observed[i];
             obsMean /= n;
@@ -510,14 +529,16 @@ namespace pwiz.OspreySharp.Scoring
                 ssTot += dt * dt;
                 ssRes += dr * dr;
             }
-            if (ssTot < 1e-30) return 0.0;
+            if (ssTot < 1e-30)
+                return 0.0;
             return Math.Max(0.0, 1.0 - ssRes / ssTot);
         }
 
         private static double PearsonCorrelationRaw(List<double> x, List<double> y)
         {
             int n = Math.Min(x.Count, y.Count);
-            if (n < 2) return 0.0;
+            if (n < 2)
+                return 0.0;
             double mx = 0.0, my = 0.0;
             for (int i = 0; i < n; i++) { mx += x[i]; my += y[i]; }
             mx /= n; my /= n;
@@ -531,7 +552,8 @@ namespace pwiz.OspreySharp.Scoring
                 sxx += dx * dx;
                 syy += dy * dy;
             }
-            if (sxx < 1e-30 || syy < 1e-30) return 0.0;
+            if (sxx < 1e-30 || syy < 1e-30)
+                return 0.0;
             return sxy / Math.Sqrt(sxx * syy);
         }
     }

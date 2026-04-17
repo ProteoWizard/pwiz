@@ -86,7 +86,8 @@ namespace pwiz.OspreySharp.ML
                         classRows.Add(i);
                 }
                 int count = classRows.Count;
-                if (count == 0) continue;
+                if (count == 0)
+                    continue;
 
                 // Build class data matrix
                 var classData = new double[count * features.Cols];

@@ -444,8 +444,10 @@ namespace pwiz.OspreySharp.FDR
             foreach (var group in parsimony.Groups)
             {
                 double qc, qb;
-                if (!qComposite.TryGetValue(group.Id, out qc)) qc = 1.0;
-                if (!qBest.TryGetValue(group.Id, out qb)) qb = 1.0;
+                if (!qComposite.TryGetValue(group.Id, out qc))
+                    qc = 1.0;
+                if (!qBest.TryGetValue(group.Id, out qb))
+                    qb = 1.0;
                 groupQvalues[group.Id] = Math.Min(qc, qb);
 
                 double compositeScore;

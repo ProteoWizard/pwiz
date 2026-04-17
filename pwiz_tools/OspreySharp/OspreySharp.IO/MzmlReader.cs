@@ -140,7 +140,8 @@ namespace pwiz.OspreySharp.IO
                 else if (d.MsLevel == 2)
                 {
                     var s = d.ToMs2Spectrum();
-                    if (s != null) ms2Spectra.Add(s);
+                    if (s != null)
+                        ms2Spectra.Add(s);
                 }
             }
 
@@ -335,8 +336,10 @@ namespace pwiz.OspreySharp.IO
                     intensityArray = DecodeBinaryArrayAsFloat(arrayInfo);
             }
 
-            if (mzArray == null) mzArray = new double[0];
-            if (intensityArray == null) intensityArray = new float[0];
+            if (mzArray == null)
+                mzArray = new double[0];
+            if (intensityArray == null)
+                intensityArray = new float[0];
 
             // Build spectrum based on MS level
             if (msLevel == 1)
@@ -502,12 +505,14 @@ namespace pwiz.OspreySharp.IO
                     {
                         string accession = subtree.GetAttribute("accession");
                         string value = subtree.GetAttribute("value");
-                        if (accession == null) continue;
+                        if (accession == null)
+                            continue;
 
                         if (currentContext == "binaryDataArray")
                         {
                             var cur = binaryArrays.Count > 0 ? binaryArrays[binaryArrays.Count - 1] : null;
-                            if (cur != null) ApplyBinaryArrayCvParam(cur, accession);
+                            if (cur != null)
+                                ApplyBinaryArrayCvParam(cur, accession);
                         }
                         else if (currentContext == "selectedIon")
                         {
@@ -556,10 +561,14 @@ namespace pwiz.OspreySharp.IO
                                 int.TryParse(value, out raw.MsLevel);
                         }
                     }
-                    else if (localName == "scan") currentContext = "scan";
-                    else if (localName == "precursor") raw.HasPrecursor = true;
-                    else if (localName == "selectedIon") currentContext = "selectedIon";
-                    else if (localName == "isolationWindow") currentContext = "isolationWindow";
+                    else if (localName == "scan")
+                        currentContext = "scan";
+                    else if (localName == "precursor")
+                        raw.HasPrecursor = true;
+                    else if (localName == "selectedIon")
+                        currentContext = "selectedIon";
+                    else if (localName == "isolationWindow")
+                        currentContext = "isolationWindow";
                     else if (localName == "binaryDataArray")
                     {
                         currentContext = "binaryDataArray";
@@ -598,7 +607,8 @@ namespace pwiz.OspreySharp.IO
 
             foreach (var arrayInfo in raw.BinaryArrays)
             {
-                if (arrayInfo.Base64Data == null) continue;
+                if (arrayInfo.Base64Data == null)
+                    continue;
                 if (arrayInfo.IsMzArray)
                     mzArray = DecodeBinaryArrayAsDouble(arrayInfo);
                 else if (arrayInfo.IsIntensityArray)
@@ -671,9 +681,11 @@ namespace pwiz.OspreySharp.IO
 
             public Spectrum ToMs2Spectrum()
             {
-                if (!HasPrecursor) return null;
+                if (!HasPrecursor)
+                    return null;
                 double center = HasIsolationWindow && IsoTarget > 0 ? IsoTarget : PrecursorMz;
-                if (center <= 0) return null;
+                if (center <= 0)
+                    return null;
 
                 double lowerOffset = IsoLower > 0 ? IsoLower : DEFAULT_ISOLATION_HALF_WIDTH;
                 double upperOffset = IsoUpper > 0 ? IsoUpper : DEFAULT_ISOLATION_HALF_WIDTH;

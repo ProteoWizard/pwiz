@@ -349,10 +349,12 @@ namespace pwiz.OspreySharp.Chromatography
 
                 // Step 3: Extend to +/-2 sigma for ~95% coverage
                 int targetStart = apexIdx - (int)COVERAGE_FACTOR * Math.Max(leftSigma, 1);
-                if (targetStart < 0) targetStart = 0;
+                if (targetStart < 0)
+                    targetStart = 0;
 
                 int targetEnd = apexIdx + (int)COVERAGE_FACTOR * Math.Max(rightSigma, 1);
-                if (targetEnd > nScans - 1) targetEnd = nScans - 1;
+                if (targetEnd > nScans - 1)
+                    targetEnd = nScans - 1;
 
                 // Step 4: Valley guard
                 double refApexVal = refSignal[apexIdx];

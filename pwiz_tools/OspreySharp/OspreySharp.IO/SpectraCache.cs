@@ -60,8 +60,10 @@ namespace pwiz.OspreySharp.IO
         /// </summary>
         public static void SaveSpectraCache(string path, List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra)
         {
-            if (ms2Spectra == null) ms2Spectra = new List<Spectrum>();
-            if (ms1Spectra == null) ms1Spectra = new List<MS1Spectrum>();
+            if (ms2Spectra == null)
+                ms2Spectra = new List<Spectrum>();
+            if (ms1Spectra == null)
+                ms1Spectra = new List<MS1Spectrum>();
 
             using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
             using (var w = new BinaryWriter(fs))

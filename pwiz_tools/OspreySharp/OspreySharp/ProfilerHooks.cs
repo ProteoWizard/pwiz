@@ -101,7 +101,8 @@ namespace pwiz.OspreySharp
         /// </summary>
         public static void LogMemoryStats(Action<string> log, string label)
         {
-            if (log == null) return;
+            if (log == null)
+                return;
             var proc = Process.GetCurrentProcess();
             long peakWs = proc.PeakWorkingSet64;
             long peakPaged = proc.PeakPagedMemorySize64;

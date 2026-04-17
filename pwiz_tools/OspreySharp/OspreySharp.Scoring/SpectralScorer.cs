@@ -279,7 +279,8 @@ namespace pwiz.OspreySharp.Scoring
             // Allocating overload retained for calibration, tests, and
             // diagnostics. Main-search hot path uses the scratch overload
             // below to avoid per-call LOH allocation at HRAM NBins.
-            if (_binConfig.NBins <= 0) return 0.0;
+            if (_binConfig.NBins <= 0)
+                return 0.0;
             if (entry == null || entry.Fragments == null || entry.Fragments.Count == 0)
                 return 0.0;
             if (spectrum == null || spectrum.Mzs == null || spectrum.Mzs.Length == 0)
@@ -298,7 +299,8 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         public double XcorrAtScan(Spectrum spectrum, LibraryEntry entry, XcorrScratch scratch)
         {
-            if (_binConfig.NBins <= 0) return 0.0;
+            if (_binConfig.NBins <= 0)
+                return 0.0;
             if (entry == null || entry.Fragments == null || entry.Fragments.Count == 0)
                 return 0.0;
             if (spectrum == null || spectrum.Mzs == null || spectrum.Mzs.Length == 0)
@@ -311,7 +313,7 @@ namespace pwiz.OspreySharp.Scoring
             double[] preprocessed = scratch.Preprocessed;
             bool[] visitedBins = scratch.VisitedBins;
 
-            // (1) Bin observed spectrum — ACCUMULATE sqrt intensities in each bin.
+            // (1) Bin observed spectrum - ACCUMULATE sqrt intensities in each bin.
             // f64 throughout to preserve calibration parity; the HRAM main-
             // search path stores a narrowed f32 cache via
             // PreprocessSpectrumForXcorrInto, but this in-place scan path is
@@ -390,7 +392,8 @@ namespace pwiz.OspreySharp.Scoring
                     {
                         int fb = _binConfig.MzToBin(entry.Fragments[f].Mz);
                         bool dup = (fb >= 0 && fb < n) && visited2[fb];
-                        if (fb >= 0 && fb < n) visited2[fb] = true;
+                        if (fb >= 0 && fb < n)
+                            visited2[fb] = true;
                         dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                             "frag\t{0}\tmz={1:G17}\tbin={2}\tval={3}\tdup={4}",
                             f, entry.Fragments[f].Mz, fb,
@@ -438,7 +441,8 @@ namespace pwiz.OspreySharp.Scoring
             {
                 int start = w * windowSize;
                 int end = Math.Min((w + 1) * windowSize, n);
-                if (start >= end) break;
+                if (start >= end)
+                    break;
 
                 double windowMax = 0.0;
                 for (int i = start; i < end; i++)

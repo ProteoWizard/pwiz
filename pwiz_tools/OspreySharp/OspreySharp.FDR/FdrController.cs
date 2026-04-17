@@ -258,10 +258,14 @@ namespace pwiz.OspreySharp.FDR
             for (int i = 0; i < qvalues.Count; i++)
             {
                 double q = qvalues[i];
-                if (q <= 0.001) counts.At001++;
-                if (q <= 0.01) counts.At01++;
-                if (q <= 0.05) counts.At05++;
-                if (q <= 0.10) counts.At10++;
+                if (q <= 0.001)
+                    counts.At001++;
+                if (q <= 0.01)
+                    counts.At01++;
+                if (q <= 0.05)
+                    counts.At05++;
+                if (q <= 0.10)
+                    counts.At10++;
             }
             return counts;
         }

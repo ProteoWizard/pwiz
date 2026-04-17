@@ -330,7 +330,7 @@ namespace pwiz.OspreySharp.Chromatography
         /// <param name="rts">Retention times (length = xic length).</param>
         /// <param name="intensities">Intensities (length = xic length).</param>
         /// <param name="minHeight">Minimum apex intensity after smoothing.</param>
-        /// <param name="peakBoundary">Intensity divisor for boundary threshold (5.0 → 20% of apex).</param>
+        /// <param name="peakBoundary">Intensity divisor for boundary threshold (5.0 means 20% of apex).</param>
         public static List<XICPeakBounds> DetectAllXicPeaks(
             double[] rts, double[] intensities,
             double minHeight, double peakBoundary)
@@ -343,7 +343,7 @@ namespace pwiz.OspreySharp.Chromatography
             double[] smoothed = SmoothSavitzkyGolay(intensities);
 
             // Collect local maxima above threshold. Interior first, then endpoints
-            // — matches Rust ordering in detect_all_xic_peaks.
+            // - matches Rust ordering in detect_all_xic_peaks.
             var apexCandidates = new List<KeyValuePair<int, double>>();
             for (int i = 1; i < n - 1; i++)
             {
@@ -361,7 +361,7 @@ namespace pwiz.OspreySharp.Chromatography
                 apexCandidates.Add(new KeyValuePair<int, double>(n - 1, smoothed[n - 1]));
 
             // Sort by intensity descending. Rust uses `sort_by(b.1.total_cmp(&a.1))`
-            // which is a STABLE sort — ties keep their insertion order. .NET's
+            // which is a STABLE sort - ties keep their insertion order. .NET's
             // List<T>.Sort is unstable (introsort); LINQ's OrderByDescending is
             // stable, so use that to match Rust exactly.
             apexCandidates = apexCandidates.OrderByDescending(kv => kv.Value).ToList();
@@ -385,7 +385,7 @@ namespace pwiz.OspreySharp.Chromatography
                 int startIdx = WalkBoundaryLeft(smoothed, apexIdx, apexIntensity, boundaryThreshold);
                 int endIdx = WalkBoundaryRight(smoothed, apexIdx, apexIntensity, boundaryThreshold);
 
-                // FWHM capping: cap boundaries at apex ± 2 * half-width
+                // FWHM capping: cap boundaries at apex +/- 2 * half-width
                 double leftHw, rightHw;
                 if (ComputeAsymmetricHalfWidths(smoothed, rts, apexIdx, out leftHw, out rightHw))
                 {
@@ -520,7 +520,8 @@ namespace pwiz.OspreySharp.Chromatography
             rightHw = 0.0;
 
             double apexVal = smoothed[apexIdx];
-            if (apexVal <= 0.0) return false;
+            if (apexVal <= 0.0)
+                return false;
 
             double half = apexVal / 2.0;
             double apexRt = rts[apexIdx];

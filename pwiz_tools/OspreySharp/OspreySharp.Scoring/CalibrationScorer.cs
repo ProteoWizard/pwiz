@@ -208,7 +208,8 @@ namespace pwiz.OspreySharp.Scoring
             winners.Sort((a, b) =>
             {
                 int cmp = scores[b].CompareTo(scores[a]);
-                if (cmp != 0) return cmp;
+                if (cmp != 0)
+                    return cmp;
                 uint baseA = entryIds[a] & 0x7FFFFFFF;
                 uint baseB = entryIds[b] & 0x7FFFFFFF;
                 return baseA.CompareTo(baseB);

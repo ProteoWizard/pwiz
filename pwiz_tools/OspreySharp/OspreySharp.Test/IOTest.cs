@@ -1538,12 +1538,15 @@ namespace pwiz.OspreySharp.Test
         {
             try
             {
-                if (File.Exists(path)) File.Delete(path);
+                if (File.Exists(path))
+                    File.Delete(path);
                 // Also clean up SQLite WAL/SHM files
                 string walPath = path + "-wal";
                 string shmPath = path + "-shm";
-                if (File.Exists(walPath)) File.Delete(walPath);
-                if (File.Exists(shmPath)) File.Delete(shmPath);
+                if (File.Exists(walPath))
+                    File.Delete(walPath);
+                if (File.Exists(shmPath))
+                    File.Delete(shmPath);
             }
             catch
             {

@@ -104,11 +104,16 @@ namespace pwiz.OspreySharp.Core
         {
             double[] dist = { 1.0, 0.0, 0.0, 0.0, 0.0 };
 
-            if (c > 0) dist = ConvolveBinomial(dist, c, C13);
-            if (h > 0) dist = ConvolveBinomial(dist, h, H2);
-            if (n > 0) dist = ConvolveBinomial(dist, n, N15);
-            if (o > 0) dist = ConvolveOxygen(dist, o);
-            if (s > 0) dist = ConvolveSulfur(dist, s);
+            if (c > 0)
+                dist = ConvolveBinomial(dist, c, C13);
+            if (h > 0)
+                dist = ConvolveBinomial(dist, h, H2);
+            if (n > 0)
+                dist = ConvolveBinomial(dist, n, N15);
+            if (o > 0)
+                dist = ConvolveOxygen(dist, o);
+            if (s > 0)
+                dist = ConvolveSulfur(dist, s);
 
             // Normalize to sum = 1
             double sum = 0;
@@ -217,7 +222,8 @@ namespace pwiz.OspreySharp.Core
                 {
                     int n16 = n - n17 - n18;
                     int shift = n17 + 2 * n18;
-                    if (shift > 4) continue;
+                    if (shift > 4)
+                        continue;
 
                     double prob = MultinomialProb(n,
                         new[] { n16, n17, n18 },
@@ -245,7 +251,8 @@ namespace pwiz.OspreySharp.Core
                     {
                         int n32 = n - n33 - n34 - n36;
                         int shift = n33 + 2 * n34 + 4 * n36;
-                        if (shift > 4) continue;
+                        if (shift > 4)
+                            continue;
 
                         double prob = MultinomialProb(n,
                             new[] { n32, n33, n34, n36 },
@@ -262,8 +269,10 @@ namespace pwiz.OspreySharp.Core
 
         private static double BinomialCoefficient(int n, int k)
         {
-            if (k > n) return 0.0;
-            if (k == 0 || k == n) return 1.0;
+            if (k > n)
+                return 0.0;
+            if (k == 0 || k == n)
+                return 1.0;
             k = Math.Min(k, n - k);
             double result = 1.0;
             for (int i = 0; i < k; i++)
@@ -275,7 +284,8 @@ namespace pwiz.OspreySharp.Core
         {
             int sum = 0;
             for (int i = 0; i < counts.Length; i++) sum += counts[i];
-            if (sum != n) return 0.0;
+            if (sum != n)
+                return 0.0;
 
             double coeff = 1.0;
             int remaining = n;
