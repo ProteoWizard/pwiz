@@ -61,12 +61,6 @@ namespace pwiz.OspreySharp
         // phase free to run in parallel across files.
         private static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
-        // Diagnostic: per-entry calibration window dump (one row per scored entry).
-        // Set during RunCalibration when OSPREY_DUMP_CAL_WINDOWS=1, then read by
-        // ScoreCalibrationEntry running in parallel. Cleared and written at the end
-        // of RunCalibration.
-        private static ConcurrentBag<string> s_calWindowDump;
-
         // Savitzky-Golay quadratic filter weights for length 5, center offset.
         // Matches Rust pipeline.rs sg_weights: [-3/35, 12/35, 17/35, 12/35, -3/35].
         private static readonly double[] SG_WEIGHTS =
@@ -90,15 +84,11 @@ namespace pwiz.OspreySharp
         internal static readonly SpectralScorer s_calXcorrScorer =
             new SpectralScorer(BinConfig.UnitResolution());
 
-        // Format a double with 10 decimal places using round-half-to-even
-        // (banker's) to match Rust's {:.10} formatter. .NET Framework's F10
-        // default is round-half-away-from-zero, which flips the last digit
-        // on exact .5 values (e.g. 4271.60400390625 -> 63 in F10 vs 62 in Rust).
-        // Use this helper in every cross-impl diagnostic dump.
+        // Local alias so existing dump code using F10 continues to read cleanly.
+        // The actual formatter lives in OspreyDiagnostics now.
         private static string F10(double v)
         {
-            return Math.Round(v, 10, MidpointRounding.ToEven)
-                .ToString("F10", System.Globalization.CultureInfo.InvariantCulture);
+            return OspreyDiagnostics.F10(v);
         }
 
         /// <summary>
@@ -1008,31 +998,11 @@ namespace pwiz.OspreySharp
             // Diagnostic: dump sorted sampled entry IDs + (modseq, charge) for
             // direct comparison with Rust. Abort after dump if CAL_SAMPLE_ONLY
             // env var is set (bisection mode - stop once we agree here).
-            if (config.WritePin || Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_SAMPLE") == "1")
+            if (config.WritePin || OspreyDiagnostics.DumpCalSample)
             {
-                string dumpPath = context.FileName + ".cs_cal_sample.txt";
-                var tuples = new List<string>();
-                foreach (var e in sampledEntries)
-                {
-                    if (e.IsDecoy)
-                        continue;
-                    tuples.Add(string.Format("{0}\t{1}\t{2}\t{3:F4}\t{4:F4}",
-                        e.Id, e.ModifiedSequence, e.Charge, e.PrecursorMz, e.RetentionTime));
-                }
-                tuples.Sort(StringComparer.Ordinal);
-                using (var w = new StreamWriter(dumpPath))
-                {
-                    w.WriteLine("id\tmodseq\tcharge\tmz\trt");
-                    foreach (var t in tuples) w.WriteLine(t);
-                }
-                LogInfo(string.Format("[COUNT] Wrote calibration sample: {0} ({1} targets)",
-                    dumpPath, tuples.Count));
-
-                if (Environment.GetEnvironmentVariable("OSPREY_CAL_SAMPLE_ONLY") == "1")
-                {
-                    LogInfo("[BISECT] OSPREY_CAL_SAMPLE_ONLY set - aborting after sample dump");
-                    Environment.Exit(0);
-                }
+                OspreyDiagnostics.WriteCalSampleDump(context.FileName, sampledEntries);
+                if (OspreyDiagnostics.CalSampleOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_SAMPLE_ONLY");
             }
             int nSampledTargets = 0;
             int nSampledDecoys = 0;
@@ -1195,10 +1165,7 @@ namespace pwiz.OspreySharp
             var fileName = context.FileName;
             // Activate per-entry window dump if requested. Cleared after the
             // matching loop completes (file written below).
-            bool dumpWindows = Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_WINDOWS") == "1";
-            s_calWindowDump = dumpWindows
-                ? new ConcurrentBag<string>()
-                : null;
+            OspreyDiagnostics.StartCalWindowCollection();
 
             // Pre-preprocess all window spectra for XCorr using the calibration
             // unit-bin scorer (~2K bins per spectrum, ~16 KB per array).
@@ -1258,97 +1225,21 @@ namespace pwiz.OspreySharp
             // Write per-entry window dump if requested. When two passes run, the
             // pass 2 dump overwrites pass 1 - same behaviour as Rust's
             // run_coelution_calibration_scoring dumping on every invocation.
-            if (s_calWindowDump != null)
+            if (OspreyDiagnostics.CalWindowsCollecting)
             {
-                var rows = new List<string>(s_calWindowDump);
-                rows.Sort(StringComparer.Ordinal);
-                using (var w = new StreamWriter("cs_cal_windows.txt"))
-                {
-                    w.WriteLine("entry_id\tis_decoy\tcharge\tprecursor_mz\tlibrary_rt\tiso_lower\tiso_upper\texpected_rt\trt_window_start\trt_window_end");
-                    foreach (var r in rows) w.WriteLine(r);
-                }
-                LogInfo(string.Format(
-                    "[COUNT] Wrote calibration windows dump (pass {0}): cs_cal_windows.txt ({1} rows)",
-                    passNumber, rows.Count));
-                s_calWindowDump = null;
-
-                if (Environment.GetEnvironmentVariable("OSPREY_CAL_WINDOWS_ONLY") == "1")
-                {
-                    LogInfo("[BISECT] OSPREY_CAL_WINDOWS_ONLY set - aborting after window dump");
-                    Environment.Exit(0);
-                }
+                OspreyDiagnostics.WriteCalWindowsDump(passNumber);
+                if (OspreyDiagnostics.CalWindowsOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_WINDOWS_ONLY");
             }
 
             // Cross-implementation diagnostic: dump per-entry calibration match info
             // for direct diff with Rust. Writes a row for EVERY sampled entry
             // (matched or not), sorted by entry_id for stable diff.
-            if (Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_MATCH") == "1")
+            if (OspreyDiagnostics.DumpCalMatch)
             {
-                string dumpPath = "cs_cal_match.txt";
-                var matchById = new Dictionary<uint, CalibrationMatch>(matches.Count);
-                foreach (var m in matches)
-                    matchById[m.EntryId] = m;
-
-                // sampledEntries is the full set (targets + decoys) passed to scoring
-                var sortedSampled = new List<LibraryEntry>(sampledEntries);
-                sortedSampled.Sort((a, b) => a.Id.CompareTo(b.Id));
-
-                int nMatched = 0, nUnmatched = 0;
-                using (var w = new StreamWriter(dumpPath))
-                {
-                    // 11-column layout matching rust_cal_match.txt.
-                    // scan is the MS2 scan number of the apex spectrum (the
-                    // candidate spectrum whose RT is closest to the XIC apex
-                    // RT, matching Rust's apex_spec_local_idx lookup).
-                    // snr is the signal-to-noise feeding the S/N filter
-                    // (gating which matches enter LOESS).
-                    // Uses F10 for all float columns to avoid banker's-vs-round-
-                    // half-up formatting mismatch with Rust.
-                    w.WriteLine("entry_id\tis_decoy\tcharge\thas_match\tscan\tapex_rt\tcorrelation\tlibcosine\ttop6\txcorr\tsnr");
-                    foreach (var entry in sortedSampled)
-                    {
-                        CalibrationMatch m;
-                        if (matchById.TryGetValue(entry.Id, out m))
-                        {
-                            KeyValuePair<double, double> rtPair;
-                            matchRts.TryGetValue(entry.Id, out rtPair);
-                            double snr;
-                            if (!snrByEntryId.TryGetValue(entry.Id, out snr))
-                                snr = 0.0;
-                            w.WriteLine(string.Format(
-                                System.Globalization.CultureInfo.InvariantCulture,
-                                "{0}\t{1}\t{2}\t1\t{3}\t{4:F10}\t{5:F10}\t{6:F10}\t{7}\t{8:F10}\t{9:F10}",
-                                entry.Id,
-                                entry.IsDecoy ? 1 : 0,
-                                entry.Charge,
-                                m.ScanNumber,
-                                rtPair.Value,
-                                m.CorrelationScore,
-                                m.LibcosineApex,
-                                m.Top6MatchedApex,
-                                m.XcorrScore,
-                                snr));
-                            nMatched++;
-                        }
-                        else
-                        {
-                            w.WriteLine("{0}\t{1}\t{2}\t0\t\t\t\t\t\t\t",
-                                entry.Id,
-                                entry.IsDecoy ? 1 : 0,
-                                entry.Charge);
-                            nUnmatched++;
-                        }
-                    }
-                }
-                LogInfo(string.Format(
-                    "[COUNT] Wrote calibration match dump (pass {0}): {1} ({2} matched, {3} unmatched)",
-                    passNumber, dumpPath, nMatched, nUnmatched));
-
-                if (Environment.GetEnvironmentVariable("OSPREY_CAL_MATCH_ONLY") == "1")
-                {
-                    LogInfo("[BISECT] OSPREY_CAL_MATCH_ONLY set - aborting after match dump");
-                    Environment.Exit(0);
-                }
+                OspreyDiagnostics.WriteCalMatchDump(passNumber, matches, sampledEntries, matchRts, snrByEntryId);
+                if (OspreyDiagnostics.CalMatchOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_MATCH_ONLY");
             }
 
             if (matches.Count == 0)
@@ -1398,32 +1289,11 @@ namespace pwiz.OspreySharp
             // Cross-implementation diagnostic: dump per-entry LDA discriminant + q-value
             // sorted by entry_id for stable diff with rust_lda_scores.txt. Gated by
             // OSPREY_DUMP_LDA_SCORES; exits after write when OSPREY_LDA_SCORES_ONLY is set.
-            // Uses F10 to avoid banker's-vs-half-up text rounding mismatches with Rust.
-            if (Environment.GetEnvironmentVariable("OSPREY_DUMP_LDA_SCORES") == "1")
+            if (OspreyDiagnostics.DumpLdaScores)
             {
-                var sortedByEntry = matchArray.OrderBy(m => m.EntryId).ToArray();
-                using (var w = new StreamWriter("cs_lda_scores.txt"))
-                {
-                    w.WriteLine("entry_id\tis_decoy\tdiscriminant\tq_value");
-                    foreach (var m in sortedByEntry)
-                    {
-                        w.WriteLine(string.Format(
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            "{0}\t{1}\t{2:F10}\t{3:F10}",
-                            m.EntryId,
-                            m.IsDecoy ? 1 : 0,
-                            m.DiscriminantScore,
-                            m.QValue));
-                    }
-                }
-                LogInfo(string.Format(
-                    "[COUNT] Wrote LDA scores dump (pass {0}): cs_lda_scores.txt ({1} entries)",
-                    passNumber, matchArray.Length));
-                if (Environment.GetEnvironmentVariable("OSPREY_LDA_SCORES_ONLY") == "1")
-                {
-                    LogInfo("[BISECT] OSPREY_LDA_SCORES_ONLY set - aborting after LDA dump");
-                    Environment.Exit(0);
-                }
+                OspreyDiagnostics.WriteLdaScoresDump(passNumber, matchArray);
+                if (OspreyDiagnostics.LdaScoresOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_LDA_SCORES_ONLY");
             }
 
             // Collect high-confidence target matches that also meet the S/N quality gate.
@@ -1521,39 +1391,13 @@ namespace pwiz.OspreySharp
                 };
 
                 // Cross-implementation diagnostic: dump the (lib_rt, measured_rt) pairs
-                // fed to LOESS, sorted by lib_rt ascending, at "R" (round-trip) precision.
-                // Gated by OSPREY_DUMP_LOESS_INPUT. Used to verify Rust and C# see
-                // identical inputs before LOESS fitting.
-                if (Environment.GetEnvironmentVariable("OSPREY_DUMP_LOESS_INPUT") == "1")
+                // fed to LOESS. Used to verify Rust and C# see identical inputs
+                // before LOESS fitting.
+                if (OspreyDiagnostics.DumpLoessInput)
                 {
-                    var pairs = new List<KeyValuePair<double, double>>(libRts.Length);
-                    for (int i = 0; i < libRts.Length; i++)
-                        pairs.Add(new KeyValuePair<double, double>(libRts[i], measuredRts[i]));
-                    pairs.Sort((a, b) =>
-                    {
-                        int c = a.Key.CompareTo(b.Key);
-                        if (c != 0)
-                            return c;
-                        return a.Value.CompareTo(b.Value);
-                    });
-                    using (var w = new StreamWriter("cs_loess_input.txt"))
-                    {
-                        w.WriteLine("idx\tlib_rt\tmeasured_rt");
-                        var inv = System.Globalization.CultureInfo.InvariantCulture;
-                        for (int i = 0; i < pairs.Count; i++)
-                        {
-                            w.WriteLine(string.Format(inv, "{0}\t{1:R}\t{2:R}",
-                                i, pairs[i].Key, pairs[i].Value));
-                        }
-                    }
-                    LogInfo(string.Format(
-                        "[COUNT] Wrote LOESS input dump (pass {0}): cs_loess_input.txt ({1} pairs)",
-                        passNumber, pairs.Count));
-                    if (Environment.GetEnvironmentVariable("OSPREY_LOESS_INPUT_ONLY") == "1")
-                    {
-                        LogInfo("[BISECT] OSPREY_LOESS_INPUT_ONLY set - aborting after LOESS input dump");
-                        Environment.Exit(0);
-                    }
+                    OspreyDiagnostics.WriteLoessInputDump(passNumber, libRts, measuredRts);
+                    if (OspreyDiagnostics.LoessInputOnly)
+                        OspreyDiagnostics.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
                 }
 
                 var calibrator = new RTCalibrator(calibratorConfig);
@@ -1669,50 +1513,13 @@ namespace pwiz.OspreySharp
 
             // Diagnostic dump: scalar parameters + full grid contents,
             // matching Rust's dump format for direct diff.
-            if (Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_SAMPLE") == "1")
+            if (OspreyDiagnostics.DumpCalSample)
             {
-                using (var w = new StreamWriter("cs_cal_scalars.txt"))
-                {
-                    w.WriteLine("n_targets\t" + targets.Count);
-                    w.WriteLine("n_decoys\t" + decoys.Count);
-                    w.WriteLine("bins_per_axis\t" + binsPerAxis);
-                    w.WriteLine("rt_min\t" + rtMin.ToString("R"));
-                    w.WriteLine("rt_max\t" + rtMax.ToString("R"));
-                    w.WriteLine("mz_min\t" + mzMin.ToString("R"));
-                    w.WriteLine("mz_max\t" + mzMax.ToString("R"));
-                    w.WriteLine("rt_range\t" + rtRange.ToString("R"));
-                    w.WriteLine("mz_range\t" + mzRange.ToString("R"));
-                    w.WriteLine("rt_bin_width\t" + rtBinWidth.ToString("R"));
-                    w.WriteLine("mz_bin_width\t" + mzBinWidth.ToString("R"));
-                    w.WriteLine("n_occupied\t" + nOccupied);
-                    w.WriteLine("per_cell\t" + perCell);
-                    w.WriteLine("seed\t" + seed);
-                }
-                using (var w = new StreamWriter("cs_cal_grid.txt"))
-                {
-                    w.WriteLine("rt_bin\tmz_bin\tcount\ttarget_ids");
-                    for (int r = 0; r < binsPerAxis; r++)
-                    {
-                        for (int c = 0; c < binsPerAxis; c++)
-                        {
-                            var cell = grid[r, c];
-                            if (cell.Count == 0)
-                                continue;
-                            var ids = new List<uint>(cell.Count);
-                            foreach (int ti in cell)
-                                ids.Add(targets[ti].Id);
-                            ids.Sort();
-                            var sb = new System.Text.StringBuilder();
-                            for (int k = 0; k < ids.Count; k++)
-                            {
-                                if (k > 0)
-                                    sb.Append(',');
-                                sb.Append(ids[k]);
-                            }
-                            w.WriteLine("{0}\t{1}\t{2}\t{3}", r, c, cell.Count, sb.ToString());
-                        }
-                    }
-                }
+                OspreyDiagnostics.WriteCalScalarsAndGridDump(
+                    targets, decoys, binsPerAxis,
+                    rtMin, rtMax, mzMin, mzMax,
+                    rtRange, mzRange, rtBinWidth, mzBinWidth,
+                    nOccupied, perCell, seed, grid);
             }
 
             // Deterministic stride sampling from each cell.
@@ -1866,24 +1673,13 @@ namespace pwiz.OspreySharp
             // C# selects ONE window per entry (the first match in dictionary order),
             // unlike Rust which scores in ALL matching windows. Capturing this here
             // before the RT/2-of-6 filter so it matches Rust's pre-filter dump.
-            if (s_calWindowDump != null)
+            if (OspreyDiagnostics.CalWindowsCollecting)
             {
-                var iso = windowSpectra[0].IsolationWindow;
-                double rtLo = expectedRt - initialTolerance;
-                double rtHi = expectedRt + initialTolerance;
-                s_calWindowDump.Add(string.Format(
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    "{0}\t{1}\t{2}\t{3:F6}\t{4:F6}\t{5:F6}\t{6:F6}\t{7:F6}\t{8:F6}\t{9:F6}",
-                    entry.Id,
-                    entry.IsDecoy ? 1 : 0,
-                    entry.Charge,
-                    entry.PrecursorMz,
-                    entry.RetentionTime,
-                    iso.LowerBound,
-                    iso.UpperBound,
+                OspreyDiagnostics.AddCalWindowRow(
+                    entry, windowSpectra[0].IsolationWindow,
                     expectedRt,
-                    rtLo,
-                    rtHi));
+                    expectedRt - initialTolerance,
+                    expectedRt + initialTolerance);
             }
 
             // Resolve the actual window key that was used (may differ from primary
@@ -1936,159 +1732,22 @@ namespace pwiz.OspreySharp
                 rts[i] = candidateSpectra[i].RetentionTime;
 
             // Per-entry chromatogram diagnostic. Dump candidates + extracted XICs.
-            // OSPREY_DIAG_XIC_ENTRY_ID selects which entry to dump; OSPREY_DIAG_XIC_PASS
-            // selects the pass (default pass 1). We default to pass 1 because the
-            // cross-tool bisection walks downstream: until pass 1 chromatograms
-            // match, there's no point comparing pass 2 (which depends on pass 1's
+            // We default to pass 1 in OspreyDiagnostics because the cross-tool
+            // bisection walks downstream: until pass 1 chromatograms match,
+            // there's no point comparing pass 2 (which depends on pass 1's
             // LOESS fit).
-            string diagXicEnv = Environment.GetEnvironmentVariable("OSPREY_DIAG_XIC_ENTRY_ID");
-            string diagXicPassEnv = Environment.GetEnvironmentVariable("OSPREY_DIAG_XIC_PASS");
-            int diagXicPass = 1;
-            if (!string.IsNullOrEmpty(diagXicPassEnv))
-                int.TryParse(diagXicPassEnv, out diagXicPass);
             int currentPass = calibrationModel != null ? 2 : 1;
-            uint diagXicEntryId;
-            bool isDiagXic = currentPass == diagXicPass &&
-                !string.IsNullOrEmpty(diagXicEnv) &&
-                uint.TryParse(diagXicEnv, out diagXicEntryId) && diagXicEntryId == entry.Id;
-            string diagXicPath = isDiagXic ? "cs_xic_entry_" + entry.Id + ".txt" : null;
-            if (isDiagXic)
-            {
-                using (var dw = new StreamWriter(diagXicPath))
-                {
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# per-entry chromatogram dump for entry_id={0} (pass {1})",
-                        entry.Id, currentPass));
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# {0} ({1}, charge={2}, lib_rt={3:F10}, mz={4:F10})",
-                        entry.ModifiedSequence, entry.Sequence, entry.Charge,
-                        entry.RetentionTime, entry.PrecursorMz));
-
-                    // Pass 2 calculations block: dump the inputs that feed into XIC
-                    // extraction so if the XICs don't match, we already have the
-                    // intermediate values to localize the divergence (LOESS model
-                    // stats, predicted RT, refined tolerance, selection window).
-                    if (calibrationModel != null)
-                    {
-                        var loessStats = calibrationModel.Stats();
-                        dw.WriteLine("# LOESS MODEL (pass 2 RT calibration)");
-                        dw.WriteLine(string.Format(
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            "# loess.n_points={0}", loessStats.NPoints));
-                        dw.WriteLine(string.Format(
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            "# loess.r_squared={0:F10}", loessStats.RSquared));
-                        dw.WriteLine(string.Format(
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            "# loess.residual_sd={0:F10}", loessStats.ResidualSD));
-                        dw.WriteLine(string.Format(
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            "# loess.mean_residual={0:F10}", loessStats.MeanResidual));
-                        dw.WriteLine(string.Format(
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            "# loess.max_residual={0:F10}", loessStats.MaxResidual));
-                        dw.WriteLine(string.Format(
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            "# loess.p20_abs_residual={0:F10}", loessStats.P20AbsResidual));
-                        dw.WriteLine(string.Format(
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            "# loess.p80_abs_residual={0:F10}", loessStats.P80AbsResidual));
-                        dw.WriteLine(string.Format(
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            "# loess.mad={0:F10}", loessStats.MAD));
-                    }
-                    dw.WriteLine("# PASS CALCULATIONS");
-                    dw.WriteLine(string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "# pass.library_rt={0:F10}", entry.RetentionTime));
-                    dw.WriteLine(string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "# pass.expected_rt={0:F10}", expectedRt));
-                    dw.WriteLine(string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "# pass.tolerance={0:F10}", initialTolerance));
-                    dw.WriteLine(string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "# pass.rt_window_lo={0:F10}", expectedRt - initialTolerance));
-                    dw.WriteLine(string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "# pass.rt_window_hi={0:F10}", expectedRt + initialTolerance));
-                    dw.WriteLine(string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "# pass.rt_slope={0:F10}", rtSlope));
-                    dw.WriteLine(string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "# pass.rt_intercept={0:F10}", rtIntercept));
-
-                    dw.WriteLine("# n_post_prefilter_candidates=" + candidateSpectra.Count);
-                    dw.WriteLine("# CANDIDATES (post-prefilter, sorted by RT)");
-                    dw.WriteLine("candidate\tscan_idx\tscan_number\trt\tiso_lower\tiso_upper");
-                    for (int i = 0; i < candidateSpectra.Count; i++)
-                    {
-                        var iso = candidateSpectra[i].IsolationWindow;
-                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "candidate\t{0}\t{1}\t{2}\t{3}\t{4}",
-                            i, candidateSpectra[i].ScanNumber,
-                            F10(candidateSpectra[i].RetentionTime),
-                            F10(iso.LowerBound), F10(iso.UpperBound)));
-                    }
-
-                    // Top-6 fragments
-                    var sortedByIntensity = new List<KeyValuePair<int, float>>(entry.Fragments.Count);
-                    for (int fi = 0; fi < entry.Fragments.Count; fi++)
-                        sortedByIntensity.Add(new KeyValuePair<int, float>(fi, entry.Fragments[fi].RelativeIntensity));
-                    sortedByIntensity.Sort((a, b) => b.Value.CompareTo(a.Value));
-                    int topN = Math.Min(6, sortedByIntensity.Count);
-
-                    dw.WriteLine("# TOP-6 FRAGMENTS (selected by intensity desc)");
-                    dw.WriteLine("topfrag\ttop_idx\tlib_idx\tlib_mz\tlib_intensity");
-                    for (int rank = 0; rank < topN; rank++)
-                    {
-                        int fi = sortedByIntensity[rank].Key;
-                        var fobj = entry.Fragments[fi];
-                        // Cast float to double and use banker's-rounded F10 helper so
-                        // the .NET Framework F10 formatter matches Rust's {:.10} on
-                        // last-digit .5 boundaries (shortest round-trip for float on
-                        // .NET Framework also hides f32 precision noise).
-                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "topfrag\t{0}\t{1}\t{2}\t{3}",
-                            rank, fi, F10(fobj.Mz), F10(fobj.RelativeIntensity)));
-                    }
-                }
-            }
 
             // Extract XICs for the top-N most intense library fragments.
             var xics = ExtractTopNFragmentXics(
                 entry, candidateSpectra, rts, CAL_TOP_N_FRAGMENTS, config);
 
-            if (isDiagXic)
+            if (OspreyDiagnostics.ShouldDumpCalXicFor(entry.Id, currentPass))
             {
-                using (var dw = new StreamWriter(diagXicPath, true))
-                {
-                    dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
-                    dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
-                    // Use F10 - wide enough that half-way rounding on values
-                    // like 1756.6640625 (exact f32 mantissa) doesn't diverge
-                    // between Rust's banker's rounding and C#'s round-half-up.
-                    foreach (var xic in xics)
-                    {
-                        for (int i = 0; i < xic.RetentionTimes.Length; i++)
-                        {
-                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "xic\t{0}\t{1}\t{2}\t{3}",
-                                xic.FragmentIndex, i, F10(xic.RetentionTimes[i]), F10(xic.Intensities[i])));
-                        }
-                    }
-                }
-                // Hard-exit immediately after dumping. We only care about the
-                // diff between rust_xic_entry_<ID>.txt and cs_xic_entry_<ID>.txt;
-                // no need to let the 200K-entry scoring loop finish (~minutes)
-                // or continue to pass 2 / downstream FDR.
-                // Other Parallel.ForEach workers will be killed by Exit(0).
-                LogInfo(string.Format(
-                    "[BISECT] OSPREY_DIAG_XIC_ENTRY_ID matched on pass {0} - wrote {1} and exiting",
-                    currentPass, diagXicPath));
-                Environment.Exit(0);
+                OspreyDiagnostics.WriteCalXicEntryDumpAndExit(
+                    entry, currentPass, calibrationModel,
+                    expectedRt, initialTolerance, rtSlope, rtIntercept,
+                    candidateSpectra, xics);
             }
 
             if (xics.Count < 2)
@@ -2574,23 +2233,14 @@ namespace pwiz.OspreySharp
                 }
             }
 
-            // Per-entry search XIC diagnostic. Dumps XIC data for specified entries
-            // during the main search (does NOT exit - collects all in one run).
-            // Usage: OSPREY_DIAG_SEARCH_ENTRY_IDS=0,100,5000,50000
-            HashSet<uint> diagSearchEntryIds = null;
-            string diagSearchEnv = Environment.GetEnvironmentVariable("OSPREY_DIAG_SEARCH_ENTRY_IDS");
-            if (!string.IsNullOrEmpty(diagSearchEnv))
+            // Per-entry search XIC diagnostic: log the intent once at start.
+            // The per-entry dump check happens inline in ScoreCandidate via
+            // OspreyDiagnostics.ShouldDumpSearchXicFor(entry.Id).
+            if (OspreyDiagnostics.DiagSearchEntryIds != null)
             {
-                diagSearchEntryIds = new HashSet<uint>();
-                foreach (string part in diagSearchEnv.Split(','))
-                {
-                    uint id;
-                    if (uint.TryParse(part.Trim(), out id))
-                        diagSearchEntryIds.Add(id);
-                }
                 LogInfo(string.Format(
                     "[BISECT] OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
-                    diagSearchEntryIds.Count));
+                    OspreyDiagnostics.DiagSearchEntryIds.Count));
             }
 
             // Per-window timings collected thread-safely for post-summary.
@@ -2628,8 +2278,7 @@ namespace pwiz.OspreySharp
                 var swWindow = Stopwatch.StartNew();
                 var windowEntries = ScoreWindow(
                     window, fullLibrary, spectraByWindowKey, ms1Spectra,
-                    rtCalibration, ms1Calibration, rtToleranceGlobal, scorer, context,
-                    diagSearchEntryIds);
+                    rtCalibration, ms1Calibration, rtToleranceGlobal, scorer, context);
                 swWindow.Stop();
 
                 windowTimings.Add(new WindowTiming
@@ -2714,8 +2363,7 @@ namespace pwiz.OspreySharp
             MzCalibrationResult ms1Calibration,
             double globalRtTolerance,
             SpectralScorer scorer,
-            ScoringContext context,
-            HashSet<uint> diagSearchEntryIds)
+            ScoringContext context)
         {
             var config = context.Config;
             var entries = new List<FdrEntry>();
@@ -2771,7 +2419,7 @@ namespace pwiz.OspreySharp
                         preprocessedXcorr,
                         ms1Spectra, rtCalibration, ms1Calibration,
                         globalRtTolerance,
-                        scorer, context, diagSearchEntryIds);
+                        scorer, context);
 
                     if (fdrEntry != null)
                         entries.Add(fdrEntry);
@@ -2804,8 +2452,7 @@ namespace pwiz.OspreySharp
             MzCalibrationResult ms1Calibration,
             double globalRtTolerance,
             SpectralScorer scorer,
-            ScoringContext context,
-            HashSet<uint> diagSearchEntryIds)
+            ScoringContext context)
         {
             var config = context.Config;
             var resolution = context.Resolution;
@@ -2915,50 +2562,12 @@ namespace pwiz.OspreySharp
                 candidate, windowSpectra, windowRts, startScan, endScan, config);
 
             // Per-entry search XIC diagnostic (thread-safe: unique file per entry_id)
-            if (diagSearchEntryIds != null && diagSearchEntryIds.Contains(candidate.Id))
+            if (OspreyDiagnostics.ShouldDumpSearchXicFor(candidate.Id))
             {
-                string dumpPath = "cs_search_xic_entry_" + candidate.Id + ".txt";
-                using (var dw = new StreamWriter(dumpPath))
-                {
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# search XIC dump for entry_id={0}", candidate.Id));
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# {0} ({1}, charge={2}, lib_rt={3:F10}, mz={4:F10})",
-                        candidate.ModifiedSequence, candidate.Sequence, candidate.Charge,
-                        candidate.RetentionTime, candidate.PrecursorMz));
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# is_decoy={0}", candidate.IsDecoy ? 1 : 0));
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# expected_rt={0:F10}", expectedRt));
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# rt_tolerance={0:F10}", rtTolerance));
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# scan_range=[{0}..{1}] n_scans={2}",
-                        startScan, endScan, rangeLen));
-                    dw.WriteLine("# CANDIDATES (scan_idx, scan_number, rt)");
-                    dw.WriteLine("candidate\tscan_idx\tscan_number\trt");
-                    for (int i = startScan; i <= endScan; i++)
-                    {
-                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "candidate\t{0}\t{1}\t{2:F10}",
-                            i - startScan, windowSpectra[i].ScanNumber,
-                            windowSpectra[i].RetentionTime));
-                    }
-                    dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
-                    dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
-                    foreach (var xic in xics)
-                    {
-                        for (int i = 0; i < xic.RetentionTimes.Length; i++)
-                        {
-                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "xic\t{0}\t{1}\t{2}\t{3}",
-                                xic.FragmentIndex, i, F10(xic.RetentionTimes[i]), F10(xic.Intensities[i])));
-                        }
-                    }
-                }
-                LogInfo(string.Format(
-                    "[BISECT] Search XIC dump for entry {0}: {1} xics, {2} scans -> {3}",
-                    candidate.Id, xics.Count, rangeLen, dumpPath));
+                OspreyDiagnostics.WriteSearchXicDump(
+                    candidate, expectedRt, rtTolerance,
+                    startScan, endScan, rangeLen,
+                    windowSpectra, xics);
             }
 
             if (xics.Count < 2)
@@ -3086,7 +2695,7 @@ namespace pwiz.OspreySharp
             }
 
             // Append peak boundaries to search XIC diagnostic dump
-            if (diagSearchEntryIds != null && diagSearchEntryIds.Contains(candidate.Id))
+            if (OspreyDiagnostics.ShouldDumpSearchXicFor(candidate.Id))
             {
                 string peakDumpPath = "cs_search_xic_entry_" + candidate.Id + ".txt";
                 using (var dw = new StreamWriter(peakDumpPath, true))
@@ -3249,43 +2858,13 @@ namespace pwiz.OspreySharp
                     mpResidualCorr = TukeyMedianPolish.ResidualCorrelation(polish);
 
                     // Median polish diagnostic for bisection
-                    string diagMpScan = Environment.GetEnvironmentVariable("OSPREY_DIAG_MP_SCAN");
-                    if (!string.IsNullOrEmpty(diagMpScan) &&
-                        apexSpectrum.ScanNumber.ToString() == diagMpScan &&
-                        candidate.ModifiedSequence != null &&
-                        candidate.ModifiedSequence.StartsWith("DECOY_ALQFAQWWK"))
+                    if (OspreyDiagnostics.ShouldDumpMpFor(apexSpectrum.ScanNumber, candidate.ModifiedSequence))
                     {
-                        using (var dw = new StreamWriter("cs_mp_diag.txt"))
-                        {
-                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "# Median polish diagnostic for {0} scan={1}", candidate.ModifiedSequence, apexSpectrum.ScanNumber));
-                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "# peak range: start={0} apex={1} end={2} len={3}",
-                                bestPeak.StartIndex, bestPeak.ApexIndex, bestPeak.EndIndex, peakLen));
-                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "# mp_cosine={0:F10} mp_rr={1:F10} mp_r2={2:F10} mp_rc={3:F10}",
-                                mpCosine, mpResidualRatio, mpMinFragmentR2, mpResidualCorr));
-                            // Dump elution profile
-                            dw.WriteLine("# ELUTION PROFILE (ColEffects)");
-                            for (int ep = 0; ep < polish.ColEffects.Length; ep++)
-                                dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                    "elution\t{0}\t{1:F10}", ep, polish.ColEffects[ep]));
-                            dw.WriteLine("# FRAGMENT EFFECTS (RowEffects)");
-                            for (int fe = 0; fe < polish.RowEffects.Length; fe++)
-                                dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                    "frag_effect\t{0}\t{1:F10}", fe, polish.RowEffects[fe]));
-                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "# grand_mean={0:F10}", polish.Overall));
-                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "# n_iterations={0} converged={1}", polish.NIterations, polish.Converged));
-                            // Dump input matrix (first fragment)
-                            dw.WriteLine("# INPUT MATRIX (frag_idx, scan_idx, value)");
-                            for (int xi = 0; xi < peakXics.Count; xi++)
-                                for (int s = 0; s < peakXics[xi].Value.Length; s++)
-                                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                        "input\t{0}\t{1}\t{2:F10}", xi, s, peakXics[xi].Value[s]));
-                        }
-                        LogInfo("[BISECT] Wrote median polish diagnostic: cs_mp_diag.txt");
+                        OspreyDiagnostics.WriteMpDump(
+                            candidate, apexSpectrum.ScanNumber,
+                            bestPeak, peakLen,
+                            mpCosine, mpResidualRatio, mpMinFragmentR2, mpResidualCorr,
+                            polish, peakXics);
                     }
                 }
             }

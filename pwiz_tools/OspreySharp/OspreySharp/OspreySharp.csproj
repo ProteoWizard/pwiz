@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalysisPipeline.cs" />
+    <Compile Include="OspreyDiagnostics.cs" />
     <Compile Include="OspreyEnvironment.cs" />
     <Compile Include="ProfilerHooks.cs" />
     <Compile Include="Program.cs" />
