@@ -1,3 +1,26 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Tests for OspreySharp.ML module
 // Ported from Rust test suite in osprey-ml
 
@@ -130,7 +153,7 @@ namespace pwiz.OspreySharp.Test
         {
             // Port of Rust dotv() test
             var a = new Matrix(new double[] { 1, 2, 3, 4 }, 2, 2);
-            var v = Matrix.DotVector(a, new double[] { 0.5, 0.5 });
+            var v = Matrix.DotVector(a, new[] { 0.5, 0.5 });
             Assert.AreEqual(1.5, v[0], 1e-10);
             Assert.AreEqual(3.5, v[1], 1e-10);
 
@@ -145,7 +168,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMatrixFromRows()
         {
-            var rows = new double[][]
+            var rows = new[]
             {
                 new double[] { 1, 2, 3 },
                 new double[] { 4, 5, 6 }
@@ -185,19 +208,9 @@ namespace pwiz.OspreySharp.Test
         public void TestSvmLinearlySeparable()
         {
             // Port of Rust test_linearly_separable
-            var features = new Matrix(new double[]
-            {
-                5.0, 5.0,  // target
-                4.0, 6.0,  // target
-                6.0, 4.0,  // target
-                5.5, 5.5,  // target
-                1.0, 1.0,  // decoy
-                0.0, 2.0,  // decoy
-                2.0, 0.0,  // decoy
-                1.5, 1.5,  // decoy
-            }, 8, 2);
+            var features = new Matrix(new[] { 5.0, 5.0, 4.0, 6.0, 6.0, 4.0, 5.5, 5.5, 1.0, 1.0, 0.0, 2.0, 2.0, 0.0, 1.5, 1.5 }, 8, 2);
 
-            var labels = new bool[] { false, false, false, false, true, true, true, true };
+            var labels = new[] { false, false, false, false, true, true, true, true };
             var model = LinearSvmClassifier.Train(features, labels, 1.0, 42);
             var scores = model.DecisionFunction(features);
 
@@ -217,8 +230,8 @@ namespace pwiz.OspreySharp.Test
         public void TestSvmDecisionFunction()
         {
             // Port of Rust test_decision_function
-            var model = new LinearSvmClassifier(new double[] { 1.0, 2.0 }, -3.0);
-            var features = new Matrix(new double[] { 1.0, 1.0, 2.0, 2.0 }, 2, 2);
+            var model = new LinearSvmClassifier(new[] { 1.0, 2.0 }, -3.0);
+            var features = new Matrix(new[] { 1.0, 1.0, 2.0, 2.0 }, 2, 2);
             var scores = model.DecisionFunction(features);
 
             // score[0] = 1*1 + 2*1 + (-3) = 0
@@ -231,14 +244,8 @@ namespace pwiz.OspreySharp.Test
         public void TestSvmDeterministicWithSeed()
         {
             // Port of Rust test_deterministic_with_seed
-            var features = new Matrix(new double[]
-            {
-                5.0, 5.0,
-                1.0, 1.0,
-                4.0, 6.0,
-                2.0, 0.0,
-            }, 4, 2);
-            var labels = new bool[] { false, true, false, true };
+            var features = new Matrix(new[] { 5.0, 5.0, 1.0, 1.0, 4.0, 6.0, 2.0, 0.0 }, 4, 2);
+            var labels = new[] { false, true, false, true };
 
             var model1 = LinearSvmClassifier.Train(features, labels, 1.0, 42);
             var model2 = LinearSvmClassifier.Train(features, labels, 1.0, 42);
@@ -251,17 +258,9 @@ namespace pwiz.OspreySharp.Test
         public void TestSvmWeightsDirection()
         {
             // Port of Rust test_weights_direction
-            var features = new Matrix(new double[]
-            {
-                10.0, 0.5,  // target
-                9.0,  0.3,  // target
-                8.0,  0.7,  // target
-                1.0,  0.4,  // decoy
-                2.0,  0.6,  // decoy
-                3.0,  0.2,  // decoy
-            }, 6, 2);
+            var features = new Matrix(new[] { 10.0, 0.5, 9.0, 0.3, 8.0, 0.7, 1.0, 0.4, 2.0, 0.6, 3.0, 0.2 }, 6, 2);
 
-            var labels = new bool[] { false, false, false, true, true, true };
+            var labels = new[] { false, false, false, true, true, true };
             var model = LinearSvmClassifier.Train(features, labels, 1.0, 42);
 
             // Weight for feature 0 should be positive (targets have higher values)
@@ -286,17 +285,9 @@ namespace pwiz.OspreySharp.Test
         public void TestSvmOverlappingClasses()
         {
             // Port of Rust test_overlapping_classes
-            var features = new Matrix(new double[]
-            {
-                5.0, 5.0,  // target
-                4.0, 4.0,  // target
-                3.0, 3.0,  // target (near boundary)
-                1.0, 1.0,  // decoy
-                2.0, 2.0,  // decoy
-                2.5, 2.5,  // decoy (near boundary)
-            }, 6, 2);
+            var features = new Matrix(new[] { 5.0, 5.0, 4.0, 4.0, 3.0, 3.0, 1.0, 1.0, 2.0, 2.0, 2.5, 2.5 }, 6, 2);
 
-            var labels = new bool[] { false, false, false, true, true, true };
+            var labels = new[] { false, false, false, true, true, true };
             var model = LinearSvmClassifier.Train(features, labels, 1.0, 42);
             var scores = model.DecisionFunction(features);
 
@@ -309,8 +300,8 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestSvmScoreSingle()
         {
-            var model = new LinearSvmClassifier(new double[] { 1.0, 2.0 }, -3.0);
-            double score = model.ScoreSingle(new double[] { 1.0, 1.0 });
+            var model = new LinearSvmClassifier(new[] { 1.0, 2.0 }, -3.0);
+            double score = model.ScoreSingle(new[] { 1.0, 1.0 });
             Assert.AreEqual(0.0, score, 1e-10);
         }
 
@@ -322,12 +313,7 @@ namespace pwiz.OspreySharp.Test
         public void TestFeatureStandardizer()
         {
             // Port of Rust test_feature_standardizer
-            var features = new Matrix(new double[]
-            {
-                10.0, 100.0,
-                20.0, 200.0,
-                30.0, 300.0,
-            }, 3, 2);
+            var features = new Matrix(new[] { 10.0, 100.0, 20.0, 200.0, 30.0, 300.0 }, 3, 2);
 
             Matrix transformed;
             var standardizer = FeatureStandardizer.FitTransform(features, out transformed);
@@ -363,12 +349,7 @@ namespace pwiz.OspreySharp.Test
         public void TestStandardizerZeroVariance()
         {
             // Port of Rust test_standardizer_zero_variance
-            var features = new Matrix(new double[]
-            {
-                5.0, 1.0,
-                5.0, 2.0,
-                5.0, 3.0,
-            }, 3, 2);
+            var features = new Matrix(new[] { 5.0, 1.0, 5.0, 2.0, 5.0, 3.0 }, 3, 2);
 
             var standardizer = FeatureStandardizer.Fit(features);
 
@@ -428,7 +409,7 @@ namespace pwiz.OspreySharp.Test
         {
             // Port of Rust test_qvalue_calculation
             // 5 targets, 2 decoys (all targets before decoys)
-            var isDecoy = new bool[] { false, false, false, false, false, true, true };
+            var isDecoy = new[] { false, false, false, false, false, true, true };
             var qValues = new double[7];
 
             int passing = QValueCalculator.ComputeQValues(isDecoy, qValues);
@@ -448,7 +429,7 @@ namespace pwiz.OspreySharp.Test
         public void TestQValueMixed()
         {
             // Port of Rust test_qvalue_mixed
-            var isDecoy = new bool[] { false, false, true, false, false, true, false };
+            var isDecoy = new[] { false, false, true, false, false, true, false };
             var qValues = new double[7];
 
             QValueCalculator.ComputeQValues(isDecoy, qValues);
@@ -468,7 +449,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestQValueConvenienceOverload()
         {
-            var isDecoy = new bool[] { false, false, false, true, true };
+            var isDecoy = new[] { false, false, false, true, true };
             int passing;
             var qValues = QValueCalculator.ComputeQValues(isDecoy, out passing);
 
@@ -483,7 +464,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestIsotonicRegressionAlreadyDecreasing()
         {
-            var values = new double[] { 1.0, 0.8, 0.6, 0.4, 0.2 };
+            var values = new[] { 1.0, 0.8, 0.6, 0.4, 0.2 };
             PepEstimator.IsotonicRegressionDecreasing(values);
             Assert.AreEqual(1.0, values[0], 1e-10);
             Assert.AreEqual(0.8, values[1], 1e-10);
@@ -496,7 +477,7 @@ namespace pwiz.OspreySharp.Test
         public void TestIsotonicRegressionSingleViolation()
         {
             // Port of Rust test: values[2] > values[1] is a violation
-            var values = new double[] { 1.0, 0.3, 0.5, 0.2, 0.1 };
+            var values = new[] { 1.0, 0.3, 0.5, 0.2, 0.1 };
             PepEstimator.IsotonicRegressionDecreasing(values);
 
             // After PAVA: indices 1,2 should be averaged: (0.3+0.5)/2 = 0.4
@@ -515,7 +496,7 @@ namespace pwiz.OspreySharp.Test
         public void TestIsotonicRegressionAllIncreasing()
         {
             // Port of Rust test
-            var values = new double[] { 0.1, 0.2, 0.3, 0.4, 0.5 };
+            var values = new[] { 0.1, 0.2, 0.3, 0.4, 0.5 };
             PepEstimator.IsotonicRegressionDecreasing(values);
 
             // All should become the average: (0.1+0.2+0.3+0.4+0.5)/5 = 0.3
@@ -526,10 +507,10 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestIsotonicRegressionEmptyAndSingle()
         {
-            var empty = new double[0];
+            var empty = Array.Empty<double>();
             PepEstimator.IsotonicRegressionDecreasing(empty);
 
-            var single = new double[] { 0.5 };
+            var single = new[] { 0.5 };
             PepEstimator.IsotonicRegressionDecreasing(single);
             Assert.AreEqual(0.5, single[0], 1e-10);
         }
@@ -543,8 +524,8 @@ namespace pwiz.OspreySharp.Test
         {
             // Port of Rust linear_discriminant test: power method
             var a = new Matrix(new double[] { 1, 2, 3, 4 }, 2, 2);
-            var eigenvector = a.PowerMethod(new double[] { 0.54, 0.34 });
-            Assert.IsTrue(MlMath.AllClose(eigenvector, new double[] { 0.4159736, 0.90937671 }, 1E-5),
+            var eigenvector = a.PowerMethod(new[] { 0.54, 0.34 });
+            Assert.IsTrue(MlMath.AllClose(eigenvector, new[] { 0.4159736, 0.90937671 }, 1E-5),
                 string.Format("eigenvector: [{0}, {1}]", eigenvector[0], eigenvector[1]));
         }
 
@@ -552,19 +533,9 @@ namespace pwiz.OspreySharp.Test
         public void TestLinearDiscriminant()
         {
             // Port of Rust linear_discriminant test
-            var feats = new Matrix(new double[]
-            {
-                5, 4, 3, 2,
-                4, 5, 4, 3,
-                6, 3, 4, 5,
-                1, 0, 2, 9,
-                5, 4, 4, 3,
-                2, 1, 1, 9.5,
-                1, 0, 2, 8,
-                3, 2, -2, 10,
-            }, 8, 4);
+            var feats = new Matrix(new[] { 5, 4, 3, 2, 4, 5, 4, 3, 6, 3, 4, 5, 1, 0, 2, 9, 5, 4, 4, 3, 2, 1, 1, 9.5, 1, 0, 2, 8, 3, 2, -2, 10 }, 8, 4);
 
-            var labels = new bool[] { false, false, false, true, false, true, true, true };
+            var labels = new[] { false, false, false, true, false, true, true, true };
             var lda = LinearDiscriminant.Fit(feats, labels);
             Assert.IsNotNull(lda, "LDA fitting should succeed");
 
@@ -574,7 +545,7 @@ namespace pwiz.OspreySharp.Test
             for (int i = 0; i < scores.Length; i++)
                 normalizedScores[i] = scores[i] / normVal;
 
-            var expected = new double[]
+            var expected = new[]
             {
                 0.49706043,
                 0.48920177,
@@ -594,19 +565,9 @@ namespace pwiz.OspreySharp.Test
         public void TestLinearDiscriminantSeparation()
         {
             // Verify LDA correctly assigns higher scores to targets
-            var feats = new Matrix(new double[]
-            {
-                5, 4, 3, 2,
-                4, 5, 4, 3,
-                6, 3, 4, 5,
-                1, 0, 2, 9,
-                5, 4, 4, 3,
-                2, 1, 1, 9.5,
-                1, 0, 2, 8,
-                3, 2, -2, 10,
-            }, 8, 4);
+            var feats = new Matrix(new[] { 5, 4, 3, 2, 4, 5, 4, 3, 6, 3, 4, 5, 1, 0, 2, 9, 5, 4, 4, 3, 2, 1, 1, 9.5, 1, 0, 2, 8, 3, 2, -2, 10 }, 8, 4);
 
-            var labels = new bool[] { false, false, false, true, false, true, true, true };
+            var labels = new[] { false, false, false, true, false, true, true, true };
             var lda = LinearDiscriminant.Fit(feats, labels);
             var scores = lda.Predict(feats);
 
@@ -627,7 +588,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestLinearDiscriminantFromWeights()
         {
-            var lda = LinearDiscriminant.FromWeights(new double[] { 1.0, 2.0, 3.0 });
+            var lda = LinearDiscriminant.FromWeights(new[] { 1.0, 2.0, 3.0 });
             Assert.AreEqual(3, lda.Eigenvector.Length);
 
             var feats = new Matrix(new double[] { 1, 0, 0, 0, 1, 0 }, 2, 3);
@@ -740,8 +701,8 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestPepAllTargets()
         {
-            var scores = new double[] { 5.0, 4.0, 3.0 };
-            var isDecoy = new bool[] { false, false, false };
+            var scores = new[] { 5.0, 4.0, 3.0 };
+            var isDecoy = new[] { false, false, false };
             var estimator = PepEstimator.FitDefault(scores, isDecoy);
             // With no decoys, PEP should be 1.0
             Assert.AreEqual(1.0, estimator.PosteriorError(5.0), 1e-10);

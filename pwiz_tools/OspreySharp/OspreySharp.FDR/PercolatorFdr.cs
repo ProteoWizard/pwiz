@@ -1,3 +1,26 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Native Percolator implementation for semi-supervised FDR control
 //
 // Implements the Percolator algorithm (Kall et al. 2007) as refined by
@@ -13,7 +36,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using pwiz.OspreySharp.ML;
 
 namespace pwiz.OspreySharp.FDR
@@ -54,7 +76,7 @@ namespace pwiz.OspreySharp.FDR
             MaxIterations = 10;
             NFolds = 3;
             Seed = 42;
-            CValues = new double[] { 0.01, 0.1, 1.0, 10.0, 100.0 };
+            CValues = new[] { 0.01, 0.1, 1.0, 10.0, 100.0 };
             MaxTrainSize = 300000;
         }
     }
@@ -193,9 +215,8 @@ namespace pwiz.OspreySharp.FDR
             Matrix stdFeatures;
             var standardizer = FeatureStandardizer.FitTransform(features, out stdFeatures);
             swSetup.Stop();
-            Console.Error.WriteLine(string.Format(
-                "[TIMING]   Percolator setup + standardize: {0:F1}s ({1} entries x {2} features)",
-                swSetup.Elapsed.TotalSeconds, n, nFeatures));
+            Console.Error.WriteLine(
+                $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
 
             // 3a. Best-per-precursor: pick the single best-scoring observation per
             //     (base_id, isDecoy) tuple across all files. With N files per peptide,
@@ -211,9 +232,8 @@ namespace pwiz.OspreySharp.FDR
                 if (labels[bestPerPrecursor[i]]) dedupDecoys++;
                 else dedupTargets++;
             }
-            Console.Error.WriteLine(string.Format(
-                "[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
-                bestPerPrecursor.Length, dedupTargets, dedupDecoys, n));
+            Console.Error.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
+                bestPerPrecursor.Length, dedupTargets, dedupDecoys, n);
 
             // 3b. If still > MaxTrainSize, subsample by peptide groups
             //     (so target/decoy pairs and same-peptide multi-charge stay together).
@@ -247,9 +267,8 @@ namespace pwiz.OspreySharp.FDR
                 if (labels[trainSubset[i]]) subDecoys++;
                 else subTargets++;
             }
-            Console.Error.WriteLine(string.Format(
-                "[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
-                subN, subTargets, subDecoys, bestPerPrecursor.Length));
+            Console.Error.WriteLine("[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
+                subN, subTargets, subDecoys, bestPerPrecursor.Length);
 
             // Build subset-local arrays
             bool[] subLabels;
@@ -302,9 +321,9 @@ namespace pwiz.OspreySharp.FDR
                                    bestFeatIdx < config.FeatureNames.Length)
                 ? config.FeatureNames[bestFeatIdx]
                 : string.Format("feature_{0}", bestFeatIdx);
-            Console.Error.WriteLine(string.Format(
+            Console.Error.WriteLine(
                 "[COUNT] Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
-                bestFeatName, bestFeatPassing, trainFdr * 100.0));
+                bestFeatName, bestFeatPassing, trainFdr * 100.0);
 
             var initialScores = new double[subN];
             for (int i = 0; i < subN; i++)
@@ -352,13 +371,11 @@ namespace pwiz.OspreySharp.FDR
 
             for (int fold = 0; fold < config.NFolds; fold++)
             {
-                Console.Error.WriteLine(string.Format(
-                    "[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
-                    fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]));
+                Console.Error.WriteLine("[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
+                    fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]);
             }
-            Console.Error.WriteLine(string.Format(
-                "[TIMING]   Percolator train all folds (parallel): {0:F1}s",
-                swTrain.Elapsed.TotalSeconds));
+            Console.Error.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
+                swTrain.Elapsed.TotalSeconds);
 
             // Score ALL entries with trained models
             if (trainSubset != null)

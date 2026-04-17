@@ -1,7 +1,29 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Tests for OspreySharp.FDR module
 // Ported from Rust test suite in osprey-fdr
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -283,7 +305,7 @@ namespace pwiz.OspreySharp.Test
                 entries.Add(MakePercolatorEntry(
                     string.Format("file1_{0}", i), "file1",
                     string.Format("PEPTIDE{0}", i), 2, false, (uint)(i + 1),
-                    new double[] { 4.0 + i * 0.1, 5.0 - i * 0.05 }));
+                    new[] { 4.0 + i * 0.1, 5.0 - i * 0.05 }));
             }
 
             // 20 paired decoys with low feature values
@@ -292,7 +314,7 @@ namespace pwiz.OspreySharp.Test
                 entries.Add(MakePercolatorEntry(
                     string.Format("file1_d{0}", i), "file1",
                     string.Format("DECOY{0}", i), 2, true, (uint)(i + 1) | 0x80000000,
-                    new double[] { 0.5 + i * 0.05, 1.0 + i * 0.02 }));
+                    new[] { 0.5 + i * 0.05, 1.0 + i * 0.02 }));
             }
 
             var config = new PercolatorConfig { MaxIterations = 3 };
@@ -339,8 +361,8 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestFoldAssignmentPeptideGrouping()
         {
-            var labels = new bool[] { false, false, false, true, true, true };
-            var peptides = new string[]
+            var labels = new[] { false, false, false, true, true, true };
+            var peptides = new[]
             {
                 "PEPTIDEK", "PEPTIDEK", "ANOTHERONE",
                 "KEDITPEP", "KEDITPEP", "ENOREHTONA"
@@ -430,10 +452,10 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestBestPrecursorPerPeptide()
         {
-            var indices = new int[] { 0, 1, 2, 3, 4 };
-            var scores = new double[] { 5.0, 3.0, 7.0, 2.0, 6.0 };
-            var labels = new bool[] { false, false, false, true, true };
-            var peptides = new string[] { "PEPK", "PEPK", "OTHER", "PEPK", "OTHER" };
+            var indices = new[] { 0, 1, 2, 3, 4 };
+            var scores = new[] { 5.0, 3.0, 7.0, 2.0, 6.0 };
+            var labels = new[] { false, false, false, true, true };
+            var peptides = new[] { "PEPK", "PEPK", "OTHER", "PEPK", "OTHER" };
 
             var best = PercolatorFdr.BestPrecursorPerPeptide(indices, scores, labels, peptides);
 
@@ -447,8 +469,8 @@ namespace pwiz.OspreySharp.Test
         public void TestConservativeQvalues()
         {
             // 3 targets, 1 decoy (already sorted by score desc)
-            var scores = new double[] { 10.0, 9.0, 8.0, 7.0 };
-            var isDecoy = new bool[] { false, false, true, false };
+            var scores = new[] { 10.0, 9.0, 8.0, 7.0 };
+            var isDecoy = new[] { false, false, true, false };
             var q = new double[4];
 
             PercolatorFdr.ComputeConservativeQvalues(scores, isDecoy, q);
@@ -465,8 +487,8 @@ namespace pwiz.OspreySharp.Test
         public void TestCompeteAndCount()
         {
             // 5 targets easily beat 5 decoys
-            var scores = new double[] { 10.0, 9.0, 8.0, 7.0, 6.0, 1.0, 0.5, 0.2, 0.1, 0.05 };
-            var labels = new bool[]
+            var scores = new[] { 10.0, 9.0, 8.0, 7.0, 6.0, 1.0, 0.5, 0.2, 0.1, 0.05 };
+            var labels = new[]
             {
                 false, false, false, false, false, true, true, true, true, true
             };

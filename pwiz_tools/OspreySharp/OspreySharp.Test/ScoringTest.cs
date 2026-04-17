@@ -1,3 +1,26 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,10 +141,9 @@ namespace pwiz.OspreySharp.Test
         public void TestCycleSequence()
         {
             var generator = new DecoyGenerator(Enzyme.Trypsin);
-            int[] mapping;
 
             // PEPTIDEK with cycle=1: shift internal [PEPTIDE] by 1 -> EPTIDEP, keep K
-            string cycled = generator.CycleSequence("PEPTIDEK", 1, out mapping);
+            string cycled = generator.CycleSequence("PEPTIDEK", 1, out _);
             Assert.AreEqual("EPTIDEPK", cycled);
         }
 
@@ -277,8 +299,8 @@ namespace pwiz.OspreySharp.Test
                 RetentionTime = 10.0,
                 PrecursorMz = 500.0,
                 IsolationWindow = IsolationWindow.Symmetric(500.0, 12.5),
-                Mzs = new double[] { 300.0, 400.0, 500.0 },
-                Intensities = new float[] { 100.0f, 50.0f, 75.0f }
+                Mzs = new[] { 300.0, 400.0, 500.0 },
+                Intensities = new[] { 100.0f, 50.0f, 75.0f }
             };
 
             double score = scorer.LibCosine(spectrum, entry, tolerance);
@@ -364,7 +386,7 @@ namespace pwiz.OspreySharp.Test
             var spectrum = new Spectrum
             {
                 Mzs = new[] { 500.2 },
-                Intensities = new float[] { 10000.0f }
+                Intensities = new[] { 10000.0f }
             };
 
             // Library entry with two fragments in the SAME bin (~500 Th)
@@ -401,7 +423,7 @@ namespace pwiz.OspreySharp.Test
             var spectrum = new Spectrum
             {
                 Mzs = new[] { 499.8, 500.4 },
-                Intensities = new float[] { 100.0f, 10000.0f }
+                Intensities = new[] { 100.0f, 10000.0f }
             };
 
             var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
@@ -434,7 +456,7 @@ namespace pwiz.OspreySharp.Test
             var spectrum3 = new Spectrum
             {
                 Mzs = new[] { 499.8, 500.4, 600.0 },
-                Intensities = new float[] { 100.0f, 10000.0f, 5000.0f }
+                Intensities = new[] { 100.0f, 10000.0f, 5000.0f }
             };
             var entry3 = new LibraryEntry(3, "TEST3", "TEST3", 2, 300.0, 10.0);
             entry3.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
@@ -594,13 +616,11 @@ namespace pwiz.OspreySharp.Test
         {
             // XIC with a flat plateau of equal intensity at scans 3-6
             double[] intensities = { 0, 1, 5, 10, 10, 10, 10, 5, 1, 0 };
-            int startIdx = 0;
-            int endIdx = 9;
 
             // Find apex using >= (last-wins) semantics
-            int apexIdx = startIdx;
-            double apexVal = intensities[startIdx];
-            for (int i = startIdx + 1; i <= endIdx; i++)
+            int apexIdx = 0;
+            double apexVal = intensities[0];
+            for (int i = 1; i < intensities.Length; i++)
             {
                 if (intensities[i] >= apexVal) // >= means last wins on tie
                 {
@@ -614,9 +634,9 @@ namespace pwiz.OspreySharp.Test
                 "Apex tie-break should resolve to LAST index (>= semantics)");
 
             // With > (bug): apex would be index 3 (first of the plateau)
-            int buggyApex = startIdx;
-            double buggyVal = intensities[startIdx];
-            for (int i = startIdx + 1; i <= endIdx; i++)
+            int buggyApex = 0;
+            double buggyVal = intensities[0];
+            for (int i = 1; i < intensities.Length; i++)
             {
                 if (intensities[i] > buggyVal) // > means first wins
                 {
@@ -781,9 +801,6 @@ namespace pwiz.OspreySharp.Test
             double[] frag0 = { 0, 0, 0, 0, 5, 20, 60, 20, 5, 0 };
             // Fragment 1: strong interference earlier, peak at scan 3
             double[] frag1 = { 0, 10, 50, 90, 50, 10, 2, 0, 0, 0 };
-            // Composite (sum)
-            double[] composite = new double[10];
-            for (int i = 0; i < 10; i++) composite[i] = frag0[i] + frag1[i];
 
             // Ref XIC is frag1 (total = 212 > frag0 total = 110)
             double frag0Total = 0, frag1Total = 0;
@@ -893,8 +910,7 @@ namespace pwiz.OspreySharp.Test
                 "Standard reversal of ABCDEFK should produce FEDCBAK");
 
             // Now generate via cycling (what the pipeline would do after detecting collision)
-            int[] cycleMapping;
-            string cycled = generator.CycleSequence("ABCDEFK", 1, out cycleMapping);
+            string cycled = generator.CycleSequence("ABCDEFK", 1, out _);
             Assert.AreNotEqual("ABCDEFK", cycled,
                 "Cycled sequence must differ from original");
             Assert.AreNotEqual("FEDCBAK", cycled,
@@ -964,7 +980,7 @@ namespace pwiz.OspreySharp.Test
             var spectrum = new Spectrum
             {
                 Mzs = new[] { 400.0, 500.0 },
-                Intensities = new float[] { 10000.0f, 10000.0f }
+                Intensities = new[] { 10000.0f, 10000.0f }
             };
 
             // Library with one fragment at 400 Th
@@ -1074,7 +1090,7 @@ namespace pwiz.OspreySharp.Test
             var spectrum = new Spectrum
             {
                 Mzs = new[] { 300.0, 1500.0 },
-                Intensities = new float[] { 10000.0f, 100.0f }
+                Intensities = new[] { 10000.0f, 100.0f }
             };
 
             // Library with fragment at 300 (matching strong peak)

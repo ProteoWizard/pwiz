@@ -1,3 +1,26 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -36,8 +59,8 @@ namespace pwiz.OspreySharp.Test
                         "PEPTIDE", "PEPTIDE",
                         500.0, 2,
                         10.0, 9.0, 11.0,
-                        new double[] { 300.0, 400.0, 500.0 },
-                        new float[] { 100.0f, 200.0f, 300.0f },
+                        new[] { 300.0, 400.0, 500.0 },
+                        new[] { 100.0f, 200.0f, 300.0f },
                         0.01, fileId, 1, 0.0);
                     Assert.IsTrue(refId > 0);
 
@@ -90,8 +113,8 @@ namespace pwiz.OspreySharp.Test
                         "PEPTCIDE", "PEPTC[+57.021]IDE",
                         500.0, 2,
                         10.0, 9.0, 11.0,
-                        new double[] { 300.0 },
-                        new float[] { 100.0f },
+                        new[] { 300.0 },
+                        new[] { 100.0f },
                         0.01, fileId, 1, 0.0);
 
                     var mods = new List<Modification>
@@ -138,8 +161,8 @@ namespace pwiz.OspreySharp.Test
                         "PEPTCIDE", "PEPTC[UniMod:4]IDE",
                         500.0, 2,
                         10.0, 9.0, 11.0,
-                        new double[] { 300.0 },
-                        new float[] { 100.0f },
+                        new[] { 300.0 },
+                        new[] { 100.0f },
                         0.01, fileId, 1, 0.0);
                 }
 
@@ -259,8 +282,8 @@ namespace pwiz.OspreySharp.Test
                         "PEPTIDE", "PEPTIDE",
                         400.0, 2,
                         10.5, 9.5, 11.5,
-                        new double[] { 300.0, 400.0 },
-                        new float[] { 100.0f, 80.0f },
+                        new[] { 300.0, 400.0 },
+                        new[] { 100.0f, 80.0f },
                         0.005, fileId1, 3, 0.0);
 
                     // Run 1: has ID, not best
@@ -328,8 +351,8 @@ namespace pwiz.OspreySharp.Test
                         "PEPTIDE", "PEPTIDE",
                         400.0, 2,
                         10.0, 9.0, 11.0,
-                        new double[] { 300.0 },
-                        new float[] { 100.0f },
+                        new[] { 300.0 },
+                        new[] { 100.0f },
                         0.01, fileId, 1, 0.0);
 
                     var proteins = new List<string>
@@ -487,8 +510,8 @@ namespace pwiz.OspreySharp.Test
                         RetentionTime = 10.5,
                         PrecursorMz = 500.0,
                         IsolationWindow = new IsolationWindow(500.0, 1.5, 1.5),
-                        Mzs = new double[] { 100.0, 200.0, 300.0 },
-                        Intensities = new float[] { 1000.0f, 2000.0f, 500.0f }
+                        Mzs = new [] { 100.0, 200.0, 300.0 },
+                        Intensities = new[] { 1000.0f, 2000.0f, 500.0f }
                     },
                     new Spectrum
                     {
@@ -496,8 +519,8 @@ namespace pwiz.OspreySharp.Test
                         RetentionTime = 11.0,
                         PrecursorMz = 600.0,
                         IsolationWindow = new IsolationWindow(600.0, 2.0, 3.0),
-                        Mzs = new double[] { 150.0, 250.0 },
-                        Intensities = new float[] { 800.0f, 1200.0f }
+                        Mzs = new [] { 150.0, 250.0 },
+                        Intensities = new [] { 800.0f, 1200.0f }
                     }
                 };
 
@@ -507,8 +530,8 @@ namespace pwiz.OspreySharp.Test
                     {
                         ScanNumber = 0,
                         RetentionTime = 10.0,
-                        Mzs = new double[] { 400.0, 500.0, 600.0 },
-                        Intensities = new float[] { 5000.0f, 3000.0f, 1000.0f }
+                        Mzs = new[] { 400.0, 500.0, 600.0 },
+                        Intensities = new[] { 5000.0f, 3000.0f, 1000.0f }
                     }
                 };
 
@@ -523,8 +546,8 @@ namespace pwiz.OspreySharp.Test
                 Assert.AreEqual((uint)1, loaded.Ms2Spectra[0].ScanNumber);
                 Assert.AreEqual(10.5, loaded.Ms2Spectra[0].RetentionTime, 1e-10);
                 Assert.AreEqual(500.0, loaded.Ms2Spectra[0].PrecursorMz, 1e-10);
-                CollectionAssert.AreEqual(new double[] { 100.0, 200.0, 300.0 }, loaded.Ms2Spectra[0].Mzs);
-                CollectionAssert.AreEqual(new float[] { 1000.0f, 2000.0f, 500.0f }, loaded.Ms2Spectra[0].Intensities);
+                CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0 }, loaded.Ms2Spectra[0].Mzs);
+                CollectionAssert.AreEqual(new[] { 1000.0f, 2000.0f, 500.0f }, loaded.Ms2Spectra[0].Intensities);
 
                 // Verify MS2 spectrum 1 isolation window
                 Assert.AreEqual(2.0, loaded.Ms2Spectra[1].IsolationWindow.LowerOffset, 1e-10);
@@ -533,8 +556,8 @@ namespace pwiz.OspreySharp.Test
                 // Verify MS1 spectrum
                 Assert.AreEqual((uint)0, loaded.Ms1Spectra[0].ScanNumber);
                 Assert.AreEqual(10.0, loaded.Ms1Spectra[0].RetentionTime, 1e-10);
-                CollectionAssert.AreEqual(new double[] { 400.0, 500.0, 600.0 }, loaded.Ms1Spectra[0].Mzs);
-                CollectionAssert.AreEqual(new float[] { 5000.0f, 3000.0f, 1000.0f }, loaded.Ms1Spectra[0].Intensities);
+                CollectionAssert.AreEqual(new[] { 400.0, 500.0, 600.0 }, loaded.Ms1Spectra[0].Mzs);
+                CollectionAssert.AreEqual(new[] { 5000.0f, 3000.0f, 1000.0f }, loaded.Ms1Spectra[0].Intensities);
             }
             finally
             {
@@ -989,8 +1012,8 @@ namespace pwiz.OspreySharp.Test
                 isoTarget: 500.25,
                 isoLower: 12.5,
                 isoUpper: 12.5,
-                mzValues: new double[] { 200.0, 300.0, 400.0 },
-                intensityValues: new float[] { 100.0f, 200.0f, 300.0f });
+                mzValues: new[] { 200.0, 300.0, 400.0 },
+                intensityValues: new[] { 100.0f, 200.0f, 300.0f });
 
             string path = Path.GetTempFileName() + ".mzML";
             try
@@ -1034,8 +1057,8 @@ namespace pwiz.OspreySharp.Test
                 isoTarget: 0,
                 isoLower: 0,
                 isoUpper: 0,
-                mzValues: new double[] { 100.0, 200.0 },
-                intensityValues: new float[] { 50.0f, 60.0f },
+                mzValues: new[] { 100.0, 200.0 },
+                intensityValues: new[] { 50.0f, 60.0f },
                 hasPrecursor: false);
 
             string ms2Block = BuildSpectrumElement(
@@ -1046,8 +1069,8 @@ namespace pwiz.OspreySharp.Test
                 isoTarget: 500.0,
                 isoLower: 10.0,
                 isoUpper: 10.0,
-                mzValues: new double[] { 300.0 },
-                intensityValues: new float[] { 150.0f },
+                mzValues: new[] { 300.0 },
+                intensityValues: new[] { 150.0f },
                 hasPrecursor: true);
 
             string mzml = WrapInMzml(ms1Block + "\n" + ms2Block);
@@ -1106,13 +1129,13 @@ namespace pwiz.OspreySharp.Test
             <cvParam cvRef=""MS"" accession=""MS:1000514"" />
             <cvParam cvRef=""MS"" accession=""MS:1000523"" />
             <cvParam cvRef=""MS"" accession=""MS:1000576"" />
-            <binary>" + EncodeDoublesBase64(new double[] { 300.0 }) + @"</binary>
+            <binary>" + EncodeDoublesBase64(new[] { 300.0 }) + @"</binary>
           </binaryDataArray>
           <binaryDataArray>
             <cvParam cvRef=""MS"" accession=""MS:1000515"" />
             <cvParam cvRef=""MS"" accession=""MS:1000521"" />
             <cvParam cvRef=""MS"" accession=""MS:1000576"" />
-            <binary>" + EncodeFloatsBase64(new float[] { 100.0f }) + @"</binary>
+            <binary>" + EncodeFloatsBase64(new[] { 100.0f }) + @"</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>";

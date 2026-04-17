@@ -1,3 +1,26 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using pwiz.OspreySharp.Core;
@@ -33,7 +56,7 @@ namespace pwiz.OspreySharp.Scoring
         /// Applies the full Comet-style fast-XCorr preprocessing to the observed
         /// spectrum (windowing normalization + sliding window subtraction) then
         /// computes a dot product with the library bins. This entry point is used
-        /// by unit tests; production callers should use <see cref="XcorrAtScan"/>
+        /// by unit tests; production callers should use XcorrAtScan() functions
         /// which bins the observed spectrum internally and sums at fragment bin
         /// positions (the actual Comet scoring form).
         /// </summary>
@@ -62,7 +85,7 @@ namespace pwiz.OspreySharp.Scoring
         /// can be reused across all library entries scored against this spectrum.
         /// Matches Rust's <c>preprocess_spectrum_for_xcorr</c> in pipeline.rs.
         /// Calibration + unit-res use this f64 path for bit-identical parity.
-        /// The f32 variant <see cref="PreprocessSpectrumForXcorrFloat"/> is used
+        /// The f32 variant <see cref="PreprocessSpectrumForXcorrInto"/> is used
         /// only by the HRAM main-search per-window cache, where halving the
         /// 800 KB / 400 KB per spectrum matters for parallel-file memory.
         /// </summary>
@@ -98,10 +121,10 @@ namespace pwiz.OspreySharp.Scoring
             Spectrum spectrum, XcorrScratch scratch, float[] output)
         {
             if (scratch == null || output == null)
-                throw new System.ArgumentNullException();
+                throw new ArgumentNullException();
             int n = _binConfig.NBins;
             if (output.Length < n)
-                throw new System.ArgumentException("output length < NBins");
+                throw new ArgumentException("output length < NBins");
 
             double[] binned = scratch.Binned;
             double[] windowed = scratch.Windowed;
@@ -329,7 +352,7 @@ namespace pwiz.OspreySharp.Scoring
             // call and do not need zeroing.
 
             // XCorr diagnostic for bisection
-            string diagXcorrScan = System.Environment.GetEnvironmentVariable("OSPREY_DIAG_XCORR_SCAN");
+            string diagXcorrScan = Environment.GetEnvironmentVariable("OSPREY_DIAG_XCORR_SCAN");
             if (!string.IsNullOrEmpty(diagXcorrScan) &&
                 spectrum.ScanNumber.ToString() == diagXcorrScan)
             {
@@ -366,7 +389,7 @@ namespace pwiz.OspreySharp.Scoring
                     for (int f = 0; f < entry.Fragments.Count; f++)
                     {
                         int fb = _binConfig.MzToBin(entry.Fragments[f].Mz);
-                        bool dup = (fb >= 0 && fb < n) ? visited2[fb] : false;
+                        bool dup = (fb >= 0 && fb < n) && visited2[fb];
                         if (fb >= 0 && fb < n) visited2[fb] = true;
                         dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                             "frag\t{0}\tmz={1:G17}\tbin={2}\tval={3}\tdup={4}",

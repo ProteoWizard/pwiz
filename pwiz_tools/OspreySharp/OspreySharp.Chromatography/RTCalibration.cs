@@ -1,3 +1,26 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -153,8 +176,7 @@ namespace pwiz.OspreySharp.Chromatography
             }
             double residualSD = LoessRegression.StdDev(residuals);
 
-            return new RTCalibration(x, y, fitted, absResiduals, _config.Bandwidth,
-                _config.Degree, residualSD);
+            return new RTCalibration(x, y, fitted, absResiduals, residualSD);
         }
     }
 
@@ -169,21 +191,17 @@ namespace pwiz.OspreySharp.Chromatography
         private readonly double[] _measuredRts;
         private readonly double[] _fittedValues;
         private readonly double[] _absResiduals;
-        private readonly double _bandwidth;
-        private readonly int _degree;
         private readonly double _residualSD;
         private readonly LoessModel _model;
 
         internal RTCalibration(double[] libraryRts, double[] measuredRts,
             double[] fittedValues, double[] absResiduals,
-            double bandwidth, int degree, double residualSD)
+            double residualSD)
         {
             _libraryRts = libraryRts;
             _measuredRts = measuredRts;
             _fittedValues = fittedValues;
             _absResiduals = absResiduals;
-            _bandwidth = bandwidth;
-            _degree = degree;
             _residualSD = residualSD;
             _model = new LoessModel(libraryRts, fittedValues);
         }
@@ -319,7 +337,7 @@ namespace pwiz.OspreySharp.Chromatography
                 : CreateUniformArray(libraryRts.Length, residualSD);
 
             return new RTCalibration(libraryRts, fittedRts, fittedRts, residuals,
-                0.3, 1, residualSD);
+                residualSD);
         }
 
         private double InterpolateAbsResidual(double libraryRt)

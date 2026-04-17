@@ -1,3 +1,26 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -42,7 +65,7 @@ namespace pwiz.OspreySharp
         // Set during RunCalibration when OSPREY_DUMP_CAL_WINDOWS=1, then read by
         // ScoreCalibrationEntry running in parallel. Cleared and written at the end
         // of RunCalibration.
-        private static System.Collections.Concurrent.ConcurrentBag<string> s_calWindowDump;
+        private static ConcurrentBag<string> s_calWindowDump;
 
         // Savitzky-Golay quadratic filter weights for length 5, center offset.
         // Matches Rust pipeline.rs sg_weights: [-3/35, 12/35, 17/35, 12/35, -3/35].
@@ -640,7 +663,7 @@ namespace pwiz.OspreySharp
             // This eliminates calibration noise from the feature comparison.
             // Usage: OSPREY_LOAD_CALIBRATION=Ste-...20.calibration.json
             string loadCalPath = Environment.GetEnvironmentVariable("OSPREY_LOAD_CALIBRATION");
-            if (!string.IsNullOrEmpty(loadCalPath) && System.IO.File.Exists(loadCalPath))
+            if (!string.IsNullOrEmpty(loadCalPath) && File.Exists(loadCalPath))
             {
                 LogInfo(string.Format("[BISECT] Loading calibration from: {0}", loadCalPath));
                 var calParams = CalibrationIO.LoadCalibration(loadCalPath);
@@ -744,7 +767,7 @@ namespace pwiz.OspreySharp
             // Optional: write per-entry feature TSV for comparison against Rust's PIN output
             if (config.WritePin)
             {
-                WriteFeatureDump(inputFile, fileName, scoredEntries, fullLibrary);
+                WriteFeatureDump(inputFile, fileName, scoredEntries);
             }
 
             return scoredEntries;
@@ -758,19 +781,13 @@ namespace pwiz.OspreySharp
         /// </summary>
         private void WriteFeatureDump(
             string inputFile, string fileName,
-            List<FdrEntry> scoredEntries,
-            List<LibraryEntry> fullLibrary)
+            List<FdrEntry> scoredEntries)
         {
             string dumpPath = Path.Combine(
                 Path.GetDirectoryName(inputFile) ?? ".",
                 fileName + ".cs_features.tsv");
 
-            // Build lookup from entry id -> library entry for mod sequence / protein info
-            var libById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
-            foreach (var le in fullLibrary)
-                libById[le.Id] = le;
-
-            var header = new string[]
+            var header = new[]
             {
                 "SpecId", "Label", "ScanNr", "Charge",
                 "fragment_coelution_sum", "fragment_coelution_max", "n_coeluting_fragments",
@@ -1172,7 +1189,7 @@ namespace pwiz.OspreySharp
             // matching loop completes (file written below).
             bool dumpWindows = Environment.GetEnvironmentVariable("OSPREY_DUMP_CAL_WINDOWS") == "1";
             s_calWindowDump = dumpWindows
-                ? new System.Collections.Concurrent.ConcurrentBag<string>()
+                ? new ConcurrentBag<string>()
                 : null;
 
             // Pre-preprocess all window spectra for XCorr using the calibration
@@ -1307,11 +1324,10 @@ namespace pwiz.OspreySharp
                         }
                         else
                         {
-                            w.WriteLine(string.Format(
-                                "{0}\t{1}\t{2}\t0\t\t\t\t\t\t\t",
+                            w.WriteLine("{0}\t{1}\t{2}\t0\t\t\t\t\t\t\t",
                                 entry.Id,
                                 entry.IsDecoy ? 1 : 0,
-                                entry.Charge));
+                                entry.Charge);
                             nUnmatched++;
                         }
                     }
@@ -1716,7 +1732,7 @@ namespace pwiz.OspreySharp
                 bool done = false;
                 for (int ri = 0; ri < binsPerAxis && !done; ri++)
                 {
-                    for (int ci = 0; ci < binsPerAxis && !done; ci++)
+                    for (int ci = 0; ci < binsPerAxis; ci++)
                     {
                         var cell = grid[ri, ci];
                         if (cell.Count == 0) continue;
@@ -2007,7 +2023,7 @@ namespace pwiz.OspreySharp
                         // .NET Framework also hides f32 precision noise).
                         dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                             "topfrag\t{0}\t{1}\t{2}\t{3}",
-                            rank, fi, F10(fobj.Mz), F10((double)fobj.RelativeIntensity)));
+                            rank, fi, F10(fobj.Mz), F10(fobj.RelativeIntensity)));
                     }
                 }
             }
@@ -2201,7 +2217,7 @@ namespace pwiz.OspreySharp
             // Collect MS2 fragment mass errors at apex for m/z calibration.
             // Matches Rust topn_fragment_match_with_errors: uses TOP-6 fragments
             // by intensity, not all fragments.
-            var ms2Errors = new System.Collections.Generic.List<double>();
+            var ms2Errors = new List<double>();
             {
                 // Select top-6 fragment indices by descending intensity
                 int nFragsForErrors = entry.Fragments.Count;
@@ -3100,12 +3116,11 @@ namespace pwiz.OspreySharp
 
 
 
-            // Compute pairwise coelution features (sum, min, max, n_positive)
-            double coelutionSum, coelutionMin, coelutionMax;
+            // Compute pairwise coelution features (sum, max, n_positive).
+            double coelutionSum, coelutionMax;
             int nCoelutingFragments;
             ComputeCoelutionStats(xics, bestPeak,
-                out coelutionSum, out coelutionMin, out coelutionMax,
-                out nCoelutingFragments);
+                out coelutionSum, out coelutionMax, out nCoelutingFragments);
 
             // Peak shape features: apex, area, sharpness
             double peakApex, peakArea, peakSharpness;
@@ -3240,7 +3255,7 @@ namespace pwiz.OspreySharp
                                     dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                                         "input\t{0}\t{1}\t{2:F10}", xi, s, peakXics[xi].Value[s]));
                         }
-                        LogInfo(string.Format("[BISECT] Wrote median polish diagnostic: cs_mp_diag.txt"));
+                        LogInfo("[BISECT] Wrote median polish diagnostic: cs_mp_diag.txt");
                     }
                 }
             }
@@ -3451,15 +3466,14 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
-        /// Compute coelution sum/min/max and count of positively-correlated fragments
+        /// Compute coelution sum/max and count of positively-correlated fragments
         /// from pairwise fragment correlations.
         /// </summary>
         private void ComputeCoelutionStats(
             List<XicData> xics, XICPeakBounds peak,
-            out double sum, out double min, out double max, out int nCoeluting)
+            out double sum, out double max, out int nCoeluting)
         {
             sum = 0.0;
-            min = 0.0;
             max = 0.0;
             nCoeluting = 0;
 
@@ -3472,7 +3486,6 @@ namespace pwiz.OspreySharp
             double[] fragCorrSum = new double[xics.Count];
             int[] fragCorrCount = new int[xics.Count];
             bool haveAny = false;
-            double minCorr = double.PositiveInfinity;
             double maxCorr = double.NegativeInfinity;
 
             for (int i = 0; i < xics.Count; i++)
@@ -3486,7 +3499,6 @@ namespace pwiz.OspreySharp
                         continue;
 
                     sum += corr;
-                    if (corr < minCorr) minCorr = corr;
                     if (corr > maxCorr) maxCorr = corr;
                     haveAny = true;
 
@@ -3498,10 +3510,7 @@ namespace pwiz.OspreySharp
             }
 
             if (haveAny)
-            {
-                min = minCorr;
                 max = maxCorr;
-            }
 
             for (int i = 0; i < xics.Count; i++)
             {
@@ -3616,8 +3625,8 @@ namespace pwiz.OspreySharp
             double specMzMin = spectrum.Mzs[0];
             double specMzMax = spectrum.Mzs[spectrum.Mzs.Length - 1];
 
-            var libPre = new System.Collections.Generic.List<double>();
-            var obsPre = new System.Collections.Generic.List<double>();
+            var libPre = new List<double>();
+            var obsPre = new List<double>();
 
             foreach (var frag in candidate.Fragments)
             {
@@ -3799,8 +3808,8 @@ namespace pwiz.OspreySharp
             // Correlate MS1 precursor intensity with reference XIC (not summed fragment).
             // Rust pipeline.rs:5373-5389: uses ref_xic[start..=end], skips missing MS1.
             double[] refIntensities = xics[refXicIdx].Intensities;
-            var ms1Intensities = new System.Collections.Generic.List<double>();
-            var refValues = new System.Collections.Generic.List<double>();
+            var ms1Intensities = new List<double>();
+            var refValues = new List<double>();
 
             for (int i = start; i <= end; i++)
             {
