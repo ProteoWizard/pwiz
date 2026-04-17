@@ -47,6 +47,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            PrepareDocument("DiannSearchTest.sky");
+
             // Exercise the download prompt: with no DIA-NN registered and no binary on disk,
             // ShowDiannSearchDlg must open the prompt instead of the wizard. Cancelling it
             // must leave the wizard closed.
@@ -66,8 +68,6 @@ namespace pwiz.SkylineTestFunctional
             var progress = new SilentProgressMonitor();
             AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(DiannHelpers.FilesToDownload, progress));
             AssertEx.IsTrue(File.Exists(DiannHelpers.DiannBinary));
-
-            PrepareDocument("DiannSearchTest.sky");
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library.fasta");
             string[] diaFilePaths =
             {
