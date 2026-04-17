@@ -22,6 +22,10 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("c000c097-3f5a-4e49-b700-5f12e36b4264")]
 
+// Expose internals to the test assembly so it can assert invariants on
+// static fields like s_calXcorrScorer.
+[assembly: InternalsVisibleTo("pwiz.OspreySharp.Test")]
+
 // Version information for an assembly consists of the following four values:
 //
 //      Major Version

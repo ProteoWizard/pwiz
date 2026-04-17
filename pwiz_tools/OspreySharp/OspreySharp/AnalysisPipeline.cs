@@ -56,13 +56,15 @@ namespace pwiz.OspreySharp
         };
 
         // Calibration XCorr always uses unit-resolution bins (~2K) regardless of
-        // instrument resolution mode. Matches the intent in Rust's
-        // run_xcorr_calibration_scoring ("Always use unit resolution bins for
-        // calibration XCorr (fast: 2001 bins vs 100K for HRAM)") and avoids the
-        // LOH allocation pressure that 100K-bin arrays cause on .NET Framework's
-        // large-object heap. Main search XCorr still uses the resolution-mode
-        // bins via the IResolutionStrategy abstraction.
-        private static readonly SpectralScorer s_calXcorrScorer =
+        // instrument resolution mode. Matches the spec in Rust osprey
+        // docs/02-calibration.md ("Comet-style XCorr (unit resolution, BLAS
+        // sdot)") and the calibration_xcorr_scorer helper in
+        // osprey/crates/osprey/src/pipeline.rs, and avoids the LOH allocation
+        // pressure that 100K-bin arrays cause on .NET Framework's large-object
+        // heap. Main search XCorr still uses the resolution-mode bins via the
+        // IResolutionStrategy abstraction. Exposed as internal so
+        // OspreySharp.Test can assert the bin-config invariant.
+        internal static readonly SpectralScorer s_calXcorrScorer =
             new SpectralScorer(BinConfig.UnitResolution());
 
         // Format a double with 10 decimal places using round-half-to-even

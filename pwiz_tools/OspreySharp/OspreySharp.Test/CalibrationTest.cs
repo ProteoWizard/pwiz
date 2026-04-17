@@ -3,6 +3,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.Scoring;
 
 namespace pwiz.OspreySharp.Test
 {
@@ -486,6 +487,42 @@ namespace pwiz.OspreySharp.Test
                 if (File.Exists(tempPath))
                     File.Delete(tempPath);
             }
+        }
+
+        #endregion
+
+        #region Calibration XCorr Regression Guard
+
+        /// <summary>
+        /// Regression guard for the calibration XCorr bin-width spec documented
+        /// in Rust osprey docs/02-calibration.md ("Comet-style XCorr (unit
+        /// resolution, BLAS sdot)"). Calibration LDA only needs target/decoy
+        /// discrimination, and unit bins (~2K) are ~50x cheaper than HRAM bins
+        /// (~100K) -- on .NET Framework the 100K double[] arrays land in the
+        /// LOH and trigger gen-2 GC pressure during the all-windows-at-once
+        /// pre-preprocessing step.
+        ///
+        /// If a future change makes AnalysisPipeline.s_calXcorrScorer
+        /// construct with BinConfig.HRAM() (or any other non-unit bin config),
+        /// these asserts fail loudly and cite the Rust design doc. Mirrors
+        /// the calibration_scorer_uses_unit_bins_for_* tests in Rust osprey
+        /// (osprey/crates/osprey/src/pipeline.rs).
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationXcorrScorerUsesUnitBins()
+        {
+            int calBins = AnalysisPipeline.s_calXcorrScorer.BinConfig.NBins;
+            int unitBins = new SpectralScorer(BinConfig.UnitResolution()).BinConfig.NBins;
+            int hramBins = new SpectralScorer(BinConfig.HRAM()).BinConfig.NBins;
+
+            Assert.AreEqual(unitBins, calBins,
+                "Calibration XCorr must use unit-resolution bins " +
+                "(see Rust osprey docs/02-calibration.md).");
+            Assert.AreNotEqual(hramBins, calBins,
+                "Calibration XCorr must NOT use HRAM bins -- if this fails, " +
+                "someone changed s_calXcorrScorer to a non-unit BinConfig. " +
+                "On .NET Framework this causes LOH allocation pressure from " +
+                "pre-preprocessing ~200K HRAM spectra for calibration.");
         }
 
         #endregion
