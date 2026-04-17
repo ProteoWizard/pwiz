@@ -193,10 +193,7 @@ namespace pwiz.OspreySharp
                 // can cap this at 1 or 2 to keep the per-file pool +
                 // spectra under budget; Stellar stays on default for
                 // max throughput.
-                int maxParallelFiles = 0;
-                string mpfEnv = Environment.GetEnvironmentVariable("OSPREY_MAX_PARALLEL_FILES");
-                if (!string.IsNullOrEmpty(mpfEnv))
-                    int.TryParse(mpfEnv, out maxParallelFiles);
+                int maxParallelFiles = OspreyEnvironment.MaxParallelFiles;
 
                 // Determine how many files will actually run concurrently so
                 // ProcessFile can divide the inner main-search thread budget
@@ -293,7 +290,7 @@ namespace pwiz.OspreySharp
 
                 // Optional early exit after Stage 4 (scoring only, no FDR).
                 // Used for benchmarking Stages 1-4 without Stage 5+ overhead.
-                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OSPREY_EXIT_AFTER_SCORING")))
+                if (OspreyEnvironment.ExitAfterScoring)
                 {
                     LogInfo(string.Format("[BENCH] OSPREY_EXIT_AFTER_SCORING set - exiting after Stage 4 ({0} entries)", totalScored));
                     return 0;
@@ -667,7 +664,7 @@ namespace pwiz.OspreySharp
             // BISECT: load Rust's calibration JSON instead of computing our own.
             // This eliminates calibration noise from the feature comparison.
             // Usage: OSPREY_LOAD_CALIBRATION=Ste-...20.calibration.json
-            string loadCalPath = Environment.GetEnvironmentVariable("OSPREY_LOAD_CALIBRATION");
+            string loadCalPath = OspreyEnvironment.LoadCalibrationPath;
             if (!string.IsNullOrEmpty(loadCalPath) && File.Exists(loadCalPath))
             {
                 LogInfo(string.Format("[BISECT] Loading calibration from: {0}", loadCalPath));
@@ -728,7 +725,7 @@ namespace pwiz.OspreySharp
             // Optional early exit after Stage 3 (calibration only, no main search).
             // Used for Stage 1-3 perf benchmarking and walking up to the main
             // search incrementally without paying the Stage 4 cost.
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OSPREY_EXIT_AFTER_CALIBRATION")))
+            if (OspreyEnvironment.ExitAfterCalibration)
             {
                 LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
                 return new List<FdrEntry>();
@@ -1520,8 +1517,7 @@ namespace pwiz.OspreySharp
                     MinPoints = Math.Min(20, libRts.Length),
                     RobustnessIterations = 2,
                     OutlierRetention = 1.0, // LDA + S/N already filtered
-                    ClassicalRobustIterations =
-                        Environment.GetEnvironmentVariable("OSPREY_LOESS_CLASSICAL_ROBUST") == "1"
+                    ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust
                 };
 
                 // Cross-implementation diagnostic: dump the (lib_rt, measured_rt) pairs
@@ -2605,11 +2601,8 @@ namespace pwiz.OspreySharp
             // WINDOWS=2 to capture a few representative windows under
             // dotTrace without paying the full ~15 min Astral wall-clock.
             var windowsToScore = isolationWindows;
-            string maxWindowsEnv = Environment.GetEnvironmentVariable("OSPREY_MAX_SCORING_WINDOWS");
-            if (!string.IsNullOrEmpty(maxWindowsEnv) &&
-                int.TryParse(maxWindowsEnv, out int maxWindows) &&
-                maxWindows > 0 &&
-                maxWindows < isolationWindows.Count)
+            int maxWindows = OspreyEnvironment.MaxScoringWindows;
+            if (maxWindows > 0 && maxWindows < isolationWindows.Count)
             {
                 windowsToScore = isolationWindows.Take(maxWindows).ToList();
                 LogInfo(string.Format(
