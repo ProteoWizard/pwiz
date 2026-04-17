@@ -136,7 +136,7 @@
 <g transform="translate(40, 40)">
   <text class="title">Osprey / OspreySharp DIA search pipeline</text>
   <text class="subtitle" y="22">
-    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-16, Session 14 (Stages 1-4 complete; 21 PIN features bit-identical on Stellar + Astral; C# 0.59x Rust 3-file parallel)
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-16, Session 16 (Stages 1-4 complete; 21 PIN features bit-identical on Stellar + Astral; 3-file parallel = 0.59x Rust on Stellar / 0.12x Rust on Astral)
   </text>
 </g>
 
@@ -420,7 +420,8 @@
 
 <footer>
   <p>
-    <strong>Evidence (Stellar + Astral, <code>--resolution unit</code>):</strong>
+    <strong>Evidence (Stellar <code>--resolution unit</code>, Astral
+    <code>--resolution hram</code>):</strong>
     Stages 1-4 fully proven on both datasets. 21 PIN features bit-identical at ULP
     on Stellar (466K entries match, all 21 under 1e-10). On Astral 19 of 21 are ULP,
     and xcorr / sg_weighted_xcorr drift at ~1e-7 from the intrinsic f32 HRAM
@@ -430,13 +431,19 @@
     per-file MS2-calibration tolerance.
   </p>
   <p>
-    <strong>Performance (Session 14, <code>Bench-Scoring.ps1 -Dataset Stellar</code>,
-    median of 5 iterations):</strong>
-    Single file: C# 22.7s vs Rust 23.2s = <strong>1.0x (tied)</strong>.
-    3-file sequential: C# 63.9s vs Rust 83.4s = <strong>0.77x (C# 1.3x faster)</strong>.
-    3-file parallel: C# 49.5s vs Rust 83.4s = <strong>0.59x (C# 1.7x faster)</strong>.
-    Astral single-file end-to-end: C# 120.9s vs Rust 911.6s = <strong>0.13x
-    (C# 7.5x faster)</strong> after the Session 12-14 memory-pool stack.
+    <strong>Performance (Session 14-16, <code>Bench-Scoring.ps1</code> warm-cache
+    wall clock):</strong>
+    <em>Stellar</em> (median of 5) - single file: C# 22.7s vs Rust 23.2s =
+    <strong>1.0x (tied)</strong>. 3-file sequential: C# 63.9s vs Rust 83.4s =
+    <strong>0.77x (C# 1.3x faster)</strong>. 3-file parallel: C# 49.5s vs Rust 83.4s =
+    <strong>0.59x (C# 1.7x faster)</strong>.
+    <em>Astral</em> (single iteration, ~100x larger main-search workload) - single
+    file: C# 110.7s vs Rust ~917s = <strong>0.12x (C# 8.3x faster)</strong>.
+    3-file sequential: C# 380.1s vs Rust 2751.2s = <strong>0.14x (C# 7.2x faster)</strong>.
+    3-file parallel: C# 342.3s vs Rust 2751.2s = <strong>0.12x (C# 8.0x faster,
+    ~97% parallel efficiency)</strong>. Rust has no file-level parallelism, so 3-file
+    Rust is strictly 3x single-file; C# par-3 exploits the full 32-core box via
+    per-file thread scaling that sidesteps oversubscription.
     Key optimizations: <code>XcorrScratchPool</code> (eliminates LOH churn on the
     ~100K-bin HRAM scratch), per-window pre-preprocessed XCorr cache with f32
     narrowing, pooled <code>visitedBins</code> for O(n_fragments) selective clear,
@@ -445,10 +452,11 @@
     <code>ProcessFile</code> calls.
   </p>
   <p>
-    Next targets: Stage 5 (Percolator SVM FDR), upstream the three Rust
-    bug fixes from Session 11 (XCorr fragment-bin dedup, DIA window-bounds
-    truncation, unit-bin calibration scorer) to maccoss/osprey,
-    Skyline CommonUtil integration.
+    Next targets: Stage 5 (Percolator SVM FDR), upstream the parity-relevant
+    bug fixes and optimizations to <code>maccoss/osprey</code> (first PR
+    <a href="https://github.com/maccoss/osprey/pull/3"><code>maccoss/osprey#3</code></a>
+    posted this session for the unit-bin calibration scorer), Skyline
+    CommonUtil integration.
     Branch <code>Skyline/work/20260409_osprey_sharp</code>.
   </p>
 </footer>
