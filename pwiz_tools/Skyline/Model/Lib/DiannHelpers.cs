@@ -47,6 +47,12 @@ namespace pwiz.Skyline.Model.Lib
 
         public static readonly Uri DIANN_DOWNLOAD_URL = new Uri(@"https://github.com/vdemichev/DiaNN/releases");
 
+        public static readonly Uri DIANN_MSI_URL =
+            new Uri($@"https://github.com/vdemichev/DiaNN/releases/download/2.0/DIA-NN-{DIANN_VERSION}-Academia.msi");
+
+        public static readonly Uri DIANN_LICENSE_URL =
+            new Uri(@"https://github.com/vdemichev/DiaNN/releases/download/2.0/LICENSE.txt");
+
         /// <summary>
         /// Mirrored DIA-NN 2.5.0 install on the Skyline tool testing S3 bucket, used by
         /// functional tests. <see cref="SimpleFileDownloader.DownloadRequiredFiles"/> rewrites
@@ -70,6 +76,33 @@ namespace pwiz.Skyline.Model.Lib
             ToolExtraArgs = DiannArgs
         };
         public static FileDownloadInfo[] FilesToDownload => new[] { DiannDownloadInfo };
+
+        /// <summary>
+        /// Extract the DIA-NN MSI (admin install) into <paramref name="targetDir"/> without
+        /// actually installing, then search the extracted tree for diann.exe.
+        /// Returns the full path to the extracted diann.exe, or null if not found.
+        /// </summary>
+        public static string ExtractDiannMsi(string msiPath, string targetDir)
+        {
+            Directory.CreateDirectory(targetDir);
+            var psi = new ProcessStartInfo(@"msiexec",
+                string.Format(CultureInfo.InvariantCulture, @"/a ""{0}"" /qn TARGETDIR=""{1}""", msiPath, targetDir))
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using (var process = Process.Start(psi))
+            {
+                process?.WaitForExit();
+                if (process == null || process.ExitCode != 0)
+                    return null;
+            }
+            // /a leaves a full copy of the original .msi in the target; it's not needed after extraction.
+            var msiCopy = Path.Combine(targetDir, Path.GetFileName(msiPath) ?? string.Empty);
+            if (File.Exists(msiCopy))
+                FileEx.SafeDelete(msiCopy, true);
+            return Directory.EnumerateFiles(targetDir, @"diann.exe", SearchOption.AllDirectories).FirstOrDefault();
+        }
 
         /// <summary>
         /// Maps Skyline enzyme names to DIA-NN --cut patterns.

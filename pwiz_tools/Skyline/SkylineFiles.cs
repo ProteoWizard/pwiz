@@ -3534,6 +3534,9 @@ namespace pwiz.Skyline
                 return;
             }
 
+            if (!EnsureDiannInstalled())
+                return;
+
             using (var dlg = new DiannSearchDlg(this, _libraryManager))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -3541,6 +3544,28 @@ namespace pwiz.Skyline
                     // Nothing to do; the dialog does all the work.
                 }
             }
+        }
+
+        /// <summary>
+        /// Loops until DIA-NN is installed, the user lets us install it, or the user cancels.
+        /// Returns true if DIA-NN is available, false if the user declined to proceed.
+        /// </summary>
+        private bool EnsureDiannInstalled()
+        {
+            while (!File.Exists(DiannHelpers.DiannBinary))
+            {
+                using var downloadDlg = new DiannDownloadDlg();
+                var result = downloadDlg.ShowDialog(this);
+                if (result == DialogResult.OK)
+                    continue; // download succeeded - loop to re-check
+                if (result == DiannDownloadDlg.SpecifyManuallyResult)
+                {
+                    ShowSearchToolsDlg();
+                    continue; // re-check after user edits the list
+                }
+                return false; // user canceled
+            }
+            return true;
         }
 
         public void ShowFeatureDetectionDlg()

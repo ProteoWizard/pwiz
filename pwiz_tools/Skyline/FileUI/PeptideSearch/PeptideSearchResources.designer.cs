@@ -424,16 +424,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to DIA-NN executable not found at &apos;{0}&apos;. Please configure the path via Edit &gt; Search Tools..
-        /// </summary>
-        public static string DiannSearchDlg_NextPage_DIA_NN_executable_not_found_at___0____Please_configure_the_path_via_Edit___Search_Tools_ {
-            get {
-                return ResourceManager.GetString("DiannSearchDlg_NextPage_DIA_NN_executable_not_found_at___0____Please_configure_the" +
-                    "_path_via_Edit___Search_Tools_", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Please add at least one DIA data file..
         /// </summary>
         public static string DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_ {

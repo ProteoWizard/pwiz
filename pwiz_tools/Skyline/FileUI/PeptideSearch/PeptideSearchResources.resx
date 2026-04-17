@@ -375,9 +375,6 @@ Check your settings and try again.</value>
   <data name="DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_" xml:space="preserve">
     <value>Please add at least one DIA data file.</value>
   </data>
-  <data name="DiannSearchDlg_NextPage_DIA_NN_executable_not_found_at___0____Please_configure_the_path_via_Edit___Search_Tools_" xml:space="preserve">
-    <value>DIA-NN executable not found at '{0}'. Please configure the path via Edit &gt; Search Tools.</value>
-  </data>
   <data name="DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_" xml:space="preserve">
     <value>DIA-NN output spectral library not found.</value>
   </data>

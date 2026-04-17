@@ -243,6 +243,12 @@
     <Compile Include="Alerts\ArdiaLoginDlg.Designer.cs">
       <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\DiannDownloadDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\DiannDownloadDlg.Designer.cs">
+      <DependentUpon>DiannDownloadDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
     <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
       <SubType>Form</SubType>
@@ -2683,6 +2689,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\DiannDownloadDlg.resx">
+      <DependentUpon>DiannDownloadDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.ja.resx">
       <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>

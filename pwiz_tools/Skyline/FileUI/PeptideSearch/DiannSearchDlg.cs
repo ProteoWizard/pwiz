@@ -302,16 +302,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.run_page:
-                    // Verify DIA-NN binary exists
-                    if (!File.Exists(DiannHelpers.DiannBinary))
-                    {
-                        MessageDlg.Show(this, string.Format(
-                            PeptideSearchResources.DiannSearchDlg_NextPage_DIA_NN_executable_not_found_at___0____Please_configure_the_path_via_Edit___Search_Tools_,
-                            DiannHelpers.DiannBinary));
-                        wizardPages.SelectTab((int)Pages.search_settings_page);
-                        return;
-                    }
-
                     btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                     btnNext.Enabled = false;
                     btnCancel.Enabled = false;

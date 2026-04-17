@@ -501,6 +501,33 @@ namespace pwiz.Skyline.Alerts {
                 return ResourceManager.GetString("MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading DIA-NN {0}.
+        /// </summary>
+        public static string DiannDownloadDlg_Downloading_DIA_NN__0_ {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_Downloading_DIA_NN__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Extracting DIA-NN installation files.
+        /// </summary>
+        public static string DiannDownloadDlg_Installing_DIA_NN {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_Installing_DIA_NN", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN installation failed. The extractor did not produce a diann.exe file.
+        /// </summary>
+        public static string DiannDownloadDlg_Installation_failed {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_Installation_failed", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Contacting MS Fragger download server.

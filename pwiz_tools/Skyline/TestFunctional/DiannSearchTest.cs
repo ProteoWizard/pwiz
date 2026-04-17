@@ -20,8 +20,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
@@ -45,6 +47,21 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Exercise the download prompt: with no DIA-NN registered and no binary on disk,
+            // ShowDiannSearchDlg must open the prompt instead of the wizard. Cancelling it
+            // must leave the wizard closed.
+            RunUI(() =>
+            {
+                if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
+                    Settings.Default.SearchToolList.Remove(
+                        Settings.Default.SearchToolList[SearchToolType.DIANN]);
+                if (File.Exists(DiannHelpers.DiannBinary))
+                    FileEx.SafeDelete(DiannHelpers.DiannBinary);
+            });
+            var downloadDlg = ShowDialog<DiannDownloadDlg>(SkylineWindow.ShowDiannSearchDlg);
+            OkDialog(downloadDlg, () => downloadDlg.DialogResult = DialogResult.Cancel);
+            AssertEx.IsNull(FindOpenForm<DiannSearchDlg>());
+
             // Download DIA-NN from the Skyline tool testing mirror (cached across runs).
             var progress = new SilentProgressMonitor();
             AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(DiannHelpers.FilesToDownload, progress));
@@ -122,7 +139,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Cancel out of the import wizard for now
             OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
-            OkDialog(searchDlg, () => searchDlg.DialogResult = System.Windows.Forms.DialogResult.Cancel);
+            OkDialog(searchDlg, () => searchDlg.DialogResult = DialogResult.Cancel);
         }
 
         private void PrepareDocument(string documentFile)
