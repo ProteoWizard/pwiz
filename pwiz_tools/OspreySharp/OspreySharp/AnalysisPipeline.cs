@@ -712,6 +712,11 @@ namespace pwiz.OspreySharp
                     swCal.Elapsed.TotalSeconds, nPoints));
             }
 
+            // Dump 11 calibration summary scalars (MS1/MS2 mean/sd/count/
+            // tolerance + RT n_points/r_squared/residual_sd) so the final
+            // calibration state can be diff'd against Rust's cal JSON.
+            OspreyDiagnostics.WriteCalibrationSummary(rtCalibration, ms1Cal, ms2Cal);
+
             // Optional early exit after Stage 3 (calibration only, no main search).
             // Used for Stage 1-3 perf benchmarking and walking up to the main
             // search incrementally without paying the Stage 4 cost.
