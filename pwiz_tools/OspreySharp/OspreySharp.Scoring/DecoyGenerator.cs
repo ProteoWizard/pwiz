@@ -371,7 +371,7 @@ namespace pwiz.OspreySharp.Scoring
                 double? mz = CalculateFragmentMz(
                     newIonType, newOrdinal, annotation.Charge,
                     decoySequence, modMasses,
-                    annotation.NeutralLoss != null ? (double?)annotation.NeutralLoss.Mass : null);
+                    annotation.NeutralLoss != null ? annotation.NeutralLoss.Mass : null);
 
                 if (mz.HasValue)
                 {

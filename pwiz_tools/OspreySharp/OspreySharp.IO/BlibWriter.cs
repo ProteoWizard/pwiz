@@ -347,7 +347,7 @@ namespace pwiz.OspreySharp.IO
             _cmdInsertRetentionTime.Parameters["@refId"].Value = refId;
             _cmdInsertRetentionTime.Parameters["@srcId"].Value = sourceFileId;
             _cmdInsertRetentionTime.Parameters["@rt"].Value =
-                retentionTime.HasValue ? (object)retentionTime.Value : DBNull.Value;
+                retentionTime.HasValue ? retentionTime.Value : DBNull.Value;
             _cmdInsertRetentionTime.Parameters["@start"].Value = startTime;
             _cmdInsertRetentionTime.Parameters["@end"].Value = endTime;
             _cmdInsertRetentionTime.Parameters["@score"].Value = score;

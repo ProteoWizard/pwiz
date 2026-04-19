@@ -4330,7 +4330,7 @@ namespace pwiz.OspreySharp
 
                             writer.AddRetentionTime(
                                 refId, srcId,
-                                passesFdr ? (double?)fileEntry.ApexRt : null,
+                                passesFdr ? fileEntry.ApexRt : null,
                                 fileEntry.StartRt,
                                 fileEntry.EndRt,
                                 fileEntry.EffectiveRunQvalue(config.FdrLevel),

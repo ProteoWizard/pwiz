@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <!-- SDK-style csproj defaults to AnyCPU, but OspreySharp.sln uses x64
+         configurations, which VS 2026 flags as "unknown project
+         configuration mappings" unless the projects advertise x64.
+         Declare both so:
+           * the x64 sln configs map cleanly (VS stops warning, CI keeps
+             working with /p:Platform=x64),
+           * the .NET 8.0 target can still be built AnyCPU on other hosts
+             (e.g. Arm64 macOS/Linux) without touching any csproj. -->
+    <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
