@@ -175,6 +175,25 @@ namespace pwiz.OspreySharp
                 bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
                 int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
 
+                // Pre-compute the parquet footer metadata ONCE, against the
+                // unmutated outer config. ProcessFile clones the config per
+                // file and mutates FragmentTolerance during MS2 calibration,
+                // so reading config.SearchParameterHash() inside ProcessFile
+                // would produce a hash that the join-only validator would
+                // not recognize. Dictionary stays null in non-NoJoin runs
+                // (no parquet writing happens then).
+                Dictionary<string, string> noJoinMetadata = null;
+                if (config.NoJoin)
+                {
+                    noJoinMetadata = new Dictionary<string, string>
+                    {
+                        { "osprey.version", Program.VERSION },
+                        { "osprey.search_hash", config.SearchParameterHash() },
+                        { "osprey.library_hash", config.LibraryIdentityHash() },
+                        { "osprey.reconciled", "false" },
+                    };
+                }
+
                 // File-level parallelism is configurable via
                 // OSPREY_MAX_PARALLEL_FILES:
                 //   1      = strictly sequential (one file at a time)
@@ -209,6 +228,14 @@ namespace pwiz.OspreySharp
                     // doesn't need it. When reconciliation lands, this branch
                     // will need to load the calibration JSON sibling files
                     // (best-effort, like the Rust impl).
+                    // Guard: hash check against current --library and search params.
+                    // Aborts with a clear, file-named error if the operator points
+                    // the merge node at parquets from a different scoring run.
+                    string validationError = ParquetScoreCache.ValidateScoresParquetGroup(
+                        config.InputScores, config, Program.VERSION, LogWarning);
+                    if (validationError != null)
+                        throw new InvalidDataException(validationError);
+
                     LogInfo(string.Format(
                         "--join-only: loading {0} per-file score parquet(s)",
                         config.InputScores.Count));
@@ -244,7 +271,7 @@ namespace pwiz.OspreySharp
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
                     LogInfo("");
                     LogInfo(string.Format("===== Processing file 1/1: {0} =====", inputFile));
-                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config);
+                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata);
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                 }
@@ -263,7 +290,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata);
                         if (fileResult != null)
                             perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                     }
@@ -287,7 +314,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata);
                         if (fileResult != null)
                             fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
                     });
@@ -623,7 +650,8 @@ namespace pwiz.OspreySharp
         /// </summary>
         private List<FdrEntry> ProcessFile(
             string inputFile, string fileName,
-            List<LibraryEntry> fullLibrary, OspreyConfig config)
+            List<LibraryEntry> fullLibrary, OspreyConfig config,
+            Dictionary<string, string> noJoinMetadata)
         {
             // Per-file shallow clone so MS2 calibration's mutation of
             // FragmentTolerance (and any future per-file overrides) does
@@ -855,17 +883,13 @@ namespace pwiz.OspreySharp
             // pick them up without re-running Stages 1-4. Same path convention
             // as Rust (`scores_path_for_input`). Snappy-compressed; cross-impl
             // ZSTD/Snappy compatibility tracked as a Phase 4 follow-up.
-            if (config.NoJoin)
+            // The metadata dictionary is precomputed in Run() against the
+            // original (un-mutated) outer config -- see Run() for why.
+            if (noJoinMetadata != null)
             {
                 string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
-                var meta = new Dictionary<string, string>
-                {
-                    { "osprey.version", Program.VERSION },
-                    { "osprey.search_hash", config.SearchParameterHash() },
-                    { "osprey.reconciled", "false" },
-                };
                 var swParquet = Stopwatch.StartNew();
-                ParquetScoreCache.WriteScoresParquet(parquetPath, scoredEntries, meta);
+                ParquetScoreCache.WriteScoresParquet(parquetPath, scoredEntries, noJoinMetadata);
                 swParquet.Stop();
                 LogInfo(string.Format(
                     "[--no-join] Wrote {0} scored entries to {1} ({2:F1}s)",

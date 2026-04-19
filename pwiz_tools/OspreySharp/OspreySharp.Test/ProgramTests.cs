@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.IO;
 
 namespace pwiz.OspreySharp.Test
 {
@@ -280,6 +281,138 @@ namespace pwiz.OspreySharp.Test
             var cfg = new OspreyConfig();
             Assert.IsFalse(cfg.NoJoin, "NoJoin should default to false");
             Assert.IsNull(cfg.InputScores, "InputScores should default to null");
+        }
+
+        // --- ParquetScoreCache.CheckParquetMetadata -----------------------
+
+        private const string VALID_SEARCH = "search-hash-aaa";
+        private const string VALID_LIB = "lib-hash-bbb";
+        private const string CURRENT_VERSION = "26.3.0";
+
+        private static string CheckMd(
+            string cachedV, string cachedS, string cachedL, out string warning)
+        {
+            return ParquetScoreCache.CheckParquetMetadata(
+                "test.scores.parquet",
+                cachedV, cachedS, cachedL,
+                VALID_SEARCH, VALID_LIB, CURRENT_VERSION,
+                out warning);
+        }
+
+        [TestMethod]
+        public void TestParseVersionRoundTrip()
+        {
+            int M, m, p;
+            Assert.IsTrue(ParquetScoreCache.TryParseVersion("26.3.0", out M, out m, out p));
+            Assert.AreEqual(26, M); Assert.AreEqual(3, m); Assert.AreEqual(0, p);
+            Assert.IsTrue(ParquetScoreCache.TryParseVersion("0.0.1", out M, out m, out p));
+            Assert.AreEqual(0, M); Assert.AreEqual(0, m); Assert.AreEqual(1, p);
+        }
+
+        [TestMethod]
+        public void TestParseVersionRejectsBadInput()
+        {
+            int M, m, p;
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("", out M, out m, out p));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.3", out M, out m, out p));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("v26.3.0", out M, out m, out p));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.3.x", out M, out m, out p));
+        }
+
+        [TestMethod]
+        public void TestMetadataHappyPathNoWarning()
+        {
+            string warn;
+            string err = CheckMd("26.3.0", VALID_SEARCH, VALID_LIB, out warn);
+            Assert.IsNull(err);
+            Assert.IsNull(warn);
+        }
+
+        [TestMethod]
+        public void TestMetadataPatchDriftWarnsButSucceeds()
+        {
+            string warn;
+            string err = CheckMd("26.3.5", VALID_SEARCH, VALID_LIB, out warn);
+            Assert.IsNull(err);
+            Assert.IsNotNull(warn);
+            StringAssert.Contains(warn, "patch-version drift");
+        }
+
+        [TestMethod]
+        public void TestMetadataMinorVersionDriftAborts()
+        {
+            string warn;
+            string err = CheckMd("26.4.0", VALID_SEARCH, VALID_LIB, out warn);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "major/minor");
+        }
+
+        [TestMethod]
+        public void TestMetadataMajorVersionDriftAborts()
+        {
+            string warn;
+            string err = CheckMd("27.0.0", VALID_SEARCH, VALID_LIB, out warn);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "major/minor");
+        }
+
+        [TestMethod]
+        public void TestMetadataMissingVersionAborts()
+        {
+            string warn;
+            string err = CheckMd(null, VALID_SEARCH, VALID_LIB, out warn);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "osprey.version");
+        }
+
+        [TestMethod]
+        public void TestMetadataMissingSearchHashAborts()
+        {
+            string warn;
+            string err = CheckMd("26.3.0", null, VALID_LIB, out warn);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "osprey.search_hash");
+        }
+
+        [TestMethod]
+        public void TestMetadataMissingLibraryHashAborts()
+        {
+            string warn;
+            string err = CheckMd("26.3.0", VALID_SEARCH, null, out warn);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "osprey.library_hash");
+        }
+
+        [TestMethod]
+        public void TestMetadataSearchHashMismatchNamesFieldAndFile()
+        {
+            string warn;
+            string err = CheckMd("26.3.0", "wrong-hash", VALID_LIB, out warn);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "search_hash mismatch");
+            StringAssert.Contains(err, "test.scores.parquet");
+            StringAssert.Contains(err, "wrong-hash");
+        }
+
+        [TestMethod]
+        public void TestMetadataLibraryHashMismatchNamesFieldAndFile()
+        {
+            string warn;
+            string err = CheckMd("26.3.0", VALID_SEARCH, "wrong-lib", out warn);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "library_hash mismatch");
+            StringAssert.Contains(err, "test.scores.parquet");
+            StringAssert.Contains(err, "wrong-lib");
+        }
+
+        [TestMethod]
+        public void TestMetadataUnparseableVersionWarnsButProceeds()
+        {
+            string warn;
+            string err = CheckMd("garbage", VALID_SEARCH, VALID_LIB, out warn);
+            Assert.IsNull(err);
+            Assert.IsNotNull(warn);
+            StringAssert.Contains(warn, "could not parse");
         }
 
         // --- helpers -------------------------------------------------------

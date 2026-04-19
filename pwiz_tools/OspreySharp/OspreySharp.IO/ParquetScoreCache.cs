@@ -566,5 +566,160 @@ namespace pwiz.OspreySharp.IO
         }
 
         #endregion
+
+        #region Phase 3: --join-only group validation
+
+        /// <summary>
+        /// Read all key-value pairs from a parquet footer. Returns an empty
+        /// dictionary if the file has no metadata. Throws on IO/parse errors.
+        /// </summary>
+        public static Dictionary<string, string> LoadFooterMetadata(string path)
+        {
+            var result = new Dictionary<string, string>();
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = new ParquetReader(stream))
+            {
+                var fileMetadata = reader.ThriftMetadata.Key_value_metadata;
+                if (fileMetadata == null)
+                    return result;
+                foreach (var kv in fileMetadata)
+                    result[kv.Key] = kv.Value;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Parse a "MAJOR.MINOR.PATCH" version string. Returns true on success
+        /// with the three components in <paramref name="major"/>, <paramref name="minor"/>,
+        /// <paramref name="patch"/>. Returns false if any component is missing
+        /// or non-numeric. Used by <see cref="CheckParquetMetadata"/>.
+        /// </summary>
+        public static bool TryParseVersion(string s, out int major, out int minor, out int patch)
+        {
+            major = minor = patch = 0;
+            if (string.IsNullOrEmpty(s))
+                return false;
+            string[] parts = s.Split('.');
+            if (parts.Length != 3)
+                return false;
+            return int.TryParse(parts[0], out major)
+                && int.TryParse(parts[1], out minor)
+                && int.TryParse(parts[2], out patch);
+        }
+
+        /// <summary>
+        /// Pure helper that checks one parquet's footer metadata against the
+        /// expected hashes. Separated from the IO so it's unit-testable
+        /// without constructing real parquet files. Mirror of the Rust
+        /// `check_parquet_metadata` helper. Returns null on success (with
+        /// optional warning string in <paramref name="warning"/>) or an error
+        /// message naming the file + offending field.
+        /// </summary>
+        public static string CheckParquetMetadata(
+            string fileLabel,
+            string cachedVersion,
+            string cachedSearch,
+            string cachedLibrary,
+            string expectedSearch,
+            string expectedLibrary,
+            string currentVersion,
+            out string warning)
+        {
+            warning = null;
+
+            if (cachedVersion == null)
+                return string.Format("{0}: parquet has no `osprey.version` metadata", fileLabel);
+            int cM, cmn, cp, rM, rmn, rp;
+            bool cachedOk = TryParseVersion(cachedVersion, out cM, out cmn, out cp);
+            bool currentOk = TryParseVersion(currentVersion, out rM, out rmn, out rp);
+            if (cachedOk && currentOk)
+            {
+                if (cM != rM || cmn != rmn)
+                {
+                    return string.Format(
+                        "{0}: osprey version mismatch: parquet was scored with {1} but current binary is {2} (incompatible major/minor)",
+                        fileLabel, cachedVersion, currentVersion);
+                }
+                if (cp != rp)
+                {
+                    warning = string.Format(
+                        "{0}: osprey patch-version drift (parquet={1}, current={2}); proceeding",
+                        fileLabel, cachedVersion, currentVersion);
+                }
+            }
+            else
+            {
+                warning = string.Format(
+                    "{0}: could not parse osprey version (parquet=\"{1}\", current=\"{2}\"); proceeding",
+                    fileLabel, cachedVersion, currentVersion);
+            }
+
+            if (cachedSearch == null)
+                return string.Format("{0}: parquet has no `osprey.search_hash` metadata", fileLabel);
+            if (cachedSearch != expectedSearch)
+            {
+                return string.Format(
+                    "{0}: search_hash mismatch: parquet was scored with search_hash={1} but current config hashes to {2}",
+                    fileLabel, cachedSearch, expectedSearch);
+            }
+
+            if (cachedLibrary == null)
+                return string.Format("{0}: parquet has no `osprey.library_hash` metadata", fileLabel);
+            if (cachedLibrary != expectedLibrary)
+            {
+                return string.Format(
+                    "{0}: library_hash mismatch: parquet was scored with library_hash={1} but --library hashes to {2}",
+                    fileLabel, cachedLibrary, expectedLibrary);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Open each `.scores.parquet` in <paramref name="paths"/> and assert
+        /// its footer metadata matches <paramref name="config"/>'s search and
+        /// library hashes. Returns null on success (logging a warning to
+        /// <paramref name="logWarning"/> for any patch-version drift) or an
+        /// error message naming the offending file. Used at the start of
+        /// --join-only mode.
+        /// </summary>
+        public static string ValidateScoresParquetGroup(
+            IEnumerable<string> paths,
+            OspreyConfig config,
+            string currentVersion,
+            System.Action<string> logWarning)
+        {
+            string expectedSearch = config.SearchParameterHash();
+            string expectedLibrary = config.LibraryIdentityHash();
+
+            foreach (string path in paths)
+            {
+                Dictionary<string, string> kv;
+                try
+                {
+                    kv = LoadFooterMetadata(path);
+                }
+                catch (System.Exception ex)
+                {
+                    return string.Format("{0}: cannot read parquet metadata: {1}", path, ex.Message);
+                }
+                string cachedV; kv.TryGetValue("osprey.version", out cachedV);
+                string cachedS; kv.TryGetValue("osprey.search_hash", out cachedS);
+                string cachedL; kv.TryGetValue("osprey.library_hash", out cachedL);
+
+                string warning;
+                string err = CheckParquetMetadata(
+                    path, cachedV, cachedS, cachedL,
+                    expectedSearch, expectedLibrary, currentVersion,
+                    out warning);
+                if (err != null)
+                    return err;
+                if (warning != null && logWarning != null)
+                    logWarning(warning);
+            }
+            return null;
+        }
+
+        #endregion
     }
 }

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -164,6 +165,35 @@ namespace pwiz.OspreySharp.Core
                 {
                     result.Append(hashBytes[i].ToString("x2"));
                 }
+                return result.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Compute a fast identity hash for the library file (path + size + mtime).
+        /// Filesystem metadata only -- no content hashing. Same recipe as the
+        /// Rust impl's library_identity_hash so same-impl HPC handoff
+        /// (--no-join then --join-only on the same OS / library) gets matching
+        /// hashes; cross-impl handoff is not bit-compatible because path
+        /// formatting and mtime serialization differ between Rust and .NET.
+        /// </summary>
+        public string LibraryIdentityHash()
+        {
+            string libPath = LibrarySource != null ? LibrarySource.Path : string.Empty;
+            using (var sha256 = SHA256.Create())
+            {
+                var sb = new StringBuilder();
+                sb.AppendFormat("path:{0}\n", libPath);
+                if (!string.IsNullOrEmpty(libPath) && File.Exists(libPath))
+                {
+                    var info = new FileInfo(libPath);
+                    sb.AppendFormat("size:{0}\n", info.Length);
+                    sb.AppendFormat("mtime:{0:o}\n", info.LastWriteTimeUtc);
+                }
+                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
+                var result = new StringBuilder(64);
+                for (int i = 0; i < hashBytes.Length; i++)
+                    result.Append(hashBytes[i].ToString("x2"));
                 return result.ToString();
             }
         }
