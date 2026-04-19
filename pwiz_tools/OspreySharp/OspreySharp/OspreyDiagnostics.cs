@@ -399,8 +399,8 @@ namespace pwiz.OspreySharp
 
         /// <summary>
         /// Dump the (lib_rt, measured_rt) pairs fed to LOESS
-        /// (cs_loess_input.txt), sorted by (lib_rt, measured_rt), at "R"
-        /// (round-trip) precision.
+        /// (cs_loess_input.txt), sorted by (lib_rt, measured_rt), at F17
+        /// precision (matches Rust's `{:.17}`).
         /// </summary>
         public static void WriteLoessInputDump(int passNumber, double[] libRts, double[] measuredRts)
         {
@@ -420,7 +420,7 @@ namespace pwiz.OspreySharp
                 w.WriteLine("idx\tlib_rt\tmeasured_rt");
                 for (int i = 0; i < pairs.Count; i++)
                 {
-                    w.WriteLine(string.Format(inv, "{0}\t{1:R}\t{2:R}",
+                    w.WriteLine(string.Format(inv, "{0}\t{1:F17}\t{2:F17}",
                         i, pairs[i].Key, pairs[i].Value));
                 }
             }
