@@ -717,6 +717,37 @@ namespace pwiz.OspreySharp
             // calibration state can be diff'd against Rust's cal JSON.
             OspreyDiagnostics.WriteCalibrationSummary(rtCalibration, ms1Cal, ms2Cal);
 
+            // Save the full calibration state to {inputStem}.calibration.json
+            // in the same directory as the mzML input. Same schema as Rust
+            // so the file is round-trippable via OSPREY_LOAD_CALIBRATION in
+            // either tool. Enables HPC "compute cal once, reuse on another
+            // node" and the cross-runtime cal-swap bisection.
+            try
+            {
+                var calParams = new CalibrationParams
+                {
+                    Metadata = new CalibrationMetadata
+                    {
+                        CalibrationSuccessful = rtCalibration != null,
+                        NumConfidentPeptides = 0,
+                        NumSampledPrecursors = 0,
+                        Timestamp = DateTime.UtcNow.ToString("o")
+                    },
+                    Ms1Calibration = MzCalibrationJson.FromResult(ms1Cal),
+                    Ms2Calibration = MzCalibrationJson.FromResult(ms2Cal),
+                    RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration),
+                    SecondPassRt = null
+                };
+                string calDir = Path.GetDirectoryName(Path.GetFullPath(inputFile));
+                string calPath = CalibrationIO.CalibrationPathForInput(inputFile, calDir);
+                CalibrationIO.SaveCalibration(calParams, calPath);
+                LogInfo(string.Format("Saved calibration to {0}", calPath));
+            }
+            catch (Exception ex)
+            {
+                LogInfo("Warning: failed to save calibration JSON: " + ex.Message);
+            }
+
             // Optional early exit after Stage 3 (calibration only, no main search).
             // Used for Stage 1-3 perf benchmarking and walking up to the main
             // search incrementally without paying the Stage 4 cost.

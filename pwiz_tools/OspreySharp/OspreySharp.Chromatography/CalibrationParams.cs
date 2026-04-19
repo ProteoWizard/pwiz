@@ -211,6 +211,29 @@ namespace pwiz.OspreySharp.Chromatography
                 Calibrated = false
             };
         }
+
+        /// <summary>
+        /// Build a JSON DTO from an in-memory MzCalibrationResult.
+        /// Returns Uncalibrated() when <paramref name="r"/> is null or
+        /// not calibrated.
+        /// </summary>
+        public static MzCalibrationJson FromResult(MzCalibrationResult r)
+        {
+            if (r == null || !r.Calibrated)
+                return Uncalibrated();
+            return new MzCalibrationJson
+            {
+                Mean = r.Mean,
+                Median = r.Median,
+                SD = r.SD,
+                Count = r.Count,
+                Unit = r.Unit,
+                AdjustedTolerance = r.AdjustedTolerance,
+                WindowHalfwidthMultiplier = 3.0,
+                Histogram = null,
+                Calibrated = true
+            };
+        }
     }
 
     /// <summary>
@@ -285,6 +308,34 @@ namespace pwiz.OspreySharp.Chromatography
                 ModelParams = null,
                 P20AbsResidual = null,
                 MAD = null
+            };
+        }
+
+        /// <summary>
+        /// Build a JSON DTO from an in-memory RTCalibration.
+        /// Returns Uncalibrated() when <paramref name="rt"/> is null.
+        /// ModelParams is populated so SaveCalibration+LoadCalibration
+        /// round-trips the LOESS fit exactly.
+        /// </summary>
+        public static RTCalibrationJson FromRTCalibration(RTCalibration rt)
+        {
+            if (rt == null)
+                return Uncalibrated();
+            var stats = rt.Stats();
+            return new RTCalibrationJson
+            {
+                Method = RTCalibrationMethod.LOESS,
+                ResidualSD = stats.ResidualSD,
+                NPoints = stats.NPoints,
+                RSquared = stats.RSquared,
+                P20AbsResidual = stats.P20AbsResidual,
+                MAD = stats.MAD,
+                ModelParams = new RTModelParamsJson
+                {
+                    LibraryRts = rt.LibraryRts,
+                    FittedRts = rt.FittedValues,
+                    AbsResiduals = rt.AbsResiduals
+                }
             };
         }
     }
