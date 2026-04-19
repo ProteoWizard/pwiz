@@ -1,123 +1,29 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{EF7990A9-10A0-4E5A-BB4D-F0E6952F0684}</ProjectGuid>
-    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.OspreySharp.Test</RootNamespace>
     <AssemblyName>OspreySharp.Test</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>true</GenerateProgramFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="ParquetNet">
-      <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Memory">
-      <HintPath>..\..\Shared\Lib\System.Memory.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>..\..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reflection.Emit.Lightweight">
-      <HintPath>..\..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Parquet.Net" Version="3.10.0" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="CalibrationTest.cs" />
-    <Compile Include="ChromatographyTest.cs" />
-    <Compile Include="CoreTypesTest.cs" />
-    <Compile Include="FdrTest.cs" />
-    <Compile Include="MLTest.cs" />
-    <Compile Include="IOTest.cs" />
-    <Compile Include="ScoringTest.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
+    <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj" />
+    <ProjectReference Include="..\OspreySharp.IO\OspreySharp.IO.csproj" />
+    <ProjectReference Include="..\OspreySharp.Chromatography\OspreySharp.Chromatography.csproj" />
+    <ProjectReference Include="..\OspreySharp.Scoring\OspreySharp.Scoring.csproj" />
+    <ProjectReference Include="..\OspreySharp.FDR\OspreySharp.FDR.csproj" />
+    <ProjectReference Include="..\OspreySharp\OspreySharp.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj">
-      <Project>{8F831B88-8AAB-405E-8569-D94B7F292518}</Project>
-      <Name>OspreySharp.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj">
-      <Project>{3975DA42-50F2-4656-9834-E3DC1D8EB088}</Project>
-      <Name>OspreySharp.ML</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OspreySharp.IO\OspreySharp.IO.csproj">
-      <Project>{773CE35B-F4AB-4789-A5D8-A859FED044FF}</Project>
-      <Name>OspreySharp.IO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OspreySharp.Chromatography\OspreySharp.Chromatography.csproj">
-      <Project>{22011FA5-E9BA-4BB8-BDA5-F8A61E9BF38D}</Project>
-      <Name>OspreySharp.Chromatography</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OspreySharp.Scoring\OspreySharp.Scoring.csproj">
-      <Project>{1F513AE4-BC4F-4CA0-917B-B2D6C99DC78C}</Project>
-      <Name>OspreySharp.Scoring</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OspreySharp.FDR\OspreySharp.FDR.csproj">
-      <Project>{AEC0F4F4-5DBE-4E84-A213-902271285E67}</Project>
-      <Name>OspreySharp.FDR</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OspreySharp\OspreySharp.csproj">
-      <Project>{C000C097-3F5A-4E49-B700-5F12E36B4264}</Project>
-      <Name>OspreySharp</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>
