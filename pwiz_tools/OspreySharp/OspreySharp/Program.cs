@@ -53,35 +53,53 @@ namespace pwiz.OspreySharp
 
             try
             {
+                // Scan args for the HPC mode flags up front so the
+                // mutex error is reported even when --input-scores is missing.
+                bool joinOnlyFlag = false;
+                bool noJoinFlag = false;
+                foreach (string a in args)
+                {
+                    if (a == "--no-join") noJoinFlag = true;
+                    else if (a == "--join-only") joinOnlyFlag = true;
+                }
+                if (noJoinFlag && joinOnlyFlag)
+                {
+                    LogError("--no-join and --join-only are mutually exclusive.");
+                    return 1;
+                }
+
                 OspreyConfig config = ParseArgs(args);
+                string err = ValidateArgs(config, noJoinFlag, joinOnlyFlag);
+                if (err != null)
+                {
+                    LogError(err);
+                    return 1;
+                }
+                bool joinOnly = joinOnlyFlag
+                                || (config.InputScores != null && config.InputScores.Count > 0);
 
-                // Validate required parameters
-                if (config.InputFiles.Count == 0)
+                // Non-fatal warning: --no-join with --output supplied.
+                if (config.NoJoin && !string.IsNullOrEmpty(config.OutputBlib))
                 {
-                    LogError("No input files specified. Use -i <file1.mzML> [file2.mzML ...]");
-                    return 1;
-                }
-                if (config.LibrarySource == null)
-                {
-                    LogError("No spectral library specified. Use -l <library.tsv>");
-                    return 1;
-                }
-                if (string.IsNullOrEmpty(config.OutputBlib))
-                {
-                    LogError("No output path specified. Use -o <output.blib>");
-                    return 1;
+                    LogWarning("--no-join: --output is ignored (no blib is written). " +
+                               "Per-file `.scores.parquet` files will be written next to each input mzML.");
                 }
 
-                // Validate input files exist
-                foreach (string inputFile in config.InputFiles)
+                // Validate input files exist on disk (skip in --join-only mode
+                // where there are no mzML inputs; --input-scores paths were
+                // already validated by ResolveInputScores during parsing).
+                if (!joinOnly)
                 {
-                    if (!File.Exists(inputFile))
+                    foreach (string inputFile in config.InputFiles)
                     {
-                        LogError(string.Format("Input file not found: {0}", inputFile));
-                        return 1;
+                        if (!File.Exists(inputFile))
+                        {
+                            LogError(string.Format("Input file not found: {0}", inputFile));
+                            return 1;
+                        }
                     }
                 }
-                if (!File.Exists(config.LibrarySource.Path))
+                if (config.LibrarySource != null && !File.Exists(config.LibrarySource.Path))
                 {
                     LogError(string.Format("Library file not found: {0}", config.LibrarySource.Path));
                     return 1;
@@ -249,6 +267,31 @@ namespace pwiz.OspreySharp
                         i++;
                         break;
 
+                    case "--no-join":
+                        config.NoJoin = true;
+                        i++;
+                        break;
+
+                    case "--join-only":
+                        // Sentinel: --input-scores must follow (validated in Main).
+                        // No-op here; presence of InputScores is the actual switch.
+                        i++;
+                        break;
+
+                    case "--input-scores":
+                        i++;
+                        // Consume all following non-flag arguments as parquet
+                        // paths or a single directory. Mirrors the -i/--input
+                        // pattern.
+                        var scorePaths = new List<string>();
+                        while (i < args.Length && !args[i].StartsWith("-"))
+                        {
+                            scorePaths.Add(args[i]);
+                            i++;
+                        }
+                        config.InputScores = ResolveInputScores(scorePaths);
+                        break;
+
                     case "--fdr-method":
                         i++;
                         if (i < args.Length)
@@ -409,6 +452,82 @@ namespace pwiz.OspreySharp
             return config;
         }
 
+        /// <summary>
+        /// Validate the HPC mode flags (--no-join, --join-only, --input-scores)
+        /// against the parsed config. Returns null on success or an error
+        /// message string on failure. Does not log warnings (those stay in
+        /// <see cref="Main"/>). Internal so OspreySharp.Test can exercise it.
+        /// </summary>
+        internal static string ValidateArgs(OspreyConfig config, bool noJoinFlag, bool joinOnlyFlag)
+        {
+            if (noJoinFlag && joinOnlyFlag)
+                return "--no-join and --join-only are mutually exclusive.";
+
+            bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
+            if (joinOnlyFlag && !hasInputScores)
+                return "--join-only requires --input-scores <path...>.";
+
+            bool joinOnly = joinOnlyFlag || hasInputScores;
+
+            if (config.NoJoin)
+            {
+                if (joinOnly)
+                    return "--no-join cannot be combined with --input-scores.";
+                if (config.InputFiles.Count == 0)
+                    return "--no-join requires --input <mzML...>.";
+                if (config.LibrarySource == null)
+                    return "--no-join requires --library.";
+                return null;
+            }
+            if (joinOnly)
+            {
+                if (config.InputFiles.Count > 0)
+                    return "--join-only (--input-scores) cannot be combined with --input.";
+                if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
+                    return "--join-only requires --library and --output.";
+                return null;
+            }
+
+            // Default mode: original required-args checks.
+            if (config.InputFiles.Count == 0)
+                return "No input files specified. Use -i <file1.mzML> [file2.mzML ...]";
+            if (config.LibrarySource == null)
+                return "No spectral library specified. Use -l <library.tsv>";
+            if (string.IsNullOrEmpty(config.OutputBlib))
+                return "No output path specified. Use -o <output.blib>";
+            return null;
+        }
+
+        /// <summary>
+        /// Expand --input-scores arguments: a single directory becomes the
+        /// non-recursive list of *.scores.parquet files in it; explicit file
+        /// paths are passed through unchanged. Throws if the directory is
+        /// empty or any explicit path doesn't exist.
+        /// </summary>
+        internal static List<string> ResolveInputScores(List<string> paths)
+        {
+            if (paths == null || paths.Count == 0)
+                throw new ArgumentException("--input-scores requires at least one path.");
+
+            if (paths.Count == 1 && Directory.Exists(paths[0]))
+            {
+                string dir = paths[0];
+                string[] found = Directory.GetFiles(dir, "*.scores.parquet", SearchOption.TopDirectoryOnly);
+                if (found.Length == 0)
+                    throw new ArgumentException(string.Format(
+                        "No *.scores.parquet files found in --input-scores directory: {0}", dir));
+                Array.Sort(found, StringComparer.Ordinal);
+                return new List<string>(found);
+            }
+
+            foreach (string p in paths)
+            {
+                if (!File.Exists(p))
+                    throw new ArgumentException(string.Format("--input-scores path not found: {0}", p));
+            }
+            return paths;
+        }
+
         private static double ParseDouble(string value, string flagName)
         {
             double result;
@@ -445,6 +564,12 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --report <file>               Write TSV report to file");
             Console.Error.WriteLine("    --no-prefilter                Disable coelution signal pre-filter");
             Console.Error.WriteLine("    --write-pin                   Write PIN files for external tools");
+            Console.Error.WriteLine("    --no-join                     HPC: run Stages 1-4 only, write per-file");
+            Console.Error.WriteLine("                                    .scores.parquet, no FDR or blib");
+            Console.Error.WriteLine("    --join-only                   HPC: skip Stages 1-4, run Stage 5+ from");
+            Console.Error.WriteLine("                                    --input-scores parquets");
+            Console.Error.WriteLine("    --input-scores <paths>        HPC: one or more .scores.parquet files,");
+            Console.Error.WriteLine("                                    or a single directory (non-recursive scan)");
             Console.Error.WriteLine("    -h, --help                    Show this help message");
             Console.Error.WriteLine("    -v, --version                 Show version");
             Console.Error.WriteLine("");
@@ -452,6 +577,14 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    osprey -i sample.mzML -l library.tsv -o results.blib");
             Console.Error.WriteLine("    osprey -i *.mzML -l library.tsv -o results.blib --resolution hram");
             Console.Error.WriteLine("    osprey -i data1.mzML data2.mzML -l lib.tsv -o out.blib --protein-fdr 0.01");
+            Console.Error.WriteLine("");
+            Console.Error.WriteLine("HPC SPLIT (per-node scoring + central merge):");
+            Console.Error.WriteLine("    # Worker node (one per mzML, in parallel on a cluster):");
+            Console.Error.WriteLine("    osprey --no-join -i data/file_N.mzML -l ref.blib --resolution hram");
+            Console.Error.WriteLine("");
+            Console.Error.WriteLine("    # Merge node (after all workers succeed):");
+            Console.Error.WriteLine("    osprey --join-only --input-scores data/*.scores.parquet \\");
+            Console.Error.WriteLine("           -l ref.blib -o experiment.blib --protein-fdr 0.01");
         }
 
         internal static void LogInfo(string message)

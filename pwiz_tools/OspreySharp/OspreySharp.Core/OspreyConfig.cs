@@ -95,6 +95,22 @@ namespace pwiz.OspreySharp.Core
         public int NThreads { get; set; } = Environment.ProcessorCount;
 
         /// <summary>
+        /// HPC scoring split: when true, run Stages 1-4 only and exit. Each
+        /// input mzML produces a {stem}.scores.parquet next to it; no FDR
+        /// is run and no blib is written. Set by the --no-join CLI flag.
+        /// Mutually exclusive with <see cref="InputScores"/>.
+        /// </summary>
+        public bool NoJoin { get; set; }
+
+        /// <summary>
+        /// HPC scoring split: when set (non-null, non-empty), skip Stages 1-4
+        /// entirely and load these per-file scoring caches as the starting
+        /// point for Stage 5+. Set by --join-only + --input-scores. When set,
+        /// <see cref="InputFiles"/> is ignored.
+        /// </summary>
+        public List<string> InputScores { get; set; }
+
+        /// <summary>
         /// How many files will actually run concurrently in the current
         /// invocation. Set by the pipeline before per-file ProcessFile()
         /// calls; used to divide the inner main-search thread budget so
