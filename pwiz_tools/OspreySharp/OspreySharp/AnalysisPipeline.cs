@@ -2205,6 +2205,13 @@ namespace pwiz.OspreySharp
             // clamped to [min, max]. C# was using per-entry LocalTolerance
             // (interpolated residuals), which produces different scan ranges.
             double rtToleranceGlobal;
+            // Sigma for the Gaussian RT penalty applied during CWT peak
+            // ranking inside ScoreCandidate. Rust pipeline.rs:6271-6274 uses
+            // the UNCLAMPED 3*MAD*1.4826 with a 0.1 min floor; the scan-
+            // window tolerance below is clamped to [MinRt, MaxRt] and may
+            // differ. Using two separate values keeps peak ranking
+            // bit-identical to Rust regardless of config clamping.
+            double rtSigmaGlobal;
             if (rtCalibration != null)
             {
                 var stats = rtCalibration.Stats();
@@ -2212,6 +2219,7 @@ namespace pwiz.OspreySharp
                 rtToleranceGlobal = Math.Max(
                     config.RtCalibration.MinRtTolerance,
                     Math.Min(config.RtCalibration.MaxRtTolerance, madTolerance));
+                rtSigmaGlobal = Math.Max(madTolerance, 0.1);
                 LogInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3})",
                     rtToleranceGlobal, stats.MAD));
@@ -2219,6 +2227,7 @@ namespace pwiz.OspreySharp
             else
             {
                 rtToleranceGlobal = config.RtCalibration.FallbackRtTolerance;
+                rtSigmaGlobal = rtToleranceGlobal;
             }
 
             // Apply MS2 calibration: calibrated fragment tolerance + m/z offset.
@@ -2326,7 +2335,8 @@ namespace pwiz.OspreySharp
                 var swWindow = Stopwatch.StartNew();
                 var windowEntries = ScoreWindow(
                     window, fullLibrary, spectraByWindowKey, ms1Spectra,
-                    rtCalibration, ms1Calibration, rtToleranceGlobal, scorer, context);
+                    rtCalibration, ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
+                    scorer, context);
                 swWindow.Stop();
 
                 windowTimings.Add(new WindowTiming
@@ -2410,6 +2420,7 @@ namespace pwiz.OspreySharp
             RTCalibration rtCalibration,
             MzCalibrationResult ms1Calibration,
             double globalRtTolerance,
+            double rtSigma,
             SpectralScorer scorer,
             ScoringContext context)
         {
@@ -2466,7 +2477,7 @@ namespace pwiz.OspreySharp
                         candidate, windowSpectra, windowRts,
                         preprocessedXcorr,
                         ms1Spectra, rtCalibration, ms1Calibration,
-                        globalRtTolerance,
+                        globalRtTolerance, rtSigma,
                         scorer, context);
 
                     if (fdrEntry != null)
@@ -2499,6 +2510,7 @@ namespace pwiz.OspreySharp
             RTCalibration rtCalibration,
             MzCalibrationResult ms1Calibration,
             double globalRtTolerance,
+            double rtSigma,
             SpectralScorer scorer,
             ScoringContext context)
         {
@@ -2687,14 +2699,18 @@ namespace pwiz.OspreySharp
             if (peaks.Count == 0)
                 return null;
 
-            // Rust scores each candidate peak by mean pairwise fragment correlation
-            // over the peak range, then picks the highest-scoring one. We were
-            // picking peaks[0] directly (the CWT consensus top peak), which isn't
-            // always the one with best pairwise correlation. Re-rank by correlation
-            // to match Rust.
+            // Rust scores each candidate peak by mean pairwise fragment
+            // correlation weighted by a Gaussian RT penalty, then picks the
+            // highest-ranked peak. The RT penalty prevents strong interferers
+            // at the wrong RT from beating the correct peak on coelution
+            // alone. Matches Rust pipeline.rs:6267-6321.
+            //   rank_score = coelution_score * exp(-dt^2 / (2 * rtSigma^2))
+            // where dt = |peak_apex_rt - expected_rt|. A peak at the expected
+            // position gets penalty=1.0; a peak 3-sigma away gets ~0.01.
             XICPeakBounds bestPeak = null;
-            double bestPeakScore = double.MinValue;
+            double bestRankScore = double.MinValue;
             int bestPeakIdx = -1;
+            double twoSigmaSq = 2.0 * rtSigma * rtSigma;
             for (int pi = 0; pi < peaks.Count; pi++)
             {
                 var p = peaks[pi];
@@ -2718,16 +2734,22 @@ namespace pwiz.OspreySharp
                         }
                     }
                 }
-                double score = count > 0 ? sum / count : 0.0;
+                double coelutionScore = count > 0 ? sum / count : 0.0;
+
+                double peakApexRt = windowRts[startScan + p.ApexIndex];
+                double rtResidual = Math.Abs(peakApexRt - expectedRt);
+                double rtPenalty = Math.Exp(-(rtResidual * rtResidual) / twoSigmaSq);
+                double rankScore = coelutionScore * rtPenalty;
+
                 if (diag)
                 {
                     LogInfo(string.Format(
-                        "[DIAG] {0}: peak[{1}] pairwise_corr_mean={2:F4}",
-                        candidate.ModifiedSequence, pi, score));
+                        "[DIAG] {0}: peak[{1}] pairwise_corr_mean={2:F4} rt_penalty={3:F4} rank={4:F4}",
+                        candidate.ModifiedSequence, pi, coelutionScore, rtPenalty, rankScore));
                 }
-                if (score > bestPeakScore)
+                if (rankScore > bestRankScore)
                 {
-                    bestPeakScore = score;
+                    bestRankScore = rankScore;
                     bestPeak = p;
                     bestPeakIdx = pi;
                 }
@@ -3225,12 +3247,15 @@ namespace pwiz.OspreySharp
             double[] refRts = xics[refIdx].RetentionTimes;
 
             // Apex: max intensity in the reference XIC over the peak range.
-            // Matches Rust: ref_xic[si..=ei].max_by(intensity).
+            // Matches Rust: ref_xic[si..=ei].max_by(intensity). On ties
+            // Rust's Iterator::max_by keeps the LAST equal element (see
+            // std::cmp::max_by returning v2 on Ordering::Equal); use `>=`
+            // here to match so flat-top peaks pick the same apex scan.
             double apexVal = 0.0;
             int apexIdx = start;
             for (int i = start; i <= end; i++)
             {
-                if (refInten[i] > apexVal)
+                if (refInten[i] >= apexVal)
                 {
                     apexVal = refInten[i];
                     apexIdx = i;
