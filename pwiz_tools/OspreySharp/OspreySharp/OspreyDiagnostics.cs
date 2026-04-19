@@ -429,6 +429,55 @@ namespace pwiz.OspreySharp
                 passNumber, pairs.Count));
         }
 
+        // ----- Calibration summary dump -----
+
+        /// <summary>
+        /// Dump 11 key calibration scalars to cs_cal_summary.txt so the
+        /// post-LOESS calibration state can be compared to Rust's cal
+        /// JSON. Emits MS1/MS2 mean/sd/count/tolerance + RT n_points /
+        /// r_squared / residual_sd at F17 precision. Does not gate on
+        /// an env var -- always runs when calibration completes, at
+        /// essentially zero cost.
+        /// </summary>
+        public static void WriteCalibrationSummary(
+            RTCalibration rtCal,
+            MzCalibrationResult ms1Cal,
+            MzCalibrationResult ms2Cal)
+        {
+            var inv = CultureInfo.InvariantCulture;
+            using (var w = new StreamWriter(@"cs_cal_summary.txt"))
+            {
+                Action<string, double> writeD = (key, val) =>
+                    w.WriteLine(key + "\t" + val.ToString(@"F17", inv));
+                Action<string, int> writeI = (key, val) =>
+                    w.WriteLine(key + "\t" + val.ToString(inv));
+
+                if (ms1Cal != null)
+                {
+                    writeD("ms1.mean",      ms1Cal.Mean);
+                    writeD("ms1.sd",        ms1Cal.SD);
+                    writeI("ms1.count",     ms1Cal.Count);
+                    writeD("ms1.tolerance", ms1Cal.AdjustedTolerance ?? 0.0);
+                }
+                if (ms2Cal != null)
+                {
+                    writeD("ms2.mean",      ms2Cal.Mean);
+                    writeD("ms2.sd",        ms2Cal.SD);
+                    writeI("ms2.count",     ms2Cal.Count);
+                    writeD("ms2.tolerance", ms2Cal.AdjustedTolerance ?? 0.0);
+                }
+                if (rtCal != null)
+                {
+                    var stats = rtCal.Stats();
+                    writeI("rt.n_points",    stats.NPoints);
+                    writeD("rt.r_squared",   stats.RSquared);
+                    writeD("rt.residual_sd", stats.ResidualSD);
+                }
+            }
+            LogAction(string.Format(inv,
+                @"[COUNT] Wrote calibration summary: cs_cal_summary.txt (11 scalars)"));
+        }
+
         // ----- Per-entry calibration XIC dump -----
 
         /// <summary>
