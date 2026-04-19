@@ -204,6 +204,86 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
+        /// Write FdrEntry results to a Parquet file. Same schema as the
+        /// CoelutionScoredEntry overload — used by --no-join HPC mode where
+        /// the pipeline keeps full features on the FdrEntry directly
+        /// (FdrEntry.Features is the already-extracted 21-feature vector).
+        /// </summary>
+        public static void WriteScoresParquet(string path, List<FdrEntry> entries,
+            Dictionary<string, string> metadata)
+        {
+            if (entries == null || entries.Count == 0)
+                return;
+
+            int n = entries.Count;
+            var schema = BuildWriteSchema();
+            var featureFields = BuildFeatureFields();
+
+            var entryIds = new int[n];
+            var isDecoys = new bool[n];
+            var charges = new int[n];
+            var scanNumbers = new int[n];
+            var modifiedSequences = new string[n];
+            var apexRts = new double[n];
+            var startRts = new double[n];
+            var endRts = new double[n];
+            var featureArrays = new double[NUM_PIN_FEATURES][];
+            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                featureArrays[f] = new double[n];
+
+            for (int i = 0; i < n; i++)
+            {
+                var entry = entries[i];
+                entryIds[i] = (int)entry.EntryId;
+                isDecoys[i] = entry.IsDecoy;
+                charges[i] = entry.Charge;
+                scanNumbers[i] = (int)entry.ScanNumber;
+                modifiedSequences[i] = entry.ModifiedSequence ?? string.Empty;
+                apexRts[i] = entry.ApexRt;
+                startRts[i] = entry.StartRt;
+                endRts[i] = entry.EndRt;
+
+                var featureVec = entry.Features;
+                if (featureVec != null && featureVec.Length == NUM_PIN_FEATURES)
+                {
+                    for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                        featureArrays[f][i] = Finite(featureVec[f]);
+                }
+                // else: leave zeros (entries without features can't drive Stage 5+).
+            }
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                string.Format("osprey_{0}_{1}", System.Diagnostics.Process.GetCurrentProcess().Id,
+                    Path.GetFileName(path)));
+
+            using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
+            using (var writer = new ParquetWriter(schema, stream))
+            {
+                writer.CompressionMethod = CompressionMethod.Snappy;
+                SetWriterMetadata(writer, metadata);
+
+                using (var group = writer.CreateRowGroup())
+                {
+                    group.WriteColumn(new DataColumn(FIELD_ENTRY_ID, entryIds));
+                    group.WriteColumn(new DataColumn(FIELD_IS_DECOY, isDecoys));
+                    group.WriteColumn(new DataColumn(FIELD_CHARGE, charges));
+                    group.WriteColumn(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers));
+                    group.WriteColumn(new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences));
+                    group.WriteColumn(new DataColumn(FIELD_APEX_RT, apexRts));
+                    group.WriteColumn(new DataColumn(FIELD_START_RT, startRts));
+                    group.WriteColumn(new DataColumn(FIELD_END_RT, endRts));
+
+                    for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                        group.WriteColumn(new DataColumn(featureFields[f], featureArrays[f]));
+                }
+            }
+
+            if (File.Exists(path))
+                File.Delete(path);
+            File.Move(tempPath, path);
+        }
+
+        /// <summary>
         /// Extract PIN feature values from a CoelutionFeatureSet into the column arrays.
         /// Matches the Rust pin_feature_value() ordering.
         /// </summary>

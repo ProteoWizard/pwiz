@@ -172,6 +172,9 @@ namespace pwiz.OspreySharp
                 // Process files in parallel when multiple files are provided.
                 var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
 
+                bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
+                int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
+
                 // File-level parallelism is configurable via
                 // OSPREY_MAX_PARALLEL_FILES:
                 //   1      = strictly sequential (one file at a time)
@@ -189,15 +192,52 @@ namespace pwiz.OspreySharp
                 // ProcessFile can divide the inner main-search thread budget
                 // and avoid oversubscription (see notes there). Stored on
                 // the config so the per-file clones inherit it.
-                if (config.InputFiles.Count == 1 || maxParallelFiles == 1)
+                if (nFiles == 1 || maxParallelFiles == 1)
                     config.EffectiveFileParallelism = 1;
                 else if (maxParallelFiles > 1)
-                    config.EffectiveFileParallelism = Math.Min(maxParallelFiles, config.InputFiles.Count);
+                    config.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
                 else
-                    config.EffectiveFileParallelism = Math.Min(config.InputFiles.Count, Environment.ProcessorCount);
+                    config.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
 
                 var swAllFiles = Stopwatch.StartNew();
-                if (config.InputFiles.Count == 1)
+                if (joinOnly)
+                {
+                    // --join-only: load per-file FdrEntry stubs directly from
+                    // each .scores.parquet listed via --input-scores. Skips
+                    // Stages 1-4. Side data (calibration, sidecars) is not
+                    // loaded on the C# side yet -- the simple Stage 5 path
+                    // doesn't need it. When reconciliation lands, this branch
+                    // will need to load the calibration JSON sibling files
+                    // (best-effort, like the Rust impl).
+                    LogInfo(string.Format(
+                        "--join-only: loading {0} per-file score parquet(s)",
+                        config.InputScores.Count));
+                    for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
+                    {
+                        string parquetPath = config.InputScores[fileIdx];
+                        string fileName = Path.GetFileNameWithoutExtension(parquetPath);
+                        if (fileName.EndsWith(".scores", StringComparison.Ordinal))
+                            fileName = fileName.Substring(0, fileName.Length - ".scores".Length);
+                        LogInfo(string.Format("===== Loading file {0}/{1}: {2} (from {3}) =====",
+                            fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
+                        var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                        // Stage 5+ (Percolator SVM) requires the 21 PIN features
+                        // on each FdrEntry. Load them in lockstep with the stubs
+                        // and bind by row index (parquet rows are stable).
+                        var features = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
+                        if (features.Count != stubs.Count)
+                        {
+                            throw new InvalidDataException(string.Format(
+                                "--join-only: parquet {0} has {1} stubs but {2} feature rows",
+                                parquetPath, stubs.Count, features.Count));
+                        }
+                        for (int j = 0; j < stubs.Count; j++)
+                            stubs[j].Features = features[j];
+                        LogInfo(string.Format("  Loaded {0} FDR stubs + features", stubs.Count));
+                        perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                    }
+                }
+                else if (config.InputFiles.Count == 1)
                 {
                     // Single file: process directly (no parallel overhead)
                     string inputFile = config.InputFiles[0];
@@ -270,7 +310,7 @@ namespace pwiz.OspreySharp
                 LogInfo("");
                 LogInfo(string.Format(
                     "Coelution analysis complete. {0} total scored entries across {1} files",
-                    totalScored, config.InputFiles.Count));
+                    totalScored, nFiles));
 
                 if (perFileEntries.Count == 0 || totalScored == 0)
                 {
@@ -278,8 +318,20 @@ namespace pwiz.OspreySharp
                     return 0;
                 }
 
-                // Optional early exit after Stage 4 (scoring only, no FDR).
-                // Used for benchmarking Stages 1-4 without Stage 5+ overhead.
+                // --no-join: stop here. Per-file `.scores.parquet` files are
+                // now on disk; a separate `--join-only` invocation (typically
+                // on a merge node) will pick them up and run Stage 5+. The
+                // OSPREY_EXIT_AFTER_SCORING env var is retained alongside for
+                // legacy bench scripts and will be removed in Phase 5.
+                if (config.NoJoin)
+                {
+                    LogInfo(string.Format(
+                        "--no-join: Stage 1-4 complete. {0} entries scored across {1} file(s). " +
+                        "Per-file `.scores.parquet` written next to each input mzML. " +
+                        "Skipping FDR and blib output.",
+                        totalScored, nFiles));
+                    return 0;
+                }
                 if (OspreyEnvironment.ExitAfterScoring)
                 {
                     LogInfo(string.Format("[BENCH] OSPREY_EXIT_AFTER_SCORING set - exiting after Stage 4 ({0} entries)", totalScored));
@@ -796,6 +848,28 @@ namespace pwiz.OspreySharp
             if (config.WritePin)
             {
                 WriteFeatureDump(inputFile, fileName, scoredEntries);
+            }
+
+            // --no-join: persist the full FdrEntry results (with features) to
+            // {stem}.scores.parquet so a subsequent --join-only invocation can
+            // pick them up without re-running Stages 1-4. Same path convention
+            // as Rust (`scores_path_for_input`). Snappy-compressed; cross-impl
+            // ZSTD/Snappy compatibility tracked as a Phase 4 follow-up.
+            if (config.NoJoin)
+            {
+                string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
+                var meta = new Dictionary<string, string>
+                {
+                    { "osprey.version", Program.VERSION },
+                    { "osprey.search_hash", config.SearchParameterHash() },
+                    { "osprey.reconciled", "false" },
+                };
+                var swParquet = Stopwatch.StartNew();
+                ParquetScoreCache.WriteScoresParquet(parquetPath, scoredEntries, meta);
+                swParquet.Stop();
+                LogInfo(string.Format(
+                    "[--no-join] Wrote {0} scored entries to {1} ({2:F1}s)",
+                    scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
             }
 
             return scoredEntries;

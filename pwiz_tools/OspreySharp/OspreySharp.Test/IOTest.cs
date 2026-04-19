@@ -1298,7 +1298,7 @@ namespace pwiz.OspreySharp.Test
                 ParquetScoreCache.WriteScoresParquet(path, new List<CoelutionScoredEntry>(), null);
                 Assert.IsFalse(File.Exists(path), "Empty entry list should not create a file");
 
-                ParquetScoreCache.WriteScoresParquet(path, null, null);
+                ParquetScoreCache.WriteScoresParquet(path, (List<CoelutionScoredEntry>)null, null);
                 Assert.IsFalse(File.Exists(path), "Null entry list should not create a file");
             }
             finally
