@@ -111,29 +111,25 @@ namespace pwiz.OspreySharp.Scoring
         /// <summary>
         /// Pool-aware preprocessing that writes the final sliding-window
         /// result into the caller-supplied <paramref name="output"/> buffer.
-        /// All intermediate steps use the scratch's f64 buffers; only the
-        /// final store narrows to f32. HRAM main search uses this variant
-        /// so its per-window cache can be f32 (halves 800 KB -> 400 KB
-        /// per spectrum) without affecting the f64 preprocessing precision
-        /// that calibration and unit-resolution paths rely on.
+        /// All intermediate steps run in pure f32 to match Rust upstream
+        /// maccoss/osprey's native f32 XCorr path, avoiding the ~4e-6 drift
+        /// that f64-compute-then-narrow produces on HRAM data. HRAM main
+        /// search uses this variant so its per-window cache is f32
+        /// (halving the 800 KB -> 400 KB per-spectrum cost vs f64).
+        /// <para/>
+        /// The <paramref name="scratch"/> parameter is currently unused;
+        /// a future change can replace it with a pooled f32 scratch set
+        /// if LOH pressure on the per-spectrum float[] allocations becomes
+        /// a hotspot.
         /// </summary>
         public void PreprocessSpectrumForXcorrInto(
             Spectrum spectrum, XcorrScratch scratch, float[] output)
         {
-            if (scratch == null || output == null)
+            if (output == null)
                 throw new ArgumentNullException();
             int n = _binConfig.NBins;
             if (output.Length < n)
                 throw new ArgumentException("output length < NBins");
-
-            double[] binned = scratch.Binned;
-            double[] windowed = scratch.Windowed;
-            double[] prefix = scratch.Prefix;
-            double[] preprocessed = scratch.Preprocessed;
-
-            // Caller reuses scratch across spectra in the same window; zero
-            // the accumulator before binning the next spectrum.
-            Array.Clear(binned, 0, n);
 
             if (spectrum == null || spectrum.Mzs == null || spectrum.Mzs.Length == 0)
             {
@@ -141,21 +137,8 @@ namespace pwiz.OspreySharp.Scoring
                 return;
             }
 
-            for (int i = 0; i < spectrum.Mzs.Length; i++)
-            {
-                int bin = _binConfig.MzToBin(spectrum.Mzs[i]);
-                if (bin >= 0 && bin < n)
-                    binned[bin] += Math.Sqrt(spectrum.Intensities[i]);
-            }
-
-            ApplyWindowingNormalizationD(binned, windowed);
-            ApplySlidingWindowD(windowed, prefix, preprocessed);
-
-            // Narrow the final preprocessed buffer to f32 only at the cache
-            // store step. Matches Rust upstream maccoss/osprey which stores
-            // Vec<f32> in the per-window preprocessed_xcorr cache.
-            for (int i = 0; i < n; i++)
-                output[i] = (float)preprocessed[i];
+            float[] pre = PreprocessSpectrumForXcorrF32(spectrum);
+            Array.Copy(pre, output, n);
         }
 
         /// <summary>
@@ -490,6 +473,91 @@ namespace pwiz.OspreySharp.Scoring
                 int right = Math.Min(n, i + offset + 1);
                 double windowSum = prefix[right] - prefix[left];
                 double sumExcludingCenter = windowSum - spectrum[i];
+                result[i] = spectrum[i] - sumExcludingCenter * normFactor;
+            }
+        }
+
+        /// <summary>
+        /// Pure-f32 preprocess: bin + windowing normalization + sliding
+        /// window subtraction, all in f32. Mirrors Rust upstream
+        /// <c>preprocess_spectrum_for_xcorr</c> in
+        /// osprey-scoring/src/lib.rs. Used by the calibration XCorr path
+        /// to stay bit-equivalent with Rust's native f32 arithmetic (vs
+        /// the ~4e-6 drift that f64-compute-then-narrow produces).
+        /// </summary>
+        public float[] PreprocessSpectrumForXcorrF32(Spectrum spectrum)
+        {
+            int n = _binConfig.NBins;
+            float[] binned = new float[n];
+            float[] windowed = new float[n];
+            float[] prefix = new float[n + 1];
+            float[] preprocessed = new float[n];
+
+            for (int i = 0; i < spectrum.Mzs.Length; i++)
+            {
+                int bin = _binConfig.MzToBin(spectrum.Mzs[i]);
+                if (bin >= 0 && bin < n)
+                    binned[bin] += (float)Math.Sqrt(spectrum.Intensities[i]);
+            }
+            ApplyWindowingNormalizationF(binned, windowed);
+            ApplySlidingWindowF(windowed, prefix, preprocessed);
+            return preprocessed;
+        }
+
+        private static void ApplyWindowingNormalizationF(float[] spectrum, float[] result)
+        {
+            int n = spectrum.Length;
+            const int numWindows = 10;
+            int windowSize = (n / numWindows) + 1;
+
+            float globalMax = 0.0f;
+            for (int i = 0; i < n; i++)
+                if (spectrum[i] > globalMax)
+                    globalMax = spectrum[i];
+            float threshold = globalMax * 0.05f;
+
+            Array.Clear(result, 0, n);
+
+            for (int w = 0; w < numWindows; w++)
+            {
+                int start = w * windowSize;
+                int end = Math.Min((w + 1) * windowSize, n);
+                if (start >= end)
+                    break;
+
+                float windowMax = 0.0f;
+                for (int i = start; i < end; i++)
+                    if (spectrum[i] > windowMax)
+                        windowMax = spectrum[i];
+
+                if (windowMax > 0.0f)
+                {
+                    float normFactor = 50.0f / windowMax;
+                    for (int i = start; i < end; i++)
+                    {
+                        if (spectrum[i] > threshold)
+                            result[i] = spectrum[i] * normFactor;
+                    }
+                }
+            }
+        }
+
+        private static void ApplySlidingWindowF(float[] spectrum, float[] prefix, float[] result)
+        {
+            int n = spectrum.Length;
+            const int offset = XCORR_WINDOW_OFFSET;
+            float normFactor = 1.0f / (2 * offset);
+
+            prefix[0] = 0.0f;
+            for (int i = 0; i < n; i++)
+                prefix[i + 1] = prefix[i] + spectrum[i];
+
+            for (int i = 0; i < n; i++)
+            {
+                int left = Math.Max(0, i - offset);
+                int right = Math.Min(n, i + offset + 1);
+                float windowSum = prefix[right] - prefix[left];
+                float sumExcludingCenter = windowSum - spectrum[i];
                 result[i] = spectrum[i] - sumExcludingCenter * normFactor;
             }
         }

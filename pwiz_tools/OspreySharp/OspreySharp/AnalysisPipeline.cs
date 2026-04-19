@@ -1209,12 +1209,24 @@ namespace pwiz.OspreySharp
             // consume ~160 GB of LOH for 204K Astral spectra, so we use the
             // small unit-bin form for calibration regardless. Main search
             // still uses the resolution-mode bins.
+            // Calibration preprocess runs in pure f32 to match Rust upstream
+            // maccoss/osprey's native f32 XCorr path (cross-impl parity at
+            // F10 rounding noise, vs ~4e-6 drift under f64). f32 values are
+            // widened to double[] here so the downstream XcorrFromPreprocessed
+            // path is unchanged; the widening is lossless (f32 is a subset of
+            // f64) and preserves the f32 bit pattern for the final sum.
             var preprocessedByWindowKey = new Dictionary<int, double[][]>();
             foreach (var kvp in spectraByWindowKey)
             {
                 var pp = new double[kvp.Value.Count][];
                 for (int i = 0; i < kvp.Value.Count; i++)
-                    pp[i] = s_calXcorrScorer.PreprocessSpectrumForXcorr(kvp.Value[i]);
+                {
+                    float[] f32pp = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
+                    var widened = new double[f32pp.Length];
+                    for (int k = 0; k < f32pp.Length; k++)
+                        widened[k] = f32pp[k];
+                    pp[i] = widened;
+                }
                 preprocessedByWindowKey[kvp.Key] = pp;
             }
 

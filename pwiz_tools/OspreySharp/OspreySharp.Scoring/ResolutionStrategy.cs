@@ -116,10 +116,20 @@ namespace pwiz.OspreySharp.Scoring
         public WindowXcorrCache PreprocessWindowSpectra(IList<Spectrum> spectra,
             SpectralScorer scorer, XcorrScratchPool scratchPool)
         {
+            // Pure-f32 preprocess to match Rust upstream maccoss/osprey.
+            // Values are widened to double[] losslessly for the downstream
+            // XcorrFromPreprocessed(double[], ...) consumer.
+            int n = scorer.BinConfig.NBins;
             var pp = new double[spectra.Count][];
             for (int i = 0; i < spectra.Count; i++)
-                pp[i] = scorer.PreprocessSpectrumForXcorr(spectra[i]);
-            return new WindowXcorrCache(pp, scorer.BinConfig.NBins);
+            {
+                float[] f32pp = scorer.PreprocessSpectrumForXcorrF32(spectra[i]);
+                var widened = new double[n];
+                for (int k = 0; k < n; k++)
+                    widened[k] = f32pp[k];
+                pp[i] = widened;
+            }
+            return new WindowXcorrCache(pp, n);
         }
 
         public void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool)
