@@ -176,6 +176,8 @@ namespace pwiz.OspreySharp.IO
         public static void WriteScoresParquet(string path, List<CoelutionScoredEntry> entries,
             Dictionary<string, string> metadata)
         {
+            if (path == null)
+                throw new System.ArgumentNullException(nameof(path));
             if (entries == null || entries.Count == 0)
                 return;
 
@@ -291,6 +293,8 @@ namespace pwiz.OspreySharp.IO
             Dictionary<uint, LibraryEntry> libraryById,
             string fileName)
         {
+            if (path == null)
+                throw new System.ArgumentNullException(nameof(path));
             if (entries == null || entries.Count == 0)
                 return;
 

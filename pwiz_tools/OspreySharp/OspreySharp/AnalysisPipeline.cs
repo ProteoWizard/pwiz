@@ -646,6 +646,9 @@ namespace pwiz.OspreySharp
             List<LibraryEntry> fullLibrary, OspreyConfig config,
             Dictionary<string, string> noJoinMetadata)
         {
+            if (inputFile == null)
+                throw new ArgumentNullException(nameof(inputFile));
+
             // Per-file shallow clone so MS2 calibration's mutation of
             // FragmentTolerance (and any future per-file overrides) does
             // not leak between parallel ProcessFile() calls. Without this
@@ -811,7 +814,9 @@ namespace pwiz.OspreySharp
                     RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration),
                     SecondPassRt = null
                 };
-                string calDir = Path.GetDirectoryName(Path.GetFullPath(inputFile));
+                // Path.GetDirectoryName can return null for a root path; default
+                // to the current dir so the calibration JSON still has a home.
+                string calDir = Path.GetDirectoryName(Path.GetFullPath(inputFile)) ?? ".";
                 string calPath = CalibrationIO.CalibrationPathForInput(inputFile, calDir);
                 CalibrationIO.SaveCalibration(calParams, calPath);
                 LogInfo(string.Format("Saved calibration to {0}", calPath));

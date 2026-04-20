@@ -62,8 +62,10 @@ namespace pwiz.OspreySharp
                 bool noJoinFlag = false;
                 foreach (string a in args)
                 {
-                    if (a == "--no-join") noJoinFlag = true;
-                    else if (a == "--join-only") joinOnlyFlag = true;
+                    if (a == "--no-join")
+                        noJoinFlag = true;
+                    else if (a == "--join-only")
+                        joinOnlyFlag = true;
                 }
                 if (noJoinFlag && joinOnlyFlag)
                 {
@@ -112,7 +114,9 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("OspreySharp v{0}", VERSION));
                 LogInfo(string.Format("Command: {0}", string.Join(" ", args)));
                 LogInfo(string.Format("Input files: {0}", config.InputFiles.Count));
-                LogInfo(string.Format("Library: {0} ({1})", config.LibrarySource.Path, config.LibrarySource.Format));
+                LogInfo(string.Format("Library: {0} ({1})",
+                    config.LibrarySource?.Path ?? "(none)",
+                    config.LibrarySource?.Format.ToString() ?? "?"));
                 LogInfo(string.Format("Output: {0}", config.OutputBlib));
                 LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));
                 LogInfo(string.Format("Fragment tolerance: {0} {1}",

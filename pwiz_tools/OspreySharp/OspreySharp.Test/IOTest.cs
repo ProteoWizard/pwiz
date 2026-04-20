@@ -85,7 +85,7 @@ namespace pwiz.OspreySharp.Test
                     // Verify numSpecs updated
                     using (var cmd = new SQLiteCommand("SELECT numSpecs FROM LibInfo", conn))
                     {
-                        long numSpecs = (long)cmd.ExecuteScalar();
+                        long numSpecs = (long)(cmd.ExecuteScalar() ?? 0);
                         Assert.AreEqual(1L, numSpecs);
                     }
                 }
@@ -173,7 +173,7 @@ namespace pwiz.OspreySharp.Test
                         "SELECT peptideModSeq FROM RefSpectra WHERE id = @id", conn))
                     {
                         cmd.Parameters.AddWithValue("@id", refId);
-                        string storedModSeq = (string)cmd.ExecuteScalar();
+                        string storedModSeq = (string)cmd.ExecuteScalar() ?? string.Empty;
                         Assert.IsTrue(storedModSeq.Contains("[+57."),
                             "Expected mass notation, got: " + storedModSeq);
                         Assert.IsFalse(storedModSeq.Contains("UniMod"),
@@ -1298,7 +1298,10 @@ namespace pwiz.OspreySharp.Test
                 ParquetScoreCache.WriteScoresParquet(path, new List<CoelutionScoredEntry>(), null);
                 Assert.IsFalse(File.Exists(path), "Empty entry list should not create a file");
 
-                ParquetScoreCache.WriteScoresParquet(path, (List<CoelutionScoredEntry>)null, null);
+                // The 3-arg overload (CoelutionScoredEntry) takes List<>, the
+                // FdrEntry overload takes 5 args, so a bare `null` is an
+                // unambiguous match for the CoelutionScoredEntry overload.
+                ParquetScoreCache.WriteScoresParquet(path, null, null);
                 Assert.IsFalse(File.Exists(path), "Null entry list should not create a file");
             }
             finally
@@ -1525,11 +1528,10 @@ namespace pwiz.OspreySharp.Test
 
         private static void VerifyTableExists(SQLiteConnection conn, string tableName)
         {
-            using (var cmd = new SQLiteCommand(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@name", conn))
+            using (var cmd = new SQLiteCommand("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@name", conn))
             {
                 cmd.Parameters.AddWithValue("@name", tableName);
-                long count = (long)cmd.ExecuteScalar();
+                long count = (long)(cmd.ExecuteScalar() ?? 0);
                 Assert.AreEqual(1L, count, "Table " + tableName + " should exist");
             }
         }

@@ -63,7 +63,7 @@ namespace pwiz.OspreySharp.IO
             {
                 cmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@name";
                 cmd.Parameters.AddWithValue("@name", tableName);
-                long count = (long)cmd.ExecuteScalar();
+                long count = (long)(cmd.ExecuteScalar() ?? 0L);
                 return count > 0;
             }
         }

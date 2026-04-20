@@ -312,11 +312,10 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestParseVersionRejectsBadInput()
         {
-            int M, m, p;
-            Assert.IsFalse(ParquetScoreCache.TryParseVersion("", out M, out m, out p));
-            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.3", out M, out m, out p));
-            Assert.IsFalse(ParquetScoreCache.TryParseVersion("v26.3.0", out M, out m, out p));
-            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.3.x", out M, out m, out p));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("", out _, out _, out _));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.3", out _, out _, out _));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("v26.3.0", out _, out _, out _));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.3.x", out _, out _, out _));
         }
 
         [TestMethod]
@@ -341,8 +340,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMinorVersionDriftAborts()
         {
-            string warn;
-            string err = CheckMd("26.4.0", VALID_SEARCH, VALID_LIB, out warn);
+            string err = CheckMd("26.4.0", VALID_SEARCH, VALID_LIB, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "major/minor");
         }
@@ -350,8 +348,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMajorVersionDriftAborts()
         {
-            string warn;
-            string err = CheckMd("27.0.0", VALID_SEARCH, VALID_LIB, out warn);
+            string err = CheckMd("27.0.0", VALID_SEARCH, VALID_LIB, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "major/minor");
         }
@@ -359,8 +356,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingVersionAborts()
         {
-            string warn;
-            string err = CheckMd(null, VALID_SEARCH, VALID_LIB, out warn);
+            string err = CheckMd(null, VALID_SEARCH, VALID_LIB, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.version");
         }
@@ -368,8 +364,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingSearchHashAborts()
         {
-            string warn;
-            string err = CheckMd("26.3.0", null, VALID_LIB, out warn);
+            string err = CheckMd("26.3.0", null, VALID_LIB, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.search_hash");
         }
@@ -377,8 +372,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingLibraryHashAborts()
         {
-            string warn;
-            string err = CheckMd("26.3.0", VALID_SEARCH, null, out warn);
+            string err = CheckMd("26.3.0", VALID_SEARCH, null, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.library_hash");
         }
@@ -386,8 +380,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataSearchHashMismatchNamesFieldAndFile()
         {
-            string warn;
-            string err = CheckMd("26.3.0", "wrong-hash", VALID_LIB, out warn);
+            string err = CheckMd("26.3.0", "wrong-hash", VALID_LIB, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "search_hash mismatch");
             StringAssert.Contains(err, "test.scores.parquet");
@@ -397,8 +390,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataLibraryHashMismatchNamesFieldAndFile()
         {
-            string warn;
-            string err = CheckMd("26.3.0", VALID_SEARCH, "wrong-lib", out warn);
+            string err = CheckMd("26.3.0", VALID_SEARCH, "wrong-lib", out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "library_hash mismatch");
             StringAssert.Contains(err, "test.scores.parquet");
