@@ -139,25 +139,31 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public string SearchParameterHash()
         {
+            // Cross-impl bit-equivalence with Rust requires:
+            //  - Booleans: Rust prints "true"/"false" (lowercase). C# default
+            //    bool.ToString() is "True"/"False". Use lowercase explicitly.
+            //  - Numbers: invariant culture (no locale-dependent separators).
             using (var sha256 = SHA256.Create())
             {
+                var ic = System.Globalization.CultureInfo.InvariantCulture;
+                Func<bool, string> b = v => v ? "true" : "false";
                 var sb = new StringBuilder();
-                sb.AppendFormat("resolution_mode:{0}\n", ResolutionMode);
-                sb.AppendFormat("fragment_tolerance:{0},{1}\n", FragmentTolerance.Tolerance, FragmentTolerance.Unit);
-                sb.AppendFormat("precursor_tolerance:{0},{1}\n", PrecursorTolerance.Tolerance, PrecursorTolerance.Unit);
-                sb.AppendFormat("prefilter_enabled:{0}\n", PrefilterEnabled);
-                sb.AppendFormat("decoy_method:{0}\n", DecoyMethod);
-                sb.AppendFormat("decoys_in_library:{0}\n", DecoysInLibrary);
-                sb.AppendFormat("rt_cal.enabled:{0}\n", RtCalibration.Enabled);
-                sb.AppendFormat("rt_cal.fallback_rt_tolerance:{0}\n", RtCalibration.FallbackRtTolerance);
-                sb.AppendFormat("rt_cal.rt_tolerance_factor:{0}\n", RtCalibration.RtToleranceFactor);
-                sb.AppendFormat("rt_cal.min_rt_tolerance:{0}\n", RtCalibration.MinRtTolerance);
-                sb.AppendFormat("rt_cal.max_rt_tolerance:{0}\n", RtCalibration.MaxRtTolerance);
-                sb.AppendFormat("rt_cal.loess_bandwidth:{0}\n", RtCalibration.LoessBandwidth);
-                sb.AppendFormat("rt_cal.min_calibration_points:{0}\n", RtCalibration.MinCalibrationPoints);
-                sb.AppendFormat("rt_cal.calibration_sample_size:{0}\n", RtCalibration.CalibrationSampleSize);
-                sb.AppendFormat("rt_cal.calibration_retry_factor:{0}\n", RtCalibration.CalibrationRetryFactor);
-                sb.AppendFormat("reconciliation.top_n_peaks:{0}\n", Reconciliation.TopNPeaks);
+                sb.AppendFormat(ic, "resolution_mode:{0}\n", ResolutionMode);
+                sb.AppendFormat(ic, "fragment_tolerance:{0},{1}\n", FragmentTolerance.Tolerance, FragmentTolerance.Unit);
+                sb.AppendFormat(ic, "precursor_tolerance:{0},{1}\n", PrecursorTolerance.Tolerance, PrecursorTolerance.Unit);
+                sb.AppendFormat(ic, "prefilter_enabled:{0}\n", b(PrefilterEnabled));
+                sb.AppendFormat(ic, "decoy_method:{0}\n", DecoyMethod);
+                sb.AppendFormat(ic, "decoys_in_library:{0}\n", b(DecoysInLibrary));
+                sb.AppendFormat(ic, "rt_cal.enabled:{0}\n", b(RtCalibration.Enabled));
+                sb.AppendFormat(ic, "rt_cal.fallback_rt_tolerance:{0}\n", RtCalibration.FallbackRtTolerance);
+                sb.AppendFormat(ic, "rt_cal.rt_tolerance_factor:{0}\n", RtCalibration.RtToleranceFactor);
+                sb.AppendFormat(ic, "rt_cal.min_rt_tolerance:{0}\n", RtCalibration.MinRtTolerance);
+                sb.AppendFormat(ic, "rt_cal.max_rt_tolerance:{0}\n", RtCalibration.MaxRtTolerance);
+                sb.AppendFormat(ic, "rt_cal.loess_bandwidth:{0}\n", RtCalibration.LoessBandwidth);
+                sb.AppendFormat(ic, "rt_cal.min_calibration_points:{0}\n", RtCalibration.MinCalibrationPoints);
+                sb.AppendFormat(ic, "rt_cal.calibration_sample_size:{0}\n", RtCalibration.CalibrationSampleSize);
+                sb.AppendFormat(ic, "rt_cal.calibration_retry_factor:{0}\n", RtCalibration.CalibrationRetryFactor);
+                sb.AppendFormat(ic, "reconciliation.top_n_peaks:{0}\n", Reconciliation.TopNPeaks);
 
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
                 var result = new StringBuilder(64);
@@ -187,8 +193,14 @@ namespace pwiz.OspreySharp.Core
                 if (!string.IsNullOrEmpty(libPath) && File.Exists(libPath))
                 {
                     var info = new FileInfo(libPath);
-                    sb.AppendFormat("size:{0}\n", info.Length);
-                    sb.AppendFormat("mtime:{0:o}\n", info.LastWriteTimeUtc);
+                    sb.AppendFormat(System.Globalization.CultureInfo.InvariantCulture,
+                        "size:{0}\n", info.Length);
+                    // Unix seconds matching Rust's library_identity_hash
+                    // (SystemTime::duration_since(UNIX_EPOCH).as_secs()).
+                    long mtimeSecs = (long)(info.LastWriteTimeUtc
+                        - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+                    sb.AppendFormat(System.Globalization.CultureInfo.InvariantCulture,
+                        "mtime:{0}\n", mtimeSecs);
                 }
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
                 var result = new StringBuilder(64);

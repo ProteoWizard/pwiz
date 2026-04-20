@@ -85,14 +85,44 @@ namespace pwiz.OspreySharp.IO
 
         #region Schema Fields
 
-        private static readonly DataField FIELD_ENTRY_ID = new DataField<int>("entry_id");
+        // Schema column types and names are aligned with the Rust impl's
+        // parquet schema (UInt32 for entry_id/scan_number, UInt8 for charge)
+        // so a C#-written parquet can be loaded by Rust's `--join-only`
+        // (which does strict downcasts) and vice versa. Reading is also
+        // strict: pre-2026-04-19 C#-written parquets used Int32 for these
+        // fields and need to be regenerated via a fresh `--no-join` run.
+        //
+        // Fields are declared in the same order Rust writes them. Order
+        // doesn't affect Parquet correctness (columns are name-indexed),
+        // but matching makes diffing easier.
+        private static readonly DataField FIELD_ENTRY_ID = new DataField<uint>("entry_id");
         private static readonly DataField FIELD_IS_DECOY = new DataField<bool>("is_decoy");
-        private static readonly DataField FIELD_CHARGE = new DataField<int>("charge");
-        private static readonly DataField FIELD_SCAN_NUMBER = new DataField<int>("scan_number");
+        private static readonly DataField FIELD_SEQUENCE = new DataField<string>("sequence");
         private static readonly DataField FIELD_MODIFIED_SEQUENCE = new DataField<string>("modified_sequence");
+        private static readonly DataField FIELD_CHARGE = new DataField<byte>("charge");
+        private static readonly DataField FIELD_PRECURSOR_MZ = new DataField<double>("precursor_mz");
+        private static readonly DataField FIELD_PROTEIN_IDS = new DataField("protein_ids", DataType.String, hasNulls: true, isArray: false);
+        private static readonly DataField FIELD_SCAN_NUMBER = new DataField<uint>("scan_number");
         private static readonly DataField FIELD_APEX_RT = new DataField<double>("apex_rt");
         private static readonly DataField FIELD_START_RT = new DataField<double>("start_rt");
         private static readonly DataField FIELD_END_RT = new DataField<double>("end_rt");
+        private static readonly DataField FIELD_BOUNDS_AREA = new DataField<double>("bounds_area");
+        private static readonly DataField FIELD_BOUNDS_SNR = new DataField<double>("bounds_snr");
+        private static readonly DataField FIELD_FILE_NAME = new DataField<string>("file_name");
+        // Binary blobs that Rust's reconciliation/gap-fill code paths read.
+        // C# writes them as nullable placeholders so the schema bit-matches
+        // Rust's; populating them with the actual fragment/XIC/CWT byte
+        // serialization is a future sprint (Stage 5+8 cross-impl works
+        // without them).
+        private static readonly DataField FIELD_CWT_CANDIDATES = new DataField("cwt_candidates", DataType.ByteArray, hasNulls: true, isArray: false);
+        private static readonly DataField FIELD_FRAGMENT_MZS = new DataField("fragment_mzs", DataType.ByteArray, hasNulls: true, isArray: false);
+        private static readonly DataField FIELD_FRAGMENT_INTENSITIES = new DataField("fragment_intensities", DataType.ByteArray, hasNulls: true, isArray: false);
+        private static readonly DataField FIELD_REFERENCE_XIC_RTS = new DataField("reference_xic_rts", DataType.ByteArray, hasNulls: true, isArray: false);
+        private static readonly DataField FIELD_REFERENCE_XIC_INTENSITIES = new DataField("reference_xic_intensities", DataType.ByteArray, hasNulls: true, isArray: false);
+        // Reader-only alias for the fragment_coelution_sum PIN feature
+        // column (the same column is read both as a stub for FDR loading
+        // and as one of the 21 PIN features). Not added to the write
+        // schema -- it's already there via BuildFeatureFields().
         private static readonly DataField FIELD_COELUTION_SUM = new DataField<double>("fragment_coelution_sum");
 
         private static DataField[] BuildFeatureFields()
@@ -105,16 +135,29 @@ namespace pwiz.OspreySharp.IO
 
         private static Schema BuildWriteSchema()
         {
+            // Order matches Rust's pipeline.rs build of `write_scores_parquet_with_metadata`.
+            // Field order is informational only -- Parquet is name-indexed.
             var fields = new List<DataField>
             {
                 FIELD_ENTRY_ID,
                 FIELD_IS_DECOY,
-                FIELD_CHARGE,
-                FIELD_SCAN_NUMBER,
+                FIELD_SEQUENCE,
                 FIELD_MODIFIED_SEQUENCE,
+                FIELD_CHARGE,
+                FIELD_PRECURSOR_MZ,
+                FIELD_PROTEIN_IDS,
+                FIELD_SCAN_NUMBER,
                 FIELD_APEX_RT,
                 FIELD_START_RT,
                 FIELD_END_RT,
+                FIELD_BOUNDS_AREA,
+                FIELD_BOUNDS_SNR,
+                FIELD_FILE_NAME,
+                FIELD_CWT_CANDIDATES,
+                FIELD_FRAGMENT_MZS,
+                FIELD_FRAGMENT_INTENSITIES,
+                FIELD_REFERENCE_XIC_RTS,
+                FIELD_REFERENCE_XIC_INTENSITIES,
             };
             fields.AddRange(BuildFeatureFields());
             return new Schema(fields.ToArray());
@@ -140,15 +183,28 @@ namespace pwiz.OspreySharp.IO
             var schema = BuildWriteSchema();
             var featureFields = BuildFeatureFields();
 
-            // Build column arrays
-            var entryIds = new int[n];
+            // Build column arrays. Schema matches Rust's
+            // write_scores_parquet_with_metadata; columns are name-indexed
+            // so order is informational, but kept aligned for clarity.
+            var entryIds = new uint[n];
             var isDecoys = new bool[n];
-            var charges = new int[n];
-            var scanNumbers = new int[n];
+            var sequences = new string[n];
             var modifiedSequences = new string[n];
+            var charges = new byte[n];
+            var precursorMzs = new double[n];
+            var proteinIds = new string[n];
+            var scanNumbers = new uint[n];
             var apexRts = new double[n];
             var startRts = new double[n];
             var endRts = new double[n];
+            var boundsAreas = new double[n];
+            var boundsSnrs = new double[n];
+            var fileNames = new string[n];
+            var cwtCandidates = new byte[n][];
+            var fragmentMzs = new byte[n][];
+            var fragmentIntensities = new byte[n][];
+            var refXicRts = new byte[n][];
+            var refXicIntensities = new byte[n][];
             var featureArrays = new double[NUM_PIN_FEATURES][];
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
                 featureArrays[f] = new double[n];
@@ -156,14 +212,22 @@ namespace pwiz.OspreySharp.IO
             for (int i = 0; i < n; i++)
             {
                 var entry = entries[i];
-                entryIds[i] = (int)entry.EntryId;
+                entryIds[i] = entry.EntryId;
                 isDecoys[i] = entry.IsDecoy;
-                charges[i] = entry.Charge;
-                scanNumbers[i] = (int)entry.ScanNumber;
+                sequences[i] = entry.Sequence ?? string.Empty;
                 modifiedSequences[i] = entry.ModifiedSequence ?? string.Empty;
+                charges[i] = entry.Charge;
+                precursorMzs[i] = entry.PrecursorMz;
+                proteinIds[i] = entry.ProteinIds != null
+                    ? string.Join(";", entry.ProteinIds)
+                    : null;
+                scanNumbers[i] = entry.ScanNumber;
                 apexRts[i] = entry.ApexRt;
                 startRts[i] = entry.PeakBounds != null ? entry.PeakBounds.StartRt : 0.0;
                 endRts[i] = entry.PeakBounds != null ? entry.PeakBounds.EndRt : 0.0;
+                boundsAreas[i] = entry.PeakBounds != null ? entry.PeakBounds.Area : 0.0;
+                boundsSnrs[i] = entry.PeakBounds != null ? entry.PeakBounds.SignalToNoise : 0.0;
+                fileNames[i] = entry.FileName ?? string.Empty;
 
                 ExtractPinFeatures(entry.Features, featureArrays, i);
             }
@@ -185,12 +249,23 @@ namespace pwiz.OspreySharp.IO
                 {
                     group.WriteColumn(new DataColumn(FIELD_ENTRY_ID, entryIds));
                     group.WriteColumn(new DataColumn(FIELD_IS_DECOY, isDecoys));
-                    group.WriteColumn(new DataColumn(FIELD_CHARGE, charges));
-                    group.WriteColumn(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers));
+                    group.WriteColumn(new DataColumn(FIELD_SEQUENCE, sequences));
                     group.WriteColumn(new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences));
+                    group.WriteColumn(new DataColumn(FIELD_CHARGE, charges));
+                    group.WriteColumn(new DataColumn(FIELD_PRECURSOR_MZ, precursorMzs));
+                    group.WriteColumn(new DataColumn(FIELD_PROTEIN_IDS, proteinIds));
+                    group.WriteColumn(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers));
                     group.WriteColumn(new DataColumn(FIELD_APEX_RT, apexRts));
                     group.WriteColumn(new DataColumn(FIELD_START_RT, startRts));
                     group.WriteColumn(new DataColumn(FIELD_END_RT, endRts));
+                    group.WriteColumn(new DataColumn(FIELD_BOUNDS_AREA, boundsAreas));
+                    group.WriteColumn(new DataColumn(FIELD_BOUNDS_SNR, boundsSnrs));
+                    group.WriteColumn(new DataColumn(FIELD_FILE_NAME, fileNames));
+                    group.WriteColumn(new DataColumn(FIELD_CWT_CANDIDATES, cwtCandidates));
+                    group.WriteColumn(new DataColumn(FIELD_FRAGMENT_MZS, fragmentMzs));
+                    group.WriteColumn(new DataColumn(FIELD_FRAGMENT_INTENSITIES, fragmentIntensities));
+                    group.WriteColumn(new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts));
+                    group.WriteColumn(new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities));
 
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
                         group.WriteColumn(new DataColumn(featureFields[f], featureArrays[f]));
@@ -208,9 +283,13 @@ namespace pwiz.OspreySharp.IO
         /// CoelutionScoredEntry overload — used by --no-join HPC mode where
         /// the pipeline keeps full features on the FdrEntry directly
         /// (FdrEntry.Features is the already-extracted 21-feature vector).
+        /// Library lookup (by entry_id) supplies the sequence / precursor_mz
+        /// / protein_ids columns that Rust expects in the schema.
         /// </summary>
         public static void WriteScoresParquet(string path, List<FdrEntry> entries,
-            Dictionary<string, string> metadata)
+            Dictionary<string, string> metadata,
+            Dictionary<uint, LibraryEntry> libraryById,
+            string fileName)
         {
             if (entries == null || entries.Count == 0)
                 return;
@@ -219,14 +298,29 @@ namespace pwiz.OspreySharp.IO
             var schema = BuildWriteSchema();
             var featureFields = BuildFeatureFields();
 
-            var entryIds = new int[n];
+            var entryIds = new uint[n];
             var isDecoys = new bool[n];
-            var charges = new int[n];
-            var scanNumbers = new int[n];
+            var sequences = new string[n];
             var modifiedSequences = new string[n];
+            var charges = new byte[n];
+            var precursorMzs = new double[n];
+            var proteinIds = new string[n];
+            var scanNumbers = new uint[n];
             var apexRts = new double[n];
             var startRts = new double[n];
             var endRts = new double[n];
+            var boundsAreas = new double[n];   // not on FdrEntry; left at 0
+            var boundsSnrs = new double[n];    // not on FdrEntry; left at 0
+            var fileNames = new string[n];
+            // Binary blobs are nullable placeholders -- C# doesn't currently
+            // populate fragments / XICs / CWT byte serialization. Stage 5+8
+            // don't need them; Stage 6 reconciliation does and is documented
+            // as not yet supported cross-impl.
+            var cwtCandidates = new byte[n][];
+            var fragmentMzs = new byte[n][];
+            var fragmentIntensities = new byte[n][];
+            var refXicRts = new byte[n][];
+            var refXicIntensities = new byte[n][];
             var featureArrays = new double[NUM_PIN_FEATURES][];
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
                 featureArrays[f] = new double[n];
@@ -234,14 +328,33 @@ namespace pwiz.OspreySharp.IO
             for (int i = 0; i < n; i++)
             {
                 var entry = entries[i];
-                entryIds[i] = (int)entry.EntryId;
+                entryIds[i] = entry.EntryId;
                 isDecoys[i] = entry.IsDecoy;
                 charges[i] = entry.Charge;
-                scanNumbers[i] = (int)entry.ScanNumber;
+                scanNumbers[i] = entry.ScanNumber;
                 modifiedSequences[i] = entry.ModifiedSequence ?? string.Empty;
                 apexRts[i] = entry.ApexRt;
                 startRts[i] = entry.StartRt;
                 endRts[i] = entry.EndRt;
+                fileNames[i] = fileName ?? string.Empty;
+
+                LibraryEntry libEntry = null;
+                if (libraryById != null)
+                    libraryById.TryGetValue(entry.EntryId, out libEntry);
+                if (libEntry != null)
+                {
+                    sequences[i] = libEntry.Sequence ?? string.Empty;
+                    precursorMzs[i] = libEntry.PrecursorMz;
+                    proteinIds[i] = libEntry.ProteinIds != null
+                        ? string.Join(";", libEntry.ProteinIds)
+                        : null;
+                }
+                else
+                {
+                    sequences[i] = string.Empty;
+                    precursorMzs[i] = 0.0;
+                    proteinIds[i] = null;
+                }
 
                 var featureVec = entry.Features;
                 if (featureVec != null && featureVec.Length == NUM_PIN_FEATURES)
@@ -266,12 +379,23 @@ namespace pwiz.OspreySharp.IO
                 {
                     group.WriteColumn(new DataColumn(FIELD_ENTRY_ID, entryIds));
                     group.WriteColumn(new DataColumn(FIELD_IS_DECOY, isDecoys));
-                    group.WriteColumn(new DataColumn(FIELD_CHARGE, charges));
-                    group.WriteColumn(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers));
+                    group.WriteColumn(new DataColumn(FIELD_SEQUENCE, sequences));
                     group.WriteColumn(new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences));
+                    group.WriteColumn(new DataColumn(FIELD_CHARGE, charges));
+                    group.WriteColumn(new DataColumn(FIELD_PRECURSOR_MZ, precursorMzs));
+                    group.WriteColumn(new DataColumn(FIELD_PROTEIN_IDS, proteinIds));
+                    group.WriteColumn(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers));
                     group.WriteColumn(new DataColumn(FIELD_APEX_RT, apexRts));
                     group.WriteColumn(new DataColumn(FIELD_START_RT, startRts));
                     group.WriteColumn(new DataColumn(FIELD_END_RT, endRts));
+                    group.WriteColumn(new DataColumn(FIELD_BOUNDS_AREA, boundsAreas));
+                    group.WriteColumn(new DataColumn(FIELD_BOUNDS_SNR, boundsSnrs));
+                    group.WriteColumn(new DataColumn(FIELD_FILE_NAME, fileNames));
+                    group.WriteColumn(new DataColumn(FIELD_CWT_CANDIDATES, cwtCandidates));
+                    group.WriteColumn(new DataColumn(FIELD_FRAGMENT_MZS, fragmentMzs));
+                    group.WriteColumn(new DataColumn(FIELD_FRAGMENT_INTENSITIES, fragmentIntensities));
+                    group.WriteColumn(new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts));
+                    group.WriteColumn(new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities));
 
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
                         group.WriteColumn(new DataColumn(featureFields[f], featureArrays[f]));
@@ -345,10 +469,10 @@ namespace pwiz.OspreySharp.IO
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
-                        var entryIdCol = groupReader.ReadColumn(FIELD_ENTRY_ID).Data as int[];
+                        var entryIdCol = groupReader.ReadColumn(FIELD_ENTRY_ID).Data as uint[];
                         var isDecoyCol = groupReader.ReadColumn(FIELD_IS_DECOY).Data as bool[];
-                        var chargeCol = groupReader.ReadColumn(FIELD_CHARGE).Data as int[];
-                        var scanCol = groupReader.ReadColumn(FIELD_SCAN_NUMBER).Data as int[];
+                        var chargeCol = groupReader.ReadColumn(FIELD_CHARGE).Data as byte[];
+                        var scanCol = groupReader.ReadColumn(FIELD_SCAN_NUMBER).Data as uint[];
                         var modseqCol = groupReader.ReadColumn(FIELD_MODIFIED_SEQUENCE).Data as string[];
                         var apexCol = groupReader.ReadColumn(FIELD_APEX_RT).Data as double[];
                         var startCol = groupReader.ReadColumn(FIELD_START_RT).Data as double[];
@@ -363,11 +487,11 @@ namespace pwiz.OspreySharp.IO
                         {
                             stubs.Add(new FdrEntry
                             {
-                                EntryId = (uint)entryIdCol[row],
+                                EntryId = entryIdCol[row],
                                 ParquetIndex = (uint)(stubs.Count),
                                 IsDecoy = isDecoyCol[row],
-                                Charge = (byte)(chargeCol != null ? chargeCol[row] : 0),
-                                ScanNumber = (uint)(scanCol != null ? scanCol[row] : 0),
+                                Charge = chargeCol != null ? chargeCol[row] : (byte)0,
+                                ScanNumber = scanCol != null ? scanCol[row] : 0u,
                                 ApexRt = apexCol != null ? apexCol[row] : 0.0,
                                 StartRt = startCol != null ? startCol[row] : 0.0,
                                 EndRt = endCol != null ? endCol[row] : 0.0,

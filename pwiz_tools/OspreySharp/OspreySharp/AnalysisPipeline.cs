@@ -881,8 +881,16 @@ namespace pwiz.OspreySharp
             if (noJoinMetadata != null)
             {
                 string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
+                // Build a per-file lookup so the writer can pull
+                // sequence/precursor_mz/protein_ids from the library by
+                // entry_id (FdrEntry doesn't carry these). One pass over
+                // ~485K library entries is well under a second.
+                var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
+                foreach (var entry in fullLibrary)
+                    libraryById[entry.Id] = entry;
                 var swParquet = Stopwatch.StartNew();
-                ParquetScoreCache.WriteScoresParquet(parquetPath, scoredEntries, noJoinMetadata);
+                ParquetScoreCache.WriteScoresParquet(
+                    parquetPath, scoredEntries, noJoinMetadata, libraryById, fileName);
                 swParquet.Stop();
                 LogInfo(string.Format(
                     "[--no-join] Wrote {0} scored entries to {1} ({2:F1}s)",

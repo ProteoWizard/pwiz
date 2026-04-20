@@ -35,7 +35,10 @@ namespace pwiz.OspreySharp
     /// </summary>
     class Program
     {
-        internal const string VERSION = "0.1.0";
+        // Tracks the Rust Osprey upstream version this OspreySharp port
+        // is aligned with. Used in parquet footer metadata; the Phase 3
+        // validator requires same major.minor across cross-impl handoff.
+        internal const string VERSION = "26.3.0";
         internal const string VERSION_STRING = VERSION;
 
         static int Main(string[] args)
