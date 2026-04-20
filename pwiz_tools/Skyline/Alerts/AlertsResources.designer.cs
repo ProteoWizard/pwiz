@@ -528,6 +528,33 @@ namespace pwiz.Skyline.Alerts {
                 return ResourceManager.GetString("DiannDownloadDlg_Installation_failed", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Download.
+        /// </summary>
+        public static string EnsureDiannInstalled_Download {
+            get {
+                return ResourceManager.GetString("EnsureDiannInstalled_Download", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Use Existing.
+        /// </summary>
+        public static string EnsureDiannInstalled_Use_Existing {
+            get {
+                return ResourceManager.GetString("EnsureDiannInstalled_Use_Existing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN is already installed at:{newline}{newline}{0}{newline}{newline}Use this installation, or download DIA-NN {1} from GitHub?.
+        /// </summary>
+        public static string EnsureDiannInstalled_Use_existing_or_download__0____1__ {
+            get {
+                return ResourceManager.GetString("EnsureDiannInstalled_Use_existing_or_download__0____1__", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Contacting MS Fragger download server.

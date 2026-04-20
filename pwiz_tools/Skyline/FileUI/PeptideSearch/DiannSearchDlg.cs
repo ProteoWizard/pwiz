@@ -277,9 +277,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             switch (CurrentPage)
             {
                 case Pages.data_files_page:
-                    if (!DataFileResults.FoundResultsFiles.Any())
+                    if (DataFileResults.FoundResultsFiles.Count < 2)
                     {
-                        MessageDlg.Show(this, PeptideSearchResources.DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_);
+                        MessageDlg.Show(this, PeptideSearchResources.DiannSearchDlg_NextPage_Please_add_at_least_two_DIA_data_files_);
                         return;
                     }
                     break;

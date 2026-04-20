@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Microsoft.Win32;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -54,9 +55,10 @@ namespace pwiz.Skyline.Model.Lib
             new Uri(@"https://github.com/vdemichev/DiaNN/releases/download/2.0/LICENSE.txt");
 
         /// <summary>
-        /// Mirrored DIA-NN 2.5.0 install on the Skyline tool testing S3 bucket, used by
-        /// functional tests. <see cref="SimpleFileDownloader.DownloadRequiredFiles"/> rewrites
-        /// this URL to the mirror when running under a unit test.
+        /// Pre-extracted DIA-NN 2.5.0 install zip on the Skyline tool testing S3 mirror.
+        /// <see cref="DiannDownloadInfo"/> points <see cref="SimpleFileDownloader.DownloadRequiredFiles"/>
+        /// directly at this URL for functional tests. End-user installs go through
+        /// <see cref="DIANN_MSI_URL"/> via the download dialog, not this download info.
         /// </summary>
         private static readonly Uri DIANN_TEST_MIRROR_URL =
             new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{DIANN_FILENAME}.zip");
@@ -76,6 +78,53 @@ namespace pwiz.Skyline.Model.Lib
             ToolExtraArgs = DiannArgs
         };
         public static FileDownloadInfo[] FilesToDownload => new[] { DiannDownloadInfo };
+
+        /// <summary>
+        /// Test-only override for <see cref="TryGetRegisteredDiannPath"/>. When set, the
+        /// registry is not consulted and the override's return value is used instead.
+        /// </summary>
+        public static Func<string> RegisteredDiannPathOverride;
+
+        /// <summary>
+        /// Scan the Windows uninstall registry keys for a DIA-NN install and return the path
+        /// to its diann.exe if found. Checks HKCU and HKLM (including WOW6432Node), per-user
+        /// and per-machine. Returns null if no DIA-NN install is registered or its
+        /// <c>InstallLocation</c> does not contain diann.exe.
+        /// </summary>
+        public static string TryGetRegisteredDiannPath()
+        {
+            if (RegisteredDiannPathOverride != null)
+                return RegisteredDiannPathOverride();
+            var roots = new[]
+            {
+                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+            };
+            foreach (var hive in new[] { Registry.CurrentUser, Registry.LocalMachine })
+            {
+                foreach (var root in roots)
+                {
+                    using var key = hive.OpenSubKey(root);
+                    if (key == null)
+                        continue;
+                    foreach (var subKeyName in key.GetSubKeyNames())
+                    {
+                        using var subKey = key.OpenSubKey(subKeyName);
+                        var displayName = subKey?.GetValue(@"DisplayName") as string;
+                        if (string.IsNullOrEmpty(displayName) ||
+                            !displayName.StartsWith(@"DIA-NN", StringComparison.OrdinalIgnoreCase))
+                            continue;
+                        var installLocation = subKey.GetValue(@"InstallLocation") as string;
+                        if (string.IsNullOrEmpty(installLocation))
+                            continue;
+                        var candidate = Path.Combine(installLocation, @"diann.exe");
+                        if (File.Exists(candidate))
+                            return candidate;
+                    }
+                }
+            }
+            return null;
+        }
 
         /// <summary>
         /// Extract the DIA-NN MSI (admin install) into <paramref name="targetDir"/> without
@@ -474,7 +523,5 @@ namespace pwiz.Skyline.Model.Lib
             MinPrCharge = (int)AdditionalSettings[@"MinPrecursorCharge"].Value;
             MaxPrCharge = (int)AdditionalSettings[@"MaxPrecursorCharge"].Value;
         }
-
-        public static DiannConfig DEFAULT => new DiannConfig();
     }
 }

@@ -424,11 +424,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Please add at least one DIA data file..
+        ///   Looks up a localized string similar to Please add at least two DIA data files..
         /// </summary>
-        public static string DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_ {
+        public static string DiannSearchDlg_NextPage_Please_add_at_least_two_DIA_data_files_ {
             get {
-                return ResourceManager.GetString("DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_", resourceCulture);
+                return ResourceManager.GetString("DiannSearchDlg_NextPage_Please_add_at_least_two_DIA_data_files_", resourceCulture);
             }
         }
 

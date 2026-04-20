@@ -49,34 +49,74 @@ namespace pwiz.SkylineTestFunctional
         {
             PrepareDocument("DiannSearchTest.sky");
 
-            // Exercise the download prompt: with no DIA-NN registered and no binary on disk,
-            // ShowDiannSearchDlg must open the prompt instead of the wizard. Cancelling it
-            // must leave the wizard closed.
+            // Decide which real DIA-NN binary to drive the search with. If the user has
+            // already configured a working DIA-NN in SearchToolList (Edit > Search Tools),
+            // honor that rather than re-downloading. Otherwise fall back to the Skyline
+            // tool testing S3 mirror (cached across runs).
+            SearchTool preConfigured = null;
             RunUI(() =>
             {
                 if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
-                    Settings.Default.SearchToolList.Remove(
-                        Settings.Default.SearchToolList[SearchToolType.DIANN]);
-                if (File.Exists(DiannHelpers.DiannBinary))
-                    FileEx.SafeDelete(DiannHelpers.DiannBinary);
+                {
+                    var candidate = Settings.Default.SearchToolList[SearchToolType.DIANN];
+                    if (File.Exists(candidate.Path))
+                        preConfigured = candidate;
+                }
             });
-            var downloadDlg = ShowDialog<DiannDownloadDlg>(SkylineWindow.ShowDiannSearchDlg);
-            OkDialog(downloadDlg, () => downloadDlg.DialogResult = DialogResult.Cancel);
-            AssertEx.IsNull(FindOpenForm<DiannSearchDlg>());
+            string realDiannPath;
+            if (preConfigured != null)
+            {
+                realDiannPath = preConfigured.Path;
+            }
+            else
+            {
+                var progress = new SilentProgressMonitor();
+                AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(DiannHelpers.FilesToDownload, progress));
+                realDiannPath = DiannHelpers.DiannBinary;
+            }
+            AssertEx.IsTrue(File.Exists(realDiannPath));
 
-            // Download DIA-NN from the Skyline tool testing mirror (cached across runs).
-            var progress = new SilentProgressMonitor();
-            AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(DiannHelpers.FilesToDownload, progress));
-            AssertEx.IsTrue(File.Exists(DiannHelpers.DiannBinary));
+            DiannSearchDlg searchDlg;
+            try
+            {
+                // Point SearchToolList at a path that doesn't exist on disk so DiannBinary
+                // resolves to a non-existent path (forcing EnsureDiannInstalled to prompt),
+                // regardless of what's actually present in the default Tools directory.
+                const string bogusPath = @"C:\__diann_not_installed__\diann.exe";
+                RunUI(() =>
+                {
+                    if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
+                        Settings.Default.SearchToolList.Remove(
+                            Settings.Default.SearchToolList[SearchToolType.DIANN]);
+                    Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
+                        bogusPath, string.Empty, Path.GetDirectoryName(bogusPath), false));
+                });
+
+                // Part A: no DIA-NN registered anywhere -> DiannDownloadDlg appears.
+                DiannHelpers.RegisteredDiannPathOverride = () => null;
+                var downloadDlg = ShowDialog<DiannDownloadDlg>(SkylineWindow.ShowDiannSearchDlg);
+                OkDialog(downloadDlg, () => downloadDlg.DialogResult = DialogResult.Cancel);
+                AssertEx.IsNull(FindOpenForm<DiannSearchDlg>());
+
+                // Part B: an existing DIA-NN install is "discovered" via registry ->
+                // MultiButtonMsgDlg asks the user to reuse it or download; choose "Use Existing".
+                DiannHelpers.RegisteredDiannPathOverride = () => realDiannPath;
+                var useExisting = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowDiannSearchDlg);
+                OkDialog(useExisting, () => useExisting.DialogResult = DialogResult.Yes);
+                searchDlg = WaitForOpenForm<DiannSearchDlg>();
+                RunUI(() => AssertEx.AreEqual(realDiannPath, DiannHelpers.DiannBinary));
+            }
+            finally
+            {
+                DiannHelpers.RegisteredDiannPathOverride = null;
+            }
+
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library.fasta");
             string[] diaFilePaths =
             {
                 TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1c.mzML"),
                 TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1d.mzML")
             };
-
-            // Open DIA-NN search dialog
-            var searchDlg = ShowDialog<DiannSearchDlg>(SkylineWindow.ShowDiannSearchDlg);
 
             // Page 0: Data files - add wide window DIA file
             RunUI(() => AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.data_files_page));
