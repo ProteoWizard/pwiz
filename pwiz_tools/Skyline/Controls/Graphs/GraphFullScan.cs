@@ -464,7 +464,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 case SplitterDrag.Horizontal:
                     return Cursors.HSplit;
                 case SplitterDrag.Both:
-                    return Cursors.SizeAll;
+                    return Cursors.SizeNESW;
                 default:
                     return Cursors.Default;
             }
