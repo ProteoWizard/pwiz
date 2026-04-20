@@ -347,9 +347,7 @@ namespace pwiz.OspreySharp
 
                 // --no-join: stop here. Per-file `.scores.parquet` files are
                 // now on disk; a separate `--join-only` invocation (typically
-                // on a merge node) will pick them up and run Stage 5+. The
-                // OSPREY_EXIT_AFTER_SCORING env var is retained alongside for
-                // legacy bench scripts and will be removed in Phase 5.
+                // on a merge node) will pick them up and run Stage 5+.
                 if (config.NoJoin)
                 {
                     LogInfo(string.Format(
@@ -357,11 +355,6 @@ namespace pwiz.OspreySharp
                         "Per-file `.scores.parquet` written next to each input mzML. " +
                         "Skipping FDR and blib output.",
                         totalScored, nFiles));
-                    return 0;
-                }
-                if (OspreyEnvironment.ExitAfterScoring)
-                {
-                    LogInfo(string.Format("[BENCH] OSPREY_EXIT_AFTER_SCORING set - exiting after Stage 4 ({0} entries)", totalScored));
                     return 0;
                 }
 

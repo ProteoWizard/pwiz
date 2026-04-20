@@ -67,12 +67,10 @@ namespace pwiz.OspreySharp
         /// </summary>
         public static readonly bool ExitAfterCalibration = IsSet(@"OSPREY_EXIT_AFTER_CALIBRATION");
 
-        /// <summary>
-        /// OSPREY_EXIT_AFTER_SCORING: exit after Stage 4 (main search complete),
-        /// skipping Percolator/simple FDR, reconciliation, and blib output.
-        /// Used for Stage 1-4 wall-clock benchmarking at parity with Rust.
-        /// </summary>
-        public static readonly bool ExitAfterScoring = IsSet(@"OSPREY_EXIT_AFTER_SCORING");
+        // Note: the OSPREY_EXIT_AFTER_SCORING env var that used to live here
+        // was retired in favor of the --no-join CLI flag. See the HPC
+        // scoring split work in AnalysisPipeline.Run. ExitAfterCalibration
+        // (Stage 3) stays because it has no production CLI analog.
 
         /// <summary>
         /// OSPREY_LOAD_CALIBRATION: path to a .calibration.json produced by
