@@ -52,14 +52,13 @@ namespace pwiz.OspreySharp.Chromatography
         public double OutlierRetention { get; set; }
 
         /// <summary>
-        /// When false (default), robustness iterations reuse absolute residuals
-        /// from the initial fit throughout the loop (matching Rust
-        /// calibration_ml.rs current behavior). When true, residuals are
-        /// recomputed from the current fit each iteration, which is the
-        /// classical Cleveland (1979) robust LOESS algorithm. The default is
-        /// false so OspreySharp remains bit-identical with the Rust reference
-        /// out of the box; set true in both tools (via OSPREY_LOESS_CLASSICAL_ROBUST)
-        /// when validating a potential upstream fix.
+        /// When true (default), residuals are recomputed from the current fit
+        /// each iteration, which is the classical Cleveland (1979) robust
+        /// LOESS algorithm. When false, robustness iterations reuse absolute
+        /// residuals from the initial fit throughout the loop (legacy
+        /// behavior). Default matches Rust calibration_ml.rs v26.3.1 and
+        /// later; override via OSPREY_LOESS_CLASSICAL_ROBUST=0 in both tools
+        /// together when validating against legacy behavior.
         /// </summary>
         public bool ClassicalRobustIterations { get; set; }
 
@@ -71,7 +70,7 @@ namespace pwiz.OspreySharp.Chromatography
             MinPoints = 20;
             RobustnessIterations = 2;
             OutlierRetention = 0.8;
-            ClassicalRobustIterations = false;
+            ClassicalRobustIterations = true;
         }
     }
 

@@ -417,6 +417,8 @@ namespace pwiz.OspreySharp
             var inv = CultureInfo.InvariantCulture;
             using (var w = new StreamWriter(@"cs_loess_input.txt"))
             {
+                w.WriteLine(string.Format(inv,
+                    "# n_library_rts={0} n_measured_rts={1}", libRts.Length, measuredRts.Length));
                 w.WriteLine("idx\tlib_rt\tmeasured_rt");
                 for (int i = 0; i < pairs.Count; i++)
                 {

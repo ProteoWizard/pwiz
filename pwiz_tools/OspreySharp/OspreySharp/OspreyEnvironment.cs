@@ -53,12 +53,12 @@ namespace pwiz.OspreySharp
         /// <summary>
         /// OSPREY_LOESS_CLASSICAL_ROBUST: use classical Cleveland (1979) robust
         /// LOESS iteration (residuals recomputed from the current fit each
-        /// pass) instead of the default that caches absolute residuals from
-        /// the initial fit. The default matches Rust calibration_ml.rs out of
-        /// the box; set this in both tools together when validating a
-        /// potential upstream fix.
+        /// pass) instead of the legacy behavior that caches absolute residuals
+        /// from the initial fit. Default on to match Rust calibration_ml.rs
+        /// v26.3.1 and later; set to "0" to force the legacy single-refresh
+        /// path for comparison.
         /// </summary>
-        public static readonly bool LoessClassicalRobust = IsOne(@"OSPREY_LOESS_CLASSICAL_ROBUST");
+        public static readonly bool LoessClassicalRobust = IsNotZero(@"OSPREY_LOESS_CLASSICAL_ROBUST");
 
         /// <summary>
         /// OSPREY_EXIT_AFTER_CALIBRATION: exit after Stage 3 (calibration
@@ -98,6 +98,11 @@ namespace pwiz.OspreySharp
         private static bool IsSet(string name)
         {
             return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name));
+        }
+
+        private static bool IsNotZero(string name)
+        {
+            return Environment.GetEnvironmentVariable(name) != @"0";
         }
     }
 }

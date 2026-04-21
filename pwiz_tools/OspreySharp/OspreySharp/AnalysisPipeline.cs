@@ -2310,20 +2310,23 @@ namespace pwiz.OspreySharp
             // (interpolated residuals), which produces different scan ranges.
             double rtToleranceGlobal;
             // Sigma for the Gaussian RT penalty applied during CWT peak
-            // ranking inside ScoreCandidate. Rust pipeline.rs:6271-6274 uses
-            // the UNCLAMPED 3*MAD*1.4826 with a 0.1 min floor; the scan-
-            // window tolerance below is clamped to [MinRt, MaxRt] and may
-            // differ. Using two separate values keeps peak ranking
-            // bit-identical to Rust regardless of config clamping.
+            // ranking inside ScoreCandidate. Rust pipeline.rs:6690 uses
+            // UNCLAMPED 5*MAD*1.4826 with a 0.1 min floor (widened from 3x
+            // in v26.3.1 so peaks with small RT deviations from the LOESS
+            // prediction aren't over-penalized; see maccoss/osprey commit
+            // 2db5f1c). The scan-window tolerance above remains at 3x and
+            // is clamped to [MinRt, MaxRt]. Two separate values keep peak
+            // ranking bit-identical to Rust regardless of config clamping.
             double rtSigmaGlobal;
             if (rtCalibration != null)
             {
                 var stats = rtCalibration.Stats();
-                double madTolerance = stats.MAD * 1.4826 * 3.0;
+                double robustSd = stats.MAD * 1.4826;
+                double rtToleranceMad = robustSd * 3.0;
                 rtToleranceGlobal = Math.Max(
                     config.RtCalibration.MinRtTolerance,
-                    Math.Min(config.RtCalibration.MaxRtTolerance, madTolerance));
-                rtSigmaGlobal = Math.Max(madTolerance, 0.1);
+                    Math.Min(config.RtCalibration.MaxRtTolerance, rtToleranceMad));
+                rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
                 LogInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3})",
                     rtToleranceGlobal, stats.MAD));
@@ -2605,6 +2608,18 @@ namespace pwiz.OspreySharp
         /// Score a single library entry candidate against spectra in its isolation window.
         /// Extracts fragment XICs, detects CWT peaks, and scores at the best apex.
         /// </summary>
+        // IEEE 754-2008 §5.10 total order on doubles: matches Rust
+        // f64::total_cmp so -0.0 < +0.0 and NaNs sort consistently.
+        // Used by the main-search peak-ranking tie-break.
+        private static bool TotalOrderGreater(double a, double b)
+        {
+            long la = BitConverter.DoubleToInt64Bits(a);
+            long lb = BitConverter.DoubleToInt64Bits(b);
+            if (la < 0) la ^= 0x7FFFFFFFFFFFFFFFL;
+            if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
+            return la > lb;
+        }
+
         private FdrEntry ScoreCandidate(
             LibraryEntry candidate,
             List<Spectrum> windowSpectra,
@@ -2646,14 +2661,21 @@ namespace pwiz.OspreySharp
                     candidate.Fragments.Count, nScans));
             }
 
-            // Find scan range within RT tolerance.
-            // Match Rust's abs(rt - expected_rt) <= tolerance (closed interval).
+            // Find scan range for XIC extraction. Matches Rust pipeline.rs
+            // commit 885339b: extract over a window wider than rtTolerance so
+            // CWT has context on both sides of any in-tolerance apex to
+            // determine full peak boundaries. The apex itself is still
+            // required to be within rtTolerance (enforced in the
+            // candidate-scoring loop below). Half-width is rtTolerance plus
+            // max(rtTolerance, 0.1) — tight-calibration runs get a 0.1 min
+            // floor of extra context; wider runs scale with rtTolerance.
+            double xicHalfWidth = rtTolerance + Math.Max(rtTolerance, 0.1);
             int startScan = -1, endScan = -1;
             for (int i = 0; i < nScans; i++)
             {
-                if (windowRts[i] > expectedRt + rtTolerance)
+                if (windowRts[i] > expectedRt + xicHalfWidth)
                     break;
-                if (windowRts[i] >= expectedRt - rtTolerance)
+                if (windowRts[i] >= expectedRt - xicHalfWidth)
                 {
                     if (startScan < 0)
                         startScan = i;
@@ -2680,8 +2702,8 @@ namespace pwiz.OspreySharp
                 {
                     LogInfo(string.Format(
                         "[DIAG] {0}: no scans in RT window [{1:F3}..{2:F3}]",
-                        candidate.ModifiedSequence, expectedRt - rtTolerance,
-                        expectedRt + rtTolerance));
+                        candidate.ModifiedSequence, expectedRt - xicHalfWidth,
+                        expectedRt + xicHalfWidth));
                 }
             }
 
@@ -2804,13 +2826,30 @@ namespace pwiz.OspreySharp
                 return null;
 
             // Rust scores each candidate peak by mean pairwise fragment
-            // correlation weighted by a Gaussian RT penalty, then picks the
-            // highest-ranked peak. The RT penalty prevents strong interferers
-            // at the wrong RT from beating the correct peak on coelution
-            // alone. Matches Rust pipeline.rs:6267-6321.
-            //   rank_score = coelution_score * exp(-dt^2 / (2 * rtSigma^2))
-            // where dt = |peak_apex_rt - expected_rt|. A peak at the expected
-            // position gets penalty=1.0; a peak 3-sigma away gets ~0.01.
+            // correlation weighted by a Gaussian RT penalty and an intensity
+            // tiebreaker, then picks the highest-ranked peak. The RT penalty
+            // prevents strong interferers at the wrong RT from beating the
+            // correct peak on coelution alone; the intensity tiebreaker
+            // ensures the main peak wins over its own shoulder when coelution
+            // scores are nearly identical. Matches Rust pipeline.rs:6685-6760.
+            //   rank_score = coelution * exp(-dt^2 / (2 * sigma^2)) * ln(1 + apex_intensity)
+            // where dt = |peak_apex_rt - expected_rt|. Peak at expected
+            // position gets RT penalty=1.0; 5-sigma away gets ~0.01.
+
+            // Reference XIC = highest total-intensity fragment. Matches Rust
+            // run_search which selects ref_xic before CWT and reuses it for
+            // apex intensity lookup.
+            int refXicIdx = 0;
+            double refXicBestTotal = -1.0;
+            for (int f = 0; f < xics.Count; f++)
+            {
+                double total = 0.0;
+                for (int i = 0; i < xics[f].Intensities.Length; i++)
+                    total += xics[f].Intensities[i];
+                if (total > refXicBestTotal) { refXicBestTotal = total; refXicIdx = f; }
+            }
+            double[] refXicIntensities = xics[refXicIdx].Intensities;
+
             XICPeakBounds bestPeak = null;
             double bestRankScore = double.MinValue;
             int bestPeakIdx = -1;
@@ -2820,6 +2859,18 @@ namespace pwiz.OspreySharp
                 var p = peaks[pi];
                 int pLen = p.EndIndex - p.StartIndex + 1;
                 if (pLen < 3)
+                    continue;
+
+                // Apex-acceptance filter (Rust pipeline.rs commit 885339b):
+                // the XIC extraction window above is wider than rtTolerance so
+                // CWT can extend peak boundaries past the acceptance edge, but
+                // the detected apex itself must fall within rtTolerance of
+                // expectedRt. Preserves first-pass selectivity -- only
+                // boundaries are allowed to extend past rtTolerance; apex
+                // locations still have to be within it.
+                double peakApexRt = windowRts[startScan + p.ApexIndex];
+                double rtResidual = Math.Abs(peakApexRt - expectedRt);
+                if (rtResidual > rtTolerance)
                     continue;
 
                 double sum = 0.0;
@@ -2840,18 +2891,33 @@ namespace pwiz.OspreySharp
                 }
                 double coelutionScore = count > 0 ? sum / count : 0.0;
 
-                double peakApexRt = windowRts[startScan + p.ApexIndex];
-                double rtResidual = Math.Abs(peakApexRt - expectedRt);
                 double rtPenalty = Math.Exp(-(rtResidual * rtResidual) / twoSigmaSq);
-                double rankScore = coelutionScore * rtPenalty;
+
+                // Intensity tiebreaker (Rust pipeline.rs:6753-6758, added in
+                // v26.3.1 commit 4d0119d): log(1 + apex_intensity) breaks ties
+                // between main peak and shoulder without dominating the
+                // coelution ranking.
+                double apexIntensity = refXicIntensities[p.ApexIndex];
+                double intensityWeight = Math.Log(1.0 + apexIntensity);
+
+                double rankScore = coelutionScore * rtPenalty * intensityWeight;
 
                 if (diag)
                 {
                     LogInfo(string.Format(
-                        "[DIAG] {0}: peak[{1}] pairwise_corr_mean={2:F4} rt_penalty={3:F4} rank={4:F4}",
-                        candidate.ModifiedSequence, pi, coelutionScore, rtPenalty, rankScore));
+                        "[DIAG] {0}: peak[{1}] pairwise_corr_mean={2:F4} rt_penalty={3:F4} int_weight={4:F2} rank={5:F4}",
+                        candidate.ModifiedSequence, pi, coelutionScore, rtPenalty, intensityWeight, rankScore));
                 }
-                if (rankScore > bestRankScore)
+                // Tie-break via IEEE 754-2008 total order (matches Rust's
+                // f64::total_cmp used in run_search's scored_candidates
+                // sort). When intensityWeight is 0 (ref_xic intensity at
+                // apex is 0), rankScore is -0.0 or +0.0 depending on
+                // coelutionScore sign. Standard '>' treats -0.0 == +0.0, so
+                // without total-order compare the tie falls back to
+                // iteration order, producing divergent peak picks vs Rust
+                // for the handful of entries where all in-tolerance peaks
+                // have zero reference intensity.
+                if (TotalOrderGreater(rankScore, bestRankScore))
                 {
                     bestRankScore = rankScore;
                     bestPeak = p;
