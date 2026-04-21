@@ -1,0 +1,64 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OspreySharp.Core", "OspreySharp.Core\OspreySharp.Core.csproj", "{8F831B88-8AAB-405E-8569-D94B7F292518}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OspreySharp.ML", "OspreySharp.ML\OspreySharp.ML.csproj", "{3975DA42-50F2-4656-9834-E3DC1D8EB088}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OspreySharp.IO", "OspreySharp.IO\OspreySharp.IO.csproj", "{773CE35B-F4AB-4789-A5D8-A859FED044FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OspreySharp.Chromatography", "OspreySharp.Chromatography\OspreySharp.Chromatography.csproj", "{22011FA5-E9BA-4BB8-BDA5-F8A61E9BF38D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OspreySharp.Scoring", "OspreySharp.Scoring\OspreySharp.Scoring.csproj", "{1F513AE4-BC4F-4CA0-917B-B2D6C99DC78C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OspreySharp.FDR", "OspreySharp.FDR\OspreySharp.FDR.csproj", "{AEC0F4F4-5DBE-4E84-A213-902271285E67}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OspreySharp", "OspreySharp\OspreySharp.csproj", "{C000C097-3F5A-4E49-B700-5F12E36B4264}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OspreySharp.Test", "OspreySharp.Test\OspreySharp.Test.csproj", "{EF7990A9-10A0-4E5A-BB4D-F0E6952F0684}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8F831B88-8AAB-405E-8569-D94B7F292518}.Debug|x64.ActiveCfg = Debug|x64
+		{8F831B88-8AAB-405E-8569-D94B7F292518}.Debug|x64.Build.0 = Debug|x64
+		{8F831B88-8AAB-405E-8569-D94B7F292518}.Release|x64.ActiveCfg = Release|x64
+		{8F831B88-8AAB-405E-8569-D94B7F292518}.Release|x64.Build.0 = Release|x64
+		{3975DA42-50F2-4656-9834-E3DC1D8EB088}.Debug|x64.ActiveCfg = Debug|x64
+		{3975DA42-50F2-4656-9834-E3DC1D8EB088}.Debug|x64.Build.0 = Debug|x64
+		{3975DA42-50F2-4656-9834-E3DC1D8EB088}.Release|x64.ActiveCfg = Release|x64
+		{3975DA42-50F2-4656-9834-E3DC1D8EB088}.Release|x64.Build.0 = Release|x64
+		{773CE35B-F4AB-4789-A5D8-A859FED044FF}.Debug|x64.ActiveCfg = Debug|x64
+		{773CE35B-F4AB-4789-A5D8-A859FED044FF}.Debug|x64.Build.0 = Debug|x64
+		{773CE35B-F4AB-4789-A5D8-A859FED044FF}.Release|x64.ActiveCfg = Release|x64
+		{773CE35B-F4AB-4789-A5D8-A859FED044FF}.Release|x64.Build.0 = Release|x64
+		{22011FA5-E9BA-4BB8-BDA5-F8A61E9BF38D}.Debug|x64.ActiveCfg = Debug|x64
+		{22011FA5-E9BA-4BB8-BDA5-F8A61E9BF38D}.Debug|x64.Build.0 = Debug|x64
+		{22011FA5-E9BA-4BB8-BDA5-F8A61E9BF38D}.Release|x64.ActiveCfg = Release|x64
+		{22011FA5-E9BA-4BB8-BDA5-F8A61E9BF38D}.Release|x64.Build.0 = Release|x64
+		{1F513AE4-BC4F-4CA0-917B-B2D6C99DC78C}.Debug|x64.ActiveCfg = Debug|x64
+		{1F513AE4-BC4F-4CA0-917B-B2D6C99DC78C}.Debug|x64.Build.0 = Debug|x64
+		{1F513AE4-BC4F-4CA0-917B-B2D6C99DC78C}.Release|x64.ActiveCfg = Release|x64
+		{1F513AE4-BC4F-4CA0-917B-B2D6C99DC78C}.Release|x64.Build.0 = Release|x64
+		{AEC0F4F4-5DBE-4E84-A213-902271285E67}.Debug|x64.ActiveCfg = Debug|x64
+		{AEC0F4F4-5DBE-4E84-A213-902271285E67}.Debug|x64.Build.0 = Debug|x64
+		{AEC0F4F4-5DBE-4E84-A213-902271285E67}.Release|x64.ActiveCfg = Release|x64
+		{AEC0F4F4-5DBE-4E84-A213-902271285E67}.Release|x64.Build.0 = Release|x64
+		{C000C097-3F5A-4E49-B700-5F12E36B4264}.Debug|x64.ActiveCfg = Debug|x64
+		{C000C097-3F5A-4E49-B700-5F12E36B4264}.Debug|x64.Build.0 = Debug|x64
+		{C000C097-3F5A-4E49-B700-5F12E36B4264}.Release|x64.ActiveCfg = Release|x64
+		{C000C097-3F5A-4E49-B700-5F12E36B4264}.Release|x64.Build.0 = Release|x64
+		{EF7990A9-10A0-4E5A-BB4D-F0E6952F0684}.Debug|x64.ActiveCfg = Debug|x64
+		{EF7990A9-10A0-4E5A-BB4D-F0E6952F0684}.Debug|x64.Build.0 = Debug|x64
+		{EF7990A9-10A0-4E5A-BB4D-F0E6952F0684}.Release|x64.ActiveCfg = Release|x64
+		{EF7990A9-10A0-4E5A-BB4D-F0E6952F0684}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
