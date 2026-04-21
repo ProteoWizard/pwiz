@@ -388,6 +388,7 @@ Version.cpp
 /pwiz_tools/BiblioSpec/tests/output
 /pwiz_tools/SeeMS/**/AssemblyInfo.cs
 /pwiz_tools/MSConvertGUI/**/AssemblyInfo.cs
+/pwiz_tools/OspreySharp/**/AssemblyInfo.cs
 /pwiz_tools/Bumbershoot/**/*Version.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cs
