@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.OspreySharp.Core</RootNamespace>
+    <AssemblyName>OspreySharp.Core</AssemblyName>
+  </PropertyGroup>
+
+</Project>
