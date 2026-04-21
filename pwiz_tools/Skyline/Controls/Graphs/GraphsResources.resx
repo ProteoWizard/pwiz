@@ -814,4 +814,10 @@ Here are the last 3 errors:
   <data name="LabelLayoutRunner_Start_Label_layout" xml:space="preserve">
     <value>Label layout</value>
   </data>
+  <data name="GraphFullScan_MobilogramRequiresHeatmap" xml:space="preserve">
+    <value>Heatmap must be visible to show mobilogram</value>
+  </data>
+  <data name="GraphFullScan_ToggleSonarHeatmap" xml:space="preserve">
+    <value>Show SONAR Heatmap</value>
+  </data>
 </root>

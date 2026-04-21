@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
@@ -81,7 +82,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         private enum SplitterDrag { None, Vertical, Horizontal, Both }
         private SplitterDrag _activeDrag = SplitterDrag.None;
-        private bool IsDualPane => _stickSpectrumPane != null;
+        private bool IsStickPlotVisible => _stickSpectrumPane != null;
         private bool IsMobilogramPaneVisible => _mobilogramPane != null;
         private double _maxMz;
         private double _maxIntensity;
@@ -101,6 +102,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool _showIonSeriesAnnotations;
 
+        private string _mobilogramBtnEnabledTooltip;
+        private string _heatmapBtnDefaultTooltip;
+
         // Tooltip shows realtime info about what's under the cursor
         // as it moves, goes away after a few seconds of no movement
         private readonly CursorTrackingTip _cursorTip;
@@ -115,7 +119,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 MinDotRadius = MIN_DOT_RADIUS,
                 MaxDotRadius = MAX_DOT_RADIUS,
-                ShowHeatMap = !Settings.Default.SumScansFullScan
+                ShowHeatMap = Settings.Default.ShowHeatmapFullScan
             };
             graphControl.GraphPane = _heatMapPane;
             graphControl.GraphPane.AllowLabelOverlap = true;
@@ -130,8 +134,8 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Paint += (sender, e) =>
             {
                 if (IsMobilogramPaneVisible)
-                    RepinMobilogramIfDrifted();
-                else if (IsDualPane)
+                    RepinMobilogram();
+                else if (IsStickPlotVisible)
                 {
                     var mpR = graphControl.MasterPane.Rect;
                     if (mpR.Height > 0 && Math.Abs(_stickSpectrumPane.Rect.Height - mpR.Height * RowFraction) > 1f)
@@ -165,15 +169,26 @@ namespace pwiz.Skyline.Controls.Graphs
             _showIonSeriesAnnotations = Settings.Default.ShowFullScanAnnotations;
 
             mobilogramBtn.Checked = Settings.Default.ShowMobilogramFullScan;
+            heatmapBtn.Checked = Settings.Default.ShowHeatmapFullScan;
+
+            // Capture the mobilogram tooltip so we can restore it when the button
+            // returns to the enabled state (we overwrite ToolTipText with a "why"
+            // message when the button is disabled because heatmap is off).
+            _mobilogramBtnEnabledTooltip = mobilogramBtn.ToolTipText;
+            // Capture the heatmap tooltip so we can swap between the ion-mobility and
+            // SONAR variants based on the data type shown by the current scan.
+            _heatmapBtnDefaultTooltip = heatmapBtn.ToolTipText;
 
             magnifyBtn.CheckedChanged += magnifyBtn_CheckedChanged;
             spectrumBtn.CheckedChanged += spectrumBtn_CheckedChanged;
             filterBtn.CheckedChanged += filterBtn_CheckedChanged;
             mobilogramBtn.CheckedChanged += mobilogramBtn_CheckedChanged;
+            heatmapBtn.CheckedChanged += heatmapBtn_CheckedChanged;
             toolStripButtonShowAnnotations.CheckedChanged += toolStripButtonShowAnnotations_CheckedChanged;
 
 
             spectrumBtn.Visible = false;
+            heatmapBtn.Visible = false;
             filterBtn.Visible = false;
             mobilogramBtn.Visible = false;
             lblScanId.Visible = false; // you might want to show the scan index for debugging
@@ -351,24 +366,82 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
+        /// Heatmap + mobilogram side by side, no stick pane. Used when the user has
+        /// heatmap on but stick off.
+        /// </summary>
+        private void SetupHeatmapMobilogramLayout()
+        {
+            _stickSpectrumPane = null;
+            _emptySpacerPane = null;
+            if (_mobilogramPane == null)
+                _mobilogramPane = CreateMobilogramPane(_heatMapPane);
+
+            var mp = graphControl.MasterPane;
+            bool alreadyConfigured = mp.PaneList.Count == 2 &&
+                                     ReferenceEquals(mp.PaneList[0], _heatMapPane) &&
+                                     ReferenceEquals(mp.PaneList[1], _mobilogramPane);
+            if (!alreadyConfigured)
+            {
+                mp.PaneList.Clear();
+                mp.InnerPaneGap = 0;
+                _heatMapPane.Margin.Top = ZedGraph.Margin.Default.Top;
+                mp.Add(_heatMapPane);
+                mp.Add(_mobilogramPane);
+                using (var g = graphControl.CreateGraphics())
+                {
+                    mp.SetLayout(g, PaneLayout.SingleRow);
+                    mp.DoLayout(g);
+                    AdjustTwoPaneColumnWidths();
+                }
+            }
+            graphControl.IsSynchronizeXAxes = false;
+        }
+
+        /// <summary>
+        /// Apply ColumnFraction to the 2-pane (heatmap + mobilogram) layout so the
+        /// vertical splitter still drives column widths when the stick pane is hidden.
+        /// </summary>
+        private void AdjustTwoPaneColumnWidths()
+        {
+            if (_heatMapPane == null || _mobilogramPane == null)
+                return;
+            var mpRect = graphControl.MasterPane.Rect;
+            if (mpRect.Width <= 0 || mpRect.Height <= 0)
+                return;
+            float leftFrac = ColumnFraction;
+            float leftW = mpRect.Width * leftFrac;
+            float rightW = mpRect.Width - leftW;
+            _heatMapPane.Rect = new RectangleF(mpRect.X, mpRect.Y, leftW, mpRect.Height);
+            _mobilogramPane.Rect = new RectangleF(mpRect.X + leftW, mpRect.Y, rightW, mpRect.Height);
+            AlignMobilogramChartToHeatmap();
+        }
+
+        /// <summary>
         /// If heatmap's actual chart rect no longer matches what we pinned, re-pin and
         /// invalidate so the next paint catches up. Called from the Paint handler.
         /// </summary>
-        private void RepinMobilogramIfDrifted()
+        private void RepinMobilogram()
         {
             if (!IsMobilogramPaneVisible)
                 return;
-            // Only re-apply the 2x2 split if pane Rects don't match expected — calling
+            // Re-apply column widths if pane Rects don't match expected — calling
             // every paint causes a repaint loop because Rect assignment invalidates.
             var mpRect = graphControl.MasterPane.Rect;
             if (mpRect.Width > 0 && mpRect.Height > 0)
             {
                 float expectedLeftW = mpRect.Width * ColumnFraction;
-                float expectedTopH = mpRect.Height * RowFraction;
-                if (Math.Abs(_heatMapPane.Rect.Width - expectedLeftW) > 1f ||
-                    Math.Abs(_stickSpectrumPane.Rect.Height - expectedTopH) > 1f)
+                if (IsStickPlotVisible)
                 {
-                    AdjustFourPaneColumnWidths();
+                    float expectedTopH = mpRect.Height * RowFraction;
+                    if (Math.Abs(_heatMapPane.Rect.Width - expectedLeftW) > 1f ||
+                        Math.Abs(_stickSpectrumPane.Rect.Height - expectedTopH) > 1f)
+                    {
+                        AdjustFourPaneColumnWidths();
+                    }
+                }
+                else if (Math.Abs(_heatMapPane.Rect.Width - expectedLeftW) > 1f)
+                {
+                    AdjustTwoPaneColumnWidths();
                 }
             }
             var heat = _heatMapPane.Chart.Rect;
@@ -404,7 +477,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SplitterDrag HitTestSplitter(Point pt)
         {
-            if (!IsDualPane)
+            if (!IsStickPlotVisible)
                 return SplitterDrag.None;
             float yMid = _heatMapPane.Rect.Y;
             bool nearH = Math.Abs(pt.Y - yMid) <= SPLITTER_HIT_PX;
@@ -441,14 +514,14 @@ namespace pwiz.Skyline.Controls.Graphs
             // Stick pane should always be X-only on wheel zoom — disable vertical zoom
             // dynamically when the cursor is over it. (ZedGraph's wheel handler reads
             // IsEnableVZoom at the moment the wheel event fires.)
-            if (IsDualPane)
+            if (IsStickPlotVisible)
             {
                 var underCursor = graphControl.MasterPane.FindPane(e.Location);
                 bool vZoomOk = !ReferenceEquals(underCursor, _stickSpectrumPane);
                 if (graphControl.IsEnableVZoom != vZoomOk)
                     graphControl.IsEnableVZoom = vZoomOk;
             }
-            if (!IsDualPane)
+            if (!IsStickPlotVisible)
                 return;
             var hit = HitTestSplitter(e.Location);
             if (hit != SplitterDrag.None)
@@ -510,10 +583,36 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Invalidate();
         }
 
+        /// <summary>
+        /// Schedule one more call to AlignMobilogramChartToHeatmap AFTER the first real
+        /// paint. During CreateGraph the heatmap's Chart.Rect is computed from CalcChartRect
+        /// against partially-configured state (axis labels not yet drawn, legend not yet
+        /// laid out). The first paint can produce a slightly different Chart.Rect which
+        /// leaves the mobilogram visually stuck misaligned until the user resizes.
+        /// Deferring an extra align via BeginInvoke runs it after the message loop
+        /// finishes processing the initial paint, picking up the settled Chart.Rect.
+        /// </summary>
+        private void RealignMobilogramAfterPaint()
+        {
+            if (!IsHandleCreated)
+                return;
+            BeginInvoke(new Action(() =>
+            {
+                if (!IsMobilogramPaneVisible)
+                    return;
+                AlignMobilogramChartToHeatmap();
+                graphControl.Invalidate();
+            }));
+        }
+
         private void AlignMobilogramChartToHeatmap()
         {
             if (!IsMobilogramPaneVisible)
                 return;
+            // Sync mobilogram Y scale from heatmap before measuring — otherwise small
+            // initial window sizes can leave mobilogram's Y scale stale from create
+            // time, producing misaligned curves until the user resizes the window.
+            CopyYAxisFromHeatmap(_mobilogramPane, _heatMapPane);
             // Compute the heatmap's chart rect live (CalcChartRect returns the rect but
             // only assigns it to Chart.Rect inside GraphPane.Draw when IsRectAuto=true).
             RectangleF heat;
@@ -845,28 +944,44 @@ namespace pwiz.Skyline.Controls.Graphs
                 _msDataFileScanHelper.GetIonMobilityFilterRange(out minIonMobilityFilter, out maxIonMobilityFilter, ChromSource.unknown);
 
                 spectrumBtn.Visible = true;
-                filterBtn.Visible = !spectrumBtn.Checked;
+                heatmapBtn.Visible = true;
+                mobilogramBtn.Visible = true;
+
+                // Heatmap tooltip reflects the kind of 2-D view this scan will show.
+                heatmapBtn.ToolTipText = _msDataFileScanHelper.IsWatersSonarData
+                    ? GraphsResources.GraphFullScan_ToggleSonarHeatmap
+                    : _heatmapBtnDefaultTooltip;
+
+                // Note: (H off, M on) is a legitimate state — user turned off the heatmap
+                // temporarily but still wants the mobilogram back when heatmap returns.
+                // The render logic below suppresses mobilogram whenever heatmap is off
+                // (showMobilogram = showHeatmap && mobilogramBtn.Checked).
+                UpdateImButtonEnableStates();
+
+                bool showStick = spectrumBtn.Checked;
+                bool showHeatmap = heatmapBtn.Checked;
+                bool showMobilogram = showHeatmap && mobilogramBtn.Checked;
+
+                filterBtn.Visible = showHeatmap;
                 if (filterBtn.Visible && (minIonMobilityFilter == double.MinValue) && (maxIonMobilityFilter == double.MaxValue))
                 {
                     filterBtn.Visible = false;
                     filterBtn.Checked = false;
                 }
 
-                bool showHeatMap = !spectrumBtn.Checked;
+                _heatMapPane.ShowHeatMap = showHeatmap;
+                double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
+                string titleText = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
 
-                if (showHeatMap)
+                if (showStick && showHeatmap)
                 {
-                    // Dual-pane: stick spectrum on top, heatmap+mobilogram on bottom
-                    bool showMobilogram = mobilogramBtn.Checked;
+                    // S+H or S+H+M: stick on top, heatmap on bottom (+ optional mobilogram on right)
                     SetupDualPaneLayout(showMobilogram);
 
-                    mobilogramBtn.Visible = true;
                     graphControl.IsEnableVPan = graphControl.IsEnableVZoom = true;
                     _heatMapPane.Legend.IsVisible = true;
                     _heatMapPane.Legend.Position = LegendPos.BottomCenter;
-                    _heatMapPane.ShowHeatMap = true;
 
-                    // Clear both panes
                     _stickSpectrumPane.CurveList.Clear();
                     _stickSpectrumPane.GraphObjList.Clear();
                     _heatMapPane.CurveList.Clear();
@@ -904,31 +1019,105 @@ namespace pwiz.Skyline.Controls.Graphs
                     ZoomStickYAxis();
 
                     PopulateProperties();
-
                     AddExtractionBoxes(_heatMapPane);
                     AddExtractionBoxes(_stickSpectrumPane);
-
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(_stickSpectrumPane, massErrors);
 
-                    double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
-                    _stickSpectrumPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
+                    _stickSpectrumPane.Title.Text = titleText;
                     _stickSpectrumPane.Title.IsVisible = true;
                     _heatMapPane.Title.IsVisible = false;
+
+                    // Title visibility affects each pane's Chart.Rect — re-align mobilogram
+                    // to the final heatmap chart rect, otherwise drift-time values don't
+                    // line up horizontally across panes.
+                    if (showMobilogram)
+                    {
+                        AdjustFourPaneColumnWidths();
+                        // Run one more align after the first paint, by which point the
+                        // heatmap has actually drawn and its Chart.Rect reflects reality.
+                        // CalcChartRect at CreateGraph-time can produce a slightly different
+                        // rect than the first real paint, leaving mobilogram stuck misaligned
+                        // until the user resizes the window.
+                        RealignMobilogramAfterPaint();
+                    }
+
+                    FireSelectedScanChanged(retentionTime);
+                }
+                else if (showHeatmap && showMobilogram)
+                {
+                    // H+M: heatmap + mobilogram side by side, no stick pane
+                    SetupHeatmapMobilogramLayout();
+
+                    graphControl.IsEnableVPan = graphControl.IsEnableVZoom = true;
+                    _heatMapPane.Legend.IsVisible = true;
+                    _heatMapPane.Legend.Position = LegendPos.BottomCenter;
+
+                    _heatMapPane.CurveList.Clear();
+                    _heatMapPane.GraphObjList.Clear();
+                    _mobilogramPane.CurveList.Clear();
+                    _mobilogramPane.GraphObjList.Clear();
+
+                    GetRankedSpectrum();
+                    _heatMapPane.Margin.Right = 2;
+                    ZoomHeatMapYAxis();
+                    CreateIonMobilityHeatmap();
+                    CreateMobilogram();
+
+                    PopulateProperties();
+                    AddExtractionBoxes(_heatMapPane);
+                    if (!_showIonSeriesAnnotations)
+                        AddTransitionLabels(_heatMapPane, null);
+
+                    _heatMapPane.Title.Text = titleText;
+                    _heatMapPane.Title.IsVisible = true;
+
+                    // Run alignment last so mobilogram chart rect matches the heatmap's
+                    // final Chart.Rect (title visibility above affects that rect).
+                    AdjustTwoPaneColumnWidths();
+                    RealignMobilogramAfterPaint();
+
+                    FireSelectedScanChanged(retentionTime);
+                }
+                else if (showHeatmap)
+                {
+                    // H only: single-pane heatmap
+                    SetupSinglePaneLayout();
+
+                    _heatMapPane.CurveList.Clear();
+                    _heatMapPane.GraphObjList.Clear();
+                    _heatMapPane.Margin.Right = ZedGraph.Margin.Default.Right;
+                    graphControl.IsEnableVPan = graphControl.IsEnableVZoom = true;
+                    _heatMapPane.Legend.IsVisible = true;
+                    _heatMapPane.Legend.Position = LegendPos.BottomCenter;
+
+                    GetRankedSpectrum();
+                    ZoomHeatMapYAxis();
+                    CreateIonMobilityHeatmap();
+
+                    PopulateProperties();
+                    AddExtractionBoxes(_heatMapPane);
+                    if (!_showIonSeriesAnnotations)
+                        AddTransitionLabels(_heatMapPane, null);
+
+                    _heatMapPane.Title.Text = titleText;
+                    _heatMapPane.Title.IsVisible = true;
 
                     FireSelectedScanChanged(retentionTime);
                 }
                 else
                 {
-                    // Heatmap off: single-pane stick spectrum (summed across ion mobility)
+                    // S only: heatmap pane used for stick rendering (ShowHeatMap=false)
                     SetupSinglePaneLayout();
 
-                    mobilogramBtn.Visible = false;
                     GraphPane.CurveList.Clear();
                     GraphPane.GraphObjList.Clear();
                     graphControl.IsEnableVPan = graphControl.IsEnableVZoom = false;
                     GraphPane.Legend.IsVisible = false;
 
+                    // Reset Y-axis so a previously pinned ion-mobility scale from a
+                    // heatmap view gives way to intensity-range auto-fit.
+                    ResetStickYAxis();
                     GetRankedSpectrum();
                     double[] massErrors;
                     CreateSingleScan(out massErrors);
@@ -938,8 +1127,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(GraphPane, massErrors);
 
-                    double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
-                    GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
+                    GraphPane.Title.Text = titleText;
 
                     FireSelectedScanChanged(retentionTime);
                 }
@@ -949,10 +1137,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Single pane: stick spectrum only (no ion mobility data)
                 SetupSinglePaneLayout();
 
+                // Reset heatmap-mode state inherited from any previous IM-bearing scan;
+                // without this, switching from an IM replicate to a non-IM one leaves
+                // _heatMapPane in heatmap-rendering mode with no data and no stick curves
+                // get drawn.
+                _heatMapPane.ShowHeatMap = false;
+                ResetStickYAxis();
                 GraphPane.CurveList.Clear();
                 GraphPane.GraphObjList.Clear();
 
                 spectrumBtn.Visible = false;
+                heatmapBtn.Visible = false;
                 filterBtn.Visible = false;
                 mobilogramBtn.Visible = false;
                 graphControl.IsEnableVPan = graphControl.IsEnableVZoom = false;
@@ -1643,7 +1838,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
                         selectionMatch ? selection.NodeTran : null);
-                    if (IsDualPane)
+                    if (IsStickPlotVisible)
                     {
                         var curveItem = graphControl.AddGraphItem(targetPane, graphItem, false);
                         curveItem.Label.IsVisible = false;
@@ -1852,7 +2047,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             ApplyXZoomToPane(GraphPane);
-            if (IsDualPane)
+            if (IsStickPlotVisible)
                 ApplyXZoomToPane(_stickSpectrumPane);
         }
 
@@ -1887,7 +2082,7 @@ namespace pwiz.Skyline.Controls.Graphs
             using (var g = graphControl.CreateGraphics())
             {
                 GraphPane.SetScale(g);
-                if (IsDualPane)
+                if (IsStickPlotVisible)
                     _stickSpectrumPane.SetScale(g);
             }
 
@@ -1896,7 +2091,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void SetIntensityScale(double maxIntensity)
         {
-            var targetPane = IsDualPane ? _stickSpectrumPane : (GraphPane)_heatMapPane;
+            var targetPane = IsStickPlotVisible ? _stickSpectrumPane : (GraphPane)_heatMapPane;
             targetPane.YAxis.Scale.MaxAuto = false;
             targetPane.YAxis.Scale.Max = maxIntensity;
             targetPane.AxisChange();
@@ -1910,12 +2105,12 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ApplyMZZoomState(ZoomState newState)
         {
             newState.XAxis.ApplyScale(GraphPane.XAxis);
-            if (IsDualPane)
+            if (IsStickPlotVisible)
                 newState.XAxis.ApplyScale(_stickSpectrumPane.XAxis);
             using (var g = graphControl.CreateGraphics())
             {
                 GraphPane.SetScale(g);
-                if (IsDualPane)
+                if (IsStickPlotVisible)
                     _stickSpectrumPane.SetScale(g);
             }
             graphControl.Refresh();
@@ -1929,7 +2124,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Propagate X from whichever of stick/heatmap the user just zoomed in to the
             // other one. Using the pane under the mouse keeps wheel zooms over the stick
             // pane working without snapping back.
-            if (IsDualPane)
+            if (IsStickPlotVisible)
             {
                 var src = graphControl.MasterPane.FindPane(Point.Truncate(mousePosition));
                 if (ReferenceEquals(src, _stickSpectrumPane))
@@ -1952,7 +2147,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_Resize(object sender, EventArgs e)
         {
-            if (IsDualPane)
+            if (IsStickPlotVisible)
             {
                 using (var g = graphControl.CreateGraphics())
                     graphControl.MasterPane.DoLayout(g);
@@ -2015,7 +2210,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
                 return;
 
-            if (IsDualPane)
+            if (IsStickPlotVisible)
             {
                 ZoomStickYAxis();
                 ZoomHeatMapYAxis();
@@ -2101,6 +2296,28 @@ namespace pwiz.Skyline.Controls.Graphs
             _stickSpectrumPane.AxisChange();
         }
 
+        /// <summary>
+        /// Reset heatmap-pane Y-axis state for a stick-spectrum render path. Called when
+        /// the heatmap pane is being reused to draw a 1-D spectrum and its Y scale may
+        /// still be pinned to an ion-mobility range from a previous heatmap render.
+        /// Setting Min/Max directly (instead of via ZoomYAxis which also runs AxisChange)
+        /// avoids a chart-rect recompute mid-CreateGraph.
+        /// </summary>
+        private void ResetStickYAxis()
+        {
+            // Pin Y to the intensity range of the current scan. We can't use MinAuto/MaxAuto=true
+            // here because setting those on the heatmap pane's Y-axis disturbs the X-axis scale
+            // during the subsequent AxisChange — the explicit (0, _maxIntensity*1.1) form sidesteps
+            // that and matches what ZoomYAxis does for the spectrum-view case.
+            var yScale = _heatMapPane.YAxis.Scale;
+            yScale.MinAuto = false;
+            _heatMapPane.LockYAxisMinAtZero = true;
+            yScale.Min = 0;
+            yScale.Max = _maxIntensity * 1.1;
+            // Magnify on → auto-fit Y to data in the zoomed X range during next paint.
+            yScale.MaxAuto = magnifyBtn.Checked;
+        }
+
         private void ZoomHeatMapYAxis()
         {
             var yScale = _heatMapPane.YAxis.Scale;
@@ -2149,10 +2366,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Visible || IsDisposed || _msDataFileScanHelper.ScanProvider == null)
                 return;
             GraphHelper.FormatGraphPane(GraphPane);
-            if (IsDualPane)
+            if (IsStickPlotVisible)
                 GraphHelper.FormatGraphPane(_stickSpectrumPane);
-            comboBoxPeakType.Visible = IsDualPane || spectrumBtn.Checked;
-            toolStripLabelPeakType.Visible = IsDualPane || spectrumBtn.Checked;
+            comboBoxPeakType.Visible = IsStickPlotVisible || spectrumBtn.Checked;
+            toolStripLabelPeakType.Visible = IsStickPlotVisible || spectrumBtn.Checked;
 
             if (selectionChanged)
                 CreateGraph();
@@ -2163,7 +2380,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Count-1);
                 lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString(@"D");
                 GraphPane.SetScale(CreateGraphics());
-                if (IsDualPane)
+                if (IsStickPlotVisible)
                     _stickSpectrumPane.SetScale(CreateGraphics());
                 if (_msDataFileScanHelper.IsWatersSonarData)
                 {
@@ -2271,19 +2488,87 @@ namespace pwiz.Skyline.Controls.Graphs
             FireZoomEvent();
         }
 
+        private bool _suppressImButtonCascade;
+
         private void spectrumBtn_CheckedChanged(object sender, EventArgs e)
         {
-            ShowMobility(!spectrumBtn.Checked);
-        }
-
-        public void ShowMobility(bool show)
-        {
-            HeatMapGraphPane.ShowHeatMap = show;
-            Settings.Default.SumScansFullScan = spectrumBtn.Checked = !show;
-            mobilogramBtn.Visible = show && spectrumBtn.Visible;
+            if (_suppressImButtonCascade)
+                return;
+            Settings.Default.SumScansFullScan = spectrumBtn.Checked;
+            // Handoff: turning stickplot off when heatmap is already off forces heatmap
+            // on so at least one of the two remains visible.
+            if (!spectrumBtn.Checked && !heatmapBtn.Checked)
+            {
+                _suppressImButtonCascade = true;
+                try { heatmapBtn.Checked = true; }
+                finally { _suppressImButtonCascade = false; }
+                Settings.Default.ShowHeatmapFullScan = true;
+            }
+            UpdateImButtonEnableStates();
             UpdateUI();
             ZoomYAxis();
             graphControl.Invalidate();
+        }
+
+        private void heatmapBtn_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_suppressImButtonCascade)
+                return;
+            Settings.Default.ShowHeatmapFullScan = heatmapBtn.Checked;
+            // Handoff: turning heatmap off when stickplot is already off forces stickplot
+            // on so at least one of the two remains visible.
+            if (!heatmapBtn.Checked && !spectrumBtn.Checked)
+            {
+                _suppressImButtonCascade = true;
+                try { spectrumBtn.Checked = true; }
+                finally { _suppressImButtonCascade = false; }
+                Settings.Default.SumScansFullScan = true;
+            }
+            // Don't cascade mobilogram off when heatmap goes off — preserve the user's
+            // mobilogram preference so turning heatmap back on restores the mobilogram.
+            // The renderer already hides the mobilogram whenever heatmap is off
+            // (showMobilogram = showHeatmap && mobilogramBtn.Checked).
+            _heatMapData = null;
+            UpdateImButtonEnableStates();
+            UpdateUI();
+            graphControl.Invalidate();
+        }
+
+        /// <summary>
+        /// Legacy API preserved for test compatibility. show==true means heatmap
+        /// visible, stick hidden (the old "dual-pane" view). show==false means
+        /// stick visible, heatmap hidden (the old "spectrum only" view).
+        /// </summary>
+        public void ShowMobility(bool show)
+        {
+            if (show)
+            {
+                heatmapBtn.Checked = true;
+                spectrumBtn.Checked = false;
+            }
+            else
+            {
+                spectrumBtn.Checked = true;
+                heatmapBtn.Checked = false;
+            }
+        }
+
+        /// <summary>
+        /// Update enabled state of the S and H toolbar buttons to enforce the
+        /// minimum-visibility invariant (stick or heatmap must remain visible).
+        /// The M button is never disabled — cascade rules let it toggle freely.
+        /// </summary>
+        private void UpdateImButtonEnableStates()
+        {
+            // S and H are always enabled. Clicking the only visible one hands off to the
+            // other so that stickplot or heatmap is always showing (handoff is implemented
+            // in the button handlers rather than by disabling the click).
+            // M is disabled when heatmap is off — mobilogram has no heatmap to pair with.
+            // M.Checked is preserved so mobilogram returns when heatmap is turned back on.
+            mobilogramBtn.Enabled = heatmapBtn.Checked;
+            mobilogramBtn.ToolTipText = mobilogramBtn.Enabled
+                ? _mobilogramBtnEnabledTooltip
+                : GraphsResources.GraphFullScan_MobilogramRequiresHeatmap;
         }
 
         private HeatMapGraphPane HeatMapGraphPane { get { return _heatMapPane; } }
@@ -2369,14 +2654,25 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void mobilogramBtn_CheckedChanged(object sender, EventArgs e)
         {
+            if (_suppressImButtonCascade)
+                return;
             Settings.Default.ShowMobilogramFullScan = mobilogramBtn.Checked;
+            // Cascade: mobilogram on implies heatmap on (mobilogram needs heatmap)
+            if (mobilogramBtn.Checked && !heatmapBtn.Checked)
+            {
+                _suppressImButtonCascade = true;
+                try { heatmapBtn.Checked = true; }
+                finally { _suppressImButtonCascade = false; }
+                Settings.Default.ShowHeatmapFullScan = true;
+            }
             _heatMapData = null; // Force recompute with/without PlotY2D
             // Preserve current axis ranges across the rebuild
             double savedYMin = _heatMapPane.YAxis.Scale.Min;
             double savedYMax = _heatMapPane.YAxis.Scale.Max;
+            UpdateImButtonEnableStates();
             UpdateUI();
             // Restore heatmap Y range (mobilogram toggle shouldn't change the view)
-            if (IsDualPane)
+            if (IsStickPlotVisible || IsMobilogramPaneVisible)
             {
                 _heatMapPane.YAxis.Scale.Min = savedYMin;
                 _heatMapPane.YAxis.Scale.Max = savedYMax;
@@ -2699,7 +2995,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)
         {
-            MSGraphPane labelPane = IsDualPane ? _stickSpectrumPane : GraphPane;
+            MSGraphPane labelPane = IsStickPlotVisible ? _stickSpectrumPane : GraphPane;
             var nearestLabel = GetNearestLabel(new PointF(e.X, e.Y), labelPane);
             if (nearestLabel == null)
                 return;
@@ -2734,9 +3030,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 return true;
             }
 
-            // Labels only exist on the stick pane
-            MSGraphPane labelPane = IsDualPane ? _stickSpectrumPane : GraphPane;
-            if (IsDualPane)
+            // Labels only exist on the stick pane, or the heatmap when stickpane is off
+            MSGraphPane labelPane = IsStickPlotVisible ? _stickSpectrumPane : GraphPane;
+            if (IsStickPlotVisible)
             {
                 var pane = graphControl.MasterPane.FindChartRect(pt);
                 if (!ReferenceEquals(pane, _stickSpectrumPane))
@@ -2767,7 +3063,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (IsMobilogramVisible && IsInMobilogramArea(pt))
                 return GetMobilogramTooltipTable(pt);
 
-            if (IsDualPane)
+            if (IsStickPlotVisible)
             {
                 var pane = graphControl.MasterPane.FindChartRect(pt);
                 if (ReferenceEquals(pane, _stickSpectrumPane))
@@ -3029,7 +3325,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseClick(double x, double y)
         {
             // In dual-pane mode, transform against stick pane for label clicks
-            var pane = IsDualPane ? _stickSpectrumPane : GraphPane;
+            var pane = IsStickPlotVisible ? _stickSpectrumPane : GraphPane;
             var mouse = pane.GeneralTransform(new PointF((float)x, (float)y), CoordType.AxisXYScale);
             graphControl_MouseClick(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
         }
@@ -3049,7 +3345,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public TableDesc TestGetTooltipTable(double x = double.NaN, double y = double.NaN)
         {
             // Heatmap tooltip when heatmap is showing (dual-pane or single-pane heatmap mode)
-            bool isHeatMap = IsDualPane || (spectrumBtn.Visible && !spectrumBtn.Checked);
+            bool isHeatMap = IsStickPlotVisible || (spectrumBtn.Visible && !spectrumBtn.Checked);
             var rt = _cursorTip.RenderTools;
             var table = new TableDesc();
 
@@ -3084,7 +3380,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                var specPane = IsDualPane ? _stickSpectrumPane : GraphPane;
+                var specPane = IsStickPlotVisible ? _stickSpectrumPane : GraphPane;
                 if (specPane.CurveList.Count == 0)
                     return null;
                 var curve = specPane.CurveList[0];
@@ -3140,7 +3436,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return table;
         }
 
-        public string TitleText => IsDualPane ? _stickSpectrumPane.Title.Text : GraphPane.Title.Text;
+        public string TitleText => IsStickPlotVisible ? _stickSpectrumPane.Title.Text : GraphPane.Title.Text;
         public string HeatMapYAxisTitleText => _heatMapPane.YAxis.Title.Text;
         public double XAxisMin => GraphPane.XAxis.Scale.Min;
         public double XAxisMax => GraphPane.XAxis.Scale.Max;
@@ -3149,7 +3445,7 @@ namespace pwiz.Skyline.Controls.Graphs
         // In dual-pane mode, expose stick pane's Y-axis (intensity) separately from heatmap Y-axis (ion mobility)
         public double StickYAxisMin => _stickSpectrumPane?.YAxis.Scale.Min ?? GraphPane.YAxis.Scale.Min;
         public double StickYAxisMax => _stickSpectrumPane?.YAxis.Scale.Max ?? GraphPane.YAxis.Scale.Max;
-        public bool IsDualPaneMode => IsDualPane;
+        public bool IsDualPaneMode => IsStickPlotVisible;
         // True if the purple ion-mobility filter band is currently drawn on the heatmap.
         public bool HasIonMobilityFilterBand => GraphPane.GraphObjList.OfType<BoxObj>().Any(b => TAG_IM_FILTER_BAND.Equals(b.Tag));
 
@@ -3176,6 +3472,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void SetSpectrum(bool isChecked)
         {
+            // Enforce minimum-visibility invariant: if turning sticklot off with heatmap
+            // already off, turn heatmap on first so something remains visible. Normal
+            // button clicks can't hit this because the S button would be disabled,
+            // but the programmatic API needs the guard.
+            if (!isChecked && !heatmapBtn.Checked)
+                heatmapBtn.Checked = true;
             spectrumBtn.Checked = isChecked;
         }
 
@@ -3198,7 +3500,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var labelPane = IsDualPane ? _stickSpectrumPane : GraphPane;
+                var labelPane = IsStickPlotVisible ? _stickSpectrumPane : GraphPane;
                 if (toolStripButtonShowAnnotations.Checked && Program.SkylineOffscreen)
                 {
                     var annotationCurves = labelPane.CurveList.FindAll(c => c is StickItem && c.Tag is SpectrumGraphItem);
@@ -3222,6 +3524,13 @@ namespace pwiz.Skyline.Controls.Graphs
         public void SetMobilogram(bool isChecked)
         {
             mobilogramBtn.Checked = isChecked;
+        }
+
+        public void SetHeatmap(bool isChecked)
+        {
+            if (!isChecked && !spectrumBtn.Checked)
+                spectrumBtn.Checked = true;
+            heatmapBtn.Checked = isChecked;
         }
 
         public bool IsMobilogramVisible => mobilogramBtn.Visible && mobilogramBtn.Checked;

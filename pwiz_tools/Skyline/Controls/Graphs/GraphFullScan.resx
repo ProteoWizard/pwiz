@@ -217,7 +217,7 @@
     <value>23, 22</value>
   </data>
   <data name="spectrumBtn.ToolTipText" xml:space="preserve">
-    <value>Toggle Heatmap</value>
+    <value>Show Summed Spectrum</value>
   </data>
   <data name="filterBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -235,7 +235,16 @@
     <value>23, 22</value>
   </data>
   <data name="mobilogramBtn.ToolTipText" xml:space="preserve">
-    <value>Toggle Mobilogram</value>
+    <value>Show Mobilogram</value>
+  </data>
+  <data name="heatmapBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="heatmapBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="heatmapBtn.ToolTipText" xml:space="preserve">
+    <value>Show Ion Mobility Heatmap</value>
   </data>
   <data name="lblScanId.Size" type="System.Drawing.Size, System.Drawing">
     <value>13, 22</value>
@@ -474,6 +483,12 @@ extraction.</value>
     <value>mobilogramBtn</value>
   </data>
   <data name="&gt;&gt;mobilogramBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;heatmapBtn.Name" xml:space="preserve">
+    <value>heatmapBtn</value>
+  </data>
+  <data name="&gt;&gt;heatmapBtn.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblScanId.Name" xml:space="preserve">

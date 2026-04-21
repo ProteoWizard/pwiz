@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.comboSpectrum = new System.Windows.Forms.ToolStripComboBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
             this.graphControlExtension = new MsGraphExtension();
-            this.toolBar = new System.Windows.Forms.ToolStrip();
+            this.toolBar = new pwiz.Skyline.Controls.Graphs.ClickThroughToolStrip();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.comboBoxScanType = new System.Windows.Forms.ToolStripComboBox();
             this.rightButton = new System.Windows.Forms.ToolStripButton();
@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.btnIsolationWindow = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonShowAnnotations = new System.Windows.Forms.ToolStripButton();
             this.mobilogramBtn = new System.Windows.Forms.ToolStripButton();
+            this.heatmapBtn = new System.Windows.Forms.ToolStripButton();
             this.toolStripLabelPeakType = new System.Windows.Forms.ToolStripLabel();
             this.comboBoxPeakType = new System.Windows.Forms.ToolStripComboBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -93,8 +94,9 @@ namespace pwiz.Skyline.Controls.Graphs
             this.leftButton,
             this.magnifyBtn,
             this.spectrumBtn,
-            this.filterBtn,
+            this.heatmapBtn,
             this.mobilogramBtn,
+            this.filterBtn,
             this.lblScanId,
             this.btnIsolationWindow,
             this.toolStripButtonShowAnnotations,
@@ -179,6 +181,15 @@ namespace pwiz.Skyline.Controls.Graphs
             this.mobilogramBtn.Image = global::pwiz.Skyline.Properties.Resources.Mobilogram;
             resources.ApplyResources(this.mobilogramBtn, "mobilogramBtn");
             this.mobilogramBtn.Name = "mobilogramBtn";
+            //
+            // heatmapBtn
+            //
+            this.heatmapBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.heatmapBtn.CheckOnClick = true;
+            this.heatmapBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.heatmapBtn.Image = global::pwiz.Skyline.Properties.Resources.IonMobilityHeatmap;
+            resources.ApplyResources(this.heatmapBtn, "heatmapBtn");
+            this.heatmapBtn.Name = "heatmapBtn";
             //
             // propertiesBtn
             // 
@@ -300,6 +311,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.ToolStripButton spectrumBtn;
         private System.Windows.Forms.ToolStripButton filterBtn;
         private System.Windows.Forms.ToolStripButton mobilogramBtn;
+        private System.Windows.Forms.ToolStripButton heatmapBtn;
         private System.Windows.Forms.ToolStripButton propertiesBtn;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem showScanNumberContextMenuItem;

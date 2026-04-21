@@ -488,6 +488,9 @@
     <Setting Name="ShowMobilogramFullScan" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="ShowHeatmapFullScan" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="FullScanMobilogramColumnFraction" Type="System.Single" Scope="User">
       <Value Profile="(Default)">0.8</Value>
     </Setting>
