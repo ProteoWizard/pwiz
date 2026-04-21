@@ -1591,6 +1591,14 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Label layout.
+        /// </summary>
+        public static string LabelLayoutRunner_Start_Label_layout {
+            get {
+                return ResourceManager.GetString("LabelLayoutRunner_Start_Label_layout", resourceCulture);
+            }
+        }
+        
         ///   Looks up a localized string similar to Peptides.
         /// </summary>
         public static string MassErrorBinFinder_DisplayName_Peptides {

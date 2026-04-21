@@ -242,6 +242,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(foldChangeForm);
                 WaitForConditionUI(() => foldChangeForm.LabelLayout != null);
                 Assert.IsNotNull(foldChangeForm.LabelLayout);
+                // This document has a saved layout in the .view file, so this code really tests the saved layout loading
+                // but does not exercise the layout algorithm itself.
                 var labels = foldChangeForm.LabelLayout.LabeledPoints.Values;
                 Assert.IsFalse(labels.Any(l => !savedLabelPositions.Any(s => s.Equals(l.LabelPosition))));
 

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.OspreySharp.FDR</RootNamespace>
+    <AssemblyName>OspreySharp.FDR</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
+    <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj" />
+  </ItemGroup>
+
+</Project>
