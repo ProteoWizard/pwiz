@@ -37,8 +37,6 @@ namespace pwiz.OspreySharp.Test
     [TestClass]
     public class ChromatographyTest
     {
-        private const double TOLERANCE = 1e-6;
-
         // =====================================================================
         // Helpers
         // =====================================================================

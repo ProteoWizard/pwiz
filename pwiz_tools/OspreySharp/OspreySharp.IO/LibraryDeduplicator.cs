@@ -86,20 +86,24 @@ namespace pwiz.OspreySharp.IO
                         allGenes.Add(g);
                 }
 
-                // Pick the best entry: most fragments, then highest total intensity
+                // Pick the best entry: most fragments, then highest total intensity.
+                // Precompute total intensities once (O(n * frag_count)) so the
+                // sort comparator is O(1) per call instead of re-summing per
+                // comparison (O(n log n * frag_count)).
+                var totalIntensities = new Dictionary<LibraryEntry, double>(group.Count);
+                foreach (var e in group)
+                {
+                    double totalIntensity = 0;
+                    foreach (var f in e.Fragments)
+                        totalIntensity += f.RelativeIntensity;
+                    totalIntensities[e] = totalIntensity;
+                }
                 group.Sort((a, b) =>
                 {
                     int fragCmp = b.Fragments.Count.CompareTo(a.Fragments.Count);
                     if (fragCmp != 0)
                         return fragCmp;
-
-                    double sumA = 0;
-                    foreach (var f in a.Fragments)
-                        sumA += f.RelativeIntensity;
-                    double sumB = 0;
-                    foreach (var f in b.Fragments)
-                        sumB += f.RelativeIntensity;
-                    return sumB.CompareTo(sumA);
+                    return totalIntensities[b].CompareTo(totalIntensities[a]);
                 });
 
                 var best = group[0];

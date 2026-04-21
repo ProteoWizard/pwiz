@@ -41,9 +41,9 @@ namespace pwiz.OspreySharp.Chromatography
         public static void SaveCalibration(CalibrationParams calibration, string path)
         {
             if (calibration == null)
-                throw new ArgumentNullException("calibration");
+                throw new ArgumentNullException(nameof(calibration));
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path must not be null or empty", "path");
+                throw new ArgumentException("path must not be null or empty", nameof(path));
 
             string json = JsonConvert.SerializeObject(calibration, Formatting.Indented);
             File.WriteAllText(path, json);
@@ -57,7 +57,7 @@ namespace pwiz.OspreySharp.Chromatography
         public static CalibrationParams LoadCalibration(string path)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path must not be null or empty", "path");
+                throw new ArgumentException("path must not be null or empty", nameof(path));
             if (!File.Exists(path))
                 throw new FileNotFoundException("Calibration file not found: " + path, path);
 

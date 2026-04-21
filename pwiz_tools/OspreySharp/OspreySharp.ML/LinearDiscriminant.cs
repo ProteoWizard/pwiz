@@ -68,6 +68,20 @@ namespace pwiz.OspreySharp.ML
             if (features.Rows != decoy.Length)
                 throw new ArgumentException("Feature rows must match label count");
 
+            bool hasDecoy = false;
+            bool hasTarget = false;
+            foreach (bool isDecoy in decoy)
+            {
+                if (isDecoy)
+                    hasDecoy = true;
+                else
+                    hasTarget = true;
+                if (hasDecoy && hasTarget)
+                    break;
+            }
+            if (!hasDecoy || !hasTarget)
+                throw new ArgumentException("Labels must contain at least one decoy and one target");
+
             // Calculate overall mean
             var xBar = features.Mean();
             var scatterWithin = Matrix.Zeros(features.Cols, features.Cols);
@@ -132,8 +146,8 @@ namespace pwiz.OspreySharp.ML
 
             // Ensure target class scores higher than decoy class
             // Class means: first class is decoy (true), second is target (false)
-            var classeMeansArray = classMeansList.ToArray();
-            var classMeansMatrix = new Matrix(classeMeansArray, 2, features.Cols);
+            var classMeansArray = classMeansList.ToArray();
+            var classMeansMatrix = new Matrix(classMeansArray, 2, features.Cols);
             var coef = Matrix.DotVector(classMeansMatrix, evec);
             if (coef[1] < coef[0])
             {

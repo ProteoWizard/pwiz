@@ -193,17 +193,23 @@ namespace pwiz.OspreySharp.IO
 
         private static double[] ReadDoubleArray(BinaryReader r, int count)
         {
-            byte[] bytes = r.ReadBytes(count * 8);
+            int byteCount = count * 8;
+            byte[] bytes = r.ReadBytes(byteCount);
+            if (bytes.Length != byteCount)
+                throw new InvalidDataException("Unexpected end of spectra cache while reading double array.");
             double[] result = new double[count];
-            Buffer.BlockCopy(bytes, 0, result, 0, bytes.Length);
+            Buffer.BlockCopy(bytes, 0, result, 0, byteCount);
             return result;
         }
 
         private static float[] ReadFloatArray(BinaryReader r, int count)
         {
-            byte[] bytes = r.ReadBytes(count * 4);
+            int byteCount = count * 4;
+            byte[] bytes = r.ReadBytes(byteCount);
+            if (bytes.Length != byteCount)
+                throw new InvalidDataException("Unexpected end of spectra cache while reading float array.");
             float[] result = new float[count];
-            Buffer.BlockCopy(bytes, 0, result, 0, bytes.Length);
+            Buffer.BlockCopy(bytes, 0, result, 0, byteCount);
             return result;
         }
 

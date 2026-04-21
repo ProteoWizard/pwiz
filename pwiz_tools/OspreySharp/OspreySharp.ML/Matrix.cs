@@ -145,7 +145,7 @@ namespace pwiz.OspreySharp.ML
         }
 
         /// <summary>
-        /// Get element at (row, col). Returns null if out of bounds.
+        /// Get element at (row, col). Throws <see cref="IndexOutOfRangeException"/> if out of bounds.
         /// </summary>
         public double Get(int row, int col)
         {
