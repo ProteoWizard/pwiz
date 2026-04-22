@@ -440,6 +440,17 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
 
+            // Stage 5 grid-search detail dump.
+            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_GRID_SEARCH"), @"1"))
+            {
+                WriteStage5GridSearchDump(foldTraces, config.CValues);
+                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_GRID_SEARCH_ONLY"), @"1"))
+                {
+                    Console.Error.WriteLine(@"[BISECT] OSPREY_GRID_SEARCH_ONLY set - aborting after dump");
+                    Environment.Exit(0);
+                }
+            }
+
             // Score ALL entries with trained models
             if (trainSubset != null)
             {
@@ -611,6 +622,10 @@ namespace pwiz.OspreySharp.FDR
             public double BestC;
             public int NSelectedTargets;
             public int NPassing;
+            /// <summary>Per-C count_passing from inner-CV grid search,
+            /// aligned to PercolatorConfig.CValues. Mirrors Rust's
+            /// TrainIterSnapshot::per_c_counts.</summary>
+            public int[] PerCCounts;
         }
 
         private static LinearSvmClassifier TrainFold(
@@ -686,10 +701,11 @@ namespace pwiz.OspreySharp.FDR
                 var svmFoldAssignments = CreateStratifiedFoldsByPeptide(
                     svmLabels, svmPeptides, svmEntryIds, config.NFolds);
 
+                int[] perCCounts;
                 double bestC = GridSearchC(
                     svmFeatures, svmLabels, svmEntryIds,
                     config.CValues, svmFoldAssignments, config.NFolds,
-                    config.Seed, trainFdr);
+                    config.Seed, trainFdr, out perCCounts);
 
                 // iii. Train SVM with best C
                 var model = LinearSvmClassifier.Train(
@@ -710,6 +726,7 @@ namespace pwiz.OspreySharp.FDR
                     BestC = bestC,
                     NSelectedTargets = selectedTargetIndices.Length,
                     NPassing = nPassing,
+                    PerCCounts = perCCounts,
                 });
 
                 if (nPassing > bestPassing)
@@ -1037,10 +1054,13 @@ namespace pwiz.OspreySharp.FDR
         private static double GridSearchC(
             Matrix features, bool[] labels, uint[] entryIds,
             double[] cValues, int[] foldAssignments, int nFolds,
-            ulong seed, double fdrThreshold)
+            ulong seed, double fdrThreshold,
+            out int[] perCCounts)
         {
             double bestC = cValues[0];
             int bestTotal = 0;
+            perCCounts = new int[cValues.Length];
+            int cIdx = 0;
 
             foreach (double c in cValues)
             {
@@ -1078,6 +1098,9 @@ namespace pwiz.OspreySharp.FDR
 
                     totalPassing += CountPassing(testScores, testLabels, testEntryIds, fdrThreshold);
                 }
+
+                perCCounts[cIdx] = totalPassing;
+                cIdx++;
 
                 if (totalPassing > bestTotal)
                 {
@@ -1769,6 +1792,49 @@ namespace pwiz.OspreySharp.FDR
                 }
                 Console.Error.WriteLine(@"Wrote Stage 5 train trace dump: {0} ({1} rows across {2} folds)",
                     path, total, foldTraces.Length);
+            }
+        }
+
+        /// <summary>
+        /// Cross-impl bisection dump of per-(fold, iteration, C) inner
+        /// grid-search counts. Mirrors dump_stage5_grid_search in Rust.
+        /// Writes cs_stage5_grid_search.tsv with columns fold,
+        /// iteration, c_idx, c_value, count_passing, is_selected.
+        /// </summary>
+        private static void WriteStage5GridSearchDump(
+            List<TrainIterSnapshot>[] foldTraces,
+            double[] cValues)
+        {
+            const string path = @"cs_stage5_grid_search.tsv";
+            var inv = CultureInfo.InvariantCulture;
+
+            using (var sw = new StreamWriter(path) { NewLine = "\n" })
+            {
+                sw.WriteLine(@"fold	iteration	c_idx	c_value	count_passing	is_selected");
+                int total = 0;
+                for (int fold = 0; fold < foldTraces.Length; fold++)
+                {
+                    var trace = foldTraces[fold];
+                    if (trace == null) continue;
+                    for (int i = 0; i < trace.Count; i++)
+                    {
+                        var snap = trace[i];
+                        if (snap.PerCCounts == null) continue;
+                        for (int cIdx = 0; cIdx < snap.PerCCounts.Length; cIdx++)
+                        {
+                            double cVal = cIdx < cValues.Length ? cValues[cIdx] : double.NaN;
+                            bool selected = cVal == snap.BestC;
+                            sw.Write(fold.ToString(inv));
+                            sw.Write('\t'); sw.Write((i + 1).ToString(inv));
+                            sw.Write('\t'); sw.Write(cIdx.ToString(inv));
+                            sw.Write('\t'); sw.Write(cVal.ToString(@"G17", inv));
+                            sw.Write('\t'); sw.Write(snap.PerCCounts[cIdx].ToString(inv));
+                            sw.Write('\t'); sw.WriteLine(selected ? @"true" : @"false");
+                            total++;
+                        }
+                    }
+                }
+                Console.Error.WriteLine(@"Wrote Stage 5 grid-search dump: {0} ({1} rows)", path, total);
             }
         }
 
