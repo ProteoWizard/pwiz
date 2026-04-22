@@ -36,6 +36,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using pwiz.OspreySharp.ML;
 
 namespace pwiz.OspreySharp.FDR
@@ -301,6 +303,22 @@ namespace pwiz.OspreySharp.FDR
             // 4. Assign folds on the (possibly subsampled) set
             int[] foldAssignments = CreateStratifiedFoldsByPeptide(
                 subLabels, subPeptides, subEntryIds, config.NFolds);
+
+            // Stage 5 sub-stage diagnostic dump. Gated by OSPREY_DUMP_SUBSAMPLE=1;
+            // exits via OSPREY_SUBSAMPLE_ONLY=1. Captures subsample membership and
+            // fold assignment per entry, mirroring the Rust dump in
+            // osprey-fdr/src/percolator.rs. The dump is inlined here (not routed
+            // through OspreyDiagnostics) because OspreySharp.FDR does not
+            // reference the main OspreySharp assembly.
+            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SUBSAMPLE"), @"1"))
+            {
+                WriteStage5SubsampleDump(entries, trainSubset, foldAssignments);
+                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SUBSAMPLE_ONLY"), @"1"))
+                {
+                    Console.Error.WriteLine(@"[BISECT] OSPREY_SUBSAMPLE_ONLY set - aborting after dump");
+                    Environment.Exit(0);
+                }
+            }
 
             // 5. Find best initial feature
             double trainFdr = config.TrainFdr;
@@ -1514,6 +1532,63 @@ namespace pwiz.OspreySharp.FDR
 
             selected.Sort();
             return selected.ToArray();
+        }
+
+        /// <summary>
+        /// Cross-impl bisection dump of Stage 5 subsample + fold-assignment
+        /// state, written to cs_stage5_subsample.tsv. Mirrors the Rust dump
+        /// in osprey-fdr/src/percolator.rs so Compare-Subsample.ps1 can
+        /// hash-join on entry_id.
+        ///
+        /// Columns: entry_id, native_position, charge, modified_sequence,
+        /// is_decoy, base_id, in_subsample, fold_id. native_position is
+        /// the entry's index in the input list -- divergence here means
+        /// the two tools populate their arrays in different order. Rows
+        /// sorted by entry_id for stable human inspection; compare is
+        /// sort-order-agnostic.
+        /// </summary>
+        private static void WriteStage5SubsampleDump(
+            IList<PercolatorEntry> entries,
+            int[] trainSubset,
+            int[] foldAssignments)
+        {
+            const string path = @"cs_stage5_subsample.tsv";
+            var inv = CultureInfo.InvariantCulture;
+            int n = entries.Count;
+
+            var inSub = new bool[n];
+            var foldFor = new int[n];
+            for (int i = 0; i < n; i++) foldFor[i] = -1;
+
+            for (int subPos = 0; subPos < trainSubset.Length; subPos++)
+            {
+                int nativePos = trainSubset[subPos];
+                inSub[nativePos] = true;
+                foldFor[nativePos] = foldAssignments[subPos];
+            }
+
+            var order = new int[n];
+            for (int i = 0; i < n; i++) order[i] = i;
+            Array.Sort(order, (a, b) => entries[a].EntryId.CompareTo(entries[b].EntryId));
+
+            using (var sw = new StreamWriter(path) { NewLine = "\n" })
+            {
+                sw.WriteLine(@"entry_id	native_position	charge	modified_sequence	is_decoy	base_id	in_subsample	fold_id");
+                foreach (int i in order)
+                {
+                    var e = entries[i];
+                    uint baseId = e.EntryId & BASE_ID_MASK;
+                    sw.Write(e.EntryId.ToString(inv));
+                    sw.Write('\t'); sw.Write(i.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.Peptide ?? string.Empty);
+                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                    sw.Write('\t'); sw.Write(baseId.ToString(inv));
+                    sw.Write('\t'); sw.Write(inSub[i] ? @"true" : @"false");
+                    sw.Write('\t'); sw.WriteLine(foldFor[i].ToString(inv));
+                }
+            }
+            Console.Error.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
         }
 
         // ============================================================

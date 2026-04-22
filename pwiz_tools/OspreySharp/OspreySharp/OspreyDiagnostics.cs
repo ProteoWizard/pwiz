@@ -814,7 +814,7 @@ namespace pwiz.OspreySharp
                 return a.Value.EntryId.CompareTo(b.Value.EntryId);
             });
 
-            using (var sw = new StreamWriter(path))
+            using (var sw = new StreamWriter(path) { NewLine = "\n" })
             {
                 sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_precursor_q	experiment_peptide_q");
                 foreach (var row in rows)
