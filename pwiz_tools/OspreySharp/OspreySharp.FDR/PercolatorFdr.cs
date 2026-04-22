@@ -371,6 +371,7 @@ namespace pwiz.OspreySharp.FDR
             var foldModels = new LinearSvmClassifier[config.NFolds];
             var foldIterations = new int[config.NFolds];
             var foldElapsed = new double[config.NFolds];
+            var foldTraces = new List<TrainIterSnapshot>[config.NFolds];
 
             // Pre-compute training indices for each fold (cheap, single-threaded).
             var foldTrainIndices = new int[config.NFolds][];
@@ -393,10 +394,13 @@ namespace pwiz.OspreySharp.FDR
             {
                 var swFold = Stopwatch.StartNew();
                 int iters;
+                List<TrainIterSnapshot> trace;
                 foldModels[fold] = TrainFold(
                     subFeatures, subLabels, subEntryIds, subPeptides,
-                    foldTrainIndices[fold], initialScores, config, trainFdr, out iters);
+                    foldTrainIndices[fold], initialScores, config, trainFdr,
+                    out iters, out trace);
                 foldIterations[fold] = iters;
+                foldTraces[fold] = trace;
                 swFold.Stop();
                 foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
             });
@@ -421,6 +425,17 @@ namespace pwiz.OspreySharp.FDR
                 if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SVM_WEIGHTS_ONLY"), @"1"))
                 {
                     Console.Error.WriteLine(@"[BISECT] OSPREY_SVM_WEIGHTS_ONLY set - aborting after dump");
+                    Environment.Exit(0);
+                }
+            }
+
+            // Stage 5 per-iteration training trace dump.
+            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_TRAIN_TRACE"), @"1"))
+            {
+                WriteStage5TrainTraceDump(foldTraces);
+                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_TRAIN_TRACE_ONLY"), @"1"))
+                {
+                    Console.Error.WriteLine(@"[BISECT] OSPREY_TRAIN_TRACE_ONLY set - aborting after dump");
                     Environment.Exit(0);
                 }
             }
@@ -586,6 +601,18 @@ namespace pwiz.OspreySharp.FDR
         // SVM fold training
         // ============================================================
 
+        /// <summary>
+        /// Per-iteration training trace entry mirroring the Rust
+        /// TrainIterSnapshot. Populated by TrainFold for the Stage 5
+        /// OSPREY_DUMP_TRAIN_TRACE diagnostic.
+        /// </summary>
+        public struct TrainIterSnapshot
+        {
+            public double BestC;
+            public int NSelectedTargets;
+            public int NPassing;
+        }
+
         private static LinearSvmClassifier TrainFold(
             Matrix stdFeatures,
             bool[] labels,
@@ -595,7 +622,8 @@ namespace pwiz.OspreySharp.FDR
             double[] initialScores,
             PercolatorConfig config,
             double trainFdr,
-            out int bestIteration)
+            out int bestIteration,
+            out List<TrainIterSnapshot> iterTrace)
         {
             int nFeatures = stdFeatures.Cols;
             var currentScores = (double[])initialScores.Clone();
@@ -605,6 +633,7 @@ namespace pwiz.OspreySharp.FDR
             bestIteration = 0;
             int bestPassing = 0;
             int consecutiveNoImprove = 0;
+            iterTrace = new List<TrainIterSnapshot>(config.MaxIterations);
 
             var trainLabels = new bool[trainIndices.Length];
             var trainEntryIds = new uint[trainIndices.Length];
@@ -675,6 +704,13 @@ namespace pwiz.OspreySharp.FDR
 
                 // v. Count passing targets
                 int nPassing = CountPassing(newTrainScores, trainLabels, trainEntryIds, trainFdr);
+
+                iterTrace.Add(new TrainIterSnapshot
+                {
+                    BestC = bestC,
+                    NSelectedTargets = selectedTargetIndices.Length,
+                    NPassing = nPassing,
+                });
 
                 if (nPassing > bestPassing)
                 {
@@ -1698,6 +1734,42 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
             Console.Error.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
+        }
+
+        /// <summary>
+        /// Cross-impl bisection dump of the per-(fold, iteration) training
+        /// trace. Mirrors dump_stage5_train_trace in Rust. Writes
+        /// cs_stage5_train_trace.tsv with columns fold, iteration,
+        /// best_c, n_selected_targets, n_passing. Iterations that
+        /// early-stop simply have fewer rows per fold.
+        /// </summary>
+        private static void WriteStage5TrainTraceDump(List<TrainIterSnapshot>[] foldTraces)
+        {
+            const string path = @"cs_stage5_train_trace.tsv";
+            var inv = CultureInfo.InvariantCulture;
+
+            using (var sw = new StreamWriter(path) { NewLine = "\n" })
+            {
+                sw.WriteLine(@"fold	iteration	best_c	n_selected_targets	n_passing");
+                int total = 0;
+                for (int fold = 0; fold < foldTraces.Length; fold++)
+                {
+                    var trace = foldTraces[fold];
+                    if (trace == null) continue;
+                    for (int i = 0; i < trace.Count; i++)
+                    {
+                        var s = trace[i];
+                        sw.Write(fold.ToString(inv));
+                        sw.Write('\t'); sw.Write((i + 1).ToString(inv));
+                        sw.Write('\t'); sw.Write(s.BestC.ToString(@"G17", inv));
+                        sw.Write('\t'); sw.Write(s.NSelectedTargets.ToString(inv));
+                        sw.Write('\t'); sw.WriteLine(s.NPassing.ToString(inv));
+                        total++;
+                    }
+                }
+                Console.Error.WriteLine(@"Wrote Stage 5 train trace dump: {0} ({1} rows across {2} folds)",
+                    path, total, foldTraces.Length);
+            }
         }
 
         // ============================================================
