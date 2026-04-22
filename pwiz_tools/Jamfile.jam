@@ -29,3 +29,4 @@ build-project-if-exists MSConvertGUI ;
 build-project-if-exists BiblioSpec ;
 build-project-if-exists Skyline ;
 build-project-if-exists sld ;
+build-project-if-exists OspreySharp ;
