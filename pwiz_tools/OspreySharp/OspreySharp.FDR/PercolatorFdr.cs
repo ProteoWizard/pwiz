@@ -397,6 +397,21 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
                 swTrain.Elapsed.TotalSeconds);
 
+            // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS=1;
+            // exits via OSPREY_SVM_WEIGHTS_ONLY=1. Captures per-fold weights,
+            // bias, and iteration count right after SVM training converges
+            // and before Granholm calibration. Mirrors rust side in
+            // osprey-fdr/src/percolator.rs::dump_stage5_svm_weights.
+            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SVM_WEIGHTS"), @"1"))
+            {
+                WriteStage5SvmWeightsDump(foldModels, foldIterations, config.FeatureNames);
+                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SVM_WEIGHTS_ONLY"), @"1"))
+                {
+                    Console.Error.WriteLine(@"[BISECT] OSPREY_SVM_WEIGHTS_ONLY set - aborting after dump");
+                    Environment.Exit(0);
+                }
+            }
+
             // Score ALL entries with trained models
             if (trainSubset != null)
             {
@@ -1589,6 +1604,54 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
             Console.Error.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
+        }
+
+        /// <summary>
+        /// Cross-impl bisection dump of per-fold SVM weights, taken right
+        /// after training converges and before Granholm cross-fold
+        /// calibration. Mirrors dump_stage5_svm_weights in Rust. Writes
+        /// cs_stage5_svm_weights.tsv with one row per (fold, weight) pair:
+        /// 21 feature weights + 1 bias per fold.
+        ///
+        /// Columns: fold, weight_idx, feature_name, value, fold_iterations.
+        /// Sorted by (fold, weight_idx) for stable inspection; compare is
+        /// hash-joined.
+        /// </summary>
+        private static void WriteStage5SvmWeightsDump(
+            LinearSvmClassifier[] foldModels,
+            int[] foldIterations,
+            string[] featureNames)
+        {
+            const string path = @"cs_stage5_svm_weights.tsv";
+            var inv = CultureInfo.InvariantCulture;
+
+            using (var sw = new StreamWriter(path) { NewLine = "\n" })
+            {
+                sw.WriteLine(@"fold	weight_idx	feature_name	value	fold_iterations");
+                for (int fold = 0; fold < foldModels.Length; fold++)
+                {
+                    var model = foldModels[fold];
+                    var weights = model.Weights;
+                    int iters = fold < foldIterations.Length ? foldIterations[fold] : 0;
+                    for (int wi = 0; wi < weights.Length; wi++)
+                    {
+                        string name = (featureNames != null && wi < featureNames.Length)
+                            ? featureNames[wi]
+                            : @"unknown";
+                        sw.Write(fold.ToString(inv));
+                        sw.Write('\t'); sw.Write(wi.ToString(inv));
+                        sw.Write('\t'); sw.Write(name);
+                        sw.Write('\t'); sw.Write(weights[wi].ToString(@"G17", inv));
+                        sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
+                    }
+                    sw.Write(fold.ToString(inv));
+                    sw.Write('\t'); sw.Write(weights.Length.ToString(inv));
+                    sw.Write('\t'); sw.Write(@"bias");
+                    sw.Write('\t'); sw.Write(model.Bias.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
+                }
+            }
+            Console.Error.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
         }
 
         // ============================================================
