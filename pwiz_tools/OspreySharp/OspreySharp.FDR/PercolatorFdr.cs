@@ -220,6 +220,19 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine(
                 $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
 
+            // Stage 5 standardizer dump. Gated by OSPREY_DUMP_STANDARDIZER=1;
+            // exits via OSPREY_STANDARDIZER_ONLY=1. Mirrors Rust
+            // dump_stage5_standardizer in osprey-fdr/src/percolator.rs.
+            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_STANDARDIZER"), @"1"))
+            {
+                WriteStage5StandardizerDump(standardizer, config.FeatureNames);
+                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_STANDARDIZER_ONLY"), @"1"))
+                {
+                    Console.Error.WriteLine(@"[BISECT] OSPREY_STANDARDIZER_ONLY set - aborting after dump");
+                    Environment.Exit(0);
+                }
+            }
+
             // 3a. Best-per-precursor: pick the single best-scoring observation per
             //     (base_id, isDecoy) tuple across all files. With N files per peptide,
             //     this avoids the SVM seeing the same precursor's target/decoy pair
@@ -1652,6 +1665,39 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
             Console.Error.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
+        }
+
+        /// <summary>
+        /// Cross-impl bisection dump of the feature standardizer state,
+        /// taken right after FitTransform returns and before subsampling
+        /// / fold assignment. Mirrors dump_stage5_standardizer in Rust.
+        /// Writes cs_stage5_standardizer.tsv with one row per feature.
+        /// Columns: feature_idx, feature_name, mean, std.
+        /// </summary>
+        private static void WriteStage5StandardizerDump(
+            FeatureStandardizer standardizer,
+            string[] featureNames)
+        {
+            const string path = @"cs_stage5_standardizer.tsv";
+            var inv = CultureInfo.InvariantCulture;
+            var means = standardizer.Means;
+            var stds = standardizer.Stds;
+
+            using (var sw = new StreamWriter(path) { NewLine = "\n" })
+            {
+                sw.WriteLine(@"feature_idx	feature_name	mean	std");
+                for (int i = 0; i < means.Length; i++)
+                {
+                    string name = (featureNames != null && i < featureNames.Length)
+                        ? featureNames[i]
+                        : @"unknown";
+                    sw.Write(i.ToString(inv));
+                    sw.Write('\t'); sw.Write(name);
+                    sw.Write('\t'); sw.Write(means[i].ToString(@"G17", inv));
+                    sw.Write('\t'); sw.WriteLine(stds[i].ToString(@"G17", inv));
+                }
+            }
+            Console.Error.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
         }
 
         // ============================================================
