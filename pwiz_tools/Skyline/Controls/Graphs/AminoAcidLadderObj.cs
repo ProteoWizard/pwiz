@@ -250,6 +250,13 @@ namespace pwiz.Skyline.Controls.Graphs
             g.Clip = savedClip;
         }
 
+        /// <summary>
+        /// The ruler is a pure visual overlay; it should never intercept hit-testing so that
+        /// peak labels (TextObj) beneath it remain reachable by FindNearestObject.
+        /// </summary>
+        public override bool PointInBox(System.Drawing.PointF pt, PaneBase pane,
+            System.Drawing.Graphics g, float scaleFactor) => false;
+
         public override void GetCoords(PaneBase pane, Graphics g, float scaleFactor,
             out string shape, out string coords)
         {

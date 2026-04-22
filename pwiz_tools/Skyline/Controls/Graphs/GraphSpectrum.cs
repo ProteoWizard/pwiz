@@ -228,6 +228,7 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMove += GraphControl_MouseMove;
+            graphControl.MouseLeave += (s, e) => UpdateHoveredPeak(null);
             msGraphExtension.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
             Icon = Resources.SkylineData;
@@ -1865,6 +1866,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            UpdateHoveredPeak(peakRmi);
+
             if (peakRmi != null)
             {
                 if (_toolTip == null)
@@ -1875,6 +1878,44 @@ namespace pwiz.Skyline.Controls.Graphs
             _toolTip?.HideTip();
             _toolTip = null;
             graphControl.Invalidate();
+        }
+
+        private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
+        {
+            MatchedFragmentIon hoveredIon = null;
+            if (peakRmi?.MatchedIons != null)
+            {
+                foreach (var mfi in peakRmi.MatchedIons)
+                {
+                    if (mfi.Losses == null)
+                    {
+                        hoveredIon = mfi;
+                        break;
+                    }
+                }
+            }
+
+            // Compare by ruler series (ion type + charge), not by object identity.
+            // This prevents Invalidate from being called when hovering different peaks of the
+            // same series (e.g. moving the mouse across a label), which would cause a repaint
+            // loop: repaint → drawLabels rebuilds TextObjs → FindNearestObject misses label →
+            // peakRmi = null → Invalidate → repaint → label rebuilt → label found again → …
+            if (SameRulerSeries(GraphItem?.HoveredIon, hoveredIon))
+                return;
+
+            if (GraphItem != null)
+                GraphItem.HoveredIon = hoveredIon;
+            if (MirrorGraphItem != null)
+                MirrorGraphItem.HoveredIon = hoveredIon;
+
+            graphControl.Invalidate();
+        }
+
+        private static bool SameRulerSeries(MatchedFragmentIon a, MatchedFragmentIon b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            return a.IonType == b.IonType && a.Charge.AdductCharge == b.Charge.AdductCharge;
         }
 
         public void GraphControl_MouseMove(object sender, MouseEventArgs e)

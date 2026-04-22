@@ -41,6 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private TransitionDocNode TransitionNode { get; set; }
         public string LibraryName { get; private set; }
         public Model.DocSettings.SrmSettings SrmSettings { get; set; }
+        public Model.Lib.MatchedFragmentIon HoveredIon { get; set; }
 
         public SpectrumGraphItem(PeptideDocNode peptideDocNode,
             TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
@@ -121,14 +122,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
         {
+            if (HoveredIon == null)
+                return;
             if (!IsProteomic() || PeptideDocNode == null || PeptideDocNode.CrosslinkStructure.HasCrosslinks)
                 return;
             if (SrmSettings == null)
-                return;
-
-            // Find the first visible ion type and charge to display a ruler for
-            var firstIon = GetFirstVisibleIon();
-            if (firstIon == null)
                 return;
 
             var peakIntensities = new Dictionary<int, double>();
@@ -136,35 +134,16 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 foreach (var mfi in rmi.MatchedIons)
                 {
-                    if (mfi.IonType != firstIon.IonType) continue;
-                    if (mfi.Charge.AdductCharge != firstIon.Charge.AdductCharge) continue;
+                    if (mfi.IonType != HoveredIon.IonType) continue;
+                    if (mfi.Charge.AdductCharge != HoveredIon.Charge.AdductCharge) continue;
                     if (mfi.Losses != null) continue;
                     peakIntensities[mfi.Ordinal] = rmi.Intensity;
                 }
             }
 
-            var ladder = new AminoAcidLadderObj(firstIon, PeptideDocNode, TransitionGroupNode,
+            var ladder = new AminoAcidLadderObj(HoveredIon, PeptideDocNode, TransitionGroupNode,
                 SrmSettings, peakIntensities, 0.04f, 0.04f, FontSize * 0.7f);
             annotations.Add(ladder);
-        }
-
-        /// <summary>Returns the first visible matched fragment ion to use as the ruler representative.</summary>
-        private MatchedFragmentIon GetFirstVisibleIon()
-        {
-            foreach (var rmi in SpectrumInfo.PeaksMatched)
-            {
-                foreach (var mfi in rmi.MatchedIons)
-                {
-                    if (mfi.Losses != null)
-                        continue;
-                    if (!ShowTypes.Contains(mfi.IonType))
-                        continue;
-                    if (!ShowCharges.Contains(System.Math.Abs(mfi.Charge.AdductCharge)))
-                        continue;
-                    return mfi;
-                }
-            }
-            return null;
         }
     }
     
