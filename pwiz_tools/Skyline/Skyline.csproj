@@ -2133,6 +2133,7 @@
     <Compile Include="FileUI\ImportResultsSamplesDlg.Designer.cs">
       <DependentUpon>ImportResultsSamplesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AminoAcidLadderObj.cs" />
     <Compile Include="Controls\Graphs\SpectrumGraphItem.cs" />
     <Compile Include="Controls\SequenceTree.cs">
       <SubType>Component</SubType>
