@@ -1968,6 +1968,18 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowHeatmapFullScanSeeded {
+            get {
+                return ((bool)(this["ShowHeatmapFullScanSeeded"]));
+            }
+            set {
+                this["ShowHeatmapFullScanSeeded"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.8")]
         public float FullScanMobilogramColumnFraction {
             get {

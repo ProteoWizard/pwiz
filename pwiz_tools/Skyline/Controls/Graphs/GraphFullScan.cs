@@ -128,20 +128,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.MouseClick += graphControl_MouseClick;
             graphControl.ZoomEvent += graphControl_ZoomEvent;
             graphControl.Resize += graphControl_Resize;
-            // Re-pin mobilogram chart rect on every paint using whatever chart rect
-            // heatmap actually ended up with. Initial layout paths can produce a stale
-            // heatmap rect at pin-time; catching it in Paint avoids that race.
-            graphControl.Paint += (sender, e) =>
-            {
-                if (IsMobilogramPaneVisible)
-                    RepinMobilogram();
-                else if (IsStickPlotVisible)
-                {
-                    var mpR = graphControl.MasterPane.Rect;
-                    if (mpR.Height > 0 && Math.Abs(_stickSpectrumPane.Rect.Height - mpR.Height * RowFraction) > 1f)
-                        AdjustTwoPaneRowHeights();
-                }
-            };
+            graphControl.Paint += graphControl_Paint;
             // Use ZedGraph's intercepting events so we can suppress its default pan/zoom
             // when the user is dragging the splitter.
             graphControl.MouseDownEvent += graphControl_SplitterMouseDown;
@@ -1267,8 +1254,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
                 _heatMapData = new HeatMapData(points,
-                    ((IHeatMapDataProvider)_heatMapPane).HeatMapZAxisName,
-                    mobilogramBtn.Checked);
+                    ((IHeatMapDataProvider)_heatMapPane).HeatMapZAxisName);
             }
 
             double minDrift;
@@ -2160,6 +2146,25 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
+        /// Re-pin mobilogram chart rect on every paint using whatever chart rect the
+        /// heatmap actually ended up with. Initial layout paths can produce a stale
+        /// heatmap rect at pin-time; catching it in Paint avoids that race.
+        /// </summary>
+        private void graphControl_Paint(object sender, PaintEventArgs e)
+        {
+            if (IsMobilogramPaneVisible)
+            {
+                RepinMobilogram();
+            }
+            else if (IsStickPlotVisible)
+            {
+                var mpR = graphControl.MasterPane.Rect;
+                if (mpR.Height > 0 && Math.Abs(_stickSpectrumPane.Rect.Height - mpR.Height * RowFraction) > 1f)
+                    AdjustTwoPaneRowHeights();
+            }
+        }
+
+        /// <summary>
         /// Copy the heatmap's Y-axis (ion mobility) range to the mobilogram pane so
         /// rows in the two panes stay visually aligned.
         /// </summary>
@@ -2528,7 +2533,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // mobilogram preference so turning heatmap back on restores the mobilogram.
             // The renderer already hides the mobilogram whenever heatmap is off
             // (showMobilogram = showHeatmap && mobilogramBtn.Checked).
-            _heatMapData = null;
             UpdateImButtonEnableStates();
             UpdateUI();
             graphControl.Invalidate();
@@ -2665,8 +2669,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 finally { _suppressImButtonCascade = false; }
                 Settings.Default.ShowHeatmapFullScan = true;
             }
-            _heatMapData = null; // Force recompute with/without PlotY2D
-            // Preserve current axis ranges across the rebuild
+            // PlotY2D is computed lazily from the existing heatmap data, so toggling
+            // the mobilogram button doesn't require a heatmap rebuild.
+            // Preserve current axis ranges across the UpdateUI rebuild
             double savedYMin = _heatMapPane.YAxis.Scale.Min;
             double savedYMax = _heatMapPane.YAxis.Scale.Max;
             UpdateImButtonEnableStates();
