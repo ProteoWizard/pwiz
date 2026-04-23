@@ -389,6 +389,18 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("Total: {0} precursors pass run-level FDR across all files",
                     passingTargets));
 
+                // Stage 5 diagnostic dump. Gated by OSPREY_DUMP_PERCOLATOR=1;
+                // exits when OSPREY_PERCOLATOR_ONLY=1 is also set. Writes all
+                // four q-values plus SVM score and PEP for every FdrEntry,
+                // before compaction drops any rows, so the cross-impl diff
+                // sees both targets and decoys.
+                if (OspreyDiagnostics.DumpPercolator)
+                {
+                    OspreyDiagnostics.WriteStage5PercolatorDump(perFileEntries);
+                    if (OspreyDiagnostics.PercolatorOnly)
+                        OspreyDiagnostics.ExitAfterDump("OSPREY_PERCOLATOR_ONLY");
+                }
+
                 // Stage 6-7: Reconciliation (TODO for multi-file)
                 if (config.InputFiles.Count > 1)
                 {
