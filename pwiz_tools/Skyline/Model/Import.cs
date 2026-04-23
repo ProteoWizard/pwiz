@@ -1023,8 +1023,18 @@ namespace pwiz.Skyline.Model
                     imUnits = IonMobilityFilter.IonMobilityUnitsFromL10NString(ColumnString(Fields, Indices.ExplicitIonMobilityUnitsColumn));
                     if (imUnits == eIonMobilityUnits.none)
                     {
-                        ionMobility = null;
-                        return ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units;
+                        // User supplied an ion mobility value without specifying units - try to
+                        // deduce from the target document's settings before giving up.
+                        var candidates = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(Settings);
+                        if (candidates.Count == 1)
+                        {
+                            imUnits = candidates.Single();
+                        }
+                        else
+                        {
+                            ionMobility = null;
+                            return ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units;
+                        }
                     }
                     declarations[imUnits] = im;
                 }

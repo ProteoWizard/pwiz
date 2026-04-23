@@ -1587,13 +1587,23 @@ namespace pwiz.Skyline.Model
             {
                 if (declaredUnitsIM == eIonMobilityUnits.none)
                 {
-                    ShowTransitionError(new PasteError
+                    // Units column missing or empty - try to deduce from the target document
+                    // before erroring.
+                    var candidates = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(document);
+                    if (candidates.Count == 1)
                     {
-                        Column = INDEX_PRECURSOR_ION_MOBILITY,
-                        Line = row.Index,
-                        Message = ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units
-                    });
-                    return null;
+                        declaredUnitsIM = candidates.Single();
+                    }
+                    else
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = INDEX_PRECURSOR_ION_MOBILITY,
+                            Line = row.Index,
+                            Message = ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units
+                        });
+                        return null;
+                    }
                 }
                 ionMobility[declaredUnitsIM] = dtmp;
             }
