@@ -439,7 +439,7 @@ namespace pwiz.SkylineTest
 
             // Null secondary arrays must be tolerated.
             var unsorted = new[] { 3.0, 1.0, 2.0 };
-            Assert.IsFalse(ArrayUtil.Sort(unsorted, (double[])null, (double[])null));
+            Assert.IsFalse(ArrayUtil.Sort(unsorted, null, null));
             AssertEx.AreEqualDeep(new[] { 1.0, 2.0, 3.0 }, unsorted);
         }
 
@@ -459,8 +459,7 @@ namespace pwiz.SkylineTest
 
             ArrayUtil.Sort(mzs, intensities, ionMobilities);
 
-            int[] refIdx;
-            ArrayUtil.Sort(mzCopy, out refIdx);
+            ArrayUtil.Sort(mzCopy, out _);
 
             AssertEx.AreEqualDeep(mzCopy, mzs);
             // For each position, secondary values must match SOME row that had the same key
