@@ -1,0 +1,39 @@
+<Project>
+
+  <!--
+    Shared MSBuild target for harness-test projects: extracts the per-vendor
+    Reader_<Vendor>_Test.data.tar.bz2 archive into its containing directory so the
+    .d/.raw/.wiff fixtures are available to VendorReaderTestHarness.
+
+    Importing test projects must set:
+      - VendorTestArchive  : absolute path to the .tar.bz2
+      - VendorTestDataParent : directory into which to extract (the tarball's internal
+        paths are rooted at Reader_<Vendor>_Test.data/, so this should be the folder
+        *containing* Reader_<Vendor>_Test.data).
+
+    Uses Windows' native tar (bsdtar at System32\tar.exe) rather than the Git-for-Windows
+    GNU tar that may shadow it on PATH: bsdtar's -k silently skips existing files, while
+    GNU tar's -k errors nonzero when files exist.
+
+    -k is essential, not just an optimization: the reference mzMLs tracked in git are
+    newer than the copies baked into the tarball, so overwriting them with the tar
+    contents would regress test oracles. We only want to fill in fixtures that aren't
+    on disk yet (the big vendor .d/.raw directories that aren't committed to git).
+
+    Inputs/Outputs incremental build skips the call entirely when the archive has not
+    changed since the sentinel was touched — an additional perf optimization on top.
+    -->
+
+  <Target Name="ExtractVendorTestData"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(VendorTestArchive)' != '' and Exists('$(VendorTestArchive)')"
+          Inputs="$(VendorTestArchive)"
+          Outputs="$(IntermediateOutputPath)vendor-test-data.extracted">
+    <MakeDir Directories="$(VendorTestDataParent);$(IntermediateOutputPath)" />
+    <Message Importance="high" Text="Extracting $(VendorTestArchive) -&gt; $(VendorTestDataParent)" />
+    <Exec Command="&quot;$(WinDir)\System32\tar.exe&quot; -xkf &quot;$(VendorTestArchive)&quot; -C &quot;$(VendorTestDataParent)&quot;"
+          IgnoreStandardErrorWarningFormat="true" />
+    <Touch Files="$(IntermediateOutputPath)vendor-test-data.extracted" AlwaysCreate="true" />
+  </Target>
+
+</Project>

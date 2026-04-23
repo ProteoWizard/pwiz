@@ -20,4 +20,10 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <VendorTestArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data.tar.bz2</VendorTestArchive>
+    <VendorTestDataParent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo</VendorTestDataParent>
+  </PropertyGroup>
+  <Import Project="..\..\build\ExtractTestData.targets" />
+
 </Project>

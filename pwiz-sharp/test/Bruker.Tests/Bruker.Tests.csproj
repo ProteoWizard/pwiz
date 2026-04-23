@@ -17,4 +17,10 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <VendorTestArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data.tar.bz2</VendorTestArchive>
+    <VendorTestDataParent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Bruker</VendorTestDataParent>
+  </PropertyGroup>
+  <Import Project="..\..\build\ExtractTestData.targets" />
+
 </Project>
