@@ -1,0 +1,44 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,xml}]
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.cs]
+# Prefer file-scoped namespaces
+csharp_style_namespace_declarations = file_scoped:warning
+
+# Use var when the type is apparent
+csharp_style_var_when_type_is_apparent = true:suggestion
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+
+# Readonly fields
+dotnet_style_readonly_field = true:warning
+
+# Nullable reference types
+dotnet_diagnostic.CS8600.severity = error
+dotnet_diagnostic.CS8602.severity = error
+dotnet_diagnostic.CS8603.severity = error
+
+# Using directives
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:warning
+
+# Test method naming: Given_When_Then / Method_Scenario_Expected conventions use underscores
+[test/**/*.cs]
+dotnet_diagnostic.CA1707.severity = none
+# Inline array literals in CollectionAssert / DataRow are idiomatic in test code.
+dotnet_diagnostic.CA1861.severity = none

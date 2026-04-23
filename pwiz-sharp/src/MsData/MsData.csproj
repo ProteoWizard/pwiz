@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Data.MsData</RootNamespace>
+    <AssemblyName>Pwiz.Data.MsData</AssemblyName>
+    <Description>MSData model, mzML/mzXML serialization, simple text formats. Port of pwiz/data/msdata.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
+
+</Project>

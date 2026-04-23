@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+
+# Vendor DLLs extracted from 7z archives at build time (see Bruker.csproj / Thermo.csproj).
+vendor-assemblies/

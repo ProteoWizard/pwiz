@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Analysis/Analysis.csproj" />
+    <Project Path="src/Common/Common.csproj" />
+    <Project Path="src/MsData/MsData.csproj" />
+    <Project Path="src/MsConvert/MsConvert.csproj" />
+    <Project Path="src/Util/Util.csproj" />
+    <Project Path="src/Thermo/Thermo.csproj" />
+    <Project Path="src/Bruker/Bruker.csproj" />
+    <Project Path="src/TestHarness/TestHarness.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Analysis.Tests/Analysis.Tests.csproj" />
+    <Project Path="test/Common.Tests/Common.Tests.csproj" />
+    <Project Path="test/MsData.Tests/MsData.Tests.csproj" />
+    <Project Path="test/MsConvert.Tests/MsConvert.Tests.csproj" />
+    <Project Path="test/Util.Tests/Util.Tests.csproj" />
+    <Project Path="test/Thermo.Tests/Thermo.Tests.csproj" />
+    <Project Path="test/Bruker.Tests/Bruker.Tests.csproj" />
+  </Folder>
+</Solution>

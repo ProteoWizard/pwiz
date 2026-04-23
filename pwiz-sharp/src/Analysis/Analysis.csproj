@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Analysis</RootNamespace>
+    <AssemblyName>Pwiz.Analysis</AssemblyName>
+    <Description>Spectrum filters, centroiding, thresholding, and other analysis helpers. Port of pwiz/analysis.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\MsData\MsData.csproj" />
+  </ItemGroup>
+
+</Project>

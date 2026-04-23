@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Tools.MsConvert</RootNamespace>
+    <AssemblyName>msconvert-sharp</AssemblyName>
+    <Description>Command-line spectrum-file converter. Port of pwiz_tools/commandline/msconvert.</Description>
+    <!-- Expose Main via a plain class so tests can drive it without Process overhead. -->
+    <InternalsVisibleTo>$(AssemblyName).Tests</InternalsVisibleTo>
+
+    <!-- Inherits from Pwiz.Vendor.Thermo — the Thermo SDK needs en-US culture. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\Thermo\Thermo.csproj" />
+    <ProjectReference Include="..\Bruker\Bruker.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MsConvert.Tests" />
+  </ItemGroup>
+
+</Project>
