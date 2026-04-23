@@ -315,10 +315,10 @@ It is recommended that you delete this file so that Skyline can create a new fil
     <value>Note: the spectral library has ion mobility values for "{0}", but they are being ignored because "Use spectral library ion mobility values when present" is not enabled. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and enable that option.</value>
   </data>
   <data name="SpectrumFilter_IonMobilityFilteringDisabled_SetWindow" xml:space="preserve">
-    <value>Note: ion mobility values are available for "{0}", but no effective filter window is configured. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and set a window type (resolving power, fixed width, or linear range) with a non-zero tolerance.</value>
+    <value>Note: ion mobility values are available for "{0}", but no effective filter window is configured. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and set a window type (resolving power, fixed width, or linear range) with a non-zero value.</value>
   </data>
   <data name="SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary" xml:space="preserve">
-    <value>Note: the spectral library has ion mobility values for "{0}", but ion mobility filtering is disabled. To apply filtering, open Settings &gt; Transition Settings &gt; Ion Mobility, set a window type (resolving power, fixed width, or linear range) with a tolerance, and enable "Use spectral library ion mobility values when present".</value>
+    <value>Note: the spectral library has ion mobility values for "{0}", but ion mobility filtering is disabled. To apply filtering, open Settings &gt; Transition Settings &gt; Ion Mobility, set a window type (resolving power, fixed width, or linear range) with a value, and enable "Use spectral library ion mobility values when present".</value>
   </data>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
