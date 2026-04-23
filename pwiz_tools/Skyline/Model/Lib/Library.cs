@@ -863,6 +863,38 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if ion mobility information was retrieved successfully</returns>
         public abstract bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities);
 
+        private HashSet<eIonMobilityUnits> _distinctIonMobilityUnits;
+
+        /// <summary>
+        /// Returns the distinct non-none ion mobility units present anywhere in this library,
+        /// lazy-computed and cached on first call. Used when deducing units for an explicit
+        /// ion mobility value that lacks them. Default implementation scans via
+        /// <see cref="TryGetIonMobilityInfos(LibKey[], int, out LibraryIonMobilityInfo)"/> with
+        /// null targets (skipping the per-key index lookup); subclasses may override to query
+        /// the underlying store more efficiently.
+        /// </summary>
+        public virtual HashSet<eIonMobilityUnits> GetDistinctIonMobilityUnits()
+        {
+            if (_distinctIonMobilityUnits != null)
+                return _distinctIonMobilityUnits;
+            var result = new HashSet<eIonMobilityUnits>();
+            for (var i = 0; TryGetIonMobilityInfos(null, i, out var infos); i++)
+            {
+                if (infos == null)
+                    continue;
+                foreach (var entries in infos.GetIonMobilityDict().Values)
+                {
+                    foreach (var im in entries)
+                    {
+                        var u = im.IonMobility.Units;
+                        if (u != eIonMobilityUnits.none && u != eIonMobilityUnits.unknown)
+                            result.Add(u);
+                    }
+                }
+            }
+            return _distinctIonMobilityUnits = result;
+        }
+
         /// <summary>
         /// Gets all of the spectrum information for a particular (sequence, charge) pair.  This
         /// may include redundant spectra.  The spectrum points themselves are only loaded as it they

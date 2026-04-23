@@ -1045,15 +1045,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             if (nodeGroup.ExplicitValues.IonMobility.HasValue)
             {
-                // Explicit IM value without units produces an empty IonMobilityValue and later
-                // crashes. The document grid setter prevents this going forward, but legacy
-                // documents may already be in this state - try to deduce units from the rest
-                // of the document before giving up.
+                // An explicit ion mobility value without units produces an empty IonMobilityValue
+                // and would crash the filter math below. Documents can arrive here in that state
+                // for several reasons: legacy documents loaded from disk; documents where the
+                // Document Grid setter accepted a value without being able to deduce a unique
+                // unit; or documents where the user explicitly set units back to "none".
+                // Try to deduce from the rest of the document before giving up.
                 var explicitUnits = nodeGroup.ExplicitValues.IonMobilityUnits;
                 if (explicitUnits == eIonMobilityUnits.none)
                 {
-                    var libKey = nodeGroup.GetLibKey(this, nodePep);
-                    var candidates = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(this, libKey);
+                    var candidates = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(this);
                     if (candidates.Count == 1)
                     {
                         // Document-level evidence is authoritative even when it contradicts the export

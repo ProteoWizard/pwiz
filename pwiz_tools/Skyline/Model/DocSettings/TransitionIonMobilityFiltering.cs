@@ -138,15 +138,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         /// <summary>
         /// Collect the distinct non-none ion mobility units implied by settings-level sources:
-        /// per-file units from imported results, the ion mobility library, and spectral libraries
-        /// with ion mobility data for the given library keys. Used to deduce units when only
-        /// <see cref="SrmSettings"/> is in scope - e.g. from within a settings method that needs
-        /// to recover from an explicit ion mobility value lacking units. Zero results means no
-        /// deduction is possible; exactly one means we can deduce unambiguously; more than one
-        /// means the document contains conflicting evidence (e.g. mixed FAIMS and TIMS) and we
-        /// must not silently pick.
+        /// per-file units from imported results, the ion mobility library, and any active spectral
+        /// libraries. Used to deduce units when only <see cref="SrmSettings"/> is in scope - e.g.
+        /// from within a settings method recovering from an explicit ion mobility value lacking
+        /// units. Zero results means no deduction is possible; exactly one means we can deduce
+        /// unambiguously; more than one means the document contains conflicting evidence (e.g.
+        /// mixed FAIMS and TIMS) and we must not silently pick. Short-circuits once two distinct
+        /// units have been seen, since further scanning can only confirm ambiguity.
         /// </summary>
-        public static HashSet<eIonMobilityUnits> GetSettingsIonMobilityUnits(SrmSettings settings, params LibKey[] spectralLibraryKeys)
+        public static HashSet<eIonMobilityUnits> GetSettingsIonMobilityUnits(SrmSettings settings)
         {
             var units = new HashSet<eIonMobilityUnits>();
 
@@ -174,13 +174,14 @@ namespace pwiz.Skyline.Model.DocSettings
                     units.Add(libUnits);
             }
 
-            // Spectral libraries with ion mobility data.
+            if (units.Count > 1)
+                return units; // Already ambiguous - skip the remaining library scan.
+
+            // Active spectral libraries. Each library caches its own distinct-units result so
+            // repeated calls (e.g. during a bulk Document Grid paste) avoid re-scanning.
             var peptideLibraries = settings.PeptideSettings.Libraries;
-            if (peptideLibraries != null && peptideLibraries.HasLibraries && peptideLibraries.IsLoaded
-                && spectralLibraryKeys != null && spectralLibraryKeys.Length > 0)
-            {
-                units.UnionWith(peptideLibraries.GetDistinctIonMobilityUnits(spectralLibraryKeys));
-            }
+            if (peptideLibraries != null && peptideLibraries.HasLibraries && peptideLibraries.IsLoaded)
+                units.UnionWith(peptideLibraries.GetDistinctIonMobilityUnits());
 
             return units;
         }
@@ -188,24 +189,25 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Extends <see cref="GetSettingsIonMobilityUnits"/> with sibling transition groups that
         /// already have explicit units set. Used when the full document tree is in scope, e.g.
-        /// the Document Grid setter that writes an explicit ion mobility value.
+        /// the Document Grid setter that writes an explicit ion mobility value. Siblings are
+        /// scanned first as they are cheap and often already carry the answer once the user is
+        /// mid-paste on a large document.
         /// </summary>
         public static HashSet<eIonMobilityUnits> GetDocumentIonMobilityUnits(SrmDocument document)
         {
-            var libKeys = document.Molecules.SelectMany(node =>
-                    node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node)))
-                .Distinct()
-                .ToArray();
-
-            var units = GetSettingsIonMobilityUnits(document.Settings, libKeys);
-
+            var units = new HashSet<eIonMobilityUnits>();
             foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
                 var u = nodeGroup.ExplicitValues.IonMobilityUnits;
                 if (u != eIonMobilityUnits.none && u != eIonMobilityUnits.unknown)
+                {
                     units.Add(u);
+                    if (units.Count > 1)
+                        return units; // Already ambiguous - no need to consult settings sources.
+                }
             }
 
+            units.UnionWith(GetSettingsIonMobilityUnits(document.Settings));
             return units;
         }
 

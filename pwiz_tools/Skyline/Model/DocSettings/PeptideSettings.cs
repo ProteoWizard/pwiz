@@ -2197,25 +2197,17 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
-        /// Distinct non-none ion mobility units present in any active library for the given ions.
+        /// Distinct non-none ion mobility units present anywhere in the active libraries.
         /// Used when deducing units for an explicit ion mobility value that was entered without units.
+        /// Libraries cache their own results so repeated calls during e.g. a bulk Document Grid paste
+        /// are cheap.
         /// </summary>
-        public HashSet<eIonMobilityUnits> GetDistinctIonMobilityUnits(LibKey[] targetIons)
+        public HashSet<eIonMobilityUnits> GetDistinctIonMobilityUnits()
         {
             var result = new HashSet<eIonMobilityUnits>();
             foreach (var lib in _libraries.Where(l => l != null))
             {
-                if (!lib.TryGetIonMobilityInfos(targetIons, out var ionMobilities) || ionMobilities == null)
-                    continue;
-                foreach (var entries in ionMobilities.GetIonMobilityDict().Values)
-                {
-                    foreach (var im in entries)
-                    {
-                        var units = im.IonMobility.Units;
-                        if (units != eIonMobilityUnits.none && units != eIonMobilityUnits.unknown)
-                            result.Add(units);
-                    }
-                }
+                result.UnionWith(lib.GetDistinctIonMobilityUnits());
             }
             return result;
         }
