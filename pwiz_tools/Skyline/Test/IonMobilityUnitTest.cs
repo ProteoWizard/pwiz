@@ -212,7 +212,7 @@ namespace pwiz.SkylineTest
 
             // Case 1: no deduction evidence anywhere - surface a friendly error naming the peptide
             // (before fix: unhandled InvalidOperationException "Nullable object must have a value").
-            AssertEx.ThrowsException<InvalidDataException>(
+            AssertEx.ThrowsException(
                 () => settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.5),
                 (InvalidDataException ex) => AssertEx.Contains(ex.Message, nodePep.ModifiedTarget.ToString()));
 
@@ -240,7 +240,7 @@ namespace pwiz.SkylineTest
                 { chromSetDriftTime.MSDataFileInfos[0].ChangeIonMobilityUnits(eIonMobilityUnits.drift_time_msec) });
             var settingsConflict = settings.ChangeMeasuredResults(
                 new MeasuredResults(new[] { chromSet, chromSetDriftTime }));
-            AssertEx.ThrowsException<InvalidDataException>(
+            AssertEx.ThrowsException(
                 () => settingsConflict.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.5),
                 (InvalidDataException ex) =>
                 {
