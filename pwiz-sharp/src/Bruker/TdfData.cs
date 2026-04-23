@@ -48,14 +48,85 @@ internal sealed class TdfData : IBrukerData
 
     public IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel)
     {
-        foreach (var frame in _meta.EnumerateFrames(preferOnlyMsLevel))
+        // When there are no PASEF DDA precursors, each frame contributes a single point —
+        // matches pwiz C++ for non-PASEF and DIA-PASEF data.
+        if (!HasPasefData || preferOnlyMsLevel == 1)
         {
-            yield return new BrukerChromatogramPoint(
-                frame.RetentionTimeSeconds,
-                frame.SummedIntensities,
-                frame.MaxIntensity,
-                frame.MsMsType == MsMsType.Ms1 ? 1 : 2);
+            foreach (var frame in _meta.EnumerateFrames(preferOnlyMsLevel))
+                yield return new BrukerChromatogramPoint(
+                    frame.RetentionTimeSeconds,
+                    frame.SummedIntensities,
+                    frame.MaxIntensity,
+                    frame.MsMsType == MsMsType.Ms1 ? 1 : 2);
+            yield break;
         }
+
+        // PASEF DDA: interleave MS1 frame TIC points with interpolated MS2 points derived from
+        // per-precursor intensities. Mirrors pwiz C++ TimsData.cpp:380-443 (inner loop) and
+        // lines 668-689 (final flush) — MS2 intensities accumulated per frame are distributed
+        // evenly across the time span from the last MS2 frame to the next.
+        foreach (var p in BuildPasefChromatogramPoints(preferOnlyMsLevel))
+            yield return p;
+    }
+
+    private List<BrukerChromatogramPoint> BuildPasefChromatogramPoints(int preferOnlyMsLevel)
+    {
+        var output = new List<BrukerChromatogramPoint>();
+        var ms1Frames = preferOnlyMsLevel != 2
+            ? _meta.EnumerateFrames(1).ToList()
+            : new List<TdfFrame>();
+        var ms2FramesById = _meta.EnumerateFrames(2).ToDictionary(f => f.FrameId);
+        var precursors = _meta.EnumeratePasefPrecursors().ToList();
+
+        int ms1Idx = 0;
+        double lastMs2Time = 0, ms2Time = 0;
+        var ms2Intensities = new List<double>();
+
+        void FlushMs2(double toTime)
+        {
+            double timeDelta = toTime - lastMs2Time;
+            if (toTime == lastMs2Time && output.Count > 1)
+                timeDelta = toTime - output[^2].RetentionTimeSeconds;
+            for (int i = 0; i < ms2Intensities.Count; i++)
+            {
+                double t = lastMs2Time + (timeDelta / ms2Intensities.Count) * (i + 1);
+                output.Add(new BrukerChromatogramPoint(t, ms2Intensities[i], ms2Intensities[i], 2));
+            }
+            lastMs2Time = toTime;
+            ms2Intensities.Clear();
+        }
+
+        foreach (var info in precursors)
+        {
+            if (!ms2FramesById.TryGetValue(info.FrameId, out var frame)) continue;
+
+            // Interleave MS1 points whose time is before this PASEF frame.
+            while (ms1Idx < ms1Frames.Count && ms1Frames[ms1Idx].RetentionTimeSeconds < frame.RetentionTimeSeconds)
+            {
+                var m1 = ms1Frames[ms1Idx++];
+                output.Add(new BrukerChromatogramPoint(m1.RetentionTimeSeconds, m1.SummedIntensities, m1.MaxIntensity, 1));
+            }
+
+            if (lastMs2Time == 0) lastMs2Time = frame.RetentionTimeSeconds;
+
+            if (ms2Intensities.Count > 0 && ms2Time != frame.RetentionTimeSeconds)
+                FlushMs2(frame.RetentionTimeSeconds);
+
+            ms2Time = frame.RetentionTimeSeconds;
+            ms2Intensities.Add(info.Intensity);
+        }
+
+        // Final flush for the last MS2 frame's accumulated intensities.
+        if (ms2Intensities.Count > 0)
+            FlushMs2(ms2Time);
+
+        // Emit any remaining MS1 points after the last PASEF frame.
+        while (ms1Idx < ms1Frames.Count)
+        {
+            var m1 = ms1Frames[ms1Idx++];
+            output.Add(new BrukerChromatogramPoint(m1.RetentionTimeSeconds, m1.SummedIntensities, m1.MaxIntensity, 1));
+        }
+        return output;
     }
 
     public List<LcTrace> ReadLcTraces() => ChromatographyDataSqlite.ReadAll(AnalysisDirectory);
@@ -68,6 +139,7 @@ internal sealed class TdfData : IBrukerData
         public int ScanBegin;  // 0-based
         public int ScanEnd;    // 0-based inclusive
         public DiaFrameWindow? DiaWindow;
+        public PasefPrecursorInfo? PasefPrecursor;
         public bool Combined;  // true when combineIonMobilitySpectra
     }
 
@@ -79,6 +151,11 @@ internal sealed class TdfData : IBrukerData
                 .GroupBy(w => w.FrameId)
                 .ToDictionary(g => g.Key, g => g.ToList())
             : new Dictionary<long, List<DiaFrameWindow>>();
+        var pasefByFrame = HasPasefData
+            ? _meta.EnumeratePasefPrecursors()
+                .GroupBy(p => p.FrameId)
+                .ToDictionary(g => g.Key, g => g.OrderBy(p => p.ScanBegin).ToList())
+            : new Dictionary<long, List<PasefPrecursorInfo>>();
 
         foreach (var frame in _meta.EnumerateFrames(preferOnlyMsLevel))
         {
@@ -115,7 +192,32 @@ internal sealed class TdfData : IBrukerData
                 continue;
             }
 
-            // Default per-(frame, scan) emission for MS1 + non-DIA MS2.
+            // PASEF DDA MS2: emit one spectrum per scan (matching pwiz C++ default
+            // allowMsMsWithoutPrecursor=true) and attach the PasefPrecursorInfo to scans
+            // whose scan number falls within a precursor's [scanBegin, scanEnd] range.
+            // Scans in the gaps between precursors are still emitted, with no precursor.
+            if (frame.MsMsType != MsMsType.Ms1 && pasefByFrame.TryGetValue(frame.FrameId, out var precursors))
+            {
+                int pIdx = 0;
+                for (int scan = 0; scan < frame.NumScans; scan++)
+                {
+                    while (pIdx < precursors.Count && scan > precursors[pIdx].ScanEnd) pIdx++;
+                    var attached = pIdx < precursors.Count
+                        && scan >= precursors[pIdx].ScanBegin && scan <= precursors[pIdx].ScanEnd
+                            ? precursors[pIdx]
+                            : null;
+                    index.Add(new BrukerIndexEntry
+                    {
+                        Index = index.Count,
+                        Id = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
+                             " scan=" + (scan + 1).ToString(CultureInfo.InvariantCulture),
+                        Tag = new Tag { Frame = frame, ScanBegin = scan, ScanEnd = scan, PasefPrecursor = attached },
+                    });
+                }
+                continue;
+            }
+
+            // Default per-(frame, scan) emission for MS1 + non-PASEF MS2.
             for (int scan = 0; scan < frame.NumScans; scan++)
                 index.Add(new BrukerIndexEntry
                 {
@@ -153,11 +255,12 @@ internal sealed class TdfData : IBrukerData
 
         // Per-scan 1/K0 for per-scan TDF spectra (matches pwiz C++ — emitted whenever
         // combineIonMobilitySpectra is off and the scan covers a single mobility bin).
+        double scanInvK0 = 0;
         if (!tag.Combined && tag.ScanBegin == tag.ScanEnd)
         {
-            double invK0 = _tims.ScanNumberToOneOverK0(frame.FrameId, new[] { (double)tag.ScanBegin })[0];
-            if (invK0 > 0)
-                scan.Set(CVID.MS_inverse_reduced_ion_mobility, invK0, CVID.MS_volt_second_per_square_centimeter);
+            scanInvK0 = _tims.ScanNumberToOneOverK0(frame.FrameId, new[] { (double)tag.ScanBegin })[0];
+            if (scanInvK0 > 0)
+                scan.Set(CVID.MS_inverse_reduced_ion_mobility, scanInvK0, CVID.MS_volt_second_per_square_centimeter);
         }
         // windowGroup userParam marks DIA-PASEF MS2 membership.
         if (tag.DiaWindow is not null)
@@ -174,6 +277,8 @@ internal sealed class TdfData : IBrukerData
 
         if (tag.DiaWindow is not null)
             AddDiaPrecursor(spec, tag.DiaWindow);
+        else if (tag.PasefPrecursor is not null)
+            AddPasefPrecursor(spec, tag.PasefPrecursor, scanInvK0);
         else if (frame.MsMsType != MsMsType.Ms1 && frame.PrecursorMz.HasValue)
             AddFrameMsMsInfoPrecursor(spec, frame);
 
@@ -201,6 +306,36 @@ internal sealed class TdfData : IBrukerData
         precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
         if (Math.Abs(window.CollisionEnergy) > 0)
             precursor.Activation.Set(CVID.MS_collision_energy, Math.Abs(window.CollisionEnergy));
+        spec.Precursors.Add(precursor);
+    }
+
+    private static void AddPasefPrecursor(Spectrum spec, PasefPrecursorInfo info, double oneOverK0)
+    {
+        var precursor = new Precursor();
+        precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, info.IsolationMz, CVID.MS_m_z);
+        double half = info.IsolationWidth / 2.0;
+        precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, half, CVID.MS_m_z);
+        precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, half, CVID.MS_m_z);
+
+        var selected = new SelectedIon();
+        double selectedMz = info.MonoisotopicMz > 0 ? info.MonoisotopicMz : info.IsolationMz;
+        selected.Set(CVID.MS_selected_ion_m_z, selectedMz, CVID.MS_m_z);
+        if (info.Charge > 0)
+            selected.Set(CVID.MS_charge_state, info.Charge);
+        if (info.Intensity > 0)
+            selected.Set(CVID.MS_peak_intensity, info.Intensity, CVID.MS_number_of_detector_counts);
+        if (oneOverK0 > 0 && info.Charge > 0 && selectedMz > 0)
+        {
+            double ccs = TimsBinaryData.OneOverK0ToCcs(oneOverK0, info.Charge, selectedMz);
+            if (ccs > 0)
+                selected.Set(CVID.MS_collisional_cross_sectional_area, ccs, CVID.UO_square_angstrom);
+        }
+        precursor.SelectedIons.Add(selected);
+
+        precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
+        // pwiz C++ emits CE without a unit for Bruker DDA (see SpectrumList_Bruker.cpp:368).
+        if (Math.Abs(info.CollisionEnergy) > 0)
+            precursor.Activation.Set(CVID.MS_collision_energy, Math.Abs(info.CollisionEnergy));
         spec.Precursors.Add(precursor);
     }
 

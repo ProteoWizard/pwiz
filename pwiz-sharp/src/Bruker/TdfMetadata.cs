@@ -56,6 +56,23 @@ public sealed record DiaFrameWindow(
     double IsolationWidth,
     double CollisionEnergy);
 
+/// <summary>
+/// One PASEF DDA precursor covering a scan range within an MS2 frame. <c>ScanEnd</c> is
+/// <b>inclusive</b> (TDF's <c>PasefFrameMsMsInfo.ScanNumEnd</c> is exclusive; we subtract
+/// 1 on load to match pwiz C++).
+/// </summary>
+public sealed record PasefPrecursorInfo(
+    long FrameId,
+    int ScanBegin,
+    int ScanEnd,
+    double IsolationMz,
+    double IsolationWidth,
+    double CollisionEnergy,
+    double MonoisotopicMz,
+    int Charge,
+    double AvgScanNumber,
+    double Intensity);
+
 /// <summary>One row from the <c>Frames</c> table in a .tdf SQLite file.</summary>
 public sealed record TdfFrame(
     long FrameId,
@@ -215,6 +232,43 @@ public sealed class TdfMetadata : IDisposable
                 IsolationWidth: reader.GetDouble(4),
                 CollisionEnergy: reader.GetDouble(5),
                 WindowGroup: reader.GetInt32(6));
+        }
+    }
+
+    /// <summary>
+    /// Enumerates per-frame PASEF DDA precursors in frame + scanBegin order. Mirrors the pwiz
+    /// C++ join of <c>PasefFrameMsMsInfo</c> with <c>Precursors</c> (monoisotopic m/z, charge,
+    /// intensity, avg scan number). Returns empty when the analysis is not PASEF DDA.
+    /// </summary>
+    /// <remarks>
+    /// ScanNumEnd in the TDF is exclusive; we subtract 1 so <c>ScanEnd</c> is inclusive.
+    /// </remarks>
+    public IEnumerable<PasefPrecursorInfo> EnumeratePasefPrecursors()
+    {
+        if (!HasPasefData) yield break;
+
+        const string sql =
+            "SELECT f.Frame, f.ScanNumBegin, f.ScanNumEnd, f.IsolationMz, f.IsolationWidth, f.CollisionEnergy, " +
+            "       p.MonoisotopicMz, p.Charge, p.ScanNumber, p.Intensity " +
+            "FROM PasefFrameMsMsInfo f " +
+            "JOIN Precursors p ON p.Id = f.Precursor " +
+            "ORDER BY f.Frame, f.ScanNumBegin";
+        using var cmd = _conn.CreateCommand();
+        cmd.CommandText = sql;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            yield return new PasefPrecursorInfo(
+                FrameId: reader.GetInt64(0),
+                ScanBegin: reader.GetInt32(1),
+                ScanEnd: reader.GetInt32(2) - 1,
+                IsolationMz: reader.GetDouble(3),
+                IsolationWidth: reader.GetDouble(4),
+                CollisionEnergy: reader.GetDouble(5),
+                MonoisotopicMz: reader.IsDBNull(6) ? 0.0 : reader.GetDouble(6),
+                Charge: reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                AvgScanNumber: reader.IsDBNull(8) ? 0.0 : reader.GetDouble(8),
+                Intensity: reader.IsDBNull(9) ? 0.0 : reader.GetDouble(9));
         }
     }
 
