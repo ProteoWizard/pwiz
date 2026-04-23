@@ -266,9 +266,11 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         if (TryGetTrailerDouble(scanNumber, "Ion Injection Time (ms):", out double injMs))
             scan.Set(CVID.MS_ion_injection_time, injMs, CVID.UO_millisecond);
 
-        // Source-induced CID offset voltage (MS_offset_voltage) is exposed by pwiz C++ via the
-        // XRawfile COM API's sourceOffsetVoltage() — which ThermoFisher.CommonCore does not
-        // expose. TODO: find an alternative path or parse the filter string for "sid=N".
+        // Source-induced CID offset voltage. CommonCore's IScanFilter doesn't expose
+        // sourceOffsetVoltage() directly like the old XRawfile COM API, but the filter
+        // string embeds it as "sid=N.NN" — e.g. "NSI sid=10.00 t Full ms2 ...".
+        if (TryParseSid(filterString, out double sid) && sid != 0)
+            scan.Set(CVID.MS_offset_voltage, sid, CVID.UO_volt);
 
         // ---- polarity ----
         if (ie.Polarity == PolarityType.Positive)
@@ -308,7 +310,12 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
 
         // ---- precursor (MS2+) ----
         if (msLevel > 1 && ie.MsOrder != MSOrderType.Par)
-            PopulatePrecursor(spec, filter, ie);
+        {
+            if (filter.MassCount > 1 && HasMultiplePrecursors(filter, msLevel))
+                PopulateMultiPrecursor(spec, filter, ie, msLevel);
+            else
+                PopulatePrecursor(spec, filter, ie);
+        }
 
         // ---- binary data ----
         // Always retrieve the mass list so defaultArrayLength + lowest/highest observed m/z match
@@ -324,6 +331,138 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         }
 
         return spec;
+    }
+
+    /// <summary>
+    /// True when the scan has multiple precursors at the same MS level (MSX) or multiple
+    /// precursors selected for a single MSn (SPS). Standard nested MSn
+    /// (<c>MassCount == msLevel - 1</c>) returns false.
+    /// </summary>
+    private static bool HasMultiplePrecursors(IScanFilter filter, int msLevel) =>
+        filter.Multiplex != TriState.Off
+        || filter.MultiNotch != TriState.Off
+        || filter.MassCount > msLevel - 1;
+
+    private void PopulateMultiPrecursor(Spectrum spec, IScanFilter filter, IndexEntry ie, int msLevel)
+    {
+        // Parity with pwiz C++ RawFile.cpp parseFilterString + SPS trailer append:
+        //   - filter masses i < msLevel-1 are nested precursors at ms level i+1
+        //   - additional filter masses (MSX) are all at ms level msLevel-1
+        //   - SPS: extra masses come from trailer "SPS Masses:" + "SPS Masses Continued:",
+        //     all at ms level msLevel-1, skipping the first (duplicate of last filter mass)
+        int filterCount = filter.MassCount;
+        var entries = new List<(double Mass, int Level, double HalfWidth, ActivationType Act, double Energy)>();
+        for (int i = 0; i < filterCount; i++)
+        {
+            int lvl = i < msLevel - 1 ? i + 1 : msLevel - 1;
+            double hw = 0;
+            try { hw = filter.GetIsolationWidth(i) / 2.0; } catch { }
+            entries.Add((filter.GetMass(i), lvl, hw, filter.GetActivation(i), filter.GetEnergy(i)));
+        }
+
+        // SPS detection: CommonCore's filter.MultiNotch returns TriState.Any rather than On,
+        // so follow pwiz C++ which also falls back to the trailer — SPS is whenever non-empty
+        // "SPS Masses:" trailer exists.
+        var spsMasses = entries.Count > 0 ? ReadSpsMasses(ie.Scan) : new List<double>();
+        bool isSps = spsMasses.Count > 0;
+        if (isSps)
+        {
+            if (spsMasses.Count > 1)
+            {
+                var last = entries[^1]; // inherit isolation width, activation, energy from last filter mass
+                for (int i = 1; i < spsMasses.Count; i++)
+                    entries.Add((spsMasses[i], msLevel - 1, last.HalfWidth, last.Act, last.Energy));
+            }
+
+            // For SPS, trailer "MS<n-1> Isolation Width:" overrides the API isolation width
+            // when larger (pwiz C++ comment: "API one isn't always accurate for some reason").
+            string widthTag = "MS" + (msLevel - 1).ToString(CultureInfo.InvariantCulture) + " Isolation Width:";
+            if (TryGetTrailerDouble(ie.Scan, widthTag, out double trailerWidth) && trailerWidth > 0)
+            {
+                double trailerHalf = trailerWidth / 2.0;
+                for (int k = 0; k < entries.Count; k++)
+                    if (entries[k].HalfWidth < trailerHalf)
+                    {
+                        var e = entries[k];
+                        entries[k] = (e.Mass, e.Level, trailerHalf, e.Act, e.Energy);
+                    }
+            }
+        }
+
+        // Emit in reverse so the highest ms level (innermost, closest to fragment scan) comes first.
+        for (int i = entries.Count - 1; i >= 0; i--)
+        {
+            var e = entries[i];
+
+            var precursor = new Precursor();
+            precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, e.Mass, CVID.MS_m_z);
+            if (e.HalfWidth > 0)
+            {
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, e.HalfWidth, CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, e.HalfWidth, CVID.MS_m_z);
+            }
+            precursor.IsolationWindow.UserParams.Add(new UserParam(
+                "ms level", e.Level.ToString(CultureInfo.InvariantCulture)));
+
+            var selectedIon = new SelectedIon();
+            selectedIon.Set(CVID.MS_selected_ion_m_z, e.Mass, CVID.MS_m_z);
+            precursor.SelectedIons.Add(selectedIon);
+
+            SetActivationCv(precursor.Activation, e.Act);
+            if (e.Energy > 0 && (e.Act == ActivationType.CollisionInducedDissociation
+                                 || e.Act == ActivationType.HigherEnergyCollisionalDissociation))
+                precursor.Activation.Set(CVID.MS_collision_energy, e.Energy, CVID.UO_electronvolt);
+
+            spec.Precursors.Add(precursor);
+        }
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex SidRegex =
+        new(@"\bsid=([\-+]?\d+(?:\.\d+)?)", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static bool TryParseSid(string filter, out double value)
+    {
+        value = 0;
+        if (string.IsNullOrEmpty(filter)) return false;
+        var m = SidRegex.Match(filter);
+        return m.Success && double.TryParse(m.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+    }
+
+    private List<double> ReadSpsMasses(int scanNumber)
+    {
+        var result = new List<double>();
+        if (!TryGetTrailerString(scanNumber, "SPS Masses:", out string s)) return result;
+        if (TryGetTrailerString(scanNumber, "SPS Masses Continued:", out string s2))
+            s = s + "," + s2;
+        foreach (var token in s.Split(','))
+        {
+            var t = token.Trim();
+            if (t.Length == 0) continue;
+            if (double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out double v))
+                result.Add(v);
+        }
+        return result;
+    }
+
+    private static void SetActivationCv(Activation activation, ActivationType activationType)
+    {
+        switch (activationType)
+        {
+            case ActivationType.HigherEnergyCollisionalDissociation:
+                activation.Set(CVID.MS_beam_type_collision_induced_dissociation); break;
+            case ActivationType.CollisionInducedDissociation:
+                activation.Set(CVID.MS_collision_induced_dissociation); break;
+            case ActivationType.ElectronTransferDissociation:
+                activation.Set(CVID.MS_electron_transfer_dissociation); break;
+            case ActivationType.ElectronCaptureDissociation:
+                activation.Set(CVID.MS_electron_capture_dissociation); break;
+            case ActivationType.PQD:
+                activation.Set(CVID.MS_pulsed_q_dissociation); break;
+            case ActivationType.MultiPhotonDissociation:
+                activation.Set(CVID.MS_photodissociation); break;
+            default:
+                activation.Set(CVID.MS_collision_induced_dissociation); break;
+        }
     }
 
     private void PopulatePrecursor(Spectrum spec, IScanFilter filter, IndexEntry ie)
@@ -365,7 +504,27 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         if (TryGetTrailerInt(ie.Scan, "Charge State:", out long cs) && cs > 0)
             precursorCharge = (int)cs;
         if (TryGetTrailerDouble(ie.Scan, "Monoisotopic M/Z:", out double mono) && mono > 0)
-            selectedIonMz = mono;
+        {
+            // Reject when outside isolation window — guards against a known Thermo firmware
+            // bug where the Monoisotopic trailer can report a reference mass well outside the
+            // actual isolation (e.g. IsolationMzOffset-ReportedMassOffset fixture). Matches
+            // pwiz C++ SpectrumList_Thermo.cpp lines 617-623.
+            const double defaultLowerOffset = 1.5;
+            const double defaultUpperOffset = 2.5;
+            double lo, hi;
+            if (isolationHalfWidth <= 2.0)
+            {
+                lo = isolationMz - defaultLowerOffset * 2;
+                hi = isolationMz + defaultUpperOffset;
+            }
+            else
+            {
+                lo = isolationMz - isolationHalfWidth;
+                hi = isolationMz + isolationHalfWidth;
+            }
+            if (mono >= lo && mono <= hi)
+                selectedIonMz = mono;
+        }
 
         if (selectedIonMz > 0)
             selectedIon.Set(CVID.MS_selected_ion_m_z, selectedIonMz, CVID.MS_m_z);
