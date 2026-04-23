@@ -886,9 +886,8 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     foreach (var im in entries)
                     {
-                        var u = im.IonMobility.Units;
-                        if (u != eIonMobilityUnits.none && u != eIonMobilityUnits.unknown)
-                            result.Add(u);
+                        if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(im.IonMobility.Units))
+                            result.Add(im.IonMobility.Units);
                     }
                 }
             }

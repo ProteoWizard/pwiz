@@ -122,10 +122,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 var dict = IonMobilityLibrary.GetIonMobilityLibKeyMap();
                 var val =
                     dict?.AsDictionary().Values.FirstOrDefault
-                        (v => v.Any(l => l.IonMobility.Units != eIonMobilityUnits.none));
+                        (v => v.Any(l => IonMobilityFilter.IsExplicitIonMobilityMeasurement(l.IonMobility.Units)));
                 if (val != null)
                 {
-                    var item = val.FirstOrDefault(i => i.IonMobility.Units != eIonMobilityUnits.none);
+                    var item = val.FirstOrDefault(i => IonMobilityFilter.IsExplicitIonMobilityMeasurement(i.IonMobility.Units));
                     if (item!=null)
                     {
                         return item.IonMobility.Units;
@@ -158,9 +158,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     foreach (var fileInfo in chromSet.MSDataFileInfos)
                     {
-                        var u = fileInfo.IonMobilityUnits;
-                        if (u != eIonMobilityUnits.none && u != eIonMobilityUnits.unknown)
-                            units.Add(u);
+                        if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(fileInfo.IonMobilityUnits))
+                            units.Add(fileInfo.IonMobilityUnits);
                     }
                 }
             }
@@ -170,7 +169,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (imFiltering != null)
             {
                 var libUnits = imFiltering.GetFirstSeenIonMobilityUnits();
-                if (libUnits != eIonMobilityUnits.none && libUnits != eIonMobilityUnits.unknown)
+                if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(libUnits))
                     units.Add(libUnits);
             }
 
@@ -199,7 +198,7 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
                 var u = nodeGroup.ExplicitValues.IonMobilityUnits;
-                if (u != eIonMobilityUnits.none && u != eIonMobilityUnits.unknown)
+                if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(u))
                 {
                     units.Add(u);
                     if (units.Count > 1)
@@ -1127,6 +1126,29 @@ namespace pwiz.Skyline.Model.DocSettings
             return units == eIonMobilityUnits.compensation_V;
         }
 
+        /// <summary>
+        /// Units that can appear in a user-facing selection (dropdown, error-message list, etc.).
+        /// <see cref="eIonMobilityUnits.waters_sonar"/> is excluded because it is an internal
+        /// marker for Waters SONAR data (which uses IMS hardware for m/z filtering) and collides
+        /// with <see cref="eIonMobilityUnits.none"/> in <see cref="IonMobilityUnitsL10NString"/>.
+        /// <see cref="eIonMobilityUnits.unknown"/> is excluded because it is only used during
+        /// deserialization of older Skyline documents.
+        /// </summary>
+        public static bool IsUserSelectableIonMobilityUnit(eIonMobilityUnits units)
+        {
+            return units != eIonMobilityUnits.unknown && units != eIonMobilityUnits.waters_sonar;
+        }
+
+        /// <summary>
+        /// Units that represent a real ion mobility measurement. Excludes the "none" sentinel in
+        /// addition to the types excluded by <see cref="IsUserSelectableIonMobilityUnit"/>.
+        /// Used when collecting the distinct units implied by a document or library.
+        /// </summary>
+        public static bool IsExplicitIonMobilityMeasurement(eIonMobilityUnits units)
+        {
+            return IsUserSelectableIonMobilityUnit(units) && units != eIonMobilityUnits.none;
+        }
+
         public static eIonMobilityUnits IonMobilityUnitsFromL10NString(string units)
         {
             if (TryParseIonMobilityUnits(units, out var result))
@@ -1195,7 +1217,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     Thread.CurrentThread.CurrentUICulture = tryCulture;
                     foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
                     {
-                        if (u != eIonMobilityUnits.none && u!= eIonMobilityUnits.unknown)
+                        if (IsExplicitIonMobilityMeasurement(u))
                             result.Add(IonMobilityUnitsL10NString(u));
                     }
                 }
