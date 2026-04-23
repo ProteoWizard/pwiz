@@ -78,7 +78,7 @@ namespace pwiz.OspreySharp.FDR
             MaxIterations = 10;
             NFolds = 3;
             Seed = 42;
-            CValues = new[] { 0.01, 0.1, 1.0, 10.0, 100.0 };
+            CValues = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
             MaxTrainSize = 300000;
         }
     }
