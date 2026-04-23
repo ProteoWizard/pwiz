@@ -60,7 +60,10 @@
     Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
     output. Color indicates port status of the OspreySharp (C#) implementation
     against the Osprey (Rust) reference. Stages 1-4 are proven bit-identical
-    (21 features, 317K entries). Green badges = regression tests; purple badges = C#/Rust perf ratio.
+    on Stellar + Astral (21 PIN features, 317K entries) and Stage 5 is
+    bit-identical on single-file Stellar (end-of-stage dump: score + pep +
+    4 q-values across 462,802 FdrEntry rows at max_diff = 0). Green badges =
+    regression tests; purple badges = C#/Rust perf ratio.
   </p>
 </header>
 
@@ -334,35 +337,30 @@
 <path class="flow" d="M 600 1300 L 600 1340" marker-end="url(#arrow)"/>
 
 <g transform="translate(0, 1340)">
-  <rect class="phase-bg-active" x="40" y="0" width="1120" height="260" rx="8"/>
+  <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="8"/>
   <text class="phase-label" x="60" y="24">stage 5</text>
   <text class="phase-title" x="60" y="42">First-pass FDR (Percolator SVM)</text>
   <text class="phase-note"  x="60" y="58">
     Semi-supervised SVM training with target-decoy competition. Produces
     precursor-level and peptide-level q-values at run and experiment levels.
+    Single-file Stellar: bit-identical cross-impl on score + pep + 4 q-values,
+    max_diff = 0 over 462,802 rows. 3-file validation pending.
   </text>
 
-  <rect class="st-unverif" x="80" y="80" width="1040" height="42" rx="4"/>
+  <rect class="st-done" x="80" y="80" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="100" text-anchor="middle">Best-per-precursor subsampling (across files)</text>
-  <text class="stage-desc"  x="600" y="114" text-anchor="middle">maximizes peptide diversity for SVM training on multi-file experiments</text>
+  <text class="stage-desc"  x="600" y="114" text-anchor="middle">subsample + fold dump matches byte-for-byte on single-file Stellar (3-file pending)</text>
 
-  <rect class="st-unverif" x="80" y="140" width="1040" height="60" rx="4"/>
+  <rect class="st-done" x="80" y="140" width="1040" height="60" rx="4"/>
   <text class="stage-title" x="600" y="160" text-anchor="middle">Iterative non-negative SVM (3-fold stratified CV by peptide)</text>
-  <text class="stage-desc"  x="600" y="176" text-anchor="middle">grid search for C; Percolator-style positive training set; best-iteration tracking;</text>
-  <text class="stage-desc"  x="600" y="190" text-anchor="middle">cross-fold score calibration (Granholm 2012)</text>
+  <text class="stage-desc"  x="600" y="176" text-anchor="middle">grid search for C; Percolator-style positive training set; per-fold SVM weights match byte-for-byte</text>
+  <text class="stage-desc"  x="600" y="190" text-anchor="middle">cross-fold score calibration (Granholm 2012); standardizer mean/std match within 1e-12</text>
 
-  <rect class="st-unverif" x="80" y="218" width="1040" height="32" rx="4"/>
+  <rect class="st-done" x="80" y="218" width="1040" height="32" rx="4"/>
   <text class="stage-title" x="600" y="238" text-anchor="middle">Target-decoy competition + q-values (run + experiment x precursor + peptide) + FDR compaction</text>
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
   <path class="flow" d="M 600 200 L 600 216" marker-end="url(#arrow)"/>
-
-  <!-- "You are here" callout -->
-  <g transform="translate(820, 75)">
-    <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
-    <text class="you-are-here" x="136" y="10">YOU ARE</text>
-    <text class="you-are-here" x="136" y="26">HERE</text>
-  </g>
 </g>
 
 <!-- ================================================================= -->
@@ -371,7 +369,7 @@
 <path class="flow" d="M 600 1600 L 600 1640" marker-end="url(#arrow)"/>
 
 <g transform="translate(0, 1640)">
-  <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="6"/>
+  <rect class="phase-bg-active" x="40" y="0" width="1120" height="260" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 6</text>
   <text class="phase-title" x="60" y="42">Refinement (post-FDR)</text>
   <text class="phase-note"  x="60" y="58">
@@ -393,6 +391,13 @@
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
   <path class="flow" d="M 600 182 L 600 198" marker-end="url(#arrow)"/>
+
+  <!-- "You are here" callout -->
+  <g transform="translate(820, 75)">
+    <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
+    <text class="you-are-here" x="136" y="10">YOU ARE</text>
+    <text class="you-are-here" x="136" y="26">HERE</text>
+  </g>
 </g>
 
 <!-- ================================================================= -->
@@ -461,12 +466,32 @@
     <code>ProcessFile</code> calls.
   </p>
   <p>
-    Next targets: Stage 5 (Percolator SVM FDR), upstream the parity-relevant
-    bug fixes and optimizations to <code>maccoss/osprey</code> (first PR
-    <a href="https://github.com/maccoss/osprey/pull/3"><code>maccoss/osprey#3</code></a>
-    posted this session for the unit-bin calibration scorer), Skyline
-    CommonUtil integration.
-    Branch <code>Skyline/work/20260409_osprey_sharp</code>.
+    <strong>Stage 5 (2026-04-22):</strong> single-file Stellar cross-impl
+    bit-parity achieved. Rust and OspreySharp agree exactly on the
+    end-of-Stage-5 dump (<code>score</code>, <code>pep</code>, 4 run/experiment
+    precursor/peptide q-values) across 462,802 <code>FdrEntry</code> rows:
+    per-column <code>max_diff = 0</code>, 0 divergent rows. Both tools report
+    <strong>34,158 precursors at 1% FDR</strong>, 30,712 peptides, 5,471
+    protein groups. Upstream PRs on <code>maccoss/osprey</code>:
+    <a href="https://github.com/maccoss/osprey/pull/16"><code>#16</code></a>
+    (self-parity: PEP non-determinism via sort + serial KDE),
+    <a href="https://github.com/maccoss/osprey/pull/17"><code>#17</code></a>
+    (cross-parity: <code>grid_search_c</code> tie-break +
+    <code>count_passing_targets_svm</code> formula), and
+    <a href="https://github.com/maccoss/osprey/pull/18"><code>#18</code></a>
+    (diagnostic dumps). OspreySharp side:
+    <a href="https://github.com/ProteoWizard/pwiz/pull/4159"><code>pwiz#4159</code></a>
+    (VERSION + C grid sync with v26.4) and
+    <a href="https://github.com/ProteoWizard/pwiz/pull/4160"><code>pwiz#4160</code></a>
+    (matching diagnostic dumps + <code>Compare-Percolator.ps1</code>).
+    Multi-file (3-file) Stage 5 validation pending as the first step of
+    Stage 6 work.
+  </p>
+  <p>
+    Next targets: Stage 5 multi-file validation (Stellar + Astral 3-file),
+    Stage 6 refinement (multi-charge consensus, cross-run reconciliation,
+    second-pass re-score), Stage 7 protein FDR, Stage 8 .blib output
+    parity. See <code>ai/todos/active/TODO-20260420_osprey_sharp.md</code>.
   </p>
 </footer>
 </body>
