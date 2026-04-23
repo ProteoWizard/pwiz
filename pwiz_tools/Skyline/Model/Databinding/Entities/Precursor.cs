@@ -30,6 +30,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -354,8 +355,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
+                var unitsForSet = DocNode.ExplicitValues.IonMobilityUnits;
+                if (value.HasValue && unitsForSet == eIonMobilityUnits.none)
+                {
+                    // An explicit ion mobility value without units is an invalid state that crashes on
+                    // method export. Deduce units from results, ion mobility library, spectral libraries,
+                    // or sibling transition groups; reject the edit if the answer is unknown or ambiguous.
+                    var candidates = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(SrmDocument);
+                    if (candidates.Count == 1)
+                    {
+                        unitsForSet = candidates.Single();
+                    }
+                    else if (candidates.Count == 0)
+                    {
+                        throw new InvalidDataException(EntitiesResources.Precursor_ExplicitIonMobility_Cannot_deduce_ion_mobility_units__Set_the_Explicit_Ion_Mobility_Units_column_first_);
+                    }
+                    else
+                    {
+                        throw new InvalidDataException(string.Format(
+                            EntitiesResources.Precursor_ExplicitIonMobility_Document_contains_multiple_ion_mobility_units___0____Set_the_Explicit_Ion_Mobility_Units_column_explicitly_,
+                            string.Join(@", ", candidates.Select(IonMobilityFilter.IonMobilityUnitsL10NString))));
+                    }
+                }
                 ChangeDocNode(EditColumnDescription(nameof(ExplicitIonMobility), value),
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, docNode.ExplicitValues.IonMobilityUnits)));
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, unitsForSet)));
             }
         }
 

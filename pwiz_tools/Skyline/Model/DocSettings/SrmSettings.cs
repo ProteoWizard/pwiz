@@ -1019,7 +1019,8 @@ namespace pwiz.Skyline.Model.DocSettings
             TransitionDocNode nodeTran,
             LibraryIonMobilityInfo libraryIonMobilityInfo,
             IIonMobilityFunctionsProvider instrumentInfo, // For converting CCS to IM if needed, or mz to IM for Waters SONAR
-            double ionMobilityMax)
+            double ionMobilityMax,
+            eIonMobilityUnits exportTargetUnits = eIonMobilityUnits.none) // Fallback when deducing units for an explicit IM value that lacks them - e.g. Bruker timsTOF export implies inverse_K0_Vsec_per_cm2
         {
             if (instrumentInfo != null && instrumentInfo.IsWatersSonarData)
             {
@@ -1044,8 +1045,43 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             if (nodeGroup.ExplicitValues.IonMobility.HasValue)
             {
+                // Explicit IM value without units produces an empty IonMobilityValue and later
+                // crashes. The document grid setter prevents this going forward, but legacy
+                // documents may already be in this state - try to deduce units from the rest
+                // of the document before giving up.
+                var explicitUnits = nodeGroup.ExplicitValues.IonMobilityUnits;
+                if (explicitUnits == eIonMobilityUnits.none)
+                {
+                    var libKey = nodeGroup.GetLibKey(this, nodePep);
+                    var candidates = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(this, libKey);
+                    if (candidates.Count == 1)
+                    {
+                        // Document-level evidence is authoritative even when it contradicts the export
+                        // target - silently substituting the target's unit would convert a stored value
+                        // to the wrong semantics without the user noticing.
+                        explicitUnits = candidates.Single();
+                    }
+                    else if (candidates.Count == 0 && exportTargetUnits != eIonMobilityUnits.none)
+                    {
+                        // No document evidence - fall back to the export target's native unit.
+                        explicitUnits = exportTargetUnits;
+                    }
+                    else if (candidates.Count == 0)
+                    {
+                        throw new InvalidDataException(string.Format(
+                            DocSettingsResources.SrmSettings_GetIonMobilityFilter_Peptide___0___has_an_explicit_ion_mobility_value_but_no_ion_mobility_units__Set_the_Explicit_Ion_Mobility_Units_column_in_the_Document_Grid_,
+                            nodePep.ModifiedTarget));
+                    }
+                    else
+                    {
+                        throw new InvalidDataException(string.Format(
+                            DocSettingsResources.SrmSettings_GetIonMobilityFilter_Peptide___0___has_an_explicit_ion_mobility_value_but_document_contains_multiple_ion_mobility_units___1____Set_the_Explicit_Ion_Mobility_Units_column_in_the_Document_Grid_,
+                            nodePep.ModifiedTarget,
+                            string.Join(@", ", candidates.Select(IonMobilityFilter.IonMobilityUnitsL10NString))));
+                    }
+                }
                 // Use the explicitly specified IM value if no CCS provided, or if CCS=>IM conversion failed
-                var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
+                var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, explicitUnits),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
                 if (!nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && // Retain original CCS if CCS=>IM failed

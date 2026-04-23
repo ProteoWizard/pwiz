@@ -21,10 +21,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -129,6 +132,50 @@ namespace pwiz.SkylineTest
             validatingIonMobilityPeptides = peptideTimes as ValidatingIonMobilityPrecursor[] ?? peptideTimes.ToArray();
             Assert.AreEqual(1, validatingIonMobilityPeptides.Length);
             Assert.AreEqual(1.75, validatingIonMobilityPeptides[0].CollisionalCrossSectionSqA);
+        }
+
+        /// <summary>
+        /// Verify that <see cref="TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits"/>
+        /// collects non-none ion mobility units from imported results and the ion mobility
+        /// library, so that an explicit ion mobility value set without units can be repaired
+        /// at export time instead of crashing in method export (as reported for Bruker timsTOF).
+        /// </summary>
+        [TestMethod]
+        public void TestIonMobilityUnitsDeduction()
+        {
+            var settingsEmpty = SrmSettingsList.GetDefault();
+
+            // No sources - deducer finds nothing.
+            var units = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(settingsEmpty);
+            Assert.AreEqual(0, units.Count);
+
+            // Imported results file tagged with 1/K0 - deducer picks it up.
+            var chromSetK0 = new ChromatogramSet(@"rep1", new[] { MsDataFileUri.Parse(@"Test") });
+            chromSetK0 = chromSetK0.ChangeMSDataFileInfos(new[]
+                { chromSetK0.MSDataFileInfos[0].ChangeIonMobilityUnits(eIonMobilityUnits.inverse_K0_Vsec_per_cm2) });
+            var settingsWithResults = settingsEmpty.ChangeMeasuredResults(new MeasuredResults(new[] { chromSetK0 }));
+            units = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(settingsWithResults);
+            Assert.AreEqual(1, units.Count);
+            Assert.IsTrue(units.Contains(eIonMobilityUnits.inverse_K0_Vsec_per_cm2));
+
+            // Two imported files with conflicting units - ambiguous.
+            var chromSetDriftTime = new ChromatogramSet(@"rep2", new[] { MsDataFileUri.Parse(@"Test2") });
+            chromSetDriftTime = chromSetDriftTime.ChangeMSDataFileInfos(new[]
+                { chromSetDriftTime.MSDataFileInfos[0].ChangeIonMobilityUnits(eIonMobilityUnits.drift_time_msec) });
+            var settingsConflict = settingsEmpty.ChangeMeasuredResults(
+                new MeasuredResults(new[] { chromSetK0, chromSetDriftTime }));
+            units = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(settingsConflict);
+            Assert.AreEqual(2, units.Count);
+            Assert.IsTrue(units.Contains(eIonMobilityUnits.inverse_K0_Vsec_per_cm2));
+            Assert.IsTrue(units.Contains(eIonMobilityUnits.drift_time_msec));
+
+            // Unknown/none units in sources are ignored.
+            var chromSetUnknown = new ChromatogramSet(@"rep3", new[] { MsDataFileUri.Parse(@"Test3") });
+            chromSetUnknown = chromSetUnknown.ChangeMSDataFileInfos(new[]
+                { chromSetUnknown.MSDataFileInfos[0].ChangeIonMobilityUnits(eIonMobilityUnits.none) });
+            var settingsNoneResults = settingsEmpty.ChangeMeasuredResults(new MeasuredResults(new[] { chromSetUnknown }));
+            units = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(settingsNoneResults);
+            Assert.AreEqual(0, units.Count);
         }
 
     }

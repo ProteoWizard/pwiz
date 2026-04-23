@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -2193,6 +2194,30 @@ namespace pwiz.Skyline.Model.DocSettings
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Distinct non-none ion mobility units present in any active library for the given ions.
+        /// Used when deducing units for an explicit ion mobility value that was entered without units.
+        /// </summary>
+        public HashSet<eIonMobilityUnits> GetDistinctIonMobilityUnits(LibKey[] targetIons)
+        {
+            var result = new HashSet<eIonMobilityUnits>();
+            foreach (var lib in _libraries.Where(l => l != null))
+            {
+                if (!lib.TryGetIonMobilityInfos(targetIons, out var ionMobilities) || ionMobilities == null)
+                    continue;
+                foreach (var entries in ionMobilities.GetIonMobilityDict().Values)
+                {
+                    foreach (var im in entries)
+                    {
+                        var units = im.IonMobility.Units;
+                        if (units != eIonMobilityUnits.none && units != eIonMobilityUnits.unknown)
+                            result.Add(units);
+                    }
+                }
+            }
+            return result;
         }
 
         /// <summary>

@@ -152,6 +152,12 @@
   <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
     <value>iRT standards can only be changed by modifying the iRT calculator</value>
   </data>
+  <data name="Precursor_ExplicitIonMobility_Cannot_deduce_ion_mobility_units__Set_the_Explicit_Ion_Mobility_Units_column_first_" xml:space="preserve">
+    <value>Cannot deduce ion mobility units. Set the Explicit Ion Mobility Units column first.</value>
+  </data>
+  <data name="Precursor_ExplicitIonMobility_Document_contains_multiple_ion_mobility_units___0____Set_the_Explicit_Ion_Mobility_Units_column_explicitly_" xml:space="preserve">
+    <value>Document contains multiple ion mobility units ({0}). Set the Explicit Ion Mobility Units column explicitly.</value>
+  </data>
   <data name="Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___" xml:space="preserve">
     <value>Are you sure you want to delete the precursor '{0}'?</value>
     <comment>Example: Are you sure you want to delete the precursor '734++'?</comment>

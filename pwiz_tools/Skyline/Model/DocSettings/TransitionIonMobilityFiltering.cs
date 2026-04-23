@@ -136,6 +136,79 @@ namespace pwiz.Skyline.Model.DocSettings
             return eIonMobilityUnits.none; // Didn't find anything
         }
 
+        /// <summary>
+        /// Collect the distinct non-none ion mobility units implied by settings-level sources:
+        /// per-file units from imported results, the ion mobility library, and spectral libraries
+        /// with ion mobility data for the given library keys. Used to deduce units when only
+        /// <see cref="SrmSettings"/> is in scope - e.g. from within a settings method that needs
+        /// to recover from an explicit ion mobility value lacking units. Zero results means no
+        /// deduction is possible; exactly one means we can deduce unambiguously; more than one
+        /// means the document contains conflicting evidence (e.g. mixed FAIMS and TIMS) and we
+        /// must not silently pick.
+        /// </summary>
+        public static HashSet<eIonMobilityUnits> GetSettingsIonMobilityUnits(SrmSettings settings, params LibKey[] spectralLibraryKeys)
+        {
+            var units = new HashSet<eIonMobilityUnits>();
+
+            // Imported results carry the instrument-native unit per file - most authoritative.
+            var results = settings.MeasuredResults;
+            if (results != null)
+            {
+                foreach (var chromSet in results.Chromatograms)
+                {
+                    foreach (var fileInfo in chromSet.MSDataFileInfos)
+                    {
+                        var u = fileInfo.IonMobilityUnits;
+                        if (u != eIonMobilityUnits.none && u != eIonMobilityUnits.unknown)
+                            units.Add(u);
+                    }
+                }
+            }
+
+            // Ion mobility library.
+            var imFiltering = settings.TransitionSettings.IonMobilityFiltering;
+            if (imFiltering != null)
+            {
+                var libUnits = imFiltering.GetFirstSeenIonMobilityUnits();
+                if (libUnits != eIonMobilityUnits.none)
+                    units.Add(libUnits);
+            }
+
+            // Spectral libraries with ion mobility data.
+            var peptideLibraries = settings.PeptideSettings.Libraries;
+            if (peptideLibraries != null && peptideLibraries.HasLibraries && peptideLibraries.IsLoaded
+                && spectralLibraryKeys != null && spectralLibraryKeys.Length > 0)
+            {
+                units.UnionWith(peptideLibraries.GetDistinctIonMobilityUnits(spectralLibraryKeys));
+            }
+
+            return units;
+        }
+
+        /// <summary>
+        /// Extends <see cref="GetSettingsIonMobilityUnits"/> with sibling transition groups that
+        /// already have explicit units set. Used when the full document tree is in scope, e.g.
+        /// the Document Grid setter that writes an explicit ion mobility value.
+        /// </summary>
+        public static HashSet<eIonMobilityUnits> GetDocumentIonMobilityUnits(SrmDocument document)
+        {
+            var libKeys = document.Molecules.SelectMany(node =>
+                    node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node)))
+                .Distinct()
+                .ToArray();
+
+            var units = GetSettingsIonMobilityUnits(document.Settings, libKeys);
+
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
+            {
+                var u = nodeGroup.ExplicitValues.IonMobilityUnits;
+                if (u != eIonMobilityUnits.none && u != eIonMobilityUnits.unknown)
+                    units.Add(u);
+            }
+
+            return units;
+        }
+
         public IonMobilityAndCCS GetIonMobilityFilter(LibKey ion, double mz,
             IIonMobilityFunctionsProvider ionMobilityFunctionsProvider)
         {
