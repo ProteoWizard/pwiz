@@ -531,14 +531,26 @@ namespace pwiz.Skyline.Model.Results
             bool WouldWith(SrmSettings probe) =>
                 WouldApplyIonMobilityFiltering(probe, libraryIonMobilityInfo, molecules, ionMobilityMax);
 
+            // Skip probes that can't change the outcome: if a setting is already on, the
+            // corresponding "With..." variation is a no-op, and since base filtering is already
+            // false that probe would also be false. When both are on, no setting change can
+            // enable filtering, so there's no actionable warning.
+            var imFiltering = settings.TransitionSettings.IonMobilityFiltering;
+            var existingCalc = imFiltering?.FilterWindowWidthCalculator;
+            bool hasWindow = HasUsableWindow(existingCalc);
+            bool hasSpectralLib = imFiltering?.UseSpectralLibraryIonMobilityValues ?? false;
+            if (hasWindow && hasSpectralLib)
+            {
+                return;
+            }
+
             // Prefer the user's existing window if one is both selected and usable - probing with
             // their real values keeps the "would this change fix it?" test faithful instead of
             // substituting an arbitrary resolving power. Fall back to a default probe if no
             // window type is set OR the selected type has a zero-valued primary field
             // (e.g., fixed_width=0, linear_range widths both 0), which would produce a
             // zero-width filter and make the probe a silent no-op.
-            var existingCalc = settings.TransitionSettings.IonMobilityFiltering?.FilterWindowWidthCalculator;
-            var probeWindow = HasUsableWindow(existingCalc)
+            var probeWindow = hasWindow
                 ? existingCalc
                 : new IonMobilityWindowWidthCalculator(PROBE_RESOLVING_POWER);
             SrmSettings WithWindow(SrmSettings s) => s.ChangeTransitionSettings(
@@ -549,17 +561,17 @@ namespace pwiz.Skyline.Model.Results
                     s.TransitionSettings.IonMobilityFiltering.ChangeUseSpectralLibraryIonMobilityValues(true)));
 
             string message = null;
-            if (WouldWith(WithWindow(settings)))
+            if (!hasWindow && WouldWith(WithWindow(settings)))
             {
                 // Window alone is enough: IMSDB or explicit IM is present.
                 message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow;
             }
-            else if (WouldWith(WithSpectralLib(settings)))
+            else if (!hasSpectralLib && WouldWith(WithSpectralLib(settings)))
             {
                 // Enabling spectral-lib IM alone is enough: window is already configured.
                 message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary;
             }
-            else if (WouldWith(WithSpectralLib(WithWindow(settings))))
+            else if (!hasWindow && !hasSpectralLib && WouldWith(WithSpectralLib(WithWindow(settings))))
             {
                 // Need both: no IMSDB or explicit IM, but spectral-lib IM is usable once enabled and a window is set.
                 message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary;
