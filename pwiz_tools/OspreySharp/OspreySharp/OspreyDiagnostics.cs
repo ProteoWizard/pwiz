@@ -39,8 +39,18 @@ namespace pwiz.OspreySharp
     ///
     /// Dump format must remain byte-for-byte stable -- these files are
     /// diffed against the Rust osprey reference to bisect cross-impl drift.
-    /// Use <see cref="F10"/> for doubles, invariant culture, and the same
-    /// field ordering as the Rust equivalents.
+    /// Use invariant culture and the same field ordering as the Rust
+    /// equivalents. Two floating-point formats are in use by convention:
+    /// <list type="bullet">
+    /// <item><description>Stages 1-4 dumps use <see cref="F10"/>
+    /// (10 decimal places), matching the Rust equivalents for those
+    /// stages.</description></item>
+    /// <item><description>Stage 5 dumps (standardizer, subsample, SVM
+    /// weights, Percolator) use invariant-culture "G17" (17-digit
+    /// roundtrippable) to match Rust's G17 choice there and to avoid
+    /// .NET Framework's historical "R"-format roundtrip bugs. Do not
+    /// switch these fields to F10.</description></item>
+    /// </list>
     /// </summary>
     public static class OspreyDiagnostics
     {
@@ -91,6 +101,17 @@ namespace pwiz.OspreySharp
 
         /// <summary>OSPREY_LOESS_INPUT_ONLY: exit after cs_loess_input.txt dump.</summary>
         public static readonly bool LoessInputOnly = IsOne(@"OSPREY_LOESS_INPUT_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_PERCOLATOR: dump per-precursor Stage 5 state
+        /// (score, pep, 4 q-values) after first-pass Percolator FDR
+        /// completes and before first-pass protein FDR / compaction.
+        /// Cross-impl parity gate (cs_stage5_percolator.tsv).
+        /// </summary>
+        public static readonly bool DumpPercolator = IsOne(@"OSPREY_DUMP_PERCOLATOR");
+
+        /// <summary>OSPREY_PERCOLATOR_ONLY: exit after cs_stage5_percolator.tsv dump.</summary>
+        public static readonly bool PercolatorOnly = IsOne(@"OSPREY_PERCOLATOR_ONLY");
 
         /// <summary>
         /// OSPREY_DIAG_XIC_ENTRY_ID: the entry ID to dump chromatogram for
@@ -767,6 +788,63 @@ namespace pwiz.OspreySharp
                     set.Add(id);
             }
             return set.Count > 0 ? set : null;
+        }
+
+        /// <summary>
+        /// Dump per-precursor Stage 5 (first-pass Percolator FDR) state to
+        /// cs_stage5_percolator.tsv, mirroring Rust's rust_stage5_percolator.tsv.
+        /// All four q-values plus score and pep are populated on every FdrEntry
+        /// at this point (before compaction or first-pass protein FDR), so the
+        /// cross-impl diff sees both targets and decoys.
+        ///
+        /// Columns: file_name, entry_id, charge, modified_sequence, is_decoy,
+        /// score, pep, run_precursor_q, run_peptide_q, experiment_precursor_q,
+        /// experiment_peptide_q. Rows sorted by (file_name, entry_id) for
+        /// stable human inspection; Compare-Percolator.ps1 hash-joins on the
+        /// composite key and is sort-order-agnostic. Floats use G17 (17-digit
+        /// roundtrippable) to avoid .NET Framework's historical "R"-format
+        /// roundtrip bugs.
+        /// </summary>
+        public static void WriteStage5PercolatorDump(List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+        {
+            const string path = @"cs_stage5_percolator.tsv";
+            var inv = CultureInfo.InvariantCulture;
+
+            var rows = new List<KeyValuePair<string, FdrEntry>>();
+            foreach (var kvp in perFileEntries)
+            {
+                string fileName = kvp.Key;
+                foreach (var e in kvp.Value)
+                    rows.Add(new KeyValuePair<string, FdrEntry>(fileName, e));
+            }
+            rows.Sort((a, b) =>
+            {
+                int cmp = string.CompareOrdinal(a.Key, b.Key);
+                if (cmp != 0) return cmp;
+                return a.Value.EntryId.CompareTo(b.Value.EntryId);
+            });
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_precursor_q	experiment_peptide_q");
+                foreach (var row in rows)
+                {
+                    var e = row.Value;
+                    sw.Write(row.Key);
+                    sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.ModifiedSequence ?? string.Empty);
+                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                    sw.Write('\t'); sw.Write(e.Score.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.Write(e.Pep.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.Write(e.RunPrecursorQvalue.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.Write(e.RunPeptideQvalue.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.Write(e.ExperimentPrecursorQvalue.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.WriteLine(e.ExperimentPeptideQvalue.ToString(@"G17", inv));
+                }
+            }
+            LogAction(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
         }
     }
 }

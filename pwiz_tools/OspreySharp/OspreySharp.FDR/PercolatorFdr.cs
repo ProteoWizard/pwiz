@@ -36,6 +36,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using pwiz.OspreySharp.ML;
 
 namespace pwiz.OspreySharp.FDR
@@ -76,7 +78,7 @@ namespace pwiz.OspreySharp.FDR
             MaxIterations = 10;
             NFolds = 3;
             Seed = 42;
-            CValues = new[] { 0.01, 0.1, 1.0, 10.0, 100.0 };
+            CValues = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
             MaxTrainSize = 300000;
         }
     }
@@ -218,6 +220,19 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine(
                 $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
 
+            // Stage 5 standardizer dump. Gated by OSPREY_DUMP_STANDARDIZER=1;
+            // exits via OSPREY_STANDARDIZER_ONLY=1. Mirrors Rust
+            // dump_stage5_standardizer in osprey-fdr/src/percolator.rs.
+            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_STANDARDIZER"), @"1"))
+            {
+                WriteStage5StandardizerDump(standardizer, config.FeatureNames);
+                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_STANDARDIZER_ONLY"), @"1"))
+                {
+                    Console.Error.WriteLine(@"[BISECT] OSPREY_STANDARDIZER_ONLY set - aborting after dump");
+                    Environment.Exit(0);
+                }
+            }
+
             // 3a. Best-per-precursor: pick the single best-scoring observation per
             //     (base_id, isDecoy) tuple across all files. With N files per peptide,
             //     this avoids the SVM seeing the same precursor's target/decoy pair
@@ -302,6 +317,22 @@ namespace pwiz.OspreySharp.FDR
             int[] foldAssignments = CreateStratifiedFoldsByPeptide(
                 subLabels, subPeptides, subEntryIds, config.NFolds);
 
+            // Stage 5 sub-stage diagnostic dump. Gated by OSPREY_DUMP_SUBSAMPLE=1;
+            // exits via OSPREY_SUBSAMPLE_ONLY=1. Captures subsample membership and
+            // fold assignment per entry, mirroring the Rust dump in
+            // osprey-fdr/src/percolator.rs. The dump is inlined here (not routed
+            // through OspreyDiagnostics) because OspreySharp.FDR does not
+            // reference the main OspreySharp assembly.
+            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SUBSAMPLE"), @"1"))
+            {
+                WriteStage5SubsampleDump(entries, trainSubset, foldAssignments);
+                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SUBSAMPLE_ONLY"), @"1"))
+                {
+                    Console.Error.WriteLine(@"[BISECT] OSPREY_SUBSAMPLE_ONLY set - aborting after dump");
+                    Environment.Exit(0);
+                }
+            }
+
             // 5. Find best initial feature
             double trainFdr = config.TrainFdr;
             int bestFeatIdx;
@@ -378,6 +409,21 @@ namespace pwiz.OspreySharp.FDR
             }
             Console.Error.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
                 swTrain.Elapsed.TotalSeconds);
+
+            // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS=1;
+            // exits via OSPREY_SVM_WEIGHTS_ONLY=1. Captures per-fold weights,
+            // bias, and iteration count right after SVM training converges
+            // and before Granholm calibration. Mirrors rust side in
+            // osprey-fdr/src/percolator.rs::dump_stage5_svm_weights.
+            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SVM_WEIGHTS"), @"1"))
+            {
+                WriteStage5SvmWeightsDump(foldModels, foldIterations, config.FeatureNames);
+                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SVM_WEIGHTS_ONLY"), @"1"))
+                {
+                    Console.Error.WriteLine(@"[BISECT] OSPREY_SVM_WEIGHTS_ONLY set - aborting after dump");
+                    Environment.Exit(0);
+                }
+            }
 
             // Score ALL entries with trained models
             if (trainSubset != null)
@@ -1514,6 +1560,147 @@ namespace pwiz.OspreySharp.FDR
 
             selected.Sort();
             return selected.ToArray();
+        }
+
+        /// <summary>
+        /// Cross-impl bisection dump of Stage 5 subsample + fold-assignment
+        /// state, written to cs_stage5_subsample.tsv. Mirrors the Rust dump
+        /// in osprey-fdr/src/percolator.rs so Compare-Subsample.ps1 can
+        /// hash-join on entry_id.
+        ///
+        /// Columns: entry_id, native_position, charge, modified_sequence,
+        /// is_decoy, base_id, in_subsample, fold_id. native_position is
+        /// the entry's index in the input list -- divergence here means
+        /// the two tools populate their arrays in different order. Rows
+        /// sorted by entry_id for stable human inspection; compare is
+        /// sort-order-agnostic.
+        /// </summary>
+        private static void WriteStage5SubsampleDump(
+            IList<PercolatorEntry> entries,
+            int[] trainSubset,
+            int[] foldAssignments)
+        {
+            const string path = @"cs_stage5_subsample.tsv";
+            var inv = CultureInfo.InvariantCulture;
+            int n = entries.Count;
+
+            var inSub = new bool[n];
+            var foldFor = new int[n];
+            for (int i = 0; i < n; i++) foldFor[i] = -1;
+
+            for (int subPos = 0; subPos < trainSubset.Length; subPos++)
+            {
+                int nativePos = trainSubset[subPos];
+                inSub[nativePos] = true;
+                foldFor[nativePos] = foldAssignments[subPos];
+            }
+
+            var order = new int[n];
+            for (int i = 0; i < n; i++) order[i] = i;
+            Array.Sort(order, (a, b) => entries[a].EntryId.CompareTo(entries[b].EntryId));
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"entry_id	native_position	charge	modified_sequence	is_decoy	base_id	in_subsample	fold_id");
+                foreach (int i in order)
+                {
+                    var e = entries[i];
+                    uint baseId = e.EntryId & BASE_ID_MASK;
+                    sw.Write(e.EntryId.ToString(inv));
+                    sw.Write('\t'); sw.Write(i.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.Peptide ?? string.Empty);
+                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                    sw.Write('\t'); sw.Write(baseId.ToString(inv));
+                    sw.Write('\t'); sw.Write(inSub[i] ? @"true" : @"false");
+                    sw.Write('\t'); sw.WriteLine(foldFor[i].ToString(inv));
+                }
+            }
+            Console.Error.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
+        }
+
+        /// <summary>
+        /// Cross-impl bisection dump of per-fold SVM weights, taken right
+        /// after training converges and before Granholm cross-fold
+        /// calibration. Mirrors dump_stage5_svm_weights in Rust. Writes
+        /// cs_stage5_svm_weights.tsv with one row per (fold, weight) pair:
+        /// 21 feature weights + 1 bias per fold.
+        ///
+        /// Columns: fold, weight_idx, feature_name, value, fold_iterations.
+        /// Sorted by (fold, weight_idx) for stable inspection; compare is
+        /// hash-joined.
+        /// </summary>
+        private static void WriteStage5SvmWeightsDump(
+            LinearSvmClassifier[] foldModels,
+            int[] foldIterations,
+            string[] featureNames)
+        {
+            const string path = @"cs_stage5_svm_weights.tsv";
+            var inv = CultureInfo.InvariantCulture;
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"fold	weight_idx	feature_name	value	fold_iterations");
+                for (int fold = 0; fold < foldModels.Length; fold++)
+                {
+                    var model = foldModels[fold];
+                    var weights = model.Weights;
+                    int iters = fold < foldIterations.Length ? foldIterations[fold] : 0;
+                    for (int wi = 0; wi < weights.Length; wi++)
+                    {
+                        string name = (featureNames != null && wi < featureNames.Length)
+                            ? featureNames[wi]
+                            : @"unknown";
+                        sw.Write(fold.ToString(inv));
+                        sw.Write('\t'); sw.Write(wi.ToString(inv));
+                        sw.Write('\t'); sw.Write(name);
+                        sw.Write('\t'); sw.Write(weights[wi].ToString(@"G17", inv));
+                        sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
+                    }
+                    sw.Write(fold.ToString(inv));
+                    sw.Write('\t'); sw.Write(weights.Length.ToString(inv));
+                    sw.Write('\t'); sw.Write(@"bias");
+                    sw.Write('\t'); sw.Write(model.Bias.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
+                }
+            }
+            Console.Error.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
+        }
+
+        /// <summary>
+        /// Cross-impl bisection dump of the feature standardizer state,
+        /// taken right after FitTransform returns and before subsampling
+        /// / fold assignment. Mirrors dump_stage5_standardizer in Rust.
+        /// Writes cs_stage5_standardizer.tsv with one row per feature.
+        /// Columns: feature_idx, feature_name, mean, std.
+        /// </summary>
+        private static void WriteStage5StandardizerDump(
+            FeatureStandardizer standardizer,
+            string[] featureNames)
+        {
+            const string path = @"cs_stage5_standardizer.tsv";
+            var inv = CultureInfo.InvariantCulture;
+            var means = standardizer.Means;
+            var stds = standardizer.Stds;
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"feature_idx	feature_name	mean	std");
+                for (int i = 0; i < means.Length; i++)
+                {
+                    string name = (featureNames != null && i < featureNames.Length)
+                        ? featureNames[i]
+                        : @"unknown";
+                    sw.Write(i.ToString(inv));
+                    sw.Write('\t'); sw.Write(name);
+                    sw.Write('\t'); sw.Write(means[i].ToString(@"G17", inv));
+                    sw.Write('\t'); sw.WriteLine(stds[i].ToString(@"G17", inv));
+                }
+            }
+            Console.Error.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
         }
 
         // ============================================================
