@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.OspreySharp.Core;
@@ -287,7 +288,26 @@ namespace pwiz.OspreySharp.Test
 
         private const string VALID_SEARCH = "search-hash-aaa";
         private const string VALID_LIB = "lib-hash-bbb";
-        private const string CURRENT_VERSION = "26.3.0";
+
+        // Track Program.VERSION so happy-path and drift tests stay
+        // meaningful after upstream version bumps.
+        private const string CURRENT_VERSION = Program.VERSION;
+        private static readonly string PATCH_DRIFT_VERSION = DriftVersion(0, 0, 5);
+        private static readonly string MINOR_DRIFT_VERSION = DriftVersion(0, 1, 0);
+        private static readonly string MAJOR_DRIFT_VERSION = DriftVersion(1, 0, 0);
+
+        private static string DriftVersion(int majorDelta, int minorDelta, int patchDelta)
+        {
+            var parts = CURRENT_VERSION.Split('.');
+            int major = int.Parse(parts[0], CultureInfo.InvariantCulture);
+            int minor = int.Parse(parts[1], CultureInfo.InvariantCulture);
+            int patch = int.Parse(parts[2], CultureInfo.InvariantCulture);
+            // Reset lower-level components when a higher-level one drifts.
+            int driftMinor = majorDelta != 0 ? 0 : minor + minorDelta;
+            int driftPatch = (majorDelta != 0 || minorDelta != 0) ? 0 : patch + patchDelta;
+            return string.Format(CultureInfo.InvariantCulture, "{0}.{1}.{2}",
+                major + majorDelta, driftMinor, driftPatch);
+        }
 
         private static string CheckMd(
             string cachedV, string cachedS, string cachedL, out string warning)
@@ -322,7 +342,7 @@ namespace pwiz.OspreySharp.Test
         public void TestMetadataHappyPathNoWarning()
         {
             string warn;
-            string err = CheckMd("26.3.0", VALID_SEARCH, VALID_LIB, out warn);
+            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, VALID_LIB, out warn);
             Assert.IsNull(err);
             Assert.IsNull(warn);
         }
@@ -331,7 +351,7 @@ namespace pwiz.OspreySharp.Test
         public void TestMetadataPatchDriftWarnsButSucceeds()
         {
             string warn;
-            string err = CheckMd("26.3.5", VALID_SEARCH, VALID_LIB, out warn);
+            string err = CheckMd(PATCH_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out warn);
             Assert.IsNull(err);
             Assert.IsNotNull(warn);
             StringAssert.Contains(warn, "patch-version drift");
@@ -340,7 +360,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMinorVersionDriftAborts()
         {
-            string err = CheckMd("26.4.0", VALID_SEARCH, VALID_LIB, out _);
+            string err = CheckMd(MINOR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "major/minor");
         }
@@ -348,7 +368,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMajorVersionDriftAborts()
         {
-            string err = CheckMd("27.0.0", VALID_SEARCH, VALID_LIB, out _);
+            string err = CheckMd(MAJOR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "major/minor");
         }
@@ -364,7 +384,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingSearchHashAborts()
         {
-            string err = CheckMd("26.3.0", null, VALID_LIB, out _);
+            string err = CheckMd(CURRENT_VERSION, null, VALID_LIB, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.search_hash");
         }
@@ -372,7 +392,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingLibraryHashAborts()
         {
-            string err = CheckMd("26.3.0", VALID_SEARCH, null, out _);
+            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, null, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.library_hash");
         }
@@ -380,7 +400,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataSearchHashMismatchNamesFieldAndFile()
         {
-            string err = CheckMd("26.3.0", "wrong-hash", VALID_LIB, out _);
+            string err = CheckMd(CURRENT_VERSION, "wrong-hash", VALID_LIB, out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "search_hash mismatch");
             StringAssert.Contains(err, "test.scores.parquet");
@@ -390,7 +410,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataLibraryHashMismatchNamesFieldAndFile()
         {
-            string err = CheckMd("26.3.0", VALID_SEARCH, "wrong-lib", out _);
+            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, "wrong-lib", out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "library_hash mismatch");
             StringAssert.Contains(err, "test.scores.parquet");
