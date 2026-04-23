@@ -130,8 +130,12 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
         spec.Params.Set(CVID.MS_centroid_spectrum);
         spec.DataProcessing = _dp;
 
-        // If vendor gave us the centroid feed already, we're done.
-        if (_vendorCentroidPath is not null) return spec;
+        // In vendor-prefer mode, the vendor list may decline to centroid some spectra
+        // (e.g. Thermo only has a centroid stream for FTMS analyzers). Those come back with
+        // MS_profile_spectrum and we fall through to the algorithmic picker below. Only
+        // short-circuit when the algorithm isn't actually needed.
+        if (_algorithm is null && _vendorCentroidPath is not null)
+            return spec; // vendor-only mode; caller accepts profile passthrough for analyzers the vendor can't centroid
 
         if (_algorithm is null)
             throw new InvalidOperationException(

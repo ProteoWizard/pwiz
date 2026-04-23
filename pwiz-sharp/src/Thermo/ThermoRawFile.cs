@@ -51,11 +51,10 @@ public sealed class ThermoRawFile : IDisposable
         RunId = Path.GetFileNameWithoutExtension(filename);
         try
         {
-            // The Thermo SDK tags CreationDate with Kind=Utc but the clock value is actually the
-            // instrument's local time at acquisition — force Local, then convert to UTC to match
-            // pwiz C++'s ISO-8601 "Z" output.
-            var created = DateTime.SpecifyKind(Raw.FileHeader.CreationDate, DateTimeKind.Local);
-            CreationDate = created.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
+            // pwiz C++ emits the instrument's local clock value verbatim with a "Z" suffix
+            // (strictly incorrect per ISO-8601 but long-standing pwiz behavior — matches
+            // the reference mzML fixtures byte-for-byte).
+            CreationDate = Raw.FileHeader.CreationDate.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
         }
         catch { CreationDate = string.Empty; }
     }
@@ -89,20 +88,39 @@ public sealed class ThermoRawFile : IDisposable
         Raw.GetFilterForScanNumber(scanNumber)?.ToString() ?? string.Empty;
 
     /// <summary>
-    /// Reads (masses, intensities) for <paramref name="scanNumber"/>. Uses the centroid stream when
-    /// the underlying analyzer is FTMS (already centroided by acquisition) and the segmented stream
-    /// otherwise.
+    /// Reads (masses, intensities) for <paramref name="scanNumber"/>. When
+    /// <paramref name="preferCentroid"/> is true, returns centroided peaks using whichever
+    /// Thermo API matches the scan's analyzer: <c>GetCentroidStream</c> for FTMS profile
+    /// scans, <c>Scan.ToCentroid(Scan.FromFile(...))</c> for non-FTMS profile scans. Scans
+    /// already acquired as centroid or with no vendor centroider available fall through to
+    /// the segmented stream.
     /// </summary>
     public (double[] Masses, double[] Intensities) GetPeaks(int scanNumber, bool preferCentroid)
     {
-        var filter = Raw.GetFilterForScanNumber(scanNumber);
-        bool useCentroid = preferCentroid && filter.MassAnalyzer == MassAnalyzerType.MassAnalyzerFTMS;
-
-        if (useCentroid)
+        if (preferCentroid)
         {
-            var stream = Raw.GetCentroidStream(scanNumber, true);
-            if (stream?.Masses is { } m && stream.Intensities is { } i)
-                return (m, i);
+            var filter = Raw.GetFilterForScanNumber(scanNumber);
+            if (filter.MassAnalyzer == MassAnalyzerType.MassAnalyzerFTMS)
+            {
+                // FTMS: the centroid stream is populated during acquisition.
+                var stream = Raw.GetCentroidStream(scanNumber, true);
+                if (stream?.Masses is { } m && stream.Intensities is { } i)
+                    return (m, i);
+            }
+            else if (filter.ScanData == ScanDataType.Profile)
+            {
+                // Non-FTMS profile (e.g. ITMS): use Thermo's CommonCore centroider, which
+                // wraps the same XRawfile label-data peak detector pwiz C++ uses via
+                // GetLabelData. ToCentroid returns a Scan whose SegmentedScan holds the
+                // centroided peaks (CentroidScan stays null — it's reserved for FTMS).
+                var profile = Scan.FromFile(Raw, scanNumber, System.Globalization.CultureInfo.InvariantCulture);
+                if (profile is not null)
+                {
+                    var centroid = Scan.ToCentroid(profile);
+                    if (centroid?.SegmentedScan is { Positions: { Length: > 0 } p2, Intensities: var intensities })
+                        return (p2, intensities!);
+                }
+            }
         }
 
         var seg = Raw.GetSegmentedScanFromScanNumber(scanNumber, null);

@@ -66,9 +66,9 @@ public sealed class Reader_Thermo : IReader
         result.CVs.AddRange(MSData.DefaultCVList);
         result.Id = Path.GetFileNameWithoutExtension(filename);
 
-        // Document metadata.
-        result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum);
-        result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
+        // Document metadata: emit only MS levels actually present. pwiz C++ walks scans up
+        // front for the same reason — RAW files often contain only one MS level.
+        bool hasMs1 = false, hasMsn = false;
 
         // C++ uses the id "RAW<n>" (1-based) and the location is the *parent directory* of the
         // .raw file with a "file:///" prefix. SHA-1 is computed post-read by MsDataFileChecksums.
@@ -81,6 +81,17 @@ public sealed class Reader_Thermo : IReader
         // Delegate spectrum-list access to a lazy-reading SpectrumList_Thermo.
         // The .raw file stays open for the lifetime of the list.
         var raw = new ThermoRawFile(filename);
+
+        // Walk scan filters for the ms-level sniff — fast (doesn't decode peaks).
+        for (int scan = raw.FirstScan; scan <= raw.LastScan; scan++)
+        {
+            int ms = (int)raw.Raw.GetFilterForScanNumber(scan).MSOrder;
+            if (ms == 1) hasMs1 = true;
+            else if (ms > 1) hasMsn = true;
+            if (hasMs1 && hasMsn) break;
+        }
+        if (hasMs1) result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum);
+        if (hasMsn) result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
 
         var icByAnalyzer = FillInstrumentConfiguration(result, raw);
 
@@ -178,8 +189,12 @@ public sealed class Reader_Thermo : IReader
             ic.ParamGroups.Add(common);
             ic.Software = xcalibur;
 
-            var source = new Component(CVID.MS_electrospray_ionization, 1);
-            source.Set(CVID.MS_electrospray_inlet);
+            // pwiz C++ returns nanoelectrospray as the first ionization type for every Orbitrap-class
+            // (and most LTQ-class) instrument in the Thermo model table. Since our current coverage
+            // is Orbitrap-only, default to nanoESI. A full port of
+            // Reader_Thermo_Detail::getIonSourcesForInstrumentModel() is a follow-up.
+            var source = new Component(CVID.MS_nanoelectrospray, 1);
+            source.Set(CVID.MS_nanospray_inlet);
             ic.ComponentList.Add(source);
 
             (CVID analyzerCv, CVID detectorCv) = TranslateAnalyzer(analyzers[i]);

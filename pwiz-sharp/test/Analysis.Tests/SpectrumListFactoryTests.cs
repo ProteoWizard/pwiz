@@ -185,4 +185,50 @@ public class SpectrumListFactoryTests
             SpectrumListFactory.Register("rot13", (_, inner) => inner);
         }
     }
+
+    // ---- peak picking ----
+
+    private static SpectrumListSimple BuildProfileList()
+    {
+        // Two peaks in a 9-point profile. Output should collapse to 2 points when centroided.
+        var list = new SpectrumListSimple();
+        var s = new Spectrum { Index = 0, Id = "scan=1" };
+        s.Params.Set(CVID.MS_ms_level, 1);
+        s.Params.Set(CVID.MS_profile_spectrum);
+        s.SetMZIntensityArrays(
+            new[] { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.0, 107.0, 108.0 },
+            new[] {   0.0,   1.0,   5.0,   1.0,   0.0,   1.0,   7.0,   1.0,   0.0 },
+            CVID.MS_number_of_detector_counts);
+        list.Spectra.Add(s);
+        return list;
+    }
+
+    [TestMethod]
+    public void Wrap_PeakPicking_True_CentroidsProfileSpectrum()
+    {
+        var picked = SpectrumListFactory.Wrap(BuildProfileList(), "peakPicking true 1-");
+        var s = picked.GetSpectrum(0, getBinaryData: true);
+        Assert.IsTrue(s.Params.HasCVParam(CVID.MS_centroid_spectrum));
+        Assert.IsFalse(s.Params.HasCVParam(CVID.MS_profile_spectrum));
+        var mz = s.GetMZArray()!.Data;
+        CollectionAssert.AreEqual(new[] { 102.0, 106.0 }, mz);
+    }
+
+    [TestMethod]
+    public void Wrap_PeakPicking_False_StillUsesLocalMaximumFallback()
+    {
+        var picked = SpectrumListFactory.Wrap(BuildProfileList(), "peakPicking false 1-");
+        var s = picked.GetSpectrum(0, getBinaryData: true);
+        Assert.AreEqual(2, s.GetMZArray()!.Data.Count);
+    }
+
+    [TestMethod]
+    public void Wrap_PeakPicking_MsLevelEquals_Syntax_AcceptsMsLevelsToken()
+    {
+        // "peakPicking vendor msLevel=1-" is the standard pwiz C++ syntax; we don't actually
+        // need a vendor reader here — inner is SpectrumListSimple, so we fall through to the
+        // algorithm (LocalMaximum) when vendor-prefer has no vendor list to defer to.
+        var picked = SpectrumListFactory.Wrap(BuildProfileList(), "peakPicking true msLevel=1-");
+        Assert.AreEqual(2, picked.GetSpectrum(0, getBinaryData: true).GetMZArray()!.Data.Count);
+    }
 }

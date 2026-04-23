@@ -1,4 +1,5 @@
 using System.Globalization;
+using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
@@ -26,7 +27,7 @@ namespace Pwiz.Vendor.Thermo;
 /// precursor isolation window + selected ion + charge + activation, ion injection time,
 /// mass resolving power, FAIMS CV, lowest/highest observed m/z, binary arrays.
 /// </remarks>
-public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable
+public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendorCentroidingSpectrumList
 {
     private readonly ThermoRawFile _raw;
     private readonly bool _ownsRaw;
@@ -120,6 +121,14 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable
         catch { return false; }
     }
 
+    private bool TryGetTrailerString(int scanNumber, string label, out string value)
+    {
+        value = string.Empty;
+        if (!TryGetTrailerValue(scanNumber, label, out var v) || v is null) return false;
+        value = (v.ToString() ?? string.Empty).Trim();
+        return value.Length > 0;
+    }
+
     /// <summary>DataProcessing id emitted as the <c>defaultDataProcessingRef</c>. Set by <see cref="Reader_Thermo"/>.</summary>
     public DataProcessing? Dp { get; set; }
 
@@ -164,7 +173,17 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable
         }
     }
 
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    /// <inheritdoc/>
+    public string VendorCentroidName => "Thermo/Xcalibur peak picking";
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData) =>
+        GetSpectrumImpl(index, getBinaryData, preferCentroid: true);
+
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+        GetSpectrumImpl(index, getBinaryData, preferCentroid: false);
+
+    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool preferCentroid)
     {
         var ie = _index[index];
         int scanNumber = ie.Scan;
@@ -201,7 +220,10 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable
 
         // ---- scan list ----
         var scan = new Scan();
-        // Prefer the analyzer-specific IC when available; fall back to the document default.
+        // Always set the analyzer-specific IC (falling back to the document default). The
+        // MzmlWriter suppresses the redundant instrumentConfigurationRef attribute when it
+        // equals the run default, while MzmlReader resolves an omitted ref back to the
+        // default — so both in-memory and serialized forms stay consistent.
         scan.InstrumentConfiguration =
             _icByAnalyzer.TryGetValue(ie.MassAnalyzer, out var icForAnalyzer)
                 ? icForAnalyzer
@@ -227,6 +249,11 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable
         if (TryGetTrailerInt(scanNumber, "Scan Event:", out long scanEvent) && scanEvent > 0)
             scan.Set(CVID.MS_preset_scan_configuration, scanEvent);
 
+        // Scan Description (e.g. "sps" for SPS-MS3 scans) — emitted as a spectrum-level userParam
+        // on the outer Spectrum, matching pwiz C++.
+        if (TryGetTrailerString(scanNumber, "Scan Description:", out string scanDesc))
+            spec.Params.UserParams.Add(new UserParam("scan description", scanDesc, "xsd:string"));
+
         if (msLevel > 1 && TryGetTrailerDouble(scanNumber, "Monoisotopic M/Z:", out double monoMz))
         {
             // Matches pwiz C++: lexical_cast<string>(double) — no trailing ".0" for integer values.
@@ -239,18 +266,25 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable
         if (TryGetTrailerDouble(scanNumber, "Ion Injection Time (ms):", out double injMs))
             scan.Set(CVID.MS_ion_injection_time, injMs, CVID.UO_millisecond);
 
+        // Source-induced CID offset voltage (MS_offset_voltage) is exposed by pwiz C++ via the
+        // XRawfile COM API's sourceOffsetVoltage() — which ThermoFisher.CommonCore does not
+        // expose. TODO: find an alternative path or parse the filter string for "sid=N".
+
         // ---- polarity ----
         if (ie.Polarity == PolarityType.Positive)
             spec.Params.Set(CVID.MS_positive_scan);
         else if (ie.Polarity == PolarityType.Negative)
             spec.Params.Set(CVID.MS_negative_scan);
 
-        // ---- profile / centroid flag (from filter) ----
+        // ---- profile / centroid flag ----
+        // Honors preferCentroid: when the caller (e.g. SpectrumList_PeakPicker in vendor-prefer
+        // mode) asks for centroided data, emit MS_centroid_spectrum regardless of analyzer —
+        // ThermoRawFile.GetPeaks uses Scan.ToCentroid for non-FTMS profile scans, so the
+        // returned arrays are genuinely centroided.
         var filter = raw.GetFilterForScanNumber(scanNumber);
-        if (filter.ScanData == ScanDataType.Profile)
-            spec.Params.Set(CVID.MS_profile_spectrum);
-        else
-            spec.Params.Set(CVID.MS_centroid_spectrum);
+        bool scanIsProfile = filter.ScanData == ScanDataType.Profile;
+        bool emitCentroid = !scanIsProfile || preferCentroid;
+        spec.Params.Set(emitCentroid ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
 
         // ---- scan stats (base peak, TIC) ----
         try
@@ -279,7 +313,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable
         // ---- binary data ----
         // Always retrieve the mass list so defaultArrayLength + lowest/highest observed m/z match
         // the data even when getBinaryData is false. C++ does the same (see SpectrumList_Thermo.cpp).
-        var (mz, intensity) = _raw.GetPeaks(scanNumber, preferCentroid: false);
+        var (mz, intensity) = _raw.GetPeaks(scanNumber, preferCentroid);
         spec.DefaultArrayLength = mz.Length;
         if (mz.Length > 0)
         {
@@ -302,9 +336,9 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable
         {
             if (filter.MassCount > 0)
             {
-                // Thermo .NET SDK returns the half-width ("offset") already; pwiz C++'s
-                // precursorInfo.isolationWidth is full-width and is halved for offsets.
-                isolationHalfWidth = filter.GetIsolationWidth(filter.MassCount - 1);
+                // Thermo SDK's GetIsolationWidth returns the FULL isolation window width (m/z);
+                // mzML's lower/upper offsets are from the target m/z so we halve it.
+                isolationHalfWidth = filter.GetIsolationWidth(filter.MassCount - 1) / 2.0;
             }
         }
         catch { }

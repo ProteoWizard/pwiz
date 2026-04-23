@@ -127,6 +127,10 @@ public static class MSDataDiff
         DiffStrings(a.DefaultSourceFile?.Id ?? "",
                     b.DefaultSourceFile?.Id ?? "",
                     ctx, "defaultSourceFileRef");
+        // Stash defaults for semantic-equivalence checks inside the spectrum list (e.g. a null
+        // scan.InstrumentConfiguration should compare equal to the run's default IC).
+        ctx.RunDefaultIcA = a.DefaultInstrumentConfiguration?.Id;
+        ctx.RunDefaultIcB = b.DefaultInstrumentConfiguration?.Id;
         DiffParamContainerBody(a, b, ctx);
 
         DiffSpectrumList(a.SpectrumList, b.SpectrumList, ctx);
@@ -221,9 +225,11 @@ public static class MSDataDiff
     {
         DiffStrings(a.SpectrumId, b.SpectrumId, ctx, "spectrumRef");
         DiffStrings(a.ExternalSpectrumId, b.ExternalSpectrumId, ctx, "externalSpectrumID");
-        DiffStrings(a.InstrumentConfiguration?.Id ?? "",
-                    b.InstrumentConfiguration?.Id ?? "",
-                    ctx, "instrumentConfigurationRef");
+        // An omitted instrumentConfigurationRef inherits the run's default — treat null as
+        // the default IC for semantic equivalence (mzML spec).
+        string icA = a.InstrumentConfiguration?.Id ?? ctx.RunDefaultIcA ?? "";
+        string icB = b.InstrumentConfiguration?.Id ?? ctx.RunDefaultIcB ?? "";
+        DiffStrings(icA, icB, ctx, "instrumentConfigurationRef");
         DiffParamContainerBody(a, b, ctx);
         DiffListByIndex(a.ScanWindows, b.ScanWindows, DiffScanWindow, ctx, "scanWindow");
     }
@@ -545,6 +551,12 @@ public static class MSDataDiff
         private readonly List<string> _diffs = new();
 
         public DiffConfig Config { get; }
+
+        /// <summary>Run's default-IC id on side a (or null), set by <see cref="DiffRun"/>.</summary>
+        public string? RunDefaultIcA { get; set; }
+
+        /// <summary>Run's default-IC id on side b (or null), set by <see cref="DiffRun"/>.</summary>
+        public string? RunDefaultIcB { get; set; }
 
         public bool Saturated => _diffs.Count >= Config.MaxDifferencesToReport;
 

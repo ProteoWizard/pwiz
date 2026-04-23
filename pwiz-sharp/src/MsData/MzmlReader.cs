@@ -25,6 +25,7 @@ public sealed class MzmlReader
     // Lookup maps populated during parse so refs can be resolved back to object references.
     private readonly Dictionary<string, Software> _softwareById = new(StringComparer.Ordinal);
     private readonly Dictionary<string, InstrumentConfiguration> _instrumentById = new(StringComparer.Ordinal);
+    private InstrumentConfiguration? _runDefaultIc;
     private readonly Dictionary<string, DataProcessing> _dpById = new(StringComparer.Ordinal);
     private readonly Dictionary<string, SourceFile> _sourceFileById = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Sample> _sampleById = new(StringComparer.Ordinal);
@@ -343,7 +344,10 @@ public sealed class MzmlReader
 
         string? icRef = r.GetAttribute("defaultInstrumentConfigurationRef");
         if (icRef is not null && _instrumentById.TryGetValue(icRef, out var ic))
+        {
             msd.Run.DefaultInstrumentConfiguration = ic;
+            _runDefaultIc = ic;
+        }
 
         string? sampleRef = r.GetAttribute("sampleRef");
         if (sampleRef is not null && _sampleById.TryGetValue(sampleRef, out var sample))
@@ -448,6 +452,9 @@ public sealed class MzmlReader
                 string? icRef = r.GetAttribute("instrumentConfigurationRef");
                 if (icRef is not null && _instrumentById.TryGetValue(icRef, out var ic))
                     scan.InstrumentConfiguration = ic;
+                else
+                    // mzML semantics: omitted ref means the run's default IC applies.
+                    scan.InstrumentConfiguration = _runDefaultIc;
 
                 if (MzmlXml.MoveToFirstChildElement(r))
                 {

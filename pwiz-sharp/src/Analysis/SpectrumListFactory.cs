@@ -1,6 +1,7 @@
 using System.Globalization;
 using Pwiz.Analysis.Filters;
 using Pwiz.Analysis.PeakFilters;
+using Pwiz.Analysis.PeakPicking;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
 using Pwiz.Util.Chemistry;
@@ -137,7 +138,89 @@ public static class SpectrumListFactory
 
         map["metadatafixer"] = (_, inner) => new SpectrumListMetadataFixer(inner);
 
+        map["peakpicking"] = (args, inner) => ParsePeakPicking(args, inner);
+
         return map;
+    }
+
+    /// <summary>
+    /// Parses the <c>peakPicking</c> filter argument string and returns a wrapped list.
+    /// </summary>
+    /// <remarks>
+    /// Supported syntax (a subset of pwiz C++ <c>peakPicking</c>):
+    /// <list type="bullet">
+    ///   <item><c>peakPicking true [msLevels]</c> — vendor-prefer mode with LocalMaximum fallback</item>
+    ///   <item><c>peakPicking false [msLevels]</c> — no vendor preference; LocalMaximum only</item>
+    ///   <item><c>peakPicking vendor [msLevel=msLevels]</c> — vendor-prefer mode; throws when
+    ///     the vendor list can't centroid</item>
+    ///   <item><c>peakPicking cwt [msLevel=msLevels]</c> — reserved; CWT isn't ported yet,
+    ///     falls back to LocalMaximum with a warning</item>
+    /// </list>
+    /// The <c>snr=</c> and <c>peakSpace=</c> parameters accepted by pwiz C++ are parsed but
+    /// currently ignored (CWT-only tuning knobs).
+    /// </remarks>
+    private static SpectrumList_PeakPicker ParsePeakPicking(string args, ISpectrumList inner)
+    {
+        bool preferVendor = true;
+        bool preferCwt = false;
+        bool vendorOnly = false;
+        IntegerSet msLevels = new(1, int.MaxValue);
+
+        string trimmed = args.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            // Default: peakPicking with vendor prefer, all MS levels (C++ default).
+        }
+        else
+        {
+            string[] tokens = trimmed.Split(s_whitespace, StringSplitOptions.RemoveEmptyEntries);
+            int msLevelsTokenIndex = 1;
+            switch (tokens[0].ToLowerInvariant())
+            {
+                case "true": preferVendor = true; break;
+                case "false": preferVendor = false; break;
+                case "vendor": preferVendor = true; vendorOnly = true; break;
+                case "cwt": preferVendor = false; preferCwt = true; break;
+                default:
+                    // No mode token; first token might already be msLevels or a key=value pair.
+                    msLevelsTokenIndex = 0;
+                    break;
+            }
+
+            for (int i = msLevelsTokenIndex; i < tokens.Length; i++)
+            {
+                string tok = tokens[i];
+                if (tok.StartsWith("msLevel=", StringComparison.OrdinalIgnoreCase))
+                {
+                    msLevels = new IntegerSet();
+                    msLevels.Parse(tok["msLevel=".Length..]);
+                }
+                else if (tok.StartsWith("snr=", StringComparison.OrdinalIgnoreCase) ||
+                         tok.StartsWith("peakSpace=", StringComparison.OrdinalIgnoreCase))
+                {
+                    // CWT tuning knobs — parsed but ignored until CwtPeakDetector lands.
+                    continue;
+                }
+                else if (i == msLevelsTokenIndex && !tok.Contains('=', StringComparison.Ordinal))
+                {
+                    // Bare MS-level range, e.g. "1-" or "2-3".
+                    msLevels = new IntegerSet();
+                    msLevels.Parse(tok);
+                }
+                else
+                {
+                    throw new ArgumentException($"peakPicking filter: unrecognized argument '{tok}'");
+                }
+            }
+        }
+
+        if (preferCwt)
+            Console.Error.WriteLine(
+                "[SpectrumListFactory] warning: CWT peak picking is not yet ported; " +
+                "falling back to local-maximum peak picker.");
+
+        IPeakDetector? algorithm = vendorOnly ? null : new LocalMaximumPeakDetector(3);
+        return new SpectrumList_PeakPicker(inner, algorithm, preferVendor, msLevels);
     }
 
     // ---------- arg parsers ----------
@@ -150,6 +233,7 @@ public static class SpectrumListFactory
     }
 
     private static readonly char[] s_rangeSeparators = { ',', '-' };
+    private static readonly char[] s_whitespace = { ' ', '\t' };
 
     private static (double Low, double High) ParseRange(string args)
     {

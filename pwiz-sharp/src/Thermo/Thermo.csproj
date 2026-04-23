@@ -26,6 +26,7 @@
     <ProjectReference Include="..\Util\Util.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
   <Target Name="ExtractThermoAssemblies"

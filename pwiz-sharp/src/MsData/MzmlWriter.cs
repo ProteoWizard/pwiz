@@ -33,6 +33,7 @@ public sealed class MzmlWriter
     private HashingCountingStream? _stream;
     private List<(string Id, long Offset)>? _spectrumOffsets;
     private List<(string Id, long Offset)>? _chromatogramOffsets;
+    private string? _runDefaultIcId;
 
     /// <summary>When true, wrap the mzML in an <c>&lt;indexedmzML&gt;</c> envelope with byte-offset
     /// indexes and an SHA-1 fileChecksum (matches pwiz C++ msconvert's default output).</summary>
@@ -398,6 +399,7 @@ public sealed class MzmlWriter
     {
         w.WriteStartElement("run");
         w.WriteAttributeString("id", run.Id);
+        _runDefaultIcId = run.DefaultInstrumentConfiguration?.Id;
         if (run.DefaultInstrumentConfiguration is not null)
             w.WriteAttributeString("defaultInstrumentConfigurationRef", run.DefaultInstrumentConfiguration.Id);
         if (run.Sample is not null) w.WriteAttributeString("sampleRef", run.Sample.Id);
@@ -523,7 +525,10 @@ public sealed class MzmlWriter
             foreach (var scan in spec.ScanList.Scans)
             {
                 w.WriteStartElement("scan");
-                if (scan.InstrumentConfiguration is not null)
+                // Only emit the explicit instrumentConfigurationRef when it differs from the
+                // run's defaultInstrumentConfigurationRef — matches pwiz C++'s serializer.
+                if (scan.InstrumentConfiguration is not null &&
+                    scan.InstrumentConfiguration.Id != _runDefaultIcId)
                     w.WriteAttributeString("instrumentConfigurationRef", scan.InstrumentConfiguration.Id);
                 if (scan.SourceFile is not null) w.WriteAttributeString("sourceFileRef", scan.SourceFile.Id);
                 if (!string.IsNullOrEmpty(scan.ExternalSpectrumId))
