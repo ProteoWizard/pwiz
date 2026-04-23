@@ -3135,7 +3135,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var rt = _cursorTip.RenderTools;
             string yAxisLabel = _heatMapPane.YAxis.Title.Text ?? string.Empty;
             var table = new TableDesc();
-            table.AddDetailRow(yAxisLabel, endpointY.ToString(Formats.IonMobility), rt);
+            table.AddDetailRow(yAxisLabel, endpointY.ToString(GetHeatmapYAxisFormat()), rt);
             if (!string.IsNullOrEmpty(bestCurve.Label?.Text))
                 table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, bestCurve.Label?.Text, rt);
             table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, endpointX.ToString(@"F0"), rt);
@@ -3189,7 +3189,7 @@ namespace pwiz.Skyline.Controls.Graphs
             string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
             var table = new TableDesc();
             table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_mz, nearest.Point.X.ToString(Formats.Mz), rt);
-            table.AddDetailRow(yAxisLabel, nearest.Point.Y.ToString(Formats.IonMobility), rt);
+            table.AddDetailRow(yAxisLabel, nearest.Point.Y.ToString(GetHeatmapYAxisFormat()), rt);
             table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity, nearest.Point.Z.ToString(@"F0"), rt);
             return table;
         }
@@ -3379,7 +3379,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_mz,
                     nearest.Point.X.ToString(Formats.Mz), rt);
                 table.AddDetailRow(yAxisLabel,
-                    nearest.Point.Y.ToString(Formats.IonMobility), rt);
+                    nearest.Point.Y.ToString(GetHeatmapYAxisFormat()), rt);
                 table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity,
                     nearest.Point.Z.ToString(@"F0"), rt);
             }
@@ -3436,10 +3436,14 @@ namespace pwiz.Skyline.Controls.Graphs
             var rt = _cursorTip.RenderTools;
             string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
             var table = new TableDesc();
-            table.AddDetailRow(yAxisLabel, nearest.Key.ToString(Formats.IonMobility), rt);
+            table.AddDetailRow(yAxisLabel, nearest.Key.ToString(GetHeatmapYAxisFormat()), rt);
             table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, nearest.Value.ToString(@"F0"), rt);
             return table;
         }
+
+        // Heatmap/mobilogram Y-axis is ion mobility in the normal case, but precursor m/z for Waters SONAR data.
+        private string GetHeatmapYAxisFormat() =>
+            _msDataFileScanHelper.IsWatersSonarData ? Formats.Mz : Formats.IonMobility;
 
         public string TitleText => IsStickPlotVisible ? _stickSpectrumPane.Title.Text : GraphPane.Title.Text;
         public string HeatMapYAxisTitleText => _heatMapPane.YAxis.Title.Text;
