@@ -154,26 +154,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot deduce ion mobility units. Set the Explicit Ion Mobility Units column first..
-        /// </summary>
-        public static string Precursor_ExplicitIonMobility_Cannot_deduce_ion_mobility_units__Set_the_Explicit_Ion_Mobility_Units_column_first_ {
-            get {
-                return ResourceManager.GetString("Precursor_ExplicitIonMobility_Cannot_deduce_ion_mobility_units__Set_the_Explicit_" +
-                        "Ion_Mobility_Units_column_first_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Document contains multiple ion mobility units ({0}). Set the Explicit Ion Mobility Units column explicitly..
-        /// </summary>
-        public static string Precursor_ExplicitIonMobility_Document_contains_multiple_ion_mobility_units___0____Set_the_Explicit_Ion_Mobility_Units_column_explicitly_ {
-            get {
-                return ResourceManager.GetString("Precursor_ExplicitIonMobility_Document_contains_multiple_ion_mobility_units___0__" +
-                        "__Set_the_Explicit_Ion_Mobility_Units_column_explicitly_", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete the precursor &apos;{0}&apos;?.
         /// </summary>
         public static string Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___ {
