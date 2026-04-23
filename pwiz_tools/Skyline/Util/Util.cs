@@ -669,8 +669,11 @@ namespace pwiz.Skyline.Util
             Sort(array, out sortIndexes);
             int len = array.Length;
             TItem[] buffer = new TItem[len];
-            foreach (var secondaryArray in secondaryArrays.Where(a => a != null))
-                ApplyOrder(sortIndexes, secondaryArray, buffer);
+            if (secondaryArrays != null)
+            {
+                foreach (var secondaryArray in secondaryArrays.Where(a => a != null))
+                    ApplyOrder(sortIndexes, secondaryArray, buffer);
+            }
             return false;
         }
 
@@ -684,6 +687,17 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static bool Sort(double[] keys, params double[][] secondaryArrays)
         {
+            // Assumes keys contains no NaN. IsSorted and IntrosortDouble below both use
+            // raw < and > comparisons, which return false on any NaN-involved pair. The
+            // partition loop still terminates (no hang, no OOB), but on NaN input the
+            // result is silently wrong: either IsSorted returns a false positive and we
+            // skip the sort entirely, or a NaN pivot makes the partition meaningless
+            // and the recursion returns an incorrectly ordered array. Today's callers
+            // sort m/z arrays during chromatogram extraction, where any NaN would have
+            // aborted the import well upstream (vendor reader, centroider, peak picker).
+            // If a future caller cannot guarantee NaN-free input, route through the
+            // generic Sort<TItem> overload instead - it goes through Comparer<double>.
+            // Default and orders NaN consistently with Array.Sort.
             if (keys == null || keys.Length < 2)
                 return true;
             if (IsSorted(keys))
