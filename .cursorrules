@@ -56,7 +56,7 @@ entry_points = [
 - Prefer `quickbuild.bat` on Windows; pass non-interactive flags where applicable.
 - Keep code style intact: do not reformat unrelated files; preserve tabs/spaces.
 - When adding sources, update the appropriate Jamfile or Visual Studio project.
-- When adding a new directory directly under `pwiz_tools/`, add the corresponding path mapping in `scripts/misc/vcs_trigger_and_paths_config.py` so the build dependency graph avoids unnecessary builds.
+- When reviewing a PR: if a new directory is added directly under `pwiz_tools/`, or if changes are made to a `pwiz_tools/` subdirectory that has no specific entry in `scripts/misc/vcs_trigger_and_paths_config.py` (i.e. it would only be matched by the generic `pwiz_tools/.*` catch-all), leave a review comment flagging this. The developer may choose to ignore the comment, but should consciously consider whether a specific build-trigger mapping is needed to avoid triggering all builds unnecessarily.
 - Use existing vendor libraries from `libraries/`; do not fetch replacements.
 - For documentation, add concise notes to `README.md` and `doc/`.
 - Project conventions: See ai/MEMORY.md for essential project context and common gotchas.
