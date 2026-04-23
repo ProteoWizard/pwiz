@@ -18,9 +18,11 @@
  */
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -176,6 +178,79 @@ namespace pwiz.SkylineTest
             var settingsNoneResults = settingsEmpty.ChangeMeasuredResults(new MeasuredResults(new[] { chromSetUnknown }));
             units = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(settingsNoneResults);
             Assert.AreEqual(0, units.Count);
+        }
+
+        /// <summary>
+        /// Regression test for exception 74341: peptide with ExplicitIonMobility value but
+        /// IonMobilityUnits == none crashed <see cref="SrmSettings.GetIonMobilityFilter"/>
+        /// with "Nullable object must have a value" (reached via Bruker timsTOF method export).
+        /// After the fix, the same call path either deduces units from document evidence,
+        /// falls back to the caller-supplied export target, or throws a user-actionable
+        /// <see cref="InvalidDataException"/> naming the peptide.
+        /// </summary>
+        [TestMethod]
+        public void TestExplicitIonMobilityWithoutUnitsRepair()
+        {
+            // Build a minimal peptide with the invalid state that caused the crash:
+            // ExplicitIonMobility set but IonMobilityUnits still none.
+            // A non-empty filter window width is needed so the returned filter is non-EMPTY
+            // and we can assert its units.
+            var windowCalculator = new IonMobilityWindowWidthCalculator(
+                IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width, 0, 0, 0, 0.05);
+            var settings = SrmSettingsList.GetDefault()
+                .ChangeTransitionSettings(SrmSettingsList.GetDefault().TransitionSettings.ChangeIonMobilityFiltering(
+                    new TransitionIonMobilityFiltering(IonMobilityLibrary.NONE, false, windowCalculator)));
+            var peptide = new Peptide(@"PEPTIDE");
+            var transitionGroup = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+            var badExplicitValues = ExplicitTransitionGroupValues.Create(null, 0.85, eIonMobilityUnits.none, null);
+            var transition = new Transition(transitionGroup, IonType.y, 3, 0, Adduct.SINGLY_PROTONATED);
+            var nodeTran = new TransitionDocNode(transition, null, TypedMass.ZERO_MONO_MASSH,
+                TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY);
+            var nodeTranGroup = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings,
+                null, null, badExplicitValues, null, new[] { nodeTran }, false);
+            var nodePep = new PeptideDocNode(peptide, settings, null, null, ExplicitRetentionTimeInfo.EMPTY,
+                new[] { nodeTranGroup }, false);
+
+            // Case 1: no deduction evidence anywhere - surface a friendly error naming the peptide
+            // (before fix: unhandled InvalidOperationException "Nullable object must have a value").
+            AssertEx.ThrowsException<InvalidDataException>(
+                () => settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.5),
+                (InvalidDataException ex) => AssertEx.Contains(ex.Message, nodePep.ModifiedTarget.ToString()));
+
+            // Case 2: no document evidence, but the exporter supplies its native unit as fallback.
+            // Bruker timsTOF would pass inverse_K0_Vsec_per_cm2, which should produce a valid filter.
+            var filter = settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.5,
+                eIonMobilityUnits.inverse_K0_Vsec_per_cm2);
+            Assert.AreEqual(eIonMobilityUnits.inverse_K0_Vsec_per_cm2, filter.IonMobilityUnits);
+            Assert.AreEqual(0.85, filter.IonMobility.Mobility.Value);
+
+            // Case 3: document has an imported results file tagged with 1/K0 - deducer finds it,
+            // no export-target fallback needed.
+            var chromSet = new ChromatogramSet(@"rep1", new[] { MsDataFileUri.Parse(@"Test") });
+            chromSet = chromSet.ChangeMSDataFileInfos(new[]
+                { chromSet.MSDataFileInfos[0].ChangeIonMobilityUnits(eIonMobilityUnits.inverse_K0_Vsec_per_cm2) });
+            var settingsWithResults = settings.ChangeMeasuredResults(new MeasuredResults(new[] { chromSet }));
+            filter = settingsWithResults.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.5);
+            Assert.AreEqual(eIonMobilityUnits.inverse_K0_Vsec_per_cm2, filter.IonMobilityUnits);
+            Assert.AreEqual(0.85, filter.IonMobility.Mobility.Value);
+
+            // Case 4: document has conflicting units (1/K0 in one file, drift_time_msec in another).
+            // Refuse to silently pick - error names both candidates in localized form.
+            var chromSetDriftTime = new ChromatogramSet(@"rep2", new[] { MsDataFileUri.Parse(@"Test2") });
+            chromSetDriftTime = chromSetDriftTime.ChangeMSDataFileInfos(new[]
+                { chromSetDriftTime.MSDataFileInfos[0].ChangeIonMobilityUnits(eIonMobilityUnits.drift_time_msec) });
+            var settingsConflict = settings.ChangeMeasuredResults(
+                new MeasuredResults(new[] { chromSet, chromSetDriftTime }));
+            AssertEx.ThrowsException<InvalidDataException>(
+                () => settingsConflict.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.5),
+                (InvalidDataException ex) =>
+                {
+                    AssertEx.Contains(ex.Message, nodePep.ModifiedTarget.ToString());
+                    AssertEx.Contains(ex.Message,
+                        IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2));
+                    AssertEx.Contains(ex.Message,
+                        IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.drift_time_msec));
+                });
         }
 
     }
