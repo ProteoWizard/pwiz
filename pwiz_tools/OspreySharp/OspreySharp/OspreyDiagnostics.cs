@@ -39,8 +39,18 @@ namespace pwiz.OspreySharp
     ///
     /// Dump format must remain byte-for-byte stable -- these files are
     /// diffed against the Rust osprey reference to bisect cross-impl drift.
-    /// Use <see cref="F10"/> for doubles, invariant culture, and the same
-    /// field ordering as the Rust equivalents.
+    /// Use invariant culture and the same field ordering as the Rust
+    /// equivalents. Two floating-point formats are in use by convention:
+    /// <list type="bullet">
+    /// <item><description>Stages 1-4 dumps use <see cref="F10"/>
+    /// (10 decimal places), matching the Rust equivalents for those
+    /// stages.</description></item>
+    /// <item><description>Stage 5 dumps (standardizer, subsample, SVM
+    /// weights, Percolator) use invariant-culture "G17" (17-digit
+    /// roundtrippable) to match Rust's G17 choice there and to avoid
+    /// .NET Framework's historical "R"-format roundtrip bugs. Do not
+    /// switch these fields to F10.</description></item>
+    /// </list>
     /// </summary>
     public static class OspreyDiagnostics
     {
@@ -814,8 +824,9 @@ namespace pwiz.OspreySharp
                 return a.Value.EntryId.CompareTo(b.Value.EntryId);
             });
 
-            using (var sw = new StreamWriter(path) { NewLine = "\n" })
+            using (var sw = new StreamWriter(path))
             {
+                sw.NewLine = "\n";
                 sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_precursor_q	experiment_peptide_q");
                 foreach (var row in rows)
                 {

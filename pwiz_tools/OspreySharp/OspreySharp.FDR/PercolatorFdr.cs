@@ -1599,8 +1599,9 @@ namespace pwiz.OspreySharp.FDR
             for (int i = 0; i < n; i++) order[i] = i;
             Array.Sort(order, (a, b) => entries[a].EntryId.CompareTo(entries[b].EntryId));
 
-            using (var sw = new StreamWriter(path) { NewLine = "\n" })
+            using (var sw = new StreamWriter(path))
             {
+                sw.NewLine = "\n";
                 sw.WriteLine(@"entry_id	native_position	charge	modified_sequence	is_decoy	base_id	in_subsample	fold_id");
                 foreach (int i in order)
                 {
@@ -1638,8 +1639,9 @@ namespace pwiz.OspreySharp.FDR
             const string path = @"cs_stage5_svm_weights.tsv";
             var inv = CultureInfo.InvariantCulture;
 
-            using (var sw = new StreamWriter(path) { NewLine = "\n" })
+            using (var sw = new StreamWriter(path))
             {
+                sw.NewLine = "\n";
                 sw.WriteLine(@"fold	weight_idx	feature_name	value	fold_iterations");
                 for (int fold = 0; fold < foldModels.Length; fold++)
                 {
@@ -1683,8 +1685,9 @@ namespace pwiz.OspreySharp.FDR
             var means = standardizer.Means;
             var stds = standardizer.Stds;
 
-            using (var sw = new StreamWriter(path) { NewLine = "\n" })
+            using (var sw = new StreamWriter(path))
             {
+                sw.NewLine = "\n";
                 sw.WriteLine(@"feature_idx	feature_name	mean	std");
                 for (int i = 0; i < means.Length; i++)
                 {
