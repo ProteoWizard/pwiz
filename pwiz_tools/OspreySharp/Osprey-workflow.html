@@ -340,12 +340,12 @@
   <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="8"/>
   <text class="phase-label" x="60" y="24">stage 5</text>
   <text class="phase-title" x="60" y="42">First-pass FDR (Percolator SVM)</text>
-  <text class="phase-note"  x="60" y="58">
-    Semi-supervised SVM training with target-decoy competition. Produces
-    precursor-level and peptide-level q-values at run and experiment levels.
-    Single-file Stellar: bit-identical cross-impl on score + pep + 4 q-values,
-    max_diff = 0 over 462,802 rows. 3-file validation pending.
-  </text>
+  <text class="phase-note"  x="60" y="58">Semi-supervised SVM training with target-decoy competition. Produces precursor-level and peptide-level q-values at run and experiment levels.</text>
+  <text class="phase-note"  x="60" y="72">Single-file Stellar: bit-identical cross-impl on score + pep + 4 q-values, max_diff = 0 over 462,802 rows. 3-file validation pending.</text>
+
+  <!-- Stage 5 perf badge (C# join-only wall clock on single-file Stellar;
+       Rust measured 2026-04-22 = 66s at dump-exit point). -->
+  <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">137s (2.1x Rust)</tspan></text>
 
   <rect class="st-done" x="80" y="80" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="100" text-anchor="middle">Best-per-precursor subsampling (across files)</text>
