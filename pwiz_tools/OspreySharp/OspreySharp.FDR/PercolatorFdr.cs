@@ -38,6 +38,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.ML;
 
 namespace pwiz.OspreySharp.FDR
@@ -1656,13 +1657,13 @@ namespace pwiz.OspreySharp.FDR
                         sw.Write(fold.ToString(inv));
                         sw.Write('\t'); sw.Write(wi.ToString(inv));
                         sw.Write('\t'); sw.Write(name);
-                        sw.Write('\t'); sw.Write(weights[wi].ToString(@"G17", inv));
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(weights[wi]));
                         sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
                     }
                     sw.Write(fold.ToString(inv));
                     sw.Write('\t'); sw.Write(weights.Length.ToString(inv));
                     sw.Write('\t'); sw.Write(@"bias");
-                    sw.Write('\t'); sw.Write(model.Bias.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(model.Bias));
                     sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
                 }
             }
@@ -1696,8 +1697,8 @@ namespace pwiz.OspreySharp.FDR
                         : @"unknown";
                     sw.Write(i.ToString(inv));
                     sw.Write('\t'); sw.Write(name);
-                    sw.Write('\t'); sw.Write(means[i].ToString(@"G17", inv));
-                    sw.Write('\t'); sw.WriteLine(stds[i].ToString(@"G17", inv));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(means[i]));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stds[i]));
                 }
             }
             Console.Error.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
