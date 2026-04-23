@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (imFiltering != null)
             {
                 var libUnits = imFiltering.GetFirstSeenIonMobilityUnits();
-                if (libUnits != eIonMobilityUnits.none)
+                if (libUnits != eIonMobilityUnits.none && libUnits != eIonMobilityUnits.unknown)
                     units.Add(libUnits);
             }
 
