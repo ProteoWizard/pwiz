@@ -43,13 +43,15 @@ namespace pwiz.OspreySharp
     /// equivalents. Two floating-point formats are in use by convention:
     /// <list type="bullet">
     /// <item><description>Stages 1-4 dumps use <see cref="F10"/>
-    /// (10 decimal places), matching the Rust equivalents for those
-    /// stages.</description></item>
-    /// <item><description>Stage 5 dumps (standardizer, subsample, SVM
-    /// weights, Percolator) use invariant-culture "G17" (17-digit
-    /// roundtrippable) to match Rust's G17 choice there and to avoid
-    /// .NET Framework's historical "R"-format roundtrip bugs. Do not
-    /// switch these fields to F10.</description></item>
+    /// (10 decimal places, round-half-to-even), matching the Rust
+    /// equivalents for those stages.</description></item>
+    /// <item><description>Stage 5+ dumps (standardizer, subsample, SVM
+    /// weights, Percolator) use
+    /// <see cref="Diagnostics.FormatF64Roundtrip"/>, which emits the
+    /// shortest decimal that round-trips to the same f64 -- matching
+    /// Rust's ryu-based <c>format!("{}", v)</c> output byte-for-byte.
+    /// Do not switch these fields to F10 or to raw "G17".</description>
+    /// </item>
     /// </list>
     /// </summary>
     public static class OspreyDiagnostics
@@ -836,12 +838,12 @@ namespace pwiz.OspreySharp
                     sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
                     sw.Write('\t'); sw.Write(e.ModifiedSequence ?? string.Empty);
                     sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
-                    sw.Write('\t'); sw.Write(e.Score.ToString(@"G17", inv));
-                    sw.Write('\t'); sw.Write(e.Pep.ToString(@"G17", inv));
-                    sw.Write('\t'); sw.Write(e.RunPrecursorQvalue.ToString(@"G17", inv));
-                    sw.Write('\t'); sw.Write(e.RunPeptideQvalue.ToString(@"G17", inv));
-                    sw.Write('\t'); sw.Write(e.ExperimentPrecursorQvalue.ToString(@"G17", inv));
-                    sw.Write('\t'); sw.WriteLine(e.ExperimentPeptideQvalue.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
                 }
             }
             LogAction(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
