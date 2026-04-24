@@ -73,6 +73,15 @@ public class ReaderBrukerTests
         RunHarness("Hela_QC_PASEF_Slot1-first-6-frames.d");
     }
 
+    [TestMethod]
+    public void Harness_HelaPasefTdf_CombineIMS_MatchesReferenceMzMl()
+    {
+        RunHarness("Hela_QC_PASEF_Slot1-first-6-frames.d", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+        });
+    }
+
     private static void RunHarness(string fixtureFolderName, Action<ReaderTestConfig>? configure = null)
     {
         string? root = FindTestDataRoot();

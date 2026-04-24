@@ -31,9 +31,11 @@ public sealed class Reader_Bruker : IReader
     public IReadOnlyList<string> FileExtensions { get; } = new[] { ".d" };
 
     /// <summary>
-    /// When true, the produced <see cref="SpectrumList_Bruker"/> emits one spectrum per frame
-    /// (all TIMS scans summed) instead of per-(frame, scan). Mirrors pwiz C++
-    /// <c>--combineIonMobilitySpectra</c>.
+    /// When true, the produced <see cref="SpectrumList_Bruker"/> emits one combined spectrum
+    /// per MS1 frame (summed across mobility) and per PASEF/DIA-PASEF precursor isolation
+    /// window, rather than per-(frame, scan). Mirrors pwiz C++ <c>--combineIonMobilitySpectra</c>.
+    /// If <see cref="ReaderConfig.CombineIonMobilitySpectra"/> is set on the passed config,
+    /// that value overrides this instance property.
     /// </summary>
     public bool CombineIonMobilitySpectra { get; set; }
 
@@ -60,6 +62,7 @@ public sealed class Reader_Bruker : IReader
         ArgumentNullException.ThrowIfNull(result);
 
         int preferOnlyMsLevel = config?.PreferOnlyMsLevel ?? 0;
+        bool combineIms = config?.CombineIonMobilitySpectra ?? CombineIonMobilitySpectra;
         var format = DetectFormat(filename);
         if (format != BrukerFormat.Tdf && format != BrukerFormat.Tsf)
             throw new NotSupportedException(
@@ -73,7 +76,7 @@ public sealed class Reader_Bruker : IReader
         var data = BrukerData.Create(analysisDir);
         try
         {
-            ReadImpl(result, data, analysisDir, preferOnlyMsLevel);
+            ReadImpl(result, data, analysisDir, preferOnlyMsLevel, combineIms);
         }
         catch
         {
@@ -82,7 +85,7 @@ public sealed class Reader_Bruker : IReader
         }
     }
 
-    private void ReadImpl(MSData result, IBrukerData data, string analysisDir, int preferOnlyMsLevel)
+    private static void ReadImpl(MSData result, IBrukerData data, string analysisDir, int preferOnlyMsLevel, bool combineIonMobilitySpectra)
     {
         result.CVs.AddRange(MSData.DefaultCVList);
         result.Id = Path.GetFileNameWithoutExtension(analysisDir);
@@ -111,7 +114,7 @@ public sealed class Reader_Bruker : IReader
 
         result.Run.SpectrumList = new SpectrumList_Bruker(
             data, owns: true,
-            combineIonMobilitySpectra: CombineIonMobilitySpectra,
+            combineIonMobilitySpectra: combineIonMobilitySpectra,
             preferOnlyMsLevel: preferOnlyMsLevel)
         { Dp = dpReader };
 

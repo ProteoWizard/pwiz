@@ -338,7 +338,7 @@ public class TimsBinaryDataSmokeTests
     }
 
     [TestMethod]
-    public void Reader_Bruker_CombineIonMobility_ProducesOneSpectrumPerFrame()
+    public void Reader_Bruker_CombineIonMobility_MergesByPasefWindow()
     {
         string? path = FindTestD();
         if (path is null) { Assert.Inconclusive("diaPASEF.d not found."); return; }
@@ -347,7 +347,11 @@ public class TimsBinaryDataSmokeTests
         new Reader_Bruker { CombineIonMobilitySpectra = true }.Read(path, msd);
 
         Assert.IsNotNull(msd.Run.SpectrumList);
-        Assert.AreEqual(5, msd.Run.SpectrumList.Count);
+        // diaPASEF.d has 5 frames: 1 MS1 + 4 MS2. Combined mode emits one spectrum per MS1
+        // frame and one per DIA-PASEF isolation window (2 windows per MS2 frame here), so
+        // 1 + 4*2 = 9 spectra. This is not "one per frame" — that was the previous behavior
+        // before pasef-aware combined emission was ported (TimsData.cpp:699-711).
+        Assert.AreEqual(9, msd.Run.SpectrumList.Count);
         var first = msd.Run.SpectrumList.GetSpectrum(0, getBinaryData: true);
         StringAssert.StartsWith(first.Id, "merged=0 frame=1", StringComparison.Ordinal);
         Assert.IsTrue(first.DefaultArrayLength > 100, "combined frame should have a lot of peaks");

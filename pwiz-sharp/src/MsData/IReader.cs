@@ -18,6 +18,20 @@ public sealed class ReaderConfig
     /// </summary>
     public int PreferOnlyMsLevel { get; set; }
 
+    /// <summary>
+    /// When true, ion-mobility-aware readers emit one combined spectrum per frame (Bruker TDF)
+    /// or per isolation window (Bruker DIA/PASEF), summing across the mobility axis. Port of
+    /// <c>pwiz::msdata::Reader::Config::combineIonMobilitySpectra</c>.
+    /// </summary>
+    public bool CombineIonMobilitySpectra { get; set; }
+
+    /// <summary>
+    /// When true, SIM (Selected Ion Monitoring) scans are exposed as individual spectra.
+    /// When false (default), SIM scans are grouped by Q1 into SIM chromatograms and removed
+    /// from the spectrum list. Port of <c>pwiz::msdata::Reader::Config::simAsSpectra</c>.
+    /// </summary>
+    public bool SimAsSpectra { get; set; }
+
     /// <summary>Default configuration.</summary>
     public static ReaderConfig Default { get; } = new();
 }

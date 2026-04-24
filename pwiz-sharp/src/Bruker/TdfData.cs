@@ -143,6 +143,17 @@ internal sealed class TdfData : IBrukerData
         public bool Combined;  // true when combineIonMobilitySpectra
     }
 
+    private static BrukerIndexEntry MakeCombinedEntry(int idx, TdfFrame frame, int scanBegin, int scanEnd, Tag tag)
+    {
+        // Matches pwiz C++ SpectrumList_Bruker.cpp native-id format for combineIonMobilitySpectra:
+        //   "merged={index} frame={frameId} scanStart={begin+1} scanEnd={end+1}"
+        string id = "merged=" + idx.ToString(CultureInfo.InvariantCulture) +
+                    " frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
+                    " scanStart=" + (scanBegin + 1).ToString(CultureInfo.InvariantCulture) +
+                    " scanEnd=" + (scanEnd + 1).ToString(CultureInfo.InvariantCulture);
+        return new BrukerIndexEntry { Index = idx, Id = id, Tag = tag };
+    }
+
     public IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(bool combineIonMobilitySpectra, int preferOnlyMsLevel)
     {
         var index = new List<BrukerIndexEntry>();
@@ -163,14 +174,39 @@ internal sealed class TdfData : IBrukerData
 
             if (combineIonMobilitySpectra)
             {
-                if (frame.NumPeaks == 0) continue;
-                index.Add(new BrukerIndexEntry
+                // PASEF DDA: one combined spectrum per precursor (merge scans in the precursor's range).
+                if (frame.MsMsType != MsMsType.Ms1 && pasefByFrame.TryGetValue(frame.FrameId, out var ddaPrecursors))
                 {
-                    Index = index.Count,
-                    Id = "merged=0 frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
-                         " scanStart=1 scanEnd=" + frame.NumScans.ToString(CultureInfo.InvariantCulture),
-                    Tag = new Tag { Frame = frame, ScanBegin = 0, ScanEnd = frame.NumScans - 1, Combined = true },
-                });
+                    foreach (var p in ddaPrecursors)
+                    {
+                        int lastScan = Math.Min(frame.NumScans - 1, p.ScanEnd);
+                        if (lastScan < p.ScanBegin) continue;
+                        index.Add(MakeCombinedEntry(
+                            index.Count, frame, p.ScanBegin, lastScan,
+                            new Tag { Frame = frame, ScanBegin = p.ScanBegin, ScanEnd = lastScan, PasefPrecursor = p, Combined = true }));
+                    }
+                    continue;
+                }
+
+                // DIA-PASEF: one combined spectrum per isolation window.
+                if (frame.MsMsType != MsMsType.Ms1 && diaByFrame.TryGetValue(frame.FrameId, out var diaWindows))
+                {
+                    foreach (var w in diaWindows)
+                    {
+                        int lastScan = Math.Min(frame.NumScans - 1, w.ScanEnd);
+                        if (lastScan < w.ScanBegin) continue;
+                        index.Add(MakeCombinedEntry(
+                            index.Count, frame, w.ScanBegin, lastScan,
+                            new Tag { Frame = frame, ScanBegin = w.ScanBegin, ScanEnd = lastScan, DiaWindow = w, Combined = true }));
+                    }
+                    continue;
+                }
+
+                // MS1 or non-PASEF MS2: one spectrum for the whole frame.
+                if (frame.NumPeaks == 0) continue;
+                index.Add(MakeCombinedEntry(
+                    index.Count, frame, 0, frame.NumScans - 1,
+                    new Tag { Frame = frame, ScanBegin = 0, ScanEnd = frame.NumScans - 1, Combined = true }));
                 continue;
             }
 

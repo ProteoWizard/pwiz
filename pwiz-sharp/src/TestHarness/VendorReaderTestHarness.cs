@@ -129,7 +129,12 @@ public static class VendorReaderTestHarness
     {
         // 1. Read the raw file through the vendor reader.
         var msd = new MSData();
-        var readerConfig = new ReaderConfig { PreferOnlyMsLevel = config.PreferOnlyMsLevel };
+        var readerConfig = new ReaderConfig
+        {
+            PreferOnlyMsLevel = config.PreferOnlyMsLevel,
+            CombineIonMobilitySpectra = config.CombineIonMobilitySpectra,
+            SimAsSpectra = config.SimAsSpectra,
+        };
         reader.Read(rawPath, msd, readerConfig);
 
         string sourceName = Path.GetFileName(rawPath.TrimEnd('/', '\\'));
