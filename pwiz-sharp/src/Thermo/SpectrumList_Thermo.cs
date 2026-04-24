@@ -517,38 +517,33 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             try { isolationMz = filter.GetMass(i); } catch { }
             if (isolationMz <= 0) continue;
 
+            // Mirror pwiz C++ SpectrumList_Thermo.cpp:552-568 isolation-width logic exactly.
+            // trailerExtraValueDouble returns 0 (not throw) when the trailer is missing, so the
+            // override is UNCONDITIONAL for primary precursors — an absent trailer zeros out
+            // the filter-based width, then the method fallback takes over. This matters for
+            // newer DDA files (e.g. TMT MS3) where no "MS{n} Isolation Width:" trailer exists
+            // and cpp emits no offsets because the method also has no width for that event.
             double isolationHalfWidth = 0;
+            try { isolationHalfWidth = filter.GetIsolationWidth(i) / 2.0; } catch { }
+
             if (isPrimary)
             {
-                // Primary precursor: trailer "MS{msLevel} Isolation Width:" overrides the API
-                // value (LTQ-class data often reports wrong values via GetIsolationWidth).
                 string widthTag = "MS" + msLevel.ToString(CultureInfo.InvariantCulture) + " Isolation Width:";
-                if (TryGetTrailerDouble(ie.Scan, widthTag, out double trailerWidth) && trailerWidth > 0)
-                    isolationHalfWidth = trailerWidth / 2.0;
+                TryGetTrailerDouble(ie.Scan, widthTag, out double trailerWidth);
+                isolationHalfWidth = trailerWidth / 2.0;  // unconditional override, matches cpp
             }
+
+            // Method fallback when the above resolved to 0 (LTQ-class where filter returns 0
+            // or trailer absent). Matches pwiz C++ line 563-568.
             if (isolationHalfWidth == 0)
             {
-                try { isolationHalfWidth = filter.GetIsolationWidth(i) / 2.0; } catch { }
-            }
-            // For LTQ-class data where filter.GetIsolationWidth returns a default like 1.0,
-            // prefer the instrument method's explicit per-scan-event width (or default per
-            // msLevel) when it's present and DIFFERENT from what we already have. Mirrors
-            // pwiz C++ SpectrumList_Thermo.cpp:563-568 which falls back to
-            // getIsolationWidth(segment, event) / getDefaultIsolationWidth(segment, msLevel).
-            if (isPrimary)
-            {
                 var (segNum, evtNum) = _raw.GetScanSegmentAndEvent(ie.Scan);
-                double methodWidth = _raw.GetMethodIsolationWidth(segNum, evtNum);
+                double methodWidth = isPrimary
+                    ? _raw.GetMethodIsolationWidth(segNum, evtNum)
+                    : 0;
                 if (methodWidth == 0)
-                    methodWidth = _raw.GetMethodDefaultIsolationWidth(segNum, precursorMsLevel + 1);
+                    methodWidth = _raw.GetMethodDefaultIsolationWidth(segNum, isPrimary ? msLevel : precursorMsLevel);
                 if (methodWidth > 0) isolationHalfWidth = methodWidth / 2.0;
-            }
-            else
-            {
-                // Outer precursor: use the per-msLevel default if available (matches C++ line 691).
-                var (segNum, _) = _raw.GetScanSegmentAndEvent(ie.Scan);
-                double methodDefault = _raw.GetMethodDefaultIsolationWidth(segNum, precursorMsLevel);
-                if (methodDefault > 0) isolationHalfWidth = methodDefault / 2.0;
             }
 
             var precursor = new Precursor();
@@ -565,8 +560,10 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             var selectedIon = new SelectedIon();
             double selectedIonMz = isolationMz;
 
+            // Charge state applies to all precursor levels (cpp reads the same trailer for
+            // primary and outer precursors — SpectrumList_Thermo.cpp:718-722).
             int precursorCharge = 0;
-            if (isPrimary && TryGetTrailerInt(ie.Scan, "Charge State:", out long cs) && cs > 0)
+            if (TryGetTrailerInt(ie.Scan, "Charge State:", out long cs) && cs > 0)
                 precursorCharge = (int)cs;
             if (isPrimary && TryGetTrailerDouble(ie.Scan, "Monoisotopic M/Z:", out double mono) && mono > 0)
             {

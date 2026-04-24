@@ -87,6 +87,43 @@ public sealed class ThermoRawFile : IDisposable
     public string FilterString(int scanNumber) =>
         Raw.GetFilterForScanNumber(scanNumber)?.ToString() ?? string.Empty;
 
+    /// <summary>Diagnostic: dump trailer key/value pairs matching one of the given substrings.</summary>
+    public string DebugDumpTrailers(int scanNumber, params string[] labelSubstrings)
+    {
+        var sb = new System.Text.StringBuilder();
+        var ci = System.Globalization.CultureInfo.InvariantCulture;
+        try
+        {
+            var hdr = Raw.GetTrailerExtraHeaderInformation();
+            for (int i = 0; i < hdr.Length; i++)
+            {
+                string lbl = hdr[i].Label;
+                bool keep = labelSubstrings.Length == 0;
+                foreach (var s in labelSubstrings)
+                    if (lbl.Contains(s, StringComparison.OrdinalIgnoreCase)) { keep = true; break; }
+                if (!keep) continue;
+                object? v = null;
+                try { v = Raw.GetTrailerExtraValue(scanNumber, i); } catch { }
+                sb.AppendLine(ci, $"  trailer[{i}] '{lbl}' = '{v}'");
+            }
+        }
+        catch (Exception ex) { sb.AppendLine(ci, $"  trailer err: {ex.Message}"); }
+        return sb.ToString();
+    }
+
+    /// <summary>Diagnostic: filter isolation widths per index for a scan.</summary>
+    public double[] FilterIsolationWidths(int scanNumber)
+    {
+        var f = Raw.GetFilterForScanNumber(scanNumber);
+        var result = new double[f.MassCount];
+        for (int i = 0; i < f.MassCount; i++)
+        {
+            try { result[i] = f.GetIsolationWidth(i); }
+            catch { result[i] = double.NaN; }
+        }
+        return result;
+    }
+
     /// <summary>
     /// Reads (masses, intensities) for <paramref name="scanNumber"/>. When
     /// <paramref name="preferCentroid"/> is true, returns centroided peaks using whichever
@@ -155,6 +192,22 @@ public sealed class ThermoRawFile : IDisposable
         return _defaultWidthBySegmentAndMsLevel!.TryGetValue(scanSegment, out var byLvl)
             && byLvl.TryGetValue(msLevel, out var w)
                 ? w : 0.0;
+    }
+
+    /// <summary>Diagnostic: returns a summary of parsed isolation-width lookups.</summary>
+    public string DebugMethodIsolationWidths()
+    {
+        EnsureMethodParsed();
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("widthBySegmentAndEvent:");
+        foreach (var (seg, byEvt) in _widthBySegmentAndEvent!)
+            foreach (var (evt, w) in byEvt)
+                sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"  seg={seg} evt={evt} width={w}");
+        sb.AppendLine("defaultWidthBySegmentAndMsLevel:");
+        foreach (var (seg, byLvl) in _defaultWidthBySegmentAndMsLevel!)
+            foreach (var (lvl, w) in byLvl)
+                sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"  seg={seg} msLevel={lvl} width={w}");
+        return sb.ToString();
     }
 
     /// <summary>
