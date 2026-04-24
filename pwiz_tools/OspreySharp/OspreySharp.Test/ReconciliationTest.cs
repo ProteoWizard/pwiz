@@ -798,6 +798,94 @@ namespace pwiz.OspreySharp.Test
 
         #endregion
 
+        #region CalibrationRefit
+
+        [TestMethod]
+        public void TestRefitReturnsNullWhenTooFewConsensusPoints()
+        {
+            // Three consensus peptides, three entries → 3 pairs, below the
+            // 20-point minimum.
+            var consensus = MakeConsensus(3);
+            var entries = MakeRefitEntries(3, measuredOffset: 0.0);
+
+            var cal = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01);
+            Assert.IsNull(cal);
+        }
+
+        [TestMethod]
+        public void TestRefitReturnsNullWhenAllDecoys()
+        {
+            var consensus = MakeConsensus(30);
+            var entries = new List<FdrEntry>();
+            for (int i = 0; i < 30; i++)
+            {
+                entries.Add(MakeEntry(@"DECOY_PEP_" + i, apexRt: i, score: 1.0,
+                    isDecoy: true, precursorQ: 0.0, peptideQ: 0.0));
+            }
+
+            var cal = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01);
+            Assert.IsNull(cal);
+        }
+
+        [TestMethod]
+        public void TestRefitReturnsNullWhenAllFailExperimentFdr()
+        {
+            var consensus = MakeConsensus(30);
+            var entries = new List<FdrEntry>();
+            for (int i = 0; i < 30; i++)
+            {
+                var e = MakeEntry(@"PEP_" + i, apexRt: i, score: 1.0,
+                    isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+                e.ExperimentPrecursorQvalue = 0.5;
+                e.ExperimentPeptideQvalue = 0.5;
+                entries.Add(e);
+            }
+
+            var cal = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01);
+            Assert.IsNull(cal);
+        }
+
+        [TestMethod]
+        public void TestRefitProducesCalibrationFromValidConsensus()
+        {
+            // 30 peptides with consensus_library_rt = i. Entries have
+            // apex_rt = 2*i + 5 (a linear 2x+5 shift, cleanly LOESS-fit-able).
+            // Refit should predict measured ≈ 2x + 5 for library = x.
+            var consensus = MakeConsensus(30);
+            var entries = MakeRefitEntries(30, measuredOffset: 0.0, scale: 2.0, intercept: 5.0);
+
+            var cal = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01);
+            Assert.IsNotNull(cal);
+
+            double pred10 = cal.Predict(10.0);
+            Assert.IsTrue(Math.Abs(pred10 - 25.0) < 1.0,
+                string.Format(@"Predict(10) should be near 25, got {0}", pred10));
+        }
+
+        [TestMethod]
+        public void TestRefitExcludesDecoysFromFit()
+        {
+            // 25 target peptides + 5 decoy entries whose ApexRt would wildly
+            // distort a fit if not filtered. Refit should ignore decoys and
+            // produce a linear calibration that matches the target data.
+            var consensus = MakeConsensus(25);
+            var entries = MakeRefitEntries(25, measuredOffset: 0.0, scale: 1.0, intercept: 0.0);
+            for (int i = 0; i < 5; i++)
+            {
+                var decoy = MakeEntry(@"DECOY_PEP_" + i, apexRt: 1e6, score: -1.0,
+                    isDecoy: true, precursorQ: 1.0, peptideQ: 1.0);
+                decoy.ExperimentPrecursorQvalue = 1.0;
+                decoy.ExperimentPeptideQvalue = 1.0;
+                entries.Add(decoy);
+            }
+
+            var cal = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01);
+            Assert.IsNotNull(cal);
+            Assert.IsTrue(Math.Abs(cal.Predict(10.0) - 10.0) < 1.0);
+        }
+
+        #endregion
+
         #region Fixture helpers
 
         /// <summary>
@@ -870,6 +958,53 @@ namespace pwiz.OspreySharp.Test
                 RunProteinQvalue = 1.0,
                 ModifiedSequence = modifiedSequence,
             };
+        }
+
+        /// <summary>
+        /// Build <paramref name="count"/> target-only consensus entries with
+        /// modified sequences PEP_0, PEP_1, ... and ConsensusLibraryRt = i.
+        /// </summary>
+        private static IReadOnlyList<PeptideConsensusRT> MakeConsensus(int count)
+        {
+            var result = new PeptideConsensusRT[count];
+            for (int i = 0; i < count; i++)
+            {
+                result[i] = new PeptideConsensusRT
+                {
+                    ModifiedSequence = @"PEP_" + i,
+                    IsDecoy = false,
+                    ConsensusLibraryRt = i,
+                    MedianPeakWidth = 0.6,
+                    NRunsDetected = 3,
+                    ApexLibraryRtMad = 0.05,
+                };
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Build <paramref name="count"/> target entries paired with the
+        /// consensus above: ApexRt = scale * i + intercept + measuredOffset.
+        /// Experiment q-values default to 0, so entries pass any normal FDR.
+        /// </summary>
+        private static List<FdrEntry> MakeRefitEntries(
+            int count, double measuredOffset,
+            double scale = 1.0, double intercept = 0.0)
+        {
+            var result = new List<FdrEntry>(count);
+            for (int i = 0; i < count; i++)
+            {
+                var e = MakeEntry(@"PEP_" + i,
+                    apexRt: scale * i + intercept + measuredOffset,
+                    score: 3.0, isDecoy: false,
+                    precursorQ: 0.0, peptideQ: 0.0);
+                // Experiment q-values default to 1.0 in the FdrEntry constructor,
+                // so set them explicitly for the refit gate.
+                e.ExperimentPrecursorQvalue = 0.0;
+                e.ExperimentPeptideQvalue = 0.0;
+                result.Add(e);
+            }
+            return result;
         }
 
         #endregion
