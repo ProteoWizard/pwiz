@@ -30,6 +30,8 @@
 // Copyright (c) 2022 Michael Lazear
 // Licensed under the MIT License
 
+using System;
+
 namespace pwiz.OspreySharp.ML
 {
     /// <summary>
@@ -64,7 +66,7 @@ namespace pwiz.OspreySharp.ML
             return null;
         }
 
-        private static Matrix SolveInner(Matrix left, Matrix right, double eps)
+        internal static Matrix SolveInner(Matrix left, Matrix right, double eps)
         {
             // Clone the matrices so we don't modify the originals
             var leftData = new double[left.Rows * left.Cols];
@@ -104,6 +106,7 @@ namespace pwiz.OspreySharp.ML
         /// </summary>
         private bool LeftSolved()
         {
+            const double TOL = 1E-8;
             int n = _left.Cols;
             for (int i = 0; i < n; i++)
             {
@@ -112,10 +115,10 @@ namespace pwiz.OspreySharp.ML
                     double x = _left[i, j];
                     if (i == j)
                     {
-                        if (x != 1.0 && x != 0.0)
+                        if (Math.Abs(x - 1.0) > TOL && Math.Abs(x) > TOL)
                             return false;
                     }
-                    else if (x > 1E-8)
+                    else if (Math.Abs(x) > TOL)
                     {
                         return false;
                     }
@@ -129,6 +132,7 @@ namespace pwiz.OspreySharp.ML
         /// </summary>
         private void Echelon()
         {
+            const double EPS = 1E-12;
             int m = _left.Rows;
             int n = _left.Cols;
             int h = 0;
@@ -136,19 +140,23 @@ namespace pwiz.OspreySharp.ML
 
             while (h < m && k < n)
             {
-                // Find the row with the largest value in column k
+                // Partial pivoting: pick the row with the largest-magnitude
+                // value in the current pivot column. Using the signed value
+                // skips large-magnitude negatives in favor of small positives,
+                // which hurts numerical stability.
                 int maxRow = h;
-                double maxVal = double.MinValue;
+                double maxAbs = 0.0;
                 for (int i = h; i < m; i++)
                 {
-                    if (_left[i, k] >= maxVal)
+                    double absVal = Math.Abs(_left[i, k]);
+                    if (absVal > maxAbs)
                     {
-                        maxVal = _left[i, k];
+                        maxAbs = absVal;
                         maxRow = i;
                     }
                 }
 
-                if (_left[maxRow, k] == 0.0)
+                if (maxAbs < EPS)
                 {
                     k++;
                     continue;

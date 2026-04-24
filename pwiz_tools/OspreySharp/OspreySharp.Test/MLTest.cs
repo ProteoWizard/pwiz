@@ -517,6 +517,53 @@ namespace pwiz.OspreySharp.Test
 
         #endregion
 
+        #region Gauss Solver Tests
+
+        /// <summary>
+        /// Regression test for abs-value pivot selection.
+        ///
+        /// Column 0 contains a large-magnitude negative (-4) and a zero. Signed-
+        /// max pivoting picks the zero (because 0 > -4), skips the column, and
+        /// produces a permuted-identity result that LeftSolved rejects through
+        /// every eps in the ladder. Abs-max pivoting picks -4 and solves exactly.
+        ///
+        /// Must use the same numeric inputs as the Rust gauss_negative_pivot test.
+        /// </summary>
+        [TestMethod]
+        public void TestGaussNegativePivot()
+        {
+            var left = new Matrix(new[] { -4.0, 2.0, 0.0, 3.0 }, 2, 2);
+            var right = new Matrix(new[] { 1.0, 6.0 }, 2, 1);
+            // Use SolveInner with eps=0 for an exact answer; the outer Solve
+            // adds a 1e-8 diagonal perturbation that prevents bit-exact matches.
+            var solution = GaussSolver.SolveInner(left, right, 0.0);
+            Assert.IsNotNull(solution, "SolveInner should succeed");
+            Assert.AreEqual(2, solution.Rows);
+            Assert.AreEqual(1, solution.Cols);
+            Assert.AreEqual(0.75, solution[0, 0], 1e-12);
+            Assert.AreEqual(2.0, solution[1, 0], 1e-12);
+        }
+
+        /// <summary>
+        /// Regression test for rank-deficient input.
+        ///
+        /// Left has rank 1 (row 2 = 2 * row 1). With eps = 0 (no diagonal
+        /// perturbation), SolveInner must return null because echelon produces
+        /// a zero row on left, and the surviving non-zero off-diagonal entry
+        /// fails the LeftSolved tolerance check.
+        ///
+        /// Must use the same numeric inputs as the Rust gauss_near_singular_returns_none test.
+        /// </summary>
+        [TestMethod]
+        public void TestGaussNearSingularReturnsNull()
+        {
+            var left = new Matrix(new[] { 1.0, 2.0, 2.0, 4.0 }, 2, 2);
+            var right = new Matrix(new[] { 1.0, 2.0 }, 2, 1);
+            Assert.IsNull(GaussSolver.SolveInner(left, right, 0.0));
+        }
+
+        #endregion
+
         #region Linear Discriminant Tests
 
         [TestMethod]
