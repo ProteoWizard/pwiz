@@ -524,6 +524,26 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             {
                 try { isolationHalfWidth = filter.GetIsolationWidth(i) / 2.0; } catch { }
             }
+            // For LTQ-class data where filter.GetIsolationWidth returns a default like 1.0,
+            // prefer the instrument method's explicit per-scan-event width (or default per
+            // msLevel) when it's present and DIFFERENT from what we already have. Mirrors
+            // pwiz C++ SpectrumList_Thermo.cpp:563-568 which falls back to
+            // getIsolationWidth(segment, event) / getDefaultIsolationWidth(segment, msLevel).
+            if (isPrimary)
+            {
+                var (segNum, evtNum) = _raw.GetScanSegmentAndEvent(ie.Scan);
+                double methodWidth = _raw.GetMethodIsolationWidth(segNum, evtNum);
+                if (methodWidth == 0)
+                    methodWidth = _raw.GetMethodDefaultIsolationWidth(segNum, precursorMsLevel + 1);
+                if (methodWidth > 0) isolationHalfWidth = methodWidth / 2.0;
+            }
+            else
+            {
+                // Outer precursor: use the per-msLevel default if available (matches C++ line 691).
+                var (segNum, _) = _raw.GetScanSegmentAndEvent(ie.Scan);
+                double methodDefault = _raw.GetMethodDefaultIsolationWidth(segNum, precursorMsLevel);
+                if (methodDefault > 0) isolationHalfWidth = methodDefault / 2.0;
+            }
 
             var precursor = new Precursor();
             precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, isolationMz, CVID.MS_m_z);

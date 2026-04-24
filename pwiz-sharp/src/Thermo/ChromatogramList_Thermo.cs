@@ -54,9 +54,13 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
     /// Walks the raw file once and groups SIM scans by (polarity, Q1 midpoint). Produces one
     /// chromatogram per group matching pwiz C++ ChromatogramList_Thermo.cpp:481-504.
     /// </summary>
+    /// <remarks>
+    /// Matches pwiz C++ <c>polarityStringForFilter</c> — only prepends "- " for negative
+    /// polarity; positive mode has an empty prefix for backward-compat (see
+    /// ChromatogramListBase.hpp line 53).
+    /// </remarks>
     private bool BuildSimIndex()
     {
-        // Group key: "{polarityChar}:{Q1:G10}" — Q1 is the scan range midpoint.
         var byKey = new Dictionary<string, IndexEntry>(StringComparer.Ordinal);
         for (int scan = _raw.FirstScan; scan <= _raw.LastScan; scan++)
         {
@@ -69,7 +73,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
                 double q1 = (lo + hi) / 2.0;
                 double halfWidth = (hi - lo) / 2.0;
                 var pol = filter.Polarity;
-                string polStr = pol == PolarityType.Positive ? "+ " : pol == PolarityType.Negative ? "- " : "";
+                string polStr = pol == PolarityType.Negative ? "- " : "";
                 string key = polStr + q1.ToString("G10", CultureInfo.InvariantCulture);
                 if (!byKey.TryGetValue(key, out var entry))
                 {
@@ -115,6 +119,15 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
 
         if (!getBinaryData) return chrom;
 
+        // Polarity cvParam for SIM chromatograms matches pwiz C++ ref output.
+        if (entry.Kind == CVID.MS_SIM_chromatogram)
+        {
+            if (entry.Polarity == PolarityType.Positive)
+                chrom.Params.Set(CVID.MS_positive_scan);
+            else if (entry.Polarity == PolarityType.Negative)
+                chrom.Params.Set(CVID.MS_negative_scan);
+        }
+
         return entry.Kind == CVID.MS_SIM_chromatogram
             ? FillSimChromatogram(chrom, entry)
             : FillTicChromatogram(chrom);
@@ -150,23 +163,26 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
 
     private Chromatogram FillSimChromatogram(Chromatogram chrom, IndexEntry entry)
     {
-        // For each SIM scan in the group, take its retention time and total-ion intensity.
-        var times = new double[entry.Scans.Count];
-        var intensities = new double[entry.Scans.Count];
-        for (int i = 0; i < entry.Scans.Count; i++)
+        // Precursor isolation window (matches pwiz C++ ChromatogramList_Thermo.cpp:211-213).
+        chrom.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, entry.Q1, CVID.MS_m_z);
+        chrom.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, entry.HalfWidth, CVID.MS_m_z);
+        chrom.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, entry.HalfWidth, CVID.MS_m_z);
+
+        // Ask Thermo for the chromatogram over the SIM's Q1 ± halfWidth window — mirrors C++
+        // getChromatogramData(Type_MassRange, "SIM ms [...]", Q1-hw, Q1+hw, ...).
+        var settings = new ChromatogramTraceSettings(TraceType.MassRange)
         {
-            int scan = entry.Scans[i];
-            times[i] = _raw.RetentionTimeMinutes(scan);
-            try
-            {
-                var stats = _raw.Raw.GetScanStatsForScanNumber(scan);
-                intensities[i] = stats.TIC;
-            }
-            catch { intensities[i] = 0; }
+            Filter = $"SIM ms [{(entry.Q1 - entry.HalfWidth).ToString("G10", CultureInfo.InvariantCulture)}-{(entry.Q1 + entry.HalfWidth).ToString("G10", CultureInfo.InvariantCulture)}]",
+            MassRanges = new[] { new ThermoFisher.CommonCore.Data.Business.Range(entry.Q1 - entry.HalfWidth, entry.Q1 + entry.HalfWidth) },
+        };
+        var data = _raw.Raw.GetChromatogramDataEx(new[] { settings }, -1, -1, new MassOptions());
+        if (data?.PositionsArray?.Length > 0 && data.PositionsArray[0] is { } times
+            && data.IntensitiesArray?[0] is { } intensities)
+        {
+            chrom.DefaultArrayLength = times.Length;
+            chrom.BinaryDataArrays.Add(MakeArray(times, CVID.MS_time_array, CVID.UO_minute));
+            chrom.BinaryDataArrays.Add(MakeArray(intensities, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts));
         }
-        chrom.DefaultArrayLength = times.Length;
-        chrom.BinaryDataArrays.Add(MakeArray(times, CVID.MS_time_array, CVID.UO_minute));
-        chrom.BinaryDataArrays.Add(MakeArray(intensities, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts));
         return chrom;
     }
 
