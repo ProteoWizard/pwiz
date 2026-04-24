@@ -124,13 +124,18 @@ public sealed class Reader_Thermo : IReader
         result.Run.StartTimeStamp = raw.CreationDate;
         if (result.InstrumentConfigurations.Count > 0)
             result.Run.DefaultInstrumentConfiguration = result.InstrumentConfigurations[0];
+        bool simAsSpectra = config?.SimAsSpectra ?? false;
         var list = new SpectrumList_Thermo(raw, ownsRaw: true,
-            result.Run.DefaultInstrumentConfiguration, icByAnalyzer)
+            result.Run.DefaultInstrumentConfiguration, icByAnalyzer, simAsSpectra)
         {
             Dp = dpThermo,
         };
         result.Run.SpectrumList = list;
-        result.Run.ChromatogramList = new ChromatogramList_Thermo(raw) { Dp = dpThermo };
+        var chromList = new ChromatogramList_Thermo(raw, simAsSpectra) { Dp = dpThermo };
+        result.Run.ChromatogramList = chromList;
+        // If any SIM chromatograms were emitted, advertise them in fileContent.
+        if (chromList.HasSimChromatograms)
+            result.FileDescription.FileContent.Set(CVID.MS_selected_ion_monitoring_chromatogram);
     }
 
     private static Software GetOrAddPwizSoftware(MSData msd)

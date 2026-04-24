@@ -73,17 +73,21 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         return sum;
     }
 
+    private readonly bool _simAsSpectra;
+
     /// <summary>Creates a spectrum list over <paramref name="raw"/> with no IC binding.</summary>
-    public SpectrumList_Thermo(ThermoRawFile raw, bool ownsRaw = true)
-        : this(raw, ownsRaw, null, null) { }
+    public SpectrumList_Thermo(ThermoRawFile raw, bool ownsRaw = true, bool simAsSpectra = false)
+        : this(raw, ownsRaw, null, null, simAsSpectra) { }
 
     internal SpectrumList_Thermo(ThermoRawFile raw, bool ownsRaw,
         Pwiz.Data.MsData.Instruments.InstrumentConfiguration? defaultInstrumentConfiguration,
-        IReadOnlyDictionary<MassAnalyzerType, Pwiz.Data.MsData.Instruments.InstrumentConfiguration>? icByAnalyzer)
+        IReadOnlyDictionary<MassAnalyzerType, Pwiz.Data.MsData.Instruments.InstrumentConfiguration>? icByAnalyzer,
+        bool simAsSpectra = false)
     {
         ArgumentNullException.ThrowIfNull(raw);
         _raw = raw;
         _ownsRaw = ownsRaw;
+        _simAsSpectra = simAsSpectra;
         _defaultIc = defaultInstrumentConfiguration;
         if (icByAnalyzer is not null)
             foreach (var kv in icByAnalyzer) _icByAnalyzer[kv.Key] = kv.Value;
@@ -154,9 +158,15 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         for (int scan = _raw.FirstScan; scan <= _raw.LastScan; scan++)
         {
             var filter = _raw.Raw.GetFilterForScanNumber(scan);
+
+            // SIM scans are emitted as chromatograms (grouped by Q1) unless simAsSpectra=true,
+            // matching pwiz C++ ChromatogramList_Thermo.cpp:481-504.
+            if (filter.ScanMode == ScanModeType.Sim && !_simAsSpectra)
+                continue;
+
             var entry = new IndexEntry
             {
-                Index = scan - _raw.FirstScan,
+                Index = _index.Count,
                 Id = ThermoRawFile.NativeId(scan),
                 Scan = scan,
                 MsOrder = filter.MSOrder,
