@@ -316,7 +316,7 @@ internal sealed class TdfData : IBrukerData
         else if (tag.PasefPrecursor is not null)
             AddPasefPrecursor(spec, tag.PasefPrecursor, scanInvK0);
         else if (frame.MsMsType != MsMsType.Ms1 && frame.PrecursorMz.HasValue)
-            AddFrameMsMsInfoPrecursor(spec, frame);
+            AddFrameMsMsInfoPrecursor(spec, frame, scanInvK0);
 
         // pwiz C++ leaves MS_lowest/highest_observed_m_z commented-out for TDF.
         var (mz, intensity) = ReadScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd);
@@ -375,7 +375,7 @@ internal sealed class TdfData : IBrukerData
         spec.Precursors.Add(precursor);
     }
 
-    private static void AddFrameMsMsInfoPrecursor(Spectrum spec, TdfFrame frame)
+    private static void AddFrameMsMsInfoPrecursor(Spectrum spec, TdfFrame frame, double oneOverK0)
     {
         var precursor = new Precursor();
         double isolationMz = frame.PrecursorMz!.Value;
@@ -391,6 +391,15 @@ internal sealed class TdfData : IBrukerData
         selected.Set(CVID.MS_selected_ion_m_z, isolationMz, CVID.MS_m_z);
         if (frame.PrecursorCharge.HasValue)
             selected.Set(CVID.MS_charge_state, frame.PrecursorCharge.Value);
+        // Per-scan CCS when 1/K0 + charge are available — pwiz C++ does this for PASEF per-scan
+        // emissions (SpectrumList_Bruker.cpp:312-313) even when no PasefPrecursorInfo row
+        // attaches to this scan.
+        if (oneOverK0 > 0 && frame.PrecursorCharge is int charge && charge > 0 && isolationMz > 0)
+        {
+            double ccs = TimsBinaryData.OneOverK0ToCcs(oneOverK0, charge, isolationMz);
+            if (ccs > 0)
+                selected.Set(CVID.MS_collisional_cross_sectional_area, ccs, CVID.UO_square_angstrom);
+        }
         precursor.SelectedIons.Add(selected);
 
         precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
