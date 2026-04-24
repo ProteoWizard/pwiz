@@ -32,7 +32,17 @@ namespace pwiz.MSGraph
     public class HeatMapData
     {
         private readonly Cell _cell;
+        private List<KeyValuePair<float, double>> _plotY2D;
         public string ZAxisName { get; private set; }
+
+        /// <summary>
+        /// 1D projection: for each Y bin, the summed intensity across all X values.
+        /// Computed lazily on first access from the underlying quad-tree points.
+        /// </summary>
+        public List<KeyValuePair<float, double>> PlotY2D
+        {
+            get { return _plotY2D ?? (_plotY2D = ComputePlotY2D(_cell.GetAllPoints())); }
+        }
 
         public class TaggedPoint3D
         {
@@ -56,7 +66,8 @@ namespace pwiz.MSGraph
         /// </summary>
         public HeatMapData(List<Point3D> points, string zAxisName = null)
         {
-            _cell = new Cell(points);
+            var tagged = points.Select(p => new TaggedPoint3D(p, null)).ToList();
+            _cell = new Cell(tagged);
             ZAxisName = zAxisName;
         }
 
@@ -64,6 +75,20 @@ namespace pwiz.MSGraph
         {
             _cell = new Cell(points);
             ZAxisName = zAxisName;
+        }
+
+        private static List<KeyValuePair<float, double>> ComputePlotY2D(IEnumerable<TaggedPoint3D> points)
+        {
+            var y2D = new Dictionary<float, double>();
+            foreach (var point in points)
+            {
+                if (point.Point != null && point.Point.Z > 0)
+                {
+                    y2D.TryGetValue(point.Point.Y, out var sum);
+                    y2D[point.Point.Y] = sum + point.Point.Z;
+                }
+            }
+            return y2D.OrderBy(p => p.Key).ToList();
         }
 
         /// <summary>
