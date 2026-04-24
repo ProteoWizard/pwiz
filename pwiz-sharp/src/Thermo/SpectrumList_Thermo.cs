@@ -228,6 +228,12 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         }
         spec.Params.Set(CVID.MS_ms_level, msLevel);
 
+        // Zoom scans (narrow m/z window) and instruments flagged as "enhanced resolution" get
+        // tagged with MS_enhanced_resolution_scan, matching pwiz C++ SpectrumList_Thermo.cpp:359.
+        var rawFilter = _raw.Raw.GetFilterForScanNumber(scanNumber);
+        if (ie.ScanMode == ScanModeType.Zoom || rawFilter.Enhanced == TriState.On)
+            spec.Params.Set(CVID.MS_enhanced_resolution_scan);
+
         // ---- scan list ----
         var scan = new Scan();
         // Always set the analyzer-specific IC (falling back to the document default). The
@@ -321,7 +327,13 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         // ---- precursor (MS2+) ----
         if (msLevel > 1 && ie.MsOrder != MSOrderType.Par)
         {
-            if (filter.MassCount > 1 && HasMultiplePrecursors(filter, msLevel))
+            // MSX / SPS take the multi-precursor path (all precursors at msLevel-1). Everything
+            // else uses the per-level path that emits one precursor per filter mass with
+            // spectrumRef / peak_intensity / isolation-width fallback.
+            bool isMsx = filter.Multiplex == TriState.On;
+            bool isSps = ReadSpsMasses(ie.Scan).Count > 1;
+            bool isBigMassCount = filter.MassCount > msLevel - 1;
+            if (filter.MassCount > 1 && (isMsx || isSps || isBigMassCount))
                 PopulateMultiPrecursor(spec, filter, ie, msLevel);
             else
                 PopulatePrecursor(spec, filter, ie);
@@ -348,9 +360,15 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
     /// precursors selected for a single MSn (SPS). Standard nested MSn
     /// (<c>MassCount == msLevel - 1</c>) returns false.
     /// </summary>
+    /// <remarks>
+    /// Must check <c>== TriState.On</c> rather than <c>!= TriState.Off</c>: CommonCore's
+    /// <c>IScanFilter</c> returns <c>TriState.Any</c> (not Off) when the flag is simply
+    /// unset — so the "Any" default would otherwise misroute every nested MSn into the
+    /// multi-precursor branch and drop the spectrumRef / peak-intensity fields.
+    /// </remarks>
     private static bool HasMultiplePrecursors(IScanFilter filter, int msLevel) =>
-        filter.Multiplex != TriState.Off
-        || filter.MultiNotch != TriState.Off
+        filter.Multiplex == TriState.On
+        || filter.MultiNotch == TriState.On
         || filter.MassCount > msLevel - 1;
 
     private void PopulateMultiPrecursor(Spectrum spec, IScanFilter filter, IndexEntry ie, int msLevel)
@@ -477,116 +495,146 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
 
     private void PopulatePrecursor(Spectrum spec, IScanFilter filter, IndexEntry ie)
     {
-        var precursor = new Precursor();
+        // pwiz C++ iterates over filter masses in reverse (innermost first). Each filter mass
+        // at index i maps to a precursor at ms level i+1; the innermost (index MassCount-1)
+        // gets the full treatment (trailer-width override, spectrumRef lookup by scan-range,
+        // peak_intensity, monoisotope adjustment). Outer precursors get a simpler emission.
+        int msLevel = MsOrderToLevel(ie.MsOrder);
+        int massCount = filter.MassCount;
+        if (massCount == 0) return;
 
-        double isolationMz = ie.IsolationMz;
-        double isolationHalfWidth = 0;
-        try
+        for (int i = massCount - 1; i >= 0; i--)
         {
-            if (filter.MassCount > 0)
+            int precursorMsLevel = i + 1;
+            bool isPrimary = precursorMsLevel == msLevel - 1;
+            double isolationMz = 0;
+            try { isolationMz = filter.GetMass(i); } catch { }
+            if (isolationMz <= 0) continue;
+
+            double isolationHalfWidth = 0;
+            if (isPrimary)
             {
-                // Thermo SDK's GetIsolationWidth returns the FULL isolation window width (m/z);
-                // mzML's lower/upper offsets are from the target m/z so we halve it.
-                isolationHalfWidth = filter.GetIsolationWidth(filter.MassCount - 1) / 2.0;
+                // Primary precursor: trailer "MS{msLevel} Isolation Width:" overrides the API
+                // value (LTQ-class data often reports wrong values via GetIsolationWidth).
+                string widthTag = "MS" + msLevel.ToString(CultureInfo.InvariantCulture) + " Isolation Width:";
+                if (TryGetTrailerDouble(ie.Scan, widthTag, out double trailerWidth) && trailerWidth > 0)
+                    isolationHalfWidth = trailerWidth / 2.0;
             }
-        }
-        catch { }
+            if (isolationHalfWidth == 0)
+            {
+                try { isolationHalfWidth = filter.GetIsolationWidth(i) / 2.0; } catch { }
+            }
 
-        if (isolationMz > 0)
-        {
+            var precursor = new Precursor();
             precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, isolationMz, CVID.MS_m_z);
             if (isolationHalfWidth > 0)
             {
                 precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, isolationHalfWidth, CVID.MS_m_z);
                 precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, isolationHalfWidth, CVID.MS_m_z);
             }
-            int precursorMsLevel = Math.Max(1, MsOrderToLevel(ie.MsOrder) - 1);
-            // Matches pwiz C++: userParams.emplace_back("ms level", string) with no xsd type.
             precursor.IsolationWindow.UserParams.Add(new UserParam(
                 "ms level", precursorMsLevel.ToString(CultureInfo.InvariantCulture)));
-        }
 
-        // ---- selected ion (m/z + charge) ----
-        var selectedIon = new SelectedIon();
-        double selectedIonMz = isolationMz;
+            // ---- selected ion (m/z + charge) ----
+            var selectedIon = new SelectedIon();
+            double selectedIonMz = isolationMz;
 
-        int precursorCharge = 0;
-        if (TryGetTrailerInt(ie.Scan, "Charge State:", out long cs) && cs > 0)
-            precursorCharge = (int)cs;
-        if (TryGetTrailerDouble(ie.Scan, "Monoisotopic M/Z:", out double mono) && mono > 0)
-        {
-            // Reject when outside isolation window — guards against a known Thermo firmware
-            // bug where the Monoisotopic trailer can report a reference mass well outside the
-            // actual isolation (e.g. IsolationMzOffset-ReportedMassOffset fixture). Matches
-            // pwiz C++ SpectrumList_Thermo.cpp lines 617-623.
-            const double defaultLowerOffset = 1.5;
-            const double defaultUpperOffset = 2.5;
-            double lo, hi;
-            if (isolationHalfWidth <= 2.0)
+            int precursorCharge = 0;
+            if (isPrimary && TryGetTrailerInt(ie.Scan, "Charge State:", out long cs) && cs > 0)
+                precursorCharge = (int)cs;
+            if (isPrimary && TryGetTrailerDouble(ie.Scan, "Monoisotopic M/Z:", out double mono) && mono > 0)
             {
-                lo = isolationMz - defaultLowerOffset * 2;
-                hi = isolationMz + defaultUpperOffset;
+                // Reject when outside isolation window — guards against a known Thermo firmware
+                // bug where the Monoisotopic trailer can report a reference mass well outside
+                // the actual isolation. Matches pwiz C++ SpectrumList_Thermo.cpp 617-623.
+                const double defaultLowerOffset = 1.5;
+                const double defaultUpperOffset = 2.5;
+                double lo, hi;
+                if (isolationHalfWidth <= 2.0)
+                {
+                    lo = isolationMz - defaultLowerOffset * 2;
+                    hi = isolationMz + defaultUpperOffset;
+                }
+                else
+                {
+                    lo = isolationMz - isolationHalfWidth;
+                    hi = isolationMz + isolationHalfWidth;
+                }
+                if (mono >= lo && mono <= hi)
+                    selectedIonMz = mono;
             }
-            else
+
+            if (selectedIonMz > 0)
+                selectedIon.Set(CVID.MS_selected_ion_m_z, selectedIonMz, CVID.MS_m_z);
+            if (precursorCharge > 0)
+                selectedIon.Set(CVID.MS_charge_state, precursorCharge);
+
+            // ---- precursor spectrum ref (only for the primary precursor): previous scan at
+            // msLevel-1 whose scan window brackets our isolation m/z. Matches pwiz C++
+            // findPrecursorSpectrumIndex — important for triple-play LTQ zoom-scan patterns.
+            if (isPrimary)
             {
-                lo = isolationMz - isolationHalfWidth;
-                hi = isolationMz + isolationHalfWidth;
+                int precursorIndex = FindPrecursorIndex(ie.Index, precursorMsLevel, isolationMz);
+                if (precursorIndex >= 0)
+                {
+                    precursor.SpectrumId = _index[precursorIndex].Id;
+                    // ---- peak intensity at the isolation m/z in the precursor scan ----
+                    double queryHalfWidth = isolationHalfWidth > 0 ? 1.5 : 0.0;
+                    double peakIntensity = SumIntensityInWindow(_index[precursorIndex].Scan, isolationMz, queryHalfWidth);
+                    if (peakIntensity > 0)
+                        selectedIon.Set(CVID.MS_peak_intensity, peakIntensity, CVID.MS_number_of_detector_counts);
+                }
             }
-            if (mono >= lo && mono <= hi)
-                selectedIonMz = mono;
-        }
 
-        if (selectedIonMz > 0)
-            selectedIon.Set(CVID.MS_selected_ion_m_z, selectedIonMz, CVID.MS_m_z);
-        if (precursorCharge > 0)
-            selectedIon.Set(CVID.MS_charge_state, precursorCharge);
-        precursor.SelectedIons.Add(selectedIon);
+            precursor.SelectedIons.Add(selectedIon);
 
-        // ---- precursor spectrum ref: previous scan at msLevel-1 ----
-        int currentLevel = MsOrderToLevel(ie.MsOrder);
-        int targetPrecursorLevel = Math.Max(1, currentLevel - 1);
-        int precursorIndex = -1;
-        for (int j = ie.Index - 1; j >= 0; j--)
-        {
-            var prev = _index[j];
-            if (MsOrderToLevel(prev.MsOrder) == targetPrecursorLevel)
+            // ---- activation ----
+            try
             {
-                precursor.SpectrumId = prev.Id;
-                precursorIndex = j;
-                break;
-            }
-        }
-
-        // ---- peak intensity at the isolation m/z in the precursor scan ----
-        if (precursorIndex >= 0 && isolationMz > 0)
-        {
-            // pwiz C++ uses 1.5 as the query half-width when any isolation width is known,
-            // 0 otherwise — see SpectrumList_Thermo.cpp line ~647.
-            double queryHalfWidth = isolationHalfWidth > 0 ? 1.5 : 0.0;
-            double peakIntensity = SumIntensityInWindow(_index[precursorIndex].Scan, isolationMz, queryHalfWidth);
-            if (peakIntensity > 0)
-                selectedIon.Set(CVID.MS_peak_intensity, peakIntensity, CVID.MS_number_of_detector_counts);
-        }
-
-        // ---- activation ----
-        try
-        {
-            if (filter.MassCount > 0)
-            {
-                int last = filter.MassCount - 1;
-                var activation = filter.GetActivation(last);
+                var activation = filter.GetActivation(i);
                 TranslateActivation(activation, precursor.Activation);
-                double energy = filter.GetEnergy(last);
+                double energy = filter.GetEnergy(i);
                 if (energy > 0 && (activation == ActivationType.CollisionInducedDissociation
                                    || activation == ActivationType.HigherEnergyCollisionalDissociation))
                 {
                     precursor.Activation.Set(CVID.MS_collision_energy, energy, CVID.UO_electronvolt);
                 }
             }
-        }
-        catch { }
+            catch { }
 
-        spec.Precursors.Add(precursor);
+            spec.Precursors.Add(precursor);
+        }
+    }
+
+    /// <summary>
+    /// Walks <see cref="_index"/> backward from <paramref name="fromIndex"/> to find a spectrum
+    /// at <paramref name="precursorMsLevel"/> whose scan-range contains <paramref name="isolationMz"/>.
+    /// Returns -1 when no such scan exists. Mirrors pwiz C++ findPrecursorSpectrumIndex.
+    /// </summary>
+    private int FindPrecursorIndex(int fromIndex, int precursorMsLevel, double isolationMz)
+    {
+        for (int j = fromIndex - 1; j >= 0; j--)
+        {
+            var prev = _index[j];
+            if (MsOrderToLevel(prev.MsOrder) != precursorMsLevel) continue;
+
+            // When we have no isolation m/z, the first preceding spectrum at the right MS level wins.
+            if (isolationMz <= 0) return j;
+
+            // Otherwise the candidate's mass range must cover the isolation m/z — this rejects
+            // triple-play zoom scans whose narrow window doesn't bracket the MSn's target.
+            var candFilter = _raw.Raw.GetFilterForScanNumber(prev.Scan);
+            bool mzInRange = false;
+            int rangeCount = candFilter.MassRangeCount;
+            for (int r = 0; r < rangeCount && !mzInRange; r++)
+            {
+                var range = candFilter.GetMassRange(r);
+                if (isolationMz >= range.Low && isolationMz <= range.High)
+                    mzInRange = true;
+            }
+            if (mzInRange) return j;
+        }
+        return -1;
     }
 
     private static int MsOrderToLevel(MSOrderType order) => order switch
