@@ -4204,6 +4204,57 @@ namespace pwiz.OspreySharp
         /// 21-feature vector is computed during coelution scoring in
         /// <see cref="ScoreCandidate"/> and stored on the entry.
         /// </summary>
+        private double[] BuildBasicFeatures(
+            FdrEntry entry, Dictionary<uint, LibraryEntry> libraryById)
+        {
+            double[] features = new double[NUM_PIN_FEATURES];
+
+            // 0: coelution_sum
+            features[0] = entry.CoelutionSum;
+            // 1: coelution_max (approximate as coelution_sum for basic version)
+            features[1] = entry.CoelutionSum * 0.5;
+            // 2: n_coeluting_fragments
+            features[2] = 3.0;
+            // 3: peak_apex
+            features[3] = 0.0;
+            // 4: peak_area
+            features[4] = 0.0;
+            // 5: peak_sharpness
+            features[5] = 0.0;
+            // 6: xcorr
+            features[6] = 0.0;
+            // 7: consecutive_ions
+            features[7] = 0.0;
+            // 8: explained_intensity
+            features[8] = 0.0;
+            // 9: mass_accuracy_mean
+            features[9] = 0.0;
+            // 10: abs_mass_accuracy_mean
+            features[10] = 0.0;
+            // 11: rt_deviation
+            features[11] = 0.0;
+            // 12: abs_rt_deviation
+            features[12] = 0.0;
+            // 13: ms1_precursor_coelution
+            features[13] = 0.0;
+            // 14: ms1_isotope_cosine
+            features[14] = 0.0;
+            // 15: median_polish_cosine
+            features[15] = 0.0;
+            // 16: median_polish_residual_ratio
+            features[16] = 0.0;
+            // 17: sg_weighted_xcorr
+            features[17] = 0.0;
+            // 18: sg_weighted_cosine
+            features[18] = 0.0;
+            // 19: median_polish_min_fragment_r2
+            features[19] = 0.0;
+            // 20: median_polish_residual_correlation
+            features[20] = 0.0;
+
+            return features;
+        }
+
         /// <summary>
         /// Streaming Percolator dispatch for multi-observation-per-precursor
         /// inputs (total entries above <c>MaxTrainSize * 2</c>). Mirrors
@@ -4314,57 +4365,6 @@ namespace pwiz.OspreySharp
 
             // 4. Apply averaged model to ALL entries and compute q-values.
             return PercolatorFdr.ScorePopulationAndComputeFdr(percEntries, trainResults, percConfig);
-        }
-
-        private double[] BuildBasicFeatures(
-            FdrEntry entry, Dictionary<uint, LibraryEntry> libraryById)
-        {
-            double[] features = new double[NUM_PIN_FEATURES];
-
-            // 0: coelution_sum
-            features[0] = entry.CoelutionSum;
-            // 1: coelution_max (approximate as coelution_sum for basic version)
-            features[1] = entry.CoelutionSum * 0.5;
-            // 2: n_coeluting_fragments
-            features[2] = 3.0;
-            // 3: peak_apex
-            features[3] = 0.0;
-            // 4: peak_area
-            features[4] = 0.0;
-            // 5: peak_sharpness
-            features[5] = 0.0;
-            // 6: xcorr
-            features[6] = 0.0;
-            // 7: consecutive_ions
-            features[7] = 0.0;
-            // 8: explained_intensity
-            features[8] = 0.0;
-            // 9: mass_accuracy_mean
-            features[9] = 0.0;
-            // 10: abs_mass_accuracy_mean
-            features[10] = 0.0;
-            // 11: rt_deviation
-            features[11] = 0.0;
-            // 12: abs_rt_deviation
-            features[12] = 0.0;
-            // 13: ms1_precursor_coelution
-            features[13] = 0.0;
-            // 14: ms1_isotope_cosine
-            features[14] = 0.0;
-            // 15: median_polish_cosine
-            features[15] = 0.0;
-            // 16: median_polish_residual_ratio
-            features[16] = 0.0;
-            // 17: sg_weighted_xcorr
-            features[17] = 0.0;
-            // 18: sg_weighted_cosine
-            features[18] = 0.0;
-            // 19: median_polish_min_fragment_r2
-            features[19] = 0.0;
-            // 20: median_polish_residual_correlation
-            features[20] = 0.0;
-
-            return features;
         }
 
         /// <summary>
