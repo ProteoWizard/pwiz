@@ -37,30 +37,33 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
     private readonly Dictionary<string, int> _trailerIndexByLabel = new(StringComparer.Ordinal);
 
     // Small LRU-ish cache so an MS1 that is the precursor for many MS2s only gets peak-decoded once.
+    // Keyed by (scan, preferCentroid) because the same scan is accessed both ways when the
+    // harness asks for centroided output — profile peaks for the regular harness, centroided
+    // peaks for the peakPicking-wrapped harness.
     private const int PrecursorCacheSize = 10;
-    private readonly LinkedList<(int Scan, double[] Mz, double[] Intensity)> _precursorCache = new();
+    private readonly LinkedList<(int Scan, bool Centroid, double[] Mz, double[] Intensity)> _precursorCache = new();
 
-    private (double[] Mz, double[] Intensity) GetCachedPeaks(int scanNumber)
+    private (double[] Mz, double[] Intensity) GetCachedPeaks(int scanNumber, bool preferCentroid)
     {
         for (var node = _precursorCache.First; node is not null; node = node.Next)
         {
-            if (node.Value.Scan == scanNumber)
+            if (node.Value.Scan == scanNumber && node.Value.Centroid == preferCentroid)
             {
                 _precursorCache.Remove(node);
                 _precursorCache.AddFirst(node);
                 return (node.Value.Mz, node.Value.Intensity);
             }
         }
-        var (mz, intensity) = _raw.GetPeaks(scanNumber, preferCentroid: false);
-        _precursorCache.AddFirst((scanNumber, mz, intensity));
+        var (mz, intensity) = _raw.GetPeaks(scanNumber, preferCentroid);
+        _precursorCache.AddFirst((scanNumber, preferCentroid, mz, intensity));
         if (_precursorCache.Count > PrecursorCacheSize)
             _precursorCache.RemoveLast();
         return (mz, intensity);
     }
 
-    private double SumIntensityInWindow(int scanNumber, double centerMz, double halfWidth)
+    private double SumIntensityInWindow(int scanNumber, double centerMz, double halfWidth, bool preferCentroid)
     {
-        var (mz, intensity) = GetCachedPeaks(scanNumber);
+        var (mz, intensity) = GetCachedPeaks(scanNumber, preferCentroid);
         if (mz.Length == 0) return 0;
         double lo = centerMz - halfWidth;
         double hi = centerMz + halfWidth;
@@ -336,7 +339,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             if (filter.MassCount > 1 && (isMsx || isSps || isBigMassCount))
                 PopulateMultiPrecursor(spec, filter, ie, msLevel);
             else
-                PopulatePrecursor(spec, filter, ie);
+                PopulatePrecursor(spec, filter, ie, preferCentroid);
         }
 
         // ---- binary data ----
@@ -493,7 +496,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         }
     }
 
-    private void PopulatePrecursor(Spectrum spec, IScanFilter filter, IndexEntry ie)
+    private void PopulatePrecursor(Spectrum spec, IScanFilter filter, IndexEntry ie, bool preferCentroid)
     {
         // pwiz C++ iterates over filter masses in reverse (innermost first). Each filter mass
         // at index i maps to a precursor at ms level i+1; the innermost (index MassCount-1)
@@ -600,7 +603,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
                     precursor.SpectrumId = _index[precursorIndex].Id;
                     // ---- peak intensity at the isolation m/z in the precursor scan ----
                     double queryHalfWidth = isolationHalfWidth > 0 ? 1.5 : 0.0;
-                    double peakIntensity = SumIntensityInWindow(_index[precursorIndex].Scan, isolationMz, queryHalfWidth);
+                    double peakIntensity = SumIntensityInWindow(_index[precursorIndex].Scan, isolationMz, queryHalfWidth, preferCentroid);
                     if (peakIntensity > 0)
                         selectedIon.Set(CVID.MS_peak_intensity, peakIntensity, CVID.MS_number_of_detector_counts);
                 }
