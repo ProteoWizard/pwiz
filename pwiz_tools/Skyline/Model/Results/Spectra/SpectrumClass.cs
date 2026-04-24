@@ -18,8 +18,10 @@
  */
 
 using JetBrains.Annotations;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -58,7 +60,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             get; private set;
         }
 
-        public double? CollisionEnergy
+        public FormattableList<double> CollisionEnergy
         {
             get; private set;
         }
@@ -81,7 +83,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         [Format(Formats.Mz)]
         public double? IsolationWindowWidth { get; private set; }
         
-        public string DissociationMethod { get; private set; }
+        public ListColumnValue<string> DissociationMethod { get; private set; }
         
         [Format(Formats.Mz)]
         public double? ConstantNeutralLoss { get; private set; } // Negative value means neutral gain

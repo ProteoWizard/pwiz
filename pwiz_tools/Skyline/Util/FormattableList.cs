@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Common.DataBinding;
@@ -29,37 +30,31 @@ namespace pwiz.Skyline.Util
     /// A list of objects which formats itself as a comma separated list, and passes
     /// the formatting parameters to the list elements.
     /// </summary>
-    public class FormattableList<T> : IFormattable
+    public class FormattableList<T> : ListColumnValue<T>, IFormattable where T : IFormattable
     {
-        private IList<T> _list;
-        public FormattableList(IList<T> list)
+        public FormattableList(IList<T> list) : base(list)
         {
-            _list = list;
         }
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            if (_list == null)
+            if (Items == null)
             {
                 return string.Empty;
             }
-            return SeparateValues(TextUtil.GetCsvSeparator(formatProvider),
-                _list.Select(item => ValueToString(item, format, formatProvider)));
+
+            return SeparateValues(TextUtil.GetCsvSeparator(formatProvider ?? CultureInfo.CurrentCulture),
+                Items.Select(item => ValueToString(item, format, formatProvider)));
         }
 
         public override string ToString()
         {
-            if (_list == null)
+            if (Items == null)
             {
                 return string.Empty;
             }
             return SeparateValues(TextUtil.CsvSeparator, 
-                _list.Select(item => ((object) item ?? string.Empty).ToString()));
-        }
-
-        public T[] ToArray()
-        {
-            return _list?.ToArray();
+                Items.Select(item => ((object) item ?? string.Empty).ToString()));
         }
 
         private static string SeparateValues(char separator, IEnumerable<string> values)

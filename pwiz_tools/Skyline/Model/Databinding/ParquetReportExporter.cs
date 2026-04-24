@@ -188,8 +188,8 @@ namespace pwiz.Skyline.Model.Databinding
                 PropertyDescriptor = propertyDescriptor;
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
 
-                // Check if this is a FormattableList<T>
-                ListElementType = GetFormattableListElementType(valueType);
+                // Check if this is a ListColumnValue<T>
+                ListElementType = GetListColumnValueStorageType(valueType);
                 if (ListElementType != null)
                 {
                     // This is a list column
@@ -280,8 +280,8 @@ namespace pwiz.Skyline.Model.Databinding
 
                 if (ListElementType != null)
                 {
-                    // Extract the list from FormattableList<T>
-                    value = ConvertListValue(value);
+                    // Extract the list from ListColumnValue<T>
+                    value = ConvertListColumnValue(value);
                 }
                 else 
                 {
@@ -290,15 +290,10 @@ namespace pwiz.Skyline.Model.Databinding
                 values.SetValue(value, rowIndex);
             }
 
-            private Array ConvertListValue(object formattableList)
+            private Array ConvertListColumnValue(object listColumnValue)
             {
                 // Get the underlying list via ToImmutableList() method
-                var toArrayMethod = formattableList.GetType().GetMethod(nameof(FormattableList<object>.ToArray));
-                if (toArrayMethod == null)
-                {
-                    return null;
-                }
-                Array array = (Array)toArrayMethod.Invoke(formattableList, null);
+                Array array = (listColumnValue as IListColumnValue)?.ToArray();
                 if (array == null)
                 {
                     return null;
@@ -321,15 +316,16 @@ namespace pwiz.Skyline.Model.Databinding
 
                 return convertedArray;
             }
-
-            private static Type GetFormattableListElementType(Type type)
+        }
+        private static Type GetListColumnValueStorageType(Type type)
+        {
+            var elementType = ListColumnValue.GetElementType(type);
+            if (elementType == null)
             {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(FormattableList<>))
-                {
-                    return DecideStorageType(type.GetGenericArguments()[0]);
-                }
                 return null;
             }
+
+            return DecideStorageType(elementType);
         }
 
         private static Dictionary<Type, Type> _storageTypes = new Dictionary<Type, Type>
@@ -474,7 +470,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return Marshal.SizeOf(columnType);
             }
-            if (columnType.IsGenericType && columnType.GetGenericTypeDefinition() == typeof(FormattableList<>))
+            if (GetListColumnValueStorageType(columnType) != null)
             {
                 return 64;
             }

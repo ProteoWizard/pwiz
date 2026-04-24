@@ -26,7 +26,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -252,16 +252,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// If the spectrum has only one collision energy, then return that collision energy.
         /// Otherwise, return null.
         /// </summary>
-        private static double? GetCollisionEnergy(SpectrumMetadata spectrumMetadata)
+        private static FormattableList<double> GetCollisionEnergy(SpectrumMetadata spectrumMetadata)
         {
-            var collisionEnergies = spectrumMetadata.GetPrecursors(1).Select(precursor => precursor.CollisionEnergy)
-                .OfType<double>().Distinct().ToList();
-            if (collisionEnergies.Count == 1)
+            var collisionEnergies = GetMsLevelValues(spectrumMetadata, precursor => precursor.CollisionEnergy).OfType<double>().ToList();
+            if (collisionEnergies.Count == 0)
             {
-                return collisionEnergies[0];
+                return null;
             }
 
-            return null;
+            return new FormattableList<double>(collisionEnergies);
         }
 
         private static double? GetIsolationWindowWidth(IEnumerable<SpectrumPrecursor> precursors)
@@ -300,26 +299,29 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return null;
         }
         
-        private static string GetDissociationMethod(SpectrumMetadata spectrumMetadata)
+        private static ListColumnValue<string> GetDissociationMethod(SpectrumMetadata spectrumMetadata)
         {
             if (spectrumMetadata.MsLevel <= 1)
             {
                 return null;
             }
 
-            var dissociationMethods  = Enumerable.Range(1, spectrumMetadata.MsLevel - 1)
-                .SelectMany(spectrumMetadata.GetPrecursors).Select(precursor => precursor.DissociationMethod)
-                .Where(method => !string.IsNullOrEmpty(method)).Distinct().ToList();
+            var dissociationMethods = GetMsLevelValues(spectrumMetadata, precursor => precursor.DissociationMethod);
             if (dissociationMethods.Count == 0)
             {
                 return null;
             }
+            return ListColumnValue.FromItems(dissociationMethods);
+        }
 
-            if (dissociationMethods.Count == 1)
-            {
-                return dissociationMethods[0];
-            }
-            return TextUtil.SpaceSeparate(dissociationMethods);
+        private static IList<T> GetMsLevelValues<T>(SpectrumMetadata spectrumMetadata,
+            Func<SpectrumPrecursor, T> getValueFunc)
+        {
+            return Enumerable.Range(1, spectrumMetadata.MsLevel - 1)
+                .Select(level =>
+                    spectrumMetadata.GetPrecursors(level).Select(getValueFunc).Where(value => null != value))
+                .Distinct()
+                .SelectMany(list => list).ToList();
         }
 
         /// <summary>

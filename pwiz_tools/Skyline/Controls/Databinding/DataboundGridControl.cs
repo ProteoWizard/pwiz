@@ -391,7 +391,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 ViewContext = BindingListSource.ViewContext
             })
             {
-                quickFilterForm.SetFilter(BindingListSource.ViewInfo.DataSchema, _columnFilterPropertyDescriptor, BindingListSource.RowFilter);
+                quickFilterForm.SetFilter(_columnFilterPropertyDescriptor, BindingListSource.RowFilter);
                 if (FormUtil.ShowDialog(this, quickFilterForm) == DialogResult.OK)
                 {
                     BindingListSource.RowFilter = quickFilterForm.RowFilter;
