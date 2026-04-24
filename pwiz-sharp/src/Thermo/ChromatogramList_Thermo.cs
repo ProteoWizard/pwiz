@@ -37,6 +37,9 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         public double HalfWidth;
         public PolarityType Polarity;
         public List<int> Scans = new();
+        // Non-MS-device sources (Pump Pressure / UV / CAD):
+        public Device Device = Device.MS;
+        public int DeviceChannel;  // 1-based
     }
 
     /// <summary>Creates a chromatogram list backed by the given Thermo raw file.</summary>
@@ -48,6 +51,66 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
 
         if (!simAsSpectra)
             HasSimChromatograms = BuildSimIndex();
+
+        // Analog/UV controllers: LC pump pressure, UV absorbance, CAD, etc. pwiz C++ iterates
+        // these and picks a CV term based on the device's Y-axis label.
+        BuildNonMsDeviceIndex();
+
+        // Restore MS selection so subsequent spectrum/chromatogram reads see the MS device.
+        try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
+    }
+
+    private void BuildNonMsDeviceIndex()
+    {
+        foreach (var device in new[] { Device.Analog, Device.UV, Device.Pda, Device.MSAnalog })
+        {
+            int count = 0;
+            try { count = _raw.Raw.GetInstrumentCountOfType(device); } catch { }
+            for (int n = 1; n <= count; n++)
+            {
+                try { _raw.Raw.SelectInstrument(device, n); }
+                catch { continue; }
+
+                InstrumentData info;
+                try { info = _raw.Raw.GetInstrumentData(); }
+                catch { continue; }
+
+                string axisY = info.AxisLabelY ?? string.Empty;
+                var units = info.Units;
+                (string idPrefix, CVID kind)? classified = null;
+
+                bool isAbsorbance = units == DataUnits.AbsorbanceUnits
+                    || units == DataUnits.MilliAbsorbanceUnits
+                    || units == DataUnits.MicroAbsorbanceUnits;
+
+                if (isAbsorbance && (axisY.Length == 0 || axisY.StartsWith("UV", StringComparison.OrdinalIgnoreCase)))
+                {
+                    classified = ("UV ", CVID.MS_emission_chromatogram);
+                }
+                else if (axisY.EndsWith("pA", StringComparison.OrdinalIgnoreCase))
+                {
+                    classified = ("CAD ", CVID.MS_TIC_chromatogram);
+                }
+                else if (axisY.Contains("Pressure", StringComparison.OrdinalIgnoreCase))
+                {
+                    classified = ("Pump Pressure ", CVID.MS_pressure_chromatogram);
+                }
+                else if (device == Device.Pda)
+                {
+                    classified = ("PDA ", CVID.MS_absorption_chromatogram);
+                }
+
+                if (classified is null) continue;
+                _index.Add(new IndexEntry
+                {
+                    Index = _index.Count,
+                    Id = classified.Value.idPrefix + n.ToString(CultureInfo.InvariantCulture),
+                    Kind = classified.Value.kind,
+                    Device = device,
+                    DeviceChannel = n,
+                });
+            }
+        }
     }
 
     /// <summary>
@@ -128,9 +191,94 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
                 chrom.Params.Set(CVID.MS_negative_scan);
         }
 
+        if (entry.Device != Device.MS)
+            return FillNonMsDeviceChromatogram(chrom, entry);
+
         return entry.Kind == CVID.MS_SIM_chromatogram
             ? FillSimChromatogram(chrom, entry)
             : FillTicChromatogram(chrom);
+    }
+
+    private Chromatogram FillNonMsDeviceChromatogram(Chromatogram chrom, IndexEntry entry)
+    {
+        try
+        {
+            _raw.Raw.SelectInstrument(entry.Device, entry.DeviceChannel);
+
+            // pwiz C++ maps the controller to a specific TraceType:
+            //   UV / Analog (pressure, CAD) -> TraceType.ChannelA (pwiz "Type_ECD" = 31)
+            //   PDA -> TraceType.TotalAbsorbance (pwiz "Type_TotalScan" = 22)
+            TraceType trace = entry.Kind switch
+            {
+                CVID.MS_absorption_chromatogram => TraceType.TotalAbsorbance,
+                _ => TraceType.ChannelA,
+            };
+            var settings = new ChromatogramTraceSettings(trace);
+            var data = _raw.Raw.GetChromatogramDataEx(new[] { settings }, -1, -1, new MassOptions());
+            if (!(data?.PositionsArray?.Length > 0) || data.PositionsArray[0] is not { } times
+                || data.IntensitiesArray?[0] is not { } intensities)
+            {
+                return chrom;
+            }
+
+            if (entry.Kind == CVID.MS_pressure_chromatogram)
+            {
+                // Pressure traces repeat the same y value for long runs of x values; dedupe
+                // everything except the first/last and transitions. Also convert bar -> pascal
+                // because the ontology doesn't have a bar term (pwiz C++ does the same).
+                var (dedupTimes, dedupIntensities) = DedupePressureTrace(times, intensities, scaleFactor: 1e5);
+                chrom.DefaultArrayLength = dedupTimes.Length;
+                chrom.BinaryDataArrays.Add(MakeArray(dedupTimes, CVID.MS_time_array, CVID.UO_minute));
+                chrom.BinaryDataArrays.Add(MakeArray(dedupIntensities, CVID.MS_intensity_array, CVID.UO_pascal));
+            }
+            else
+            {
+                CVID intensityUnit = entry.Kind switch
+                {
+                    CVID.MS_absorption_chromatogram => CVID.UO_absorbance_unit,
+                    CVID.MS_emission_chromatogram => CVID.UO_absorbance_unit,
+                    CVID.MS_TIC_chromatogram => CVID.UO_picoampere, // CAD -> pA
+                    _ => CVID.MS_number_of_detector_counts,
+                };
+                chrom.DefaultArrayLength = times.Length;
+                chrom.BinaryDataArrays.Add(MakeArray(times, CVID.MS_time_array, CVID.UO_minute));
+                chrom.BinaryDataArrays.Add(MakeArray(intensities, CVID.MS_intensity_array, intensityUnit));
+            }
+        }
+        finally
+        {
+            // Always restore the MS instrument so subsequent spectrum reads work.
+            try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
+        }
+        return chrom;
+    }
+
+    private static (double[] Times, double[] Intensities) DedupePressureTrace(
+        double[] times, double[] intensities, double scaleFactor)
+    {
+        int n = Math.Min(times.Length, intensities.Length);
+        if (n == 0) return (Array.Empty<double>(), Array.Empty<double>());
+        if (n <= 2)
+        {
+            var ti = new double[n];
+            var ii = new double[n];
+            for (int k = 0; k < n; k++) { ti[k] = times[k]; ii[k] = intensities[k] * scaleFactor; }
+            return (ti, ii);
+        }
+        var outTimes = new List<double>(n);
+        var outIntensities = new List<double>(n);
+        outTimes.Add(times[0]); outIntensities.Add(intensities[0] * scaleFactor);
+        for (int i = 1; i + 1 < n; i++)
+        {
+            double prev = intensities[i - 1], cur = intensities[i], next = intensities[i + 1];
+            if (cur != prev || cur != next)
+            {
+                outTimes.Add(times[i]);
+                outIntensities.Add(cur * scaleFactor);
+            }
+        }
+        outTimes.Add(times[n - 1]); outIntensities.Add(intensities[n - 1] * scaleFactor);
+        return (outTimes.ToArray(), outIntensities.ToArray());
     }
 
     private Chromatogram FillTicChromatogram(Chromatogram chrom)
