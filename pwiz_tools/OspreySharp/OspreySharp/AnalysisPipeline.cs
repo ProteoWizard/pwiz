@@ -389,6 +389,18 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("Total: {0} precursors pass run-level FDR across all files",
                     passingTargets));
 
+                // Stage 5 diagnostic dump. Gated by OSPREY_DUMP_PERCOLATOR=1;
+                // exits when OSPREY_PERCOLATOR_ONLY=1 is also set. Writes all
+                // four q-values plus SVM score and PEP for every FdrEntry,
+                // before compaction drops any rows, so the cross-impl diff
+                // sees both targets and decoys.
+                if (OspreyDiagnostics.DumpPercolator)
+                {
+                    OspreyDiagnostics.WriteStage5PercolatorDump(perFileEntries);
+                    if (OspreyDiagnostics.PercolatorOnly)
+                        OspreyDiagnostics.ExitAfterDump("OSPREY_PERCOLATOR_ONLY");
+                }
+
                 // Stage 6-7: Reconciliation (TODO for multi-file)
                 if (config.InputFiles.Count > 1)
                 {
@@ -4088,7 +4100,25 @@ namespace pwiz.OspreySharp
                 FeatureNames = ParquetScoreCache.PIN_FEATURE_NAMES
             };
 
-            var results = PercolatorFdr.RunPercolator(percEntries, percConfig);
+            // Streaming vs direct dispatch, matching Rust
+            // osprey/src/pipeline.rs::run_percolator_fdr. Above the
+            // MaxTrainSize * 2 threshold the training set is dominated by
+            // multi-observation-per-precursor redundancy; best-per-precursor
+            // dedup + peptide-grouped subsample give the SVM a diverse
+            // per-peptide training pool (same approach mokapot takes) and
+            // keep the Stage 5 standardizer fit on the subset -- essential
+            // for cross-impl byte parity with Rust once Astral-scale inputs
+            // push past the threshold.
+            PercolatorResults results;
+            if (percConfig.MaxTrainSize > 0 &&
+                percEntries.Count > percConfig.MaxTrainSize * 2)
+            {
+                results = RunPercolatorStreaming(percEntries, percConfig);
+            }
+            else
+            {
+                results = PercolatorFdr.RunPercolator(percEntries, percConfig);
+            }
 
             // Map results back to FdrEntry stubs
             var resultMap = new Dictionary<string, PercolatorResult>();
@@ -4223,6 +4253,118 @@ namespace pwiz.OspreySharp
             features[20] = 0.0;
 
             return features;
+        }
+
+        /// <summary>
+        /// Streaming Percolator dispatch for multi-observation-per-precursor
+        /// inputs (total entries above <c>MaxTrainSize * 2</c>). Mirrors
+        /// Rust's <c>run_percolator_fdr</c> streaming branch
+        /// (osprey/src/pipeline.rs:4232-4580):
+        /// <list type="number">
+        /// <item>Best-per-precursor dedup across all per-file entries (one
+        /// target + one decoy per base_id, by Features[0] = coelution_sum).
+        /// </item>
+        /// <item>Peptide-grouped subsample to <c>MaxTrainSize</c> using the
+        /// same XOR-shift RNG and peptide-key sort order as Rust.</item>
+        /// <item>Train fold models + standardizer on that subset
+        /// (<c>TrainOnly = true</c>) -- the standardizer is fit on the
+        /// subset, matching Rust's run_percolator-on-subset behaviour
+        /// instead of fitting on the full 1M+ observation pool.</item>
+        /// <item>Apply the averaged model to ALL entries for scoring, then
+        /// compute PEP and per-run / experiment q-values on that flat
+        /// score array.</item>
+        /// </list>
+        /// The selection uses <see cref="PercolatorFdr.SelectBestPerPrecursor"/>
+        /// and <see cref="PercolatorFdr.SubsampleByPeptideGroup"/> -- the
+        /// same helpers the direct path calls internally, so both paths
+        /// select identical 300K subsets when given identical input.
+        /// </summary>
+        private PercolatorResults RunPercolatorStreaming(
+            List<PercolatorEntry> percEntries,
+            PercolatorConfig percConfig)
+        {
+            int n = percEntries.Count;
+            int maxTrain = percConfig.MaxTrainSize;
+
+            // Pull labels / entry IDs / peptides into flat arrays for the
+            // subset helpers.
+            var labels = new bool[n];
+            var entryIds = new uint[n];
+            var peptides = new string[n];
+            for (int i = 0; i < n; i++)
+            {
+                labels[i] = percEntries[i].IsDecoy;
+                entryIds[i] = percEntries[i].EntryId;
+                peptides[i] = percEntries[i].Peptide;
+            }
+
+            // 1. Best-per-precursor dedup.
+            int[] bestIdx = PercolatorFdr.SelectBestPerPrecursor(labels, entryIds, percEntries);
+            int dedupTargets = 0, dedupDecoys = 0;
+            for (int i = 0; i < bestIdx.Length; i++)
+            {
+                if (labels[bestIdx[i]]) dedupDecoys++;
+                else dedupTargets++;
+            }
+            LogInfo(string.Format(
+                "[COUNT] Percolator streaming best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
+                bestIdx.Length, dedupTargets, dedupDecoys, n));
+
+            // 2. Peptide-grouped subsample if dedup count still exceeds MaxTrainSize.
+            int[] trainSubsetGlobalIdx;
+            if (maxTrain > 0 && bestIdx.Length > maxTrain)
+            {
+                var dedupLabels = new bool[bestIdx.Length];
+                var dedupEntryIds = new uint[bestIdx.Length];
+                var dedupPeptides = new string[bestIdx.Length];
+                for (int i = 0; i < bestIdx.Length; i++)
+                {
+                    int gi = bestIdx[i];
+                    dedupLabels[i] = labels[gi];
+                    dedupEntryIds[i] = entryIds[gi];
+                    dedupPeptides[i] = peptides[gi];
+                }
+                int[] localSelected = PercolatorFdr.SubsampleByPeptideGroup(
+                    dedupLabels, dedupEntryIds, dedupPeptides, maxTrain, percConfig.Seed);
+                trainSubsetGlobalIdx = new int[localSelected.Length];
+                for (int i = 0; i < localSelected.Length; i++)
+                    trainSubsetGlobalIdx[i] = bestIdx[localSelected[i]];
+            }
+            else
+            {
+                trainSubsetGlobalIdx = bestIdx;
+            }
+
+            int subTargets = 0, subDecoys = 0;
+            for (int i = 0; i < trainSubsetGlobalIdx.Length; i++)
+            {
+                if (labels[trainSubsetGlobalIdx[i]]) subDecoys++;
+                else subTargets++;
+            }
+            LogInfo(string.Format(
+                "[COUNT] Percolator streaming subsample: {0} entries ({1} targets, {2} decoys)",
+                trainSubsetGlobalIdx.Length, subTargets, subDecoys));
+
+            // 3. Build subset entry list + train.
+            var subsetEntries = new List<PercolatorEntry>(trainSubsetGlobalIdx.Length);
+            foreach (int i in trainSubsetGlobalIdx)
+                subsetEntries.Add(percEntries[i]);
+            var trainConfig = new PercolatorConfig
+            {
+                TrainFdr = percConfig.TrainFdr,
+                TestFdr = percConfig.TestFdr,
+                MaxIterations = percConfig.MaxIterations,
+                NFolds = percConfig.NFolds,
+                Seed = percConfig.Seed,
+                CValues = percConfig.CValues,
+                MaxTrainSize = percConfig.MaxTrainSize,
+                FeatureNames = percConfig.FeatureNames,
+                TrainOnly = true
+            };
+            PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
+
+            // 4. Apply averaged model to ALL entries and compute q-values.
+            return PercolatorFdr.ScorePopulationAndComputeFdr(percEntries, trainResults, percConfig);
         }
 
         /// <summary>
