@@ -351,9 +351,12 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         {
             spec.Params.Set(CVID.MS_lowest_observed_m_z, mz[0], CVID.MS_m_z);
             spec.Params.Set(CVID.MS_highest_observed_m_z, mz[^1], CVID.MS_m_z);
-            if (getBinaryData)
-                spec.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
         }
+        // pwiz C++ always attaches the (possibly empty) m/z + intensity arrays when binary
+        // data is requested — so empty spectra still emit two zero-length binaryDataArray
+        // elements rather than an empty binaryDataArrayList.
+        if (getBinaryData)
+            spec.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
 
         return spec;
     }
@@ -597,7 +600,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             // findPrecursorSpectrumIndex — important for triple-play LTQ zoom-scan patterns.
             if (isPrimary)
             {
-                int precursorIndex = FindPrecursorIndex(ie.Index, precursorMsLevel, isolationMz);
+                int precursorIndex = FindPrecursorIndex(ie.Index, precursorMsLevel, isolationMz, ie.Scan);
                 if (precursorIndex >= 0)
                 {
                     precursor.SpectrumId = _index[precursorIndex].Id;
@@ -630,22 +633,41 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
     }
 
     /// <summary>
-    /// Walks <see cref="_index"/> backward from <paramref name="fromIndex"/> to find a spectrum
-    /// at <paramref name="precursorMsLevel"/> whose scan-range contains <paramref name="isolationMz"/>.
-    /// Returns -1 when no such scan exists. Mirrors pwiz C++ findPrecursorSpectrumIndex.
+    /// Walks <see cref="_index"/> backward from <paramref name="fromIndex"/> to find the spectrum
+    /// that produced this MSn's precursor. When the scan's <c>"Master Scan Number:"</c> trailer
+    /// is set we prefer that scan (matches the Thermo-native master-scan link for DDA/TMT-style
+    /// MS3 trees); otherwise fall back to the first preceding spectrum at
+    /// <paramref name="precursorMsLevel"/> whose scan-range covers <paramref name="isolationMz"/>
+    /// (rejects narrow-window zoom scans that don't bracket the MSn target). Mirrors pwiz C++
+    /// findPrecursorSpectrumIndex in SpectrumList_Thermo.cpp:972+.
     /// </summary>
-    private int FindPrecursorIndex(int fromIndex, int precursorMsLevel, double isolationMz)
+    private int FindPrecursorIndex(int fromIndex, int precursorMsLevel, double isolationMz, int currentScan)
     {
+        long masterScan = TryGetTrailerInt(currentScan, "Master Scan Number:", out long m) && m > 0 ? m : -1;
+
         for (int j = fromIndex - 1; j >= 0; j--)
         {
             var prev = _index[j];
+            if (MsOrderToLevel(prev.MsOrder) < 1) continue;
+
+            if (masterScan > 0)
+            {
+                if (masterScan == prev.Scan)
+                {
+                    // Master-scan hit: accept if it's at the right ms level, else keep looking
+                    // (master scan can be a non-precursor triggering scan, e.g. ETD→HCD).
+                    if (MsOrderToLevel(prev.MsOrder) == precursorMsLevel) return j;
+                    masterScan = -1;
+                    continue;
+                }
+                if (masterScan > prev.Scan) return -1; // walked past the master; give up
+                continue;
+            }
+
             if (MsOrderToLevel(prev.MsOrder) != precursorMsLevel) continue;
 
-            // When we have no isolation m/z, the first preceding spectrum at the right MS level wins.
             if (isolationMz <= 0) return j;
 
-            // Otherwise the candidate's mass range must cover the isolation m/z — this rejects
-            // triple-play zoom scans whose narrow window doesn't bracket the MSn's target.
             var candFilter = _raw.Raw.GetFilterForScanNumber(prev.Scan);
             bool mzInRange = false;
             int rangeCount = candFilter.MassRangeCount;
