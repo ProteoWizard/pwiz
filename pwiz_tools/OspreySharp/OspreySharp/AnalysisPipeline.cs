@@ -2632,6 +2632,72 @@ namespace pwiz.OspreySharp
             return la > lb;
         }
 
+        /// <summary>
+        /// Build a one-element peak list at the supplied (apex, start, end)
+        /// RT triple, mapped onto the reference XIC's RT axis. Returns null
+        /// when the resulting index range is degenerate. Mirrors the
+        /// boundary_overrides peak-construction path in run_search at
+        /// osprey/crates/osprey/src/pipeline.rs:6596-6644.
+        /// </summary>
+        private static List<XICPeakBounds> BuildOverridePeaks(
+            (double Apex, double Start, double End) ob,
+            List<XicData> xics)
+        {
+            // Reference XIC = highest total-intensity fragment, matching
+            // the CWT-path selection further down in ScoreCandidate.
+            int refIdx = 0;
+            double refTotal = -1.0;
+            for (int f = 0; f < xics.Count; f++)
+            {
+                double total = 0.0;
+                var ints = xics[f].Intensities;
+                for (int j = 0; j < ints.Length; j++)
+                    total += ints[j];
+                if (total > refTotal) { refTotal = total; refIdx = f; }
+            }
+            var rtArr = xics[refIdx].RetentionTimes;
+            var intArr = xics[refIdx].Intensities;
+            int last = rtArr.Length - 1;
+            if (last < 2)
+                return null;
+
+            // Map override RTs to indices via Rust partition_point semantics:
+            // first index where rt >= target. start_index then saturating_sub(1).
+            int startIdx = BinarySearchLowerBound(rtArr, ob.Start);
+            if (startIdx > 0) startIdx--;
+            if (startIdx > last) startIdx = last;
+
+            int endIdx = BinarySearchLowerBound(rtArr, ob.End);
+            if (endIdx > last) endIdx = last;
+
+            int apexIdx = BinarySearchLowerBound(rtArr, ob.Apex);
+            if (apexIdx > last) apexIdx = last;
+            if (apexIdx > 0 &&
+                Math.Abs(rtArr[apexIdx - 1] - ob.Apex) < Math.Abs(rtArr[apexIdx] - ob.Apex))
+                apexIdx--;
+            if (apexIdx < startIdx) apexIdx = startIdx;
+            if (apexIdx > endIdx) apexIdx = endIdx;
+
+            if (endIdx <= startIdx + 1)
+                return null;
+
+            return new List<XICPeakBounds>
+            {
+                new XICPeakBounds
+                {
+                    ApexRt = rtArr[apexIdx],
+                    ApexIntensity = intArr[apexIdx],
+                    ApexIndex = apexIdx,
+                    StartRt = rtArr[startIdx],
+                    EndRt = rtArr[endIdx],
+                    StartIndex = startIdx,
+                    EndIndex = endIdx,
+                    Area = PeakDetector.TrapezoidalArea(rtArr, intArr, startIdx, endIdx),
+                    SignalToNoise = PeakDetector.ComputeSnr(intArr, apexIdx, startIdx, endIdx),
+                },
+            };
+        }
+
         private FdrEntry ScoreCandidate(
             LibraryEntry candidate,
             List<Spectrum> windowSpectra,
@@ -2653,6 +2719,18 @@ namespace pwiz.OspreySharp
             if (nScans < 5)
                 return null;
 
+            // Stage 6 boundary override (post-FDR re-scoring): when set,
+            // peak detection + the signal pre-filter are skipped and
+            // scoring uses the supplied (apex, start, end) RT triple.
+            // Mirrors the boundary_overrides path in run_search at
+            // osprey/crates/osprey/src/pipeline.rs:6453-6664.
+            (double Apex, double Start, double End)? overrideBounds = null;
+            if (context.BoundaryOverrides != null &&
+                context.BoundaryOverrides.TryGetValue(candidate.Id, out var bnd))
+            {
+                overrideBounds = bnd;
+            }
+
             // Determine RT search window.
             // Use the global tolerance passed from RunCoelutionScoring (matches
             // Rust's single rt_tolerance for all entries in run_search).
@@ -2673,21 +2751,41 @@ namespace pwiz.OspreySharp
                     candidate.Fragments.Count, nScans));
             }
 
-            // Find scan range for XIC extraction. Matches Rust pipeline.rs
-            // commit 885339b: extract over a window wider than rtTolerance so
-            // CWT has context on both sides of any in-tolerance apex to
-            // determine full peak boundaries. The apex itself is still
-            // required to be within rtTolerance (enforced in the
-            // candidate-scoring loop below). Half-width is rtTolerance plus
-            // max(rtTolerance, 0.1) — tight-calibration runs get a 0.1 min
-            // floor of extra context; wider runs scale with rtTolerance.
-            double xicHalfWidth = rtTolerance + Math.Max(rtTolerance, 0.1);
+            // Find scan range for XIC extraction.
+            //
+            // For boundary overrides: use the given boundaries plus margin
+            // for SNR context — peak_width on each side, with a 0.2 min
+            // floor. Mirrors run_search at pipeline.rs:6473-6477.
+            //
+            // For normal search (matches Rust commit 885339b): extract over
+            // a window wider than rtTolerance so CWT has context on both
+            // sides of any in-tolerance apex to determine full peak
+            // boundaries. The apex itself is still required to be within
+            // rtTolerance (enforced in the candidate-scoring loop below).
+            // Half-width is rtTolerance plus max(rtTolerance, 0.1) —
+            // tight-calibration runs get a 0.1 min floor of extra context;
+            // wider runs scale with rtTolerance.
+            double rtLo, rtHi;
+            if (overrideBounds.HasValue)
+            {
+                var ob = overrideBounds.Value;
+                double peakWidth = Math.Max(0.1, ob.End - ob.Start);
+                double margin = Math.Max(0.2, peakWidth);
+                rtLo = ob.Start - margin;
+                rtHi = ob.End + margin;
+            }
+            else
+            {
+                double xicHalfWidth = rtTolerance + Math.Max(rtTolerance, 0.1);
+                rtLo = expectedRt - xicHalfWidth;
+                rtHi = expectedRt + xicHalfWidth;
+            }
             int startScan = -1, endScan = -1;
             for (int i = 0; i < nScans; i++)
             {
-                if (windowRts[i] > expectedRt + xicHalfWidth)
+                if (windowRts[i] > rtHi)
                     break;
-                if (windowRts[i] >= expectedRt - xicHalfWidth)
+                if (windowRts[i] >= rtLo)
                 {
                     if (startScan < 0)
                         startScan = i;
@@ -2714,8 +2812,7 @@ namespace pwiz.OspreySharp
                 {
                     LogInfo(string.Format(
                         "[DIAG] {0}: no scans in RT window [{1:F3}..{2:F3}]",
-                        candidate.ModifiedSequence, expectedRt - xicHalfWidth,
-                        expectedRt + xicHalfWidth));
+                        candidate.ModifiedSequence, rtLo, rtHi));
                 }
             }
 
@@ -2727,7 +2824,9 @@ namespace pwiz.OspreySharp
             // Signal pre-filter: require at least 2 of top 6 fragments present
             // in at least 3 of 4 consecutive scans. Matches Rust pipeline.rs:6032-6066.
             // Skips noise-only candidates before the expensive XIC extraction.
-            if (config.PrefilterEnabled)
+            // Skipped for boundary overrides — caller has already decided to
+            // score here.
+            if (config.PrefilterEnabled && !overrideBounds.HasValue)
             {
                 const int WIN = 4;
                 const int MIN_PASS = 3;
@@ -2775,7 +2874,22 @@ namespace pwiz.OspreySharp
             //   1. CWT consensus (primary)
             //   2. Peak detection on median polish elution profile (fallback 1)
             //   3. Peak detection on reference XIC (fallback 2)
-            var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+            //
+            // For boundary overrides (Stage 6 re-scoring), peak detection is
+            // skipped and a single synthetic XICPeakBounds is built directly
+            // from the supplied (apex, start, end). Mirrors run_search at
+            // pipeline.rs:6596-6664.
+            List<XICPeakBounds> peaks;
+            if (overrideBounds.HasValue)
+            {
+                peaks = BuildOverridePeaks(overrideBounds.Value, xics);
+                if (peaks == null)
+                    return null;
+            }
+            else
+            {
+                peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+            }
 
             if (peaks.Count == 0)
             {
@@ -2879,10 +2993,11 @@ namespace pwiz.OspreySharp
                 // the detected apex itself must fall within rtTolerance of
                 // expectedRt. Preserves first-pass selectivity -- only
                 // boundaries are allowed to extend past rtTolerance; apex
-                // locations still have to be within it.
+                // locations still have to be within it. Bypassed for
+                // boundary overrides (caller has already chosen the apex).
                 double peakApexRt = windowRts[startScan + p.ApexIndex];
                 double rtResidual = Math.Abs(peakApexRt - expectedRt);
-                if (rtResidual > rtTolerance)
+                if (!overrideBounds.HasValue && rtResidual > rtTolerance)
                     continue;
 
                 double sum = 0.0;
