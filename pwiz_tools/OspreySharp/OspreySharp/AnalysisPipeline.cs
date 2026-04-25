@@ -437,6 +437,23 @@ namespace pwiz.OspreySharp
                         OspreyDiagnostics.ExitAfterDump("OSPREY_PERCOLATOR_ONLY");
                 }
 
+                // First-pass protein FDR: runs on the full pre-compaction
+                // peptide pool so target and decoy proteins compete on a
+                // symmetric set. Sets RunProteinQvalue on every FdrEntry,
+                // which Stage 6 reconciliation reads via the protein-rescue
+                // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
+                // ("First-pass protein FDR").
+                if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
+                {
+                    LogInfo("");
+                    LogInfo("First-pass protein FDR");
+                    var swFirstPassProtein = Stopwatch.StartNew();
+                    RunFirstPassProteinFdr(perFileEntries, fullLibrary, config);
+                    swFirstPassProtein.Stop();
+                    LogInfo(string.Format("[TIMING] First-pass protein FDR: {0:F1}s",
+                        swFirstPassProtein.Elapsed.TotalSeconds));
+                }
+
                 // Stage 6: planning checkpoint — multi-charge consensus +
                 // cross-run consensus RTs + per-file calibration refit. The
                 // execution side (per-file rescore at locked boundaries +
@@ -4657,6 +4674,62 @@ namespace pwiz.OspreySharp
         #endregion
 
         #region Stage 8: Protein FDR
+
+        /// <summary>
+        /// First-pass protein FDR run BEFORE Stage 6 reconciliation, on the
+        /// full pre-compaction peptide pool. Sets only RunProteinQvalue
+        /// (leaves ExperimentProteinQvalue at its 1.0 default for the
+        /// second-pass to overwrite). Detected-peptide filter uses
+        /// run_peptide_qvalue, the strict peptide-level gate, matching Rust
+        /// pipeline.rs:3045-3049 exactly. Protein-FDR gate is config.RunFdr
+        /// (1x), the Savitski-2015 convention applied at first pass, NOT the
+        /// 2x relaxed gate the post-output Stage 8 protein FDR uses.
+        /// </summary>
+        private void RunFirstPassProteinFdr(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            // Detected-peptide gate: targets passing peptide-level run FDR.
+            // Matches Rust pipeline.rs:3048 (e.run_peptide_qvalue <= run_fdr).
+            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (!entry.IsDecoy && entry.RunPeptideQvalue <= config.RunFdr)
+                        detectedPeptides.Add(entry.ModifiedSequence);
+                }
+            }
+            LogInfo(string.Format(
+                "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
+                detectedPeptides.Count));
+
+            var parsimony = ProteinFdr.BuildProteinParsimony(
+                fullLibrary, config.SharedPeptides, detectedPeptides);
+
+            // Best peptide score across all files for picked-protein TDC.
+            var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
+
+            // First-pass gate is config.RunFdr exactly — matches Rust
+            // pipeline.rs:3062 (compute_protein_fdr at config.run_fdr).
+            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
+
+            int nAtRunFdr = 0;
+            foreach (var qv in proteinFdr.GroupQvalues.Values)
+            {
+                if (qv <= config.RunFdr)
+                    nAtRunFdr++;
+            }
+            LogInfo(string.Format(
+                "First-pass protein FDR: {0} target groups at {1:P1} FDR",
+                nAtRunFdr, config.RunFdr));
+
+            // Set RunProteinQvalue ONLY. Experiment-protein-q is set by the
+            // post-output Stage 8 protein FDR pass (Rust calls it second-pass).
+            ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr,
+                setRun: true, setExperiment: false);
+        }
 
         /// <summary>
         /// Run protein-level FDR using parsimony and picked-protein competition.
