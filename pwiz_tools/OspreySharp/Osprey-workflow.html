@@ -60,9 +60,14 @@
     Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
     output. Color indicates port status of the OspreySharp (C#) implementation
     against the Osprey (Rust) reference. Stages 1-4 are proven bit-identical
-    on Stellar + Astral (21 PIN features, 317K entries) and Stage 5 is
-    bit-identical on single-file Stellar (end-of-stage dump: score + pep +
-    4 q-values across 462,802 FdrEntry rows at max_diff = 0). Green badges =
+    on Stellar + Astral (21 PIN features, 317K entries). Stage 5 is bit-identical
+    on Stellar 1-file AND 3-file (end-of-stage dump: score + pep + 4 q-values
+    across 1,388,872 FdrEntry rows at max_diff = 0; multi-file required an
+    experiment_precursor_qvalue propagation fix in C#'s Percolator FDR).
+    Stage 6 planning checkpoint is wired (multi-charge consensus, consensus
+    RTs, calibration refit) with cross-impl dumps; counts and structure
+    match Rust exactly, remaining diffs are ULP-level floating-point in
+    sigmoid-weighted median + LOESS residual stats. Green badges =
     regression tests; purple badges = C#/Rust perf ratio.
   </p>
 </header>
@@ -341,7 +346,7 @@
   <text class="phase-label" x="60" y="24">stage 5</text>
   <text class="phase-title" x="60" y="42">First-pass FDR (Percolator SVM)</text>
   <text class="phase-note"  x="60" y="58">Semi-supervised SVM training with target-decoy competition. Produces precursor-level and peptide-level q-values at run and experiment levels.</text>
-  <text class="phase-note"  x="60" y="72">Single-file Stellar: bit-identical cross-impl on score + pep + 4 q-values, max_diff = 0 over 462,802 rows. 3-file validation pending.</text>
+  <text class="phase-note"  x="60" y="72">Stellar 1-file AND 3-file: bit-identical cross-impl on score + pep + 4 q-values, max_diff = 0. Multi-file required experiment_precursor_qvalue propagation by base_id (a2972ab6d).</text>
 
   <!-- Stage 5 perf badge (C# join-only wall clock on single-file Stellar;
        Rust measured 2026-04-22 = 66s at dump-exit point). -->
@@ -375,15 +380,17 @@
   <text class="phase-note"  x="60" y="58">
     Multi-charge consensus + cross-run reconciliation adjust peak boundaries
     across replicates, then re-score at locked boundaries and re-run FDR.
+    Planning checkpoint cross-impl dumps in place; structure matches at the
+    row level, residual diffs are ULP-level floating-point.
   </text>
 
-  <rect class="st-missing" x="80" y="80" width="1040" height="42" rx="4"/>
+  <rect class="st-partial" x="80" y="80" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="100" text-anchor="middle">Multi-charge consensus</text>
-  <text class="stage-desc"  x="600" y="114" text-anchor="middle">pick a consensus leader among FDR-passing charge states using SVM scores</text>
+  <text class="stage-desc"  x="600" y="114" text-anchor="middle">SelectRescoreTargets ported; per-file rescore-target dump emits at ~31K targets matching Rust by entry_id</text>
 
-  <rect class="st-missing" x="80" y="140" width="1040" height="42" rx="4"/>
+  <rect class="st-partial" x="80" y="140" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="160" text-anchor="middle">Cross-run reconciliation</text>
-  <text class="stage-desc"  x="600" y="174" text-anchor="middle">establish shared RT boundaries across replicates from the consensus set</text>
+  <text class="stage-desc"  x="600" y="174" text-anchor="middle">ConsensusRts.Compute + CalibrationRefit.Refit wired; n_runs_detected + n_points byte-identical with Rust; ReconciliationPlanner not yet wired</text>
 
   <rect class="st-missing" x="80" y="200" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="220" text-anchor="middle">Second-pass re-score + Percolator SVM</text>
@@ -484,14 +491,40 @@
     (VERSION + C grid sync with v26.4) and
     <a href="https://github.com/ProteoWizard/pwiz/pull/4160"><code>pwiz#4160</code></a>
     (matching diagnostic dumps + <code>Compare-Percolator.ps1</code>).
-    Multi-file (3-file) Stage 5 validation pending as the first step of
-    Stage 6 work.
+    Multi-file (3-file) Stage 5 cross-impl bit-parity also achieved
+    (2026-04-25): the per-base_id experiment_precursor_qvalue propagation
+    fix in C# (pwiz <code>a2972ab6d</code>) plus the multi-file
+    <code>--input-scores</code> CLI accumulation closes the gap with Rust.
+    1,388,872 row dump byte-identical on Stellar 3-file.
   </p>
   <p>
-    Next targets: Stage 5 multi-file validation (Stellar + Astral 3-file),
-    Stage 6 refinement (multi-charge consensus, cross-run reconciliation,
-    second-pass re-score), Stage 7 protein FDR, Stage 8 .blib output
-    parity. See <code>ai/todos/active/TODO-20260420_osprey_sharp.md</code>.
+    <strong>Stage 6 planning checkpoint (2026-04-25):</strong> the
+    Stage 6 entry block in OspreySharp now runs first-pass protein FDR,
+    multi-charge consensus, cross-run consensus RTs, and per-file
+    calibration refit. Three new diagnostic dumps land on each side
+    (<code>OSPREY_DUMP_CONSENSUS</code> /
+    <code>OSPREY_DUMP_MULTICHARGE</code> /
+    <code>OSPREY_DUMP_REFIT</code>, with matching <code>_ONLY</code>
+    early-exits) and a sibling harness
+    <code>Compare-Stage6-Planning.ps1</code> byte-compares the four
+    dumps (Stage 5 percolator + the three Stage 6 planning dumps).
+    On Stellar 3-file: <strong>1/4 dump pairs byte-identical</strong>
+    (Stage 5 percolator); the three Stage 6 planning dumps agree on
+    row count, sort order, n_runs_detected, n_points, and
+    median_peak_width but diverge at the last 1-3 decimals of
+    sigmoid-weighted-median RTs and LOESS residual stats. Driver
+    branches: <code>maccoss/osprey:feature/stage6-planning-diagnostics</code>
+    and <code>ProteoWizard/pwiz:Skyline/work/20260423_osprey_sharp_stage6</code>.
+  </p>
+  <p>
+    Next targets: investigate sigmoid weighting + LOESS-residual ULP
+    differences (likely <code>Math.Exp</code>/<code>Math.Log</code>
+    vs Rust <code>f64::exp</code>; may need alternative formulations
+    or a small numeric tolerance in the parity gate). Then wire
+    <code>ReconciliationPlanner.Plan</code>, gap-fill, and second-pass
+    Percolator. Stage 7 protein FDR + Stage 8 .blib output parity
+    follow once Stage 6 is fully proven. See
+    <code>ai/todos/active/TODO-20260423_osprey_sharp_stage6.md</code>.
   </p>
 </footer>
 </body>
