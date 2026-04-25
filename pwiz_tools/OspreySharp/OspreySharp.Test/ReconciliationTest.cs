@@ -886,6 +886,166 @@ namespace pwiz.OspreySharp.Test
 
         #endregion
 
+        #region MultiChargeConsensus
+
+        [TestMethod]
+        public void TestMultiChargeSingleEntryGroupProducesNoTargets()
+        {
+            var entries = new List<FdrEntry>
+            {
+                MakeEntry(@"PEPTIDE1", apexRt: 10.0, score: 3.0,
+                          isDecoy: false, precursorQ: 0.0, peptideQ: 0.0),
+            };
+
+            var targets = MultiChargeConsensus.SelectRescoreTargets(entries, fdrThreshold: 0.01);
+            Assert.AreEqual(0, targets.Count);
+        }
+
+        [TestMethod]
+        public void TestMultiChargeNoPassingEntryInGroupSkipped()
+        {
+            // Two charges of the same peptide, both with q > threshold.
+            var e1 = MakeEntry(@"PEPTIDE1", apexRt: 10.0, score: 0.0,
+                isDecoy: false, precursorQ: 0.5, peptideQ: 0.5);
+            e1.Charge = 2;
+            var e2 = MakeEntry(@"PEPTIDE1", apexRt: 20.0, score: 0.0,
+                isDecoy: false, precursorQ: 0.5, peptideQ: 0.5);
+            e2.Charge = 3;
+
+            var targets = MultiChargeConsensus.SelectRescoreTargets(
+                new[] { e1, e2 }, fdrThreshold: 0.01);
+
+            Assert.AreEqual(0, targets.Count);
+        }
+
+        [TestMethod]
+        public void TestMultiChargeAllChargesAtSameApexNoRescore()
+        {
+            // Both charges pass FDR and are within tolerance of each other.
+            var e1 = MakeEntry(@"PEPTIDE1", apexRt: 10.0, score: 3.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            e1.Charge = 2;
+            var e2 = MakeEntry(@"PEPTIDE1", apexRt: 10.05, score: 2.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            e2.Charge = 3;
+
+            var targets = MultiChargeConsensus.SelectRescoreTargets(
+                new[] { e1, e2 }, fdrThreshold: 0.01);
+
+            Assert.AreEqual(0, targets.Count);
+        }
+
+        [TestMethod]
+        public void TestMultiChargeWrongApexChargeIsRescoreTarget()
+        {
+            // z=2 is the leader (highest SVM score). z=3 is at 20.0, way
+            // outside tolerance of leader's consensus apex 10.0.
+            var leader = MakeEntry(@"PEPTIDE1", apexRt: 10.0, score: 5.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            leader.Charge = 2;
+            var wrong = MakeEntry(@"PEPTIDE1", apexRt: 20.0, score: 2.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            wrong.Charge = 3;
+
+            var targets = MultiChargeConsensus.SelectRescoreTargets(
+                new[] { leader, wrong }, fdrThreshold: 0.01);
+
+            Assert.AreEqual(1, targets.Count);
+            Assert.AreEqual(1, targets[0].Index);
+            Assert.AreEqual(10.0, targets[0].Apex, TOLERANCE);
+            Assert.AreEqual(9.5, targets[0].Start, TOLERANCE);
+            Assert.AreEqual(10.5, targets[0].End, TOLERANCE);
+        }
+
+        [TestMethod]
+        public void TestMultiChargeOnlyDivergentChargeIsRescored()
+        {
+            // z=2 is leader at apex 10.0. z=3 is at 10.02 (within tolerance).
+            // z=4 is at 25.0 (way off). Only z=4 is a rescore target.
+            var z2 = MakeEntry(@"PEPTIDE1", apexRt: 10.0, score: 5.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            z2.Charge = 2;
+            var z3 = MakeEntry(@"PEPTIDE1", apexRt: 10.02, score: 3.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            z3.Charge = 3;
+            var z4 = MakeEntry(@"PEPTIDE1", apexRt: 25.0, score: 1.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            z4.Charge = 4;
+
+            var targets = MultiChargeConsensus.SelectRescoreTargets(
+                new[] { z2, z3, z4 }, fdrThreshold: 0.01);
+
+            Assert.AreEqual(1, targets.Count);
+            Assert.AreEqual(2, targets[0].Index); // z4 at position 2
+        }
+
+        [TestMethod]
+        public void TestMultiChargeTieOnScoreLowerQvalueWins()
+        {
+            // Two passing entries with equal score but different qvalues.
+            // Lower q-value should win. Third entry has a wrong apex and
+            // should be a rescore target anchored at the winner's RT.
+            var tieHighQ = MakeEntry(@"PEPTIDE1", apexRt: 30.0, score: 3.0,
+                isDecoy: false, precursorQ: 0.009, peptideQ: 0.009);
+            tieHighQ.Charge = 2;
+            var tieLowQ = MakeEntry(@"PEPTIDE1", apexRt: 10.0, score: 3.0,
+                isDecoy: false, precursorQ: 0.001, peptideQ: 0.001);
+            tieLowQ.Charge = 3;
+            var wrong = MakeEntry(@"PEPTIDE1", apexRt: 50.0, score: 1.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            wrong.Charge = 4;
+
+            var targets = MultiChargeConsensus.SelectRescoreTargets(
+                new[] { tieHighQ, tieLowQ, wrong }, fdrThreshold: 0.01);
+
+            // Leader should be tieLowQ (apex 10.0). Both the other entries
+            // are far from it and should be rescore targets.
+            Assert.AreEqual(2, targets.Count);
+            foreach (var t in targets)
+            {
+                Assert.AreEqual(10.0, t.Apex, TOLERANCE,
+                    @"targets should anchor on the low-qvalue leader");
+            }
+        }
+
+        [TestMethod]
+        public void TestMultiChargeDecoyAndTargetAreSeparateGroups()
+        {
+            // Target PEPTIDE1 and decoy DECOY_PEPTIDE1 are treated as
+            // separate groups (different modified_sequence keys), so they
+            // do not interfere.
+            var t2 = MakeEntry(@"PEPTIDE1", apexRt: 10.0, score: 5.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            t2.Charge = 2;
+            var t3 = MakeEntry(@"PEPTIDE1", apexRt: 25.0, score: 1.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0);
+            t3.Charge = 3;
+            var d2 = MakeEntry(@"DECOY_PEPTIDE1", apexRt: 40.0, score: 3.0,
+                isDecoy: true, precursorQ: 0.0, peptideQ: 0.0);
+            d2.Charge = 2;
+            var d3 = MakeEntry(@"DECOY_PEPTIDE1", apexRt: 60.0, score: 1.0,
+                isDecoy: true, precursorQ: 0.0, peptideQ: 0.0);
+            d3.Charge = 3;
+
+            var targets = MultiChargeConsensus.SelectRescoreTargets(
+                new[] { t2, t3, d2, d3 }, fdrThreshold: 0.01);
+
+            // t3 anchored at t2 (apex 10.0), d3 anchored at d2 (apex 40.0).
+            Assert.AreEqual(2, targets.Count);
+            // t3 was at index 1, d3 at index 3.
+            foreach (var t in targets)
+            {
+                if (t.Index == 1)
+                    Assert.AreEqual(10.0, t.Apex, TOLERANCE);
+                else if (t.Index == 3)
+                    Assert.AreEqual(40.0, t.Apex, TOLERANCE);
+                else
+                    Assert.Fail(@"unexpected index " + t.Index);
+            }
+        }
+
+        #endregion
+
         #region Fixture helpers
 
         /// <summary>
