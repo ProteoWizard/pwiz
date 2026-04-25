@@ -32,6 +32,7 @@ using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR;
+using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
 using pwiz.OspreySharp.Scoring;
 
@@ -171,6 +172,9 @@ namespace pwiz.OspreySharp
                 // Stage 2-4: Per-file calibration + coelution scoring
                 // Process files in parallel when multiple files are provided.
                 var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+                // Per-file RT calibration handles harvested by ProcessFile so
+                // Stage 6 reconciliation has the live RTCalibration objects.
+                var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
 
                 bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
                 int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
@@ -262,6 +266,38 @@ namespace pwiz.OspreySharp
                             stubs[j].Features = features[j];
                         LogInfo(string.Format("  Loaded {0} FDR stubs + features", stubs.Count));
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+
+                        // Best-effort calibration JSON load for Stage 6
+                        // reconciliation. Mirrors osprey/src/pipeline.rs:2573-2588.
+                        try
+                        {
+                            string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
+                            if (parquetDir != null)
+                            {
+                                // The parquet stem is "<fileName>.scores"; strip
+                                // the trailing ".scores" so the calibration
+                                // filename derives from the same input stem
+                                // both ProcessFile and join-only used.
+                                string calStemPath = Path.Combine(parquetDir, fileName);
+                                string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
+                                if (File.Exists(calPath))
+                                {
+                                    var calParams = CalibrationIO.LoadCalibration(calPath);
+                                    if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                                    {
+                                        var mp = calParams.RtCalibration.ModelParams;
+                                        var rtCal = RTCalibration.FromModelParams(
+                                            mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                                            calParams.RtCalibration.ResidualSD);
+                                        perFileCalibrations[fileName] = rtCal;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogWarning(string.Format("  Failed to load calibration for {0}: {1}", fileName, ex.Message));
+                        }
                     }
                 }
                 else if (config.InputFiles.Count == 1)
@@ -271,7 +307,7 @@ namespace pwiz.OspreySharp
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
                     LogInfo("");
                     LogInfo(string.Format("===== Processing file 1/1: {0} =====", inputFile));
-                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata);
+                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                 }
@@ -290,7 +326,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
                         if (fileResult != null)
                             perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                     }
@@ -314,7 +350,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
                         if (fileResult != null)
                             fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
                     });
@@ -401,12 +437,98 @@ namespace pwiz.OspreySharp
                         OspreyDiagnostics.ExitAfterDump("OSPREY_PERCOLATOR_ONLY");
                 }
 
-                // Stage 6-7: Reconciliation (TODO for multi-file)
-                if (config.InputFiles.Count > 1)
+                // Stage 6: planning checkpoint — multi-charge consensus +
+                // cross-run consensus RTs + per-file calibration refit. The
+                // execution side (per-file rescore at locked boundaries +
+                // gap-fill + second-pass FDR) is not yet implemented; this
+                // pass exists to prove cross-impl byte parity at the start
+                // of Stage 6 via the three planning dumps below. Mirrors
+                // pipeline.rs Stage 6 entry block at lines 3208-3273.
+                if (perFileEntries.Count > 1 && config.Reconciliation.Enabled)
                 {
                     LogInfo("");
-                    LogInfo("TODO: Inter-replicate reconciliation not yet implemented");
-                    LogInfo("      First-pass results are still usable for single-run analysis");
+                    LogInfo("Stage 6: planning");
+
+                    // 1. Multi-charge consensus per file (independent — runs
+                    //    first per Rust pipeline.rs:3217, before consensus
+                    //    RT computation).
+                    var perFileConsensusTargets = new Dictionary<string,
+                        IReadOnlyList<(int Index, double Apex, double Start, double End)>>();
+                    foreach (var kvp in perFileEntries)
+                    {
+                        perFileConsensusTargets[kvp.Key] =
+                            MultiChargeConsensus.SelectRescoreTargets(kvp.Value, config.RunFdr);
+                    }
+                    int totalMulticharge = 0;
+                    foreach (var kvp in perFileConsensusTargets)
+                        totalMulticharge += kvp.Value.Count;
+                    LogInfo(string.Format(
+                        "Stage 6 multi-charge consensus: {0} entries need re-scoring across {1} files",
+                        totalMulticharge, perFileEntries.Count));
+
+                    if (OspreyDiagnostics.DumpMulticharge)
+                    {
+                        OspreyDiagnostics.WriteStage6MultichargeDump(perFileConsensusTargets);
+                        if (OspreyDiagnostics.MultichargeOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_MULTICHARGE_ONLY");
+                    }
+
+                    // 2. Cross-run consensus RTs (target peptides + paired
+                    //    decoys, sigmoid(score)-weighted median, hard
+                    //    run_precursor_qvalue gate).
+                    var perFileForRecon = new List<KeyValuePair<string,
+                        IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                    foreach (var kvp in perFileEntries)
+                    {
+                        perFileForRecon.Add(new KeyValuePair<string,
+                            IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+                    }
+                    var consensus = ConsensusRts.Compute(
+                        perFileForRecon, perFileCalibrations,
+                        config.Reconciliation.ConsensusFdr,
+                        config.ProteinFdr ?? 0.0);
+                    int nTargets = 0, nDecoys = 0;
+                    foreach (var c in consensus)
+                    {
+                        if (c.IsDecoy) nDecoys++;
+                        else nTargets++;
+                    }
+                    LogInfo(string.Format(
+                        "Stage 6 consensus: {0} target peptides, {1} decoy peptides",
+                        nTargets, nDecoys));
+
+                    if (OspreyDiagnostics.DumpConsensus)
+                    {
+                        OspreyDiagnostics.WriteStage6ConsensusDump(consensus);
+                        if (OspreyDiagnostics.ConsensusOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_CONSENSUS_ONLY");
+                    }
+
+                    // 3. Per-file calibration refit on consensus peptides.
+                    var refinedCalibrations = new Dictionary<string, RTCalibration>();
+                    foreach (var kvp in perFileEntries)
+                    {
+                        var refined = CalibrationRefit.Refit(consensus, kvp.Value,
+                            config.Reconciliation.ConsensusFdr);
+                        if (refined != null)
+                            refinedCalibrations[kvp.Key] = refined;
+                    }
+                    LogInfo(string.Format(
+                        "Stage 6 refit: {0}/{1} files produced refined calibrations",
+                        refinedCalibrations.Count, perFileEntries.Count));
+
+                    if (OspreyDiagnostics.DumpRefit)
+                    {
+                        OspreyDiagnostics.WriteStage6RefitDump(refinedCalibrations);
+                        if (OspreyDiagnostics.RefitOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_REFIT_ONLY");
+                    }
+
+                    // Reconciliation planning + per-file rescore + gap-fill +
+                    // second-pass FDR are deferred to a later commit. Without
+                    // those, single-run analysis still produces valid output
+                    // from the first-pass FDR results above.
+                    LogInfo(@"Stage 6 reconciliation rescore: not yet implemented");
                 }
 
                 // Stage 8: Protein FDR (optional)
@@ -656,7 +778,8 @@ namespace pwiz.OspreySharp
         private List<FdrEntry> ProcessFile(
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, OspreyConfig config,
-            Dictionary<string, string> noJoinMetadata)
+            Dictionary<string, string> noJoinMetadata,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrationsOut)
         {
             if (inputFile == null)
                 throw new ArgumentNullException(nameof(inputFile));
@@ -846,6 +969,13 @@ namespace pwiz.OspreySharp
                 LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
                 return new List<FdrEntry>();
             }
+
+            // Surface the per-file calibration to Stage 6 reconciliation
+            // (multi-file runs only). Threaded calls share a
+            // ConcurrentDictionary; null on single-file paths that don't
+            // need cross-file consensus.
+            if (perFileCalibrationsOut != null && rtCalibration != null)
+                perFileCalibrationsOut[fileName] = rtCalibration;
 
             // Run coelution scoring across all isolation windows
             var swScoring = Stopwatch.StartNew();

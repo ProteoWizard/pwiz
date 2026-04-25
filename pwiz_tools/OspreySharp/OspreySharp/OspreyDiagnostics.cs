@@ -27,6 +27,7 @@ using System.Linq;
 using System.Text;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.Scoring;
 
 namespace pwiz.OspreySharp
@@ -114,6 +115,35 @@ namespace pwiz.OspreySharp
 
         /// <summary>OSPREY_PERCOLATOR_ONLY: exit after cs_stage5_percolator.tsv dump.</summary>
         public static readonly bool PercolatorOnly = IsOne(@"OSPREY_PERCOLATOR_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_CONSENSUS: dump the per-peptide consensus RT planning
+        /// state at the start of Stage 6 (cs_stage6_consensus.tsv) for
+        /// cross-impl parity at the planning checkpoint.
+        /// </summary>
+        public static readonly bool DumpConsensus = IsOne(@"OSPREY_DUMP_CONSENSUS");
+
+        /// <summary>OSPREY_CONSENSUS_ONLY: exit after cs_stage6_consensus.tsv dump.</summary>
+        public static readonly bool ConsensusOnly = IsOne(@"OSPREY_CONSENSUS_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_MULTICHARGE: dump the per-file multi-charge consensus
+        /// rescore targets (cs_stage6_multicharge.tsv) for cross-impl parity.
+        /// </summary>
+        public static readonly bool DumpMulticharge = IsOne(@"OSPREY_DUMP_MULTICHARGE");
+
+        /// <summary>OSPREY_MULTICHARGE_ONLY: exit after cs_stage6_multicharge.tsv dump.</summary>
+        public static readonly bool MultichargeOnly = IsOne(@"OSPREY_MULTICHARGE_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_REFIT: dump per-file refined-calibration statistics
+        /// produced by CalibrationRefit (cs_stage6_refit.tsv) for cross-impl
+        /// parity.
+        /// </summary>
+        public static readonly bool DumpRefit = IsOne(@"OSPREY_DUMP_REFIT");
+
+        /// <summary>OSPREY_REFIT_ONLY: exit after cs_stage6_refit.tsv dump.</summary>
+        public static readonly bool RefitOnly = IsOne(@"OSPREY_REFIT_ONLY");
 
         /// <summary>
         /// OSPREY_DIAG_XIC_ENTRY_ID: the entry ID to dump chromatogram for
@@ -847,6 +877,114 @@ namespace pwiz.OspreySharp
                 }
             }
             LogAction(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
+        }
+
+        // ---- Stage 6 planning dumps ----
+
+        /// <summary>
+        /// Dump the per-peptide consensus RT planning state to
+        /// cs_stage6_consensus.tsv. Mirrors Rust dump_stage6_consensus.
+        /// Columns: is_decoy, modified_sequence, consensus_library_rt,
+        /// median_peak_width, n_runs_detected, apex_library_rt_mad. Rows
+        /// are emitted in the order produced by ConsensusRts.Compute, which
+        /// sorts by (is_decoy, modified_sequence) for deterministic output.
+        /// apex_library_rt_mad is empty when fewer than 3 detections
+        /// contributed.
+        /// </summary>
+        public static void WriteStage6ConsensusDump(IReadOnlyList<PeptideConsensusRT> consensus)
+        {
+            const string path = @"cs_stage6_consensus.tsv";
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"is_decoy	modified_sequence	consensus_library_rt	median_peak_width	n_runs_detected	apex_library_rt_mad");
+                foreach (var c in consensus)
+                {
+                    sw.Write(c.IsDecoy ? @"true" : @"false");
+                    sw.Write('\t'); sw.Write(c.ModifiedSequence ?? string.Empty);
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(c.ConsensusLibraryRt));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(c.MedianPeakWidth));
+                    sw.Write('\t'); sw.Write(c.NRunsDetected.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t');
+                    if (c.ApexLibraryRtMad.HasValue)
+                        sw.Write(Diagnostics.FormatF64Roundtrip(c.ApexLibraryRtMad.Value));
+                    sw.WriteLine();
+                }
+            }
+            LogAction(string.Format(@"Wrote Stage 6 consensus dump: {0} ({1} rows)", path, consensus.Count));
+        }
+
+        /// <summary>
+        /// Dump the per-file multi-charge consensus rescore targets to
+        /// cs_stage6_multicharge.tsv. Mirrors Rust dump_stage6_multicharge.
+        /// Columns: file_name, entry_idx, consensus_apex, consensus_start,
+        /// consensus_end. Rows sorted by (file_name, entry_idx) for stable diff.
+        /// </summary>
+        public static void WriteStage6MultichargeDump(
+            IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> perFileTargets)
+        {
+            const string path = @"cs_stage6_multicharge.tsv";
+
+            var rows = new List<(string FileName, int Index, double Apex, double Start, double End)>();
+            foreach (var kvp in perFileTargets)
+            {
+                foreach (var t in kvp.Value)
+                    rows.Add((kvp.Key, t.Index, t.Apex, t.Start, t.End));
+            }
+            rows.Sort((a, b) =>
+            {
+                int cmp = string.CompareOrdinal(a.FileName, b.FileName);
+                if (cmp != 0) return cmp;
+                return a.Index.CompareTo(b.Index);
+            });
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"file_name	entry_idx	consensus_apex	consensus_start	consensus_end");
+                foreach (var r in rows)
+                {
+                    sw.Write(r.FileName);
+                    sw.Write('\t'); sw.Write(r.Index.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.Apex));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.Start));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(r.End));
+                }
+            }
+            LogAction(string.Format(@"Wrote Stage 6 multi-charge dump: {0} ({1} rows)", path, rows.Count));
+        }
+
+        /// <summary>
+        /// Dump per-file refined-calibration statistics to
+        /// cs_stage6_refit.tsv. Mirrors Rust dump_stage6_refit. Columns:
+        /// file_name, n_points, r_squared, residual_sd, mad. Files where the
+        /// refit failed (insufficient points) are absent. Rows sorted by
+        /// file_name for stable diff.
+        /// </summary>
+        public static void WriteStage6RefitDump(
+            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations)
+        {
+            const string path = @"cs_stage6_refit.tsv";
+
+            var fileNames = new List<string>(refinedCalibrations.Keys);
+            fileNames.Sort(StringComparer.Ordinal);
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"file_name	n_points	r_squared	residual_sd	mad");
+                foreach (var fileName in fileNames)
+                {
+                    var stats = refinedCalibrations[fileName].Stats();
+                    sw.Write(fileName);
+                    sw.Write('\t'); sw.Write(stats.NPoints.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(stats.RSquared));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(stats.ResidualSD));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stats.MAD));
+                }
+            }
+            LogAction(string.Format(@"Wrote Stage 6 refit dump: {0} ({1} rows)", path, fileNames.Count));
         }
     }
 }
