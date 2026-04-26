@@ -454,6 +454,46 @@ namespace pwiz.OspreySharp
                         swFirstPassProtein.Elapsed.TotalSeconds));
                 }
 
+                // Compaction: drop entries whose base_id (entry_id with the
+                // decoy bit masked off) does not pass either the peptide-q
+                // or protein-q gate. Target and paired decoy share base_id
+                // and are kept or dropped together. Mirrors Rust
+                // pipeline.rs:3094-3132. Without this, Stage 6 multi-charge
+                // consensus selection groups by modified_sequence and
+                // includes non-passing charge states that Rust has already
+                // dropped, producing different rescore-target sets and
+                // different per-file Vec positions.
+                if (perFileEntries.Count > 0)
+                {
+                    var firstPassBaseIds = new HashSet<uint>();
+                    double peptideGate = config.RunFdr;
+                    double proteinGate = config.ProteinFdr ?? 0.0;
+                    foreach (var kvp in perFileEntries)
+                    {
+                        foreach (var entry in kvp.Value)
+                        {
+                            if (entry.IsDecoy)
+                                continue;
+                            if (entry.RunPeptideQvalue <= peptideGate ||
+                                (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
+                            {
+                                firstPassBaseIds.Add(entry.EntryId & 0x7FFFFFFFu);
+                            }
+                        }
+                    }
+                    int beforeCount = 0, afterCount = 0;
+                    foreach (var kvp in perFileEntries)
+                    {
+                        beforeCount += kvp.Value.Count;
+                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & 0x7FFFFFFFu));
+                        kvp.Value.TrimExcess();
+                        afterCount += kvp.Value.Count;
+                    }
+                    LogInfo(string.Format(
+                        "First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
+                        beforeCount, afterCount, firstPassBaseIds.Count));
+                }
+
                 // Stage 6: planning checkpoint — multi-charge consensus +
                 // cross-run consensus RTs + per-file calibration refit. The
                 // execution side (per-file rescore at locked boundaries +
@@ -485,7 +525,15 @@ namespace pwiz.OspreySharp
 
                     if (OspreyDiagnostics.DumpMulticharge)
                     {
-                        OspreyDiagnostics.WriteStage6MultichargeDump(perFileConsensusTargets);
+                        var perFileForDump = new List<KeyValuePair<string,
+                            IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                        foreach (var kvp in perFileEntries)
+                        {
+                            perFileForDump.Add(new KeyValuePair<string,
+                                IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+                        }
+                        OspreyDiagnostics.WriteStage6MultichargeDump(
+                            perFileForDump, perFileConsensusTargets);
                         if (OspreyDiagnostics.MultichargeOnly)
                             OspreyDiagnostics.ExitAfterDump(@"OSPREY_MULTICHARGE_ONLY");
                     }

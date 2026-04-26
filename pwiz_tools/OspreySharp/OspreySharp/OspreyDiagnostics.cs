@@ -918,35 +918,52 @@ namespace pwiz.OspreySharp
         /// <summary>
         /// Dump the per-file multi-charge consensus rescore targets to
         /// cs_stage6_multicharge.tsv. Mirrors Rust dump_stage6_multicharge.
-        /// Columns: file_name, entry_idx, consensus_apex, consensus_start,
-        /// consensus_end. Rows sorted by (file_name, entry_idx) for stable diff.
+        /// Columns: file_name, entry_id, consensus_apex, consensus_start,
+        /// consensus_end. Rows sorted by (file_name, entry_id) for stable
+        /// diff. The dump uses the stable library entry id (FdrEntry.EntryId)
+        /// instead of the per-file Vec position, so cross-impl comparison is
+        /// invariant to whether the implementation has compacted the
+        /// per-file FdrEntry list before computing multi-charge consensus.
         /// </summary>
         public static void WriteStage6MultichargeDump(
+            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> perFileTargets)
         {
             const string path = @"cs_stage6_multicharge.tsv";
 
-            var rows = new List<(string FileName, int Index, double Apex, double Start, double End)>();
+            // Resolve Index -> EntryId via the matching per-file entries list.
+            var entriesByFile = new Dictionary<string, IReadOnlyList<FdrEntry>>(StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+                entriesByFile[kvp.Key] = kvp.Value;
+
+            var rows = new List<(string FileName, uint EntryId, double Apex, double Start, double End)>();
             foreach (var kvp in perFileTargets)
             {
+                IReadOnlyList<FdrEntry> entries;
+                if (!entriesByFile.TryGetValue(kvp.Key, out entries))
+                    continue;
                 foreach (var t in kvp.Value)
-                    rows.Add((kvp.Key, t.Index, t.Apex, t.Start, t.End));
+                {
+                    if (t.Index < 0 || t.Index >= entries.Count)
+                        continue;
+                    rows.Add((kvp.Key, entries[t.Index].EntryId, t.Apex, t.Start, t.End));
+                }
             }
             rows.Sort((a, b) =>
             {
                 int cmp = string.CompareOrdinal(a.FileName, b.FileName);
                 if (cmp != 0) return cmp;
-                return a.Index.CompareTo(b.Index);
+                return a.EntryId.CompareTo(b.EntryId);
             });
 
             using (var sw = new StreamWriter(path))
             {
                 sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_idx	consensus_apex	consensus_start	consensus_end");
+                sw.WriteLine(@"file_name	entry_id	consensus_apex	consensus_start	consensus_end");
                 foreach (var r in rows)
                 {
                     sw.Write(r.FileName);
-                    sw.Write('\t'); sw.Write(r.Index.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t'); sw.Write(r.EntryId.ToString(CultureInfo.InvariantCulture));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.Apex));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.Start));
                     sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(r.End));
