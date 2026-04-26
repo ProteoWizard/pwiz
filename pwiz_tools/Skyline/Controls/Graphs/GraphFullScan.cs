@@ -635,15 +635,15 @@ namespace pwiz.Skyline.Controls.Graphs
             // MSGraphPane defaults this to true, which would snap Y.Min to 0 on AxisChange.
             pane.LockYAxisMinAtZero = false;
             CopyYAxisFromHeatmap(pane, heatMap);
-            // Hide Y-axis numbers (heatmap shows them — avoid redundancy) but keep tick marks
-            // on both sides of the axis line to match heatmap's visual style.
+            // Show Y-axis numbers; keep tick marks on both sides of the axis line to match
+            // heatmap's visual style. Title is suppressed since the heatmap pane already
+            // labels the drift-time axis.
             pane.YAxis.Title.IsVisible = false;
-            pane.YAxis.Scale.IsVisible = false;
             pane.YAxis.MajorTic.IsOutside = true;
             pane.YAxis.MajorTic.IsInside = true;
             pane.YAxis.MinorTic.IsOutside = true;
             pane.YAxis.MinorTic.IsInside = true;
-            pane.YAxis.MinSpace = 4; // small, just enough for tick marks
+            pane.YAxis.MinSpace = 50; // room for tick labels
             // Match heatmap pane's margins so Chart.Rect Y/Height auto-align
             pane.Margin.Left = 0;
             pane.Margin.Right = ZedGraph.Margin.Default.Right;
