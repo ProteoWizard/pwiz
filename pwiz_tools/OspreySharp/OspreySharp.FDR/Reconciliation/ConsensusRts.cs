@@ -66,7 +66,8 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
             IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             double consensusFdr,
-            double proteinFdrThreshold)
+            double proteinFdrThreshold,
+            IList<InvPredictRecord> invPredictTrace = null)
         {
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
@@ -164,6 +165,16 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
                     double weight = Math.Max(1e-6, 1.0 / (1.0 + Math.Exp(-det.Score)));
                     libraryRtWeights.Add((libraryRt, weight));
                     peakWidthWeights.Add((det.PeakWidth, weight));
+
+                    invPredictTrace?.Add(new InvPredictRecord
+                    {
+                        FileName = det.FileName,
+                        ModifiedSequence = modifiedSequence,
+                        IsDecoy = isDecoy,
+                        ApexRt = det.ApexRt,
+                        LibraryRt = libraryRt,
+                        Weight = weight,
+                    });
                 }
 
                 if (libraryRtWeights.Count == 0)

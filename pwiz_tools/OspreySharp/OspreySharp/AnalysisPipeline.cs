@@ -286,6 +286,14 @@ namespace pwiz.OspreySharp
                                     if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
                                     {
                                         var mp = calParams.RtCalibration.ModelParams;
+                                        // Cross-impl JSON-decode parity check: append
+                                        // the raw arrays as loaded from the calibration
+                                        // JSON, gated by OSPREY_DUMP_CALIBRATION.
+                                        if (OspreyDiagnostics.DumpCalibration)
+                                        {
+                                            OspreyDiagnostics.WriteStage6CalibrationDump(
+                                                fileName, mp.LibraryRts, mp.FittedRts);
+                                        }
                                         var rtCal = RTCalibration.FromModelParams(
                                             mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
                                             calParams.RtCalibration.ResidualSD);
@@ -299,6 +307,12 @@ namespace pwiz.OspreySharp
                             LogWarning(string.Format("  Failed to load calibration for {0}: {1}", fileName, ex.Message));
                         }
                     }
+                    // Cross-impl JSON-decode parity short-circuit: after every
+                    // parquet's calibration JSON has been loaded and dumped, exit
+                    // if OSPREY_CALIBRATION_ONLY is set. Pairs with
+                    // OSPREY_DUMP_CALIBRATION.
+                    if (OspreyDiagnostics.CalibrationOnly)
+                        OspreyDiagnostics.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
                 }
                 else if (config.InputFiles.Count == 1)
                 {
@@ -548,10 +562,28 @@ namespace pwiz.OspreySharp
                         perFileForRecon.Add(new KeyValuePair<string,
                             IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
                     }
+                    // Cross-impl bisection trace for InversePredict: if the
+                    // OSPREY_DUMP_INV_PREDICT env var is set, ConsensusRts
+                    // populates this list with one row per detection. The
+                    // caller drives the dump via OspreyDiagnostics so the
+                    // FDR project doesn't have to know about the diagnostic
+                    // file format.
+                    List<InvPredictRecord> invPredictTrace = null;
+                    if (OspreyDiagnostics.DumpInvPredict)
+                        invPredictTrace = new List<InvPredictRecord>();
+
                     var consensus = ConsensusRts.Compute(
                         perFileForRecon, perFileCalibrations,
                         config.Reconciliation.ConsensusFdr,
-                        config.ProteinFdr ?? 0.0);
+                        config.ProteinFdr ?? 0.0,
+                        invPredictTrace);
+
+                    if (invPredictTrace != null)
+                    {
+                        OspreyDiagnostics.WriteStage6InvPredictDump(invPredictTrace);
+                        if (OspreyDiagnostics.InvPredictOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_INV_PREDICT_ONLY");
+                    }
                     int nTargets = 0, nDecoys = 0;
                     foreach (var c in consensus)
                     {

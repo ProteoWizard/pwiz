@@ -146,6 +146,37 @@ namespace pwiz.OspreySharp
         public static readonly bool RefitOnly = IsOne(@"OSPREY_REFIT_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_CALIBRATION: dump the loaded calibration JSON
+        /// arrays (library_rts + fitted_values) for each file to
+        /// cs_stage6_calibration.tsv as the C# join-only path loads
+        /// them. Diffing against rust_stage6_calibration.tsv localizes
+        /// whether cross-impl divergence in InversePredict enters at
+        /// the JSON f64 parser (decimal-to-binary) or inside the LOESS
+        /// interpolation arithmetic. No _ONLY companion: pair with a
+        /// later dump's _ONLY (e.g. OSPREY_INV_PREDICT_ONLY) to
+        /// short-circuit after all files have written their rows.
+        /// </summary>
+        public static readonly bool DumpCalibration = IsOne(@"OSPREY_DUMP_CALIBRATION");
+
+        /// <summary>OSPREY_CALIBRATION_ONLY: exit after cs_stage6_calibration.tsv dump.</summary>
+        public static readonly bool CalibrationOnly = IsOne(@"OSPREY_CALIBRATION_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_INV_PREDICT: capture per-detection
+        /// (apex_rt, library_rt, weight) triples flowing into
+        /// ConsensusRts.Compute and dump them to cs_stage6_inv_predict.tsv
+        /// for ULP-level bisection of consensus_library_rt cross-impl
+        /// divergence. Diffing against rust_stage6_inv_predict.tsv
+        /// localizes whether the divergence enters at Parquet f64 decode
+        /// (apex_rt diverges) or inside LOESS InversePredict (only
+        /// library_rt diverges).
+        /// </summary>
+        public static readonly bool DumpInvPredict = IsOne(@"OSPREY_DUMP_INV_PREDICT");
+
+        /// <summary>OSPREY_INV_PREDICT_ONLY: exit after cs_stage6_inv_predict.tsv dump.</summary>
+        public static readonly bool InvPredictOnly = IsOne(@"OSPREY_INV_PREDICT_ONLY");
+
+        /// <summary>
         /// OSPREY_DIAG_XIC_ENTRY_ID: the entry ID to dump chromatogram for
         /// during calibration scoring. null = no dump.
         /// </summary>
@@ -1002,6 +1033,81 @@ namespace pwiz.OspreySharp
                 }
             }
             LogAction(string.Format(@"Wrote Stage 6 refit dump: {0} ({1} rows)", path, fileNames.Count));
+        }
+
+        /// <summary>
+        /// Append the loaded calibration arrays for one file to
+        /// cs_stage6_calibration.tsv. Mirrors Rust dump_stage6_calibration.
+        /// Header is written on the first call (file does not yet exist),
+        /// subsequent calls append. Each call writes one row per
+        /// (libraryRts[i], fittedValues[i]) pair. Used for cross-impl
+        /// JSON-decode bisection — see DumpCalibration docs.
+        /// </summary>
+        public static void WriteStage6CalibrationDump(
+            string fileName, double[] libraryRts, double[] fittedValues)
+        {
+            const string path = @"cs_stage6_calibration.tsv";
+            bool headerNeeded = !System.IO.File.Exists(path);
+            using (var sw = new StreamWriter(path, append: true))
+            {
+                sw.NewLine = "\n";
+                if (headerNeeded)
+                    sw.WriteLine(@"file_name	idx	library_rt	fitted_value");
+                int n = Math.Min(libraryRts.Length, fittedValues.Length);
+                for (int i = 0; i < n; i++)
+                {
+                    sw.Write(fileName);
+                    sw.Write('\t'); sw.Write(i.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(libraryRts[i]));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(fittedValues[i]));
+                }
+            }
+            LogAction(string.Format(
+                @"Appended {0} calibration rows for {1} to {2}",
+                Math.Min(libraryRts.Length, fittedValues.Length), fileName, path));
+        }
+
+        /// <summary>
+        /// Dump the per-detection (apex_rt, library_rt, weight) trace
+        /// captured by ConsensusRts.Compute to cs_stage6_inv_predict.tsv.
+        /// Mirrors Rust dump_stage6_inv_predict. Columns: file_name,
+        /// is_decoy, modified_sequence, apex_rt, library_rt, weight. Rows
+        /// sorted by (is_decoy, modified_sequence, file_name) for stable
+        /// diff. Used for ULP bisection of consensus_library_rt cross-impl
+        /// divergence: if apex_rt diverges the bug is in Parquet f64 decode,
+        /// if only library_rt diverges the bug is in LOESS InversePredict.
+        /// </summary>
+        public static void WriteStage6InvPredictDump(IList<InvPredictRecord> records)
+        {
+            const string path = @"cs_stage6_inv_predict.tsv";
+
+            var sorted = new List<InvPredictRecord>(records);
+            sorted.Sort((a, b) =>
+            {
+                int cmp = a.IsDecoy.CompareTo(b.IsDecoy);
+                if (cmp != 0) return cmp;
+                cmp = string.CompareOrdinal(a.ModifiedSequence, b.ModifiedSequence);
+                if (cmp != 0) return cmp;
+                return string.CompareOrdinal(a.FileName, b.FileName);
+            });
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"file_name	is_decoy	modified_sequence	apex_rt	library_rt	weight");
+                foreach (var r in sorted)
+                {
+                    sw.Write(r.FileName);
+                    sw.Write('\t'); sw.Write(r.IsDecoy ? @"true" : @"false");
+                    sw.Write('\t'); sw.Write(r.ModifiedSequence ?? string.Empty);
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.ApexRt));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.LibraryRt));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(r.Weight));
+                }
+            }
+            LogAction(string.Format(
+                @"Wrote Stage 6 inverse-predict dump: {0} ({1} rows)",
+                path, sorted.Count));
         }
     }
 }
