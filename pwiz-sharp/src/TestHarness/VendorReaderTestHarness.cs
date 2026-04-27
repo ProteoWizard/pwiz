@@ -134,6 +134,7 @@ public static class VendorReaderTestHarness
             PreferOnlyMsLevel = config.PreferOnlyMsLevel,
             CombineIonMobilitySpectra = config.CombineIonMobilitySpectra,
             SimAsSpectra = config.SimAsSpectra,
+            SortAndJitter = config.SortAndJitter,
         };
         reader.Read(rawPath, msd, readerConfig);
 

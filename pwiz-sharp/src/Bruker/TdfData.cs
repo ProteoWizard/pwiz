@@ -281,7 +281,7 @@ internal sealed class TdfData : IBrukerData
 
     // ---------- spectrum fill ----------
 
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid)
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
@@ -316,19 +316,23 @@ internal sealed class TdfData : IBrukerData
             if (scanInvK0 > 0)
                 scan.Set(CVID.MS_inverse_reduced_ion_mobility, scanInvK0, CVID.MS_volt_second_per_square_centimeter);
         }
-        else if (tag.Combined)
+        else if (tag.Combined && (tag.ScanEnd - tag.ScanBegin + 1) < 100)
         {
-            // The first scan in the merged list carries the time + invK0 of the first member.
-            scanInvK0 = _tims.ScanNumberToOneOverK0(frame.FrameId, new[] { (double)tag.ScanBegin })[0];
-            if (scanInvK0 > 0)
-                scan.Set(CVID.MS_inverse_reduced_ion_mobility, scanInvK0, CVID.MS_volt_second_per_square_centimeter);
-            // pwiz C++ combined-mode native ids use the raw TDF scan value (0-based) — see
-            // SpectrumList_Bruker.cpp:393-396 which emits *getMergedScanNumbers().begin()
-            // directly. This is inconsistent with the non-combined path that adds +1, but
-            // we mirror the wire format faithfully.
+            // PASEF combined (< 100 merged scans, typically per-precursor). pwiz C++ emits
+            // a multi-scan list and labels the first scan with the raw 0-based TDF scan
+            // number plus an invK0 computed at the precursor's avg-scan-number (fractional
+            // centroid mobility from PasefFrameMsMsInfo+Precursors join).
             scan.SpectrumId = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
                               " scan=" + tag.ScanBegin.ToString(CultureInfo.InvariantCulture);
+            double k0Probe = tag.PasefPrecursor?.AvgScanNumber > 0
+                ? tag.PasefPrecursor.AvgScanNumber
+                : tag.ScanBegin;
+            scanInvK0 = _tims.ScanNumberToOneOverK0(frame.FrameId, new[] { k0Probe })[0];
+            if (scanInvK0 > 0)
+                scan.Set(CVID.MS_inverse_reduced_ion_mobility, scanInvK0, CVID.MS_volt_second_per_square_centimeter);
         }
+        // MS1 combined (>= 100 merged scans): no spectrumRef, no invK0 on the single scan
+        // element, no per-scan list (matches ref combineIMS mzML for whole-frame summaries).
 
         if (tag.DiaWindow is not null)
             scan.UserParams.Add(new UserParam(
@@ -339,15 +343,19 @@ internal sealed class TdfData : IBrukerData
         if (mzHigh > 0)
             scan.ScanWindows.Add(new ScanWindow(mzLow, mzHigh, CVID.MS_m_z));
 
-        if (tag.Combined)
+        // Multi-scan emission only fires when fewer than 100 scans are merged (matches pwiz C++
+        // SpectrumList_Bruker.cpp:390 `if (scanNumbers.size() < 100)`); this is the regime for
+        // PASEF per-precursor combined spectra (~25 scans) but not for MS1 combined frames
+        // (~900 scans), which keep the simpler single-scan + MS_no_combination layout.
+        int mergedScanCount = tag.Combined ? (tag.ScanEnd - tag.ScanBegin + 1) : 1;
+        bool emitMergedList = tag.Combined && mergedScanCount < 100;
+        if (emitMergedList)
             spec.ScanList.Set(CVID.MS_sum_of_spectra);
         else
             spec.ScanList.Set(CVID.MS_no_combination);
         spec.ScanList.Scans.Add(scan);
 
-        // Combined mode: append empty <scan spectrumRef="..."> entries for the remaining
-        // merged scans (matches pwiz C++ SpectrumList_Bruker.cpp:400-415).
-        if (tag.Combined)
+        if (emitMergedList)
         {
             for (int s = tag.ScanBegin + 1; s <= tag.ScanEnd; s++)
             {
@@ -370,7 +378,7 @@ internal sealed class TdfData : IBrukerData
         // pwiz C++ leaves MS_lowest/highest_observed_m_z commented-out for TDF.
         double[] meanMobility = Array.Empty<double>();
         var (mz, intensity) = tag.Combined
-            ? ReadCombinedScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd, out meanMobility)
+            ? ReadCombinedScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd, sortAndJitter, out meanMobility)
             : ReadScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd);
         spec.DefaultArrayLength = mz.Length;
         if (getBinaryData)
@@ -533,7 +541,7 @@ internal sealed class TdfData : IBrukerData
     /// each emitted peak. Output arrays are aligned: <c>mz[i] / intensity[i] / mobility[i]</c>.
     /// </summary>
     private (double[] Mz, double[] Intensity) ReadCombinedScanRangePeaks(
-        TdfFrame frame, int scanBegin, int scanEnd, out double[] meanMobility)
+        TdfFrame frame, int scanBegin, int scanEnd, bool sortAndJitter, out double[] meanMobility)
     {
         var proxy = GetFrame(frame.FrameId, frame.NumScans);
 
@@ -568,8 +576,50 @@ internal sealed class TdfData : IBrukerData
                 write++;
             }
         }
-        meanMobility = mobArr;
-        return (mzArr, intArr);
+        if (!sortAndJitter)
+        {
+            // Production mode: keep peaks in scan-by-scan order. mzML doesn't mandate m/z
+            // ordering and downstream tools handle either layout — skipping the sort + jitter
+            // means our output is cheaper to produce and the m/z values are exact (no 1e-8
+            // perturbation on duplicates).
+            meanMobility = mobArr;
+            return (mzArr, intArr);
+        }
+
+        // Test/reference-parity mode: sort by m/z across all merged scans, then jitter
+        // duplicate m/z values by 1e-8 per row (matches pwiz C++ TimsSpectrum::
+        // getCombinedSpectrumData at TimsData.cpp:1112-1147 with sortAndJitter=true).
+        // Stable sort by m/z preserves scan order on duplicates. cpp uses std::sort which
+        // is unstable, so its tie-break order is implementation-defined; on this fixture's
+        // data libstdc++ tends to keep the smaller-scan peak first. The jitter perturbs
+        // the m/z to lock the tie-break — but if our tie-break ordering differs from the
+        // ref the per-position (intensity, mobility) values will still mismatch on a few
+        // duplicate positions.
+        var idx = Enumerable.Range(0, total).OrderBy(i => mzArr[i]).ToArray();
+        var mzSorted = new double[total];
+        var intSorted = new double[total];
+        var mobSorted = new double[total];
+        for (int i = 0; i < total; i++)
+        {
+            int src = idx[i];
+            mzSorted[i] = mzArr[src];
+            intSorted[i] = intArr[src];
+            mobSorted[i] = mobArr[src];
+        }
+        // Jitter duplicate m/z values by 1e-8 per consecutive entry so std::sort-style
+        // ordering of same-m/z peaks becomes irrelevant — matches pwiz C++ jitter at
+        // TimsData.cpp:1141-1147.
+        for (int i = 1; i < total; i++)
+        {
+            if (mzSorted[i - 1] == mzSorted[i])
+            {
+                int startI = i - 1;
+                for (; i < total && mzSorted[startI] == mzSorted[i]; i++)
+                    mzSorted[i] += 1e-8 * (i - startI);
+            }
+        }
+        meanMobility = mobSorted;
+        return (mzSorted, intSorted);
     }
 
     private FrameProxy GetFrame(long frameId, int numScans)

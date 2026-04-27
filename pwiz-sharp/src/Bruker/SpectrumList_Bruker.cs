@@ -41,15 +41,19 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IDisposable, IVendor
     /// Creates a spectrum list over the given Bruker analysis handle. Index is built eagerly so
     /// the caller sees a stable <see cref="Count"/> immediately.
     /// </summary>
+    private readonly bool _sortAndJitter;
+
     public SpectrumList_Bruker(
         IBrukerData data,
         bool owns = true,
         bool combineIonMobilitySpectra = false,
-        int preferOnlyMsLevel = 0)
+        int preferOnlyMsLevel = 0,
+        bool sortAndJitter = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
         _owns = owns;
+        _sortAndJitter = sortAndJitter;
         _index = data.BuildSpectrumIndex(combineIonMobilitySpectra, preferOnlyMsLevel);
     }
 
@@ -75,7 +79,7 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IDisposable, IVendor
     {
         var entry = _index[index];
         var spec = new Spectrum { Index = index, Id = entry.Id };
-        _data.FillSpectrum(spec, entry, getBinaryData, preferCentroid);
+        _data.FillSpectrum(spec, entry, getBinaryData, preferCentroid, _sortAndJitter);
         return spec;
     }
 

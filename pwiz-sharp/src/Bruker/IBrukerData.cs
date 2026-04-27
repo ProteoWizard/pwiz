@@ -62,7 +62,7 @@ public interface IBrukerData : IDisposable
     /// <paramref name="getBinaryData"/> is true, its peak arrays. The existing <c>Index</c> /
     /// <c>Id</c> on <paramref name="spec"/> are left untouched.
     /// </summary>
-    void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid);
+    void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter);
 
     /// <summary>
     /// Yields one point per frame for the TIC / BPC chromatograms, honoring

@@ -40,6 +40,13 @@ public sealed class ReaderTestConfig
     /// <summary>Expose SIM scans as top-level spectra.</summary>
     public bool SimAsSpectra { get; set; }
 
+    /// <summary>
+    /// When true, Bruker combined-IMS spectra sort + jitter merged peaks for reproducible
+    /// ordering against pwiz C++ reference mzMLs. The harness should set this on combineIMS
+    /// PASEF tests; production msconvert-sharp leaves it off. See <see cref="Pwiz.Data.MsData.Readers.ReaderConfig.SortAndJitter"/>.
+    /// </summary>
+    public bool SortAndJitter { get; set; }
+
     /// <summary>Expose SRM transitions as top-level spectra.</summary>
     public bool SrmAsSpectra { get; set; }
 

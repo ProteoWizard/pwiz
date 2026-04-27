@@ -79,6 +79,11 @@ public class ReaderBrukerTests
         RunHarness("Hela_QC_PASEF_Slot1-first-6-frames.d", config =>
         {
             config.CombineIonMobilitySpectra = true;
+            // pwiz C++ ref combineIMS mzMLs were generated with sortAndJitter=true so the
+            // merged peak arrays are sorted by m/z with a 1e-8 jitter on duplicates. We only
+            // turn this on under the harness — production msconvert-sharp doesn't perturb
+            // m/z values.
+            config.SortAndJitter = true;
         });
     }
 

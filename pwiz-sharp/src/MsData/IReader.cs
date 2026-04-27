@@ -32,6 +32,15 @@ public sealed class ReaderConfig
     /// </summary>
     public bool SimAsSpectra { get; set; }
 
+    /// <summary>
+    /// When true (test/reference-parity mode), Bruker combined-IMS spectra sort their merged
+    /// peak arrays by m/z and add a 1e-8 jitter to duplicate m/z values so std::sort-style
+    /// tie-break ordering is reproducible. Production conversions leave this off — mzML
+    /// doesn't mandate m/z ordering and downstream tools handle either layout. Port of
+    /// <c>pwiz::msdata::Reader::Config::sortAndJitter</c>.
+    /// </summary>
+    public bool SortAndJitter { get; set; }
+
     /// <summary>Default configuration.</summary>
     public static ReaderConfig Default { get; } = new();
 }
