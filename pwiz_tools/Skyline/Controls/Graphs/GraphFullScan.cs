@@ -2221,9 +2221,21 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var src = graphControl.MasterPane.FindPane(Point.Truncate(mousePosition));
                 if (ReferenceEquals(src, _stickSpectrumPane))
+                {
                     CopyXAxis(_heatMapPane, _stickSpectrumPane);
+                    // ZedGraph called AxisChange on the source pane (stick) but not on
+                    // the target — without an explicit SetScale here the heatmap's
+                    // CurveList stays stuck at the pre-zoom contents (built from the old
+                    // X range) and the next paint just stretches those points across the
+                    // new pixel mapping. Forcing SetScale re-runs HeatMapGraphPane's
+                    // GraphHeatMap so it re-queries _heatMapData for the new range.
+                    using (var g = graphControl.CreateGraphics())
+                        _heatMapPane.SetScale(g);
+                }
                 else if (ReferenceEquals(src, _heatMapPane))
+                {
                     CopyXAxis(_stickSpectrumPane, _heatMapPane);
+                }
             }
             FireZoomEvent(newState);
         }
