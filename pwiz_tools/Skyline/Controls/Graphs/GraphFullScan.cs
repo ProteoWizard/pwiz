@@ -143,8 +143,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 new MsDataFileScanHelper(SetSpectra, HandleLoadScanException,
                     false); // We need zero intensity points for proper display
 
-            GraphPane.Title.IsVisible = true;
+            GraphPane.Title.IsVisible = false;
             GraphPane.Legend.IsVisible = false;
+            // Master pane title carries the scan filename / RT centred across the whole
+            // window (initialised here so DoLayout reserves the strip on first render).
+            graphControl.MasterPane.Title.IsVisible = true;
+            graphControl.MasterPane.Title.Text = string.Empty;
             // Make sure to use italics for "m/z"
             AbstractMSGraphItem.SetAxisText(GraphPane.XAxis, GraphsResources.AbstractMSGraphItem_CustomizeXAxis_MZ);
 
@@ -200,7 +204,9 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Configure dual-pane layout: stick spectrum on top, heatmap on bottom.
         /// When <paramref name="includeMobilogram"/> is true, adds a 4-pane 2x2 grid
-        /// (stick + empty spacer on row 0, heatmap + mobilogram on row 1).
+        /// (spacer + stick on row 0, mobilogram + heatmap on row 1) — mobilogram on
+        /// the left so its drift-time Y-axis labels sit at the outer edge of the
+        /// layout and its X-axis is reversed (intensity grows outward from heatmap).
         /// </summary>
         private void SetupDualPaneLayout(bool includeMobilogram)
         {
@@ -220,10 +226,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 _stickSpectrumPane.XAxis.Title.IsVisible = false;
             }
 
-            // Force both Y-axes to reserve the same width so chart areas align horizontally
-            const float yAxisMinSpace = 80f;
+            // When mobilogram is visible the spacer pane carries the stick's Intensity
+            // title and the mobilogram pane carries the heatmap's Drift Time title, so
+            // stick and heatmap only need room for tick labels — narrow MinSpace closes
+            // the gap between mobilogram chart and heatmap chart. Without mobilogram the
+            // titles live in their own panes and need the full 80.
+            float yAxisMinSpace = includeMobilogram ? 35f : 80f;
             _stickSpectrumPane.YAxis.MinSpace = yAxisMinSpace;
             _heatMapPane.YAxis.MinSpace = yAxisMinSpace;
+            _stickSpectrumPane.YAxis.Title.IsVisible = !includeMobilogram;
+            _heatMapPane.YAxis.Title.IsVisible = !includeMobilogram;
+            // Drop the heatmap's left margin so its Y-axis content butts up against the
+            // mobilogram pane (when present) — minimises the visible gap. Stick matches.
+            _stickSpectrumPane.Margin.Left = 0;
+            _heatMapPane.Margin.Left = 0;
+            _heatMapPane.YAxis.Scale.IsVisible = true;
 
             if (includeMobilogram)
             {
@@ -244,10 +261,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if (includeMobilogram)
             {
                 alreadyConfigured = mp.PaneList.Count == 4 &&
-                                    ReferenceEquals(mp.PaneList[0], _stickSpectrumPane) &&
-                                    ReferenceEquals(mp.PaneList[1], _emptySpacerPane) &&
-                                    ReferenceEquals(mp.PaneList[2], _heatMapPane) &&
-                                    ReferenceEquals(mp.PaneList[3], _mobilogramPane);
+                                    ReferenceEquals(mp.PaneList[0], _emptySpacerPane) &&
+                                    ReferenceEquals(mp.PaneList[1], _stickSpectrumPane) &&
+                                    ReferenceEquals(mp.PaneList[2], _mobilogramPane) &&
+                                    ReferenceEquals(mp.PaneList[3], _heatMapPane);
             }
             else
             {
@@ -268,12 +285,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     float topFrac = RowFraction;
                     if (includeMobilogram)
                     {
-                        // 2 rows × 2 cols: stick+spacer on top, heatmap+mobilogram below
+                        // 2 rows × 2 cols: spacer+stick on top, mobilogram+heatmap below
                         mp.SetLayout(g, true, new[] { 2, 2 }, new[] { topFrac, 1 - topFrac });
-                        mp.Add(_stickSpectrumPane);
                         mp.Add(_emptySpacerPane);
-                        mp.Add(_heatMapPane);
+                        mp.Add(_stickSpectrumPane);
                         mp.Add(_mobilogramPane);
+                        mp.Add(_heatMapPane);
                     }
                     else
                     {
@@ -295,10 +312,33 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// After MasterPane.DoLayout, override the per-pane Rects so the left column
-        /// occupies ColumnFraction of the total width and the right column (spacer +
-        /// mobilogram) occupies the remaining width. Likewise, the top row occupies
-        /// RowFraction of the total height and the bottom row occupies the remainder.
+        /// MasterPane.Rect with the master-title strip subtracted. Use this anywhere we
+        /// override pane Rects manually — otherwise our pane Rects span the full window
+        /// and overlap the master title that ZedGraph reserves at the top.
+        /// </summary>
+        private RectangleF GetMasterPaneClientRect()
+        {
+            var mp = graphControl.MasterPane;
+            var rect = mp.Rect;
+            if (mp.Title.IsVisible && !string.IsNullOrEmpty(mp.Title.Text))
+            {
+                using (var g = graphControl.CreateGraphics())
+                {
+                    float scaleFactor = mp.CalcScaleFactor();
+                    var size = mp.Title.FontSpec.BoundingBox(g, mp.Title.Text, scaleFactor);
+                    float titleSpace = size.Height + mp.Margin.Top;
+                    rect.Y += titleSpace;
+                    rect.Height -= titleSpace;
+                }
+            }
+            return rect;
+        }
+
+        /// <summary>
+        /// After MasterPane.DoLayout, override the per-pane Rects so the right column
+        /// (stick + heatmap) occupies <see cref="ColumnFraction"/> of the total width
+        /// and the left column (spacer + mobilogram) occupies the remainder. Likewise,
+        /// the top row occupies <see cref="RowFraction"/> and the bottom row the rest.
         /// </summary>
         private void AdjustFourPaneColumnWidths()
         {
@@ -306,9 +346,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 _heatMapPane == null || _mobilogramPane == null)
                 return;
 
-            // Use MasterPane.Rect as the authoritative source so we don't fold compressed
-            // pane Rects from a previous bad layout back into the math (would shrink each call).
-            var mpRect = graphControl.MasterPane.Rect;
+            // Use the client rect (excludes the master title strip) as the authoritative
+            // source so we don't fold compressed pane Rects from a previous bad layout
+            // back into the math (would shrink each call).
+            var mpRect = GetMasterPaneClientRect();
             float x0 = mpRect.X;
             float y0 = mpRect.Y;
             float totalW = mpRect.Width;
@@ -316,19 +357,19 @@ namespace pwiz.Skyline.Controls.Graphs
             if (totalW <= 0 || totalH <= 0)
                 return;
 
-            float leftFrac = ColumnFraction;
+            float rightFrac = ColumnFraction;
             float topFrac = RowFraction;
-            float leftW = totalW * leftFrac;
-            float rightW = totalW - leftW;
+            float rightW = totalW * rightFrac;
+            float leftW = totalW - rightW;
             float topH = totalH * topFrac;
             float botH = totalH - topH;
             float xMid = x0 + leftW;
             float yMid = y0 + topH;
 
-            _stickSpectrumPane.Rect = new RectangleF(x0, y0, leftW, topH);
-            _emptySpacerPane.Rect = new RectangleF(xMid, y0, rightW, topH);
-            _heatMapPane.Rect = new RectangleF(x0, yMid, leftW, botH);
-            _mobilogramPane.Rect = new RectangleF(xMid, yMid, rightW, botH);
+            _emptySpacerPane.Rect = new RectangleF(x0, y0, leftW, topH);
+            _stickSpectrumPane.Rect = new RectangleF(xMid, y0, rightW, topH);
+            _mobilogramPane.Rect = new RectangleF(x0, yMid, leftW, botH);
+            _heatMapPane.Rect = new RectangleF(xMid, yMid, rightW, botH);
 
             AlignMobilogramChartToHeatmap();
         }
@@ -341,7 +382,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_stickSpectrumPane == null || _heatMapPane == null)
                 return;
-            var mpRect = graphControl.MasterPane.Rect;
+            var mpRect = GetMasterPaneClientRect();
             if (mpRect.Width <= 0 || mpRect.Height <= 0)
                 return;
             float topFrac = RowFraction;
@@ -352,8 +393,8 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Heatmap + mobilogram side by side, no stick pane. Used when the user has
-        /// heatmap on but stick off.
+        /// Mobilogram + heatmap side by side (mobilogram on the left), no stick pane.
+        /// Used when the user has heatmap on but stick off.
         /// </summary>
         private void SetupHeatmapMobilogramLayout()
         {
@@ -362,17 +403,23 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_mobilogramPane == null)
                 _mobilogramPane = CreateMobilogramPane(_heatMapPane);
 
+            _heatMapPane.YAxis.Scale.IsVisible = true;
+            // Mobilogram pane carries the drift-time title; heatmap shows numbers only.
+            _heatMapPane.YAxis.Title.IsVisible = false;
+            _heatMapPane.YAxis.MinSpace = 35f;
+            _heatMapPane.Margin.Left = 0;
+
             var mp = graphControl.MasterPane;
             bool alreadyConfigured = mp.PaneList.Count == 2 &&
-                                     ReferenceEquals(mp.PaneList[0], _heatMapPane) &&
-                                     ReferenceEquals(mp.PaneList[1], _mobilogramPane);
+                                     ReferenceEquals(mp.PaneList[0], _mobilogramPane) &&
+                                     ReferenceEquals(mp.PaneList[1], _heatMapPane);
             if (!alreadyConfigured)
             {
                 mp.PaneList.Clear();
                 mp.InnerPaneGap = 0;
                 _heatMapPane.Margin.Top = ZedGraph.Margin.Default.Top;
-                mp.Add(_heatMapPane);
                 mp.Add(_mobilogramPane);
+                mp.Add(_heatMapPane);
                 using (var g = graphControl.CreateGraphics())
                 {
                     mp.SetLayout(g, PaneLayout.SingleRow);
@@ -384,21 +431,22 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Apply ColumnFraction to the 2-pane (heatmap + mobilogram) layout so the
+        /// Apply ColumnFraction to the 2-pane (mobilogram + heatmap) layout so the
         /// vertical splitter still drives column widths when the stick pane is hidden.
+        /// ColumnFraction is the heatmap (right) column's share of the total width.
         /// </summary>
         private void AdjustTwoPaneColumnWidths()
         {
             if (_heatMapPane == null || _mobilogramPane == null)
                 return;
-            var mpRect = graphControl.MasterPane.Rect;
+            var mpRect = GetMasterPaneClientRect();
             if (mpRect.Width <= 0 || mpRect.Height <= 0)
                 return;
-            float leftFrac = ColumnFraction;
-            float leftW = mpRect.Width * leftFrac;
-            float rightW = mpRect.Width - leftW;
-            _heatMapPane.Rect = new RectangleF(mpRect.X, mpRect.Y, leftW, mpRect.Height);
-            _mobilogramPane.Rect = new RectangleF(mpRect.X + leftW, mpRect.Y, rightW, mpRect.Height);
+            float rightFrac = ColumnFraction;
+            float rightW = mpRect.Width * rightFrac;
+            float leftW = mpRect.Width - rightW;
+            _mobilogramPane.Rect = new RectangleF(mpRect.X, mpRect.Y, leftW, mpRect.Height);
+            _heatMapPane.Rect = new RectangleF(mpRect.X + leftW, mpRect.Y, rightW, mpRect.Height);
             AlignMobilogramChartToHeatmap();
         }
 
@@ -412,20 +460,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             // Re-apply column widths if pane Rects don't match expected — calling
             // every paint causes a repaint loop because Rect assignment invalidates.
-            var mpRect = graphControl.MasterPane.Rect;
+            var mpRect = GetMasterPaneClientRect();
             if (mpRect.Width > 0 && mpRect.Height > 0)
             {
-                float expectedLeftW = mpRect.Width * ColumnFraction;
+                float expectedHeatmapW = mpRect.Width * ColumnFraction;
                 if (IsStickPlotVisible)
                 {
                     float expectedTopH = mpRect.Height * RowFraction;
-                    if (Math.Abs(_heatMapPane.Rect.Width - expectedLeftW) > 1f ||
+                    if (Math.Abs(_heatMapPane.Rect.Width - expectedHeatmapW) > 1f ||
                         Math.Abs(_stickSpectrumPane.Rect.Height - expectedTopH) > 1f)
                     {
                         AdjustFourPaneColumnWidths();
                     }
                 }
-                else if (Math.Abs(_heatMapPane.Rect.Width - expectedLeftW) > 1f)
+                else if (Math.Abs(_heatMapPane.Rect.Width - expectedHeatmapW) > 1f)
                 {
                     AdjustTwoPaneColumnWidths();
                 }
@@ -449,8 +497,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (rectDrifted)
             {
                 var paneRect = _mobilogramPane.Rect;
-                float chartX = paneRect.X + _mobilogramPane.YAxis.MinSpace;
-                float chartRight = paneRect.Right - 10;
+                float chartX = paneRect.X + _mobilogramPane.Margin.Left + _mobilogramPane.YAxis.MinSpace;
+                float chartRight = paneRect.Right - 6;
                 float chartW = Math.Max(1, chartRight - chartX);
                 _mobilogramPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
             }
@@ -463,25 +511,44 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SplitterDrag HitTestSplitter(Point pt)
         {
-            if (!IsStickPlotVisible)
+            if (!IsStickPlotVisible && !IsMobilogramPaneVisible)
                 return SplitterDrag.None;
-            float yMid = _heatMapPane.Rect.Y;
-            bool nearH = Math.Abs(pt.Y - yMid) <= SPLITTER_HIT_PX;
+
+            // Horizontal splitter sits between the stick (top) and heatmap (bottom)
+            // when stick is shown.
+            bool nearH = false;
+            if (IsStickPlotVisible)
+            {
+                float yMid = _heatMapPane.Rect.Y;
+                nearH = Math.Abs(pt.Y - yMid) <= SPLITTER_HIT_PX;
+            }
+
+            // Vertical splitter sits between mobilogram (left) and heatmap (right) when
+            // mobilogram is shown. In 4-pane mode it lines up with the spacer's right
+            // edge; in the H+M 2-pane case it's the heatmap pane's left edge.
+            bool nearV = false;
             if (IsMobilogramPaneVisible)
             {
-                float xMid = _emptySpacerPane.Rect.X;
-                bool nearV = Math.Abs(pt.X - xMid) <= SPLITTER_HIT_PX;
-                // Bottom-left corner of the empty spacer pane is a generous grab-zone for
-                // the cruciform intersection — easier to hit than the 12px-wide cross.
+                float xMid = IsStickPlotVisible
+                    ? _emptySpacerPane.Rect.Right
+                    : _heatMapPane.Rect.X;
+                nearV = Math.Abs(pt.X - xMid) <= SPLITTER_HIT_PX;
+            }
+
+            // Cruciform corner grab-zone — only meaningful in the 4-pane case where
+            // both splitters meet at the spacer's bottom-right corner.
+            if (IsStickPlotVisible && IsMobilogramPaneVisible)
+            {
                 var spacer = _emptySpacerPane.Rect;
-                bool inCorner = pt.X >= spacer.Left && pt.X <= spacer.Left + SPLITTER_CORNER_PX &&
+                bool inCorner = pt.X >= spacer.Right - SPLITTER_CORNER_PX && pt.X <= spacer.Right &&
                                 pt.Y >= spacer.Bottom - SPLITTER_CORNER_PX && pt.Y <= spacer.Bottom;
                 if (inCorner)
                     return SplitterDrag.Both;
                 if (nearV && nearH)
                     return SplitterDrag.Both;
-                if (nearV) return SplitterDrag.Vertical;
             }
+
+            if (nearV) return SplitterDrag.Vertical;
             if (nearH) return SplitterDrag.Horizontal;
             return SplitterDrag.None;
         }
@@ -507,7 +574,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (graphControl.IsEnableVZoom != vZoomOk)
                     graphControl.IsEnableVZoom = vZoomOk;
             }
-            if (!IsStickPlotVisible)
+            if (!IsStickPlotVisible && !IsMobilogramPaneVisible)
                 return;
             var hit = HitTestSplitter(e.Location);
             if (hit != SplitterDrag.None)
@@ -523,7 +590,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 case SplitterDrag.Horizontal:
                     return Cursors.HSplit;
                 case SplitterDrag.Both:
-                    return Cursors.SizeNESW;
+                    return Cursors.SizeNWSE;
                 default:
                     return Cursors.Default;
             }
@@ -553,17 +620,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ApplyDrag(Point pt)
         {
-            var mpRect = graphControl.MasterPane.Rect;
+            var mpRect = GetMasterPaneClientRect();
             if (mpRect.Width <= 0 || mpRect.Height <= 0)
                 return;
 
             if (_activeDrag == SplitterDrag.Vertical || _activeDrag == SplitterDrag.Both)
-                ColumnFraction = (pt.X - mpRect.X) / mpRect.Width;
+                ColumnFraction = (mpRect.Right - pt.X) / mpRect.Width;
             if (_activeDrag == SplitterDrag.Horizontal || _activeDrag == SplitterDrag.Both)
                 RowFraction = (pt.Y - mpRect.Y) / mpRect.Height;
 
-            if (IsMobilogramPaneVisible)
+            if (IsStickPlotVisible && IsMobilogramPaneVisible)
                 AdjustFourPaneColumnWidths();
+            else if (IsMobilogramPaneVisible)
+                AdjustTwoPaneColumnWidths();
             else
                 AdjustTwoPaneRowHeights();
             graphControl.Invalidate();
@@ -611,9 +680,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (heat.Height <= 0)
                 return;
             var paneRect = _mobilogramPane.Rect;
-            // Offset chartX by Y-axis space so labels have room to render on the left
-            float chartX = paneRect.X + _mobilogramPane.YAxis.MinSpace;
-            float chartRight = paneRect.Right - 10;
+            // Offset chartX by Y-axis space so labels have room to render on the left.
+            // Extend chart all the way to the pane's right edge so the mobilogram chart
+            // butts up against the heatmap pane's Y-axis area — minimizes visible gap.
+            float chartX = paneRect.X + _mobilogramPane.Margin.Left + _mobilogramPane.YAxis.MinSpace;
+            float chartRight = paneRect.Right - 6;
             float chartW = Math.Max(1, chartRight - chartX);
             _mobilogramPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
             // Setting Rect flips IsRectAuto to false automatically
@@ -635,22 +706,26 @@ namespace pwiz.Skyline.Controls.Graphs
             // MSGraphPane defaults this to true, which would snap Y.Min to 0 on AxisChange.
             pane.LockYAxisMinAtZero = false;
             CopyYAxisFromHeatmap(pane, heatMap);
-            // Show Y-axis numbers; keep tick marks on both sides of the axis line to match
-            // heatmap's visual style. Title is suppressed since the heatmap pane already
-            // labels the drift-time axis.
-            pane.YAxis.Title.IsVisible = false;
+            // Mobilogram carries the drift-time Y-axis title (the heatmap suppresses its
+            // own when mobilogram is present). Numbers and tick marks visible on both sides
+            // of the axis line to match the heatmap's visual style.
+            pane.YAxis.Title.IsVisible = true;
             pane.YAxis.MajorTic.IsOutside = true;
             pane.YAxis.MajorTic.IsInside = true;
             pane.YAxis.MinorTic.IsOutside = true;
             pane.YAxis.MinorTic.IsInside = true;
-            pane.YAxis.MinSpace = 50; // room for tick labels
-            // Match heatmap pane's margins so Chart.Rect Y/Height auto-align
-            pane.Margin.Left = 0;
+            pane.YAxis.MinSpace = 60; // room for title + tick labels
+            // Default left margin gives the mobilogram some breathing room from the
+            // window's left edge (otherwise the Y title sits flush against it).
+            pane.Margin.Left = ZedGraph.Margin.Default.Left;
             pane.Margin.Right = ZedGraph.Margin.Default.Right;
             pane.Margin.Top = 10;
             pane.Margin.Bottom = ZedGraph.Margin.Default.Bottom;
             pane.XAxis.Scale.MinAuto = false;
             pane.XAxis.Scale.MaxAuto = false;
+            // Mobilogram sits to the left of the heatmap, so reverse the X scale —
+            // intensity 0 at the right edge (touching the heatmap), peaks growing left.
+            pane.XAxis.Scale.IsReverse = true;
             return pane;
         }
 
@@ -673,6 +748,8 @@ namespace pwiz.Skyline.Controls.Graphs
             dst.MinorStep = src.MinorStep;
             dst.MajorStepAuto = false;
             dst.MinorStepAuto = false;
+            // Mirror the heatmap's drift-time title text so the mobilogram can carry it.
+            target.YAxis.Title.Text = heatMap.YAxis.Title.Text;
         }
 
         private MSGraphPane CreateEmptySpacerPane()
@@ -689,6 +766,27 @@ namespace pwiz.Skyline.Controls.Graphs
             pane.X2Axis.IsVisible = false;
             pane.Y2Axis.IsVisible = false;
             pane.Margin.All = 0;
+
+            // The spacer carries the stick pane's "Intensity" Y-axis title — placed near
+            // the right edge of the spacer so it sits immediately to the left of the
+            // stick's tick labels. Frees the stick pane to use a narrow Y-axis reserve
+            // (just numbers + ticks), which in turn lets the heatmap match and shrink the
+            // gap between mobilogram and heatmap.
+            var intensityLabel = new TextObj(
+                GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity,
+                0.95, 0.5,
+                CoordType.PaneFraction,
+                AlignH.Center,
+                AlignV.Center)
+            {
+                IsClippedToChartRect = false,
+            };
+            intensityLabel.FontSpec.Size = 14;
+            intensityLabel.FontSpec.IsBold = true;
+            intensityLabel.FontSpec.Angle = 90;
+            intensityLabel.FontSpec.Border.IsVisible = false;
+            intensityLabel.FontSpec.Fill.IsVisible = false;
+            pane.GraphObjList.Add(intensityLabel);
             return pane;
         }
 
@@ -710,6 +808,10 @@ namespace pwiz.Skyline.Controls.Graphs
             // Reset margins and force layout recalculation
             _heatMapPane.Margin.Top = ZedGraph.Margin.Default.Top;
             _heatMapPane.Margin.Right = ZedGraph.Margin.Default.Right;
+            _heatMapPane.Margin.Left = ZedGraph.Margin.Default.Left;
+            _heatMapPane.YAxis.MinSpace = 0f;
+            _heatMapPane.YAxis.Scale.IsVisible = true;
+            _heatMapPane.YAxis.Title.IsVisible = true;
             using (var g = graphControl.CreateGraphics())
             {
                 mp.SetLayout(g, PaneLayout.SingleColumn);
@@ -789,7 +891,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HandleLoadScanExceptionUI(Exception ex)
         {
-            GraphPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Spectrum_unavailable;
+            graphControl.MasterPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Spectrum_unavailable;
+            graphControl.MasterPane.Title.IsVisible = true;
             MessageDlg.ShowException(this, ex);
         }
 
@@ -899,7 +1002,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Need to check again once on the UI thread
                     if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
                     {
-                        GraphPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Loading___;
+                        graphControl.MasterPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Loading___;
+                        graphControl.MasterPane.Title.IsVisible = true;
                         graphControl.Refresh();
                     }
                 }));
@@ -958,6 +1062,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 _heatMapPane.ShowHeatMap = showHeatmap;
                 double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
                 string titleText = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
+                // Show the scan title once at the top of the master pane (centered across
+                // the full window) so it doesn't anchor over only one pane in multi-pane modes.
+                graphControl.MasterPane.Title.Text = titleText;
+                graphControl.MasterPane.Title.IsVisible = true;
 
                 if (showStick && showHeatmap)
                 {
@@ -1010,8 +1118,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(_stickSpectrumPane, massErrors);
 
-                    _stickSpectrumPane.Title.Text = titleText;
-                    _stickSpectrumPane.Title.IsVisible = true;
+                    _stickSpectrumPane.Title.IsVisible = false;
                     _heatMapPane.Title.IsVisible = false;
 
                     // Title visibility affects each pane's Chart.Rect — re-align mobilogram
@@ -1055,8 +1162,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(_heatMapPane, null);
 
-                    _heatMapPane.Title.Text = titleText;
-                    _heatMapPane.Title.IsVisible = true;
+                    _heatMapPane.Title.IsVisible = false;
 
                     // Run alignment last so mobilogram chart rect matches the heatmap's
                     // final Chart.Rect (title visibility above affects that rect).
@@ -1086,8 +1192,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(_heatMapPane, null);
 
-                    _heatMapPane.Title.Text = titleText;
-                    _heatMapPane.Title.IsVisible = true;
+                    _heatMapPane.Title.IsVisible = false;
 
                     FireSelectedScanChanged(retentionTime);
                 }
@@ -1113,7 +1218,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(GraphPane, massErrors);
 
-                    GraphPane.Title.Text = titleText;
+                    GraphPane.Title.IsVisible = false;
 
                     FireSelectedScanChanged(retentionTime);
                 }
@@ -1149,7 +1254,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     AddTransitionLabels(GraphPane, massErrors);
 
                 double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
-                GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
+                graphControl.MasterPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
+                graphControl.MasterPane.Title.IsVisible = true;
+                GraphPane.Title.IsVisible = false;
 
                 FireSelectedScanChanged(retentionTime);
             }
@@ -1978,7 +2085,8 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBoxScanType.Enabled = false;
             lblScanId.Text = string.Empty;
             leftButton.Enabled = rightButton.Enabled = false;
-            GraphPane.Title.Text = _msDataFileScanHelper.FileName;
+            graphControl.MasterPane.Title.Text = _msDataFileScanHelper.FileName;
+            graphControl.MasterPane.Title.IsVisible = true;
         }
 
         [Browsable(true)]
@@ -2157,7 +2265,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (IsStickPlotVisible)
             {
-                var mpR = graphControl.MasterPane.Rect;
+                var mpR = GetMasterPaneClientRect();
                 if (mpR.Height > 0 && Math.Abs(_stickSpectrumPane.Rect.Height - mpR.Height * RowFraction) > 1f)
                     AdjustTwoPaneRowHeights();
             }
@@ -2893,12 +3001,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 _mobilogramPane.CurveList.Add(line);
             }
 
-            // Filter band as a BoxObj spanning full X range between filterMin and filterMax
+            // Filter band as a BoxObj spanning the full chart width between filterMin
+            // and filterMax. Use chart-fraction X (not scale X) so the band positions
+            // correctly when the X axis is reversed.
             if (!double.IsNaN(filterMin) && !double.IsNaN(filterMax))
             {
-                var band = new BoxObj(xScale.Min, filterMax, xScale.Max - xScale.Min, filterMax - filterMin,
+                var band = new BoxObj(0.0, filterMax, 1.0, filterMax - filterMin,
                     Color.FromArgb(100, Color.DarkViolet), Color.FromArgb(50, Color.Gray))
                 {
+                    Location = { CoordinateFrame = CoordType.XChartFractionYScale },
                     IsClippedToChartRect = true,
                     ZOrder = ZOrder.E_BehindCurves,
                 };
@@ -2906,12 +3017,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 _mobilogramPane.GraphObjList.Add(band);
             }
 
-            // Peak center as a dashed horizontal line
+            // Peak center as a dashed horizontal line spanning the full chart width.
             if (!double.IsNaN(filterPeak))
             {
                 var peakLine = new LineObj(Color.FromArgb(180, Color.DarkViolet),
-                    xScale.Min, filterPeak, xScale.Max, filterPeak)
+                    0.0, filterPeak, 1.0, filterPeak)
                 {
+                    Location = { CoordinateFrame = CoordType.XChartFractionYScale },
                     IsClippedToChartRect = true,
                     ZOrder = ZOrder.A_InFront,
                 };
