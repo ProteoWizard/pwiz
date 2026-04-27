@@ -38,22 +38,25 @@ namespace pwiz.Skyline.EditUI
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.panelClauses = new System.Windows.Forms.Panel();
-            this.toolStripFilter = new System.Windows.Forms.ToolStrip();
-            this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
-            this.lblDescription = new System.Windows.Forms.Label();
-            this.panelEditor = new System.Windows.Forms.Panel();
-            this.panelPages = new System.Windows.Forms.FlowLayoutPanel();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.buttonPanel = new System.Windows.Forms.Panel();
             this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
             this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.valueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.toolStripFilter = new System.Windows.Forms.ToolStrip();
+            this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
+            this.lblDescription = new System.Windows.Forms.Label();
+            this.panelEditor = new System.Windows.Forms.Panel();
+            this.tabClauses = new System.Windows.Forms.TabControl();
+            this.tabPageCriteria = new System.Windows.Forms.TabPage();
+            this.tabPageNewAlternative = new System.Windows.Forms.TabPage();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.buttonPanel = new System.Windows.Forms.Panel();
             this.panelClauses.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.toolStripFilter.SuspendLayout();
             this.panelEditor.SuspendLayout();
+            this.tabClauses.SuspendLayout();
             this.buttonPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.SuspendLayout();
             // 
             // cbCreateCopy
@@ -89,48 +92,6 @@ namespace pwiz.Skyline.EditUI
             this.panelClauses.Controls.Add(this.toolStripFilter);
             resources.ApplyResources(this.panelClauses, "panelClauses");
             this.panelClauses.Name = "panelClauses";
-            // 
-            // toolStripFilter
-            // 
-            resources.ApplyResources(this.toolStripFilter, "toolStripFilter");
-            this.toolStripFilter.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStripFilter.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnDeleteFilter});
-            this.toolStripFilter.Name = "toolStripFilter";
-            // 
-            // btnDeleteFilter
-            // 
-            this.btnDeleteFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            resources.ApplyResources(this.btnDeleteFilter, "btnDeleteFilter");
-            this.btnDeleteFilter.Name = "btnDeleteFilter";
-            this.btnDeleteFilter.Click += new System.EventHandler(this.btnDeleteFilter_Click);
-            // 
-            // lblDescription
-            // 
-            resources.ApplyResources(this.lblDescription, "lblDescription");
-            this.lblDescription.Name = "lblDescription";
-            // 
-            // panelEditor
-            // 
-            this.panelEditor.Controls.Add(this.panelClauses);
-            this.panelEditor.Controls.Add(this.panelPages);
-            this.panelEditor.Controls.Add(this.lblDescription);
-            resources.ApplyResources(this.panelEditor, "panelEditor");
-            this.panelEditor.Name = "panelEditor";
-            // 
-            // panelPages
-            // 
-            resources.ApplyResources(this.panelPages, "panelPages");
-            this.panelPages.Name = "panelPages";
-            // 
-            // buttonPanel
-            // 
-            this.buttonPanel.Controls.Add(this.btnReset);
-            this.buttonPanel.Controls.Add(this.cbCreateCopy);
-            this.buttonPanel.Controls.Add(this.btnOk);
-            this.buttonPanel.Controls.Add(this.btnCancel);
-            resources.ApplyResources(this.buttonPanel, "buttonPanel");
-            this.buttonPanel.Name = "buttonPanel";
             // 
             // dataGridViewEx1
             // 
@@ -175,7 +136,6 @@ namespace pwiz.Skyline.EditUI
             // 
             this.propertyColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             this.propertyColumn.DataPropertyName = "Property";
-            resources.ApplyResources(this.propertyColumn, "propertyColumn");
             this.propertyColumn.Name = "propertyColumn";
             this.propertyColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.propertyColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
@@ -184,7 +144,6 @@ namespace pwiz.Skyline.EditUI
             // 
             this.operationColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             this.operationColumn.DataPropertyName = "Operation";
-            resources.ApplyResources(this.operationColumn, "operationColumn");
             this.operationColumn.Name = "operationColumn";
             this.operationColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.operationColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
@@ -193,8 +152,65 @@ namespace pwiz.Skyline.EditUI
             // 
             this.valueColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.valueColumn.DataPropertyName = "Value";
-            resources.ApplyResources(this.valueColumn, "valueColumn");
             this.valueColumn.Name = "valueColumn";
+            // 
+            // toolStripFilter
+            // 
+            resources.ApplyResources(this.toolStripFilter, "toolStripFilter");
+            this.toolStripFilter.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStripFilter.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnDeleteFilter});
+            this.toolStripFilter.Name = "toolStripFilter";
+            // 
+            // btnDeleteFilter
+            // 
+            this.btnDeleteFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnDeleteFilter, "btnDeleteFilter");
+            this.btnDeleteFilter.Name = "btnDeleteFilter";
+            this.btnDeleteFilter.Click += new System.EventHandler(this.btnDeleteFilter_Click);
+            // 
+            // lblDescription
+            // 
+            resources.ApplyResources(this.lblDescription, "lblDescription");
+            this.lblDescription.Name = "lblDescription";
+            // 
+            // panelEditor
+            // 
+            this.panelEditor.Controls.Add(this.panelClauses);
+            this.panelEditor.Controls.Add(this.tabClauses);
+            this.panelEditor.Controls.Add(this.lblDescription);
+            resources.ApplyResources(this.panelEditor, "panelEditor");
+            this.panelEditor.Name = "panelEditor";
+            // 
+            // tabClauses
+            // 
+            this.tabClauses.Controls.Add(this.tabPageCriteria);
+            this.tabClauses.Controls.Add(this.tabPageNewAlternative);
+            resources.ApplyResources(this.tabClauses, "tabClauses");
+            this.tabClauses.Name = "tabClauses";
+            this.tabClauses.SelectedIndex = 0;
+            this.tabClauses.SelectedIndexChanged += new System.EventHandler(this.tabClauses_SelectedIndexChanged);
+            // 
+            // tabPageCriteria
+            // 
+            resources.ApplyResources(this.tabPageCriteria, "tabPageCriteria");
+            this.tabPageCriteria.Name = "tabPageCriteria";
+            this.tabPageCriteria.UseVisualStyleBackColor = true;
+            // 
+            // tabPageNewAlternative
+            // 
+            resources.ApplyResources(this.tabPageNewAlternative, "tabPageNewAlternative");
+            this.tabPageNewAlternative.Name = "tabPageNewAlternative";
+            this.tabPageNewAlternative.UseVisualStyleBackColor = true;
+            // 
+            // buttonPanel
+            // 
+            this.buttonPanel.Controls.Add(this.btnReset);
+            this.buttonPanel.Controls.Add(this.cbCreateCopy);
+            this.buttonPanel.Controls.Add(this.btnOk);
+            this.buttonPanel.Controls.Add(this.btnCancel);
+            resources.ApplyResources(this.buttonPanel, "buttonPanel");
+            this.buttonPanel.Name = "buttonPanel";
             // 
             // EditSpectrumFilterDlg
             // 
@@ -211,13 +227,14 @@ namespace pwiz.Skyline.EditUI
             this.ShowInTaskbar = false;
             this.panelClauses.ResumeLayout(false);
             this.panelClauses.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
             this.toolStripFilter.ResumeLayout(false);
             this.toolStripFilter.PerformLayout();
             this.panelEditor.ResumeLayout(false);
             this.panelEditor.PerformLayout();
+            this.tabClauses.ResumeLayout(false);
             this.buttonPanel.ResumeLayout(false);
             this.buttonPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -237,7 +254,9 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.DataGridViewTextBoxColumn valueColumn;
         private System.Windows.Forms.Label lblDescription;
         private System.Windows.Forms.Panel panelEditor;
-        private System.Windows.Forms.FlowLayoutPanel panelPages;
+        private System.Windows.Forms.TabControl tabClauses;
+        private System.Windows.Forms.TabPage tabPageCriteria;
+        private System.Windows.Forms.TabPage tabPageNewAlternative;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Panel buttonPanel;
     }

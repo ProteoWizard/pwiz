@@ -640,6 +640,15 @@ namespace pwiz.Skyline.EditUI {
                 return ResourceManager.GetString("EditSpectrumFilterDlg_MakePageButton_Case__0_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to New Alternative.
+        /// </summary>
+        public static string EditSpectrumFilterDlg_MakeNewAlternativeTabPage_New_Alternative {
+            get {
+                return ResourceManager.GetString("EditSpectrumFilterDlg_MakeNewAlternativeTabPage_New_Alternative", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to &lt;&lt; Hide Ad&amp;vanced.

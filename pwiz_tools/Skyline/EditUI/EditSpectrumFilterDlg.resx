@@ -243,21 +243,6 @@
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="propertyColumn.HeaderText" xml:space="preserve">
-    <value>Property</value>
-  </data>
-  <data name="propertyColumn.Width" type="System.Int32, mscorlib">
-    <value>150</value>
-  </data>
-  <data name="operationColumn.HeaderText" xml:space="preserve">
-    <value>Operation</value>
-  </data>
-  <data name="operationColumn.Width" type="System.Int32, mscorlib">
-    <value>150</value>
-  </data>
-  <data name="valueColumn.HeaderText" xml:space="preserve">
-    <value>Value</value>
-  </data>
   <data name="dataGridViewEx1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -265,7 +250,7 @@
     <value>0, 0</value>
   </data>
   <data name="dataGridViewEx1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>671, 168</value>
+    <value>671, 180</value>
   </data>
   <data name="dataGridViewEx1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -274,7 +259,7 @@
     <value>dataGridViewEx1</value>
   </data>
   <data name="&gt;&gt;dataGridViewEx1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=26.1.1.114, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewEx1.Parent" xml:space="preserve">
     <value>panelClauses</value>
@@ -291,13 +276,13 @@
   <data name="btnDeleteFilter.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFvSURBVDhPtZBNKMNhHMd3Vd5K7eKCWjkgk7yEZDKksciE
-        yMwkBw6LhHZxcCDlQg64SA4kJeVE4jRv89qaWn8tUtoF/7g8H2Ootb+x4nt56nm+38/v+/xUfyJcJ9Bt
-        BMcOH1eRiZV5RGcVwqyHrfWwELweWJoJ9rC2AL0mRLse0VEBcxOKkLeGwlwGIz2h75w6ApC6bERjAdia
-        gkxiyIow5cKkPWxDFYvTiMrUdxDDVnCfwVh/AOo/P2zhhccFzcWBLxmzEPV50Nfyu/Cn2N/1V85DGNKh
-        Rhth+EaCxkLISUDWxvOgjYXa7F/Wv7kGUz4UJeKzGODi6H25d2l+yPLsDwu8v4NWHY8lSbhL0/HtbX8F
-        GLXh1MQgnxwoQ3h5hkEL6JI5TlPj21gNMd6WZyC1VSN7r0Mh7G4i56pxpkQhdTWA/KQ4aUcTh+x0KACm
-        RpBSo3HrM0G6Uq7pl2zvhvNDBcClE8YH4HDv2/A/SKV6BYojAxyEJtLJAAAAAElFTkSuQmCC
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFrSURBVDhPtZBNKMNhHMf/V+WtlIsLSjkgk5iQTIbkJTKN
+        yLwlBw6LhFx2cCDlQg64SA4kJeVEstO8zWtrSn9pWmkX/OPyfMQQnrWm+Fy/3++n5/kpyl+A6xi6q8Gx
+        w88sJFiZR3SWIyxG2FoPKuHmCpZmvndYW4BeE6LViGgvhbmJgJLXFwpLMdh65JwTh19Sm4kw54K14VtJ
+        DHUgTNkwOSKPv8LiNKIs+U3EcAe4T2Gs3y8d6w8+/oArFzQW+L9UnYGo00NfU2jjD9jbRZj0iIpUqNL9
+        cuxRwZwHWTFoumjudZFQkxmaBM81mHIgPw5fWwWcH74d15sSCcuzwSXceaHZwENhPO6iVHz27c8Bo1ac
+        SRFox/uBJTw/wWAbGBI4SonFt7EqFW9L0lBbKtFurqVMYXcTLTsWZ2IYalc9aI9ySVGUnaQoNKdDzpiy
+        oSaH4zamg3opF97RRrrh7EDOuXDC+AAc2OXwP3kBiiMDHFY5tmwAAAAASUVORK5CYII=
 </value>
   </data>
   <data name="btnDeleteFilter.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
@@ -313,7 +298,7 @@
     <value>671, 0</value>
   </data>
   <data name="toolStripFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 168</value>
+    <value>24, 180</value>
   </data>
   <data name="toolStripFilter.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -337,10 +322,10 @@
     <value>Fill</value>
   </data>
   <data name="panelClauses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 58</value>
+    <value>9, 46</value>
   </data>
   <data name="panelClauses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>695, 168</value>
+    <value>695, 180</value>
   </data>
   <data name="panelClauses.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -396,28 +381,88 @@
   <data name="&gt;&gt;lblDescription.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="panelPages.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="tabPageCriteria.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageCriteria.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageCriteria.Size" type="System.Drawing.Size, System.Drawing">
+    <value>687, 0</value>
+  </data>
+  <data name="tabPageCriteria.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabPageCriteria.Text" xml:space="preserve">
+    <value>Criteria</value>
+  </data>
+  <data name="&gt;&gt;tabPageCriteria.Name" xml:space="preserve">
+    <value>tabPageCriteria</value>
+  </data>
+  <data name="&gt;&gt;tabPageCriteria.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageCriteria.Parent" xml:space="preserve">
+    <value>tabClauses</value>
+  </data>
+  <data name="&gt;&gt;tabPageCriteria.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabPageNewAlternative.ImageKey" xml:space="preserve">
+    <value>add</value>
+  </data>
+  <data name="tabPageNewAlternative.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageNewAlternative.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageNewAlternative.Size" type="System.Drawing.Size, System.Drawing">
+    <value>687, 0</value>
+  </data>
+  <data name="tabPageNewAlternative.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabPageNewAlternative.Text" xml:space="preserve">
+    <value>+ Add Alternative</value>
+  </data>
+  <data name="&gt;&gt;tabPageNewAlternative.Name" xml:space="preserve">
+    <value>tabPageNewAlternative</value>
+  </data>
+  <data name="&gt;&gt;tabPageNewAlternative.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageNewAlternative.Parent" xml:space="preserve">
+    <value>tabClauses</value>
+  </data>
+  <data name="&gt;&gt;tabPageNewAlternative.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabClauses.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
-  <data name="panelPages.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="tabClauses.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 22</value>
   </data>
-  <data name="panelPages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>695, 36</value>
+  <data name="tabClauses.ShowToolTips" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="panelPages.TabIndex" type="System.Int32, mscorlib">
+  <data name="tabClauses.Size" type="System.Drawing.Size, System.Drawing">
+    <value>695, 24</value>
+  </data>
+  <data name="tabClauses.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
-  <data name="&gt;&gt;panelPages.Name" xml:space="preserve">
-    <value>panelPages</value>
+  <data name="&gt;&gt;tabClauses.Name" xml:space="preserve">
+    <value>tabClauses</value>
   </data>
-  <data name="&gt;&gt;panelPages.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;tabClauses.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelPages.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabClauses.Parent" xml:space="preserve">
     <value>panelEditor</value>
   </data>
-  <data name="&gt;&gt;panelPages.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabClauses.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelEditor.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -486,26 +531,11 @@
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>800, 235</value>
   </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Edit Spectrum Filter</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteFilter.Name" xml:space="preserve">
-    <value>btnDeleteFilter</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;propertyColumn.Name" xml:space="preserve">
     <value>propertyColumn</value>
@@ -524,6 +554,18 @@
   </data>
   <data name="&gt;&gt;valueColumn.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteFilter.Name" xml:space="preserve">
+    <value>btnDeleteFilter</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditSpectrumFilterDlg</value>

@@ -303,6 +303,9 @@ Example: Looplink: T [4]
     <value>Case {0}</value>
     <comment>"Case" means "possibility" or "branch"</comment>
   </data>
+  <data name="EditSpectrumFilterDlg_MakeNewAlternativeTabPage_New_Alternative" xml:space="preserve">
+    <value>New Alternative</value>
+  </data>
   <data name="FindNodeDlg_AdvancedVisible_Hide_Advanced" xml:space="preserve">
     <value>&lt;&lt; Hide Ad&amp;vanced</value>
   </data>

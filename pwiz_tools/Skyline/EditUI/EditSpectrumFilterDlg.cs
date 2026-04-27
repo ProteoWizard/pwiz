@@ -34,30 +34,21 @@ namespace pwiz.Skyline.EditUI
     {
         private List<Row> _rowList;
         private BindingList<Row> _rowBindingList;
+        private FilterPages _filterPages;
         private FilterPages _originalFilterPages;
-        private List<RadioButton> _pageRadioButtons = new List<RadioButton>();
         private ColumnDescriptor _rootColumn;
         private Dictionary<string, ColumnDescriptor> _propertyColumns = new Dictionary<string, ColumnDescriptor>();
+        private bool _updating;
 
         public EditSpectrumFilterDlg(ColumnDescriptor rootColumn, FilterPages filterPages)
         {
             InitializeComponent();
             _rootColumn = rootColumn;
-            _originalFilterPages = FilterPages = filterPages;
-            for (int iPage = 0; iPage < FilterPages.Pages.Count; iPage++)
-            {
-                _pageRadioButtons.Add(MakePageButton(iPage, FilterPages.Pages[iPage]));
-            }
-            panelPages.Controls.AddRange(_pageRadioButtons.ToArray());
-
-            if (FilterPages.Pages.Count == 1)
-            {
-                panelPages.Visible = false;
-            }
             _rowList = new List<Row>();
             _rowBindingList = new BindingList<Row>(_rowList);
             dataGridViewEx1.DataSource = _rowBindingList;
-            operationColumn.Items.AddRange(FilterOperations.ListOperations().Select(op=>(object) op.DisplayName).ToArray());
+            operationColumn.Items.AddRange(FilterOperations.ListOperations().Select(op => (object)op.DisplayName).ToArray());
+            FilterPages = _originalFilterPages = filterPages;
             // Select the first non-empty page
             for (int i = 0; i < FilterPages.Clauses.Count; i++)
             {
@@ -69,7 +60,81 @@ namespace pwiz.Skyline.EditUI
             }
             DisplayCurrentPage();
         }
-        public FilterPages FilterPages { get; private set; }
+        public FilterPages FilterPages
+        {
+            get
+            {
+                return _filterPages;
+            }
+            set
+            {
+                _updating = true;
+                try
+                {
+                    _filterPages = value;
+                    var newTabNames = GetFilterTabNames(FilterPages);
+                    for (int i = 0; i < newTabNames.Count; i++)
+                    {
+                        if (tabClauses.TabCount <= i)
+                        {
+                            tabClauses.TabPages.Add(new TabPage());
+                        }
+                        var tabPage = tabClauses.TabPages[i];
+                        tabPage.Text = newTabNames[i];
+                    }
+
+                    while (tabClauses.TabCount > newTabNames.Count)
+                    {
+                        tabClauses.TabPages.RemoveAt(tabClauses.TabCount - 1);
+                    }
+                }
+                finally
+                {
+                    _updating = false;
+                }
+            }
+        }
+
+        private IList<string> GetFilterTabNames(FilterPages filterPages)
+        {
+            if (filterPages.Pages.Count == 0)
+            {
+                return new[] { "Criteria" };
+            }
+
+            bool lastPageEmpty = filterPages.Pages[filterPages.Pages.Count - 1].Discriminant.IsEmpty && filterPages
+                .Clauses[filterPages.Clauses.Count - 1].FilterSpecs
+                .All(spec => spec.Operation == FilterOperations.OP_HAS_ANY_VALUE);
+
+            List<string> tabNames = new List<string>();
+            int unnamedTabCount = 0;
+            for (int i = 0; i < filterPages.Pages.Count; i++)
+            {
+                var caption = filterPages.Pages[i].Caption;
+                if (string.IsNullOrEmpty(caption))
+                {
+                    unnamedTabCount++;
+                    if (filterPages.Pages.Count == 1)
+                    {
+                        caption = "Criteria";
+                    }
+                    else
+                    {
+                        caption = string.Format("Criteria {0}", unnamedTabCount);
+                    }
+                }
+
+                tabNames.Add(caption);
+            }
+
+            if (!lastPageEmpty)
+            {
+                tabNames.Add("+ Add Alternative");
+            }
+
+            return tabNames;
+        }
+
         public int CurrentPageIndex { get; private set; }
 
         public FilterPage CurrentPage { get { return FilterPages.Pages[CurrentPageIndex]; } }
@@ -246,19 +311,26 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private RadioButton MakePageButton(int index, FilterPage page)
+        private void tabClauses_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var radioButton = new RadioButton
+            if (_updating)
             {
-                Text = page.Caption ?? string.Format(EditUIResources.EditSpectrumFilterDlg_MakePageButton_Case__0_, index + 1),
-                AutoCheck = false
-            };
-            radioButton.Click += (sender, args)=>SelectPage(index);
-            if (page.Description != null)
-            {
-                toolTip1.SetToolTip(radioButton, page.Description);
+                return;
             }
-            return radioButton;
+            int newIndex = tabClauses.SelectedIndex;
+            if (newIndex == CurrentPageIndex)
+            {
+                return;
+            }
+            if (newIndex < 0 || newIndex > FilterPages.Pages.Count)
+            {
+                tabClauses.SelectedIndex = CurrentPageIndex;
+                return;
+            }
+            if (!SelectPage(newIndex))
+            {
+                tabClauses.SelectedIndex = CurrentPageIndex;
+            }
         }
 
         public bool SelectPage(int pageIndex)
@@ -275,7 +347,7 @@ namespace pwiz.Skyline.EditUI
 
         private void DisplayCurrentPage()
         {
-            var currentPage = FilterPages.Pages[CurrentPageIndex];
+            var currentPage = FilterPages.Pages.ElementAtOrDefault(CurrentPageIndex) ?? SpectrumClassFilter.GenericFilterPage;
             propertyColumn.Items.Clear();
             _propertyColumns.Clear();
             foreach (var column in currentPage.AvailableColumns)
@@ -289,12 +361,12 @@ namespace pwiz.Skyline.EditUI
                 }
             }
 
-            for (int i = 0; i < _pageRadioButtons.Count; i++)
+            if (tabClauses.SelectedIndex != CurrentPageIndex)
             {
-                _pageRadioButtons[i].Checked = i == CurrentPageIndex;
+                tabClauses.SelectedIndex = CurrentPageIndex;
             }
             _rowList.Clear();
-            _rowList.AddRange(GetRows(FilterPages.Clauses[CurrentPageIndex]));
+            _rowList.AddRange(GetRows(FilterPages.Clauses.ElementAtOrDefault(CurrentPageIndex) ?? FilterClause.EMPTY));
             _rowBindingList.ResetBindings();
         }
 
