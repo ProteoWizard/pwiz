@@ -55,6 +55,8 @@ public sealed class Reader_Waters : IReader
         bool ddaProcessing = config?.DdaProcessing ?? false;
         bool combineIms = config?.CombineIonMobilitySpectra ?? false;
         bool globalChromMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
+        bool ignoreCalibrationScans = config?.IgnoreCalibrationScans ?? false;
+        var mobilityFilter = config?.IsolationMzAndMobilityFilter ?? new List<Pwiz.Data.Common.Chemistry.MzMobilityWindow>();
 
         // Waters paths can't contain unicode (the SDK rejects them), but we let the OS open
         // any path we can find on disk — mirror the pwiz C++ short-path workaround only when
@@ -66,7 +68,7 @@ public sealed class Reader_Waters : IReader
         var data = new WatersRawFile(fullPath);
         try
         {
-            ReadImpl(result, data, fullPath, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms, globalChromMs1Only);
+            ReadImpl(result, data, fullPath, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms, globalChromMs1Only, ignoreCalibrationScans, mobilityFilter);
         }
         catch
         {
@@ -77,7 +79,8 @@ public sealed class Reader_Waters : IReader
 
     private static void ReadImpl(MSData result, WatersRawFile data, string analysisDir,
         int preferOnlyMsLevel, bool srmAsSpectra, bool ddaProcessing, bool combineIms,
-        bool globalChromatogramsAreMs1Only)
+        bool globalChromatogramsAreMs1Only, bool ignoreCalibrationScans,
+        List<Pwiz.Data.Common.Chemistry.MzMobilityWindow> mobilityFilter)
     {
         // Identifier is the directory name minus the .raw extension (matches pwiz C++:
         // bfs::basename(p) drops the trailing extension component).
@@ -114,7 +117,7 @@ public sealed class Reader_Waters : IReader
         result.Run.DefaultInstrumentConfiguration = ic;
         result.Run.StartTimeStamp = ConvertHeaderTimestamp(data);
 
-        var spectrumList = new SpectrumList_Waters(data, owns: true, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms)
+        var spectrumList = new SpectrumList_Waters(data, owns: true, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms, ignoreCalibrationScans, mobilityFilter)
         { Dp = dpReader };
         result.Run.SpectrumList = spectrumList;
 

@@ -139,6 +139,8 @@ public static class VendorReaderTestHarness
             PeakPicking = config.PeakPicking,
             DdaProcessing = config.DdaProcessing,
             GlobalChromatogramsAreMs1Only = config.GlobalChromatogramsAreMs1Only,
+            IgnoreCalibrationScans = config.IgnoreCalibrationScans,
+            IsolationMzAndMobilityFilter = config.IsolationMzAndMobilityFilter,
         };
         reader.Read(rawPath, msd, readerConfig);
 

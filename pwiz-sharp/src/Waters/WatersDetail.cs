@@ -78,6 +78,7 @@ internal static class WatersScanItem
 
     public const int CollisionEnergy = Base + 61;
     public const int SetMass = Base + 76;
+    public const int SonarEnabled = Base + 80;
     public const int TotalIonCurrent = Base + 251;
     public const int BasePeakMass = Base + 252;
     public const int BasePeakIntensity = Base + 253;

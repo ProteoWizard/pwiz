@@ -1,3 +1,4 @@
+using Pwiz.Data.Common.Chemistry;
 using Pwiz.TestHarness;
 
 namespace Pwiz.Vendor.Waters.Tests;
@@ -173,6 +174,122 @@ public class ReaderWatersTests
         {
             config.CombineIonMobilitySpectra = true;
             config.PeakPickingCWT = true;
+        });
+    }
+
+    [TestMethod]
+    public void Harness_MseShortRaw_MatchesReferenceMzMl()
+    {
+        // Non-IMS MSe acquisition — exercises the same MSe heuristic as HDMSe but without
+        // the drift dimension.
+        RunHarness("MSe_Short.raw");
+    }
+
+    [TestMethod]
+    public void Harness_MseShortGlobalMs1OnlyChromatograms_MatchesReferenceMzMl()
+    {
+        RunHarness("MSe_Short.raw", config =>
+        {
+            config.GlobalChromatogramsAreMs1Only = true;
+            config.IndexRange = (0, 0);
+        });
+    }
+
+    [TestMethod]
+    public void Harness_MinimalDdaRaw_MatchesReferenceMzMl()
+    {
+        RunHarness("Minimal_DDA.raw");
+    }
+
+    [TestMethod]
+    public void Harness_MinimalDdaDdaProcessing_MatchesReferenceMzMl()
+    {
+        RunHarness("Minimal_DDA.raw", config => config.DdaProcessing = true);
+    }
+
+    [TestMethod]
+    public void Harness_QcLcms2Raw_MatchesReferenceMzMl()
+    {
+        // pwiz C++ tests this one with indexRange = (0, 9): only the first 10 spectra are
+        // diffed (the file is too large to include all 2360 in the reference). Also
+        // exercises the analog channel path (TIC + System Pressure + 3 detector channels).
+        RunHarness("QC_LCMS2-2_23_268-1-1.raw", config => config.IndexRange = (0, 9));
+    }
+
+    [TestMethod]
+    public void Harness_HdddaShortCombineIMSMzMobilityFilter_MatchesReferenceMzMl()
+    {
+        // mzMobilityFilter test config: single window centered at mobility=4 with tolerance
+        // 0.2 → bounds (3.8, 4.2). pwiz C++ writes the reference with this exact filter.
+        RunHarness("HDDDA_Short_noLM.raw", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.HasIsolationMzFilter = true;
+            config.IsolationMzAndMobilityFilter.Add(new MzMobilityWindow(4.0, 0.2));
+        });
+    }
+
+    [TestMethod]
+    public void Harness_HdmrmShortCombineIMSMzMobilityFilter_MatchesReferenceMzMl()
+    {
+        RunHarness("HDMRM_Short_noLM.raw", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.HasIsolationMzFilter = true;
+            config.IsolationMzAndMobilityFilter.Add(new MzMobilityWindow(4.0, 0.2));
+        });
+    }
+
+    [TestMethod]
+    public void Harness_HdmseShortCombineIMSMzMobilityFilter_MatchesReferenceMzMl()
+    {
+        RunHarness("HDMSe_Short_noLM.raw", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.HasIsolationMzFilter = true;
+            config.IsolationMzAndMobilityFilter.Add(new MzMobilityWindow(4.0, 0.2));
+        });
+    }
+
+    [TestMethod]
+    public void Harness_SonarShortRaw_MatchesReferenceMzMl()
+    {
+        // SONAR (scanning quadrupole) acquisition — non-combine: 600 spectra, each gets
+        // scanning_quadrupole_position lower/upper bound userParams on its scan element.
+        RunHarness("SONAR_Short.raw");
+    }
+
+    [TestMethod]
+    public void Harness_SonarShortCombineIMS_MatchesReferenceMzMl()
+    {
+        // Combine path emits MS_scanning_quadrupole_position_lower/upper_bound_m_z_array
+        // (instead of MS_raw_ion_mobility_array) since the drift dimension is repurposed.
+        RunHarness("SONAR_Short.raw", config => config.CombineIonMobilitySpectra = true);
+    }
+
+    [TestMethod]
+    public void Harness_SonarShortCombineIMSMzMobilityFilter_MatchesReferenceMzMl()
+    {
+        // SONAR doesn't have mobility, so the filter is a no-op on the data itself but the
+        // reference filename includes the suffix.
+        RunHarness("SONAR_Short.raw", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.HasIsolationMzFilter = true;
+            config.IsolationMzAndMobilityFilter.Add(new MzMobilityWindow(4.0, 0.2));
+        });
+    }
+
+    [TestMethod]
+    public void Harness_HdddaShortCombineIMSCentroidCwtIgnoreCalibrationScans_MatchesReferenceMzMl()
+    {
+        // ignoreCalibrationScans skips the lockmass function from the spectrum list.
+        // Combined with combineIMS + centroid-cwt to exercise three filters at once.
+        RunHarness("HDDDA_Short_noLM.raw", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.PeakPickingCWT = true;
+            config.IgnoreCalibrationScans = true;
         });
     }
 

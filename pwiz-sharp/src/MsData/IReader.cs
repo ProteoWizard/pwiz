@@ -1,3 +1,4 @@
+using Pwiz.Data.Common.Chemistry;
 using Pwiz.Data.Common.Cv;
 
 namespace Pwiz.Data.MsData.Readers;
@@ -64,6 +65,20 @@ public sealed class ReaderConfig
     /// <c>pwiz::msdata::Reader::Config::globalChromatogramsAreMs1Only</c>.
     /// </summary>
     public bool GlobalChromatogramsAreMs1Only { get; set; }
+
+    /// <summary>
+    /// When true, vendor-flagged calibration scans (e.g. Waters lockmass function) are
+    /// excluded from the spectrum list. Port of
+    /// <c>pwiz::msdata::Reader::Config::ignoreCalibrationScans</c>.
+    /// </summary>
+    public bool IgnoreCalibrationScans { get; set; }
+
+    /// <summary>
+    /// Optional list of (m/z, mobility-bounds) windows used to filter combine-IMS spectra:
+    /// only peaks whose drift time falls inside one of the windows are retained. Port of
+    /// <c>pwiz::msdata::Reader::Config::isolationMzAndMobilityFilter</c>.
+    /// </summary>
+    public List<MzMobilityWindow> IsolationMzAndMobilityFilter { get; set; } = new();
 
     /// <summary>Default configuration.</summary>
     public static ReaderConfig Default { get; } = new();

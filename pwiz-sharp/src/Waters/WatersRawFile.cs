@@ -19,6 +19,7 @@ internal sealed class WatersRawFile : IDisposable
     private IntPtr _scan;
     private IntPtr _chrom;
     private IntPtr _drift; // SCAN reader bound to the same file but used for drift reads (only meaningful when IMS present)
+    private IntPtr _analog;        // ANALOG-type reader (lazy: not all .raw have analog channels).
     private IntPtr _centroidProc; // SCAN-type processor used for vendor centroid (Load + Centroid + GetScan).
     private NativeMethods.ProgressCallback? _centroidProgressCb;
     private IntPtr _ddaProc;       // DDA-type processor (lazily created on first DDA request).
@@ -39,6 +40,12 @@ internal sealed class WatersRawFile : IDisposable
 
     /// <summary>Per-function-index → has ion mobility (.cdt sibling and DriftScanCount &gt; 0).</summary>
     public IReadOnlyList<bool> IonMobilityByFunctionIndex { get; }
+
+    /// <summary>True if any function has SONAR enabled (scanning-quadrupole binning).</summary>
+    public bool HasSonar { get; }
+
+    /// <summary>Per-function-index → SONAR enabled (only IMS functions can be SONAR).</summary>
+    public IReadOnlyList<bool> SonarEnabledByFunctionIndex { get; }
 
     /// <summary>Properties parsed out of <c>_HEADER.TXT</c> (e.g. "Acquired Date").</summary>
     public IReadOnlyDictionary<string, string> HeaderProps { get; }
@@ -72,7 +79,9 @@ internal sealed class WatersRawFile : IDisposable
             // empty drift dimension. Build the per-function flag here.
             int last = indices.Count == 0 ? -1 : indices[indices.Count - 1];
             var imsByFunc = new bool[last + 1];
+            var sonarByFunc = new bool[last + 1];
             bool anyIms = false;
+            bool anySonar = false;
             foreach (int f in indices)
             {
                 if (!hasCdt.TryGetValue(f, out bool cdt) || !cdt) continue;
@@ -80,10 +89,22 @@ internal sealed class WatersRawFile : IDisposable
                 {
                     imsByFunc[f] = true;
                     anyIms = true;
+                    // SONAR detection: only IMS functions can be SONAR. The flag lives in the
+                    // SONAR_ENABLED scan item on the first scan (matches pwiz C++ RawData).
+                    string sonar = GetScanItemImpl(f, 0, WatersScanItem.SonarEnabled);
+                    if (sonar.Length > 0
+                        && (string.Equals(sonar, "1", StringComparison.Ordinal)
+                            || string.Equals(sonar, "true", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        sonarByFunc[f] = true;
+                        anySonar = true;
+                    }
                 }
             }
             IonMobilityByFunctionIndex = imsByFunc;
             HasIonMobility = anyIms;
+            SonarEnabledByFunctionIndex = sonarByFunc;
+            HasSonar = anySonar;
 
             // Pre-cache per-function TIC.
             var times = new float[last + 1][];
@@ -196,6 +217,93 @@ internal sealed class WatersRawFile : IDisposable
         Check(NativeMethods.isContinuum(_info, function, out bool cont), "isContinuum");
         return cont;
     }
+
+    /// <summary>
+    /// Number of analog channels in this raw file (pressure, column temperature, ELSD, etc.).
+    /// Lazily opens the ANALOG-type reader on first access.
+    /// </summary>
+    public int GetAnalogChannelCount()
+    {
+        EnsureAnalogReader();
+        if (_analog == IntPtr.Zero) return 0;
+        Check(NativeMethods.getChannelCount(_analog, out int n), "getChannelCount");
+        return n;
+    }
+
+    /// <summary>Channel description (e.g. "System Pressure"). Encoded in CP1252 by the SDK.</summary>
+    public string GetAnalogChannelDescription(int channel)
+    {
+        EnsureAnalogReader();
+        if (_analog == IntPtr.Zero) return string.Empty;
+        Check(NativeMethods.getChannelDescription(_analog, channel, out IntPtr p), "getChannelDescription");
+        return Cp1252OrAnsiAndRelease(p);
+    }
+
+    /// <summary>Channel unit string (e.g. "psi", "°C", "%", "LSU").</summary>
+    public string GetAnalogChannelUnits(int channel)
+    {
+        EnsureAnalogReader();
+        if (_analog == IntPtr.Zero) return string.Empty;
+        Check(NativeMethods.getChannelUnits(_analog, channel, out IntPtr p), "getChannelUnits");
+        return Cp1252OrAnsiAndRelease(p);
+    }
+
+    /// <summary>
+    /// Reads the (time, intensity) data for an analog channel. SDK retains buffer ownership
+    /// (matches pwiz C++ ToVector with bRelease=false) — copy out, do not free.
+    /// </summary>
+    public (float[] Times, float[] Intensities) ReadAnalogChannel(int channel)
+    {
+        EnsureAnalogReader();
+        if (_analog == IntPtr.Zero) return (Array.Empty<float>(), Array.Empty<float>());
+        // Some channels may be empty; the SDK may signal this by failing readChannel. pwiz C++
+        // catches the exception and treats it as "empty channel"; we mirror that.
+        int rc = NativeMethods.readChannel(_analog, channel,
+            out IntPtr pTimes, out IntPtr pInts, out int n);
+        if (rc != 0) return (Array.Empty<float>(), Array.Empty<float>());
+        var times = new float[n];
+        var intensities = new float[n];
+        if (n > 0)
+        {
+            Marshal.Copy(pTimes, times, 0, n);
+            Marshal.Copy(pInts, intensities, 0, n);
+        }
+        return (times, intensities);
+    }
+
+    private void EnsureAnalogReader()
+    {
+        if (_analog != IntPtr.Zero) return;
+        // If the file has no analog data, createRawReaderFromReader fails — swallow the error
+        // and leave the handle null (matches pwiz C++ which does this lazily inside RawData).
+        if (NativeMethods.createRawReaderFromReader(_scan, out IntPtr h, NativeMethods.MassLynxBaseType.ANALOG) == 0)
+            _analog = h;
+    }
+
+    private static string Cp1252OrAnsiAndRelease(IntPtr ansiPtr)
+    {
+        // pwiz C++ converts the SDK strings from CP1252 to UTF-8 before storing. We use
+        // PtrToStringAnsi which respects the local ANSI code page; for Latin-1 channel names
+        // this matches CP1252 in practice. SDK retains ownership of the string buffer.
+        if (ansiPtr == IntPtr.Zero) return string.Empty;
+        return Marshal.PtrToStringAnsi(ansiPtr) ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Returns the lockmass function index, or null if the file has no lockmass function.
+    /// Cached after the first lookup since the answer doesn't change for an open file.
+    /// </summary>
+    public int? GetLockMassFunction()
+    {
+        if (_lockmassChecked) return _lockmassFunction;
+        _lockmassChecked = true;
+        if (NativeMethods.getLockMassFunction(_info, out bool has, out int which) == 0 && has)
+            _lockmassFunction = which;
+        return _lockmassFunction;
+    }
+
+    private bool _lockmassChecked;
+    private int? _lockmassFunction;
 
     /// <summary>Number of drift (ion-mobility) bins per RT block in <paramref name="function"/>.</summary>
     public int GetDriftScanCount(int function)
@@ -458,9 +566,12 @@ internal sealed class WatersRawFile : IDisposable
     }
 
     /// <summary>Reads a single scan item via the parameters-handle round-trip.</summary>
-    public string GetScanItem(int function, int scan, int item)
+    public string GetScanItem(int function, int scan, int item) =>
+        GetScanItemImpl(function, scan, item);
+
+    private string GetScanItemImpl(int function, int scan, int item)
     {
-        Check(NativeMethods.createParameters(out IntPtr p), "createParameters");
+        if (NativeMethods.createParameters(out IntPtr p) != 0) return string.Empty;
         try
         {
             int rc = NativeMethods.getScanItemValue(_info, function, scan, new[] { item }, 1, p);
@@ -475,6 +586,17 @@ internal sealed class WatersRawFile : IDisposable
         {
             _ = NativeMethods.destroyParameters(p);
         }
+    }
+
+    /// <summary>
+    /// Returns the (low, high) precursor m/z range for one SONAR bin. Used to attach
+    /// scanning_quadrupole_position userParams or arrays to SONAR spectra.
+    /// </summary>
+    public (float Low, float High) GetSonarBinPrecursorMassRange(int function, int bin)
+    {
+        Check(NativeMethods.getIndexPrecursorMassRange(_info, function, bin, out float low, out float high),
+            "getIndexPrecursorMassRange");
+        return (low, high);
     }
 
     private void ReadTic(int function, out float[] times, out float[] intensities)
@@ -538,6 +660,7 @@ internal sealed class WatersRawFile : IDisposable
     {
         if (_ddaProc != IntPtr.Zero) { _ = NativeMethods.destroyRawProcessor(_ddaProc); _ddaProc = IntPtr.Zero; }
         if (_centroidProc != IntPtr.Zero) { _ = NativeMethods.destroyRawProcessor(_centroidProc); _centroidProc = IntPtr.Zero; }
+        if (_analog != IntPtr.Zero) { _ = NativeMethods.destroyRawReader(_analog); _analog = IntPtr.Zero; }
         if (_drift != IntPtr.Zero) { _ = NativeMethods.destroyRawReader(_drift); _drift = IntPtr.Zero; }
         if (_chrom != IntPtr.Zero) { _ = NativeMethods.destroyRawReader(_chrom); _chrom = IntPtr.Zero; }
         if (_info != IntPtr.Zero) { _ = NativeMethods.destroyRawReader(_info); _info = IntPtr.Zero; }

@@ -66,6 +66,13 @@ public sealed class ReaderTestConfig
     public bool HasIsolationMzFilter { get; set; }
 
     /// <summary>
+    /// (m/z, mobility-bounds) filter windows for combine-IMS reads. Mirrors pwiz C++ test
+    /// config <c>isolationMzAndMobilityFilter</c>; setting this also sets
+    /// <see cref="HasIsolationMzFilter"/> for the result-filename suffix.
+    /// </summary>
+    public List<Pwiz.Data.Common.Chemistry.MzMobilityWindow> IsolationMzAndMobilityFilter { get; set; } = new();
+
+    /// <summary>
     /// Whether double precision is expected for m/z. Influences the <c>--generate-mzML</c>
     /// regeneration step; doesn't affect the diff pathway.
     /// </summary>

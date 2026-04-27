@@ -23,6 +23,8 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
     private readonly bool _srmAsSpectra;
     private readonly bool _ddaProcessing;
     private readonly bool _combineIonMobilitySpectra;
+    private readonly bool _ignoreCalibrationScans;
+    private readonly IReadOnlyList<Pwiz.Data.Common.Chemistry.MzMobilityWindow> _mobilityFilter;
     private readonly List<IndexEntry> _index = new();
     private readonly Dictionary<string, int> _idToIndex = new(StringComparer.Ordinal);
     private readonly Lazy<(float Lower, float Upper)?> _ddaIsolationOffsets;
@@ -57,7 +59,9 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
     }
 
     internal SpectrumList_Waters(WatersRawFile data, bool owns, int preferOnlyMsLevel,
-        bool srmAsSpectra, bool ddaProcessing = false, bool combineIonMobilitySpectra = false)
+        bool srmAsSpectra, bool ddaProcessing = false, bool combineIonMobilitySpectra = false,
+        bool ignoreCalibrationScans = false,
+        IReadOnlyList<Pwiz.Data.Common.Chemistry.MzMobilityWindow>? mobilityFilter = null)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
@@ -66,6 +70,8 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
         _srmAsSpectra = srmAsSpectra;
         _ddaProcessing = ddaProcessing;
         _combineIonMobilitySpectra = combineIonMobilitySpectra;
+        _ignoreCalibrationScans = ignoreCalibrationScans;
+        _mobilityFilter = mobilityFilter ?? Array.Empty<Pwiz.Data.Common.Chemistry.MzMobilityWindow>();
         _ddaIsolationOffsets = new Lazy<(float, float)?>(_data.GetDdaIsolationWindowOffsets);
         if (ddaProcessing)
             BuildDdaIndex();
@@ -92,8 +98,13 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
         // (non-combine) or one combined entry (combine). The expansion happens after the sort
         // so all bins of one block stay adjacent.
         var byRt = new List<(float Rt, int Function, int Scan, int MsLevel, CVID Type, bool Ims)>();
+        int? lockmassFunction = _ignoreCalibrationScans ? _data.GetLockMassFunction() : null;
         foreach (int function in _data.FunctionIndices)
         {
+            // Skip the lockmass-correction function when ignoreCalibrationScans is set —
+            // it's the calibration probe Waters injects and isn't part of the analytical run.
+            if (lockmassFunction.HasValue && lockmassFunction.Value == function) continue;
+
             int rawType;
             try { rawType = _data.GetFunctionType(function); }
             catch { continue; }
@@ -285,10 +296,28 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
         // IMS scans record drift time on the scan element. Non-combine: per-bin drift time.
         // Combine: drift time of the mid-bin (numScansInBlock/2) — pwiz C++ uses ie.scan
         // which BuildIndex sets to numScansInBlock/2 for the combined entry.
-        if (ie.Block >= 0)
+        // SONAR functions hijack the drift dimension for quadrupole-position binning, so
+        // they get scanning_quadrupole_position userParams (non-combine) or arrays (combine)
+        // instead of drift time.
+        // pwiz C++ keys SONAR-vs-IMS behavior off the global HasSONAR flag, not per-function:
+        // any SONAR-enabled function in the file means the drift dimension is repurposed for
+        // every IMS spectrum (per-function SONAR_ENABLED can disagree on calibration funcs).
+        bool isSonar = _data.HasSonar;
+        if (ie.Block >= 0 && !isSonar)
         {
             double driftTime = _data.GetDriftTime(ie.Scan);
             scan.Set(CVID.MS_ion_mobility_drift_time, driftTime, CVID.UO_millisecond);
+        }
+        else if (ie.Block >= 0 && isSonar && !ie.Combined)
+        {
+            var (qLow, qHigh) = _data.GetSonarBinPrecursorMassRange(ie.Function, ie.Scan);
+            // pwiz C++ formats SONAR userParams via toString(float) which uses Karma's
+            // float5_policy (up to 5 fractional digits, trailing zeros stripped). Our
+            // PwizFloat.ToPwizString(float) mirrors that policy.
+            scan.UserParams.Add(new UserParam("scanning quadrupole position lower bound",
+                PwizFloat.ToPwizString(qLow), "xsd:float", CVID.MS_m_z));
+            scan.UserParams.Add(new UserParam("scanning quadrupole position upper bound",
+                PwizFloat.ToPwizString(qHigh), "xsd:float", CVID.MS_m_z));
         }
 
         if (isMs)
@@ -297,7 +326,9 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
             if (polarity != CVID.CVID_Unknown) spec.Params.Set(polarity);
         }
 
-        bool isProfile = isMs && _data.IsContinuum(ie.Function);
+        // IsContinuum applies regardless of MS-ness — DiodeArray spectra are continuum data
+        // (wavelength × absorbance) just like profile MS spectra.
+        bool isProfile = _data.IsContinuum(ie.Function);
         // pwiz C++ always tags the *source* spectrum type up front (so SpectrumList_PeakPicker
         // can decide whether to re-pick) and then overrides to centroid when doCentroid is on
         // and we actually centroided. Mirror that order.
@@ -324,7 +355,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
         // via calculatePeakMetadata (matches pwiz C++).
         // IMS non-combine spectra get only TIC from the per-block array (the scan-stats only
         // describe the block, not individual drift bins).
-        if (isMs && !willCentroid)
+        if (!willCentroid)
         {
             if (ie.Block < 0 || ie.Combined)
             {
@@ -334,6 +365,9 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
                 string tic = _data.GetScanItem(ie.Function, s, WatersScanItem.TotalIonCurrent);
                 string peaks = _data.GetScanItem(ie.Function, s, WatersScanItem.PeaksInScan);
 
+                // pwiz C++ emits these scan-stat fields for all spectrum types including
+                // non-MS (DiodeArray) — base_peak_m_z, base_peak_intensity, TIC, PeaksInScan
+                // come straight from the SDK regardless of m/z vs wavelength axis.
                 if (TryParseDouble(bpMass, out double bpMassD)) spec.Params.Set(CVID.MS_base_peak_m_z, bpMassD);
                 if (TryParseDouble(bpInt, out double bpIntD)) spec.Params.Set(CVID.MS_base_peak_intensity, bpIntD);
                 if (TryParseDouble(tic, out double ticD)) spec.Params.Set(CVID.MS_total_ion_current, ticD);
@@ -431,16 +465,27 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
             int numScansInBlock = _data.GetDriftScanCount(ie.Function);
             var mzList = new List<double>();
             var intList = new List<double>();
+            // For non-SONAR IMS we collect drift time per peak. For SONAR we collect the
+            // quadrupole low/high bounds per peak (which become two arrays at the end).
             var driftList = new List<double>();
+            var qLowList = new List<double>();
+            var qHighList = new List<double>();
             for (int s = 0; s < numScansInBlock; s++)
             {
-                double driftTime = _data.GetDriftTime(s);
+                double driftTime = isSonar ? 0.0 : _data.GetDriftTime(s);
+                if (!isSonar
+                    && !Pwiz.Data.Common.Chemistry.MzMobilityWindow.MobilityValueInBounds(_mobilityFilter, driftTime))
+                    continue;
+                float sonarLow = 0, sonarHigh = 0;
+                if (isSonar)
+                    (sonarLow, sonarHigh) = _data.GetSonarBinPrecursorMassRange(ie.Function, s);
                 var (binMz, binInt) = _data.ReadDriftScan(ie.Function, ie.Block, s);
                 for (int i = 0; i < binMz.Length; i++)
                 {
                     mzList.Add(binMz[i]);
                     intList.Add(binInt[i]);
-                    driftList.Add(driftTime);
+                    if (isSonar) { qLowList.Add(sonarLow); qHighList.Add(sonarHigh); }
+                    else driftList.Add(driftTime);
                 }
             }
             spec.DefaultArrayLength = mzList.Count;
@@ -448,13 +493,27 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
             if (getBinaryData)
             {
                 spec.SetMZIntensityArrays(mzList, intList, CVID.MS_number_of_detector_counts);
-                var driftArr = new BinaryDataArray();
-                driftArr.Set(CVID.MS_raw_ion_mobility_array, "", CVID.UO_millisecond);
-                driftArr.Data.AddRange(driftList);
-                spec.BinaryDataArrays.Add(driftArr);
+                if (isSonar)
+                {
+                    var qLowArr = new BinaryDataArray();
+                    qLowArr.Set(CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, "", CVID.MS_m_z);
+                    qLowArr.Data.AddRange(qLowList);
+                    spec.BinaryDataArrays.Add(qLowArr);
+                    var qHighArr = new BinaryDataArray();
+                    qHighArr.Set(CVID.MS_scanning_quadrupole_position_upper_bound_m_z_array, "", CVID.MS_m_z);
+                    qHighArr.Data.AddRange(qHighList);
+                    spec.BinaryDataArrays.Add(qHighArr);
+                }
+                else
+                {
+                    var driftArr = new BinaryDataArray();
+                    driftArr.Set(CVID.MS_raw_ion_mobility_array, "", CVID.UO_millisecond);
+                    driftArr.Data.AddRange(driftList);
+                    spec.BinaryDataArrays.Add(driftArr);
+                }
             }
         }
-        else if (isMs && (getBinaryData || willCentroid))
+        else if (getBinaryData || willCentroid)
         {
             float[] mz, intensity;
             if (ie.Dda)
@@ -475,7 +534,23 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
                 var mzD = new double[mz.Length];
                 var intD = new double[intensity.Length];
                 for (int i = 0; i < mz.Length; i++) { mzD[i] = mz[i]; intD[i] = intensity[i]; }
-                spec.SetMZIntensityArrays(mzD, intD, CVID.MS_number_of_detector_counts);
+                if (isMs)
+                {
+                    spec.SetMZIntensityArrays(mzD, intD, CVID.MS_number_of_detector_counts);
+                }
+                else
+                {
+                    // DiodeArray (EMR): pwiz C++ swapMZIntensityArrays switches the array CV
+                    // term to MS_wavelength_array when the unit is UO_nanometer.
+                    var xArr = new BinaryDataArray();
+                    xArr.Set(CVID.MS_wavelength_array, "", CVID.UO_nanometer);
+                    xArr.Data.AddRange(mzD);
+                    var yArr = new BinaryDataArray();
+                    yArr.Set(CVID.MS_intensity_array, "", CVID.MS_number_of_detector_counts);
+                    yArr.Data.AddRange(intD);
+                    spec.BinaryDataArrays.Add(xArr);
+                    spec.BinaryDataArrays.Add(yArr);
+                }
             }
         }
 

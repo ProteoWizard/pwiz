@@ -57,8 +57,12 @@ public static class PwizFloat
 
     private static string FormatFixed(double value, int precision)
     {
-        string s = value.ToString("F" + precision.ToString(CultureInfo.InvariantCulture),
-                                  CultureInfo.InvariantCulture);
+        // Pre-round with AwayFromZero to match Boost.Spirit.Karma's default tie-break (and
+        // pwiz's reference output). C#'s "F" format defaults to banker's rounding which would
+        // emit e.g. "632.26562" instead of "632.26563" for the exact float 632.265625.
+        double rounded = Math.Round(value, precision, MidpointRounding.AwayFromZero);
+        string s = rounded.ToString("F" + precision.ToString(CultureInfo.InvariantCulture),
+                                    CultureInfo.InvariantCulture);
         int dot = s.IndexOf('.');
         if (dot < 0) return s + ".0";
         int end = s.Length;

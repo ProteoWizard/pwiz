@@ -1,5 +1,6 @@
 using System.Globalization;
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
 
@@ -29,10 +30,13 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
     {
         public CVID Kind;
         public int Function;
-        public int Offset;        // transition index within the function (SRM only)
+        public int Offset;        // transition index within the function (SRM only) or analog channel index
         public float Q1;
         public float Q3;
         public CVID Polarity;
+        public bool IsAnalog;
+        public CVID AnalogUnit;
+        public string? AnalogUnitsUserParam;
     }
 
     internal ChromatogramList_Waters(WatersRawFile data, int preferOnlyMsLevel,
@@ -51,6 +55,67 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         // we don't expand those yet (no Phase 1 fixture exercises SIM chromatograms).
         if (srmAsSpectra) return; // SRM-as-spectra mode means SRM transitions appear in the spectrum list, not here.
         AppendSrmIndex();
+        AppendAnalogIndex();
+    }
+
+    private void AppendAnalogIndex()
+    {
+        // pwiz C++ ChromatogramList_Waters appends one chromatogram per analog channel after
+        // the SRM/SIM block. The chromatogram type is inferred from the channel name + units:
+        //   - name contains "temp" + units == "C" → MS_temperature_chromatogram
+        //   - units == "LSU"                       → MS_electromagnetic_radiation_chromatogram
+        //   - name contains "pressure"             → MS_pressure_chromatogram
+        //   - everything else                      → MS_electromagnetic_radiation_chromatogram (PDA/UV)
+        int channels = _data.GetAnalogChannelCount();
+        for (int ch = 0; ch < channels; ch++)
+        {
+            string rawName = _data.GetAnalogChannelDescription(ch);
+            string rawUnits = _data.GetAnalogChannelUnits(ch);
+            // pwiz C++ strips "%" from the name and the degree sign (\u00b0) from units, then trims.
+            string name = rawName.Replace("%", "", StringComparison.Ordinal).Trim();
+            string units = rawUnits.Replace("\u00b0", "", StringComparison.Ordinal).Trim();
+
+            CVID kind;
+            if (name.Contains("temp", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(units, "C", StringComparison.OrdinalIgnoreCase))
+                kind = CVID.MS_temperature_chromatogram;
+            else if (string.Equals(units, "LSU", StringComparison.OrdinalIgnoreCase))
+                kind = CVID.MS_electromagnetic_radiation_chromatogram;
+            else if (name.Contains("pressure", StringComparison.OrdinalIgnoreCase))
+                kind = CVID.MS_pressure_chromatogram;
+            else
+                kind = CVID.MS_electromagnetic_radiation_chromatogram;
+
+            // Map units to a CV term where possible; otherwise emit a raw "units" userParam
+            // (pwiz C++ does the same — see ChromatogramList_Waters.cpp:262-266).
+            CVID unitCv;
+            string? unitsUserParam = null;
+            if (kind == CVID.MS_pressure_chromatogram
+                && string.Equals(rawUnits, "psi", StringComparison.OrdinalIgnoreCase))
+                unitCv = CVID.UO_pounds_per_square_inch;
+            else if (kind == CVID.MS_temperature_chromatogram
+                && rawUnits.EndsWith("C", StringComparison.OrdinalIgnoreCase))
+                unitCv = CVID.UO_degree_Celsius;
+            else if (rawUnits == "%")
+                unitCv = CVID.UO_percent;
+            else
+            {
+                unitCv = CVID.MS_number_of_detector_counts;
+                unitsUserParam = rawUnits;
+            }
+
+            _index.Add(new IndexEntry
+            {
+                Index = _index.Count,
+                Id = name,
+                Kind = kind,
+                Function = -1,
+                Offset = ch,
+                IsAnalog = true,
+                AnalogUnit = unitCv,
+                AnalogUnitsUserParam = unitsUserParam,
+            });
+        }
     }
 
     private void AppendSrmIndex()
@@ -98,6 +163,31 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         // C++ ostream default is 6 significant digits ("%g") — G6 in .NET matches: 418.72601f
         // becomes "418.726", 666.34332f becomes "666.343".
         mz.ToString("G6", CultureInfo.InvariantCulture);
+
+    private Chromatogram FillAnalogChromatogram(Chromatogram chrom, IndexEntry ie, bool getBinaryData)
+    {
+        // The ANALOG reader returns parallel time/intensity arrays per channel. pwiz C++
+        // attaches a "units" userParam when the units string isn't a known CV term.
+        if (ie.AnalogUnitsUserParam is { Length: > 0 } unitsParam)
+            chrom.Params.UserParams.Add(new UserParam("units", unitsParam, "xsd:string"));
+
+        var (times, intensities) = _data.ReadAnalogChannel(ie.Offset);
+        chrom.DefaultArrayLength = times.Length;
+        if (!getBinaryData) return chrom;
+
+        var timeArr = new BinaryDataArray();
+        timeArr.Set(CVID.MS_time_array, "", CVID.UO_minute);
+        var intArr = new BinaryDataArray();
+        intArr.Set(CVID.MS_intensity_array, "", ie.AnalogUnit);
+        for (int i = 0; i < times.Length; i++)
+        {
+            timeArr.Data.Add(times[i]);
+            intArr.Data.Add(intensities[i]);
+        }
+        chrom.BinaryDataArrays.Add(timeArr);
+        chrom.BinaryDataArrays.Add(intArr);
+        return chrom;
+    }
 
     private Chromatogram FillSrmChromatogram(Chromatogram chrom, IndexEntry ie, bool getBinaryData)
     {
@@ -147,6 +237,9 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         if (ie.Kind == CVID.MS_SRM_chromatogram)
             return FillSrmChromatogram(chrom, ie, getBinaryData);
 
+        if (ie.IsAnalog)
+            return FillAnalogChromatogram(chrom, ie, getBinaryData);
+
         if (ie.Kind != CVID.MS_TIC_chromatogram) return chrom;
 
         // Aggregate per-function TIC into a single sorted-by-time chromatogram. We tag each
@@ -155,17 +248,17 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         var points = new List<(double Time, double Intensity, long Function)>();
         foreach (int function in _data.FunctionIndices)
         {
-            // Skip functions that don't translate to MS spectra (some test fixtures include
-            // diode-array or off functions that we don't want in the global TIC).
+            // pwiz C++ ChromatogramList_Waters TIC includes all functions (even DiodeArray)
+            // unless globalChromatogramsAreMs1Only is set; preferOnlyMsLevel narrows similarly.
             int rawType;
             try { rawType = _data.GetFunctionType(function); }
             catch { continue; }
             var ft = WatersDetail.FromMassLynxFunctionType(rawType);
-            if (!WatersDetail.TranslateFunctionType(ft, out int msLevel, out CVID spectrumType)) continue;
-            if (spectrumType == CVID.MS_EMR_spectrum) continue; // diode array
+            int msLevel = 0;
+            CVID spectrumType = CVID.CVID_Unknown;
+            try { _ = WatersDetail.TranslateFunctionType(ft, out msLevel, out spectrumType); }
+            catch { continue; }
 
-            // preferOnlyMsLevel narrows the TIC the same way it narrows the spectrum list, so
-            // the chromatogram lines up with the spectrum count.
             if (_preferOnlyMsLevel > 0 && msLevel != _preferOnlyMsLevel) continue;
 
             // GlobalChromatogramsAreMs1Only excludes non-MS1 functions, plus Waters function-1

@@ -101,6 +101,24 @@ internal static class NativeMethods
     [DllImport(MassLynxRawDll)]
     public static extern int getScanItemValue(IntPtr reader, int function, int scan, int[] items, int itemCount, IntPtr parameters);
 
+    /// <summary>
+    /// Returns whether the file has a lockmass-correction function and, if so, which function
+    /// index it occupies. Used by <c>ignoreCalibrationScans</c> to skip the lockmass function
+    /// when building the spectrum list.
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int getLockMassFunction(IntPtr reader,
+        [MarshalAs(UnmanagedType.U1)] out bool hasLockmass, out int whichFunction);
+
+    /// <summary>
+    /// SONAR: returns the precursor (quadrupole) m/z range for one SONAR bin within a function.
+    /// pwiz C++ uses this to attach scanning_quadrupole_position lower/upper bound userParams
+    /// to non-combine SONAR spectra.
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int getIndexPrecursorMassRange(IntPtr reader, int function, int index,
+        out float startMass, out float endMass);
+
     // ---------- scan reader ----------
 
     [DllImport(MassLynxRawDll)]
@@ -126,6 +144,31 @@ internal static class NativeMethods
 
     [DllImport(MassLynxRawDll)]
     public static extern int readBPIChromatogram(IntPtr reader, int function, out IntPtr times, out IntPtr intensities, out int size);
+
+    // ---------- analog reader ----------
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int getChannelCount(IntPtr reader, out int count);
+
+    /// <summary>
+    /// Reads (time, intensity) for an analog channel. The native API returns const float**
+    /// pointers that the SDK retains ownership of (matches pwiz C++ ToVector with
+    /// bRelease=false) — copy out and do not free.
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int readChannel(IntPtr reader, int channel,
+        out IntPtr times, out IntPtr intensities, out int size);
+
+    /// <summary>
+    /// Returns the channel description (e.g. "System Pressure", "A", "ELSD Signal"). Note the
+    /// typo in the export name (<c>getChannelDesciption</c>, missing the 'r') — that's the
+    /// actual symbol exported by MassLynxRaw.dll.
+    /// </summary>
+    [DllImport(MassLynxRawDll, EntryPoint = "getChannelDesciption")]
+    public static extern int getChannelDescription(IntPtr reader, int channel, out IntPtr description);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int getChannelUnits(IntPtr reader, int channel, out IntPtr units);
 
     /// <summary>
     /// Reads MRM-transition chromatograms for the requested function. <paramref name="mrmList"/>
