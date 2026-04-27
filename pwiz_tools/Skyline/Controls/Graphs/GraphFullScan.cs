@@ -145,8 +145,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             GraphPane.Title.IsVisible = false;
             GraphPane.Legend.IsVisible = false;
-            // Master pane title carries the scan filename / RT centred across the whole
-            // window (initialised here so DoLayout reserves the strip on first render).
+            // Scan filename / RT renders as the master-pane title, centred across the
+            // whole window. CreateGraph fills in the actual text per scan; ZedGraph
+            // reserves the title strip during DoLayout once the text is non-empty.
             graphControl.MasterPane.Title.IsVisible = true;
             graphControl.MasterPane.Title.Text = string.Empty;
             // Make sure to use italics for "m/z"
@@ -236,10 +237,13 @@ namespace pwiz.Skyline.Controls.Graphs
             _heatMapPane.YAxis.MinSpace = yAxisMinSpace;
             _stickSpectrumPane.YAxis.Title.IsVisible = !includeMobilogram;
             _heatMapPane.YAxis.Title.IsVisible = !includeMobilogram;
-            // Drop the heatmap's left margin so its Y-axis content butts up against the
-            // mobilogram pane (when present) — minimises the visible gap. Stick matches.
-            _stickSpectrumPane.Margin.Left = 0;
-            _heatMapPane.Margin.Left = 0;
+            // Drop the left margin only when the mobilogram is present, so the heatmap's
+            // Y-axis content butts up against it (minimises the visible gap). Stick
+            // matches so its chart-X stays aligned with the heatmap's. Restore default
+            // when mobilogram is hidden so S+H spacing isn't squashed.
+            float yAxisLeftMargin = includeMobilogram ? 0f : ZedGraph.Margin.Default.Left;
+            _stickSpectrumPane.Margin.Left = yAxisLeftMargin;
+            _heatMapPane.Margin.Left = yAxisLeftMargin;
             _heatMapPane.YAxis.Scale.IsVisible = true;
 
             if (includeMobilogram)
@@ -312,26 +316,16 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// MasterPane.Rect with the master-title strip subtracted. Use this anywhere we
-        /// override pane Rects manually — otherwise our pane Rects span the full window
-        /// and overlap the master title that ZedGraph reserves at the top.
+        /// MasterPane.Rect with the master-title strip and pane margins subtracted —
+        /// i.e. the area inside which child panes are laid out. Use this anywhere we
+        /// override pane Rects manually so they stay consistent with ZedGraph's own
+        /// auto-layout (which uses the same calculation in MasterPane.DoLayout).
         /// </summary>
         private RectangleF GetMasterPaneClientRect()
         {
             var mp = graphControl.MasterPane;
-            var rect = mp.Rect;
-            if (mp.Title.IsVisible && !string.IsNullOrEmpty(mp.Title.Text))
-            {
-                using (var g = graphControl.CreateGraphics())
-                {
-                    float scaleFactor = mp.CalcScaleFactor();
-                    var size = mp.Title.FontSpec.BoundingBox(g, mp.Title.Text, scaleFactor);
-                    float titleSpace = size.Height + mp.Margin.Top;
-                    rect.Y += titleSpace;
-                    rect.Height -= titleSpace;
-                }
-            }
-            return rect;
+            using (var g = graphControl.CreateGraphics())
+                return mp.CalcClientRect(g, mp.CalcScaleFactor());
         }
 
         /// <summary>
@@ -371,6 +365,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _mobilogramPane.Rect = new RectangleF(x0, yMid, leftW, botH);
             _heatMapPane.Rect = new RectangleF(xMid, yMid, rightW, botH);
 
+            AlignStickHeatmapChartX();
             AlignMobilogramChartToHeatmap();
         }
 
@@ -660,6 +655,34 @@ namespace pwiz.Skyline.Controls.Graphs
             }));
         }
 
+        /// <summary>
+        /// Pin stick and heatmap chart-X to the wider of the two auto-reserves so m/z
+        /// pixel positions line up across the panes even when their Y-axis tick labels
+        /// have different widths (e.g. "2000" intensity vs "4" drift time).
+        /// </summary>
+        private void AlignStickHeatmapChartX()
+        {
+            if (!IsStickPlotVisible || _heatMapPane == null)
+                return;
+            RectangleF stick, heat;
+            using (var g = graphControl.CreateGraphics())
+            {
+                _stickSpectrumPane.AxisChange(g);
+                _heatMapPane.AxisChange(g);
+                stick = _stickSpectrumPane.CalcChartRect(g);
+                heat = _heatMapPane.CalcChartRect(g);
+            }
+            if (stick.Width <= 0 || heat.Width <= 0)
+                return;
+            // Larger X = more reserved Y space. Smaller Right = less right padding. Pin
+            // both to the tighter of each so the chart areas match exactly.
+            float chartX = Math.Max(stick.X, heat.X);
+            float chartRight = Math.Min(stick.Right, heat.Right);
+            float chartW = Math.Max(1, chartRight - chartX);
+            _stickSpectrumPane.Chart.Rect = new RectangleF(chartX, stick.Y, chartW, stick.Height);
+            _heatMapPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
+        }
+
         private void AlignMobilogramChartToHeatmap()
         {
             if (!IsMobilogramPaneVisible)
@@ -668,14 +691,21 @@ namespace pwiz.Skyline.Controls.Graphs
             // initial window sizes can leave mobilogram's Y scale stale from create
             // time, producing misaligned curves until the user resizes the window.
             CopyYAxisFromHeatmap(_mobilogramPane, _heatMapPane);
-            // Compute the heatmap's chart rect live (CalcChartRect returns the rect but
-            // only assigns it to Chart.Rect inside GraphPane.Draw when IsRectAuto=true).
+            // Read the heatmap's chart rect — prefer the explicitly pinned Chart.Rect
+            // (set by AlignStickHeatmapChartX); fall back to CalcChartRect if it hasn't
+            // been pinned yet (e.g. on first call before stick is populated).
             RectangleF heat;
-            using (var g = graphControl.CreateGraphics())
+            if (!_heatMapPane.Chart.IsRectAuto)
             {
-                // AxisChange populates scale data so CalcChartRect returns what Draw will use
-                _heatMapPane.AxisChange(g);
-                heat = _heatMapPane.CalcChartRect(g);
+                heat = _heatMapPane.Chart.Rect;
+            }
+            else
+            {
+                using (var g = graphControl.CreateGraphics())
+                {
+                    _heatMapPane.AxisChange(g);
+                    heat = _heatMapPane.CalcChartRect(g);
+                }
             }
             if (heat.Height <= 0)
                 return;
@@ -2220,21 +2250,26 @@ namespace pwiz.Skyline.Controls.Graphs
             if (IsStickPlotVisible)
             {
                 var src = graphControl.MasterPane.FindPane(Point.Truncate(mousePosition));
+                // ZedGraph calls AxisChange on the source pane only; we have to force
+                // SetScale on the target so it picks up the new X range. For the heatmap
+                // that re-runs GraphHeatMap (refetches points from _heatMapData). For the
+                // stick it re-runs EnforceMinExtractionBoxWidth so the extraction-band
+                // width tracks the new pixel-to-m/z transform. We also push the target's
+                // pre-copy state onto its own ZoomStack so the right-click Un-Zoom menu
+                // works the same whichever pane is the zoom source.
                 if (ReferenceEquals(src, _stickSpectrumPane))
                 {
+                    _heatMapPane.ZoomStack.Push(_heatMapPane, ZoomState.StateType.Zoom);
                     CopyXAxis(_heatMapPane, _stickSpectrumPane);
-                    // ZedGraph called AxisChange on the source pane (stick) but not on
-                    // the target — without an explicit SetScale here the heatmap's
-                    // CurveList stays stuck at the pre-zoom contents (built from the old
-                    // X range) and the next paint just stretches those points across the
-                    // new pixel mapping. Forcing SetScale re-runs HeatMapGraphPane's
-                    // GraphHeatMap so it re-queries _heatMapData for the new range.
                     using (var g = graphControl.CreateGraphics())
                         _heatMapPane.SetScale(g);
                 }
                 else if (ReferenceEquals(src, _heatMapPane))
                 {
+                    _stickSpectrumPane.ZoomStack.Push(_stickSpectrumPane, ZoomState.StateType.Zoom);
                     CopyXAxis(_stickSpectrumPane, _heatMapPane);
+                    using (var g = graphControl.CreateGraphics())
+                        _stickSpectrumPane.SetScale(g);
                 }
             }
             FireZoomEvent(newState);
@@ -3568,7 +3603,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private string GetHeatmapYAxisFormat() =>
             _msDataFileScanHelper.IsWatersSonarData ? Formats.Mz : Formats.IonMobility;
 
-        public string TitleText => IsStickPlotVisible ? _stickSpectrumPane.Title.Text : GraphPane.Title.Text;
+        public string TitleText => graphControl.MasterPane.Title.Text;
         public string HeatMapYAxisTitleText => _heatMapPane.YAxis.Title.Text;
         public double XAxisMin => GraphPane.XAxis.Scale.Min;
         public double XAxisMax => GraphPane.XAxis.Scale.Max;
