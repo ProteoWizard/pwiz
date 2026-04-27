@@ -65,11 +65,14 @@
     across 1,388,872 FdrEntry rows at max_diff = 0; multi-file required an
     experiment_precursor_qvalue propagation fix in C#'s Percolator FDR).
     Stage 6 planning checkpoint is wired with cross-impl dumps. Multi-charge
-    consensus is now bit-identical with Rust on Stellar 3-file (31,270
-    rescore-target rows). Consensus RTs and calibration refit still differ
-    at ULP-level floating-point (counts and structure match exactly; values
-    diverge at the last 1-3 decimals through <code>InversePredict</code>).
-    Green badges = regression tests; purple badges = C#/Rust perf ratio.
+    consensus is bit-identical with Rust on Stellar 3-file (31,270
+    rescore-target rows). Consensus RTs are now 99.999% bit-identical (1
+    of 87,343 rows differs on a borderline first-pass protein-FDR rescue,
+    not arithmetic) after a Rust serde_json parser fix that routes f64
+    deserialization through <code>f64::from_str</code> instead of the
+    inexact default parser. Calibration refit n_points matches; the
+    refit's LOESS residual stats still diverge at ULP. Green badges =
+    regression tests; purple badges = C#/Rust perf ratio.
   </p>
 </header>
 
@@ -391,7 +394,7 @@
 
   <rect class="st-partial" x="80" y="140" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="160" text-anchor="middle">Cross-run reconciliation</text>
-  <text class="stage-desc"  x="600" y="174" text-anchor="middle">ConsensusRts.Compute + CalibrationRefit.Refit wired; n_runs_detected + n_points byte-identical; consensus_library_rt + LOESS residuals diverge at ULP through InversePredict; ReconciliationPlanner not yet wired</text>
+  <text class="stage-desc"  x="600" y="174" text-anchor="middle">ConsensusRts.Compute + CalibrationRefit.Refit wired; consensus_library_rt 99.999% bit-identical (1/87343 rows differ on a borderline first-pass-protein-FDR rescue); refit n_points matches but LOESS residual stats off at ULP; ReconciliationPlanner not yet wired</text>
 
   <rect class="st-missing" x="80" y="200" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="220" text-anchor="middle">Second-pass re-score + Percolator SVM</text>
@@ -511,22 +514,25 @@
     early-exits) and a sibling harness
     <code>Compare-Stage6-Planning.ps1</code> byte-compares the four
     dumps (Stage 5 percolator + the three Stage 6 planning dumps).
-    On Stellar 3-file: <strong>2/4 dump pairs byte-identical</strong>
-    after first-pass protein FDR + first-pass compaction land on the
-    C# side. Stage 5 percolator and Stage 6 multi-charge consensus
-    pass exactly; consensus RTs and calibration refit agree on counts
-    and structure but diverge at the last 1-3 decimals through
-    <code>InversePredict</code>. Driver branches:
+    On Stellar 3-file: stage5_percolator + multicharge + calibration are
+    bit-identical; consensus is 99.999% bit-identical (1/87343 rows on
+    a borderline protein-FDR rescue); inv_predict is 99.99966%
+    (1/292512 rows, same root cause); refit ULP at LOESS-fit residual
+    stats. The InversePredict ULP that previously diverged on every
+    consensus row was traced to <code>serde_json</code>'s default f64
+    parser disagreeing with .NET's correctly-rounded
+    <code>double.Parse</code> on full-precision values; routing Rust
+    f64 array deserialization through <code>f64::from_str</code>
+    closes the arithmetic gap. Driver branches:
     <code>maccoss/osprey:feature/stage6-planning-diagnostics</code>
     and <code>ProteoWizard/pwiz:Skyline/work/20260423_osprey_sharp_stage6</code>.
   </p>
   <p>
-    Next targets: bisect the <code>InversePredict</code> ULP source —
-    add a per-detection diagnostic dump (apex_rt, library_rt) on both
-    sides and locate whether divergence is in Parquet f64 decode or
-    inside LOESS interpolation; same fix should close both consensus
-    and refit (the LOESS residual stats just downstream of the same
-    consensus library RTs). Then wire
+    Next targets: localize the borderline first-pass-protein-FDR rescue
+    that produces the 1-row consensus / inv_predict diff (likely a
+    tie-break in protein-group construction at exactly 1% q-value);
+    bisect the LOESS-fit ULP that affects refit r²/sd/mad
+    (independent of InversePredict). Then wire
     <code>ReconciliationPlanner.Plan</code>, gap-fill, and second-pass
     Percolator. Stage 7 protein FDR + Stage 8 .blib output parity
     follow once Stage 6 is fully proven. See
