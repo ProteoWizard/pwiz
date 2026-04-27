@@ -66,12 +66,19 @@ namespace pwiz.Common.SystemUtil
         {
             CommonActionUtil.RunAsync(() =>
             {
-                foreach (var source in sources)
+                try
                 {
-                    Add(source);
-                }
+                    foreach (var source in sources)
+                    {
+                        Add(source);
+                    }
 
-                DoneAdding();
+                    DoneAdding();
+                }
+                catch
+                {
+                    // ignore
+                }
             }, CommonTextUtil.SpaceSeparate(GetThreadName(), nameof(AddAll)));
         }
 
