@@ -114,16 +114,36 @@ public class ReaderBrukerTests
     // the mobility array. Tracked separately; harness scaffolding kept so the test names
     // remain visible.
     [TestMethod]
-    public void Harness_HelaPasefTdf_CombineIMS_Centroid_MatchesReferenceMzMl() =>
-        Assert.Inconclusive("Pending: vendor-centroid path for PASEF combineIMS (mobility array, precursor metadata).");
+    public void Harness_HelaPasefTdf_CombineIMS_Centroid_MatchesReferenceMzMl()
+    {
+        RunHarness("Hela_QC_PASEF_Slot1-first-6-frames.d", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.PeakPicking = true;
+        });
+    }
 
     [TestMethod]
-    public void Harness_HelaPasefTdf_CombineIMS_Ms1Centroid_MatchesReferenceMzMl() =>
-        Assert.Inconclusive("Pending: vendor-centroid path for PASEF combineIMS (mobility array, precursor metadata).");
+    public void Harness_HelaPasefTdf_CombineIMS_Ms1Centroid_MatchesReferenceMzMl()
+    {
+        RunHarness("Hela_QC_PASEF_Slot1-first-6-frames.d", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.PreferOnlyMsLevel = 1;
+            config.PeakPicking = true;
+        });
+    }
 
     [TestMethod]
-    public void Harness_HelaPasefTdf_CombineIMS_Ms2Centroid_MatchesReferenceMzMl() =>
-        Assert.Inconclusive("Pending: vendor-centroid path for PASEF combineIMS (mobility array, precursor metadata).");
+    public void Harness_HelaPasefTdf_CombineIMS_Ms2Centroid_MatchesReferenceMzMl()
+    {
+        RunHarness("Hela_QC_PASEF_Slot1-first-6-frames.d", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.PreferOnlyMsLevel = 2;
+            config.PeakPicking = true;
+        });
+    }
 
     private static void RunHarness(string fixtureFolderName, Action<ReaderTestConfig>? configure = null)
     {

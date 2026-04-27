@@ -41,6 +41,15 @@ public sealed class ReaderConfig
     /// </summary>
     public bool SortAndJitter { get; set; }
 
+    /// <summary>
+    /// Hint to the reader that the caller will apply vendor peak picking downstream. Bruker's
+    /// reader currently uses this to keep the global TIC/BPC chromatograms emitted in
+    /// combine-ion-mobility mode (pwiz C++ centroid+combineIMS reference mzMLs include them
+    /// while non-centroid combineIMS refs omit them). Port of
+    /// <c>pwiz::msdata::Reader::Config::peakPicking</c>.
+    /// </summary>
+    public bool PeakPicking { get; set; }
+
     /// <summary>Default configuration.</summary>
     public static ReaderConfig Default { get; } = new();
 }

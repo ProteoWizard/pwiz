@@ -64,6 +64,7 @@ public sealed class Reader_Bruker : IReader
         int preferOnlyMsLevel = config?.PreferOnlyMsLevel ?? 0;
         bool combineIms = config?.CombineIonMobilitySpectra ?? CombineIonMobilitySpectra;
         bool sortAndJitter = config?.SortAndJitter ?? false;
+        bool peakPicking = config?.PeakPicking ?? false;
         var format = DetectFormat(filename);
         if (format != BrukerFormat.Tdf && format != BrukerFormat.Tsf)
             throw new NotSupportedException(
@@ -77,7 +78,7 @@ public sealed class Reader_Bruker : IReader
         var data = BrukerData.Create(analysisDir);
         try
         {
-            ReadImpl(result, data, analysisDir, preferOnlyMsLevel, combineIms, sortAndJitter);
+            ReadImpl(result, data, analysisDir, preferOnlyMsLevel, combineIms, sortAndJitter, peakPicking);
         }
         catch
         {
@@ -86,7 +87,7 @@ public sealed class Reader_Bruker : IReader
         }
     }
 
-    private static void ReadImpl(MSData result, IBrukerData data, string analysisDir, int preferOnlyMsLevel, bool combineIonMobilitySpectra, bool sortAndJitter)
+    private static void ReadImpl(MSData result, IBrukerData data, string analysisDir, int preferOnlyMsLevel, bool combineIonMobilitySpectra, bool sortAndJitter, bool peakPicking)
     {
         result.CVs.AddRange(MSData.DefaultCVList);
         result.Id = Path.GetFileNameWithoutExtension(analysisDir);
@@ -121,10 +122,11 @@ public sealed class Reader_Bruker : IReader
         { Dp = dpReader };
         result.Run.SpectrumList = spectrumList;
 
-        // pwiz C++ combineIMS reference mzMLs omit the chromatogramList entirely (each combined
-        // spectrum already carries the TIC of its merged frame range, so a separate document-
-        // level chromatogram is redundant). Suppress it to match.
-        if (!combineIonMobilitySpectra)
+        // pwiz C++ non-centroid combineIMS reference mzMLs omit the chromatogramList entirely
+        // (each combined spectrum already carries the TIC of its merged frame range), but the
+        // centroid-combineIMS refs include it — so suppress only when combine is on AND peak
+        // picking is off.
+        if (!combineIonMobilitySpectra || peakPicking)
             result.Run.ChromatogramList = new ChromatogramList_Bruker(data, spectrumList, preferOnlyMsLevel) { Dp = dpReader };
     }
 

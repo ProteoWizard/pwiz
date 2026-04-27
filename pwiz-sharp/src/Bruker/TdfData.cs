@@ -285,9 +285,19 @@ internal sealed class TdfData : IBrukerData
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
-        _ = preferCentroid; // TDF is always centroided at the vendor API level.
         var tag = (Tag)entry.Tag;
         var frame = tag.Frame;
+
+        // pwiz C++ centroid+combineIMS path emits a longer native id with frame/scan range so
+        // each merged spectrum is uniquely addressable. Non-centroid path keeps the short
+        // "merged=N" form (set in MakeCombinedEntry).
+        if (preferCentroid && tag.Combined)
+        {
+            spec.Id = "merged=" + entry.Index.ToString(CultureInfo.InvariantCulture)
+                + " frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture)
+                + " scanStart=" + (tag.ScanBegin + 1).ToString(CultureInfo.InvariantCulture)
+                + " scanEnd=" + (tag.ScanEnd + 1).ToString(CultureInfo.InvariantCulture);
+        }
 
         int msLevel = frame.MsMsType == MsMsType.Ms1 ? 1 : 2;
         spec.Params.Set(CVID.MS_ms_level, msLevel);
@@ -298,10 +308,31 @@ internal sealed class TdfData : IBrukerData
         spec.Params.Set(CVID.MS_base_peak_intensity, frame.MaxIntensity);
         spec.Params.Set(CVID.MS_total_ion_current, frame.SummedIntensities);
 
-        // Per-scan emission marks the spectrum as centroid; combined mode does NOT (mirrors
-        // pwiz C++ output which doesn't tag combined PASEF spectra with MS_centroid_spectrum).
-        if (!tag.Combined)
+        // Per-scan emission marks centroid; non-centroid+combined leaves the spectrum unmarked
+        // (matches pwiz C++ profile combine output). Centroid+combined re-marks centroid since
+        // the underlying TDF data is already centroid at the vendor API level.
+        if (!tag.Combined || preferCentroid)
             spec.Params.Set(CVID.MS_centroid_spectrum);
+
+        // Centroid+combined spectra carry the merged scan range's K0 bounds as userParams
+        // (pwiz C++ TimsData.cpp `getCombinedSpectrumData` emits them when the spectrum is
+        // returned in centroid mode).
+        if (preferCentroid && tag.Combined)
+        {
+            var bounds = _tims.ScanNumberToOneOverK0(frame.FrameId,
+                new[] { (double)tag.ScanBegin, (double)tag.ScanEnd });
+            // Bruker's K0 is monotonically decreasing with scan number, so scanBegin gives the
+            // upper limit and scanEnd the lower limit. The mzML userParam names ("lower limit",
+            // "upper limit") refer to the K0 values, not the scan numbers.
+            double lower = Math.Min(bounds[0], bounds[1]);
+            double upper = Math.Max(bounds[0], bounds[1]);
+            spec.Params.UserParams.Add(new UserParam("ion mobility lower limit",
+                lower.ToString("R", CultureInfo.InvariantCulture), "xsd:double",
+                CVID.MS_volt_second_per_square_centimeter));
+            spec.Params.UserParams.Add(new UserParam("ion mobility upper limit",
+                upper.ToString("R", CultureInfo.InvariantCulture), "xsd:double",
+                CVID.MS_volt_second_per_square_centimeter));
+        }
 
         // Build the scanList. Per-scan TDF emission has one Scan with full metadata; combined
         // mode has one Scan per merged scan (only the first carries time/invK0/scanWindow per
@@ -321,14 +352,17 @@ internal sealed class TdfData : IBrukerData
             // PASEF combined (< 100 merged scans, typically per-precursor). pwiz C++ emits
             // a multi-scan list and labels the first scan with the raw 0-based TDF scan
             // number plus an invK0 computed at the precursor's avg-scan-number (fractional
-            // centroid mobility from PasefFrameMsMsInfo+Precursors join).
+            // centroid mobility from PasefFrameMsMsInfo+Precursors join). The centroid path
+            // drops the per-scan invK0 (the spectrum-level mobility limits + precursor CCS
+            // already encode the relevant mobility) but keeps the scan range info we need
+            // for downstream computations.
             scan.SpectrumId = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
                               " scan=" + tag.ScanBegin.ToString(CultureInfo.InvariantCulture);
             double k0Probe = tag.PasefPrecursor?.AvgScanNumber > 0
                 ? tag.PasefPrecursor.AvgScanNumber
                 : tag.ScanBegin;
             scanInvK0 = _tims.ScanNumberToOneOverK0(frame.FrameId, new[] { k0Probe })[0];
-            if (scanInvK0 > 0)
+            if (scanInvK0 > 0 && !preferCentroid)
                 scan.Set(CVID.MS_inverse_reduced_ion_mobility, scanInvK0, CVID.MS_volt_second_per_square_centimeter);
         }
         // MS1 combined (>= 100 merged scans): no spectrumRef, no invK0 on the single scan
@@ -349,7 +383,11 @@ internal sealed class TdfData : IBrukerData
         // (~900 scans), which keep the simpler single-scan + MS_no_combination layout.
         int mergedScanCount = tag.Combined ? (tag.ScanEnd - tag.ScanBegin + 1) : 1;
         bool emitMergedList = tag.Combined && mergedScanCount < 100;
-        if (emitMergedList)
+        // Centroid+combined uses MS_sum_of_spectra regardless of scan count (whole-frame MS1
+        // combine has count=1 single scan element with sum_of_spectra). Non-centroid combined
+        // falls back to MS_no_combination for >=100 scans (matches pwiz C++ profile output).
+        bool sumOfSpectraMark = emitMergedList || (preferCentroid && tag.Combined);
+        if (sumOfSpectraMark)
             spec.ScanList.Set(CVID.MS_sum_of_spectra);
         else
             spec.ScanList.Set(CVID.MS_no_combination);
@@ -371,7 +409,12 @@ internal sealed class TdfData : IBrukerData
         if (tag.DiaWindow is not null)
             AddDiaPrecursor(spec, tag.DiaWindow, omitMsLevelUserParam: tag.Combined);
         else if (tag.PasefPrecursor is not null)
-            AddPasefPrecursor(spec, tag.PasefPrecursor, scanInvK0, omitMsLevelUserParam: tag.Combined, omitCcs: tag.Combined);
+            // Centroid+combined re-emits the precursor extras (peak intensity, CCS, collision
+            // energy) — pwiz C++'s centroid path goes through the PasefMsMs API which carries
+            // them. The non-centroid combined path drops them to match pwiz's profile output.
+            AddPasefPrecursor(spec, tag.PasefPrecursor, scanInvK0,
+                omitMsLevelUserParam: tag.Combined,
+                omitCcs: tag.Combined && !preferCentroid);
         else if (frame.MsMsType != MsMsType.Ms1 && frame.PrecursorMz.HasValue)
             AddFrameMsMsInfoPrecursor(spec, frame, scanInvK0);
 
@@ -387,10 +430,14 @@ internal sealed class TdfData : IBrukerData
             if (tag.Combined && meanMobility.Length == mz.Length && mz.Length > 0)
             {
                 var mobArr = new BinaryDataArray();
-                // pwiz C++ uses MS_mean_inverse_reduced_ion_mobility_array as its enum name
-                // but the underlying accession is MS:1002816 — which our generated CV table
-                // names MS_mean_ion_mobility_array (newer OBO display name; same accession).
-                mobArr.Set(CVID.MS_mean_ion_mobility_array, "", CVID.MS_volt_second_per_square_centimeter);
+                // Non-centroid combine ref uses MS:1002816 ("mean ion mobility array");
+                // centroid combine ref uses MS:1003006 ("mean inverse reduced ion mobility
+                // array"). Same payload (per-peak 1/K0), different accession depending on the
+                // emission path — pwiz C++'s centroid path goes through the newer CV term.
+                CVID mobCv = preferCentroid
+                    ? CVID.MS_mean_inverse_reduced_ion_mobility_array
+                    : CVID.MS_mean_ion_mobility_array;
+                mobArr.Set(mobCv, "", CVID.MS_volt_second_per_square_centimeter);
                 mobArr.Data.AddRange(meanMobility);
                 spec.BinaryDataArrays.Add(mobArr);
             }
