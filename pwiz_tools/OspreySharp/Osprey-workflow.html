@@ -384,17 +384,17 @@
   <text class="phase-note"  x="60" y="58">
     Multi-charge consensus + cross-run reconciliation adjust peak boundaries
     across replicates, then re-score at locked boundaries and re-run FDR.
-    Planning checkpoint cross-impl dumps in place; structure matches at the
-    row level, residual diffs are ULP-level floating-point.
+    Planning checkpoint dumps byte-identical with Rust on Stellar + Astral
+    3-file; second-pass re-score still missing.
   </text>
 
   <rect class="st-done" x="80" y="80" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="100" text-anchor="middle">Multi-charge consensus</text>
   <text class="stage-desc"  x="600" y="114" text-anchor="middle">SelectRescoreTargets ported; rescore-target dump bit-identical with Rust by entry_id (31,270 rows on Stellar 3-file, after first-pass compaction)</text>
 
-  <rect class="st-partial" x="80" y="140" width="1040" height="42" rx="4"/>
+  <rect class="st-done" x="80" y="140" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="160" text-anchor="middle">Cross-run reconciliation</text>
-  <text class="stage-desc"  x="600" y="174" text-anchor="middle">ConsensusRts.Compute + CalibrationRefit.Refit wired; consensus_library_rt 99.999% bit-identical (1/87343 rows differ on a borderline first-pass-protein-FDR rescue); refit n_points matches but LOESS residual stats off at ULP; ReconciliationPlanner not yet wired</text>
+  <text class="stage-desc"  x="600" y="174" text-anchor="middle">ConsensusRts.Compute + CalibrationRefit.Refit wired; consensus / inv_predict / multicharge / refit / loess_fit / protein_fdr / calibration dumps all byte-identical with Rust on Stellar + Astral 3-file; ReconciliationPlanner deferred to second-pass re-score sprint</text>
 
   <rect class="st-missing" x="80" y="200" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="220" text-anchor="middle">Second-pass re-score + Percolator SVM</text>
@@ -403,10 +403,11 @@
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
   <path class="flow" d="M 600 182 L 600 198" marker-end="url(#arrow)"/>
 
-  <!-- "You are here" callout — pointing at cross-run reconciliation,
-       the active in-progress box (multi-charge consensus shipped
-       bit-identical; second-pass re-score is still missing). -->
-  <g transform="translate(820, 135)">
+  <!-- "You are here" callout — pointing at second-pass re-score,
+       the next box up (multi-charge consensus + cross-run reconciliation
+       both shipped byte-identical; second-pass re-score is the remaining
+       Stage 6 substage). -->
+  <g transform="translate(820, 195)">
     <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
     <text class="you-are-here" x="136" y="10">YOU ARE</text>
     <text class="you-are-here" x="136" y="26">HERE</text>
