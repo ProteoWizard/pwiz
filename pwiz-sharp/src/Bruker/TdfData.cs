@@ -53,11 +53,14 @@ internal sealed class TdfData : IBrukerData
         if (!HasPasefData || preferOnlyMsLevel == 1)
         {
             foreach (var frame in _meta.EnumerateFrames(preferOnlyMsLevel))
+            {
+                if (frame.NumPeaks == 0) continue; // skip calibration / warm-up frames (cpp TimsData.cpp:247)
                 yield return new BrukerChromatogramPoint(
                     frame.RetentionTimeSeconds,
                     frame.SummedIntensities,
                     frame.MaxIntensity,
                     frame.MsMsType == MsMsType.Ms1 ? 1 : 2);
+            }
             yield break;
         }
 
@@ -73,9 +76,9 @@ internal sealed class TdfData : IBrukerData
     {
         var output = new List<BrukerChromatogramPoint>();
         var ms1Frames = preferOnlyMsLevel != 2
-            ? _meta.EnumerateFrames(1).ToList()
+            ? _meta.EnumerateFrames(1).Where(f => f.NumPeaks > 0).ToList()
             : new List<TdfFrame>();
-        var ms2FramesById = _meta.EnumerateFrames(2).ToDictionary(f => f.FrameId);
+        var ms2FramesById = _meta.EnumerateFrames(2).Where(f => f.NumPeaks > 0).ToDictionary(f => f.FrameId);
         var precursors = _meta.EnumeratePasefPrecursors().ToList();
 
         int ms1Idx = 0;
@@ -171,6 +174,10 @@ internal sealed class TdfData : IBrukerData
         foreach (var frame in _meta.EnumerateFrames(preferOnlyMsLevel))
         {
             if (frame.NumScans <= 0) continue;
+            // pwiz C++ TimsData.cpp:247-248 skips frames with NumPeaks == 0 — these are
+            // typically calibration / warm-up frames at the start of the run that carry no
+            // usable spectra.
+            if (frame.NumPeaks == 0) continue;
 
             if (combineIonMobilitySpectra)
             {
