@@ -98,6 +98,34 @@ public class ReaderWatersTests
         RunHarness("DDA_IsolationWindow.raw", config => config.DdaProcessing = true);
     }
 
+    [TestMethod]
+    public void Harness_HdddaShortRaw_MatchesReferenceMzMl()
+    {
+        // 400 spectra (2 IMS functions × 200 drift bins). Non-combine path.
+        RunHarness("HDDDA_Short_noLM.raw");
+    }
+
+    [TestMethod]
+    public void Harness_HdddaShortCombineIMS_MatchesReferenceMzMl()
+    {
+        // 2 spectra (one combined per IMS block).
+        RunHarness("HDDDA_Short_noLM.raw", config => config.CombineIonMobilitySpectra = true);
+    }
+
+    [TestMethod]
+    public void Harness_HdmseShortRaw_MatchesReferenceMzMl()
+    {
+        // 400 spectra MSe acquisition (function 0 = MS1, function 1 = high-energy MSn).
+        RunHarness("HDMSe_Short_noLM.raw");
+    }
+
+    [TestMethod]
+    public void Harness_HdmrmShortRaw_MatchesReferenceMzMl()
+    {
+        // 600 spectra HD-MRM acquisition.
+        RunHarness("HDMRM_Short_noLM.raw");
+    }
+
     private static void RunHarness(string fixtureFolderName, Action<ReaderTestConfig>? configure = null)
     {
         string? root = FindTestDataRoot();

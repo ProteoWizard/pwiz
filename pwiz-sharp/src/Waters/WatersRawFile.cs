@@ -37,6 +37,9 @@ internal sealed class WatersRawFile : IDisposable
     /// <summary>True if any function has a sibling _FUNCnnn.cdt file (ion mobility data).</summary>
     public bool HasIonMobility { get; }
 
+    /// <summary>Per-function-index → has ion mobility (.cdt sibling and DriftScanCount &gt; 0).</summary>
+    public IReadOnlyList<bool> IonMobilityByFunctionIndex { get; }
+
     /// <summary>Properties parsed out of <c>_HEADER.TXT</c> (e.g. "Acquired Date").</summary>
     public IReadOnlyDictionary<string, string> HeaderProps { get; }
 
@@ -61,12 +64,28 @@ internal sealed class WatersRawFile : IDisposable
             _drift = IntPtr.Zero;
 
             // Build the function index by globbing _FUNC*.DAT (matches pwiz C++).
-            var (indices, hasIms) = ScanFunctionFiles(rawPath);
+            var (indices, hasCdt) = ScanFunctionFiles(rawPath);
             FunctionIndices = indices;
-            HasIonMobility = hasIms;
+
+            // pwiz C++ also requires Info.GetDriftScanCount(function) > 0 in addition to the
+            // .cdt sibling for IMS detection — some files have leftover .cdt artifacts but
+            // empty drift dimension. Build the per-function flag here.
+            int last = indices.Count == 0 ? -1 : indices[indices.Count - 1];
+            var imsByFunc = new bool[last + 1];
+            bool anyIms = false;
+            foreach (int f in indices)
+            {
+                if (!hasCdt.TryGetValue(f, out bool cdt) || !cdt) continue;
+                if (NativeMethods.getDriftScanCount(_info, f, out uint dc) == 0 && dc > 0)
+                {
+                    imsByFunc[f] = true;
+                    anyIms = true;
+                }
+            }
+            IonMobilityByFunctionIndex = imsByFunc;
+            HasIonMobility = anyIms;
 
             // Pre-cache per-function TIC.
-            int last = indices.Count == 0 ? -1 : indices[indices.Count - 1];
             var times = new float[last + 1][];
             var tic = new float[last + 1][];
             foreach (int f in indices)
@@ -87,7 +106,7 @@ internal sealed class WatersRawFile : IDisposable
         }
     }
 
-    private static (IReadOnlyList<int> indices, bool hasIms) ScanFunctionFiles(string rawPath)
+    private static (IReadOnlyList<int> indices, IReadOnlyDictionary<int, bool> hasCdt) ScanFunctionFiles(string rawPath)
     {
         // Native MassLynx stores each function's binary frames in _FUNC###.DAT; ion mobility
         // adds a sibling _FUNC###.cdt with the compressed drift bins. We mirror pwiz C++ here:
@@ -95,8 +114,8 @@ internal sealed class WatersRawFile : IDisposable
         // function numbers >= 100 the filename grows to _FUNC0100.DAT (4 digits), so we strip
         // the leading zeros before parsing.
         var indices = new List<int>();
-        bool hasIms = false;
-        if (!Directory.Exists(rawPath)) return (indices, hasIms);
+        var cdtMap = new Dictionary<int, bool>();
+        if (!Directory.Exists(rawPath)) return (indices, cdtMap);
         foreach (var path in Directory.EnumerateFiles(rawPath, "_FUNC*.DAT"))
         {
             string name = Path.GetFileName(path);
@@ -104,12 +123,13 @@ internal sealed class WatersRawFile : IDisposable
             string digits = name.Substring(5, name.Length - 9).TrimStart('0');
             if (digits.Length == 0) digits = "0";
             if (!int.TryParse(digits, NumberStyles.Integer, CultureInfo.InvariantCulture, out int n) || n <= 0) continue;
-            indices.Add(n - 1); // 0-based throughout the rest of the reader
+            int idx = n - 1;
+            indices.Add(idx);
             string cdt = Path.ChangeExtension(path, ".cdt");
-            if (File.Exists(cdt)) hasIms = true;
+            cdtMap[idx] = File.Exists(cdt);
         }
         indices.Sort();
-        return (indices, hasIms);
+        return (indices, cdtMap);
     }
 
     private static Dictionary<string, string> ParseHeaderTxt(string rawPath)
@@ -175,6 +195,38 @@ internal sealed class WatersRawFile : IDisposable
     {
         Check(NativeMethods.isContinuum(_info, function, out bool cont), "isContinuum");
         return cont;
+    }
+
+    /// <summary>Number of drift (ion-mobility) bins per RT block in <paramref name="function"/>.</summary>
+    public int GetDriftScanCount(int function)
+    {
+        Check(NativeMethods.getDriftScanCount(_info, function, out uint c), "getDriftScanCount");
+        return (int)c;
+    }
+
+    /// <summary>Drift time (milliseconds) for the given drift bin index.</summary>
+    public float GetDriftTime(int driftBin)
+    {
+        Check(NativeMethods.getDriftTime(_info, driftBin, out float dt), "getDriftTime");
+        return dt;
+    }
+
+    /// <summary>
+    /// Reads (mz, intensity) for one drift bin within an IMS block. SDK retains buffer
+    /// ownership (matches pwiz C++ ToVector with bRelease=false).
+    /// </summary>
+    public (float[] Mz, float[] Intensity) ReadDriftScan(int function, int block, int driftBin)
+    {
+        Check(NativeMethods.readDriftScan(_scan, function, block, driftBin,
+            out IntPtr pMass, out IntPtr pInt, out int n), "readDriftScan");
+        var mz = new float[n];
+        var intensity = new float[n];
+        if (n > 0)
+        {
+            Marshal.Copy(pMass, mz, 0, n);
+            Marshal.Copy(pInt, intensity, 0, n);
+        }
+        return (mz, intensity);
     }
 
     /// <summary>

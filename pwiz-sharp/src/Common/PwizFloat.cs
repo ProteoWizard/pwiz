@@ -18,8 +18,18 @@ public static class PwizFloat
 {
     private const int Precision = 12;
 
+    /// <summary>
+    /// Formats a float in pwiz's canonical XML form. pwiz C++ emits floats via boost
+    /// lexical_cast which historically uses <c>numeric_limits&lt;float&gt;::digits10 = 6</c>
+    /// (6 significant figures) — in scientific notation that's 5 fractional digits in the
+    /// mantissa. The double overload keeps 12 fractional digits.
+    /// </summary>
+    public static string ToPwizString(float value) => Format(value, 5);
+
     /// <summary>Formats <paramref name="value"/> in pwiz's canonical XML form.</summary>
-    public static string ToPwizString(double value)
+    public static string ToPwizString(double value) => Format(value, Precision);
+
+    private static string Format(double value, int precision)
     {
         if (double.IsNaN(value)) return "nan";
         if (double.IsPositiveInfinity(value)) return "inf";
@@ -35,14 +45,14 @@ public static class PwizFloat
             if (Math.Abs(mantissa) >= 10.0) { mantissa /= 10.0; exp++; }
             else if (Math.Abs(mantissa) < 1.0 && mantissa != 0) { mantissa *= 10.0; exp--; }
 
-            string m = FormatFixed(mantissa, Precision);
+            string m = FormatFixed(mantissa, precision);
             string expStr = exp < 0
                 ? "-" + (-exp).ToString("D2", CultureInfo.InvariantCulture)
                 : exp.ToString("D2", CultureInfo.InvariantCulture);
             return m + "e" + expStr;
         }
 
-        return FormatFixed(value, Precision);
+        return FormatFixed(value, precision);
     }
 
     private static string FormatFixed(double value, int precision)
