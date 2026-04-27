@@ -156,4 +156,60 @@ internal static class NativeMethods
 
     [DllImport(MassLynxRawDll)]
     public static extern int getParameterKeys(IntPtr parameters, out IntPtr keys, out int size);
+
+    // ---------- scan / centroid processor ----------
+
+    /// <summary>
+    /// Progress callback type. The C ABI is <c>void __stdcall(void* caller, const int&amp; percent)</c>;
+    /// `percent` arrives by reference (i.e. as a pointer) for ABI parity with C++ refs. We
+    /// don't actually subscribe to progress, so we register a no-op callback at registration
+    /// time and keep it pinned for the processor's lifetime.
+    /// </summary>
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    public delegate void ProgressCallback(IntPtr caller, in int percent);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int createRawProcessor(out IntPtr processor, MassLynxBaseType type,
+        ProgressCallback? callback, IntPtr caller);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int destroyRawProcessor(IntPtr processor);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int setRawReader(IntPtr processor, IntPtr reader);
+
+    /// <summary>
+    /// Loads a (possibly merged) scan range into the SCAN-type processor for downstream
+    /// centroid / threshold / smooth operations. <see cref="MassLynxBaseType.SCAN"/> processor
+    /// only — pass start==end for a single scan.
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int combineScan(IntPtr processor, int function, int startScan, int endScan);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int centroidScan(IntPtr processor);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int getScan(IntPtr processor, out IntPtr masses, out IntPtr intensities, out int size);
+
+    // ---------- DDA processor ----------
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int ddaGetScanCount(IntPtr processor, out int count);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int ddaGetScanInfo(IntPtr processor, int whichScan, IntPtr parameters);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int ddaGetScan(IntPtr processor, int whichScan,
+        out IntPtr masses, out IntPtr intensities, out int size, IntPtr parameters);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int setDDAParameters(IntPtr processor, IntPtr parameters);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int setQuadIsolationWindowParameters(IntPtr processor, IntPtr parameters);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int getQuadIsolationWindowParameters(IntPtr processor, IntPtr parameters);
 }

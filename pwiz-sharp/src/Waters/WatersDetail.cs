@@ -85,6 +85,40 @@ internal static class WatersScanItem
 }
 
 /// <summary>
+/// MassLynx <c>MassLynxDDAIndexDetail</c> keys (DDA_TYPE_BASE = 1800). Returned from the
+/// DDA processor's GetScanInfo as parameter values.
+/// </summary>
+internal static class WatersDdaIndex
+{
+    public const int RT = 1800;
+    public const int Function = 1801;
+    public const int StartScan = 1802;
+    public const int EndScan = 1803;
+    public const int ScanType = 1804;
+    public const int SetMass = 1805;
+    public const int PrecursorMass = 1806;
+}
+
+/// <summary>DDAIsolationWindowParameter keys (DDA_ISOLATION_WINDOW_PARAMETER_BASE = 1900).</summary>
+internal static class WatersDdaIsolation
+{
+    public const int LowerOffset = 1900;
+    public const int UpperOffset = 1901;
+}
+
+/// <summary>DDAParameter keys (DDA_PARAMETER_BASE = 1950).</summary>
+internal static class WatersDdaParameter
+{
+    public const int Centroid = 1950;
+}
+
+/// <summary>MassLynxScanType (SCAN_TYPE_BASE = 1850). MS1 = 1850, MS2 = 1851.</summary>
+internal static class WatersScanType
+{
+    public const int Ms1 = 1850;
+}
+
+/// <summary>
 /// Helpers translating MassLynx-native enums to mzML CV terms. Mirrors
 /// <c>Reader_Waters_Detail.cpp</c> + the inline helpers in <c>WatersRawFile.hpp</c>.
 /// </summary>

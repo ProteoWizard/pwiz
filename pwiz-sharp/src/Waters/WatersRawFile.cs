@@ -19,6 +19,10 @@ internal sealed class WatersRawFile : IDisposable
     private IntPtr _scan;
     private IntPtr _chrom;
     private IntPtr _drift; // SCAN reader bound to the same file but used for drift reads (only meaningful when IMS present)
+    private IntPtr _centroidProc; // SCAN-type processor used for vendor centroid (Load + Centroid + GetScan).
+    private NativeMethods.ProgressCallback? _centroidProgressCb;
+    private IntPtr _ddaProc;       // DDA-type processor (lazily created on first DDA request).
+    private NativeMethods.ProgressCallback? _ddaProgressCb;
     private bool _disposed;
 
     /// <summary>0-based function indices present in the raw directory (sorted ascending).</summary>
@@ -192,6 +196,168 @@ internal sealed class WatersRawFile : IDisposable
     }
 
     /// <summary>
+    /// Reads a single scan and returns vendor-centroided peaks via MassLynx's scan processor
+    /// (createRawProcessor(SCAN) → combineScan(start=end) → centroidScan → getScan). Mirrors
+    /// pwiz C++ <c>RawData::ReadScan(..., doCentroid=true, ...)</c>. The processor is lazily
+    /// constructed on first centroid request.
+    /// </summary>
+    public (float[] Mz, float[] Intensity) ReadCentroidScan(int function, int scan)
+    {
+        EnsureCentroidProcessor();
+        Check(NativeMethods.combineScan(_centroidProc, function, scan, scan), "combineScan");
+        Check(NativeMethods.centroidScan(_centroidProc), "centroidScan");
+        Check(NativeMethods.getScan(_centroidProc, out IntPtr pMass, out IntPtr pInt, out int n), "getScan");
+        // ScanProcessor's GetScan uses ToVector with bRelease=false (matches RawData::ReadScan
+        // pattern) — SDK retains ownership, we just copy.
+        var mz = new float[n];
+        var intensity = new float[n];
+        if (n > 0)
+        {
+            Marshal.Copy(pMass, mz, 0, n);
+            Marshal.Copy(pInt, intensity, 0, n);
+        }
+        return (mz, intensity);
+    }
+
+    private void EnsureCentroidProcessor()
+    {
+        if (_centroidProc != IntPtr.Zero) return;
+        // Pin a no-op progress callback so the SDK doesn't invoke a freed delegate during a
+        // long-running operation (createRawProcessor stores the function pointer).
+        _centroidProgressCb = static (IntPtr _, in int _) => { };
+        Check(NativeMethods.createRawProcessor(out _centroidProc, NativeMethods.MassLynxBaseType.SCAN,
+            _centroidProgressCb, IntPtr.Zero), "createRawProcessor(SCAN)");
+        Check(NativeMethods.setRawReader(_centroidProc, _scan), "setRawReader(centroid)");
+    }
+
+    private void EnsureDdaProcessor()
+    {
+        if (_ddaProc != IntPtr.Zero) return;
+        _ddaProgressCb = static (IntPtr _, in int _) => { };
+        Check(NativeMethods.createRawProcessor(out _ddaProc, NativeMethods.MassLynxBaseType.DDA,
+            _ddaProgressCb, IntPtr.Zero), "createRawProcessor(DDA)");
+        Check(NativeMethods.setRawReader(_ddaProc, _scan), "setRawReader(DDA)");
+    }
+
+    /// <summary>Number of DDA-processed scans this file would emit.</summary>
+    public int GetDdaScanCount()
+    {
+        EnsureDdaProcessor();
+        Check(NativeMethods.ddaGetScanCount(_ddaProc, out int n), "ddaGetScanCount");
+        return n;
+    }
+
+    /// <summary>
+    /// Returns the metadata for one DDA-processed scan: retention time, source function,
+    /// underlying scan range, MS1-vs-MSn flag, and (for MS2) set/precursor mass. Mirrors
+    /// pwiz C++ <c>RawData::GetDDAScanInfo</c>.
+    /// </summary>
+    public DdaScanInfo GetDdaScanInfo(int index)
+    {
+        EnsureDdaProcessor();
+        Check(NativeMethods.createParameters(out IntPtr p), "createParameters");
+        try
+        {
+            int rc = NativeMethods.ddaGetScanInfo(_ddaProc, index, p);
+            if (rc != 0) return default;
+            float rt = ReadFloatParam(p, WatersDdaIndex.RT);
+            int func = (int)ReadFloatParam(p, WatersDdaIndex.Function);
+            int startScan = (int)ReadFloatParam(p, WatersDdaIndex.StartScan);
+            int endScan = (int)ReadFloatParam(p, WatersDdaIndex.EndScan);
+            int scanType = (int)ReadFloatParam(p, WatersDdaIndex.ScanType);
+            bool isMs1 = scanType == WatersScanType.Ms1;
+            float setMass = isMs1 ? 0f : ReadFloatParam(p, WatersDdaIndex.SetMass);
+            float precursorMass = isMs1 ? 0f : ReadFloatParam(p, WatersDdaIndex.PrecursorMass);
+            return new DdaScanInfo(rt, func, startScan, endScan, isMs1, setMass, precursorMass);
+        }
+        finally
+        {
+            _ = NativeMethods.destroyParameters(p);
+        }
+    }
+
+    /// <summary>
+    /// Reads the (mz, intensity) arrays for a DDA-processed scan. Optionally centroids via
+    /// the DDA processor's CENTROID parameter (mirrors pwiz C++ <c>SetCentroid(true)</c>).
+    /// </summary>
+    public (float[] Mz, float[] Intensity) GetDdaScan(int index, bool doCentroid)
+    {
+        EnsureDdaProcessor();
+        SetDdaCentroid(doCentroid);
+        Check(NativeMethods.createParameters(out IntPtr p), "createParameters");
+        try
+        {
+            Check(NativeMethods.ddaGetScan(_ddaProc, index,
+                out IntPtr pMass, out IntPtr pInt, out int n, p), "ddaGetScan");
+            // SDK retains ownership (matches pwiz C++ ToVector with bRelease=false).
+            var mz = new float[n];
+            var intensity = new float[n];
+            if (n > 0)
+            {
+                Marshal.Copy(pMass, mz, 0, n);
+                Marshal.Copy(pInt, intensity, 0, n);
+            }
+            return (mz, intensity);
+        }
+        finally
+        {
+            _ = NativeMethods.destroyParameters(p);
+        }
+    }
+
+    /// <summary>
+    /// Returns the per-scan isolation window offsets stored in the file, or null if both are
+    /// zero (pwiz C++ treats that case as "no offsets present" and falls back to default).
+    /// </summary>
+    public (float Lower, float Upper)? GetDdaIsolationWindowOffsets()
+    {
+        EnsureDdaProcessor();
+        Check(NativeMethods.createParameters(out IntPtr p), "createParameters");
+        try
+        {
+            int rc = NativeMethods.getQuadIsolationWindowParameters(_ddaProc, p);
+            if (rc != 0) return null;
+            float lower = ReadFloatParam(p, WatersDdaIsolation.LowerOffset);
+            float upper = ReadFloatParam(p, WatersDdaIsolation.UpperOffset);
+            if (lower == 0f && upper == 0f) return null;
+            return (lower, upper);
+        }
+        finally
+        {
+            _ = NativeMethods.destroyParameters(p);
+        }
+    }
+
+    private void SetDdaCentroid(bool centroid)
+    {
+        Check(NativeMethods.createParameters(out IntPtr p), "createParameters");
+        try
+        {
+            Check(NativeMethods.setParameterValue(p, WatersDdaParameter.Centroid,
+                centroid ? "1" : "0"), "setParameterValue(CENTROID)");
+            Check(NativeMethods.setDDAParameters(_ddaProc, p), "setDDAParameters");
+        }
+        finally
+        {
+            _ = NativeMethods.destroyParameters(p);
+        }
+    }
+
+    private static float ReadFloatParam(IntPtr parameters, int key)
+    {
+        if (NativeMethods.getParameterValue(parameters, key, out IntPtr v) != 0 || v == IntPtr.Zero)
+            return 0f;
+        string s = Marshal.PtrToStringAnsi(v) ?? string.Empty;
+        return float.TryParse(s, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out float f) ? f : 0f;
+    }
+
+    /// <summary>DDA scan info fields. <c>StartScan</c>/<c>EndScan</c> are 0-based.</summary>
+    public readonly record struct DdaScanInfo(
+        float RetentionTime, int Function, int StartScan, int EndScan,
+        bool IsMs1, float SetMass, float PrecursorMass);
+
+    /// <summary>
     /// SRM/MRM transitions for the given function. Returns parallel (precursor m/z, product
     /// m/z) arrays — one entry per Q1/Q3 transition. Pwiz C++ enumerates these via
     /// <c>Reader.ReadScan(function, 1, precursorMZs, intensities, productMZs)</c> and discards
@@ -318,6 +484,8 @@ internal sealed class WatersRawFile : IDisposable
 
     private void DisposeNative()
     {
+        if (_ddaProc != IntPtr.Zero) { _ = NativeMethods.destroyRawProcessor(_ddaProc); _ddaProc = IntPtr.Zero; }
+        if (_centroidProc != IntPtr.Zero) { _ = NativeMethods.destroyRawProcessor(_centroidProc); _centroidProc = IntPtr.Zero; }
         if (_drift != IntPtr.Zero) { _ = NativeMethods.destroyRawReader(_drift); _drift = IntPtr.Zero; }
         if (_chrom != IntPtr.Zero) { _ = NativeMethods.destroyRawReader(_chrom); _chrom = IntPtr.Zero; }
         if (_info != IntPtr.Zero) { _ = NativeMethods.destroyRawReader(_info); _info = IntPtr.Zero; }

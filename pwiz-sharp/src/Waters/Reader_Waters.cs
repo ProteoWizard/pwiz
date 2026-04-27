@@ -52,6 +52,7 @@ public sealed class Reader_Waters : IReader
 
         int preferOnlyMsLevel = config?.PreferOnlyMsLevel ?? 0;
         bool srmAsSpectra = false; // Phase 1 doesn't expose this through ReaderConfig.
+        bool ddaProcessing = config?.DdaProcessing ?? false;
 
         // Waters paths can't contain unicode (the SDK rejects them), but we let the OS open
         // any path we can find on disk — mirror the pwiz C++ short-path workaround only when
@@ -63,7 +64,7 @@ public sealed class Reader_Waters : IReader
         var data = new WatersRawFile(fullPath);
         try
         {
-            ReadImpl(result, data, fullPath, preferOnlyMsLevel, srmAsSpectra);
+            ReadImpl(result, data, fullPath, preferOnlyMsLevel, srmAsSpectra, ddaProcessing);
         }
         catch
         {
@@ -73,7 +74,7 @@ public sealed class Reader_Waters : IReader
     }
 
     private static void ReadImpl(MSData result, WatersRawFile data, string analysisDir,
-        int preferOnlyMsLevel, bool srmAsSpectra)
+        int preferOnlyMsLevel, bool srmAsSpectra, bool ddaProcessing)
     {
         // Identifier is the directory name minus the .raw extension (matches pwiz C++:
         // bfs::basename(p) drops the trailing extension component).
@@ -110,7 +111,7 @@ public sealed class Reader_Waters : IReader
         result.Run.DefaultInstrumentConfiguration = ic;
         result.Run.StartTimeStamp = ConvertHeaderTimestamp(data);
 
-        var spectrumList = new SpectrumList_Waters(data, owns: true, preferOnlyMsLevel, srmAsSpectra)
+        var spectrumList = new SpectrumList_Waters(data, owns: true, preferOnlyMsLevel, srmAsSpectra, ddaProcessing)
         { Dp = dpReader };
         result.Run.SpectrumList = spectrumList;
 

@@ -40,6 +40,64 @@ public class ReaderWatersTests
         RunHarness("160109_Mix1_calcurve_070.raw");
     }
 
+    [TestMethod]
+    public void Harness_AtehlstlsekProfile_MatchesReferenceMzMl()
+    {
+        // 8 spectra of profile-mode TOF MS — exercises the IsContinuum=true path.
+        RunHarness("ATEHLSTLSEK_profile.raw");
+    }
+
+    [TestMethod]
+    public void Harness_AtehlstlsekLm684_MatchesReferenceMzMl()
+    {
+        // 8 spectra with lockmass=684.3469 set on the file. The reference mzML is the
+        // *uncorrected* path (no msconvert --lockmass override applied), so we just need
+        // the basic flow to work — lockmass *correction* (which would require ApplyLockMass)
+        // is exercised in the -ddaProcessing variant only.
+        RunHarness("ATEHLSTLSEK_LM_684.3469.raw");
+    }
+
+    [TestMethod]
+    public void Harness_AtehlstlsekLm785_MatchesReferenceMzMl()
+    {
+        RunHarness("ATEHLSTLSEK_LM_785.8426.raw");
+    }
+
+    [TestMethod]
+    public void Harness_DdaIsolationWindow_MatchesReferenceMzMl()
+    {
+        // Exercises the DDA isolation-window-offset code path (lower/upper offsets recorded
+        // in the file are non-zero); the non-ddaProcessing reference is the simpler path
+        // where we don't actually invoke the DDA processor.
+        RunHarness("DDA_IsolationWindow.raw");
+    }
+
+    [TestMethod]
+    public void Harness_AtehlstlsekProfileCentroid_MatchesReferenceMzMl()
+    {
+        // Profile data with PeakPicking enabled — exercises Waters vendor centroid via
+        // MassLynx ScanProcessor + calculatePeakMetadata recompute of base peak / TIC /
+        // lowest+highest m/z.
+        RunHarness("ATEHLSTLSEK_profile.raw", config => config.PeakPicking = true);
+    }
+
+    [TestMethod]
+    public void Harness_AtehlstlsekLm684DdaProcessing_MatchesReferenceMzMl()
+    {
+        // Exercises MassLynx's DDA processor (GetDDAScanCount / Info / Scan) — produces 2
+        // spectra: one MS1 with raw centroids (~26k peaks) and one MS2 merging scans 1-5
+        // with id "merged=1 function=2 process=0 scans=1-5".
+        RunHarness("ATEHLSTLSEK_LM_684.3469.raw", config => config.DdaProcessing = true);
+    }
+
+    [TestMethod]
+    public void Harness_DdaIsolationWindowDdaProcessing_MatchesReferenceMzMl()
+    {
+        // Exercises the per-file DDA isolation window offsets (LowerOffset, UpperOffset)
+        // pushed onto the precursor isolation window when present.
+        RunHarness("DDA_IsolationWindow.raw", config => config.DdaProcessing = true);
+    }
+
     private static void RunHarness(string fixtureFolderName, Action<ReaderTestConfig>? configure = null)
     {
         string? root = FindTestDataRoot();

@@ -50,6 +50,14 @@ public sealed class ReaderConfig
     /// </summary>
     public bool PeakPicking { get; set; }
 
+    /// <summary>
+    /// When true, vendor-specific DDA preprocessing kicks in (currently Waters MassLynx
+    /// DDA processor only). The reader emits one spectrum per DDA-processed scan with
+    /// merged-scan ids when multiple raw scans contribute to a single DDA precursor. Port of
+    /// <c>pwiz::msdata::Reader::Config::ddaProcessing</c>.
+    /// </summary>
+    public bool DdaProcessing { get; set; }
+
     /// <summary>Default configuration.</summary>
     public static ReaderConfig Default { get; } = new();
 }
