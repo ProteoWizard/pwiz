@@ -76,16 +76,54 @@ public class ReaderBrukerTests
     [TestMethod]
     public void Harness_HelaPasefTdf_CombineIMS_MatchesReferenceMzMl()
     {
+        // SortAndJitter is intentionally OFF — the MSDataDiff treats the m/z + intensity +
+        // mobility arrays as a multiset, so production order (scan-by-scan, no jitter) compares
+        // clean against pwiz C++ reference mzMLs even though those were generated with
+        // sortAndJitter=true.
         RunHarness("Hela_QC_PASEF_Slot1-first-6-frames.d", config =>
         {
             config.CombineIonMobilitySpectra = true;
-            // pwiz C++ ref combineIMS mzMLs were generated with sortAndJitter=true so the
-            // merged peak arrays are sorted by m/z with a 1e-8 jitter on duplicates. We only
-            // turn this on under the harness — production msconvert-sharp doesn't perturb
-            // m/z values.
-            config.SortAndJitter = true;
         });
     }
+
+    [TestMethod]
+    public void Harness_HelaPasefTdf_CombineIMS_Ms1_MatchesReferenceMzMl()
+    {
+        RunHarness("Hela_QC_PASEF_Slot1-first-6-frames.d", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.PreferOnlyMsLevel = 1;
+        });
+    }
+
+    [TestMethod]
+    public void Harness_HelaPasefTdf_CombineIMS_Ms2_MatchesReferenceMzMl()
+    {
+        RunHarness("Hela_QC_PASEF_Slot1-first-6-frames.d", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.PreferOnlyMsLevel = 2;
+        });
+    }
+
+    // Centroid + CombineIMS variants are intentionally pending. pwiz C++ takes a vendor-centroid
+    // path for PASEF combineIMS (per-frame precomputed centroids), preserving the per-scan
+    // mobility array and emitting precursor metadata (MS_peak_intensity, CCS,
+    // collision_energy, ion mobility upper/lower limit userParams) — our SpectrumList_PeakPicker
+    // wrapper instead reduces the merged profile to a smaller set of CWT centroids and drops
+    // the mobility array. Tracked separately; harness scaffolding kept so the test names
+    // remain visible.
+    [TestMethod]
+    public void Harness_HelaPasefTdf_CombineIMS_Centroid_MatchesReferenceMzMl() =>
+        Assert.Inconclusive("Pending: vendor-centroid path for PASEF combineIMS (mobility array, precursor metadata).");
+
+    [TestMethod]
+    public void Harness_HelaPasefTdf_CombineIMS_Ms1Centroid_MatchesReferenceMzMl() =>
+        Assert.Inconclusive("Pending: vendor-centroid path for PASEF combineIMS (mobility array, precursor metadata).");
+
+    [TestMethod]
+    public void Harness_HelaPasefTdf_CombineIMS_Ms2Centroid_MatchesReferenceMzMl() =>
+        Assert.Inconclusive("Pending: vendor-centroid path for PASEF combineIMS (mobility array, precursor metadata).");
 
     private static void RunHarness(string fixtureFolderName, Action<ReaderTestConfig>? configure = null)
     {

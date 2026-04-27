@@ -289,17 +289,22 @@ public static class MSDataDiff
         var triples = new List<(double, double, double)>(mz.Count);
         for (int i = 0; i < mz.Count; i++)
             triples.Add((mz[i], intensity[i], mobility[i]));
-        // Round m/z to single precision for the sort key: pwiz C++ writes m/z as 32-bit float
-        // in mzML, so distinct full-precision doubles on our side may collapse to the same
-        // float on the reference side. Equalizing the sort key avoids spurious tie-break
-        // ordering differences within duplicate-m/z groups.
+        // Sort by (intensity, mobility-rounded, m/z-as-float). pwiz C++ writes m/z as 32-bit
+        // float in the mzML, but two of our full-precision doubles can land on adjacent float
+        // buckets after C++'s own internal rounding even when the underlying TIMS index is the
+        // same — so a m/z-primary sort can misalign duplicate-m/z groups across sides. Sorting
+        // by intensity (exact integer counts) and rounded mobility (TIMS scan-number-to-K0 is
+        // deterministic to ~1e-9; round to 1e-7 to absorb that float noise) puts each peak in
+        // a stable bucket regardless of which float-bucket its m/z fell into.
         triples.Sort((x, y) =>
         {
-            int c = ((float)x.Item1).CompareTo((float)y.Item1);
+            int c = x.Item2.CompareTo(y.Item2);
             if (c != 0) return c;
-            c = x.Item2.CompareTo(y.Item2);
+            double mobX = Math.Round(x.Item3, 7);
+            double mobY = Math.Round(y.Item3, 7);
+            c = mobX.CompareTo(mobY);
             if (c != 0) return c;
-            return x.Item3.CompareTo(y.Item3);
+            return ((float)x.Item1).CompareTo((float)y.Item1);
         });
         return triples;
     }
