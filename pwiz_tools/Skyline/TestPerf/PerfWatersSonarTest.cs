@@ -75,7 +75,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             string yTitle = null;
             RunUI(()=>
             {
-                yTitle = SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.YAxis.Title.Text;
+                yTitle = SkylineWindow.GraphFullScan.HeatMapYAxisTitleText;
             });
             var expectedTitle = Resources.GraphFullScan_CreateIonMobilityHeatmap_Quadrupole_Scan_Range__m_z_;
             AssertEx.AreEqual(expectedTitle, yTitle, "expected fullscan graph y axis title to be " + expectedTitle);

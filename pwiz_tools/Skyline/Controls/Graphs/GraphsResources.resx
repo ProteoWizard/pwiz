@@ -550,6 +550,9 @@ Here are the last 3 errors:
   <data name="GraphFullScan_ToolTip_Transition" xml:space="preserve">
     <value>Transition</value>
   </data>
+  <data name="GraphFullScan_ToolTip_Summed_Intensity" xml:space="preserve">
+    <value>Summed Intensity</value>
+  </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
     <value>{0:0.0000}</value>
   </data>
@@ -810,5 +813,11 @@ Here are the last 3 errors:
   </data>
   <data name="LabelLayoutRunner_Start_Label_layout" xml:space="preserve">
     <value>Label layout</value>
+  </data>
+  <data name="GraphFullScan_MobilogramRequiresHeatmap" xml:space="preserve">
+    <value>Heatmap must be visible to show mobilogram</value>
+  </data>
+  <data name="GraphFullScan_ToggleSonarHeatmap" xml:space="preserve">
+    <value>Show SONAR Heatmap</value>
   </data>
 </root>
