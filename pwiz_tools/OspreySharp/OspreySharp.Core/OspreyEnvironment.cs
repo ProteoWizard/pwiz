@@ -20,15 +20,21 @@
 
 using System;
 
-namespace pwiz.OspreySharp
+namespace pwiz.OspreySharp.Core
 {
     /// <summary>
     /// Central access point for OSPREY_* environment variables that control
     /// production behavior (throttling, fast-iteration early exits, algorithm
-    /// variants). A separate OspreyDiagnostics class (coming next) covers the
-    /// diagnostic-dump env vars. Values are read once at process start and
-    /// cached as readonly static fields so callers never reach for
+    /// variants). A separate OspreyDiagnostics class covers the diagnostic-dump
+    /// env vars. Values are read once at process start and cached as readonly
+    /// static fields so callers never reach for
     /// <see cref="Environment.GetEnvironmentVariable(string)"/> inline.
+    ///
+    /// Lives in OspreySharp.Core so every project below the main pipeline
+    /// (FDR, Chromatography, Scoring, ML, IO) can read it without
+    /// depending on the main project (which would create a cycle). See
+    /// "OspreySharp project layering" in
+    /// <c>ai/docs/osprey-development-guide.md</c>.
     /// </summary>
     public static class OspreyEnvironment
     {
@@ -88,11 +94,6 @@ namespace pwiz.OspreySharp
                 return 0;
             int.TryParse(v, out int result);
             return result;
-        }
-
-        private static bool IsOne(string name)
-        {
-            return Environment.GetEnvironmentVariable(name) == @"1";
         }
 
         private static bool IsSet(string name)
