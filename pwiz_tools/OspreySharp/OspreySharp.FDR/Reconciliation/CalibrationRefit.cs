@@ -84,11 +84,17 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
             // Disable outlier removal (retention = 1.0) — these are
             // FDR-controlled detections, not noisy initial matches. LOESS
             // robustness iterations still downweight any stragglers.
+            //
+            // ClassicalRobustIterations must mirror the value used at Stage 4
+            // (initial calibration) on both Rust and C# sides; otherwise the
+            // refit fitted_values diverge cross-impl. Stage 4 reads
+            // OspreyEnvironment.LoessClassicalRobust (default true).
             var config = new RTCalibratorConfig
             {
                 Bandwidth = 0.3,
                 OutlierRetention = 1.0,
                 MinPoints = MIN_CONSENSUS_POINTS,
+                ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust,
             };
 
             try
