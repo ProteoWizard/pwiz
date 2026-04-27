@@ -81,6 +81,9 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         private enum SplitterDrag { None, Vertical, Horizontal, Both }
         private SplitterDrag _activeDrag = SplitterDrag.None;
+        // Cached master-pane client rect for the duration of a splitter drag — avoids
+        // a CreateGraphics + CalcClientRect call on every MouseMove. Cleared on MouseUp.
+        private RectangleF? _dragMasterClientRect;
         private bool IsStickPlotVisible => _stickSpectrumPane != null;
         private bool IsMobilogramPaneVisible => _mobilogramPane != null;
         private double _maxMz;
@@ -369,7 +372,6 @@ namespace pwiz.Skyline.Controls.Graphs
             _mobilogramPane.Rect = new RectangleF(x0, yMid, leftW, botH);
             _heatMapPane.Rect = new RectangleF(xMid, yMid, rightW, botH);
 
-            AlignStickHeatmapChartX();
             AlignMobilogramChartToHeatmap();
         }
 
@@ -603,6 +605,9 @@ namespace pwiz.Skyline.Controls.Graphs
             if (hit == SplitterDrag.None)
                 return false;
             _activeDrag = hit;
+            // Cache the client rect once for the drag — window dimensions don't change
+            // mid-drag, so MouseMove can reuse this without allocating a Graphics each time.
+            _dragMasterClientRect = GetMasterPaneClientRect();
             graphControl.Capture = true;
             return true; // suppress ZedGraph pan/zoom while dragging splitter
         }
@@ -612,6 +617,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_activeDrag == SplitterDrag.None)
                 return false;
             _activeDrag = SplitterDrag.None;
+            _dragMasterClientRect = null;
             graphControl.Capture = false;
             Settings.Default.Save();
             return true;
@@ -619,7 +625,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ApplyDrag(Point pt)
         {
-            var mpRect = GetMasterPaneClientRect();
+            var mpRect = _dragMasterClientRect ?? GetMasterPaneClientRect();
             if (mpRect.Width <= 0 || mpRect.Height <= 0)
                 return;
 
@@ -784,6 +790,25 @@ namespace pwiz.Skyline.Controls.Graphs
             dst.MinorStepAuto = false;
             // Mirror the heatmap's drift-time title text so the mobilogram can carry it.
             target.YAxis.Title.Text = heatMap.YAxis.Title.Text;
+            // Force a uniform numeric format so heatmap and mobilogram drift-time tick
+            // labels render identically (e.g. "4.0" not "4"). FormatGraphPane sets the
+            // heatmap to "g" which strips trailing zeros — undo that here for both panes
+            // using a precision derived from the major step.
+            string format = ComputeAxisFormat(src.MajorStep);
+            src.Format = format;
+            dst.Format = format;
+        }
+
+        /// <summary>
+        /// Numeric format string with enough fractional digits to express
+        /// <paramref name="majorStep"/> without rounding (e.g. step 0.5 → "F1").
+        /// </summary>
+        private static string ComputeAxisFormat(double majorStep)
+        {
+            if (majorStep <= 0 || double.IsNaN(majorStep) || double.IsInfinity(majorStep) || majorStep >= 1)
+                return @"F0";
+            int decimals = (int)Math.Ceiling(-Math.Log10(majorStep));
+            return @"F" + decimals;
         }
 
         private MSGraphPane CreateEmptySpacerPane()
@@ -1160,6 +1185,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     // line up horizontally across panes.
                     if (showMobilogram)
                     {
+                        // Compute the matching YAxis.MinSpace once now that data and tick
+                        // labels are populated. Persisted MinSpace then keeps stick and
+                        // heatmap chart-X aligned across drag-resize without redoing the
+                        // expensive AxisChange/CalcChartRect work on every drag step.
+                        AlignStickHeatmapChartX();
                         AdjustFourPaneColumnWidths();
                         // Run one more align after the first paint, by which point the
                         // heatmap has actually drawn and its Chart.Rect reflects reality.
@@ -2531,6 +2561,10 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphHelper.FormatGraphPane(GraphPane);
             if (IsStickPlotVisible)
                 GraphHelper.FormatGraphPane(_stickSpectrumPane);
+            // FormatGraphPane sets heatmap Y format to "g" which strips trailing zeros;
+            // re-sync from mobilogram so both panes show the same drift-time precision.
+            if (IsMobilogramPaneVisible)
+                SyncMobilogramYAxisFromHeatmap();
             comboBoxPeakType.Visible = IsStickPlotVisible || spectrumBtn.Checked;
             toolStripLabelPeakType.Visible = IsStickPlotVisible || spectrumBtn.Checked;
 
