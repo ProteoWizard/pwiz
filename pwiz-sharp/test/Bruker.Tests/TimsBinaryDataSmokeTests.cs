@@ -353,7 +353,9 @@ public class TimsBinaryDataSmokeTests
         // before pasef-aware combined emission was ported (TimsData.cpp:699-711).
         Assert.AreEqual(9, msd.Run.SpectrumList.Count);
         var first = msd.Run.SpectrumList.GetSpectrum(0, getBinaryData: true);
-        StringAssert.StartsWith(first.Id, "merged=0 frame=1", StringComparison.Ordinal);
+        // pwiz C++ SpectrumList_Bruker.cpp:381 native id is just "merged=N"; per-scan
+        // membership is carried by scanList <scan spectrumRef="..."> entries.
+        Assert.AreEqual("merged=0", first.Id);
         Assert.IsTrue(first.DefaultArrayLength > 100, "combined frame should have a lot of peaks");
     }
 }

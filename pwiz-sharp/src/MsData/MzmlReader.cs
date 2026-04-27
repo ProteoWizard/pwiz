@@ -455,6 +455,9 @@ public sealed class MzmlReader
                 else
                     // mzML semantics: omitted ref means the run's default IC applies.
                     scan.InstrumentConfiguration = _runDefaultIc;
+                // Bruker combined-IMS spectra carry one <scan spectrumRef="frame=N scan=M">
+                // per merged scan; preserve the link for round-trip parity.
+                scan.SpectrumId = r.GetAttribute("spectrumRef") ?? string.Empty;
 
                 if (MzmlXml.MoveToFirstChildElement(r))
                 {

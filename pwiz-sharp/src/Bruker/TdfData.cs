@@ -148,12 +148,14 @@ internal sealed class TdfData : IBrukerData
 
     private static BrukerIndexEntry MakeCombinedEntry(int idx, TdfFrame frame, int scanBegin, int scanEnd, Tag tag)
     {
-        // Matches pwiz C++ SpectrumList_Bruker.cpp native-id format for combineIonMobilitySpectra:
-        //   "merged={index} frame={frameId} scanStart={begin+1} scanEnd={end+1}"
-        string id = "merged=" + idx.ToString(CultureInfo.InvariantCulture) +
-                    " frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
-                    " scanStart=" + (scanBegin + 1).ToString(CultureInfo.InvariantCulture) +
-                    " scanEnd=" + (scanEnd + 1).ToString(CultureInfo.InvariantCulture);
+        // pwiz C++ SpectrumList_Bruker.cpp:381 emits short combineIMS native id "merged=N";
+        // the per-scan list of `<scan spectrumRef="frame=F scan=S">` carries the merged scan
+        // membership in scanList. (Earlier we used the longer form derived from
+        // SpectrumList_Bruker.cpp:785 which is the *spectrumIdentity index id*, not the
+        // emitted native id — our older smoke test pinned to "merged=0 frame=1" because
+        // that prefix happened to match.)
+        _ = scanBegin; _ = scanEnd;
+        string id = "merged=" + idx.ToString(CultureInfo.InvariantCulture);
         return new BrukerIndexEntry { Index = idx, Id = id, Tag = tag, MsLevel = frame.MsMsType == MsMsType.Ms1 ? 1 : 2 };
     }
 
@@ -295,13 +297,18 @@ internal sealed class TdfData : IBrukerData
         // pwiz C++ attr order: base peak + TIC before centroid; no unit on base peak intensity.
         spec.Params.Set(CVID.MS_base_peak_intensity, frame.MaxIntensity);
         spec.Params.Set(CVID.MS_total_ion_current, frame.SummedIntensities);
-        spec.Params.Set(CVID.MS_centroid_spectrum);
 
+        // Per-scan emission marks the spectrum as centroid; combined mode does NOT (mirrors
+        // pwiz C++ output which doesn't tag combined PASEF spectra with MS_centroid_spectrum).
+        if (!tag.Combined)
+            spec.Params.Set(CVID.MS_centroid_spectrum);
+
+        // Build the scanList. Per-scan TDF emission has one Scan with full metadata; combined
+        // mode has one Scan per merged scan (only the first carries time/invK0/scanWindow per
+        // pwiz C++ SpectrumList_Bruker.cpp:398-414).
         var scan = new Scan();
         scan.Set(CVID.MS_scan_start_time, frame.RetentionTimeSeconds, CVID.UO_second);
 
-        // Per-scan 1/K0 for per-scan TDF spectra (matches pwiz C++ — emitted whenever
-        // combineIonMobilitySpectra is off and the scan covers a single mobility bin).
         double scanInvK0 = 0;
         if (!tag.Combined && tag.ScanBegin == tag.ScanEnd)
         {
@@ -309,7 +316,20 @@ internal sealed class TdfData : IBrukerData
             if (scanInvK0 > 0)
                 scan.Set(CVID.MS_inverse_reduced_ion_mobility, scanInvK0, CVID.MS_volt_second_per_square_centimeter);
         }
-        // windowGroup userParam marks DIA-PASEF MS2 membership.
+        else if (tag.Combined)
+        {
+            // The first scan in the merged list carries the time + invK0 of the first member.
+            scanInvK0 = _tims.ScanNumberToOneOverK0(frame.FrameId, new[] { (double)tag.ScanBegin })[0];
+            if (scanInvK0 > 0)
+                scan.Set(CVID.MS_inverse_reduced_ion_mobility, scanInvK0, CVID.MS_volt_second_per_square_centimeter);
+            // pwiz C++ combined-mode native ids use the raw TDF scan value (0-based) — see
+            // SpectrumList_Bruker.cpp:393-396 which emits *getMergedScanNumbers().begin()
+            // directly. This is inconsistent with the non-combined path that adds +1, but
+            // we mirror the wire format faithfully.
+            scan.SpectrumId = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
+                              " scan=" + tag.ScanBegin.ToString(CultureInfo.InvariantCulture);
+        }
+
         if (tag.DiaWindow is not null)
             scan.UserParams.Add(new UserParam(
                 "windowGroup",
@@ -319,25 +339,57 @@ internal sealed class TdfData : IBrukerData
         if (mzHigh > 0)
             scan.ScanWindows.Add(new ScanWindow(mzLow, mzHigh, CVID.MS_m_z));
 
-        spec.ScanList.Set(CVID.MS_no_combination);
+        if (tag.Combined)
+            spec.ScanList.Set(CVID.MS_sum_of_spectra);
+        else
+            spec.ScanList.Set(CVID.MS_no_combination);
         spec.ScanList.Scans.Add(scan);
 
+        // Combined mode: append empty <scan spectrumRef="..."> entries for the remaining
+        // merged scans (matches pwiz C++ SpectrumList_Bruker.cpp:400-415).
+        if (tag.Combined)
+        {
+            for (int s = tag.ScanBegin + 1; s <= tag.ScanEnd; s++)
+            {
+                var extra = new Scan
+                {
+                    SpectrumId = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
+                                 " scan=" + s.ToString(CultureInfo.InvariantCulture),
+                };
+                spec.ScanList.Scans.Add(extra);
+            }
+        }
+
         if (tag.DiaWindow is not null)
-            AddDiaPrecursor(spec, tag.DiaWindow);
+            AddDiaPrecursor(spec, tag.DiaWindow, omitMsLevelUserParam: tag.Combined);
         else if (tag.PasefPrecursor is not null)
-            AddPasefPrecursor(spec, tag.PasefPrecursor, scanInvK0);
+            AddPasefPrecursor(spec, tag.PasefPrecursor, scanInvK0, omitMsLevelUserParam: tag.Combined, omitCcs: tag.Combined);
         else if (frame.MsMsType != MsMsType.Ms1 && frame.PrecursorMz.HasValue)
             AddFrameMsMsInfoPrecursor(spec, frame, scanInvK0);
 
         // pwiz C++ leaves MS_lowest/highest_observed_m_z commented-out for TDF.
-        var (mz, intensity) = ReadScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd);
+        double[] meanMobility = Array.Empty<double>();
+        var (mz, intensity) = tag.Combined
+            ? ReadCombinedScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd, out meanMobility)
+            : ReadScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd);
         spec.DefaultArrayLength = mz.Length;
-        // Always emit (possibly empty) m/z + intensity arrays when binary data is requested.
         if (getBinaryData)
+        {
             spec.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
+            if (tag.Combined && meanMobility.Length == mz.Length && mz.Length > 0)
+            {
+                var mobArr = new BinaryDataArray();
+                // pwiz C++ uses MS_mean_inverse_reduced_ion_mobility_array as its enum name
+                // but the underlying accession is MS:1002816 — which our generated CV table
+                // names MS_mean_ion_mobility_array (newer OBO display name; same accession).
+                mobArr.Set(CVID.MS_mean_ion_mobility_array, "", CVID.MS_volt_second_per_square_centimeter);
+                mobArr.Data.AddRange(meanMobility);
+                spec.BinaryDataArrays.Add(mobArr);
+            }
+        }
     }
 
-    private static void AddDiaPrecursor(Spectrum spec, DiaFrameWindow window)
+    private static void AddDiaPrecursor(Spectrum spec, DiaFrameWindow window, bool omitMsLevelUserParam = false)
     {
         var precursor = new Precursor();
         double isolationMz = window.IsolationMz;
@@ -345,6 +397,7 @@ internal sealed class TdfData : IBrukerData
         double half = window.IsolationWidth / 2.0;
         precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, half, CVID.MS_m_z);
         precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, half, CVID.MS_m_z);
+        _ = omitMsLevelUserParam; // DIA emission doesn't add an "ms level" userParam in either mode.
 
         var selected = new SelectedIon();
         selected.Set(CVID.MS_selected_ion_m_z, isolationMz, CVID.MS_m_z);
@@ -356,22 +409,23 @@ internal sealed class TdfData : IBrukerData
         spec.Precursors.Add(precursor);
     }
 
-    private static void AddPasefPrecursor(Spectrum spec, PasefPrecursorInfo info, double oneOverK0)
+    private static void AddPasefPrecursor(Spectrum spec, PasefPrecursorInfo info, double oneOverK0, bool omitMsLevelUserParam = false, bool omitCcs = false)
     {
         var precursor = new Precursor();
         precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, info.IsolationMz, CVID.MS_m_z);
         double half = info.IsolationWidth / 2.0;
         precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, half, CVID.MS_m_z);
         precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, half, CVID.MS_m_z);
+        _ = omitMsLevelUserParam; // we don't add an "ms level" userParam in either mode here.
 
         var selected = new SelectedIon();
         double selectedMz = info.MonoisotopicMz > 0 ? info.MonoisotopicMz : info.IsolationMz;
         selected.Set(CVID.MS_selected_ion_m_z, selectedMz, CVID.MS_m_z);
         if (info.Charge > 0)
             selected.Set(CVID.MS_charge_state, info.Charge);
-        if (info.Intensity > 0)
+        if (!omitCcs && info.Intensity > 0)
             selected.Set(CVID.MS_peak_intensity, info.Intensity, CVID.MS_number_of_detector_counts);
-        if (oneOverK0 > 0 && info.Charge > 0 && selectedMz > 0)
+        if (!omitCcs && oneOverK0 > 0 && info.Charge > 0 && selectedMz > 0)
         {
             double ccs = TimsBinaryData.OneOverK0ToCcs(oneOverK0, info.Charge, selectedMz);
             if (ccs > 0)
@@ -380,8 +434,10 @@ internal sealed class TdfData : IBrukerData
         precursor.SelectedIons.Add(selected);
 
         precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
-        // pwiz C++ emits CE without a unit for Bruker DDA (see SpectrumList_Bruker.cpp:368).
-        if (Math.Abs(info.CollisionEnergy) > 0)
+        // Combined-mode PASEF doesn't emit collision energy (matches pwiz C++ — the per-scan
+        // path emits CE but the combined path drops it because CE may vary across the merged
+        // scan range).
+        if (!omitCcs && Math.Abs(info.CollisionEnergy) > 0)
             precursor.Activation.Set(CVID.MS_collision_energy, Math.Abs(info.CollisionEnergy));
         spec.Precursors.Add(precursor);
     }
@@ -467,6 +523,53 @@ internal sealed class TdfData : IBrukerData
         }
         mzOut.Add(curMz); intOut.Add(curI);
         return (mzOut.ToArray(), intOut.ToArray());
+    }
+
+    /// <summary>
+    /// Combined-mode peak reader: concatenates each scan's peaks (m/z, intensity, 1/K0)
+    /// in scan order WITHOUT merging. Mirrors pwiz C++ TimsSpectrum::getCombinedSpectrumData
+    /// (TimsData.cpp:1022+) which preserves per-scan peaks one-to-one so the
+    /// MS_mean_inverse_reduced_ion_mobility_array carries the actual scan-level 1/K0 of
+    /// each emitted peak. Output arrays are aligned: <c>mz[i] / intensity[i] / mobility[i]</c>.
+    /// </summary>
+    private (double[] Mz, double[] Intensity) ReadCombinedScanRangePeaks(
+        TdfFrame frame, int scanBegin, int scanEnd, out double[] meanMobility)
+    {
+        var proxy = GetFrame(frame.FrameId, frame.NumScans);
+
+        int total = 0;
+        for (int s = scanBegin; s <= scanEnd; s++) total += proxy.NumPeaks(s);
+        if (total == 0)
+        {
+            meanMobility = Array.Empty<double>();
+            return (Array.Empty<double>(), Array.Empty<double>());
+        }
+
+        // Pre-compute 1/K0 for each scan in the range (single batched native call).
+        int rangeLen = scanEnd - scanBegin + 1;
+        var scanArgs = new double[rangeLen];
+        for (int i = 0; i < rangeLen; i++) scanArgs[i] = scanBegin + i;
+        var invK0PerScan = _tims.ScanNumberToOneOverK0(frame.FrameId, scanArgs);
+
+        var mzArr = new double[total];
+        var intArr = new double[total];
+        var mobArr = new double[total];
+        int write = 0;
+        for (int s = scanBegin; s <= scanEnd; s++)
+        {
+            double k0 = invK0PerScan[s - scanBegin];
+            var mzs = proxy.GetScanMzs(s);
+            var ints = proxy.GetScanIntensities(s);
+            for (int i = 0; i < mzs.Length; i++)
+            {
+                mzArr[write] = mzs[i];
+                intArr[write] = ints[i];
+                mobArr[write] = k0;
+                write++;
+            }
+        }
+        meanMobility = mobArr;
+        return (mzArr, intArr);
     }
 
     private FrameProxy GetFrame(long frameId, int numScans)
