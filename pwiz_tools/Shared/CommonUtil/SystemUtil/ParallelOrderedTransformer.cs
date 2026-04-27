@@ -34,7 +34,6 @@ namespace pwiz.Common.SystemUtil
         private int _nextAddIndex;
         private int _nextTakeIndex;
         private bool _doneAdding;
-        private Exception _unhandledException;
 
         protected ParallelOrderedTransformer(int maxTransformedItems, int maxQueueSize)
         {
@@ -58,10 +57,6 @@ namespace pwiz.Common.SystemUtil
             int index;
             lock (_results)
             {
-                if (_unhandledException != null)
-                {
-                    throw new AggregateException(_unhandledException);
-                }
                 index = _nextAddIndex++;
             }
             _worker.Add(new WorkItem(index, source));
@@ -75,45 +70,31 @@ namespace pwiz.Common.SystemUtil
                 {
                     Add(source);
                 }
+
                 DoneAdding();
             }, CommonTextUtil.SpaceSeparate(GetThreadName(), nameof(AddAll)));
         }
 
-        public void SetException(Exception ex)
-        {
-            lock (_results)
-            {
-                if (_unhandledException == null)
-                {
-                    _unhandledException = ex;
-                    Monitor.PulseAll(_results);
-                }
-            }
-        }
-
         private void ConsumeWorkItem(WorkItem item, int threadIndex)
         {
-            try
+            TResult result = Transform(item.Source);
+            lock (_results)
             {
-                TResult result = Transform(item.Source);
-                lock (_results)
+                while (true)
                 {
-                    while (item.Index >= _nextTakeIndex + _maxTransformedItems && _worker.Exception == null && _unhandledException == null)
+                    if (_worker.Exception != null)
                     {
-                        Monitor.Wait(_results);
+                        return;
                     }
 
-                    if (_worker.Exception != null || _unhandledException != null)
+                    if (item.Index < _nextAddIndex + _maxTransformedItems)
+                    {
+                        _results.Add(item.Index, result);
+                        Monitor.PulseAll(_results);
                         return;
-
-                    _results.Add(item.Index, result);
-                    Monitor.PulseAll(_results);
+                    }
+                    Monitor.Wait(_results);
                 }
-            }
-            catch (Exception ex)
-            {
-                SetException(ex);
-                throw;
             }
         }
 
@@ -127,12 +108,8 @@ namespace pwiz.Common.SystemUtil
                     {
                         throw new AggregateException(_worker.Exception);
                     }
-                    if (_unhandledException != null)
-                    {
-                        throw new AggregateException(_unhandledException);
-                    }
                     if (_doneAdding && _nextTakeIndex >= _nextAddIndex)
-                        return default(TResult);
+                        return default;
 
                     Monitor.Wait(_results);
                 }
