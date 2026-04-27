@@ -320,12 +320,16 @@ namespace pwiz.Skyline.Controls.Graphs
         /// i.e. the area inside which child panes are laid out. Use this anywhere we
         /// override pane Rects manually so they stay consistent with ZedGraph's own
         /// auto-layout (which uses the same calculation in MasterPane.DoLayout).
+        /// Pass <paramref name="g"/> to avoid creating a new GDI Graphics from paint
+        /// or other hot paths; otherwise we allocate one ourselves.
         /// </summary>
-        private RectangleF GetMasterPaneClientRect()
+        private RectangleF GetMasterPaneClientRect(Graphics g = null)
         {
             var mp = graphControl.MasterPane;
-            using (var g = graphControl.CreateGraphics())
+            if (g != null)
                 return mp.CalcClientRect(g, mp.CalcScaleFactor());
+            using (var ownG = graphControl.CreateGraphics())
+                return mp.CalcClientRect(ownG, mp.CalcScaleFactor());
         }
 
         /// <summary>
@@ -449,13 +453,13 @@ namespace pwiz.Skyline.Controls.Graphs
         /// If heatmap's actual chart rect no longer matches what we pinned, re-pin and
         /// invalidate so the next paint catches up. Called from the Paint handler.
         /// </summary>
-        private void RepinMobilogram()
+        private void RepinMobilogram(Graphics paintGraphics = null)
         {
             if (!IsMobilogramPaneVisible)
                 return;
             // Re-apply column widths if pane Rects don't match expected — calling
             // every paint causes a repaint loop because Rect assignment invalidates.
-            var mpRect = GetMasterPaneClientRect();
+            var mpRect = GetMasterPaneClientRect(paintGraphics);
             if (mpRect.Width > 0 && mpRect.Height > 0)
             {
                 float expectedHeatmapW = mpRect.Width * ColumnFraction;
@@ -656,31 +660,31 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Pin stick and heatmap chart-X to the wider of the two auto-reserves so m/z
-        /// pixel positions line up across the panes even when their Y-axis tick labels
-        /// have different widths (e.g. "2000" intensity vs "4" drift time).
+        /// Force stick and heatmap to reserve the same Y-axis width so their auto-laid-out
+        /// chart X positions line up — even when their tick labels have different widths
+        /// (e.g. "2000" intensity vs "4" drift time). Uses YAxis.MinSpace rather than
+        /// pinning Chart.Rect so ZedGraph's auto-layout (and legend positioning) keeps
+        /// working normally.
         /// </summary>
         private void AlignStickHeatmapChartX()
         {
             if (!IsStickPlotVisible || _heatMapPane == null)
                 return;
-            RectangleF stick, heat;
+            float stickReserve, heatReserve;
             using (var g = graphControl.CreateGraphics())
             {
                 _stickSpectrumPane.AxisChange(g);
                 _heatMapPane.AxisChange(g);
-                stick = _stickSpectrumPane.CalcChartRect(g);
-                heat = _heatMapPane.CalcChartRect(g);
+                var stick = _stickSpectrumPane.CalcChartRect(g);
+                var heat = _heatMapPane.CalcChartRect(g);
+                if (stick.Width <= 0 || heat.Width <= 0)
+                    return;
+                stickReserve = stick.X - _stickSpectrumPane.Rect.X - _stickSpectrumPane.Margin.Left;
+                heatReserve = heat.X - _heatMapPane.Rect.X - _heatMapPane.Margin.Left;
             }
-            if (stick.Width <= 0 || heat.Width <= 0)
-                return;
-            // Larger X = more reserved Y space. Smaller Right = less right padding. Pin
-            // both to the tighter of each so the chart areas match exactly.
-            float chartX = Math.Max(stick.X, heat.X);
-            float chartRight = Math.Min(stick.Right, heat.Right);
-            float chartW = Math.Max(1, chartRight - chartX);
-            _stickSpectrumPane.Chart.Rect = new RectangleF(chartX, stick.Y, chartW, stick.Height);
-            _heatMapPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
+            float reserve = Math.Max(stickReserve, heatReserve);
+            _stickSpectrumPane.YAxis.MinSpace = reserve;
+            _heatMapPane.YAxis.MinSpace = reserve;
         }
 
         private void AlignMobilogramChartToHeatmap()
@@ -2308,11 +2312,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (IsMobilogramPaneVisible)
             {
-                RepinMobilogram();
+                RepinMobilogram(e.Graphics);
             }
             else if (IsStickPlotVisible)
             {
-                var mpR = GetMasterPaneClientRect();
+                var mpR = GetMasterPaneClientRect(e.Graphics);
                 if (mpR.Height > 0 && Math.Abs(_stickSpectrumPane.Rect.Height - mpR.Height * RowFraction) > 1f)
                     AdjustTwoPaneRowHeights();
             }
