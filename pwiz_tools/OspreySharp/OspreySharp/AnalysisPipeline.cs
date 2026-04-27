@@ -614,6 +614,13 @@ namespace pwiz.OspreySharp
                         "Stage 6 refit: {0}/{1} files produced refined calibrations",
                         refinedCalibrations.Count, perFileEntries.Count));
 
+                    if (OspreyDiagnostics.DumpLoessFit)
+                    {
+                        OspreyDiagnostics.WriteStage6LoessFitDump(refinedCalibrations);
+                        if (OspreyDiagnostics.LoessFitOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_LOESS_FIT_ONLY");
+                    }
+
                     if (OspreyDiagnostics.DumpRefit)
                     {
                         OspreyDiagnostics.WriteStage6RefitDump(refinedCalibrations);
@@ -4804,6 +4811,14 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "First-pass protein FDR: {0} target groups at {1:P1} FDR",
                 nAtRunFdr, config.RunFdr));
+
+            if (OspreyDiagnostics.DumpProteinFdr)
+            {
+                OspreyDiagnostics.WriteStage6ProteinFdrDump(
+                    bestScores, proteinFdr.PeptideQvalues);
+                if (OspreyDiagnostics.ProteinFdrOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
+            }
 
             // Set RunProteinQvalue ONLY. Experiment-protein-q is set by the
             // post-output Stage 8 protein FDR pass (Rust calls it second-pass).

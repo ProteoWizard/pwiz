@@ -27,6 +27,7 @@ using System.Linq;
 using System.Text;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.FDR;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.Scoring;
 
@@ -175,6 +176,34 @@ namespace pwiz.OspreySharp
 
         /// <summary>OSPREY_INV_PREDICT_ONLY: exit after cs_stage6_inv_predict.tsv dump.</summary>
         public static readonly bool InvPredictOnly = IsOne(@"OSPREY_INV_PREDICT_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_PROTEIN_FDR: dump the per-peptide first-pass protein
+        /// FDR state (gate input + ranking input + propagated output) to
+        /// cs_stage6_protein_fdr.tsv after RunFirstPassProteinFdr completes.
+        /// Used to bisect the SQC[UniMod:4]LQVPER borderline cross-impl
+        /// divergence in run_protein_qvalue: matching against
+        /// rust_stage6_protein_fdr.tsv shows whether the gate input
+        /// (best_qvalue), the ranking input (score), or the algorithm output
+        /// (protein_qvalue) is responsible.
+        /// </summary>
+        public static readonly bool DumpProteinFdr = IsOne(@"OSPREY_DUMP_PROTEIN_FDR");
+
+        /// <summary>OSPREY_PROTEIN_FDR_ONLY: exit after cs_stage6_protein_fdr.tsv dump.</summary>
+        public static readonly bool ProteinFdrOnly = IsOne(@"OSPREY_PROTEIN_FDR_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_LOESS_FIT: dump the per-point LOESS fit state of the
+        /// Stage 6 refit RTCalibration to cs_stage6_loess_fit.tsv. Used to
+        /// bisect the refit ULP divergence: if (library_rt, fitted_value,
+        /// abs_residual) match cross-impl, the divergence is in the
+        /// stats computation (R²/SD/MAD). If fitted_value diverges, the
+        /// LOESS smoother arithmetic itself differs.
+        /// </summary>
+        public static readonly bool DumpLoessFit = IsOne(@"OSPREY_DUMP_LOESS_FIT");
+
+        /// <summary>OSPREY_LOESS_FIT_ONLY: exit after cs_stage6_loess_fit.tsv dump.</summary>
+        public static readonly bool LoessFitOnly = IsOne(@"OSPREY_LOESS_FIT_ONLY");
 
         /// <summary>
         /// OSPREY_DIAG_XIC_ENTRY_ID: the entry ID to dump chromatogram for
@@ -1047,7 +1076,7 @@ namespace pwiz.OspreySharp
             string fileName, double[] libraryRts, double[] fittedValues)
         {
             const string path = @"cs_stage6_calibration.tsv";
-            bool headerNeeded = !System.IO.File.Exists(path);
+            bool headerNeeded = !File.Exists(path);
             using (var sw = new StreamWriter(path, append: true))
             {
                 sw.NewLine = "\n";
@@ -1088,7 +1117,17 @@ namespace pwiz.OspreySharp
                 if (cmp != 0) return cmp;
                 cmp = string.CompareOrdinal(a.ModifiedSequence, b.ModifiedSequence);
                 if (cmp != 0) return cmp;
-                return string.CompareOrdinal(a.FileName, b.FileName);
+                cmp = string.CompareOrdinal(a.FileName, b.FileName);
+                if (cmp != 0) return cmp;
+                // Same (is_decoy, modseq, file_name) ties happen when a peptide
+                // has multiple charge-state detections in one file. Tiebreak on
+                // the data fields so the order is deterministic regardless of
+                // sort stability (List<T>.Sort is not stable; Rust's
+                // sort_by IS stable but the input order also differs cross-impl,
+                // so a complete data tiebreak is the only way to get byte-parity).
+                cmp = a.ApexRt.CompareTo(b.ApexRt);
+                if (cmp != 0) return cmp;
+                return a.LibraryRt.CompareTo(b.LibraryRt);
             });
 
             using (var sw = new StreamWriter(path))
@@ -1108,6 +1147,103 @@ namespace pwiz.OspreySharp
             LogAction(string.Format(
                 @"Wrote Stage 6 inverse-predict dump: {0} ({1} rows)",
                 path, sorted.Count));
+        }
+
+        /// <summary>
+        /// Dump the per-peptide first-pass protein FDR state to
+        /// cs_stage6_protein_fdr.tsv. Mirrors Rust dump_stage6_protein_fdr.
+        /// One row per peptide that appears in best_scores (the union of
+        /// target + decoy modified_sequences seen across all per-file
+        /// FdrEntry stubs at the moment first-pass protein FDR runs).
+        /// Columns: is_decoy, modified_sequence, best_qvalue, score,
+        /// protein_qvalue. best_qvalue is the input gate (peptide-level
+        /// run q-value, min across files). score is the input ranking
+        /// (max SVM discriminant across files). protein_qvalue is the
+        /// propagated output -- the value PropagateProteinQvalues will
+        /// write to FdrEntry.RunProteinQvalue (1.0 if the peptide is
+        /// not in proteinFdr.PeptideQvalues, matching the
+        /// PropagateProteinQvalues default). Rows sorted by
+        /// (is_decoy, modified_sequence) for stable diff.
+        /// </summary>
+        public static void WriteStage6ProteinFdrDump(
+            IDictionary<string, PeptideScore> bestScores,
+            IDictionary<string, double> peptideQvalues)
+        {
+            const string path = @"cs_stage6_protein_fdr.tsv";
+
+            var rows = new List<KeyValuePair<string, PeptideScore>>(bestScores);
+            rows.Sort((a, b) =>
+            {
+                int cmp = a.Value.IsDecoy.CompareTo(b.Value.IsDecoy);
+                if (cmp != 0) return cmp;
+                return string.CompareOrdinal(a.Key, b.Key);
+            });
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"is_decoy	modified_sequence	best_qvalue	score	protein_qvalue");
+                foreach (var row in rows)
+                {
+                    var ps = row.Value;
+                    double q;
+                    if (!peptideQvalues.TryGetValue(row.Key, out q))
+                        q = 1.0;
+                    sw.Write(ps.IsDecoy ? @"true" : @"false");
+                    sw.Write('\t'); sw.Write(row.Key ?? string.Empty);
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(ps.BestQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(ps.Score));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(q));
+                }
+            }
+            LogAction(string.Format(
+                @"Wrote Stage 6 first-pass protein FDR dump: {0} ({1} rows)",
+                path, rows.Count));
+        }
+
+        /// <summary>
+        /// Dump the per-point LOESS fit state of every refit RTCalibration
+        /// to cs_stage6_loess_fit.tsv. Mirrors Rust dump_stage6_loess_fit.
+        /// One row per (file_name, idx) into the refit's library_rts +
+        /// fitted_values + abs_residuals arrays. Rows sorted by
+        /// (file_name, idx) for stable diff. The refit dump captures
+        /// scalar stats (R²/SD/MAD); this dump captures the LOESS curve
+        /// itself so a stats-vs-smoother bisection is possible.
+        /// </summary>
+        public static void WriteStage6LoessFitDump(
+            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations)
+        {
+            const string path = @"cs_stage6_loess_fit.tsv";
+
+            var fileNames = new List<string>(refinedCalibrations.Keys);
+            fileNames.Sort(StringComparer.Ordinal);
+
+            int totalRows = 0;
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"file_name	idx	library_rt	fitted_value	abs_residual");
+                foreach (var fileName in fileNames)
+                {
+                    var cal = refinedCalibrations[fileName];
+                    var libRts = cal.LibraryRts;
+                    var fitted = cal.FittedValues;
+                    var residuals = cal.AbsResiduals;
+                    int n = Math.Min(libRts.Length, Math.Min(fitted.Length, residuals.Length));
+                    for (int i = 0; i < n; i++)
+                    {
+                        sw.Write(fileName);
+                        sw.Write('\t'); sw.Write(i.ToString(CultureInfo.InvariantCulture));
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(libRts[i]));
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(fitted[i]));
+                        sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(residuals[i]));
+                    }
+                    totalRows += n;
+                }
+            }
+            LogAction(string.Format(
+                @"Wrote Stage 6 LOESS fit dump: {0} ({1} rows across {2} files)",
+                path, totalRows, fileNames.Count));
         }
     }
 }

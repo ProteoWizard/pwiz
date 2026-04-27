@@ -62,6 +62,13 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
         /// q-value is borderline. Typically set to <c>config.ProteinFdr</c>.
         /// Pass 0.0 to disable.
         /// </param>
+        /// <param name="invPredictTrace">
+        /// If non-null, populated with one <see cref="InvPredictRecord"/> per
+        /// detection contributing to a consensus computation, capturing the
+        /// (apex_rt, library_rt, weight) triple that flows into the weighted
+        /// median. The caller drives the diagnostic dump (see
+        /// <c>OspreyDiagnostics.WriteStage6InvPredictDump</c>).
+        /// </param>
         public static IReadOnlyList<PeptideConsensusRT> Compute(
             IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
