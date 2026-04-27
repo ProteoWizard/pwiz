@@ -82,6 +82,10 @@ public sealed class BrukerIndexEntry : SpectrumIdentity
     /// so derived classes can stash their state; clients treat it as opaque.
     /// </summary>
     public object Tag { get; set; } = null!;
+
+    /// <summary>1 for MS1, 2 for MSn — exposed so chromatogram callers can build a per-point
+    /// ms-level array without round-tripping through full spectrum metadata.</summary>
+    public int MsLevel { get; set; } = 1;
 }
 
 /// <summary>One point in a TIC / BPC chromatogram.</summary>

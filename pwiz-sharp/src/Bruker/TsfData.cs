@@ -75,6 +75,7 @@ internal sealed class TsfData : IBrukerData
                 Index = index.Count,
                 Id = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture),
                 Tag = new Tag { Frame = frame },
+                MsLevel = frame.MsMsType == MsMsType.Ms1 ? 1 : 2,
             });
         }
         return index;

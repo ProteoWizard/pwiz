@@ -112,13 +112,14 @@ public sealed class Reader_Bruker : IReader
         if (result.InstrumentConfigurations.Count > 0)
             result.Run.DefaultInstrumentConfiguration = result.InstrumentConfigurations[0];
 
-        result.Run.SpectrumList = new SpectrumList_Bruker(
+        var spectrumList = new SpectrumList_Bruker(
             data, owns: true,
             combineIonMobilitySpectra: combineIonMobilitySpectra,
             preferOnlyMsLevel: preferOnlyMsLevel)
         { Dp = dpReader };
+        result.Run.SpectrumList = spectrumList;
 
-        result.Run.ChromatogramList = new ChromatogramList_Bruker(data, preferOnlyMsLevel) { Dp = dpReader };
+        result.Run.ChromatogramList = new ChromatogramList_Bruker(data, spectrumList, preferOnlyMsLevel) { Dp = dpReader };
     }
 
     private static void AddSourceFiles(MSData result, string analysisDir, BrukerFormat format)

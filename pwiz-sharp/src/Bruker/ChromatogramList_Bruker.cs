@@ -16,6 +16,7 @@ namespace Pwiz.Vendor.Bruker;
 public sealed class ChromatogramList_Bruker : ChromatogramListBase
 {
     private readonly IBrukerData _data;
+    private readonly SpectrumList_Bruker? _spectrumList;
     private readonly int _preferOnlyMsLevel;
     private readonly List<IndexEntry> _index = new();
     private readonly List<LcTrace> _lcTraces;
@@ -37,9 +38,19 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
     /// <c>chromatography-data.sqlite</c>) are appended after the global TIC + BPC.
     /// </summary>
     public ChromatogramList_Bruker(IBrukerData data, int preferOnlyMsLevel = 0)
+        : this(data, null, preferOnlyMsLevel) { }
+
+    /// <summary>
+    /// Creates a chromatogram list with a sibling spectrum list, used to populate the
+    /// <c>ms level</c> integer-array attached to TIC/BPC chromatograms by indexing
+    /// <c>spectrumList[i]</c> for each chromatogram point — matches pwiz C++
+    /// ChromatogramList_Bruker.cpp:155-156 which calls <c>getMSSpectrum(i)->getMSMSStage()</c>.
+    /// </summary>
+    public ChromatogramList_Bruker(IBrukerData data, SpectrumList_Bruker? spectrumList, int preferOnlyMsLevel)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
+        _spectrumList = spectrumList;
         _preferOnlyMsLevel = preferOnlyMsLevel;
 
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
@@ -88,12 +99,31 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
     {
         var times = new List<double>();
         var intensities = new List<double>();
-        var msLevels = new List<long>();
         foreach (var p in _data.EnumerateChromatogramPoints(_preferOnlyMsLevel))
         {
             times.Add(p.RetentionTimeSeconds);
             intensities.Add(kind == CVID.MS_TIC_chromatogram ? p.TotalIonCurrent : p.BasePeakIntensity);
-            msLevels.Add(p.MsLevel);
+        }
+        // pwiz C++ ChromatogramList_Bruker.cpp:155-156 keys msLevel array by spectrumList[i],
+        // not by per-point classification — for PASEF data this means the msLevel array
+        // mirrors the FIRST N spectra's ms levels. Without a sibling spectrum list we fall
+        // back to per-point classification (same value either way for non-PASEF, where
+        // chromatogram[i] corresponds 1:1 to spectrum[i]).
+        var msLevels = new List<long>(times.Count);
+        if (_spectrumList is not null)
+        {
+            int specCount = _spectrumList.Count;
+            for (int i = 0; i < times.Count; i++)
+                msLevels.Add(i < specCount ? _spectrumList.GetMsLevelByIndex(i) : 0);
+        }
+        else
+        {
+            int idx = 0;
+            foreach (var p in _data.EnumerateChromatogramPoints(_preferOnlyMsLevel))
+            {
+                msLevels.Add(p.MsLevel);
+                if (++idx >= times.Count) break;
+            }
         }
 
         chrom.DefaultArrayLength = times.Count;

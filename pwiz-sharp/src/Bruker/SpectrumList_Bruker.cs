@@ -59,6 +59,14 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IDisposable, IVendor
     /// <inheritdoc/>
     public override SpectrumIdentity SpectrumIdentity(int index) => _index[index];
 
+    /// <summary>
+    /// Returns the MS level of the spectrum at <paramref name="index"/> without loading binary
+    /// data. Used by <see cref="ChromatogramList_Bruker"/> to populate the per-point
+    /// <c>ms level</c> integer-array on TIC/BPC chromatograms.
+    /// </summary>
+    public int GetMsLevelByIndex(int index) =>
+        index >= 0 && index < _index.Count ? _index[index].MsLevel : 0;
+
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
         BuildSpectrum(index, getBinaryData, preferCentroid: false);

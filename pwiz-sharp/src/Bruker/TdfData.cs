@@ -154,7 +154,7 @@ internal sealed class TdfData : IBrukerData
                     " frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
                     " scanStart=" + (scanBegin + 1).ToString(CultureInfo.InvariantCulture) +
                     " scanEnd=" + (scanEnd + 1).ToString(CultureInfo.InvariantCulture);
-        return new BrukerIndexEntry { Index = idx, Id = id, Tag = tag };
+        return new BrukerIndexEntry { Index = idx, Id = id, Tag = tag, MsLevel = frame.MsMsType == MsMsType.Ms1 ? 1 : 2 };
     }
 
     public IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(bool combineIonMobilitySpectra, int preferOnlyMsLevel)
@@ -230,6 +230,7 @@ internal sealed class TdfData : IBrukerData
                             Id = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
                                  " scan=" + (scan + 1).ToString(CultureInfo.InvariantCulture),
                             Tag = new Tag { Frame = frame, ScanBegin = scan, ScanEnd = scan, DiaWindow = w },
+                            MsLevel = 2,
                         });
                 }
                 continue;
@@ -255,12 +256,14 @@ internal sealed class TdfData : IBrukerData
                         Id = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
                              " scan=" + (scan + 1).ToString(CultureInfo.InvariantCulture),
                         Tag = new Tag { Frame = frame, ScanBegin = scan, ScanEnd = scan, PasefPrecursor = attached },
+                        MsLevel = 2,
                     });
                 }
                 continue;
             }
 
             // Default per-(frame, scan) emission for MS1 + non-PASEF MS2.
+            int defaultLevel = frame.MsMsType == MsMsType.Ms1 ? 1 : 2;
             for (int scan = 0; scan < frame.NumScans; scan++)
                 index.Add(new BrukerIndexEntry
                 {
@@ -268,6 +271,7 @@ internal sealed class TdfData : IBrukerData
                     Id = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
                          " scan=" + (scan + 1).ToString(CultureInfo.InvariantCulture),
                     Tag = new Tag { Frame = frame, ScanBegin = scan, ScanEnd = scan },
+                    MsLevel = defaultLevel,
                 });
         }
         return index;
