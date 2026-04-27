@@ -15,7 +15,7 @@ namespace Pwiz.Vendor.Waters;
 /// (or per drift bin when ion mobility is enabled). Phase 1 of the port: no IMS, no DDA, no
 /// lockmass. Mirrors pwiz C++ <c>SpectrumList_Waters</c>.
 /// </summary>
-public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendorCentroidingSpectrumList
+public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendorCentroidingSpectrumList, IIonMobilityCcsConversion
 {
     private readonly WatersRawFile _data;
     private readonly bool _owns;
@@ -242,6 +242,17 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
 
     /// <inheritdoc/>
     public string VendorCentroidName => "Waters/MassLynx peak picking";
+
+    /// <inheritdoc/>
+    public bool CanConvertIonMobilityAndCcs => _data.HasCcsCalibration;
+
+    /// <inheritdoc/>
+    public double IonMobilityToCcs(double ionMobility, double mz, int charge) =>
+        _data.DriftTimeToCcs((float)ionMobility, (float)mz, charge);
+
+    /// <inheritdoc/>
+    public double CcsToIonMobility(double ccs, double mz, int charge) =>
+        _data.CcsToDriftTime((float)ccs, (float)mz, charge);
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData) =>

@@ -599,6 +599,36 @@ internal sealed class WatersRawFile : IDisposable
         return (low, high);
     }
 
+    /// <summary>
+    /// True if this file ships with a CCS calibration (<c>mob_cal.csv</c>). SONAR files use
+    /// IMS hardware but don't have a CCS calibration even if the file is present, so we gate
+    /// on <see cref="HasSonar"/> too — matches pwiz C++ <c>RawData::HasCcsCalibration</c>.
+    /// </summary>
+    public bool HasCcsCalibration =>
+        !HasSonar && File.Exists(Path.Combine(RawPath, "mob_cal.csv"));
+
+    /// <summary>
+    /// Converts a drift time (ms) + neutral mass (Da) + charge to a collisional cross
+    /// section (Å²). Requires <see cref="HasCcsCalibration"/>; throws otherwise.
+    /// </summary>
+    public float DriftTimeToCcs(float driftTime, float mass, int charge)
+    {
+        Check(NativeMethods.getCollisionalCrossSection(_info, driftTime, mass, charge, out float ccs),
+            "getCollisionalCrossSection");
+        return ccs;
+    }
+
+    /// <summary>
+    /// Inverse of <see cref="DriftTimeToCcs"/> — given a CCS + neutral mass + charge,
+    /// returns the predicted drift time (ms).
+    /// </summary>
+    public float CcsToDriftTime(float ccs, float mass, int charge)
+    {
+        Check(NativeMethods.getDriftTime_CCS(_info, ccs, mass, charge, out float dt),
+            "getDriftTime_CCS");
+        return dt;
+    }
+
     private void ReadTic(int function, out float[] times, out float[] intensities)
     {
         Check(NativeMethods.readTICChromatogram(_chrom, function, out IntPtr pTimes, out IntPtr pInts, out int n), "readTICChromatogram");

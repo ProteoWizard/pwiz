@@ -119,6 +119,22 @@ internal static class NativeMethods
     public static extern int getIndexPrecursorMassRange(IntPtr reader, int function, int index,
         out float startMass, out float endMass);
 
+    /// <summary>
+    /// Returns the collisional cross section in Å² for the given (drift time, neutral mass,
+    /// charge) triple. Requires a CCS calibration (mob_cal.csv) — fails otherwise.
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int getCollisionalCrossSection(IntPtr reader, float driftTime,
+        float mass, int charge, out float ccs);
+
+    /// <summary>
+    /// Inverse of <see cref="getCollisionalCrossSection"/>: returns the drift time predicted
+    /// for a (CCS, neutral mass, charge) triple.
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int getDriftTime_CCS(IntPtr reader, float ccs, float mass, int charge,
+        out float driftTime);
+
     // ---------- scan reader ----------
 
     [DllImport(MassLynxRawDll)]
