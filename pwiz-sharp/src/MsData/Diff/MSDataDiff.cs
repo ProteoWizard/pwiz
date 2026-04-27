@@ -80,7 +80,8 @@ public static class MSDataDiff
     private static void DiffSoftware(Software a, Software b, Context ctx)
     {
         DiffIds(a.Id, b.Id, ctx, "id");
-        DiffStrings(a.Version, b.Version, ctx, "version");
+        if (!ctx.Config.IgnoreVersions)
+            DiffStrings(a.Version, b.Version, ctx, "version");
         DiffParamContainerBody(a, b, ctx);
     }
 
@@ -104,7 +105,26 @@ public static class MSDataDiff
         DiffStrings(a.Id, b.Id, ctx, "id");
         DiffStrings(a.Software?.Id ?? "", b.Software?.Id ?? "", ctx, "softwareRef");
         DiffListByIndex(a.ComponentList, b.ComponentList, DiffComponent, ctx, "component");
-        DiffParamContainerBody(a, b, ctx);
+        // The instrument serial number cvParam is emitted only by newer vendor SDKs (e.g.
+        // Bruker TIMS SDK >=2.21 emits MS:1000529); older reference mzMLs lack it. Treat it
+        // as version-dependent so IgnoreVersions tolerates the asymmetry.
+        if (ctx.Config.IgnoreVersions)
+            DiffParamContainerWithoutCv(a, b, ctx, CVID.MS_instrument_serial_number);
+        else
+            DiffParamContainerBody(a, b, ctx);
+    }
+
+    private static void DiffParamContainerWithoutCv(ParamContainer a, ParamContainer b, Context ctx, CVID cvidToSkip)
+    {
+        var aFiltered = new ParamContainer();
+        var bFiltered = new ParamContainer();
+        foreach (var p in a.CVParams) if (p.Cvid != cvidToSkip) aFiltered.CVParams.Add(p);
+        foreach (var p in b.CVParams) if (p.Cvid != cvidToSkip) bFiltered.CVParams.Add(p);
+        foreach (var u in a.UserParams) aFiltered.UserParams.Add(u);
+        foreach (var u in b.UserParams) bFiltered.UserParams.Add(u);
+        foreach (var pg in a.ParamGroups) aFiltered.ParamGroups.Add(pg);
+        foreach (var pg in b.ParamGroups) bFiltered.ParamGroups.Add(pg);
+        DiffParamContainerBody(aFiltered, bFiltered, ctx);
     }
 
     private static void DiffComponent(Component a, Component b, Context ctx)
@@ -196,8 +216,100 @@ public static class MSDataDiff
         DiffScanList(a.ScanList, b.ScanList, ctx);
         DiffListByIndex(a.Precursors, b.Precursors, DiffPrecursor, ctx, "precursor");
         DiffListByIndex(a.Products, b.Products, DiffProduct, ctx, "product");
-        DiffBinaryArrays(a.BinaryDataArrays, b.BinaryDataArrays, ctx);
+        // Bruker combined-IMS spectra carry an MS_mean_ion_mobility_array alongside the
+        // m/z and intensity arrays. The order of duplicate-m/z peaks in those arrays is
+        // implementation-defined (depends on the sort algorithm — pwiz C++ uses std::sort,
+        // we use Array.Sort), so a position-by-position diff produces noise on duplicate
+        // groups even when the underlying peak set is identical. Detect this case and
+        // compare as a multiset of (m/z, intensity, mobility) triples.
+        if (HasIonMobilityTriples(a) && HasIonMobilityTriples(b))
+            DiffMobilityTriples(a, b, ctx);
+        else
+            DiffBinaryArrays(a.BinaryDataArrays, b.BinaryDataArrays, ctx);
         DiffIntegerArrays(a.IntegerDataArrays, b.IntegerDataArrays, ctx);
+    }
+
+    private static bool HasIonMobilityTriples(Spectrum s) =>
+        FindArray(s, CVID.MS_m_z_array) is not null
+        && FindArray(s, CVID.MS_intensity_array) is not null
+        && (FindArray(s, CVID.MS_mean_ion_mobility_array) is not null
+            || FindArray(s, CVID.MS_mean_inverse_reduced_ion_mobility_array) is not null);
+
+    private static BinaryDataArray? FindArray(Spectrum s, CVID kind) =>
+        s.BinaryDataArrays.FirstOrDefault(b => b.CVParams.Any(p => p.Cvid == kind));
+
+    private static void DiffMobilityTriples(Spectrum a, Spectrum b, Context ctx)
+    {
+        var mzA = FindArray(a, CVID.MS_m_z_array)!;
+        var intA = FindArray(a, CVID.MS_intensity_array)!;
+        var mobA = FindArray(a, CVID.MS_mean_ion_mobility_array)
+                   ?? FindArray(a, CVID.MS_mean_inverse_reduced_ion_mobility_array)!;
+        var mzB = FindArray(b, CVID.MS_m_z_array)!;
+        var intB = FindArray(b, CVID.MS_intensity_array)!;
+        var mobB = FindArray(b, CVID.MS_mean_ion_mobility_array)
+                   ?? FindArray(b, CVID.MS_mean_inverse_reduced_ion_mobility_array)!;
+
+        // Compare the array-level cvParams + userParams normally — only the data is set-based.
+        using (var _ = ctx.Push("binaryDataArray[m/z]"))
+            DiffArrayMetadata(mzA, mzB, ctx);
+        using (var _ = ctx.Push("binaryDataArray[intensity]"))
+            DiffArrayMetadata(intA, intB, ctx);
+        using (var _ = ctx.Push("binaryDataArray[ion mobility]"))
+            DiffArrayMetadata(mobA, mobB, ctx);
+
+        int n = mzA.Data.Count;
+        if (n != mzB.Data.Count || n != intA.Data.Count || n != intB.Data.Count
+            || n != mobA.Data.Count || n != mobB.Data.Count)
+        {
+            ctx.Report($"ion-mobility triple array length mismatch: a={mzA.Data.Count}/{intA.Data.Count}/{mobA.Data.Count} b={mzB.Data.Count}/{intB.Data.Count}/{mobB.Data.Count}");
+            return;
+        }
+
+        // Sort both triple sets by (m/z, intensity, mobility) for set-based comparison.
+        var aTriples = SortedTriples(mzA.Data, intA.Data, mobA.Data);
+        var bTriples = SortedTriples(mzB.Data, intB.Data, mobB.Data);
+
+        for (int i = 0; i < n && !ctx.Saturated; i++)
+        {
+            var (amz, aint, amob) = aTriples[i];
+            var (bmz, bint, bmob) = bTriples[i];
+            if (!DiffImpl.FloatingPointEqual(amz, bmz, ctx.Config)
+                || !DiffImpl.FloatingPointEqual(aint, bint, ctx.Config)
+                || !DiffImpl.FloatingPointEqual(amob, bmob, ctx.Config))
+            {
+                ctx.Report($"mobility triple sorted[{i}]: ({amz:G10},{aint:G10},{amob:G10}) vs ({bmz:G10},{bint:G10},{bmob:G10})");
+                return;
+            }
+        }
+    }
+
+    private static List<(double Mz, double Intensity, double Mobility)> SortedTriples(
+        List<double> mz, List<double> intensity, List<double> mobility)
+    {
+        var triples = new List<(double, double, double)>(mz.Count);
+        for (int i = 0; i < mz.Count; i++)
+            triples.Add((mz[i], intensity[i], mobility[i]));
+        // Round m/z to single precision for the sort key: pwiz C++ writes m/z as 32-bit float
+        // in mzML, so distinct full-precision doubles on our side may collapse to the same
+        // float on the reference side. Equalizing the sort key avoids spurious tie-break
+        // ordering differences within duplicate-m/z groups.
+        triples.Sort((x, y) =>
+        {
+            int c = ((float)x.Item1).CompareTo((float)y.Item1);
+            if (c != 0) return c;
+            c = x.Item2.CompareTo(y.Item2);
+            if (c != 0) return c;
+            return x.Item3.CompareTo(y.Item3);
+        });
+        return triples;
+    }
+
+    private static void DiffArrayMetadata(BinaryDataArray a, BinaryDataArray b, Context ctx)
+    {
+        var aCvParams = a.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid)).ToList();
+        var bCvParams = b.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid)).ToList();
+        DiffCvParamLists(aCvParams, bCvParams, ctx);
+        DiffUserParamLists(a.UserParams, b.UserParams, ctx);
     }
 
     private static void DiffChromatogram(Chromatogram a, Chromatogram b, Context ctx)
