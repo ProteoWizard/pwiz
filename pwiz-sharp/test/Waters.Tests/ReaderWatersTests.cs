@@ -33,12 +33,12 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Harness_Mix1CalCurveRaw_MatchesReferenceMzMl() =>
-        // 160109_Mix1_calcurve_070 is an MRM acquisition: the reference mzML carries 25
-        // SRM chromatograms (one per Q1/Q3 transition) which we don't emit yet. Phase 1
-        // covers basic MS1/MS2 (TIC + non-IMS spectra); SRM chromatograms come with the
-        // Phase 2 chromatogram-list expansion (per-MRM-transition + analog channels).
-        Assert.Inconclusive("Pending: SRM/SIM chromatogram emission for MRM .raw fixtures.");
+    public void Harness_Mix1CalCurveRaw_MatchesReferenceMzMl()
+    {
+        // 24-transition MRM acquisition; exercises the SRM chromatogram path
+        // (1 TIC + 24 SRM SIC chromatograms).
+        RunHarness("160109_Mix1_calcurve_070.raw");
+    }
 
     private static void RunHarness(string fixtureFolderName, Action<ReaderTestConfig>? configure = null)
     {

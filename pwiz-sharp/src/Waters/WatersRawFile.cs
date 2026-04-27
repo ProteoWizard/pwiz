@@ -191,6 +191,54 @@ internal sealed class WatersRawFile : IDisposable
         return (mz, intensity);
     }
 
+    /// <summary>
+    /// SRM/MRM transitions for the given function. Returns parallel (precursor m/z, product
+    /// m/z) arrays — one entry per Q1/Q3 transition. Pwiz C++ enumerates these via
+    /// <c>Reader.ReadScan(function, 1, precursorMZs, intensities, productMZs)</c> and discards
+    /// intensities here; we preserve the same shape.
+    /// </summary>
+    public (float[] PrecursorMz, float[] ProductMz) ReadMrmTransitions(int function)
+    {
+        Check(NativeMethods.readProductScan(_scan, function, 1,
+            out IntPtr pPrec, out IntPtr pInt, out IntPtr pProd, out int n, out int nProd),
+            "readProductScan");
+        // SDK retains ownership of these float* buffers (matches pwiz C++ ToVector with
+        // bRelease=false), so just copy out.
+        var prec = new float[n];
+        var prod = new float[nProd];
+        if (n > 0) Marshal.Copy(pPrec, prec, 0, n);
+        if (nProd > 0) Marshal.Copy(pProd, prod, 0, nProd);
+        _ = pInt;
+        return (prec, prod);
+    }
+
+    /// <summary>
+    /// Reads the (time, intensity) chromatogram for a specific MRM transition (0-based offset
+    /// within the function's transition list). Caller-owned float buffers — released here.
+    /// </summary>
+    public (float[] Times, float[] Intensities) ReadMrmChromatogram(int function, int transition)
+    {
+        var list = new[] { transition };
+        Check(NativeMethods.readMRMChromatograms(_chrom, function, list, 1,
+            out IntPtr pTimes, out IntPtr pInts, out int n), "readMRMChromatograms");
+        try
+        {
+            var times = new float[n];
+            var intens = new float[n];
+            if (n > 0)
+            {
+                Marshal.Copy(pTimes, times, 0, n);
+                Marshal.Copy(pInts, intens, 0, n);
+            }
+            return (times, intens);
+        }
+        finally
+        {
+            if (pTimes != IntPtr.Zero) _ = NativeMethods.releaseMemory(pTimes);
+            if (pInts != IntPtr.Zero) _ = NativeMethods.releaseMemory(pInts);
+        }
+    }
+
     /// <summary>Reads a single scan item via the parameters-handle round-trip.</summary>
     public string GetScanItem(int function, int scan, int item)
     {

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
@@ -26,14 +27,104 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
     private sealed class IndexEntry : ChromatogramIdentity
     {
         public CVID Kind;
+        public int Function;
+        public int Offset;        // transition index within the function (SRM only)
+        public float Q1;
+        public float Q3;
+        public CVID Polarity;
     }
 
-    internal ChromatogramList_Waters(WatersRawFile data, int preferOnlyMsLevel)
+    internal ChromatogramList_Waters(WatersRawFile data, int preferOnlyMsLevel, bool srmAsSpectra = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
         _preferOnlyMsLevel = preferOnlyMsLevel;
+
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
+
+        // Enumerate SRM transitions per MRM function. pwiz C++ uses readProductScan(scan=1) on
+        // each MRM function — the precursor and product m/z arrays come back parallel, one
+        // entry per transition. SIM functions go through the same path but with no product;
+        // we don't expand those yet (no Phase 1 fixture exercises SIM chromatograms).
+        if (srmAsSpectra) return; // SRM-as-spectra mode means SRM transitions appear in the spectrum list, not here.
+        AppendSrmIndex();
+    }
+
+    private void AppendSrmIndex()
+    {
+        foreach (int function in _data.FunctionIndices)
+        {
+            int rawType;
+            try { rawType = _data.GetFunctionType(function); }
+            catch { continue; }
+            var ft = WatersDetail.FromMassLynxFunctionType(rawType);
+            if (!WatersDetail.TranslateFunctionType(ft, out _, out CVID spectrumType)) continue;
+            if (spectrumType != CVID.MS_SRM_spectrum) continue;
+
+            float[] precs, prods;
+            try { (precs, prods) = _data.ReadMrmTransitions(function); }
+            catch { continue; }
+            if (precs.Length == 0 || prods.Length != precs.Length) continue;
+
+            CVID polarity = WatersDetail.Polarity(WatersDetail.FromMassLynxIonMode(_data.GetIonMode(function)));
+
+            for (int i = 0; i < precs.Length; i++)
+            {
+                string prefix = polarity == CVID.MS_negative_scan ? "- " : string.Empty;
+                string id = prefix
+                    + "SRM SIC Q1=" + FormatMz(precs[i])
+                    + " Q3=" + FormatMz(prods[i])
+                    + " function=" + (function + 1).ToString(CultureInfo.InvariantCulture)
+                    + " offset=" + i.ToString(CultureInfo.InvariantCulture);
+                _index.Add(new IndexEntry
+                {
+                    Index = _index.Count,
+                    Id = id,
+                    Kind = CVID.MS_SRM_chromatogram,
+                    Function = function,
+                    Offset = i,
+                    Q1 = precs[i],
+                    Q3 = prods[i],
+                    Polarity = polarity,
+                });
+            }
+        }
+    }
+
+    private static string FormatMz(float mz) =>
+        // C++ ostream default is 6 significant digits ("%g") — G6 in .NET matches: 418.72601f
+        // becomes "418.726", 666.34332f becomes "666.343".
+        mz.ToString("G6", CultureInfo.InvariantCulture);
+
+    private Chromatogram FillSrmChromatogram(Chromatogram chrom, IndexEntry ie, bool getBinaryData)
+    {
+        // Polarity tag inside the chromatogram (the id-prefix is set elsewhere).
+        if (ie.Polarity != CVID.CVID_Unknown) chrom.Params.Set(ie.Polarity);
+
+        // Precursor / product isolation windows + activation. pwiz C++ adds only the target
+        // m/z (no offsets) and a CID activation — we mirror that exactly.
+        chrom.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, ie.Q1, CVID.MS_m_z);
+        chrom.Precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
+        chrom.Product.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, ie.Q3, CVID.MS_m_z);
+
+        var (times, intensities) = _data.ReadMrmChromatogram(ie.Function, ie.Offset);
+        chrom.DefaultArrayLength = times.Length;
+        if (!getBinaryData) return chrom;
+
+        var timeArr = new BinaryDataArray();
+        timeArr.Set(CVID.MS_time_array, "", CVID.UO_minute);
+        var intArr = new BinaryDataArray();
+        intArr.Set(CVID.MS_intensity_array, "", CVID.MS_number_of_detector_counts);
+        timeArr.Data.Capacity = times.Length;
+        intArr.Data.Capacity = intensities.Length;
+        for (int i = 0; i < times.Length; i++)
+        {
+            timeArr.Data.Add(times[i]);
+            intArr.Data.Add(intensities[i]);
+        }
+        chrom.BinaryDataArrays.Add(timeArr);
+        chrom.BinaryDataArrays.Add(intArr);
+        return chrom;
     }
 
     /// <inheritdoc/>
@@ -49,6 +140,9 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         var ie = _index[index];
         var chrom = new Chromatogram { Index = ie.Index, Id = ie.Id };
         chrom.Params.Set(ie.Kind);
+
+        if (ie.Kind == CVID.MS_SRM_chromatogram)
+            return FillSrmChromatogram(chrom, ie, getBinaryData);
 
         if (ie.Kind != CVID.MS_TIC_chromatogram) return chrom;
 

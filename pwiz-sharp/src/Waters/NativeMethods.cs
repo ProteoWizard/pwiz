@@ -109,6 +109,16 @@ internal static class NativeMethods
     [DllImport(MassLynxRawDll)]
     public static extern int readDriftScan(IntPtr reader, int function, int scan, int drift, out IntPtr masses, out IntPtr intensities, out int size);
 
+    /// <summary>
+    /// Reads (precursor m/z, intensity, product m/z) triplets for an SRM/MRM scan. For MRM
+    /// functions, scan 1 returns one entry per transition (precursor and product mass arrays
+    /// have the same length).
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int readProductScan(IntPtr reader, int function, int scan,
+        out IntPtr masses, out IntPtr intensities, out IntPtr productMasses,
+        out int size, out int productSize);
+
     // ---------- chromatogram reader ----------
 
     [DllImport(MassLynxRawDll)]
@@ -116,6 +126,15 @@ internal static class NativeMethods
 
     [DllImport(MassLynxRawDll)]
     public static extern int readBPIChromatogram(IntPtr reader, int function, out IntPtr times, out IntPtr intensities, out int size);
+
+    /// <summary>
+    /// Reads MRM-transition chromatograms for the requested function. <paramref name="mrmList"/>
+    /// is a 0-based list of transition indices (within the function). The output arrays are
+    /// concatenated when the list has multiple entries.
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int readMRMChromatograms(IntPtr reader, int function,
+        int[] mrmList, int nMRM, out IntPtr times, out IntPtr intensities, out int size);
 
     // ---------- parameters ----------
 
