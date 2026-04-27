@@ -303,6 +303,11 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
         // and we actually centroided. Mirror that order.
         spec.Params.Set(isProfile ? CVID.MS_profile_spectrum : CVID.MS_centroid_spectrum);
         bool willCentroid = doCentroid && isProfile;
+        // pwiz C++ explicitly forces doCentroid=false for non-combine IMS spectra — vendor
+        // centroid doesn't apply to per-bin drift data, so the outer SpectrumList_PeakPicker
+        // is expected to run its CWT detector on the profile output. We mirror that here.
+        if (willCentroid && ie.Block >= 0 && !ie.Combined)
+            willCentroid = false;
         if (willCentroid)
         {
             // Replace MS_profile_spectrum with MS_centroid_spectrum.

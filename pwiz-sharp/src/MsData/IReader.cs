@@ -58,6 +58,13 @@ public sealed class ReaderConfig
     /// </summary>
     public bool DdaProcessing { get; set; }
 
+    /// <summary>
+    /// When true, the global TIC chromatogram only sums MS1 functions — non-MS1 functions
+    /// (and Waters function-1 promoted by the MSe heuristic) are excluded. Port of
+    /// <c>pwiz::msdata::Reader::Config::globalChromatogramsAreMs1Only</c>.
+    /// </summary>
+    public bool GlobalChromatogramsAreMs1Only { get; set; }
+
     /// <summary>Default configuration.</summary>
     public static ReaderConfig Default { get; } = new();
 }

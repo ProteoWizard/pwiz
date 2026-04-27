@@ -126,6 +126,56 @@ public class ReaderWatersTests
         RunHarness("HDMRM_Short_noLM.raw");
     }
 
+    [TestMethod]
+    public void Harness_HdmseShortCombineIMS_MatchesReferenceMzMl()
+    {
+        RunHarness("HDMSe_Short_noLM.raw", config => config.CombineIonMobilitySpectra = true);
+    }
+
+    [TestMethod]
+    public void Harness_HdmrmShortCombineIMS_MatchesReferenceMzMl()
+    {
+        RunHarness("HDMRM_Short_noLM.raw", config => config.CombineIonMobilitySpectra = true);
+    }
+
+    [TestMethod]
+    public void Harness_HdddaShortGlobalMs1OnlyChromatograms_MatchesReferenceMzMl()
+    {
+        // pwiz C++ writes this reference with indexRange = (0, 0): only the first spectrum
+        // is in the reference, and the global TIC excludes function 1 (MSe high-energy).
+        RunHarness("HDDDA_Short_noLM.raw", config =>
+        {
+            config.GlobalChromatogramsAreMs1Only = true;
+            config.IndexRange = (0, 0);
+        });
+    }
+
+    [TestMethod]
+    public void Harness_HdmrmShortGlobalMs1OnlyChromatograms_MatchesReferenceMzMl()
+    {
+        RunHarness("HDMRM_Short_noLM.raw", config =>
+        {
+            config.GlobalChromatogramsAreMs1Only = true;
+            config.IndexRange = (0, 0);
+        });
+    }
+
+    [TestMethod]
+    public void Harness_HdddaShortCentroidCwt_MatchesReferenceMzMl()
+    {
+        RunHarness("HDDDA_Short_noLM.raw", config => config.PeakPickingCWT = true);
+    }
+
+    [TestMethod]
+    public void Harness_HdddaShortCombineIMSCentroidCwt_MatchesReferenceMzMl()
+    {
+        RunHarness("HDDDA_Short_noLM.raw", config =>
+        {
+            config.CombineIonMobilitySpectra = true;
+            config.PeakPickingCWT = true;
+        });
+    }
+
     private static void RunHarness(string fixtureFolderName, Action<ReaderTestConfig>? configure = null)
     {
         string? root = FindTestDataRoot();

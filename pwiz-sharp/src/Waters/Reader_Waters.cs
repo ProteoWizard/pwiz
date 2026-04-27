@@ -54,6 +54,7 @@ public sealed class Reader_Waters : IReader
         bool srmAsSpectra = false; // Phase 1 doesn't expose this through ReaderConfig.
         bool ddaProcessing = config?.DdaProcessing ?? false;
         bool combineIms = config?.CombineIonMobilitySpectra ?? false;
+        bool globalChromMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
 
         // Waters paths can't contain unicode (the SDK rejects them), but we let the OS open
         // any path we can find on disk — mirror the pwiz C++ short-path workaround only when
@@ -65,7 +66,7 @@ public sealed class Reader_Waters : IReader
         var data = new WatersRawFile(fullPath);
         try
         {
-            ReadImpl(result, data, fullPath, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms);
+            ReadImpl(result, data, fullPath, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms, globalChromMs1Only);
         }
         catch
         {
@@ -75,7 +76,8 @@ public sealed class Reader_Waters : IReader
     }
 
     private static void ReadImpl(MSData result, WatersRawFile data, string analysisDir,
-        int preferOnlyMsLevel, bool srmAsSpectra, bool ddaProcessing, bool combineIms)
+        int preferOnlyMsLevel, bool srmAsSpectra, bool ddaProcessing, bool combineIms,
+        bool globalChromatogramsAreMs1Only)
     {
         // Identifier is the directory name minus the .raw extension (matches pwiz C++:
         // bfs::basename(p) drops the trailing extension component).
@@ -116,7 +118,8 @@ public sealed class Reader_Waters : IReader
         { Dp = dpReader };
         result.Run.SpectrumList = spectrumList;
 
-        var chromatogramList = new ChromatogramList_Waters(data, preferOnlyMsLevel)
+        var chromatogramList = new ChromatogramList_Waters(data, preferOnlyMsLevel,
+            globalChromatogramsAreMs1Only: globalChromatogramsAreMs1Only)
         { Dp = dpReader };
         result.Run.ChromatogramList = chromatogramList;
     }

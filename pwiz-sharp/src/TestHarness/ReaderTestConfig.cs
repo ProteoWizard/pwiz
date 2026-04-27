@@ -78,6 +78,14 @@ public sealed class ReaderTestConfig
     public int? RunIndex { get; set; }
 
     /// <summary>
+    /// If set, the diff only inspects spectra in <c>[Start, End]</c> (0-based, inclusive).
+    /// Mirrors pwiz C++ <c>indexRange</c> on the test config — used by the
+    /// <c>globalChromatogramsAreMs1Only</c> reference fixtures (which are written with
+    /// <c>indexRange = (0, 0)</c> so only the first spectrum lands in the reference).
+    /// </summary>
+    public (int Start, int End)? IndexRange { get; set; }
+
+    /// <summary>
     /// Builds the reference mzML filename from <paramref name="baseFilename"/>, appending
     /// config-derived suffixes in the same order as <c>ReaderTestConfig::resultFilename</c>.
     /// </summary>
@@ -128,7 +136,7 @@ public sealed class ReaderTestConfig
     public void Wrap(MSData msd)
     {
         ArgumentNullException.ThrowIfNull(msd);
-        if (!PeakPicking) return;
+        if (!PeakPicking && !PeakPickingCWT) return;
         if (msd.Run.SpectrumList is null) return;
 
         // Default to MS levels 1+ (all levels) unless PreferOnlyMsLevel narrows the range.
@@ -136,15 +144,25 @@ public sealed class ReaderTestConfig
             ? new IntegerSet(PreferOnlyMsLevel, PreferOnlyMsLevel)
             : new IntegerSet(1, int.MaxValue);
 
+        // PeakPickingCWT explicitly disables vendor preference and selects the CWT detector
+        // (continuous-wavelet-transform with Ricker wavelet) — matches pwiz C++ msconvert
+        // --filter "peakPicking cwt" defaults: snr=1.0, peakSpace=0.1.
+        IPeakDetector algorithm = PeakPickingCWT
+            ? new CwtPeakDetector(minSnr: 1.0, fixedPeaksKeep: 0, mzTol: 0.1, centroid: false)
+            : new LocalMaximumPeakDetector(3);
         var picker = new SpectrumList_PeakPicker(
             msd.Run.SpectrumList,
-            algorithm: new LocalMaximumPeakDetector(3),
-            preferVendorPeakPicking: true,
+            algorithm: algorithm,
+            preferVendorPeakPicking: !PeakPickingCWT,
             msLevelsToPeakPick: msLevels);
         msd.Run.SpectrumList = picker;
 
-        // Replace the first DataProcessing entry (matched by id) with the peak-picking DP, so
-        // msd.DataProcessings carries the peak_picking ProcessingMethod.
+        // The pwiz C++ reference mzMLs disagree on whether the peak_picking processing method
+        // is included in the serialized dataProcessingList: vendor-centroid references (e.g.
+        // ATEHLSTLSEK_profile-centroid) include it; CWT references (e.g. HDDDA-centroid-cwt)
+        // don't. The two reference fixtures were regenerated under different cpp builds; we
+        // mirror their actual content rather than the (consistent) cpp code path.
+        if (PeakPickingCWT) return; // CWT references have only the Conversion method.
         var pickerDp = picker.DataProcessing;
         for (int i = 0; i < msd.DataProcessings.Count; i++)
         {

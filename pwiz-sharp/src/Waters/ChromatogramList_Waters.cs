@@ -16,6 +16,7 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
 {
     private readonly WatersRawFile _data;
     private readonly int _preferOnlyMsLevel;
+    private readonly bool _globalChromatogramsAreMs1Only;
     private readonly List<IndexEntry> _index = new();
 
     /// <summary>DataProcessing emitted as the <c>defaultDataProcessingRef</c>.</summary>
@@ -34,11 +35,13 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         public CVID Polarity;
     }
 
-    internal ChromatogramList_Waters(WatersRawFile data, int preferOnlyMsLevel, bool srmAsSpectra = false)
+    internal ChromatogramList_Waters(WatersRawFile data, int preferOnlyMsLevel,
+        bool srmAsSpectra = false, bool globalChromatogramsAreMs1Only = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
         _preferOnlyMsLevel = preferOnlyMsLevel;
+        _globalChromatogramsAreMs1Only = globalChromatogramsAreMs1Only;
 
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
 
@@ -164,6 +167,21 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
             // preferOnlyMsLevel narrows the TIC the same way it narrows the spectrum list, so
             // the chromatogram lines up with the spectrum count.
             if (_preferOnlyMsLevel > 0 && msLevel != _preferOnlyMsLevel) continue;
+
+            // GlobalChromatogramsAreMs1Only excludes non-MS1 functions, plus Waters function-1
+            // (0-based) when its collision energy is non-zero (the MSe heuristic that promotes
+            // the high-energy function to pseudo-MS2). Mirrors pwiz C++ ChromatogramList_Waters.
+            if (_globalChromatogramsAreMs1Only)
+            {
+                if (spectrumType != CVID.MS_MS1_spectrum) continue;
+                if (function == 1)
+                {
+                    string ceStr = _data.GetScanItem(function, 0, WatersScanItem.CollisionEnergy);
+                    if (double.TryParse(ceStr, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out double ce) && Math.Abs(ce) > 0)
+                        continue;
+                }
+            }
 
             var times = _data.TimesByFunctionIndex[function];
             var intens = _data.TicByFunctionIndex[function];

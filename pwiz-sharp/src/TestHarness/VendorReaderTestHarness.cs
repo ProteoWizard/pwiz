@@ -8,6 +8,7 @@ using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Sources;
+using Pwiz.Data.MsData.Spectra;
 using Pwiz.Util;
 
 namespace Pwiz.TestHarness;
@@ -137,6 +138,7 @@ public static class VendorReaderTestHarness
             SortAndJitter = config.SortAndJitter,
             PeakPicking = config.PeakPicking,
             DdaProcessing = config.DdaProcessing,
+            GlobalChromatogramsAreMs1Only = config.GlobalChromatogramsAreMs1Only,
         };
         reader.Read(rawPath, msd, readerConfig);
 
@@ -144,6 +146,25 @@ public static class VendorReaderTestHarness
 
         // 1a. Apply config-driven SpectrumList wrappers (peak picking, etc.) before mangling.
         config.Wrap(msd);
+
+        // 1b. Apply IndexRange — pwiz C++ uses indexRange = (a, b) for a few reference
+        // fixtures that only ship the first spectrum (e.g. -globalChromatogramsAreMs1Only).
+        // We materialize the requested range into a SpectrumListSimple so the subsequent
+        // diff sees only those spectra (and the SpectrumIdentity index numbers stay 0-based
+        // contiguous, matching the cpp output).
+        if (config.IndexRange is { } range && msd.Run.SpectrumList is { } sl)
+        {
+            int start = Math.Max(0, range.Start);
+            int end = Math.Min(sl.Count - 1, range.End);
+            var simple = new SpectrumListSimple { Dp = sl.DataProcessing };
+            for (int i = start; i <= end; i++)
+            {
+                var spec = sl.GetSpectrum(i, getBinaryData: true);
+                spec.Index = i - start;
+                simple.Spectra.Add(spec);
+            }
+            msd.Run.SpectrumList = simple;
+        }
 
         // 2. Mangle paths + checksums + pwiz software to match how the reference mzML was written.
         CalculateSourceFileChecksums(msd.FileDescription.SourceFiles);
