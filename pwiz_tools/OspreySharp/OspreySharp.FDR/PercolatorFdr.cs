@@ -38,6 +38,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.ML;
 
 namespace pwiz.OspreySharp.FDR
@@ -71,6 +72,19 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>Optional feature names for logging (must match feature count).</summary>
         public string[] FeatureNames { get; set; }
 
+        /// <summary>
+        /// If true, <see cref="PercolatorFdr.RunPercolator"/> trains the fold
+        /// models + standardizer and returns early -- skips CV/averaged
+        /// scoring of the input entries, PEP estimation, q-value
+        /// computation, and per-file FDR logging. Used by the streaming
+        /// path in <c>AnalysisPipeline.RunPercolatorStreaming</c>, where
+        /// the caller pre-dedups + subsamples the entries for training,
+        /// then invokes <see cref="PercolatorFdr.ScorePopulationAndComputeFdr"/>
+        /// on the full per-file FdrEntry population. Mirrors Rust's
+        /// <c>PercolatorConfig::train_only</c>.
+        /// </summary>
+        public bool TrainOnly { get; set; }
+
         public PercolatorConfig()
         {
             TrainFdr = 0.01;
@@ -80,6 +94,7 @@ namespace pwiz.OspreySharp.FDR
             Seed = 42;
             CValues = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
             MaxTrainSize = 300000;
+            TrainOnly = false;
         }
     }
 
@@ -425,6 +440,34 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
 
+            // Train-only mode: return fold models + standardizer; skip the
+            // CV/averaged scoring of the input entries, PEP, and q-values.
+            // Used by the streaming path where the caller (AnalysisPipeline)
+            // will apply the averaged model to ALL FdrEntry values and
+            // compute q-values on the full, scored population. Mirrors
+            // Rust's `config.train_only` short-circuit in
+            // osprey-fdr/src/percolator.rs.
+            if (config.TrainOnly)
+            {
+                var trainFoldWeights = new List<double[]>(config.NFolds);
+                var trainFoldBiases = new List<double>(config.NFolds);
+                var trainIterations = new List<int>(config.NFolds);
+                for (int fold = 0; fold < config.NFolds; fold++)
+                {
+                    trainFoldWeights.Add(foldModels[fold].Weights);
+                    trainFoldBiases.Add(foldModels[fold].Bias);
+                    trainIterations.Add(foldIterations[fold]);
+                }
+                return new PercolatorResults
+                {
+                    Entries = new List<PercolatorResult>(),
+                    FoldWeights = trainFoldWeights,
+                    FoldBiases = trainFoldBiases,
+                    Standardizer = standardizer,
+                    IterationsPerFold = trainIterations
+                };
+            }
+
             // Score ALL entries with trained models
             if (trainSubset != null)
             {
@@ -579,6 +622,181 @@ namespace pwiz.OspreySharp.FDR
                 FoldBiases = foldBiases,
                 Standardizer = standardizer,
                 IterationsPerFold = iterationsPerFold
+            };
+        }
+
+        /// <summary>
+        /// Streaming-path continuation: given the <paramref name="trainResults"/>
+        /// returned by <see cref="RunPercolator"/> with <c>TrainOnly = true</c>
+        /// on a pre-dedup + subsampled training set, apply the averaged fold
+        /// model + standardizer to score ALL entries in the population, fit
+        /// PEP on the global target-decoy competition winners, and compute
+        /// per-run / experiment precursor + peptide q-values on that flat
+        /// score array. Mirrors phases 4-5 of Rust's streaming
+        /// <c>run_percolator_fdr</c> (pipeline.rs:4460-4800).
+        ///
+        /// The returned <see cref="PercolatorResults"/> has one
+        /// <see cref="PercolatorResult"/> per input entry (sorted in the
+        /// same order) plus the training model carried through from
+        /// <paramref name="trainResults"/>.
+        /// </summary>
+        public static PercolatorResults ScorePopulationAndComputeFdr(
+            IList<PercolatorEntry> entries,
+            PercolatorResults trainResults,
+            PercolatorConfig config)
+        {
+            int n = entries.Count;
+            if (n == 0)
+            {
+                return new PercolatorResults
+                {
+                    Entries = new List<PercolatorResult>(),
+                    FoldWeights = trainResults.FoldWeights,
+                    FoldBiases = trainResults.FoldBiases,
+                    Standardizer = trainResults.Standardizer,
+                    IterationsPerFold = trainResults.IterationsPerFold
+                };
+            }
+
+            int nFeatures = entries[0].Features.Length;
+            int nModels = trainResults.FoldWeights.Count;
+            if (nModels == 0)
+                throw new InvalidOperationException(
+                    @"ScorePopulationAndComputeFdr: trainResults contains no fold models");
+
+            // Average fold weights + biases. Matches Rust streaming:
+            //   avg_weights[j] = mean_f(fold_weights[f][j])
+            //   avg_bias       = mean_f(fold_biases[f])
+            var avgWeights = new double[nFeatures];
+            double avgBias = 0.0;
+            for (int f = 0; f < nModels; f++)
+            {
+                double[] foldW = trainResults.FoldWeights[f];
+                for (int j = 0; j < nFeatures; j++)
+                    avgWeights[j] += foldW[j];
+                avgBias += trainResults.FoldBiases[f];
+            }
+            double nModelsD = nModels;
+            for (int j = 0; j < nFeatures; j++)
+                avgWeights[j] /= nModelsD;
+            avgBias /= nModelsD;
+
+            // Apply standardizer + averaged SVM model to every entry.
+            // Serial (not parallel) so float accumulation order stays
+            // deterministic for byte-for-byte cross-impl parity.
+            var standardizer = trainResults.Standardizer;
+            var finalScores = new double[n];
+            var labels = new bool[n];
+            var entryIds = new uint[n];
+            var peptides = new string[n];
+            var fileNames = new string[n];
+            var featureBuf = new double[nFeatures];
+            for (int i = 0; i < n; i++)
+            {
+                var entry = entries[i];
+                labels[i] = entry.IsDecoy;
+                entryIds[i] = entry.EntryId;
+                peptides[i] = entry.Peptide;
+                fileNames[i] = entry.FileName;
+
+                Array.Copy(entry.Features, 0, featureBuf, 0, nFeatures);
+                standardizer.TransformSlice(featureBuf);
+                double score = avgBias;
+                for (int j = 0; j < nFeatures; j++)
+                    score += avgWeights[j] * featureBuf[j];
+                finalScores[i] = score;
+            }
+
+            // PEP via global target-decoy competition. CompeteAll returns
+            // winners sorted by score-descending (matches the direct-path
+            // Percolator flow and is what ComputeConservativeQvalues needs
+            // downstream). Rust's streaming path uses compute_fdr_from_stubs
+            // instead, which iterates a base_id-ascending-sorted union of
+            // targets + decoys -- because PepEstimator.FitDefault's KDE sum
+            // is NOT associative and HashMap iteration order would leak 1-
+            // ULP-level noise into every PEP value. For cross-impl byte
+            // parity we must feed PepEstimator in the same base_id-sorted
+            // order Rust uses, not CompeteAll's score-sorted order. Reorder
+            // a parallel copy here; the score-sorted arrays stay intact for
+            // the per-run / experiment q-value calls below.
+            int[] winnerIndices;
+            double[] winnerScores;
+            bool[] winnerIsDecoy;
+            CompeteAll(finalScores, labels, entryIds,
+                out winnerIndices, out winnerScores, out winnerIsDecoy);
+
+            int nWinners = winnerIndices.Length;
+            var pepOrder = new int[nWinners];
+            for (int k = 0; k < nWinners; k++)
+                pepOrder[k] = k;
+            Array.Sort(pepOrder, (a, b) =>
+            {
+                uint ba = entryIds[winnerIndices[a]] & BASE_ID_MASK;
+                uint bb = entryIds[winnerIndices[b]] & BASE_ID_MASK;
+                return ba.CompareTo(bb);
+            });
+            var pepScores = new double[nWinners];
+            var pepIsDecoy = new bool[nWinners];
+            for (int k = 0; k < nWinners; k++)
+            {
+                pepScores[k] = winnerScores[pepOrder[k]];
+                pepIsDecoy[k] = winnerIsDecoy[pepOrder[k]];
+            }
+
+            var pepEstimator = PepEstimator.FitDefault(pepScores, pepIsDecoy);
+            var peps = new double[n];
+            for (int i = 0; i < n; i++)
+                peps[i] = 1.0;
+            foreach (int idx in winnerIndices)
+                peps[idx] = pepEstimator.PosteriorError(finalScores[idx]);
+
+            // Per-run precursor + peptide q-values (each file independently).
+            var runPrecursorQvalues = ComputePerRunPrecursorQvalues(
+                finalScores, labels, entryIds, fileNames);
+            var runPeptideQvalues = ComputePerRunPeptideQvalues(
+                finalScores, labels, entryIds, fileNames, peptides);
+
+            // Experiment-level q-values: single-file shortcut matches
+            // direct-path semantics.
+            var uniqueFiles = new HashSet<string>(fileNames);
+            bool isSingleFile = uniqueFiles.Count <= 1;
+            double[] expPrecursorQvalues;
+            double[] expPeptideQvalues;
+            if (isSingleFile)
+            {
+                expPrecursorQvalues = (double[])runPrecursorQvalues.Clone();
+                expPeptideQvalues = (double[])runPeptideQvalues.Clone();
+            }
+            else
+            {
+                expPrecursorQvalues = ComputeExperimentPrecursorQvalues(
+                    finalScores, labels, entryIds);
+                expPeptideQvalues = ComputeExperimentPeptideQvalues(
+                    finalScores, labels, entryIds, peptides);
+            }
+
+            var results = new List<PercolatorResult>(n);
+            for (int i = 0; i < n; i++)
+            {
+                results.Add(new PercolatorResult
+                {
+                    Id = entries[i].Id,
+                    Score = finalScores[i],
+                    RunPrecursorQvalue = runPrecursorQvalues[i],
+                    RunPeptideQvalue = runPeptideQvalues[i],
+                    ExperimentPrecursorQvalue = expPrecursorQvalues[i],
+                    ExperimentPeptideQvalue = expPeptideQvalues[i],
+                    Pep = peps[i]
+                });
+            }
+
+            return new PercolatorResults
+            {
+                Entries = results,
+                FoldWeights = trainResults.FoldWeights,
+                FoldBiases = trainResults.FoldBiases,
+                Standardizer = standardizer,
+                IterationsPerFold = trainResults.IterationsPerFold
             };
         }
 
@@ -1656,13 +1874,13 @@ namespace pwiz.OspreySharp.FDR
                         sw.Write(fold.ToString(inv));
                         sw.Write('\t'); sw.Write(wi.ToString(inv));
                         sw.Write('\t'); sw.Write(name);
-                        sw.Write('\t'); sw.Write(weights[wi].ToString(@"G17", inv));
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(weights[wi]));
                         sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
                     }
                     sw.Write(fold.ToString(inv));
                     sw.Write('\t'); sw.Write(weights.Length.ToString(inv));
                     sw.Write('\t'); sw.Write(@"bias");
-                    sw.Write('\t'); sw.Write(model.Bias.ToString(@"G17", inv));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(model.Bias));
                     sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
                 }
             }
@@ -1696,8 +1914,8 @@ namespace pwiz.OspreySharp.FDR
                         : @"unknown";
                     sw.Write(i.ToString(inv));
                     sw.Write('\t'); sw.Write(name);
-                    sw.Write('\t'); sw.Write(means[i].ToString(@"G17", inv));
-                    sw.Write('\t'); sw.WriteLine(stds[i].ToString(@"G17", inv));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(means[i]));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stds[i]));
                 }
             }
             Console.Error.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
