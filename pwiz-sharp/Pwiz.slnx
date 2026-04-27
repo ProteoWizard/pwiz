@@ -7,6 +7,7 @@
     <Project Path="src/Util/Util.csproj" />
     <Project Path="src/Thermo/Thermo.csproj" />
     <Project Path="src/Bruker/Bruker.csproj" />
+    <Project Path="src/Waters/Waters.csproj" />
     <Project Path="src/TestHarness/TestHarness.csproj" />
   </Folder>
   <Folder Name="/test/">
@@ -17,5 +18,6 @@
     <Project Path="test/Util.Tests/Util.Tests.csproj" />
     <Project Path="test/Thermo.Tests/Thermo.Tests.csproj" />
     <Project Path="test/Bruker.Tests/Bruker.Tests.csproj" />
+    <Project Path="test/Waters.Tests/Waters.Tests.csproj" />
   </Folder>
 </Solution>
