@@ -141,7 +141,7 @@ namespace MSConvertGUI
             var precision32 = false;
             var precision64 = false;
             var noindex = false;
-            var zlib = false;
+            var zlib = true; // match msconvert.exe default
             var gzip = false;
 
             var commandList = argv.Split('|');

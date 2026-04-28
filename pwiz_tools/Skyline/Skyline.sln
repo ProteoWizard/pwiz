@@ -79,6 +79,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BullseyeSharp", "BullseyeSh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonMsData", "..\Shared\CommonMsData\CommonMsData.csproj", "{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonFileDialogs", "..\Shared\CommonFileDialogs\CommonFileDialogs.csproj", "{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -295,6 +297,14 @@ Global
 		{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}.Release|x64.Build.0 = Release|x64
 		{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}.Release|x86.ActiveCfg = Release|x86
 		{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}.Release|x86.Build.0 = Release|x86
+		{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}.Debug|x64.ActiveCfg = Debug|x64
+		{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}.Debug|x64.Build.0 = Debug|x64
+		{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}.Debug|x86.ActiveCfg = Debug|x86
+		{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}.Debug|x86.Build.0 = Debug|x86
+		{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}.Release|x64.ActiveCfg = Release|x64
+		{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}.Release|x64.Build.0 = Release|x64
+		{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}.Release|x86.ActiveCfg = Release|x86
+		{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

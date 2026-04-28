@@ -46,6 +46,7 @@ using pwiz.Skyline.Util;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.CommonFileDialogs;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -1382,18 +1383,6 @@ namespace pwiz.Skyline.Properties
                 RTCalculatorName = value?.ToPersistentString();
             }
         }
-    }
-
-    [Serializable]
-    public sealed class OpenDataSourceState
-    {
-        public string DocumentPath { get; set; }
-        public string InitialDirectory { get; set; }
-        public string SourceTypeName { get; set; }
-        public View ListView { get; set; }
-        public int ListSortColumnIndex { get; set; }
-        public SortOrder ListSortOrder { get; set; }
-        public Size WindowSize { get; set; }
     }
 
     public sealed class ArdiaRegistrationCodeEntry

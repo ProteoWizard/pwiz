@@ -207,6 +207,10 @@
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
+      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
+      <Name>CommonFileDialogs</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
       <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
       <Name>CommonMsData</Name>

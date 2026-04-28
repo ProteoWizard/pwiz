@@ -114,12 +114,6 @@
     <Compile Include="DataGridViewProgressBar.cs" />
     <Compile Include="FileSizeFormatProvider.cs" />
     <Compile Include="ListViewColumnSorter.cs" />
-    <Compile Include="LoginForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="LoginForm.Designer.cs">
-      <DependentUpon>LoginForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -127,8 +121,14 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="MainLogic.cs" />
-    <Compile Include="NetworkSource.cs" />
+    <Compile Include="MSConvertOpenDataSourceDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MSConvertRemoteAccountServices.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="RemoteAccountEditForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="ProgressForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -137,22 +137,16 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SingleInstanceHandler.cs" />
+    <Compile Include="SplitButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TextInputPrompt.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="TextInputPrompt.designer.cs">
       <DependentUpon>TextInputPrompt.cs</DependentUpon>
     </Compile>
-    <Compile Include="UnifiBrowserForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UnifiBrowserForm.Designer.cs">
-      <DependentUpon>UnifiBrowserForm.cs</DependentUpon>
-    </Compile>
     <None Include="Resources\SpectrumConverter.ico" />
-    <EmbeddedResource Include="LoginForm.resx">
-      <DependentUpon>LoginForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -171,9 +165,6 @@
     </Compile>
     <EmbeddedResource Include="TextInputPrompt.resx">
       <DependentUpon>TextInputPrompt.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UnifiBrowserForm.resx">
-      <DependentUpon>UnifiBrowserForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
@@ -208,20 +199,22 @@
       <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\thermo\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup Condition=" '$(Platform)' == 'x86' ">
-    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.13.0, Type=AnyCPU">
-      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
-      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\thermo\$(Platform)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
-    </NativeReference>
-  </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
+      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
+      <Name>CommonFileDialogs</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
-    <ProjectReference Include="CustomDataSourceDialog\CustomDataSourceDialog.csproj">
-      <Project>{6B7B0771-4D09-469F-AEFA-00E4FA06D017}</Project>
-      <Name>CustomDataSourceDialog</Name>
+    <ProjectReference Include="..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
+      <Project>{dacee7d5-5a6a-4001-9602-fab1a9a2de59}</Project>
+      <Name>ProteowizardWrapper</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

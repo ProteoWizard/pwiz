@@ -10,8 +10,10 @@ using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.FileUI
 {
-    public class WatersConnectMethodFileDialog : BaseFileDialogNE
+    public class WatersConnectMethodFileDialog : SkylineFileDialogNE
     {
+        protected override bool ShouldCheckMethodDevelopmentSupport => true;
+
         protected string InstrumentType { get; set; }
         public WatersConnectMethodFileDialog(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
             : base(null, remoteAccounts, specificDataSourceFilter, true)
