@@ -289,8 +289,13 @@ namespace pwiz.OspreySharp
                         i++;
                         // Consume all following non-flag arguments as parquet
                         // paths or a single directory. Mirrors the -i/--input
-                        // pattern.
+                        // pattern. Accumulates across repeated --input-scores
+                        // flags so both `--input-scores X Y Z` and
+                        // `--input-scores X --input-scores Y` work, matching
+                        // Rust's clap Vec<PathBuf>.
                         var scorePaths = new List<string>();
+                        if (config.InputScores != null)
+                            scorePaths.AddRange(config.InputScores);
                         while (i < args.Length && !args[i].StartsWith("-"))
                         {
                             scorePaths.Add(args[i]);

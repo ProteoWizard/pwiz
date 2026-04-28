@@ -1505,8 +1505,26 @@ namespace pwiz.OspreySharp.FDR
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
 
+            // Propagate the winner's q-value to all observations sharing the
+            // same base_id (both target and decoy sides). Matches Rust's
+            // base_id_exp_prec_q HashMap at osprey-fdr/src/percolator.rs:2168
+            // — without this, non-winning per-file observations of a
+            // multi-file precursor stay at q=1.0 and downstream stages that
+            // gate on experiment_precursor_qvalue (Stage 6 calibration refit
+            // and reconciliation) miss the bulk of the consensus pool.
+            var baseIdExpQ = new Dictionary<uint, double>();
             for (int rank = 0; rank < wi.Length; rank++)
-                qvalues[wi[rank]] = q[rank];
+            {
+                uint baseId = entryIds[wi[rank]] & BASE_ID_MASK;
+                baseIdExpQ[baseId] = q[rank];
+            }
+            for (int i = 0; i < n; i++)
+            {
+                uint baseId = entryIds[i] & BASE_ID_MASK;
+                double qv;
+                if (baseIdExpQ.TryGetValue(baseId, out qv))
+                    qvalues[i] = qv;
+            }
 
             return qvalues;
         }
