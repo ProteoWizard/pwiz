@@ -64,14 +64,16 @@
     on Stellar 1-file AND 3-file (end-of-stage dump: score + pep + 4 q-values
     across 1,388,872 FdrEntry rows at max_diff = 0; multi-file required an
     experiment_precursor_qvalue propagation fix in C#'s Percolator FDR).
-    Stage 6 planning checkpoint is wired with cross-impl dumps. Multi-charge
-    consensus is bit-identical with Rust on Stellar 3-file (31,270
-    rescore-target rows). Consensus RTs are now 99.999% bit-identical (1
-    of 87,343 rows differs on a borderline first-pass protein-FDR rescue,
-    not arithmetic) after a Rust serde_json parser fix that routes f64
-    deserialization through <code>f64::from_str</code> instead of the
-    inexact default parser. Calibration refit n_points matches; the
-    refit's LOESS residual stats still diverge at ULP. Green badges =
+    Stage 6 planning checkpoint is bit-identical with Rust across all
+    eight planning dumps on Stellar 3-file (multi-charge consensus,
+    consensus RTs, calibration refit, and the Stage-5 inputs they read).
+    Astral 3-file matches 7 of 8 planning dumps; the one outstanding
+    Astral gap is a 1-ULP difference in <code>experiment_precursor_q</code>
+    on 168 losing entries in file 49 (q approximately 0.0977, far above
+    the 0.01 FDR gate, so downstream Stage 6 dumps are unaffected). The
+    remaining Stage 6 substage is the second-pass re-score plus
+    Percolator SVM (gray box below); once that lands and its two new
+    cross-impl dumps go byte-identical, Stage 6 closes. Green badges =
     regression tests; purple badges = C#/Rust perf ratio.
   </p>
 </header>

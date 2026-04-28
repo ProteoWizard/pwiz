@@ -53,6 +53,10 @@ namespace pwiz.OspreySharp
     {
         private const int NUM_PIN_FEATURES = 21;
 
+        // EntryId encodes target/decoy in the high bit; base_id is the
+        // lower 31 bits, shared by a target and its paired decoy.
+        private const uint BASE_ID_MASK = 0x7FFFFFFFu;
+
         // Serializes mzML reads across concurrent ProcessFile() calls.
         // The producer inside MzmlReader.LoadAllSpectra is a sequential
         // XmlReader over a FileStream, so 3 files parsing in parallel
@@ -274,10 +278,10 @@ namespace pwiz.OspreySharp
                             string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
                             if (parquetDir != null)
                             {
-                                // The parquet stem is "<fileName>.scores"; strip
-                                // the trailing ".scores" so the calibration
-                                // filename derives from the same input stem
-                                // both ProcessFile and join-only used.
+                                // fileName is the bare input stem (the trailing
+                                // ".scores" was stripped above), so combining it
+                                // with parquetDir yields the same input-stem path
+                                // ProcessFile passes to CalibrationPathForInput.
                                 string calStemPath = Path.Combine(parquetDir, fileName);
                                 string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
                                 if (File.Exists(calPath))
@@ -491,7 +495,7 @@ namespace pwiz.OspreySharp
                             if (entry.RunPeptideQvalue <= peptideGate ||
                                 (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
                             {
-                                firstPassBaseIds.Add(entry.EntryId & 0x7FFFFFFFu);
+                                firstPassBaseIds.Add(entry.EntryId & BASE_ID_MASK);
                             }
                         }
                     }
@@ -499,7 +503,7 @@ namespace pwiz.OspreySharp
                     foreach (var kvp in perFileEntries)
                     {
                         beforeCount += kvp.Value.Count;
-                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & 0x7FFFFFFFu));
+                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
                         kvp.Value.TrimExcess();
                         afterCount += kvp.Value.Count;
                     }
