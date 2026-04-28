@@ -76,6 +76,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ddaSearchTitlePanel = new System.Windows.Forms.Panel();
             this.lblDDASearch = new System.Windows.Forms.Label();
             this.btnBack = new System.Windows.Forms.Button();
+            this.lblSettingsPreset = new System.Windows.Forms.Label();
+            this.cbSettingsPreset = new System.Windows.Forms.ComboBox();
+            this.btnSavePreset = new System.Windows.Forms.Button();
             this.wizardPagesImportPeptideSearch.SuspendLayout();
             this.buildSearchSpecLibPage.SuspendLayout();
             this.buildSpectralLibraryTitlePanel.SuspendLayout();
@@ -448,11 +451,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBack.UseVisualStyleBackColor = true;
             this.btnBack.Click += new System.EventHandler(this.btnBack_Click);
             // 
+            // lblSettingsPreset
+            // 
+            resources.ApplyResources(this.lblSettingsPreset, "lblSettingsPreset");
+            this.lblSettingsPreset.Name = "lblSettingsPreset";
+            // 
+            // cbSettingsPreset
+            // 
+            resources.ApplyResources(this.cbSettingsPreset, "cbSettingsPreset");
+            this.cbSettingsPreset.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbSettingsPreset.FormattingEnabled = true;
+            this.cbSettingsPreset.Name = "cbSettingsPreset";
+            // 
+            // btnSavePreset
+            // 
+            resources.ApplyResources(this.btnSavePreset, "btnSavePreset");
+            this.btnSavePreset.Name = "btnSavePreset";
+            this.btnSavePreset.UseVisualStyleBackColor = true;
+            // 
             // ImportPeptideSearchDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnSavePreset);
+            this.Controls.Add(this.cbSettingsPreset);
+            this.Controls.Add(this.lblSettingsPreset);
             this.Controls.Add(this.btnBack);
             this.Controls.Add(this.btnEarlyFinish);
             this.Controls.Add(this.wizardPagesImportPeptideSearch);
@@ -491,6 +515,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ddaSearchTitlePanel.ResumeLayout(false);
             this.ddaSearchTitlePanel.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -542,5 +567,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TabPage converterSettingsPage;
         private System.Windows.Forms.Panel converterSettingsTitlePanel;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label lblSettingsPreset;
+        private System.Windows.Forms.ComboBox cbSettingsPreset;
+        private System.Windows.Forms.Button btnSavePreset;
     }
 }

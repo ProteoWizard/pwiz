@@ -61,8 +61,8 @@ namespace TestPerf
 
         public struct DdaTestSettings
         {
-            private SearchSettingsControl.SearchEngine _searchEngine;
-            public SearchSettingsControl.SearchEngine SearchEngine
+            private SearchEngine _searchEngine;
+            public SearchEngine SearchEngine
             {
                 get => _searchEngine;
                 set
