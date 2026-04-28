@@ -1047,7 +1047,7 @@ namespace pwiz.OspreySharp
             string fileName, double[] libraryRts, double[] fittedValues)
         {
             const string path = @"cs_stage6_calibration.tsv";
-            bool headerNeeded = !System.IO.File.Exists(path);
+            bool headerNeeded = !File.Exists(path);
             using (var sw = new StreamWriter(path, append: true))
             {
                 sw.NewLine = "\n";
