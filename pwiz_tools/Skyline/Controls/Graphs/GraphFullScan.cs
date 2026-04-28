@@ -125,11 +125,6 @@ namespace pwiz.Skyline.Controls.Graphs
             };
             graphControl.GraphPane = _heatMapPane;
             graphControl.GraphPane.AllowLabelOverlap = true;
-            // ZedGraph's FontSpec default is non-antialiased — produces visible jagged
-            // edges on modern displays, especially on rotated text. Enable antialiasing
-            // throughout the full-scan view (master title + each pane's titles/labels).
-            graphControl.MasterPane.Title.FontSpec.IsAntiAlias = true;
-            SetAntiAlias(_heatMapPane, true);
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMoveEvent += graphControl_MouseMove;
             graphControl.MouseClick += graphControl_MouseClick;
@@ -233,7 +228,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 _stickSpectrumPane.YAxis.Title.Text =
                     GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
                 _stickSpectrumPane.XAxis.Title.IsVisible = false;
-                SetAntiAlias(_stickSpectrumPane, true);
             }
 
             // When mobilogram is visible the spacer pane carries the stick's Intensity
@@ -769,7 +763,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // Mobilogram sits to the left of the heatmap, so reverse the X scale —
             // intensity 0 at the right edge (touching the heatmap), peaks growing left.
             pane.XAxis.Scale.IsReverse = true;
-            SetAntiAlias(pane, true);
             return pane;
         }
 
@@ -799,26 +792,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // site is responsible for re-enabling FormatAuto on the heatmap when needed
             // (FormatGraphPane sets the heatmap to "g" and disables auto).
             dst.FormatAuto = true;
-        }
-
-        /// <summary>
-        /// Set anti-aliased text rendering on every FontSpec the pane uses for titles,
-        /// tick labels, and legend. ZedGraph's per-FontSpec default is false; toggling it
-        /// on here gives sharp text on modern displays without requiring a global change.
-        /// Pass <paramref name="isAntiAlias"/> = false at the call site for A/B comparison.
-        /// </summary>
-        private static void SetAntiAlias(GraphPane pane, bool isAntiAlias)
-        {
-            pane.Title.FontSpec.IsAntiAlias = isAntiAlias;
-            pane.Legend.FontSpec.IsAntiAlias = isAntiAlias;
-            pane.XAxis.Title.FontSpec.IsAntiAlias = isAntiAlias;
-            pane.XAxis.Scale.FontSpec.IsAntiAlias = isAntiAlias;
-            pane.YAxis.Title.FontSpec.IsAntiAlias = isAntiAlias;
-            pane.YAxis.Scale.FontSpec.IsAntiAlias = isAntiAlias;
-            pane.X2Axis.Title.FontSpec.IsAntiAlias = isAntiAlias;
-            pane.X2Axis.Scale.FontSpec.IsAntiAlias = isAntiAlias;
-            pane.Y2Axis.Title.FontSpec.IsAntiAlias = isAntiAlias;
-            pane.Y2Axis.Scale.FontSpec.IsAntiAlias = isAntiAlias;
         }
 
         private MSGraphPane CreateEmptySpacerPane()
