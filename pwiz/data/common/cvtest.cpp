@@ -108,7 +108,7 @@ void testSynonyms()
 
     unit_assert(cvTermInfo(MS_chemical_ionization).shortName() == "CI");
     unit_assert(cvTermInfo(MS_FT_ICR).shortName() == "FT_ICR");
-    unit_assert(cvTermInfo(MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer).shortName() == "FT_ICR");
+    unit_assert(cvTermInfo(MS_fourier_transform_ion_cyclotron_resonance).shortName() == "FT_ICR");
     unit_assert(cvTermInfo(CVID_Unknown).shortName() == "Unknown");
 }
 

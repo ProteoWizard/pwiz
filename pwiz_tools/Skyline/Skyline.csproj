@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>271</ApplicationRevision>
-    <ApplicationVersion>25.1.1.271</ApplicationVersion>
+    <ApplicationRevision>097</ApplicationRevision>
+    <ApplicationVersion>26.1.1.097</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -159,6 +159,12 @@
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="ParquetNet">
+      <HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Emit.Lightweight">
+      <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
+    </Reference>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -184,14 +190,8 @@
       <HintPath>..\Shared\Lib\System.Interactive.Async.dll</HintPath>
     </Reference>
     <Reference Include="System.Management" />
-    <Reference Include="System.Memory">
-      <HintPath>..\Shared\Lib\System.Memory.dll</HintPath>
-    </Reference>
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data.DataSetExtensions">
@@ -210,6 +210,12 @@
     <Compile Include="Controls\FilesTree\ManagedFileSystemWatcher.cs" />
     <Compile Include="Controls\Databinding\BuiltInReports.cs" />
     <Compile Include="Controls\Graphs\ZoomSynchronizer.cs" />
+    <Compile Include="Menus\ContextMenuControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\ContextMenuControl.Designer.cs">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -306,6 +312,12 @@
     </Compile>
     <Compile Include="Alerts\ReportErrorDlg.Designer.cs">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ScreenCapturePermissionDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ScreenCapturePermissionDlg.Designer.cs">
+      <DependentUpon>ScreenCapturePermissionDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\ShareTypeDlg.cs">
       <SubType>Form</SubType>
@@ -425,7 +437,9 @@
     <Compile Include="Controls\Graphs\Calibration\CalibrationGraphControl.Designer.cs">
       <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AreaAbundanceComparisonGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaRelativeAbundanceGraphPane.cs" />
+    <Compile Include="Controls\Graphs\BoxPlotBarItem.cs" />
     <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
@@ -450,7 +464,11 @@
     <Compile Include="Controls\Graphs\DetectionToolbarProperties.Designer.cs">
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\ClickThroughToolStrip.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
+    <Compile Include="Controls\Graphs\LabelLayoutRunner.cs" />
     <Compile Include="Controls\Graphs\MatchExpressionListDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -563,18 +581,29 @@
     <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Databinding\CandidatePeakGroupFactory.cs" />
+    <Compile Include="Model\Databinding\Collections\ResultMap.cs" />
+    <Compile Include="Model\Databinding\ReportExporters.cs" />
+    <Compile Include="Model\Databinding\ParquetReportExporter.cs" />
+    <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
+    <Compile Include="Model\Databinding\DsvReportExporter.cs" />
+    <Compile Include="Model\Databinding\ColumnResolver.cs" />
+    <Compile Include="ToolsUI\ReportDefinitionReader.cs" />
+    <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
+    <Compile Include="Model\ElementReorderer.cs" />
+    <Compile Include="Model\GroupComparison\FoldChangeRowFactory.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRows.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>EnumNames.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AuditLogStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
       <SubType>UserControl</SubType>
@@ -603,7 +632,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Databinding\ReplicatePivotColumns.cs" />
     <Compile Include="Model\DdaSearch\TideSearchEngine.cs" />
     <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
@@ -654,6 +682,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Results\ReplicatePositions.cs" />
     <Compile Include="Model\Results\TransitionGroupIntegrator.cs" />
     <Compile Include="Model\WatersConnect\MethodModel.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
@@ -697,6 +726,42 @@
     </Compile>
     <Compile Include="Menus\ChromatogramContextMenu.Designer.cs">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\DetectionsContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\DetectionsContextMenu.Designer.cs">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\MassErrorsContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\MassErrorsContextMenu.Designer.cs">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\PeakAreasContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\PeakAreasContextMenu.Designer.cs">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\TreeNodeContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\TreeNodeContextMenu.Designer.cs">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\RetentionTimesContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\RetentionTimesContextMenu.Designer.cs">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\SpectrumContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\SpectrumContextMenu.Designer.cs">
+      <DependentUpon>SpectrumContextMenu.cs</DependentUpon>
     </Compile>
     <Compile Include="Menus\EditMenu.cs">
       <SubType>UserControl</SubType>
@@ -991,6 +1056,7 @@
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
+    <Compile Include="Util\SkylineRemoteAccountServices.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1300,6 +1366,9 @@
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\ToolDescriptionRunUI.cs" />
+    <Compile Include="ToolsUI\JsonToolServer.cs" />
+    <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
+    <Compile Include="ToolsUI\JsonUiService.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
@@ -1422,6 +1491,7 @@
     </Compile>
     <Compile Include="Controls\Graphs\MassErrorHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\MassErrorHistogramGraphPane.cs" />
+    <Compile Include="Controls\Graphs\MassErrorBinFinder.cs" />
     <Compile Include="Controls\Graphs\PeptideAnnotationPairFinder.cs" />
     <Compile Include="Controls\Graphs\PeptidesAndTransitionGroups.cs" />
     <Compile Include="Controls\Graphs\RunToRunRegressionToolbar.cs">
@@ -1476,6 +1546,7 @@
     <Compile Include="Controls\Graphs\AsyncRenderControl.Designer.cs">
       <DependentUpon>AsyncRenderControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\CursorTrackingTip.cs" />
     <Compile Include="Controls\Graphs\GraphFullScan.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1601,6 +1672,7 @@
       <DependentUpon>ActionBoxControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Startup\ActionTutorial.cs" />
+    <Compile Include="Controls\Startup\TutorialCatalog.cs" />
     <Compile Include="Controls\Startup\RecentFileControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2647,6 +2719,9 @@
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ScreenCapturePermissionDlg.resx">
+      <DependentUpon>ScreenCapturePermissionDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.ja.resx">
       <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2976,6 +3051,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.ja.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.zh-CHS.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
@@ -3313,6 +3389,81 @@
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.zh-CHS.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ContextMenuControl.resx">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ContextMenuControl.ja.resx">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ContextMenuControl.zh-CHS.resx">
+      <DependentUpon>ContextMenuControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\DetectionsContextMenu.ja.resx">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\DetectionsContextMenu.resx">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\DetectionsContextMenu.zh-CHS.resx">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\MassErrorsContextMenu.ja.resx">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\MassErrorsContextMenu.resx">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\MassErrorsContextMenu.zh-CHS.resx">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\PeakAreasContextMenu.ja.resx">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\PeakAreasContextMenu.resx">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\PeakAreasContextMenu.zh-CHS.resx">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\TreeNodeContextMenu.ja.resx">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\TreeNodeContextMenu.resx">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\TreeNodeContextMenu.zh-CHS.resx">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RetentionTimesContextMenu.ja.resx">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RetentionTimesContextMenu.resx">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RetentionTimesContextMenu.zh-CHS.resx">
+      <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\SpectrumContextMenu.ja.resx">
+      <DependentUpon>SpectrumContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\SpectrumContextMenu.resx">
+      <DependentUpon>SpectrumContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\SpectrumContextMenu.zh-CHS.resx">
+      <DependentUpon>SpectrumContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Menus\EditMenu.ja.resx">
       <DependentUpon>EditMenu.cs</DependentUpon>
     </EmbeddedResource>
@@ -3327,6 +3478,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\RefineMenu.resx">
       <DependentUpon>RefineMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\RefineMenu.zh-CHS.resx">
       <DependentUpon>RefineMenu.cs</DependentUpon>
@@ -5251,6 +5403,7 @@
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
     <Compile Include="Util\ClipboardEx.cs" />
+    <Compile Include="Util\ScreenCapture.cs" />
     <Compile Include="Util\FormEx.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -7124,6 +7277,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="DigitalRune.Windows.Docking.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="enzymes.xml">
       <Visible>False</Visible>

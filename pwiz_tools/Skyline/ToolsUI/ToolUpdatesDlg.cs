@@ -528,7 +528,7 @@ namespace pwiz.Skyline.ToolsUI
     public interface IToolUpdateHelper
     {
         ToolInstaller.UnzipToolReturnAccumulator UnpackZipTool(string pathToZip, IUnpackZipToolSupport unpackSupport);
-        void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver);
+        void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver, string downloadUrl = null);
     }
 
     public class ToolUpdateHelper : IToolUpdateHelper
@@ -538,10 +538,10 @@ namespace pwiz.Skyline.ToolsUI
             return ToolInstaller.UnpackZipTool(pathToZip, unpackSupport);
         }
 
-        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
+        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver, string downloadUrl = null)
         {
             var client = ToolStoreUtil.CreateClient();
-            client.GetToolZipFile(progressMonitor, progressStatus, packageIdentifier, fileSaver);
+            client.GetToolZipFile(progressMonitor, progressStatus, packageIdentifier, fileSaver, downloadUrl);
         }
     }
 

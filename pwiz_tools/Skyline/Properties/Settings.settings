@@ -398,6 +398,9 @@
     <Setting Name="GroupByReplicateAnnotation" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="AbundanceComparisonGroupByAnnotation" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
     <Setting Name="OrderByReplicateAnnotation" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -481,6 +484,21 @@
     </Setting>
     <Setting Name="SumScansFullScan" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ShowMobilogramFullScan" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ShowHeatmapFullScan" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ShowHeatmapFullScanSeeded" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="FullScanMobilogramColumnFraction" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.8</Value>
+    </Setting>
+    <Setting Name="FullScanStickRowFraction" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.45</Value>
     </Setting>
     <Setting Name="ShowStartupForm" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
@@ -913,6 +931,15 @@
     </Setting>
     <Setting Name="MaxChromatogramGraphs" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">100</Value>
+    </Setting>
+	<Setting Name="MaxGridRowCount" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">10000000</Value>
+	</Setting>
+    <Setting Name="AllowMcpScreenCapture" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="EnableMcpAutoConnect" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

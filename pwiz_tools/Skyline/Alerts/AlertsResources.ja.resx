@@ -322,10 +322,12 @@
     <value>ログインページを読み込めませんでした。HTTPステータスコードは{0}です。クライアント登録コードが無効な可能性があります。新しいクライアント登録コードをサーバーから受信した直後であるため、不具合の可能性があります。ログインページURL: {1}</value>
   </data>
   <data name="MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email" xml:space="preserve">
-    <value>Check your email for the verification code and copy it into the box.
+    <value>電子メールの検証コードを確認して入力欄にコピーしてください。
 
-If you don't get an email, double-check your email address or click "More Info" for troubleshooting.</value>
-    <comment>Needs Review:Missing translation</comment>
+電子メールを受信していない場合は、入力したメールアドレスをご確認ください。トラブルシューティングするには「詳細」をクリックしてください。</value>
+  </data>
+  <data name="MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server" xml:space="preserve">
+    <value>MS Fraggerダウンロードサーバーに連絡中</value>
   </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>ツールのダウンロードエラー</value>

@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -105,20 +107,28 @@ namespace pwiz.SkylineTestFunctional
                         var peakBoundsList = new List<ScoredPeakBounds>();
                         for (int replicateIndex = 0; replicateIndex < transitionGroup.Results.Count; replicateIndex++)
                         {
+                            var message =
+                                $"{molecule.Peptide}{Transition.GetChargeIndicator(transitionGroup.PrecursorAdduct)} {measuredResults.Chromatograms[replicateIndex].Name}";
                             var chromInfoList = transitionGroup.GetSafeChromInfo(replicateIndex);
-                            Assert.AreEqual(1, chromInfoList.Count);
+                            Assert.AreEqual(1, chromInfoList.Count, message);
                             var transitionGroupChromInfo = chromInfoList[0];
-                            Assert.IsNotNull(transitionGroupChromInfo.OriginalPeak);
-                            Assert.AreEqual(UserSet.FALSE, transitionGroupChromInfo.UserSet);
+                            Assert.IsNotNull(transitionGroupChromInfo.OriginalPeak, message);
+                            Assert.AreEqual(UserSet.FALSE, transitionGroupChromInfo.UserSet, message);
                             if (transitionGroupChromInfo.RetentionTime.HasValue)
                             {
-                                Assert.IsNotNull(transitionGroupChromInfo.StartRetentionTime);
-                                Assert.IsNotNull(transitionGroupChromInfo.EndRetentionTime);
+                                Assert.IsNotNull(transitionGroupChromInfo.StartRetentionTime, message);
+                                Assert.IsNotNull(transitionGroupChromInfo.EndRetentionTime, message);
                                 peakBoundsList.Add(new ScoredPeakBounds(transitionGroupChromInfo.RetentionTime.Value, transitionGroupChromInfo.StartRetentionTime.Value, transitionGroupChromInfo.EndRetentionTime.Value, 0));
                                 var chosenPeakMidPoint = (transitionGroupChromInfo.StartRetentionTime.Value + transitionGroupChromInfo.EndRetentionTime.Value) / 2;
                                 if (imputation.MaxRtShift.HasValue)
                                 {
-                                    Assert.AreEqual(exemplaryPeakMidPoint, chosenPeakMidPoint, imputation.MaxRtShift.Value);
+                                    // The chosen peak should be within MaxRtShift of the exemplary peak,
+                                    // unless the exemplary peak is beyond the chromatogram extraction window in which case the peak should be truncated.
+                                    if (Math.Abs(exemplaryPeakMidPoint - chosenPeakMidPoint) >
+                                        imputation.MaxRtShift.Value)
+                                    {
+                                        Assert.AreNotEqual(0, transitionGroupChromInfo.Truncated.Value, message);
+                                    }
                                 }
                             }
                         }

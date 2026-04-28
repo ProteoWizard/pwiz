@@ -663,7 +663,7 @@ namespace pwiz.SkylineTestFunctional
             var calcTemp = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
             Assert.IsNotNull(calcTemp);
             string dbPath = calcTemp.DatabasePath;
-            IrtDb db = IrtDb.GetIrtDb(dbPath, null);
+            IrtDb db = IrtDb.GetIrtDb(dbPath);
             var oldPeptides = db.ReadPeptides().ToList();
             var standardSeq = from peptide in oldPeptides where peptide.Standard select peptide.Target;
             standardSeq = standardSeq.ToList();

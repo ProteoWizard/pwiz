@@ -198,7 +198,7 @@ namespace pwiz.Common.GUI
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButtonCopy;
-        private System.Windows.Forms.SplitContainer iconAndMessageSplitContainer;
+        protected System.Windows.Forms.SplitContainer iconAndMessageSplitContainer;
         private System.Windows.Forms.PictureBox iconPictureBox;
     }
 }

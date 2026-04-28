@@ -343,6 +343,42 @@
   <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
     <value>安装更新至{0}</value>
   </data>
+  <data name="NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia" xml:space="preserve">
+    <value>成功设置 Nvidia 库</value>
+  </data>
+  <data name="NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia" xml:space="preserve">
+    <value>无法设置 Nvidia 库</value>
+  </data>
+  <data name="NvidiaInstaller_Setup_Nvidia_Libraries" xml:space="preserve">
+    <value>正在设置 Nvidia GPU 计算</value>
+  </data>
+  <data name="PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment" xml:space="preserve">
+    <value>成功设置 Python 虚拟环境</value>
+  </data>
+  <data name="PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment" xml:space="preserve">
+    <value>无法设置 Python 虚拟环境</value>
+  </data>
+  <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required" xml:space="preserve">
+    <value>{1} 需要安装 Python {0}，点击“确定”继续。</value>
+  </data>
+  <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" xml:space="preserve">
+    <value>{1} 需要安装 Python {0}，请等待 Python 安装和配置完成……</value>
+  </data>
+  <data name="PythonInstaller_Requesting_Administrator_elevation" xml:space="preserve">
+    <value>完成安装需要管理员权限，必要时请咨询您的系统管理员。是否要继续？</value>
+  </data>
+  <data name="PythonInstaller_Install_Nvidia_Library" xml:space="preserve">
+    <value>Skyline 检测到这台计算机上安装了 Nvidia GPU。是否要设置 Nvidia GPU 计算来加快 AI 处理速度？安装此功能需要提升权限。</value>
+  </data>
+  <data name="PythonInstaller_Downloading_Nvidia_Library" xml:space="preserve">
+    <value>正在下载 Nvidia Cuda 工具包和深度神经网络软件。</value>
+  </data>
+  <data name="PythonInstaller_Installing_Nvidia_Library" xml:space="preserve">
+    <value>正在安装 Nvidia Cuda 工具包和深度神经网络软件。</value>
+  </data>
+  <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
+    <value>SkylineProcessRunner 在 {0} 毫秒后超时</value>
+  </data>
   <data name="EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect" xml:space="preserve">
     <value>连接</value>
   </data>
@@ -354,6 +390,18 @@
   </data>
   <data name="EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled" xml:space="preserve">
     <value>登录已取消</value>
+  </data>
+  <data name="EditRemoteAccountDlg_Ardia_OneAccountSupported" xml:space="preserve">
+    <value>Skyline 不支持添加第二个 Ardia 帐户。要使用新帐户，请删除当前帐户并添加新帐户。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection" xml:space="preserve">
+    <value>正在测试远程帐户连接</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Exe_Files" xml:space="preserve">
+    <value>Exe 文件</value>
+  </data>
+  <data name="EditSearchToolDlg_OkDialog_The_tool__0__is_already_configured_" xml:space="preserve">
+    <value>工具 {0} 已配置。</value>
   </data>
   <data name="EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_" xml:space="preserve">
     <value>文件{0}不存在。</value>
@@ -378,5 +426,16 @@
   </data>
   <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools" xml:space="preserve">
     <value>成功更新下列工具</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret" xml:space="preserve">
+    <value>无法连接至 waters_connect 实例。
+导出和导入至 waters_connect 功能已禁用。
+请确保已安装 waters_connect V4.2 或更高版本、TQ Skyline Adapter V1.0 或更高版本以及相关 MS 驱动程序 V2.0 或更高版本。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_instance_does_not_support_method_development__Method_upload_will_be_disabled_" xml:space="preserve">
+    <value>设置正确，但此 waters_connect 实例不支持方法开发。方法上传功能将被禁用。
+要启用此功能，请安装以下组件：
+      - waters_connect TQ Skyline Adapter 1.0.0 或更高版本
+      - 相关 MS 驱动程序 V2.0 或更高版本</value>
   </data>
 </root>

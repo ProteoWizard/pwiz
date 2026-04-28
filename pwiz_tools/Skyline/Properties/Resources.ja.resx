@@ -1171,6 +1171,9 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="Note" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\note.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool" xml:space="preserve">
+    <value>ツールの抽出に失敗しました</value>
+  </data>
   <data name="NoPeak" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\nopeak.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -2477,6 +2480,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
     <value>プロダクト</value>
+  </data>
+  <data name="ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_" xml:space="preserve">
+    <value>ツールストアへの接続エラー：</value>
   </data>
   <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
     <value>分子リスト</value>

@@ -26,7 +26,9 @@ using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
+using pwiz.PanoramaClient;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
@@ -405,6 +407,79 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqualDeep(arrayBase, array2);
             AssertEx.AreEqualDeep(arrayBase, array3);
             AssertEx.AreEqualDeep(arrayBase, array4);
+
+            // Double-specific overload: IsSorted fast path and custom three-array sort.
+            Assert.IsTrue(ArrayUtil.IsSorted(new double[0]));
+            Assert.IsTrue(ArrayUtil.IsSorted(new[] { 1.0 }));
+            Assert.IsTrue(ArrayUtil.IsSorted(new[] { 1.0, 1.0, 2.0, 3.0, 3.0 }));
+            Assert.IsFalse(ArrayUtil.IsSorted(new[] { 1.0, 2.0, 1.5 }));
+
+            // Fast path returns true without mutating inputs.
+            var mzSorted = new[] { 100.0, 200.0, 300.0 };
+            var intSorted = new[] { 10.0, 20.0, 30.0 };
+            var imSorted = new[] { 0.5, 0.6, 0.7 };
+            Assert.IsTrue(ArrayUtil.Sort(mzSorted, intSorted, imSorted));
+            AssertEx.AreEqualDeep(new[] { 100.0, 200.0, 300.0 }, mzSorted);
+            AssertEx.AreEqualDeep(new[] { 10.0, 20.0, 30.0 }, intSorted);
+            AssertEx.AreEqualDeep(new[] { 0.5, 0.6, 0.7 }, imSorted);
+
+            // Randomized correctness: new sort must produce the same m/z ordering as
+            // Array.Sort, with parallel arrays permuted consistently.
+            VerifyDoubleSortAgainstReference(new[] { 3.0, 1.0, 2.0 });
+            VerifyDoubleSortAgainstReference(new[] { 5.0, 5.0, 5.0, 5.0 });
+            VerifyDoubleSortAgainstReference(new[] { 5.0, 4.0, 3.0, 2.0, 1.0 });
+            var rand = new Random(20260421);
+            foreach (int n in new[] { 2, 15, 16, 17, 100, 1000, 10000 })
+            {
+                var arr = new double[n];
+                for (int i = 0; i < n; i++)
+                    arr[i] = rand.NextDouble() * 2000;
+                VerifyDoubleSortAgainstReference(arr);
+            }
+
+            // Null secondary arrays must be tolerated.
+            var unsorted = new[] { 3.0, 1.0, 2.0 };
+            Assert.IsFalse(ArrayUtil.Sort(unsorted, null, null));
+            AssertEx.AreEqualDeep(new[] { 1.0, 2.0, 3.0 }, unsorted);
+        }
+
+        private static void VerifyDoubleSortAgainstReference(double[] mzs)
+        {
+            var intensities = new double[mzs.Length];
+            var ionMobilities = new double[mzs.Length];
+            for (int i = 0; i < mzs.Length; i++)
+            {
+                // Tag each row so we can check secondary arrays permuted with m/z.
+                intensities[i] = i * 1000.0 + mzs[i];
+                ionMobilities[i] = i * 0.001;
+            }
+            var mzCopy = (double[])mzs.Clone();
+            var intCopy = (double[])intensities.Clone();
+            var imCopy = (double[])ionMobilities.Clone();
+
+            ArrayUtil.Sort(mzs, intensities, ionMobilities);
+
+            ArrayUtil.Sort(mzCopy, out _);
+
+            AssertEx.AreEqualDeep(mzCopy, mzs);
+            // For each position, secondary values must match SOME row that had the same key
+            // in the original input (covers both stable and unstable sorts).
+            for (int i = 0; i < mzs.Length; i++)
+            {
+                int origIdx = FindMatchingRow(intCopy, imCopy, intensities[i], ionMobilities[i]);
+                Assert.IsTrue(origIdx >= 0, @"secondary arrays lost a row at index {0}", i);
+                Assert.AreEqual(mzCopy[i], intCopy[origIdx] - origIdx * 1000.0, 1e-9);
+            }
+        }
+
+        private static int FindMatchingRow(double[] intCopy, double[] imCopy, double intensity, double ionMobility)
+        {
+            for (int i = 0; i < intCopy.Length; i++)
+            {
+                if (intCopy[i] == intensity && imCopy[i] == ionMobility)
+                    return i;
+            }
+            return -1;
         }
 
         [TestMethod]
@@ -496,7 +571,33 @@ namespace pwiz.SkylineTest
             // NB: We really do not want to see the error "was locked but has since been deleted"
             //     since we know the file is locked and cannot have been deleted.
             AssertEx.ThrowsException<IOException>(() => FileLockingProcessFinder.DeleteDirectoryWithFileLockingDetails(dirPath),
-                x => AssertEx.Contains(x.Message, lockedFile, "this process"));
+                x => AssertEx.Contains(x.Message, lockedFile, MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process));
+        }
+
+        /// <summary>
+        /// Verifies that Panorama exceptions are recognized as user-actionable errors,
+        /// not programming defects. This ensures users see friendly error messages
+        /// instead of crash dialogs when Panorama operations fail.
+        /// </summary>
+        [TestMethod]
+        public void TestPanoramaExceptionsUserActionable()
+        {
+            // PanoramaException and its subclasses should NOT be treated as programming defects
+            // because they inherit from IOException, which is recognized as user-actionable
+            var testUri = new Uri("https://panoramaweb.org/");
+
+            // Base class
+            Assert.IsFalse(ExceptionUtil.IsProgrammingDefect(new PanoramaException("Test error")));
+
+            // PanoramaServerException - used for server communication errors
+            Assert.IsFalse(ExceptionUtil.IsProgrammingDefect(new PanoramaServerException("Server error")));
+
+            // PanoramaImportErrorException - used when document import fails on server
+            // This was the bug reported in issue #3808: before the fix, this exception
+            // inherited from Exception instead of IOException, causing it to be treated
+            // as a programming defect and showing a crash dialog instead of a friendly error
+            Assert.IsFalse(ExceptionUtil.IsProgrammingDefect(
+                new PanoramaImportErrorException(testUri, testUri, "Import failed")));
         }
     }
 }

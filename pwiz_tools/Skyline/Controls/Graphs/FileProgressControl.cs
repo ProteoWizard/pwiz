@@ -100,6 +100,13 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return progressBar.Value; }
         }
 
+        /// <summary>
+        /// Gets the progress bar control for screenshot processing.
+        /// Use with ScreenshotProcessingExtensions.FillProgressBar to paint over
+        /// the animated progress bar with a static representation.
+        /// </summary>
+        public ProgressBar ProgressBar => progressBar;
+
         public MsDataFileUri FilePath
         {
             get { return _filePath; }

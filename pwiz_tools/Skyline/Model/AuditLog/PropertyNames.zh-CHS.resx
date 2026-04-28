@@ -1817,6 +1817,21 @@
   <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
     <value>谱图过滤器</value>
   </data>
+  <data name="AnnotationDef_Lookup" xml:space="preserve">
+    <value>查询</value>
+  </data>
+  <data name="ImputationSettings_ImputeMissingPeaks" xml:space="preserve">
+    <value>插补缺失峰</value>
+  </data>
+  <data name="ImputationSettings_MaxPeakWidthVariation" xml:space="preserve">
+    <value>最大峰宽度变化</value>
+  </data>
+  <data name="ImputationSettings_MaxRtShift" xml:space="preserve">
+    <value>最大 RT 偏移</value>
+  </data>
+  <data name="PeptideSettings_Imputation" xml:space="preserve">
+    <value>插补</value>
+  </data>
   <data name="AlignmentTargetSpec_Type" xml:space="preserve">
     <value>类型</value>
   </data>
@@ -1825,5 +1840,8 @@
   </data>
   <data name="AlignmentTargetSpec_RegressionMethod" xml:space="preserve">
     <value>回归方法</value>
+  </data>
+  <data name="ImputationSettings_AlignmentTarget" xml:space="preserve">
+    <value>校准目标</value>
   </data>
 </root>

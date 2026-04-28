@@ -1,0 +1,96 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>
+ *                   MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4.6) <noreply .at. anthropic.com>
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Drawing;
+using System.IO;
+
+namespace ImageComparer.Core
+{
+    public enum ImageSource { disk, web, git }
+
+    public class ScreenshotInfo
+    {
+        protected ScreenshotInfo()
+        {
+        }
+
+        public ScreenshotInfo(Bitmap image)
+        {
+            Image = image;
+            ImageSize = image?.Size ?? Size.Empty;
+        }
+
+        public ScreenshotInfo(MemoryStream ms, Bitmap bmp = null)
+            : this(bmp ?? new Bitmap(ms))
+        {
+            Memory = ms;
+        }
+
+        public ScreenshotInfo(ScreenshotInfo info)
+        {
+            Image = info.Image;
+            Memory = info.Memory;
+            ImageSize = info.ImageSize;
+        }
+
+        public Bitmap Image { get; }
+        public MemoryStream Memory { get; }
+        public Size ImageSize { get; }
+        public bool IsPlaceholder => Memory == null;
+    }
+
+    public class OldScreenshot : ScreenshotInfo
+    {
+        public OldScreenshot()
+        {
+        }
+
+        public OldScreenshot(ScreenshotInfo info, string fileLoaded, ImageSource source = ImageSource.disk)
+            : base(info)
+        {
+            FileLoaded = fileLoaded;
+            Source = source;
+        }
+
+        public string FileLoaded { get; set; }
+        // ReSharper disable once UnusedAutoPropertyAccessor.Global
+        public ImageSource Source { get; private set; }
+
+        public bool IsCurrent(ScreenshotFile screenshot, ImageSource currentSource)
+        {
+            return Equals(FileLoaded, screenshot?.GetDescription(currentSource));
+        }
+    }
+
+    public class NewScreenshot : ScreenshotInfo
+    {
+        public NewScreenshot()
+        {
+        }
+
+        public NewScreenshot(ScreenshotInfo info, bool isTaken)
+            : base(info)
+        {
+            IsTaken = isTaken;
+        }
+
+        // ReSharper disable once UnusedAutoPropertyAccessor.Global
+        public bool IsTaken { get; set; }
+    }
+}

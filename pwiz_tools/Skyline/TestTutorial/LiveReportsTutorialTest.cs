@@ -69,6 +69,7 @@ namespace pwiz.SkylineTestTutorial
                 @"TestTutorial\LiveReportsViews.zip"
             };
 
+            using (new TestTimeProvider(new DateTime(2025, 1, 1, 10, 10, 0, DateTimeKind.Local)))
             using (new AuditLogList.IgnoreTestChecksScope())
                 RunFunctionalTest();
         }

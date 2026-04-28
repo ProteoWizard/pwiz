@@ -347,4 +347,13 @@
   <data name="NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_be_ignored" xml:space="preserve">
     <value>第 {1} 行的 {0} 缺少详细信息， 该条目将被忽略</value>
   </data>
+  <data name="BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library" xml:space="preserve">
+    <value>正在从 {0} 库中读取条目</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_" xml:space="preserve">
+    <value>正在从中读取保留时间 {0}</value>
+  </data>
+  <data name="NistLibraryBase_ParseName_Failed_to_understand_entry___0___starting_at_line__1_" xml:space="preserve">
+    <value>无法解读从第 {1} 行开始的“{0}”条目</value>
+  </data>
 </root>

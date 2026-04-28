@@ -141,19 +141,29 @@ namespace pwiz.Common.DataBinding.Controls
                         }
                         else
                         {
-                            bool filterApplied = false;
+                            var filterMessages = new List<string>();
                             if (queryResults.TransformResults.RowTransform is RowFilter)
                             {
-                                int filteredCount = queryResults.TransformResults.PivotedRows.RowCount;
-                                int unfilteredCount = queryResults.TransformResults.Parent.PivotedRows.RowCount;
+                                var filteredCount = queryResults.TransformResults.PivotedRows.RowCount;
+                                var unfilteredCount = queryResults.TransformResults.Parent.PivotedRows.RowCount;
                                 if (filteredCount != unfilteredCount)
                                 {
-                                    lblFilterApplied.Text = string.Format(Resources.NavBar_RefreshUi__Filtered_from__0__, unfilteredCount);
-                                    lblFilterApplied.Visible = true;
-                                    filterApplied = true;
+                                    filterMessages.Add(string.Format(Resources.NavBar_RefreshUi__Filtered_from__0__,
+                                        unfilteredCount));
                                 }
                             }
-                            if (!filterApplied)
+
+                            if (queryResults.ResultRows.Count != BindingListSource.Count)
+                            {
+                                filterMessages.Add(string.Format(Resources.NavBar_RefreshUi__Truncated_from__0__, queryResults.ResultRows.Count));
+                            }
+
+                            if (filterMessages.Count > 0)
+                            {
+                                lblFilterApplied.Text = CommonTextUtil.SpaceSeparate(filterMessages);
+                                lblFilterApplied.Visible = true;
+                            }
+                            else
                             {
                                 lblFilterApplied.Visible = false;
                             }

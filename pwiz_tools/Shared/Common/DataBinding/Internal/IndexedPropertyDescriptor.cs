@@ -16,7 +16,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
 
         public IndexedPropertyDescriptor(DataSchema dataSchema, int index, Type propertyType, IColumnCaption displayName, PivotedColumnId pivotedColumnId, Attribute[] attributes)
-            : base(@"property" + index, displayName, dataSchema.DataSchemaLocalizer, MergeAttributes(dataSchema, displayName, attributes))
+            : base(@"property" + index, displayName, dataSchema, MergeAttributes(dataSchema, displayName, attributes))
         {
             PropertyIndex = index;
             _propertyType = propertyType;
@@ -24,7 +24,6 @@ namespace pwiz.Common.DataBinding.Internal
         }
 
         public int PropertyIndex { get; private set; }
-
         public override bool CanResetValue(object component)
         {
             return false;

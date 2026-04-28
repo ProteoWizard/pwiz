@@ -207,5 +207,12 @@ namespace pwiz.Common.DataBinding.Layout
         }
         // ReSharper restore LocalizableElement
 
+        public void ApplyFormats(ColumnFormats columnFormats)
+        {
+            foreach (var format in ColumnFormats)
+            {
+                columnFormats.SetFormat(format.Item1, format.Item2);
+            }
+        }
     }
 }

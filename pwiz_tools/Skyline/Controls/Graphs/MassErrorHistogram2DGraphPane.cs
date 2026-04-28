@@ -20,17 +20,22 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class MassErrorHistogram2DGraphPane : SummaryGraphPane
+    public class MassErrorHistogram2DGraphPane : SummaryGraphPane, IHeatMapDataProvider, ICursorTrackingTooltipProvider
     {
         public static ReplicateDisplay ShowReplicate
         {
@@ -38,6 +43,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private GraphData Data { get; set; }
+        private MassErrorBinData _selectedData;
 
         public MassErrorHistogram2DGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
@@ -66,6 +72,48 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange(g);
 
             base.Draw(g);
+        }
+
+        //
+        // Dynamic tool tip responds instantly to mouse moves
+        //
+        public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            using (var g = sender.CreateGraphics())
+            {
+                object nearestObject;
+                int index;
+                if (FindNearestObject(e.Location, g, out nearestObject, out index))
+                {
+                    var lineItem = nearestObject as LineItem;
+                    if (lineItem != null)
+                    {
+                        var objectList = lineItem.Tag as List<object>;
+                        if (objectList != null)
+                        {
+                            _selectedData = (MassErrorBinData)objectList[index];
+                            sender.Cursor = Cursors.Hand;
+                            return true;
+                        }
+                    }
+                }
+                _selectedData = null;
+                sender.Cursor = Cursors.Cross;
+                return base.HandleMouseMoveEvent(sender, e);
+            }
+        }
+
+        public override void HandleMouseClick(object sender, MouseEventArgs e)
+        {
+            if (_selectedData != null && e.Button == MouseButtons.Left)
+            {
+                var document = GraphSummary.DocumentUIContainer.DocumentUI;
+                var displayText = string.Format(GraphsResources.MassErrorBinFinder_GetDisplayText_Mass_Error,
+                    _selectedData.MassError.ToString(Formats.Mz));
+                HistogramHelper.CreateAndShowFindResults((ZedGraphControl)sender, GraphSummary, document,
+                    _selectedData.Peptides, displayText);
+                _selectedData = null;
+            }
         }
 
         public override void UpdateGraph(bool selectionChanged)
@@ -116,6 +164,77 @@ namespace pwiz.Skyline.Controls.Graphs
                 data.Graph(this, nodeSelected);
         }
 
+        TableDesc ICursorTrackingTooltipProvider.GetTooltipTable(Point pt)
+        {
+            using (var g = GraphSummary.GraphControl.CreateGraphics())
+            {
+                object nearestObject;
+                int index;
+                if (!FindNearestObject(pt, g, out nearestObject, out index))
+                    return null;
+
+                var lineItem = nearestObject as LineItem;
+                var objectList = lineItem?.Tag as List<object>;
+                if (objectList == null)
+                    return null;
+
+                var binData = (MassErrorBinData)objectList[index];
+                var rt = CursorTipRenderTools;
+
+                var table = new TableDesc();
+                var xLabel = Data != null && Data.XAxisType == Histogram2DXAxis.mass_to_charge
+                    ? GraphsResources.MassErrorHistogram2DGraphPane_Graph_Mz
+                    : GraphsResources.MassErrorHistogram2DGraphPane_Graph_Retention_Time;
+                table.AddDetailRow(xLabel, binData.XValue.ToString(Formats.Mz), rt);
+                table.AddDetailRow(GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error,
+                    binData.MassError.ToString(Formats.Mz), rt);
+                var countValue = binData.ReplicateCount > 1
+                    ? string.Format(GraphsResources.MassErrorHistogram2DGraphPane_ToolTip_Count_Format, binData.Count, binData.ReplicateCount)
+                    : binData.Count.ToString();
+                table.AddDetailRow(HeatMapZAxisName, countValue, rt);
+
+                const int MAX_NAMED = 4;
+                int totalCount = binData.Peptides?.Count ?? 0;
+                if (totalCount > 0)
+                {
+                    int showCount = totalCount <= MAX_NAMED ? totalCount : MAX_NAMED - 1;
+                    string label = GraphsResources.MassErrorHistogram2DGraphPane_ToolTip_Peptides;
+                    // ReSharper disable once AssignNullToNotNullAttribute
+                    foreach (var peptide in binData.Peptides.Take(showCount))
+                    {
+                        table.AddDetailRow(label, peptide, rt);
+                        label = string.Empty;
+                    }
+                    if (totalCount > showCount)
+                        table.AddDetailRow(string.Empty,
+                            string.Format(GraphsResources.MassErrorHistogram2DGraphPane_ToolTip_Plus_N_More, totalCount - showCount), rt);
+                }
+
+                return table;
+            }
+        }
+
+        /// <summary>
+        /// Data object for a single heatmap dot, carrying its position and the peptides in that bin.
+        /// </summary>
+        private class MassErrorBinData
+        {
+            public MassErrorBinData(double xValue, double massError, int count, int replicateCount, IList<string> peptides)
+            {
+                XValue = xValue;
+                MassError = massError;
+                Count = count;
+                ReplicateCount = replicateCount;
+                Peptides = peptides;
+            }
+
+            public double XValue { get; }
+            public double MassError { get; }
+            public int Count { get; }
+            public int ReplicateCount { get; }
+            public IList<string> Peptides { get; }
+        }
+
         /// <summary>
         /// Holds the data currently displayed in the graph.
         /// </summary>
@@ -141,6 +260,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private static readonly int[,] EMPTY_COUNTS = new int[1,1];
 
+            public Histogram2DXAxis XAxisType => _xAxis;
+
             public GraphData(SrmDocument document, GraphData dataPrevious, int resultIndex,
                 bool bestResult, PointsTypeMassError pointsType)
             {
@@ -149,6 +270,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 _replicateDisplay = ShowReplicate;
 
                 int[,] counts2D = EMPTY_COUNTS;
+                Dictionary<int, HashSet<string>> binPeptides = null;
+                Dictionary<int, HashSet<int>> binReplicates = null;
                 _displayType = MassErrorGraphController.HistogramDisplayType;
                 _binSizePpm = Settings.Default.MassErorrHistogramBinSize;
                 _transition = MassErrorGraphController.HistogramTransiton;
@@ -163,13 +286,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 while (ReferenceEquals(counts2D, EMPTY_COUNTS))
                 {
                     if (_maxMass != double.MinValue)
-                       counts2D = new int[xAxisBins, (int)((_maxMass - _minMass) / _binSizePpm + 1)];
+                    {
+                        counts2D = new int[xAxisBins, (int)((_maxMass - _minMass) / _binSizePpm + 1)];
+                        binPeptides = new Dictionary<int, HashSet<string>>();
+                        binReplicates = new Dictionary<int, HashSet<int>>();
+                    }
 
                     foreach (var nodePep in document.Molecules) 
                     {
                         if (decoys != nodePep.IsDecoy)
                             continue;
 
+                        var peptideTextId = nodePep.RawTextId;
                         var replicateIndex = bestResult && nodePep.BestResult != -1 ? nodePep.BestResult : resultIndex;
                         foreach (var nodeGroup in nodePep.TransitionGroups)
                         {
@@ -180,12 +308,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var mz = nodeTran.Mz.Value;
                                 if (replicateIndex >= 0)
                                 {
-                                    AddChromInfo(nodeGroup, nodeTran, replicateIndex, mz, counts2D);
+                                    AddChromInfo(nodeGroup, nodeTran, replicateIndex, mz, counts2D, binPeptides, binReplicates, peptideTextId);
                                 }
-                                else 
+                                else
                                 {
                                     for (int i = 0; i < nodeTran.Results.Count; i++)
-                                        AddChromInfo(nodeGroup, nodeTran, i, mz, counts2D);
+                                        AddChromInfo(nodeGroup, nodeTran, i, mz, counts2D, binPeptides, binReplicates, peptideTextId);
                                 }
                             }
                         }
@@ -196,35 +324,50 @@ namespace pwiz.Skyline.Controls.Graphs
                         return;
                 }
 
-                var points = new List<Point3D>();
+                var points = new List<HeatMapData.TaggedPoint3D>();
+                int yLen = counts2D.GetLength(1);
+                double binSizeX = (_maxX - _minX) / xAxisBins;
                 for (int x = 0; x < counts2D.GetLength(0); x++)
                 {
-                    for (int y = 0; y < counts2D.GetLength(1); y++)
+                    for (int y = 0; y < yLen; y++)
                     {
                         int count = counts2D[x, y];
                         if (count > 0)
                         {
-                            double binSizeX = (_maxX - _minX)/xAxisBins;
-                            double xPoint = x*binSizeX + _minX + binSizeX/2;
-                            double yPoint = y*_binSizePpm + _minMass + _binSizePpm/2;
-                            points.Add(new Point3D(xPoint, yPoint, count));
+                            double xPoint = x * binSizeX + _minX + binSizeX / 2;
+                            double yPoint = y * _binSizePpm + _minMass + _binSizePpm / 2;
+                            int binKey = x * yLen + y;
+                            HashSet<string> peptideSet;
+                            binPeptides.TryGetValue(binKey, out peptideSet);
+                            HashSet<int> replicateSet;
+                            binReplicates.TryGetValue(binKey, out replicateSet);
+                            var binData = new MassErrorBinData(xPoint, yPoint, count,
+                                replicateSet?.Count ?? 0,
+                                peptideSet != null ? peptideSet.ToList() : new List<string>());
+                            points.Add(new HeatMapData.TaggedPoint3D(new Point3D(xPoint, yPoint, count), binData));
                         }
                         _maxCount = Math.Max(_maxCount, count);
                     }
                 }
-                _heatMapData = new HeatMapData(points);
+                _heatMapData = new HeatMapData(points, GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count);
             }
 
             private void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int replicateIndex,
-                double mz, int[,] counts2D)
+                double mz, int[,] counts2D,
+                Dictionary<int, HashSet<string>> binPeptides,
+                Dictionary<int, HashSet<int>> binReplicates,
+                string peptideTextId)
             {
                 var chromGroupInfos = nodeGroup.Results[replicateIndex];
                 var chromInfos = nodeTran.Results[replicateIndex];
-                AddChromInfo(chromGroupInfos, chromInfos, mz, counts2D);
+                AddChromInfo(chromGroupInfos, chromInfos, replicateIndex, mz, counts2D, binPeptides, binReplicates, peptideTextId);
             }
 
             private void AddChromInfo(ChromInfoList<TransitionGroupChromInfo> chromGroupInfos, ChromInfoList<TransitionChromInfo> chromInfos,
-                double mz, int[,] counts2D)
+                int replicateIndex, double mz, int[,] counts2D,
+                Dictionary<int, HashSet<string>> binPeptides,
+                Dictionary<int, HashSet<int>> binReplicates,
+                string peptideTextId)
             {
                 if (chromInfos.IsEmpty)
                     return;
@@ -247,9 +390,28 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         else
                         {
-                            int x = (int) Math.Floor((xVal - _minX)/((_maxX - _minX)/xAxisBins));
-                            int y = (int) Math.Floor((massError.Value - _minMass)/_binSizePpm);
-                            counts2D[Math.Min(x, counts2D.GetLength(0)-1), Math.Min(y, counts2D.GetLength(1)-1)]++;
+                            double xRange = _maxX - _minX;
+                            int x = xRange > 0
+                                ? (int) Math.Floor((xVal - _minX) / (xRange / xAxisBins))
+                                : 0;
+                            int y = (int) Math.Floor((massError.Value - _minMass) / _binSizePpm);
+                            x = Math.Max(0, Math.Min(x, counts2D.GetLength(0) - 1));
+                            y = Math.Max(0, Math.Min(y, counts2D.GetLength(1) - 1));
+                            counts2D[x, y]++;
+
+                            // Track replicate counts for tooltip use
+                            int binKey = x * counts2D.GetLength(1) + y;
+                            HashSet<string> peptideSet;
+                            if (!binPeptides.TryGetValue(binKey, out peptideSet))
+                                binPeptides[binKey] = peptideSet = new HashSet<string>();
+                            peptideSet.Add(peptideTextId);
+                            if (binReplicates != null)
+                            {
+                                HashSet<int> replicateSet;
+                                if (!binReplicates.TryGetValue(binKey, out replicateSet))
+                                    binReplicates[binKey] = replicateSet = new HashSet<int>();
+                                replicateSet.Add(replicateIndex);
+                            }
                         }
                     }
                 }
@@ -280,16 +442,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphPane.CurveList.Clear();
                     return;
                 }
-                graphPane.YAxis.Scale.Min = _minMass;
-                graphPane.YAxis.Scale.Max = _maxMass;
-                graphPane.XAxis.Scale.Min = _minX;
-                graphPane.XAxis.Scale.Max = _maxX;
+                // Pad axes when range is zero (degenerate single-point data)
+                graphPane.XAxis.Scale.Min = _minX == _maxX ? _minX - 1 : _minX;
+                graphPane.XAxis.Scale.Max = _minX == _maxX ? _maxX + 1 : _maxX;
+                graphPane.YAxis.Scale.Min = _minMass == _maxMass ? _minMass - _binSizePpm : _minMass;
+                graphPane.YAxis.Scale.Max = _minMass == _maxMass ? _maxMass + _binSizePpm : _maxMass;
                 graphPane.AxisChange();
                 HeatMapGraphPane.GraphHeatMap(graphPane,
                     _heatMapData, MAX_DOT_RADIUS, MIN_DOT_RADIUS, (float)_minMass, (float)_maxMass,
                     Settings.Default.MassErrorHistogram2DLogScale, 5);
             }
         }
+
+        public HeatMapData HeatMapData => Data?._heatMapData;
+        public string HeatMapZAxisName => GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count;
 
         public int GetPoints()
         {

@@ -313,6 +313,9 @@
   <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
     <value>Import Properties from external tool</value>
   </data>
+  <data name="ToolService_RunCommand_Run_command" xml:space="preserve">
+    <value>Run command</value>
+  </data>
   <data name="ToolStoreDlg_DownloadSelectedTool_Downloading__0_" xml:space="preserve">
     <value>Downloading {0}</value>
   </data>
@@ -437,5 +440,8 @@ Ensure waters_connect V4.2 or later, TQ Skyline Adapter V1.0 or later and releva
 To enable, install the following items:
       - waters_connect TQ Skyline Adapter 1.0.0 or later
       - Relevant MS drivers version 2.0 or later</value>
+  </data>
+  <data name="ToolService_ReorderElements_Elements_reordered_by_external_tool" xml:space="preserve">
+    <value>Elements reordered by external tool</value>
   </data>
 </root>

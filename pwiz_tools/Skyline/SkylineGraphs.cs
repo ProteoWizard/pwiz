@@ -16,6 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Xml;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -27,41 +37,29 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Clustering;
-using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using System.Xml;
-using pwiz.Skyline.Controls.Lists;
-using pwiz.Skyline.Model.Lib;
 using ZedGraph;
-using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
-using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
 
 namespace pwiz.Skyline
 {
@@ -102,7 +100,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private GraphSummary ContextMenuGraphSummary { get; set; }
+
 
         private void dockPanel_ActiveDocumentChanged(object sender, EventArgs e)
         {
@@ -330,8 +328,6 @@ namespace pwiz.Skyline
                 ViewMenu.UpdateGraphUi(layoutLock.EnsureLocked, settingsNew, deserialized);
 
                 var enable = settingsNew.HasResults;
-                bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
-                runToRunToolStripMenuItem.Enabled = enableRunToRun;
                 if (_graphFullScan != null && _graphFullScan.Visible && !enable)
                 {
                     layoutLock.EnsureLocked();
@@ -466,6 +462,7 @@ namespace pwiz.Skyline
 
             UpdateGraphPanes(listUpdateGraphs);
             FoldChangeForm.CloseInapplicableForms(this);
+            ListGridForm.CloseInapplicableForms(this);
         }
 
         public void UpdateGraphSpectrumEnabled()
@@ -520,6 +517,7 @@ namespace pwiz.Skyline
             DetectionsGraphController.GraphType = type;
 
             FormUtil.OpenForms.OfType<FoldChangeForm>().ForEach(f => f.Close());
+            FormUtil.OpenForms.OfType<ListGridForm>().ForEach(f => f.Close());
 
             DestroyResultsGrid();
             DestroyDocumentGrid();
@@ -746,7 +744,7 @@ namespace pwiz.Skyline
                 else if (controllerTypeName == typeof(DetectionsGraphController).Name)
                     graphSummary = _listGraphDetections.FirstOrDefault(g => g.Type == type) ?? CreateGraphDetections(type);
                 if (graphSummary != null && splitLength > 3)
-                    graphSummary.LabelLayoutString = Uri.UnescapeDataString(split[3]);
+                    graphSummary.LabelLayoutString = TextUtil.UnescapePipe(split[3]);
                 return graphSummary;
             }
 
@@ -1059,36 +1057,16 @@ namespace pwiz.Skyline
             ShowLosses(losses);
         }
 
-        private void fragmentsMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowFragmentIons(!_graphSpectrumSettings.ShowFragmentIons);
-        }
-
-        private void precursorIonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPrecursorIon(!_graphSpectrumSettings.ShowPrecursorIon);
-        }
-
-        private void specialionsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowSpecialIons(!_graphSpectrumSettings.ShowSpecialIons);
-        }
-        
-        public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
+        public void SynchMzScaleToolStripMenuItemClick(bool syncMz, IMzScalePlot source = null)
         {
             if (ListMzScaleCopyables().Count() < 2)
                 return;
-            Settings.Default.SyncMZScale = synchMzScaleToolStripMenuItem.Checked;
+            Settings.Default.SyncMZScale = syncMz;
             if (!Settings.Default.SyncMZScale)
                 return;
 
             if (source == null)
-            {
-                // ReSharper disable once SuspiciousTypeConversion.Global
-                source = (synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm() as IMzScalePlot;
-                if (source == null)
-                    return;
-            }
+                return;
 
             foreach (var targetGraph in ListMzScaleCopyables())
             {
@@ -1096,59 +1074,13 @@ namespace pwiz.Skyline
                     targetGraph.SetMzScale(source.Range);
             }
         }
-        private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SynchMzScaleToolStripMenuItemClick();
-        }
 
         // Testing support
         public void SynchMzScale(IMzScalePlot source, bool setSynchMz = true)
         {
-            synchMzScaleToolStripMenuItem.Checked = setSynchMz;
-            SynchMzScaleToolStripMenuItemClick(source);
+            SynchMzScaleToolStripMenuItemClick(setSynchMz, source);
         }
 
-        public void UpdateChargesMenu()
-        {
-            if (chargesContextMenuItem.DropDownItems.Count > 0 && chargesContextMenuItem.DropDownItems[0] is MenuControl<ChargeSelectionPanel> chargeSelector)
-            {
-                chargeSelector.Update(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
-            }
-            else
-            {
-                chargesContextMenuItem.DropDownItems.Clear();
-                var selectorControl = new MenuControl<ChargeSelectionPanel>(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
-                chargesContextMenuItem.DropDownItems.Add(selectorControl);
-                selectorControl.HostedControl.OnChargeChanged += IonChargeSelector_ionChargeChanged;
-            }
-        }
-
-        public void UpdateIonTypeMenu()
-        {
-            if (ionTypesContextMenuItem.DropDownItems.Count > 0 &&
-                ionTypesContextMenuItem.DropDownItems[0] is MenuControl<IonTypeSelectionPanel> ionSelector)
-            {
-                ionSelector.Update(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
-            }
-            else
-            {
-                ionTypesContextMenuItem.DropDownItems.Clear();
-                var ionTypeSelector = new MenuControl<IonTypeSelectionPanel>(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
-                ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
-                ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
-                ionTypeSelector.HostedControl.LossChanged += IonTypeSelector_LossChanged;
-            }
-        }
-
-        public void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            UpdateChargesMenu();
-        }
-
-        public void ionTypeMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            UpdateIonTypeMenu();
-        }
 
         private void editToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
@@ -1169,191 +1101,15 @@ namespace pwiz.Skyline
             return graphChrom.GetChromFileInfoId();
         }
 
-        private void ranksMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
-            UpdateSpectrumGraph(false);
-        }
 
-        private void scoresContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowLibraryScores = !Settings.Default.ShowLibraryScores;
-            UpdateSpectrumGraph(false);
-        }
-
-        private void ionMzValuesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowIonMz = !Settings.Default.ShowIonMz;
-            UpdateSpectrumGraph(false);
-        }
-
-        private void massErrorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowFullScanMassError = !Settings.Default.ShowFullScanMassError;
-            UpdateSpectrumGraph(false);
-        }
-
-        private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ToggleObservedMzValues();
-        }
-
-        private void showLibSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            if (_graphSpectrum != null && _graphSpectrum.Visible)
-                _graphSpectrum.ShowPropertiesSheet = !showLibSpectrumPropertiesContextMenuItem.Checked;
-        }
-        private void showFullScanSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            if (_graphFullScan != null && _graphFullScan.Visible)
-                _graphFullScan.ShowPropertiesSheet = !showFullScanSpectrumPropertiesContextMenuItem.Checked;
-        }
-
-        public void ToggleObservedMzValues()
-        {
-            Settings.Default.ShowObservedMz = !Settings.Default.ShowObservedMz;
-            UpdateSpectrumGraph(false);
-        }
 
         void GraphSpectrum.IStateProvider.BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (var i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i - 1;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator27);
-
-            // Insert skyline specific menus
-            var set = Settings.Default;
-            var control = FormUtil.FindParentOfType<IMzScalePlot>(menuStrip.SourceControl);
-            int iInsert = 0;
-            if (control?.IsAnnotated ?? false)
-            {
-                if (isProteomic)
-                {
-                    menuStrip.Items.Insert(iInsert++, ionTypesContextMenuItem);
-                    specialionsContextMenuItem.Checked = set.ShowSpecialIons;
-                    menuStrip.Items.Insert(iInsert++, specialionsContextMenuItem);
-                }
-                else
-                {
-                    fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
-                    menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
-                }
-
-                precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
-                menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
-                menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
-
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
-                
-                ranksContextMenuItem.Checked = set.ShowRanks;
-                menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-
-                ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
-                menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
-                observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
-                menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
-                menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
-                massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
-                duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
-                menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
-            }
-            else
-            {
-                menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
-                massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
-            }
-            lockYaxisContextMenuItem.Checked = set.LockYAxis;
-            menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
-
-            // Need to test small mol
-            if (isProteomic && control?.ControlType == SpectrumControlType.LibraryMatch)
-            {
-                koinaLibMatchItem.Checked = Settings.Default.Koina;
-                menuStrip.Items.Insert(iInsert++, koinaLibMatchItem);
-                mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
-                menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
-            }
-
-            if (control != null)
-            {
-                menuStrip.Items.Insert(iInsert++, spectrumGraphPropsContextMenuItem);
-                if (control.ControlType == SpectrumControlType.LibraryMatch)
-                {
-                    showLibSpectrumPropertiesContextMenuItem.Checked = control.ShowPropertiesSheet;
-                    menuStrip.Items.Insert(iInsert++, showLibSpectrumPropertiesContextMenuItem);
-                }
-                else if (control.ControlType == SpectrumControlType.FullScanViewer)
-                {
-                    showFullScanSpectrumPropertiesContextMenuItem.Checked = control.ShowPropertiesSheet;
-                    menuStrip.Items.Insert(iInsert++, showFullScanSpectrumPropertiesContextMenuItem);
-                }
-            }
-
-
-            if (control is { HasChromatogramData: true }) // Don't offer to show chromatograms when there are none
-            {
-                showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
-                menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
-            }
-            /*
-            if(ListMzScaleCopyables().Count() >=2)
-            {
-                menuStrip.Items.Insert(iInsert++, synchMzScaleToolStripMenuItem);
-                synchMzScaleToolStripMenuItem.Checked = Settings.Default.SyncMZScale;
-            }
-            */
-            //menuStrip.Items.Insert(iInsert, toolStripSeparator15);
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
-
-            ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
-            UpdateIonTypeMenu();
-            UpdateChargesMenu();
+            PrepareZedGraphContextMenu(zedGraphControl, menuStrip);
+            using var spectrumContextMenu = new SpectrumContextMenu(this);
+            spectrumContextMenu.BuildSpectrumMenu(isProteomic, zedGraphControl, menuStrip);
         }
 
-        private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowDuplicateIons = duplicatesContextMenuItem.Checked;
-            UpdateSpectrumGraph(false);
-        }
-
-        private void lockYaxisContextMenuItem_Click(object sender, EventArgs e)
-        {
-            // Avoid updating the rest of the graph just to change the y-axis lock state
-            Settings.Default.LockYAxis = lockYaxisContextMenuItem.Checked;
-            _graphSpectrum?.LockYAxis(lockYaxisContextMenuItem.Checked);
-            _graphFullScan?.LockYAxis(lockYaxisContextMenuItem.Checked);
-        }
-
-        private void showChromatogramsSpectrumContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowLibraryChromatograms = !Settings.Default.ShowLibraryChromatograms;
-            UpdateGraphPanes();
-        }
-
-        private void spectrumGraphPropsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowSpectrumProperties();
-        }
 
         public void ShowSpectrumProperties()
         {
@@ -1364,11 +1120,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void zoomSpectrumContextMenuItem_Click(object sender, EventArgs e)
-        {
-            if (_graphSpectrum != null)
-                _graphSpectrum.ZoomSpectrumToSettings();
-        }
 
         public void ShowGraphSpectrum(bool show)
         {
@@ -1661,39 +1412,14 @@ namespace pwiz.Skyline
 
         void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
         {
-            ChromatogramContextMenu.BuildChromatogramMenu(zedGraphControl, paneKey, menuStrip, chromFileInfoId);
-        }
-
-        private void AddRelativeAbundanceFormattingForm(ToolStrip menuStrip, int iInsert)
-        {
-            ChromatogramContextMenu.AddRelativeAbundanceFormattingMenu(menuStrip, iInsert);
-        }
-        private void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            ChromatogramContextMenu.AddTransitionContextMenu(menuStrip, iInsert);
+            PrepareZedGraphContextMenu(zedGraphControl, menuStrip);
+            using var chromatogramContextMenu = new ChromatogramContextMenu(this);
+            chromatogramContextMenu.BuildChromatogramMenu(paneKey, menuStrip, chromFileInfoId);
         }
 
         public void ShowChromatogramLegends(bool show)
         {
             Settings.Default.ShowChromatogramLegend = show;
-            UpdateChromGraphs();
-        }
-
-        public void ShowMassErrors(bool show)
-        {
-            Settings.Default.ShowMassError = show;
-            UpdateChromGraphs();
-        }
-
-        public void ShowPeakBoundaries(bool show)
-        {
-            Settings.Default.ShowPeakBoundaries = show;
-            UpdateChromGraphs();
-        }
-
-        public void ShowOriginalPeak(bool show)
-        {
-            Settings.Default.ShowOriginalPeak = show;
             UpdateChromGraphs();
         }
 
@@ -1703,28 +1429,6 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        public void SetShowRetentionTimes(ShowRTChrom showRTChrom)
-        {
-            Settings.Default.ShowRetentionTimesEnum = showRTChrom.ToString();
-            UpdateChromGraphs();
-        }
-
-        public void ShowChromatogramRTThresholdDlg()
-        {
-            using (var dlg = new ChromatogramRTThresholdDlg())
-            {
-                double threshold = Settings.Default.ShowRetentionTimesThreshold;
-                if (threshold > 0)
-                    dlg.Threshold = threshold;
-
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    Settings.Default.ShowRetentionTimesThreshold = dlg.Threshold;
-                    Settings.Default.ShowRetentionTimesEnum = ShowRTChrom.threshold.ToString();
-                    UpdateChromGraphs();
-                }
-            }
-        }
 
         public void ToggleRawTimesMenuItem()
         {
@@ -1732,12 +1436,6 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        public void SetShowRetentionTimePred(bool showRetentionTimePred)
-        {
-            Settings.Default.ShowRetentionTimePred = showRetentionTimePred;
-            UpdateChromGraphs();
-
-        }
 
         public void ShowPeptideIDTimes(bool show)
         {
@@ -1757,13 +1455,6 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        public void HideAllIdTimes()
-        {
-            Settings.Default.ShowPeptideIdTimes =
-                Settings.Default.ShowAlignedPeptideIdTimes =
-                Settings.Default.ShowUnalignedPeptideIdTimes = false;
-            UpdateChromGraphs();
-        }
 
         public bool IsMultipleIonSources
         {
@@ -1781,11 +1472,6 @@ namespace pwiz.Skyline
         public void ApplyPeak(bool subsequent, bool group)
         {
             EditMenu.ApplyPeak(subsequent, group);
-        }
-
-        private void removePeakMenuItem_Click(object sender, EventArgs e)
-        {
-            EditMenu.RemovePeak(true);
         }
 
         public void RemovePeak()
@@ -1813,17 +1499,6 @@ namespace pwiz.Skyline
             SetDisplayTypeChrom(DisplayTypeChrom.products);
         }
 
-        public void ShowRelativeAbundanceFormatting()
-        {
-            var summary = _listGraphPeakArea.FirstOrDefault(graph => graph.Type == GraphTypeSummary.abundance);
-            if (summary != null)
-            {
-                if (summary.TryGetGraphPane<SummaryRelativeAbundanceGraphPane>(out var graphPane))
-                {
-                    graphPane.ShowFormattingDialog();
-                }
-            }
-        }
         public void ShowAllTransitions()
         {
             SetDisplayTypeChrom(DisplayTypeChrom.all);
@@ -1939,6 +1614,23 @@ namespace pwiz.Skyline
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                     UpdateChromGraphs();
+            }
+        }
+
+        public void ShowChromatogramRTThresholdDlg()
+        {
+            using (var dlg = new ChromatogramRTThresholdDlg())
+            {
+                double threshold = Settings.Default.ShowRetentionTimesThreshold;
+                if (threshold > 0)
+                    dlg.Threshold = threshold;
+
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.ShowRetentionTimesThreshold = dlg.Threshold;
+                    Settings.Default.ShowRetentionTimesEnum = ShowRTChrom.threshold.ToString();
+                    UpdateChromGraphs();
+                }
             }
         }
 
@@ -2114,12 +1806,14 @@ namespace pwiz.Skyline
 
         private void graphChromatogram_PickedPeak(object sender, PickedPeakEventArgs e)
         {
+            if (!EnsureLibrariesLoadedForPeakIntegration())
+                return;
             var graphChrom = sender as GraphChromatogram;
             if (graphChrom != null)
                 graphChrom.LockZoom();
             try
             {
-                ModifyDocument(string.Format(SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime), 
+                ModifyDocument(string.Format(SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime),
                     doc => PickPeak(doc, e), docPair =>
                     {
                         var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
@@ -2232,6 +1926,9 @@ namespace pwiz.Skyline
 
         private void graphChromatogram_ChangedPeakBounds(object sender, ChangedMultiPeakBoundsEventArgs eMulti)
         {
+            if (!EnsureLibrariesLoadedForPeakIntegration())
+                return;
+
             var graphChrom = sender as GraphChromatogram;
             if (graphChrom != null)
                 graphChrom.LockZoom();
@@ -2355,6 +2052,22 @@ namespace pwiz.Skyline
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Checks that document libraries are loaded, which is required for peak integration
+        /// changes that need to look up peptide ID times. Shows a message to the user if not.
+        /// </summary>
+        /// <returns>True if libraries are loaded and peak integration can proceed</returns>
+        public bool EnsureLibrariesLoadedForPeakIntegration()
+        {
+            if (!DocumentUI.Settings.PeptideSettings.Libraries.IsLoaded)
+            {
+                MessageDlg.Show(this,
+                    SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded);
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -2510,7 +2223,7 @@ namespace pwiz.Skyline
                 _graphSpectrum.SelectSpectrum(e.SpectrumId);
         }
 
-        private void UpdateChromGraphs()
+        public void UpdateChromGraphs()
         {
             foreach (var graphChrom in _listGraphChrom)
                 graphChrom.UpdateUI();
@@ -2615,19 +2328,17 @@ namespace pwiz.Skyline
                     graphs.Insert(0, graph);
                     graph.Controller.GraphTypes.Insert(0, type);
 
-                    if (graphs.Count > 1 && !graphs[1].IsHidden)
-                        graph.Show(FindPane(graphs[1]), null);
-                    else
-                        graph.Activate();
+                    graph.Activate();
                 }
                 else
                 {
                     if (graph == null)
                         graph = createGraph(type);
 
-                    if (graphs.Count > 1 && !graphs[1].IsHidden)
+                    var colocateWith = FindColocateGraph(graphs, graph, type);
+                    if (colocateWith != null)
                     {
-                        graph.Show(FindPane(graphs[1]), null);
+                        graph.Show(FindPane(colocateWith), null);
                     }
                     else
                     {
@@ -2640,6 +2351,41 @@ namespace pwiz.Skyline
             else if (graph != null)
             {
                 graph.Hide();
+            }
+        }
+
+        /// <summary>
+        /// Find the best visible graph to co-locate with. For types that have a
+        /// defined sibling (e.g., abundance and abundance_comparison), only co-locate
+        /// with the sibling -- if it's not visible, float independently so the two
+        /// abundance graphs end up in their own shared pane. For types without a
+        /// sibling, fall back to the first visible graph in the list.
+        /// </summary>
+        private static GraphSummary FindColocateGraph(List<GraphSummary> graphs, GraphSummary exclude, GraphTypeSummary type)
+        {
+            var siblingType = GetSiblingGraphType(type);
+            if (siblingType != GraphTypeSummary.invalid)
+            {
+                // Only co-locate with the sibling, not with unrelated graphs
+                return graphs.FirstOrDefault(g => g != exclude && g.Type == siblingType && !g.IsHidden);
+            }
+            return graphs.FirstOrDefault(g => g != exclude && !g.IsHidden);
+        }
+
+        private static GraphTypeSummary GetSiblingGraphType(GraphTypeSummary type)
+        {
+            switch (type)
+            {
+                case GraphTypeSummary.abundance:
+                    return GraphTypeSummary.abundance_comparison;
+                case GraphTypeSummary.abundance_comparison:
+                    return GraphTypeSummary.abundance;
+                case GraphTypeSummary.histogram:
+                    return GraphTypeSummary.histogram2d;
+                case GraphTypeSummary.histogram2d:
+                    return GraphTypeSummary.histogram;
+                default:
+                    return GraphTypeSummary.invalid;
             }
         }
 
@@ -2751,17 +2497,51 @@ namespace pwiz.Skyline
         void GraphSummary.IStateProvider.BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt,
             GraphSummary.IController controller)
         {
-            ContextMenuGraphSummary = controller.GraphSummary;
+            PrepareZedGraphContextMenu(zedGraphControl, menuStrip);
             var graphController = controller as RTGraphController;
             if (graphController != null)
-                BuildRTGraphMenu(controller.GraphSummary, menuStrip, mousePt, graphController);
+            {
+                using var retentionTimesContextMenu = new RetentionTimesContextMenu(this);
+                retentionTimesContextMenu.BuildRTGraphMenu(controller.GraphSummary, menuStrip, mousePt, graphController);
+            }
             else if (controller is AreaGraphController)
-                BuildAreaGraphMenu(controller.GraphSummary, menuStrip, mousePt);
+            {
+                using var peakAreasContextMenu = new PeakAreasContextMenu(this, controller.GraphSummary);
+                peakAreasContextMenu.BuildAreaGraphMenu(menuStrip, mousePt);
+            }
             else if (controller is MassErrorGraphController)
-                BuildMassErrorGraphMenu(controller.GraphSummary, menuStrip);
+            {
+                using var massErrorsContextMenu = new MassErrorsContextMenu(this);
+                massErrorsContextMenu.BuildMassErrorGraphMenu(controller.GraphSummary, menuStrip);
+            }
             else if (controller is DetectionsGraphController)
-                BuildDetectionsGraphMenu(controller.GraphSummary, menuStrip);
+            {
+                using var detectionsContextMenu = new DetectionsContextMenu(this);
+                detectionsContextMenu.BuildDetectionsGraphMenu(controller.GraphSummary, menuStrip);
+            }
 
+            // Translate "Peptide" to "Molecule" etc. based on UI mode (recurses into submenus)
+            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, Program.ModeUI, null, recurse: true);
+        }
+
+        /// <summary>
+        /// Removes "Set Scale to Default" and "Show Point Values" from ZedGraph context menu.
+        /// Adds separator before "Unzoom".
+        /// Adds "Copy Metafile" and "Copy Data" menu items. 
+        /// </summary>
+        private void PrepareZedGraphContextMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
+        {
+            for (int i = menuStrip.Items.Count - 1; i >= 0; i--)
+            {
+                string tag = (string)menuStrip.Items[i].Tag;
+                if (tag == @"set_default" || tag == @"show_val")
+                    menuStrip.Items.RemoveAt(i);
+            }
+            int iUnzoom = menuStrip.Items.Cast<ToolStripItem>().ToList().FindIndex(item => (string)item.Tag == @"unzoom");
+            if (iUnzoom >= 0)
+            {
+                menuStrip.Items.Insert(iUnzoom, new ToolStripSeparator());
+            }
             ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
@@ -2853,325 +2633,12 @@ namespace pwiz.Skyline
             ShowGraphSpectrum(true);
         }
 
-        private void BuildRTGraphMenu(GraphSummary graph, ToolStrip menuStrip, Point mousePt, RTGraphController controller)
-        {
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
+        // BuildRTGraphMenu has been moved to RetentionTimesContextMenu
 
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator25);
+        // AddScopeContextMenu, AddReplicatesContextMenu, AddPeptideOrderContextMenu moved to ContextMenuControl
 
-            // Insert skyline specific menus
-            var set = Settings.Default;
-            int iInsert = 0;
-            menuStrip.Items.Insert(iInsert++, timeGraphContextMenuItem);
-            if (timeGraphContextMenuItem.DropDownItems.Count == 0)
-            {
-                timeGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    replicateComparisonContextMenuItem,
-                    timePeptideComparisonContextMenuItem,
-                    regressionContextMenuItem,
-                    schedulingContextMenuItem
-                });
-            }
-            if (regressionContextMenuItem.DropDownItems.Count == 0)
-            {
-                regressionContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    scoreToRunToolStripMenuItem,
-                    runToRunToolStripMenuItem
-                });
-            }
-
-            GraphTypeSummary graphType = graph.Type;
-            if (graphType == GraphTypeSummary.score_to_run_regression || graphType == GraphTypeSummary.run_to_run_regression)
-            {
-                var runToRun = graphType == GraphTypeSummary.run_to_run_regression;
-                menuStrip.Items.Insert(iInsert++, timePlotContextMenuItem);
-                if (timePlotContextMenuItem.DropDownItems.Count == 0)
-                {
-                    timePlotContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        timeCorrelationContextMenuItem,
-                        timeResidualsContextMenuItem
-                    });
-                }
-                timeCorrelationContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.correlation;
-                timeResidualsContextMenuItem.Checked = RTGraphController.PlotType == PlotTypeRT.residuals;
-
-                menuStrip.Items.Insert(iInsert++,setRegressionMethodContextMenuItem);
-                if (setRegressionMethodContextMenuItem.DropDownItems.Count == 0)
-                {
-                    setRegressionMethodContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        linearRegressionContextMenuItem,
-                        kernelDensityEstimationContextMenuItem,
-                        logRegressionContextMenuItem,
-                        loessContextMenuItem
-                    });
-                }
-                linearRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.linear;
-                kernelDensityEstimationContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.kde;
-                logRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.log;
-                loessContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.loess;
-
-                var showPointsTypeStandards = Document.GetRetentionTimeStandards().Any();
-                var showPointsTypeDecoys = Document.PeptideGroups.Any(nodePepGroup => nodePepGroup.Children.Cast<PeptideDocNode>().Any(nodePep => nodePep.IsDecoy));
-                var qvalues = Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
-                if (showPointsTypeStandards || showPointsTypeDecoys || qvalues)
-                {
-                    menuStrip.Items.Insert(iInsert++, timePointsContextMenuItem);
-                    if (timePointsContextMenuItem.DropDownItems.Count == 0)
-                    {
-                        timePointsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                        {
-                            timeTargetsContextMenuItem,
-                            timeStandardsContextMenuItem,
-                            timeDecoysContextMenuItem
-                        });
-
-                        if (Document.Settings.HasResults &&
-                            Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained)
-                        {
-                            timePointsContextMenuItem.DropDownItems.Insert(1, targetsAt1FDRToolStripMenuItem);
-                        }
-                    }
-                    timeStandardsContextMenuItem.Visible = showPointsTypeStandards;
-                    timeDecoysContextMenuItem.Visible = showPointsTypeDecoys;
-                    timeTargetsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.targets;
-                    targetsAt1FDRToolStripMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.targets_fdr;
-                    timeStandardsContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.standards;
-                    timeDecoysContextMenuItem.Checked = RTGraphController.PointsType == PointsTypeRT.decoys;
-                }
-
-                refineRTContextMenuItem.Checked = set.RTRefinePeptides;
-                //Grey out so user knows we cannot refine with current regression method
-                refineRTContextMenuItem.Enabled = RTGraphController.CanDoRefinementForRegressionMethod;
-                menuStrip.Items.Insert(iInsert++, refineRTContextMenuItem);
-                if (!runToRun)
-                {
-                    predictionRTContextMenuItem.Checked = set.RTPredictorVisible;
-                    menuStrip.Items.Insert(iInsert++, predictionRTContextMenuItem);
-                    iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                }
-
-                menuStrip.Items.Insert(iInsert++, setRTThresholdContextMenuItem);
-                if (!runToRun)
-                {
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator22);
-                    menuStrip.Items.Insert(iInsert++, createRTRegressionContextMenuItem);
-                    menuStrip.Items.Insert(iInsert++, chooseCalculatorContextMenuItem);
-
-                    if (chooseCalculatorContextMenuItem.DropDownItems.Count == 0)
-                    {
-                        chooseCalculatorContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                        {
-                            placeholderToolStripMenuItem1,
-                            toolStripSeparatorCalculators,
-                            addCalculatorContextMenuItem,
-                            updateCalculatorContextMenuItem
-                        });
-                    }
-                }
-                var regressionRT = controller.RegressionRefined;
-                createRTRegressionContextMenuItem.Enabled = (regressionRT != null) && !runToRun;
-                updateCalculatorContextMenuItem.Visible = (regressionRT != null &&
-                    Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator) && !runToRun);
-                bool showDelete = controller.ShowDelete(mousePt);
-                bool showDeleteOutliers = controller.ShowDeleteOutliers;
-                if (showDelete || showDeleteOutliers)
-                {
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator23);
-                    if (showDelete)
-                        menuStrip.Items.Insert(iInsert++, removeRTContextMenuItem);
-                    if (showDeleteOutliers)
-                        menuStrip.Items.Insert(iInsert++, removeRTOutliersContextMenuItem);
-                }
-            }
-            else if (graphType == GraphTypeSummary.schedule)
-            {
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
-                menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);                
-            }
-            else
-            {
-                menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
-                menuStrip.Items.Insert(iInsert++, rtValueMenuItem);
-                if (rtValueMenuItem.DropDownItems.Count == 0)
-                {
-                    rtValueMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        allRTValueContextMenuItem,
-                        timeRTValueContextMenuItem,
-                        fwhmRTValueContextMenuItem,
-                        fwbRTValueContextMenuItem
-                    });
-                }
-                AddTransitionContextMenu(menuStrip, iInsert++);
-                if (graphType == GraphTypeSummary.replicate)
-                {
-                    iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
-                    var rtReplicateGraphPane = graph.GraphPanes.FirstOrDefault() as RTReplicateGraphPane;
-                    if (rtReplicateGraphPane != null && rtReplicateGraphPane.CanShowRTLegend)
-                    {
-                        showRTLegendContextMenuItem.Checked = set.ShowRetentionTimesLegend;
-                        menuStrip.Items.Insert(iInsert++, showRTLegendContextMenuItem);
-                    }
-                    if (rtReplicateGraphPane != null)
-                    {
-                        ChromFileInfoId chromFileInfoId = null;
-                        if (DocumentUI.Settings.HasResults)
-                        {
-                            var chromatogramSet = DocumentUI.Settings.MeasuredResults.Chromatograms[SelectedResultsIndex];
-                            if (chromatogramSet.MSDataFileInfos.Count == 1)
-                            {
-                                chromFileInfoId = chromatogramSet.MSDataFileInfos[0].FileId;
-                            }
-                        }
-                        iInsert = InsertAlignmentMenuItems(menuStrip.Items, chromFileInfoId, iInsert);
-                    }
-                }
-                else if (graphType == GraphTypeSummary.peptide)
-                {
-                    AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                    iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                    AddScopeContextMenu(menuStrip, iInsert++);
-                    InsertAlignmentMenuItems(menuStrip.Items, null, iInsert);
-                }
-                if (graphType == GraphTypeSummary.peptide ||  graphType == GraphTypeSummary.abundance || null != SummaryReplicateGraphPane.GroupByReplicateAnnotation)
-                {
-                    menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
-                    peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
-                }
-                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
-                menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);
-
-                var isotopeLabelType = graph.GraphPaneFromPoint(mousePt) != null
-                    ? graph.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
-                    : null;
-                ChromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
-            }
-
-            menuStrip.Items.Insert(iInsert, toolStripSeparator24);
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
-        }
-
-        private void AddScopeContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert, scopeContextMenuItem);
-            if (scopeContextMenuItem.DropDownItems.Count == 0)
-            {
-                scopeContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    documentScopeContextMenuItem,
-                    proteinScopeContextMenuItem
-                });
-            }
-        }
-
-        private int AddReplicatesContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            if (DocumentUI.Settings.HasResults &&
-                DocumentUI.Settings.MeasuredResults.Chromatograms.Count > 1)
-            {
-                menuStrip.Items.Insert(iInsert++, replicatesRTContextMenuItem);
-                if (replicatesRTContextMenuItem.DropDownItems.Count == 0)
-                {
-                    replicatesRTContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        averageReplicatesContextMenuItem,
-                        singleReplicateRTContextMenuItem,
-                        bestReplicateRTContextMenuItem
-                    });
-                }
-            }
-            return iInsert;
-        }
-
-        private void AddPeptideOrderContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert, peptideOrderContextMenuItem);
-            if (peptideOrderContextMenuItem.DropDownItems.Count == 0)
-            {
-                peptideOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    peptideOrderDocumentContextMenuItem,
-                    peptideOrderRTContextMenuItem,
-                    peptideOrderAreaContextMenuItem
-                });
-            }
-        }
-
-        private void AddTargetsContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            abundanceTargetsMenuItem.DropDownItems.Clear();
-            abundanceTargetsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                abundanceTargetsPeptidesMenuItem,
-                abundanceTargetsProteinsMenuItem
-            });
-            abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
-            abundanceTargetsProteinsMenuItem.Checked = Settings.Default.AreaProteinTargets;
-            menuStrip.Items.Insert(iInsert, abundanceTargetsMenuItem);
-        }
-
-        private void AddExcludeTargetsContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            excludeTargetsStandardsMenuItem.Checked = Settings.Default.ExcludeStandardsFromAbundanceGraph;
-            excludeTargetsPeptideListMenuItem.Checked = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
-            excludeTargetsMenuItem.DropDownItems.Clear();
-            excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsStandardsMenuItem);
-            if (!IsSmallMoleculeOrMixedUI)
-            {
-                excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsPeptideListMenuItem);
-            }
-            menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
-        }
-
-        private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var types = Settings.Default.RTGraphTypes;
-            bool runToRunRegression = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.run_to_run_regression);
-            bool scoreToRunRegression = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.score_to_run_regression);
-
-            runToRunToolStripMenuItem.Checked = runToRunRegression;
-            scoreToRunToolStripMenuItem.Checked = scoreToRunRegression;
-            regressionContextMenuItem.Checked = runToRunRegression || scoreToRunRegression;
-
-            replicateComparisonContextMenuItem.Checked = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.replicate);
-            timePeptideComparisonContextMenuItem.Checked = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.peptide);
-            schedulingContextMenuItem.Checked = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.schedule);
-        }
-
-        private void regressionMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTRegressionGraphScoreToRun();
-        }
-
-        private void fullReplicateComparisonToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTRegressionGraphRunToRun();
-        }
+        // timeGraphMenuItem_DropDownOpening, regressionMenuItem_Click, fullReplicateComparisonToolStripMenuItem_Click
+        // moved to RetentionTimesContextMenu
 
         public void ShowRTRegressionGraphScoreToRun()
         {
@@ -3187,68 +2654,7 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void linearRegressionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionMethod(RegressionMethodRT.linear);
-        }
-
-        private void kernelDensityEstimationContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionMethod(RegressionMethodRT.kde);
-        }
-
-        private void logRegressionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionMethod(RegressionMethodRT.log);
-        }
-
-        private void loessContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionMethod(RegressionMethodRT.loess);
-        }
-
-        private void timeCorrelationContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPlotType(PlotTypeRT.correlation);
-        }
-
-        private void timeResidualsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPlotType(PlotTypeRT.residuals);
-        }
-
-        private void timeTargetsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsType(PointsTypeRT.targets);
-        }
-
-        private void targetsAt1FDRToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (RTLinearRegressionGraphPane.ShowReplicate != ReplicateDisplay.single &&
-                RTGraphController.GraphType == GraphTypeSummary.score_to_run_regression)
-            {
-                using (var dlg = new MultiButtonMsgDlg(
-                    SkylineResources.SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_,
-                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
-                {
-                    if (dlg.ShowDialog(this) != DialogResult.Yes)
-                        return;
-                }
-            }
-
-            ShowSingleReplicate();
-            ShowPointsType(PointsTypeRT.targets_fdr);
-        }
-
-        private void timeStandardsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsType(PointsTypeRT.standards);
-        }
-
-        private void timeDecoysContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsType(PointsTypeRT.decoys);
-        }
+        // RT regression/plot/points event handlers moved to RetentionTimesContextMenu
 
         public void ShowPlotType(PlotTypeRT plotTypeRT)
         {
@@ -3268,10 +2674,7 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void timePeptideComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPeptideGraph();
-        }
+        // timePeptideComparisonMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTPeptideGraph()
         {
@@ -3281,10 +2684,7 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        private void showRTLegendContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTLegend(!Settings.Default.ShowRetentionTimesLegend);
-        }
+        // showRTLegendContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTLegend(bool show)
         {
@@ -3292,10 +2692,7 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void replicateComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTReplicateGraph();
-        }
+        // replicateComparisonMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTReplicateGraph()
         {
@@ -3305,10 +2702,7 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        private void schedulingMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTSchedulingGraph();
-        }
+        // schedulingMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTSchedulingGraph()
         {
@@ -3317,28 +2711,9 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void selectionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowReplicateSelection = selectionContextMenuItem.Checked;
-            UpdateSummaryGraphs();
-        }
+        // refineRTContextMenuItem_Click, predictionRTContextMenuItem_Click moved to RetentionTimesContextMenu
 
-        private void refineRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.RTRefinePeptides = refineRTContextMenuItem.Checked;
-            UpdateRetentionTimeGraph();
-        }
-
-        private void predictionRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.RTPredictorVisible = predictionRTContextMenuItem.Checked;
-            UpdateRetentionTimeGraph();
-        }
-
-        private void averageReplicatesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowAverageReplicates();
-        }
+        // averageReplicatesContextMenuItem_Click moved to ContextMenuControl
 
         public void ShowAverageReplicates()
         {
@@ -3346,10 +2721,7 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void singleReplicateRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowSingleReplicate();
-        }
+        // singleReplicateRTContextMenuItem_Click moved to ContextMenuControl
 
         public void ShowSingleReplicate()
         {
@@ -3359,26 +2731,9 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void bestReplicateRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.best.ToString();
-            // No CVs with single replicate data views
-            Settings.Default.ShowPeptideCV = false;
-            UpdateSummaryGraphs();
-        }
+        // bestReplicateRTContextMenuItem_Click, replicatesRTContextMenuItem_DropDownOpening moved to ContextMenuControl
 
-        private void replicatesRTContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            ReplicateDisplay replicate = RTLinearRegressionGraphPane.ShowReplicate;
-            averageReplicatesContextMenuItem.Checked = (replicate == ReplicateDisplay.all);
-            singleReplicateRTContextMenuItem.Checked = (replicate == ReplicateDisplay.single);
-            bestReplicateRTContextMenuItem.Checked = (replicate == ReplicateDisplay.best);
-        }
-
-        private void setRTThresholdContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRegressionRTThresholdDlg();
-        }
+        // setRTThresholdContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRegressionRTThresholdDlg()
         {
@@ -3393,10 +2748,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void createRTRegressionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            CreateRegression();               
-        }
+        // createRTRegressionContextMenuItem_Click moved to RetentionTimesContextMenu
         public void CreateRegression()
         {
             var listRegression = Settings.Default.RetentionTimeList;
@@ -3429,36 +2781,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void chooseCalculatorContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            SetupCalculatorChooser();
-        }
-
-        public void SetupCalculatorChooser()
-        {
-            while (!ReferenceEquals(chooseCalculatorContextMenuItem.DropDownItems[0], toolStripSeparatorCalculators))
-                chooseCalculatorContextMenuItem.DropDownItems.RemoveAt(0);
-
-            //If no calculator has been picked for use in the graph, get the best one.
-            var autoItem = new ToolStripMenuItem(SkylineResources.SkylineWindow_SetupCalculatorChooser_Auto, null,
-                delegate { ChooseCalculator(string.Empty); })
-            {
-                Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
-            };
-            chooseCalculatorContextMenuItem.DropDownItems.Insert(0, autoItem);
-
-            int i = 0;
-            var document = DocumentUI;
-            foreach (var optionVariable in RtCalculatorOption.GetOptions(document))
-            {
-                var option = optionVariable;
-                var menuItem = new ToolStripMenuItem(option.DisplayName, null, delegate { ChooseCalculator(option); })
-                {
-                    Checked = Equals(option, Settings.Default.RtCalculatorOption)
-                };
-                chooseCalculatorContextMenuItem.DropDownItems.Insert(i++, menuItem);
-            }
-        }
+        // chooseCalculatorContextMenuItem_DropDownOpening, SetupCalculatorChooser moved to RetentionTimesContextMenu
 
         public void ChooseCalculator(RtCalculatorOption option)
         {
@@ -3471,18 +2794,7 @@ namespace pwiz.Skyline
             ChooseCalculator(new RtCalculatorOption.Irt(irtCalc));
         }
 
-        private void addCalculatorContextMenuItem_Click(object sender, EventArgs e)
-        {
-            var list = Settings.Default.RTScoreCalculatorList;
-            var calcNew = list.EditItem(this, null, list, null);
-            if (calcNew != null)
-                list.SetValue(calcNew);
-        }
-
-        private void updateCalculatorContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowEditCalculatorDlg();
-        }
+        // addCalculatorContextMenuItem_Click, updateCalculatorContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowEditCalculatorDlg()
         {
@@ -3508,10 +2820,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void removeRTOutliersContextMenuItem_Click(object sender, EventArgs e)
-        {
-            RemoveRTOutliers();
-        }
+        // removeRTOutliersContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void RemoveRTOutliers()
         {
@@ -3526,63 +2835,9 @@ namespace pwiz.Skyline
                     MessageType.removed_rt_outliers, docPair.OldDocumentType, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
         }
 
-        private void removeRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            deleteMenuItem_Click(sender, e);
-        }
-
-        private void peptideRTValueMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            RTPeptideValue rtValue = RTPeptideGraphPane.RTValue;
-            allRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.All);
-            timeRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.Retention);
-            fwhmRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.FWHM);
-            fwbRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.FWB);
-        }
-
-        /// <summary>
-        /// If the predicted retention time is auto calculated, add a "Show {Prediction} score" menu item.
-        /// If there are retention time alignments available for the specified chromFileInfoId, then adds 
-        /// a "Align Times To {Specified File}" menu item to a context menu.
-        /// </summary>
-        private int InsertAlignmentMenuItems(ToolStripItemCollection items, ChromFileInfoId chromFileInfoId, int iInsert)
-        {
-            var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
-            if (predictRT != null && predictRT.IsAutoCalculated)
-            {
-                var menuItem = new ToolStripMenuItem(
-                    string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null,
-                    (sender, eventArgs) => AlignToRtPrediction = !AlignToRtPrediction)
-                {
-                    Checked = AlignToRtPrediction,
-                };
-                items.Insert(iInsert++, menuItem);
-            }
-
-            return iInsert;
-        }
-
-        private void allRTValueContextMenuItem_Click(object sender, EventArgs e)
-        {
-            // No CVs with all retention time values showing
-            Settings.Default.ShowPeptideCV = false;
-            ShowRTPeptideValue(RTPeptideValue.All);
-        }
-
-        private void timeRTValueContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPeptideValue(RTPeptideValue.Retention);
-        }
-
-        private void fwhmRTValueContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPeptideValue(RTPeptideValue.FWHM);
-        }
-
-        private void fwbRTValueContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPeptideValue(RTPeptideValue.FWB);
-        }
+        // removeRTContextMenuItem_Click, peptideRTValueMenuItem_DropDownOpening, InsertAlignmentMenuItems,
+        // allRTValueContextMenuItem_Click, timeRTValueContextMenuItem_Click, fwhmRTValueContextMenuItem_Click,
+        // fwbRTValueContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTPeptideValue(RTPeptideValue value)
         {
@@ -3590,10 +2845,7 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
-        private void timePropsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRTPropertyDlg(ContextMenuGraphSummary);
-        }
+        // timePropsContextMenuItem_Click moved to RetentionTimesContextMenu
 
         public void ShowRTPropertyDlg(GraphSummary graph)
         {
@@ -3749,379 +3001,7 @@ namespace pwiz.Skyline
             Settings.Default.AreaGraphTypes.Remove(graph.Type);
         }
 
-        private void BuildAreaGraphMenu(GraphSummary graphSummary, ToolStrip menuStrip, Point mousePt)
-        {
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator25);
-
-            // Insert skyline specific menus
-            var set = Settings.Default;
-            int iInsert = 0;
-            menuStrip.Items.Insert(iInsert++, areaGraphContextMenuItem);
-            if (areaGraphContextMenuItem.DropDownItems.Count == 0)
-            {
-                areaGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    areaReplicateComparisonContextMenuItem,
-                    areaPeptideComparisonContextMenuItem,
-                    areaRelativeAbundanceContextMenuItem,
-                    areaCVHistogramContextMenuItem,
-                    areaCVHistogram2DContextMenuItem
-                });
-            }
-            var graphType = graphSummary.Type;
-            if (graphType == GraphTypeSummary.replicate)
-            {
-                menuStrip.Items.Insert(iInsert++, graphTypeToolStripMenuItem);
-                if (graphTypeToolStripMenuItem.DropDownItems.Count == 0)
-                {
-                    graphTypeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        barAreaGraphDisplayTypeMenuItem,
-                        lineAreaGraphDisplayTypeMenuItem
-                    });
-                }
- 
-            }
-
-            menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
-
-            var isHistogram = graphType == GraphTypeSummary.histogram || graphType == GraphTypeSummary.histogram2d;
-
-            if (isHistogram)
-            {
-                EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
-            }
-            else if(graphType != GraphTypeSummary.abundance)
-            {
-                AddTransitionContextMenu(menuStrip, iInsert++);
-            }
-            else
-            {
-                // Protein level comparisons are likely not meaningful for small molecule documents,
-                // so only offer peptide level comparison.
-                // CONSIDER support protein level in mixed cases?
-                if (!IsSmallMoleculeOrMixedUI)
-                {
-                    AddTargetsContextMenu(menuStrip, iInsert++);
-                }
-                AddExcludeTargetsContextMenu(menuStrip, iInsert++);
-            }
-            if (graphType == GraphTypeSummary.replicate)
-            {
-                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
-                var normalizeOptions = new List<NormalizeOption>();
-                normalizeOptions.Add(NormalizeOption.DEFAULT);
-                normalizeOptions.AddRange(NormalizeOption.AvailableNormalizeOptions(DocumentUI));
-                normalizeOptions.Add(NormalizeOption.MAXIMUM);
-                normalizeOptions.Add(NormalizeOption.TOTAL);
-                normalizeOptions.Add(null); // separator
-                normalizeOptions.Add(NormalizeOption.NONE);
-                areaNormalizeContextMenuItem.DropDownItems.Clear();
-                areaNormalizeContextMenuItem.DropDownItems.AddRange(MakeNormalizeToMenuItems(normalizeOptions, AreaGraphController.AreaNormalizeOption.Constrain(DocumentUI.Settings)).ToArray());
-                menuStrip.Items.Insert(iInsert++, areaNormalizeContextMenuItem);
-                AreaReplicateGraphPane areaReplicateGraphPane;
-                if (graphSummary.GraphControl.MasterPane.PaneList.Count == 1)
-                    areaReplicateGraphPane = (AreaReplicateGraphPane)graphSummary.GraphControl.MasterPane.PaneList[0];
-                else
-                    areaReplicateGraphPane = (AreaReplicateGraphPane)graphSummary.GraphControl.MasterPane.FindPane(mousePt);
-
-                if (areaReplicateGraphPane != null)
-                {
-                    // If the area replicate graph is being displayed and it shows a legend, 
-                    // display the "Legend" option
-                    if (areaReplicateGraphPane.CanShowPeakAreaLegend)
-                    {
-                        showPeakAreaLegendContextMenuItem.Checked = set.ShowPeakAreaLegend;
-                        menuStrip.Items.Insert(iInsert++, showPeakAreaLegendContextMenuItem);
-                    }
-
-                    // If the area replicate graph is being displayed and it can show a library,
-                    // display the "Show Library" option
-                    var expectedVisible = areaReplicateGraphPane.ExpectedVisible;
-                    if (expectedVisible.CanShowExpected())
-                    {
-                        showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
-                        showLibraryPeakAreaContextMenuItem.Text = expectedVisible == AreaExpectedValue.library
-                                                                      ? SkylineResources.SkylineWindow_BuildAreaGraphMenu_Show_Library
-                                                                      : SkylineResources.SkylineWindow_BuildAreaGraphMenu_Show_Expected;
-                        menuStrip.Items.Insert(iInsert++, showLibraryPeakAreaContextMenuItem);
-                    }
-
-                    // If the area replicate graph is being displayed and it can show dot products,
-                    // display the "Show Dot Product" option
-                    if (areaReplicateGraphPane.CanShowDotProduct)
-                    {
-                        showDotProductToolStripMenuItem.DropDownItems.Clear();
-                        var optionsList = DotProductDisplayOptionExtension.ListAll();
-                        if(areaReplicateGraphPane.IsLineGraph)
-                            optionsList = new[]{ DotProductDisplayOption.none, DotProductDisplayOption.line};
-                        showDotProductToolStripMenuItem.DropDownItems.AddRange(optionsList.Select(MakeShowDotpMenuItem).ToArray());
-                        menuStrip.Items.Insert(iInsert++, showDotProductToolStripMenuItem);
-                    }
-                } 
-            }
-            else if (graphType == GraphTypeSummary.peptide)
-            {
-                AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                AddScopeContextMenu(menuStrip, iInsert++);
-            }
-            if (graphType == GraphTypeSummary.abundance || graphType == GraphTypeSummary.peptide)
-            {
-                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-            }
-
-            if (isHistogram)
-            {
-                bool trained = Document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
-                bool decoys = Document.Settings.PeptideSettings.Integration.PeakScoringModel.UsesDecoys;
- 
-                if (trained || decoys)
-                {
-                    UpdateAreaPointsTypeMenuItems();
-
-                    if (pointsToolStripMenuItem.DropDownItems.Count == 0)
-                    {
-                        pointsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                        {
-                            areaCVtargetsToolStripMenuItem,
-                            areaCVdecoysToolStripMenuItem
-                        });
-                    }
-
-                    menuStrip.Items.Insert(iInsert++, pointsToolStripMenuItem);
-                }
-
-                UpdateAreaCVTransitionsMenuItems();
-
-                if (areaCVTransitionsToolStripMenuItem.DropDownItems.Count == 0)
-                {
-                    areaCVTransitionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        areaCVAllTransitionsToolStripMenuItem,
-                        areaCVCountTransitionsToolStripMenuItem,
-                        areaCVBestTransitionsToolStripMenuItem,
-                        toolStripSeparator58,
-                        areaCVPrecursorsToolStripMenuItem,
-                        areaCVProductsToolStripMenuItem
-                    });
-                }
-
-                if (areaCVCountTransitionsToolStripMenuItem.DropDownItems.Count == 0)
-                {
-                    var maxTransCount = Document.MoleculeTransitionGroups
-                        .Select(g => g.TransitionCount).Append(0).Max();
-                    for (int i = 1; i <= maxTransCount; i++)
-                    {
-                        var tmp = new ToolStripMenuItem(i.ToString(), null,
-                            areaCVCountTransitionsToolStripMenuItem_Click)
-                        {
-                            Checked = AreaGraphController.AreaCVTransitionsCount == i
-                        };
-                        areaCVCountTransitionsToolStripMenuItem.DropDownItems.Add(tmp);
-                    }
-                }
-
-                menuStrip.Items.Insert(iInsert++, areaCVTransitionsToolStripMenuItem);
-
-
-                UpdateAreaBinWidthMenuItems();
-                if (areaCVbinWidthToolStripMenuItem.DropDownItems.Count == 0)
-                {
-                    areaCVbinWidthToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        areaCV05binWidthToolStripMenuItem,
-                        areaCV10binWidthToolStripMenuItem,
-                        areaCV15binWidthToolStripMenuItem,
-                        areaCV20binWidthToolStripMenuItem
-                    });
-                }
-                menuStrip.Items.Insert(iInsert++, areaCVbinWidthToolStripMenuItem);
-                var normalizeOptions = new List<NormalizeOption>();
-                normalizeOptions.Add(NormalizeOption.DEFAULT);
-                normalizeOptions.AddRange(NormalizeOption.AvailableNormalizeOptions(DocumentUI));
-                normalizeOptions.Add(null); // separator
-                normalizeOptions.Add(NormalizeOption.NONE);
-
-                areaCVNormalizedToToolStripMenuItem.DropDownItems.Clear();
-                areaCVNormalizedToToolStripMenuItem.DropDownItems.AddRange(MakeNormalizeToMenuItems(normalizeOptions, AreaGraphController.AreaCVNormalizeOption.Constrain(DocumentUI.Settings)).ToArray());
-                menuStrip.Items.Insert(iInsert++, areaCVNormalizedToToolStripMenuItem);
-
-                if (graphType == GraphTypeSummary.histogram2d)
-                {
-                    areaCVLogScaleToolStripMenuItem.Checked = Settings.Default.AreaCVLogScale;
-                    menuStrip.Items.Insert(iInsert++, areaCVLogScaleToolStripMenuItem);
-                }
-
-                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator57);
-                menuStrip.Items.Insert(iInsert++, removeAboveCVCutoffToolStripMenuItem);
-            }
-            else
-            {
-                if (graphType == GraphTypeSummary.peptide || graphType == GraphTypeSummary.abundance || !string.IsNullOrEmpty(Settings.Default.GroupByReplicateAnnotation))
-                {
-                    menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
-                    peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
-                }
-
-                if (graphType != GraphTypeSummary.abundance)
-                {
-                    menuStrip.Items.Insert(iInsert++, peptideLogScaleContextMenuItem);
-                    peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
-                }
-                else
-                {
-                    menuStrip.Items.Insert(iInsert++, relativeAbundanceLogScaleContextMenuItem);
-                    relativeAbundanceLogScaleContextMenuItem.Checked = set.RelativeAbundanceLogScale;
-                }
-                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-                if (graphType == GraphTypeSummary.abundance)
-                {
-                    menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels, null, OnLabelOverlapClick)
-                    {
-                        Checked = Settings.Default.GroupComparisonAvoidLabelOverlap
-                    });
-                    if (Settings.Default.GroupComparisonAvoidLabelOverlap && 
-                        graphSummary.GraphPaneFromPoint(mousePt) is SummaryRelativeAbundanceGraphPane abundancePane)
-                    {
-                        var suspendResumeText = Settings.Default.GroupComparisonSuspendLabelLayout
-                            ? GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout
-                            : GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout;
-                        menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(suspendResumeText, null, abundancePane.OnSuspendLayout));
-                    }
-                }
-                else
-                {
-                    synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                    menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
-                }
-            }
-
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
-            if(graphType != GraphTypeSummary.abundance)
-                menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
-            else
-                AddRelativeAbundanceFormattingForm(menuStrip, iInsert++);
-            menuStrip.Items.Insert(iInsert, toolStripSeparator28);
-
-            if (!isHistogram && graphType != GraphTypeSummary.abundance)
-            {
-                var isotopeLabelType = graphSummary.GraphPaneFromPoint(mousePt) != null
-                    ? graphSummary.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
-                    : null;
-                ChromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
-            }
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
-        }
-
-        private void OnLabelOverlapClick(object o, EventArgs eventArgs)
-        {
-            Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
-        }
-
-        private ToolStripItem MakeNormalizeToMenuItem(NormalizeOption normalizeOption, bool isChecked)
-        {
-            if (normalizeOption == null)
-            {
-                return new ToolStripSeparator();
-            }
-
-            string caption = normalizeOption.Caption;
-            if (normalizeOption == NormalizeOption.DEFAULT)
-            {
-                var selectedNormalizationMethods =
-                    NormalizationMethod.GetMoleculeNormalizationMethods(DocumentUI, SequenceTree.SelectedPaths);
-                if (selectedNormalizationMethods.Count == 1)
-                {
-                    caption = string.Format(QuantificationStrings.SkylineWindow_MakeNormalizeToMenuItem_Default___0__, selectedNormalizationMethods.First().NormalizeToCaption);
-                }
-            }
-
-            return new ToolStripMenuItem(caption, null, NormalizeMenuItemOnClick)
-            {
-                Tag = normalizeOption,
-                Checked = isChecked,
-            };
-        }
-
-        private ToolStripItem MakeShowDotpMenuItem(DotProductDisplayOption displayOption)
-        {
-            return new ToolStripMenuItem(displayOption.GetLocalizedString(), null, DotpDisplayOptionMenuItemOnClick)
-            {
-                Checked = displayOption.IsSet(Settings.Default), Tag = displayOption
-            };
-        }
-        public void DotpDisplayOptionMenuItemOnClick(object sender, EventArgs eventArgs)
-        {
-            var displayOption = (DotProductDisplayOption)((ToolStripMenuItem)sender).Tag;
-            Settings.Default.PeakAreaDotpDisplay = displayOption.ToString();
-            UpdateSummaryGraphs();
-        }
-
-        private IEnumerable<ToolStripItem> MakeNormalizeToMenuItems(IEnumerable<NormalizeOption> normalizeOptions,
-            NormalizeOption selectedOption)
-        {
-            return normalizeOptions.Select(option=>MakeNormalizeToMenuItem(option, option == selectedOption));
-        }
-
-        public void NormalizeMenuItemOnClick(object sender, EventArgs eventArgs)
-        {
-            var normalizeOption = (NormalizeOption) ((ToolStripMenuItem) sender).Tag;
-            NormalizeAreaGraphTo(normalizeOption);
-        }
-
-        private void UpdateAreaCVTransitionsMenuItems()
-        {
-            areaCVAllTransitionsToolStripMenuItem.Checked = AreaGraphController.AreaCVTransitions == AreaCVTransitions.all;
-            areaCVBestTransitionsToolStripMenuItem.Checked = AreaGraphController.AreaCVTransitions == AreaCVTransitions.best;
-            var selectedCount = AreaGraphController.AreaCVTransitionsCount;
-            for (int i = 0; i < areaCVCountTransitionsToolStripMenuItem.DropDownItems.Count; i++)
-            {
-                ((ToolStripMenuItem)areaCVCountTransitionsToolStripMenuItem.DropDownItems[i]).Checked =
-                    selectedCount - 1 == i;
-            }
-            areaCVPrecursorsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.precursors;
-            areaCVProductsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.products;
-        }
-
-        private void areaCVAllTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaCVTransitions(AreaCVTransitions.all, -1);
-        }
-
-        private void areaCVCountTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var item = (ToolStripMenuItem)sender;
-            int selectedIdx = ((ToolStripMenuItem)item.OwnerItem).DropDownItems.IndexOf(item) + 1;
-            SetAreaCVTransitions(AreaCVTransitions.count, selectedIdx);
-        }
-
-        private void areaCVBestTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaCVTransitions(AreaCVTransitions.best, -1);
-        }
+        // BuildAreaGraphMenu and peak area event handlers moved to PeakAreasContextMenu
 
         public void SetAreaCVTransitions(AreaCVTransitions transitions, int count)
         {
@@ -4130,55 +3010,9 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        private void areaCVPrecursorsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaCVMsLevel(AreaCVMsLevel.precursors);
-        }
-
-        private void areaCVProductsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaCVMsLevel(AreaCVMsLevel.products);
-        }
-
-        public void SetAreaCVMsLevel(AreaCVMsLevel msLevel)
-        {
-            AreaGraphController.AreaCVMsLevel = msLevel;
-            UpdatePeakAreaGraph();
-        }
-
-
-        private void UpdateAreaBinWidthMenuItems()
-        {
-            var factor = AreaGraphController.GetAreaCVFactorToPercentage();
-            var unit = Settings.Default.AreaCVShowDecimals ? string.Empty : @"%";
-
-            areaCV05binWidthToolStripMenuItem.Text = 0.5 / factor + unit;
-            areaCV10binWidthToolStripMenuItem.Text = 1.0 / factor + unit;
-            areaCV15binWidthToolStripMenuItem.Text = 1.5 / factor + unit;
-            areaCV20binWidthToolStripMenuItem.Text = 2.0 / factor + unit;
-
-            var binwidth = Settings.Default.AreaCVHistogramBinWidth;
-            areaCV05binWidthToolStripMenuItem.Checked = binwidth == 0.5 / factor;
-            areaCV10binWidthToolStripMenuItem.Checked = binwidth == 1.0 / factor;
-            areaCV15binWidthToolStripMenuItem.Checked = binwidth == 1.5 / factor;
-            areaCV20binWidthToolStripMenuItem.Checked = binwidth == 2.0 / factor;
-        }
-
-        private void barAreaGraphTypeMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaGraphDisplayType(AreaGraphDisplayType.bars);
-        }
-
-        private void lineAreaGraphTypeMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaGraphDisplayType(AreaGraphDisplayType.lines);
-        }
-
         public void SetAreaGraphDisplayType(AreaGraphDisplayType displayType)
         {
             AreaGraphController.GraphDisplayType = displayType;
-            barAreaGraphDisplayTypeMenuItem.Checked = (displayType == AreaGraphDisplayType.bars);
-            lineAreaGraphDisplayTypeMenuItem.Checked = (displayType == AreaGraphDisplayType.lines);
             UpdatePeakAreaGraph();
         }
 
@@ -4231,12 +3065,6 @@ namespace pwiz.Skyline
             }
         }
 
-        void synchronizeSummaryZoomingContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.SynchronizeSummaryZooming = synchronizeSummaryZoomingContextMenuItem.Checked;
-            SynchronizeSummaryZooming();
-        }
-
         void GraphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
             // We pass in a GraphSummary here because sometimes dockPanel.ActiveContent is not the graph the user is zooming in on
@@ -4249,82 +3077,9 @@ namespace pwiz.Skyline
             Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString();
         }
 
-        private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
-        {
-            ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
-            var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
-
-            var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
-                value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
-            menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
-            replicateOrderContextMenuItem.DropDownItems.Clear();
-            replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                replicateOrderDocumentContextMenuItem,
-                replicateOrderAcqTimeContextMenuItem
-            });
-            replicateOrderDocumentContextMenuItem.Checked
-                = null == orderByReplicateAnnotationDef &&
-                  SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
-            replicateOrderAcqTimeContextMenuItem.Checked
-                = null == orderByReplicateAnnotationDef &&
-                  SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
-            foreach (var replicateValue in groupByValues)
-            {
-                replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
-                    replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
-            }
-            
-            if (groupByValues.Length > 0)
-            {
-                menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
-                groupReplicatesByContextMenuItem.DropDownItems.Clear();
-                groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked = currentGroupBy == null;
-                foreach (var replicateValue in groupByValues)
-                {
-                    groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, Equals(replicateValue, currentGroupBy)));
-                }
-            }
-            return iInsert;
-        }
-
-        public ToolStripMenuItem ReplicateOrderContextMenuItem
-        {
-            get
-            {
-                return replicateOrderContextMenuItem;
-            }
-        }
-
-        public ToolStripMenuItem ReplicateGroupByContextMenuItem
-        {
-            get { return groupReplicatesByContextMenuItem; }
-        }
-
-        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, bool isChecked)
-        {
-            return new ToolStripMenuItem(replicateValue.Title, null,
-                (sender, eventArgs) => GroupByReplicateValue(replicateValue))
-            {
-                Checked = isChecked
-            };
-        }
-
-        private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string currentOrderBy)
-        {
-            return new ToolStripMenuItem(replicateValue.Title, null,
-                                         (sender, eventArgs) => OrderByReplicateAnnotation(replicateValue))
-                {
-                    Checked = replicateValue.ToPersistedString() == currentOrderBy
-                };
-        }
-
-        private void removeAboveCVCutoffToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            RemoveAboveCVCutoff(ContextMenuGraphSummary);
-        }
+        // AddReplicateOrderAndGroupByMenuItems, ReplicateOrderContextMenuItem, ReplicateGroupByContextMenuItem,
+        // GroupByReplicateAnnotationMenuItem, OrderByReplicateAnnotationMenuItem moved to ContextMenuControl
+        // GroupByAbundanceComparisonMenuItem moved to PeakAreasContextMenu
 
         public void RemoveAboveCVCutoff(GraphSummary graphSummary)
         {
@@ -4367,47 +3122,10 @@ namespace pwiz.Skyline
                 UpdatePeakAreaGraph();
         }
 
-        private void areaCVtargetsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaCVPointsType(PointsTypePeakArea.targets);
-        }
-
-        private void areaCVdecoysToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaCVPointsType(PointsTypePeakArea.decoys);
-        }
-
         public void SetAreaCVPointsType(PointsTypePeakArea pointsType)
         {
             AreaGraphController.PointsType = pointsType;
             UpdatePeakAreaGraph();
-        }
-
-        private void UpdateAreaPointsTypeMenuItems()
-        {
-            var pointsType = AreaGraphController.PointsType;
-            var shouldUseQValues = AreaGraphController.ShouldUseQValues(Document);
-            var decoys = Document.Settings.PeptideSettings.Integration.PeakScoringModel.UsesDecoys;
-
-            if (!decoys && pointsType == PointsTypePeakArea.decoys)
-            {
-                pointsType = AreaGraphController.PointsType = PointsTypePeakArea.targets;
-            }
-
-            areaCVtargetsToolStripMenuItem.Checked = pointsType == PointsTypePeakArea.targets;
-            areaCVtargetsToolStripMenuItem.Text = shouldUseQValues ? string.Format(SkylineResources.SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR, Settings.Default.AreaCVQValueCutoff * 100.0) : SkylineResources.SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets;
-            areaCVdecoysToolStripMenuItem.Visible = decoys;
-            areaCVdecoysToolStripMenuItem.Checked = pointsType == PointsTypePeakArea.decoys;
-        }
-        private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var types = Settings.Default.AreaGraphTypes;
-            var list = _listGraphPeakArea;
-            areaReplicateComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.replicate);
-            areaPeptideComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.peptide);
-            areaRelativeAbundanceContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.abundance);
-            areaCVHistogramContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram);
-            areaCVHistogram2DContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
 
         public bool GraphChecked(GraphTypeSummary type)
@@ -4434,39 +3152,10 @@ namespace pwiz.Skyline
             return GraphChecked(list, types, type);
         }
 
-        private void areaCV05binWidthToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var factor = AreaGraphController.GetAreaCVFactorToPercentage();
-            SetAreaCVBinWidth(0.5 / factor);
-        }
-
-        private void areaCV10binWidthToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var factor = AreaGraphController.GetAreaCVFactorToPercentage();
-            SetAreaCVBinWidth(1.0 / factor);
-        }
-
-        private void areaCV15binWidthToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var factor = AreaGraphController.GetAreaCVFactorToPercentage();
-            SetAreaCVBinWidth(1.5 / factor);
-        }
-
-        private void areaCV20binWidthToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var factor = AreaGraphController.GetAreaCVFactorToPercentage();
-            SetAreaCVBinWidth(2.0 / factor);
-        }
-
         public void SetAreaCVBinWidth(double binWidth)
         {
             Settings.Default.AreaCVHistogramBinWidth = binWidth;
             UpdatePeakAreaGraph();
-        }
-
-        private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeakAreaReplicateComparison();
         }
 
         public void ShowPeakAreaReplicateComparison()
@@ -4477,26 +3166,6 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        private void areaPeptideComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeakAreaPeptideGraph();
-        }
-
-        private void areaRelativeAbundanceMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeakAreaRelativeAbundanceGraph();
-        }
-
-        private void areaCVLogScaleToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            EnableAreaCVLogScale(!Settings.Default.AreaCVLogScale);
-        }
-
-        public void EnableAreaCVLogScale(bool enabled)
-        {
-            Settings.Default.AreaCVLogScale = enabled;
-            UpdatePeakAreaGraph();
-        }
 
         public void SetNormalizationMethod(NormalizeOption normalizeOption)
         {
@@ -4544,9 +3213,11 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        private void areaCVHistogramToolStripMenuItem1_Click(object sender, EventArgs e)
+        public void ShowPeakAreaAbundanceComparisonGraph()
         {
-            ShowPeakAreaCVHistogram();
+            Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.abundance_comparison);
+            ShowGraphPeakArea(true, GraphTypeSummary.abundance_comparison);
+            UpdatePeakAreaGraph();
         }
 
         public void ShowPeakAreaCVHistogram()
@@ -4556,11 +3227,6 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        private void areaCVHistogram2DToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            ShowPeakAreaCVHistogram2D();
-        }
-
         public void ShowPeakAreaCVHistogram2D()
         {
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.histogram2d);
@@ -4568,15 +3234,7 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        private void replicateOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowReplicateOrder(SummaryReplicateOrder.document);
-        }
-
-        private void replicateOrderAcqTimeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowReplicateOrder(SummaryReplicateOrder.time);
-        }
+        // replicateOrderDocumentContextMenuItem_Click, replicateOrderAcqTimeContextMenuItem_Click moved to ContextMenuControl
 
         public void ShowReplicateOrder(SummaryReplicateOrder order)
         {
@@ -4585,9 +3243,14 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void groupByReplicateContextMenuItem_Click(object sender, EventArgs e)
+        // groupByReplicateContextMenuItem_Click moved to ContextMenuControl
+
+        public void GroupByAbundanceComparisonAnnotation(string annotationName)
         {
-            GroupByReplicateValue(null);
+            Settings.Default.AbundanceComparisonGroupByAnnotation = annotationName != null
+                ? DocumentAnnotations.ANNOTATION_PREFIX + annotationName
+                : null;
+            UpdateSummaryGraphs();
         }
 
         public void GroupByReplicateValue(ReplicateValue replicateValue)
@@ -4609,22 +3272,8 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void scopeContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var areaScope = AreaGraphController.AreaScope;
-            documentScopeContextMenuItem.Checked = (areaScope == AreaScope.document);
-            proteinScopeContextMenuItem.Checked = (areaScope == AreaScope.protein);
-        }
-
-        private void documentScopeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AreaScopeTo(AreaScope.document);
-        }
-
-        private void proteinScopeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AreaScopeTo(AreaScope.protein);
-        }
+        // scopeContextMenuItem_DropDownOpening, documentScopeContextMenuItem_Click,
+        // proteinScopeContextMenuItem_Click moved to ContextMenuControl
 
         public void AreaScopeTo(AreaScope areaScope)
         {
@@ -4632,34 +3281,9 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void peptideOrderContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            SummaryPeptideOrder peptideOrder = SummaryPeptideGraphPane.PeptideOrder;
-            peptideOrderDocumentContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.document);
-            peptideOrderRTContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.time);
-            peptideOrderAreaContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.area);
-            peptideOrderMassErrorContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.mass_error);
-        }
-
-        private void peptideOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeptideOrder(SummaryPeptideOrder.document);
-        }
-
-        private void peptideOrderRTContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeptideOrder(SummaryPeptideOrder.time);
-        }
-
-        private void peptideOrderAreaContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeptideOrder(SummaryPeptideOrder.area);
-        }
-
-        private void peptideOrderMassErrorContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeptideOrder(SummaryPeptideOrder.mass_error);
-        }
+        // peptideOrderContextMenuItem_DropDownOpening, peptideOrderDocumentContextMenuItem_Click,
+        // peptideOrderRTContextMenuItem_Click, peptideOrderAreaContextMenuItem_Click,
+        // peptideOrderMassErrorContextMenuItem_Click moved to ContextMenuControl
 
         public void ShowPeptideOrder(SummaryPeptideOrder order)
         {
@@ -4674,11 +3298,6 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        private void peptideLogScaleContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeptideLogScale(peptideLogScaleContextMenuItem.Checked);
-        }
-
         public void ShowPeptideLogScale(bool isChecked)
         {
             Settings.Default.AreaLogScale = isChecked ;
@@ -4689,51 +3308,15 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void relativeAbundanceLogScaleContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRelativeAbundanceLogScale(relativeAbundanceLogScaleContextMenuItem.Checked);
-        }
-
-        public void ShowRelativeAbundanceLogScale(bool isChecked)
-        {
-            Settings.Default.RelativeAbundanceLogScale = isChecked ;
-            UpdateRelativeAbundanceGraphs();
-        }
-
-        private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCVValues(peptideCvsContextMenuItem.Checked);
-        }
-
-        private void abundanceTargetsProteinsMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaProteinTargets(true);
-        }
-
-        private void abundanceTargetsPeptidesMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAreaProteinTargets(false);
-        }
 
         public void SetAreaProteinTargets(bool areaProteinTargets)
         {
             Settings.Default.AreaProteinTargets = areaProteinTargets;
             UpdateSummaryGraphs();
         }
-        private void excludeTargetsPeptideListMenuItem_Click(object sender, EventArgs e)
-        {
-            SetExcludePeptideListsFromAbundanceGraph(!Settings.Default.ExcludePeptideListsFromAbundanceGraph);
-        }
-
         public void SetExcludePeptideListsFromAbundanceGraph(bool excludePeptideLists)
         {
             Settings.Default.ExcludePeptideListsFromAbundanceGraph = excludePeptideLists;
-            UpdateSummaryGraphs();
-        }
-
-        private void excludeTargetsStandardsMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ExcludeStandardsFromAbundanceGraph = !Settings.Default.ExcludeStandardsFromAbundanceGraph;
             UpdateSummaryGraphs();
         }
 
@@ -4747,22 +3330,6 @@ namespace pwiz.Skyline
 //            if (RTPeptideGraphPane.RTValue == RTPeptideValue.All)
 //                Settings.Default.RTPeptideValue = RTPeptideValue.Retention.ToString();
             UpdateSummaryGraphs();
-        }
-
-        private void areaPropsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            switch (ContextMenuGraphSummary.Type)
-            {
-                case GraphTypeSummary.abundance:
-                case GraphTypeSummary.replicate:
-                case GraphTypeSummary.peptide:
-                    ShowAreaPropertyDlg();
-                    break;
-                case GraphTypeSummary.histogram:
-                case GraphTypeSummary.histogram2d:
-                    ShowAreaCVPropertyDlg(ContextMenuGraphSummary);
-                    break;
-            }       
         }
 
         public void ShowAreaCVPropertyDlg(GraphSummary graphSummary)
@@ -4805,18 +3372,6 @@ namespace pwiz.Skyline
             new SelectNormalizeHandler(this, index).Select();
         }
 
-        private void showLibraryPeakAreaContextMenuItem_Click(object sender, EventArgs e)
-        {
-            // Show/hide the library column in the peak area view.
-            Settings.Default.ShowLibraryPeakArea = !Settings.Default.ShowLibraryPeakArea;
-            UpdateSummaryGraphs();
-        }
-
-        private void showPeakAreaLegendContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPeakAreaLegend(!Settings.Default.ShowPeakAreaLegend);
-        }
-
         public void ShowPeakAreaLegend(bool show)
         {
             Settings.Default.ShowPeakAreaLegend = show;
@@ -4828,11 +3383,18 @@ namespace pwiz.Skyline
             _listGraphPeakArea.ForEach(g => g.UpdateUI());
         }
 
+        public void ShowRelativeAbundanceLogScale(bool logScale)
+        {
+            Settings.Default.RelativeAbundanceLogScale = logScale;
+            UpdateRelativeAbundanceGraphs();
+        }
+
         public void UpdateRelativeAbundanceGraphs()
         {
-            _listGraphPeakArea.FindAll(g => g.Type == GraphTypeSummary.abundance).ForEach(g => g.UpdateUI());
+            _listGraphPeakArea.FindAll(g => g.Type == GraphTypeSummary.abundance ||
+                                            g.Type == GraphTypeSummary.abundance_comparison).ForEach(g => g.UpdateUI());
         }
-        private void UpdateSummaryGraphs()
+        internal void UpdateSummaryGraphs()
         {
             UpdateRetentionTimeGraph();
             UpdatePeakAreaGraph();    
@@ -4912,11 +3474,6 @@ namespace pwiz.Skyline
             Settings.Default.MassErrorGraphTypes.Remove(graph.Type);
         }
 
-        private void massErrorReplicateComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorReplicateComparison();
-        }
-        
         public void ShowMassErrorReplicateComparison()
         {
             Settings.Default.MassErrorGraphTypes.Insert(0, GraphTypeSummary.replicate);
@@ -4925,11 +3482,6 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        private void massErrorPeptideComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorPeptideGraph();
-        }
-        
         public void ShowMassErrorPeptideGraph()
         {
             Settings.Default.MassErrorGraphTypes.Insert(0, GraphTypeSummary.peptide);
@@ -4938,21 +3490,11 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        private void massErrorHistogramMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorHistogramGraph();
-        }
-
         public void ShowMassErrorHistogramGraph()
         {
             Settings.Default.MassErrorGraphTypes.Insert(0, GraphTypeSummary.histogram);
             ShowGraphMassError(true, GraphTypeSummary.histogram);
             UpdateMassErrorGraph();
-        }
-
-        private void massErrorHistogram2DMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorHistogramGraph2D();
         }
 
         public void ShowMassErrorHistogramGraph2D()
@@ -4967,213 +3509,12 @@ namespace pwiz.Skyline
             _listGraphMassError.ForEach(g => g.UpdateUI());
         }
 
-        internal void massErrorMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var types = Settings.Default.MassErrorGraphTypes;
-            massErrorReplicateComparisonContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.replicate);
-            massErrorPeptideComparisonContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.peptide);
-            massErrorHistogramContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram);
-            massErrorHistogram2DContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram2d);
-        }
 
-        private void BuildMassErrorGraphMenu(GraphSummary graph, ToolStrip menuStrip)
-        {
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator25); // TODO: Use another separator?
-
-            // Insert skyline specific menus
-            var set = Settings.Default;
-            int iInsert = 0;
-            var graphType = graph.Type;
-            menuStrip.Items.Insert(iInsert++, massErrorGraphContextMenuItem);
-            if (massErrorGraphContextMenuItem.DropDownItems.Count == 0) {
-                massErrorGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        massErrorReplicateComparisonContextMenuItem,
-                        massErrorPeptideComparisonContextMenuItem,
-                        massErrorHistogramContextMenuItem,
-                        massErrorHistogram2DContextMenuItem
-                    });
-            }
-
-            menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
-            if (graphType == GraphTypeSummary.peptide ||
-                graphType == GraphTypeSummary.replicate)
-            {
-                AddTransitionContextMenu(menuStrip, iInsert++);
-            }
-            if (graphType == GraphTypeSummary.replicate)
-            {
-                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
-                var massErrorReplicateGraphPane = graph.GraphPanes.FirstOrDefault() as MassErrorReplicateGraphPane;
-                if (massErrorReplicateGraphPane != null)
-                {
-                    // If the mass error graph is being displayed and it shows a legend, 
-                    // display the "Legend" option
-                    if (massErrorReplicateGraphPane.CanShowMassErrorLegend)
-                    {
-                        showMassErrorLegendContextMenuItem.Checked = set.ShowMassErrorLegend; // TODO: Mass error legend
-                        menuStrip.Items.Insert(iInsert++, showMassErrorLegendContextMenuItem);
-                    }
-                }
-            }
-            else if (graphType == GraphTypeSummary.peptide)
-            {
-                AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                AddScopeContextMenu(menuStrip, iInsert++);
-            }
-            else if (graphType == GraphTypeSummary.histogram || graphType == GraphTypeSummary.histogram2d)
-            {
-                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                iInsert = AddPointsContextMenu(menuStrip, iInsert);
-                massErrorTargetsContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.targets;
-                massErrorDecoysContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.decoys;
-                bool trained = DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
-                massErrorTargets1FDRContextMenuItem.Visible = trained;
-                massErrorTargets1FDRContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.targets_1FDR;
-                if (!trained && massErrorTargets1FDRContextMenuItem.Checked)
-                {
-                    massErrorTargetsContextMenuItem.Checked = true;
-                }
-                iInsert = AddBinCountContextMenu(menuStrip, iInsert);
-                iInsert = AddTransitionsMassErrorContextMenu(menuStrip, iInsert);
-            }
-            if (graphType == GraphTypeSummary.histogram2d)
-            {
-                iInsert = AddXAxisContextMenu(menuStrip, iInsert);
-                menuStrip.Items.Insert(iInsert++, massErrorlogScaleContextMenuItem);
-                massErrorlogScaleContextMenuItem.Checked = Settings.Default.MassErrorHistogram2DLogScale;
-            }
-            if (graphType == GraphTypeSummary.peptide || (null != Settings.Default.GroupByReplicateAnnotation && graphType == GraphTypeSummary.replicate))
-            {
-                menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
-                peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
-            }
-
-            if (graphType == GraphTypeSummary.peptide ||
-                graphType == GraphTypeSummary.replicate)
-            {
-                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
-            }
-
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
-            menuStrip.Items.Insert(iInsert++, massErrorPropsContextMenuItem);
-            menuStrip.Items.Insert(iInsert, toolStripSeparator28);
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
-        }
-
-        private int AddPointsContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-                menuStrip.Items.Insert(iInsert++, massErrorPointsContextMenuItem);
-                if (massErrorPointsContextMenuItem.DropDownItems.Count == 0) {
-                    massErrorPointsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        massErrorTargetsContextMenuItem,
-                        massErrorTargets1FDRContextMenuItem,
-                        massErrorDecoysContextMenuItem
-                    });
-                }
-            return iInsert;
-        }
-
-        private int AddBinCountContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert++, binCountContextMenuItem);
-            if (binCountContextMenuItem.DropDownItems.Count == 0) {
-                binCountContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                       ppm05ContextMenuItem,
-                       ppm10ContextMenuItem,
-                       ppm15ContextMenuItem,
-                       ppm20ContextMenuItem
-                    });
-            }
-            return iInsert;
-        }
-
-        private int AddTransitionsMassErrorContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert++, massErrorTransitionsContextMenuItem);
-            if (massErrorTransitionsContextMenuItem.DropDownItems.Count == 0) {
-                massErrorTransitionsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                       massErrorAllTransitionsContextMenuItem,
-                       massErrorBestTransitionsContextMenuItem,
-                       toolStripSeparator55,
-                       MassErrorPrecursorsContextMenuItem,
-                       MassErrorProductsContextMenuItem
-                    });
-            }
-            return iInsert;
-        }
-        private int AddXAxisContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert++, massErrorXAxisContextMenuItem);
-            if (massErrorXAxisContextMenuItem.DropDownItems.Count == 0) {
-                massErrorXAxisContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        massErorrRetentionTimeContextMenuItem,
-                        massErrorMassToChargContextMenuItem
-                    });
-            }
-            return iInsert;
-        }
-
-        private void massErrorTransitionsContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            massErrorAllTransitionsContextMenuItem.Checked = MassErrorGraphController.HistogramTransiton == TransitionMassError.all;
-            massErrorBestTransitionsContextMenuItem.Checked = MassErrorGraphController.HistogramTransiton == TransitionMassError.best;
-
-            MassErrorPrecursorsContextMenuItem.Checked = MassErrorGraphController.HistogramDisplayType == DisplayTypeMassError.precursors;
-            MassErrorProductsContextMenuItem.Checked = MassErrorGraphController.HistogramDisplayType == DisplayTypeMassError.products;
-        }
-
-        private void massErrorAllTransitionsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeMassErrorTransition(TransitionMassError.all);
-        }
-
-        private void massErrorBestTransitionsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeMassErrorTransition(TransitionMassError.best);
-        }
 
         public void ChangeMassErrorTransition(TransitionMassError transitionMassError)
         {
             MassErrorGraphController.HistogramTransiton = transitionMassError;
             UpdateMassErrorGraph();
-        }
-
-        private void MassErrorPrecursorsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeMassErrorDisplayType(DisplayTypeMassError.precursors);
-        }
-
-        private void MassErrorProductsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeMassErrorDisplayType(DisplayTypeMassError.products);
         }
 
         public void ChangeMassErrorDisplayType(DisplayTypeMassError displayType)
@@ -5182,32 +3523,10 @@ namespace pwiz.Skyline
             UpdateMassErrorGraph();
         }
 
-        private void massErrorXAxisContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            massErrorMassToChargContextMenuItem.Checked = MassErrorGraphController.Histogram2DXAxis == Histogram2DXAxis.mass_to_charge;
-            massErorrRetentionTimeContextMenuItem.Checked = MassErrorGraphController.Histogram2DXAxis == Histogram2DXAxis.retention_time;
-        }
-
-
-        private void massErorrRetentionTimeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateXAxis(Histogram2DXAxis.retention_time);
-        }
-
-        private void massErrorMassToChargContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateXAxis(Histogram2DXAxis.mass_to_charge);
-        }
-
         public void UpdateXAxis(Histogram2DXAxis Xaxis)
         {
             MassErrorGraphController.Histogram2DXAxis = Xaxis;
             UpdateMassErrorGraph();
-        }
-
-        private void showMassErrorLegendContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorLegend(!Settings.Default.ShowMassErrorLegend);
         }
 
         public void ShowMassErrorLegend(bool show)
@@ -5216,49 +3535,10 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void massErrorlogScaleContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SwitchLogScale();
-        }
-
         public void SwitchLogScale()
         {
             Settings.Default.MassErrorHistogram2DLogScale = !Settings.Default.MassErrorHistogram2DLogScale;
             UpdateMassErrorGraph();
-        }
-
-        private void binCountContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            UpdatePpmMenuItem(ppm05ContextMenuItem, 0.5);
-            UpdatePpmMenuItem(ppm10ContextMenuItem, 1.0);
-            UpdatePpmMenuItem(ppm15ContextMenuItem, 1.5);
-            UpdatePpmMenuItem(ppm20ContextMenuItem, 2.0);
-        }
-
-        private void UpdatePpmMenuItem(ToolStripMenuItem toolStripMenuItem, double ppm)
-        {
-            toolStripMenuItem.Checked = Settings.Default.MassErorrHistogramBinSize == ppm;
-            toolStripMenuItem.Text = string.Format(@"{0:F01} ppm", ppm);
-        }
-
-        private void ppm05ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateBinSize(0.5);
-        }
-
-        private void ppm10ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateBinSize(1);
-        }
-
-        private void ppm15ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateBinSize(1.5);
-        }
-
-        private void ppm20ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateBinSize(2);
         }
 
         public void UpdateBinSize(double bin)
@@ -5267,30 +3547,10 @@ namespace pwiz.Skyline
             UpdateMassErrorGraph();
         }
 
-        private void massErrorTargetsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsTypeMassError(PointsTypeMassError.targets);
-        }
-
-        private void massErrorDecoysContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsTypeMassError(PointsTypeMassError.decoys);
-        }
-
-        private void massErrorTargets1FDRContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsTypeMassError(PointsTypeMassError.targets_1FDR);
-        }
-
         public void ShowPointsTypeMassError(PointsTypeMassError pointsTypeMassError)
         {
             MassErrorGraphController.PointsType = pointsTypeMassError;
             UpdateMassErrorGraph();
-        }
-
-        private void massErrorPropsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorPropertyDlg();
         }
 
         public void ShowMassErrorPropertyDlg()
@@ -5396,80 +3656,6 @@ namespace pwiz.Skyline
 
         public GraphSummary DetectionsPlot { get { return _listGraphDetections.FirstOrDefault(); } }
 
-        private void BuildDetectionsGraphMenu(GraphSummary graph, ToolStrip menuStrip)
-        {
-            // Store original menu items in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, detectionsToolStripSeparator1); 
-
-            // Insert skyline specific menus
-            int iInsert = 0;
-            var graphType = graph.Type;
-
-            menuStrip.Items.Insert(iInsert++, detectionsGraphTypeToolStripMenuItem);
-            menuStrip.Items.Insert(iInsert++, detectionsTargetToolStripMenuItem);
-
-            menuStrip.Items.Insert(iInsert++, detectionsToolStripSeparator2);
-            if(graphType == GraphTypeSummary.detections)
-                menuStrip.Items.Insert(iInsert++, detectionsShowToolStripMenuItem);
-            menuStrip.Items.Insert(iInsert++, detectionsYScaleToolStripMenuItem);
-            menuStrip.Items.Insert(iInsert++, detectionsPropertiesToolStripMenuItem);
-            detectionsPropertiesToolStripMenuItem.Tag = graph;
-            menuStrip.Items.Insert(iInsert++, detectionsToolStripSeparator3);
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
-
-            //Update menu according to the current settings
-            detectionsShowMeanToolStripMenuItem.Checked = DetectionsGraphController.Settings.ShowMean;
-            detectionsShowSelectionToolStripMenuItem.Checked = DetectionsGraphController.Settings.ShowSelection;
-            detectionsShowLegendToolStripMenuItem.Checked = DetectionsGraphController.Settings.ShowLegend;
-            detectionsShowAtLeastNToolStripMenuItem.Checked = DetectionsGraphController.Settings.ShowAtLeastN;
-
-            foreach (var item in new[]
-            {
-                detectionsYScaleOneToolStripMenuItem,
-                detectionsYScalePercentToolStripMenuItem
-            })
-            {
-                item.Checked = ((int) item.Tag) == DetectionsGraphController.Settings.YScaleFactor.Value;
-                item.Text = DetectionsGraphController.YScaleFactorType.GetValues()
-                    .First((e) => ((int) item.Tag) == e.Value).ToString();
-            }
-
-
-            foreach (var item in new[]
-            {
-                detectionsTargetPrecursorToolStripMenuItem,
-                detectionsTargetPeptideToolStripMenuItem
-            })
-                item.Checked = ((int)item.Tag) == DetectionsGraphController.Settings.TargetType.Value;
-        }
-
-        private void detectionsPropertiesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (sender is ToolStripMenuItem item)
-            {
-                if (item.Tag is GraphSummary graph)
-                    ShowDetectionsPropertyDlg(graph);
-            }
-        }
-
         public void ShowDetectionsPropertyDlg(GraphSummary graph)
         {
             using (var dlg = new DetectionToolbarProperties(graph))
@@ -5481,64 +3667,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void detectionsYScaleOneToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.YScaleFactor = DetectionsGraphController.YScaleFactorType.ONE;
-            UpdateDetectionsGraph();
-        }
-
-        private void detectionsYScalePercentToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.YScaleFactor = DetectionsGraphController.YScaleFactorType.PERCENT;
-            UpdateDetectionsGraph();
-        }
-
-        private void detectionsShowSelectionToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.ShowSelection = !DetectionsGraphController.Settings.ShowSelection;
-            UpdateDetectionsGraph();
-        }
-
-        private void detectionsShowLegendToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.ShowLegend = !DetectionsGraphController.Settings.ShowLegend;
-            UpdateDetectionsGraph();
-        }
-
-        private void detectionsShowMeanToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.ShowMean = !DetectionsGraphController.Settings.ShowMean;
-            UpdateDetectionsGraph();
-        }
-
-        private void detectionsShowAtLeastNToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.ShowAtLeastN = !DetectionsGraphController.Settings.ShowAtLeastN;
-            UpdateDetectionsGraph();
-        }
-        private void detectionsTargetPrecursorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.TargetType = DetectionsGraphController.TargetType.PRECURSOR;
-            UpdateDetectionsGraph();
-        }
-        private void detectionsTargetPeptideToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.TargetType = DetectionsGraphController.TargetType.PEPTIDE;
-            detectionsTargetPrecursorToolStripMenuItem.Checked = false;
-            detectionsTargetPeptideToolStripMenuItem.Checked = true;
-            UpdateDetectionsGraph();
-        }
-
-        private void detectionsGraphTypeReplicateToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowDetectionsReplicateComparisonGraph();
-
-        }
-
-        private void detectionsGraphTypeHistogramToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowDetectionsHistogramGraph();
-        }
         #endregion
 
         #region Results Grid
@@ -5923,9 +4051,16 @@ namespace pwiz.Skyline
         private void PlacePane(int row, int col, int count,
             DockPaneAlignment alignment, IList<List<List<DockableForm>>> listTiles)
         {
+            if (row >= listTiles.Count || col >= listTiles[row].Count)
+                return;
+            int previousIndex = alignment == DockPaneAlignment.Bottom ? row - 1 : col - 1;
+            if (previousIndex < 0)
+                return;
+            if (alignment == DockPaneAlignment.Bottom && col >= listTiles[previousIndex].Count)
+                return;
             DockableForm previousForm = alignment == DockPaneAlignment.Bottom
-                                            ? listTiles[row - 1][col][0]
-                                            : listTiles[row][col - 1][0];
+                                            ? listTiles[previousIndex][col][0]
+                                            : listTiles[row][previousIndex][0];
             DockPane previousPane = FindPane(previousForm);
             var groupForms = listTiles[row][col];
             var dockableForm = groupForms[0];

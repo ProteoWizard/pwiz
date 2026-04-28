@@ -218,9 +218,9 @@ namespace pwiz.SkylineTest
                     why);
             }
 
-            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 2);
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code");
             // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
-            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 1);
+            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code");
             AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
 
             // Check for using DataGridView.
@@ -603,11 +603,11 @@ namespace pwiz.SkylineTest
             {
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
-                { typeof(Gdi32), 4 },
+                { typeof(Gdi32), 5 },
                 { typeof(Kernel32), 8 },
                 { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
-                { typeof(User32), 33 },
+                { typeof(User32), 35 },
 
                 { typeof(DwmapiTest), 4 },
                 { typeof(Gdi32Test), 1 },
@@ -1472,30 +1472,35 @@ namespace pwiz.SkylineTest
         }
 
         // Prepare a list of files that we never need to deal with for L10N
-        // Uses the information found in our KeepResx L10N development tool,
-        // along with a hardcoded list herein.
+        // Directories and files that are not localized. Previously parsed from KeepResx\Program.cs
+        // at runtime, now maintained inline since KeepResx was removed (superseded by DevTools\ResourcesOrganizer).
 
         private string[] NonLocalizedFiles()
         {
             var root = GetCodeBaseRoot(out var thisFile);
-            if (string.IsNullOrEmpty(root) || !File.Exists(root + "\\Executables\\KeepResx\\Program.cs"))
+            if (string.IsNullOrEmpty(root) || !Directory.Exists(root + "\\Executables\\DevTools"))
             {
                 return null; // Not an installation with code alongside
             }
 
             var result = new List<string>();
 
-            // Get the list of files/directories that we don't localize per the KeepResx utility
-            foreach (var line in File.ReadAllLines(root + "\\Executables\\KeepResx\\Program.cs"))
-            {
-                if (line.Trim().StartsWith(@"@"""))
-                {
-                    var parts = line.Split('\"');
-                    result.Add(parts[1].Replace("*", string.Empty));
-                }
-            }
+            // Directories and files that we don't localize (formerly maintained in KeepResx\Program.cs)
+            result.Add("msconvertgui\\");
+            result.Add("seems\\");
+            result.Add("shared\\zedgraph\\");
+            result.Add("shared\\proteomedb\\forms\\proteomedbform.resx");
+            result.Add("skyline\\executables\\autoqc\\");
+            result.Add("skyline\\executables\\skylinerunner\\");
+            result.Add("skyline\\executables\\tools\\exampleargcollector\\");
+            result.Add("skyline\\executables\\tools\\exampleinteractivetool\\");
+            result.Add("skyline\\executables\\tools\\xltcalc\\c#\\skylineintegration\\properties\\resources.resx");
+            result.Add("skyline\\controls\\startup\\tutoriallinkresources.resx");
+            result.Add("skyline\\skylinenightly\\");
+            result.Add("skyline\\skylinetester\\");
+            result.Add("skyline\\testutil\\");
 
-            // Add any others we know don't require L10N
+            // Additional files and directories that don't require L10N
             result.Add("CommandArgUsage.designer.cs");
             result.Add("ActionBoxControl.Designer.cs");
             result.Add("Model\\AuditLog\\AuditLogStrings.Designer.cs");
@@ -1514,7 +1519,6 @@ namespace pwiz.SkylineTest
             result.Add("RecentFileControl.Designer.cs");
             result.Add("settings.designer.cs");
             result.Add("resources.designer.cs");
-            result.Add("Executables\\KeepResxW");
             result.Add("Executables\\Tools\\MSstats");
             result.Add("Executables\\Tools\\MS1Probe");
             result.Add("Executables\\Tools\\Skyline Gadget");
@@ -1523,6 +1527,7 @@ namespace pwiz.SkylineTest
             result.Add("Executables\\Tools\\TestArgCollector");
             result.Add("Executables\\Tools\\ExampleInteractiveTool");
             result.Add("Executables\\DevTools");
+            result.Add("Executables\\Tools\\SkylineMcp");
             return result.ToArray();
         }
 

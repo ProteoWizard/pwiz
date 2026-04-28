@@ -251,7 +251,7 @@ namespace TestRunner
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
             "demo=off;showformnames=off;status=off;buildcheck=0;" +
-            "quality=off;pass0=off;pass1=off;pass2=on;" +
+            "quality=off;qualityonly=off;pass0=off;pass1=off;pass2=on;" +
             "perftests=off;" +
             "retrydatadownloads=off;" +
             "runsmallmoleculeversions=off;" +
@@ -260,7 +260,8 @@ namespace TestRunner
             "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;" +
             "teamcitytestdecoration=off;teamcitytestsuite=;teamcitycleanup=off;" +
             "verbose=off;listonly;showheader=on;" +
-            "reportheaps=off;reporthandles=off;sorthandlesbycount=off";
+            "reportheaps=off;reporthandles=off;sorthandlesbycount=off;" +
+            "dotmemorywarmup=5;dotmemorywaitruns=0;dotmemorycollectallocations=off;dotmemoryattests";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
                                                          "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
@@ -738,11 +739,11 @@ namespace TestRunner
             string workerName = $"hostWorker{GetTestRunTimeStamp()}";
             string testRunnerLog = string.Empty;
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
-                testRunnerLog = @$"log={pwizRoot}\TestRunner-{workerName}.log";
+                testRunnerLog = @$"log=""{pwizRoot}\TestRunner-{workerName}.log""";
 
             // here paths are in host space
             var testRunnerExe = Assembly.GetExecutingAssembly().Location;
-            var testRunnerArgs = $"parallelmode=client showheader=0 {testRunnerLog}";
+            var testRunnerArgs = $"parallelmode=client showheader=0 results=\"{pwizRoot}\\TestResults_host\" {testRunnerLog}";
             if (commandLineArgs.ArgAsBool("coverage"))
             {
                 string dotCoverExe = GetFullDotCoverExePath(commandLineArgs);
@@ -1404,6 +1405,9 @@ namespace TestRunner
             bool reportHeaps = commandLineArgs.ArgAsBool("reportheaps");
             bool reportHandles = commandLineArgs.ArgAsBool("reporthandles");
             bool sortHandlesByCount = commandLineArgs.ArgAsBool("sorthandlesbycount");
+            int dotMemoryWarmup = (int) commandLineArgs.ArgAsLong("dotmemorywarmup");
+            int dotMemoryWaitRuns = (int) commandLineArgs.ArgAsLong("dotmemorywaitruns");
+            bool dotMemoryCollectAllocations = commandLineArgs.ArgAsBool("dotmemorycollectallocations");
             string parallelMode = commandLineArgs.ArgAsString("parallelmode");
             bool serverMode = parallelMode == "server";
             bool clientMode = parallelMode == "client";
@@ -1430,11 +1434,12 @@ namespace TestRunner
                 testList.RemoveAll(test => test.IsPerfTest);
                 unfilteredTestList.RemoveAll(test => test.IsPerfTest);
             }
-            else if (asNightly)
+            else if (asNightly && !commandLineArgs.ArgAsBool("qualityonly"))
             {
                 // Take advantage of the extra time available in nightly perftest runs to do the leak tests we
                 // skip in regular nightlies - but skip leak tests covered in regular nightlies.
-                // Only apply this inversion during actual nightly runs, not when perftests=on is used interactively.
+                // The Quality tab sets qualityonly=on and perftests=on (in case selected tests include perf tests),
+                // which would otherwise trigger this inversion and skip all normal tests in pass 1.
                 foreach (var test in unfilteredTestList)
                 {
                     test.DoNotLeakTest = !test.DoNotLeakTest;
@@ -1479,6 +1484,23 @@ namespace TestRunner
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
                 results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount);
+
+            // Configure dotMemory snapshot settings only when explicitly requested
+            if (commandLineArgs.HasArg("dotmemorywarmup") || commandLineArgs.HasArg("dotmemorywaitruns"))
+            {
+                runTests.DotMemoryWarmupRuns = dotMemoryWarmup;
+                runTests.DotMemoryWaitRuns = dotMemoryWaitRuns;
+                runTests.DotMemoryCollectAllocations = dotMemoryCollectAllocations;
+            }
+
+            // Take dotMemory snapshots after specific test numbers (e.g. dotmemoryattests=187,188)
+            var dotMemoryAtTests = commandLineArgs.ArgAsString("dotmemoryattests");
+            if (!string.IsNullOrEmpty(dotMemoryAtTests))
+            {
+                runTests.DotMemoryAtTests = new List<int>(
+                    dotMemoryAtTests.Split(',').Select(s => int.Parse(s.Trim())));
+                runTests.DotMemoryCollectAllocations = dotMemoryCollectAllocations;
+            }
 
             var timer = new Stopwatch();
             timer.Start();
@@ -1815,6 +1837,13 @@ namespace TestRunner
                                     i = languages.Length - 1;   // Don't run other languages.
                                     break;
                                 }
+                                if (runTests.ProfilingComplete) // All configured snapshots taken
+                                {
+                                    runTests.Log("# Profiling complete - stopping test run.\r\n");
+                                    pass = passEnd; // Break out of pass loop
+                                    i = languages.Length - 1; // Break out of language loop
+                                    break; // Break out of repeat loop
+                                }
                                 if (maxSecondsPerTest > 0)
                                 {
                                     var maxSecondsPerTestPerLanguage = maxSecondsPerTest / languagesThisTest.Length; // We'd like no more than 5 minutes per test across all languages when doing stess tests
@@ -1965,7 +1994,10 @@ namespace TestRunner
                 testDict.Add(testNames[i], i);
             }
 
-            var testArray = new TestInfo[testNames.Count];
+            // Use List<TestInfo> per slot to support class names (which may have multiple tests)
+            var testArray = new List<TestInfo>[testNames.Count];
+            for (int i = 0; i < testNames.Count; i++)
+                testArray[i] = new List<TestInfo>();
 
             var skipList = LoadList(commandLineArgs.ArgAsString("skip"));
 
@@ -1976,7 +2008,8 @@ namespace TestRunner
                 {
                     var testName = testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name;
                     if (testNames.Count == 0 || testNames.Contains(testName) ||
-                        testNames.Contains(testInfo.TestMethod.Name))
+                        testNames.Contains(testInfo.TestMethod.Name) ||
+                        testNames.Contains(testInfo.TestClassType.Name))
                     {
                         if (!skipList.Contains(testName) && !skipList.Contains(testInfo.TestMethod.Name))
                         {
@@ -1984,15 +2017,18 @@ namespace TestRunner
                                 testList.Add(testInfo);
                             else
                             {
-                                string lookup = testNames.Contains(testName) ? testName : testInfo.TestMethod.Name;
-                                testArray[testDict[lookup]] = testInfo;
+                                // Lookup in priority order: full name, method name, class name
+                                string lookup = testNames.Contains(testName) ? testName :
+                                    testNames.Contains(testInfo.TestMethod.Name) ? testInfo.TestMethod.Name :
+                                    testInfo.TestClassType.Name;
+                                testArray[testDict[lookup]].Add(testInfo);
                             }
                         }
                     }
                 }
             }
             if (testNames.Count > 0)
-                testList.AddRange(testArray.Where(testInfo => testInfo != null));
+                testList.AddRange(testArray.SelectMany(list => list));
 
             // Sort tests alphabetically, but run perf tests last for best coverage in a fixed amount of time.
             // However, if tests were explicitly specified (via file or command line), preserve that order.
@@ -2231,9 +2267,10 @@ in the current directory.  You can get a summary of errors and memory leaks by r
 Here is a list of recognized arguments:
 
     test=[test1,test2,...]          Run one or more tests by name (separated by ',').
-                                    Test names can be just the method name, or the method
-                                    name prefixed by the class name and a period
-                                    (such as IrtTest.IrtFunctionalTest).  Tests must belong
+                                    Test names can be just the method name, the class name
+                                    (to run all tests in that class), or the method name
+                                    prefixed by the class name and a period (such as
+                                    IrtTest.IrtFunctionalTest).  Tests must belong
                                     to a class marked [TestClass], although the method does
                                     not need to be marked [TestMethod] to be included in a
                                     test run.  A name prefixed by '@' (such as ""@fail.txt"")

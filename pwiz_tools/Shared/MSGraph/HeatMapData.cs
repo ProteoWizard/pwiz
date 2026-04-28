@@ -32,6 +32,17 @@ namespace pwiz.MSGraph
     public class HeatMapData
     {
         private readonly Cell _cell;
+        private List<KeyValuePair<float, double>> _plotY2D;
+        public string ZAxisName { get; private set; }
+
+        /// <summary>
+        /// 1D projection: for each Y bin, the summed intensity across all X values.
+        /// Computed lazily on first access from the underlying quad-tree points.
+        /// </summary>
+        public List<KeyValuePair<float, double>> PlotY2D
+        {
+            get { return _plotY2D ?? (_plotY2D = ComputePlotY2D(_cell.GetAllPoints())); }
+        }
 
         public class TaggedPoint3D
         {
@@ -53,14 +64,31 @@ namespace pwiz.MSGraph
         /// <summary>
         /// Construct the quad-tree from a given list of 3D data points.
         /// </summary>
-        public HeatMapData(List<Point3D> points)
+        public HeatMapData(List<Point3D> points, string zAxisName = null)
         {
-            _cell = new Cell(points);
+            var tagged = points.Select(p => new TaggedPoint3D(p, null)).ToList();
+            _cell = new Cell(tagged);
+            ZAxisName = zAxisName;
         }
 
-        public HeatMapData(List<TaggedPoint3D> points)
+        public HeatMapData(List<TaggedPoint3D> points, string zAxisName = null)
         {
             _cell = new Cell(points);
+            ZAxisName = zAxisName;
+        }
+
+        private static List<KeyValuePair<float, double>> ComputePlotY2D(IEnumerable<TaggedPoint3D> points)
+        {
+            var y2D = new Dictionary<float, double>();
+            foreach (var point in points)
+            {
+                if (point.Point != null && point.Point.Z > 0)
+                {
+                    y2D.TryGetValue(point.Point.Y, out var sum);
+                    y2D[point.Point.Y] = sum + point.Point.Z;
+                }
+            }
+            return y2D.OrderBy(p => p.Key).ToList();
         }
 
         /// <summary>
@@ -80,6 +108,14 @@ namespace pwiz.MSGraph
             var points = new List<TaggedPoint3D>(5000);
             _cell.GetPoints((float) xMin, (float) xMax, (float) yMin, (float) yMax, (float) cellWidth, (float) cellHeight, points);
             return points;
+        }
+
+        /// <summary>
+        /// Return all raw points without filtering. Used for "Copy Data" to clipboard.
+        /// </summary>
+        public IEnumerable<TaggedPoint3D> GetAllPoints()
+        {
+            return _cell.GetAllPoints();
         }
 
         /// <summary>
@@ -131,6 +167,14 @@ namespace pwiz.MSGraph
             }
 
             /// <summary>
+            /// Return all raw points in this cell.
+            /// </summary>
+            public IEnumerable<TaggedPoint3D> GetAllPoints()
+            {
+                return _points;
+            }
+
+            /// <summary>
             /// Add to a list of points any that fall within the given x and y range for a cell size
             /// that has been recursively refined to be smaller than the given cell dimensions.
             /// </summary>
@@ -154,6 +198,15 @@ namespace pwiz.MSGraph
 
                 if (_cells == null)
                     _cells = CreateCells();
+
+                // If subdivision made no progress (all points share the same
+                // coordinates), treat this cell as a leaf.
+                if (_cells[0] == null && _cells[1] == null &&
+                    _cells[2] == null && _cells[3] == null)
+                {
+                    returnedPoints.Add(_maxPoint);
+                    return;
+                }
 
                 // Add the maximum intensity points from each of the 4 cells inside this cell (and recurse to
                 // the right cell size).
@@ -191,9 +244,13 @@ namespace pwiz.MSGraph
                     if (pointLists[i].Count > 0)
                     {
                         var newCell = new Cell(pointLists[i]);
-                        // Make sure there was a maximum point, or the boundaries
-                        // will end up float.MinValue and float.MaxValue
-                        if (newCell.MaxPoint != null)
+                        // Skip cells with no positive-Z points (bounds would be
+                        // float.MinValue/MaxValue), and skip cells whose bounds
+                        // match the parent exactly (no spatial progress was made,
+                        // which would cause infinite recursion).
+                        if (newCell.MaxPoint != null &&
+                            !(newCell._xMin == _xMin && newCell._xMax == _xMax &&
+                              newCell._yMin == _yMin && newCell._yMax == _yMax))
                             cells[i] = newCell;
                     }
                 }

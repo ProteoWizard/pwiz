@@ -178,6 +178,9 @@
   <data name="FullScanAcquisitionMethod_DDA_TOOLTIP" xml:space="preserve">
     <value>数据依赖采集： 提取 MS2 色谱图但不用于定量</value>
   </data>
+  <data name="FullScanAcquisitionMethod_EI_TOOLTIP" xml:space="preserve">
+    <value>电子离子化：假设 MS1 数据为 EI 碎片化，并按 MS2 处理</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DIA_TOOLTIP" xml:space="preserve">
     <value>非数据依赖采集： MS2 谱图用于其质荷比值在分离窗口内的所有母离子的色谱图</value>
   </data>

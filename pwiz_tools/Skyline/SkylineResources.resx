@@ -586,6 +586,16 @@
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
     <value>Uploading document to Panorama</value>
   </data>
+  <data name="Program_CheckNativeLibraries_Failed_to_load_required_native_libraries" xml:space="preserve">
+    <value>Skyline failed to load a required native library. This may be caused by a Windows security policy (Application Control) blocking the file, or by a broken installation.
+
+{0}
+
+Try uninstalling and reinstalling Skyline, or contact your IT department if the problem persists.</value>
+  </data>
+  <data name="Program_CheckNativeLibraries_Troubleshooting" xml:space="preserve">
+    <value>Recovering From a Broken Installation</value>
+  </data>
   <data name="Program_CopyOldTools_Error_copying_external_tools_from_previous_installation" xml:space="preserve">
     <value>Error copying external tools from previous installation</value>
   </data>
@@ -741,6 +751,9 @@
   </data>
   <data name="SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_" xml:space="preserve">
     <value>The raw file must be re-imported in order to show full scans: {0}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded" xml:space="preserve">
+    <value>Peak integration cannot be changed until library loading is complete. Please wait for the libraries to finish loading.</value>
   </data>
   <data name="SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_" xml:space="preserve">
     <value>Pick peak {0:F01}</value>
@@ -1200,5 +1213,35 @@ Do you want to save the document now?</value>
   </data>
   <data name="SkylineWindow_ImportAnnotations_Reading_annotations" xml:space="preserve">
     <value>Reading annotations</value>
+  </data>
+  <data name="CommandLine_SaveFile_File__0__save_canceled" xml:space="preserve">
+    <value>File {0} save canceled</value>
+  </data>
+  <data name="CommandLine_AddSettings_Settings_imported_from__0__" xml:space="preserve">
+    <value>Settings imported from {0}.</value>
+  </data>
+  <data name="CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_" xml:space="preserve">
+    <value>Error: The following settings names already exist. Use --doc-settings-conflict-resolution to specify overwrite or skip.</value>
+  </data>
+  <data name="CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_" xml:space="preserve">
+    <value>Error: The settings name '{0}' already exists. Use --doc-settings-conflict-resolution to specify overwrite or skip.</value>
+  </data>
+  <data name="CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_" xml:space="preserve">
+    <value>Error: The settings file {0} does not exist.</value>
+  </data>
+  <data name="CommandLine_AddSettings_Error__Failed_attempting_to_add_settings_from_the_file__0_" xml:space="preserve">
+    <value>Error: Failed attempting to add settings from the file {0}</value>
+  </data>
+  <data name="CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__or___discard_changes_before___new_or___in_" xml:space="preserve">
+    <value>Error: The document has unsaved changes. Use --save, --out, or --discard-changes before --new or --in.</value>
+  </data>
+  <data name="CommandLine_NewDocument_The___new_argument_requires_a_file_path_in_command_line_mode_" xml:space="preserve">
+    <value>The --new argument requires a file path in command-line mode.</value>
+  </data>
+  <data name="CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_" xml:space="preserve">
+    <value>Error: The settings '{0}' could not be found. Use --doc-settings-name with a name from the Settings menu.</value>
+  </data>
+  <data name="CommandLine_ApplySettings_Settings___0___applied_to_document_" xml:space="preserve">
+    <value>Settings '{0}' applied to document.</value>
   </data>
 </root>

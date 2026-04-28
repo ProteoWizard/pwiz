@@ -1263,7 +1263,7 @@ bool configurationIsHighRes(const InstrumentConfigurationPtr& ic)
     // Look for Orbitrap, FT, or TOF to test for high-res
     if (la->hasCVParam(MS_orbitrap)
         || la->hasCVParam(MS_time_of_flight)
-        || la->hasCVParam(MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer)
+        || la->hasCVParam(MS_fourier_transform_ion_cyclotron_resonance)
         || la->hasCVParam(MS_stored_waveform_inverse_fourier_transform))
     {
         return true;

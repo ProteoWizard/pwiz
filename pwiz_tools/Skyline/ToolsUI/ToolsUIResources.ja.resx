@@ -343,6 +343,42 @@
   <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
     <value>{0}にアップデートのインストール中</value>
   </data>
+  <data name="NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia" xml:space="preserve">
+    <value>Nvidiaライブラリの設定に成功しました</value>
+  </data>
+  <data name="NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia" xml:space="preserve">
+    <value>Nvidiaライブラリの設定に失敗しました</value>
+  </data>
+  <data name="NvidiaInstaller_Setup_Nvidia_Libraries" xml:space="preserve">
+    <value>Nvidia GPU演算を設定中です</value>
+  </data>
+  <data name="PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment" xml:space="preserve">
+    <value>Python仮想環境の設定に成功しました</value>
+  </data>
+  <data name="PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment" xml:space="preserve">
+    <value>Python仮想環境の設定に失敗しました</value>
+  </data>
+  <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required" xml:space="preserve">
+    <value>{1}にはPython{0}の設定が必要です。設定するには「OK」をクリックしてください。</value>
+  </data>
+  <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" xml:space="preserve">
+    <value>{1}にはPython {0}の設定が必要です。Pythonのインストールと設定が終わるまでお待ちください ...</value>
+  </data>
+  <data name="PythonInstaller_Requesting_Administrator_elevation" xml:space="preserve">
+    <value>インストールを完了するには管理者権限が必要です。必要な場合はシステム管理者に連絡してください。継続しますか？</value>
+  </data>
+  <data name="PythonInstaller_Install_Nvidia_Library" xml:space="preserve">
+    <value>Skylineはこのコンピュータ上にNvidia GPUを検出しました。Nvidia GPU演算を設定して、より高速のAI処理を有効にしますか？この機能をインストールするには、権限昇格が必要です。</value>
+  </data>
+  <data name="PythonInstaller_Downloading_Nvidia_Library" xml:space="preserve">
+    <value>Nvidia Cuda ToolkitとDeep Neural Networkソフトウェアをダウンロード中です。</value>
+  </data>
+  <data name="PythonInstaller_Installing_Nvidia_Library" xml:space="preserve">
+    <value>Nvidia Cuda ToolkitとDeep Neural Networkソフトウェアをインストール中です。</value>
+  </data>
+  <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
+    <value>SkylineProcessRunnerは{0}ミリ秒後にタイムアウトします</value>
+  </data>
   <data name="EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect" xml:space="preserve">
     <value>接続</value>
   </data>
@@ -354,6 +390,18 @@
   </data>
   <data name="EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled" xml:space="preserve">
     <value>ログインがキャンセルされました</value>
+  </data>
+  <data name="EditRemoteAccountDlg_Ardia_OneAccountSupported" xml:space="preserve">
+    <value>Skylineは2番目のArdiaアカウントの追加をサポートしません。新しいアカウントを使用するには、現在のアカウントを削除してから新しいアカウントを追加してください。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection" xml:space="preserve">
+    <value>リモートアカウントの接続をテスト中です</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Exe_Files" xml:space="preserve">
+    <value>実行ファイル</value>
+  </data>
+  <data name="EditSearchToolDlg_OkDialog_The_tool__0__is_already_configured_" xml:space="preserve">
+    <value>ツール{0}はすでに設定されています。　</value>
   </data>
   <data name="EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_" xml:space="preserve">
     <value>ファイル{0}は存在しません。</value>
@@ -378,5 +426,16 @@
   </data>
   <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools" xml:space="preserve">
     <value>以下のツールが正常にアップデートされました</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret" xml:space="preserve">
+    <value>waters_connectインスタンスに接続できませんでした。
+waters_connectへのエクスポートとインポートは無効になっています。
+waters_connect V4.2以降、TQ Skyline Adapter V1.0以降、関連するMSドライバーV2.0以降がインストールされていることを確認してください。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_instance_does_not_support_method_development__Method_upload_will_be_disabled_" xml:space="preserve">
+    <value>設定は正しいですが、このwaters_connectインスタンスはメソッド開発をサポートしません。メソッドのアップロードは無効になります。
+有効にするには、次をインストールしてください：
+      - waters_connect TQ Skyline Adapter 1.0.0以降
+      - 関連するMSドライバー2.0以降</value>
   </data>
 </root>

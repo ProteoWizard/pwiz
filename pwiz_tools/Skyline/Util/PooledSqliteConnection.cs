@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Util
             FileTime = File.GetLastWriteTime(FilePath);
         }
 
-        private string FilePath { get; set; }
+        public string FilePath { get; private set; }
         private DateTime FileTime { get; set; }
 
         protected override IDisposable Connect()
@@ -73,6 +73,11 @@ namespace pwiz.Skyline.Util
         public void CloseStream()
         {
             Disconnect();
+        }
+
+        public override string ToString()
+        {
+            return $@"PooledSqliteConnection({FilePath})"; // Not L10N - debug only
         }
 
         /// <summary>

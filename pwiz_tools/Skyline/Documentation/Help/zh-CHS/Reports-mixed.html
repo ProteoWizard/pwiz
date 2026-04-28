@@ -1,0 +1,834 @@
+<html><head>
+<meta charset="utf-8">
+<style>body {
+    font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+}
+.RowType {
+    font-size: 1.769em;
+    line-height: 1.3em;
+    font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+    color: #000;
+}
+table {
+border: 1px solid #bbb;
+border-collapse: collapse;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+th {
+    background-color: #ededed;
+    color: #636363;
+    text-align: left;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    font-weight: bold;
+    border: 1px solid #bbb;
+}
+td {
+    color: #2a2a2a;
+    vertical-align: top;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    border: 1px solid #bbb;
+}
+.Hidden {
+    font-style: italic; 
+}
+.Obsolete {
+    text-decoration: line-through;
+}</style>
+</head><body>
+<div id="pwiz.Skyline.Model.Databinding.Entities.SkylineDocument"><span class="RowType">SkylineDocument</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子列表</td><td class="ColumnDescription">Skyline 文档中所有分子分组的顶级集合。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">分子列表</a> 列表</td></tr>
+<tr><td class="ColumnCaption">重复测定</td><td class="ColumnDescription">重复测定</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">重复测定</a> 列表</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Protein"><span class="RowType">分子列表</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子</td><td class="ColumnDescription">分子列表中的分子。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">分子</a> 列表</td></tr>
+<tr><td class="ColumnCaption">分子列表结果</td><td class="ColumnDescription">分子列表结果</td><td class="ColumnType">ResultKey 到 <a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">分子列表结果</a> 的图谱</td></tr>
+<tr><td class="ColumnCaption">分子列表名称</td><td class="ColumnDescription">分子列表的名称。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">蛋白质描述</td><td class="ColumnDescription">在通过公共 FASTA 序列文件将蛋白质导入 Skyline 时，
+会提供该蛋白质的描述。若将光标悬浮在
+肽段树视图中的蛋白质名称，也会看到蛋白质描述。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">蛋白质检索号</td><td class="ColumnDescription">蛋白质检索号</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">蛋白质首选名称</td><td class="ColumnDescription">蛋白质首选名称</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">蛋白质基因</td><td class="ColumnDescription">蛋白质基因</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">蛋白质物种</td><td class="ColumnDescription">蛋白质物种</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">蛋白质序列</td><td class="ColumnDescription">在通过公共 FASTA 序列文件将蛋白质导入 Skyline 时，
+可以存取全部蛋白质序列。若将光标悬浮在
+肽段树视图中的蛋白质名称，也会看到蛋白质描述。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">自动选择分子</td><td class="ColumnDescription">如果为“true”，则 Skyline 将根据当前设置在分子列表中自动添加或删除分子。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">蛋白质序列覆盖率</td><td class="ColumnDescription">蛋白质序列中氨基酸的部分可能是子肽段的一个或多个序列的一部分。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子列表注释</td><td class="ColumnDescription">与分子相关的自由文本注释。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子列表定位器</td><td class="ColumnDescription">文档内的分子列表特殊标识符。以“MoleculeGroup：”开头。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Replicate"><span class="RowType">重复测定</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">重复测定名称</td><td class="ColumnDescription">汇入时分配给数据的重复测定名称。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">文件</td><td class="ColumnDescription">文件</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ResultFile">结果文件</a> 列表</td></tr>
+<tr><td class="ColumnCaption">样品类型</td><td class="ColumnDescription">样品类型。 以下一种：
+      未知（正在测量的样品）
+      标准（含校正曲线中使用的已知量的分析物的外标）
+      质量控制（含有要验证校正的已知量分析物）
+      溶剂
+      空白
+      双空白</td><td class="ColumnType">样品类型</td></tr>
+<tr><td class="ColumnCaption">分析物浓度</td><td class="ColumnDescription">加入外部或质量控制标准的已知量的分析物。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">样品稀释因子</td><td class="ColumnDescription">在分析之前稀释样品的量。
+外部标准通常具有 1 的稀释因子，并且未知样品可能已被稀释大于 1 的因子，以使它们进入仪器的可量化范围。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">批次名称</td><td class="ColumnDescription">此重复测定所属批次的名称。特定重复的校准曲线
+将使用拥有相同批次名称的外部标准子集进行计算。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">重复测定定位器</td><td class="ColumnDescription">文档内的重复测定特殊标识符。这始终是“Replicate:/”之后跟随重复测定的名称。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Peptide"><span class="RowType">分子</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">母离子</td><td class="ColumnDescription">母离子</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">母离子</a> 列表</td></tr>
+<tr><td class="ColumnCaption">分子结果</td><td class="ColumnDescription">结果与分子有关。</td><td class="ColumnType">ResultKey 到 <a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">分子结果</a> 的图谱</td></tr>
+<tr><td class="ColumnCaption">分子列表</td><td class="ColumnDescription">Skyline 文档中的一组分子。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">分子列表</a></td></tr>
+<tr><td class="ColumnCaption">肽段序列</td><td class="ColumnDescription">肽段的氨基酸序列。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">肽段序列长度</td><td class="ColumnDescription">肽段序列中的氨基酸计数。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">肽段修饰序列</td><td class="ColumnDescription">仅使用结构化修饰质量差注释的
+氨基酸序列（例如 AC[+57]GR）。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.ProteomicSequence">ProteomicSequence</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">肽段修饰序列单一同位素质量</td><td class="ColumnDescription">以其单一同位素质量指代修饰的肽段的修饰序列，例如&quot;C[+57.021464]&quot;。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">肽段修饰序列平均质量</td><td class="ColumnDescription">以其平均质量指代修饰的肽段的修饰序列，例如&quot;C[+57.05162]&quot;。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">肽段修饰序列三字母代码</td><td class="ColumnDescription">以其三字母代码指代修饰的肽段的修饰序列，例如&quot;C[CAM]&quot;。如果修饰没有三字母代码，则使用其全名代替。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">肽段修饰序列全名</td><td class="ColumnDescription">以其全名指代修饰的肽段的修饰序列，例如&quot;C[Carbamidomethyl (C)]&quot;。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">肽段修饰序列 Unimod ID</td><td class="ColumnDescription">以其 unimod id 指代修饰的肽段的修饰序列，例如&quot;C(unimod:4)&quot;。如果修饰没有 unimod id，则使用其全名代替。</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">分子名称</td><td class="ColumnDescription">可以以中性、未标记形式分配给分子的通用名称。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子式</td><td class="ColumnDescription">用于在质谱仪中测量的中性未标记分子的原子化学式。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">标准类型</td><td class="ColumnDescription">标准类型</td><td class="ColumnType">标准类型</td></tr>
+<tr><td class="ColumnCaption">上一个 Aa</td><td class="ColumnDescription">上一个 Aa</td><td class="ColumnType">Char</td></tr>
+<tr><td class="ColumnCaption">下一个 Aa</td><td class="ColumnDescription">蛋白质序列中紧跟肽段之后的氨基酸残基。</td><td class="ColumnType">Char</td></tr>
+<tr><td class="ColumnCaption">第一个位置</td><td class="ColumnDescription">肽段的第一个 (N-末端) 氨基酸在其包含的蛋白质序列中的位置，
+如果没有可用的蛋白质序列，则为 #N/A。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">最后一个位置</td><td class="ColumnDescription">肽段的最后一个 (C-末端) 氨基酸在其包含的蛋白质序列中的位置，
+如果没有可用的蛋白质序列，则为 #N/A</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">遗漏的酶解位点数</td><td class="ColumnDescription">肽段序列中缺失酶剪切位点的数量</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">保留时间计算器得分</td><td class="ColumnDescription">在使用保留得分计算器时
+（例如 SSRCalc 或 iRT 得分），该当前计算器的肽段原始得分
+    </td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">预测保留时间</td><td class="ColumnDescription">由一组测量结果和保留时间计算器
+（目前仅可以使用 SSRCalc 3.0）之间的保留时间回归预测的保留时间；
+或如果未分配保留时间回归，则为 #N/A。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">平均测量保留时间</td><td class="ColumnDescription">所有重复测定结果中该肽段的平均保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明确保留时间</td><td class="ColumnDescription">用于目标的确切预测保留时间（以分钟为单位），覆盖所有其他预测方法。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示保留时间窗口</td><td class="ColumnDescription">用于目标的确切所需的保留时间窗口（以分钟为单位），覆盖用于导出该值的所有其他设定。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">校准方法</td><td class="ColumnDescription">覆盖与该特定分子一起使用的归一化方法，进行绝对定量和组间比较。</td><td class="ColumnType">校准方法</td></tr>
+<tr><td class="ColumnCaption">替代外部标准</td><td class="ColumnDescription">将使用其拟合校准曲线来对该肽段或分子定量的其他肽段或分子的名称</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子注释</td><td class="ColumnDescription">与分子相关的自由文本注释。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子定位器</td><td class="ColumnDescription">文档内的分子特殊标识符。以“Molecule:”开头。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">内标浓度</td><td class="ColumnDescription">样品内标量。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">浓度系数</td><td class="ColumnDescription">重复测定的“分析物浓度”所乘的值，以获得特定肽段或分子的特定浓度。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">校准曲线</td><td class="ColumnDescription">校正曲线，其使用样品类型为“标准”并标明“分析物浓度”的重复测定计算。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics">校准曲线</a></td></tr>
+<tr><td class="ColumnCaption">品质因数</td><td class="ColumnDescription">肽段或分子的检出极限和定量极限。可以在肽段设置的定量选项卡选择计算这些数量的方法。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit">品质因数</a></td></tr>
+<tr><td class="ColumnCaption">InChiKey（国际化合物标识键）</td><td class="ColumnDescription">标准化分子标识符</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">CAS（化学文摘社）</td><td class="ColumnDescription">标准化分子标识符</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">HMDB（人类代谢组学数据库）</td><td class="ColumnDescription">标准化分子标识符</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">InChI（国际化合物标识）</td><td class="ColumnDescription">标准化分子标识符</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">SMILES（简化分子线性输入规范）</td><td class="ColumnDescription">标准化分子标识符</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">KEGG</td><td class="ColumnDescription">标准化分子标识符</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">自动选择母离子</td><td class="ColumnDescription">如果为“true”，则 Skyline 将根据离子对设置筛选器、谱图库等自动添加或删除母离子。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">属性组 ID</td><td class="ColumnDescription">影响属性面积比例计算中肽段或分子的分组。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics"><span class="RowType">校准曲线</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">斜率</td><td class="ColumnDescription">拟合曲线或线中线性项的系数。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">截距</td><td class="ColumnDescription">拟合线或曲线中的 Y 截距</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">转折点</td><td class="ColumnDescription">对于双线性回归，两条线相交的 X 坐标。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">计数点</td><td class="ColumnDescription">在曲线拟合中使用的数据点数。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">二次项系数</td><td class="ColumnDescription">二次回归中 x 平方项的系数。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">R 平方</td><td class="ColumnDescription">测定系数</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">错误消息</td><td class="ColumnDescription">在尝试计算该值时出现的错误消息正文（如有）。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit"><span class="RowType">品质因数</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">检出极限</td><td class="ColumnDescription"> 能可靠地将分析物与空白区分开的浓度下限。
+      可以在肽段设置的定量选项卡指定有关计算检测下限的选项。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">定量极限</td><td class="ColumnDescription">分析物据称可量化的浓度下限。
+可以在肽段设置的定量选项卡指定用于确定此值的选项。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.ProteinResult"><span class="RowType">分子列表结果</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">重复测定</td><td class="ColumnDescription">重复测定</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">重复测定</a></td></tr>
+<tr><td class="ColumnCaption">分子列表丰度</td><td class="ColumnDescription">一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue">AbundanceValue</a></td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Collections.ResultKey"><span class="RowType">ResultKey</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">重复测定索引</td><td class="ColumnDescription">重复测定索引</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">重复测定名称</td><td class="ColumnDescription">汇入时分配给数据的重复测定名称。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">文件索引</td><td class="ColumnDescription">文件索引</td><td class="ColumnType">Int32</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.ResultFile"><span class="RowType">结果文件</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">重复测定</td><td class="ColumnDescription">重复测定</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">重复测定</a></td></tr>
+<tr><td class="ColumnCaption">文件名称</td><td class="ColumnDescription">导入数据的文件的名称</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">文件路径</td><td class="ColumnDescription">从中导入数据的文件所在的完整路径和文件名。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">样品名称</td><td class="ColumnDescription">当数据导入自多样品 WIFF 文件时的
+样品名称，或其他文件类型的文件名。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修改的时间</td><td class="ColumnDescription">原始质谱仪文件在磁盘上修改的最后
+时间和日期</td><td class="ColumnType">DateTime</td></tr>
+<tr><td class="ColumnCaption">采集时间</td><td class="ColumnDescription">质谱仪上一次开始获取此重复测定数据的时间
+和日期。或者，如果文件通过 1.1 之前的版本导入，则为 #N/A。</td><td class="ColumnType">DateTime</td></tr>
+<tr><td class="ColumnCaption">明确的全局标准面积</td><td class="ColumnDescription">在计算“相对于总体标准品比率”时使用的值。
+    在除以在 Skyline 以外计算的值来归一化特定重复测定中的峰面积时使用。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">总离子电流面积</td><td class="ColumnDescription">总离子电流在整个运行中的积分。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">离子迁移单位</td><td class="ColumnDescription">在色谱图提取中使用的离子迁移的单位。</td><td class="ColumnType">eIonMobilityUnits</td></tr>
+<tr><td class="ColumnCaption">结果文件定位器</td><td class="ColumnDescription">文档内的结果文件特殊标识符。这以“ResultFile:/”开头，之后是重复测定名称。
+这通常以结果文件名称结束，但如果文件名称不是重复测定内唯一的，则可能包含额外属性（比如完整路径）。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">样品 ID</td><td class="ColumnDescription">参阅样品的免费文本标识符（可以在多个文件之间共享）。从导入结果文档内“样品 ID”属性中读取</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">仪器序列号</td><td class="ColumnDescription">导入结果文档中读取的仪器序列号</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">中位数峰面积</td><td class="ColumnDescription">特定结果文件中离子对结果的离子对峰面积中位数。
+当归一化方法为“均衡中位数”时，将使用该中位数峰面积。
+如果有内标标签类型，则仅使用母离子标签类型为内标的离子对峰面积来计算中位数峰面积。
+如果没有内标峰面积，则根据所有离子对峰面积计算中位数离子对峰面积。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">归一化除数</td><td class="ColumnDescription">使用默认归一化方法时观察值除以的数字。
+默认归一化方法在肽段或分子设置对话框的“定量”选项卡上指定。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Precursor"><span class="RowType">母离子</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子</td><td class="ColumnDescription">分子属于分子列表并包含母离子。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">分子</a></td></tr>
+<tr><td class="ColumnCaption">离子对</td><td class="ColumnDescription">离子对</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Transition">离子对</a> 列表</td></tr>
+<tr><td class="ColumnCaption">母离子结果（多个）</td><td class="ColumnDescription">母离子结果（多个）</td><td class="ColumnType">ResultKey 到 <a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">母离子结果（单个）</a> 的图谱</td></tr>
+<tr><td class="ColumnCaption">母离子结果摘要</td><td class="ColumnDescription">母离子结果摘要</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResultSummary">PrecursorResultSummary</a></td></tr>
+<tr><td class="ColumnCaption">母离子电荷</td><td class="ColumnDescription">与母离子相关的电荷。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">同位素标记类型</td><td class="ColumnDescription">与母离子（轻标/重标）相关的标签类型名称，
+表明应用了哪些同位素修饰</td><td class="ColumnType">同位素标记类型</td></tr>
+<tr><td class="ColumnCaption">母离子中性质量</td><td class="ColumnDescription">母离子的中性质量（以道尔顿为单位）</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">离子对计数</td><td class="ColumnDescription">该母离子包含的离子对数量。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">母离子名称</td><td class="ColumnDescription">母离子的名称。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">母离子公式</td><td class="ColumnDescription">母离子的公式。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">母离子中性分子式</td><td class="ColumnDescription">母离子的公式。这是不推荐使用的，而应该使用“PrecursorIonFomula”。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">母离子加合物</td><td class="ColumnDescription">应用于分子以制备母离子的加合物。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">母离子质荷比</td><td class="ColumnDescription">母离子的质荷比 (m/z)。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">碰撞能量</td><td class="ColumnDescription">根据仪器/厂商特定的 Skyline 内的预设碰撞能量方程
+所计算出的母离子碰撞能量</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">去簇电压</td><td class="ColumnDescription">根据 Skyline 内仪器/厂商特定的预设去簇电位方程
+所计算出的母离子的去簇电位</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">修改的序列</td><td class="ColumnDescription">包括任何氨基酸修饰
+（如半胱氨酸烷基化）的肽段序列。（例如：AGLC[+57]QTFVYGGC[+57]R）</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.ProteomicSequence">ProteomicSequence</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">修改的序列同位素质量</td><td class="ColumnDescription">以其单一同位素质量指代修饰的母离子的修饰序列，例如&quot;C[+57.021464]&quot;。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修改的序列平均质量</td><td class="ColumnDescription">以其平均质量指代修饰的母离子的修饰序列，例如&quot;C[+57.05162]&quot;。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修改的序列三字母代码</td><td class="ColumnDescription">以其三字母代码指代修饰的母离子的修饰序列，例如&quot;C[CAM]&quot;。如果修饰没有三字母代码，则使用其全名代替。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修改的序列全名</td><td class="ColumnDescription">以其全名指代修饰的母离子的修饰序列，例如&quot;C[Carbamidomethyl (C)]&quot;。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修改的序列Unimod ID</td><td class="ColumnDescription">以其 unimod id 指代修饰的母离子的修饰序列，例如&quot;C(unimod:4)&quot;。如果修饰没有 unimod id，则使用其全名代替。</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">母离子明确碰撞能量</td><td class="ColumnDescription">目标的 SRM 方法或离子对列表中使用的确切目标碰撞能量，将覆盖所有模型或优化库值。 可依次由每个离子对的明确碰撞能量覆盖。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明确的补偿电压</td><td class="ColumnDescription">用于目标的 SRM 方法或离子对清单确切所需的补偿电压（离子迁移率过滤器），覆盖所有模型或优化库值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示离子迁移</td><td class="ColumnDescription">在提取色谱图时使用的过滤器中心的离子迁移值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示离子迁移单位</td><td class="ColumnDescription">明示离子迁移值的单位。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">明确的碰撞横截面</td><td class="ColumnDescription">待转换为离子迁移且用于从离子迁移质谱中提取色谱图确切所需的碰撞横截面（以平方埃为单位），覆盖所有模型值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">母离子浓度</td><td class="ColumnDescription">将该母离子掺入样品时的浓度。用于产生同位素响应曲线。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">库离子迁移</td><td class="ColumnDescription">离子迁移库中母离子的离子迁移信息</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.IonMobilityObject">IonMobilityObject</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">库离子迁移值</td><td class="ColumnDescription">离子迁移库中母离子的离子迁移</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">库离子迁移单位</td><td class="ColumnDescription">库离子迁移值的单位</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">库碰撞横截面</td><td class="ColumnDescription">离子迁移库中母离子的碰撞横截面</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">库离子迁移高能偏置</td><td class="ColumnDescription">离子迁移库中母离子的高能偏置</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">谱图过滤器</td><td class="ColumnDescription">谱图必须满足被包含在提取的离子色谱图中的额外条件</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">母离子注释</td><td class="ColumnDescription">点击“编辑”菜单中的“编辑注释”后显示的与母离子相关的
+自由文字注释</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">库名称</td><td class="ColumnDescription">当串联质谱谱图库谱图与母离子相关时，
+串联质谱谱图库的名称。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">库类型</td><td class="ColumnDescription">当串联质谱谱图库谱图与母离子相关时，
+串联质谱谱图库（BiblioSpec、GPM、NIST）的类型。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">库概率得分</td><td class="ColumnDescription">在构建谱图库所用输入文件中分配至该匹配的概率得分。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">库得分 1</td><td class="ColumnDescription">或许会用于在蛋白质母离子之间排名的
+原始肽段库得分。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">库得分 2</td><td class="ColumnDescription">或许会用于在蛋白质母离子之间排名的
+原始肽段库得分。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">库得分 3</td><td class="ColumnDescription">或许会用于在蛋白质母离子之间排名的
+原始肽段库得分。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">是诱饵</td><td class="ColumnDescription">若是诱饵母离子，则成立。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">诱饵 Mz 偏移</td><td class="ColumnDescription">应用于母离子的质荷比变化，以产生
+诱饵质荷比</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">自动选择离子对</td><td class="ColumnDescription">如果为“true”，则 Skyline 将根据离子对设置筛选器、谱图库等自动添加或删除母离子中的离子对。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">目标定性离子比</td><td class="ColumnDescription">所有未从校准排除的外部标准重复测定中定性离子比值的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范例峰</td><td class="ColumnDescription">文档中任一重复测定或库中任一明确峰边界中得分最高的峰</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.SourcedPeakValue">SourcedPeakValue</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">范例保留时间</td><td class="ColumnDescription">得分最高的峰顶点的归一化保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范例起始时间</td><td class="ColumnDescription">来自得分最高的重复测定或库文件的峰归一化起点保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范例结束时间</td><td class="ColumnDescription">来自得分最高的重复测定或库文件的峰归一化结束保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范例得分</td><td class="ColumnDescription">重复测定或库中得分最高的峰得分</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范例重复测定名称</td><td class="ColumnDescription">得分最高的峰重复测定名称</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">范例库名称</td><td class="ColumnDescription">得分最高的峰库名称</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">范例文件路径</td><td class="ColumnDescription">得分最高的峰结果文件路径</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">母离子定位器</td><td class="ColumnDescription">文档内的母离子特殊标识符。这将以“Precursor:”开头，并通常以母离子标记类型（之后是其加合物）结束。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.PrecursorResultSummary"><span class="RowType">PrecursorResultSummary</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">最佳保留时间</td><td class="ColumnDescription">其母离子具有最高强度时
+离子对的保留时间值。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.RetentionTimeSummary">RetentionTimeSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">最佳保留时间最小值</td><td class="ColumnDescription">母离子最佳保留时间值的最小值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最佳保留时间最大值</td><td class="ColumnDescription">母离子最佳保留时间值的最大值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范围最佳保留时间</td><td class="ColumnDescription">最大最佳保留时间和最小最佳保留时间之间的
+差异，可用于测定所测量的保留时间的
+漂移范围。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">平均最佳保留时间</td><td class="ColumnDescription">母离子最佳保留时间值的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最佳保留时间标准偏差</td><td class="ColumnDescription">母离子最佳保留时间值的标准
+      偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最佳保留时间的变异系数</td><td class="ColumnDescription">母离子最佳保留时间值
+的变异系数 (CV)。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">检测 Q 值</td><td class="ColumnDescription">在应用 mProphet 模型后分配给每个选定目标峰的错误发现率 (FDR) 得分。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.DetectionQValueSummary">DetectionQValueSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">最小检测 Q 值</td><td class="ColumnDescription">在应用 mProphet 模型后，分配给每个选定目标峰的错误发现率 (FDR) 得分的最小值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大检测 Q 值</td><td class="ColumnDescription">在应用 mProphet 模型后，分配给每个选定目标峰的错误发现率 (FDR) 得分的最大值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">中位数检测 Q 值</td><td class="ColumnDescription">在应用 mProphet 模型后，分配给每个选定目标峰的错误发现率 (FDR) 得分的中位数。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">半峰宽最大值</td><td class="ColumnDescription">母离子离子对峰的最大半峰
+全宽 (FWHM)。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.FwhmSummary">FwhmSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均最大半峰宽</td><td class="ColumnDescription">母离子最大 Fwhm（峰宽）值的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大半峰全宽标准偏差</td><td class="ColumnDescription">母离子最大 Fwhm（峰宽）值的标准偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大半峰宽的变异系数</td><td class="ColumnDescription">母离子最大 Fwhm（峰宽）值的
+变异系数 (CV)。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">总面积</td><td class="ColumnDescription">特定母离子的所有单个离子对的面积值
+总和。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaSummary">AreaSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均总面积</td><td class="ColumnDescription">母离子总面积值的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">总面积标准偏差</td><td class="ColumnDescription">母离子总面积值的标准偏差</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">总面积的变异系数</td><td class="ColumnDescription">母离子总面积值的变异系数 (CV)</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">总面积比</td><td class="ColumnDescription">该母离子与首个内标标签类型的总面积比，
+在版本 0.7 之前始终是轻标/重标，
+并显示在重标母离子上。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaRatioSummary">AreaRatioSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均总面积比</td><td class="ColumnDescription">母离子总面积比值的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">总面积比标准偏差</td><td class="ColumnDescription">母离子总面积归一化值的标准
+偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">总面积比的变异系数</td><td class="ColumnDescription">母离子总面积比值的变异系数 (CV)</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">归一化的总面积</td><td class="ColumnDescription">根据文档中所有肽段母离子的总面积值总和
+归一化计算出的总面积值</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaNormalizedSummary">AreaNormalizedSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">归一化的平均总面积</td><td class="ColumnDescription">母离子总面积归一化值的平均值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">归一化总面积的标准偏差</td><td class="ColumnDescription">归一化总面积的标准偏差</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">归一化总面积的变异系数</td><td class="ColumnDescription">母离子总面积归一化值的变异系数 (CV)。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">高度最大值</td><td class="ColumnDescription">高度最大值</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaSummary">AreaSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均最大高度</td><td class="ColumnDescription">平均最大高度</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大高度标准偏差</td><td class="ColumnDescription">标准偏差最大高度</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大高度的变异系数</td><td class="ColumnDescription">最大高度的变异系数</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.PeptideResult"><span class="RowType">分子结果</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子峰值发现比率</td><td class="ColumnDescription">分子峰值发现比率</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子保留时间</td><td class="ColumnDescription">特定重复测定中母离子的最佳保留时间值的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">预测结果保留时间</td><td class="ColumnDescription">每次重复测定运行的肽段保留时间。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">相对于标准品比率</td><td class="ColumnDescription">肽段的轻标/重标面积比</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最佳重复测定</td><td class="ColumnDescription">如果此重复测定得出了最高的总肽段峰得分，则成立。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">修改的面积比例</td><td class="ColumnDescription">此肽段结果的归一化面积，除以在此蛋白质和具有相同未修饰序列的重复测定中的所有肽段结果的总和。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">属性面积比例</td><td class="ColumnDescription">校准后面积与文档（拥有相同属性面积比例）内所有其他肽段或分子的校准后面积总和比。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">结果文件</td><td class="ColumnDescription">结果文件</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ResultFile">结果文件</a></td></tr>
+<tr><td class="ColumnCaption">分子列表结果</td><td class="ColumnDescription">分子列表结果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">分子列表结果</a></td></tr>
+<tr><td class="ColumnCaption">从校准中排除</td><td class="ColumnDescription">是否应从肽段的校准曲线计算中排除重复测定的结果。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">定量</td><td class="ColumnDescription">与使用校正曲线或归一化方法量化分析相关的值。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.QuantificationResult">QuantificationResult</a></td></tr>
+<tr><td class="ColumnCaption">重复测定校准曲线</td><td class="ColumnDescription">使用与此重复测定具有相同批次名称的重复测定生成的校准曲线。
+若母离子浓度在任一此肽段内母离子中指定，则校准曲线将为同位素响应曲线。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics">校准曲线</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">重复测定斜度</td><td class="ColumnDescription">重复测定校准曲线的斜度</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重复测定截距</td><td class="ColumnDescription">重复测定校准曲线的截距</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重复测定转折点</td><td class="ColumnDescription">重复测定校准曲线上的双线性转折点</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重复测定点计数</td><td class="ColumnDescription">拟合重复测定校准曲线的数据点数</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">重复测定二次项系数</td><td class="ColumnDescription">重复测定校准曲线上 x 平方项的系数</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重复测定 R 平方</td><td class="ColumnDescription">重复测定校准曲线上的确定系数</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重复测定错误消息</td><td class="ColumnDescription">在尝试拟合重复测定校准曲线时出现的错误消息正文（如有）</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">批次品质因数</td><td class="ColumnDescription">使用与此重复测定具有相同批次名称的外部标准重复测定子集计算的品质因数。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit">品质因数</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">批次检测限制</td><td class="ColumnDescription">使用与此重复测定具有相同批次名称的外部标准重复测定子集计算的检测下限。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">批次定量限制</td><td class="ColumnDescription">使用与此重复测定具有相同批次名称的外部标准重复测定子集计算的定量下限。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">明确分析物浓度</td><td class="ColumnDescription">这种特定的分子或肽段在该重复测定中的浓度。
+如果未指定明确分析物浓度，则假定分析物的浓度为
+重复测定中的分析物浓度乘以肽段或分子的浓度系数。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">肽段谱图匹配计数</td><td class="ColumnDescription">谱图库中与肽段和结果文件相匹配的谱图数量。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">分子结果定位器</td><td class="ColumnDescription">文档内的分子结果特殊标识符。以“MoleculeResult：”开头，并包含分子名称和重复测定名称。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">RatioLightToHeavy</td><td class="ColumnDescription"></td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">DotProductLightToHeavy</td><td class="ColumnDescription"></td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue"><span class="RowType">AbundanceValue</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子列表丰度原始值</td><td class="ColumnDescription">一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+在缺失的数据影响到重复测定之间的比较时仍可获取。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子列表丰度精确值</td><td class="ColumnDescription">一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+在缺失的数据影响到重复测定之间的比较时不可获取。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子列表丰度消息</td><td class="ColumnDescription">如果缺失的数据影响到比较重复测定之间的“分子列表丰度”，则发出警告</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Transition"><span class="RowType">离子对</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">母离子</td><td class="ColumnDescription">母离子</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">母离子</a></td></tr>
+<tr><td class="ColumnCaption">离子对结果（多个）</td><td class="ColumnDescription">离子对结果（多个）</td><td class="ColumnType">ResultKey 到 <a href="#pwiz.Skyline.Model.Databinding.Entities.TransitionResult">离子对结果（单个）</a> 的图谱</td></tr>
+<tr><td class="ColumnCaption">离子对结果摘要</td><td class="ColumnDescription">离子对结果摘要</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.TransitionResultSummary">TransitionResultSummary</a></td></tr>
+<tr><td class="ColumnCaption">子离子电荷</td><td class="ColumnDescription">子离子电荷 (z)。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">子离子中性质量</td><td class="ColumnDescription">子离子肽段片段的中性质量（以道尔顿为单位）。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">子离子质荷比</td><td class="ColumnDescription">子离子的质荷比 (m/z)。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">碎片离子</td><td class="ColumnDescription">子离子肽段片段的名称（例如 y8、y10、b7 等。）。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">子离子公式</td><td class="ColumnDescription">子离子的公式。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">子离子中性分子式</td><td class="ColumnDescription">子离子的公式。这是不推荐使用的，而应该使用“ProductIonFormula”。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">子离子加合物</td><td class="ColumnDescription">应用于子离子的加合物。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">碎片离子类型</td><td class="ColumnDescription">子离子类型（y、b、c、z、a、x、母离子）</td><td class="ColumnType">IonType</td></tr>
+<tr><td class="ColumnCaption">碎片离子序数</td><td class="ColumnDescription">在肽段断裂后（C-末端）
+肽段中的氨基酸的位置。（例如 8、10、7 等。）</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">剪切 Aa</td><td class="ColumnDescription">在肽段断裂后（C-末端）肽段中的特异性
+氨基酸残基。（例如 P、M、S、T 等。）</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">丢失中性质量</td><td class="ColumnDescription">此片段中所有中性丢失的总质量。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">损失</td><td class="ColumnDescription">此片段中所有中性丢失的逗号分隔清单</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">损失公式</td><td class="ColumnDescription">此片段中所有中性丢失的逗号分隔化学式列表，或者如果并非所有丢失都具有化学式，则为空</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">定量</td><td class="ColumnDescription">定量肽段时是否应该包含离子对的峰面积。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">明确碰撞能量</td><td class="ColumnDescription">用于目标的 SRM 方法或离子对列表确切所需的碰撞能量，覆盖所有模型或优化库值或根据母离子而定的明确值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示SLens</td><td class="ColumnDescription">用于目标的 SRM 方法或离子对清单确切所需的 SLens 值（仅限 Thermo 仪器）。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明确的锥孔电压</td><td class="ColumnDescription">用于目标的 SRM 方法或离子对清单确切所需的锥电压（仅限 Waters 仪器）。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明确的去簇电压</td><td class="ColumnDescription">用于目标的 SRM 方法或离子对清单确切所需的去簇电压（仅限 SCIEX 仪器），覆盖所有模型值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示离子迁移高能偏置</td><td class="ColumnDescription">在提取色谱图时使用的离子迁移高能偏置</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">离子对注释</td><td class="ColumnDescription">点击“编辑”菜单中的“编辑注释”后显示的与离子对相关的
+自由文字注释</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">库排名</td><td class="ColumnDescription">排名系基于在离子对过滤设定允许的所有离子对中，
+该离子的库强度，在用户界面中显示为“(rank #)”。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">库强度</td><td class="ColumnDescription">对应匹配库谱图中离子对子离子的
+串联质谱峰强度。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">同位素分布指数</td><td class="ColumnDescription">单一同位素峰为零，M+1 为 1、M+2 为 2 等。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">同位素分布排名</td><td class="ColumnDescription">排名系基于预测同位素分布的所有同位素峰中的同位素分布比例，
+在用户界面中显示为“(irank #)”。
+目前仅适用于从高分辨率 MS1 扫描中过滤
+的母离子离子对。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">同位素分布比例</td><td class="ColumnDescription">为此同位素峰预测的全部同位素
+分布的比例。目前仅适用于从高分辨率 MS1 扫描中过滤的
+母离子离子对。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">全扫描过滤器宽度</td><td class="ColumnDescription">全扫描过滤器宽度</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">离子对是诱饵</td><td class="ColumnDescription">若是诱饵离子对，则成立</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">子离子诱饵质荷比偏移</td><td class="ColumnDescription">应用于子离子的质荷比变化，以产生
+诱饵质荷比。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">离子对定位器</td><td class="ColumnDescription">文档内的离子对特殊标识符。这以“Transition:”开头。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.TransitionResultSummary"><span class="RowType">TransitionResultSummary</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">保留时间</td><td class="ColumnDescription">离子对峰的最大强度所对应的的保留时间。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.RetentionTimeSummary">RetentionTimeSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">保留时间最小值</td><td class="ColumnDescription">离子对保留时间值的最小值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">保留时间最大值</td><td class="ColumnDescription">离子对保留时间值最大值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范围保留时间</td><td class="ColumnDescription">最大保留时间和最小保留时间之间的差异，
+可用于测定所测量的保留时间的
+漂移范围。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">平均保留时间</td><td class="ColumnDescription">离子对保留时间值的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">保留时间标准偏差</td><td class="ColumnDescription">离子对保留时间值的标准偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">保留时间的变异系数</td><td class="ColumnDescription">离子对保留时间值的变异系数 (CV)。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">半峰宽</td><td class="ColumnDescription">离子对峰的半峰全宽 (FWHM)。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.FwhmSummary">FwhmSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均半峰宽</td><td class="ColumnDescription">离子对 Fwhm（峰宽）值的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">半峰全宽标准偏差</td><td class="ColumnDescription">离子对 Fwhm（峰宽）值的标准偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">半峰宽的变异系数</td><td class="ColumnDescription">离子对 Fwhm（峰宽）值的变异系数 (CV)</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">面积</td><td class="ColumnDescription">离子对峰值的曲线下面积 (AUC) 减去背景。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaSummary">AreaSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均面积</td><td class="ColumnDescription">离子对面积值的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">面积标准偏差</td><td class="ColumnDescription">离子对面积值的标准偏差</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">峰面积的变异系数</td><td class="ColumnDescription">离子对面积值的变异系数 (CV)。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">归一化的面积</td><td class="ColumnDescription">归一化为文档中所有离子对的面积总值
+的面积。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaNormalizedSummary">AreaNormalizedSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">归一化的平均面积</td><td class="ColumnDescription">离子对面积归一化值的平均值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">归一化的面积标准偏差</td><td class="ColumnDescription">离子对面积归一化值的标准偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">归一化峰面积的变异系数</td><td class="ColumnDescription">离子对面积归一化值的
+变异系数 (CV)。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">面积比</td><td class="ColumnDescription">该离子对与其首个内标标签类型中
+相应离子对的面积比，在版本 0.7 前始终是轻标/重标，
+并显示在重离子对上。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaRatioSummary">AreaRatioSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均面积比</td><td class="ColumnDescription">离子对面积比率的平均值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">面积比标准偏差</td><td class="ColumnDescription">离子对面积比值的标准偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">面积比的变异系数</td><td class="ColumnDescription">离子对面积比值的变异系数 (CV)。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.PrecursorResult"><span class="RowType">母离子结果（单个）</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">母离子</td><td class="ColumnDescription">母离子</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">母离子</a></td></tr>
+<tr><td class="ColumnCaption">检测 Q 值</td><td class="ColumnDescription">在应用 mProphet 模型后分配给每个选定目标峰的错误发现率 (FDR) 得分。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">检测 Z 得分</td><td class="ColumnDescription">在应用 mProphet 模型后，分配给每个选定峰（目标和诱饵）的归一化 mProphet 得分，表示为平均诱饵评分的标准偏差 (SD) 数。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">母离子峰值检出比</td><td class="ColumnDescription">所测量峰中的离子对与肽段中
+离子对总数的比。肽段树视图中的峰值指示符
+对应于绿色 = 1.0（集成所有离子对），橙色 &gt;= 0.5，红色 &lt; 0.5。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最佳保留时间</td><td class="ColumnDescription">其母离子具有最高强度时
+离子对的保留时间值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">半峰宽最大值</td><td class="ColumnDescription">母离子离子对峰的最大半峰
+全宽 (FWHM)。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">启动时间最小值</td><td class="ColumnDescription">母离子所有离子对的最小开始时间。除非使用
+相同的积分边界手动编辑母离子的所有离子对</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">结束时间最大值</td><td class="ColumnDescription">母离子所有离子对的最大结束时间。除非使用
+相同的积分边界手动编辑母离子的所有离子对。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">总面积</td><td class="ColumnDescription">特定母离子的所有单个离子对的面积值
+总和。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">MS1 总面积</td><td class="ColumnDescription"> MS1总面积</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">片段总面积</td><td class="ColumnDescription">片段总面积</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">总体背景</td><td class="ColumnDescription">特定母离子的所有单个离子对的
+背景值总和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">MS1 总体背景</td><td class="ColumnDescription">MS1总背景</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">片段总背景</td><td class="ColumnDescription">片段总背景</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">总面积比</td><td class="ColumnDescription">该母离子与首个内标标签类型的总面积比，
+在版本 0.7 之前始终是轻标/重标，
+并显示在重标母离子上。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">比率点积</td><td class="ColumnDescription">相当于用户界面中显示的“rdotp”。库点积中所述的点积计算，但在母离子峰面积（如轻标）和标准类型母离子峰面积（如重标）之间进行计算，如果没有标准类型或母离子为标准类型则为 #N/A。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">归一化的总面积</td><td class="ColumnDescription">根据文档中所有肽段母离子的总面积值总和
+归一化计算出的总面积值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">高度最大值</td><td class="ColumnDescription">高度最大值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">平均质量误差PPM</td><td class="ColumnDescription">所有离子对的预期与实测质荷比值（以百万分之几 (PPM) 表示）之差的面积加权平均值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">截尾计数</td><td class="ColumnDescription">峰积分
+边界触及采集时间范围任意一端、末端强度
+超过背景校正峰高 25% 且明显超出另一侧范围的母离子的离子对数量。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">截断比例</td><td class="ColumnDescription">峰积分
+边界触及采集时间范围任意一端、末端强度
+超过背景校正峰高 25% 且明显超出另一侧范围的母离子的离子对面积加权平均值（0 至 1.0）。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">已确认的</td><td class="ColumnDescription">如果在峰积分边界之间的某一点存在结果文件
+的串联质谱 (MS/MS) 肽鉴定，则成立。</td><td class="ColumnType">PeakIdentification</td></tr>
+<tr><td class="ColumnCaption">库点积</td><td class="ColumnDescription">相当于用户界面中显示的“dotp”。母离子的单个离子对峰面积
+与匹配的 MS/MS
+谱图库谱图中匹配离子峰的强度之间的点积（注释：截止版本 v1.4，为 1 &#226;€“ Arcos(dotp)/(Pi/2)，
+其中 dotp 是上文所述的值， 又称归一化谱图对比角度）；或者如果母离子没有匹配的
+库谱图或离子对少于 4 个，则为 #N/A。这是用于方法调整的 35 
+个有用值。当
+存在 6 个或更多离子对时， 效果最佳。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">同位素点积值</td><td class="ColumnDescription">上文所述的点积计算，但在母离子的单个母离子
+（M、M+1、M+2 等）峰面积与预测的同位素分布强度之间；
+或如果离子对不是母离子同位素，则为 #N/A；
+或色谱图非提取自高分辨率 MS1 数据。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">用户设定总数</td><td class="ColumnDescription">若峰的预设选择或其边界是手动更改的，则成立。</td><td class="ColumnType">UserSet</td></tr>
+<tr><td class="ColumnCaption">最优步骤</td><td class="ColumnDescription">指明与正在优化的参数的默认值所距离的优化步骤值，
+预设参数值或者当重复测定中未
+进行优化时的值为 0。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">最优碰撞能量</td><td class="ColumnDescription">当正在进行碰撞能量优化时，
+与优化步骤对应的碰撞能量值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最优去簇电压</td><td class="ColumnDescription">当正在进行去簇电压优化时，
+与优化步骤对应的去簇电压值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最优补偿电压</td><td class="ColumnDescription">当正在进行补偿电压优化时，与优化步骤对应的离子迁移过滤的补偿电压值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">碰撞横截面</td><td class="ColumnDescription">以平方埃为单位的离子迁移测量值，通常会转换为适当的单位（例如漂移时间，inverseK0），并用于从离子迁移质谱中提取色谱图。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">离子迁移 MS1</td><td class="ColumnDescription">在母离子色谱图提取中使用的离子迁移过滤器窗口的中心。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">离子迁移碎片</td><td class="ColumnDescription">在子离子色谱图提取中使用的离子迁移过滤器窗口的中心。这可能不同于母离子的值，因为子离子可能由于能量碰撞更多而移动得更快，</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">离子迁移窗口</td><td class="ColumnDescription">在色谱图提取中使用的离子迁移过滤器窗口的宽度。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">离子迁移单位</td><td class="ColumnDescription">在色谱图提取中使用的离子迁移的单位。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">母离子定量</td><td class="ColumnDescription">与使用同位素响应曲线来量化母离子结果相关的值。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult">PrecursorQuantificationResult</a></td></tr>
+<tr><td class="ColumnCaption">液相色谱峰离子指标 MS1</td><td class="ColumnDescription">在峰积分边界间采集 MS1 谱图时，质谱仪内离子数量的相关数值</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.LcPeakIonMetrics">LcPeakIonMetrics</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">液相色谱峰总离子流面积 MS1</td><td class="ColumnDescription">峰积分边界间 MS1 谱图总离子流的积分</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex 总离子计数 MS1</td><td class="ColumnDescription">总母离子强度与最大母离子强度 MS1 谱图进样时间的乘积</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">液相色谱峰总离子计数 MS1</td><td class="ColumnDescription">总离子流与峰积分边界间 MS1 谱图进样时间的乘积之和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex 分析物离子计数 MS1</td><td class="ColumnDescription">总母离子强度与最大母离子强度 MS1 谱图进样时间的乘积</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">液相色谱峰分析物离子计数 MS1</td><td class="ColumnDescription">总母离子强度与峰积分边界间 MS1 谱图进样时间的乘积之和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex 谱图 ID MS1</td><td class="ColumnDescription">最大母离子强度 MS1 谱图标识</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">液相色谱峰离子指标片段</td><td class="ColumnDescription">在峰积分边界间采集 MS2 谱图时，质谱仪内离子数量的相关数值</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.LcPeakIonMetrics">LcPeakIonMetrics</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">液相色谱峰总离子流面积片段</td><td class="ColumnDescription">峰积分边界间 MS2 谱图总离子流的积分</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex 总离子计数片段</td><td class="ColumnDescription">总离子流与最大离子对强度 MS2 谱图进样时间的乘积</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">液相色谱峰总离子计数片段</td><td class="ColumnDescription">总离子流与峰积分边界间 MS2 谱图进样时间的乘积之和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex 分析物离子计数片段</td><td class="ColumnDescription">总离子对强度与最大离子对强度 MS2 谱图进样时间的乘积</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">液相色谱峰分析物离子计数片段</td><td class="ColumnDescription">离子对强度与峰积分边界间 MS2 谱图进样时间的乘积之和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex 谱图 ID 片段</td><td class="ColumnDescription">最大离子对强度 MS2 谱图标识</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">初始峰</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 选定的峰边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">原始保留时间</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 选定的峰顶点保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">原始起始时间</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 选定的峰起始保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">原始结束时间</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 选定的峰结束保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">原始得分</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 分配的峰得分</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">重新合并峰</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">重新合并保留时间</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰顶点保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新合并起始时间</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰起始保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新合并结束时间</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰结束保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新合并得分</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时分配的峰得分</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">母离子重复测定注释</td><td class="ColumnDescription">与使用结果网格的母离子结果集
+相关的自由文字注释。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子结果</td><td class="ColumnDescription">分子结果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">分子结果</a></td></tr>
+<tr><td class="ColumnCaption">插补峰</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时的峰边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">插补起始时间</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的起始时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">插补结束时间</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的结束时间</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">母离子结果定位器</td><td class="ColumnDescription">文档内的母离子结果特殊标识符。这以“PrecursorResult:”开头，并通常以重复测定名称结束，但可能包含最优步和结果文件的额外属性。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.QuantificationResult"><span class="RowType">QuantificationResult</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">校准后面积</td><td class="ColumnDescription">根据
+明示的肽段/分子“归一化方法”
+或在“设置 &gt; 肽段设置 &gt; 定量”中指定的归一化方法归一化肽段/分子强度而得出的值</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">归一化面积原始值</td><td class="ColumnDescription">根据
+明示的肽段/分子“归一化方法”或在“设置 &gt; 肽段设置 &gt; 定量”中指定的归一化方法归一化肽段/分子强度而得出的值。在缺失的数据影响到重复测定之间的比较时仍可获取</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">归一化面积精确值</td><td class="ColumnDescription">根据
+明示的肽段/分子“归一化方法”或在“设置 &gt; 肽段设置 &gt; 定量”中指定的归一化方法归一化肽段/分子强度而得出的值。在缺失的数据影响到重复测定之间的比较时不可获取</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">归一化面积消息</td><td class="ColumnDescription">缺失的数据影响到重复测定之间的“归一化面积”值时发出警告</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">计算的浓度</td><td class="ColumnDescription">分析物浓度通过以下任意一种方式计算：
+1. 使用校准曲线（前提是“肽段设置 &gt; 定量”指定了回归拟合）
+2. 使用与内标 (或替代) 的比，并乘以内标浓度。</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">计算的浓度原始值</td><td class="ColumnDescription">即使缺失的数据影响到重复测定之间的比较，仍可获取计算的浓度值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">计算的浓度精确值</td><td class="ColumnDescription">缺失的数据影响到重复测定之间的比较时，不可获取计算的浓度值</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">计算的浓度消息</td><td class="ColumnDescription">如果缺失的数据影响到比较重复测定之间“计算的浓度”，则发出警告</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">准确性</td><td class="ColumnDescription">计算的浓度与指定的分析物浓度之比</td><td class="ColumnType">Double</td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.TransitionResult"><span class="RowType">离子对结果（单个）</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">离子对</td><td class="ColumnDescription">离子对</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Transition">离子对</a></td></tr>
+<tr><td class="ColumnCaption">保留时间</td><td class="ColumnDescription">离子对峰的最大强度所对应的的保留时间。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">半峰宽</td><td class="ColumnDescription">离子对峰的半峰全宽 (FWHM)。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">半峰宽退化</td><td class="ColumnDescription">简并的Fwhm</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">启动时间</td><td class="ColumnDescription">离子对峰开始积分边界的保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">结束时间</td><td class="ColumnDescription">离子对峰结束积分边界的保留时间。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">面积</td><td class="ColumnDescription">离子对峰值的曲线下面积 (AUC) 减去背景。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">背景</td><td class="ColumnDescription">由积分边界形成的矩形面积，以及
+基线和垂直于积分边界与离子对峰的
+色谱图之间的最小交点强度的线。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">面积比</td><td class="ColumnDescription">该离子对与其首个内标标签类型中
+相应离子对的面积比，在版本 0.7 前始终是轻标/重标，
+并显示在重离子对上。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">归一化的面积</td><td class="ColumnDescription">归一化为文档中所有离子对的面积总值
+的面积。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">高度</td><td class="ColumnDescription">离子对峰积分边界之间的点的
+最大强度。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">质量误差 PPM</td><td class="ColumnDescription">以百万分之几 (PPM) 表示的预期质荷比值与测量值之差</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">截短的</td><td class="ColumnDescription">如果峰积分边界触及采集
+时间范围任意一端、末端强度超过背景校正峰高
+25% 且明显超出另一侧范围，则为真。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">峰排名</td><td class="ColumnDescription">基于该离子对在相同母离子的所有其他离子对中的面积
+进行的排名。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">按级别进行峰排名</td><td class="ColumnDescription">在特定重复测定中按质谱级别排名的峰面积（即 MS1 和串联质谱分开排名）</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">用户设定峰</td><td class="ColumnDescription">若峰的预设选择或其边界是手动更改的，则成立</td><td class="ColumnType">UserSet</td></tr>
+<tr><td class="ColumnCaption">最优步骤</td><td class="ColumnDescription">指明与正在优化的参数的默认值所距离的优化步骤值，
+预设参数值或者当重复测定中未
+进行优化时的值为 0。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">峰内点</td><td class="ColumnDescription">合并峰启动时间和结束时间之间的色谱图点数。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">峰间周期时间</td><td class="ColumnDescription">整合峰间的周期时间（秒）。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">偏度</td><td class="ColumnDescription">色谱峰不对称性的测量值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">峰度</td><td class="ColumnDescription">色谱峰“拖尾度”的测量值。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">峰标准偏差</td><td class="ColumnDescription">色谱图峰的标准偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">形状关联</td><td class="ColumnDescription">该离子对的色谱峰对比同一母离子下所有离子对的中位数峰形状的 Pearson 关联。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">共洗脱</td><td class="ColumnDescription">如果此离子对的峰具有与峰群组内的其他离子对类似的顶点和范围，则为真。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">离子迁移碎片</td><td class="ColumnDescription">在子离子色谱图提取中使用的离子迁移过滤器窗口的中心。这可能不同于母离子的值，因为子离子可能由于能量碰撞更多而移动得更快，</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">色谱图</td><td class="ColumnDescription">离子对和重复测定的色谱图。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram">色谱图</a></td></tr>
+<tr><td class="ColumnCaption">离子对重复测定注释</td><td class="ColumnDescription">与使用结果网格的离子对结果集
+相关的自由文字注释。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">离子对结果为定量</td><td class="ColumnDescription">该结果是否作为定量处理，是基于离子对的可由用户修改的定量性质；以及 MS/MS 全扫描采集方法是否为将所有碎片离子作为非定量的 DDA。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">离子对结果为 MS1</td><td class="ColumnDescription">此结果是否从 MS1 扫描获取。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">母离子结果（单个）</td><td class="ColumnDescription">母离子结果（单个）</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">母离子结果（单个）</a></td></tr>
+<tr><td class="ColumnCaption">离子对结果定位器</td><td class="ColumnDescription">文档内的离子对结果特殊标识符。这以“TransitionResult:”开头，并通常以重复测定名称结束，但可能包含最优步和结果文件的额外属性。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">转移离子指标</td><td class="ColumnDescription">与质谱仪中离子数量相关的数值</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">转移离子指标</a></td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult"><span class="RowType">PrecursorQuantificationResult</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">母离子校准后面积</td><td class="ColumnDescription">母离子归一化面积结果。等于根据肽段归一化方法归一化的母离子总面积结果。如果肽段归一化方法为“无”或为与标签的比率，则母离子归一化面积将等于母离子总面积。</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">母离子归一化面积原始值</td><td class="ColumnDescription">母离子归一化面积结果。等于根据肽段归一化方法归一化的母离子总面积结果。如果肽段归一化方法为“无”或为与标签的比率，则母离子归一化面积将等于母离子总面积。在缺失的数据影响到重复测定之间的比较时仍可获取</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">母离子归一化面积精确值</td><td class="ColumnDescription">母离子归一化面积结果。等于根据肽段归一化方法归一化的母离子总面积结果。如果肽段归一化方法为“无”或为与标签的比率，则母离子归一化面积将等于母离子总面积。在缺失的数据影响到重复测定之间的比较时不可获取</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">母离子归一化面积消息</td><td class="ColumnDescription">缺失值影响到比较重复测定的“母离子归一化面积”值时发出警告</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">母离子计算的浓度</td><td class="ColumnDescription">使用同位素响应曲线所计算母离子结果浓度。</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">由母离子计算的浓度原始值</td><td class="ColumnDescription">使用同位素响应曲线所计算母离子结果浓度。在缺失的数据影响到重复测定之间的比较时仍可获取</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">母离子计算的浓度精确值</td><td class="ColumnDescription">使用同位素响应曲线所计算母离子结果浓度。在缺失的数据影响到重复测定之间的比较时不可获取</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">由母离子计算的浓度消息</td><td class="ColumnDescription">如果缺失的数据影响到比较重复测定之间“母离子计算的浓度”，则发出警告</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">母离子准确性</td><td class="ColumnDescription">母离子计算的浓度与母离子中规定的母离子浓度比</td><td class="ColumnType">Double</td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">定性离子比</td><td class="ColumnDescription">在该分子或肽段下，非定量离子对的峰面积总和与定量离子对峰面积总和之比。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">定性离子比状态</td><td class="ColumnDescription">描述定性离子比与目标定性离子比的比较。
+如果在定量设置中指定了定性离子比阈值，则定性离子比状态将为“通过”或“失败”。
+如果未指定定性离子比阈值，定性离子比状态将为“等于”、“低”或“高”，具体取决于它与目标定性离子比的比较方式。</td><td class="ColumnType">ValueStatus</td></tr>
+<tr><td class="ColumnCaption">批次目标定性离子比</td><td class="ColumnDescription">使用与此重复测定具有相同批次名称的外部标准重复测定子集计算的目标定性离子比。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Chromatogram"><span class="RowType">色谱图</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">色谱图母离子质荷比</td><td class="ColumnDescription">色谱图的母离子质荷比</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">色谱图子离子质荷比</td><td class="ColumnDescription">色谱图的子离子质荷比</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">色谱图提取宽度</td><td class="ColumnDescription">汇总了谱图强度的信道的全宽</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">色谱图开始时间</td><td class="ColumnDescription">色谱图中的第一保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">色谱图结束时间</td><td class="ColumnDescription">色谱图中的最后保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">色谱图离子迁移</td><td class="ColumnDescription">在色谱图提取过程中用于过滤谱图的离子迁移窗口中心</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">色谱图离子迁移提取宽度</td><td class="ColumnDescription">在色谱图提取过程中用于过滤谱图的离子迁移窗口全宽</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">色谱图离子迁移单位</td><td class="ColumnDescription">色谱图离子迁移和色谱图离子迁移提取宽度的单位</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">色谱图源</td><td class="ColumnDescription">提取色谱图所用的扫描类型：“片段”、“sim”、“ms1”或“未知”之一</td><td class="ColumnType">ChromSource</td></tr>
+<tr><td class="ColumnCaption">原始数据</td><td class="ColumnDescription">原始（未内插）的色谱图数据。色谱图的间隔时间不均匀，每个离子对的色谱图可能具有不同的点数。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram+Data">Data</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">原始点数</td><td class="ColumnDescription">原始（未插入）色谱图中的点数。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">原始时间</td><td class="ColumnDescription">原始（未内插）的色谱图中的保留时间。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">原始强度</td><td class="ColumnDescription">原始（未内插）的色谱图的强度。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">原始质量误差</td><td class="ColumnDescription">原始（未内插）的色谱图的质量误差。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">原始谱图 ID</td><td class="ColumnDescription">用于原始（未插入）色谱图中的点的谱图标识符。</td><td class="ColumnType">FormattableList`1</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">内插数据</td><td class="ColumnDescription">在时间维度内插的色谱图数据使得保留时间均匀分布，并且肽段或分子内的所有离子对具有相同的点数。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram+Data">Data</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">插值点数</td><td class="ColumnDescription">内插色谱图中的点数。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">内插时间</td><td class="ColumnDescription">内插色谱图中的保留时间。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">内插强度</td><td class="ColumnDescription">内插数据的色谱图强度。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">内插质量误差</td><td class="ColumnDescription">内插数据的色谱图质量误差。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">内插谱图 ID</td><td class="ColumnDescription">用于内插色谱图中点的谱图标识符。</td><td class="ColumnType">FormattableList`1</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">转移离子指标</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LC 峰转移离子计数</td><td class="ColumnDescription">离子对强度与峰积分边界间 MS2 谱图进样时间的乘积之和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">顶点转移离子计数</td><td class="ColumnDescription">光谱中强度最高的提取离子强度对应的强度值与进样时间的乘积</td><td class="ColumnType">Double</td></tr>
+</table>
+
+
+</body></html>

@@ -153,6 +153,9 @@
   <data name="ApexTotalIonCountMS1">
     <value>总母离子强度与最大母离子强度 MS1 谱图进样时间的乘积</value>
   </data>
+  <data name="ApexTransitionIonCount">
+    <value>光谱中强度最高的提取离子强度对应的强度值与进样时间的乘积</value>
+  </data>
   <data name="Area">
     <value>离子对峰值的曲线下面积 (AUC) 减去背景。</value>
   </data>
@@ -316,6 +319,9 @@
   <data name="ConfidenceLevel">
     <value>用于确定对于倍数变化的置信区间的置信水平。</value>
   </data>
+  <data name="ConstantNeutralLoss">
+    <value>分析仪偏移值用于恒定中性损耗扫描——中性增益使用负值。</value>
+  </data>
   <data name="CountTruncated">
     <value>峰积分
 边界触及采集时间范围任意一端、末端强度
@@ -386,6 +392,9 @@
   <data name="DetectionZScore">
     <value>在应用 mProphet 模型后，分配给每个选定峰（目标和诱饵）的归一化 mProphet 得分，表示为平均诱饵评分的标准偏差 (SD) 数。</value>
   </data>
+  <data name="DissociationMethod">
+    <value>分段技术（如 CID、HCD、ETD）</value>
+  </data>
   <data name="DriftTimeFragment">
     <value>碎片离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
   </data>
@@ -410,6 +419,30 @@
   </data>
   <data name="ExcludeFromCalibration">
     <value>是否应从肽段的校准曲线计算中排除重复测定的结果。</value>
+  </data>
+  <data name="ExemplaryEndTime">
+    <value>来自得分最高的重复测定或库文件的峰归一化结束保留时间</value>
+  </data>
+  <data name="ExemplaryFilePath">
+    <value>得分最高的峰结果文件路径</value>
+  </data>
+  <data name="ExemplaryLibraryName">
+    <value>得分最高的峰库名称</value>
+  </data>
+  <data name="ExemplaryPeak">
+    <value>文档中任一重复测定或库中任一明确峰边界中得分最高的峰</value>
+  </data>
+  <data name="ExemplaryReplicateName">
+    <value>得分最高的峰重复测定名称</value>
+  </data>
+  <data name="ExemplaryRetentionTime">
+    <value>得分最高的峰顶点的归一化保留时间</value>
+  </data>
+  <data name="ExemplaryScore">
+    <value>重复测定或库中得分最高的峰得分</value>
+  </data>
+  <data name="ExemplaryStartTime">
+    <value>来自得分最高的重复测定或库文件的峰归一化起点保留时间</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
     <value>这种特定的分子或肽段在该重复测定中的浓度。
@@ -523,6 +556,15 @@
     <value>如果在峰积分边界之间的某一点存在结果文件
 的串联质谱 (MS/MS) 肽鉴定，则成立。</value>
   </data>
+  <data name="ImputedEndTime">
+    <value>基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的结束时间</value>
+  </data>
+  <data name="ImputedPeak">
+    <value>基于保留时间校准将得分最高的重复测定映射至该重复测定时的峰边界</value>
+  </data>
+  <data name="ImputedStartTime">
+    <value>基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的起始时间</value>
+  </data>
   <data name="InChI" xml:space="preserve">
     <value>标准化分子标识符</value>
   </data>
@@ -587,15 +629,8 @@
     <value>若是诱饵母离子，则成立。</value>
   </data>
   <data name="IsolationWindowWidth">
-    <value>Width of the m/z window in which the precursor was isolated. 
-If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.</value>
-    <comment>Needs Review:English text changed
-Old English:With of the m/z window in which the precursor was isolated. 
-If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.
-Current English:Width of the m/z window in which the precursor was isolated. 
-If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.
-Old Localized:母离子隔离时的质荷比窗口宽度。
-如果隔离了多个母离子，则隔离窗口宽度为各母离子周围窗口宽度之和。</comment>
+    <value>母离子隔离时的质荷比窗口宽度。
+如果隔离了多个母离子，则隔离窗口宽度为各母离子周围窗口宽度之和。</value>
   </data>
   <data name="IsotopeDistIndex">
     <value>单一同位素峰为零，M+1 为 1、M+2 为 2 等。</value>
@@ -666,6 +701,9 @@ Old Localized:母离子隔离时的质荷比窗口宽度。
   </data>
   <data name="LcPeakTotalIonCurrentAreaMS1">
     <value>峰积分边界间 MS1 谱图总离子流的积分</value>
+  </data>
+  <data name="LcPeakTransitionIonCount">
+    <value>离子对强度与峰积分边界间 MS2 谱图进样时间的乘积之和</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>离子迁移库中母离子的碰撞横截面</value>
@@ -883,11 +921,7 @@ Old Localized:母离子隔离时的质荷比窗口宽度。
 时间和日期</value>
   </data>
   <data name="Molecule">
-    <value>Molecules belong to Molecule Lists and contain Precursors.</value>
-    <comment>Needs Review:English text changed
-Old English:Molecules belong to Molecule Lists and contain Percursors.
-Current English:Molecules belong to Molecule Lists and contain Precursors.
-Old Localized:分子属于分子列表并包含母离子。</comment>
+    <value>分子属于分子列表并包含母离子。</value>
   </data>
   <data name="MoleculeFormula">
     <value>用于在质谱仪中测量的中性未标记分子的原子化学式。</value>
@@ -896,44 +930,27 @@ Old Localized:分子属于分子列表并包含母离子。</comment>
     <value>Skyline 文档中的一组分子。</value>
   </data>
   <data name="MoleculeListAbundance">
-    <value>A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings
-Current English:A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Old Localized:代表分子列表丰度的数值，该数值根据分子定量设置中指定的“归一化方法”计算得出</comment>
+    <value>一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。</value>
   </data>
   <data name="MoleculeListAbundanceMessage">
     <value>如果缺失的数据影响到比较重复测定之间的“分子列表丰度”，则发出警告</value>
   </data>
+  <data name="MoleculeListAbundanceRaw">
+    <value>一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+在缺失的数据影响到重复测定之间的比较时仍可获取。</value>
+  </data>
   <data name="MoleculeListAbundanceStrict">
-    <value>A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.
-Current English:A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.
-Old Localized:代表分子列表丰度的数值，该数值根据分子定量设置中指定的“归一化方法”计算得出。在缺失的数据影响到重复测定之间的比较时不可获取</comment>
+    <value>一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+在缺失的数据影响到重复测定之间的比较时不可获取。</value>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
-    <value>Obsolete: Use Molecule List Abundance Raw instead.</value>
-    <comment>Needs Review:English text changed
-Old English:Average of the normalized areas of the transitions under the Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
-Current English:Obsolete: Use Molecule List Abundance Raw instead.
-Old Localized:分子列表下的离子对面积归一化的平均值。这些面积根据“分子定量”设置中指定的“归一化方法”进行归一化。</comment>
+    <value>已废弃：请改用分子列表丰度原始值。</value>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
-    <value>Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions.</value>
-    <comment>Needs Review:English text changed
-Old English:Sum of the normalized areas of the transitions under the Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings
-Current English:Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions.
-Old Localized:分子列表下的离子对面积归一化总和。这些面积根据“分子定量”设置中指定的“归一化方法”进行归一化</comment>
+    <value>已废弃：等于分子列表丰度原始值乘以转移次数。</value>
   </data>
   <data name="MoleculeListLocator">
     <value>文档内的分子列表特殊标识符。以“MoleculeGroup：”开头。</value>
@@ -1039,6 +1056,21 @@ Old Localized:分子列表下的离子对面积归一化总和。这些面积根
     <value>指明与正在优化的参数的默认值所距离的优化步骤值，
 预设参数值或者当重复测定中未
 进行优化时的值为 0。</value>
+  </data>
+  <data name="OriginalEndTime">
+    <value>色谱图提取过程中由 Skyline 选定的峰结束保留时间</value>
+  </data>
+  <data name="OriginalPeak">
+    <value>色谱图提取过程中由 Skyline 选定的峰边界</value>
+  </data>
+  <data name="OriginalRetentionTime">
+    <value>色谱图提取过程中由 Skyline 选定的峰顶点保留时间</value>
+  </data>
+  <data name="OriginalScore">
+    <value>色谱图提取过程中由 Skyline 分配的峰得分</value>
+  </data>
+  <data name="OriginalStartTime">
+    <value>色谱图提取过程中由 Skyline 选定的峰起始保留时间</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>峰组中各个峰的最大结束时间。</value>
@@ -1273,44 +1305,27 @@ Old Localized:分子列表下的离子对面积归一化总和。这些面积根
     <value>蛋白质</value>
   </data>
   <data name="ProteinAbundance">
-    <value>A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
-Current English:A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Old Localized:代表蛋白质列表丰度的数值，该数值根据肽段定量设置中指定的“归一化方法”计算得出。</comment>
+    <value>一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。</value>
   </data>
   <data name="ProteinAbundanceMessage">
     <value>如果缺失的数据影响到比较重复测定之间的“蛋白质丰度”，则发出警告</value>
   </data>
+  <data name="ProteinAbundanceRaw">
+    <value>一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+在缺失的数据影响到重复测定之间的比较时仍可获取。</value>
+  </data>
   <data name="ProteinAbundanceStrict">
-    <value>A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.
-Current English:A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.
-Old Localized:代表蛋白质列表丰度的数值，该数值根据肽段定量设置中指定的“归一化方法”计算得出。在缺失的数据影响到重复测定之间的比较时不可获取。</comment>
+    <value>一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+在缺失的数据影响到重复测定之间的比较时不可获取。</value>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>Obsolete: Use Protein Abundance Raw instead.</value>
-    <comment>Needs Review:English text changed
-Old English:Average of the normalized areas of the transitions under the Protein.
-The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
-Current English:Obsolete: Use Protein Abundance Raw instead.
-Old Localized:“蛋白质”下的离子对面积归一化的平均值。这些面积根据“肽段定量”设置中指定的“归一化方法”进行归一化。</comment>
+    <value>已废弃：请改用蛋白质丰度原始值。</value>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>Obsolete: Equal to Protein Abundance Raw times the number of transitions.</value>
-    <comment>Needs Review:English text changed
-Old English:Sum of the normalized areas of the transitions under the Protein.
-The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
-Current English:Obsolete: Equal to Protein Abundance Raw times the number of transitions.
-Old Localized:“蛋白质”下的离子对面积归一化总和。这些面积根据“肽段定量”设置中指定的“归一化方法”进行归一化。</comment>
+    <value>已废弃：等于蛋白质丰度原始值乘以转移次数。</value>
   </data>
   <data name="ProteinAccession">
     <value>蛋白质检索号</value>
@@ -1421,6 +1436,21 @@ Old Localized:“蛋白质”下的离子对面积归一化总和。这些面积
   </data>
   <data name="Reason">
     <value>用户给予的进行更改的原因</value>
+  </data>
+  <data name="ReintegratedEndTime">
+    <value>与训练好的峰得分模型重新合并时选定的峰结束保留时间</value>
+  </data>
+  <data name="ReintegratedPeak">
+    <value>与训练好的峰得分模型重新合并时选定的峰边界</value>
+  </data>
+  <data name="ReintegratedRetentionTime">
+    <value>与训练好的峰得分模型重新合并时选定的峰顶点保留时间</value>
+  </data>
+  <data name="ReintegratedScore">
+    <value>与训练好的峰得分模型重新合并时分配的峰得分</value>
+  </data>
+  <data name="ReintegratedStartTime">
+    <value>与训练好的峰得分模型重新合并时选定的峰起始保留时间</value>
   </data>
   <data name="Replicate">
     <value>重复测定</value>
@@ -1658,6 +1688,9 @@ Old Localized:“蛋白质”下的离子对面积归一化总和。这些面积
   </data>
   <data name="TransitionCount">
     <value>该母离子包含的离子对数量。</value>
+  </data>
+  <data name="TransitionIonMetrics">
+    <value>与质谱仪中离子数量相关的数值</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>若是诱饵离子对，则成立</value>

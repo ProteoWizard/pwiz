@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
@@ -639,7 +640,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!ExceptionUtil.IsProgrammingDefect(exception))
                 {
                     errorList.Add(new TransitionImportErrorInfo(exception.Message, null, _linesSeen, row));
                     continue;
@@ -881,11 +882,14 @@ namespace pwiz.Skyline.Model
                 FormatProvider = provider;
                 Separator = separator;
                 Indices = indices;
+                _maxColumnIndex = indices.CalcMaxColumnIndex();
                 Lines = lines;
                 Settings = settings;
                 ModMatcher = CreateModificationMatcher(settings, sequences, lines.Count, progressMonitor, status);
                 NodeDictionary = new Dictionary<string, PeptideDocNode>();
             }
+
+            private readonly int _maxColumnIndex;
 
             private static ModificationMatcher CreateModificationMatcher(SrmSettings settings, IEnumerable<string> sequences,
                 int expectedCount = 0, IProgressMonitor progressMonitor = null, IProgressStatus status = null)
@@ -1096,6 +1100,14 @@ namespace pwiz.Skyline.Model
 
                 if (PeptideColumn == -1)
                     return new TransitionImportErrorInfo(ModelResources.MassListRowReader_NextRow_No_peptide_sequence_column_specified, null, lineNum, line);
+
+                if (_maxColumnIndex >= Fields.Length)
+                {
+                    return new TransitionImportErrorInfo(
+                        string.Format(ModelResources.MassListRowReader_NextRow_Line_has__0__fields_but__1__are_expected,
+                            Fields.Length, _maxColumnIndex + 1),
+                        null, lineNum, line);
+                }
 
                 ExTransitionInfo info;
                 try
@@ -2523,16 +2535,68 @@ namespace pwiz.Skyline.Model
 
         public int MoleculeNameColumn { get; set; }
 
+        // Multiple fragments per line (Issue 860): Fragment-oriented column types (Product m/z,
+        // Product Formula, etc.) can be assigned to multiple columns in the column picker,
+        // allowing each row to define multiple transitions. The nth assignment of each type
+        // maps to the nth fragment. Types with fewer assignments than Product m/z use
+        // fill-forward (the last value applies to remaining fragments).
+        // Names intentionally don't end in "Column" to avoid reflection-based init/reset.
+        public List<int> ProductMzColumns { get; } = new List<int>();
+        public List<int> ProductFormulaColumns { get; } = new List<int>();
+        public List<int> ProductNameColumns { get; } = new List<int>();
+        public List<int> ProductChargeColumns { get; } = new List<int>();
+        public List<int> ProductAdductColumns { get; } = new List<int>();
+        public List<int> ProductNeutralLossColumns { get; } = new List<int>();
+
+        /// <summary>
+        /// Number of fragments per line, driven by the maximum repeat count across all
+        /// fragment-oriented column types (Product m/z, Product Formula, Product Name, etc.)
+        /// </summary>
+        public int FragmentCount => GetFragmentCount(
+            ProductMzColumns.Count, ProductFormulaColumns.Count, ProductNameColumns.Count,
+            ProductChargeColumns.Count, ProductAdductColumns.Count, ProductNeutralLossColumns.Count);
+
+        public static int GetFragmentCount(params int[] fragmentColumnCounts)
+        {
+            return Math.Max(1, fragmentColumnCounts.Max());
+        }
+
+        /// <summary>
+        /// Get the column index for a given fragment, with fill-forward for types that have
+        /// fewer assignments than Product m/z columns
+        /// </summary>
+        public static int GetProductColumnForFragment(List<int> columnList, int fragmentIndex)
+        {
+            if (columnList.Count == 0)
+            {
+                return -1;
+            }
+            return fragmentIndex < columnList.Count
+                ? columnList[fragmentIndex]
+                : columnList[columnList.Count - 1]; // fill-forward
+        }
+
         public ColumnIndices()
         {
             // Iterates through the column indices and initializes them all to -1
-            foreach (var property in GetType().GetProperties())
-            {
-                if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
-                {
-                    property.SetValue(this, -1);
-                }
-            }
+            foreach (var property in GetColumnProperties())
+                property.SetValue(this, -1);
+        }
+
+        /// <summary>
+        /// Calculates the highest assigned column index across all column properties,
+        /// or -1 if none assigned. Uses reflection, so callers that need the value
+        /// repeatedly (e.g. per-row validation) should cache the result.
+        /// </summary>
+        public int CalcMaxColumnIndex()
+        {
+            return GetColumnProperties().Select(p => (int)p.GetValue(this)).Prepend(-1).Max();
+        }
+
+        private IEnumerable<PropertyInfo> GetColumnProperties()
+        {
+            return GetType().GetProperties()
+                .Where(p => p.Name.EndsWith(@"Column") && p.PropertyType == typeof(int));
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2563,7 +2627,7 @@ namespace pwiz.Skyline.Model
                 property.SetValue(this, value);
             }
 
-            void FindValueMatch(string key, string header, string propertyName)
+            void FindValueMatch(string key, string header, string propertyName, List<int> columnList = null)
             {
                 considered.Add(propertyName); // Aids in checking that we've covered all header types
                 foreach (var item in SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms)
@@ -2579,8 +2643,16 @@ namespace pwiz.Skyline.Model
                         lowerKey = lowerKey.Replace(@" ", string.Empty);
                         if (lowerValue.Equals(lowerHeader) || lowerKey.Equals(lowerHeader))
                         {
-
-                            SetPropertyValue(propertyName, index);
+                            if (columnList != null)
+                            {
+                                columnList.Add(index);
+                                if (columnList.Count == 1)
+                                    SetPropertyValue(propertyName, index); // First match sets primary
+                            }
+                            else
+                            {
+                                SetPropertyValue(propertyName, index);
+                            }
                         }
                     }
                 }
@@ -2590,14 +2662,14 @@ namespace pwiz.Skyline.Model
             {
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, header, nameof(MoleculeListNameColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.namePrecursor, header, nameof(MoleculeNameColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.nameProduct, header, nameof(ProductNameColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.nameProduct, header, nameof(ProductNameColumn), ProductNameColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, header, nameof(MolecularFormulaColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaProduct, header, nameof(ProductFormulaColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct, header, nameof(ProductNeutralLossColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaProduct, header, nameof(ProductFormulaColumn), ProductFormulaColumns);
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct, header, nameof(ProductNeutralLossColumn), ProductNeutralLossColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, header, nameof(PrecursorColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzProduct, header, nameof(ProductColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzProduct, header, nameof(ProductColumn), ProductMzColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, header, nameof(PrecursorChargeColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargeProduct, header, nameof(ProductChargeColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargeProduct, header, nameof(ProductChargeColumn), ProductChargeColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, header, nameof(ExplicitRetentionTimeColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor, header, nameof(ExplicitRetentionTimeWindowColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.cePrecursor, header, nameof(ExplicitCollisionEnergyColumn));
@@ -2617,7 +2689,7 @@ namespace pwiz.Skyline.Model
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeListNote, header, nameof(MoleculeListNoteColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.labelType, header, nameof(LabelTypeColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, header, nameof(PrecursorAdductColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductProduct, header, nameof(ProductAdductColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductProduct, header, nameof(ProductAdductColumn), ProductAdductColumns);
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idCAS, header, nameof(CASColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idInChiKey, header, nameof(InChiKeyColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idInChi, header, nameof(InChiColumn));
@@ -2662,6 +2734,22 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+            // Also remove from multi-fragment lists and re-point primary properties
+            RemoveFromColumnList(ProductMzColumns, index, v => ProductColumn = v);
+            RemoveFromColumnList(ProductFormulaColumns, index, v => ProductFormulaColumn = v);
+            RemoveFromColumnList(ProductNameColumns, index, v => ProductNameColumn = v);
+            RemoveFromColumnList(ProductChargeColumns, index, v => ProductChargeColumn = v);
+            RemoveFromColumnList(ProductAdductColumns, index, v => ProductAdductColumn = v);
+            RemoveFromColumnList(ProductNeutralLossColumns, index, v => ProductNeutralLossColumn = v);
+        }
+
+        private static void RemoveFromColumnList(List<int> columnList, int index, Action<int> setPrimary)
+        {
+            columnList.RemoveAll(i => i == index);
+            // If the primary property was reset to -1 but the list still has entries,
+            // re-point the primary to the first remaining entry
+            if (columnList.Count > 0)
+                setPrimary(columnList[0]);
         }
 
         /// <summary>

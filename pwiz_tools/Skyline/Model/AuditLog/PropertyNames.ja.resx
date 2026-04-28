@@ -1817,6 +1817,21 @@
   <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
     <value>スペクトルフィルタ</value>
   </data>
+  <data name="AnnotationDef_Lookup" xml:space="preserve">
+    <value>ルックアップ</value>
+  </data>
+  <data name="ImputationSettings_ImputeMissingPeaks" xml:space="preserve">
+    <value>欠損しているピークを補間</value>
+  </data>
+  <data name="ImputationSettings_MaxPeakWidthVariation" xml:space="preserve">
+    <value>最大ピーク幅変動</value>
+  </data>
+  <data name="ImputationSettings_MaxRtShift" xml:space="preserve">
+    <value>最大RTシフト</value>
+  </data>
+  <data name="PeptideSettings_Imputation" xml:space="preserve">
+    <value>補間</value>
+  </data>
   <data name="AlignmentTargetSpec_Type" xml:space="preserve">
     <value>タイプ</value>
   </data>
@@ -1825,5 +1840,8 @@
   </data>
   <data name="AlignmentTargetSpec_RegressionMethod" xml:space="preserve">
     <value>回帰方法</value>
+  </data>
+  <data name="ImputationSettings_AlignmentTarget" xml:space="preserve">
+    <value>アラインメント目標</value>
   </data>
 </root>
