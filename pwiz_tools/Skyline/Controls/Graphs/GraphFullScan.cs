@@ -499,7 +499,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var paneRect = _mobilogramPane.Rect;
                 float chartX = paneRect.X + _mobilogramPane.Margin.Left + _mobilogramPane.YAxis.MinSpace;
-                float chartRight = paneRect.Right - 6;
+                float chartRight = paneRect.Right - _mobilogramPane.Margin.Right;
                 float chartW = Math.Max(1, chartRight - chartX);
                 _mobilogramPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
             }
@@ -701,15 +701,12 @@ namespace pwiz.Skyline.Controls.Graphs
             // initial window sizes can leave mobilogram's Y scale stale from create
             // time, producing misaligned curves until the user resizes the window.
             CopyYAxisFromHeatmap(_mobilogramPane, _heatMapPane);
-            // Read the heatmap's chart rect — prefer the explicitly pinned Chart.Rect
-            // (set by AlignStickHeatmapChartX); fall back to CalcChartRect if it hasn't
-            // been pinned yet (e.g. on first call before stick is populated).
-            RectangleF heat;
-            if (!_heatMapPane.Chart.IsRectAuto)
-            {
-                heat = _heatMapPane.Chart.Rect;
-            }
-            else
+            // Read the heatmap's chart rect: after the first paint Chart.Rect holds the
+            // settled value ZedGraph just rendered; before that, fall back to a fresh
+            // CalcChartRect. AlignStickHeatmapChartX no longer pins Chart.Rect, so this
+            // avoids the expensive AxisChange/CalcChartRect on every drag step.
+            RectangleF heat = _heatMapPane.Chart.Rect;
+            if (heat.Width <= 0 || heat.Height <= 0)
             {
                 using (var g = graphControl.CreateGraphics())
                 {
@@ -724,7 +721,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Extend chart all the way to the pane's right edge so the mobilogram chart
             // butts up against the heatmap pane's Y-axis area — minimizes visible gap.
             float chartX = paneRect.X + _mobilogramPane.Margin.Left + _mobilogramPane.YAxis.MinSpace;
-            float chartRight = paneRect.Right - 6;
+            float chartRight = paneRect.Right - _mobilogramPane.Margin.Right;
             float chartW = Math.Max(1, chartRight - chartX);
             _mobilogramPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
             // Setting Rect flips IsRectAuto to false automatically
@@ -790,11 +787,10 @@ namespace pwiz.Skyline.Controls.Graphs
             dst.MinorStepAuto = false;
             // Mirror the heatmap's drift-time title text so the mobilogram can carry it.
             target.YAxis.Title.Text = heatMap.YAxis.Title.Text;
-            // Both panes share Min/Max/MajorStep, so let ZedGraph's auto-format pick the
-            // numeric format — both will land on the same "f<n>" string and render the
-            // same labels. Re-enable FormatAuto here because FormatGraphPane sets the
-            // heatmap to "g" (which strips trailing zeros and disables auto).
-            src.FormatAuto = true;
+            // Both panes share Min/Max/MajorStep, so letting ZedGraph's auto-format pick
+            // the numeric format makes both land on the same "f<n>" precision. The call
+            // site is responsible for re-enabling FormatAuto on the heatmap when needed
+            // (FormatGraphPane sets the heatmap to "g" and disables auto).
             dst.FormatAuto = true;
         }
 
@@ -2548,9 +2544,13 @@ namespace pwiz.Skyline.Controls.Graphs
             if (IsStickPlotVisible)
                 GraphHelper.FormatGraphPane(_stickSpectrumPane);
             // FormatGraphPane sets heatmap Y format to "g" which strips trailing zeros;
-            // re-sync from mobilogram so both panes show the same drift-time precision.
+            // when the mobilogram is alongside, re-enable auto-format so both panes
+            // pick the same precision from the (shared) MajorStep.
             if (IsMobilogramPaneVisible)
+            {
+                _heatMapPane.YAxis.Scale.FormatAuto = true;
                 SyncMobilogramYAxisFromHeatmap();
+            }
             comboBoxPeakType.Visible = IsStickPlotVisible || spectrumBtn.Checked;
             toolStripLabelPeakType.Visible = IsStickPlotVisible || spectrumBtn.Checked;
 
