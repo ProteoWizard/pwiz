@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.Scoring
@@ -43,6 +44,18 @@ namespace pwiz.OspreySharp.Scoring
         /// 100K-bin HRAM arrays instead of triggering LOH churn per scan.
         /// </summary>
         public XcorrScratchPool XcorrScratchPool { get; private set; }
+
+        /// <summary>
+        /// Stage 6 boundary overrides keyed by library entry id. When the
+        /// dictionary contains an entry's id, the search engine skips CWT
+        /// peak detection + the signal pre-filter and scores at the supplied
+        /// (apex, start, end) RT triple. Null during the first-pass main
+        /// search; populated only on the post-FDR re-scoring pass for
+        /// multi-charge consensus, cross-run reconciliation, and gap-fill.
+        /// Maps to <c>boundary_overrides</c> in
+        /// <c>osprey/crates/osprey/src/pipeline.rs run_search</c>.
+        /// </summary>
+        public IReadOnlyDictionary<uint, (double Apex, double Start, double End)> BoundaryOverrides { get; set; }
 
         public ScoringContext(OspreyConfig config, string fileName)
         {

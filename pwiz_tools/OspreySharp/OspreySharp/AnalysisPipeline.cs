@@ -32,6 +32,7 @@ using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR;
+using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
 using pwiz.OspreySharp.Scoring;
 
@@ -171,6 +172,9 @@ namespace pwiz.OspreySharp
                 // Stage 2-4: Per-file calibration + coelution scoring
                 // Process files in parallel when multiple files are provided.
                 var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+                // Per-file RT calibration handles harvested by ProcessFile so
+                // Stage 6 reconciliation has the live RTCalibration objects.
+                var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
 
                 bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
                 int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
@@ -262,7 +266,53 @@ namespace pwiz.OspreySharp
                             stubs[j].Features = features[j];
                         LogInfo(string.Format("  Loaded {0} FDR stubs + features", stubs.Count));
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+
+                        // Best-effort calibration JSON load for Stage 6
+                        // reconciliation. Mirrors osprey/src/pipeline.rs:2573-2588.
+                        try
+                        {
+                            string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
+                            if (parquetDir != null)
+                            {
+                                // The parquet stem is "<fileName>.scores"; strip
+                                // the trailing ".scores" so the calibration
+                                // filename derives from the same input stem
+                                // both ProcessFile and join-only used.
+                                string calStemPath = Path.Combine(parquetDir, fileName);
+                                string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
+                                if (File.Exists(calPath))
+                                {
+                                    var calParams = CalibrationIO.LoadCalibration(calPath);
+                                    if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                                    {
+                                        var mp = calParams.RtCalibration.ModelParams;
+                                        // Cross-impl JSON-decode parity check: append
+                                        // the raw arrays as loaded from the calibration
+                                        // JSON, gated by OSPREY_DUMP_CALIBRATION.
+                                        if (OspreyDiagnostics.DumpCalibration)
+                                        {
+                                            OspreyDiagnostics.WriteStage6CalibrationDump(
+                                                fileName, mp.LibraryRts, mp.FittedRts);
+                                        }
+                                        var rtCal = RTCalibration.FromModelParams(
+                                            mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                                            calParams.RtCalibration.ResidualSD);
+                                        perFileCalibrations[fileName] = rtCal;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogWarning(string.Format("  Failed to load calibration for {0}: {1}", fileName, ex.Message));
+                        }
                     }
+                    // Cross-impl JSON-decode parity short-circuit: after every
+                    // parquet's calibration JSON has been loaded and dumped, exit
+                    // if OSPREY_CALIBRATION_ONLY is set. Pairs with
+                    // OSPREY_DUMP_CALIBRATION.
+                    if (OspreyDiagnostics.CalibrationOnly)
+                        OspreyDiagnostics.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
                 }
                 else if (config.InputFiles.Count == 1)
                 {
@@ -271,7 +321,7 @@ namespace pwiz.OspreySharp
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
                     LogInfo("");
                     LogInfo(string.Format("===== Processing file 1/1: {0} =====", inputFile));
-                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata);
+                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                 }
@@ -290,7 +340,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
                         if (fileResult != null)
                             perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                     }
@@ -314,7 +364,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
                         if (fileResult != null)
                             fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
                     });
@@ -401,12 +451,188 @@ namespace pwiz.OspreySharp
                         OspreyDiagnostics.ExitAfterDump("OSPREY_PERCOLATOR_ONLY");
                 }
 
-                // Stage 6-7: Reconciliation (TODO for multi-file)
-                if (config.InputFiles.Count > 1)
+                // First-pass protein FDR: runs on the full pre-compaction
+                // peptide pool so target and decoy proteins compete on a
+                // symmetric set. Sets RunProteinQvalue on every FdrEntry,
+                // which Stage 6 reconciliation reads via the protein-rescue
+                // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
+                // ("First-pass protein FDR").
+                if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
                 {
                     LogInfo("");
-                    LogInfo("TODO: Inter-replicate reconciliation not yet implemented");
-                    LogInfo("      First-pass results are still usable for single-run analysis");
+                    LogInfo("First-pass protein FDR");
+                    var swFirstPassProtein = Stopwatch.StartNew();
+                    RunFirstPassProteinFdr(perFileEntries, fullLibrary, config);
+                    swFirstPassProtein.Stop();
+                    LogInfo(string.Format("[TIMING] First-pass protein FDR: {0:F1}s",
+                        swFirstPassProtein.Elapsed.TotalSeconds));
+                }
+
+                // Compaction: drop entries whose base_id (entry_id with the
+                // decoy bit masked off) does not pass either the peptide-q
+                // or protein-q gate. Target and paired decoy share base_id
+                // and are kept or dropped together. Mirrors Rust
+                // pipeline.rs:3094-3132. Without this, Stage 6 multi-charge
+                // consensus selection groups by modified_sequence and
+                // includes non-passing charge states that Rust has already
+                // dropped, producing different rescore-target sets and
+                // different per-file Vec positions.
+                if (perFileEntries.Count > 0)
+                {
+                    var firstPassBaseIds = new HashSet<uint>();
+                    double peptideGate = config.RunFdr;
+                    double proteinGate = config.ProteinFdr ?? 0.0;
+                    foreach (var kvp in perFileEntries)
+                    {
+                        foreach (var entry in kvp.Value)
+                        {
+                            if (entry.IsDecoy)
+                                continue;
+                            if (entry.RunPeptideQvalue <= peptideGate ||
+                                (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
+                            {
+                                firstPassBaseIds.Add(entry.EntryId & 0x7FFFFFFFu);
+                            }
+                        }
+                    }
+                    int beforeCount = 0, afterCount = 0;
+                    foreach (var kvp in perFileEntries)
+                    {
+                        beforeCount += kvp.Value.Count;
+                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & 0x7FFFFFFFu));
+                        kvp.Value.TrimExcess();
+                        afterCount += kvp.Value.Count;
+                    }
+                    LogInfo(string.Format(
+                        "First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
+                        beforeCount, afterCount, firstPassBaseIds.Count));
+                }
+
+                // Stage 6: planning checkpoint — multi-charge consensus +
+                // cross-run consensus RTs + per-file calibration refit. The
+                // execution side (per-file rescore at locked boundaries +
+                // gap-fill + second-pass FDR) is not yet implemented; this
+                // pass exists to prove cross-impl byte parity at the start
+                // of Stage 6 via the three planning dumps below. Mirrors
+                // pipeline.rs Stage 6 entry block at lines 3208-3273.
+                if (perFileEntries.Count > 1 && config.Reconciliation.Enabled)
+                {
+                    LogInfo("");
+                    LogInfo("Stage 6: planning");
+
+                    // 1. Multi-charge consensus per file (independent — runs
+                    //    first per Rust pipeline.rs:3217, before consensus
+                    //    RT computation).
+                    var perFileConsensusTargets = new Dictionary<string,
+                        IReadOnlyList<(int Index, double Apex, double Start, double End)>>();
+                    foreach (var kvp in perFileEntries)
+                    {
+                        perFileConsensusTargets[kvp.Key] =
+                            MultiChargeConsensus.SelectRescoreTargets(kvp.Value, config.RunFdr);
+                    }
+                    int totalMulticharge = 0;
+                    foreach (var kvp in perFileConsensusTargets)
+                        totalMulticharge += kvp.Value.Count;
+                    LogInfo(string.Format(
+                        "Stage 6 multi-charge consensus: {0} entries need re-scoring across {1} files",
+                        totalMulticharge, perFileEntries.Count));
+
+                    if (OspreyDiagnostics.DumpMulticharge)
+                    {
+                        var perFileForDump = new List<KeyValuePair<string,
+                            IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                        foreach (var kvp in perFileEntries)
+                        {
+                            perFileForDump.Add(new KeyValuePair<string,
+                                IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+                        }
+                        OspreyDiagnostics.WriteStage6MultichargeDump(
+                            perFileForDump, perFileConsensusTargets);
+                        if (OspreyDiagnostics.MultichargeOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_MULTICHARGE_ONLY");
+                    }
+
+                    // 2. Cross-run consensus RTs (target peptides + paired
+                    //    decoys, sigmoid(score)-weighted median, hard
+                    //    run_precursor_qvalue gate).
+                    var perFileForRecon = new List<KeyValuePair<string,
+                        IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                    foreach (var kvp in perFileEntries)
+                    {
+                        perFileForRecon.Add(new KeyValuePair<string,
+                            IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+                    }
+                    // Cross-impl bisection trace for InversePredict: if the
+                    // OSPREY_DUMP_INV_PREDICT env var is set, ConsensusRts
+                    // populates this list with one row per detection. The
+                    // caller drives the dump via OspreyDiagnostics so the
+                    // FDR project doesn't have to know about the diagnostic
+                    // file format.
+                    List<InvPredictRecord> invPredictTrace = null;
+                    if (OspreyDiagnostics.DumpInvPredict)
+                        invPredictTrace = new List<InvPredictRecord>();
+
+                    var consensus = ConsensusRts.Compute(
+                        perFileForRecon, perFileCalibrations,
+                        config.Reconciliation.ConsensusFdr,
+                        config.ProteinFdr ?? 0.0,
+                        invPredictTrace);
+
+                    if (invPredictTrace != null)
+                    {
+                        OspreyDiagnostics.WriteStage6InvPredictDump(invPredictTrace);
+                        if (OspreyDiagnostics.InvPredictOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_INV_PREDICT_ONLY");
+                    }
+                    int nTargets = 0, nDecoys = 0;
+                    foreach (var c in consensus)
+                    {
+                        if (c.IsDecoy) nDecoys++;
+                        else nTargets++;
+                    }
+                    LogInfo(string.Format(
+                        "Stage 6 consensus: {0} target peptides, {1} decoy peptides",
+                        nTargets, nDecoys));
+
+                    if (OspreyDiagnostics.DumpConsensus)
+                    {
+                        OspreyDiagnostics.WriteStage6ConsensusDump(consensus);
+                        if (OspreyDiagnostics.ConsensusOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_CONSENSUS_ONLY");
+                    }
+
+                    // 3. Per-file calibration refit on consensus peptides.
+                    var refinedCalibrations = new Dictionary<string, RTCalibration>();
+                    foreach (var kvp in perFileEntries)
+                    {
+                        var refined = CalibrationRefit.Refit(consensus, kvp.Value,
+                            config.Reconciliation.ConsensusFdr);
+                        if (refined != null)
+                            refinedCalibrations[kvp.Key] = refined;
+                    }
+                    LogInfo(string.Format(
+                        "Stage 6 refit: {0}/{1} files produced refined calibrations",
+                        refinedCalibrations.Count, perFileEntries.Count));
+
+                    if (OspreyDiagnostics.DumpLoessFit)
+                    {
+                        OspreyDiagnostics.WriteStage6LoessFitDump(refinedCalibrations);
+                        if (OspreyDiagnostics.LoessFitOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_LOESS_FIT_ONLY");
+                    }
+
+                    if (OspreyDiagnostics.DumpRefit)
+                    {
+                        OspreyDiagnostics.WriteStage6RefitDump(refinedCalibrations);
+                        if (OspreyDiagnostics.RefitOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_REFIT_ONLY");
+                    }
+
+                    // Reconciliation planning + per-file rescore + gap-fill +
+                    // second-pass FDR are deferred to a later commit. Without
+                    // those, single-run analysis still produces valid output
+                    // from the first-pass FDR results above.
+                    LogInfo(@"Stage 6 reconciliation rescore: not yet implemented");
                 }
 
                 // Stage 8: Protein FDR (optional)
@@ -656,7 +882,8 @@ namespace pwiz.OspreySharp
         private List<FdrEntry> ProcessFile(
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, OspreyConfig config,
-            Dictionary<string, string> noJoinMetadata)
+            Dictionary<string, string> noJoinMetadata,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrationsOut)
         {
             if (inputFile == null)
                 throw new ArgumentNullException(nameof(inputFile));
@@ -846,6 +1073,13 @@ namespace pwiz.OspreySharp
                 LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
                 return new List<FdrEntry>();
             }
+
+            // Surface the per-file calibration to Stage 6 reconciliation
+            // (multi-file runs only). Threaded calls share a
+            // ConcurrentDictionary; null on single-file paths that don't
+            // need cross-file consensus.
+            if (perFileCalibrationsOut != null && rtCalibration != null)
+                perFileCalibrationsOut[fileName] = rtCalibration;
 
             // Run coelution scoring across all isolation windows
             var swScoring = Stopwatch.StartNew();
@@ -2632,6 +2866,72 @@ namespace pwiz.OspreySharp
             return la > lb;
         }
 
+        /// <summary>
+        /// Build a one-element peak list at the supplied (apex, start, end)
+        /// RT triple, mapped onto the reference XIC's RT axis. Returns null
+        /// when the resulting index range is degenerate. Mirrors the
+        /// boundary_overrides peak-construction path in run_search at
+        /// osprey/crates/osprey/src/pipeline.rs:6596-6644.
+        /// </summary>
+        private static List<XICPeakBounds> BuildOverridePeaks(
+            (double Apex, double Start, double End) ob,
+            List<XicData> xics)
+        {
+            // Reference XIC = highest total-intensity fragment, matching
+            // the CWT-path selection further down in ScoreCandidate.
+            int refIdx = 0;
+            double refTotal = -1.0;
+            for (int f = 0; f < xics.Count; f++)
+            {
+                double total = 0.0;
+                var ints = xics[f].Intensities;
+                for (int j = 0; j < ints.Length; j++)
+                    total += ints[j];
+                if (total > refTotal) { refTotal = total; refIdx = f; }
+            }
+            var rtArr = xics[refIdx].RetentionTimes;
+            var intArr = xics[refIdx].Intensities;
+            int last = rtArr.Length - 1;
+            if (last < 2)
+                return null;
+
+            // Map override RTs to indices via Rust partition_point semantics:
+            // first index where rt >= target. start_index then saturating_sub(1).
+            int startIdx = BinarySearchLowerBound(rtArr, ob.Start);
+            if (startIdx > 0) startIdx--;
+            if (startIdx > last) startIdx = last;
+
+            int endIdx = BinarySearchLowerBound(rtArr, ob.End);
+            if (endIdx > last) endIdx = last;
+
+            int apexIdx = BinarySearchLowerBound(rtArr, ob.Apex);
+            if (apexIdx > last) apexIdx = last;
+            if (apexIdx > 0 &&
+                Math.Abs(rtArr[apexIdx - 1] - ob.Apex) < Math.Abs(rtArr[apexIdx] - ob.Apex))
+                apexIdx--;
+            if (apexIdx < startIdx) apexIdx = startIdx;
+            if (apexIdx > endIdx) apexIdx = endIdx;
+
+            if (endIdx <= startIdx + 1)
+                return null;
+
+            return new List<XICPeakBounds>
+            {
+                new XICPeakBounds
+                {
+                    ApexRt = rtArr[apexIdx],
+                    ApexIntensity = intArr[apexIdx],
+                    ApexIndex = apexIdx,
+                    StartRt = rtArr[startIdx],
+                    EndRt = rtArr[endIdx],
+                    StartIndex = startIdx,
+                    EndIndex = endIdx,
+                    Area = PeakDetector.TrapezoidalArea(rtArr, intArr, startIdx, endIdx),
+                    SignalToNoise = PeakDetector.ComputeSnr(intArr, apexIdx, startIdx, endIdx),
+                },
+            };
+        }
+
         private FdrEntry ScoreCandidate(
             LibraryEntry candidate,
             List<Spectrum> windowSpectra,
@@ -2653,6 +2953,18 @@ namespace pwiz.OspreySharp
             if (nScans < 5)
                 return null;
 
+            // Stage 6 boundary override (post-FDR re-scoring): when set,
+            // peak detection + the signal pre-filter are skipped and
+            // scoring uses the supplied (apex, start, end) RT triple.
+            // Mirrors the boundary_overrides path in run_search at
+            // osprey/crates/osprey/src/pipeline.rs:6453-6664.
+            (double Apex, double Start, double End)? overrideBounds = null;
+            if (context.BoundaryOverrides != null &&
+                context.BoundaryOverrides.TryGetValue(candidate.Id, out var bnd))
+            {
+                overrideBounds = bnd;
+            }
+
             // Determine RT search window.
             // Use the global tolerance passed from RunCoelutionScoring (matches
             // Rust's single rt_tolerance for all entries in run_search).
@@ -2673,21 +2985,41 @@ namespace pwiz.OspreySharp
                     candidate.Fragments.Count, nScans));
             }
 
-            // Find scan range for XIC extraction. Matches Rust pipeline.rs
-            // commit 885339b: extract over a window wider than rtTolerance so
-            // CWT has context on both sides of any in-tolerance apex to
-            // determine full peak boundaries. The apex itself is still
-            // required to be within rtTolerance (enforced in the
-            // candidate-scoring loop below). Half-width is rtTolerance plus
-            // max(rtTolerance, 0.1) — tight-calibration runs get a 0.1 min
-            // floor of extra context; wider runs scale with rtTolerance.
-            double xicHalfWidth = rtTolerance + Math.Max(rtTolerance, 0.1);
+            // Find scan range for XIC extraction.
+            //
+            // For boundary overrides: use the given boundaries plus margin
+            // for SNR context — peak_width on each side, with a 0.2 min
+            // floor. Mirrors run_search at pipeline.rs:6473-6477.
+            //
+            // For normal search (matches Rust commit 885339b): extract over
+            // a window wider than rtTolerance so CWT has context on both
+            // sides of any in-tolerance apex to determine full peak
+            // boundaries. The apex itself is still required to be within
+            // rtTolerance (enforced in the candidate-scoring loop below).
+            // Half-width is rtTolerance plus max(rtTolerance, 0.1) —
+            // tight-calibration runs get a 0.1 min floor of extra context;
+            // wider runs scale with rtTolerance.
+            double rtLo, rtHi;
+            if (overrideBounds.HasValue)
+            {
+                var ob = overrideBounds.Value;
+                double peakWidth = Math.Max(0.1, ob.End - ob.Start);
+                double margin = Math.Max(0.2, peakWidth);
+                rtLo = ob.Start - margin;
+                rtHi = ob.End + margin;
+            }
+            else
+            {
+                double xicHalfWidth = rtTolerance + Math.Max(rtTolerance, 0.1);
+                rtLo = expectedRt - xicHalfWidth;
+                rtHi = expectedRt + xicHalfWidth;
+            }
             int startScan = -1, endScan = -1;
             for (int i = 0; i < nScans; i++)
             {
-                if (windowRts[i] > expectedRt + xicHalfWidth)
+                if (windowRts[i] > rtHi)
                     break;
-                if (windowRts[i] >= expectedRt - xicHalfWidth)
+                if (windowRts[i] >= rtLo)
                 {
                     if (startScan < 0)
                         startScan = i;
@@ -2714,8 +3046,7 @@ namespace pwiz.OspreySharp
                 {
                     LogInfo(string.Format(
                         "[DIAG] {0}: no scans in RT window [{1:F3}..{2:F3}]",
-                        candidate.ModifiedSequence, expectedRt - xicHalfWidth,
-                        expectedRt + xicHalfWidth));
+                        candidate.ModifiedSequence, rtLo, rtHi));
                 }
             }
 
@@ -2727,7 +3058,9 @@ namespace pwiz.OspreySharp
             // Signal pre-filter: require at least 2 of top 6 fragments present
             // in at least 3 of 4 consecutive scans. Matches Rust pipeline.rs:6032-6066.
             // Skips noise-only candidates before the expensive XIC extraction.
-            if (config.PrefilterEnabled)
+            // Skipped for boundary overrides — caller has already decided to
+            // score here.
+            if (config.PrefilterEnabled && !overrideBounds.HasValue)
             {
                 const int WIN = 4;
                 const int MIN_PASS = 3;
@@ -2775,7 +3108,22 @@ namespace pwiz.OspreySharp
             //   1. CWT consensus (primary)
             //   2. Peak detection on median polish elution profile (fallback 1)
             //   3. Peak detection on reference XIC (fallback 2)
-            var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+            //
+            // For boundary overrides (Stage 6 re-scoring), peak detection is
+            // skipped and a single synthetic XICPeakBounds is built directly
+            // from the supplied (apex, start, end). Mirrors run_search at
+            // pipeline.rs:6596-6664.
+            List<XICPeakBounds> peaks;
+            if (overrideBounds.HasValue)
+            {
+                peaks = BuildOverridePeaks(overrideBounds.Value, xics);
+                if (peaks == null)
+                    return null;
+            }
+            else
+            {
+                peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+            }
 
             if (peaks.Count == 0)
             {
@@ -2879,10 +3227,11 @@ namespace pwiz.OspreySharp
                 // the detected apex itself must fall within rtTolerance of
                 // expectedRt. Preserves first-pass selectivity -- only
                 // boundaries are allowed to extend past rtTolerance; apex
-                // locations still have to be within it.
+                // locations still have to be within it. Bypassed for
+                // boundary overrides (caller has already chosen the apex).
                 double peakApexRt = windowRts[startScan + p.ApexIndex];
                 double rtResidual = Math.Abs(peakApexRt - expectedRt);
-                if (rtResidual > rtTolerance)
+                if (!overrideBounds.HasValue && rtResidual > rtTolerance)
                     continue;
 
                 double sum = 0.0;
@@ -4412,6 +4761,70 @@ namespace pwiz.OspreySharp
         #endregion
 
         #region Stage 8: Protein FDR
+
+        /// <summary>
+        /// First-pass protein FDR run BEFORE Stage 6 reconciliation, on the
+        /// full pre-compaction peptide pool. Sets only RunProteinQvalue
+        /// (leaves ExperimentProteinQvalue at its 1.0 default for the
+        /// second-pass to overwrite). Detected-peptide filter uses
+        /// run_peptide_qvalue, the strict peptide-level gate, matching Rust
+        /// pipeline.rs:3045-3049 exactly. Protein-FDR gate is config.RunFdr
+        /// (1x), the Savitski-2015 convention applied at first pass, NOT the
+        /// 2x relaxed gate the post-output Stage 8 protein FDR uses.
+        /// </summary>
+        private void RunFirstPassProteinFdr(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            // Detected-peptide gate: targets passing peptide-level run FDR.
+            // Matches Rust pipeline.rs:3048 (e.run_peptide_qvalue <= run_fdr).
+            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (!entry.IsDecoy && entry.RunPeptideQvalue <= config.RunFdr)
+                        detectedPeptides.Add(entry.ModifiedSequence);
+                }
+            }
+            LogInfo(string.Format(
+                "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
+                detectedPeptides.Count));
+
+            var parsimony = ProteinFdr.BuildProteinParsimony(
+                fullLibrary, config.SharedPeptides, detectedPeptides);
+
+            // Best peptide score across all files for picked-protein TDC.
+            var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
+
+            // First-pass gate is config.RunFdr exactly — matches Rust
+            // pipeline.rs:3062 (compute_protein_fdr at config.run_fdr).
+            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
+
+            int nAtRunFdr = 0;
+            foreach (var qv in proteinFdr.GroupQvalues.Values)
+            {
+                if (qv <= config.RunFdr)
+                    nAtRunFdr++;
+            }
+            LogInfo(string.Format(
+                "First-pass protein FDR: {0} target groups at {1:P1} FDR",
+                nAtRunFdr, config.RunFdr));
+
+            if (OspreyDiagnostics.DumpProteinFdr)
+            {
+                OspreyDiagnostics.WriteStage6ProteinFdrDump(
+                    bestScores, proteinFdr.PeptideQvalues);
+                if (OspreyDiagnostics.ProteinFdrOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
+            }
+
+            // Set RunProteinQvalue ONLY. Experiment-protein-q is set by the
+            // post-output Stage 8 protein FDR pass (Rust calls it second-pass).
+            ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr,
+                setRun: true, setExperiment: false);
+        }
 
         /// <summary>
         /// Run protein-level FDR using parsimony and picked-protein competition.
