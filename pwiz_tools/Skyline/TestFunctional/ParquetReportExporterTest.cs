@@ -39,8 +39,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestConvertToStorageType()
         {
-            var dateTimeOffset = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTimeOffset));
-            Assert.IsInstanceOfType(dateTimeOffset, typeof(DateTimeOffset));
+            var nullableDateTime = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTime?));
+            Assert.IsInstanceOfType(nullableDateTime, typeof(DateTime?));
             var nullableFloat = ParquetReportExporter.ConvertToStorageType(1f, typeof(float?));
             Assert.IsInstanceOfType(nullableFloat, typeof(float?));
         }
@@ -62,8 +62,8 @@ namespace pwiz.SkylineTestFunctional
             RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items),
                 rowItemExporter, new SilentProgressMonitor(), ref status);
             stream.Position = 0;
-            var table = ParquetReader.ReadTableFromStream(stream);
-            Assert.AreEqual(1, table.Schema.Fields.Count);
+            using var reader = ParquetReader.CreateAsync(stream).Result;
+            Assert.AreEqual(1, reader.Schema.Fields.Count);
         }
 
         class MyObject

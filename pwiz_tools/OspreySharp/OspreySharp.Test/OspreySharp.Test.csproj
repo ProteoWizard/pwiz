@@ -12,13 +12,14 @@
     <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
     <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Parquet.Net" Version="3.10.0" />
+    <PackageReference Include="Parquet.Net" Version="5.5.0" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
   </ItemGroup>
 
-  <!-- net472 needs System.Memory explicitly; net8 has it built in. -->
+  <!-- net472 needs System.Memory explicitly; net8 has it built in.
+       Version pinned to match Parquet.Net 5.5.0's transitive lower bound. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Memory" Version="4.6.3" />
   </ItemGroup>
 
   <ItemGroup>

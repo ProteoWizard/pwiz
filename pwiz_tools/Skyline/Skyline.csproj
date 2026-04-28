@@ -162,8 +162,52 @@
     <Reference Include="ParquetNet">
       <HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reflection.Emit.Lightweight">
-      <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
+    <Reference Include="CommunityToolkit.HighPerformance">
+      <HintPath>..\Shared\Lib\Parquet\CommunityToolkit.HighPerformance.dll</HintPath>
+    </Reference>
+    <Reference Include="K4os.Compression.LZ4">
+      <HintPath>..\Shared\Lib\Parquet\K4os.Compression.LZ4.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces">
+      <HintPath>..\Shared\Lib\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode">
+      <HintPath>..\Shared\Lib\Parquet\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
+    <!-- Polyfills required by Parquet.Net 5.5.0; explicit refs win over older
+         transitive copies pulled from NuGet cache. -->
+    <Reference Include="System.Memory">
+      <HintPath>..\Shared\Lib\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>..\Shared\Lib\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>..\Shared\Lib\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions">
+      <HintPath>..\Shared\Lib\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream">
+      <HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="Snappier">
+      <HintPath>..\Shared\Lib\Parquet\Snappier.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Pipelines">
+      <HintPath>..\Shared\Lib\Parquet\System.IO.Pipelines.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ZstdSharp">
+      <HintPath>..\Shared\Lib\Parquet\ZstdSharp.dll</HintPath>
     </Reference>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>

@@ -81,6 +81,7 @@ Clearcore2.Utility.dll (included automatically from ProteoWizard; DO NOT ADD TO 
 Clearcore2.XmlHelpers.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 CLFIO32.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 CRHAKEI2.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+CommunityToolkit.HighPerformance.dll
 Dapper.dll
 de\ZedGraph.resources.dll
 DigitalRune.Windows.Docking.dll
@@ -113,6 +114,7 @@ ja\pwiz.CommonUtil.resources.dll
 ja\SkylineCmd.resources.dll
 ja\Skyline-daily.resources.dll
 ja\ZedGraph.resources.dll
+K4os.Compression.LZ4.dll
 Kajabity Tools.dll
 log4net.dll
 MassCalcWrapObject.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
@@ -201,7 +203,9 @@ Method\Waters\BuildWatersMethod.exe
 Method\Waters\VerifyESkylineLibrary.dll
 MethodConverter.dll
 MethodWriter.dll
+Microsoft.Bcl.HashCode.dll
 Microsoft.ConcurrencyVisualizer.Markers.dll
+Microsoft.IO.RecyclableMemoryStream.dll
 Microsoft.Practices.ServiceLocation.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Microsoft.Practices.Unity.Configuration.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Microsoft.Practices.Unity.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
@@ -259,6 +263,7 @@ Sciex.FMan.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS 
 Sciex.Wiff.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 SciexToolKit.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Shimadzu.LabSolutions.IO.IoModule.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Snappier.dll
 sk\ZedGraph.resources.dll
 SkylineCmd.exe
 SkylineCmd.exe.config
@@ -275,10 +280,12 @@ SkylineTool.pdb
 sv\ZedGraph.resources.dll
 System.Data.SQLite.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 System.Interactive.Async.dll
+System.IO.Pipelines.dll
 System.Memory.dll
-System.Reflection.Emit.Lightweight.dll
 System.Runtime.Caching.Generic.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 System.Runtime.CompilerServices.Unsafe.dll
+System.Text.Encodings.Web.dll
+System.Text.Json.dll
 ThermoFisher.CommonCore.Data.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 ThermoFisher.CommonCore.RawFileReader.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 timsdata.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
@@ -290,6 +297,7 @@ vcomp110.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TE
 vcomp140.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 vcruntime140.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 ZedGraph.dll
+ZstdSharp.dll
 zh-CHS\BiblioSpec.resources.dll
 zh-CHS\DigitalRune.Windows.Docking.resources.dll
 zh-CHS\MSGraph.resources.dll

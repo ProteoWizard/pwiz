@@ -92,14 +92,14 @@
         <member name="M:System.Threading.Tasks.TaskAsyncEnumerableExtensions.ConfigureAwait(System.IAsyncDisposable,System.Boolean)">
             <summary>Configures how awaits on the tasks returned from an async disposable will be performed.</summary>
             <param name="source">The source async disposable.</param>
-            <param name="continueOnCapturedContext">Whether to capture and marshal back to the current context.</param>
+            <param name="continueOnCapturedContext"><see langword="true" /> to capture and marshal back to the current context; otherwise, <see langword="false" />.</param>
             <returns>The configured async disposable.</returns>
         </member>
         <member name="M:System.Threading.Tasks.TaskAsyncEnumerableExtensions.ConfigureAwait``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Boolean)">
             <summary>Configures how awaits on the tasks returned from an async iteration will be performed.</summary>
             <typeparam name="T">The type of the objects being iterated.</typeparam>
             <param name="source">The source enumerable being iterated.</param>
-            <param name="continueOnCapturedContext">Whether to capture and marshal back to the current context.</param>
+            <param name="continueOnCapturedContext"><see langword="true" /> to capture and marshal back to the current context; otherwise, <see langword="false" />.</param>
             <returns>The configured enumerable.</returns>
         </member>
         <member name="M:System.Threading.Tasks.TaskAsyncEnumerableExtensions.WithCancellation``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)">
@@ -160,7 +160,7 @@
         </member>
         <member name="M:System.Runtime.CompilerServices.ConfiguredCancelableAsyncEnumerable`1.ConfigureAwait(System.Boolean)">
             <summary>Configures how awaits on the tasks returned from an async iteration will be performed.</summary>
-            <param name="continueOnCapturedContext">Whether to capture and marshal back to the current context.</param>
+            <param name="continueOnCapturedContext"><see langword="true" /> to capture and marshal back to the current context; otherwise, <see langword="false" />.</param>
             <returns>The configured enumerable.</returns>
             <remarks>This will replace any previous value set by <see cref="M:System.Runtime.CompilerServices.ConfiguredCancelableAsyncEnumerable`1.ConfigureAwait(System.Boolean)"/> for this iteration.</remarks>
         </member>
@@ -412,6 +412,9 @@
         </member>
         <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.Members">
             <summary>Gets field or property member names.</summary>
+        </member>
+        <member name="T:System.ExceptionPolyfills">
+            <summary>Provides downlevel polyfills for static methods on Exception-derived types.</summary>
         </member>
     </members>
 </doc>
