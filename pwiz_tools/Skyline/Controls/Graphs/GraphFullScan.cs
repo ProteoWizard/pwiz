@@ -790,25 +790,12 @@ namespace pwiz.Skyline.Controls.Graphs
             dst.MinorStepAuto = false;
             // Mirror the heatmap's drift-time title text so the mobilogram can carry it.
             target.YAxis.Title.Text = heatMap.YAxis.Title.Text;
-            // Force a uniform numeric format so heatmap and mobilogram drift-time tick
-            // labels render identically (e.g. "4.0" not "4"). FormatGraphPane sets the
-            // heatmap to "g" which strips trailing zeros — undo that here for both panes
-            // using a precision derived from the major step.
-            string format = ComputeAxisFormat(src.MajorStep);
-            src.Format = format;
-            dst.Format = format;
-        }
-
-        /// <summary>
-        /// Numeric format string with enough fractional digits to express
-        /// <paramref name="majorStep"/> without rounding (e.g. step 0.5 → "F1").
-        /// </summary>
-        private static string ComputeAxisFormat(double majorStep)
-        {
-            if (majorStep <= 0 || double.IsNaN(majorStep) || double.IsInfinity(majorStep) || majorStep >= 1)
-                return @"F0";
-            int decimals = (int)Math.Ceiling(-Math.Log10(majorStep));
-            return @"F" + decimals;
+            // Both panes share Min/Max/MajorStep, so let ZedGraph's auto-format pick the
+            // numeric format — both will land on the same "f<n>" string and render the
+            // same labels. Re-enable FormatAuto here because FormatGraphPane sets the
+            // heatmap to "g" (which strips trailing zeros and disables auto).
+            src.FormatAuto = true;
+            dst.FormatAuto = true;
         }
 
         private MSGraphPane CreateEmptySpacerPane()
