@@ -830,7 +830,9 @@ namespace pwiz.Skyline.Controls.Graphs
             // the right edge of the spacer so it sits immediately to the left of the
             // stick's tick labels. Frees the stick pane to use a narrow Y-axis reserve
             // (just numbers + ticks), which in turn lets the heatmap match and shrink the
-            // gap between mobilogram and heatmap.
+            // gap between mobilogram and heatmap. FontSpec is cloned from the real stick
+            // YAxis title so size/family/bold/color match — only the rotation angle is
+            // overridden for vertical placement.
             var intensityLabel = new TextObj(
                 GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity,
                 0.95, 0.5,
@@ -839,12 +841,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 AlignV.Center)
             {
                 IsClippedToChartRect = false,
+                FontSpec = _stickSpectrumPane.YAxis.Title.FontSpec.Clone(),
             };
-            intensityLabel.FontSpec.Size = 14;
-            intensityLabel.FontSpec.IsBold = true;
             intensityLabel.FontSpec.Angle = 90;
-            intensityLabel.FontSpec.Border.IsVisible = false;
-            intensityLabel.FontSpec.Fill.IsVisible = false;
             pane.GraphObjList.Add(intensityLabel);
             return pane;
         }
