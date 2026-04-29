@@ -59,27 +59,32 @@
   <p class="sub">
     Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
     output. Color indicates port status of the OspreySharp (C#) implementation
-    against the Osprey (Rust) reference. Stages 1-4 are proven bit-identical
-    on Stellar + Astral (21 PIN features, 317K entries). Stage 5 is bit-identical
-    on Stellar 1-file AND 3-file (end-of-stage dump: score + pep + 4 q-values
-    across 1,388,872 FdrEntry rows at max_diff = 0; multi-file required an
-    experiment_precursor_qvalue propagation fix in C#'s Percolator FDR).
-    Stage 6 planning checkpoint is bit-identical with Rust across all
-    eight planning dumps on Stellar 3-file (multi-charge consensus,
-    consensus RTs, calibration refit, and the Stage-5 inputs they read).
-    Astral 3-file matches 7 of 8 planning dumps; the one outstanding
-    Astral gap is a 1-ULP difference in <code>experiment_precursor_q</code>
-    on 168 losing entries in file 49 (q approximately 0.0977, far above
-    the 0.01 FDR gate, so downstream Stage 6 dumps are unaffected). The
-    remaining Stage 6 substage is the second-pass re-score plus
-    Percolator SVM (gray box below); once that lands and its two new
-    cross-impl dumps go byte-identical, Stage 6 closes. Green badges =
-    regression tests; purple badges = C#/Rust perf ratio.
+    against the Osprey (Rust) reference. Stages 1-4 match within the
+    <code>Test-Features.ps1</code> 1e-6 tolerance gate on Stellar + Astral
+    (21 PIN features, 317K matched entries); a 0.5% row-count gap and a
+    ~2% per-CWT-candidate ULP-level <code>area</code> drift remain to be
+    explained or upgraded to true bit-identity. Stage 5 is bit-identical
+    on Stellar 1-file AND 3-file (end-of-stage dump: score + pep + 4
+    q-values across 1,388,872 FdrEntry rows at max_diff = 0; multi-file
+    required an experiment_precursor_qvalue propagation fix in C#'s
+    Percolator FDR). Stage 6 planning + reconciliation planner output
+    are bit-identical with Rust across all nine cross-impl dumps on
+    Stellar (172,548 reconciliation actions) AND Astral (248,711) 3-file.
+    The 168-cell Astral <code>experiment_precursor_q</code> diff seen in
+    earlier runs was identified as a Rust ryu vs .NET R formatter
+    tie-break choice (same f64 bits, different shortest-roundtrip
+    decimal); the harness now does a bit-aware fallback comparison that
+    correctly accepts these as equal. Remaining Stage 6 substages are
+    the second-pass re-score (per-file rescoring at locked boundaries
+    plus gap-fill) and the second-pass Percolator SVM (gray boxes
+    below); once those land and their cross-impl dumps go byte-identical,
+    Stage 6 closes. Green badges = regression tests; purple badges =
+    C#/Rust perf ratio.
   </p>
 </header>
 
 <main>
-<svg class="pipeline" viewBox="0 0 1200 2180" xmlns="http://www.w3.org/2000/svg">
+<svg class="pipeline" viewBox="0 0 1200 2240" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <!-- Arrowhead for control flow between stages -->
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
@@ -386,8 +391,9 @@
   <text class="phase-note"  x="60" y="58">
     Multi-charge consensus + cross-run reconciliation adjust peak boundaries
     across replicates, then re-score at locked boundaries and re-run FDR.
-    Planning checkpoint dumps byte-identical with Rust on Stellar + Astral
-    3-file; second-pass re-score still missing.
+    Planning checkpoint + reconciliation planner output byte-identical with
+    Rust on Stellar + Astral 3-file; per-file re-score and second-pass
+    Percolator are the remaining substages.
   </text>
 
   <rect class="st-done" x="80" y="80" width="1040" height="42" rx="4"/>
@@ -396,19 +402,24 @@
 
   <rect class="st-done" x="80" y="140" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="160" text-anchor="middle">Cross-run reconciliation</text>
-  <text class="stage-desc"  x="600" y="174" text-anchor="middle">ConsensusRts.Compute + CalibrationRefit.Refit wired; consensus / inv_predict / multicharge / refit / loess_fit / protein_fdr / calibration dumps all byte-identical with Rust on Stellar + Astral 3-file; ReconciliationPlanner deferred to second-pass re-score sprint</text>
+  <text class="stage-desc"  x="600" y="174" text-anchor="middle">ConsensusRts.Compute + CalibrationRefit.Refit + ReconciliationPlanner.Plan wired; 9/9 cross-impl Stage 6 dumps byte-identical with Rust on Stellar (172,548 reconciliation actions) + Astral (248,711) 3-file</text>
 
   <rect class="st-missing" x="80" y="200" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="220" text-anchor="middle">Second-pass re-score + Percolator SVM</text>
-  <text class="stage-desc"  x="600" y="234" text-anchor="middle">re-extract XICs at locked boundaries; re-train SVM on corrected features; final run + experiment q-values</text>
+  <text class="stage-title" x="600" y="220" text-anchor="middle">Second-pass re-score</text>
+  <text class="stage-desc"  x="600" y="234" text-anchor="middle">re-invoke search engine with reconciled boundary overrides; gap-fill missing precursors via two-pass CWT + forced integration; write reconciled scores back to per-file .scores.parquet</text>
+
+  <rect class="st-missing" x="80" y="260" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="280" text-anchor="middle">Second-pass Percolator SVM</text>
+  <text class="stage-desc"  x="600" y="294" text-anchor="middle">single Percolator pass on the re-scored + gap-filled pool; final run + experiment q-values at precursor + peptide levels</text>
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
   <path class="flow" d="M 600 182 L 600 198" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 242 L 600 258" marker-end="url(#arrow)"/>
 
-  <!-- "You are here" callout — pointing at second-pass re-score,
-       the next box up (multi-charge consensus + cross-run reconciliation
-       both shipped byte-identical; second-pass re-score is the remaining
-       Stage 6 substage). -->
+  <!-- "You are here" callout — pointing at the second-pass re-score box.
+       Multi-charge consensus, cross-run reconciliation, and the
+       reconciliation planner output all shipped byte-identical;
+       per-file re-score is next. -->
   <g transform="translate(820, 195)">
     <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
     <text class="you-are-here" x="136" y="10">YOU ARE</text>
@@ -419,9 +430,9 @@
 <!-- ================================================================= -->
 <!-- STAGE 7 PROTEIN FDR                                                -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1900 L 600 1940" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1960 L 600 2000" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 1940)">
+<g transform="translate(0, 2000)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="100" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 7</text>
   <text class="phase-title" x="60" y="42">Protein FDR</text>
@@ -434,9 +445,9 @@
 <!-- ================================================================= -->
 <!-- STAGE 8 OUTPUT                                                     -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2040 L 600 2080" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2100 L 600 2140" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2080)">
+<g transform="translate(0, 2140)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="90" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 8</text>
   <text class="phase-title" x="60" y="42">Output</text>
