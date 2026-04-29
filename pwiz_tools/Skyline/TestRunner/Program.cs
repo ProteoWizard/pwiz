@@ -261,6 +261,7 @@ namespace TestRunner
             "teamcitytestdecoration=off;teamcitytestsuite=;teamcitycleanup=off;" +
             "verbose=off;listonly;showheader=on;" +
             "reportheaps=off;reporthandles=off;sorthandlesbycount=off;" +
+            "zedgraphantialiasing=on;" +
             "dotmemorywarmup=5;dotmemorywaitruns=0;dotmemorycollectallocations=off;dotmemoryattests";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
@@ -279,6 +280,13 @@ namespace TestRunner
 
             // Parse command line args and initialize default values.
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
+
+            // Propagate the ZedGraph anti-aliasing toggle to test-launched Skyline
+            // instances via an environment variable. Default on → anti-aliasing enabled;
+            // pass zedgraphantialiasing=off to A/B compare against the legacy aliased
+            // rendering.
+            Environment.SetEnvironmentVariable(@"SKYLINE_ZEDGRAPH_ANTIALIASING",
+                commandLineArgs.ArgAsBool("zedgraphantialiasing") ? @"1" : @"0");
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
             {

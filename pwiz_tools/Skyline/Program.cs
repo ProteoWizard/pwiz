@@ -157,6 +157,14 @@ namespace pwiz.Skyline
         [STAThread]
         public static int Main(string[] args = null)
         {
+            // Throwaway: enable ZedGraph anti-aliasing globally so we can measure how
+            // many existing tests / tutorial screenshots would be affected by the change.
+            // Default on; TestRunner sets SKYLINE_ZEDGRAPH_ANTIALIASING=0 when its
+            // zedgraphantialiasing switch is off, so we can A/B test from the cmdline
+            // without rebuilding.
+            ZedGraph.FontSpec.Default.IsAntiAlias =
+                Environment.GetEnvironmentVariable(@"SKYLINE_ZEDGRAPH_ANTIALIASING") != @"0";
+
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
                 Settings.Default.InstallationId = Guid.NewGuid().ToString();
 
