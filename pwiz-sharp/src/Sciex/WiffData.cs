@@ -67,6 +67,9 @@ public sealed class WiffData : IDisposable
     /// <summary>Total samples in the wiff (the SDK's per-wiff index).</summary>
     public int SampleCount { get; }
 
+    /// <summary>SampleName for the open sample, or empty when the SDK doesn't expose it.</summary>
+    public string SampleName { get; private set; } = string.Empty;
+
     /// <summary>Constructor: opens <paramref name="wiffPath"/> at sample <paramref name="sampleIndex0"/> (0-based).</summary>
     public WiffData(string wiffPath, int sampleIndex0 = 0)
     {
@@ -88,6 +91,18 @@ public sealed class WiffData : IDisposable
         if (!_sample.HasMassSpectrometerData)
             throw new InvalidDataException($"WIFF sample {sampleIndex0} has no MS data: {wiffPath}");
         _msSample = _sample.MassSpectrometerSample;
+
+        // Pull the user-facing sample name (cpp emits this in the run id as "<wiff_base>-<sampleName>").
+        try
+        {
+            int idx = 0;
+            foreach (var info in _provider.GetBasicSampleInfos(wiffPath))
+            {
+                if (idx == sampleIndex0) { SampleName = info.SampleName ?? string.Empty; break; }
+                idx++;
+            }
+        }
+        catch { /* SDK didn't expose sample names — fall back to "(sample N)" elsewhere */ }
     }
 
     /// <summary>Returns the experiment at <paramref name="experimentIndex"/> (0-based).</summary>

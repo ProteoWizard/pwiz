@@ -50,6 +50,15 @@ public sealed class Reader_Sciex : IReader
         if (!File.Exists(filename))
             throw new FileNotFoundException("WIFF file not found", filename);
 
+        // .wiff2 files use a different SDK (SCIEX.Apis.Data.v1) than the legacy
+        // AnalystWiffDataProvider in this port. Cpp's WiffFile2.ipp dispatches to a separate
+        // WiffFile2Impl. Until that path is ported, fail with a clear message.
+        if (filename.EndsWith(".wiff2", StringComparison.OrdinalIgnoreCase))
+            throw new NotSupportedException(
+                ".wiff2 files are not yet supported by the Sciex reader port. "
+                + "The cpp reader uses SCIEX.Apis.Data.v1 (a separate SDK from "
+                + "AnalystWiffDataProvider) that hasn't been wrapped yet.");
+
         result.CVs.AddRange(MSData.DefaultCVList);
         var wiff = new WiffData(filename, sampleIndex0: 0);
         try
@@ -66,9 +75,12 @@ public sealed class Reader_Sciex : IReader
     private static void FillMetadata(MSData result, string wiffPath, WiffData wiff, ReaderConfig? config)
     {
         string baseName = Path.GetFileNameWithoutExtension(wiffPath);
-        // Cpp run id: "<baseName> (sample N)" when multi-sample, else baseName. We default to
-        // the simple case until multi-sample support lands.
-        result.Id = wiff.SampleCount > 1 ? $"{baseName} (sample {wiff.SampleNumber})" : baseName;
+        // Cpp run id: "<baseName>-<sampleName>" for multi-sample, else baseName. SampleName is
+        // populated from the SDK's BasicSampleInfo collection.
+        if (wiff.SampleCount > 1 && !string.IsNullOrEmpty(wiff.SampleName))
+            result.Id = $"{baseName}-{wiff.SampleName}";
+        else
+            result.Id = baseName;
         result.Run.Id = result.Id;
 
         var sf = new SourceFile(Path.GetFileName(wiffPath), Path.GetFileName(wiffPath),

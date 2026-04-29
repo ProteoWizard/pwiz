@@ -52,6 +52,8 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
         public double Q3;
         public double DwellTimeMs;
         public double CollisionEnergy;
+        public double StartTime;        // scheduled MRM start time (0 if unscheduled)
+        public double EndTime;          // scheduled MRM end time (0 if unscheduled)
         public string? CompoundId;
         public MSExperimentInfo.PolarityEnum Polarity;
     }
@@ -86,6 +88,11 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
                     // CompoundDepParameters can carry a per-transition collision energy. Falling
                     // back to the experiment default keeps id consistency with cpp.
                     double ce = ReadCompoundParameter(mrm.CompoundDepParameters, "CE");
+                    // Scheduled-MRM windows: cpp WiffFile.cpp sets target.startTime =
+                    // ExpectedRT - RTWindow/2 and target.endTime = ExpectedRT + RTWindow/2,
+                    // emitting "start=... end=..." iff endTime > 0.
+                    double start = mrm.ExpectedRT - mrm.RTWindow / 2.0;
+                    double end = mrm.ExpectedRT + mrm.RTWindow / 2.0;
                     var entry = new IndexEntry
                     {
                         Index = _index.Count,
@@ -97,6 +104,8 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
                         Q3 = mrm.Q3Mass,
                         DwellTimeMs = mrm.DwellTime,
                         CollisionEnergy = ce,
+                        StartTime = start,
+                        EndTime = end,
                         CompoundId = mrm.Name,
                         Polarity = info.Polarity,
                     };
@@ -110,6 +119,8 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
                 {
                     if (simRanges[t] is not SIMMassRange sim) continue;
                     double ce = ReadCompoundParameter(sim.CompoundDepParameters, "CE");
+                    double start = sim.ExpectedRT - sim.RTWindow / 2.0;
+                    double end = sim.ExpectedRT + sim.RTWindow / 2.0;
                     var entry = new IndexEntry
                     {
                         Index = _index.Count,
@@ -120,6 +131,8 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
                         Q1 = sim.Mass,
                         DwellTimeMs = sim.DwellTime,
                         CollisionEnergy = ce,
+                        StartTime = start,
+                        EndTime = end,
                         CompoundId = sim.Name,
                         Polarity = info.Polarity,
                     };
@@ -190,6 +203,11 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
         sb.Append(" sample=").Append(sample);
         sb.Append(" period=1 experiment=").Append(experimentNumber);
         sb.Append(" transition=").Append(e.TransitionIndex);
+        if (e.EndTime > 0)
+        {
+            sb.Append(" start=").Append(FormatLikeCppOss(e.StartTime));
+            sb.Append(" end=").Append(FormatLikeCppOss(e.EndTime));
+        }
         if (e.CollisionEnergy > 0) sb.Append(" ce=").Append(FormatLikeCppOss(e.CollisionEnergy));
         if (!string.IsNullOrEmpty(e.CompoundId)) sb.Append(" name=").Append(e.CompoundId);
         return sb.ToString();
@@ -203,6 +221,11 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
         sb.Append(" sample=").Append(sample);
         sb.Append(" period=1 experiment=").Append(experimentNumber);
         sb.Append(" transition=").Append(e.TransitionIndex);
+        if (e.EndTime > 0)
+        {
+            sb.Append(" start=").Append(FormatLikeCppOss(e.StartTime));
+            sb.Append(" end=").Append(FormatLikeCppOss(e.EndTime));
+        }
         if (e.CollisionEnergy > 0) sb.Append(" ce=").Append(FormatLikeCppOss(e.CollisionEnergy));
         if (!string.IsNullOrEmpty(e.CompoundId)) sb.Append(" name=").Append(e.CompoundId);
         return sb.ToString();
