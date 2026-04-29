@@ -66,9 +66,9 @@ public sealed class Reader_Bruker : IReader
         bool sortAndJitter = config?.SortAndJitter ?? false;
         bool peakPicking = config?.PeakPicking ?? false;
         var format = DetectFormat(filename);
-        if (format != BrukerFormat.Tdf && format != BrukerFormat.Tsf)
+        if (format != BrukerFormat.Tdf && format != BrukerFormat.Tsf && format != BrukerFormat.Baf)
             throw new NotSupportedException(
-                $"Bruker format {format} is not yet supported by msconvert-sharp (only TDF and TSF are ported).");
+                $"Bruker format {format} is not yet supported by msconvert-sharp (TDF, TSF, BAF are ported; YEP / FID still pending).");
 
         string analysisDir = Directory.Exists(filename)
             ? filename
@@ -136,6 +136,7 @@ public sealed class Reader_Bruker : IReader
         {
             BrukerFormat.Tdf => ("analysis.tdf", CVID.MS_Bruker_TDF_nativeID_format, CVID.MS_Bruker_TDF_format),
             BrukerFormat.Tsf => ("analysis.tsf", CVID.MS_Bruker_TSF_nativeID_format, CVID.MS_Bruker_TSF_format),
+            BrukerFormat.Baf => ("analysis.baf", CVID.MS_Bruker_BAF_nativeID_format, CVID.MS_Bruker_BAF_format),
             _ => throw new ArgumentOutOfRangeException(nameof(format)),
         };
         AddPairedSourceFiles(result, analysisDir, baseName, nativeIdFormat, fileFormat);

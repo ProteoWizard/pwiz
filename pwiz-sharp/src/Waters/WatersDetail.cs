@@ -119,6 +119,14 @@ internal static class WatersScanType
     public const int Ms1 = 1850;
 }
 
+/// <summary>LockMassParameter keys (LOCKMASS_ITEM_BASE = 1000).</summary>
+internal static class WatersLockMassParameter
+{
+    public const int Mass = 1000;
+    public const int Tolerance = 1001;
+    public const int Force = 1002;
+}
+
 /// <summary>
 /// Helpers translating MassLynx-native enums to mzML CV terms. Mirrors
 /// <c>Reader_Waters_Detail.cpp</c> + the inline helpers in <c>WatersRawFile.hpp</c>.

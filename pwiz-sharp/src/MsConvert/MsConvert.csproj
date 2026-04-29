@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj" />
     <ProjectReference Include="..\Thermo\Thermo.csproj" />
     <ProjectReference Include="..\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\Waters\Waters.csproj" />
   </ItemGroup>
 
   <ItemGroup>

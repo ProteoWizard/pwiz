@@ -93,7 +93,12 @@ public sealed class Reader_Thermo : IReader
         if (hasMs1) result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum);
         if (hasMsn) result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
 
-        var icByAnalyzer = FillInstrumentConfiguration(result, raw);
+        // Cpp emits MS_EMR_spectrum (electromagnetic radiation spectrum) when the file has any
+        // PDA-as-spectra entries — Reader_Thermo.cpp:228-229.
+        if (raw.PdaControllerCount > 0)
+            result.FileDescription.FileContent.Set(CVID.MS_EMR_spectrum);
+
+        var icByAnalyzer = FillInstrumentConfiguration(result, raw, out var pdaIc);
 
         // Sample list: Thermo exposes a single SampleId; emit a Sample entry matching pwiz C++.
         string sampleId = TryGetSampleId(raw);
@@ -125,17 +130,21 @@ public sealed class Reader_Thermo : IReader
         if (result.InstrumentConfigurations.Count > 0)
             result.Run.DefaultInstrumentConfiguration = result.InstrumentConfigurations[0];
         bool simAsSpectra = config?.SimAsSpectra ?? false;
+        bool srmAsSpectra = config?.SrmAsSpectra ?? false;
         var list = new SpectrumList_Thermo(raw, ownsRaw: true,
-            result.Run.DefaultInstrumentConfiguration, icByAnalyzer, simAsSpectra)
+            result.Run.DefaultInstrumentConfiguration, icByAnalyzer, simAsSpectra, srmAsSpectra, pdaIc)
         {
             Dp = dpThermo,
         };
         result.Run.SpectrumList = list;
-        var chromList = new ChromatogramList_Thermo(raw, simAsSpectra) { Dp = dpThermo };
+        var chromList = new ChromatogramList_Thermo(raw, simAsSpectra, srmAsSpectra) { Dp = dpThermo };
         result.Run.ChromatogramList = chromList;
-        // If any SIM chromatograms were emitted, advertise them in fileContent.
+        // Advertise SIM/SRM chromatograms in fileContent when emitted (matches cpp's reference
+        // mzML metadata for files that produce these chromatogram types).
         if (chromList.HasSimChromatograms)
             result.FileDescription.FileContent.Set(CVID.MS_selected_ion_monitoring_chromatogram);
+        if (chromList.HasSrmChromatograms)
+            result.FileDescription.FileContent.Set(CVID.MS_selected_reaction_monitoring_chromatogram);
     }
 
     private static Software GetOrAddPwizSoftware(MSData msd)
@@ -150,8 +159,13 @@ public sealed class Reader_Thermo : IReader
         return pwiz;
     }
 
+    /// <summary>
+    /// Fills the document's <see cref="MSData.InstrumentConfigurations"/> from <paramref name="raw"/>.
+    /// Returns a dictionary mapping each MS analyzer type to its configuration plus an
+    /// out parameter for the PDA configuration (null if the file has no PDA controller).
+    /// </summary>
     private static Dictionary<ThermoFisher.CommonCore.Data.FilterEnums.MassAnalyzerType, InstrumentConfiguration>
-        FillInstrumentConfiguration(MSData result, ThermoRawFile raw)
+        FillInstrumentConfiguration(MSData result, ThermoRawFile raw, out InstrumentConfiguration? pdaIc)
     {
         // Software: Xcalibur (acquisition). pwiz Software entry is added separately by the caller.
         var xcalibur = new Software("Xcalibur")
@@ -208,6 +222,16 @@ public sealed class Reader_Thermo : IReader
 
             result.InstrumentConfigurations.Add(ic);
             map[analyzers[i]] = ic;
+        }
+
+        // Append a separate "PDA" IC when a PDA controller is present (mirror of cpp
+        // Reader_Thermo_Detail.cpp:198-203). Single component: MS_PDA detector, order 1.
+        pdaIc = null;
+        if (raw.PdaControllerCount > 0)
+        {
+            pdaIc = new InstrumentConfiguration("PDA");
+            pdaIc.ComponentList.Add(new Component(CVID.MS_PDA, 1));
+            result.InstrumentConfigurations.Add(pdaIc);
         }
         return map;
     }

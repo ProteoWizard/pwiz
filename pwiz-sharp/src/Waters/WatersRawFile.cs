@@ -24,6 +24,13 @@ internal sealed class WatersRawFile : IDisposable
     private NativeMethods.ProgressCallback? _centroidProgressCb;
     private IntPtr _ddaProc;       // DDA-type processor (lazily created on first DDA request).
     private NativeMethods.ProgressCallback? _ddaProgressCb;
+    private IntPtr _lockMassProc;  // LOCKMASS-type processor (lazy, only when ApplyLockMass is called).
+    private NativeMethods.ProgressCallback? _lockMassProgressCb;
+    private float _appliedLockMassMz;
+    private float _appliedLockMassTolerance;
+    private int _sonarFunctionIndex = -1;          // Lazy-resolved by FindSonarFunction.
+    private float _sonarMassLowerLimit;            // Cached at SONAR-function discovery.
+    private float _sonarMassUpperLimit;            // Cached at SONAR-function discovery.
     private bool _disposed;
 
     /// <summary>0-based function indices present in the raw directory (sorted ascending).</summary>
@@ -338,13 +345,17 @@ internal sealed class WatersRawFile : IDisposable
     }
 
     /// <summary>
-    /// Reads the (mz, intensity) arrays for the given (function, scan). The SDK retains
-    /// ownership of the returned float buffers (matching pwiz C++ <c>ReadScan</c> which calls
-    /// <c>ToVector</c> with <c>bRelease=false</c>) — we copy out and do not free.
+    /// Reads the profile (mz, intensity) arrays for the given (function, scan). Mirrors
+    /// pwiz C++ <c>RawData::ReadScan(..., doCentroid=false, ...)</c> which routes through
+    /// the MassLynx scan processor (combineScan(start=end) → getScan), not the raw scan
+    /// reader. The processor path applies any pending lockmass correction and matches the
+    /// data the cpp peak picker sees.
     /// </summary>
     public (float[] Mz, float[] Intensity) ReadScan(int function, int scan)
     {
-        Check(NativeMethods.readScan(_scan, function, scan, out IntPtr pMass, out IntPtr pInt, out int n), "readScan");
+        EnsureCentroidProcessor();
+        Check(NativeMethods.combineScan(_centroidProc, function, scan, scan), "combineScan");
+        Check(NativeMethods.getScan(_centroidProc, out IntPtr pMass, out IntPtr pInt, out int n), "getScan");
         var mz = new float[n];
         var intensity = new float[n];
         if (n > 0)
@@ -539,6 +550,51 @@ internal sealed class WatersRawFile : IDisposable
     }
 
     /// <summary>
+    /// Reads the SIM channel m/z list for the given function (typically called with scan=1 to
+    /// enumerate the channels). Bypasses the scan processor — pwiz C++ uses the raw scan
+    /// reader (<c>readScan</c>) for the channel-list query, which is more reliable than the
+    /// processor pipeline for non-MS1 scans.
+    /// </summary>
+    public float[] ReadSimChannelMzs(int function, int scan = 1)
+    {
+        Check(NativeMethods.readScan(_scan, function, scan,
+            out IntPtr pMass, out IntPtr _, out int n), "readScan");
+        var mz = new float[n];
+        if (n > 0) Marshal.Copy(pMass, mz, 0, n);
+        return mz;
+    }
+
+    /// <summary>
+    /// Reads the (time, intensity) mass chromatogram for one m/z target. <paramref name="massWindow"/>
+    /// is the half-width in Da; <paramref name="products"/>=true reads product-ion chromatograms,
+    /// false reads MS1/SIM. Mirrors pwiz C++ <c>ChromatogramReader::ReadMassChromatogram</c>.
+    /// </summary>
+    public (float[] Times, float[] Intensities) ReadMassChromatogram(int function, float mass,
+        float massWindow = 1.0f, bool products = false)
+    {
+        var masses = new[] { mass };
+        Check(NativeMethods.readMassChromatograms(_chrom, function, masses, 1,
+            out IntPtr pTimes, out IntPtr pInts, massWindow, products, out int n),
+            "readMassChromatograms");
+        try
+        {
+            var times = new float[n];
+            var intens = new float[n];
+            if (n > 0)
+            {
+                Marshal.Copy(pTimes, times, 0, n);
+                Marshal.Copy(pInts, intens, 0, n);
+            }
+            return (times, intens);
+        }
+        finally
+        {
+            if (pTimes != IntPtr.Zero) _ = NativeMethods.releaseMemory(pTimes);
+            if (pInts != IntPtr.Zero) _ = NativeMethods.releaseMemory(pInts);
+        }
+    }
+
+    /// <summary>
     /// Reads the (time, intensity) chromatogram for a specific MRM transition (0-based offset
     /// within the function's transition list). Caller-owned float buffers — released here.
     /// </summary>
@@ -600,6 +656,61 @@ internal sealed class WatersRawFile : IDisposable
     }
 
     /// <summary>
+    /// Returns the SONAR bin range covering <paramref name="precursorMz"/> ± <paramref name="tolerance"/>.
+    /// Returns (-1, -1) when the requested window falls outside the calibrated mass range.
+    /// Mirrors pwiz C++ <c>RawData::GetSonarRange</c>.
+    /// </summary>
+    public (int Start, int End) GetSonarBinRange(double precursorMz, double tolerance)
+    {
+        FindSonarFunction();
+        if (precursorMz - tolerance > _sonarMassUpperLimit || precursorMz + tolerance < _sonarMassLowerLimit)
+            return (-1, -1);
+        // SDK takes a "tolerance" but treats it as half-window — cpp passes tolerance*2.
+        if (NativeMethods.getIndexRange(_info, _sonarFunctionIndex, (float)precursorMz,
+            (float)tolerance * 2.0f, out int start, out int end) != 0)
+            return (-1, -1);
+        return (start, end);
+    }
+
+    /// <summary>
+    /// Returns the nominal precursor m/z at SONAR bin <paramref name="bin"/>. Returns 0 when
+    /// the bin is outside the calibrated range. Used for display + bin-to-mass mapping in
+    /// SONAR-aware tools. Mirrors pwiz C++ <c>RawData::SonarBinToPrecursorMz</c>.
+    /// </summary>
+    public double SonarBinToPrecursorMz(int bin)
+    {
+        FindSonarFunction();
+        if (NativeMethods.getPrecursorMass(_info, _sonarFunctionIndex, bin, out float mz) != 0)
+            return 0;
+        return mz;
+    }
+
+    /// <summary>
+    /// Lazy-resolves the first SONAR-calibrated function in the file and caches its overall
+    /// precursor mass range. Per the Waters SDK team, function index doesn't matter under
+    /// normal operation, so we pick the first one that responds to <c>getPrecursorMass</c>.
+    /// </summary>
+    private void FindSonarFunction()
+    {
+        if (_sonarFunctionIndex >= 0) return;
+        foreach (int function in FunctionIndices)
+        {
+            if (NativeMethods.getPrecursorMass(_info, function, 1, out float _) != 0)
+                continue;
+            _sonarFunctionIndex = function;
+            // Cache the overall mass range so GetSonarBinRange can short-circuit out-of-range
+            // queries before calling the SDK.
+            Check(NativeMethods.getFunctionPrecursorMassRange(_info, function,
+                out _sonarMassLowerLimit, out _sonarMassUpperLimit),
+                "getFunctionPrecursorMassRange");
+            return;
+        }
+        throw new InvalidOperationException(
+            "[WatersRawFile.FindSonarFunction] could not identify any function index for SONAR " +
+            "mz-to-bin conversion (_sonar.inf calibration file missing or corrupt?)");
+    }
+
+    /// <summary>
     /// True if this file ships with a CCS calibration (<c>mob_cal.csv</c>). SONAR files use
     /// IMS hardware but don't have a CCS calibration even if the file is present, so we gate
     /// on <see cref="HasSonar"/> too — matches pwiz C++ <c>RawData::HasCcsCalibration</c>.
@@ -627,6 +738,109 @@ internal sealed class WatersRawFile : IDisposable
         Check(NativeMethods.getDriftTime_CCS(_info, ccs, mass, charge, out float dt),
             "getDriftTime_CCS");
         return dt;
+    }
+
+    // ---------- lockmass correction ----------
+
+    /// <summary>
+    /// True if this file CAN have lockmass correction applied (the lockmass function exists
+    /// and is acquired). Doesn't apply correction; that's <see cref="ApplyLockMass"/>.
+    /// </summary>
+    public bool LockMassCanBeApplied()
+    {
+        if (NativeMethods.canLockMassCorrect(_info, out bool canApply) != 0) return false;
+        return canApply;
+    }
+
+    /// <summary>True if lockmass correction is currently applied (post-acquisition).</summary>
+    public bool LockMassIsApplied()
+    {
+        if (!LockMassCanBeApplied()) return false;
+        return NativeMethods.isLockMassCorrected(_info, out bool applied) == 0 && applied;
+    }
+
+    /// <summary>
+    /// Applies lockmass correction at <paramref name="mz"/> (Da) with the given tolerance.
+    /// No-op if correction is already applied at the same parameters. Returns true if the
+    /// correction is now active (or was already active at the requested params).
+    /// </summary>
+    public bool ApplyLockMass(double mz, double tolerance)
+    {
+        const float MzEpsilon = 1e-5f;
+        const float ToleranceEpsilon = 1e-5f;
+        float newMz = (float)mz;
+        float newTolerance = (float)tolerance;
+
+        if (LockMassIsApplied()
+            && Math.Abs(newMz - _appliedLockMassMz) < MzEpsilon
+            && Math.Abs(newTolerance - _appliedLockMassTolerance) < ToleranceEpsilon)
+            return true; // unchanged
+
+        EnsureLockMassProcessor();
+        if (_lockMassProc == IntPtr.Zero) return false;
+
+        // Build a parameters bag with MASS + TOLERANCE keys, then trigger the correction.
+        Check(NativeMethods.createParameters(out IntPtr p), "createParameters");
+        try
+        {
+            Check(NativeMethods.setParameterValue(p, WatersLockMassParameter.Mass,
+                newMz.ToString("R", System.Globalization.CultureInfo.InvariantCulture)),
+                "setParameterValue(MASS)");
+            Check(NativeMethods.setParameterValue(p, WatersLockMassParameter.Tolerance,
+                newTolerance.ToString("R", System.Globalization.CultureInfo.InvariantCulture)),
+                "setParameterValue(TOLERANCE)");
+            Check(NativeMethods.setLockMassParameters(_lockMassProc, p), "setLockMassParameters");
+            Check(NativeMethods.lockMassCorrect(_lockMassProc, out bool _), "lockMassCorrect");
+        }
+        finally
+        {
+            _ = NativeMethods.destroyParameters(p);
+        }
+        _appliedLockMassMz = newMz;
+        _appliedLockMassTolerance = newTolerance;
+        return true;
+    }
+
+    /// <summary>
+    /// Removes any active lockmass correction. Cheap when no correction is active. The native
+    /// call is expensive when correction WAS applied (re-reads spectra), so we gate on
+    /// <see cref="LockMassIsApplied"/>.
+    /// </summary>
+    public void RemoveLockMass()
+    {
+        if (!LockMassIsApplied()) return;
+        // Lockmass state can be persisted to disk (lmgt.inf) by a prior LockMassCorrect call,
+        // so IsLockMassApplied may be true on first open even though we've never created a
+        // processor handle. Ensure one exists before issuing the clear.
+        EnsureLockMassProcessor();
+        if (_lockMassProc == IntPtr.Zero) return;
+        Check(NativeMethods.removeLockMassCorrection(_lockMassProc), "removeLockMassCorrection");
+        _appliedLockMassMz = 0;
+        _appliedLockMassTolerance = 0;
+    }
+
+    /// <summary>
+    /// Returns the lockmass-corrected m/z for an arbitrary m/z value at the given scan time.
+    /// When correction is active the SDK provides a per-RT gain factor that scales m/z values.
+    /// When inactive returns the input unchanged.
+    /// </summary>
+    public double GetLockMassCorrectedMz(double scanTimeMin, double uncorrectedMz)
+    {
+        if (!LockMassIsApplied() || _lockMassProc == IntPtr.Zero) return uncorrectedMz;
+        if (NativeMethods.getLockMassCorrection(_lockMassProc, (float)scanTimeMin, out float gain) != 0)
+            return uncorrectedMz;
+        return uncorrectedMz * gain;
+    }
+
+    private void EnsureLockMassProcessor()
+    {
+        if (_lockMassProc != IntPtr.Zero) return;
+        _lockMassProgressCb = static (IntPtr _, in int _) => { };
+        if (NativeMethods.createRawProcessor(out IntPtr h, NativeMethods.MassLynxBaseType.LOCKMASS,
+            _lockMassProgressCb, IntPtr.Zero) != 0) return;
+        _lockMassProc = h;
+        // Bind the lockmass processor to the same SCAN reader pwiz C++ uses.
+        Check(NativeMethods.setRawReader(_lockMassProc, _scan), "setRawReader(lockmass)");
     }
 
     private void ReadTic(int function, out float[] times, out float[] intensities)
@@ -688,6 +902,7 @@ internal sealed class WatersRawFile : IDisposable
 
     private void DisposeNative()
     {
+        if (_lockMassProc != IntPtr.Zero) { _ = NativeMethods.destroyRawProcessor(_lockMassProc); _lockMassProc = IntPtr.Zero; }
         if (_ddaProc != IntPtr.Zero) { _ = NativeMethods.destroyRawProcessor(_ddaProc); _ddaProc = IntPtr.Zero; }
         if (_centroidProc != IntPtr.Zero) { _ = NativeMethods.destroyRawProcessor(_centroidProc); _centroidProc = IntPtr.Zero; }
         if (_analog != IntPtr.Zero) { _ = NativeMethods.destroyRawReader(_analog); _analog = IntPtr.Zero; }

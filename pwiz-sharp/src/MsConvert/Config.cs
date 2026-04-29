@@ -1,3 +1,4 @@
+using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Encoding;
 
 namespace Pwiz.Tools.MsConvert;
@@ -90,8 +91,21 @@ public sealed class MsConvertConfig
     /// <summary>Optional path to a contact-info file to attach to the output's FileDescription.</summary>
     public string? ContactInfo { get; set; }
 
-    /// <summary>Binary-array encoder config (precision, compression, numpress).</summary>
-    public BinaryEncoderConfig EncoderConfig { get; } = new();
+    /// <summary>
+    /// Binary-array encoder config (precision, compression, numpress). Defaults match the
+    /// pwiz C++ msconvert command-line defaults: 64-bit m/z + retention time, 32-bit
+    /// intensity, zlib compression. (See <c>msconvert.cpp</c>: <c>bool zlib = true</c> at
+    /// the option declaration plus the unconditional 32-bit intensity override around the
+    /// precision-flag block.)
+    /// </summary>
+    public BinaryEncoderConfig EncoderConfig { get; } = new()
+    {
+        Compression = BinaryCompression.Zlib,
+        PrecisionOverrides =
+        {
+            [CVID.MS_intensity_array] = BinaryPrecision.Bits32,
+        },
+    };
 
     /// <summary>When true, gzip the final output file (appends .gz to the filename).</summary>
     public bool Gzip { get; set; }

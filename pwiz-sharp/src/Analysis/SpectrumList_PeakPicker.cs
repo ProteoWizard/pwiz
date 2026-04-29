@@ -33,6 +33,10 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
     /// <summary>MS levels this detector targets (anything outside passes through).</summary>
     public IntegerSet MsLevels => _msLevels;
 
+    /// <summary>The wrapped spectrum list. Public so wrappers (e.g.
+    /// <c>SpectrumList_LockmassRefiner</c>) can detect a vendor source through a peak picker.</summary>
+    public new ISpectrumList Inner => base.Inner;
+
     /// <inheritdoc/>
     public override DataProcessing DataProcessing => _dp;
 

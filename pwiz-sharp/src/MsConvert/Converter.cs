@@ -8,6 +8,7 @@ using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Vendor.Bruker;
 using Pwiz.Vendor.Thermo;
+using Pwiz.Vendor.Waters;
 
 namespace Pwiz.Tools.MsConvert;
 
@@ -24,10 +25,12 @@ public sealed class Converter
         ArgumentNullException.ThrowIfNull(config);
         _config = config;
         _log = log ?? TextWriter.Null;
-        // Include Thermo + Bruker alongside the built-in mzML/MGF readers so vendor files auto-detect.
+        // Include Thermo + Bruker + Waters alongside the built-in mzML/MGF readers so vendor
+        // files auto-detect by extension/identity.
         _readers = ThermoReaderRegistration.CreateDefaultWithThermo();
         var brukerReader = new Reader_Bruker { CombineIonMobilitySpectra = _config.CombineIonMobilitySpectra };
         _readers.Add(brukerReader);
+        _readers.Add(new Reader_Waters());
     }
 
     /// <summary>Processes every configured input file. Returns the count that succeeded.</summary>
@@ -57,6 +60,7 @@ public sealed class Converter
             catch (Exception ex)
             {
                 _log.WriteLine($"error converting {input}: {ex.Message}");
+                if (_config.Verbose) _log.WriteLine(ex.ToString());
                 if (!_config.ContinueOnError) break;
             }
         }
@@ -91,7 +95,7 @@ public sealed class Converter
     private MSData ReadAndProcess(string input)
     {
         var msd = new MSData();
-        _readers.Read(input, msd);
+        _readers.Read(input, msd, BuildReaderConfig());
         MSDataFile.CalculateSha1Checksums(msd);
 
         if (!string.IsNullOrEmpty(_config.ContactInfo))
@@ -233,12 +237,21 @@ public sealed class Converter
         if (_config.IntenDelta) _log.WriteLine("warning: --intenDelta not implemented");
         if (_config.MzLinear) _log.WriteLine("warning: --mzLinear not implemented");
         if (_config.IntenLinear) _log.WriteLine("warning: --intenLinear not implemented");
-        if (_config.SimAsSpectra) _log.WriteLine("warning: --simAsSpectra not implemented (SIMs emit as chromatograms)");
-        if (_config.SrmAsSpectra) _log.WriteLine("warning: --srmAsSpectra not implemented (SRMs emit as chromatograms)");
+        // --simAsSpectra and --srmAsSpectra are honored for Thermo (Reader_Thermo passes them
+        // through to ChromatogramList_Thermo + SpectrumList_Thermo).
         // --combineIonMobilitySpectra is honored for Bruker; silently ignored for Thermo (no IMS).
         if (_config.DdaProcessing) _log.WriteLine("warning: --ddaProcessing not implemented");
         if (_config.IgnoreCalibrationScans) _log.WriteLine("warning: --ignoreCalibrationScans not implemented");
         if (!string.IsNullOrEmpty(_config.RunIndexSet)) _log.WriteLine("warning: --runIndexSet not implemented");
         if (_config.SingleThreaded > 0) _log.WriteLine("note: --singleThreaded is a no-op (msconvert-sharp is single-threaded today)");
     }
+
+    private ReaderConfig BuildReaderConfig() => new()
+    {
+        SimAsSpectra = _config.SimAsSpectra,
+        SrmAsSpectra = _config.SrmAsSpectra,
+        CombineIonMobilitySpectra = _config.CombineIonMobilitySpectra,
+        DdaProcessing = _config.DdaProcessing,
+        IgnoreCalibrationScans = _config.IgnoreCalibrationScans,
+    };
 }

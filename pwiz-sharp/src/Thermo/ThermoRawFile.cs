@@ -164,9 +164,22 @@ public sealed class ThermoRawFile : IDisposable
         return (seg.Positions ?? Array.Empty<double>(), seg.Intensities ?? Array.Empty<double>());
     }
 
-    /// <summary>Native id string in pwiz's Thermo format.</summary>
+    /// <summary>Native id string in pwiz's Thermo format (MS controller).</summary>
     public static string NativeId(int scanNumber) =>
         $"controllerType=0 controllerNumber=1 scan={scanNumber}";
+
+    /// <summary>
+    /// Native id string for any controller. The controllerType integer matches the cpp
+    /// <c>ControllerType</c> enum (Win64): 0=MS, 1=Analog, 2=ADCard, 3=UV, 4=PDA, 5=Other.
+    /// </summary>
+    public static string NativeId(int scanNumber, Device controller, int controllerNumber) =>
+        $"controllerType={(int)controller} controllerNumber={controllerNumber} scan={scanNumber}";
+
+    /// <summary>Number of PDA controllers on the file (0 if none).</summary>
+    public int PdaControllerCount
+    {
+        get { try { return Raw.GetInstrumentCountOfType(Device.Pda); } catch { return 0; } }
+    }
 
     // ---- Instrument method isolation-width lookup ----
     // Older LTQ-class instruments often return 1.0 (or 0) from filter.GetIsolationWidth even

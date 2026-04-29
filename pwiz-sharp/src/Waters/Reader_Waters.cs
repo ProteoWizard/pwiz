@@ -6,6 +6,7 @@ using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Sources;
+using Pwiz.Util.Misc;
 
 #pragma warning disable CA1707
 
@@ -58,12 +59,24 @@ public sealed class Reader_Waters : IReader
         bool ignoreCalibrationScans = config?.IgnoreCalibrationScans ?? false;
         var mobilityFilter = config?.IsolationMzAndMobilityFilter ?? new List<Pwiz.Data.Common.Chemistry.MzMobilityWindow>();
 
-        // Waters paths can't contain unicode (the SDK rejects them), but we let the OS open
-        // any path we can find on disk — mirror the pwiz C++ short-path workaround only when
-        // we hit failures down the road.
         string fullPath = Path.GetFullPath(filename);
         if (!Directory.Exists(fullPath))
             throw new FileNotFoundException("Waters .raw directory not found: " + fullPath, fullPath);
+
+        // The MassLynx SDK only accepts ANSI paths (createRawReaderFromPath takes char*). For
+        // paths containing non-ASCII characters we substitute the Windows 8.3 short name for
+        // each affected component — this is what pwiz C++ does in Reader_Waters::read via
+        // get_non_unicode_path. After that, fail loudly if any non-ASCII chars remain (e.g.
+        // 8.3 short names disabled on the volume), matching pwiz C++ which throws ReaderFail.
+        fullPath = Filesystem.GetNonUnicodePath(fullPath);
+        for (int i = 0; i < fullPath.Length; i++)
+        {
+            char c = fullPath[i];
+            if (c < 32 || c > 126)
+                throw new InvalidOperationException(
+                    "Waters API does not support Unicode in filepaths and Windows 8.3 short " +
+                    "names are unavailable for this path: " + fullPath);
+        }
 
         var data = new WatersRawFile(fullPath);
         try

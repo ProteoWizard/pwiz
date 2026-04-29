@@ -120,6 +120,30 @@ internal static class NativeMethods
         out float startMass, out float endMass);
 
     /// <summary>
+    /// Returns the precursor mass range across all bins of a SONAR function (used to lazy-find
+    /// the first SONAR-calibrated function in <see cref="WatersRawFile.FindSonarFunction"/>).
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int getFunctionPrecursorMassRange(IntPtr reader, int function,
+        out float startMass, out float endMass);
+
+    /// <summary>
+    /// Returns the SONAR bin range covering a precursor m/z window — wrapped in
+    /// <see cref="WatersRawFile.GetSonarBinRange"/> so callers see a (start, end) pair.
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int getIndexRange(IntPtr reader, int function, float precursorMass,
+        float precursorTolerance, out int startIndex, out int endIndex);
+
+    /// <summary>
+    /// Returns the nominal precursor m/z for a SONAR bin. Used for SONAR-aware analysis
+    /// (e.g. mobility-resolved precursor selection).
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int getPrecursorMass(IntPtr reader, int function, int index,
+        out float mass);
+
+    /// <summary>
     /// Returns the collisional cross section in Å² for the given (drift time, neutral mass,
     /// charge) triple. Requires a CCS calibration (mob_cal.csv) — fails otherwise.
     /// </summary>
@@ -134,6 +158,33 @@ internal static class NativeMethods
     [DllImport(MassLynxRawDll)]
     public static extern int getDriftTime_CCS(IntPtr reader, float ccs, float mass, int charge,
         out float driftTime);
+
+    // ---------- lockmass processor ----------
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int isLockMassCorrected(IntPtr infoReader,
+        [MarshalAs(UnmanagedType.U1)] out bool isApplied);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int canLockMassCorrect(IntPtr infoReader,
+        [MarshalAs(UnmanagedType.U1)] out bool canApply);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int setLockMassParameters(IntPtr processor, IntPtr parameters);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int lockMassCorrect(IntPtr processor,
+        [MarshalAs(UnmanagedType.U1)] out bool applied);
+
+    [DllImport(MassLynxRawDll)]
+    public static extern int removeLockMassCorrection(IntPtr processor);
+
+    /// <summary>
+    /// Returns the lockmass correction multiplier (gain) for a given retention time. Used to
+    /// adjust precursor m/z values that aren't on the array (e.g. SET_MASS for MS2 isolation).
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int getLockMassCorrection(IntPtr processor, float retentionTime, out float gain);
 
     // ---------- scan reader ----------
 
@@ -194,6 +245,16 @@ internal static class NativeMethods
     [DllImport(MassLynxRawDll)]
     public static extern int readMRMChromatograms(IntPtr reader, int function,
         int[] mrmList, int nMRM, out IntPtr times, out IntPtr intensities, out int size);
+
+    /// <summary>
+    /// Extracts mass chromatograms (one per requested m/z) for the given function within
+    /// <paramref name="massWindow"/> Da of each mass. <paramref name="products"/>=false reads
+    /// MS1 / SIM data; true reads product-ion chromatograms.
+    /// </summary>
+    [DllImport(MassLynxRawDll)]
+    public static extern int readMassChromatograms(IntPtr reader, int function,
+        float[] masses, int nMasses, out IntPtr times, out IntPtr intensities,
+        float massWindow, [MarshalAs(UnmanagedType.U1)] bool products, out int size);
 
     // ---------- parameters ----------
 

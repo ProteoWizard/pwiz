@@ -5,6 +5,7 @@ using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
+using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.FilterEnums;
 using ThermoFisher.CommonCore.Data.Interfaces;
 using Scan = Pwiz.Data.MsData.Spectra.Scan;
@@ -77,21 +78,26 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
     }
 
     private readonly bool _simAsSpectra;
+    private readonly bool _srmAsSpectra;
+    private readonly Pwiz.Data.MsData.Instruments.InstrumentConfiguration? _pdaIc;
 
     /// <summary>Creates a spectrum list over <paramref name="raw"/> with no IC binding.</summary>
-    public SpectrumList_Thermo(ThermoRawFile raw, bool ownsRaw = true, bool simAsSpectra = false)
-        : this(raw, ownsRaw, null, null, simAsSpectra) { }
+    public SpectrumList_Thermo(ThermoRawFile raw, bool ownsRaw = true, bool simAsSpectra = false, bool srmAsSpectra = false)
+        : this(raw, ownsRaw, null, null, simAsSpectra, srmAsSpectra, null) { }
 
     internal SpectrumList_Thermo(ThermoRawFile raw, bool ownsRaw,
         Pwiz.Data.MsData.Instruments.InstrumentConfiguration? defaultInstrumentConfiguration,
         IReadOnlyDictionary<MassAnalyzerType, Pwiz.Data.MsData.Instruments.InstrumentConfiguration>? icByAnalyzer,
-        bool simAsSpectra = false)
+        bool simAsSpectra = false, bool srmAsSpectra = false,
+        Pwiz.Data.MsData.Instruments.InstrumentConfiguration? pdaInstrumentConfiguration = null)
     {
         ArgumentNullException.ThrowIfNull(raw);
         _raw = raw;
         _ownsRaw = ownsRaw;
         _simAsSpectra = simAsSpectra;
+        _srmAsSpectra = srmAsSpectra;
         _defaultIc = defaultInstrumentConfiguration;
+        _pdaIc = pdaInstrumentConfiguration;
         if (icByAnalyzer is not null)
             foreach (var kv in icByAnalyzer) _icByAnalyzer[kv.Key] = kv.Value;
         try
@@ -150,6 +156,11 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         public ScanModeType ScanMode;
         public PolarityType Polarity;
         public double IsolationMz;
+
+        // Controller this scan belongs to. MS scans use Device.MS / 1; PDA-as-spectra entries
+        // use Device.Pda / N. Cpp emits these as separate native id "controllerType=4 ..." entries.
+        public Device Controller = Device.MS;
+        public int ControllerNumber = 1;
     }
 
     public override int Count => _index.Count;
@@ -165,6 +176,10 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             // SIM scans are emitted as chromatograms (grouped by Q1) unless simAsSpectra=true,
             // matching pwiz C++ ChromatogramList_Thermo.cpp:481-504.
             if (filter.ScanMode == ScanModeType.Sim && !_simAsSpectra)
+                continue;
+            // SRM scans become per-transition chromatograms (Q1, Q3) unless srmAsSpectra=true,
+            // matching pwiz C++ ChromatogramList_Thermo.cpp:413-479.
+            if (filter.ScanMode == ScanModeType.Srm && !_srmAsSpectra)
                 continue;
 
             var entry = new IndexEntry
@@ -184,6 +199,44 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             }
             _index.Add(entry);
         }
+
+        // PDA-as-spectra: matches cpp SpectrumList_Thermo.cpp:939-961 — append one entry per
+        // PDA scan as an EMR (electromagnetic-radiation) spectrum after the MS scans.
+        AddPdaIndex();
+
+        // Restore MS as the active controller so subsequent MS-side reads see the right state.
+        try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
+    }
+
+    private void AddPdaIndex()
+    {
+        int pdaCount = _raw.PdaControllerCount;
+        for (int n = 1; n <= pdaCount; n++)
+        {
+            try { _raw.Raw.SelectInstrument(Device.Pda, n); }
+            catch { continue; }
+
+            int firstScan, lastScan;
+            try
+            {
+                var hdr = _raw.Raw.RunHeaderEx;
+                firstScan = hdr.FirstSpectrum;
+                lastScan = hdr.LastSpectrum;
+            }
+            catch { continue; }
+
+            for (int scan = firstScan; scan <= lastScan; scan++)
+            {
+                _index.Add(new IndexEntry
+                {
+                    Index = _index.Count,
+                    Id = ThermoRawFile.NativeId(scan, Device.Pda, n),
+                    Scan = scan,
+                    Controller = Device.Pda,
+                    ControllerNumber = n,
+                });
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -196,9 +249,110 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
         GetSpectrumImpl(index, getBinaryData, preferCentroid: false);
 
+    /// <summary>
+    /// Populates a PDA "scan" as an electromagnetic-radiation spectrum (wavelength vs intensity),
+    /// matching cpp SpectrumList_Thermo.cpp:282-317. Switches to the entry's PDA controller for
+    /// the duration of the read and restores Device.MS afterward so subsequent MS reads see the
+    /// original state.
+    /// </summary>
+    private Spectrum GetPdaSpectrum(int index, IndexEntry ie, bool getBinaryData)
+    {
+        var raw = _raw.Raw;
+        try
+        {
+            raw.SelectInstrument(ie.Controller, ie.ControllerNumber);
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException(
+                $"Error setting PDA controller {(int)ie.Controller}/{ie.ControllerNumber}: {e.Message}", e);
+        }
+
+        try
+        {
+            var spec = new Spectrum
+            {
+                Index = index,
+                Id = ie.Id,
+            };
+
+            spec.Params.Set(CVID.MS_EMR_spectrum);
+            spec.ScanList.Set(CVID.MS_no_combination);
+
+            var scan = new Scan
+            {
+                InstrumentConfiguration = _pdaIc,
+            };
+            double rtMin = raw.RetentionTimeFromScanNumber(ie.Scan);
+            scan.Set(CVID.MS_scan_start_time, rtMin, CVID.UO_minute);
+
+            try
+            {
+                var stats = raw.GetScanStatsForScanNumber(ie.Scan);
+                if (stats.BasePeakMass > 0)
+                {
+                    spec.Params.Set(CVID.MS_base_peak_m_z, stats.BasePeakMass, CVID.UO_nanometer);
+                    spec.Params.Set(CVID.MS_base_peak_intensity, stats.BasePeakIntensity);
+                }
+                spec.Params.Set(CVID.MS_total_ion_current, stats.TIC);
+                if (stats.HighMass > 0)
+                    scan.ScanWindows.Add(new ScanWindow(stats.LowMass, stats.HighMass, CVID.UO_nanometer));
+            }
+            catch { /* stats unavailable on some PDA scans */ }
+
+            spec.ScanList.Scans.Add(scan);
+
+            // Read the scan data: GetSegmentedScanFromScanNumber returns wavelength positions on
+            // PDA controllers (the same call returns m/z on MS controllers — units come from the
+            // selected device). Cpp uses raw->getMassList(scan, ...) which is equivalent.
+            double[] mz = Array.Empty<double>();
+            double[] intensity = Array.Empty<double>();
+            try
+            {
+                var seg = raw.GetSegmentedScanFromScanNumber(ie.Scan, null);
+                mz = seg.Positions ?? Array.Empty<double>();
+                intensity = seg.Intensities ?? Array.Empty<double>();
+            }
+            catch { /* leave empty */ }
+
+            spec.DefaultArrayLength = mz.Length;
+            if (mz.Length > 0)
+            {
+                spec.Params.Set(CVID.MS_lowest_observed_wavelength, mz[0], CVID.UO_nanometer);
+                spec.Params.Set(CVID.MS_highest_observed_wavelength, mz[mz.Length - 1], CVID.UO_nanometer);
+            }
+
+            if (getBinaryData && mz.Length > 0)
+            {
+                // Mirror cpp swapMZIntensityArrays + replace m/z term with wavelength term.
+                // Build wavelength + intensity arrays directly so the spectrum carries
+                // MS_wavelength_array (not MS_m_z_array) — same byte layout, different CV term.
+                var wlArray = new BinaryDataArray();
+                wlArray.Set(CVID.MS_wavelength_array, "", CVID.UO_nanometer);
+                wlArray.Data.AddRange(mz);
+                var intArray = new BinaryDataArray();
+                intArray.Set(CVID.MS_intensity_array, "", CVID.MS_number_of_detector_counts);
+                intArray.Data.AddRange(intensity);
+                spec.BinaryDataArrays.Add(wlArray);
+                spec.BinaryDataArrays.Add(intArray);
+            }
+            return spec;
+        }
+        finally
+        {
+            try { raw.SelectInstrument(Device.MS, 1); } catch { }
+        }
+    }
+
     private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool preferCentroid)
     {
         var ie = _index[index];
+
+        // PDA-as-spectra: separate population path. Cpp SpectrumList_Thermo.cpp:282-317 emits
+        // these as MS_EMR_spectrum with wavelength axis (UO_nanometer) and no msLevel.
+        if (ie.Controller == Device.Pda)
+            return GetPdaSpectrum(index, ie, getBinaryData);
+
         int scanNumber = ie.Scan;
         var raw = _raw.Raw;
 
@@ -330,13 +484,16 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         // ---- precursor (MS2+) ----
         if (msLevel > 1 && ie.MsOrder != MSOrderType.Par)
         {
-            // MSX / SPS take the multi-precursor path (all precursors at msLevel-1). Everything
-            // else uses the per-level path that emits one precursor per filter mass with
-            // spectrumRef / peak_intensity / isolation-width fallback.
+            // Route to the multi-precursor path for MSX (Multiplex flag) or SPS-style scans.
+            // pwiz C++ keys SPS off the "SPS Masses:" trailer being non-empty (RawFile.cpp:1422
+            // sets hasMultiplePrecursors_=true and isSPS_=true whenever the trailer string is
+            // non-empty, regardless of how many actual mass tokens it parses to). Use the same
+            // textual non-emptiness check rather than a parsed-count threshold so files with
+            // a single SPS mass + trailing comma route the same way cpp does.
             bool isMsx = filter.Multiplex == TriState.On;
-            bool isSps = ReadSpsMasses(ie.Scan).Count > 1;
-            bool isBigMassCount = filter.MassCount > msLevel - 1;
-            if (filter.MassCount > 1 && (isMsx || isSps || isBigMassCount))
+            bool hasSpsTrailer = TryGetTrailerString(ie.Scan, "SPS Masses:", out string spsRaw)
+                && !string.IsNullOrWhiteSpace(spsRaw);
+            if (isMsx || hasSpsTrailer)
                 PopulateMultiPrecursor(spec, filter, ie, msLevel);
             else
                 PopulatePrecursor(spec, filter, ie, preferCentroid);
@@ -440,6 +597,16 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
 
             var selectedIon = new SelectedIon();
             selectedIon.Set(CVID.MS_selected_ion_m_z, e.Mass, CVID.MS_m_z);
+            // Charge state on the innermost (primary) precursor only — pwiz C++
+            // SpectrumList_Thermo.cpp:506-509 only consults the "Charge State:" trailer when
+            // precursorInfo.msLevel == msLevel-1; outer precursors fall back to the
+            // zero-initialized precursorInfo.chargeState (no emission). Additionally, the
+            // ScanInfo::precursorCharge wrapper returns 0 when the file has >1 SPS masses
+            // (RawFile.cpp:1730) — the per-scan trailer in those files refers to the MS2
+            // precursor, which is ambiguous for SPS targets, so cpp suppresses it entirely.
+            if (e.Level == msLevel - 1 && spsMasses.Count <= 1
+                && TryGetTrailerInt(ie.Scan, "Charge State:", out long cs) && cs > 0)
+                selectedIon.Set(CVID.MS_charge_state, (int)cs);
             precursor.SelectedIons.Add(selectedIon);
 
             SetActivationCv(precursor.Activation, e.Act);
@@ -505,11 +672,17 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         // at index i maps to a precursor at ms level i+1; the innermost (index MassCount-1)
         // gets the full treatment (trailer-width override, spectrumRef lookup by scan-range,
         // peak_intensity, monoisotope adjustment). Outer precursors get a simpler emission.
+        // Only iterate up to msLevel-1 entries — additional filter masses (e.g. an ETD scan
+        // with @etd@cid encoding) describe SUPPLEMENTAL ACTIVATION on the same precursor, not
+        // additional nested precursors. cpp gates this with `i < msLevel_-1` in
+        // RawFile.cpp:1657 when populating precursorMZs_.
         int msLevel = MsOrderToLevel(ie.MsOrder);
         int massCount = filter.MassCount;
         if (massCount == 0) return;
+        int precursorMassCount = Math.Min(massCount, msLevel - 1);
+        if (precursorMassCount <= 0) return;
 
-        for (int i = massCount - 1; i >= 0; i--)
+        for (int i = precursorMassCount - 1; i >= 0; i--)
         {
             int precursorMsLevel = i + 1;
             bool isPrimary = precursorMsLevel == msLevel - 1;
@@ -529,7 +702,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             if (isPrimary)
             {
                 string widthTag = "MS" + msLevel.ToString(CultureInfo.InvariantCulture) + " Isolation Width:";
-                TryGetTrailerDouble(ie.Scan, widthTag, out double trailerWidth);
+                bool trailerHit = TryGetTrailerDouble(ie.Scan, widthTag, out double trailerWidth);
                 isolationHalfWidth = trailerWidth / 2.0;  // unconditional override, matches cpp
             }
 
@@ -560,8 +733,10 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             var selectedIon = new SelectedIon();
             double selectedIonMz = isolationMz;
 
-            // Charge state applies to all precursor levels (cpp reads the same trailer for
-            // primary and outer precursors — SpectrumList_Thermo.cpp:718-722).
+            // pwiz C++ single-precursor branch reads "Charge State:" trailer for BOTH primary
+            // and non-primary precursors (SpectrumList_Thermo.cpp:594 + 720). Multi-precursor
+            // branch differs — that path only reads it for primary — and the SPS-trailer
+            // routing above sends those scans there.
             int precursorCharge = 0;
             if (TryGetTrailerInt(ie.Scan, "Charge State:", out long cs) && cs > 0)
                 precursorCharge = (int)cs;
@@ -612,13 +787,45 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
             precursor.SelectedIons.Add(selectedIon);
 
             // ---- activation ----
+            // Primary activation. For the innermost precursor of an MS2 with combined
+            // ETD + supplemental CID/HCD ("EThcD"), the filter encodes the supplemental as a
+            // SECOND activation entry (filter.GetActivation(1) / GetEnergy(1)) and sets
+            // SupplementalActivation == On. cpp combines these into one precursor with both
+            // activation cvParams plus a "supplemental collision energy" — see
+            // RawFile.cpp:1671-1692 + Reader_Thermo_Detail.cpp::setActivationType.
             try
             {
                 var activation = filter.GetActivation(i);
                 TranslateActivation(activation, precursor.Activation);
                 double energy = filter.GetEnergy(i);
+
+                bool isInnermost = (i == precursorMassCount - 1);
+                bool hasSupplemental = isInnermost
+                    && filter.SupplementalActivation == TriState.On
+                    && activation == ActivationType.ElectronTransferDissociation;
+                if (hasSupplemental)
+                {
+                    // Read the supplemental activation type + energy from filter mass index
+                    // beyond the precursors. Default to CID with 0 energy when the filter has
+                    // no extra entry (rare; matches cpp's fallback at RawFile.cpp:1685-1688).
+                    ActivationType saType = ActivationType.CollisionInducedDissociation;
+                    double saEnergy = 0;
+                    if (filter.MassCount > precursorMassCount)
+                    {
+                        saType = filter.GetActivation(precursorMassCount);
+                        saEnergy = filter.GetEnergy(precursorMassCount);
+                    }
+                    if (saType == ActivationType.HigherEnergyCollisionalDissociation)
+                        precursor.Activation.Set(CVID.MS_supplemental_beam_type_collision_induced_dissociation);
+                    else
+                        precursor.Activation.Set(CVID.MS_supplemental_collision_induced_dissociation);
+                    if (saEnergy > 0)
+                        precursor.Activation.Set(CVID.MS_supplemental_collision_energy, saEnergy, CVID.UO_electronvolt);
+                }
+
                 if (energy > 0 && (activation == ActivationType.CollisionInducedDissociation
-                                   || activation == ActivationType.HigherEnergyCollisionalDissociation))
+                                   || activation == ActivationType.HigherEnergyCollisionalDissociation
+                                   || hasSupplemental))
                 {
                     precursor.Activation.Set(CVID.MS_collision_energy, energy, CVID.UO_electronvolt);
                 }
@@ -640,14 +847,20 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
     /// </summary>
     private int FindPrecursorIndex(int fromIndex, int precursorMsLevel, double isolationMz, int currentScan)
     {
-        long masterScan = TryGetTrailerInt(currentScan, "Master Scan Number:", out long m) && m > 0 ? m : -1;
+        // pwiz C++ uses getTrailerExtraValueLong(...,"Master Scan Number:", -1) which returns
+        // -1 only when the trailer key is ABSENT. When the key is present but the value is 0
+        // (Thermo-default "no master" sentinel), cpp still enters master-scan mode and lets
+        // the loop fail to match any preceding scan — effectively returning "not found".
+        // Mirror that: only fall back to scan-window matching when the trailer is truly
+        // missing.
+        long masterScan = TryGetTrailerInt(currentScan, "Master Scan Number:", out long m) ? m : -1;
 
         for (int j = fromIndex - 1; j >= 0; j--)
         {
             var prev = _index[j];
             if (MsOrderToLevel(prev.MsOrder) < 1) continue;
 
-            if (masterScan > 0)
+            if (masterScan > -1)
             {
                 if (masterScan == prev.Scan)
                 {

@@ -25,23 +25,29 @@
   <Target Name="ExtractBrukerAssemblies"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(BrukerArchive)"
-          Outputs="$(BrukerAssembliesDir)\timsdata.dll">
+          Outputs="$(BrukerAssembliesDir)\timsdata.dll;$(BrukerAssembliesDir)\baf2sql_c.dll">
     <MakeDir Directories="$(BrukerAssembliesDir)" />
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; vendor_api\Bruker\x64\timsdata.dll" />
+    <!-- timsdata.dll is the TDF/TSF reader; baf2sql_c.dll is the SQL-cached BAF reader. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; vendor_api\Bruker\x64\timsdata.dll vendor_api\Bruker\x64\baf2sql_c.dll" />
     <!-- Flatten the extracted layout. -->
-    <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\x64\timsdata.dll"
+    <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\x64\timsdata.dll;$(BrukerAssembliesDir)\vendor_api\Bruker\x64\baf2sql_c.dll"
           DestinationFolder="$(BrukerAssembliesDir)"
           SkipUnchangedFiles="true" />
   </Target>
 
   <!--
-    Copy the native DLL into the build output directory so DllImport can find it at runtime.
-    A content file keeps it out of the managed assembly metadata.
+    Copy the native DLLs into the build output directory so DllImport can find them at runtime.
+    Content files keep them out of the managed assembly metadata.
     -->
   <ItemGroup>
     <Content Include="$(BrukerAssembliesDir)\timsdata.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>timsdata.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(BrukerAssembliesDir)\baf2sql_c.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>baf2sql_c.dll</Link>
       <Visible>false</Visible>
     </Content>
   </ItemGroup>

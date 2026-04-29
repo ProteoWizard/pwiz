@@ -153,6 +153,46 @@ internal static class NativeMethods
     /// <summary>Sets the number of threads used internally by the TSF half of timsdata.dll.</summary>
     [DllImport(TimsDataDll)]
     public static extern void tsf_set_num_threads(uint n);
+
+    // ---- baf2sql_c.dll: SQL-cached BAF reader ----
+    // BAF is the older Bruker format used on micrOTOF / impact / maXis / solariX. It comes
+    // with a SQLite cache (analysis.sqlite) created on first read by baf2sql_get_sqlite_cache_filename;
+    // metadata queries hit the cache, binary spectrum data goes through baf2sql_array_*.
+
+    /// <summary>DLL name for the BAF reader.</summary>
+    public const string Baf2SqlDll = "baf2sql_c";
+
+    /// <summary>
+    /// On success returns the buffer length used (or required if the caller's buffer was too
+    /// small). On failure returns 0; call <see cref="baf2sql_get_last_error_string"/>.
+    /// </summary>
+    [DllImport(Baf2SqlDll, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+    public static extern uint baf2sql_get_sqlite_cache_filename(
+        [Out] byte[] sql_filename_buf,
+        uint sql_filename_buflen,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string baf_filename);
+
+    /// <summary>Open binary array storage. Returns 0 on failure.</summary>
+    [DllImport(Baf2SqlDll, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+    public static extern ulong baf2sql_array_open_storage(
+        int raw_calibration,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string baf_filename);
+
+    /// <summary>Close binary array storage opened with <see cref="baf2sql_array_open_storage"/>.</summary>
+    [DllImport(Baf2SqlDll)]
+    public static extern void baf2sql_array_close_storage(ulong handle);
+
+    /// <summary>Number of elements in array <paramref name="id"/>; returns 0 on error.</summary>
+    [DllImport(Baf2SqlDll)]
+    public static extern int baf2sql_array_get_num_elements(ulong handle, ulong id, out ulong num_elements);
+
+    /// <summary>Read array as doubles into caller-provided buffer.</summary>
+    [DllImport(Baf2SqlDll)]
+    public static extern int baf2sql_array_read_double(ulong handle, ulong id, [Out] double[] buf);
+
+    /// <summary>Read last thread-local error message (truncated to <paramref name="len"/>).</summary>
+    [DllImport(Baf2SqlDll)]
+    public static extern uint baf2sql_get_last_error_string([Out] byte[] buf, uint len);
 }
 
 /// <summary>Pressure compensation strategies recognized by <c>tims_open_v2</c>.</summary>

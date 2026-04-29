@@ -34,6 +34,14 @@ public sealed class ReaderConfig
     public bool SimAsSpectra { get; set; }
 
     /// <summary>
+    /// When true, SRM (Selected Reaction Monitoring) scans are exposed as individual spectra.
+    /// When false (default), SRM transitions are grouped by (Q1, Q3) into SRM SIC
+    /// chromatograms and removed from the spectrum list. Port of
+    /// <c>pwiz::msdata::Reader::Config::srmAsSpectra</c>.
+    /// </summary>
+    public bool SrmAsSpectra { get; set; }
+
+    /// <summary>
     /// When true (test/reference-parity mode), Bruker combined-IMS spectra sort their merged
     /// peak arrays by m/z and add a 1e-8 jitter to duplicate m/z values so std::sort-style
     /// tie-break ordering is reproducible. Production conversions leave this off — mzML

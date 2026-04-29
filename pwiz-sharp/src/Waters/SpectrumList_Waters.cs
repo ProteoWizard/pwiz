@@ -18,6 +18,9 @@ namespace Pwiz.Vendor.Waters;
 public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendorCentroidingSpectrumList, IIonMobilityCcsConversion
 {
     private readonly WatersRawFile _data;
+
+    /// <summary>The underlying raw file. Exposed internally for tests.</summary>
+    internal WatersRawFile RawData => _data;
     private readonly bool _owns;
     private readonly int _preferOnlyMsLevel;
     private readonly bool _srmAsSpectra;
@@ -243,6 +246,41 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
     /// <inheritdoc/>
     public string VendorCentroidName => "Waters/MassLynx peak picking";
 
+    /// <summary>True if any function in the file is SONAR-enabled.</summary>
+    public bool HasSonarFunctions => _data.HasSonar;
+
+    /// <summary>True if any function carries ion mobility data (.cdt sibling files).</summary>
+    public bool HasIonMobility => _data.HasIonMobility;
+
+    /// <summary>
+    /// True when this list is configured to merge per-bin IMS spectra into per-block
+    /// combined spectra. Independent of <see cref="HasIonMobility"/>: a non-IMS file always
+    /// reports false.
+    /// </summary>
+    public bool HasCombinedIonMobility => _data.HasIonMobility && _combineIonMobilitySpectra;
+
+    /// <summary>
+    /// True when calibration (lockmass) function spectra are excluded from the index. Mirrors
+    /// pwiz C++ <c>SpectrumList_Waters::calibrationSpectraAreOmitted</c>: requires both the
+    /// ignoreCalibrationScans config flag AND a discoverable lockmass function.
+    /// </summary>
+    public override bool CalibrationSpectraAreOmitted =>
+        _ignoreCalibrationScans && _data.GetLockMassFunction() is int f && f >= 0;
+
+    /// <summary>
+    /// Returns the SONAR bin range covering <paramref name="precursorMz"/> ±
+    /// <paramref name="tolerance"/>. Returns (-1, -1) for an out-of-range query. Mirrors pwiz
+    /// C++ <c>SpectrumList_Waters::sonarMzToBinRange</c>.
+    /// </summary>
+    public (int Start, int End) SonarMzToBinRange(double precursorMz, double tolerance) =>
+        _data.GetSonarBinRange(precursorMz, tolerance);
+
+    /// <summary>
+    /// Returns the nominal precursor m/z for SONAR bin <paramref name="bin"/>, or 0 for an
+    /// out-of-range bin. Mirrors pwiz C++ <c>SpectrumList_Waters::sonarBinToPrecursorMz</c>.
+    /// </summary>
+    public double SonarBinToPrecursorMz(int bin) => _data.SonarBinToPrecursorMz(bin);
+
     /// <inheritdoc/>
     public bool CanConvertIonMobilityAndCcs => _data.HasCcsCalibration;
 
@@ -256,13 +294,33 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData) =>
-        GetSpectrumImpl(index, getBinaryData, doCentroid: true);
+        GetSpectrumImpl(index, getBinaryData, doCentroid: true, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+
+    /// <summary>
+    /// Lockmass-aware vendor centroid path — used by <see cref="SpectrumList_LockmassRefiner"/>
+    /// when an outer <see cref="Pwiz.Analysis.SpectrumList_PeakPicker"/> requests centroids.
+    /// </summary>
+    internal Spectrum GetCentroidSpectrumWithLockmass(int index, bool getBinaryData,
+        double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance) =>
+        GetSpectrumImpl(index, getBinaryData, doCentroid: true, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        GetSpectrumImpl(index, getBinaryData, doCentroid: false);
+        GetSpectrumImpl(index, getBinaryData, doCentroid: false, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool doCentroid)
+    /// <summary>
+    /// Lockmass-aware overload used by <see cref="SpectrumList_LockmassRefiner"/>. When
+    /// either <paramref name="lockmassMzPos"/> or <paramref name="lockmassMzNeg"/> is non-zero,
+    /// the corresponding correction is applied to the underlying SDK reader before peaks are
+    /// fetched (so the binary data the SDK returns is already gain-adjusted) and the SET_MASS
+    /// scan-stat used for the MS2 isolation window is corrected via the per-RT gain factor.
+    /// </summary>
+    internal Spectrum GetSpectrumWithLockmass(int index, bool getBinaryData,
+        double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance, bool doCentroid = false) =>
+        GetSpectrumImpl(index, getBinaryData, doCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
+
+    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool doCentroid,
+        double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance)
     {
         if (index < 0 || index >= _index.Count) throw new ArgumentOutOfRangeException(nameof(index));
         var ie = _index[index];
@@ -275,7 +333,13 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
         int msLevel = ie.MsLevel;
         CVID spectrumType = ie.SpectrumType;
         double promotedCe = 0;
-        if (msLevel == 1 && ie.Function == 1 && ie.SpectrumType == CVID.MS_MS1_spectrum)
+        // Skip the MSe promotion when function 1 is actually the lockmass function — its
+        // collision energy comes from calibration, not from a high-energy fragmentation event.
+        // pwiz C++ guards on `!isLockMassFunction(ie.function)` here for the same reason; we
+        // were missing that and incorrectly promoting lockmass spectra in non-MSe files (e.g.
+        // QCsC8 ACQUITY data has lockmass at function 1 with non-zero CE).
+        if (msLevel == 1 && ie.Function == 1 && ie.SpectrumType == CVID.MS_MS1_spectrum
+            && _data.GetLockMassFunction() != ie.Function)
         {
             int mseStatIndex = ie.Block >= 0 ? ie.Block : ie.Scan;
             string ceStr = _data.GetScanItem(ie.Function, mseStatIndex, WatersScanItem.CollisionEnergy);
@@ -331,10 +395,25 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
                 PwizFloat.ToPwizString(qHigh), "xsd:float", CVID.MS_m_z));
         }
 
+        CVID polarityCv = CVID.CVID_Unknown;
         if (isMs)
         {
-            CVID polarity = WatersDetail.Polarity(WatersDetail.FromMassLynxIonMode(_data.GetIonMode(ie.Function)));
-            if (polarity != CVID.CVID_Unknown) spec.Params.Set(polarity);
+            polarityCv = WatersDetail.Polarity(WatersDetail.FromMassLynxIonMode(_data.GetIonMode(ie.Function)));
+            if (polarityCv != CVID.CVID_Unknown) spec.Params.Set(polarityCv);
+        }
+
+        // Lockmass: apply (or remove) the correction on the SDK reader BEFORE fetching peaks.
+        // The polarity gates which mass to use; tolerance is per-call. pwiz C++ does the same
+        // dance: ApplyLockMass when the current-polarity mz is non-zero, else RemoveLockMass.
+        // Only apply when we'll actually read peaks (binary data) — pure metadata fetches
+        // skip the work to match cpp's `detailLevel == DetailLevel_FullData` gate.
+        double lockmassMz = polarityCv == CVID.MS_negative_scan ? lockmassMzNeg : lockmassMzPos;
+        if (isMs && getBinaryData)
+        {
+            if (lockmassMz != 0.0)
+                _data.ApplyLockMass(lockmassMz, lockmassTolerance);
+            else
+                _data.RemoveLockMass();
         }
 
         // IsContinuum applies regardless of MS-ness — DiodeArray spectra are continuum data
@@ -429,14 +508,24 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
             (float Lower, float Upper)? offsets = null;
             if (ie.Dda)
             {
-                setMass = ie.DdaSetMass;
-                precursorMass = ie.DdaPrecursorMass;
+                // pwiz C++ re-reads DDA scan info per spectrum so the SDK can return the
+                // lockmass-corrected precursor mass for the current lockmass state. The
+                // SET_MASS field stays uncorrected (it represents the original isolation
+                // target) and goes to the isolation window unchanged.
+                var info = _data.GetDdaScanInfo(ie.DdaIndex);
+                setMass = info.SetMass;
+                precursorMass = info.PrecursorMass;
                 offsets = _ddaIsolationOffsets.Value;
             }
             else
             {
                 string setMassStr = _data.GetScanItem(ie.Function, scanStatIndex, WatersScanItem.SetMass);
                 setMass = TryParseDouble(setMassStr, out double sm) ? sm : 0;
+                // pwiz C++ runs SET_MASS through GetLockMassCorrectedMz so the isolation
+                // window target reflects the correction even though SET_MASS isn't part of the
+                // peak array (it lives in the scan stats).
+                if (setMass > 0)
+                    setMass = _data.GetLockMassCorrectedMz(scanTimeMin, setMass);
                 precursorMass = setMass;
             }
 
@@ -537,7 +626,9 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
                 (mz, intensity) = _data.ReadScan(ie.Function, ie.Scan);
             spec.DefaultArrayLength = mz.Length;
 
-            if (willCentroid)
+            // pwiz C++ only calculates peak metadata for the non-DDA non-IMS centroid path.
+            // For DDA, GetDdaScan returns vendor-supplied centroids without the cpp metadata pass.
+            if (willCentroid && !ie.Dda)
                 CalculatePeakMetadata(spec, mz, intensity);
 
             if (getBinaryData)

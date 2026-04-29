@@ -49,12 +49,11 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
 
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
 
-        // Enumerate SRM transitions per MRM function. pwiz C++ uses readProductScan(scan=1) on
-        // each MRM function — the precursor and product m/z arrays come back parallel, one
-        // entry per transition. SIM functions go through the same path but with no product;
-        // we don't expand those yet (no Phase 1 fixture exercises SIM chromatograms).
-        if (srmAsSpectra) return; // SRM-as-spectra mode means SRM transitions appear in the spectrum list, not here.
-        AppendSrmIndex();
+        // Enumerate per-channel chromatograms for SRM and SIM functions. pwiz C++ reads scan 1
+        // of each function: SRM yields parallel precursor + product m/z lists (one chromatogram
+        // per transition); SIM yields just the precursor m/z list (one chromatogram per channel,
+        // no product). srmAsSpectra config moves SRM transitions into the spectrum list instead.
+        AppendTransitionIndex(srmAsSpectra);
         AppendAnalogIndex();
     }
 
@@ -118,7 +117,7 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         }
     }
 
-    private void AppendSrmIndex()
+    private void AppendTransitionIndex(bool srmAsSpectra)
     {
         foreach (int function in _data.FunctionIndices)
         {
@@ -127,32 +126,68 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
             catch { continue; }
             var ft = WatersDetail.FromMassLynxFunctionType(rawType);
             if (!WatersDetail.TranslateFunctionType(ft, out _, out CVID spectrumType)) continue;
-            if (spectrumType != CVID.MS_SRM_spectrum) continue;
+
+            bool isSrm = spectrumType == CVID.MS_SRM_spectrum;
+            bool isSim = spectrumType == CVID.MS_SIM_spectrum;
+            if (!isSrm && !isSim) continue;
+            // SRM-as-spectra mode moves SRM transitions into the spectrum list; SIM stays here
+            // because it has no product axis to disambiguate.
+            if (isSrm && srmAsSpectra) continue;
 
             float[] precs, prods;
-            try { (precs, prods) = _data.ReadMrmTransitions(function); }
+            try
+            {
+                if (isSrm)
+                    (precs, prods) = _data.ReadMrmTransitions(function);
+                else
+                {
+                    // pwiz C++ reads SIM channels via the raw scan reader (not the product-scan
+                    // overload) — the SDK's product-scan call rejects SIM functions outright.
+                    precs = _data.ReadSimChannelMzs(function, scan: 1);
+                    prods = Array.Empty<float>();
+                }
+            }
             catch { continue; }
-            if (precs.Length == 0 || prods.Length != precs.Length) continue;
+            if (precs.Length == 0) continue;
+            if (isSrm && prods.Length != precs.Length) continue;
 
             CVID polarity = WatersDetail.Polarity(WatersDetail.FromMassLynxIonMode(_data.GetIonMode(function)));
 
             for (int i = 0; i < precs.Length; i++)
             {
-                string prefix = polarity == CVID.MS_negative_scan ? "- " : string.Empty;
-                string id = prefix
-                    + "SRM SIC Q1=" + FormatMz(precs[i])
-                    + " Q3=" + FormatMz(prods[i])
-                    + " function=" + (function + 1).ToString(CultureInfo.InvariantCulture)
-                    + " offset=" + i.ToString(CultureInfo.InvariantCulture);
+                string id;
+                CVID kind;
+                float q3;
+                if (isSrm)
+                {
+                    string prefix = polarity == CVID.MS_negative_scan ? "- " : string.Empty;
+                    id = prefix
+                        + "SRM SIC Q1=" + FormatMz(precs[i])
+                        + " Q3=" + FormatMz(prods[i])
+                        + " function=" + (function + 1).ToString(CultureInfo.InvariantCulture)
+                        + " offset=" + i.ToString(CultureInfo.InvariantCulture);
+                    kind = CVID.MS_SRM_chromatogram;
+                    q3 = prods[i];
+                }
+                else
+                {
+                    // pwiz C++ doesn't prefix the polarity for SIM ids — only SRM gets it.
+                    id = "SIM SIC Q1=" + FormatMz(precs[i])
+                        + " function=" + (function + 1).ToString(CultureInfo.InvariantCulture)
+                        + " offset=" + i.ToString(CultureInfo.InvariantCulture);
+                    kind = CVID.MS_SIM_chromatogram;
+                    q3 = 0;
+                }
+
                 _index.Add(new IndexEntry
                 {
                     Index = _index.Count,
                     Id = id,
-                    Kind = CVID.MS_SRM_chromatogram,
+                    Kind = kind,
                     Function = function,
                     Offset = i,
                     Q1 = precs[i],
-                    Q3 = prods[i],
+                    Q3 = q3,
                     Polarity = polarity,
                 });
             }
@@ -179,6 +214,36 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         timeArr.Set(CVID.MS_time_array, "", CVID.UO_minute);
         var intArr = new BinaryDataArray();
         intArr.Set(CVID.MS_intensity_array, "", ie.AnalogUnit);
+        for (int i = 0; i < times.Length; i++)
+        {
+            timeArr.Data.Add(times[i]);
+            intArr.Data.Add(intensities[i]);
+        }
+        chrom.BinaryDataArrays.Add(timeArr);
+        chrom.BinaryDataArrays.Add(intArr);
+        return chrom;
+    }
+
+    private Chromatogram FillSimChromatogram(Chromatogram chrom, IndexEntry ie, bool getBinaryData)
+    {
+        // pwiz C++ sets only the isolation window target + CID activation for SIM chromatograms
+        // (no polarity tag, no product side). Mirror that exactly so msdiff stays clean.
+        chrom.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, ie.Q1, CVID.MS_m_z);
+        chrom.Precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
+
+        // pwiz C++ ChromatogramReader::ReadMassChromatogram(function, q1, ..., 1.0, false): a
+        // Da window of 1.0 with bProducts=false (the SIM channels are MS1 ions, not products).
+        var (times, intensities) = _data.ReadMassChromatogram(ie.Function, ie.Q1,
+            massWindow: 1.0f, products: false);
+        chrom.DefaultArrayLength = times.Length;
+        if (!getBinaryData) return chrom;
+
+        var timeArr = new BinaryDataArray();
+        timeArr.Set(CVID.MS_time_array, "", CVID.UO_minute);
+        var intArr = new BinaryDataArray();
+        intArr.Set(CVID.MS_intensity_array, "", CVID.MS_number_of_detector_counts);
+        timeArr.Data.Capacity = times.Length;
+        intArr.Data.Capacity = intensities.Length;
         for (int i = 0; i < times.Length; i++)
         {
             timeArr.Data.Add(times[i]);
@@ -237,6 +302,9 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         if (ie.Kind == CVID.MS_SRM_chromatogram)
             return FillSrmChromatogram(chrom, ie, getBinaryData);
 
+        if (ie.Kind == CVID.MS_SIM_chromatogram)
+            return FillSimChromatogram(chrom, ie, getBinaryData);
+
         if (ie.IsAnalog)
             return FillAnalogChromatogram(chrom, ie, getBinaryData);
 
@@ -282,7 +350,16 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
                 points.Add((times[i], intens[i], function + 1));
         }
 
-        points.Sort((a, b) => a.Time.CompareTo(b.Time));
+        // Sort by time, breaking ties by function number. pwiz C++ uses a multimap which
+        // preserves insertion order for equal keys; we iterate functions in ascending order so
+        // a function-number tie-break gives the same emit order. Without this, .NET's unstable
+        // List.Sort can swap the function-1/function-2 entries at a shared retention time and
+        // produce binary diffs against the cpp reference (seen on MRM+Survey-Scan files).
+        points.Sort((a, b) =>
+        {
+            int cmp = a.Time.CompareTo(b.Time);
+            return cmp != 0 ? cmp : a.Function.CompareTo(b.Function);
+        });
         chrom.DefaultArrayLength = points.Count;
 
         if (!getBinaryData) return chrom;

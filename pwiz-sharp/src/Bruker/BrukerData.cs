@@ -24,8 +24,10 @@ public static class BrukerData
             return new TdfData(full, useRecalibratedState);
         if (File.Exists(Path.Combine(full, "analysis.tsf")) || File.Exists(Path.Combine(full, "Analysis.tsf")))
             return new TsfData(full, useRecalibratedState);
+        if (File.Exists(Path.Combine(full, "analysis.baf")) || File.Exists(Path.Combine(full, "Analysis.baf")))
+            return new Baf2SqlData(full, useRecalibratedState);
 
         throw new NotSupportedException(
-            $"Bruker format at {rawPath} is not yet supported (only TDF and TSF are ported).");
+            $"Bruker format at {rawPath} is not yet supported (TDF, TSF, BAF are ported; YEP / FID still pending).");
     }
 }
