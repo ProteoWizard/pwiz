@@ -633,11 +633,12 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
 
             //Labels are not created in offscreen mode, so we just validate total number of ions matching the show settings
-            // Onscreen counts shifted slightly from pre-3-button values (was 20 en / 15 ja).
-            // Offscreen count (70 — the data-level ion list) is unchanged; the onscreen shift
-            // comes from something in MSGraphPane's onscreen label-overlap pass that's sensitive
-            // to Y-axis label width — the offscreen assertion is the authoritative data-level check.
-            Assert.AreEqual(ExpectedLabelCount(70, 13, 13), SkylineWindow.GraphFullScan.IonLabels.Count());
+            // Onscreen counts are sensitive to MSGraphPane's label-overlap pass, which is in turn
+            // sensitive to Y-axis label width — the title relocation (Intensity into the spacer
+            // pane, Drift Time into the mobilogram pane) shrinks the heatmap Y-axis area, which
+            // bumps the onscreen count back up. Offscreen count (70 — the data-level ion list)
+            // is unchanged and is the authoritative data-level check.
+            Assert.AreEqual(ExpectedLabelCount(70, 20, 15), SkylineWindow.GraphFullScan.IonLabels.Count());
 
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library);
