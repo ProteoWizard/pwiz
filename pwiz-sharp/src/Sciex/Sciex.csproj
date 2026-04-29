@@ -19,14 +19,24 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
+  <!-- Sciex.Data.SimpleTypes.MassUnits's static initializer references
+       System.Configuration.ConfigurationManager, which isn't part of the .NET 8 BCL by default
+       but is shipped as a NuGet package. Without it, GetBasePeakChromatogram and other paths
+       throw TypeInitializationException at runtime. -->
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
+
   <Target Name="ExtractSciexAssemblies"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(SciexArchive)"
           Outputs="$(SciexAssembliesDir)\Clearcore2.Data.AnalystDataProvider.dll">
     <MakeDir Directories="$(SciexAssembliesDir)" />
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(SciexAssembliesDir)&quot; &quot;$(SciexArchive)&quot; vendor_api\ABI\*.dll" />
+    <!-- 7za uses case-insensitive globbing on Windows; *.dll picks up Sciex.Data.Processing.DLL too. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(SciexAssembliesDir)&quot; &quot;$(SciexArchive)&quot; &quot;vendor_api\ABI\*.dll&quot; &quot;vendor_api\ABI\*.DLL&quot;" />
     <ItemGroup>
       <_SciexExtracted Include="$(SciexAssembliesDir)\vendor_api\ABI\*.dll" />
+      <_SciexExtracted Include="$(SciexAssembliesDir)\vendor_api\ABI\*.DLL" />
     </ItemGroup>
     <Copy SourceFiles="@(_SciexExtracted)" DestinationFolder="$(SciexAssembliesDir)" SkipUnchangedFiles="true" />
   </Target>
@@ -59,6 +69,7 @@
     <_SciexRuntime Include="$(SciexAssembliesDir)\OFX.Core.Contracts.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\SCIEX.Apis.Data.v1.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Clearcore.FMan.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.Processing.DLL" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.SimpleTypes.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.XYData.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.FMan.dll" />

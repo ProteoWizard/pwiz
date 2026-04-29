@@ -173,16 +173,24 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
     private static string PolarityPrefix(MSExperimentInfo.PolarityEnum polarity) =>
         polarity == MSExperimentInfo.PolarityEnum.Negative ? "- " : string.Empty;
 
+    /// <summary>
+    /// Formats a double with C++ <c>ostringstream</c>'s default precision (6 significant
+    /// digits, trailing zeros trimmed). Cpp builds chromatogram ids by streaming the m/z values
+    /// into <c>ostringstream</c>; matching that format keeps native ids byte-equal.
+    /// </summary>
+    private static string FormatLikeCppOss(double v) =>
+        v.ToString("G6", CultureInfo.InvariantCulture);
+
     private static string BuildSrmId(IndexEntry e, int sample, int experimentNumber)
     {
         var ic = CultureInfo.InvariantCulture;
         var sb = new System.Text.StringBuilder(PolarityPrefix(e.Polarity));
-        sb.Append("SRM SIC Q1=").Append(e.Q1.ToString(ic));
-        sb.Append(" Q3=").Append(e.Q3.ToString(ic));
+        sb.Append("SRM SIC Q1=").Append(FormatLikeCppOss(e.Q1));
+        sb.Append(" Q3=").Append(FormatLikeCppOss(e.Q3));
         sb.Append(" sample=").Append(sample);
         sb.Append(" period=1 experiment=").Append(experimentNumber);
         sb.Append(" transition=").Append(e.TransitionIndex);
-        if (e.CollisionEnergy > 0) sb.Append(" ce=").Append(((float)e.CollisionEnergy).ToString("R", ic));
+        if (e.CollisionEnergy > 0) sb.Append(" ce=").Append(FormatLikeCppOss(e.CollisionEnergy));
         if (!string.IsNullOrEmpty(e.CompoundId)) sb.Append(" name=").Append(e.CompoundId);
         return sb.ToString();
     }
@@ -191,11 +199,11 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
     {
         var ic = CultureInfo.InvariantCulture;
         var sb = new System.Text.StringBuilder(PolarityPrefix(e.Polarity));
-        sb.Append("SIM SIC Q1=").Append(e.Q1.ToString(ic));
+        sb.Append("SIM SIC Q1=").Append(FormatLikeCppOss(e.Q1));
         sb.Append(" sample=").Append(sample);
         sb.Append(" period=1 experiment=").Append(experimentNumber);
         sb.Append(" transition=").Append(e.TransitionIndex);
-        if (e.CollisionEnergy > 0) sb.Append(" ce=").Append(((float)e.CollisionEnergy).ToString("R", ic));
+        if (e.CollisionEnergy > 0) sb.Append(" ce=").Append(FormatLikeCppOss(e.CollisionEnergy));
         if (!string.IsNullOrEmpty(e.CompoundId)) sb.Append(" name=").Append(e.CompoundId);
         return sb.ToString();
     }
@@ -311,7 +319,29 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
                     intensities = tic.GetActualYValues() ?? Array.Empty<double>();
                 }
             }
-            catch { /* leave empty */ }
+            catch { /* leave empty — see TIC fallback below */ }
+
+            // Cpp WiffFile.cpp:488-530 has a two-tier BPC fetch: first GetBasePeakChromatogram
+            // with no time range; if that throws, retry with a constrained time range up to
+            // the second-to-last cycle. We mirror the constrained retry, using TIC's cycle
+            // times to derive the end. Without this, MRM-only experiments emit an empty BPC.
+            if (isBpc && times.Length == 0)
+            {
+                try
+                {
+                    var tic = exp.GetTotalIonChromatogram();
+                    var ticTimes = tic.GetActualXValues() ?? Array.Empty<double>();
+                    if (ticTimes.Length > 0)
+                    {
+                        int lastUsable = ticTimes.Length > 10 ? ticTimes.Length - 1 : ticTimes.Length;
+                        var settings = new BasePeakChromatogramSettings(0, null, null, 0, ticTimes[lastUsable - 1]);
+                        var bpc = exp.GetBasePeakChromatogram(settings);
+                        times = bpc.GetActualXValues() ?? Array.Empty<double>();
+                        intensities = bpc.GetActualYValues() ?? Array.Empty<double>();
+                    }
+                }
+                catch { /* leave empty */ }
+            }
 
             int n = Math.Min(times.Length, intensities.Length);
             for (int i = 0; i < n; i++)

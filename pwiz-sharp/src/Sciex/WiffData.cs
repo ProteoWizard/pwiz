@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Runtime.Loader;
 using Clearcore2.Data;
 using Clearcore2.Data.AnalystDataProvider;
 using Clearcore2.Data.DataAccess.SampleData;
@@ -14,6 +16,34 @@ namespace Pwiz.Vendor.Sciex;
 /// </summary>
 public sealed class WiffData : IDisposable
 {
+    /// <summary>
+    /// One-time AssemblyLoadContext.Resolving handler so dependent SDK assemblies
+    /// (<c>Sciex.Data.Processing.dll</c>, etc.) load when the SDK references them transitively.
+    /// .NET 8's default probe doesn't find Content-only assemblies in the app base directory
+    /// automatically; this hook scans the AppContext base for matching DLLs.
+    /// </summary>
+    private static readonly object s_resolverLock = new();
+    private static bool s_resolverInstalled;
+    private static void EnsureResolver()
+    {
+        if (s_resolverInstalled) return;
+        lock (s_resolverLock)
+        {
+            if (s_resolverInstalled) return;
+            AssemblyLoadContext.Default.Resolving += (ctx, name) =>
+            {
+                string baseDir = AppContext.BaseDirectory;
+                foreach (var ext in new[] { ".dll", ".DLL" })
+                {
+                    string p = Path.Combine(baseDir, name.Name + ext);
+                    if (File.Exists(p)) return ctx.LoadFromAssemblyPath(p);
+                }
+                return null;
+            };
+            s_resolverInstalled = true;
+        }
+    }
+
     private readonly AnalystWiffDataProvider _provider;
     private readonly Sample _sample;
     private readonly MassSpectrometerSample _msSample;
@@ -42,6 +72,7 @@ public sealed class WiffData : IDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(wiffPath);
         if (!File.Exists(wiffPath)) throw new FileNotFoundException("WIFF not found", wiffPath);
+        EnsureResolver();
         WiffPath = wiffPath;
 
         _provider = new AnalystWiffDataProvider();

@@ -274,10 +274,18 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IDisposable
 /// the SDK doesn't expose the variant we need on the public surface.</summary>
 internal static class MSExperimentExtensions
 {
-    /// <summary>Per-cycle ms level. The SDK's <c>GetMsLevel(cycle)</c> isn't on the public
-    /// interface; fall back to the experiment-level type-based default.</summary>
+    /// <summary>Per-cycle ms level. Mirrors cpp <c>ExperimentImpl::getMsLevel</c>: ask the SDK
+    /// via <see cref="MSExperiment.GetMassSpectrumInfo"/> so MRM/SIM cycles report whatever ms
+    /// level the instrument actually used (typically 1 for MRM, 2 for IDA Product). Falls back
+    /// to an experiment-type heuristic when the per-cycle info isn't available.</summary>
     public static int GetMsLevelForCycle(this MSExperiment exp, int cycle)
     {
+        try
+        {
+            int level = exp.GetMassSpectrumInfo(cycle - 1).MSLevel;
+            if (level > 0) return level;
+        }
+        catch { /* ignore — fall back to experiment-type default */ }
         var info = exp.Details;
         return info.ExperimentType switch
         {
@@ -286,7 +294,7 @@ internal static class MSExperimentExtensions
             ExperimentType.Product => 2,
             ExperimentType.Precursor => 2,
             ExperimentType.NeutralGainOrLoss => 2,
-            ExperimentType.MRM => 2,
+            ExperimentType.MRM => 1,   // cpp reports msLevel=1 for MRM cycles via the SDK
             _ => 1,
         };
     }
