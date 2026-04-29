@@ -3118,6 +3118,11 @@ namespace pwiz.OspreySharp
             // from the supplied (apex, start, end). Mirrors run_search at
             // pipeline.rs:6596-6664.
             List<XICPeakBounds> peaks;
+            // Track whether peaks came from CWT (vs fallback / override) so the
+            // top-N CWT candidate capture below only fires for the CWT path,
+            // matching Rust run_search at pipeline.rs:6856 which only stores
+            // CWT-sourced candidates on the returned CoelutionScoredEntry.
+            bool peaksFromCwt = false;
             if (overrideBounds.HasValue)
             {
                 peaks = BuildOverridePeaks(overrideBounds.Value, xics);
@@ -3127,6 +3132,7 @@ namespace pwiz.OspreySharp
             else
             {
                 peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+                peaksFromCwt = peaks.Count > 0;
             }
 
             if (peaks.Count == 0)
@@ -3218,6 +3224,13 @@ namespace pwiz.OspreySharp
             double bestRankScore = double.MinValue;
             int bestPeakIdx = -1;
             double twoSigmaSq = 2.0 * rtSigma * rtSigma;
+            // Capture every CWT-passed peak with its raw coelution score and
+            // rank score for the top-N CwtCandidate list assigned below
+            // (Stage 6 reconciliation input). Mirrors Rust run_search's
+            // scored_candidates collection at pipeline.rs:6790-6806.
+            var capturedPeaks = peaksFromCwt
+                ? new List<(XICPeakBounds peak, double coelutionScore, double rankScore)>(peaks.Count)
+                : null;
             for (int pi = 0; pi < peaks.Count; pi++)
             {
                 var p = peaks[pi];
@@ -3288,6 +3301,9 @@ namespace pwiz.OspreySharp
                     bestPeak = p;
                     bestPeakIdx = pi;
                 }
+
+                if (capturedPeaks != null)
+                    capturedPeaks.Add((p, coelutionScore, rankScore));
             }
 
             if (diag && bestPeak != null)
@@ -3498,6 +3514,60 @@ namespace pwiz.OspreySharp
             features[19] = mpMinFragmentR2;
             features[20] = mpResidualCorr;
 
+            // Stage 6 reconciliation input: capture the top-N CWT peak
+            // candidates ranked by penalized rank score, with each kept
+            // candidate's apex/area/snr recomputed over the reference XIC
+            // slice. Mirrors Rust run_search at pipeline.rs:6852-6879.
+            // The stored coelution_score is the raw mean (NOT the RT-
+            // penalized rank score) -- reconciliation has its own RT
+            // tolerance logic via consensus RT comparison.
+            List<CwtCandidate> cwtCandidatesOut = null;
+            int topN = context.Config.Reconciliation != null
+                ? context.Config.Reconciliation.TopNPeaks
+                : 0;
+            if (capturedPeaks != null && capturedPeaks.Count > 0 && topN > 0)
+            {
+                capturedPeaks.Sort((a, b) =>
+                {
+                    if (TotalOrderGreater(a.rankScore, b.rankScore)) return -1;
+                    if (TotalOrderGreater(b.rankScore, a.rankScore)) return 1;
+                    return 0;
+                });
+                int kept = Math.Min(topN, capturedPeaks.Count);
+                cwtCandidatesOut = new List<CwtCandidate>(kept);
+                double[] refRts = xics[refXicIdx].RetentionTimes;
+                for (int k = 0; k < kept; k++)
+                {
+                    var cap = capturedPeaks[k];
+                    var p = cap.peak;
+                    int safeStart = Math.Max(0, Math.Min(p.StartIndex, refXicIntensities.Length - 1));
+                    int safeEnd = Math.Max(safeStart, Math.Min(p.EndIndex, refXicIntensities.Length - 1));
+                    int apexIdx = safeStart;
+                    double apexVal = refXicIntensities[safeStart];
+                    for (int s = safeStart; s <= safeEnd; s++)
+                    {
+                        if (refXicIntensities[s] >= apexVal)
+                        {
+                            apexVal = refXicIntensities[s];
+                            apexIdx = s;
+                        }
+                    }
+                    double area = PeakDetector.TrapezoidalArea(
+                        refRts, refXicIntensities, safeStart, safeEnd);
+                    double snr = PeakDetector.ComputeSnr(
+                        refXicIntensities, apexIdx, safeStart, safeEnd);
+                    cwtCandidatesOut.Add(new CwtCandidate
+                    {
+                        ApexRt = refRts[apexIdx],
+                        StartRt = refRts[safeStart],
+                        EndRt = refRts[safeEnd],
+                        Area = area,
+                        Snr = snr,
+                        CoelutionScore = cap.coelutionScore,
+                    });
+                }
+            }
+
             // Build FdrEntry
             var entry = new FdrEntry
             {
@@ -3511,7 +3581,8 @@ namespace pwiz.OspreySharp
                 CoelutionSum = coelutionSum,
                 Score = coelutionSum,
                 ModifiedSequence = candidate.ModifiedSequence,
-                Features = features
+                Features = features,
+                CwtCandidates = cwtCandidatesOut
             };
 
             return entry;
