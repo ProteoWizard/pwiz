@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Sciex</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Sciex</AssemblyName>
+    <Description>Sciex / ABI WIFF reader. References Sciex's managed Clearcore2 + WiffReader assemblies.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SciexArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz_aux\msrc\utility\vendor_api_ABI.7z</SciexArchive>
+    <SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Sciex</SciexAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\libraries\7za.exe</SevenZaExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <Target Name="ExtractSciexAssemblies"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(SciexArchive)"
+          Outputs="$(SciexAssembliesDir)\Clearcore2.Data.AnalystDataProvider.dll">
+    <MakeDir Directories="$(SciexAssembliesDir)" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(SciexAssembliesDir)&quot; &quot;$(SciexArchive)&quot; vendor_api\ABI\*.dll" />
+    <ItemGroup>
+      <_SciexExtracted Include="$(SciexAssembliesDir)\vendor_api\ABI\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SciexExtracted)" DestinationFolder="$(SciexAssembliesDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Reference the Clearcore2 + Wiff assemblies. CopyLocal=true so they land next to the
+       managed output and the dependent assemblies resolve at runtime via Default load context. -->
+  <ItemGroup>
+    <Reference Include="Clearcore2.Data.AnalystDataProvider"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.AnalystDataProvider.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data.Client"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.Client.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data.CommonInterfaces"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.CommonInterfaces.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data.WiffReader"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.WiffReader.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data.Wiff2"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.Wiff2.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.RawXYProcessing"><HintPath>$(SciexAssembliesDir)\Clearcore2.RawXYProcessing.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Sciex.Data.XYData"><HintPath>$(SciexAssembliesDir)\Sciex.Data.XYData.dll</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+
+  <!-- Runtime dependencies: indirect Clearcore2 + Sciex assemblies must land next to the output
+       so the SDK's late-bound type loads succeed. -->
+  <ItemGroup>
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Compression.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Devices.Types.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Domain.Acquisition.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Infrastructure.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.InternalRawXYProcessing.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Muni.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.StructuredStorage.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Utility.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.XmlHelpers.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\OFX.Core.Contracts.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\SCIEX.Apis.Data.v1.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Clearcore.FMan.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.SimpleTypes.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.XYData.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.FMan.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Wiff.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\protobuf-net.dll" />
+    <Content Include="@(_SciexRuntime)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>

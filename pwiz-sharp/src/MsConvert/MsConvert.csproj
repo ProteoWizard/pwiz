@@ -20,6 +20,8 @@
     <ProjectReference Include="..\Thermo\Thermo.csproj" />
     <ProjectReference Include="..\Bruker\Bruker.csproj" />
     <ProjectReference Include="..\Waters\Waters.csproj" />
+    <ProjectReference Include="..\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\Sciex\Sciex.csproj" />
   </ItemGroup>
 
   <ItemGroup>

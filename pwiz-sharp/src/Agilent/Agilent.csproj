@@ -1,0 +1,85 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Agilent</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Agilent</AssemblyName>
+    <Description>Agilent MassHunter (.d) reader. References Agilent's managed MassSpecDataReader / BaseDataAccess / BaseTof / MIDAC assemblies.</Description>
+  </PropertyGroup>
+
+  <!--
+    Vendor archive: pwiz_aux/msrc/utility/vendor_api_Agilent.7z. ExtractAgilentAssemblies
+    unpacks the x64 .NET assemblies on every build (idempotent). Sharp targets x64 only.
+    -->
+  <PropertyGroup>
+    <AgilentArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz_aux\msrc\utility\vendor_api_Agilent.7z</AgilentArchive>
+    <AgilentAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Agilent</AgilentAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\libraries\7za.exe</SevenZaExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <Target Name="ExtractAgilentAssemblies"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(AgilentArchive)"
+          Outputs="$(AgilentAssembliesDir)\MassSpecDataReader.dll;$(AgilentAssembliesDir)\BaseDataAccess.dll;$(AgilentAssembliesDir)\MIDAC.dll">
+    <MakeDir Directories="$(AgilentAssembliesDir)" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(AgilentAssembliesDir)&quot; &quot;$(AgilentArchive)&quot; vendor_api\Agilent\x64\*.dll vendor_api\Agilent\x64\*.config" />
+    <!-- Flatten the extracted layout so the references below are stable. -->
+    <ItemGroup>
+      <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.dll" />
+      <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.config" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_AgilentExtracted)" DestinationFolder="$(AgilentAssembliesDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
+       plain .NET assemblies, not COM interop wrappers. -->
+  <ItemGroup>
+    <Reference Include="MassSpecDataReader">
+      <HintPath>$(AgilentAssembliesDir)\MassSpecDataReader.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseCommon">
+      <HintPath>$(AgilentAssembliesDir)\BaseCommon.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseDataAccess">
+      <HintPath>$(AgilentAssembliesDir)\BaseDataAccess.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseError">
+      <HintPath>$(AgilentAssembliesDir)\BaseError.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseTof">
+      <HintPath>$(AgilentAssembliesDir)\BaseTof.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="MIDAC">
+      <HintPath>$(AgilentAssembliesDir)\MIDAC.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Native runtime DLLs (agtsampleinforw.dll plus the .config) need to land in the build
+       output. The managed Reference items above already copy the .NET assemblies because
+       Private=true. -->
+  <ItemGroup>
+    <Content Include="$(AgilentAssembliesDir)\agtsampleinforw.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>agtsampleinforw.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(AgilentAssembliesDir)\BaseDataAccess.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>BaseDataAccess.dll.config</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>

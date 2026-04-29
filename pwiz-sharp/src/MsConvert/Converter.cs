@@ -31,6 +31,8 @@ public sealed class Converter
         var brukerReader = new Reader_Bruker { CombineIonMobilitySpectra = _config.CombineIonMobilitySpectra };
         _readers.Add(brukerReader);
         _readers.Add(new Reader_Waters());
+        _readers.Add(new Pwiz.Vendor.Agilent.Reader_Agilent());
+        _readers.Add(new Pwiz.Vendor.Sciex.Reader_Sciex());
     }
 
     /// <summary>Processes every configured input file. Returns the count that succeeded.</summary>
