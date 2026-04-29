@@ -697,15 +697,15 @@ namespace pwiz.OspreySharp
                             }
                         }
                     }
+                    var perFileForPlan = new List<KeyValuePair<string,
+                        IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                    foreach (var kvp in perFileEntries)
+                    {
+                        perFileForPlan.Add(new KeyValuePair<string,
+                            IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+                    }
                     if (perFileCwtCandidates.Count == perFileEntries.Count)
                     {
-                        var perFileForPlan = new List<KeyValuePair<string,
-                            IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
-                        foreach (var kvp in perFileEntries)
-                        {
-                            perFileForPlan.Add(new KeyValuePair<string,
-                                IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
-                        }
                         reconciliationActions = ReconciliationPlanner.Plan(
                             consensus,
                             perFileForPlan,
@@ -716,20 +716,29 @@ namespace pwiz.OspreySharp
                         LogInfo(string.Format(
                             "Stage 6 reconciliation: {0} per-(file, entry) actions planned",
                             reconciliationActions.Count));
-
-                        if (OspreyDiagnostics.DumpReconciliation)
-                        {
-                            OspreyDiagnostics.WriteStage6ReconciliationDump(
-                                reconciliationActions, perFileForPlan);
-                            if (OspreyDiagnostics.ReconciliationOnly)
-                                OspreyDiagnostics.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
-                        }
                     }
                     else
                     {
                         LogInfo(string.Format(
                             "Stage 6 reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
                             perFileCwtCandidates.Count, perFileEntries.Count));
+                    }
+
+                    // Stage 6 cross-impl bisection dump for the planner output.
+                    // Fires unconditionally when OSPREY_DUMP_RECONCILIATION=1
+                    // is set so the skipped / empty paths still produce a
+                    // header-only TSV and still honor OSPREY_RECONCILIATION_ONLY
+                    // for early exit. Mirrors the Rust side at
+                    // crates/osprey/src/pipeline.rs after the reconciliation
+                    // block closes.
+                    if (OspreyDiagnostics.DumpReconciliation)
+                    {
+                        var dumpActions = reconciliationActions
+                            ?? new Dictionary<(string File, int Index), ReconcileAction>();
+                        OspreyDiagnostics.WriteStage6ReconciliationDump(
+                            dumpActions, perFileForPlan);
+                        if (OspreyDiagnostics.ReconciliationOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
                     }
 
                     // Per-file rescore + gap-fill + second-pass FDR are
