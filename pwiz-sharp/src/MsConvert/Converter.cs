@@ -143,6 +143,9 @@ public sealed class Converter
             case OutputFormat.Mzml:
                 new MzmlWriter(_config.EncoderConfig) { Indexed = !_config.NoIndex }.Write(msd, output);
                 break;
+            case OutputFormat.MzXml:
+                new Pwiz.Data.MsData.MzXml.MzxmlWriter(_config.EncoderConfig) { Indexed = !_config.NoIndex }.Write(msd, output);
+                break;
             case OutputFormat.Mgf:
                 using (var tw = new StreamWriter(output))
                     new MgfSerializer().Write(msd, tw);

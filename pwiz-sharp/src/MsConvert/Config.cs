@@ -11,7 +11,7 @@ public enum OutputFormat
     Mzml,
     /// <summary>Mascot Generic Format — MS/MS peak lists only.</summary>
     Mgf,
-    /// <summary>mzXML (unimplemented — throws at convert time).</summary>
+    /// <summary>mzXML 3.2 — flat-attribute predecessor to mzML.</summary>
     MzXml,
     /// <summary>mz5 HDF5 format (unimplemented).</summary>
     Mz5,

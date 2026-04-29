@@ -93,6 +93,22 @@ public sealed class ReaderTestConfig
     public (int Start, int End)? IndexRange { get; set; }
 
     /// <summary>
+    /// When true, the harness writes the in-memory MSData to mzXML, parses it back, and diffs
+    /// against the original (with <see cref="DiffConfig.IgnoreMetadata"/> /
+    /// <see cref="DiffConfig.IgnoreChromatograms"/> set, since mzXML drops document metadata
+    /// and chromatograms). Mirrors cpp <c>VendorReaderTestHarness</c>'s mzML↔mzXML check.
+    /// </summary>
+    public bool TestMzxmlRoundTrip { get; set; } = true;
+
+    /// <summary>
+    /// When true, the harness writes the in-memory MSData to MGF, parses it back, and diffs
+    /// against the MS2+-with-precursor subset of the original (MGF can only carry MSn peak
+    /// lists). Mirrors cpp <c>VendorReaderTestHarness</c>'s mzML↔MGF check (and is skipped
+    /// for <see cref="PreferOnlyMsLevel"/> = 2 inputs that already have no MS1 to drop).
+    /// </summary>
+    public bool TestMgfRoundTrip { get; set; } = true;
+
+    /// <summary>
     /// Builds the reference mzML filename from <paramref name="baseFilename"/>, appending
     /// config-derived suffixes in the same order as <c>ReaderTestConfig::resultFilename</c>.
     /// </summary>

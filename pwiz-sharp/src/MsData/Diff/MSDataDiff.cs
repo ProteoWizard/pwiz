@@ -39,6 +39,103 @@ public static class MSDataDiff
         return ctx.Format();
     }
 
+    /// <summary>
+    /// Tolerance mode for the <c>msLevel</c> comparison in <see cref="DescribeSpectraDataOnly"/>.
+    /// Captures the well-known lossy defaults each peak-list format applies on read.
+    /// </summary>
+    public enum LossyMsLevelMode
+    {
+        /// <summary>Strict equality required.</summary>
+        None,
+        /// <summary>mzXML: an absent <c>msLevel</c> attribute reads back as 1, so 0→1 is a wash.</summary>
+        MzxmlDefault,
+        /// <summary>MGF: every parsed spectrum is tagged as MS2, so any aMs ≥ 2 round-trips to bMs == 2.</summary>
+        MgfFlatten,
+    }
+
+    /// <summary>
+    /// Compares only the data-bearing parts of two SpectrumLists: count, ms level, and the
+    /// m/z + intensity arrays. Skips all metadata and chromatograms. Used by the vendor
+    /// test harness to verify a lossy round-trip (mzXML / MGF) preserved the spectrum data
+    /// while ignoring metadata that the format doesn't carry.
+    /// </summary>
+    /// <param name="a">Reference document (typically the freshly read vendor MSData).</param>
+    /// <param name="b">Document under test (typically the round-tripped MSData).</param>
+    /// <param name="precision">Absolute tolerance for m/z and intensity comparisons.</param>
+    /// <param name="msLevelMode">Selects which format-specific msLevel-default lossiness is
+    /// tolerated. <see cref="LossyMsLevelMode.None"/> requires strict equality.</param>
+    public static string DescribeSpectraDataOnly(MSData a, MSData b, double precision = 1e-6,
+        LossyMsLevelMode msLevelMode = LossyMsLevelMode.MzxmlDefault)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        var ctx = new Context(new DiffConfig { Precision = precision });
+
+        var listA = a.Run.SpectrumList;
+        var listB = b.Run.SpectrumList;
+        if (listA is null && listB is null) return string.Empty;
+        using var _ = ctx.Push("spectrumList");
+        int ca = listA?.Count ?? 0;
+        int cb = listB?.Count ?? 0;
+        if (ca != cb)
+        {
+            ctx.Report($"spectrum count: {ca} vs {cb}");
+            return ctx.Format();
+        }
+        if (listA is null || listB is null) return ctx.Format();
+
+        for (int i = 0; i < ca && !ctx.Saturated; i++)
+        {
+            using var __ = ctx.Push("spectrum[" + i + "]");
+            var sa = listA.GetSpectrum(i, getBinaryData: true);
+            var sb = listB.GetSpectrum(i, getBinaryData: true);
+            DiffSpectrumDataOnly(sa, sb, ctx, precision, msLevelMode);
+        }
+        return ctx.Format();
+    }
+
+    private static void DiffSpectrumDataOnly(Spectrum a, Spectrum b, Context ctx, double precision,
+        LossyMsLevelMode msLevelMode)
+    {
+        int aMs = a.Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
+        int bMs = b.Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
+        bool tolerated = msLevelMode switch
+        {
+            LossyMsLevelMode.MzxmlDefault => aMs == 0 && bMs == 1,
+            LossyMsLevelMode.MgfFlatten => aMs >= 2 && bMs == 2,
+            _ => false,
+        };
+        if (aMs != bMs && !tolerated)
+            ctx.Report($"ms level: {aMs} vs {bMs}");
+
+        var aMz = a.GetMZArray()?.Data;
+        var bMz = b.GetMZArray()?.Data;
+        var aInt = a.GetIntensityArray()?.Data;
+        var bInt = b.GetIntensityArray()?.Data;
+        int aCount = aMz?.Count ?? 0;
+        int bCount = bMz?.Count ?? 0;
+        if (aCount != bCount)
+        {
+            ctx.Report($"peak count: {aCount} vs {bCount}");
+            return;
+        }
+        if (aCount == 0 || aMz is null || bMz is null || aInt is null || bInt is null) return;
+
+        for (int k = 0; k < aCount; k++)
+        {
+            if (Math.Abs(aMz[k] - bMz[k]) > precision)
+            {
+                ctx.Report($"m/z[{k}]: {aMz[k]} vs {bMz[k]}");
+                return;
+            }
+            if (Math.Abs(aInt[k] - bInt[k]) > precision)
+            {
+                ctx.Report($"intensity[{k}]: {aInt[k]} vs {bInt[k]}");
+                return;
+            }
+        }
+    }
+
     // ---------- top-level ----------
 
     private static void DiffRoot(MSData a, MSData b, Context ctx)

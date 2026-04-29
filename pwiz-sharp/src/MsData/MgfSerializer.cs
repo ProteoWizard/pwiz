@@ -48,11 +48,22 @@ public sealed class MgfSerializer
         }
     }
 
-    private static bool WriteSpectrum(TextWriter w, Spectrum spec)
+    /// <summary>
+    /// True iff <paramref name="spec"/> would be emitted by <see cref="Write(MSData, TextWriter)"/>.
+    /// MGF carries only MS2+ peak lists with at least one precursor + selected ion.
+    /// </summary>
+    public static bool IsMgfWritable(Spectrum spec)
     {
+        ArgumentNullException.ThrowIfNull(spec);
         int msLevel = spec.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
         if (msLevel <= 1) return false;
         if (spec.Precursors.Count == 0 || spec.Precursors[0].SelectedIons.Count == 0) return false;
+        return true;
+    }
+
+    private static bool WriteSpectrum(TextWriter w, Spectrum spec)
+    {
+        if (!IsMgfWritable(spec)) return false;
 
         var precursor = spec.Precursors[0];
         var si = precursor.SelectedIons[0];

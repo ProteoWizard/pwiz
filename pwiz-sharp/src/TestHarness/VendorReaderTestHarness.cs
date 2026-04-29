@@ -8,6 +8,7 @@ using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Sources;
+using Pwiz.Data.MsData.Mgf;
 using Pwiz.Data.MsData.Spectra;
 using Pwiz.Util;
 
@@ -192,6 +193,72 @@ public static class VendorReaderTestHarness
         string diff = MSDataDiff.Describe(msd, referenceMsd, diffConfig);
         if (diff.Length > 0)
             throw new InvalidOperationException(diff);
+
+        // 6. mzXML round-trip: write to mzXML, parse it back, verify the spectrum data made the
+        // round trip. mzXML loses most metadata (instrument config, multi-scan combineIMS,
+        // scan-list combination type, userParam units), so the check restricts to the data
+        // path via DescribeSpectraDataOnly. Mirrors cpp VendorReaderTestHarness's mzXML diff
+        // pattern — cpp uses a much-extended Diff with non-mzML tolerances we don't port.
+        if (config.TestMzxmlRoundTrip && msd.Run.SpectrumList is not null)
+        {
+            using var mem = new MemoryStream();
+            new Pwiz.Data.MsData.MzXml.MzxmlWriter().Write(msd, mem);
+            mem.Position = 0;
+            var roundtripped = new MSData();
+            Pwiz.Data.MsData.MzXml.MzxmlReader.Read(mem, roundtripped);
+
+            string mzxmlReport = MSDataDiff.DescribeSpectraDataOnly(
+                msd, roundtripped, config.DiffPrecision ?? 1e-6);
+            if (mzxmlReport.Length > 0)
+                throw new InvalidOperationException("mzXML round-trip diff:\n" + mzxmlReport);
+        }
+
+        // 7. MGF round-trip: same idea, but MGF only carries MS2+ peak lists with precursors,
+        // so we filter the original first and compare that filtered subset against the parsed
+        // MGF. Mirrors cpp VendorReaderTestHarness's mzML↔MGF check.
+        if (config.TestMgfRoundTrip && config.PreferOnlyMsLevel != 2 && msd.Run.SpectrumList is not null)
+        {
+            var filtered = BuildMgfFilteredCopy(msd);
+            if (filtered.Run.SpectrumList?.Count > 0)
+            {
+                using var mem = new MemoryStream();
+                using (var writer = new StreamWriter(mem, leaveOpen: true))
+                    new MgfSerializer().Write(filtered, writer);
+                mem.Position = 0;
+                MSData roundtripped;
+                using (var rdr = new StreamReader(mem))
+                    roundtripped = new MgfSerializer().Read(rdr);
+
+                string mgfReport = MSDataDiff.DescribeSpectraDataOnly(
+                    filtered, roundtripped, config.DiffPrecision ?? 1e-6,
+                    MSDataDiff.LossyMsLevelMode.MgfFlatten);
+                if (mgfReport.Length > 0)
+                    throw new InvalidOperationException("MGF round-trip diff:\n" + mgfReport);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Builds an <see cref="MSData"/> whose SpectrumList contains only the MS2+ precursor-bearing
+    /// spectra of <paramref name="original"/> — i.e. the subset MGF would actually emit. Mirrors
+    /// cpp <c>SpectrumList_MGF_Filter</c> in <c>VendorReaderTestHarness.cpp</c>.
+    /// </summary>
+    private static MSData BuildMgfFilteredCopy(MSData original)
+    {
+        var copy = new MSData { Id = original.Id };
+        var sl = original.Run.SpectrumList;
+        if (sl is null) return copy;
+
+        var filtered = new SpectrumListSimple();
+        for (int i = 0; i < sl.Count; i++)
+        {
+            var spec = sl.GetSpectrum(i, getBinaryData: true);
+            if (!MgfSerializer.IsMgfWritable(spec)) continue;
+            spec.Index = filtered.Spectra.Count;
+            filtered.Spectra.Add(spec);
+        }
+        copy.Run.SpectrumList = filtered;
+        return copy;
     }
 
     // ---------- helpers ported from VendorReaderTestHarness.cpp ----------
