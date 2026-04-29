@@ -664,6 +664,26 @@ namespace pwiz.OspreySharp
                             {
                                 var cwtRows = ParquetScoreCache
                                     .LoadCwtCandidatesFromParquet(parquetPath);
+                                // The planner indexes CWT lists by the entry's
+                                // position in perFileEntries[file] (the same
+                                // order LoadFdrStubsFromParquet returns). If
+                                // the row counts disagree the loaded lists
+                                // would be misaligned with the FdrEntry stubs,
+                                // which would hand the planner empty
+                                // candidate sets for entries whose actual
+                                // candidates exist further down the file.
+                                // Skip planning for this file with a clear
+                                // warning rather than letting that happen
+                                // silently.
+                                if (cwtRows.Count != kvp.Value.Count)
+                                {
+                                    LogWarning(string.Format(
+                                        "CWT candidate row count mismatch for {0}: " +
+                                        "parquet has {1} rows, FdrEntry stubs have {2} -- " +
+                                        "skipping reconciliation planning for this file",
+                                        kvp.Key, cwtRows.Count, kvp.Value.Count));
+                                    continue;
+                                }
                                 var converted = new List<IReadOnlyList<CwtCandidate>>(cwtRows.Count);
                                 foreach (var row in cwtRows)
                                     converted.Add(row);

@@ -538,9 +538,22 @@ namespace pwiz.OspreySharp.IO
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
                         var col = groupReader.ReadColumn(FIELD_CWT_CANDIDATES);
+                        // The cwt_candidates column is binary; if Parquet.Net
+                        // hands back something other than byte[][] the
+                        // schema or write path is wrong upstream and any
+                        // silent fallback would desynchronize this list
+                        // from LoadFdrStubsFromParquet's row order. Throw
+                        // with the offending file + group so the caller
+                        // sees a clear error rather than empty CWT lists.
                         var blobs = col.Data as byte[][];
                         if (blobs == null)
-                            continue;
+                        {
+                            throw new InvalidDataException(string.Format(
+                                "{0}: cwt_candidates column in row group {1} " +
+                                "decoded as {2}, expected byte[][] -- parquet schema mismatch",
+                                Path.GetFileName(path), g,
+                                col.Data == null ? "null" : col.Data.GetType().Name));
+                        }
                         for (int row = 0; row < blobs.Length; row++)
                             allCandidates.Add(CwtCandidateCodec.Decode(blobs[row]));
                     }

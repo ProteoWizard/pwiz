@@ -188,10 +188,11 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestCwtCandidateCrossImplParity()
         {
-            const string csPath = @"D:\test\osprey-runs\stellar\" +
-                                  @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20.scores.cs.parquet";
-            const string rustPath = @"D:\test\osprey-runs\stellar\" +
-                                    @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20.scores.rust.parquet";
+            string baseDir = StellarBaseDir();
+            string csPath = System.IO.Path.Combine(baseDir,
+                @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20.scores.cs.parquet");
+            string rustPath = System.IO.Path.Combine(baseDir,
+                @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20.scores.rust.parquet");
             if (!System.IO.File.Exists(csPath) || !System.IO.File.Exists(rustPath))
             {
                 Assert.Inconclusive(@"Both Stellar 20 cs+rust parquets must be present");
@@ -314,8 +315,8 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestCsScoringPopulatesCwtCandidates()
         {
-            const string path = @"D:\test\osprey-runs\stellar\" +
-                                @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20.scores.cs.parquet";
+            string path = System.IO.Path.Combine(StellarBaseDir(),
+                @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20.scores.cs.parquet");
             if (!System.IO.File.Exists(path))
             {
                 Assert.Inconclusive(@"C# scores parquet not present: " + path);
@@ -355,8 +356,11 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestLoadCwtCandidatesFromRustParquet()
         {
-            const string path = @"D:\test\osprey-runs\astral\_stage6_planning\Astral\" +
-                                @"Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_49.scores.parquet";
+            string baseDir = System.Environment.GetEnvironmentVariable(@"OSPREY_TEST_BASE_DIR")
+                             ?? @"D:\test\osprey-runs";
+            string path = System.IO.Path.Combine(baseDir, @"astral",
+                @"_stage6_planning", @"Astral",
+                @"Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_49.scores.parquet");
             if (!System.IO.File.Exists(path))
             {
                 Assert.Inconclusive(@"Reference parquet not present: " + path);
@@ -398,6 +402,23 @@ namespace pwiz.OspreySharp.Test
             Assert.IsTrue(sensibleFraction > 0.95,
                 string.Format(@"Only {0}/{1} candidates have apex_rt in [0, 200] min",
                     candidatesWithSensibleApex, totalCandidates));
+        }
+
+        /// <summary>
+        /// Resolve the Stellar test data directory via the
+        /// <c>OSPREY_TEST_BASE_DIR</c> environment variable used by
+        /// <c>ai/scripts/OspreySharp/Dataset-Config.ps1</c>, falling back
+        /// to <c>D:\test\osprey-runs</c> for the default Windows
+        /// developer setup. Tests that read parquets call
+        /// <c>Assert.Inconclusive</c> when the resolved file is missing,
+        /// keeping the suite portable to environments without the test
+        /// dataset.
+        /// </summary>
+        private static string StellarBaseDir()
+        {
+            string baseDir = System.Environment.GetEnvironmentVariable(@"OSPREY_TEST_BASE_DIR")
+                             ?? @"D:\test\osprey-runs";
+            return System.IO.Path.Combine(baseDir, @"stellar");
         }
 
         private static void AssertBitEqual(double expected, double actual, string label)

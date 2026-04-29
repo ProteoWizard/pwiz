@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 
 namespace pwiz.OspreySharp.Core
@@ -56,24 +57,28 @@ namespace pwiz.OspreySharp.Core
 
         /// <summary>Encode a list of CWT candidates to the Rust binary
         /// layout. Returns null when <paramref name="candidates"/> is null
-        /// (matches Rust's missing-column semantics in the parquet write path).</summary>
+        /// (matches Rust's missing-column semantics in the parquet write path).
+        /// Writes directly into a single preallocated buffer via
+        /// <see cref="BinaryPrimitives"/> -- no per-field allocations and
+        /// little-endian is enforced explicitly (independent of host
+        /// endianness).</summary>
         public static byte[] Encode(IReadOnlyList<CwtCandidate> candidates)
         {
             if (candidates == null)
                 return null;
             int n = candidates.Count;
             var buf = new byte[COUNT_PREFIX_BYTES + n * BYTES_PER_CANDIDATE];
-            BitConverter.GetBytes((uint)n).CopyTo(buf, 0);
+            BinaryPrimitives.WriteUInt32LittleEndian(buf, (uint)n);
             int offset = COUNT_PREFIX_BYTES;
             for (int i = 0; i < n; i++)
             {
                 var c = candidates[i];
-                BitConverter.GetBytes(c.ApexRt).CopyTo(buf, offset); offset += 8;
-                BitConverter.GetBytes(c.StartRt).CopyTo(buf, offset); offset += 8;
-                BitConverter.GetBytes(c.EndRt).CopyTo(buf, offset); offset += 8;
-                BitConverter.GetBytes(c.Area).CopyTo(buf, offset); offset += 8;
-                BitConverter.GetBytes(c.Snr).CopyTo(buf, offset); offset += 8;
-                BitConverter.GetBytes(c.CoelutionScore).CopyTo(buf, offset); offset += 8;
+                WriteF64(buf, ref offset, c.ApexRt);
+                WriteF64(buf, ref offset, c.StartRt);
+                WriteF64(buf, ref offset, c.EndRt);
+                WriteF64(buf, ref offset, c.Area);
+                WriteF64(buf, ref offset, c.Snr);
+                WriteF64(buf, ref offset, c.CoelutionScore);
             }
             return buf;
         }
@@ -81,12 +86,14 @@ namespace pwiz.OspreySharp.Core
         /// <summary>Decode a CWT candidate list from the Rust binary layout.
         /// Returns an empty list for null/short input, mirroring the Rust
         /// loader's tolerance for cells that were written before this column
-        /// was populated.</summary>
+        /// was populated. Reads via <see cref="BinaryPrimitives"/> so the
+        /// little-endian byte order matches the writer regardless of host
+        /// endianness.</summary>
         public static List<CwtCandidate> Decode(byte[] bytes)
         {
             if (bytes == null || bytes.Length < COUNT_PREFIX_BYTES)
                 return new List<CwtCandidate>();
-            uint count = BitConverter.ToUInt32(bytes, 0);
+            uint count = BinaryPrimitives.ReadUInt32LittleEndian(bytes);
             int available = (bytes.Length - COUNT_PREFIX_BYTES) / BYTES_PER_CANDIDATE;
             int n = (int)Math.Min(count, (uint)available);
             var result = new List<CwtCandidate>(n);
@@ -95,16 +102,30 @@ namespace pwiz.OspreySharp.Core
             {
                 result.Add(new CwtCandidate
                 {
-                    ApexRt = BitConverter.ToDouble(bytes, offset),
-                    StartRt = BitConverter.ToDouble(bytes, offset + 8),
-                    EndRt = BitConverter.ToDouble(bytes, offset + 16),
-                    Area = BitConverter.ToDouble(bytes, offset + 24),
-                    Snr = BitConverter.ToDouble(bytes, offset + 32),
-                    CoelutionScore = BitConverter.ToDouble(bytes, offset + 40),
+                    ApexRt = ReadF64(bytes, offset),
+                    StartRt = ReadF64(bytes, offset + 8),
+                    EndRt = ReadF64(bytes, offset + 16),
+                    Area = ReadF64(bytes, offset + 24),
+                    Snr = ReadF64(bytes, offset + 32),
+                    CoelutionScore = ReadF64(bytes, offset + 40),
                 });
                 offset += BYTES_PER_CANDIDATE;
             }
             return result;
+        }
+
+        private static void WriteF64(byte[] buf, ref int offset, double v)
+        {
+            BinaryPrimitives.WriteInt64LittleEndian(
+                new Span<byte>(buf, offset, 8),
+                BitConverter.DoubleToInt64Bits(v));
+            offset += 8;
+        }
+
+        private static double ReadF64(byte[] buf, int offset)
+        {
+            return BitConverter.Int64BitsToDouble(
+                BinaryPrimitives.ReadInt64LittleEndian(new Span<byte>(buf, offset, 8)));
         }
     }
 }

@@ -5,4 +5,11 @@
     <AssemblyName>OspreySharp.Core</AssemblyName>
   </PropertyGroup>
 
+  <!-- net472 needs System.Memory for BinaryPrimitives (used by
+       CwtCandidateCodec to write/read the Rust-compatible binary
+       layout without per-field allocations). net8.0 has it built in. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+  </ItemGroup>
+
 </Project>
