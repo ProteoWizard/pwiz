@@ -147,6 +147,19 @@ namespace pwiz.OspreySharp
         public static readonly bool RefitOnly = IsOne(@"OSPREY_REFIT_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_RECONCILIATION: dump the per-(file, entry)
+        /// ReconcileAction map produced by ReconciliationPlanner.Plan
+        /// to cs_stage6_reconciliation.tsv. Mirrors the action variant
+        /// + apex/start/end/half_width fields the Rust dump emits, so
+        /// cross-impl parity at the planning step can be checked
+        /// independently of the per-file rescoring that follows.
+        /// </summary>
+        public static readonly bool DumpReconciliation = IsOne(@"OSPREY_DUMP_RECONCILIATION");
+
+        /// <summary>OSPREY_RECONCILIATION_ONLY: exit after cs_stage6_reconciliation.tsv dump.</summary>
+        public static readonly bool ReconciliationOnly = IsOne(@"OSPREY_RECONCILIATION_ONLY");
+
+        /// <summary>
         /// OSPREY_DUMP_CALIBRATION: dump the loaded calibration JSON
         /// arrays (library_rts + fitted_values) for each file to
         /// cs_stage6_calibration.tsv as the C# join-only path loads
@@ -1062,6 +1075,92 @@ namespace pwiz.OspreySharp
                 }
             }
             LogAction(string.Format(@"Wrote Stage 6 refit dump: {0} ({1} rows)", path, fileNames.Count));
+        }
+
+        /// <summary>
+        /// Dump the per-(file, entry) <see cref="ReconcileAction"/> map
+        /// produced by <see cref="ReconciliationPlanner.Plan"/> to
+        /// <c>cs_stage6_reconciliation.tsv</c>. Used for cross-impl parity
+        /// of the planner output -- pairs with the Rust
+        /// <c>dump_stage6_reconciliation</c> helper. Columns:
+        /// <c>file_name, entry_id, action, apex_or_expected_rt, start_rt,
+        /// end_rt, half_width, candidate_index</c>. Cells that don't
+        /// apply to a given action stay empty. Rows are sorted by
+        /// <c>(file_name, entry_id)</c> for stable diffing.
+        /// </summary>
+        public static void WriteStage6ReconciliationDump(
+            IReadOnlyDictionary<(string File, int Index), ReconcileAction> actions,
+            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries)
+        {
+            const string path = @"cs_stage6_reconciliation.tsv";
+
+            // Build (file, entryId, action) rows. The planner's key is
+            // (file, list-index); we resolve back to the entry_id via
+            // perFileEntries so the dump is sortable by entry_id and
+            // joinable with other dumps that key off entry_id.
+            var perFileEntriesMap = new Dictionary<string, IReadOnlyList<FdrEntry>>(
+                perFileEntries.Count);
+            foreach (var kvp in perFileEntries)
+                perFileEntriesMap[kvp.Key] = kvp.Value;
+
+            var rows = new List<(string FileName, uint EntryId, ReconcileAction Action)>(
+                actions.Count);
+            foreach (var kvp in actions)
+            {
+                IReadOnlyList<FdrEntry> entries;
+                if (!perFileEntriesMap.TryGetValue(kvp.Key.File, out entries))
+                    continue;
+                if (kvp.Key.Index < 0 || kvp.Key.Index >= entries.Count)
+                    continue;
+                rows.Add((kvp.Key.File, entries[kvp.Key.Index].EntryId, kvp.Value));
+            }
+            rows.Sort((a, b) =>
+            {
+                int cmp = string.CompareOrdinal(a.FileName, b.FileName);
+                if (cmp != 0) return cmp;
+                return a.EntryId.CompareTo(b.EntryId);
+            });
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"file_name	entry_id	action	apex_or_expected_rt	start_rt	end_rt	half_width	candidate_index");
+                foreach (var row in rows)
+                {
+                    sw.Write(row.FileName);
+                    sw.Write('\t'); sw.Write(row.EntryId.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t');
+                    var useCwt = row.Action as ReconcileAction.UseCwtPeak;
+                    var forced = row.Action as ReconcileAction.ForcedIntegration;
+                    if (useCwt != null)
+                    {
+                        sw.Write(@"use_cwt_peak");
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.ApexRt));
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.StartRt));
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.EndRt));
+                        sw.Write('\t'); // half_width empty
+                        sw.Write('\t'); sw.WriteLine(useCwt.CandidateIndex.ToString(CultureInfo.InvariantCulture));
+                    }
+                    else if (forced != null)
+                    {
+                        sw.Write(@"forced_integration");
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(forced.ExpectedRt));
+                        sw.Write('\t'); // start_rt empty
+                        sw.Write('\t'); // end_rt empty
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(forced.HalfWidth));
+                        sw.WriteLine('\t'); // candidate_index empty
+                    }
+                    else
+                    {
+                        // Defensive: planner shouldn't return Keep, but emit
+                        // a row anyway so a future regression is visible.
+                        sw.Write(@"keep");
+                        sw.WriteLine("\t\t\t\t\t");
+                    }
+                }
+            }
+            LogAction(string.Format(@"Wrote Stage 6 reconciliation dump: {0} ({1} rows)",
+                path, rows.Count));
         }
 
         /// <summary>

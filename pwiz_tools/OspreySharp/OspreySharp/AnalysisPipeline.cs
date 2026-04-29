@@ -179,6 +179,11 @@ namespace pwiz.OspreySharp
                 // Per-file RT calibration handles harvested by ProcessFile so
                 // Stage 6 reconciliation has the live RTCalibration objects.
                 var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
+                // fileName -> .scores.parquet path. Populated by --join-only
+                // (which already knows the paths) so Stage 6 reconciliation
+                // can lazily load CWT candidates per file via
+                // ParquetScoreCache.LoadCwtCandidatesFromParquet.
+                var perFileParquetPaths = new Dictionary<string, string>();
 
                 bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
                 int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
@@ -270,6 +275,7 @@ namespace pwiz.OspreySharp
                             stubs[j].Features = features[j];
                         LogInfo(string.Format("  Loaded {0} FDR stubs + features", stubs.Count));
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                        perFileParquetPaths[fileName] = parquetPath;
 
                         // Best-effort calibration JSON load for Stage 6
                         // reconciliation. Mirrors osprey/src/pipeline.rs:2573-2588.
@@ -632,11 +638,85 @@ namespace pwiz.OspreySharp
                             OspreyDiagnostics.ExitAfterDump(@"OSPREY_REFIT_ONLY");
                     }
 
-                    // Reconciliation planning + per-file rescore + gap-fill +
-                    // second-pass FDR are deferred to a later commit. Without
-                    // those, single-run analysis still produces valid output
-                    // from the first-pass FDR results above.
-                    LogInfo(@"Stage 6 reconciliation rescore: not yet implemented");
+                    // 4. Reconciliation planning. Reads each file's CWT
+                    //    candidates from the parquet cache and asks the
+                    //    planner to choose, per (file, entry), whether to
+                    //    keep the existing peak, switch to a stored CWT
+                    //    candidate at the consensus RT, or force an
+                    //    integration window. Mirrors Rust pipeline.rs
+                    //    reconciliation block at ~3260-3380.
+                    //
+                    //    Per-file re-scoring at the planner-chosen
+                    //    boundaries, gap-fill, and second-pass FDR are
+                    //    still pending. The planner output is wired
+                    //    primarily to make the cross-impl
+                    //    OSPREY_DUMP_RECONCILIATION dump available below.
+                    IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions = null;
+                    var perFileCwtCandidates = new Dictionary<string,
+                        IReadOnlyList<IReadOnlyList<CwtCandidate>>>();
+                    foreach (var kvp in perFileEntries)
+                    {
+                        string parquetPath;
+                        if (perFileParquetPaths.TryGetValue(kvp.Key, out parquetPath) &&
+                            File.Exists(parquetPath))
+                        {
+                            try
+                            {
+                                var cwtRows = ParquetScoreCache
+                                    .LoadCwtCandidatesFromParquet(parquetPath);
+                                var converted = new List<IReadOnlyList<CwtCandidate>>(cwtRows.Count);
+                                foreach (var row in cwtRows)
+                                    converted.Add(row);
+                                perFileCwtCandidates[kvp.Key] = converted;
+                            }
+                            catch (Exception ex)
+                            {
+                                LogWarning(string.Format(
+                                    "Failed to load CWT candidates for {0}: {1}",
+                                    kvp.Key, ex.Message));
+                            }
+                        }
+                    }
+                    if (perFileCwtCandidates.Count == perFileEntries.Count)
+                    {
+                        var perFileForPlan = new List<KeyValuePair<string,
+                            IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                        foreach (var kvp in perFileEntries)
+                        {
+                            perFileForPlan.Add(new KeyValuePair<string,
+                                IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+                        }
+                        reconciliationActions = ReconciliationPlanner.Plan(
+                            consensus,
+                            perFileForPlan,
+                            perFileCwtCandidates,
+                            refinedCalibrations,
+                            perFileCalibrations,
+                            config.Reconciliation.ConsensusFdr);
+                        LogInfo(string.Format(
+                            "Stage 6 reconciliation: {0} per-(file, entry) actions planned",
+                            reconciliationActions.Count));
+
+                        if (OspreyDiagnostics.DumpReconciliation)
+                        {
+                            OspreyDiagnostics.WriteStage6ReconciliationDump(
+                                reconciliationActions, perFileForPlan);
+                            if (OspreyDiagnostics.ReconciliationOnly)
+                                OspreyDiagnostics.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
+                        }
+                    }
+                    else
+                    {
+                        LogInfo(string.Format(
+                            "Stage 6 reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
+                            perFileCwtCandidates.Count, perFileEntries.Count));
+                    }
+
+                    // Per-file rescore + gap-fill + second-pass FDR are
+                    // deferred to a later commit. Without those, single-run
+                    // analysis still produces valid output from the
+                    // first-pass FDR results above.
+                    LogInfo(@"Stage 6 per-file rescore: not yet implemented");
                 }
 
                 // Stage 8: Protein FDR (optional)
