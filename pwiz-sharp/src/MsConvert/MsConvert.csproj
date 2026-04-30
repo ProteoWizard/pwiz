@@ -23,6 +23,14 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\MsData\MsData.csproj" />
     <ProjectReference Include="..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- Vendor projects always build so Reader.Identify() works. Without
+       -p:IAgreeToVendorLicenses=true (build.bat translates the vendor-license CLI flag), the
+       vendor csprojs skip extracting their encrypted SDKs and compile with NO_VENDOR_SUPPORT,
+       which makes Reader.Read() throw a clear "vendor support not enabled" error. Identify
+       remains functional in both modes. -->
+  <ItemGroup>
     <ProjectReference Include="..\Vendor\Thermo\Thermo.csproj" />
     <ProjectReference Include="..\Vendor\Bruker\Bruker.csproj" />
     <ProjectReference Include="..\Vendor\Waters\Waters.csproj" />
@@ -51,7 +59,7 @@
        default ALC for the legacy .wiff path (AnalystDataProvider was compiled against those
        identities). The two ALCs coexist because their resolved assemblies have different
        PublicKeyTokens, so there's no identity collision. -->
-  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build">
+  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <PropertyGroup>
       <_SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Sciex</_SciexAssembliesDir>
     </PropertyGroup>

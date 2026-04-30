@@ -1,13 +1,15 @@
-using System.Globalization;
 using Pwiz.Data.Common.Cv;
-using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Readers;
+#if !NO_VENDOR_SUPPORT
+using System.Globalization;
+using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Processing;
-using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Sources;
 using AgDeviceType = Agilent.MassSpectrometry.DataAnalysis.DeviceType;
 using AgIonization = Agilent.MassSpectrometry.DataAnalysis.IonizationMode;
+#endif
 
 #pragma warning disable CA1707
 
@@ -16,7 +18,7 @@ namespace Pwiz.Vendor.Agilent;
 /// <summary>
 /// <see cref="IReader"/> for Agilent MassHunter <c>.d</c> directories. Identifies a directory
 /// as Agilent by the presence of <c>AcqData/MSScan.bin</c> (or <c>AcqData/MSPeak.bin</c>) and
-/// builds an MSData via <see cref="AgilentRawData"/> + <see cref="SpectrumList_Agilent"/>.
+/// builds an MSData via <c>AgilentRawData</c> + <c>SpectrumList_Agilent</c>.
 /// </summary>
 /// <remarks>
 /// Port of pwiz <c>Reader_Agilent</c>. Initial scope: Q-TOF / TQ / single-quad / TOF MS scans
@@ -38,7 +40,21 @@ public sealed class Reader_Agilent : IReader
     public CVID Identify(string filename, string? head)
     {
         ArgumentNullException.ThrowIfNull(filename);
-        return AgilentRawData.IsAgilentDirectory(filename) ? CvType : CVID.CVID_Unknown;
+        return IsAgilentDirectory(filename) ? CvType : CVID.CVID_Unknown;
+    }
+
+    /// <summary>
+    /// Pure filesystem check used by both <see cref="Identify"/> and <see cref="Read"/>.
+    /// Lives here (rather than <c>AgilentRawData</c>) so it stays callable when the SDK isn't
+    /// compiled in (NO_VENDOR_SUPPORT mode).
+    /// </summary>
+    private static bool IsAgilentDirectory(string path)
+    {
+        if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return false;
+        string acqData = Path.Combine(path, "AcqData");
+        if (!Directory.Exists(acqData)) return false;
+        return File.Exists(Path.Combine(acqData, "MSScan.bin"))
+            || File.Exists(Path.Combine(acqData, "MSPeak.bin"));
     }
 
     /// <inheritdoc/>
@@ -47,9 +63,13 @@ public sealed class Reader_Agilent : IReader
         ArgumentNullException.ThrowIfNull(filename);
         ArgumentNullException.ThrowIfNull(result);
 
-        if (!AgilentRawData.IsAgilentDirectory(filename))
+        if (!IsAgilentDirectory(filename))
             throw new InvalidDataException($"Not an Agilent .d directory: {filename}");
 
+#if NO_VENDOR_SUPPORT
+        throw new NotSupportedException(
+            "Agilent .d reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
+#else
         result.CVs.AddRange(MSData.DefaultCVList);
         var raw = new AgilentRawData(filename);
         try
@@ -61,8 +81,10 @@ public sealed class Reader_Agilent : IReader
             raw.Dispose();
             throw;
         }
+#endif
     }
 
+#if !NO_VENDOR_SUPPORT
     private static void FillMetadata(MSData result, string dotDPath, AgilentRawData raw, ReaderConfig? config)
     {
         string dirName = Path.GetFileName(dotDPath.TrimEnd('/', '\\'));
@@ -215,4 +237,5 @@ public sealed class Reader_Agilent : IReader
         if (mode.HasFlag(AgIonization.ICP)) return CVID.MS_inductively_coupled_plasma;
         return CVID.CVID_Unknown;
     }
+#endif
 }

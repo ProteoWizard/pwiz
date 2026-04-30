@@ -26,7 +26,15 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the native DLL Content entries below are dropped. NO_VENDOR_SUPPORT compiles
+       Reader_Waters without the P/Invoke surface so Read() throws but Identify() still works. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
   <Target Name="ExtractWatersAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(WatersArchive)"
           Outputs="$(WatersAssembliesDir)\MassLynxRaw.dll">
@@ -40,7 +48,7 @@
           SkipUnchangedFiles="true" />
   </Target>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <Content Include="$(WatersAssembliesDir)\MassLynxRaw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>MassLynxRaw.dll</Link>

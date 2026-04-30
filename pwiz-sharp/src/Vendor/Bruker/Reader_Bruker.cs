@@ -61,6 +61,10 @@ public sealed class Reader_Bruker : IReader
         ArgumentNullException.ThrowIfNull(filename);
         ArgumentNullException.ThrowIfNull(result);
 
+#if NO_VENDOR_SUPPORT
+        throw new NotSupportedException(
+            "Bruker .d reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
+#else
         int preferOnlyMsLevel = config?.PreferOnlyMsLevel ?? 0;
         bool combineIms = config?.CombineIonMobilitySpectra ?? CombineIonMobilitySpectra;
         bool sortAndJitter = config?.SortAndJitter ?? false;
@@ -85,6 +89,7 @@ public sealed class Reader_Bruker : IReader
             data.Dispose();
             throw;
         }
+#endif
     }
 
     private static void ReadImpl(MSData result, IBrukerData data, string analysisDir, int preferOnlyMsLevel, bool combineIonMobilitySpectra, bool sortAndJitter, bool peakPicking)

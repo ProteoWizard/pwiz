@@ -1,10 +1,12 @@
 using Pwiz.Data.Common.Cv;
-using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Readers;
+#if !NO_VENDOR_SUPPORT
+using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Processing;
-using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Sources;
+#endif
 
 #pragma warning disable CA1707
 
@@ -12,7 +14,7 @@ namespace Pwiz.Vendor.Sciex;
 
 /// <summary>
 /// <see cref="IReader"/> for Sciex / ABI WIFF files. Identifies <c>.wiff</c> and <c>.wiff2</c>;
-/// <see cref="AbstractWiffFile.Open"/> dispatches to the legacy AnalystDataProvider wrapper for
+/// <c>AbstractWiffFile.Open</c> dispatches to the legacy AnalystDataProvider wrapper for
 /// <c>.wiff</c> or to the side-by-side wiff2 plugin for <c>.wiff2</c>, then a single
 /// metadata-fill path emits the same shape of MSData for both.
 /// </summary>
@@ -50,6 +52,10 @@ public sealed class Reader_Sciex : IReader
         if (!File.Exists(filename))
             throw new FileNotFoundException("WIFF file not found", filename);
 
+#if NO_VENDOR_SUPPORT
+        throw new NotSupportedException(
+            "Sciex WIFF reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
+#else
         result.CVs.AddRange(MSData.DefaultCVList);
 
         var wiff = AbstractWiffFile.Open(filename, sampleIndex0: 0);
@@ -62,12 +68,14 @@ public sealed class Reader_Sciex : IReader
             wiff.Dispose();
             throw;
         }
+#endif
     }
 
     private static bool IsWiffFile(string path)
         => path.EndsWith(".wiff", StringComparison.OrdinalIgnoreCase)
            || path.EndsWith(".wiff2", StringComparison.OrdinalIgnoreCase);
 
+#if !NO_VENDOR_SUPPORT
     private static void FillMetadata(MSData result, string wiffPath, AbstractWiffFile wiff, ReaderConfig? config)
     {
         string baseName = Path.GetFileNameWithoutExtension(wiffPath);
@@ -155,4 +163,5 @@ public sealed class Reader_Sciex : IReader
             Dp = dpReader,
         };
     }
+#endif
 }

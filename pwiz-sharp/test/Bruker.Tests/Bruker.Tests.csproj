@@ -17,6 +17,13 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
+  <!-- Without -p:IAgreeToVendorLicenses=true, timsdata.dll isn't extracted next to the test
+       output and the P/Invoke smoke tests can't run; the harness-based tests in
+       ReaderBrukerTests still run via VendorReaderTestHarness's identify-only fallback. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="TimsBinaryDataSmokeTests.cs" />
+  </ItemGroup>
+
   <PropertyGroup>
     <VendorTestArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data.tar.bz2</VendorTestArchive>
     <VendorTestDataParent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Bruker</VendorTestDataParent>

@@ -17,4 +17,14 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
+  <!-- Without -p:IAgreeToVendorLicenses=true, MassLynxRaw.dll isn't extracted next to the test
+       output. The CCS / lockmass / sonar tests open .raw files directly through Reader_Waters
+       and fail with NotSupportedException; the harness-based tests in ReaderWatersTests still
+       run via VendorReaderTestHarness's identify-only fallback. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="CcsConversionTests.cs" />
+    <Compile Remove="LockmassRefinerTests.cs" />
+    <Compile Remove="SonarAndFlagsTests.cs" />
+  </ItemGroup>
+
 </Project>

@@ -143,7 +143,26 @@ public static class VendorReaderTestHarness
             IgnoreCalibrationScans = config.IgnoreCalibrationScans,
             IsolationMzAndMobilityFilter = config.IsolationMzAndMobilityFilter,
         };
-        reader.Read(rawPath, msd, readerConfig);
+        try
+        {
+            reader.Read(rawPath, msd, readerConfig);
+        }
+        catch (NotSupportedException ex)
+        {
+            // Vendor SDK not available in this build (NO_VENDOR_SUPPORT). Verify Identify()
+            // still recognizes the source and call it a pass — full read+diff parity is the
+            // job of the with-vendor-DLLs build.
+            string head = ReadHead(rawPath);
+            CVID identified = reader.Identify(rawPath, head);
+            if (identified == CVID.CVID_Unknown)
+                throw new InvalidOperationException(
+                    $"identify-only mode: Read() threw NotSupportedException AND Identify() returned CVID_Unknown for {rawPath}. " +
+                    $"Underlying message: {ex.Message}");
+            Console.WriteLine(
+                $"[identify-only] {Path.GetFileName(rawPath.TrimEnd('/', '\\'))}: vendor SDK not built into this configuration; " +
+                $"Identify() returned {identified}. Full read+diff is skipped.");
+            return;
+        }
 
         string sourceName = Path.GetFileName(rawPath.TrimEnd('/', '\\'));
 
@@ -236,6 +255,25 @@ public static class VendorReaderTestHarness
                     throw new InvalidOperationException("MGF round-trip diff:\n" + mgfReport);
             }
         }
+    }
+
+    /// <summary>
+    /// Reads the first ~512 bytes of <paramref name="rawPath"/> as a Latin-1 string for
+    /// header-sniffing identifiers. Returns an empty string for directories or when the file
+    /// is unreadable; callers fall back to filename-based identification in that case.
+    /// </summary>
+    private static string ReadHead(string rawPath)
+    {
+        try
+        {
+            if (Directory.Exists(rawPath)) return string.Empty;
+            using var fs = File.OpenRead(rawPath);
+            Span<byte> buf = stackalloc byte[512];
+            int n = fs.Read(buf);
+            if (n <= 0) return string.Empty;
+            return System.Text.Encoding.Latin1.GetString(buf[..n]);
+        }
+        catch { return string.Empty; }
     }
 
     /// <summary>

@@ -22,7 +22,15 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the native DLL Content entries below are dropped. NO_VENDOR_SUPPORT compiles
+       Reader_Bruker without the P/Invoke surface so Read() throws but Identify() still works. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
   <Target Name="ExtractBrukerAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(BrukerArchive)"
           Outputs="$(BrukerAssembliesDir)\timsdata.dll;$(BrukerAssembliesDir)\baf2sql_c.dll">
@@ -39,7 +47,7 @@
     Copy the native DLLs into the build output directory so DllImport can find them at runtime.
     Content files keep them out of the managed assembly metadata.
     -->
-  <ItemGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <Content Include="$(BrukerAssembliesDir)\timsdata.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>timsdata.dll</Link>

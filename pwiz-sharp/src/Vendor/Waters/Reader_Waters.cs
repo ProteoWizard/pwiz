@@ -51,6 +51,10 @@ public sealed class Reader_Waters : IReader
         ArgumentNullException.ThrowIfNull(filename);
         ArgumentNullException.ThrowIfNull(result);
 
+#if NO_VENDOR_SUPPORT
+        throw new NotSupportedException(
+            "Waters .raw reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
+#else
         int preferOnlyMsLevel = config?.PreferOnlyMsLevel ?? 0;
         bool srmAsSpectra = false; // Phase 1 doesn't expose this through ReaderConfig.
         bool ddaProcessing = config?.DdaProcessing ?? false;
@@ -88,6 +92,7 @@ public sealed class Reader_Waters : IReader
             data.Dispose();
             throw;
         }
+#endif
     }
 
     private static void ReadImpl(MSData result, WatersRawFile data, string analysisDir,

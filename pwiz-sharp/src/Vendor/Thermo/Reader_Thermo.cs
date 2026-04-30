@@ -63,6 +63,10 @@ public sealed class Reader_Thermo : IReader
         ArgumentNullException.ThrowIfNull(filename);
         ArgumentNullException.ThrowIfNull(result);
 
+#if NO_VENDOR_SUPPORT
+        throw new NotSupportedException(
+            "Thermo .raw reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
+#else
         result.CVs.AddRange(MSData.DefaultCVList);
         result.Id = Path.GetFileNameWithoutExtension(filename);
 
@@ -145,8 +149,10 @@ public sealed class Reader_Thermo : IReader
             result.FileDescription.FileContent.Set(CVID.MS_selected_ion_monitoring_chromatogram);
         if (chromList.HasSrmChromatograms)
             result.FileDescription.FileContent.Set(CVID.MS_selected_reaction_monitoring_chromatogram);
+#endif
     }
 
+#if !NO_VENDOR_SUPPORT
     private static Software GetOrAddPwizSoftware(MSData msd)
     {
         foreach (var s in msd.Software)
@@ -306,6 +312,7 @@ public sealed class Reader_Thermo : IReader
         }
         catch { return string.Empty; }
     }
+#endif
 
     internal static bool HasThermoHeader(string head)
     {

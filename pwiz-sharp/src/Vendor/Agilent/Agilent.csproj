@@ -23,7 +23,21 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Agilent
+       compile without the SDK and throw from Read() while keeping Identify() working. The
+       SDK-only files (AgilentRawData / SpectrumList_Agilent) reference Agilent.MassSpectrometry.*
+       directly, so they must be excluded from compilation in that mode. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="AgilentRawData.cs" />
+    <Compile Remove="SpectrumList_Agilent.cs" />
+  </ItemGroup>
+
   <Target Name="ExtractAgilentAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(AgilentArchive)"
           Outputs="$(AgilentAssembliesDir)\MassSpecDataReader.dll;$(AgilentAssembliesDir)\BaseDataAccess.dll;$(AgilentAssembliesDir)\MIDAC.dll">
@@ -39,7 +53,7 @@
 
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
        plain .NET assemblies, not COM interop wrappers. -->
-  <ItemGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <Reference Include="MassSpecDataReader">
       <HintPath>$(AgilentAssembliesDir)\MassSpecDataReader.dll</HintPath>
       <Private>true</Private>
@@ -69,7 +83,7 @@
   <!-- Native runtime DLLs (agtsampleinforw.dll plus the .config) need to land in the build
        output. The managed Reference items above already copy the .NET assemblies because
        Private=true. -->
-  <ItemGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <Content Include="$(AgilentAssembliesDir)\agtsampleinforw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>agtsampleinforw.dll</Link>

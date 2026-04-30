@@ -21,4 +21,13 @@
     <Authors>ProteoWizard Contributors</Authors>
   </PropertyGroup>
 
+  <!-- Tag the assembly version like cpp's generate-version.jam: "(automated build)" for CI
+       runs with the automated flag, "(developer build)" for local builds. build.bat sets
+       AutomatedBuild=true when its automated flag is passed. -->
+  <PropertyGroup>
+    <_BuildKindSuffix Condition="'$(AutomatedBuild)' == 'true'">automated build</_BuildKindSuffix>
+    <_BuildKindSuffix Condition="'$(AutomatedBuild)' != 'true'">developer build</_BuildKindSuffix>
+    <InformationalVersion Condition="'$(InformationalVersion)' == ''">0.1.0 ($(_BuildKindSuffix))</InformationalVersion>
+  </PropertyGroup>
+
 </Project>

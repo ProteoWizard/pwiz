@@ -25,8 +25,11 @@ public sealed class Converter
         ArgumentNullException.ThrowIfNull(config);
         _config = config;
         _log = log ?? TextWriter.Null;
-        // Include Thermo + Bruker + Waters alongside the built-in mzML/MGF readers so vendor
-        // files auto-detect by extension/identity.
+        // Include Thermo + Bruker + Waters + Agilent + Sciex alongside the built-in mzML/MGF
+        // readers so vendor files auto-detect by extension/identity. Vendor projects always
+        // build, so Reader.Identify() works in every configuration. When the build was made
+        // without --i-agree-to-the-vendor-licenses, the encrypted vendor SDKs aren't extracted
+        // and Reader.Read() throws a clear "vendor support not enabled" error.
         _readers = ThermoReaderRegistration.CreateDefaultWithThermo();
         var brukerReader = new Reader_Bruker { CombineIonMobilitySpectra = _config.CombineIonMobilitySpectra };
         _readers.Add(brukerReader);
