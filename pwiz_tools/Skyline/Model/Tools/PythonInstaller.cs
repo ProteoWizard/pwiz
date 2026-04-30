@@ -573,14 +573,16 @@ namespace pwiz.Skyline.Model.Tools
             return cmdString;
         }
 
-        // Tees process output to Writer + a capture buffer so that on non-zero exit the
-        // captured stderr/stdout is included in the thrown exception. Without this, failures
-        // surface only as "Failed to execute command: [...]" with no diagnostic detail.
+        // Tees process output to Writer + a bounded tail buffer so that on non-zero exit the
+        // captured stderr/stdout is included in the thrown exception. Bounded because pip
+        // installs can produce megabytes of output; we only need the recent tail for diagnostics.
+        private const int MAX_CAPTURED_PROCESS_OUTPUT_CHARS = 32 * 1024;
+
         internal static void RunProcessOrThrow(ISkylineProcessRunnerWrapper runner, string cmd,
             string cmdLineForError, bool runAsAdministrator, bool createNoWindow,
             CancellationToken cancellationToken)
         {
-            var capture = new StringWriter();
+            var capture = new RollingTextWriter(MAX_CAPTURED_PROCESS_OUTPUT_CHARS);
             var tee = new TeeTextWriter(Writer, capture);
             if (runner.RunProcess(cmd, runAsAdministrator, tee, createNoWindow, cancellationToken) == 0)
                 return;
@@ -591,6 +593,45 @@ namespace pwiz.Skyline.Model.Tools
                 : string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0____Output____1__,
                     cmdLineForError, captured);
             throw new ToolExecutionException(message);
+        }
+
+        /// <summary>
+        /// TextWriter that retains only the last N characters written to it, dropping older
+        /// content to stay within the cap. Used to capture a bounded tail of process output
+        /// for failure diagnostics without growing unboundedly when the process succeeds (pip
+        /// installs in particular can stream megabytes of progress output that we never need).
+        /// </summary>
+        private sealed class RollingTextWriter : TextWriter
+        {
+            private readonly int _maxChars;
+            private readonly StringBuilder _buffer = new StringBuilder();
+
+            public RollingTextWriter(int maxChars) { _maxChars = maxChars; }
+
+            public override Encoding Encoding => Encoding.UTF8;
+
+            public override void Write(char value)
+            {
+                _buffer.Append(value);
+                TrimToMax();
+            }
+
+            public override void Write(string value)
+            {
+                if (string.IsNullOrEmpty(value))
+                    return;
+                _buffer.Append(value);
+                TrimToMax();
+            }
+
+            public override string ToString() => _buffer.ToString();
+
+            private void TrimToMax()
+            {
+                var excess = _buffer.Length - _maxChars;
+                if (excess > 0)
+                    _buffer.Remove(0, excess);
+            }
         }
 
         public void CleanUpPythonEnvironment(string name)

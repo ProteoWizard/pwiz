@@ -265,6 +265,12 @@
   <data name="PythonInstaller_Failed_to_execute_command____0__" xml:space="preserve">
     <value>コマンドを実行できませんでした： [{0}]</value>
   </data>
+  <data name="PythonInstaller_Failed_to_execute_command____0____Output____1__" xml:space="preserve">
+    <value>コマンドを実行できませんでした： [{0}]
+
+出力：
+{1}</value>
+  </data>
   <data name="PythonInstaller__0__Running_command____1____2__" xml:space="preserve">
     <value>{0} コマンドを実行中： [{1}] {2} </value>
   </data>
