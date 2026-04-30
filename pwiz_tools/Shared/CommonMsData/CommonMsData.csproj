@@ -204,32 +204,6 @@
     <PackageReference Include="Microsoft.Extensions.Http">
       <Version>9.0.4</Version>
     </PackageReference>
-    <!-- The polyfill/JSON/IO packages below are pinned to the versions
-         Parquet.Net 5.5.0 was compiled against. Without these pins
-         CommonMsData's NuGet restore drops older transitive copies into
-         its bin/, which then clobber the newer Lib/ copies during the
-         project-reference Copy Local into Skyline/bin/. -->
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
-      <Version>10.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream">
-      <Version>3.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="System.Buffers">
-      <Version>4.6.1</Version>
-    </PackageReference>
-    <PackageReference Include="System.Memory">
-      <Version>4.6.3</Version>
-    </PackageReference>
-    <PackageReference Include="System.Numerics.Vectors">
-      <Version>4.6.1</Version>
-    </PackageReference>
-    <PackageReference Include="System.Text.Encodings.Web">
-      <Version>10.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="System.Text.Json">
-      <Version>10.0.1</Version>
-    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

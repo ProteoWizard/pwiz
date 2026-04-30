@@ -81,7 +81,6 @@ Clearcore2.Utility.dll (included automatically from ProteoWizard; DO NOT ADD TO 
 Clearcore2.XmlHelpers.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 CLFIO32.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 CRHAKEI2.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
-CommunityToolkit.HighPerformance.dll
 Dapper.dll
 de\ZedGraph.resources.dll
 DigitalRune.Windows.Docking.dll
@@ -114,7 +113,8 @@ ja\pwiz.CommonUtil.resources.dll
 ja\SkylineCmd.resources.dll
 ja\Skyline-daily.resources.dll
 ja\ZedGraph.resources.dll
-K4os.Compression.LZ4.dll
+IronCompress.dll
+nironcompress.dll
 Kajabity Tools.dll
 log4net.dll
 MassCalcWrapObject.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
@@ -203,7 +203,6 @@ Method\Waters\BuildWatersMethod.exe
 Method\Waters\VerifyESkylineLibrary.dll
 MethodConverter.dll
 MethodWriter.dll
-Microsoft.Bcl.HashCode.dll
 Microsoft.ConcurrencyVisualizer.Markers.dll
 Microsoft.IO.RecyclableMemoryStream.dll
 Microsoft.Practices.ServiceLocation.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
@@ -280,8 +279,8 @@ SkylineTool.pdb
 sv\ZedGraph.resources.dll
 System.Data.SQLite.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 System.Interactive.Async.dll
-System.IO.Pipelines.dll
 System.Memory.dll
+System.Reflection.Emit.Lightweight.dll
 System.Runtime.Caching.Generic.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 System.Runtime.CompilerServices.Unsafe.dll
 System.Text.Encodings.Web.dll

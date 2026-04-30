@@ -258,23 +258,20 @@
       <Component Id="ParquetNet.dll">
         <File Source="$(var.Skyline.TargetDir)/ParquetNet.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="CommunityToolkit.HighPerformance.dll">
-        <File Source="$(var.Skyline.TargetDir)/CommunityToolkit.HighPerformance.dll" KeyPath="yes"/>
+      <Component Id="IronCompress.dll">
+        <File Source="$(var.Skyline.TargetDir)/IronCompress.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="K4os.Compression.LZ4.dll">
-        <File Source="$(var.Skyline.TargetDir)/K4os.Compression.LZ4.dll" KeyPath="yes"/>
+      <Component Id="nironcompress.dll">
+        <File Source="$(var.Skyline.TargetDir)/nironcompress.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="Microsoft.Bcl.HashCode.dll">
-        <File Source="$(var.Skyline.TargetDir)/Microsoft.Bcl.HashCode.dll" KeyPath="yes"/>
+      <Component Id="System.Reflection.Emit.Lightweight.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Reflection.Emit.Lightweight.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Microsoft.IO.RecyclableMemoryStream.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.IO.RecyclableMemoryStream.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Snappier.dll">
         <File Source="$(var.Skyline.TargetDir)/Snappier.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="System.IO.Pipelines.dll">
-        <File Source="$(var.Skyline.TargetDir)/System.IO.Pipelines.dll" KeyPath="yes"/>
       </Component>
       <Component Id="System.Text.Encodings.Web.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Text.Encodings.Web.dll" KeyPath="yes"/>
