@@ -484,8 +484,7 @@ namespace pwiz.Skyline.Model.Tools
 
             var cancelToken = broker.GetSafeCancellationToken();
 
-            if (processRunner.RunProcess(cmd, true, Writer, false, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
+            RunProcessOrThrow(processRunner, cmd, cmdLine, true, false, cancelToken);
         }
 
         internal void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages, ILongWaitBroker broker = null)
@@ -524,11 +523,7 @@ namespace pwiz.Skyline.Model.Tools
 
                     var cancelToken = broker.GetSafeCancellationToken();
 
-                    if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
-                    {
-                        throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__,
-                            cmdLine));
-                    }
+                    RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken);
 
                     if (cancelToken.IsCancellationRequested)
                         break;
@@ -559,9 +554,8 @@ namespace pwiz.Skyline.Model.Tools
 
             var cancelToken = broker.GetSafeCancellationToken();
 
-            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
-            
+            RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken);
+
             PythonInstallerUtil.SignDirectory(PythonEmbeddablePackageExtractDir);
         }
 
@@ -573,6 +567,26 @@ namespace pwiz.Skyline.Model.Tools
                 cmdString = cmdString.Replace(specialChar, CMD_ESCAPE_SYMBOL + specialChar);
             }
             return cmdString;
+        }
+
+        // Tees process output to Writer + a capture buffer so that on non-zero exit the
+        // captured stderr/stdout is included in the thrown exception. Without this, failures
+        // surface only as "Failed to execute command: [...]" with no diagnostic detail.
+        internal static void RunProcessOrThrow(ISkylineProcessRunnerWrapper runner, string cmd,
+            string cmdLineForError, bool runAsAdministrator, bool createNoWindow,
+            CancellationToken cancellationToken)
+        {
+            var capture = new StringWriter();
+            var tee = new TeeTextWriter(Writer, capture);
+            if (runner.RunProcess(cmd, runAsAdministrator, tee, createNoWindow, cancellationToken) == 0)
+                return;
+
+            var captured = capture.ToString().Trim();
+            var message = string.IsNullOrEmpty(captured)
+                ? string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLineForError)
+                : string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0____Output____1__,
+                    cmdLineForError, captured);
+            throw new ToolExecutionException(message);
         }
 
         public void CleanUpPythonEnvironment(string name)
@@ -1082,11 +1096,10 @@ namespace pwiz.Skyline.Model.Tools
             cmd += cmdLine;
             
             var pipedProcessRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            
+
             var cancelToken = broker.GetSafeCancellationToken();
 
-            if (pipedProcessRunner.RunProcess(cmd, false, PythonInstaller.Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
+            PythonInstaller.RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken);
 
             var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
             PythonInstallerUtil.SignFile(filePath);
@@ -1252,8 +1265,7 @@ namespace pwiz.Skyline.Model.Tools
 
             var cancelToken = broker.GetSafeCancellationToken();
 
-            if (pipedProcessRunner.RunProcess(cmd, true, PythonInstaller.Writer, false, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+            PythonInstaller.RunProcessOrThrow(pipedProcessRunner, cmd, cmdBuilder.ToString(), true, false, cancelToken);
         }
 
         public override bool IsRequiredForPythonEnvironment => false;
