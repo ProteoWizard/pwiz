@@ -265,12 +265,6 @@
   <data name="PythonInstaller_Failed_to_execute_command____0__" xml:space="preserve">
     <value>无法执行命令：[{0}]</value>
   </data>
-  <data name="PythonInstaller_Failed_to_execute_command____0____Output____1__" xml:space="preserve">
-    <value>无法执行命令：[{0}]
-
-输出：
-{1}</value>
-  </data>
   <data name="PythonInstaller__0__Running_command____1____2__" xml:space="preserve">
     <value>{0}运行命令：[{1}] {2} </value>
   </data>
