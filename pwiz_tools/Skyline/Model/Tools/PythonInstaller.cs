@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Tools
     public class PythonInstaller
     {
         private const string PYTHON = @"Python";
-        private const string BOOTSTRAP_PYPA_URL = @"https://bootstrap.pypa.io/";
+        private const string BOOTSTRAP_PYPA_URL = @"https://bootstrap.pypa.io/pip/";
         private const string CD = @"cd";
         private const string CMD_ESCAPE_SYMBOL = TextUtil.CARET;
         internal const string CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND;
@@ -151,7 +151,18 @@ namespace pwiz.Skyline.Model.Tools
         public static Uri PythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + PythonVersion + FORWARD_SLASH + PythonEmbeddablePackageFileName);
         public static string PythonEmbeddablePackageDownloadPath => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileName);
         public static string PythonEmbeddablePackageExtractDir => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileBaseName);
-        public static Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + GET_PIP_SCRIPT_FILE_NAME);
+        // Use PyPA's version-pinned subpath (e.g. /pip/3.9/get-pip.py) rather than the unpinned
+        // /get-pip.py: the unpinned URL serves the latest pip, which drops support for retired
+        // Python versions. The version-pinned URL serves the last pip release for that Python.
+        public static Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + PythonMajorMinorVersion + FORWARD_SLASH + GET_PIP_SCRIPT_FILE_NAME);
+        private static string PythonMajorMinorVersion
+        {
+            get
+            {
+                var parts = PythonVersion.Split('.');
+                return parts.Length >= 2 ? parts[0] + @"." + parts[1] : PythonVersion;
+            }
+        }
         public static string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir, GET_PIP_SCRIPT_FILE_NAME);
         public static string BasePythonExecutablePath => Path.Combine(PythonEmbeddablePackageExtractDir, PYTHON_EXECUTABLE);
 
