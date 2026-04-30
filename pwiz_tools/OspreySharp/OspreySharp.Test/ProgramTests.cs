@@ -64,6 +64,8 @@ namespace pwiz.OspreySharp.Test
             };
             string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true);
             Assert.IsNotNull(err);
+            // Error refers to the canonical flag the user typed.
+            StringAssert.Contains(err, "--join-at-pass=1");
             StringAssert.Contains(err, "--input-scores");
         }
 
@@ -79,6 +81,7 @@ namespace pwiz.OspreySharp.Test
             };
             string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true);
             Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--join-at-pass=1");
             StringAssert.Contains(err, "cannot be combined with --input");
         }
 
@@ -91,6 +94,7 @@ namespace pwiz.OspreySharp.Test
             };
             string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true);
             Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--join-at-pass=1");
             StringAssert.Contains(err, "--library and --output");
         }
 

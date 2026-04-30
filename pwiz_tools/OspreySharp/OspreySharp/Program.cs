@@ -593,7 +593,7 @@ namespace pwiz.OspreySharp
 
             bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
             if (joinOnlyFlag && !hasInputScores)
-                return "--join-only requires --input-scores <path...>.";
+                return "--join-at-pass=1 requires --input-scores <path...>.";
 
             bool joinOnly = joinOnlyFlag || hasInputScores;
 
@@ -610,9 +610,9 @@ namespace pwiz.OspreySharp
             if (joinOnly)
             {
                 if (config.InputFiles.Count > 0)
-                    return "--join-only (--input-scores) cannot be combined with --input.";
+                    return "--join-at-pass=1 cannot be combined with --input. Use --input-scores instead.";
                 if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                    return "--join-only requires --library and --output.";
+                    return "--join-at-pass=1 requires --library and --output.";
                 return null;
             }
 
@@ -692,12 +692,20 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --report <file>               Write TSV report to file");
             Console.Error.WriteLine("    --no-prefilter                Disable coelution signal pre-filter");
             Console.Error.WriteLine("    --write-pin                   Write PIN files for external tools");
-            Console.Error.WriteLine("    --no-join                     HPC: run Stages 1-4 only, write per-file");
-            Console.Error.WriteLine("                                    .scores.parquet, no FDR or blib");
-            Console.Error.WriteLine("    --join-only                   HPC: skip Stages 1-4, run Stage 5+ from");
-            Console.Error.WriteLine("                                    --input-scores parquets");
+            Console.Error.WriteLine("    --join-at-pass=<N>            HPC: enter the pipeline at a join checkpoint.");
+            Console.Error.WriteLine("                                    1 = consume Stage 4 outputs, run Stages 5-8.");
+            Console.Error.WriteLine("                                    2 = consume Stage 6 outputs, run Stages 7-8.");
+            Console.Error.WriteLine("                                    Requires --input-scores; mutex with --input.");
+            Console.Error.WriteLine("    --no-join                     HPC modifier: run only the per-file fan-out from");
+            Console.Error.WriteLine("                                    the entry point. With -i, runs Stages 1-4 (per-file");
+            Console.Error.WriteLine("                                    .scores.parquet written next to each mzML, no FDR,");
+            Console.Error.WriteLine("                                    no blib). Mutex with --join-only.");
+            Console.Error.WriteLine("    --join-only                   HPC modifier: run only the join phase from the entry");
+            Console.Error.WriteLine("                                    point, stopping before the per-file fan-out that");
+            Console.Error.WriteLine("                                    follows. Requires --join-at-pass=<N>.");
             Console.Error.WriteLine("    --input-scores <paths>        HPC: one or more .scores.parquet files,");
-            Console.Error.WriteLine("                                    or a single directory (non-recursive scan)");
+            Console.Error.WriteLine("                                    or a single directory (non-recursive scan).");
+            Console.Error.WriteLine("                                    Required when --join-at-pass is set.");
             Console.Error.WriteLine("    -h, --help                    Show this help message");
             Console.Error.WriteLine("    -v, --version                 Show version");
             Console.Error.WriteLine("");
@@ -711,7 +719,7 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    osprey --no-join -i data/file_N.mzML -l ref.blib --resolution hram");
             Console.Error.WriteLine("");
             Console.Error.WriteLine("    # Merge node (after all workers succeed):");
-            Console.Error.WriteLine("    osprey --join-only --input-scores data/*.scores.parquet \\");
+            Console.Error.WriteLine("    osprey --join-at-pass=1 --input-scores data/*.scores.parquet \\");
             Console.Error.WriteLine("           -l ref.blib -o experiment.blib --protein-fdr 0.01");
         }
 
