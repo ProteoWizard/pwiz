@@ -1,0 +1,742 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>697, 527</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="btnBack.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnBack.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnBack.Location" type="System.Drawing.Point, System.Drawing">
+    <value>535, 527</value>
+  </data>
+  <data name="btnBack.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBack.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="btnBack.Text" xml:space="preserve">
+    <value>&lt; &amp;Back</value>
+  </data>
+  <data name="&gt;&gt;btnBack.Name" xml:space="preserve">
+    <value>btnBack</value>
+  </data>
+  <data name="&gt;&gt;btnBack.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBack.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="btnNext.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
+    <value>616, 527</value>
+  </data>
+  <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnNext.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnNext.Text" xml:space="preserve">
+    <value>&amp;Next &gt;</value>
+  </data>
+  <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
+    <value>btnNext</value>
+  </data>
+  <data name="&gt;&gt;btnNext.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="wizardPages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="wizardPages.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="wizardPages.Size" type="System.Drawing.Size, System.Drawing">
+    <value>784, 521</value>
+  </data>
+  <data name="wizardPages.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;wizardPages.Name" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="&gt;&gt;wizardPages.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;wizardPages.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="dataFilesPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="dataFilesPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="dataFilesPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="dataFilesPage.Text" xml:space="preserve">
+    <value>Data Files</value>
+  </data>
+  <data name="&gt;&gt;dataFilesPage.Name" xml:space="preserve">
+    <value>dataFilesPage</value>
+  </data>
+  <data name="&gt;&gt;dataFilesPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataFilesPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblDataFiles.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblDataFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblDataFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>299, 39</value>
+  </data>
+  <data name="lblDataFiles.Text" xml:space="preserve">
+    <value>Add DIA data files to analyze with DIA-NN.
+DIA-NN requires 2 or more files. MBR (match-between-runs) is always enabled.
+Supported formats: Thermo .raw, Bruker .d, Sciex .wiff, .mzML</value>
+  </data>
+  <data name="&gt;&gt;lblDataFiles.Name" xml:space="preserve">
+    <value>lblDataFiles</value>
+  </data>
+  <data name="&gt;&gt;lblDataFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblDataFiles.Parent" xml:space="preserve">
+    <value>dataFilesPage</value>
+  </data>
+  <data name="fastaPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="fastaPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="fastaPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="fastaPage.Text" xml:space="preserve">
+    <value>FASTA</value>
+  </data>
+  <data name="&gt;&gt;fastaPage.Name" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="&gt;&gt;fastaPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;fastaPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblFasta.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblFasta.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblFasta.Size" type="System.Drawing.Size, System.Drawing">
+    <value>289, 26</value>
+  </data>
+  <data name="lblFasta.Text" xml:space="preserve">
+    <value>Select a FASTA protein database for library-free search.
+DIA-NN will use deep learning to predict a spectral library.</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.Name" xml:space="preserve">
+    <value>lblFasta</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="modificationsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="modificationsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="modificationsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="modificationsPage.Text" xml:space="preserve">
+    <value>Modifications</value>
+  </data>
+  <data name="&gt;&gt;modificationsPage.Name" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="&gt;&gt;modificationsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;modificationsPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblModifications.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblModifications.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblModifications.Size" type="System.Drawing.Size, System.Drawing">
+    <value>350, 13</value>
+  </data>
+  <data name="lblModifications.Text" xml:space="preserve">
+    <value>Configure fixed and variable modifications for the DIA-NN search.</value>
+  </data>
+  <data name="&gt;&gt;lblModifications.Name" xml:space="preserve">
+    <value>lblModifications</value>
+  </data>
+  <data name="&gt;&gt;lblModifications.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblModifications.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="lblFixedMods.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblFixedMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 45</value>
+  </data>
+  <data name="lblFixedMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>105, 13</value>
+  </data>
+  <data name="lblFixedMods.Text" xml:space="preserve">
+    <value>Fixed Modifications:</value>
+  </data>
+  <data name="&gt;&gt;lblFixedMods.Name" xml:space="preserve">
+    <value>lblFixedMods</value>
+  </data>
+  <data name="&gt;&gt;lblFixedMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblFixedMods.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="listFixedMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 65</value>
+  </data>
+  <data name="listFixedMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>450, 130</value>
+  </data>
+  <data name="&gt;&gt;listFixedMods.Name" xml:space="preserve">
+    <value>listFixedMods</value>
+  </data>
+  <data name="&gt;&gt;listFixedMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listFixedMods.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="btnAddFixedMod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>470, 65</value>
+  </data>
+  <data name="btnAddFixedMod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAddFixedMod.Text" xml:space="preserve">
+    <value>Add...</value>
+  </data>
+  <data name="&gt;&gt;btnAddFixedMod.Name" xml:space="preserve">
+    <value>btnAddFixedMod</value>
+  </data>
+  <data name="&gt;&gt;btnAddFixedMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddFixedMod.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="btnRemoveFixedMod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>470, 94</value>
+  </data>
+  <data name="btnRemoveFixedMod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnRemoveFixedMod.Text" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveFixedMod.Name" xml:space="preserve">
+    <value>btnRemoveFixedMod</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveFixedMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveFixedMod.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="lblVariableMods.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblVariableMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 210</value>
+  </data>
+  <data name="lblVariableMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 13</value>
+  </data>
+  <data name="lblVariableMods.Text" xml:space="preserve">
+    <value>Variable Modifications:</value>
+  </data>
+  <data name="&gt;&gt;lblVariableMods.Name" xml:space="preserve">
+    <value>lblVariableMods</value>
+  </data>
+  <data name="&gt;&gt;lblVariableMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblVariableMods.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="listVariableMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 230</value>
+  </data>
+  <data name="listVariableMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>450, 130</value>
+  </data>
+  <data name="&gt;&gt;listVariableMods.Name" xml:space="preserve">
+    <value>listVariableMods</value>
+  </data>
+  <data name="&gt;&gt;listVariableMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listVariableMods.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="btnAddVariableMod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>470, 230</value>
+  </data>
+  <data name="btnAddVariableMod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAddVariableMod.Text" xml:space="preserve">
+    <value>Add...</value>
+  </data>
+  <data name="&gt;&gt;btnAddVariableMod.Name" xml:space="preserve">
+    <value>btnAddVariableMod</value>
+  </data>
+  <data name="&gt;&gt;btnAddVariableMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddVariableMod.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="btnRemoveVariableMod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>470, 259</value>
+  </data>
+  <data name="btnRemoveVariableMod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnRemoveVariableMod.Text" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveVariableMod.Name" xml:space="preserve">
+    <value>btnRemoveVariableMod</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveVariableMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveVariableMod.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="searchSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="searchSettingsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="searchSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="searchSettingsPage.Text" xml:space="preserve">
+    <value>Search Settings</value>
+  </data>
+  <data name="&gt;&gt;searchSettingsPage.Name" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;searchSettingsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;searchSettingsPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblSearchSettings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSearchSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblSearchSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>276, 13</value>
+  </data>
+  <data name="lblSearchSettings.Text" xml:space="preserve">
+    <value>Configure DIA-NN search parameters. Set 0 for auto-detect.</value>
+  </data>
+  <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
+    <value>lblSearchSettings</value>
+  </data>
+  <data name="&gt;&gt;lblSearchSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSearchSettings.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="lblMs1Tolerance.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMs1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 50</value>
+  </data>
+  <data name="lblMs1Tolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 13</value>
+  </data>
+  <data name="lblMs1Tolerance.Text" xml:space="preserve">
+    <value>MS1 accuracy (ppm):</value>
+  </data>
+  <data name="&gt;&gt;lblMs1Tolerance.Name" xml:space="preserve">
+    <value>lblMs1Tolerance</value>
+  </data>
+  <data name="&gt;&gt;lblMs1Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMs1Tolerance.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="numMs1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>200, 48</value>
+  </data>
+  <data name="numMs1Tolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="&gt;&gt;numMs1Tolerance.Name" xml:space="preserve">
+    <value>numMs1Tolerance</value>
+  </data>
+  <data name="&gt;&gt;numMs1Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;numMs1Tolerance.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="lblMs2Tolerance.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMs2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 80</value>
+  </data>
+  <data name="lblMs2Tolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>127, 13</value>
+  </data>
+  <data name="lblMs2Tolerance.Text" xml:space="preserve">
+    <value>MS/MS accuracy (ppm):</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Tolerance.Name" xml:space="preserve">
+    <value>lblMs2Tolerance</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Tolerance.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="numMs2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>200, 78</value>
+  </data>
+  <data name="numMs2Tolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="&gt;&gt;numMs2Tolerance.Name" xml:space="preserve">
+    <value>numMs2Tolerance</value>
+  </data>
+  <data name="&gt;&gt;numMs2Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;numMs2Tolerance.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="lblQValue.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblQValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 110</value>
+  </data>
+  <data name="lblQValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>85, 13</value>
+  </data>
+  <data name="lblQValue.Text" xml:space="preserve">
+    <value>FDR threshold:</value>
+  </data>
+  <data name="&gt;&gt;lblQValue.Name" xml:space="preserve">
+    <value>lblQValue</value>
+  </data>
+  <data name="&gt;&gt;lblQValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblQValue.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="txtQValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>200, 108</value>
+  </data>
+  <data name="txtQValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="txtQValue.Text" xml:space="preserve">
+    <value>0.01</value>
+  </data>
+  <data name="&gt;&gt;txtQValue.Name" xml:space="preserve">
+    <value>txtQValue</value>
+  </data>
+  <data name="&gt;&gt;txtQValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtQValue.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="lblThreads.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblThreads.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 140</value>
+  </data>
+  <data name="lblThreads.Size" type="System.Drawing.Size, System.Drawing">
+    <value>49, 13</value>
+  </data>
+  <data name="lblThreads.Text" xml:space="preserve">
+    <value>Threads:</value>
+  </data>
+  <data name="&gt;&gt;lblThreads.Name" xml:space="preserve">
+    <value>lblThreads</value>
+  </data>
+  <data name="&gt;&gt;lblThreads.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblThreads.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="numThreads.Location" type="System.Drawing.Point, System.Drawing">
+    <value>200, 138</value>
+  </data>
+  <data name="numThreads.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="&gt;&gt;numThreads.Name" xml:space="preserve">
+    <value>numThreads</value>
+  </data>
+  <data name="&gt;&gt;numThreads.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;numThreads.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="lblMissedCleavages.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 170</value>
+  </data>
+  <data name="lblMissedCleavages.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 13</value>
+  </data>
+  <data name="lblMissedCleavages.Text" xml:space="preserve">
+    <value>Missed cleavages:</value>
+  </data>
+  <data name="&gt;&gt;lblMissedCleavages.Name" xml:space="preserve">
+    <value>lblMissedCleavages</value>
+  </data>
+  <data name="&gt;&gt;lblMissedCleavages.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMissedCleavages.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="numMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
+    <value>200, 168</value>
+  </data>
+  <data name="numMissedCleavages.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="&gt;&gt;numMissedCleavages.Name" xml:space="preserve">
+    <value>numMissedCleavages</value>
+  </data>
+  <data name="&gt;&gt;numMissedCleavages.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;numMissedCleavages.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="cbMetExcision.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbMetExcision.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 200</value>
+  </data>
+  <data name="cbMetExcision.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 17</value>
+  </data>
+  <data name="cbMetExcision.Text" xml:space="preserve">
+    <value>N-term methionine excision</value>
+  </data>
+  <data name="&gt;&gt;cbMetExcision.Name" xml:space="preserve">
+    <value>cbMetExcision</value>
+  </data>
+  <data name="&gt;&gt;cbMetExcision.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbMetExcision.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="btnAdditionalSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 250</value>
+  </data>
+  <data name="btnAdditionalSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 23</value>
+  </data>
+  <data name="btnAdditionalSettings.Text" xml:space="preserve">
+    <value>A&amp;dditional Settings</value>
+  </data>
+  <data name="btnAdditionalSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="&gt;&gt;btnAdditionalSettings.Name" xml:space="preserve">
+    <value>btnAdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;btnAdditionalSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAdditionalSettings.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="runSearchPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="runSearchPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="runSearchPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="runSearchPage.Text" xml:space="preserve">
+    <value>Run Search</value>
+  </data>
+  <data name="&gt;&gt;runSearchPage.Name" xml:space="preserve">
+    <value>runSearchPage</value>
+  </data>
+  <data name="&gt;&gt;runSearchPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;runSearchPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>784, 561</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>DIA-NN Search</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>DiannSearchDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>
