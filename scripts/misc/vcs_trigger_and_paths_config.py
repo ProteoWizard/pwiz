@@ -22,6 +22,11 @@ targets['CoreWindowsRelease'] = \
 targets['CoreWindows'] = targets['CoreWindowsRelease']
 targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
 
+# pwiz-sharp is the .NET 8 C# port; the corresponding TeamCity build runs `pwiz-sharp/build.bat`
+# (dotnet restore + build + test). Independent from the cpp build configs above — only files
+# under pwiz-sharp/ should trigger it.
+targets['CoreWindowsNet'] = {'master': {"ProteoWizard_CoreWindowsNet": "Core Windows .NET"}}
+
 targets['SkylineRelease'] = \
 {
     'master':
@@ -95,6 +100,10 @@ targets['Linux'] = merge(targets['CoreLinux'], targets['BumbershootLinux'])
 matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     (".*/ai/.*", {}),
+    # pwiz-sharp: standalone .NET 8 port. Builds run via `pwiz-sharp/build.bat`. Match this
+    # before the generic libraries/scripts/.bat patterns below so changes under pwiz-sharp/
+    # don't trigger the cpp Core/Skyline/Bumbershoot/Container chain.
+    ("pwiz-sharp/.*", targets['CoreWindowsNet']),
     ("libraries/.*", targets['All']),
     ("pwiz/.*", targets['All']),
     ("pwiz_aux/.*", targets['All']),
