@@ -3016,6 +3016,12 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
+        public void SetAreaGraphMultiPeptideDisplay(MultiPeptideDisplay display)
+        {
+            AreaGraphController.AreaGraphMultiPeptideDisplay = display;
+            UpdatePeakAreaGraph();
+        }
+
         public void SynchronizeSummaryZooming(GraphSummary graphSummary = null, ZoomState zoomState = null)
         {
             var activeGraphSummary = graphSummary ?? dockPanel.ActiveContent as GraphSummary;

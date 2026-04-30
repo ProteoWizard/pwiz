@@ -244,6 +244,15 @@
   <data name="AreaReplicateGraphPane_UpdateGraph_Step__0_" xml:space="preserve">
     <value>Step {0}</value>
   </data>
+  <data name="AreaReplicateGraphPane_UpdateGraph_Aggregated_Abundance" xml:space="preserve">
+    <value>Aggregated Abundance</value>
+  </data>
+  <data name="AreaReplicateGraphPane_YAxis_Protein_Abundance" xml:space="preserve">
+    <value>Protein Abundance</value>
+  </data>
+  <data name="AreaReplicateGraphPane_YAxis_Protein_Abundance_From__0__Peptides" xml:space="preserve">
+    <value>Protein Abundance From {0} Peptides</value>
+  </data>
   <data name="AreaReplicateGraphPane_Tooltip_Total" xml:space="preserve">
     <value>Total:</value>
   </data>

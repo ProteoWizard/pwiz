@@ -55,10 +55,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static IList<SummarizationMethod> ListSummarizationMethods()
         {
-            return new[]
-            {
-                AVERAGING, MEDIANPOLISH, LEGACY_MEDIANPOLISH
-            };
+            return new[] { AVERAGING, MEDIANPOLISH };
         }
 
         public static IList<SummarizationMethod> ListGroupComparisonMethods()

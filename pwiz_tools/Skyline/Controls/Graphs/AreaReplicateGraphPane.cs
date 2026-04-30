@@ -543,7 +543,17 @@ namespace pwiz.Skyline.Controls.Graphs
             int iColor = 0;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             ToolTip.TargetCurves.Clear();
-            for (int i = 0; i < countNodes; i++)
+
+            bool aggregateProteinDisplay = IsMultiSelect &&
+                                           AreaGraphController.AreaGraphMultiPeptideDisplay ==
+                                           MultiPeptideDisplay.Aggregate;
+            if (aggregateProteinDisplay)
+            {
+                AddAggregateProteinCurve(document, peptidePaths, normalizedValueCalculator,
+                    graphData, graphType, replicateGroupOp, selectedReplicateIndex,
+                    sumAreas, ref maxArea, ref sumArea);
+            }
+            for (int i = 0; !aggregateProteinDisplay && i < countNodes; i++)
             {
                 var docNode = graphData.DocNodes[i];
                 identityPath = graphData.DocNodePaths[i];
@@ -611,9 +621,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
                         ToolTip.TargetCurves.Add(curveItem);
                     }
-                    else 
+                    else
                     {
-                        if (IsMultiSelect)
+                        if (IsMultiSelect && AreaGraphController.AreaGraphMultiPeptideDisplay == MultiPeptideDisplay.Line)
                         {
                             curveItem = CreateLineItem(label, pointPairList, color);
                         }
@@ -694,11 +704,94 @@ namespace pwiz.Skyline.Controls.Graphs
             AddDotProductLine(graphData);
 
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
+            if (aggregateProteinDisplay)
+            {
+                YAxis.Title.Text = aggregateOp.AnnotateTitle(GetAggregateProteinYAxisTitle(document, peptidePaths));
+            }
             // Draw a box around the currently selected replicate
             if (ShowSelection && maxArea > -double.MaxValue)
             {
                 AddSelection(normalizeOption, selectedReplicateIndex, sumArea, maxArea);
             }
+        }
+
+        private static string GetAggregateProteinYAxisTitle(SrmDocument document, IList<IdentityPath> peptidePaths)
+        {
+            var groupings = peptidePaths
+                .GroupBy(path => path.GetPathTo((int) SrmDocument.Level.MoleculeGroups))
+                .ToList();
+            if (groupings.Count == 1 &&
+                document.FindNode(groupings[0].Key) is PeptideGroupDocNode peptideGroup &&
+                peptideGroup.MoleculeCount == groupings[0].Count())
+            {
+                return GraphsResources.AreaReplicateGraphPane_YAxis_Protein_Abundance;
+            }
+
+            return string.Format(
+                GraphsResources.AreaReplicateGraphPane_YAxis_Protein_Abundance_From__0__Peptides,
+                peptidePaths.Count);
+        }
+
+        private void AddAggregateProteinCurve(SrmDocument document, IList<IdentityPath> peptidePaths,
+            NormalizedValueCalculator normalizedValueCalculator, AreaGraphData graphData,
+            AreaGraphDisplayType graphType, ReplicateGroupOp replicateGroupOp, int selectedReplicateIndex,
+            double[] sumAreas, ref double maxArea, ref double sumArea)
+        {
+            var peptideQuantifiers = new List<PeptideQuantifier>();
+            foreach (var path in peptidePaths)
+            {
+                var nodeArray = document.ToNodeArray(path);
+                if (nodeArray.Length < 2)
+                    continue;
+                if (!(nodeArray[0] is PeptideGroupDocNode peptideGroup) ||
+                    !(nodeArray[1] is PeptideDocNode peptideDocNode))
+                    continue;
+                peptideQuantifiers.Add(PeptideQuantifier.GetPeptideQuantifier(
+                    normalizedValueCalculator.LazyNormalizationData, document.Settings,
+                    peptideGroup.PeptideGroup, peptideDocNode));
+            }
+            if (peptideQuantifiers.Count == 0)
+                return;
+
+            var proteinQuantifier = new ProteinQuantifier(document.Settings, peptideQuantifiers);
+            var abundances = proteinQuantifier.CalculateProteinAbundances();
+
+            var pointPairList = new PointPairList();
+            for (int iGroup = 0; iGroup < graphData.ReplicateGroups.Count; iGroup++)
+            {
+                var values = graphData.ReplicateGroups[iGroup].ReplicateIndexes
+                    .Where(abundances.ContainsKey)
+                    .Select(idx => abundances[idx].Raw);
+                pointPairList.Add(replicateGroupOp.AggregateOp.MakeBarValue(iGroup, values));
+            }
+
+            var label = GraphsResources.AreaReplicateGraphPane_UpdateGraph_Aggregated_Abundance;
+            var color = ColorScheme.ChromGraphItemSelected;
+            CurveItem curveItem;
+            if (graphType == AreaGraphDisplayType.lines)
+            {
+                curveItem = CreateLineItem(label, pointPairList, color);
+            }
+            else
+            {
+                var barItem = new BarItem(label, pointPairList, color);
+                barItem.Bar.Border.IsVisible = false;
+                curveItem = barItem;
+                ToolTip.TargetCurves.Add(curveItem);
+            }
+            CurveList.Add(curveItem);
+
+            if (0 <= selectedReplicateIndex && selectedReplicateIndex < pointPairList.Count)
+            {
+                var pointPair = pointPairList[selectedReplicateIndex];
+                if (!pointPair.IsInvalid)
+                {
+                    sumArea += pointPair.Y;
+                    maxArea = Math.Max(maxArea, pointPair.Y);
+                }
+            }
+
+            AddAreasToSums(pointPairList, sumAreas, Math.Max);
         }
 
         private void AddDotProductLine(AreaGraphData graphData)

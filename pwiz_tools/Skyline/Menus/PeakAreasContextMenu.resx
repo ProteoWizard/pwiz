@@ -187,6 +187,30 @@
   <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
     <value>Graph Type</value>
   </data>
+  <data name="multiPeptideDisplayMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="multiPeptideDisplayMenuItem.Text" xml:space="preserve">
+    <value>Multi-Peptide Display</value>
+  </data>
+  <data name="lineMultiPeptideDisplayMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="lineMultiPeptideDisplayMenuItem.Text" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="clusterMultiPeptideDisplayMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="clusterMultiPeptideDisplayMenuItem.Text" xml:space="preserve">
+    <value>Cluster</value>
+  </data>
+  <data name="aggregateMultiPeptideDisplayMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="aggregateMultiPeptideDisplayMenuItem.Text" xml:space="preserve">
+    <value>Aggregate</value>
+  </data>
   <data name="areaNormalizeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
@@ -446,6 +470,30 @@
     <value>lineAreaGraphDisplayTypeMenuItem</value>
   </data>
   <data name="&gt;&gt;lineAreaGraphDisplayTypeMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;multiPeptideDisplayMenuItem.Name" xml:space="preserve">
+    <value>multiPeptideDisplayMenuItem</value>
+  </data>
+  <data name="&gt;&gt;multiPeptideDisplayMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lineMultiPeptideDisplayMenuItem.Name" xml:space="preserve">
+    <value>lineMultiPeptideDisplayMenuItem</value>
+  </data>
+  <data name="&gt;&gt;lineMultiPeptideDisplayMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;clusterMultiPeptideDisplayMenuItem.Name" xml:space="preserve">
+    <value>clusterMultiPeptideDisplayMenuItem</value>
+  </data>
+  <data name="&gt;&gt;clusterMultiPeptideDisplayMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;aggregateMultiPeptideDisplayMenuItem.Name" xml:space="preserve">
+    <value>aggregateMultiPeptideDisplayMenuItem</value>
+  </data>
+  <data name="&gt;&gt;aggregateMultiPeptideDisplayMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;areaNormalizeContextMenuItem.Name" xml:space="preserve">

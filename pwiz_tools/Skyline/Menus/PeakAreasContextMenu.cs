@@ -51,6 +51,8 @@ namespace pwiz.Skyline.Menus
             if (graphType == GraphTypeSummary.replicate)
             {
                 menuStrip.Items.Insert(iInsert++, graphTypeToolStripMenuItem);
+                UpdateMultiPeptideDisplayMenuItemCheckedState();
+                menuStrip.Items.Insert(iInsert++, multiPeptideDisplayMenuItem);
             }
 
             menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
@@ -440,6 +442,23 @@ namespace pwiz.Skyline.Menus
 
         private void lineAreaGraphTypeMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.SetAreaGraphDisplayType(AreaGraphDisplayType.lines);
+
+        private void lineMultiPeptideDisplayMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetAreaGraphMultiPeptideDisplay(MultiPeptideDisplay.Line);
+
+        private void clusterMultiPeptideDisplayMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetAreaGraphMultiPeptideDisplay(MultiPeptideDisplay.Cluster);
+
+        private void aggregateMultiPeptideDisplayMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetAreaGraphMultiPeptideDisplay(MultiPeptideDisplay.Aggregate);
+
+        private void UpdateMultiPeptideDisplayMenuItemCheckedState()
+        {
+            var current = AreaGraphController.AreaGraphMultiPeptideDisplay;
+            lineMultiPeptideDisplayMenuItem.Checked = current == MultiPeptideDisplay.Line;
+            clusterMultiPeptideDisplayMenuItem.Checked = current == MultiPeptideDisplay.Cluster;
+            aggregateMultiPeptideDisplayMenuItem.Checked = current == MultiPeptideDisplay.Aggregate;
+        }
 
         private void showLibraryPeakAreaContextMenuItem_Click(object sender, EventArgs e)
         {

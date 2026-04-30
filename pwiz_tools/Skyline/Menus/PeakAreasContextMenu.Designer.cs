@@ -43,6 +43,10 @@ namespace pwiz.Skyline.Menus
             this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.barAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lineAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.multiPeptideDisplayMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lineMultiPeptideDisplayMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clusterMultiPeptideDisplayMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aggregateMultiPeptideDisplayMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaNormalizeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abundanceTargetsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abundanceTargetsPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -162,15 +166,42 @@ namespace pwiz.Skyline.Menus
             this.barAreaGraphDisplayTypeMenuItem.Name = "barAreaGraphDisplayTypeMenuItem";
             resources.ApplyResources(this.barAreaGraphDisplayTypeMenuItem, "barAreaGraphDisplayTypeMenuItem");
             this.barAreaGraphDisplayTypeMenuItem.Click += new System.EventHandler(this.barAreaGraphTypeMenuItem_Click);
-            // 
+            //
             // lineAreaGraphDisplayTypeMenuItem
-            // 
+            //
             this.lineAreaGraphDisplayTypeMenuItem.Name = "lineAreaGraphDisplayTypeMenuItem";
             resources.ApplyResources(this.lineAreaGraphDisplayTypeMenuItem, "lineAreaGraphDisplayTypeMenuItem");
             this.lineAreaGraphDisplayTypeMenuItem.Click += new System.EventHandler(this.lineAreaGraphTypeMenuItem_Click);
-            // 
+            //
+            // multiPeptideDisplayMenuItem
+            //
+            this.multiPeptideDisplayMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lineMultiPeptideDisplayMenuItem,
+            this.clusterMultiPeptideDisplayMenuItem,
+            this.aggregateMultiPeptideDisplayMenuItem});
+            this.multiPeptideDisplayMenuItem.Name = "multiPeptideDisplayMenuItem";
+            resources.ApplyResources(this.multiPeptideDisplayMenuItem, "multiPeptideDisplayMenuItem");
+            //
+            // lineMultiPeptideDisplayMenuItem
+            //
+            this.lineMultiPeptideDisplayMenuItem.Name = "lineMultiPeptideDisplayMenuItem";
+            resources.ApplyResources(this.lineMultiPeptideDisplayMenuItem, "lineMultiPeptideDisplayMenuItem");
+            this.lineMultiPeptideDisplayMenuItem.Click += new System.EventHandler(this.lineMultiPeptideDisplayMenuItem_Click);
+            //
+            // clusterMultiPeptideDisplayMenuItem
+            //
+            this.clusterMultiPeptideDisplayMenuItem.Name = "clusterMultiPeptideDisplayMenuItem";
+            resources.ApplyResources(this.clusterMultiPeptideDisplayMenuItem, "clusterMultiPeptideDisplayMenuItem");
+            this.clusterMultiPeptideDisplayMenuItem.Click += new System.EventHandler(this.clusterMultiPeptideDisplayMenuItem_Click);
+            //
+            // aggregateMultiPeptideDisplayMenuItem
+            //
+            this.aggregateMultiPeptideDisplayMenuItem.Name = "aggregateMultiPeptideDisplayMenuItem";
+            resources.ApplyResources(this.aggregateMultiPeptideDisplayMenuItem, "aggregateMultiPeptideDisplayMenuItem");
+            this.aggregateMultiPeptideDisplayMenuItem.Click += new System.EventHandler(this.aggregateMultiPeptideDisplayMenuItem_Click);
+            //
             // areaNormalizeContextMenuItem
-            // 
+            //
             this.areaNormalizeContextMenuItem.Name = "areaNormalizeContextMenuItem";
             resources.ApplyResources(this.areaNormalizeContextMenuItem, "areaNormalizeContextMenuItem");
             // 
@@ -423,6 +454,10 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem graphTypeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem barAreaGraphDisplayTypeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem lineAreaGraphDisplayTypeMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem multiPeptideDisplayMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem lineMultiPeptideDisplayMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem clusterMultiPeptideDisplayMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aggregateMultiPeptideDisplayMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem abundanceTargetsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem abundanceTargetsProteinsMenuItem;

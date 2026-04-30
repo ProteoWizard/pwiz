@@ -60,6 +60,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AreaGraphDisplayType { bars, lines }
 
+    public enum MultiPeptideDisplay { Line, Cluster, Aggregate }
+
     public sealed class AreaGraphController : GraphSummary.IControllerSplit
     {
         public static GraphTypeSummary GraphType
@@ -72,6 +74,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return Helpers.ParseEnum(Settings.Default.AreaGraphDisplayType, AreaGraphDisplayType.bars); }
             set { Settings.Default.AreaGraphDisplayType = value.ToString(); }
+        }
+
+        public static MultiPeptideDisplay AreaGraphMultiPeptideDisplay
+        {
+            get { return Helpers.ParseEnum(Settings.Default.AreaGraphMultiPeptideDisplay, MultiPeptideDisplay.Line); }
+            set { Settings.Default.AreaGraphMultiPeptideDisplay = value.ToString(); }
         }
 
         public static NormalizeOption AreaNormalizeOption
