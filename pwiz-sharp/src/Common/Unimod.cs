@@ -9,6 +9,7 @@ namespace Pwiz.Data.Common.Unimod;
 /// The site a <see cref="UnimodModification"/> can apply to (single-letter residues, termini, any).
 /// Port of pwiz/data::unimod::Site (bitfield).
 /// </summary>
+#pragma warning disable CS1591 // residue / terminus member names are self-documenting against the unimod spec
 [Flags]
 public enum UnimodSite : int
 {
@@ -39,6 +40,7 @@ public enum UnimodSite : int
     Tryptophan = 1 << 22,
     Tyrosine = 1 << 23,
 }
+#pragma warning restore CS1591
 
 /// <summary>Position constraint for a modification specificity. Port of pwiz/data::unimod::Position.</summary>
 public enum UnimodPosition
@@ -56,6 +58,7 @@ public enum UnimodPosition
 }
 
 /// <summary>Classification flags for a modification. Port of pwiz/data::unimod::Classification (bitfield).</summary>
+#pragma warning disable CS1591 // bitfield member names are self-documenting against the unimod spec
 [Flags]
 public enum UnimodClassification : int
 {
@@ -77,6 +80,7 @@ public enum UnimodClassification : int
     Substitution = 1 << 13,
     SynthPepProtectGP = 1 << 14,
 }
+#pragma warning restore CS1591
 
 /// <summary>
 /// A Unimod modification. Port of pwiz/data::unimod::Modification.
