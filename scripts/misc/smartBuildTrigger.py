@@ -128,7 +128,9 @@ if (current_branch == "master" or current_branch.startswith("skyline_")) and len
                     triggers[target] = "merge to %s" % base_branch
 else:
     for path in changed_files:
-        if os.path.basename(path) == "smartBuildTrigger.py":
+        # Skip the trigger machinery itself — editing these files shouldn't fan out to "build
+        # everything" via the generic scripts/.* match further down.
+        if os.path.basename(path) in ("smartBuildTrigger.py", "vcs_trigger_and_paths_config.py"):
             continue
         triggered = False # only trigger once per path
         for tuple in matchPaths:

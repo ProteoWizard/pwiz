@@ -99,6 +99,7 @@ targets['Linux'] = merge(targets['CoreLinux'], targets['BumbershootLinux'])
 # "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
 matchPaths = [
     (".*/smartBuildTrigger.py", {}),
+    (".*/vcs_trigger_and_paths_config.py", {}),
     (".*/ai/.*", {}),
     # pwiz-sharp: standalone .NET 8 port. Builds run via `pwiz-sharp/build.bat`. Match this
     # before the generic libraries/scripts/.bat patterns below so changes under pwiz-sharp/
