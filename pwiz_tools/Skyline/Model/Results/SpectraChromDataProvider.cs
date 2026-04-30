@@ -1754,10 +1754,8 @@ namespace pwiz.Skyline.Model.Results
                     chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null);
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
-                    // Only when times are shared across collectors (grouped/shared mode);
-                    // in IsSingleTime mode each collector tracks its own times, so
-                    // back-filling intensities without times would desync the arrays.
-                    if (ionScanCount > 1 && lenTimes > 1 && !IsSingleTime)
+                    // (No-op when this collector owns its own times — see ChromCollector.FillZeroes.)
+                    if (ionScanCount > 1 && lenTimes > 1)
                     {
                         chromCollector.FillZeroes(chromIndex, lenTimes - 1, _blockWriter);
                     }
@@ -1785,10 +1783,8 @@ namespace pwiz.Skyline.Model.Results
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.
-            // Skip in IsSingleTime mode: each collector owns its own time array, so a
-            // transition that wasn't scanned this cycle should not gain an intensity
-            // without a matching time (which would desync the arrays).
-            if (ionScanCount > 1 && !IsSingleTime &&
+            // (No-op for collectors that own their own times — see ChromCollector.AddPoint.)
+            if (ionScanCount > 1 &&
                 (ionCount != ionScanCount || ionCount != collector.ProductIntensityMap.Count))
             {
                 // Times should have gotten one longer
