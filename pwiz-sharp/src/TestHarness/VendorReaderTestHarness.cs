@@ -147,16 +147,18 @@ public static class VendorReaderTestHarness
         {
             reader.Read(rawPath, msd, readerConfig);
         }
-        catch (NotSupportedException ex)
+        catch (VendorSupportNotEnabledException ex)
         {
-            // Vendor SDK not available in this build (NO_VENDOR_SUPPORT). Verify Identify()
+            // Vendor SDK not compiled into this build (NO_VENDOR_SUPPORT). Verify Identify()
             // still recognizes the source and call it a pass — full read+diff parity is the
-            // job of the with-vendor-DLLs build.
+            // job of the with-vendor-DLLs build. NOTE: catch only this specific subclass so
+            // legitimate NotSupportedException from a reader (e.g. "format X not yet ported")
+            // bubbles up as a real test failure.
             string head = ReadHead(rawPath);
             CVID identified = reader.Identify(rawPath, head);
             if (identified == CVID.CVID_Unknown)
                 throw new InvalidOperationException(
-                    $"identify-only mode: Read() threw NotSupportedException AND Identify() returned CVID_Unknown for {rawPath}. " +
+                    $"identify-only mode: Read() threw VendorSupportNotEnabledException AND Identify() returned CVID_Unknown for {rawPath}. " +
                     $"Underlying message: {ex.Message}");
             Console.WriteLine(
                 $"[identify-only] {Path.GetFileName(rawPath.TrimEnd('/', '\\'))}: vendor SDK not built into this configuration; " +

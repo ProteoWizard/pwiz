@@ -62,7 +62,7 @@ public sealed class Reader_Bruker : IReader
         ArgumentNullException.ThrowIfNull(result);
 
 #if NO_VENDOR_SUPPORT
-        throw new NotSupportedException(
+        throw new VendorSupportNotEnabledException(
             "Bruker .d reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
 #else
         int preferOnlyMsLevel = config?.PreferOnlyMsLevel ?? 0;

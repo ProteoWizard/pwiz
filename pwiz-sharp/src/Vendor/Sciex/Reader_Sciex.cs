@@ -53,7 +53,7 @@ public sealed class Reader_Sciex : IReader
             throw new FileNotFoundException("WIFF file not found", filename);
 
 #if NO_VENDOR_SUPPORT
-        throw new NotSupportedException(
+        throw new VendorSupportNotEnabledException(
             "Sciex WIFF reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
 #else
         result.CVs.AddRange(MSData.DefaultCVList);

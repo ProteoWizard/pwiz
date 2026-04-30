@@ -66,7 +66,7 @@ public sealed class Reader_Thermo : IReader
             throw new FileNotFoundException("Thermo .raw file not found", filename);
 
 #if NO_VENDOR_SUPPORT
-        throw new NotSupportedException(
+        throw new VendorSupportNotEnabledException(
             "Thermo .raw reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
 #else
         result.CVs.AddRange(MSData.DefaultCVList);

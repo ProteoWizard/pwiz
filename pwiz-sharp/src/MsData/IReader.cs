@@ -131,3 +131,23 @@ public static class ReaderExtensions
         return reader.Identify(filename, head) != CVID.CVID_Unknown;
     }
 }
+
+/// <summary>
+/// Thrown by an <see cref="IReader"/>'s <see cref="IReader.Read"/> when the reader recognizes
+/// the format but its vendor SDK isn't compiled into this build (i.e. the project was built
+/// without <c>-p:IAgreeToVendorLicenses=true</c>). Distinct from
+/// <see cref="NotSupportedException"/>, which a reader still legitimately throws for
+/// formats it hasn't ported yet but whose SDK <em>is</em> available.
+/// </summary>
+public sealed class VendorSupportNotEnabledException : NotSupportedException
+{
+    /// <summary>Creates the exception with a default message.</summary>
+    public VendorSupportNotEnabledException() : base() { }
+
+    /// <summary>Creates the exception with the given message.</summary>
+    public VendorSupportNotEnabledException(string? message) : base(message) { }
+
+    /// <summary>Creates the exception with the given message and inner exception.</summary>
+    public VendorSupportNotEnabledException(string? message, Exception? innerException)
+        : base(message, innerException) { }
+}

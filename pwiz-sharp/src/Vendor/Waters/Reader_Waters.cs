@@ -52,7 +52,7 @@ public sealed class Reader_Waters : IReader
         ArgumentNullException.ThrowIfNull(result);
 
 #if NO_VENDOR_SUPPORT
-        throw new NotSupportedException(
+        throw new VendorSupportNotEnabledException(
             "Waters .raw reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
 #else
         int preferOnlyMsLevel = config?.PreferOnlyMsLevel ?? 0;

@@ -67,7 +67,7 @@ public sealed class Reader_Agilent : IReader
             throw new InvalidDataException($"Not an Agilent .d directory: {filename}");
 
 #if NO_VENDOR_SUPPORT
-        throw new NotSupportedException(
+        throw new VendorSupportNotEnabledException(
             "Agilent .d reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
 #else
         result.CVs.AddRange(MSData.DefaultCVList);
