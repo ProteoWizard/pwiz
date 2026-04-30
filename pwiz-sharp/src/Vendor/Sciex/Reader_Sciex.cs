@@ -1,4 +1,3 @@
-using System.Globalization;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
@@ -12,14 +11,15 @@ using Pwiz.Data.MsData.Sources;
 namespace Pwiz.Vendor.Sciex;
 
 /// <summary>
-/// <see cref="IReader"/> for Sciex / ABI WIFF files. Identifies <c>.wiff</c> and <c>.wiff2</c>
-/// files; opens the first sample via <see cref="WiffData"/> and emits one MSData per
-/// invocation. Multi-sample wiff support is a follow-up.
+/// <see cref="IReader"/> for Sciex / ABI WIFF files. Identifies <c>.wiff</c> and <c>.wiff2</c>;
+/// <see cref="AbstractWiffFile.Open"/> dispatches to the legacy AnalystDataProvider wrapper for
+/// <c>.wiff</c> or to the side-by-side wiff2 plugin for <c>.wiff2</c>, then a single
+/// metadata-fill path emits the same shape of MSData for both.
 /// </summary>
 /// <remarks>
 /// Initial port covers Q-TOF / TripleTOF / TripleQuad data: full-scan MS1 / MSn (Product),
 /// SIM/MRM as chromatograms (or as spectra when the matching config flag is set). Skipped:
-/// ADC traces, multi-sample wiffs, instrument-model translation table beyond a generic
+/// multi-sample wiffs, instrument-model translation table beyond a generic
 /// <c>MS_SCIEX_instrument_model</c> term.
 /// </remarks>
 public sealed class Reader_Sciex : IReader
@@ -37,7 +37,7 @@ public sealed class Reader_Sciex : IReader
     public CVID Identify(string filename, string? head)
     {
         ArgumentNullException.ThrowIfNull(filename);
-        return WiffData.IsWiffFile(filename) && File.Exists(filename) ? CvType : CVID.CVID_Unknown;
+        return IsWiffFile(filename) && File.Exists(filename) ? CvType : CVID.CVID_Unknown;
     }
 
     /// <inheritdoc/>
@@ -45,22 +45,14 @@ public sealed class Reader_Sciex : IReader
     {
         ArgumentNullException.ThrowIfNull(filename);
         ArgumentNullException.ThrowIfNull(result);
-        if (!WiffData.IsWiffFile(filename))
+        if (!IsWiffFile(filename))
             throw new InvalidDataException($"Not a WIFF file: {filename}");
         if (!File.Exists(filename))
             throw new FileNotFoundException("WIFF file not found", filename);
 
-        // .wiff2 files use a different SDK (SCIEX.Apis.Data.v1) than the legacy
-        // AnalystWiffDataProvider in this port. Cpp's WiffFile2.ipp dispatches to a separate
-        // WiffFile2Impl. Until that path is ported, fail with a clear message.
-        if (filename.EndsWith(".wiff2", StringComparison.OrdinalIgnoreCase))
-            throw new NotSupportedException(
-                ".wiff2 files are not yet supported by the Sciex reader port. "
-                + "The cpp reader uses SCIEX.Apis.Data.v1 (a separate SDK from "
-                + "AnalystWiffDataProvider) that hasn't been wrapped yet.");
-
         result.CVs.AddRange(MSData.DefaultCVList);
-        var wiff = new WiffData(filename, sampleIndex0: 0);
+
+        var wiff = AbstractWiffFile.Open(filename, sampleIndex0: 0);
         try
         {
             FillMetadata(result, filename, wiff, config);
@@ -72,11 +64,14 @@ public sealed class Reader_Sciex : IReader
         }
     }
 
-    private static void FillMetadata(MSData result, string wiffPath, WiffData wiff, ReaderConfig? config)
+    private static bool IsWiffFile(string path)
+        => path.EndsWith(".wiff", StringComparison.OrdinalIgnoreCase)
+           || path.EndsWith(".wiff2", StringComparison.OrdinalIgnoreCase);
+
+    private static void FillMetadata(MSData result, string wiffPath, AbstractWiffFile wiff, ReaderConfig? config)
     {
         string baseName = Path.GetFileNameWithoutExtension(wiffPath);
-        // Cpp run id: "<baseName>-<sampleName>" for multi-sample, else baseName. SampleName is
-        // populated from the SDK's BasicSampleInfo collection.
+        // cpp run id: "<baseName>-<sampleName>" for multi-sample, else baseName.
         if (wiff.SampleCount > 1 && !string.IsNullOrEmpty(wiff.SampleName))
             result.Id = $"{baseName}-{wiff.SampleName}";
         else
@@ -90,24 +85,17 @@ public sealed class Reader_Sciex : IReader
         result.FileDescription.SourceFiles.Add(sf);
         result.Run.DefaultSourceFile = sf;
 
-        // fileContent: scan the experiments to figure out which spectrum types we'll emit.
+        // fileContent — scan experiments for ms levels.
         bool hasMs1 = false, hasMsn = false;
         for (int e = 0; e < wiff.ExperimentCount; e++)
         {
             try
             {
-                var exp = wiff.GetExperiment(e);
-                var info = exp.Details;
-                int level = info.ExperimentType switch
-                {
-                    Clearcore2.Data.DataAccess.SampleData.ExperimentType.MS => 1,
-                    Clearcore2.Data.DataAccess.SampleData.ExperimentType.SIM => 1,
-                    _ => 2,
-                };
+                int level = wiff.GetExperiment(e).GetMsLevelForCycle(1);
                 if (level == 1) hasMs1 = true;
                 else hasMsn = true;
             }
-            catch { /* corrupt experiment — skip */ }
+            catch { /* skip corrupt experiment */ }
         }
         if (hasMs1) result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum);
         if (hasMsn) result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
@@ -132,13 +120,13 @@ public sealed class Reader_Sciex : IReader
         result.DataProcessings.Add(dpCommon);
 
         // Single instrument config: cpp emits per-instrument-model components, but we go with
-        // the generic SCIEX model term + an ESI/MicroESI source + Q-TOF analyzer chain. A full
-        // table can land later when we have parity tests.
+        // the generic SCIEX model term + a MicroESI source + Q-TOF analyzer chain. A full table
+        // can land later when we have parity tests.
         var ic = new InstrumentConfiguration("IC1");
         var common = new ParamGroup("CommonInstrumentParams");
         common.Set(CVID.MS_SCIEX_instrument_model);
-        if (!string.IsNullOrEmpty(wiff.MsSample.InstrumentName))
-            common.UserParams.Add(new UserParam("instrument model", wiff.MsSample.InstrumentName, "xsd:string"));
+        if (!string.IsNullOrEmpty(wiff.InstrumentModelName))
+            common.UserParams.Add(new UserParam("instrument model", wiff.InstrumentModelName, "xsd:string"));
         result.ParamGroups.Add(common);
         ic.ParamGroups.Add(common);
         ic.ComponentList.Add(new Component(CVID.MS_microelectrospray, 1));
@@ -149,30 +137,22 @@ public sealed class Reader_Sciex : IReader
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
-        try
-        {
-            // Sample acquisition timestamp — SDK exposes BasicSampleInfo with AcquisitionDateTime.
-            var details = wiff.Sample.Details;
-            result.Run.StartTimeStamp = details.AcquisitionDateTime
-                .ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
-        }
-        catch { }
+        if (!string.IsNullOrEmpty(wiff.StartTimestampUtc))
+            result.Run.StartTimeStamp = wiff.StartTimestampUtc;
 
         bool simAsSpectra = config?.SimAsSpectra ?? false;
         bool srmAsSpectra = config?.SrmAsSpectra ?? false;
         bool globalChromsAreMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
         // SpectrumList owns the underlying wiff handle; ChromatogramList shares the same
         // reference so we can iterate both lists during conversion. cpp uses the same pattern
-        // (one shared MassHunterDataPtr / WiffFilePtr).
-        var list = new SpectrumList_Sciex(wiff, ownsWiff: true, ic, simAsSpectra, srmAsSpectra)
+        // (one shared WiffFilePtr).
+        result.Run.SpectrumList = new SpectrumList_Sciex(wiff, ownsWiff: true, ic, simAsSpectra, srmAsSpectra)
         {
             Dp = dpReader,
         };
-        result.Run.SpectrumList = list;
-        var chromList = new ChromatogramList_Sciex(wiff, ownsWiff: false, globalChromsAreMs1Only)
+        result.Run.ChromatogramList = new ChromatogramList_Sciex(wiff, ownsWiff: false, globalChromsAreMs1Only)
         {
             Dp = dpReader,
         };
-        result.Run.ChromatogramList = chromList;
     }
 }

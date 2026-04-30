@@ -10,6 +10,12 @@
 
     <!-- Inherits from Pwiz.Vendor.Thermo — the Thermo SDK needs en-US culture. -->
     <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- The wiff2 SDK (SCIEX.Apis.Data.v1) uses BinaryFormatter via SmartAssembly's resolver
+         and via Microsoft.Practices.Unity's serialization paths. .NET 8 disables BinaryFormatter
+         by default; flip the runtimeconfig switch so the Sciex.Data.SDK can deserialize its
+         bundled assembly resources. -->
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,15 +23,48 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\MsData\MsData.csproj" />
     <ProjectReference Include="..\Analysis\Analysis.csproj" />
-    <ProjectReference Include="..\Thermo\Thermo.csproj" />
-    <ProjectReference Include="..\Bruker\Bruker.csproj" />
-    <ProjectReference Include="..\Waters\Waters.csproj" />
-    <ProjectReference Include="..\Agilent\Agilent.csproj" />
-    <ProjectReference Include="..\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="..\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="..\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\Vendor\Sciex\Sciex.csproj" />
+    <!-- Sciex.Wiff2 is a runtime-only plugin: built as a build dependency, but its assembly is
+         deliberately NOT referenced (would land in deps.json / TPA). Wiff2LoadContext loads
+         Pwiz.Vendor.Sciex.Wiff2.dll on demand into a side-by-side ALC so its bundled
+         SCIEX.Apis.Data.v1 deps don't conflict with the legacy .wiff path's signed Clearcore2
+         dlls in the default ALC. -->
+    <ProjectReference Include="..\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="MsConvert.Tests" />
   </ItemGroup>
+
+  <!-- Side-by-side wiff2 dlls. The wiff2 SDK is loaded into a custom AssemblyLoadContext
+       (Wiff2LoadContext) that pulls bundled Clearcore2/OFX/Unity dlls from SCIEX.Apis.Data.v1's
+       SmartAssembly resources, plus a dedicated copy of SQLite 1.0.109 (no SEE license probe)
+       and its matching native interop. The on-disk signed-PKT Clearcore2 dlls remain in the
+       default ALC for the legacy .wiff path (AnalystDataProvider was compiled against those
+       identities). The two ALCs coexist because their resolved assemblies have different
+       PublicKeyTokens, so there's no identity collision. -->
+  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build">
+    <PropertyGroup>
+      <_SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Sciex</_SciexAssembliesDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(OutputPath)wiff2" />
+    <Copy SourceFiles="$(_SciexAssembliesDir)\System.Data.SQLite.dll"
+          DestinationFiles="$(OutputPath)wiff2\System.Data.SQLite.dll"
+          OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll"
+          DestinationFiles="$(OutputPath)wiff2\SQLite.Interop.dll"
+          OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexAssembliesDir)\Unity.Abstractions.dll"
+          DestinationFiles="$(OutputPath)wiff2\Unity.Abstractions.dll"
+          OverwriteReadOnlyFiles="true" />
+  </Target>
 
 </Project>

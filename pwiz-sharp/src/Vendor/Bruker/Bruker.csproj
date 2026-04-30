@@ -10,16 +10,16 @@
       target below unpacks it into $(BrukerAssembliesDir) on every build (idempotent). Only the x64
       DLL is extracted; msconvert-sharp targets x64 exclusively.
       -->
-    <BrukerArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz_aux\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
-    <BrukerAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Bruker</BrukerAssembliesDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\libraries\7za.exe</SevenZaExe>
+    <BrukerArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
+    <BrukerAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Bruker</BrukerAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Util\Util.csproj" />
-    <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\MsData\MsData.csproj" />
-    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
   <Target Name="ExtractBrukerAssemblies"

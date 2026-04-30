@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\..\src\Vendor\Bruker\Bruker.csproj" />
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 

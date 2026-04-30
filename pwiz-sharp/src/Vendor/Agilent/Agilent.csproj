@@ -11,16 +11,16 @@
     unpacks the x64 .NET assemblies on every build (idempotent). Sharp targets x64 only.
     -->
   <PropertyGroup>
-    <AgilentArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz_aux\msrc\utility\vendor_api_Agilent.7z</AgilentArchive>
-    <AgilentAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Agilent</AgilentAssembliesDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\libraries\7za.exe</SevenZaExe>
+    <AgilentArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Agilent.7z</AgilentArchive>
+    <AgilentAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Agilent</AgilentAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Util\Util.csproj" />
-    <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\MsData\MsData.csproj" />
-    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
   <Target Name="ExtractAgilentAssemblies"

@@ -6,17 +6,26 @@
     <Description>Sciex / ABI WIFF reader. References Sciex's managed Clearcore2 + WiffReader assemblies.</Description>
   </PropertyGroup>
 
+  <!-- Wiff2/ is a separate sub-project (Sciex.Wiff2.csproj). Exclude its sources and build
+       output so MSBuild's default .cs glob doesn't try to compile them into Sciex.dll. -->
+  <ItemGroup>
+    <Compile Remove="Wiff2\**" />
+    <None Remove="Wiff2\**" />
+    <Content Remove="Wiff2\**" />
+    <EmbeddedResource Remove="Wiff2\**" />
+  </ItemGroup>
+
   <PropertyGroup>
-    <SciexArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz_aux\msrc\utility\vendor_api_ABI.7z</SciexArchive>
-    <SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Sciex</SciexAssembliesDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\libraries\7za.exe</SevenZaExe>
+    <SciexArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_ABI.7z</SciexArchive>
+    <SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Sciex</SciexAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Util\Util.csproj" />
-    <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\MsData\MsData.csproj" />
-    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
   <!-- Sciex.Data.SimpleTypes.MassUnits's static initializer references
@@ -25,6 +34,11 @@
        throw TypeInitializationException at runtime. -->
   <ItemGroup>
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <!-- System.ServiceModel.Primitives + System.ServiceModel.dll on disk are needed by the
+         bundled Clearcore2.RFLight.SampleDataProvider's WCF-style configuration paths during
+         Unity wire-up; these are the .NET-Core-compatible WCF assemblies (CoreWCF). -->
+    <PackageReference Include="System.ServiceModel.Primitives" Version="8.0.0" />
+    <PackageReference Include="System.Runtime.Caching" Version="8.0.0" />
   </ItemGroup>
 
   <Target Name="ExtractSciexAssemblies"
@@ -52,12 +66,24 @@
     <Reference Include="Clearcore2.Data.Wiff2"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.Wiff2.dll</HintPath><Private>true</Private></Reference>
     <Reference Include="Clearcore2.RawXYProcessing"><HintPath>$(SciexAssembliesDir)\Clearcore2.RawXYProcessing.dll</HintPath><Private>true</Private></Reference>
     <Reference Include="Sciex.Data.XYData"><HintPath>$(SciexAssembliesDir)\Sciex.Data.XYData.dll</HintPath><Private>true</Private></Reference>
+    <!-- SCIEX.Apis.Data.v1 is intentionally NOT a compile-time Reference: it would land in
+         deps.json and load into the default ALC's TPA, where its bundled-deps SmartAssembly
+         resolver would clash with the legacy .wiff path's signed Clearcore2.* on disk. We ship
+         it as Content (below) and load it only inside Wiff2LoadContext via reflection. -->
   </ItemGroup>
 
-  <!-- Runtime dependencies: indirect Clearcore2 + Sciex assemblies must land next to the output
+<!-- Runtime dependencies: indirect Clearcore2 + Sciex assemblies must land next to the output
        so the SDK's late-bound type loads succeed. -->
   <ItemGroup>
     <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Compression.dll" />
+    <!-- Clearcore2.Data + Client + CommonInterfaces + RawXYProcessing are also <Reference>
+         entries above; listing them as Content too forces them into the consumer's bin even
+         when MSBuild's transitive propagation drops them (it does for Reference assemblies
+         that aren't part of the Sciex public ABI). -->
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Data.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Data.Client.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Data.CommonInterfaces.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.RawXYProcessing.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Devices.Types.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Domain.Acquisition.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Infrastructure.dll" />
@@ -67,7 +93,6 @@
     <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Utility.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.XmlHelpers.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\OFX.Core.Contracts.dll" />
-    <_SciexRuntime Include="$(SciexAssembliesDir)\SCIEX.Apis.Data.v1.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Clearcore.FMan.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.Processing.DLL" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.SimpleTypes.dll" />
@@ -75,6 +100,23 @@
     <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.FMan.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Wiff.dll" />
     <_SciexRuntime Include="$(SciexAssembliesDir)\protobuf-net.dll" />
+    <!-- SCIEX.Apis.Data.v1 is loaded into Wiff2LoadContext at runtime via reflection. Ship
+         the dll alongside the legacy ones; the side-by-side ALC keeps it isolated from the
+         default ALC's loaded assemblies. -->
+    <_SciexRuntime Include="$(SciexAssembliesDir)\SCIEX.Apis.Data.v1.dll" />
+    <!-- System.ServiceModel 4.0.0.0 (the .NET Framework WCF assembly) is referenced by the
+         bundled Clearcore2.RFLight.SampleDataProvider during Unity wire-up. .NET 8 doesn't
+         include it; we ship the .NET-Standard-compatible build from the SCIEX server SDK.
+         Loaded by Wiff2LoadContext (the patched Unity.Abstractions, wiff2-specific SQLite,
+         and SQLite.Interop go to wiff2/ via the StageWiff2NativeAssemblies build target in
+         MsConvert.csproj). -->
+    <_SciexRuntime Include="$(SciexAssembliesDir)\System.ServiceModel.dll" />
+    <!-- Unity DI configuration files used by the wiff2 SDK during component wire-up. The
+         SCIEX SDK reads them from the working / app directory at startup; without them the
+         request handlers throw NullReferenceException when the container resolves them. -->
+    <_SciexRuntime Include="$(SciexAssembliesDir)\DataServiceComponent.config" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\DataServiceClientComponent.config" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\DataServiceInternalComponent.config" />
     <Content Include="@(_SciexRuntime)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(Filename)%(Extension)</Link>

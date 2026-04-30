@@ -17,16 +17,16 @@
       The ExtractThermoAssemblies target below unpacks them into $(ThermoAssembliesDir) on
       every build (idempotent — skipped if the files are already current).
       -->
-    <ThermoArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz_aux\msrc\utility\vendor_api_Thermo.7z</ThermoArchive>
-    <ThermoAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Thermo</ThermoAssembliesDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\libraries\7za.exe</SevenZaExe>
+    <ThermoArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Thermo.7z</ThermoArchive>
+    <ThermoAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Thermo</ThermoAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Util\Util.csproj" />
-    <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\MsData\MsData.csproj" />
-    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
   <Target Name="ExtractThermoAssemblies"

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Sciex.Wiff2</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Sciex.Wiff2</AssemblyName>
+    <Description>Wiff2 reader plugin. Loaded into Pwiz.Vendor.Sciex.Wiff2LoadContext at runtime so its bundled SCIEX.Apis.Data.v1 / Clearcore2 / OFX dependencies don't conflict with the legacy AnalystWiffDataProvider stack the .wiff path uses in the default ALC.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\Sciex.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-assemblies\Sciex</SciexAssembliesDir>
+  </PropertyGroup>
+
+  <!-- SCIEX.Apis.Data.v1 reference is compile-time only (Private=false). The dll is shipped to
+       the consumer bin by Sciex.csproj's _SciexRuntime Content list, and loaded at runtime by
+       Wiff2LoadContext into the side-by-side ALC. -->
+  <ItemGroup>
+    <Reference Include="SCIEX.Apis.Data.v1">
+      <HintPath>$(SciexAssembliesDir)\SCIEX.Apis.Data.v1.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

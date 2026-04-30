@@ -10,9 +10,9 @@
       ExtractWatersAssemblies target below unpacks them into $(WatersAssembliesDir) on every
       build (idempotent). Only the x64 DLLs are extracted; msconvert-sharp targets x64 exclusively.
       -->
-    <WatersArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz_aux\msrc\utility\vendor_api_Waters.7z</WatersArchive>
-    <WatersAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Waters</WatersAssembliesDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\libraries\7za.exe</SevenZaExe>
+    <WatersArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Waters.7z</WatersArchive>
+    <WatersAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Waters</WatersAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,10 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Util\Util.csproj" />
-    <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\MsData\MsData.csproj" />
-    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
   <Target Name="ExtractWatersAssemblies"

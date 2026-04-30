@@ -5,10 +5,13 @@
     <Project Path="src/MsData/MsData.csproj" />
     <Project Path="src/MsConvert/MsConvert.csproj" />
     <Project Path="src/Util/Util.csproj" />
-    <Project Path="src/Thermo/Thermo.csproj" />
-    <Project Path="src/Bruker/Bruker.csproj" />
-    <Project Path="src/Waters/Waters.csproj" />
     <Project Path="src/TestHarness/TestHarness.csproj" />
+    <Project Path="src/Vendor/Agilent/Agilent.csproj" />
+    <Project Path="src/Vendor/Bruker/Bruker.csproj" />
+    <Project Path="src/Vendor/Sciex/Sciex.csproj" />
+    <Project Path="src/Vendor/Sciex/Wiff2/Sciex.Wiff2.csproj" />
+    <Project Path="src/Vendor/Thermo/Thermo.csproj" />
+    <Project Path="src/Vendor/Waters/Waters.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Analysis.Tests/Analysis.Tests.csproj" />
