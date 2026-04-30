@@ -18,6 +18,11 @@
   <PropertyGroup>
     <SciexArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_ABI.7z</SciexArchive>
     <SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Sciex</SciexAssembliesDir>
+    <!-- Manually-curated wiff2-on-net8 deps: assemblies/configs that don't ship in
+         vendor_api_ABI.7z (the .NET-Standard System.ServiceModel and three Unity DI configs
+         are committed under pwiz-sharp/vendor-archives/Sciex/). See
+         src/Vendor/Sciex/wiff2-on-net8-investigation.md for provenance. -->
+    <SciexWiff2DepsDir>$(MSBuildThisFileDirectory)..\..\..\vendor-archives\Sciex</SciexWiff2DepsDir>
     <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
   </PropertyGroup>
 
@@ -62,13 +67,17 @@
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(SciexArchive)"
-          Outputs="$(SciexAssembliesDir)\Clearcore2.Data.AnalystDataProvider.dll">
+          Outputs="$(SciexAssembliesDir)\Clearcore2.Data.AnalystDataProvider.dll;$(SciexAssembliesDir)\SQLite.Interop.dll">
     <MakeDir Directories="$(SciexAssembliesDir)" />
-    <!-- 7za uses case-insensitive globbing on Windows; *.dll picks up Sciex.Data.Processing.DLL too. -->
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(SciexAssembliesDir)&quot; &quot;$(SciexArchive)&quot; &quot;vendor_api\ABI\*.dll&quot; &quot;vendor_api\ABI\*.DLL&quot;" />
+    <!-- 7za uses case-insensitive globbing on Windows; *.dll picks up Sciex.Data.Processing.DLL too.
+         x64\SQLite.Interop.dll is extracted alongside so MsConvert.csproj's StageWiff2NativeAssemblies
+         target can stage it into the wiff2/ subfolder for Wiff2LoadContext. We deliberately skip the
+         x86 copy and the rest of x64\* — only SQLite.Interop is needed at runtime. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(SciexAssembliesDir)&quot; &quot;$(SciexArchive)&quot; &quot;vendor_api\ABI\*.dll&quot; &quot;vendor_api\ABI\*.DLL&quot; &quot;vendor_api\ABI\x64\SQLite.Interop.dll&quot;" />
     <ItemGroup>
       <_SciexExtracted Include="$(SciexAssembliesDir)\vendor_api\ABI\*.dll" />
       <_SciexExtracted Include="$(SciexAssembliesDir)\vendor_api\ABI\*.DLL" />
+      <_SciexExtracted Include="$(SciexAssembliesDir)\vendor_api\ABI\x64\SQLite.Interop.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_SciexExtracted)" DestinationFolder="$(SciexAssembliesDir)" SkipUnchangedFiles="true" />
   </Target>
@@ -128,13 +137,13 @@
          Loaded by Wiff2LoadContext (the patched Unity.Abstractions, wiff2-specific SQLite,
          and SQLite.Interop go to wiff2/ via the StageWiff2NativeAssemblies build target in
          MsConvert.csproj). -->
-    <_SciexRuntime Include="$(SciexAssembliesDir)\System.ServiceModel.dll" />
+    <_SciexRuntime Include="$(SciexWiff2DepsDir)\System.ServiceModel.dll" />
     <!-- Unity DI configuration files used by the wiff2 SDK during component wire-up. The
          SCIEX SDK reads them from the working / app directory at startup; without them the
          request handlers throw NullReferenceException when the container resolves them. -->
-    <_SciexRuntime Include="$(SciexAssembliesDir)\DataServiceComponent.config" />
-    <_SciexRuntime Include="$(SciexAssembliesDir)\DataServiceClientComponent.config" />
-    <_SciexRuntime Include="$(SciexAssembliesDir)\DataServiceInternalComponent.config" />
+    <_SciexRuntime Include="$(SciexWiff2DepsDir)\DataServiceComponent.config" />
+    <_SciexRuntime Include="$(SciexWiff2DepsDir)\DataServiceClientComponent.config" />
+    <_SciexRuntime Include="$(SciexWiff2DepsDir)\DataServiceInternalComponent.config" />
     <Content Include="@(_SciexRuntime)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(Filename)%(Extension)</Link>

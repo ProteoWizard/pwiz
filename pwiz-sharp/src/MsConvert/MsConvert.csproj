@@ -61,16 +61,26 @@
        PublicKeyTokens, so there's no identity collision. -->
   <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <PropertyGroup>
+      <!-- System.Data.SQLite.dll (1.0.109) and Unity.Abstractions.dll (Cecil-patched) are
+           committed at pwiz-sharp/vendor-archives/Sciex/. Both originate from the SmartAssembly
+           bundle inside SCIEX.Apis.Data.v1.dll; we keep on-disk copies because the wiff2 SDK
+           is hard-bound to those exact assembly identities and a build-time extraction step
+           (with Cecil patching for Unity) is more machinery than this PR warrants. See
+           src/Vendor/Sciex/wiff2-on-net8-investigation.md for provenance. -->
+      <_SciexWiff2DepsDir>$(MSBuildThisFileDirectory)..\..\vendor-archives\Sciex</_SciexWiff2DepsDir>
+      <!-- SQLite.Interop.dll: extracted by Sciex.csproj's ExtractSciexAssemblies from
+           vendor_api_ABI.7z's vendor_api\ABI\x64\ subfolder and flattened into
+           vendor-assemblies/Sciex/. -->
       <_SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Sciex</_SciexAssembliesDir>
     </PropertyGroup>
     <MakeDir Directories="$(OutputPath)wiff2" />
-    <Copy SourceFiles="$(_SciexAssembliesDir)\System.Data.SQLite.dll"
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll"
           DestinationFiles="$(OutputPath)wiff2\System.Data.SQLite.dll"
           OverwriteReadOnlyFiles="true" />
     <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll"
           DestinationFiles="$(OutputPath)wiff2\SQLite.Interop.dll"
           OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(_SciexAssembliesDir)\Unity.Abstractions.dll"
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll"
           DestinationFiles="$(OutputPath)wiff2\Unity.Abstractions.dll"
           OverwriteReadOnlyFiles="true" />
   </Target>
