@@ -163,7 +163,11 @@ namespace pwiz.Skyline.Model.Tools
                 return parts.Length >= 2 ? parts[0] + @"." + parts[1] : PythonVersion;
             }
         }
-        public static string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir, GET_PIP_SCRIPT_FILE_NAME);
+        // Version the local filename by major.minor so a URL change (e.g. unpinned -> pip/3.9/) invalidates
+        // any previously cached file. DownloadGetPipScriptTask's signature only covers file content, not
+        // source, so without this a stale file from the old URL would be treated as valid.
+        public static string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir,
+            string.Format(@"get-pip-{0}.py", PythonMajorMinorVersion));
         public static string BasePythonExecutablePath => Path.Combine(PythonEmbeddablePackageExtractDir, PYTHON_EXECUTABLE);
 
         public int NumTotalTasks { get; set; }
