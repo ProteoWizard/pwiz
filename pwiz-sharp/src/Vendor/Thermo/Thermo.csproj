@@ -13,11 +13,16 @@
     <InvariantGlobalization>false</InvariantGlobalization>
 
     <!--
-      The Thermo assemblies are encrypted in pwiz_aux/msrc/utility/vendor_api_Thermo.7z.
-      The ExtractThermoAssemblies target below unpacks them into $(ThermoAssembliesDir) on
-      every build (idempotent — skipped if the files are already current).
+      The Thermo assemblies are encrypted in pwiz-sharp/vendor-archives/vendor_api_Thermo.7z —
+      a pwiz-sharp-local copy of the cpp archive. We keep our own copy because the .NET 8
+      Thermo reader needs RawFileReaderAdapter.FromFile's 3-arg overload (and OpenMcdf bundled),
+      both of which are present in the newer SDK; the cpp build still ships the older SDK in
+      pwiz_aux/msrc/utility/vendor_api_Thermo.7z, and we don't want a pwiz-sharp-driven SDK
+      bump to disturb the cpp build. ExtractThermoAssemblies unpacks this into
+      $(ThermoAssembliesDir) on every build (idempotent — skipped if the files are already
+      current).
       -->
-    <ThermoArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Thermo.7z</ThermoArchive>
+    <ThermoArchive>$(MSBuildThisFileDirectory)..\..\..\vendor-archives\vendor_api_Thermo.7z</ThermoArchive>
     <ThermoAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Thermo</ThermoAssembliesDir>
     <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
   </PropertyGroup>
@@ -29,7 +34,22 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Thermo
+       compile without the SDK and throw from Read() while keeping Identify() working. The
+       SDK-only files (ThermoRawFile / SpectrumList_Thermo / ChromatogramList_Thermo) reference
+       ThermoFisher.* types directly, so they must be excluded from compilation in that mode. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="ThermoRawFile.cs" />
+    <Compile Remove="SpectrumList_Thermo.cs" />
+    <Compile Remove="ChromatogramList_Thermo.cs" />
+  </ItemGroup>
+
   <Target Name="ExtractThermoAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences"
           Inputs="$(ThermoArchive)"
           Outputs="$(ThermoAssembliesDir)\ThermoFisher.CommonCore.RawFileReader.dll">
@@ -50,7 +70,7 @@
           SkipUnchangedFiles="true" />
   </Target>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <Reference Include="ThermoFisher.CommonCore.Data">
       <HintPath>$(ThermoAssembliesDir)\ThermoFisher.CommonCore.Data.dll</HintPath>
       <Private>true</Private>
