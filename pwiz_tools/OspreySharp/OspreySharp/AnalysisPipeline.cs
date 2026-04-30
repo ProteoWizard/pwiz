@@ -53,6 +53,10 @@ namespace pwiz.OspreySharp
     {
         private const int NUM_PIN_FEATURES = 21;
 
+        // EntryId encodes target/decoy in the high bit; base_id is the
+        // lower 31 bits, shared by a target and its paired decoy.
+        private const uint BASE_ID_MASK = 0x7FFFFFFFu;
+
         // Serializes mzML reads across concurrent ProcessFile() calls.
         // The producer inside MzmlReader.LoadAllSpectra is a sequential
         // XmlReader over a FileStream, so 3 files parsing in parallel
@@ -175,6 +179,11 @@ namespace pwiz.OspreySharp
                 // Per-file RT calibration handles harvested by ProcessFile so
                 // Stage 6 reconciliation has the live RTCalibration objects.
                 var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
+                // fileName -> .scores.parquet path. Populated by --join-only
+                // (which already knows the paths) so Stage 6 reconciliation
+                // can lazily load CWT candidates per file via
+                // ParquetScoreCache.LoadCwtCandidatesFromParquet.
+                var perFileParquetPaths = new Dictionary<string, string>();
 
                 bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
                 int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
@@ -266,6 +275,7 @@ namespace pwiz.OspreySharp
                             stubs[j].Features = features[j];
                         LogInfo(string.Format("  Loaded {0} FDR stubs + features", stubs.Count));
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                        perFileParquetPaths[fileName] = parquetPath;
 
                         // Best-effort calibration JSON load for Stage 6
                         // reconciliation. Mirrors osprey/src/pipeline.rs:2573-2588.
@@ -274,10 +284,10 @@ namespace pwiz.OspreySharp
                             string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
                             if (parquetDir != null)
                             {
-                                // The parquet stem is "<fileName>.scores"; strip
-                                // the trailing ".scores" so the calibration
-                                // filename derives from the same input stem
-                                // both ProcessFile and join-only used.
+                                // fileName is the bare input stem (the trailing
+                                // ".scores" was stripped above), so combining it
+                                // with parquetDir yields the same input-stem path
+                                // ProcessFile passes to CalibrationPathForInput.
                                 string calStemPath = Path.Combine(parquetDir, fileName);
                                 string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
                                 if (File.Exists(calPath))
@@ -491,7 +501,7 @@ namespace pwiz.OspreySharp
                             if (entry.RunPeptideQvalue <= peptideGate ||
                                 (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
                             {
-                                firstPassBaseIds.Add(entry.EntryId & 0x7FFFFFFFu);
+                                firstPassBaseIds.Add(entry.EntryId & BASE_ID_MASK);
                             }
                         }
                     }
@@ -499,7 +509,7 @@ namespace pwiz.OspreySharp
                     foreach (var kvp in perFileEntries)
                     {
                         beforeCount += kvp.Value.Count;
-                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & 0x7FFFFFFFu));
+                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
                         kvp.Value.TrimExcess();
                         afterCount += kvp.Value.Count;
                     }
@@ -628,11 +638,114 @@ namespace pwiz.OspreySharp
                             OspreyDiagnostics.ExitAfterDump(@"OSPREY_REFIT_ONLY");
                     }
 
-                    // Reconciliation planning + per-file rescore + gap-fill +
-                    // second-pass FDR are deferred to a later commit. Without
-                    // those, single-run analysis still produces valid output
-                    // from the first-pass FDR results above.
-                    LogInfo(@"Stage 6 reconciliation rescore: not yet implemented");
+                    // 4. Reconciliation planning. Reads each file's CWT
+                    //    candidates from the parquet cache and asks the
+                    //    planner to choose, per (file, entry), whether to
+                    //    keep the existing peak, switch to a stored CWT
+                    //    candidate at the consensus RT, or force an
+                    //    integration window. Mirrors Rust pipeline.rs
+                    //    reconciliation block at ~3260-3380.
+                    //
+                    //    Per-file re-scoring at the planner-chosen
+                    //    boundaries, gap-fill, and second-pass FDR are
+                    //    still pending. The planner output is wired
+                    //    primarily to make the cross-impl
+                    //    OSPREY_DUMP_RECONCILIATION dump available below.
+                    IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions = null;
+                    var perFileCwtCandidates = new Dictionary<string,
+                        IReadOnlyList<IReadOnlyList<CwtCandidate>>>();
+                    foreach (var kvp in perFileEntries)
+                    {
+                        string parquetPath;
+                        if (perFileParquetPaths.TryGetValue(kvp.Key, out parquetPath) &&
+                            File.Exists(parquetPath))
+                        {
+                            try
+                            {
+                                var cwtRows = ParquetScoreCache
+                                    .LoadCwtCandidatesFromParquet(parquetPath);
+                                // The planner indexes CWT lists by the entry's
+                                // position in perFileEntries[file] (the same
+                                // order LoadFdrStubsFromParquet returns). If
+                                // the row counts disagree the loaded lists
+                                // would be misaligned with the FdrEntry stubs,
+                                // which would hand the planner empty
+                                // candidate sets for entries whose actual
+                                // candidates exist further down the file.
+                                // Skip planning for this file with a clear
+                                // warning rather than letting that happen
+                                // silently.
+                                if (cwtRows.Count != kvp.Value.Count)
+                                {
+                                    LogWarning(string.Format(
+                                        "CWT candidate row count mismatch for {0}: " +
+                                        "parquet has {1} rows, FdrEntry stubs have {2} -- " +
+                                        "skipping reconciliation planning for this file",
+                                        kvp.Key, cwtRows.Count, kvp.Value.Count));
+                                    continue;
+                                }
+                                var converted = new List<IReadOnlyList<CwtCandidate>>(cwtRows.Count);
+                                foreach (var row in cwtRows)
+                                    converted.Add(row);
+                                perFileCwtCandidates[kvp.Key] = converted;
+                            }
+                            catch (Exception ex)
+                            {
+                                LogWarning(string.Format(
+                                    "Failed to load CWT candidates for {0}: {1}",
+                                    kvp.Key, ex.Message));
+                            }
+                        }
+                    }
+                    var perFileForPlan = new List<KeyValuePair<string,
+                        IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                    foreach (var kvp in perFileEntries)
+                    {
+                        perFileForPlan.Add(new KeyValuePair<string,
+                            IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+                    }
+                    if (perFileCwtCandidates.Count == perFileEntries.Count)
+                    {
+                        reconciliationActions = ReconciliationPlanner.Plan(
+                            consensus,
+                            perFileForPlan,
+                            perFileCwtCandidates,
+                            refinedCalibrations,
+                            perFileCalibrations,
+                            config.Reconciliation.ConsensusFdr);
+                        LogInfo(string.Format(
+                            "Stage 6 reconciliation: {0} per-(file, entry) actions planned",
+                            reconciliationActions.Count));
+                    }
+                    else
+                    {
+                        LogInfo(string.Format(
+                            "Stage 6 reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
+                            perFileCwtCandidates.Count, perFileEntries.Count));
+                    }
+
+                    // Stage 6 cross-impl bisection dump for the planner output.
+                    // Fires unconditionally when OSPREY_DUMP_RECONCILIATION=1
+                    // is set so the skipped / empty paths still produce a
+                    // header-only TSV and still honor OSPREY_RECONCILIATION_ONLY
+                    // for early exit. Mirrors the Rust side at
+                    // crates/osprey/src/pipeline.rs after the reconciliation
+                    // block closes.
+                    if (OspreyDiagnostics.DumpReconciliation)
+                    {
+                        var dumpActions = reconciliationActions
+                            ?? new Dictionary<(string File, int Index), ReconcileAction>();
+                        OspreyDiagnostics.WriteStage6ReconciliationDump(
+                            dumpActions, perFileForPlan);
+                        if (OspreyDiagnostics.ReconciliationOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
+                    }
+
+                    // Per-file rescore + gap-fill + second-pass FDR are
+                    // deferred to a later commit. Without those, single-run
+                    // analysis still produces valid output from the
+                    // first-pass FDR results above.
+                    LogInfo(@"Stage 6 per-file rescore: not yet implemented");
                 }
 
                 // Stage 8: Protein FDR (optional)
@@ -3114,6 +3227,11 @@ namespace pwiz.OspreySharp
             // from the supplied (apex, start, end). Mirrors run_search at
             // pipeline.rs:6596-6664.
             List<XICPeakBounds> peaks;
+            // Track whether peaks came from CWT (vs fallback / override) so the
+            // top-N CWT candidate capture below only fires for the CWT path,
+            // matching Rust run_search at pipeline.rs:6856 which only stores
+            // CWT-sourced candidates on the returned CoelutionScoredEntry.
+            bool peaksFromCwt = false;
             if (overrideBounds.HasValue)
             {
                 peaks = BuildOverridePeaks(overrideBounds.Value, xics);
@@ -3123,6 +3241,7 @@ namespace pwiz.OspreySharp
             else
             {
                 peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+                peaksFromCwt = peaks.Count > 0;
             }
 
             if (peaks.Count == 0)
@@ -3214,6 +3333,13 @@ namespace pwiz.OspreySharp
             double bestRankScore = double.MinValue;
             int bestPeakIdx = -1;
             double twoSigmaSq = 2.0 * rtSigma * rtSigma;
+            // Capture every CWT-passed peak with its raw coelution score and
+            // rank score for the top-N CwtCandidate list assigned below
+            // (Stage 6 reconciliation input). Mirrors Rust run_search's
+            // scored_candidates collection at pipeline.rs:6790-6806.
+            var capturedPeaks = peaksFromCwt
+                ? new List<(XICPeakBounds peak, double coelutionScore, double rankScore)>(peaks.Count)
+                : null;
             for (int pi = 0; pi < peaks.Count; pi++)
             {
                 var p = peaks[pi];
@@ -3284,6 +3410,9 @@ namespace pwiz.OspreySharp
                     bestPeak = p;
                     bestPeakIdx = pi;
                 }
+
+                if (capturedPeaks != null)
+                    capturedPeaks.Add((p, coelutionScore, rankScore));
             }
 
             if (diag && bestPeak != null)
@@ -3494,6 +3623,60 @@ namespace pwiz.OspreySharp
             features[19] = mpMinFragmentR2;
             features[20] = mpResidualCorr;
 
+            // Stage 6 reconciliation input: capture the top-N CWT peak
+            // candidates ranked by penalized rank score, with each kept
+            // candidate's apex/area/snr recomputed over the reference XIC
+            // slice. Mirrors Rust run_search at pipeline.rs:6852-6879.
+            // The stored coelution_score is the raw mean (NOT the RT-
+            // penalized rank score) -- reconciliation has its own RT
+            // tolerance logic via consensus RT comparison.
+            List<CwtCandidate> cwtCandidatesOut = null;
+            int topN = context.Config.Reconciliation != null
+                ? context.Config.Reconciliation.TopNPeaks
+                : 0;
+            if (capturedPeaks != null && capturedPeaks.Count > 0 && topN > 0)
+            {
+                capturedPeaks.Sort((a, b) =>
+                {
+                    if (TotalOrderGreater(a.rankScore, b.rankScore)) return -1;
+                    if (TotalOrderGreater(b.rankScore, a.rankScore)) return 1;
+                    return 0;
+                });
+                int kept = Math.Min(topN, capturedPeaks.Count);
+                cwtCandidatesOut = new List<CwtCandidate>(kept);
+                double[] refRts = xics[refXicIdx].RetentionTimes;
+                for (int k = 0; k < kept; k++)
+                {
+                    var cap = capturedPeaks[k];
+                    var p = cap.peak;
+                    int safeStart = Math.Max(0, Math.Min(p.StartIndex, refXicIntensities.Length - 1));
+                    int safeEnd = Math.Max(safeStart, Math.Min(p.EndIndex, refXicIntensities.Length - 1));
+                    int apexIdx = safeStart;
+                    double apexVal = refXicIntensities[safeStart];
+                    for (int s = safeStart; s <= safeEnd; s++)
+                    {
+                        if (refXicIntensities[s] >= apexVal)
+                        {
+                            apexVal = refXicIntensities[s];
+                            apexIdx = s;
+                        }
+                    }
+                    double area = PeakDetector.TrapezoidalArea(
+                        refRts, refXicIntensities, safeStart, safeEnd);
+                    double snr = PeakDetector.ComputeSnr(
+                        refXicIntensities, apexIdx, safeStart, safeEnd);
+                    cwtCandidatesOut.Add(new CwtCandidate
+                    {
+                        ApexRt = refRts[apexIdx],
+                        StartRt = refRts[safeStart],
+                        EndRt = refRts[safeEnd],
+                        Area = area,
+                        Snr = snr,
+                        CoelutionScore = cap.coelutionScore,
+                    });
+                }
+            }
+
             // Build FdrEntry
             var entry = new FdrEntry
             {
@@ -3507,7 +3690,8 @@ namespace pwiz.OspreySharp
                 CoelutionSum = coelutionSum,
                 Score = coelutionSum,
                 ModifiedSequence = candidate.ModifiedSequence,
-                Features = features
+                Features = features,
+                CwtCandidates = cwtCandidatesOut
             };
 
             return entry;
