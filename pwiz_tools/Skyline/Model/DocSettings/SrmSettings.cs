@@ -1054,7 +1054,18 @@ namespace pwiz.Skyline.Model.DocSettings
                 var explicitUnits = nodeGroup.ExplicitValues.IonMobilityUnits;
                 if (explicitUnits == eIonMobilityUnits.none)
                 {
-                    var candidates = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(this);
+                    // Settings-level evidence (results, IM library, spectral libraries) plus any
+                    // sibling transition groups on the same peptide that already have explicit
+                    // units. The sibling case matters for legacy documents where one TG was
+                    // saved with units and another wasn't.
+                    var candidates = new HashSet<eIonMobilityUnits>(
+                        TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(this));
+                    foreach (var siblingGroup in nodePep.TransitionGroups)
+                    {
+                        var siblingUnits = siblingGroup.ExplicitValues.IonMobilityUnits;
+                        if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(siblingUnits))
+                            candidates.Add(siblingUnits);
+                    }
                     if (candidates.Count == 1)
                     {
                         // Document-level evidence is authoritative even when it contradicts the export

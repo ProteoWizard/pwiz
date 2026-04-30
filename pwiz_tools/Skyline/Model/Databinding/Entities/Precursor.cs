@@ -363,7 +363,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     // If deduction is empty or ambiguous, accept the value with units=none and
                     // let the user set the units column next; the safety net in
                     // SrmSettings.GetIonMobilityFilter guards consumption of an unresolved state.
-                    var candidates = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(SrmDocument);
+                    // Settings + sibling transition groups on this peptide is sufficient evidence
+                    // and avoids walking the entire MoleculeTransitionGroups tree on every cell
+                    // edit during a large paste. The settings deduction is library-cached so the
+                    // expensive scan only runs once per document.
+                    var candidates = new HashSet<eIonMobilityUnits>(
+                        TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(SrmDocument.Settings));
+                    foreach (var siblingGroup in Peptide.DocNode.TransitionGroups)
+                    {
+                        var siblingUnits = siblingGroup.ExplicitValues.IonMobilityUnits;
+                        if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(siblingUnits))
+                            candidates.Add(siblingUnits);
+                    }
                     if (candidates.Count == 1)
                         unitsForSet = candidates.Single();
                 }
