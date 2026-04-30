@@ -622,18 +622,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return comboBoxIonMobilityUnits.SelectedIndex >= 0
-                    ? (eIonMobilityUnits) comboBoxIonMobilityUnits.SelectedIndex
-                    : eIonMobilityUnits.none;
+                // Look up by display string rather than relying on the dropdown index matching
+                // the enum value - they only line up today because the user-selectable enum
+                // members happen to occupy contiguous values starting at 0.
+                return IonMobilityFilter.IonMobilityUnitsFromL10NString(
+                    comboBoxIonMobilityUnits.SelectedItem as string);
             }
             set
             {
-                // Dropdown only holds entries where IsUserSelectableIonMobilityUnit is true;
-                // map non-displayable values (waters_sonar, unknown) to "None" rather than
-                // throwing out of range.
-                var idx = (int) value;
-                comboBoxIonMobilityUnits.SelectedIndex =
-                    idx >= 0 && idx < comboBoxIonMobilityUnits.Items.Count ? idx : 0;
+                var idx = comboBoxIonMobilityUnits.Items.IndexOf(IonMobilityFilter.IonMobilityUnitsL10NString(value));
+                // Non-displayable values (waters_sonar, unknown) fall back to "None".
+                comboBoxIonMobilityUnits.SelectedIndex = idx >= 0 ? idx : 0;
             }
         }
 

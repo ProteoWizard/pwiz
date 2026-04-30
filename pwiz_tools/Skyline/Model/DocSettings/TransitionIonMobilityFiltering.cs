@@ -161,6 +161,8 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(fileInfo.IonMobilityUnits))
                             units.Add(fileInfo.IonMobilityUnits);
                     }
+                    if (units.Count > 1)
+                        return units;
                 }
             }
 

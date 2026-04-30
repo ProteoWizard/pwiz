@@ -2202,7 +2202,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Libraries cache their own results so repeated calls during e.g. a bulk Document Grid paste
         /// are cheap.
         /// </summary>
-        public HashSet<eIonMobilityUnits> GetDistinctIonMobilityUnits()
+        public IReadOnlyCollection<eIonMobilityUnits> GetDistinctIonMobilityUnits()
         {
             var result = new HashSet<eIonMobilityUnits>();
             foreach (var lib in _libraries.Where(l => l != null))

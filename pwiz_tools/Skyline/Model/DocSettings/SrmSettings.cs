@@ -1062,7 +1062,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         // to the wrong semantics without the user noticing.
                         explicitUnits = candidates.Single();
                     }
-                    else if (candidates.Count == 0 && exportTargetUnits != eIonMobilityUnits.none)
+                    else if (candidates.Count == 0 && IonMobilityFilter.IsExplicitIonMobilityMeasurement(exportTargetUnits))
                     {
                         // No document evidence - fall back to the export target's native unit.
                         explicitUnits = exportTargetUnits;
@@ -1075,10 +1075,12 @@ namespace pwiz.Skyline.Model.DocSettings
                     }
                     else
                     {
+                        // HashSet enumeration order is not guaranteed - sort by enum value so the
+                        // user-visible message is stable across runs.
                         throw new InvalidDataException(string.Format(
                             DocSettingsResources.SrmSettings_GetIonMobilityFilter_Peptide___0___has_an_explicit_ion_mobility_value_but_document_contains_multiple_ion_mobility_units___1____Set_the_Explicit_Ion_Mobility_Units_column_in_the_Document_Grid_,
                             nodePep.ModifiedTarget,
-                            string.Join(@", ", candidates.Select(IonMobilityFilter.IonMobilityUnitsL10NString))));
+                            string.Join(@", ", candidates.OrderBy(u => u).Select(IonMobilityFilter.IonMobilityUnitsL10NString))));
                     }
                 }
                 // Use the explicitly specified IM value if no CCS provided, or if CCS=>IM conversion failed

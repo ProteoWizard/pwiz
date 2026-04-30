@@ -1024,8 +1024,10 @@ namespace pwiz.Skyline.Model
                     if (imUnits == eIonMobilityUnits.none)
                     {
                         // User supplied an ion mobility value without specifying units - try to
-                        // deduce from the target document's settings before giving up.
-                        var candidates = TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(Settings);
+                        // deduce from the target document's settings before giving up. Cached
+                        // per-reader so a large transition list import doesn't rescan results
+                        // and libraries on every row.
+                        var candidates = GetCachedSettingsIonMobilityUnits();
                         if (candidates.Count == 1)
                         {
                             imUnits = candidates.Single();
@@ -1054,6 +1056,13 @@ namespace pwiz.Skyline.Model
                 ionMobility = declarations.First().Value;
                 imUnits = declarations.First().Key;
                 return null; // No error
+            }
+
+            private IReadOnlyCollection<eIonMobilityUnits> _cachedSettingsImUnits;
+
+            private IReadOnlyCollection<eIonMobilityUnits> GetCachedSettingsIonMobilityUnits()
+            {
+                return _cachedSettingsImUnits ??= TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(Settings);
             }
 
             public ExplicitTransitionGroupValues ExplicitTransitionGroupValues

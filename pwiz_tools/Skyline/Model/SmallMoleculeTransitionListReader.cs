@@ -1588,8 +1588,9 @@ namespace pwiz.Skyline.Model
                 if (declaredUnitsIM == eIonMobilityUnits.none)
                 {
                     // Units column missing or empty - try to deduce from the target document
-                    // before erroring.
-                    var candidates = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(document);
+                    // before erroring. Cached per-reader so a large paste doesn't rescan the
+                    // document tree, results, and libraries on every row.
+                    var candidates = GetCachedDocumentIonMobilityUnits(document);
                     if (candidates.Count == 1)
                     {
                         declaredUnitsIM = candidates.Single();
@@ -1912,6 +1913,17 @@ namespace pwiz.Skyline.Model
         {
             return Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations +
                    $@" ({string.Join(@", ", ionMobility.Select(kvp => $@"{IonMobilityFilter.IonMobilityUnitsL10NString(kvp.Key)} = {kvp.Value}"))}";
+        }
+
+        private IReadOnlyCollection<eIonMobilityUnits> _cachedDocImUnits;
+
+        // Captured on first call and reused for the rest of the paste. Each row passes a slightly
+        // different document instance (rows are added incrementally), but the deduced unit set is
+        // monotonically non-decreasing, and once we deduce a unit we want every subsequent
+        // missing-units row in this paste to receive the same one.
+        private IReadOnlyCollection<eIonMobilityUnits> GetCachedDocumentIonMobilityUnits(SrmDocument document)
+        {
+            return _cachedDocImUnits ??= TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(document);
         }
 
         /// <summary>

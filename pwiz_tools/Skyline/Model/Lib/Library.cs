@@ -863,7 +863,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if ion mobility information was retrieved successfully</returns>
         public abstract bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities);
 
-        private HashSet<eIonMobilityUnits> _distinctIonMobilityUnits;
+        private IReadOnlyCollection<eIonMobilityUnits> _distinctIonMobilityUnits;
 
         /// <summary>
         /// Returns the distinct non-none ion mobility units present anywhere in this library,
@@ -871,9 +871,10 @@ namespace pwiz.Skyline.Model.Lib
         /// ion mobility value that lacks them. Default implementation scans via
         /// <see cref="TryGetIonMobilityInfos(LibKey[], int, out LibraryIonMobilityInfo)"/> with
         /// null targets (skipping the per-key index lookup); subclasses may override to query
-        /// the underlying store more efficiently.
+        /// the underlying store more efficiently. Returned as a read-only view so callers cannot
+        /// mutate the cache.
         /// </summary>
-        public virtual HashSet<eIonMobilityUnits> GetDistinctIonMobilityUnits()
+        public virtual IReadOnlyCollection<eIonMobilityUnits> GetDistinctIonMobilityUnits()
         {
             if (_distinctIonMobilityUnits != null)
                 return _distinctIonMobilityUnits;
