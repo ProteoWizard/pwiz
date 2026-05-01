@@ -78,12 +78,21 @@ public sealed class Reader_Sciex : IReader
 #if !NO_VENDOR_SUPPORT
     private static void FillMetadata(MSData result, string wiffPath, AbstractWiffFile wiff, ReaderConfig? config)
     {
-        string baseName = Path.GetFileNameWithoutExtension(wiffPath);
-        // cpp run id: "<baseName>-<sampleName>" for multi-sample, else baseName.
-        if (wiff.SampleCount > 1 && !string.IsNullOrEmpty(wiff.SampleName))
-            result.Id = $"{baseName}-{wiff.SampleName}";
-        else
-            result.Id = baseName;
+        // Mirror pwiz cpp Reader_ABI: msd.id starts at the wiff stem, then is reconciled with
+        // the per-sample name. If the only-sample's name already contains the stem, prefer the
+        // sample name (more specific). Otherwise, when there are multiple samples or the stem
+        // and sample name don't share a substring, append "-<sampleName>" so the run id matches
+        // the reference mzML naming used by VendorReaderTestHarness.
+        string id = Path.GetFileNameWithoutExtension(wiffPath);
+        string sampleName = wiff.SampleName ?? string.Empty;
+        if (!string.IsNullOrEmpty(sampleName))
+        {
+            if (wiff.SampleCount == 1 && sampleName.Contains(id, StringComparison.Ordinal))
+                id = sampleName;
+            else if (wiff.SampleCount > 1 || !id.Contains(sampleName, StringComparison.Ordinal))
+                id = $"{id}-{sampleName}";
+        }
+        result.Id = id;
         result.Run.Id = result.Id;
 
         var sf = new SourceFile(Path.GetFileName(wiffPath), Path.GetFileName(wiffPath),

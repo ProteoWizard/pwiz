@@ -51,6 +51,28 @@
     <Copy SourceFiles="@(_AgilentExtracted)" DestinationFolder="$(AgilentAssembliesDir)" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- Cecil-patches BaseDataAccess.dll + BaseCommon.dll to remove uses of
+       Delegate.BeginInvoke/EndInvoke (removed from .NET 5+; the SDK throws
+       PlatformNotSupportedException on first OpenDataFile without this). The patcher backs
+       each input DLL up to <name>.prepatched on first run and reads from that copy on every
+       subsequent run, so applying the patch to an already-patched DLL is idempotent. Patched
+       DLLs live only in vendor-assemblies/Agilent/ — never committed (gitignored).
+
+       Sequencing: AfterTargets="ExtractAgilentAssemblies" guarantees the SDK exists before
+       we touch it; BeforeTargets="ResolveAssemblyReferences" makes the patched files visible
+       to the reference-copy step that follows. We don't bother with Inputs/Outputs because
+       the patcher is fast (~1s) and the .prepatched-backed idempotency makes re-runs safe. -->
+  <PropertyGroup>
+    <AgilentPatcherProj>$(MSBuildThisFileDirectory)..\..\..\build\AgilentPatcher\AgilentPatcher.csproj</AgilentPatcherProj>
+  </PropertyGroup>
+  <Target Name="PatchAgilentBeginInvoke"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          AfterTargets="ExtractAgilentAssemblies"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths">
+    <Message Importance="high" Text="Cecil-patching Agilent SDK (BaseDataAccess.dll, BaseCommon.dll) to remove BeginInvoke/EndInvoke." />
+    <Exec Command="dotnet run --project &quot;$(AgilentPatcherProj)&quot; -c Release -- &quot;$(AgilentAssembliesDir)&quot;" />
+  </Target>
+
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
        plain .NET assemblies, not COM interop wrappers. -->
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
