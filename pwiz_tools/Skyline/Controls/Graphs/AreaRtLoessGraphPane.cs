@@ -22,12 +22,14 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Dapper;
 using pwiz.Common.Collections;
 using pwiz.Common.Colors;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Themes;
+using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -121,9 +123,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string replicateName = measuredResults.Chromatograms[i].Name;
                     var color = colors[iColor++ % colors.Count];
-                    if (i == GraphSummary.ResultsIndex)
+                    var width = 1.5f;
+                    if (i == GraphSummary.ResultsIndex && Settings.Default.ShowReplicateSelection)
                     {
                         color = ColorScheme.ChromGraphItemSelected;
+                        width = 3;
                     }
 
                     foreach (var curveInfo in curves)
@@ -157,7 +161,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         curve.Line.IsAntiAlias = true;
                         curve.Line.IsOptimizedDraw = true;
                         curve.Symbol.IsVisible = false;
-                        curve.Line.Width = 1.5f;
+                        curve.Line.Width = width;
                         curve.Label.IsVisible = true;
                         curve.Tag = curveInfo.ReplicateIndex;
                     }
