@@ -1624,7 +1624,7 @@ namespace pwiz.OspreySharp.Test
                     MakeFdrEntry(1, 0.0, 0.0, 0.0),
                     MakeFdrEntry(2, 0.0, 0.0, 0.0),
                 };
-                Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded));
+                Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.FirstPass));
 
                 for (int i = 0; i < entries.Count; i++)
                 {
@@ -1674,7 +1674,7 @@ namespace pwiz.OspreySharp.Test
                     MakeFdrEntry(1, 0.0, 0.0, 0.0),
                     MakeFdrEntry(2, 0.0, 0.0, 0.0),
                 };
-                Assert.IsFalse(FdrScoresSidecar.TryRead(path, entries));
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, entries, FdrScoresSidecar.Pass.FirstPass));
                 foreach (var e in entries)
                     Assert.AreEqual(0.0, e.Score);
             }
@@ -1706,7 +1706,44 @@ namespace pwiz.OspreySharp.Test
                     MakeFdrEntry(0, 0.0, 0.0, 0.0),
                     MakeFdrEntry(1, 0.0, 0.0, 0.0),
                 };
-                Assert.IsFalse(FdrScoresSidecar.TryRead(path, wrongCount));
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, wrongCount, FdrScoresSidecar.Pass.FirstPass));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A 1st-pass sidecar must NOT load into a TryRead call that
+        /// expects 2nd-pass (and vice versa) — would otherwise scramble
+        /// q-values silently because the records are positionally
+        /// compatible but semantically different.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarPassMismatchRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_pm_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.fdr_scores.bin");
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry>
+                    {
+                        MakeFdrEntry(0, -3.5, 0.001, 0.02),
+                        MakeFdrEntry(1, -2.1, 0.005, 0.04),
+                    },
+                    FdrScoresSidecar.Pass.FirstPass);
+
+                var stubs = new List<FdrEntry>
+                {
+                    MakeFdrEntry(0, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(1, 0.0, 0.0, 0.0),
+                };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, stubs, FdrScoresSidecar.Pass.SecondPass));
+                foreach (var s in stubs)
+                    Assert.AreEqual(0.0, s.Score);
             }
             finally
             {

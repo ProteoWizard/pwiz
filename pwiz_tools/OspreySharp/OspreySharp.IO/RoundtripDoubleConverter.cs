@@ -64,6 +64,19 @@ namespace pwiz.OspreySharp.IO
         public override double ReadJson(JsonReader reader, Type objectType, double existingValue,
             bool hasExistingValue, JsonSerializer serializer)
         {
+            // Newtonsoft's default `Convert.ToDouble(reader.Value)` happily
+            // returns 0.0 for `JsonToken.Null` (because `Convert.ToDouble`
+            // accepts null), and silently truncates non-numeric tokens via
+            // `ToString` paths. Both would let malformed cross-impl input
+            // pass through without surfacing — reject explicitly so a
+            // future schema drift produces a parse error instead of zeros.
+            if (reader.TokenType != JsonToken.Integer && reader.TokenType != JsonToken.Float)
+            {
+                throw new JsonSerializationException(string.Format(CultureInfo.InvariantCulture,
+                    "Expected number token for double, got {0}", reader.TokenType));
+            }
+            if (reader.Value == null)
+                throw new JsonSerializationException("Null value for numeric token");
             return Convert.ToDouble(reader.Value, CultureInfo.InvariantCulture);
         }
     }

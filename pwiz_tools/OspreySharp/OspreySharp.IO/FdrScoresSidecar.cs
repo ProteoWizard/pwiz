@@ -56,15 +56,23 @@ namespace pwiz.OspreySharp.IO
     ///                            f64 experiment_peptide_qvalue
     ///                            f64 pep
     /// </code>
-    /// Records are post-compaction: every record corresponds to a stub
-    /// that passed first-pass FDR. The <c>entry_id</c> on each record
-    /// lets a Stage 6 worker assemble the post-compaction stub set by
-    /// joining the full parquet against the sidecar's entry_id set —
-    /// the worker does not need to re-run Percolator. In skip-Percolator
-    /// mode the order also matches the in-memory list position-for-
-    /// position, so the per-position
-    /// <c>entries[i].EntryId == record.entry_id</c> check doubles as a
-    /// corruption detector.
+    /// Records are written pre-compaction at the Stage 5 → Stage 6
+    /// boundary: every input entry contributes one record so q-values
+    /// are preserved even for entries that may not survive later
+    /// compaction. The pre-compaction call site is at the bottom of the
+    /// first-pass FDR block, just before the compaction loop runs,
+    /// mirroring Rust's <c>persist_fdr_scores</c> at
+    /// <c>pipeline.rs</c>. Each record carries the entry's
+    /// <c>entry_id</c> for identity verification (the per-position
+    /// <c>entries[i].EntryId == record.entry_id</c> check during load
+    /// doubles as a corruption detector); the loader matches records
+    /// to stubs by position + count rather than by joining on
+    /// <c>entry_id</c>. A Stage 6 worker therefore consumes the
+    /// sidecar by reloading the same FdrEntry sequence from the
+    /// per-file parquet cache and applying records in order. The
+    /// loader also rejects mismatches on the header <c>pass</c> byte
+    /// so a 2nd-pass sidecar can never silently scramble 1st-pass
+    /// stubs (or vice versa).
     /// </summary>
     public static class FdrScoresSidecar
     {
@@ -113,9 +121,16 @@ namespace pwiz.OspreySharp.IO
 
         /// <summary>
         /// Write per-file FDR scores to <paramref name="path"/>. Stages
-        /// through a temp file in the same directory, then atomically
-        /// renames. The pass byte distinguishes first- vs second-pass
-        /// outputs at the Percolator level.
+        /// through a sibling <c>.tmp</c> file in the same directory and
+        /// renames into place; this avoids leaving a partially-written
+        /// destination on writer failure, but the rename is not strictly
+        /// atomic when the destination already exists (the existing file
+        /// is removed first). A crash between the remove and the rename
+        /// leaves the <c>.tmp</c> next to the missing destination, which
+        /// the next run either overwrites or — if the writer fails
+        /// identically — leaves recoverable by hand. The pass byte
+        /// distinguishes first- vs second-pass outputs at the Percolator
+        /// level.
         /// </summary>
         public static void Write(string path, IReadOnlyList<FdrEntry> entries, Pass pass)
         {
@@ -126,8 +141,9 @@ namespace pwiz.OspreySharp.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            // Stage to sibling tmp file then atomically rename. Avoids
-            // partial-file corruption if the writer is interrupted.
+            // Stage to sibling .tmp file then rename. Avoids partial-file
+            // corruption if the writer is interrupted; not strictly
+            // atomic on overwrite (delete + move), see Write() doc.
             string tmpPath = path + ".tmp";
             try
             {
@@ -169,12 +185,14 @@ namespace pwiz.OspreySharp.IO
         /// <summary>
         /// Read per-file FDR scores from <paramref name="path"/> into
         /// <paramref name="entries"/>. Returns true on success, false on
-        /// any of: missing file, bad magic, unsupported version, count
+        /// any of: missing file, bad magic, unsupported version, pass-byte
+        /// mismatch against <paramref name="expectedPass"/>, count
         /// mismatch, or size mismatch. Records are positional, so the
-        /// caller's <paramref name="entries"/> Vec must already be sized
-        /// to match the post-compaction stub set.
+        /// caller's <paramref name="entries"/> list must already be sized
+        /// to match the FdrEntry sequence the sidecar was written from
+        /// (pre-compaction at the Stage 5 → Stage 6 boundary).
         /// </summary>
-        public static bool TryRead(string path, IList<FdrEntry> entries)
+        public static bool TryRead(string path, IList<FdrEntry> entries, Pass expectedPass)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (entries == null) throw new ArgumentNullException(nameof(entries));
@@ -198,6 +216,12 @@ namespace pwiz.OspreySharp.IO
             }
             byte version = data[8];
             if (version != FormatVersion)
+                return false;
+            // Reject mismatched pass bytes so a 2nd-pass sidecar can never
+            // be silently loaded into 1st-pass stubs (or vice versa) — the
+            // q-values would scramble without any visible error.
+            byte passByte = data[9];
+            if (passByte != (byte)expectedPass)
                 return false;
             // bytes 10..16 reserved, ignored
             ulong headerCount = BitConverter.ToUInt64(data, 16);

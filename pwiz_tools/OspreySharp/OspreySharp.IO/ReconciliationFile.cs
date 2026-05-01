@@ -101,8 +101,14 @@ namespace pwiz.OspreySharp.IO
 
         /// <summary>
         /// Write the reconciliation file as pretty 2-space-indented JSON
-        /// with LF line endings. Stages through a sibling .tmp file then
-        /// atomically renames so partial writes don't corrupt the output.
+        /// with LF line endings. Stages through a sibling <c>.tmp</c>
+        /// file in the same directory and renames into place; this
+        /// avoids leaving a partially-written destination on writer
+        /// failure, but the rename is not strictly atomic when the
+        /// destination already exists (the existing file is removed
+        /// first). A crash between the remove and the rename leaves
+        /// the <c>.tmp</c> next to the missing destination, recoverable
+        /// by hand or by re-running.
         /// </summary>
         public static void Save(string path, ReconciliationFile file)
         {

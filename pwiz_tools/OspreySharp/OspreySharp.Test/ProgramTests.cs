@@ -49,7 +49,7 @@ namespace pwiz.OspreySharp.Test
         public void TestValidateNoJoinAndJoinOnlyIsMutex()
         {
             var config = new OspreyConfig();
-            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: true);
+            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: true, joinOnlyModifier: false);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "mutually exclusive");
         }
@@ -62,7 +62,7 @@ namespace pwiz.OspreySharp.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true);
+            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false);
             Assert.IsNotNull(err);
             // Error refers to the canonical flag the user typed.
             StringAssert.Contains(err, "--join-at-pass=1");
@@ -79,7 +79,7 @@ namespace pwiz.OspreySharp.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true);
+            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "--join-at-pass=1");
             StringAssert.Contains(err, "cannot be combined with --input");
@@ -92,7 +92,7 @@ namespace pwiz.OspreySharp.Test
             {
                 InputScores = new List<string> { "a.scores.parquet" }
             };
-            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true);
+            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "--join-at-pass=1");
             StringAssert.Contains(err, "--library and --output");
@@ -106,7 +106,7 @@ namespace pwiz.OspreySharp.Test
                 NoJoin = true,
                 LibrarySource = LibrarySource.FromPath("ref.blib")
             };
-            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false);
+            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "--input <mzML");
         }
@@ -121,7 +121,7 @@ namespace pwiz.OspreySharp.Test
                 InputScores = new List<string> { "a.scores.parquet" },
                 LibrarySource = LibrarySource.FromPath("ref.blib")
             };
-            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false);
+            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "--input-scores");
         }
@@ -135,7 +135,7 @@ namespace pwiz.OspreySharp.Test
                 InputFiles = new List<string> { "a.mzML" },
                 LibrarySource = LibrarySource.FromPath("ref.blib")
             };
-            Assert.IsNull(Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false));
+            Assert.IsNull(Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false));
         }
 
         [TestMethod]
@@ -147,7 +147,59 @@ namespace pwiz.OspreySharp.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            Assert.IsNull(Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true));
+            Assert.IsNull(Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false));
+        }
+
+        [TestMethod]
+        public void TestValidateJoinOnlyModifierRejectsSingleFile()
+        {
+            // --join-at-pass=1 --join-only writes the Stage 5 → Stage 6
+            // boundary file pair; that's only meaningful with siblings,
+            // so a single-file invocation should error fast rather than
+            // running Stages 1-5 and silently producing nothing useful.
+            var config = new OspreyConfig
+            {
+                InputScores = new List<string> { "only.scores.parquet" },
+                LibrarySource = LibrarySource.FromPath("ref.blib"),
+                OutputBlib = "out.blib"
+            };
+            string err = Program.ValidateArgs(config,
+                noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: true);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--join-at-pass=1 --join-only");
+            StringAssert.Contains(err, "2+ parquet files");
+        }
+
+        [TestMethod]
+        public void TestValidateJoinOnlyModifierRequiresReconciliationEnabled()
+        {
+            var config = new OspreyConfig
+            {
+                InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" },
+                LibrarySource = LibrarySource.FromPath("ref.blib"),
+                OutputBlib = "out.blib"
+            };
+            config.Reconciliation.Enabled = false;
+            string err = Program.ValidateArgs(config,
+                noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: true);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "Reconciliation.Enabled");
+        }
+
+        [TestMethod]
+        public void TestValidateJoinOnlyPlainAcceptsSingleFile()
+        {
+            // Plain --join-at-pass=1 (no modifier) runs Stages 5-8 from
+            // the parquet entry point; a 1-file run is a degenerate but
+            // legal case and shouldn't be rejected here.
+            var config = new OspreyConfig
+            {
+                InputScores = new List<string> { "only.scores.parquet" },
+                LibrarySource = LibrarySource.FromPath("ref.blib"),
+                OutputBlib = "out.blib"
+            };
+            Assert.IsNull(Program.ValidateArgs(config,
+                noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false));
         }
 
         [TestMethod]
@@ -159,7 +211,7 @@ namespace pwiz.OspreySharp.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            Assert.IsNull(Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: false));
+            Assert.IsNull(Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: false, joinOnlyModifier: false));
         }
 
         [TestMethod]
@@ -170,7 +222,7 @@ namespace pwiz.OspreySharp.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: false);
+            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: false, joinOnlyModifier: false);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "No input files");
         }
