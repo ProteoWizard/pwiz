@@ -176,12 +176,15 @@ namespace pwiz.OspreySharp.Core
         }
 
         /// <summary>
-        /// Compute a fast identity hash for the library file (path + size + mtime).
-        /// Filesystem metadata only -- no content hashing. Same recipe as the
-        /// Rust impl's library_identity_hash so same-impl HPC handoff
-        /// (--no-join then --join-only on the same OS / library) gets matching
-        /// hashes; cross-impl handoff is not bit-compatible because path
-        /// formatting and mtime serialization differ between Rust and .NET.
+        /// Compute a fast identity hash for the library file (file name + size
+        /// + mtime). Filesystem metadata only -- no content hashing. The
+        /// directory portion is deliberately NOT in the hash so the same
+        /// library identifies identically across Rust / .NET / OS variations
+        /// (drive letter case, forward vs back slash, relative vs absolute,
+        /// HPC node-local vs shared paths). Mirrors the
+        /// <c>reconciliation_parameter_hash</c> precedent that hashes only
+        /// sorted file stems for the input set. Same recipe as Rust's
+        /// <c>library_identity_hash</c>.
         /// </summary>
         public string LibraryIdentityHash()
         {
@@ -189,7 +192,10 @@ namespace pwiz.OspreySharp.Core
             using (var sha256 = SHA256.Create())
             {
                 var sb = new StringBuilder();
-                sb.AppendFormat("path:{0}\n", libPath);
+                string fileName = string.IsNullOrEmpty(libPath)
+                    ? string.Empty
+                    : Path.GetFileName(libPath);
+                sb.AppendFormat("file_name:{0}\n", fileName);
                 if (!string.IsNullOrEmpty(libPath) && File.Exists(libPath))
                 {
                     var info = new FileInfo(libPath);

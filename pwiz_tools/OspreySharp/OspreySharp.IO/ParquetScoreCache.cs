@@ -316,10 +316,11 @@ namespace pwiz.OspreySharp.IO
             var boundsAreas = new double[n];   // not on FdrEntry; left at 0
             var boundsSnrs = new double[n];    // not on FdrEntry; left at 0
             var fileNames = new string[n];
-            // Binary blobs are nullable placeholders -- C# doesn't currently
-            // populate fragments / XICs / CWT byte serialization. Stage 5+8
-            // don't need them; Stage 6 reconciliation does and is documented
-            // as not yet supported cross-impl.
+            // The cwt_candidates column carries the per-entry CWT peak list
+            // for Stage 6 reconciliation (encoded via CwtCandidateCodec to
+            // match Rust's binary layout). The fragments and XIC blobs are
+            // still nullable placeholders -- they're not consumed by any
+            // current Stage 6 path.
             var cwtCandidates = new byte[n][];
             var fragmentMzs = new byte[n][];
             var fragmentIntensities = new byte[n][];
@@ -341,6 +342,13 @@ namespace pwiz.OspreySharp.IO
                 startRts[i] = entry.StartRt;
                 endRts[i] = entry.EndRt;
                 fileNames[i] = fileName ?? string.Empty;
+
+                // Encode CWT candidate list (mirrors Rust binary layout).
+                // Leave the cell null when the entry has no captured candidates
+                // -- LoadCwtCandidatesFromParquet treats null/short cells as
+                // empty, matching the Rust loader's tolerance.
+                if (entry.CwtCandidates != null && entry.CwtCandidates.Count > 0)
+                    cwtCandidates[i] = CwtCandidateCodec.Encode(entry.CwtCandidates);
 
                 LibraryEntry libEntry = null;
                 if (libraryById != null)
@@ -508,6 +516,50 @@ namespace pwiz.OspreySharp.IO
             }
 
             return stubs;
+        }
+
+        /// <summary>
+        /// Load only the <c>cwt_candidates</c> column from a Parquet cache,
+        /// returning one <see cref="CwtCandidate"/> list per row in the same
+        /// order as <see cref="LoadFdrStubsFromParquet"/>. Used by Stage 6
+        /// reconciliation planning, which needs the per-entry CWT peak
+        /// candidates without paying the cost of loading features and
+        /// fragments. Mirrors the Rust loader at
+        /// <c>osprey/crates/osprey/src/pipeline.rs::load_cwt_candidates_from_parquet</c>.
+        /// </summary>
+        public static List<List<CwtCandidate>> LoadCwtCandidatesFromParquet(string path)
+        {
+            var allCandidates = new List<List<CwtCandidate>>();
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = new ParquetReader(stream))
+            {
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var col = groupReader.ReadColumn(FIELD_CWT_CANDIDATES);
+                        // The cwt_candidates column is binary; if Parquet.Net
+                        // hands back something other than byte[][] the
+                        // schema or write path is wrong upstream and any
+                        // silent fallback would desynchronize this list
+                        // from LoadFdrStubsFromParquet's row order. Throw
+                        // with the offending file + group so the caller
+                        // sees a clear error rather than empty CWT lists.
+                        var blobs = col.Data as byte[][];
+                        if (blobs == null)
+                        {
+                            throw new InvalidDataException(string.Format(
+                                "{0}: cwt_candidates column in row group {1} " +
+                                "decoded as {2}, expected byte[][] -- parquet schema mismatch",
+                                Path.GetFileName(path), g,
+                                col.Data == null ? "null" : col.Data.GetType().Name));
+                        }
+                        for (int row = 0; row < blobs.Length; row++)
+                            allCandidates.Add(CwtCandidateCodec.Decode(blobs[row]));
+                    }
+                }
+            }
+            return allCandidates;
         }
 
         #endregion

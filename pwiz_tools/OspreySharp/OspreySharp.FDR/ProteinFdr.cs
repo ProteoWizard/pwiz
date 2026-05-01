@@ -34,7 +34,6 @@
 using System;
 using System.Collections.Generic;
 using pwiz.OspreySharp.Core;
-using pwiz.OspreySharp.ML;
 
 namespace pwiz.OspreySharp.FDR
 {
@@ -92,22 +91,30 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>Whether this peptide is a decoy.</summary>
         public bool IsDecoy { get; set; }
 
-        /// <summary>Best (lowest) run-level precursor q-value for this peptide.</summary>
+        /// <summary>
+        /// Best (lowest) run-level <b>peptide</b> q-value for this peptide across all files.
+        /// Used as the target-side gate in picked-protein FDR (Savitski 2015 convention):
+        /// only targets with <c>BestQvalue &lt;= gate</c> are eligible to contribute.
+        /// Rust's <c>collect_best_peptide_scores</c> uses <c>run_peptide_qvalue</c>
+        /// (not precursor q-value) for the same reason.
+        /// </summary>
         public double BestQvalue { get; set; }
     }
 
     /// <summary>
-    /// Result of picked-protein FDR computation.
+    /// Result of picked-protein FDR computation. Only target winners appear in
+    /// <see cref="GroupQvalues"/> and <see cref="GroupScores"/>; decoy winners are
+    /// statistical machinery for the cumulative FDR computation and are not
+    /// exposed. Protein-level posterior error probability (PEP) is intentionally
+    /// not computed -- use peptide-level PEP for downstream confidence (matches
+    /// Rust <c>ProteinFdrResult</c>).
     /// </summary>
     public class ProteinFdrResult
     {
-        /// <summary>Protein group ID to q-value.</summary>
+        /// <summary>Protein group ID to q-value (target winners only).</summary>
         public Dictionary<uint, double> GroupQvalues { get; set; }
 
-        /// <summary>Protein group ID to posterior error probability.</summary>
-        public Dictionary<uint, double> GroupPep { get; set; }
-
-        /// <summary>Protein group ID to best peptide SVM score (target side).</summary>
+        /// <summary>Protein group ID to best peptide SVM score (target winners only).</summary>
         public Dictionary<uint, double> GroupScores { get; set; }
 
         /// <summary>Peptide (modified_sequence) to best protein q-value among its groups.</summary>
@@ -116,7 +123,6 @@ namespace pwiz.OspreySharp.FDR
         public ProteinFdrResult()
         {
             GroupQvalues = new Dictionary<uint, double>();
-            GroupPep = new Dictionary<uint, double>();
             GroupScores = new Dictionary<uint, double>();
             PeptideQvalues = new Dictionary<string, double>();
         }
@@ -128,8 +134,7 @@ namespace pwiz.OspreySharp.FDR
     /// </summary>
     public static class ProteinFdr
     {
-        private static readonly string DECOY_PREFIX = "DECOY_";
-        private static readonly double EPSILON = 1e-16;
+        private const string DECOY_PREFIX = "DECOY_";
 
         /// <summary>
         /// Build protein parsimony from the spectral library.
@@ -337,160 +342,168 @@ namespace pwiz.OspreySharp.FDR
         }
 
         /// <summary>
-        /// Compute protein-level FDR using DIA-NN-style composite scoring.
+        /// Compute picked-protein FDR (Savitski et al. 2015). Mirrors Rust
+        /// <c>osprey-fdr/src/protein.rs::compute_protein_fdr</c>.
         ///
-        /// Uses two complementary scoring metrics, computing q-values independently
-        /// on each and taking the minimum:
-        /// 1. Composite score (sum of per-peptide log-likelihoods)
-        /// 2. Best peptide quality: max(0, 1 - peptide_err)
+        /// For each protein group:
+        /// <list type="number">
+        /// <item><description><b>Score by best peptide.</b> Target-side score = max
+        /// SVM discriminant over target peptides whose best peptide-level q-value is
+        /// &lt;= <paramref name="qvalueGate"/> (Savitski's gate, restricts analysis
+        /// to "proteins we'd actually report"). Decoy-side score = max SVM
+        /// discriminant over ALL decoy peptides for the group (the decoy side is
+        /// NOT gated; gating decoys would create survivorship bias and collapse the
+        /// null distribution).</description></item>
+        /// <item><description><b>Pairwise picking.</b> Each group produces exactly
+        /// one winner: target wins on <c>target_score &gt;= decoy_score</c>
+        /// (ties to target). Groups with only one side win that side. Groups with
+        /// no passing peptides are skipped.</description></item>
+        /// <item><description><b>Cumulative FDR on winners</b> sorted by SVM score
+        /// descending (tiebreak group_id ascending). At each rank,
+        /// <c>q = cum_decoys / cum_targets</c>, capped at 1.0.</description></item>
+        /// <item><description><b>Backward sweep</b> enforces monotonicity (lower
+        /// score → non-decreasing q-value). Only target winners are emitted in
+        /// <see cref="ProteinFdrResult.GroupQvalues"/>; decoy winners are
+        /// statistical machinery and not exposed.</description></item>
+        /// <item><description><b>Peptide propagation.</b> Each peptide's q-value is
+        /// the min q-value among the protein groups it belongs to (peptides whose
+        /// only groups lost the pair stay at q = 1.0).</description></item>
+        /// </list>
+        ///
+        /// <b>Why picked-protein:</b> classical protein-level TDC suffers decoy
+        /// over-representation in the low-scoring region. Pairwise picking
+        /// produces a balanced winner pool by construction so cumulative FDR is
+        /// well-calibrated. <b>Why SVM (not q-value or PEP):</b> losing decoys
+        /// have q=1.0 / PEP≈1.0 which collapses the null distribution; raw SVM
+        /// gives every entry a well-defined score on the same scale.
+        ///
+        /// Reference: Savitski MM et al., "A Scalable Approach for Protein False
+        /// Discovery Rate Estimation in Large Proteomic Data Sets,"
+        /// Mol Cell Proteomics. 2015;14(9):2394-2404.
         /// </summary>
         public static ProteinFdrResult ComputeProteinFdr(
             ProteinParsimonyResult parsimony,
             Dictionary<string, PeptideScore> bestScores,
             double qvalueGate)
         {
-            // Count proteotypic peptides per group
-            var nPeptidesPerGroup = new Dictionary<uint, int>();
-            foreach (var group in parsimony.Groups)
-            {
-                nPeptidesPerGroup[group.Id] =
-                    group.UniquePeptides.Count + group.SharedPeptides.Count;
-            }
-
-            // Accumulate scores for target and decoy versions
-            var targetComposite = new Dictionary<uint, double>();
-            var targetBestQuality = new Dictionary<uint, double>();
-            var decoyComposite = new Dictionary<uint, double>();
-            var decoyBestQuality = new Dictionary<uint, double>();
+            // Step 1: Per-group max SVM score on each side.
+            // - Target side: gated by best peptide-level q-value <= qvalueGate.
+            // - Decoy side: NOT gated (forms the null distribution).
+            // Iterate parsimony.PeptideToGroupMap which is keyed by the target
+            // modified_sequence; the decoy side is looked up via DECOY_<seq>.
+            var targetScore = new Dictionary<uint, double>();
+            var decoyScore = new Dictionary<uint, double>();
 
             foreach (var kvp in parsimony.PeptideToGroupMap)
             {
                 string peptide = kvp.Key;
                 var groupIds = kvp.Value;
 
-                double nPep = 1.0;
-                foreach (uint gid in groupIds)
+                PeptideScore tps;
+                if (bestScores.TryGetValue(peptide, out tps) &&
+                    !tps.IsDecoy && tps.BestQvalue <= qvalueGate)
                 {
-                    int count;
-                    if (nPeptidesPerGroup.TryGetValue(gid, out count) && count > nPep)
-                        nPep = count;
-                }
-
-                // Target peptide contribution
-                PeptideScore ps;
-                if (bestScores.TryGetValue(peptide, out ps))
-                {
-                    if (!ps.IsDecoy && ps.BestQvalue <= qvalueGate)
+                    foreach (uint gid in groupIds)
                     {
-                        double err = 1.0 / (1.0 + Math.Exp(ps.Score));
-                        double quality = Math.Max(0.0, 1.0 - err);
-                        double compositeContrib = -Math.Log(Math.Max(EPSILON, Math.Min(1.0, err * nPep)));
-
-                        foreach (uint gid in groupIds)
+                        double existing;
+                        if (targetScore.TryGetValue(gid, out existing))
                         {
-                            double existing;
-                            if (targetComposite.TryGetValue(gid, out existing))
-                                targetComposite[gid] = existing + compositeContrib;
-                            else
-                                targetComposite[gid] = compositeContrib;
-
-                            double existingQ;
-                            if (targetBestQuality.TryGetValue(gid, out existingQ))
-                                targetBestQuality[gid] = Math.Max(existingQ, quality);
-                            else
-                                targetBestQuality[gid] = quality;
+                            if (tps.Score > existing)
+                                targetScore[gid] = tps.Score;
+                        }
+                        else
+                        {
+                            targetScore[gid] = tps.Score;
                         }
                     }
                 }
 
-                // Decoy peptide contribution
-                string decoyKey = DECOY_PREFIX + peptide;
-                PeptideScore decoyPs;
-                if (bestScores.TryGetValue(decoyKey, out decoyPs))
+                PeptideScore dps;
+                if (bestScores.TryGetValue(DECOY_PREFIX + peptide, out dps) && dps.IsDecoy)
                 {
-                    if (decoyPs.IsDecoy && decoyPs.BestQvalue <= qvalueGate)
+                    foreach (uint gid in groupIds)
                     {
-                        double err = 1.0 / (1.0 + Math.Exp(decoyPs.Score));
-                        double quality = Math.Max(0.0, 1.0 - err);
-                        double compositeContrib = -Math.Log(Math.Max(EPSILON, Math.Min(1.0, err * nPep)));
-
-                        foreach (uint gid in groupIds)
+                        double existing;
+                        if (decoyScore.TryGetValue(gid, out existing))
                         {
-                            double existing;
-                            if (decoyComposite.TryGetValue(gid, out existing))
-                                decoyComposite[gid] = existing + compositeContrib;
-                            else
-                                decoyComposite[gid] = compositeContrib;
-
-                            double existingQ;
-                            if (decoyBestQuality.TryGetValue(gid, out existingQ))
-                                decoyBestQuality[gid] = Math.Max(existingQ, quality);
-                            else
-                                decoyBestQuality[gid] = quality;
+                            if (dps.Score > existing)
+                                decoyScore[gid] = dps.Score;
+                        }
+                        else
+                        {
+                            decoyScore[gid] = dps.Score;
                         }
                     }
                 }
             }
 
-            // Compute q-values independently on each metric
-            var qComposite = ComputeProteinQvaluesDiann(
-                parsimony.Groups, targetComposite, decoyComposite);
-            var qBest = ComputeProteinQvaluesDiann(
-                parsimony.Groups, targetBestQuality, decoyBestQuality);
+            // Step 2: Pair picking. Iterate parsimony.Groups in deterministic
+            // order. Each group yields one winner: target if t >= d, else decoy.
+            var winners = new List<ProteinWinner>();
+            foreach (var group in parsimony.Groups)
+            {
+                bool hasT = targetScore.TryGetValue(group.Id, out double t);
+                bool hasD = decoyScore.TryGetValue(group.Id, out double d);
+                if (hasT && hasD)
+                {
+                    if (t >= d)
+                        winners.Add(new ProteinWinner { GroupId = group.Id, Score = t, IsDecoy = false });
+                    else
+                        winners.Add(new ProteinWinner { GroupId = group.Id, Score = d, IsDecoy = true });
+                }
+                else if (hasT)
+                {
+                    winners.Add(new ProteinWinner { GroupId = group.Id, Score = t, IsDecoy = false });
+                }
+                else if (hasD)
+                {
+                    winners.Add(new ProteinWinner { GroupId = group.Id, Score = d, IsDecoy = true });
+                }
+            }
 
-            // Final q-value = min(q_composite, q_best_quality)
+            // Step 3: Cumulative FDR. Sort winners by score descending,
+            // tiebreak by group_id ascending for determinism.
+            winners.Sort((a, b) =>
+            {
+                int cmp = b.Score.CompareTo(a.Score);
+                if (cmp != 0) return cmp;
+                return a.GroupId.CompareTo(b.GroupId);
+            });
+
+            var rawQvalues = new double[winners.Count];
+            int cumTargets = 0;
+            int cumDecoys = 0;
+            for (int i = 0; i < winners.Count; i++)
+            {
+                if (winners[i].IsDecoy)
+                    cumDecoys++;
+                else
+                    cumTargets++;
+                rawQvalues[i] = cumTargets > 0
+                    ? Math.Min(1.0, (double)cumDecoys / cumTargets)
+                    : 1.0;
+            }
+
+            // Step 4: Backward sweep for monotonicity. Emit only target winners
+            // to GroupQvalues / GroupScores.
             var groupQvalues = new Dictionary<uint, double>();
             var groupScores = new Dictionary<uint, double>();
-            foreach (var group in parsimony.Groups)
+            double minQ = 1.0;
+            for (int i = winners.Count - 1; i >= 0; i--)
             {
-                double qc, qb;
-                if (!qComposite.TryGetValue(group.Id, out qc))
-                    qc = 1.0;
-                if (!qBest.TryGetValue(group.Id, out qb))
-                    qb = 1.0;
-                groupQvalues[group.Id] = Math.Min(qc, qb);
-
-                double compositeScore;
-                if (!targetComposite.TryGetValue(group.Id, out compositeScore))
-                    compositeScore = 0.0;
-                groupScores[group.Id] = compositeScore;
+                if (rawQvalues[i] < minQ)
+                    minQ = rawQvalues[i];
+                var w = winners[i];
+                if (!w.IsDecoy)
+                {
+                    groupQvalues[w.GroupId] = minQ;
+                    groupScores[w.GroupId] = w.Score;
+                }
             }
 
-            // Compute protein PEP from the composite score
-            var targetScoresVec = new List<double>();
-            var decoyScoresVec = new List<double>();
-            foreach (var group in parsimony.Groups)
-            {
-                double s;
-                if (targetComposite.TryGetValue(group.Id, out s))
-                    targetScoresVec.Add(s);
-                if (decoyComposite.TryGetValue(group.Id, out s))
-                    decoyScoresVec.Add(s);
-            }
-
-            var allScores = new double[targetScoresVec.Count + decoyScoresVec.Count];
-            var allIsDecoy = new bool[allScores.Length];
-            for (int i = 0; i < targetScoresVec.Count; i++)
-            {
-                allScores[i] = targetScoresVec[i];
-                allIsDecoy[i] = false;
-            }
-            for (int i = 0; i < decoyScoresVec.Count; i++)
-            {
-                allScores[targetScoresVec.Count + i] = decoyScoresVec[i];
-                allIsDecoy[targetScoresVec.Count + i] = true;
-            }
-
-            var pepEstimator = PepEstimator.FitDefault(allScores, allIsDecoy);
-            var groupPep = new Dictionary<uint, double>();
-            foreach (var group in parsimony.Groups)
-            {
-                double s;
-                if (targetComposite.TryGetValue(group.Id, out s))
-                    groupPep[group.Id] = pepEstimator.PosteriorError(s);
-            }
-
-            // Propagate to peptides: each peptide gets the best (lowest) protein q-value
+            // Step 5: Propagate to peptides. Each peptide's q-value is the min
+            // (best) q-value across its groups. Peptides whose only groups lost
+            // the pair stay at q = 1.0.
             var peptideQvalues = new Dictionary<string, double>();
             foreach (var kvp in parsimony.PeptideToGroupMap)
             {
@@ -509,89 +522,25 @@ namespace pwiz.OspreySharp.FDR
             return new ProteinFdrResult
             {
                 GroupQvalues = groupQvalues,
-                GroupPep = groupPep,
                 GroupScores = groupScores,
                 PeptideQvalues = peptideQvalues
             };
         }
 
-        /// <summary>
-        /// Compute protein q-values using DIA-NN-style TDC.
-        /// For each target protein with score s:
-        ///   q = n_decoys_with_score_gte_s / max(1, n_targets_with_score_gte_s)
-        /// </summary>
-        private static Dictionary<uint, double> ComputeProteinQvaluesDiann(
-            IList<ProteinGroup> groups,
-            Dictionary<uint, double> targetScores,
-            Dictionary<uint, double> decoyScores)
+        private struct ProteinWinner
         {
-            var allTarget = new List<double>(targetScores.Values);
-            var allDecoy = new List<double>(decoyScores.Values);
-            allTarget.Sort();
-            allDecoy.Sort();
-
-            int nTargetsWith = allTarget.Count;
-            int nDecoysWith = allDecoy.Count;
-
-            // For each target protein, compute raw FDR
-            var rawQvals = new List<Tuple<double, double, uint>>(); // (score, raw_q, gid)
-            foreach (var group in groups)
-            {
-                double score;
-                if (!targetScores.TryGetValue(group.Id, out score) || score <= 0.0)
-                    continue;
-
-                int dPos = BinarySearchLeft(allDecoy, score);
-                int nDecoysGe = nDecoysWith - dPos;
-
-                int tPos = BinarySearchLeft(allTarget, score);
-                int nTargetsGe = nTargetsWith - tPos;
-
-                double q = nTargetsGe > 0
-                    ? Math.Min(1.0, (double)nDecoysGe / nTargetsGe)
-                    : 1.0;
-
-                rawQvals.Add(Tuple.Create(score, q, group.Id));
-            }
-
-            // Sort by score ascending for backward sweep
-            rawQvals.Sort((a, b) => a.Item1.CompareTo(b.Item1));
-
-            // Backward sweep: enforce monotonicity
-            double minQ = 1.0;
-            var result = new Dictionary<uint, double>();
-            for (int i = rawQvals.Count - 1; i >= 0; i--)
-            {
-                minQ = Math.Min(minQ, rawQvals[i].Item2);
-                result[rawQvals[i].Item3] = minQ;
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Binary search: find first index where list[index] >= value.
-        /// </summary>
-        private static int BinarySearchLeft(List<double> sortedList, double value)
-        {
-            int lo = 0;
-            int hi = sortedList.Count;
-            while (lo < hi)
-            {
-                int mid = lo + (hi - lo) / 2;
-                if (sortedList[mid] < value)
-                    lo = mid + 1;
-                else
-                    hi = mid;
-            }
-            return lo;
+            public uint GroupId;
+            public double Score;
+            public bool IsDecoy;
         }
 
         /// <summary>
         /// Collect peptide-level scores for protein FDR.
         ///
-        /// For each unique modified_sequence, keeps the best SVM score and best q-value
-        /// across all files.
+        /// For each unique modified_sequence, keeps the best (max) SVM score and the
+        /// best (min) run-level <b>peptide</b> q-value across all files.
+        /// Mirrors Rust <c>collect_best_peptide_scores</c>: picked-protein gates on
+        /// peptide-level FDR per Savitski 2015, not precursor-level.
         /// </summary>
         public static Dictionary<string, PeptideScore> CollectBestPeptideScores(
             IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
@@ -606,8 +555,8 @@ namespace pwiz.OspreySharp.FDR
                     {
                         if (entry.Score > ps.Score)
                             ps.Score = entry.Score;
-                        if (entry.RunPrecursorQvalue < ps.BestQvalue)
-                            ps.BestQvalue = entry.RunPrecursorQvalue;
+                        if (entry.RunPeptideQvalue < ps.BestQvalue)
+                            ps.BestQvalue = entry.RunPeptideQvalue;
                     }
                     else
                     {
@@ -615,7 +564,7 @@ namespace pwiz.OspreySharp.FDR
                         {
                             Score = entry.Score,
                             IsDecoy = entry.IsDecoy,
-                            BestQvalue = entry.RunPrecursorQvalue
+                            BestQvalue = entry.RunPeptideQvalue
                         };
                     }
                 }
