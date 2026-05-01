@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Bruker</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Bruker</AssemblyName>
+    <Description>Bruker timsTOF (.d) reader. P/Invoke bindings for Bruker's native timsdata.dll.</Description>
+
+    <!--
+      timsdata.dll ships in pwiz_aux/msrc/utility/vendor_api_Bruker.7z. The ExtractBrukerAssemblies
+      target below unpacks it into $(BrukerAssembliesDir) on every build (idempotent). Only the x64
+      DLL is extracted; msconvert-sharp targets x64 exclusively.
+      -->
+    <BrukerArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
+    <BrukerAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Bruker</BrukerAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the native DLL Content entries below are dropped. NO_VENDOR_SUPPORT compiles
+       Reader_Bruker without the P/Invoke surface so Read() throws but Identify() still works. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
+  <Target Name="ExtractBrukerAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(BrukerArchive)"
+          Outputs="$(BrukerAssembliesDir)\timsdata.dll;$(BrukerAssembliesDir)\baf2sql_c.dll">
+    <MakeDir Directories="$(BrukerAssembliesDir)" />
+    <!-- timsdata.dll is the TDF/TSF reader; baf2sql_c.dll is the SQL-cached BAF reader. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; vendor_api\Bruker\x64\timsdata.dll vendor_api\Bruker\x64\baf2sql_c.dll" />
+    <!-- Flatten the extracted layout. -->
+    <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\x64\timsdata.dll;$(BrukerAssembliesDir)\vendor_api\Bruker\x64\baf2sql_c.dll"
+          DestinationFolder="$(BrukerAssembliesDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!--
+    Copy the native DLLs into the build output directory so DllImport can find them at runtime.
+    Content files keep them out of the managed assembly metadata.
+    -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Content Include="$(BrukerAssembliesDir)\timsdata.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>timsdata.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(BrukerAssembliesDir)\baf2sql_c.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>baf2sql_c.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+  <!--
+    System.Data.SQLite.Core: reads the .tdf metadata tables. Matches what the legacy
+    pwiz_tools/Shared/Common uses on .NET Framework, so Skyline and pwiz-sharp end up
+    sharing one SQLite backend in a combined process.
+    -->
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+
+</Project>

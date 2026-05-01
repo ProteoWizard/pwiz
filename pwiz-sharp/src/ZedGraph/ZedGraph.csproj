@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Multi-target wrapper around the existing ZedGraph sources at pwiz_tools/Shared/zedgraph/.
+    The legacy ZedGraph.csproj there targets net4.7.2 with an old non-SDK project format and
+    is shared with Skyline's build; we don't modify it. This SDK-style project compiles the
+    same .cs files for net8.0-windows so SeeMS-sharp can take a project reference.
+
+    The source tree itself is untouched — every file is included via relative <Compile Include>.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>ZedGraph</RootNamespace>
+    <AssemblyName>ZedGraph</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <!-- ZedGraph is third-party source we don't own; the C# 12 / nullable / analyzer rules in
+         pwiz-sharp's Directory.Build.props would generate hundreds of "errors" against it. -->
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS0612;CS0618;CS1591;CS8981;CA1416;CA1822;CA1031;CA2326;CA2352;CA1051;CA1715;CA1822;CA2200;CA1825;NU1701;SYSLIB0003;SYSLIB0011;SYSLIB0050;SYSLIB0051</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AnalysisLevel>none</AnalysisLevel>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+
+    <!-- The legacy build has the BinaryFormatter-using Newtonsoft.Json reference for serializing
+         scale state. .NET 8 disables BinaryFormatter by default; opt back in. -->
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+  </PropertyGroup>
+
+  <!-- Source files live under pwiz_tools/Shared/zedgraph/ZedGraph/. Compile them all in place.
+       The Link prefix preserves the original "ZedGraph\" subfolder so embedded resources get the
+       same manifest name (ZedGraph.ZedGraph.ZedGraphLocale.resources) the legacy build produces —
+       ZedGraphControl looks resources up by that exact name at runtime. -->
+  <ItemGroup>
+    <Compile Include="..\..\..\pwiz_tools\Shared\zedgraph\ZedGraph\*.cs">
+      <Link>ZedGraph\%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\pwiz_tools\Shared\zedgraph\ZedGraph\*.resx">
+      <Link>ZedGraph\%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>

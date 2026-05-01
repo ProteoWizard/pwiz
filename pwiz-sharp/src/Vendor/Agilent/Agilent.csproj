@@ -1,0 +1,134 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Agilent</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Agilent</AssemblyName>
+    <Description>Agilent MassHunter (.d) reader. References Agilent's managed MassSpecDataReader / BaseDataAccess / BaseTof / MIDAC assemblies.</Description>
+  </PropertyGroup>
+
+  <!--
+    Vendor archive: pwiz_aux/msrc/utility/vendor_api_Agilent.7z. ExtractAgilentAssemblies
+    unpacks the x64 .NET assemblies on every build (idempotent). Sharp targets x64 only.
+    -->
+  <PropertyGroup>
+    <AgilentArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Agilent.7z</AgilentArchive>
+    <AgilentAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Agilent</AgilentAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Agilent
+       compile without the SDK and throw from Read() while keeping Identify() working. The
+       SDK-only files (AgilentRawData / SpectrumList_Agilent) reference Agilent.MassSpectrometry.*
+       directly, so they must be excluded from compilation in that mode. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="AgilentRawData.cs" />
+    <Compile Remove="SpectrumList_Agilent.cs" />
+  </ItemGroup>
+
+  <Target Name="ExtractAgilentAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(AgilentArchive)"
+          Outputs="$(AgilentAssembliesDir)\MassSpecDataReader.dll;$(AgilentAssembliesDir)\BaseDataAccess.dll;$(AgilentAssembliesDir)\MIDAC.dll">
+    <MakeDir Directories="$(AgilentAssembliesDir)" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(AgilentAssembliesDir)&quot; &quot;$(AgilentArchive)&quot; vendor_api\Agilent\x64\*.dll vendor_api\Agilent\x64\*.config" />
+    <!-- Flatten the extracted layout so the references below are stable. -->
+    <ItemGroup>
+      <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.dll" />
+      <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.config" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_AgilentExtracted)" DestinationFolder="$(AgilentAssembliesDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Cecil-patches BaseDataAccess.dll + BaseCommon.dll to remove uses of
+       Delegate.BeginInvoke/EndInvoke (removed from .NET 5+; the SDK throws
+       PlatformNotSupportedException on first OpenDataFile without this). The patcher backs
+       each input DLL up to <name>.prepatched on first run and reads from that copy on every
+       subsequent run, so applying the patch to an already-patched DLL is idempotent. Patched
+       DLLs live only in vendor-assemblies/Agilent/ — never committed (gitignored).
+
+       Sequencing: AfterTargets="ExtractAgilentAssemblies" guarantees the SDK exists before
+       we touch it; BeforeTargets="ResolveAssemblyReferences" makes the patched files visible
+       to the reference-copy step that follows. We don't bother with Inputs/Outputs because
+       the patcher is fast (~1s) and the .prepatched-backed idempotency makes re-runs safe.
+
+       WorkingDirectory: the child `dotnet run` starts SDK resolution from its own cwd.
+       The outer build can run from above pwiz-sharp/ (e.g. CI invoking msbuild from the
+       repo root), in which case the child wouldn't see pwiz-sharp/global.json and would
+       pick whatever SDK is installed (10.x on the build agent — broken for the patcher's
+       net8.0 target). Anchoring the cwd inside pwiz-sharp/ so global.json applies. -->
+  <PropertyGroup>
+    <AgilentPatcherProj>$(MSBuildThisFileDirectory)..\..\..\build\AgilentPatcher\AgilentPatcher.csproj</AgilentPatcherProj>
+    <PwizSharpRoot>$(MSBuildThisFileDirectory)..\..\..</PwizSharpRoot>
+  </PropertyGroup>
+  <Target Name="PatchAgilentBeginInvoke"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          AfterTargets="ExtractAgilentAssemblies"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths">
+    <Message Importance="high" Text="Cecil-patching Agilent SDK (BaseDataAccess.dll, BaseCommon.dll) to remove BeginInvoke/EndInvoke." />
+    <!-- MSBuild's Exec task inherits the parent process's MSBUILD_EXE_PATH and MSBuildSDKsPath
+         env vars; the child `dotnet run` then routes through the parent's MSBuild (SDK 10 on
+         the build agent) instead of resolving SDK from its cwd / global.json (SDK 8). Clearing
+         them forces the child to do a fresh muxer-based SDK resolution. -->
+    <Exec Command="dotnet run --project &quot;$(AgilentPatcherProj)&quot; -c Release -- &quot;$(AgilentAssembliesDir)&quot;"
+          WorkingDirectory="$(PwizSharpRoot)"
+          EnvironmentVariables="MSBUILD_EXE_PATH=;MSBuildSDKsPath=;MSBuildToolsPath=;MSBuildExtensionsPath=;DOTNET_HOST_PATH=" />
+  </Target>
+
+  <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
+       plain .NET assemblies, not COM interop wrappers. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Reference Include="MassSpecDataReader">
+      <HintPath>$(AgilentAssembliesDir)\MassSpecDataReader.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseCommon">
+      <HintPath>$(AgilentAssembliesDir)\BaseCommon.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseDataAccess">
+      <HintPath>$(AgilentAssembliesDir)\BaseDataAccess.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseError">
+      <HintPath>$(AgilentAssembliesDir)\BaseError.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseTof">
+      <HintPath>$(AgilentAssembliesDir)\BaseTof.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="MIDAC">
+      <HintPath>$(AgilentAssembliesDir)\MIDAC.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Native runtime DLLs (agtsampleinforw.dll plus the .config) need to land in the build
+       output. The managed Reference items above already copy the .NET assemblies because
+       Private=true. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Content Include="$(AgilentAssembliesDir)\agtsampleinforw.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>agtsampleinforw.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(AgilentAssembliesDir)\BaseDataAccess.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>BaseDataAccess.dll.config</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>

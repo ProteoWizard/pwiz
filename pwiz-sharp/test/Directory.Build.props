@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- Shared settings for every test project under pwiz-sharp/test/.
+       MSBuild stops walking parents once it finds the closest Directory.Build.props, so we
+       have to explicitly chain to the pwiz-sharp/ root for TargetFramework / Nullable / etc. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
+
+
+  <ItemGroup>
+    <!-- coverlet.collector enables the "XPlat Code Coverage" data collector for `dotnet test`
+         and writes a Cobertura XML under TestResults/<guid>/coverage.cobertura.xml. -->
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

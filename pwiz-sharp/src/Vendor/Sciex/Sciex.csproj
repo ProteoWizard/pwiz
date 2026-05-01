@@ -1,0 +1,154 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Sciex</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Sciex</AssemblyName>
+    <Description>Sciex / ABI WIFF reader. References Sciex's managed Clearcore2 + WiffReader assemblies.</Description>
+  </PropertyGroup>
+
+  <!-- Wiff2/ is a separate sub-project (Sciex.Wiff2.csproj). Exclude its sources and build
+       output so MSBuild's default .cs glob doesn't try to compile them into Sciex.dll. -->
+  <ItemGroup>
+    <Compile Remove="Wiff2\**" />
+    <None Remove="Wiff2\**" />
+    <Content Remove="Wiff2\**" />
+    <EmbeddedResource Remove="Wiff2\**" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <SciexArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_ABI.7z</SciexArchive>
+    <SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Sciex</SciexAssembliesDir>
+    <!-- Manually-curated wiff2-on-net8 deps: assemblies/configs that don't ship in
+         vendor_api_ABI.7z (the .NET-Standard System.ServiceModel and three Unity DI configs
+         are committed under pwiz-sharp/vendor-archives/Sciex/). See
+         src/Vendor/Sciex/wiff2-on-net8-investigation.md for provenance. -->
+    <SciexWiff2DepsDir>$(MSBuildThisFileDirectory)..\..\..\vendor-archives\Sciex</SciexWiff2DepsDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the SDK <Reference> + <Content> entries below are dropped. NO_VENDOR_SUPPORT lets
+       Reader_Sciex compile without the SDK and throw from Read() while keeping Identify() working.
+       The SDK-only files reference Clearcore2 / SCIEX.Apis.Data.v1 directly, so they must be
+       excluded from compilation in that mode. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="AbstractWiffFile.cs" />
+    <Compile Remove="WiffFile.cs" />
+    <Compile Remove="SpectrumList_Sciex.cs" />
+    <Compile Remove="ChromatogramList_Sciex.cs" />
+    <Compile Remove="SciexAssemblyResolver.cs" />
+    <Compile Remove="Wiff2LoadContext.cs" />
+  </ItemGroup>
+
+  <!-- Sciex.Data.SimpleTypes.MassUnits's static initializer references
+       System.Configuration.ConfigurationManager, which isn't part of the .NET 8 BCL by default
+       but is shipped as a NuGet package. Without it, GetBasePeakChromatogram and other paths
+       throw TypeInitializationException at runtime. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <!-- System.ServiceModel.Primitives + System.ServiceModel.dll on disk are needed by the
+         bundled Clearcore2.RFLight.SampleDataProvider's WCF-style configuration paths during
+         Unity wire-up; these are the .NET-Core-compatible WCF assemblies (CoreWCF). -->
+    <PackageReference Include="System.ServiceModel.Primitives" Version="8.0.0" />
+    <PackageReference Include="System.Runtime.Caching" Version="8.0.0" />
+  </ItemGroup>
+
+  <Target Name="ExtractSciexAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(SciexArchive)"
+          Outputs="$(SciexAssembliesDir)\Clearcore2.Data.AnalystDataProvider.dll;$(SciexAssembliesDir)\SQLite.Interop.dll">
+    <MakeDir Directories="$(SciexAssembliesDir)" />
+    <!-- 7za uses case-insensitive globbing on Windows; *.dll picks up Sciex.Data.Processing.DLL too.
+         x64\SQLite.Interop.dll is extracted alongside so MsConvert.csproj's StageWiff2NativeAssemblies
+         target can stage it into the wiff2/ subfolder for Wiff2LoadContext. We deliberately skip the
+         x86 copy and the rest of x64\* — only SQLite.Interop is needed at runtime. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(SciexAssembliesDir)&quot; &quot;$(SciexArchive)&quot; &quot;vendor_api\ABI\*.dll&quot; &quot;vendor_api\ABI\*.DLL&quot; &quot;vendor_api\ABI\x64\SQLite.Interop.dll&quot;" />
+    <ItemGroup>
+      <_SciexExtracted Include="$(SciexAssembliesDir)\vendor_api\ABI\*.dll" />
+      <_SciexExtracted Include="$(SciexAssembliesDir)\vendor_api\ABI\*.DLL" />
+      <_SciexExtracted Include="$(SciexAssembliesDir)\vendor_api\ABI\x64\SQLite.Interop.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SciexExtracted)" DestinationFolder="$(SciexAssembliesDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Reference the Clearcore2 + Wiff assemblies. CopyLocal=true so they land next to the
+       managed output and the dependent assemblies resolve at runtime via Default load context. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Reference Include="Clearcore2.Data.AnalystDataProvider"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.AnalystDataProvider.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data.Client"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.Client.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data.CommonInterfaces"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.CommonInterfaces.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data.WiffReader"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.WiffReader.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.Data.Wiff2"><HintPath>$(SciexAssembliesDir)\Clearcore2.Data.Wiff2.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Clearcore2.RawXYProcessing"><HintPath>$(SciexAssembliesDir)\Clearcore2.RawXYProcessing.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Sciex.Data.XYData"><HintPath>$(SciexAssembliesDir)\Sciex.Data.XYData.dll</HintPath><Private>true</Private></Reference>
+    <!-- SCIEX.Apis.Data.v1 is intentionally NOT a compile-time Reference: it would land in
+         deps.json and load into the default ALC's TPA, where its bundled-deps SmartAssembly
+         resolver would clash with the legacy .wiff path's signed Clearcore2.* on disk. We ship
+         it as Content (below) and load it only inside Wiff2LoadContext via reflection. -->
+  </ItemGroup>
+
+<!-- Runtime dependencies: indirect Clearcore2 + Sciex assemblies must land next to the output
+       so the SDK's late-bound type loads succeed. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Compression.dll" />
+    <!-- Clearcore2.Data + Client + CommonInterfaces + RawXYProcessing are also <Reference>
+         entries above; listing them as Content too forces them into the consumer's bin even
+         when MSBuild's transitive propagation drops them (it does for Reference assemblies
+         that aren't part of the Sciex public ABI). -->
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Data.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Data.Client.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Data.CommonInterfaces.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.RawXYProcessing.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Devices.Types.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Domain.Acquisition.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Infrastructure.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.InternalRawXYProcessing.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Muni.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.StructuredStorage.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.Utility.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Clearcore2.XmlHelpers.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\OFX.Core.Contracts.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Clearcore.FMan.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.Processing.DLL" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.SimpleTypes.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Data.XYData.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.FMan.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\Sciex.Wiff.dll" />
+    <_SciexRuntime Include="$(SciexAssembliesDir)\protobuf-net.dll" />
+    <!-- SCIEX.Apis.Data.v1 is loaded into Wiff2LoadContext at runtime via reflection. Ship
+         the dll alongside the legacy ones; the side-by-side ALC keeps it isolated from the
+         default ALC's loaded assemblies. -->
+    <_SciexRuntime Include="$(SciexAssembliesDir)\SCIEX.Apis.Data.v1.dll" />
+    <!-- System.ServiceModel 4.0.0.0 (the .NET Framework WCF assembly) is referenced by the
+         bundled Clearcore2.RFLight.SampleDataProvider during Unity wire-up. .NET 8 doesn't
+         include it; we ship the .NET-Standard-compatible build from the SCIEX server SDK.
+         Loaded by Wiff2LoadContext (the patched Unity.Abstractions, wiff2-specific SQLite,
+         and SQLite.Interop go to wiff2/ via the StageWiff2NativeAssemblies build target in
+         MsConvert.csproj). -->
+    <_SciexRuntime Include="$(SciexWiff2DepsDir)\System.ServiceModel.dll" />
+    <!-- Unity DI configuration files used by the wiff2 SDK during component wire-up. The
+         SCIEX SDK reads them from the working / app directory at startup; without them the
+         request handlers throw NullReferenceException when the container resolves them. -->
+    <_SciexRuntime Include="$(SciexWiff2DepsDir)\DataServiceComponent.config" />
+    <_SciexRuntime Include="$(SciexWiff2DepsDir)\DataServiceClientComponent.config" />
+    <_SciexRuntime Include="$(SciexWiff2DepsDir)\DataServiceInternalComponent.config" />
+    <Content Include="@(_SciexRuntime)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>

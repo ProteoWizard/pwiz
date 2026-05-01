@@ -1,0 +1,38 @@
+<Project>
+
+  <!-- Optional per-user overrides (gitignored). Drop in $(IAgreeToVendorLicenses), local
+       NuGet feed creds, etc. Created by i-agree-to-the-vendor-licenses.bat in the repo root. -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.user.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.user.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>ProteoWizard</Company>
+    <Product>pwiz-sharp</Product>
+    <Copyright>Copyright (c) ProteoWizard</Copyright>
+    <Authors>ProteoWizard Contributors</Authors>
+  </PropertyGroup>
+
+  <!-- Tag the assembly version like cpp's generate-version.jam: "(automated build)" for CI
+       runs with the automated flag, "(developer build)" for local builds. build.bat sets
+       AutomatedBuild=true when its automated flag is passed. -->
+  <PropertyGroup>
+    <_BuildKindSuffix Condition="'$(AutomatedBuild)' == 'true'">automated build</_BuildKindSuffix>
+    <_BuildKindSuffix Condition="'$(AutomatedBuild)' != 'true'">developer build</_BuildKindSuffix>
+    <InformationalVersion Condition="'$(InformationalVersion)' == ''">0.1.0 ($(_BuildKindSuffix))</InformationalVersion>
+  </PropertyGroup>
+
+</Project>

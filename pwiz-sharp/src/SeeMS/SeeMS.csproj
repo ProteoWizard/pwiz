@@ -1,0 +1,120 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Pwiz.SeeMS</RootNamespace>
+    <AssemblyName>seems-sharp</AssemblyName>
+    <Description>Port of pwiz_tools/SeeMS to pwiz-sharp. Data layer only (no WinForms UI).</Description>
+
+    <!-- WinForms is required to reference DigitalRune.Windows.Docking, which derives from
+         WinForms types (Form, Panel, etc.). Setting UseWindowsForms=true + the `-windows`
+         TFM suffix pulls in the WinForms reference assemblies during compile. Override the
+         root Directory.Build.props's net8.0 TFM for this project specifically. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <!-- Vendor SDKs (specifically Thermo) need en-US culture; matching MsConvert.csproj. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+
+    <!-- This project is a near-verbatim port of legacy SeeMS WinForms code (pre-nullable C#).
+         The pwiz-sharp Directory.Build.props turns nullable + analyzer rules on as errors;
+         that's the right policy for new code, but for the SeeMS port it would generate
+         thousands of errors. Match the ZedGraph/MSGraph wrapper projects. -->
+    <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS0618;CS1591;CS8981;CA1416;CA1822;CA1031;CA1051;CA1715;CA2200;CA1825;NU1701;SYSLIB0003;SYSLIB0011;SYSLIB0050;SYSLIB0051</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AnalysisLevel>none</AnalysisLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- DigitalRune.Windows.Docking 1.3.5 is a .NET Framework 4.x WinForms library. We
+         reference the on-disk DLL the original SeeMS uses (pwiz_tools/Shared/Lib/) to
+         test whether it actually runs on .NET 8 — Microsoft explicitly supports running
+         unrecompiled .NET Framework WinForms libraries on .NET 8 if they don't hit the
+         API blocklist. -->
+    <Reference Include="DigitalRune.Windows.Docking">
+      <HintPath>..\..\..\pwiz_tools\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\ZedGraph\ZedGraph.csproj" />
+    <ProjectReference Include="..\MSGraph\MSGraph.csproj" />
+    <ProjectReference Include="..\StlContainers\StlContainers.csproj" />
+  </ItemGroup>
+
+  <!-- Vendor support is opt-in (mirrors MsConvert.csproj). Without -p:IAgreeToVendorLicenses=true,
+       vendor projects compile in NO_VENDOR_SUPPORT mode and Reader.Read throws clearly. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="..\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="..\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!-- Excluded for the first-pass shell: dialogs / panels that depend on cpp/CLI types or
+       .NET-Framework-era features we haven't ported yet (typed-dataset annotation panels,
+       MemoryCache.GetOrAdd, Properties.Resources image bundling, etc.). These come back as
+       individual ports land. The core open-file → spectrum-list → chromatogram-list → graph
+       flow ships without them.
+  -->
+  <ItemGroup>
+    <Compile Remove="Dialogs\OpenDataSourceDialog.cs" />
+    <Compile Remove="Dialogs\OpenDataSourceDialog.Designer.cs" />
+    <EmbeddedResource Remove="Dialogs\OpenDataSourceDialog.resx" />
+
+    <Compile Remove="Dialogs\HeatmapForm.cs" />
+    <Compile Remove="Dialogs\HeatmapForm.Designer.cs" />
+    <EmbeddedResource Remove="Dialogs\HeatmapForm.resx" />
+    <Compile Remove="Dialogs\TimeMzHeatmapForm.cs" />
+    <Compile Remove="Dialogs\TimeMzHeatmapForm.Designer.cs" />
+    <EmbeddedResource Remove="Dialogs\TimeMzHeatmapForm.resx" />
+
+    <Compile Remove="Dialogs\AnnotationPanels.cs" />
+    <Compile Remove="Dialogs\AnnotationPanels.Designer.cs" />
+    <EmbeddedResource Remove="Dialogs\AnnotationPanels.resx" />
+    <Compile Remove="Dialogs\ProcessingPanels.cs" />
+    <Compile Remove="Dialogs\ProcessingPanels.Designer.cs" />
+    <EmbeddedResource Remove="Dialogs\ProcessingPanels.resx" />
+
+    <Compile Remove="Dialogs\SpectrumAnnotationForm.cs" />
+    <Compile Remove="Dialogs\SpectrumAnnotationForm.Designer.cs" />
+    <EmbeddedResource Remove="Dialogs\SpectrumAnnotationForm.resx" />
+    <Compile Remove="Dialogs\SpectrumProcessingForm.cs" />
+    <Compile Remove="Dialogs\SpectrumProcessingForm.Designer.cs" />
+    <EmbeddedResource Remove="Dialogs\SpectrumProcessingForm.resx" />
+
+    <Compile Remove="Dialogs\ProcessingListView.cs" />
+    <EmbeddedResource Remove="Dialogs\ProcessingListView.resx" />
+
+    <Compile Remove="Dialogs\DataPointTableForm.cs" />
+    <Compile Remove="Dialogs\DataPointTableForm.Designer.cs" />
+    <EmbeddedResource Remove="Dialogs\DataPointTableForm.resx" />
+
+    <Compile Remove="Dialogs\AboutForm.cs" />
+    <Compile Remove="Dialogs\AboutForm.Designer.cs" />
+    <EmbeddedResource Remove="Dialogs\AboutForm.resx" />
+
+    <Compile Remove="Dialogs\SelectColumnsDialog.cs" />
+
+    <!-- Annotation.cs and Processing.cs implementations bind heavily to AnnotationPanels /
+         ProcessingPanels. We provide minimal IAnnotation / IProcessing interfaces below
+         (Stubs.Annotation.cs / Stubs.Processing.cs) instead. -->
+    <Compile Remove="Annotation.cs" />
+    <Compile Remove="Processing.cs" />
+  </ItemGroup>
+
+</Project>

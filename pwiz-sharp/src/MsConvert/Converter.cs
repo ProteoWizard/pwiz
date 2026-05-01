@@ -1,0 +1,311 @@
+using System.Globalization;
+using System.IO.Compression;
+using Pwiz.Analysis;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Mgf;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Util.Misc;
+using Pwiz.Vendor.Bruker;
+using Pwiz.Vendor.Thermo;
+using Pwiz.Vendor.Waters;
+
+namespace Pwiz.Tools.MsConvert;
+
+/// <summary>Runs the msconvert-sharp conversion pipeline: read → filter → write.</summary>
+public sealed class Converter
+{
+    private readonly MsConvertConfig _config;
+    private readonly TextWriter _log;
+    private readonly ReaderList _readers;
+
+    /// <summary>Creates a converter with the given configuration. Output goes to <paramref name="log"/> (stderr-style).</summary>
+    public Converter(MsConvertConfig config, TextWriter? log = null)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        _config = config;
+        _log = log ?? TextWriter.Null;
+        // Include Thermo + Bruker + Waters + Agilent + Sciex alongside the built-in mzML/MGF
+        // readers so vendor files auto-detect by extension/identity. Vendor projects always
+        // build, so Reader.Identify() works in every configuration. When the build was made
+        // without --i-agree-to-the-vendor-licenses, the encrypted vendor SDKs aren't extracted
+        // and Reader.Read() throws a clear "vendor support not enabled" error.
+        _readers = ThermoReaderRegistration.CreateDefaultWithThermo();
+        var brukerReader = new Reader_Bruker { CombineIonMobilitySpectra = _config.CombineIonMobilitySpectra };
+        _readers.Add(brukerReader);
+        _readers.Add(new Reader_Waters());
+        _readers.Add(new Pwiz.Vendor.Agilent.Reader_Agilent());
+        _readers.Add(new Pwiz.Vendor.Sciex.Reader_Sciex());
+    }
+
+    /// <summary>Processes every configured input file. Returns the count that succeeded.</summary>
+    public int Run()
+    {
+        Directory.CreateDirectory(_config.OutputPath);
+        WarnAboutUnimplementedOptions();
+
+        if (_config.Merge)
+        {
+            try { ConvertMerged(); return 1; }
+            catch (Exception ex)
+            {
+                _log.WriteLine($"error converting merged output: {ex.Message}");
+                return 0;
+            }
+        }
+
+        int successCount = 0;
+        foreach (var input in _config.InputFiles)
+        {
+            try
+            {
+                ConvertOne(input);
+                successCount++;
+            }
+            catch (Exception ex)
+            {
+                _log.WriteLine($"error converting {input}: {ex.Message}");
+                if (_config.Verbose) _log.WriteLine(ex.ToString());
+                if (!_config.ContinueOnError) break;
+            }
+        }
+        return successCount;
+    }
+
+    private void ConvertOne(string input)
+    {
+        if (_config.Verbose) _log.WriteLine($"reading {input}");
+
+        // `using` releases native vendor handles (Thermo IRawFileThreadManager, Bruker timsdata,
+        // etc.) once the output is written.
+        using var msd = ReadAndProcess(input);
+        WriteOutput(msd, BuildOutputPath(input));
+    }
+
+    private void ConvertMerged()
+    {
+        if (_config.InputFiles.Count == 0)
+            throw new InvalidOperationException("--merge requires at least one input.");
+        // Start from the first file; subsequent files contribute their spectra/chromatograms in order.
+        using var merged = ReadAndProcess(_config.InputFiles[0]);
+        foreach (var extra in _config.InputFiles.Skip(1))
+        {
+            if (_config.Verbose) _log.WriteLine($"merging {extra}");
+            // MergeRun copies the source's spectra into a SpectrumListSimple on `merged`, so once
+            // the merge completes we can release `next`'s vendor handle immediately.
+            using var next = ReadAndProcess(extra);
+            MergeRun(merged, next);
+        }
+        // Choose an output name: --outfile wins, otherwise the first input's basename.
+        string outputFile = BuildOutputPath(_config.InputFiles[0]);
+        WriteOutput(merged, outputFile);
+    }
+
+    private MSData ReadAndProcess(string input)
+    {
+        var msd = new MSData();
+        _readers.Read(input, msd, BuildReaderConfig());
+        MSDataFile.CalculateSha1Checksums(msd);
+
+        if (!string.IsNullOrEmpty(_config.ContactInfo))
+            AttachContactInfo(msd, _config.ContactInfo);
+
+        if (_config.StripLocationFromSourceFiles)
+            foreach (var sf in msd.FileDescription.SourceFiles) sf.Location = string.Empty;
+        if (_config.StripVersionFromSoftware)
+            foreach (var sw in msd.Software) sw.Version = string.Empty;
+
+        if (_config.Filters.Count > 0 && msd.Run.SpectrumList is not null)
+        {
+            if (_config.Verbose)
+                foreach (var f in _config.Filters) _log.WriteLine($"  filter: {f}");
+            msd.Run.SpectrumList = SpectrumListFactory.Wrap(msd.Run.SpectrumList, _config.Filters);
+
+            // Filters that produce a new DataProcessing (e.g. peakPicking) expose it via
+            // SpectrumList.DataProcessing — promote it to the top-level dataProcessingList so
+            // the writer emits the processingMethod entry. Matches pwiz C++ behavior.
+            var wrappedDp = msd.Run.SpectrumList.DataProcessing;
+            if (wrappedDp is not null)
+            {
+                int existing = msd.DataProcessings.FindIndex(d => d.Id == wrappedDp.Id);
+                if (existing >= 0) msd.DataProcessings[existing] = wrappedDp;
+                else msd.DataProcessings.Add(wrappedDp);
+            }
+        }
+
+        // Chromatogram filters aren't implemented yet; warn once rather than silently drop.
+        if (_config.ChromatogramFilters.Count > 0)
+            _log.WriteLine("warning: --chromatogramFilter not implemented; filters ignored");
+
+        return msd;
+    }
+
+    private void WriteOutput(MSData msd, string outputFile)
+    {
+        if (_config.Gzip && !outputFile.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+            outputFile += ".gz";
+        if (_config.Verbose) _log.WriteLine($"writing {outputFile}");
+
+        // In verbose mode, attach a console listener to the writer so per-spectrum progress
+        // shows up on the log. Period of 100 so smallish files still show at least one line of
+        // intermediate progress (the registry always fires on the final iteration).
+        IterationListenerRegistry? registry = null;
+        if (_config.Verbose)
+        {
+            registry = new IterationListenerRegistry();
+            registry.AddListener(new ConsoleProgressListener(_log), iterationPeriod: 100);
+        }
+
+        using Stream output = OpenOutputStream(outputFile);
+        switch (_config.Format)
+        {
+            case OutputFormat.Mzml:
+                new MzmlWriter(_config.EncoderConfig)
+                {
+                    Indexed = !_config.NoIndex,
+                    IterationListenerRegistry = registry,
+                }.Write(msd, output);
+                break;
+            case OutputFormat.MzXml:
+                new Pwiz.Data.MsData.MzXml.MzxmlWriter(_config.EncoderConfig)
+                {
+                    Indexed = !_config.NoIndex,
+                    IterationListenerRegistry = registry,
+                }.Write(msd, output);
+                break;
+            case OutputFormat.Mgf:
+                using (var tw = new StreamWriter(output))
+                    new MgfSerializer { IterationListenerRegistry = registry }.Write(msd, tw);
+                break;
+            default:
+                throw new NotImplementedException(
+                    $"Output format {_config.Format} is accepted by the CLI but not yet implemented in msconvert-sharp.");
+        }
+    }
+
+    /// <summary>
+    /// Console progress listener used by msconvert-sharp's <c>-v</c> mode. Writes one line per
+    /// delivery to the configured log sink (typically stderr).
+    /// </summary>
+    private sealed class ConsoleProgressListener : IIterationListener
+    {
+        private readonly TextWriter _out;
+
+        public ConsoleProgressListener(TextWriter logSink) => _out = logSink;
+
+        public IterationStatus Update(IterationUpdate message)
+        {
+            string line = message.IterationCount > 0
+                ? string.Format(CultureInfo.InvariantCulture, "  {0}: {1}/{2}",
+                    message.Message, message.IterationIndex + 1, message.IterationCount)
+                : string.Format(CultureInfo.InvariantCulture, "  {0}: {1}",
+                    message.Message, message.IterationIndex + 1);
+            _out.WriteLine(line);
+            return IterationStatus.Ok;
+        }
+    }
+
+    private Stream OpenOutputStream(string outputFile)
+    {
+        var fs = File.Create(outputFile);
+        return _config.Gzip
+            ? new GZipStream(fs, CompressionLevel.Optimal, leaveOpen: false)
+            : fs;
+    }
+
+    private static void MergeRun(MSData dest, MSData src)
+    {
+        // Source files + software pile up; spectra/chromatograms concat.
+        foreach (var sf in src.FileDescription.SourceFiles) dest.FileDescription.SourceFiles.Add(sf);
+        foreach (var s in src.Software)
+        {
+            if (!dest.Software.Any(x => x.Id == s.Id)) dest.Software.Add(s);
+        }
+        if (src.Run.SpectrumList is not null && dest.Run.SpectrumList is not null)
+        {
+            // Naive merge: re-wrap via SpectrumListSimple so the Writer iterates both.
+            var combined = new Pwiz.Data.MsData.Spectra.SpectrumListSimple
+            {
+                Dp = (dest.Run.SpectrumList.DataProcessing ?? src.Run.SpectrumList.DataProcessing),
+            };
+            for (int i = 0; i < dest.Run.SpectrumList.Count; i++)
+                combined.Spectra.Add(dest.Run.SpectrumList.GetSpectrum(i, getBinaryData: true));
+            for (int i = 0; i < src.Run.SpectrumList.Count; i++)
+            {
+                var spec = src.Run.SpectrumList.GetSpectrum(i, getBinaryData: true);
+                spec.Index = combined.Spectra.Count;
+                combined.Spectra.Add(spec);
+            }
+            dest.Run.SpectrumList = combined;
+        }
+    }
+
+    private static void AttachContactInfo(MSData msd, string contactFile)
+    {
+        if (!File.Exists(contactFile)) return;
+        string contents = File.ReadAllText(contactFile).Trim();
+        if (string.IsNullOrEmpty(contents)) return;
+        // pwiz C++ accepts a free-form file; we attach it as a userParam on fileDescription.
+        msd.FileDescription.FileContent.UserParams.Add(
+            new UserParam("contact info", contents, "xsd:string"));
+    }
+
+    private string BuildOutputPath(string input)
+    {
+        string ext = _config.OutputExtension ?? DefaultExtension(_config.Format);
+        if (!ext.StartsWith('.')) ext = "." + ext;
+
+        string name = !string.IsNullOrEmpty(_config.OutFile)
+            ? _config.OutFile
+            : Path.GetFileNameWithoutExtension(input) + ext;
+        return Path.Combine(_config.OutputPath, name);
+    }
+
+    private static string DefaultExtension(OutputFormat format) => format switch
+    {
+        OutputFormat.Mzml => ".mzML",
+        OutputFormat.MzXml => ".mzXML",
+        OutputFormat.Mz5 => ".mz5",
+        OutputFormat.MzMLb => ".mzMLb",
+        OutputFormat.Mgf => ".mgf",
+        OutputFormat.Text => ".txt",
+        OutputFormat.Ms1 => ".ms1",
+        OutputFormat.Cms1 => ".cms1",
+        OutputFormat.Ms2 => ".ms2",
+        OutputFormat.Cms2 => ".cms2",
+        _ => ".out",
+    };
+
+    /// <summary>
+    /// Emits a single warning line per unimplemented switch the user requested. Accepting these
+    /// switches (and warning) is friendlier than rejecting — users scripting msconvert invocations
+    /// via Skyline / workflows should be able to point them at msconvert-sharp without surprises.
+    /// </summary>
+    private void WarnAboutUnimplementedOptions()
+    {
+        if (_config.MzTruncation != 0) _log.WriteLine("warning: --mzTruncation not implemented");
+        if (_config.IntenTruncation != 0) _log.WriteLine("warning: --intenTruncation not implemented");
+        if (_config.MzDelta) _log.WriteLine("warning: --mzDelta not implemented");
+        if (_config.IntenDelta) _log.WriteLine("warning: --intenDelta not implemented");
+        if (_config.MzLinear) _log.WriteLine("warning: --mzLinear not implemented");
+        if (_config.IntenLinear) _log.WriteLine("warning: --intenLinear not implemented");
+        // --simAsSpectra and --srmAsSpectra are honored for Thermo (Reader_Thermo passes them
+        // through to ChromatogramList_Thermo + SpectrumList_Thermo).
+        // --combineIonMobilitySpectra is honored for Bruker; silently ignored for Thermo (no IMS).
+        if (_config.DdaProcessing) _log.WriteLine("warning: --ddaProcessing not implemented");
+        if (_config.IgnoreCalibrationScans) _log.WriteLine("warning: --ignoreCalibrationScans not implemented");
+        if (!string.IsNullOrEmpty(_config.RunIndexSet)) _log.WriteLine("warning: --runIndexSet not implemented");
+        if (_config.SingleThreaded > 0) _log.WriteLine("note: --singleThreaded is a no-op (msconvert-sharp is single-threaded today)");
+    }
+
+    private ReaderConfig BuildReaderConfig() => new()
+    {
+        SimAsSpectra = _config.SimAsSpectra,
+        SrmAsSpectra = _config.SrmAsSpectra,
+        CombineIonMobilitySpectra = _config.CombineIonMobilitySpectra,
+        DdaProcessing = _config.DdaProcessing,
+        IgnoreCalibrationScans = _config.IgnoreCalibrationScans,
+    };
+}

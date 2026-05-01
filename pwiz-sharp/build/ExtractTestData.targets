@@ -1,0 +1,50 @@
+<Project>
+
+  <!--
+    Shared MSBuild target for harness-test projects: extracts the per-vendor
+    Reader_<Vendor>_Test.data.tar.bz2 archive into its containing directory so the
+    .d/.raw/.wiff fixtures are available to VendorReaderTestHarness.
+
+    Importing test projects must set:
+      - VendorTestArchive  : absolute path to the .tar.bz2
+      - VendorTestDataParent : directory into which to extract (the tarball's internal
+        paths are rooted at Reader_<Vendor>_Test.data/, so this should be the folder
+        *containing* Reader_<Vendor>_Test.data).
+
+    Uses the bsdtar binary checked in at libraries/bsdtar.exe rather than %WinDir%\System32\
+    tar.exe. The system32 build of bsdtar isn't always present (Windows 10 1803+ shipped it,
+    but pre-1803 / Server SKUs / restricted images don't), and the Git-for-Windows GNU tar
+    that may shadow it on PATH is wrong for our purposes anyway — GNU tar's -k errors when
+    files exist instead of skipping them.
+
+    -k is essential, not just an optimization: the reference mzMLs tracked in git are
+    newer than the copies baked into the tarball, so overwriting them with the tar
+    contents would regress test oracles. We only want to fill in fixtures that aren't
+    on disk yet (the big vendor .d/.raw directories that aren't committed to git).
+
+    The libraries/bsdtar.exe binary is libarchive 2.7 — older than the system32 one. With
+    -k it does the right thing (skips existing files without overwriting), but it reports
+    each skip as a warning and then exits with status 1 ("Error exit delayed from previous
+    errors"). Set IgnoreExitCode="true" to swallow that — an actual extraction failure
+    would also produce missing files, which the tests would surface immediately. The
+    Inputs/Outputs incremental build skips the call entirely when the archive hasn't
+    changed since the sentinel was touched.
+    -->
+
+  <Target Name="ExtractVendorTestData"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(VendorTestArchive)' != '' and Exists('$(VendorTestArchive)')"
+          Inputs="$(VendorTestArchive)"
+          Outputs="$(IntermediateOutputPath)vendor-test-data.extracted">
+    <PropertyGroup>
+      <_BsdTarExe>$(MSBuildThisFileDirectory)..\..\libraries\bsdtar.exe</_BsdTarExe>
+    </PropertyGroup>
+    <MakeDir Directories="$(VendorTestDataParent);$(IntermediateOutputPath)" />
+    <Message Importance="high" Text="Extracting $(VendorTestArchive) -&gt; $(VendorTestDataParent)" />
+    <Exec Command="&quot;$(_BsdTarExe)&quot; -xkf &quot;$(VendorTestArchive)&quot; -C &quot;$(VendorTestDataParent)&quot;"
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true" />
+    <Touch Files="$(IntermediateOutputPath)vendor-test-data.extracted" AlwaysCreate="true" />
+  </Target>
+
+</Project>

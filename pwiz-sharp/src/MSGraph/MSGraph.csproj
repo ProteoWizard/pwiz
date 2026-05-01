@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Multi-target wrapper around the existing pwiz.MSGraph sources at pwiz_tools/Shared/MSGraph/.
+    Same pattern as the sibling pwiz-sharp/src/ZedGraph project: legacy csproj is shared with
+    Skyline's net4.7.2 build and stays untouched; this SDK-style wrapper compiles the same .cs
+    files for net8.0-windows so SeeMS-sharp can use it.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>pwiz.MSGraph</RootNamespace>
+    <AssemblyName>MSGraph</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <!-- pwiz.MSGraph is internal, but old enough that the strict pwiz-sharp analyzer rules in
+         Directory.Build.props would generate dozens of "errors" against it. Match ZedGraph. -->
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS0612;CS0618;CS1591;CS8981;CA1416;CA1822;CA1031;CA2326;CA2352;CA1051;CA1715;CA1822;CA2200;CA1825;NU1701;SYSLIB0003;SYSLIB0011;SYSLIB0050;SYSLIB0051</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AnalysisLevel>none</AnalysisLevel>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\pwiz_tools\Shared\MSGraph\*.cs">
+      <Link>%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\pwiz_tools\Shared\MSGraph\*.resx">
+      <Link>%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ZedGraph\ZedGraph.csproj" />
+  </ItemGroup>
+
+</Project>

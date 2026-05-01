@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Sciex.Wiff2</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Sciex.Wiff2</AssemblyName>
+    <Description>Wiff2 reader plugin. Loaded into Pwiz.Vendor.Sciex.Wiff2LoadContext at runtime so its bundled SCIEX.Apis.Data.v1 / Clearcore2 / OFX dependencies don't conflict with the legacy AnalystWiffDataProvider stack the .wiff path uses in the default ALC.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\Sciex.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-assemblies\Sciex</SciexAssembliesDir>
+  </PropertyGroup>
+
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       (Sciex.csproj owns the extraction target). NO_VENDOR_SUPPORT compiles the wiff2 plugin
+       without its SDK so it can still self-identify the format but throw on actual reads. The
+       SDK-using files reference SCIEX.Apis.Data.v1 directly, so they're excluded in that mode. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="Wiff2File.cs" />
+  </ItemGroup>
+
+  <!-- SCIEX.Apis.Data.v1 reference is compile-time only (Private=false). The dll is shipped to
+       the consumer bin by Sciex.csproj's _SciexRuntime Content list, and loaded at runtime by
+       Wiff2LoadContext into the side-by-side ALC. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Reference Include="SCIEX.Apis.Data.v1">
+      <HintPath>$(SciexAssembliesDir)\SCIEX.Apis.Data.v1.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

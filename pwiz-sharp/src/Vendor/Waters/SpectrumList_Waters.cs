@@ -1,0 +1,703 @@
+using System.Globalization;
+using Pwiz.Analysis;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData.Processing;
+using Pwiz.Data.MsData.Spectra;
+
+#pragma warning disable CA1707
+
+namespace Pwiz.Vendor.Waters;
+
+/// <summary>
+/// <see cref="ISpectrumList"/> backed by a Waters <c>.raw</c> directory. Iterates the SDK's
+/// (function, scan) grid in retention-time order and emits one mzML spectrum per non-IMS scan
+/// (or per drift bin when ion mobility is enabled). Phase 1 of the port: no IMS, no DDA, no
+/// lockmass. Mirrors pwiz C++ <c>SpectrumList_Waters</c>.
+/// </summary>
+public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSpectrumList, IIonMobilityCcsConversion
+{
+    private readonly WatersRawFile _data;
+
+    /// <summary>The underlying raw file. Exposed internally for tests.</summary>
+    internal WatersRawFile RawData => _data;
+    private readonly bool _owns;
+    private readonly int _preferOnlyMsLevel;
+    private readonly bool _srmAsSpectra;
+    private readonly bool _ddaProcessing;
+    private readonly bool _combineIonMobilitySpectra;
+    private readonly bool _ignoreCalibrationScans;
+    private readonly IReadOnlyList<Pwiz.Data.Common.Chemistry.MzMobilityWindow> _mobilityFilter;
+    private readonly List<IndexEntry> _index = new();
+    private readonly Dictionary<string, int> _idToIndex = new(StringComparer.Ordinal);
+    private readonly Lazy<(float Lower, float Upper)?> _ddaIsolationOffsets;
+
+    /// <summary>DataProcessing emitted as the <c>defaultDataProcessingRef</c>.</summary>
+    public DataProcessing? Dp { get; set; }
+
+    /// <inheritdoc/>
+    public override DataProcessing? DataProcessing => Dp;
+
+    private sealed class IndexEntry : SpectrumIdentity
+    {
+        public int Function;
+        public int Scan;        // 0-based scan within function (or starting scan when DDA-merged)
+        public int MsLevel;
+        public CVID SpectrumType;
+        // DDA-only: when DDA is true, this entry was produced by the MassLynx DDA processor.
+        // The id and isolation-window emission take a different path; the underlying scan-stat
+        // calls don't apply.
+        public bool Dda;
+        public int DdaIndex;
+        public int DdaStartScan;
+        public int DdaEndScan;
+        public float DdaSetMass;
+        public float DdaPrecursorMass;
+        public bool DdaIsMs1;
+        // IMS-only: when Block >= 0 the entry refers to an IMS frame (block = original RT
+        // index in the function). For non-combine, Scan holds the drift bin (0-based);
+        // for combine, Scan is the mid-bin used for default drift time.
+        public int Block = -1;
+        public bool Combined;
+    }
+
+    internal SpectrumList_Waters(WatersRawFile data, bool owns, int preferOnlyMsLevel,
+        bool srmAsSpectra, bool ddaProcessing = false, bool combineIonMobilitySpectra = false,
+        bool ignoreCalibrationScans = false,
+        IReadOnlyList<Pwiz.Data.Common.Chemistry.MzMobilityWindow>? mobilityFilter = null)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        _data = data;
+        _owns = owns;
+        _preferOnlyMsLevel = preferOnlyMsLevel;
+        _srmAsSpectra = srmAsSpectra;
+        _ddaProcessing = ddaProcessing;
+        _combineIonMobilitySpectra = combineIonMobilitySpectra;
+        _ignoreCalibrationScans = ignoreCalibrationScans;
+        _mobilityFilter = mobilityFilter ?? Array.Empty<Pwiz.Data.Common.Chemistry.MzMobilityWindow>();
+        _ddaIsolationOffsets = new Lazy<(float, float)?>(_data.GetDdaIsolationWindowOffsets);
+        if (ddaProcessing)
+            BuildDdaIndex();
+        else
+            BuildIndex();
+    }
+
+    /// <inheritdoc/>
+    public override int Count => _index.Count;
+
+    /// <inheritdoc/>
+    public override SpectrumIdentity SpectrumIdentity(int index) => _index[index];
+
+    /// <inheritdoc/>
+    public override int Find(string id) =>
+        _idToIndex.TryGetValue(id, out int v) ? v : Count;
+
+    private void BuildIndex()
+    {
+        // pwiz C++ orders all (function, scan) pairs by retention time across all functions, so
+        // a TIC scan from function 10 at t=0.02min sorts before a TIC scan from function 0 at
+        // t=0.05min. For non-IMS functions, "scan" is the RT-axis position. For IMS functions,
+        // we still order *blocks* (RT-axis) by RT, but each block expands to drift-bin entries
+        // (non-combine) or one combined entry (combine). The expansion happens after the sort
+        // so all bins of one block stay adjacent.
+        var byRt = new List<(float Rt, int Function, int Scan, int MsLevel, CVID Type, bool Ims)>();
+        int? lockmassFunction = _ignoreCalibrationScans ? _data.GetLockMassFunction() : null;
+        foreach (int function in _data.FunctionIndices)
+        {
+            // Skip the lockmass-correction function when ignoreCalibrationScans is set —
+            // it's the calibration probe Waters injects and isn't part of the analytical run.
+            if (lockmassFunction.HasValue && lockmassFunction.Value == function) continue;
+
+            int rawType;
+            try { rawType = _data.GetFunctionType(function); }
+            catch { continue; }
+
+            var ft = WatersDetail.FromMassLynxFunctionType(rawType);
+            if (!WatersDetail.TranslateFunctionType(ft, out int msLevel, out CVID spectrumType))
+                continue;
+
+            // Skip non-MS function variants we don't expand to spectra in this phase.
+            if (spectrumType == CVID.MS_SRM_spectrum && !_srmAsSpectra) continue;
+            if (spectrumType == CVID.MS_SIM_spectrum) continue;
+            if (spectrumType == CVID.MS_constant_neutral_loss_spectrum) continue;
+            if (spectrumType == CVID.MS_constant_neutral_gain_spectrum) continue;
+
+            if (_preferOnlyMsLevel > 0 && msLevel != _preferOnlyMsLevel) continue;
+
+            bool ims = function < _data.IonMobilityByFunctionIndex.Count
+                && _data.IonMobilityByFunctionIndex[function];
+
+            int scanCount = _data.GetScanCount(function);
+            for (int s = 0; s < scanCount; s++)
+            {
+                float rt = _data.GetRetentionTime(function, s);
+                byRt.Add((rt, function, s, msLevel, spectrumType, ims));
+            }
+        }
+
+        // Stable sort by retention time.
+        var sorted = byRt.OrderBy(t => t.Rt).ToList();
+
+        foreach (var e in sorted)
+        {
+            if (!e.Ims)
+            {
+                int i = _index.Count;
+                string id = "function=" + (e.Function + 1).ToString(CultureInfo.InvariantCulture)
+                    + " process=0 scan=" + (e.Scan + 1).ToString(CultureInfo.InvariantCulture);
+                var entry = new IndexEntry
+                {
+                    Index = i, Id = id,
+                    Function = e.Function, Scan = e.Scan, Block = -1,
+                    MsLevel = e.MsLevel, SpectrumType = e.Type,
+                };
+                _index.Add(entry);
+                _idToIndex[id] = i;
+                continue;
+            }
+
+            // IMS function. Block = the RT-axis index (e.Scan). Each block has
+            // numScansInBlock drift bins.
+            int numScansInBlock = _data.GetDriftScanCount(e.Function);
+
+            if (_combineIonMobilitySpectra)
+            {
+                int i = _index.Count;
+                // pwiz C++ id format for combine-IMS: "merged=N function=F block=B+1".
+                string id = "merged=" + (i + 1).ToString(CultureInfo.InvariantCulture)
+                    + " function=" + (e.Function + 1).ToString(CultureInfo.InvariantCulture)
+                    + " block=" + (e.Scan + 1).ToString(CultureInfo.InvariantCulture);
+                var entry = new IndexEntry
+                {
+                    Index = i, Id = id,
+                    Function = e.Function, Block = e.Scan,
+                    Scan = numScansInBlock / 2, // mid-bin for default drift-time
+                    MsLevel = e.MsLevel, SpectrumType = e.Type,
+                    Combined = true,
+                };
+                _index.Add(entry);
+                _idToIndex[id] = i;
+            }
+            else
+            {
+                // Non-combine: one entry per (block, drift bin). pwiz C++ id is the linear
+                // scan number = numScansInBlock * block + driftBin + 1.
+                for (int j = 0; j < numScansInBlock; j++)
+                {
+                    int i = _index.Count;
+                    int linearScan = numScansInBlock * e.Scan + j + 1;
+                    string id = "function=" + (e.Function + 1).ToString(CultureInfo.InvariantCulture)
+                        + " process=0 scan=" + linearScan.ToString(CultureInfo.InvariantCulture);
+                    var entry = new IndexEntry
+                    {
+                        Index = i, Id = id,
+                        Function = e.Function, Block = e.Scan, Scan = j,
+                        MsLevel = e.MsLevel, SpectrumType = e.Type,
+                    };
+                    _index.Add(entry);
+                    _idToIndex[id] = i;
+                }
+            }
+        }
+    }
+
+    private void BuildDdaIndex()
+    {
+        // pwiz C++ createDDAIndex iterates GetDDAScanCount entries; each one has its own
+        // (function, startScan, endScan) plus precursor info. ID format depends on whether
+        // it's a single scan or a merged range:
+        //   start==end → "function=F process=0 scan=S+1"
+        //   else       → "merged=N function=F process=0 scans=S+1-E+1"
+        int n = _data.GetDdaScanCount();
+        for (int i = 0; i < n; i++)
+        {
+            var info = _data.GetDdaScanInfo(i);
+            int msLevel = info.IsMs1 ? 1 : 2;
+            CVID specType = info.IsMs1 ? CVID.MS_MS1_spectrum : CVID.MS_MSn_spectrum;
+            string id = info.StartScan == info.EndScan
+                ? "function=" + (info.Function + 1).ToString(CultureInfo.InvariantCulture)
+                  + " process=0 scan=" + (info.StartScan + 1).ToString(CultureInfo.InvariantCulture)
+                : "merged=" + i.ToString(CultureInfo.InvariantCulture)
+                  + " function=" + (info.Function + 1).ToString(CultureInfo.InvariantCulture)
+                  + " process=0 scans=" + (info.StartScan + 1).ToString(CultureInfo.InvariantCulture)
+                  + "-" + (info.EndScan + 1).ToString(CultureInfo.InvariantCulture);
+
+            var entry = new IndexEntry
+            {
+                Index = i,
+                Id = id,
+                Function = info.Function,
+                Scan = info.StartScan,
+                MsLevel = msLevel,
+                SpectrumType = specType,
+                Dda = true,
+                DdaIndex = i,
+                DdaStartScan = info.StartScan,
+                DdaEndScan = info.EndScan,
+                DdaSetMass = info.SetMass,
+                DdaPrecursorMass = info.PrecursorMass,
+                DdaIsMs1 = info.IsMs1,
+            };
+            _index.Add(entry);
+            _idToIndex[id] = i;
+        }
+    }
+
+    /// <inheritdoc/>
+    public string VendorCentroidName => "Waters/MassLynx peak picking";
+
+    /// <summary>True if any function in the file is SONAR-enabled.</summary>
+    public bool HasSonarFunctions => _data.HasSonar;
+
+    /// <summary>True if any function carries ion mobility data (.cdt sibling files).</summary>
+    public bool HasIonMobility => _data.HasIonMobility;
+
+    /// <summary>
+    /// True when this list is configured to merge per-bin IMS spectra into per-block
+    /// combined spectra. Independent of <see cref="HasIonMobility"/>: a non-IMS file always
+    /// reports false.
+    /// </summary>
+    public bool HasCombinedIonMobility => _data.HasIonMobility && _combineIonMobilitySpectra;
+
+    /// <summary>
+    /// True when calibration (lockmass) function spectra are excluded from the index. Mirrors
+    /// pwiz C++ <c>SpectrumList_Waters::calibrationSpectraAreOmitted</c>: requires both the
+    /// ignoreCalibrationScans config flag AND a discoverable lockmass function.
+    /// </summary>
+    public override bool CalibrationSpectraAreOmitted =>
+        _ignoreCalibrationScans && _data.GetLockMassFunction() is int f && f >= 0;
+
+    /// <summary>
+    /// Returns the SONAR bin range covering <paramref name="precursorMz"/> ±
+    /// <paramref name="tolerance"/>. Returns (-1, -1) for an out-of-range query. Mirrors pwiz
+    /// C++ <c>SpectrumList_Waters::sonarMzToBinRange</c>.
+    /// </summary>
+    public (int Start, int End) SonarMzToBinRange(double precursorMz, double tolerance) =>
+        _data.GetSonarBinRange(precursorMz, tolerance);
+
+    /// <summary>
+    /// Returns the nominal precursor m/z for SONAR bin <paramref name="bin"/>, or 0 for an
+    /// out-of-range bin. Mirrors pwiz C++ <c>SpectrumList_Waters::sonarBinToPrecursorMz</c>.
+    /// </summary>
+    public double SonarBinToPrecursorMz(int bin) => _data.SonarBinToPrecursorMz(bin);
+
+    /// <inheritdoc/>
+    public bool CanConvertIonMobilityAndCcs => _data.HasCcsCalibration;
+
+    /// <inheritdoc/>
+    public double IonMobilityToCcs(double ionMobility, double mz, int charge) =>
+        _data.DriftTimeToCcs((float)ionMobility, (float)mz, charge);
+
+    /// <inheritdoc/>
+    public double CcsToIonMobility(double ccs, double mz, int charge) =>
+        _data.CcsToDriftTime((float)ccs, (float)mz, charge);
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData) =>
+        GetSpectrumImpl(index, getBinaryData, doCentroid: true, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+
+    /// <summary>
+    /// Lockmass-aware vendor centroid path — used by <see cref="SpectrumList_LockmassRefiner"/>
+    /// when an outer <see cref="Pwiz.Analysis.SpectrumList_PeakPicker"/> requests centroids.
+    /// </summary>
+    internal Spectrum GetCentroidSpectrumWithLockmass(int index, bool getBinaryData,
+        double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance) =>
+        GetSpectrumImpl(index, getBinaryData, doCentroid: true, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
+
+    /// <inheritdoc/>
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+        GetSpectrumImpl(index, getBinaryData, doCentroid: false, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+
+    /// <summary>
+    /// Lockmass-aware overload used by <see cref="SpectrumList_LockmassRefiner"/>. When
+    /// either <paramref name="lockmassMzPos"/> or <paramref name="lockmassMzNeg"/> is non-zero,
+    /// the corresponding correction is applied to the underlying SDK reader before peaks are
+    /// fetched (so the binary data the SDK returns is already gain-adjusted) and the SET_MASS
+    /// scan-stat used for the MS2 isolation window is corrected via the per-RT gain factor.
+    /// </summary>
+    internal Spectrum GetSpectrumWithLockmass(int index, bool getBinaryData,
+        double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance, bool doCentroid = false) =>
+        GetSpectrumImpl(index, getBinaryData, doCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
+
+    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool doCentroid,
+        double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance)
+    {
+        if (index < 0 || index >= _index.Count) throw new ArgumentOutOfRangeException(nameof(index));
+        var ie = _index[index];
+        var spec = new Spectrum { Index = ie.Index, Id = ie.Id };
+
+        // MSe heuristic (mirrors pwiz C++): if this MS1 spectrum is from function 1 and has a
+        // non-zero collision energy, promote it to MSn. The cpp code has a FIXME-disabled
+        // comparison against function 0's collision energy; we keep the same behavior so the
+        // reference mzMLs for HDMSe match (where every function-1 spectrum becomes pseudo-MS2).
+        int msLevel = ie.MsLevel;
+        CVID spectrumType = ie.SpectrumType;
+        double promotedCe = 0;
+        // Skip the MSe promotion when function 1 is actually the lockmass function — its
+        // collision energy comes from calibration, not from a high-energy fragmentation event.
+        // pwiz C++ guards on `!isLockMassFunction(ie.function)` here for the same reason; we
+        // were missing that and incorrectly promoting lockmass spectra in non-MSe files (e.g.
+        // QCsC8 ACQUITY data has lockmass at function 1 with non-zero CE).
+        if (msLevel == 1 && ie.Function == 1 && ie.SpectrumType == CVID.MS_MS1_spectrum
+            && _data.GetLockMassFunction() != ie.Function)
+        {
+            int mseStatIndex = ie.Block >= 0 ? ie.Block : ie.Scan;
+            string ceStr = _data.GetScanItem(ie.Function, mseStatIndex, WatersScanItem.CollisionEnergy);
+            if (TryParseDouble(ceStr, out double ce) && Math.Abs(ce) > 0)
+            {
+                msLevel = 2;
+                spectrumType = CVID.MS_MSn_spectrum;
+                promotedCe = Math.Abs(ce);
+            }
+        }
+
+        spec.Params.Set(spectrumType);
+        bool isMs = spectrumType == CVID.MS_MS1_spectrum || spectrumType == CVID.MS_MSn_spectrum
+            || spectrumType == CVID.MS_SIM_spectrum || spectrumType == CVID.MS_SRM_spectrum
+            || spectrumType == CVID.MS_constant_neutral_loss_spectrum
+            || spectrumType == CVID.MS_constant_neutral_gain_spectrum;
+        if (isMs) spec.Params.Set(CVID.MS_ms_level, msLevel);
+
+        spec.ScanList.Set(CVID.MS_no_combination);
+        var scan = new Scan();
+        scan.Set(CVID.MS_preset_scan_configuration, ie.Function + 1);
+        spec.ScanList.Scans.Add(scan);
+
+        // IMS scans use the block index for RT/scan-stat lookups; non-IMS scans use Scan.
+        int statIndex = ie.Block >= 0 ? ie.Block : ie.Scan;
+        double scanTimeMin = _data.GetRetentionTime(ie.Function, statIndex);
+        scan.Set(CVID.MS_scan_start_time, scanTimeMin, CVID.UO_minute);
+
+        // IMS scans record drift time on the scan element. Non-combine: per-bin drift time.
+        // Combine: drift time of the mid-bin (numScansInBlock/2) — pwiz C++ uses ie.scan
+        // which BuildIndex sets to numScansInBlock/2 for the combined entry.
+        // SONAR functions hijack the drift dimension for quadrupole-position binning, so
+        // they get scanning_quadrupole_position userParams (non-combine) or arrays (combine)
+        // instead of drift time.
+        // pwiz C++ keys SONAR-vs-IMS behavior off the global HasSONAR flag, not per-function:
+        // any SONAR-enabled function in the file means the drift dimension is repurposed for
+        // every IMS spectrum (per-function SONAR_ENABLED can disagree on calibration funcs).
+        bool isSonar = _data.HasSonar;
+        if (ie.Block >= 0 && !isSonar)
+        {
+            double driftTime = _data.GetDriftTime(ie.Scan);
+            scan.Set(CVID.MS_ion_mobility_drift_time, driftTime, CVID.UO_millisecond);
+        }
+        else if (ie.Block >= 0 && isSonar && !ie.Combined)
+        {
+            var (qLow, qHigh) = _data.GetSonarBinPrecursorMassRange(ie.Function, ie.Scan);
+            // pwiz C++ formats SONAR userParams via toString(float) which uses Karma's
+            // float5_policy (up to 5 fractional digits, trailing zeros stripped). Our
+            // PwizFloat.ToPwizString(float) mirrors that policy.
+            scan.UserParams.Add(new UserParam("scanning quadrupole position lower bound",
+                PwizFloat.ToPwizString(qLow), "xsd:float", CVID.MS_m_z));
+            scan.UserParams.Add(new UserParam("scanning quadrupole position upper bound",
+                PwizFloat.ToPwizString(qHigh), "xsd:float", CVID.MS_m_z));
+        }
+
+        CVID polarityCv = CVID.CVID_Unknown;
+        if (isMs)
+        {
+            polarityCv = WatersDetail.Polarity(WatersDetail.FromMassLynxIonMode(_data.GetIonMode(ie.Function)));
+            if (polarityCv != CVID.CVID_Unknown) spec.Params.Set(polarityCv);
+        }
+
+        // Lockmass: apply (or remove) the correction on the SDK reader BEFORE fetching peaks.
+        // The polarity gates which mass to use; tolerance is per-call. pwiz C++ does the same
+        // dance: ApplyLockMass when the current-polarity mz is non-zero, else RemoveLockMass.
+        // Only apply when we'll actually read peaks (binary data) — pure metadata fetches
+        // skip the work to match cpp's `detailLevel == DetailLevel_FullData` gate.
+        double lockmassMz = polarityCv == CVID.MS_negative_scan ? lockmassMzNeg : lockmassMzPos;
+        if (isMs && getBinaryData)
+        {
+            if (lockmassMz != 0.0)
+                _data.ApplyLockMass(lockmassMz, lockmassTolerance);
+            else
+                _data.RemoveLockMass();
+        }
+
+        // IsContinuum applies regardless of MS-ness — DiodeArray spectra are continuum data
+        // (wavelength × absorbance) just like profile MS spectra.
+        bool isProfile = _data.IsContinuum(ie.Function);
+        // pwiz C++ always tags the *source* spectrum type up front (so SpectrumList_PeakPicker
+        // can decide whether to re-pick) and then overrides to centroid when doCentroid is on
+        // and we actually centroided. Mirror that order.
+        spec.Params.Set(isProfile ? CVID.MS_profile_spectrum : CVID.MS_centroid_spectrum);
+        bool willCentroid = doCentroid && isProfile;
+        // pwiz C++ explicitly forces doCentroid=false for non-combine IMS spectra — vendor
+        // centroid doesn't apply to per-bin drift data, so the outer SpectrumList_PeakPicker
+        // is expected to run its CWT detector on the profile output. We mirror that here.
+        if (willCentroid && ie.Block >= 0 && !ie.Combined)
+            willCentroid = false;
+        if (willCentroid)
+        {
+            // Replace MS_profile_spectrum with MS_centroid_spectrum.
+            for (int i = spec.Params.CVParams.Count - 1; i >= 0; i--)
+                if (spec.Params.CVParams[i].Cvid == CVID.MS_profile_spectrum) spec.Params.CVParams.RemoveAt(i);
+            spec.Params.Set(CVID.MS_centroid_spectrum);
+        }
+
+        // Base peak / TIC / peak count come from per-scan stats (not from the binary data),
+        // matching pwiz C++ which fills these from MassLynxScanItem entries directly. Reading
+        // a single item via the parameters round-trip (createParameters → getScanItemValue →
+        // getParameterValue) is the same pattern pwiz C++ wraps in GetScanStat.
+        // When we actually centroid (willCentroid==true) we instead recompute from the peaks
+        // via calculatePeakMetadata (matches pwiz C++).
+        // IMS non-combine spectra get only TIC from the per-block array (the scan-stats only
+        // describe the block, not individual drift bins).
+        if (!willCentroid)
+        {
+            if (ie.Block < 0 || ie.Combined)
+            {
+                int s = ie.Block < 0 ? ie.Scan : ie.Block;
+                string bpMass = _data.GetScanItem(ie.Function, s, WatersScanItem.BasePeakMass);
+                string bpInt = _data.GetScanItem(ie.Function, s, WatersScanItem.BasePeakIntensity);
+                string tic = _data.GetScanItem(ie.Function, s, WatersScanItem.TotalIonCurrent);
+                string peaks = _data.GetScanItem(ie.Function, s, WatersScanItem.PeaksInScan);
+
+                // pwiz C++ emits these scan-stat fields for all spectrum types including
+                // non-MS (DiodeArray) — base_peak_m_z, base_peak_intensity, TIC, PeaksInScan
+                // come straight from the SDK regardless of m/z vs wavelength axis.
+                if (TryParseDouble(bpMass, out double bpMassD)) spec.Params.Set(CVID.MS_base_peak_m_z, bpMassD);
+                if (TryParseDouble(bpInt, out double bpIntD)) spec.Params.Set(CVID.MS_base_peak_intensity, bpIntD);
+                if (TryParseDouble(tic, out double ticD)) spec.Params.Set(CVID.MS_total_ion_current, ticD);
+                if (int.TryParse(peaks, NumberStyles.Integer, CultureInfo.InvariantCulture, out int peaksI))
+                    spec.DefaultArrayLength = peaksI;
+            }
+            else // non-combine IMS: per-block TIC, no base peak / peak count
+            {
+                if (ie.Function < _data.TicByFunctionIndex.Count
+                    && _data.TicByFunctionIndex[ie.Function] is { } ticArr
+                    && ie.Block < ticArr.Length)
+                {
+                    // Use the float overload — pwiz C++ stores TicByFunctionIndex as float<>
+                    // and serializes with default 6-sig-fig precision; widening to double here
+                    // would emit 7 digits and diff against the reference.
+                    spec.Params.Set(CVID.MS_total_ion_current, ticArr[ie.Block]);
+                }
+                spec.DefaultArrayLength = 0;
+            }
+        }
+
+        // Scan window from the function's acquisition mass range.
+        if (isMs)
+        {
+            var (lo, hi) = _data.GetAcquisitionMassRange(ie.Function);
+            scan.ScanWindows.Add(new ScanWindow(lo, hi, CVID.MS_m_z));
+        }
+
+        // Precursor metadata for MS2 / MSn — pwiz C++ pulls SET_MASS for the isolation target
+        // and COLLISION_ENERGY for the activation. We emit a single isolation window with
+        // target = setMass (mid-range fallback when SET_MASS is missing). DDA-processed scans
+        // carry the precursor info from the DDA processor (SET_MASS in the index, plus per-file
+        // isolation window offsets); the selected ion's m/z is the precursor (monoisotopic)
+        // mass when set, distinct from the isolation-window target.
+        if (msLevel > 1 && isMs)
+        {
+            // IMS spectra get scan stats from the block index, not the per-bin drift index.
+            int scanStatIndex = ie.Block >= 0 ? ie.Block : ie.Scan;
+            double collisionEnergy = promotedCe;
+            if (collisionEnergy == 0)
+            {
+                string ceStr = _data.GetScanItem(ie.Function, scanStatIndex, WatersScanItem.CollisionEnergy);
+                if (TryParseDouble(ceStr, out double ce)) collisionEnergy = Math.Abs(ce);
+            }
+
+            double setMass;
+            double precursorMass;
+            (float Lower, float Upper)? offsets = null;
+            if (ie.Dda)
+            {
+                // pwiz C++ re-reads DDA scan info per spectrum so the SDK can return the
+                // lockmass-corrected precursor mass for the current lockmass state. The
+                // SET_MASS field stays uncorrected (it represents the original isolation
+                // target) and goes to the isolation window unchanged.
+                var info = _data.GetDdaScanInfo(ie.DdaIndex);
+                setMass = info.SetMass;
+                precursorMass = info.PrecursorMass;
+                offsets = _ddaIsolationOffsets.Value;
+            }
+            else
+            {
+                string setMassStr = _data.GetScanItem(ie.Function, scanStatIndex, WatersScanItem.SetMass);
+                setMass = TryParseDouble(setMassStr, out double sm) ? sm : 0;
+                // pwiz C++ runs SET_MASS through GetLockMassCorrectedMz so the isolation
+                // window target reflects the correction even though SET_MASS isn't part of the
+                // peak array (it lives in the scan stats).
+                if (setMass > 0)
+                    setMass = _data.GetLockMassCorrectedMz(scanTimeMin, setMass);
+                precursorMass = setMass;
+            }
+
+            var precursor = new Precursor();
+            var (lo, hi) = _data.GetAcquisitionMassRange(ie.Function);
+            if (offsets is { } o)
+            {
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, o.Lower, CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, o.Upper, CVID.MS_m_z);
+            }
+            else if (setMass == 0)
+            {
+                setMass = (lo + hi) / 2.0;
+                precursorMass = setMass;
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, hi - setMass, CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, hi - setMass, CVID.MS_m_z);
+            }
+            precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, setMass, CVID.MS_m_z);
+
+            precursor.Activation.Set(CVID.MS_beam_type_collision_induced_dissociation);
+            if (collisionEnergy > 0)
+                precursor.Activation.Set(CVID.MS_collision_energy, collisionEnergy, CVID.UO_electronvolt);
+
+            precursor.SelectedIons.Add(new SelectedIon(precursorMass));
+            spec.Precursors.Add(precursor);
+        }
+
+        // Read peaks. Centroid request goes through MassLynx ScanProcessor (or, for DDA, the
+        // DDA processor's centroid path). IMS uses readDriftScan for individual bins; combine
+        // IMS aggregates across all bins. Otherwise we read the raw scan as-is.
+        if (isMs && ie.Combined)
+        {
+            // Combine path: build (mz, intensity, drift_time) arrays across all bins of the
+            // block, regardless of getBinaryData (DefaultArrayLength reflects the merged peak
+            // count). We always read peaks here because the combined spectrum has no useful
+            // scan-stat-driven shortcut.
+            int numScansInBlock = _data.GetDriftScanCount(ie.Function);
+            var mzList = new List<double>();
+            var intList = new List<double>();
+            // For non-SONAR IMS we collect drift time per peak. For SONAR we collect the
+            // quadrupole low/high bounds per peak (which become two arrays at the end).
+            var driftList = new List<double>();
+            var qLowList = new List<double>();
+            var qHighList = new List<double>();
+            for (int s = 0; s < numScansInBlock; s++)
+            {
+                double driftTime = isSonar ? 0.0 : _data.GetDriftTime(s);
+                if (!isSonar
+                    && !Pwiz.Data.Common.Chemistry.MzMobilityWindow.MobilityValueInBounds(_mobilityFilter, driftTime))
+                    continue;
+                float sonarLow = 0, sonarHigh = 0;
+                if (isSonar)
+                    (sonarLow, sonarHigh) = _data.GetSonarBinPrecursorMassRange(ie.Function, s);
+                var (binMz, binInt) = _data.ReadDriftScan(ie.Function, ie.Block, s);
+                for (int i = 0; i < binMz.Length; i++)
+                {
+                    mzList.Add(binMz[i]);
+                    intList.Add(binInt[i]);
+                    if (isSonar) { qLowList.Add(sonarLow); qHighList.Add(sonarHigh); }
+                    else driftList.Add(driftTime);
+                }
+            }
+            spec.DefaultArrayLength = mzList.Count;
+
+            if (getBinaryData)
+            {
+                spec.SetMZIntensityArrays(mzList, intList, CVID.MS_number_of_detector_counts);
+                if (isSonar)
+                {
+                    var qLowArr = new BinaryDataArray();
+                    qLowArr.Set(CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, "", CVID.MS_m_z);
+                    qLowArr.Data.AddRange(qLowList);
+                    spec.BinaryDataArrays.Add(qLowArr);
+                    var qHighArr = new BinaryDataArray();
+                    qHighArr.Set(CVID.MS_scanning_quadrupole_position_upper_bound_m_z_array, "", CVID.MS_m_z);
+                    qHighArr.Data.AddRange(qHighList);
+                    spec.BinaryDataArrays.Add(qHighArr);
+                }
+                else
+                {
+                    var driftArr = new BinaryDataArray();
+                    driftArr.Set(CVID.MS_raw_ion_mobility_array, "", CVID.UO_millisecond);
+                    driftArr.Data.AddRange(driftList);
+                    spec.BinaryDataArrays.Add(driftArr);
+                }
+            }
+        }
+        else if (getBinaryData || willCentroid)
+        {
+            float[] mz, intensity;
+            if (ie.Dda)
+                (mz, intensity) = _data.GetDdaScan(ie.DdaIndex, willCentroid);
+            else if (ie.Block >= 0)
+                (mz, intensity) = _data.ReadDriftScan(ie.Function, ie.Block, ie.Scan);
+            else if (willCentroid)
+                (mz, intensity) = _data.ReadCentroidScan(ie.Function, ie.Scan);
+            else
+                (mz, intensity) = _data.ReadScan(ie.Function, ie.Scan);
+            spec.DefaultArrayLength = mz.Length;
+
+            // pwiz C++ only calculates peak metadata for the non-DDA non-IMS centroid path.
+            // For DDA, GetDdaScan returns vendor-supplied centroids without the cpp metadata pass.
+            if (willCentroid && !ie.Dda)
+                CalculatePeakMetadata(spec, mz, intensity);
+
+            if (getBinaryData)
+            {
+                var mzD = new double[mz.Length];
+                var intD = new double[intensity.Length];
+                for (int i = 0; i < mz.Length; i++) { mzD[i] = mz[i]; intD[i] = intensity[i]; }
+                if (isMs)
+                {
+                    spec.SetMZIntensityArrays(mzD, intD, CVID.MS_number_of_detector_counts);
+                }
+                else
+                {
+                    // DiodeArray (EMR): pwiz C++ swapMZIntensityArrays switches the array CV
+                    // term to MS_wavelength_array when the unit is UO_nanometer.
+                    var xArr = new BinaryDataArray();
+                    xArr.Set(CVID.MS_wavelength_array, "", CVID.UO_nanometer);
+                    xArr.Data.AddRange(mzD);
+                    var yArr = new BinaryDataArray();
+                    yArr.Set(CVID.MS_intensity_array, "", CVID.MS_number_of_detector_counts);
+                    yArr.Data.AddRange(intD);
+                    spec.BinaryDataArrays.Add(xArr);
+                    spec.BinaryDataArrays.Add(yArr);
+                }
+            }
+        }
+
+        return spec;
+    }
+
+    /// <summary>
+    /// Recomputes base peak / lowest+highest m/z / TIC from a centroided peak list. Mirrors
+    /// pwiz C++ <c>SpectrumList_MetadataFixer::calculatePeakMetadata</c> with single-pass O(n)
+    /// folding (the ref expects sample max-by-intensity tie-break ordering on equal intensities,
+    /// matching <c>std::max_element</c> over the peaks; we keep the first occurrence too).
+    /// </summary>
+    private static void CalculatePeakMetadata(Spectrum spec, float[] mz, float[] intensity)
+    {
+        if (mz.Length == 0)
+        {
+            spec.Params.Set(CVID.MS_total_ion_current, 0.0, CVID.MS_number_of_detector_counts);
+            return;
+        }
+        double total = 0;
+        double basePeakX = mz[0];
+        double basePeakY = intensity[0];
+        double lowestX = mz[0];
+        double highestX = mz[0];
+        for (int i = 0; i < mz.Length; i++)
+        {
+            total += intensity[i];
+            if (intensity[i] > basePeakY) { basePeakY = intensity[i]; basePeakX = mz[i]; }
+            if (mz[i] < lowestX) lowestX = mz[i];
+            if (mz[i] > highestX) highestX = mz[i];
+        }
+        spec.Params.Set(CVID.MS_base_peak_intensity, basePeakY, CVID.MS_number_of_detector_counts);
+        spec.Params.Set(CVID.MS_base_peak_m_z, basePeakX, CVID.MS_m_z);
+        spec.Params.Set(CVID.MS_lowest_observed_m_z, lowestX, CVID.MS_m_z);
+        spec.Params.Set(CVID.MS_highest_observed_m_z, highestX, CVID.MS_m_z);
+        spec.Params.Set(CVID.MS_total_ion_current, total, CVID.MS_number_of_detector_counts);
+    }
+
+    private static bool TryParseDouble(string s, out double v) =>
+        double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v);
+
+    /// <inheritdoc/>
+    protected override void DisposeCore()
+    {
+        if (_owns) _data.Dispose();
+        base.DisposeCore();
+    }
+}

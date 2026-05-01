@@ -1,0 +1,83 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Tools.MsConvert</RootNamespace>
+    <AssemblyName>msconvert-sharp</AssemblyName>
+    <Description>Command-line spectrum-file converter. Port of pwiz_tools/commandline/msconvert.</Description>
+    <!-- Expose Main via a plain class so tests can drive it without Process overhead. -->
+    <InternalsVisibleTo>$(AssemblyName).Tests</InternalsVisibleTo>
+
+    <!-- Inherits from Pwiz.Vendor.Thermo — the Thermo SDK needs en-US culture. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- The wiff2 SDK (SCIEX.Apis.Data.v1) uses BinaryFormatter via SmartAssembly's resolver
+         and via Microsoft.Practices.Unity's serialization paths. .NET 8 disables BinaryFormatter
+         by default; flip the runtimeconfig switch so the Sciex.Data.SDK can deserialize its
+         bundled assembly resources. -->
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+    <UseWindowsForms>False</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- Vendor projects always build so Reader.Identify() works. Without
+       -p:IAgreeToVendorLicenses=true (build.bat translates the vendor-license CLI flag), the
+       vendor csprojs skip extracting their encrypted SDKs and compile with NO_VENDOR_SUPPORT,
+       which makes Reader.Read() throw a clear "vendor support not enabled" error. Identify
+       remains functional in both modes. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="..\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="..\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\Vendor\Sciex\Sciex.csproj" />
+    <!-- Sciex.Wiff2 is a runtime-only plugin: built as a build dependency, but its assembly is
+         deliberately NOT referenced (would land in deps.json / TPA). Wiff2LoadContext loads
+         Pwiz.Vendor.Sciex.Wiff2.dll on demand into a side-by-side ALC so its bundled
+         SCIEX.Apis.Data.v1 deps don't conflict with the legacy .wiff path's signed Clearcore2
+         dlls in the default ALC. -->
+    <ProjectReference Include="..\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MsConvert.Tests" />
+  </ItemGroup>
+
+  <!-- Side-by-side wiff2 dlls. The wiff2 SDK is loaded into a custom AssemblyLoadContext
+       (Wiff2LoadContext) that pulls bundled Clearcore2/OFX/Unity dlls from SCIEX.Apis.Data.v1's
+       SmartAssembly resources, plus a dedicated copy of SQLite 1.0.109 (no SEE license probe)
+       and its matching native interop. The on-disk signed-PKT Clearcore2 dlls remain in the
+       default ALC for the legacy .wiff path (AnalystDataProvider was compiled against those
+       identities). The two ALCs coexist because their resolved assemblies have different
+       PublicKeyTokens, so there's no identity collision. -->
+  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <PropertyGroup>
+      <!-- System.Data.SQLite.dll (1.0.109) and Unity.Abstractions.dll (Cecil-patched) are
+           committed at pwiz-sharp/vendor-archives/Sciex/. Both originate from the SmartAssembly
+           bundle inside SCIEX.Apis.Data.v1.dll; we keep on-disk copies because the wiff2 SDK
+           is hard-bound to those exact assembly identities and a build-time extraction step
+           (with Cecil patching for Unity) is more machinery than this PR warrants. See
+           src/Vendor/Sciex/wiff2-on-net8-investigation.md for provenance. -->
+      <_SciexWiff2DepsDir>$(MSBuildThisFileDirectory)..\..\vendor-archives\Sciex</_SciexWiff2DepsDir>
+      <!-- SQLite.Interop.dll: extracted by Sciex.csproj's ExtractSciexAssemblies from
+           vendor_api_ABI.7z's vendor_api\ABI\x64\ subfolder and flattened into
+           vendor-assemblies/Sciex/. -->
+      <_SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Sciex</_SciexAssembliesDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(OutputPath)wiff2" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll" DestinationFiles="$(OutputPath)wiff2\System.Data.SQLite.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll" DestinationFiles="$(OutputPath)wiff2\SQLite.Interop.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll" DestinationFiles="$(OutputPath)wiff2\Unity.Abstractions.dll" OverwriteReadOnlyFiles="true" />
+  </Target>
+
+</Project>

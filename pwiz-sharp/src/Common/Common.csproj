@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Data.Common</RootNamespace>
+    <AssemblyName>Pwiz.Data.Common</AssemblyName>
+    <Description>Controlled vocabulary, parameter containers, Unimod. Port of pwiz/data/common.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\pwiz\data\common\psi-ms.obo" Link="Cv\psi-ms.obo" LogicalName="Pwiz.Data.Common.Cv.psi-ms.obo" />
+    <EmbeddedResource Include="..\..\..\pwiz\data\common\unimod.obo" Link="Cv\unimod.obo" LogicalName="Pwiz.Data.Common.Cv.unimod.obo" />
+    <EmbeddedResource Include="..\..\..\pwiz\data\common\unit.obo" Link="Cv\unit.obo" LogicalName="Pwiz.Data.Common.Cv.unit.obo" />
+  </ItemGroup>
+
+</Project>

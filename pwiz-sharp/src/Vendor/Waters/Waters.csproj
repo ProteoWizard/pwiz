@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Waters</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Waters</AssemblyName>
+    <Description>Waters MassLynx (.raw) reader. P/Invoke bindings for Waters' native MassLynxRaw.dll.</Description>
+
+    <!--
+      MassLynxRaw.dll + cdt.dll ship in pwiz_aux/msrc/utility/vendor_api_Waters.7z. The
+      ExtractWatersAssemblies target below unpacks them into $(WatersAssembliesDir) on every
+      build (idempotent). Only the x64 DLLs are extracted; msconvert-sharp targets x64 exclusively.
+      -->
+    <WatersArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Waters.7z</WatersArchive>
+    <WatersAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Waters</WatersAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Waters.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the native DLL Content entries below are dropped. NO_VENDOR_SUPPORT compiles
+       Reader_Waters without the P/Invoke surface so Read() throws but Identify() still works. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
+  <Target Name="ExtractWatersAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(WatersArchive)"
+          Outputs="$(WatersAssembliesDir)\MassLynxRaw.dll">
+    <MakeDir Directories="$(WatersAssembliesDir)" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(WatersAssembliesDir)&quot; &quot;$(WatersArchive)&quot; vendor_api\Waters\vc12_x64\MassLynxRaw.dll vendor_api\Waters\vc12_x64\cdt.dll" />
+    <!-- Flatten the extracted layout. cdt.dll is a runtime dependency of MassLynxRaw.dll
+         (compressed-data-cluster reader for IMS .cdt files); both must sit next to the
+         managed output for DllImport to resolve them. -->
+    <Copy SourceFiles="$(WatersAssembliesDir)\vendor_api\Waters\vc12_x64\MassLynxRaw.dll;$(WatersAssembliesDir)\vendor_api\Waters\vc12_x64\cdt.dll"
+          DestinationFolder="$(WatersAssembliesDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Content Include="$(WatersAssembliesDir)\MassLynxRaw.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>MassLynxRaw.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(WatersAssembliesDir)\cdt.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>cdt.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>

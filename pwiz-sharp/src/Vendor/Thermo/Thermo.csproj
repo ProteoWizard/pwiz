@@ -1,0 +1,100 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Thermo</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Thermo</AssemblyName>
+    <Description>Thermo .raw reader. Uses ThermoFisher.CommonCore Net8 assemblies (cross-platform).</Description>
+
+    <!--
+      The Thermo SDK needs en-US culture internally (constructs CultureInfo("en-US") directly).
+      Our root Directory.Build.props turns on InvariantGlobalization for core libraries; opt out
+      here and in the test project so the Thermo SDK can load cultures without throwing.
+      -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!--
+      The Thermo assemblies are encrypted in pwiz-sharp/vendor-archives/vendor_api_Thermo.7z —
+      a pwiz-sharp-local copy of the cpp archive. We keep our own copy because the .NET 8
+      Thermo reader needs RawFileReaderAdapter.FromFile's 3-arg overload (and OpenMcdf bundled),
+      both of which are present in the newer SDK; the cpp build still ships the older SDK in
+      pwiz_aux/msrc/utility/vendor_api_Thermo.7z, and we don't want a pwiz-sharp-driven SDK
+      bump to disturb the cpp build. ExtractThermoAssemblies unpacks this into
+      $(ThermoAssembliesDir) on every build (idempotent — skipped if the files are already
+      current).
+      -->
+    <ThermoArchive>$(MSBuildThisFileDirectory)..\..\..\vendor-archives\vendor_api_Thermo.7z</ThermoArchive>
+    <ThermoAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Thermo</ThermoAssembliesDir>
+    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\libraries\7za.exe</SevenZaExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Thermo
+       compile without the SDK and throw from Read() while keeping Identify() working. The
+       SDK-only files (ThermoRawFile / SpectrumList_Thermo / ChromatogramList_Thermo) reference
+       ThermoFisher.* types directly, so they must be excluded from compilation in that mode. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="ThermoRawFile.cs" />
+    <Compile Remove="SpectrumList_Thermo.cs" />
+    <Compile Remove="ChromatogramList_Thermo.cs" />
+  </ItemGroup>
+
+  <Target Name="ExtractThermoAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences"
+          Inputs="$(ThermoArchive)"
+          Outputs="$(ThermoAssembliesDir)\ThermoFisher.CommonCore.RawFileReader.dll">
+    <!--
+      Extract vendor_api/Thermo/*.dll from the encrypted 7z on build. The
+      -pi-agree-to-the-vendor-licenses password gates the archive (see make_Thermo_7z.bat).
+      MSBuild's Inputs/Outputs drive incrementality: re-runs only when the 7z is newer than the
+      flattened RawFileReader DLL.
+      -->
+    <MakeDir Directories="$(ThermoAssembliesDir)" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ThermoAssembliesDir)&quot; &quot;$(ThermoArchive)&quot; vendor_api\Thermo\*.dll" />
+    <!-- Flatten the extracted layout so <HintPath> entries stay simple. -->
+    <ItemGroup>
+      <_ThermoDll Include="$(ThermoAssembliesDir)\vendor_api\Thermo\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ThermoDll)"
+          DestinationFolder="$(ThermoAssembliesDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Reference Include="ThermoFisher.CommonCore.Data">
+      <HintPath>$(ThermoAssembliesDir)\ThermoFisher.CommonCore.Data.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.RawFileReader">
+      <HintPath>$(ThermoAssembliesDir)\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.BackgroundSubtraction">
+      <HintPath>$(ThermoAssembliesDir)\ThermoFisher.CommonCore.BackgroundSubtraction.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.MassPrecisionEstimator">
+      <HintPath>$(ThermoAssembliesDir)\ThermoFisher.CommonCore.MassPrecisionEstimator.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="OpenMcdf">
+      <HintPath>$(ThermoAssembliesDir)\OpenMcdf.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="OpenMcdf.Extensions">
+      <HintPath>$(ThermoAssembliesDir)\OpenMcdf.Extensions.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
