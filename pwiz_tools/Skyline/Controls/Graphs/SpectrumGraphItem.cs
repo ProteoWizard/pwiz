@@ -25,6 +25,7 @@ using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -34,12 +35,76 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
+    /// <summary>
+    /// Identifies a specific ion series: one ion type at one charge state.
+    /// Used to track which individual series are pinned or currently hovered.
+    /// </summary>
+    public readonly struct IonSeriesKey : IEquatable<IonSeriesKey>
+    {
+        public readonly IonType IonType;
+        /// <summary>Signed adduct charge.</summary>
+        public readonly int Charge;
+
+        public IonSeriesKey(IonType ionType, int charge)
+        {
+            IonType = ionType;
+            Charge = charge;
+        }
+
+        /// <summary>Returns the group key (direction + charge) this series belongs to.</summary>
+        public RulerGroupKey GroupKey => new RulerGroupKey(IonType.IsNTerminal(), Charge);
+
+        public bool Equals(IonSeriesKey other) => IonType == other.IonType && Charge == other.Charge;
+        public override bool Equals(object obj) => obj is IonSeriesKey other && Equals(other);
+        public override int GetHashCode() => ((int)IonType * 397) ^ Charge;
+        public override string ToString() => @$"{IonType} z={Charge}";
+    }
+
+    /// <summary>
+    /// Identifies a ruler group: all non-loss ions sharing the same N/C-terminal direction
+    /// and charge state.  Equality is by (IsNTerminal, Charge).
+    /// </summary>
+    public readonly struct RulerGroupKey : IEquatable<RulerGroupKey>
+    {
+        /// <summary>True for b/a/c series; false for y/x/z series.</summary>
+        public readonly bool IsNTerminal;
+
+        /// <summary>Signed adduct charge (e.g. +1, +2, -1).</summary>
+        public readonly int Charge;
+
+        public RulerGroupKey(bool isNTerminal, int charge)
+        {
+            IsNTerminal = isNTerminal;
+            Charge = charge;
+        }
+
+        public bool Equals(RulerGroupKey other) =>
+            IsNTerminal == other.IsNTerminal && Charge == other.Charge;
+
+        public override bool Equals(object obj) =>
+            obj is RulerGroupKey other && Equals(other);
+
+        public override int GetHashCode() =>
+            (IsNTerminal.GetHashCode() * 397) ^ Charge;
+
+        public override string ToString() =>
+            string.Format(GraphsResources.RulerGroupKey_ToString__0__terminal_z__1_,
+                IsNTerminal ? @"N" : @"C", Charge);
+    }
+
     public class SpectrumGraphItem : AbstractSpectrumGraphItem
     {
         public PeptideDocNode PeptideDocNode { get; private set; }
         public TransitionGroupDocNode TransitionGroupNode { get; private set; }
         private TransitionDocNode TransitionNode { get; set; }
         public string LibraryName { get; private set; }
+        public SrmSettings SrmSettings { get; set; }
+
+        /// <summary>The specific ion series currently highlighted by mouse-over; null = no ruler shown.</summary>
+        public IonSeriesKey? HoveredSeriesKey { get; set; }
+
+        /// <summary>Individual ion series pinned by the user, in order of pinning.</summary>
+        public IReadOnlyList<IonSeriesKey> PinnedSeriesKeys { get; set; } = new IonSeriesKey[0];
 
         public SpectrumGraphItem(PeptideDocNode peptideDocNode,
             TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
@@ -117,11 +182,145 @@ namespace pwiz.Skyline.Controls.Graphs
                 return title;
             }
         }
+
+        private const float RULER_SLOT_HEIGHT = 0.07f;
+
+        public override void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
+        {
+            if (!IsProteomic() || PeptideDocNode == null || PeptideDocNode.CrosslinkStructure.HasCrosslinks || SrmSettings == null)
+                return;
+
+            // Build groups from pinned series, preserving order of first appearance.
+            // A group = all pinned series sharing the same (direction, charge).
+            var groupOrder  = new List<RulerGroupKey>();
+            var groupIonTypes = new Dictionary<RulerGroupKey, List<IonType>>();
+
+            foreach (var key in PinnedSeriesKeys)
+            {
+                var gk = key.GroupKey;
+                if (!groupIonTypes.ContainsKey(gk))
+                {
+                    groupOrder.Add(gk);
+                    groupIonTypes[gk] = new List<IonType>();
+                }
+                if (!groupIonTypes[gk].Contains(key.IonType))
+                    groupIonTypes[gk].Add(key.IonType);
+            }
+
+            // Add the hovered series to its group (or create a new last-slot group).
+            if (HoveredSeriesKey.HasValue)
+            {
+                var hk = HoveredSeriesKey.Value;
+                var gk = hk.GroupKey;
+                if (!groupIonTypes.ContainsKey(gk))
+                {
+                    groupOrder.Add(gk);
+                    groupIonTypes[gk] = new List<IonType>();
+                }
+                if (!groupIonTypes[gk].Contains(hk.IonType))
+                    groupIonTypes[gk].Add(hk.IonType);
+            }
+
+            if (groupOrder.Count == 0)
+                return;
+
+            // Pre-compute shared ion mass data
+            var calc = SrmSettings.GetFragmentCalc(
+                TransitionGroupNode.TransitionGroup.LabelType, PeptideDocNode.ExplicitMods);
+            var plainTarget = PeptideDocNode.Peptide.Target;
+            var ionMasses = calc.GetFragmentIonMasses(plainTarget);
+            int nSeq = ionMasses.GetLength(1);
+            var precursorMass = calc.GetPrecursorFragmentMass(plainTarget);
+            var allResidues = AminoAcidLadderObj.ParseModifiedSequenceResidues(
+                PeptideDocNode.ModifiedSequenceDisplay);
+
+            // Build matched-peak intensity lookup: (ionType, adductCharge, ordinal) → intensity
+            var intensityLookup = new Dictionary<(IonType, int, int), double>();
+            foreach (var rmi in SpectrumInfo.PeaksMatched)
+            {
+                if (rmi.MatchedIons == null) continue;
+                foreach (var mfi in rmi.MatchedIons)
+                {
+                    if (mfi.Losses != null) continue;
+                    intensityLookup[(mfi.IonType, mfi.Charge.AdductCharge, mfi.Ordinal)] = rmi.Intensity;
+                }
+            }
+
+            for (int slot = 0; slot < groupOrder.Count; slot++)
+            {
+                var gk = groupOrder[slot];
+                float yLine = 0.04f + slot * RULER_SLOT_HEIGHT;
+                var ladder = BuildGroupLadder(gk, groupIonTypes[gk], allResidues, ionMasses,
+                    nSeq, precursorMass, intensityLookup, yLine);
+                if (ladder != null)
+                    annotations.Add(ladder);
+            }
+        }
+
+        private AminoAcidLadderObj BuildGroupLadder(
+            RulerGroupKey key,
+            List<IonType> ionTypes,
+            string[] allResidues,
+            IonTable<TypedMass> ionMasses,
+            int nSeq,
+            TypedMass precursorMass,
+            Dictionary<(IonType ionType, int charge, int ordinal), double> intensityLookup,
+            float yLine)
+        {
+            var seriesList = new List<IonSeriesData>();
+            foreach (var ionType in ionTypes)
+            {
+                var boundaries = new double[nSeq + 1];
+                bool valid = true;
+                for (int k = 1; k <= nSeq; k++)
+                {
+                    var mass = ionMasses.GetIonValue(ionType, k);
+                    if (mass <= 0) { valid = false; break; }
+                    boundaries[k - 1] = SequenceMassCalc.GetMZ(mass, key.Charge);
+                }
+                if (!valid) continue;
+                boundaries[nSeq] = SequenceMassCalc.GetMZ(precursorMass, key.Charge);
+
+                var peakIntensities = new Dictionary<int, double>();
+                for (int ordinal = 1; ordinal <= nSeq; ordinal++)
+                {
+                    if (intensityLookup.TryGetValue((ionType, key.Charge, ordinal), out double intensity))
+                        peakIntensities[ordinal] = intensity;
+                }
+
+                seriesList.Add(new IonSeriesData(ionType, boundaries, peakIntensities));
+            }
+
+            if (seriesList.Count == 0)
+                return null;
+
+            // Reference series for label positions: b for N-terminal, y for C-terminal
+            var refIonType = key.IsNTerminal ? IonType.b : IonType.y;
+            var refSeries = seriesList.FirstOrDefault(s => s.IonType == refIonType) ?? seriesList[0];
+
+            // Residue labels
+            var labels = new string[nSeq];
+            if (key.IsNTerminal)
+            {
+                for (int i = 0; i < nSeq; i++)
+                    labels[i] = i + 1 < allResidues.Length ? allResidues[i + 1] : string.Empty;
+            }
+            else
+            {
+                for (int i = 0; i < nSeq; i++)
+                {
+                    int ri = nSeq - i - 1;
+                    labels[i] = ri >= 0 && ri < allResidues.Length ? allResidues[ri] : string.Empty;
+                }
+            }
+
+            return new AminoAcidLadderObj(labels, refSeries.Boundaries, seriesList, yLine, yLine, FontSize * 0.7f);
+        }
     }
     
     public abstract class AbstractSpectrumGraphItem : AbstractMSGraphItem
     {
-        private const string FONT_FACE = "Arial";
+        protected const string FONT_FACE = "Arial";
         public static readonly Color COLOR_SELECTED = Color.Red;
 
         private readonly Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> _ionMatches;

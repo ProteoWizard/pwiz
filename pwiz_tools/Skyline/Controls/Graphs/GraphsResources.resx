@@ -820,4 +820,7 @@ Here are the last 3 errors:
   <data name="GraphFullScan_ToggleSonarHeatmap" xml:space="preserve">
     <value>Show SONAR Heatmap</value>
   </data>
+  <data name="RulerGroupKey_ToString__0__terminal_z__1_" xml:space="preserve">
+    <value>{0}-terminal z={1}</value>
+  </data>
 </root>

@@ -210,6 +210,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumDisplayInfo _spectrum;
         private NodeTip _toolTip;
+        private readonly List<IonSeriesKey> _pinnedSeriesKeys = new List<IonSeriesKey>();
+        private bool _contextMenuOpen;
                 
         private string _userSelectedSpectrum;
         private SpectrumDisplayInfo _mirrorSpectrum;
@@ -228,6 +230,7 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMove += GraphControl_MouseMove;
+            graphControl.MouseLeave += (s, e) => { if (!_contextMenuOpen) UpdateHoveredPeak(null); };
             msGraphExtension.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
             Icon = Resources.SkylineData;
@@ -1044,7 +1047,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowMassError = Settings.Default.ShowFullScanMassError,
                 ShowDuplicates = Settings.Default.ShowDuplicateIons,
                 FontSize = Settings.Default.SpectrumFontSize,
-                LineWidth = Settings.Default.SpectrumLineWidth
+                LineWidth = Settings.Default.SpectrumLineWidth,
+                SrmSettings = settings
             };
         }
 
@@ -1178,6 +1182,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphPane.GraphObjList.Clear();
             GraphItem = null;
             AllowDisplayTip = false;
+            _pinnedSeriesKeys.Clear();
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
             GraphHelper.FormatFontSize(graphControl.GraphPane, Settings.Default.SpectrumFontSize);
@@ -1690,6 +1695,59 @@ namespace pwiz.Skyline.Controls.Graphs
             ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             _stateProvider.BuildSpectrumMenu(IsNotSmallMolecule, sender, menuStrip);
+
+            // Capture the hovered series key now — MouseLeave fires when the context menu
+            // window appears on top of the graph, which would clear HoveredSeriesKey before
+            // the user can click "Pin Ruler".
+            var hoveredKey = GraphItem?.HoveredSeriesKey;
+            bool hasPinned = _pinnedSeriesKeys.Count > 0;
+
+            if (!hoveredKey.HasValue && !hasPinned)
+                return;
+
+            // Suppress MouseLeave while the menu is open so the ruler stays visible.
+            _contextMenuOpen = true;
+            menuStrip.Closed += (s, e) =>
+            {
+                _contextMenuOpen = false;
+                if (!graphControl.ClientRectangle.Contains(
+                        graphControl.PointToClient(Cursor.Position)))
+                    UpdateHoveredPeak(null);
+            };
+
+            menuStrip.Items.Add(new ToolStripSeparator());
+
+            if (hoveredKey.HasValue)
+            {
+                var key = hoveredKey.Value;
+                if (_pinnedSeriesKeys.Contains(key))
+                {
+                    var item = new ToolStripMenuItem(@"Unpin Ruler");
+                    item.Click += (s, e) => UnpinSeries(key);
+                    menuStrip.Items.Add(item);
+                }
+                else
+                {
+                    var item = new ToolStripMenuItem(@"Pin Ruler");
+                    item.Click += (s, e) =>
+                    {
+                        if (!_pinnedSeriesKeys.Contains(key))
+                        {
+                            _pinnedSeriesKeys.Add(key);
+                            SyncPinnedSeriesToGraphItems();
+                            graphControl.Invalidate();
+                        }
+                    };
+                    menuStrip.Items.Add(item);
+                }
+            }
+
+            if (hasPinned)
+            {
+                var item = new ToolStripMenuItem(@"Unpin All Rulers");
+                item.Click += (s, e) => UnpinAllRulers();
+                menuStrip.Items.Add(item);
+            }
         }
 
         public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new()
@@ -1864,6 +1922,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            UpdateHoveredPeak(peakRmi);
+
             if (peakRmi != null)
             {
                 if (_toolTip == null)
@@ -1874,6 +1934,59 @@ namespace pwiz.Skyline.Controls.Graphs
             _toolTip?.HideTip();
             _toolTip = null;
             graphControl.Invalidate();
+        }
+
+        private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
+        {
+            IonSeriesKey? newKey = null;
+            if (peakRmi?.MatchedIons != null)
+            {
+                foreach (var mfi in peakRmi.MatchedIons)
+                {
+                    if (mfi.Losses == null)
+                    {
+                        newKey = new IonSeriesKey(mfi.IonType, mfi.Charge.AdductCharge);
+                        break;
+                    }
+                }
+            }
+
+            // Only redraw when the hovered ion series actually changes.
+            // Stable comparison prevents a repaint loop: Invalidate → drawLabels rebuilds
+            // TextObjs → FindNearestObject may miss the label for one frame → null key →
+            // Invalidate → … (PointInBox=false breaks this, but the guard still avoids noise).
+            if (Equals(newKey, GraphItem?.HoveredSeriesKey))
+                return;
+
+            if (GraphItem != null)
+                GraphItem.HoveredSeriesKey = newKey;
+            if (MirrorGraphItem != null)
+                MirrorGraphItem.HoveredSeriesKey = newKey;
+
+            graphControl.Invalidate();
+        }
+
+        private void UnpinSeries(IonSeriesKey key)
+        {
+            _pinnedSeriesKeys.Remove(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        private void UnpinAllRulers()
+        {
+            _pinnedSeriesKeys.Clear();
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        private void SyncPinnedSeriesToGraphItems()
+        {
+            var readOnly = _pinnedSeriesKeys.AsReadOnly();
+            if (GraphItem != null)
+                GraphItem.PinnedSeriesKeys = readOnly;
+            if (MirrorGraphItem != null)
+                MirrorGraphItem.PinnedSeriesKeys = readOnly;
         }
 
         public void GraphControl_MouseMove(object sender, MouseEventArgs e)
