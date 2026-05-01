@@ -207,7 +207,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public void OnResultsIndexChanged()
         {
             if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */ ||
-                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single
+                    || GraphSummary.GraphPanes.OfType<AreaRtLoessGraphPane>().Any())
                 GraphSummary.UpdateUI();
         }
 

@@ -120,6 +120,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string replicateName = measuredResults.Chromatograms[i].Name;
                     var color = colors[iColor++ % colors.Count];
+                    if (i == GraphSummary.ResultsIndex)
+                    {
+                        color = ColorScheme.ChromGraphItemSelected;
+                    }
 
                     foreach (var curveInfo in curves)
                     {
