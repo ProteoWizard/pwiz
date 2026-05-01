@@ -56,20 +56,50 @@ namespace pwiz.OspreySharp
 
             try
             {
-                // Scan args for the HPC mode flags up front so the
-                // mutex error is reported even when --input-scores is missing.
+                // Scan args for the HPC entry-point + modifier flags up
+                // front so error messages fire before --input-scores
+                // resolution. Mirrors the Rust pre-parse done by clap +
+                // normalize_hpc_args in osprey/src/main.rs.
                 bool joinOnlyFlag = false;
                 bool noJoinFlag = false;
-                foreach (string a in args)
+                int? joinAtPass = null;
+                for (int i = 0; i < args.Length; i++)
                 {
+                    string a = args[i];
                     if (a == "--no-join")
+                    {
                         noJoinFlag = true;
+                    }
                     else if (a == "--join-only")
+                    {
                         joinOnlyFlag = true;
+                    }
+                    else if (a.StartsWith("--join-at-pass=", StringComparison.Ordinal))
+                    {
+                        string v = a.Substring("--join-at-pass=".Length);
+                        if (!int.TryParse(v, out int parsed))
+                        {
+                            LogError(string.Format("--join-at-pass: invalid integer value '{0}'.", v));
+                            return 1;
+                        }
+                        joinAtPass = parsed;
+                    }
+                    else if (a == "--join-at-pass")
+                    {
+                        if (i + 1 >= args.Length || !int.TryParse(args[i + 1], out int parsed))
+                        {
+                            LogError("--join-at-pass requires an integer value (e.g., --join-at-pass=1).");
+                            return 1;
+                        }
+                        joinAtPass = parsed;
+                        i++; // consume value
+                    }
                 }
-                if (noJoinFlag && joinOnlyFlag)
+
+                string normErr = NormalizeHpcArgs(joinAtPass, ref noJoinFlag, ref joinOnlyFlag);
+                if (normErr != null)
                 {
-                    LogError("--no-join and --join-only are mutually exclusive.");
+                    LogError(normErr);
                     return 1;
                 }
 
@@ -158,6 +188,15 @@ namespace pwiz.OspreySharp
             while (i < args.Length)
             {
                 string arg = args[i];
+
+                // The single-token `--join-at-pass=N` form is already parsed
+                // + validated in Main's pre-scan via NormalizeHpcArgs. Skip
+                // it here so the default branch doesn't flag it as unknown.
+                if (arg.StartsWith("--join-at-pass=", StringComparison.Ordinal))
+                {
+                    i++;
+                    continue;
+                }
 
                 switch (arg)
                 {
@@ -277,6 +316,16 @@ namespace pwiz.OspreySharp
                     case "--no-join":
                         config.NoJoin = true;
                         i++;
+                        break;
+
+                    case "--join-at-pass":
+                        // Already parsed + validated in Main's pre-scan via
+                        // NormalizeHpcArgs. Consume the integer value here so
+                        // ParseArgs doesn't fall through to the unknown-flag
+                        // warning. Mutex/range checks happen up there.
+                        i++; // consume flag
+                        if (i < args.Length && !args[i].StartsWith("-"))
+                            i++; // consume value
                         break;
 
                     case "--join-only":
@@ -465,6 +514,73 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
+        /// Normalize the HPC entry-point + modifier flags before
+        /// <see cref="ValidateArgs"/>. Resolves the
+        /// (<c>--join-at-pass=&lt;N&gt;</c>, <c>--join-only</c>,
+        /// <c>--no-join</c>) triple into the same
+        /// (<paramref name="noJoinFlag"/>, <paramref name="joinOnlyFlag"/>)
+        /// tuple downstream code already reads.
+        ///
+        /// Modifier semantics: <c>--join-only</c> runs only the next join
+        /// from the entry point; <c>--no-join</c> runs only the per-file
+        /// fan-out. <c>--join-at-pass=1</c> selects the post-Stage-4 entry
+        /// point; <c>--join-at-pass=2</c> the post-Stage-6 entry point.
+        ///
+        /// PR 1 wires the rename only — combinations that need the
+        /// Stage 5 → Stage 6 boundary persistence (--join-at-pass=1 with
+        /// either modifier) error as "not yet implemented", and
+        /// --join-at-pass=2 errors the same way until the Stage 6 →
+        /// Stage 7 path lands. Mirrors normalize_hpc_args() in
+        /// osprey/src/main.rs.
+        ///
+        /// Returns null on success, or an error message string on failure.
+        /// Internal so OspreySharp.Test can exercise it.
+        /// </summary>
+        internal static string NormalizeHpcArgs(int? joinAtPass, ref bool noJoinFlag, ref bool joinOnlyFlag)
+        {
+            // Modifiers are mutually exclusive: can't be both per-file-only
+            // and join-only simultaneously.
+            if (noJoinFlag && joinOnlyFlag)
+                return "--no-join and --join-only are mutually exclusive modifiers.";
+
+            // --join-only is a modifier of --join-at-pass=<N>; standalone
+            // use has no entry point to modify. The old standalone spelling
+            // that meant "run Stages 5-8 from Stage 4 parquets" is now
+            // --join-at-pass=1.
+            if (joinOnlyFlag && !joinAtPass.HasValue)
+            {
+                return "--join-only is a modifier and requires --join-at-pass=<N>. " +
+                       "To run Stages 5-8 from Stage 4 parquets, use --join-at-pass=1 --input-scores ...";
+            }
+
+            if (!joinAtPass.HasValue)
+            {
+                // Stage 1 entry point (with -i ...). --no-join keeps its
+                // existing meaning: do per-file work only = Stages 1-4.
+                return null;
+            }
+
+            switch (joinAtPass.Value)
+            {
+                case 1:
+                    // PR 2 will implement these modifier combinations
+                    // against persisted Stage 5 → Stage 6 boundary files.
+                    if (joinOnlyFlag)
+                        return "--join-at-pass=1 --join-only (run only Stage 5) is not yet implemented.";
+                    if (noJoinFlag)
+                        return "--join-at-pass=1 --no-join (run only Stage 6 from persisted Stage 5 outputs) is not yet implemented.";
+                    // Plain --join-at-pass=1: route through the existing
+                    // Stage 5+ entry path that reads joinOnlyFlag.
+                    joinOnlyFlag = true;
+                    return null;
+                case 2:
+                    return "--join-at-pass=2 (Stage 6 reconciled-parquet input) is not yet implemented.";
+                default:
+                    return string.Format("--join-at-pass must be 1 or 2 (got {0}).", joinAtPass.Value);
+            }
+        }
+
+        /// <summary>
         /// Validate the HPC mode flags (--no-join, --join-only, --input-scores)
         /// against the parsed config. Returns null on success or an error
         /// message string on failure. Does not log warnings (those stay in
@@ -477,7 +593,7 @@ namespace pwiz.OspreySharp
 
             bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
             if (joinOnlyFlag && !hasInputScores)
-                return "--join-only requires --input-scores <path...>.";
+                return "--join-at-pass=1 requires --input-scores <path...>.";
 
             bool joinOnly = joinOnlyFlag || hasInputScores;
 
@@ -494,9 +610,9 @@ namespace pwiz.OspreySharp
             if (joinOnly)
             {
                 if (config.InputFiles.Count > 0)
-                    return "--join-only (--input-scores) cannot be combined with --input.";
+                    return "--join-at-pass=1 cannot be combined with --input. Use --input-scores instead.";
                 if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                    return "--join-only requires --library and --output.";
+                    return "--join-at-pass=1 requires --library and --output.";
                 return null;
             }
 
@@ -576,12 +692,20 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --report <file>               Write TSV report to file");
             Console.Error.WriteLine("    --no-prefilter                Disable coelution signal pre-filter");
             Console.Error.WriteLine("    --write-pin                   Write PIN files for external tools");
-            Console.Error.WriteLine("    --no-join                     HPC: run Stages 1-4 only, write per-file");
-            Console.Error.WriteLine("                                    .scores.parquet, no FDR or blib");
-            Console.Error.WriteLine("    --join-only                   HPC: skip Stages 1-4, run Stage 5+ from");
-            Console.Error.WriteLine("                                    --input-scores parquets");
+            Console.Error.WriteLine("    --join-at-pass=<N>            HPC: enter the pipeline at a join checkpoint.");
+            Console.Error.WriteLine("                                    1 = consume Stage 4 outputs, run Stages 5-8.");
+            Console.Error.WriteLine("                                    2 = consume Stage 6 outputs, run Stages 7-8.");
+            Console.Error.WriteLine("                                    Requires --input-scores; mutex with --input.");
+            Console.Error.WriteLine("    --no-join                     HPC modifier: run only the per-file fan-out from");
+            Console.Error.WriteLine("                                    the entry point. With -i, runs Stages 1-4 (per-file");
+            Console.Error.WriteLine("                                    .scores.parquet written next to each mzML, no FDR,");
+            Console.Error.WriteLine("                                    no blib). Mutex with --join-only.");
+            Console.Error.WriteLine("    --join-only                   HPC modifier: run only the join phase from the entry");
+            Console.Error.WriteLine("                                    point, stopping before the per-file fan-out that");
+            Console.Error.WriteLine("                                    follows. Requires --join-at-pass=<N>.");
             Console.Error.WriteLine("    --input-scores <paths>        HPC: one or more .scores.parquet files,");
-            Console.Error.WriteLine("                                    or a single directory (non-recursive scan)");
+            Console.Error.WriteLine("                                    or a single directory (non-recursive scan).");
+            Console.Error.WriteLine("                                    Required when --join-at-pass is set.");
             Console.Error.WriteLine("    -h, --help                    Show this help message");
             Console.Error.WriteLine("    -v, --version                 Show version");
             Console.Error.WriteLine("");
@@ -595,7 +719,7 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    osprey --no-join -i data/file_N.mzML -l ref.blib --resolution hram");
             Console.Error.WriteLine("");
             Console.Error.WriteLine("    # Merge node (after all workers succeed):");
-            Console.Error.WriteLine("    osprey --join-only --input-scores data/*.scores.parquet \\");
+            Console.Error.WriteLine("    osprey --join-at-pass=1 --input-scores data/*.scores.parquet \\");
             Console.Error.WriteLine("           -l ref.blib -o experiment.blib --protein-fdr 0.01");
         }
 
