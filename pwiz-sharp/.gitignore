@@ -5,5 +5,8 @@ obj/
 *.suo
 TestResults/
 
+# Per-user MSBuild overrides written by i-agree-to-the-vendor-licenses.bat.
+Directory.Build.user.props
+
 # Vendor DLLs extracted from 7z archives at build time (see Bruker.csproj / Thermo.csproj).
 vendor-assemblies/

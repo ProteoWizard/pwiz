@@ -1,5 +1,10 @@
 <Project>
 
+  <!-- Optional per-user overrides (gitignored). Drop in $(IAgreeToVendorLicenses), local
+       NuGet feed creds, etc. Created by i-agree-to-the-vendor-licenses.bat in the repo root. -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.user.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.user.props')" />
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>latest</LangVersion>
