@@ -30,68 +30,42 @@ public class OboParserTests
         """;
 
     [TestMethod]
-    public void Parse_ReadsHeader()
+    public void Parse_HeaderAndPrefixes()
     {
         var obo = ObOntology.Parse(new StringReader(SampleObo));
-        Assert.IsTrue(obo.Header.Count >= 2);
+        Assert.IsTrue(obo.Header.Count >= 2, "header lines collected");
         CollectionAssert.Contains(obo.Header, "format-version: 1.2");
+        Assert.IsTrue(obo.Prefixes.Contains("MS"), "MS prefix collected");
     }
 
     [TestMethod]
-    public void Parse_CollectsPrefixes()
+    public void Parse_TermsAndFields()
     {
         var obo = ObOntology.Parse(new StringReader(SampleObo));
-        Assert.IsTrue(obo.Prefixes.Contains("MS"));
-    }
-
-    [TestMethod]
-    public void Parse_ReadsTerms()
-    {
-        var obo = ObOntology.Parse(new StringReader(SampleObo));
-        Assert.AreEqual(2, obo.Terms.Count);
+        // [Typedef] stanzas don't become terms — only the two [Term] stanzas count.
+        Assert.AreEqual(2, obo.Terms.Count, "only [Term] stanzas count");
         Assert.IsTrue(obo.Terms.ContainsKey(1000031));
         Assert.IsTrue(obo.Terms.ContainsKey(1000032));
+
+        // Term fields decoded from the keyed lines.
+        var instrumentModel = obo.Terms[1000031];
+        Assert.AreEqual("MS", instrumentModel.Prefix);
+        Assert.AreEqual("instrument model", instrumentModel.Name);
+        Assert.IsTrue(instrumentModel.Def.Contains("Instrument model", StringComparison.Ordinal));
     }
 
     [TestMethod]
-    public void Parse_ExtractsTermFields()
+    public void Parse_RelationsAndFlags()
     {
         var obo = ObOntology.Parse(new StringReader(SampleObo));
-        var term = obo.Terms[1000031];
-        Assert.AreEqual("MS", term.Prefix);
-        Assert.AreEqual("instrument model", term.Name);
-        Assert.IsTrue(term.Def.Contains("Instrument model", StringComparison.Ordinal));
-    }
 
-    [TestMethod]
-    public void Parse_CapturesIsAParents()
-    {
-        var obo = ObOntology.Parse(new StringReader(SampleObo));
-        var term = obo.Terms[1000031];
-        CollectionAssert.Contains(term.ParentsIsA, 1000463u);
-    }
+        // is_a parent CVIDs and EXACT synonyms collected.
+        var instrumentModel = obo.Terms[1000031];
+        CollectionAssert.Contains(instrumentModel.ParentsIsA, 1000463u);
+        CollectionAssert.Contains(instrumentModel.ExactSynonyms, "instrument_name");
 
-    [TestMethod]
-    public void Parse_CapturesExactSynonyms()
-    {
-        var obo = ObOntology.Parse(new StringReader(SampleObo));
-        var term = obo.Terms[1000031];
-        CollectionAssert.Contains(term.ExactSynonyms, "instrument_name");
-    }
-
-    [TestMethod]
-    public void Parse_DetectsObsoleteFlag()
-    {
-        var obo = ObOntology.Parse(new StringReader(SampleObo));
-        Assert.IsFalse(obo.Terms[1000031].IsObsolete);
+        // is_obsolete:true honored; absent line defaults to false.
+        Assert.IsFalse(instrumentModel.IsObsolete);
         Assert.IsTrue(obo.Terms[1000032].IsObsolete);
-    }
-
-    [TestMethod]
-    public void Parse_SkipsNonTermStanzas()
-    {
-        // Typedef stanza should not become a term.
-        var obo = ObOntology.Parse(new StringReader(SampleObo));
-        Assert.AreEqual(2, obo.Terms.Count);
     }
 }

@@ -6,69 +6,45 @@ namespace Pwiz.Util.Tests.Numerics;
 public class ParabolaTests
 {
     [TestMethod]
-    public void Coefficients_EvaluateCorrectly()
+    public void Coefficients_EvaluateAndCenter()
     {
-        // y = x² − 2x + 1 = (x − 1)²; at x=2 → 1, at x=0 → 1, at x=1 → 0.
+        // y = x² − 2x + 1 = (x − 1)²; vertex at x = 1.
         var p = new Parabola(1, -2, 1);
-        Assert.AreEqual(1.0, p.Evaluate(2), 1e-12);
-        Assert.AreEqual(1.0, p.Evaluate(0), 1e-12);
-        Assert.AreEqual(0.0, p.Evaluate(1), 1e-12);
+        Assert.AreEqual(1.0, p.Evaluate(2), 1e-12, "Evaluate(2)");
+        Assert.AreEqual(1.0, p.Evaluate(0), 1e-12, "Evaluate(0)");
+        Assert.AreEqual(0.0, p.Evaluate(1), 1e-12, "Evaluate(1) = vertex y");
+        Assert.AreEqual(1.0, p.Center, 1e-12, "vertex x");
+
+        // a == 0 → linear, no parabolic vertex defined.
+        Assert.IsTrue(double.IsNaN(new Parabola(0, 1, 0).Center), "linear case Center");
     }
 
     [TestMethod]
-    public void Center_ReturnsVertexX()
+    public void Fit_RecoversCoefficients_AndRespectsWeights()
     {
-        // y = x² − 2x + 1 has vertex at x = 1.
-        var p = new Parabola(1, -2, 1);
-        Assert.AreEqual(1.0, p.Center, 1e-12);
-    }
+        // Three exact points on y = 2x² − 3x + 5 must recover (2, -3, 5).
+        var exact = new List<(double, double)> { (0, 5), (1, 4), (2, 7) };
+        var pExact = new Parabola(exact);
+        Assert.AreEqual(2, pExact.Coefficients[0], 1e-9);
+        Assert.AreEqual(-3, pExact.Coefficients[1], 1e-9);
+        Assert.AreEqual(5, pExact.Coefficients[2], 1e-9);
 
-    [TestMethod]
-    public void Center_LinearCase_ReturnsNaN()
-    {
-        // a == 0 → undefined (division by zero)
-        var p = new Parabola(0, 1, 0);
-        Assert.IsTrue(double.IsNaN(p.Center));
-    }
+        // Many points on y = x² + x + 1; least-squares recovers exactly.
+        var many = new List<(double, double)>();
+        for (int x = -3; x <= 3; x++) many.Add((x, x * x + x + 1.0));
+        var pMany = new Parabola(many);
+        Assert.AreEqual(1.0, pMany.Coefficients[0], 1e-9);
+        Assert.AreEqual(1.0, pMany.Coefficients[1], 1e-9);
+        Assert.AreEqual(1.0, pMany.Coefficients[2], 1e-9);
 
-    [TestMethod]
-    public void Fit_ThreePointsExactly_RecoversCoefficients()
-    {
-        // Points on y = 2x² − 3x + 5: (0,5), (1,4), (2,7).
-        var samples = new List<(double, double)> { (0, 5), (1, 4), (2, 7) };
-        var p = new Parabola(samples);
-        Assert.AreEqual(2, p.Coefficients[0], 1e-9);
-        Assert.AreEqual(-3, p.Coefficients[1], 1e-9);
-        Assert.AreEqual(5, p.Coefficients[2], 1e-9);
-    }
-
-    [TestMethod]
-    public void Fit_ManyPoints_LeastSquaresMinimizes()
-    {
-        // Noisy samples around y = x² + x + 1; coefficients should still be close.
-        var samples = new List<(double, double)>();
-        for (int x = -3; x <= 3; x++) samples.Add((x, x * x + x + 1.0));
-        var p = new Parabola(samples);
-        Assert.AreEqual(1.0, p.Coefficients[0], 1e-9);
-        Assert.AreEqual(1.0, p.Coefficients[1], 1e-9);
-        Assert.AreEqual(1.0, p.Coefficients[2], 1e-9);
-    }
-
-    [TestMethod]
-    public void Fit_TooFewSamples_Throws()
-    {
-        var samples = new List<(double, double)> { (0, 0), (1, 1) };
-        Assert.ThrowsException<ArgumentException>(() => new Parabola(samples));
-    }
-
-    [TestMethod]
-    public void Fit_WeightedLeastSquares_RespectsWeights()
-    {
-        // Three points; weight third one heavily so it dominates.
-        var samples = new List<(double, double)> { (0, 0), (1, 1), (2, 10) };
+        // Weighted fit: heavily-weighted sample dominates the curve.
+        var weighted = new List<(double, double)> { (0, 0), (1, 1), (2, 10) };
         var weights = new List<double> { 1, 1, 1000 };
-        var p = new Parabola(samples, weights);
-        // Heavy-weight sample must be (almost) exactly on the curve.
-        Assert.AreEqual(10.0, p.Evaluate(2), 1e-3);
+        var pWeighted = new Parabola(weighted, weights);
+        Assert.AreEqual(10.0, pWeighted.Evaluate(2), 1e-3, "heavy-weight sample on the curve");
+
+        // Fewer than three samples can't fit a parabola.
+        Assert.ThrowsException<ArgumentException>(
+            () => new Parabola(new List<(double, double)> { (0, 0), (1, 1) }));
     }
 }

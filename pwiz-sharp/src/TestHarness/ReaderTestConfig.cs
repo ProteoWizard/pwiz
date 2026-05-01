@@ -13,11 +13,16 @@ namespace Pwiz.TestHarness;
 /// filename and shapes the mzML output (combineIonMobilitySpectra, preferOnlyMsLevel, etc.).
 /// </summary>
 /// <remarks>
+/// Declared as a record so per-fixture vendor tests can spin off config variants with
+/// <c>baseConfig with { PreferOnlyMsLevel = 1, PeakPicking = true }</c> instead of fully
+/// reconstructing each variant. Reference-typed members (e.g.
+/// <see cref="IsolationMzAndMobilityFilter"/>) shallow-copy across <c>with</c>, which is fine
+/// for our usage — the harness reads but never mutates them.
 /// The flags mirror pwiz's <c>Reader::Config</c> where they overlap; unused flags stay here
 /// as plain properties so <see cref="ResultFilename"/> can assemble the same derivative names
 /// (e.g. <c>&lt;run&gt;-combineIMS-ms1-centroid.mzML</c>) even if our reader doesn't act on them yet.
 /// </remarks>
-public sealed class ReaderTestConfig
+public sealed record ReaderTestConfig
 {
     /// <summary>Emit one spectrum per frame (sum across mobility), not per (frame, scan).</summary>
     public bool CombineIonMobilitySpectra { get; set; }

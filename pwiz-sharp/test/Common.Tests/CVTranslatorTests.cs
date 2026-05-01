@@ -6,51 +6,30 @@ namespace Pwiz.Data.Common.Tests.Cv;
 public class CVTranslatorTests
 {
     [TestMethod]
-    public void Translate_ExactMsTerm_ReturnsCvid()
+    public void Translate_ExactNameAndCaseAndWhitespace()
     {
+        // Exact display-name match, plus case-insensitive and whitespace-tolerant lookup.
         var t = new CVTranslator();
-        // "software" is the display name of MS_software
-        Assert.AreEqual(CVID.MS_software, t.Translate("software"));
+        Assert.AreEqual(CVID.MS_software, t.Translate("software"), "exact");
+        Assert.AreEqual(CVID.MS_software, t.Translate("SOFTWARE"), "uppercase");
+        Assert.AreEqual(CVID.MS_software, t.Translate("Software"), "title case");
+        Assert.AreEqual(CVID.MS_software, t.Translate("  software  "), "leading/trailing whitespace");
     }
 
     [TestMethod]
-    public void Translate_CaseInsensitive()
+    public void Translate_DefaultAliases_AndUnknown()
     {
-        var t = new CVTranslator();
-        Assert.AreEqual(CVID.MS_software, t.Translate("SOFTWARE"));
-        Assert.AreEqual(CVID.MS_software, t.Translate("Software"));
-    }
-
-    [TestMethod]
-    public void Translate_WithExtraWhitespace_Matches()
-    {
-        var t = new CVTranslator();
-        Assert.AreEqual(CVID.MS_software, t.Translate("  software  "));
-    }
-
-    [TestMethod]
-    public void Translate_DefaultExtra_ITMS_MatchesIonTrap()
-    {
+        // Hard-coded built-in aliases for legacy mzXML-style instrument tokens.
         var t = new CVTranslator();
         Assert.AreEqual(CVID.MS_ion_trap, t.Translate("ITMS"));
-    }
-
-    [TestMethod]
-    public void Translate_DefaultExtra_FTMS_MatchesFtIcr()
-    {
-        var t = new CVTranslator();
         Assert.AreEqual(CVID.MS_FT_ICR, t.Translate("FTMS"));
-    }
 
-    [TestMethod]
-    public void Translate_Unknown_ReturnsCvidUnknown()
-    {
-        var t = new CVTranslator();
+        // Unknown terms return the sentinel rather than throwing.
         Assert.AreEqual(CVID.CVID_Unknown, t.Translate("this is not a CV term"));
     }
 
     [TestMethod]
-    public void Insert_CustomAlias_WorksOnLookup()
+    public void Insert_CustomAlias_AvailableOnLookup()
     {
         var t = new CVTranslator();
         t.Insert("my_alias", CVID.MS_software);

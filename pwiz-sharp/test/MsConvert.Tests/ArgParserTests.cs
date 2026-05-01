@@ -6,110 +6,56 @@ namespace Pwiz.Tools.MsConvert.Tests;
 [TestClass]
 public class ArgParserTests
 {
-    [TestMethod]
-    public void SingleInput_DefaultsToMzmlWith64Bit()
-    {
-        var c = Invoke("in.mzML");
-        Assert.AreEqual(1, c.InputFiles.Count);
-        Assert.AreEqual(OutputFormat.Mzml, c.Format);
-        Assert.AreEqual(BinaryPrecision.Bits64, c.EncoderConfig.Precision);
-        Assert.AreEqual(".", c.OutputPath);
-    }
+    private static MsConvertConfig Invoke(params string[] args) => ArgParser.Parse(args);
 
     [TestMethod]
-    public void Filters_Accumulate()
+    public void Inputs_DefaultsAndMultiple_AndFilelist()
     {
-        // Both use --filter; -f is reserved for --filelist (matches pwiz C++ msconvert).
-        var c = Invoke("in.mzML", "--filter", "msLevel 2-", "--filter", "scanTime 10-20");
-        CollectionAssert.AreEqual(new[] { "msLevel 2-", "scanTime 10-20" }, c.Filters);
-    }
+        // Single input → mzML output, 64-bit precision, output to current directory.
+        var single = Invoke("in.mzML");
+        Assert.AreEqual(1, single.InputFiles.Count);
+        Assert.AreEqual(OutputFormat.Mzml, single.Format);
+        Assert.AreEqual(BinaryPrecision.Bits64, single.EncoderConfig.Precision);
+        Assert.AreEqual(".", single.OutputPath);
 
-    [TestMethod]
-    public void OutputOptions_Apply()
-    {
-        var c = Invoke("in.mzML", "-o", "/tmp/out", "--mgf", "-z", "--32-bit");
-        Assert.AreEqual("/tmp/out", c.OutputPath);
-        Assert.AreEqual(OutputFormat.Mgf, c.Format);
-        Assert.AreEqual(BinaryCompression.Zlib, c.EncoderConfig.Compression);
-        Assert.AreEqual(BinaryPrecision.Bits32, c.EncoderConfig.Precision);
-    }
+        // Multiple positional inputs are accumulated.
+        CollectionAssert.AreEqual(new[] { "a.mzML", "b.mzML", "c.mgf" },
+            Invoke("a.mzML", "b.mzML", "c.mgf").InputFiles);
 
-    [TestMethod]
-    public void Verbose_TurnsOnLogging()
-    {
-        var c = Invoke("in.mzML", "-v");
-        Assert.IsTrue(c.Verbose);
-    }
-
-    [TestMethod]
-    public void MultipleInputs_AllCaptured()
-    {
-        var c = Invoke("a.mzML", "b.mzML", "c.mgf");
-        CollectionAssert.AreEqual(new[] { "a.mzML", "b.mzML", "c.mgf" }, c.InputFiles);
-    }
-
-    [TestMethod]
-    public void UnknownOption_Throws()
-    {
-        Assert.ThrowsException<ArgumentException>(() => Invoke("--notanoption"));
-    }
-
-    [TestMethod]
-    public void NoInputFiles_Throws()
-    {
-        Assert.ThrowsException<ArgumentException>(() => Invoke());
-    }
-
-    [TestMethod]
-    public void OptionRequiringValue_WithoutValue_Throws()
-    {
-        Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "--filter"));
-    }
-
-    [TestMethod]
-    public void Filelist_LoadsPathsFromFile()
-    {
+        // -f loads inputs from a file (skips comments + blank lines).
         string tmp = Path.GetTempFileName();
         try
         {
             File.WriteAllLines(tmp, new[] { "one.mzML", "# comment", "two.mzML", "", "three.mzML" });
-            var c = Invoke("-f", tmp);
-            CollectionAssert.AreEqual(new[] { "one.mzML", "two.mzML", "three.mzML" }, c.InputFiles);
+            CollectionAssert.AreEqual(
+                new[] { "one.mzML", "two.mzML", "three.mzML" },
+                Invoke("-f", tmp).InputFiles);
         }
         finally { File.Delete(tmp); }
     }
 
     [TestMethod]
-    public void PerArrayPrecision_OverridesApplied()
+    public void OutputOptions_FormatPathCompressionPrecision()
     {
-        var c = Invoke("in.mzML", "--mz64", "--inten32");
-        Assert.AreEqual(BinaryPrecision.Bits64,
-            c.EncoderConfig.PrecisionOverrides[Pwiz.Data.Common.Cv.CVID.MS_m_z_array]);
-        Assert.AreEqual(BinaryPrecision.Bits32,
-            c.EncoderConfig.PrecisionOverrides[Pwiz.Data.Common.Cv.CVID.MS_intensity_array]);
-    }
+        // -o sets output dir; --mgf picks format; -z enables zlib; --32-bit drops precision.
+        var c = Invoke("in.mzML", "-o", "/tmp/out", "--mgf", "-z", "--32-bit");
+        Assert.AreEqual("/tmp/out", c.OutputPath);
+        Assert.AreEqual(OutputFormat.Mgf, c.Format);
+        Assert.AreEqual(BinaryCompression.Zlib, c.EncoderConfig.Compression);
+        Assert.AreEqual(BinaryPrecision.Bits32, c.EncoderConfig.Precision);
+        Assert.IsFalse(c.Verbose, "no -v flag");
 
-    [TestMethod]
-    public void NumpressAll_SetsLinearAndSlof()
-    {
-        var c = Invoke("in.mzML", "-n");
-        Assert.AreEqual(BinaryNumpress.Linear,
-            c.EncoderConfig.NumpressOverrides[Pwiz.Data.Common.Cv.CVID.MS_m_z_array]);
-        Assert.AreEqual(BinaryNumpress.Slof,
-            c.EncoderConfig.NumpressOverrides[Pwiz.Data.Common.Cv.CVID.MS_intensity_array]);
-    }
+        // -v turns verbose on.
+        Assert.IsTrue(Invoke("in.mzML", "-v").Verbose);
 
-    [TestMethod]
-    public void NumpressLinear_WithInlineTolerance()
-    {
-        // "--numpressLinear 1e-5" — the numeric argument should override the default tolerance.
-        var c = Invoke("in.mzML", "--numpressLinear", "1e-5");
-        Assert.AreEqual(1e-5, c.EncoderConfig.NumpressLinearErrorTolerance, 1e-12);
+        // -e overrides the output filename extension.
+        Assert.AreEqual("mzml", Invoke("in.mzML", "-e", "mzml").OutputExtension);
     }
 
     [TestMethod]
     public void OutputFormats_AllRecognized()
     {
+        // Each format flag selects its OutputFormat enum value.
         Assert.AreEqual(OutputFormat.MzXml, Invoke("x", "--mzXML").Format);
         Assert.AreEqual(OutputFormat.Mz5, Invoke("x", "--mz5").Format);
         Assert.AreEqual(OutputFormat.MzMLb, Invoke("x", "--mzMLb").Format);
@@ -118,6 +64,36 @@ public class ArgParserTests
         Assert.AreEqual(OutputFormat.Cms1, Invoke("x", "--cms1").Format);
         Assert.AreEqual(OutputFormat.Ms2, Invoke("x", "--ms2").Format);
         Assert.AreEqual(OutputFormat.Cms2, Invoke("x", "--cms2").Format);
+    }
+
+    [TestMethod]
+    public void Filters_AccumulateInOrder()
+    {
+        // --filter is repeatable; -f is reserved for --filelist (matches pwiz cpp msconvert).
+        var c = Invoke("in.mzML", "--filter", "msLevel 2-", "--filter", "scanTime 10-20");
+        CollectionAssert.AreEqual(new[] { "msLevel 2-", "scanTime 10-20" }, c.Filters);
+    }
+
+    [TestMethod]
+    public void PrecisionOverrides_PerArrayAndNumpress()
+    {
+        // --mz64 / --inten32 override precision per array type.
+        var perArray = Invoke("in.mzML", "--mz64", "--inten32");
+        Assert.AreEqual(BinaryPrecision.Bits64,
+            perArray.EncoderConfig.PrecisionOverrides[Pwiz.Data.Common.Cv.CVID.MS_m_z_array]);
+        Assert.AreEqual(BinaryPrecision.Bits32,
+            perArray.EncoderConfig.PrecisionOverrides[Pwiz.Data.Common.Cv.CVID.MS_intensity_array]);
+
+        // -n is shorthand for "numpress everything": Linear for m/z, Slof for intensity.
+        var numpressAll = Invoke("in.mzML", "-n");
+        Assert.AreEqual(BinaryNumpress.Linear,
+            numpressAll.EncoderConfig.NumpressOverrides[Pwiz.Data.Common.Cv.CVID.MS_m_z_array]);
+        Assert.AreEqual(BinaryNumpress.Slof,
+            numpressAll.EncoderConfig.NumpressOverrides[Pwiz.Data.Common.Cv.CVID.MS_intensity_array]);
+
+        // --numpressLinear takes an inline tolerance.
+        Assert.AreEqual(1e-5,
+            Invoke("in.mzML", "--numpressLinear", "1e-5").EncoderConfig.NumpressLinearErrorTolerance, 1e-12);
     }
 
     [TestMethod]
@@ -150,20 +126,15 @@ public class ArgParserTests
     [TestMethod]
     public void SingleThreaded_WithAndWithoutArg()
     {
+        // No arg → 1 (cpp parity); with int arg → that thread count.
         Assert.AreEqual(1, Invoke("in.mzML", "--singleThreaded").SingleThreaded);
         Assert.AreEqual(4, Invoke("in.mzML", "--singleThreaded", "4").SingleThreaded);
     }
 
     [TestMethod]
-    public void ExtOverride_UsedForOutputFilename()
-    {
-        var c = Invoke("in.mzML", "-e", "mzml");
-        Assert.AreEqual("mzml", c.OutputExtension);
-    }
-
-    [TestMethod]
     public void ConfigFile_ReplayedAsOptions()
     {
+        // -c FILE replays each line as if it were a command-line option.
         string tmp = Path.GetTempFileName();
         try
         {
@@ -182,5 +153,12 @@ public class ArgParserTests
         finally { File.Delete(tmp); }
     }
 
-    private static MsConvertConfig Invoke(params string[] args) => ArgParser.Parse(args);
+    [TestMethod]
+    public void ErrorPaths()
+    {
+        // Unknown option, no-input, and value-required-but-missing all throw ArgumentException.
+        Assert.ThrowsException<ArgumentException>(() => Invoke("--notanoption"), "unknown option");
+        Assert.ThrowsException<ArgumentException>(() => Invoke(), "no input files");
+        Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "--filter"), "missing value");
+    }
 }

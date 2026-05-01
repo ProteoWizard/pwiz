@@ -76,8 +76,16 @@ public class MzxmlRoundTripTests
         return msd;
     }
 
+    private static MSData ReparseMzxml(string xml)
+    {
+        var reparsed = new MSData();
+        using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
+        MzxmlReader.Read(ms, reparsed);
+        return reparsed;
+    }
+
     [TestMethod]
-    public void Writer_ProducesWellFormedXml()
+    public void Writer_ProducesWellFormedMzxml()
     {
         var xml = new MzxmlWriter().Write(BuildSynthetic());
         StringAssert.Contains(xml, "<mzXML", StringComparison.Ordinal);
@@ -87,81 +95,57 @@ public class MzxmlRoundTripTests
     }
 
     [TestMethod]
-    public void RoundTrip_64BitZlibPreservesPeaks()
+    public void RoundTrip_PrecisionAndCompressionVariants()
     {
         var original = BuildSynthetic();
-        var encoderConfig = new BinaryEncoderConfig
+
+        // 64-bit + zlib: lossless peaks + spectrum-level params + scan-level RT/window all preserved.
+        var zlib64 = new MzxmlWriter(new BinaryEncoderConfig
         {
             Precision = BinaryPrecision.Bits64,
             Compression = BinaryCompression.Zlib,
-        };
-        var xml = new MzxmlWriter(encoderConfig).Write(original);
+        }).Write(original);
+        var reparsedZlib = ReparseMzxml(zlib64);
+        Assert.AreEqual(1, reparsedZlib.Run.SpectrumList!.Count);
 
-        var reparsed = new MSData();
-        using (var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml)))
-            MzxmlReader.Read(ms, reparsed);
-
-        Assert.AreEqual(1, reparsed.Run.SpectrumList!.Count);
-        var spec = reparsed.Run.SpectrumList.GetSpectrum(0, getBinaryData: true);
+        var spec = reparsedZlib.Run.SpectrumList.GetSpectrum(0, getBinaryData: true);
         Assert.AreEqual(4, spec.DefaultArrayLength);
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, spec.GetMZArray()!.Data);
+        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, spec.GetIntensityArray()!.Data);
 
-        var mz = spec.GetMZArray()!.Data;
-        var intensity = spec.GetIntensityArray()!.Data;
-        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, mz);
-        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, intensity);
-
-        // Spectrum-level attributes round-trip.
         Assert.AreEqual(1, spec.Params.CvParam(CVID.MS_ms_level).ValueAs<int>());
         Assert.IsTrue(spec.Params.HasCVParam(CVID.MS_centroid_spectrum));
         Assert.IsTrue(spec.Params.HasCVParam(CVID.MS_positive_scan));
         Assert.AreEqual(500, spec.Params.CvParam(CVID.MS_total_ion_current).ValueAs<int>());
 
-        // Scan-level retention time and window.
-        var rtScan = spec.ScanList.Scans[0];
-        Assert.AreEqual(90.0, rtScan.CvParam(CVID.MS_scan_start_time).ValueAs<double>(), 1e-6);
-        Assert.AreEqual(50.0, rtScan.ScanWindows[0].CvParam(CVID.MS_scan_window_lower_limit).ValueAs<double>(), 1e-6);
-        Assert.AreEqual(1000.0, rtScan.ScanWindows[0].CvParam(CVID.MS_scan_window_upper_limit).ValueAs<double>(), 1e-6);
-    }
+        var scan = spec.ScanList.Scans[0];
+        Assert.AreEqual(90.0, scan.CvParam(CVID.MS_scan_start_time).ValueAs<double>(), 1e-6);
+        Assert.AreEqual(50.0, scan.ScanWindows[0].CvParam(CVID.MS_scan_window_lower_limit).ValueAs<double>(), 1e-6);
+        Assert.AreEqual(1000.0, scan.ScanWindows[0].CvParam(CVID.MS_scan_window_upper_limit).ValueAs<double>(), 1e-6);
 
-    [TestMethod]
-    public void RoundTrip_32BitNoCompressionPreservesPeaks()
-    {
-        var original = BuildSynthetic();
-        var encoderConfig = new BinaryEncoderConfig
+        // 32-bit, no compression: lossy at ~1e-3 due to float cast.
+        var bits32 = new MzxmlWriter(new BinaryEncoderConfig
         {
             Precision = BinaryPrecision.Bits32,
             Compression = BinaryCompression.None,
-        };
-        var xml = new MzxmlWriter(encoderConfig).Write(original);
-
-        var reparsed = new MSData();
-        using (var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml)))
-            MzxmlReader.Read(ms, reparsed);
-
-        var spec = reparsed.Run.SpectrumList!.GetSpectrum(0, getBinaryData: true);
-        var mz = spec.GetMZArray()!.Data;
-        var intensity = spec.GetIntensityArray()!.Data;
-        // 32-bit precision introduces small float-cast errors.
+        }).Write(original);
+        var spec32 = ReparseMzxml(bits32).Run.SpectrumList!.GetSpectrum(0, getBinaryData: true);
         for (int i = 0; i < 4; i++)
         {
-            Assert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }[i], mz[i], 1e-3);
-            Assert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }[i], intensity[i], 1e-3);
+            Assert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }[i], spec32.GetMZArray()!.Data[i], 1e-3);
+            Assert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }[i], spec32.GetIntensityArray()!.Data[i], 1e-3);
         }
     }
 
     [TestMethod]
-    public void RoundTrip_PreservesRunIdFromParentFile()
+    public void RoundTrip_DerivesRunIdFromParentFile()
     {
-        var xml = new MzxmlWriter().Write(BuildSynthetic());
-        var reparsed = new MSData();
-        using (var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml)))
-            MzxmlReader.Read(ms, reparsed);
-
-        // FillInMetadata derives run id from "data.raw" → "data".
+        // FillInMetadata derives the run id from the parentFile name ("data.raw" → "data").
+        var reparsed = ReparseMzxml(new MzxmlWriter().Write(BuildSynthetic()));
         Assert.AreEqual("data", reparsed.Id);
         Assert.AreEqual("data", reparsed.Run.Id);
 
-        // Source file got its CV terms re-stamped.
+        // Source file CV terms re-stamped on read.
         var sf = reparsed.FileDescription.SourceFiles[0];
         Assert.IsTrue(sf.HasCVParam(CVID.MS_Thermo_RAW_format));
         Assert.IsTrue(sf.HasCVParam(CVID.MS_Thermo_nativeID_format));

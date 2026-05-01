@@ -9,71 +9,53 @@ namespace Pwiz.Data.Common.Tests.Cv;
 public class CvLookupOboTests
 {
     [TestMethod]
-    public void CvTermInfo_MsSoftware_HasRealDefinition()
+    public void CvTermInfo_AccessionsAndDefinitions()
     {
-        var info = CvLookup.CvTermInfo(CVID.MS_software);
-        Assert.AreEqual("software", info.Name);
-        Assert.AreEqual("MS:1000531", info.Id);
-        StringAssert.Contains(info.Def, "Software", StringComparison.OrdinalIgnoreCase);
-        Assert.IsTrue(info.Def.Length > 20, "real OBO def is descriptive, not just the name");
+        // MS, UO, and UNIMOD CVs all expose ID + Name from the OBO files (not derived from enum names).
+        var msSoftware = CvLookup.CvTermInfo(CVID.MS_software);
+        Assert.AreEqual("software", msSoftware.Name);
+        Assert.AreEqual("MS:1000531", msSoftware.Id);
+        StringAssert.Contains(msSoftware.Def, "Software", StringComparison.OrdinalIgnoreCase);
+        Assert.IsTrue(msSoftware.Def.Length > 20, "OBO def should be descriptive, not just the name");
+
+        var uoSecond = CvLookup.CvTermInfo(CVID.UO_second);
+        Assert.AreEqual("UO:0000010", uoSecond.Id);
+        Assert.AreEqual("second", uoSecond.Name);
+        Assert.IsTrue(uoSecond.Def.Length > 10);
+
+        var unimodAcetyl = CvLookup.CvTermInfo(CVID.UNIMOD_Acetyl);
+        Assert.AreEqual("UNIMOD:1", unimodAcetyl.Id);
+        Assert.AreEqual("Acetyl", unimodAcetyl.Name);
     }
 
     [TestMethod]
-    public void CvTermInfo_UoSecond_HasIsAParents()
+    public void CvTermInfo_Relations_IsAAndPartOf()
     {
-        // UO:0000010 (second) is_a UO:0000045 (base unit) per unit.obo.
-        var info = CvLookup.CvTermInfo(CVID.UO_second);
-        Assert.IsTrue(info.ParentsIsA.Count > 0, "UO_second should have is_a parents from OBO");
+        // UO_second has is_a UO_base_unit per unit.obo; the harness can traverse it.
+        var uoSecond = CvLookup.CvTermInfo(CVID.UO_second);
+        Assert.IsTrue(uoSecond.ParentsIsA.Count > 0, "UO_second should have is_a parents");
+        Assert.IsTrue(CvLookup.CvIsA(CVID.UO_second, uoSecond.ParentsIsA[0]),
+            "CvIsA should follow direct is_a edges");
+
+        // MS_software has part_of (not is_a) per psi-ms.obo 4.1.232.
+        Assert.IsTrue(CvLookup.CvTermInfo(CVID.MS_software).ParentsPartOf.Count > 0,
+            "MS_software should have part_of parents");
     }
 
     [TestMethod]
-    public void CvIsA_RealHierarchy_Works()
-    {
-        // Picks a term we know has a direct is_a from the OBO and verifies traversal.
-        var info = CvLookup.CvTermInfo(CVID.UO_second);
-        Assert.IsTrue(info.ParentsIsA.Count > 0);
-        var someParent = info.ParentsIsA[0];
-        Assert.IsTrue(CvLookup.CvIsA(CVID.UO_second, someParent),
-            "CvIsA should follow the is_a chain for direct parents");
-    }
-
-    [TestMethod]
-    public void CvTermInfo_MsSoftware_HasPartOfRelation()
-    {
-        // MS:1000531 (software) has part_of MS:0000000 but no is_a in psi-ms.obo 4.1.232.
-        var info = CvLookup.CvTermInfo(CVID.MS_software);
-        Assert.IsTrue(info.ParentsPartOf.Count > 0, "MS_software should have part_of parents from OBO");
-    }
-
-    [TestMethod]
-    public void CvTermInfo_UoSecond_HasUnitDef()
-    {
-        var info = CvLookup.CvTermInfo(CVID.UO_second);
-        Assert.AreEqual("UO:0000010", info.Id);
-        Assert.AreEqual("second", info.Name);
-        Assert.IsTrue(info.Def.Length > 10, "UO_second def should be populated");
-    }
-
-    [TestMethod]
-    public void CvTermInfo_UnimodAcetyl_HasRealName()
-    {
-        var info = CvLookup.CvTermInfo(CVID.UNIMOD_Acetyl);
-        Assert.AreEqual("UNIMOD:1", info.Id);
-        Assert.AreEqual("Acetyl", info.Name);
-    }
-
-    [TestMethod]
-    public void GetCv_Ms_HasVersionFromObo()
+    public void GetCv_VersionFromOboHeader()
     {
         var cv = CvLookup.GetCv("MS");
         Assert.AreEqual("MS", cv.Id);
-        Assert.IsFalse(string.IsNullOrEmpty(cv.Version), "version should be extracted from psi-ms.obo header");
+        Assert.IsFalse(string.IsNullOrEmpty(cv.Version),
+            "version should be extracted from psi-ms.obo header");
     }
 
     [TestMethod]
-    public void CvTermInfo_ExactSynonyms_PopulatedForTermsThatHaveThem()
+    public void CvTermInfo_ExactSynonyms_PopulatedForSomeTerms()
     {
-        // Look at ALL MS terms; at least some should have non-empty synonyms.
+        // Sweep MS terms and confirm at least a few have non-empty synonyms (so we know the
+        // synonym block is parsed at all). Exits as soon as enough are found.
         int synCount = 0;
         foreach (var cvid in CvLookup.AllCvids)
         {

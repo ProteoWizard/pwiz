@@ -20,14 +20,6 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
-  <!-- Without -p:IAgreeToVendorLicenses=true, the Thermo SDK isn't built into Pwiz.Vendor.Thermo
-       and ThermoRawFile / SpectrumList_Thermo aren't compiled. SmallRawEndToEndTests references
-       both directly, so it can't compile in that mode — the harness-based tests in
-       ReaderThermoHarnessTests still run via VendorReaderTestHarness's identify-only fallback. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
-    <Compile Remove="SmallRawEndToEndTests.cs" />
-  </ItemGroup>
-
   <PropertyGroup>
     <VendorTestArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data.tar.bz2</VendorTestArchive>
     <VendorTestDataParent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo</VendorTestDataParent>

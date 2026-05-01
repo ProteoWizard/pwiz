@@ -17,9 +17,11 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
-  <!-- Without -p:IAgreeToVendorLicenses=true, timsdata.dll isn't extracted next to the test
-       output and the P/Invoke smoke tests can't run; the harness-based tests in
-       ReaderBrukerTests still run via VendorReaderTestHarness's identify-only fallback. -->
+  <!-- TimsBinaryDataSmokeTests exercises Reader_Bruker.Read() against diaPASEF.d directly to
+       cover DiaFrameWindow / DiaWindowGroup / TdfMetadata.HasDiaPasefData — the harness path
+       can't reach those because the only diaPASEF.d reference mzML uses an unported
+       isolation-mz-and-mobility filter. The smoke tests also call P/Invoke against
+       timsdata.dll, so they need vendor extraction at build time. -->
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
     <Compile Remove="TimsBinaryDataSmokeTests.cs" />
   </ItemGroup>

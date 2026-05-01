@@ -1,5 +1,6 @@
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Unimod;
+using UnimodHelper = Pwiz.Data.Common.Unimod.Unimod;
 
 namespace Pwiz.Data.Common.Tests.Unimod;
 
@@ -7,32 +8,27 @@ namespace Pwiz.Data.Common.Tests.Unimod;
 public class UnimodTests
 {
     [TestMethod]
-    public void SiteFromSymbol_CommonResidues_MapCorrectly()
+    public void SiteFromSymbol_KnownAndUnknown()
     {
-        Assert.AreEqual(UnimodSite.Alanine, global::Pwiz.Data.Common.Unimod.Unimod.SiteFromSymbol('A'));
-        Assert.AreEqual(UnimodSite.Lysine, global::Pwiz.Data.Common.Unimod.Unimod.SiteFromSymbol('K'));
-        Assert.AreEqual(UnimodSite.Any, global::Pwiz.Data.Common.Unimod.Unimod.SiteFromSymbol('x'));
-        Assert.AreEqual(UnimodSite.NTerminus, global::Pwiz.Data.Common.Unimod.Unimod.SiteFromSymbol('n'));
-        Assert.AreEqual(UnimodSite.CTerminus, global::Pwiz.Data.Common.Unimod.Unimod.SiteFromSymbol('c'));
+        // One-letter residue codes, plus the special 'x'/'n'/'c' wildcards.
+        Assert.AreEqual(UnimodSite.Alanine, UnimodHelper.SiteFromSymbol('A'));
+        Assert.AreEqual(UnimodSite.Lysine, UnimodHelper.SiteFromSymbol('K'));
+        Assert.AreEqual(UnimodSite.Any, UnimodHelper.SiteFromSymbol('x'));
+        Assert.AreEqual(UnimodSite.NTerminus, UnimodHelper.SiteFromSymbol('n'));
+        Assert.AreEqual(UnimodSite.CTerminus, UnimodHelper.SiteFromSymbol('c'));
+
+        // Unknown one-letter codes throw rather than silently returning a default.
+        Assert.ThrowsException<ArgumentException>(() => UnimodHelper.SiteFromSymbol('Z'));
     }
 
     [TestMethod]
-    public void SiteFromSymbol_UnknownChar_Throws()
+    public void PositionFromCvid_DefaultAndKnown()
     {
-        Assert.ThrowsException<ArgumentException>(
-            () => global::Pwiz.Data.Common.Unimod.Unimod.SiteFromSymbol('Z'));
-    }
+        // No CVID supplied -> Anywhere.
+        Assert.AreEqual(UnimodPosition.Anywhere, UnimodHelper.PositionFromCvid());
 
-    [TestMethod]
-    public void PositionFromCvid_DefaultUnknown_Anywhere()
-    {
-        Assert.AreEqual(UnimodPosition.Anywhere, global::Pwiz.Data.Common.Unimod.Unimod.PositionFromCvid());
-    }
-
-    [TestMethod]
-    public void PositionFromCvid_PeptideNTerm_MapsCorrectly()
-    {
+        // Known CVID -> mapped position constraint.
         Assert.AreEqual(UnimodPosition.AnyNTerminus,
-            global::Pwiz.Data.Common.Unimod.Unimod.PositionFromCvid(CVID.MS_modification_specificity_peptide_N_term));
+            UnimodHelper.PositionFromCvid(CVID.MS_modification_specificity_peptide_N_term));
     }
 }

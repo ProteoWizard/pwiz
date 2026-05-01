@@ -6,70 +6,43 @@ namespace Pwiz.Data.Common.Tests.Cv;
 public class CvLookupTests
 {
     [TestMethod]
-    public void CvTermInfo_UnknownCvid_ReturnsUnknownSentinel()
+    public void CvTermInfo_LookupAndAccessionRoundTrip()
     {
-        var info = CvLookup.CvTermInfo(CVID.CVID_Unknown);
-        Assert.AreEqual(CVID.CVID_Unknown, info.Cvid);
-        Assert.AreEqual("??:0000000", info.Id);
+        // Known MS / UO terms decode to the expected prefix + name.
+        var ms = CvLookup.CvTermInfo(CVID.MS_software);
+        Assert.AreEqual("MS", ms.Prefix);
+        Assert.IsTrue(ms.Id.StartsWith("MS:", StringComparison.Ordinal));
+        Assert.AreEqual("software", ms.Name);
+
+        var uo = CvLookup.CvTermInfo(CVID.UO_second);
+        Assert.AreEqual("UO", uo.Prefix);
+        Assert.AreEqual("second", uo.Name);
+
+        // CVID -> Id -> CVID round-trips for known terms.
+        var byId = CvLookup.CvTermInfo(ms.Id);
+        Assert.AreEqual(ms.Cvid, byId.Cvid);
+
+        // CVID_Unknown returns a sentinel rather than throwing; same for unknown accession.
+        var unknown = CvLookup.CvTermInfo(CVID.CVID_Unknown);
+        Assert.AreEqual(CVID.CVID_Unknown, unknown.Cvid);
+        Assert.AreEqual("??:0000000", unknown.Id);
+        Assert.AreEqual(CVID.CVID_Unknown, CvLookup.CvTermInfo("XX:9999999").Cvid);
     }
 
     [TestMethod]
-    public void CvTermInfo_MsTerm_ReturnsMsAccession()
+    public void CvIsA_AndAllCvidsTable()
     {
-        var info = CvLookup.CvTermInfo(CVID.MS_software);
-        Assert.AreEqual("MS", info.Prefix);
-        Assert.IsTrue(info.Id.StartsWith("MS:", StringComparison.Ordinal));
-        Assert.AreEqual("software", info.Name);
-    }
+        // CvIsA: identity is true; unrelated namespaces are false.
+        Assert.IsTrue(CvLookup.CvIsA(CVID.MS_software, CVID.MS_software), "identity");
+        Assert.IsFalse(CvLookup.CvIsA(CVID.MS_software, CVID.UO_second), "unrelated");
 
-    [TestMethod]
-    public void CvTermInfo_UoTerm_ReturnsUoAccession()
-    {
-        var info = CvLookup.CvTermInfo(CVID.UO_second);
-        Assert.AreEqual("UO", info.Prefix);
-        Assert.AreEqual("second", info.Name);
-    }
-
-    [TestMethod]
-    public void CvTermInfo_ByAccession_RoundTrips()
-    {
-        var byEnum = CvLookup.CvTermInfo(CVID.MS_software);
-        var byId = CvLookup.CvTermInfo(byEnum.Id);
-        Assert.AreEqual(byEnum.Cvid, byId.Cvid);
-    }
-
-    [TestMethod]
-    public void CvTermInfo_UnknownAccession_ReturnsUnknown()
-    {
-        var info = CvLookup.CvTermInfo("XX:9999999");
-        Assert.AreEqual(CVID.CVID_Unknown, info.Cvid);
-    }
-
-    [TestMethod]
-    public void CvIsA_Identity_IsTrue()
-    {
-        Assert.IsTrue(CvLookup.CvIsA(CVID.MS_software, CVID.MS_software));
-    }
-
-    [TestMethod]
-    public void CvIsA_Unrelated_IsFalse()
-    {
-        Assert.IsFalse(CvLookup.CvIsA(CVID.MS_software, CVID.UO_second));
-    }
-
-    [TestMethod]
-    public void AllCvids_IncludesKnownTerms()
-    {
+        // AllCvids: bulk shape — thousands of terms generated, covers the namespaces we use.
         var all = CvLookup.AllCvids;
         Assert.IsTrue(all.Count > 1000, "generated enum should have thousands of terms");
-        CollectionAssert.Contains((List<CVID>)all.ToList(), CVID.MS_software);
-        CollectionAssert.Contains((List<CVID>)all.ToList(), CVID.UO_second);
-    }
+        CollectionAssert.Contains(all.ToList(), CVID.MS_software);
+        CollectionAssert.Contains(all.ToList(), CVID.UO_second);
 
-    [TestMethod]
-    public void ObsoleteTerm_IsFlagged()
-    {
-        var info = CvLookup.CvTermInfo(CVID.MS_second_OBSOLETE);
-        Assert.IsTrue(info.IsObsolete);
+        // Terms marked obsolete in the OBO are flagged on CvTermInfo.
+        Assert.IsTrue(CvLookup.CvTermInfo(CVID.MS_second_OBSOLETE).IsObsolete);
     }
 }

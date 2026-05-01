@@ -75,6 +75,62 @@ public sealed class TestResult
 }
 
 /// <summary>
+/// Per-fixture scratch context for the vendor harness `[TestMethod]`s. A test method calls
+/// <see cref="Run"/> once per config variant it wants to exercise on the fixture and ends with
+/// <see cref="Check"/>; the context aggregates results across the calls and asserts that every
+/// <see cref="Run"/> resulted in exactly one fixture being matched (so a typo in a fixture name
+/// fails loudly instead of silently passing). Lives next to <see cref="TestResult"/> so all
+/// three vendor test classes (Bruker, Thermo, Waters) can reuse it.
+/// </summary>
+public sealed class FixtureRunContext
+{
+    private readonly IReader _reader;
+    private readonly string _root;
+    private readonly TestPathPredicate _predicate;
+    private readonly string _fixtureName;
+    private readonly TestResult _result = new();
+    private int _runs;
+
+    /// <summary>Constructs the context. Returns from a per-fixture SetUp helper.</summary>
+    public FixtureRunContext(IReader reader, string rootPath, TestPathPredicate predicate, string fixtureName)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        ArgumentNullException.ThrowIfNull(rootPath);
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(fixtureName);
+        _reader = reader;
+        _root = rootPath;
+        _predicate = predicate;
+        _fixtureName = fixtureName;
+    }
+
+    /// <summary>Runs the harness for this fixture under <paramref name="config"/> and accumulates the result.</summary>
+    public void Run(ReaderTestConfig config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        _runs++;
+        _result.Add(VendorReaderTestHarness.TestReader(_reader, _root, _predicate, config));
+    }
+
+    /// <summary>
+    /// Asserts that all accumulated runs passed and that <see cref="Run"/> matched exactly one
+    /// fixture each time (predicate hit rate == call count). Throws on mismatch; the exception
+    /// surfaces as a test failure in the calling MSTest method (TestHarness.csproj deliberately
+    /// doesn't reference MSTest, so we can't call Assert.Fail directly here).
+    /// </summary>
+    public void Check()
+    {
+        if (_result.FailedTests > 0)
+            throw new InvalidOperationException(
+                $"{_fixtureName}: {_result.FailedTests} of {_result.TotalTests} runs failed:\n" +
+                string.Join('\n', _result.FailureMessages));
+        if (_result.TotalTests != _runs)
+            throw new InvalidOperationException(
+                $"{_fixtureName}: harness ran {_result.TotalTests} reads but {_runs} were expected (one per Run() call) — predicate may have failed to match");
+    }
+}
+
+/// <summary>
 /// Test harness that mirrors pwiz C++ <c>VendorReaderTestHarness</c>. For each vendor source
 /// directory under a supplied root that matches a <see cref="TestPathPredicate"/>, the reader
 /// is invoked, the in-memory <see cref="MSData"/> is compared against a sibling reference mzML
@@ -129,8 +185,31 @@ public static class VendorReaderTestHarness
 
     private static void TestOne(IReader reader, string rawPath, string rootPath, ReaderTestConfig config)
     {
-        // 1. Read the raw file through the vendor reader.
-        var msd = new MSData();
+        bool readSucceeded = false;
+        try
+        {
+            ReadAndDiff(reader, rawPath, rootPath, config, out readSucceeded);
+        }
+        finally
+        {
+            // ReadAndDiff disposed msd already (the using-scope exits before this finally
+            // runs). The check has to happen AFTER disposal so any vendor file handles are
+            // released — that's what makes it a useful regression guard against missing
+            // Dispose plumbing.
+            if (readSucceeded)
+                AssertFilesUnlocked(rawPath);
+        }
+    }
+
+    private static void ReadAndDiff(IReader reader, string rawPath, string rootPath, ReaderTestConfig config,
+        out bool readSucceeded)
+    {
+        readSucceeded = false;
+
+        // 1. Read the raw file through the vendor reader. `using` cascades disposal to the
+        // SpectrumList / ChromatogramList, releasing the underlying vendor file handle once
+        // the diff is done.
+        using var msd = new MSData();
         var readerConfig = new ReaderConfig
         {
             PreferOnlyMsLevel = config.PreferOnlyMsLevel,
@@ -256,6 +335,68 @@ public static class VendorReaderTestHarness
                 if (mgfReport.Length > 0)
                     throw new InvalidOperationException("MGF round-trip diff:\n" + mgfReport);
             }
+        }
+
+        // We finished a real read+diff (vs. taking the identify-only short-circuit). Tell
+        // TestOne to run the file-unlock probe once `using var msd` releases vendor handles.
+        readSucceeded = true;
+    }
+
+    /// <summary>
+    /// Mirrors pwiz cpp <c>VendorReaderTestHarness.cpp</c> lines 1004–1019: after the reader
+    /// has been disposed, rename the vendor source to <c>&lt;path&gt;.renamed</c> and back.
+    /// If a vendor handle is still open the OS will reject the rename with a sharing-violation
+    /// IOException; that's the regression we want to catch (vendor SpectrumList missed a
+    /// Dispose, MSData/Run didn't propagate, Converter didn't `using`, etc.).
+    /// </summary>
+    private static void AssertFilesUnlocked(string rawPath)
+    {
+        if (!File.Exists(rawPath) && !Directory.Exists(rawPath)) return;
+
+        // Some vendor SDKs queue native handle release through a finalizer / thread-local
+        // disposal path that's only synchronous after a GC pass. Force one before the probe
+        // so the test asks "are handles released after Dispose + GC?" rather than "right
+        // now?". Also retry briefly in case Windows hasn't fully reaped the handle yet.
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        string renamed = rawPath.TrimEnd('/', '\\') + ".renamed";
+        IOException? lastError = null;
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            try
+            {
+                Directory.Move(rawPath, renamed);
+                lastError = null;
+                break;
+            }
+            catch (IOException ex)
+            {
+                lastError = ex;
+                Thread.Sleep(50);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                lastError = new IOException(ex.Message, ex);
+                Thread.Sleep(50);
+            }
+        }
+        if (lastError is not null)
+            throw new InvalidOperationException(
+                $"Cannot rename {rawPath} after dispose: there are unreleased file locks. " +
+                $"Likely a missing Dispose somewhere in the SpectrumList → backing-data chain. " +
+                $"Underlying error: {lastError.Message}", lastError);
+
+        try
+        {
+            Directory.Move(renamed, rawPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw new InvalidOperationException(
+                $"Renamed {rawPath} -> {renamed} succeeded but couldn't move it back; " +
+                $"underlying error: {ex.Message}", ex);
         }
     }
 

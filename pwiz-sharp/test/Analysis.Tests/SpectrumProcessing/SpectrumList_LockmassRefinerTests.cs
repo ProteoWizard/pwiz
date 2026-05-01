@@ -8,18 +8,27 @@ using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Spectra;
 using Pwiz.Util.Misc;
+using Pwiz.Vendor.Waters;
 
-namespace Pwiz.Vendor.Waters.Tests;
+namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 
 /// <summary>
 /// Port of pwiz C++ <c>SpectrumList_LockmassRefinerTest</c>. Verifies that
-/// <see cref="SpectrumList_LockmassRefiner"/> wired around <see cref="SpectrumList_Waters"/>
-/// applies (or skips) lockmass correction depending on the configured m/z, and that the
-/// output diffs cleanly against the corrected reference fixtures shipped under
+/// <see cref="Pwiz.Vendor.Waters.SpectrumList_LockmassRefiner"/> wired around
+/// <see cref="Pwiz.Vendor.Waters.SpectrumList_Waters"/> applies (or skips) lockmass correction
+/// depending on the configured m/z, and that the output diffs cleanly against the corrected
+/// reference fixtures shipped under
 /// <c>pwiz/analysis/spectrum_processing/SpectrumList_LockmassRefinerTest.data/</c>.
 /// </summary>
+/// <remarks>
+/// Located under Analysis.Tests/SpectrumProcessing/ to mirror the cpp test layout
+/// (<c>pwiz/analysis/spectrum_processing/SpectrumList_LockmassRefinerTest.cpp</c>). Even though
+/// it lives under Analysis.Tests, this test still depends on Pwiz.Vendor.Waters because the C#
+/// port currently implements <c>SpectrumList_LockmassRefiner</c> there as a Waters-specific
+/// wrapper (cpp's version is generic — refactoring the C# class to match is a follow-up).
+/// </remarks>
 [TestClass]
-public class LockmassRefinerTests
+public class SpectrumList_LockmassRefinerTests
 {
     private enum PeakPickingMode { None, Vendor, Cwt }
 
@@ -49,45 +58,45 @@ public class LockmassRefinerTests
         throw new InvalidOperationException("fixture not found: " + fixture);
     }
 
+    // Each test exercises one (peak-picking mode, ddaProcessing) combination by running the
+    // case both with the correct lockmass m/z (must match the corrected reference) AND with
+    // lockmass=0 (must DIFFER from the corrected reference). Catches both directions of the
+    // refinement on a single MSTest entry per mode-combination.
+
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_None_AppliedMatchesReference() =>
+    public void Lockmass_AtehlstlsekProfile_None_AppliedAndUnapplied()
+    {
         RunCase(PeakPickingMode.None, ddaProcessing: false, lockmassMz: 684.3469);
-
-    [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_None_UnappliedDiffersFromReference() =>
         RunCase(PeakPickingMode.None, ddaProcessing: false, lockmassMz: 0);
+    }
 
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_Vendor_AppliedMatchesReference() =>
+    public void Lockmass_AtehlstlsekProfile_Vendor_AppliedAndUnapplied()
+    {
         RunCase(PeakPickingMode.Vendor, ddaProcessing: false, lockmassMz: 684.3469);
-
-    [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_Vendor_UnappliedDiffersFromReference() =>
         RunCase(PeakPickingMode.Vendor, ddaProcessing: false, lockmassMz: 0);
+    }
 
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_Cwt_AppliedMatchesReference() =>
+    public void Lockmass_AtehlstlsekProfile_Cwt_AppliedAndUnapplied()
+    {
         RunCase(PeakPickingMode.Cwt, ddaProcessing: false, lockmassMz: 684.3469);
-
-    [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_Cwt_UnappliedDiffersFromReference() =>
         RunCase(PeakPickingMode.Cwt, ddaProcessing: false, lockmassMz: 0);
+    }
 
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_VendorDda_AppliedMatchesReference() =>
+    public void Lockmass_AtehlstlsekProfile_VendorDda_AppliedAndUnapplied()
+    {
         RunCase(PeakPickingMode.Vendor, ddaProcessing: true, lockmassMz: 684.3469);
-
-    [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_VendorDda_UnappliedDiffersFromReference() =>
         RunCase(PeakPickingMode.Vendor, ddaProcessing: true, lockmassMz: 0);
+    }
 
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_CwtDda_AppliedMatchesReference() =>
+    public void Lockmass_AtehlstlsekProfile_CwtDda_AppliedAndUnapplied()
+    {
         RunCase(PeakPickingMode.Cwt, ddaProcessing: true, lockmassMz: 684.3469);
-
-    [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_CwtDda_UnappliedDiffersFromReference() =>
         RunCase(PeakPickingMode.Cwt, ddaProcessing: true, lockmassMz: 0);
+    }
 
     private static void RunCase(PeakPickingMode mode, bool ddaProcessing, double lockmassMz)
     {

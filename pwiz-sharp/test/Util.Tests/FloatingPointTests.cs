@@ -6,33 +6,21 @@ namespace Pwiz.Util.Tests.Misc;
 public class FloatingPointTests
 {
     [TestMethod]
-    public void AlmostEqual_Identical_True()
+    public void AlmostEqual_BehaviorAcrossInputsAndMultipliers()
     {
-        Assert.IsTrue(FloatingPoint.AlmostEqual(1.0, 1.0));
-    }
-
-    [TestMethod]
-    public void AlmostEqual_VastlyDifferent_False()
-    {
-        Assert.IsFalse(FloatingPoint.AlmostEqual(1.0, 2.0));
-    }
-
-    [TestMethod]
-    public void AlmostEqual_MultiplierScalesTolerance()
-    {
-        // Values separated by ~5× machine epsilon: fails with multiplier=1, passes with multiplier=10.
         const double machineEps = 2.2204460492503131e-16;
+
+        // Identity and gross inequality.
+        Assert.IsTrue(FloatingPoint.AlmostEqual(1.0, 1.0), "identical");
+        Assert.IsFalse(FloatingPoint.AlmostEqual(1.0, 2.0), "vastly different");
+
+        // Multiplier scales tolerance: values separated by ~5× ε fail at multiplier=1, pass at 10.
         double a = 1.0;
         double b = 1.0 + 5 * machineEps;
         Assert.IsFalse(FloatingPoint.AlmostEqual(a, b, multiplier: 1));
         Assert.IsTrue(FloatingPoint.AlmostEqual(a, b, multiplier: 10));
-    }
 
-    [TestMethod]
-    public void AlmostEqual_ZeroValue_UsesUnitScale()
-    {
         // When a == 0, scale defaults to 1, so (0, ε/2) passes for any multiplier ≥ 1.
-        const double machineEps = 2.2204460492503131e-16;
         Assert.IsTrue(FloatingPoint.AlmostEqual(0.0, machineEps / 2));
     }
 }

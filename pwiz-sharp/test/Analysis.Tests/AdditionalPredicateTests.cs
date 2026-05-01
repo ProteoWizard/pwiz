@@ -23,98 +23,67 @@ public class AdditionalPredicateTests
         return s;
     }
 
-    // ---- ChargeState ----
-
     [TestMethod]
-    public void ChargeState_FilterByCharge()
+    public void ChargeState_FilterAndMissing()
     {
+        // Filters by an integer set; missing charge is rejected.
         var list = new SpectrumListSimple();
         list.Spectra.Add(MakeMs2(0, 1, 500, CVID.MS_CID));
         list.Spectra.Add(MakeMs2(1, 2, 500, CVID.MS_CID));
         list.Spectra.Add(MakeMs2(2, 3, 500, CVID.MS_CID));
+        list.Spectra.Add(MakeMs2(3, null, 500, CVID.MS_CID));
 
         var set = new IntegerSet();
         set.Insert(2, 3);
         var filtered = new SpectrumListFilter(list, new ChargeStatePredicate(set));
-        Assert.AreEqual(2, filtered.Count);
+        Assert.AreEqual(2, filtered.Count, "kept charges 2 and 3 only; missing rejected");
     }
 
     [TestMethod]
-    public void ChargeState_MissingCharge_Rejected()
+    public void ActivationType_HierarchyAndExclusion()
     {
-        var list = new SpectrumListSimple();
-        list.Spectra.Add(MakeMs2(0, null, 500, CVID.MS_CID));
-
-        var set = new IntegerSet();
-        set.Insert(2);
-        var filtered = new SpectrumListFilter(list, new ChargeStatePredicate(set));
-        Assert.AreEqual(0, filtered.Count);
-    }
-
-    // ---- ActivationType ----
-
-    [TestMethod]
-    public void ActivationType_MatchesCidAndChildrenViaCvHierarchy()
-    {
-        // HCD is_a beam-type CID is_a CID, so a predicate targeting CID accepts HCD too.
-        // This is the intended behavior — pwiz's ActivationType predicate uses CV hierarchy,
-        // not exact-term matching. Use a terminal term to exclude children.
         var list = new SpectrumListSimple();
         list.Spectra.Add(MakeMs2(0, 2, 500, CVID.MS_collision_induced_dissociation));
         list.Spectra.Add(MakeMs2(1, 2, 500, CVID.MS_higher_energy_beam_type_collision_induced_dissociation));
         list.Spectra.Add(MakeMs2(2, 2, 500, CVID.MS_electron_transfer_dissociation));
 
-        // Filter for CID → matches CID and its HCD descendant (2 spectra).
-        var cidMatches = new SpectrumListFilter(list,
+        // CID matches CID + HCD (HCD is_a CID via the CV hierarchy).
+        var cid = new SpectrumListFilter(list,
             new ActivationTypePredicate(new[] { CVID.MS_collision_induced_dissociation }));
-        Assert.AreEqual(2, cidMatches.Count);
+        Assert.AreEqual(2, cid.Count, "CID predicate matches CID and HCD descendant");
 
-        // Filter for only ETD → matches just that spectrum.
-        var etdMatches = new SpectrumListFilter(list,
+        // ETD predicate matches only the ETD spectrum (terminal CV, no descendants here).
+        var etd = new SpectrumListFilter(list,
             new ActivationTypePredicate(new[] { CVID.MS_electron_transfer_dissociation }));
-        Assert.AreEqual(1, etdMatches.Count);
-        Assert.AreEqual(2, etdMatches.SpectrumIdentity(0).Index);
-    }
+        Assert.AreEqual(1, etd.Count);
+        Assert.AreEqual(2, etd.SpectrumIdentity(0).Index);
 
-    [TestMethod]
-    public void ActivationType_NoneOf_Inverts()
-    {
-        var list = new SpectrumListSimple();
-        list.Spectra.Add(MakeMs2(0, 2, 500, CVID.MS_collision_induced_dissociation));
-        list.Spectra.Add(MakeMs2(1, 2, 500, CVID.MS_electron_transfer_dissociation));
-
-        var filtered = new SpectrumListFilter(list,
+        // hasNoneOf inverts the membership: anything NOT in the CID hierarchy survives (just ETD).
+        var noneOfCid = new SpectrumListFilter(list,
             new ActivationTypePredicate(
                 new[] { CVID.MS_collision_induced_dissociation }, hasNoneOf: true));
-        Assert.AreEqual(1, filtered.Count);
-        Assert.AreEqual(1, filtered.SpectrumIdentity(0).Index); // the ETD one survives
-    }
-
-    // ---- PrecursorMz ----
-
-    [TestMethod]
-    public void PrecursorMz_MatchesWithinTolerance()
-    {
-        var list = new SpectrumListSimple();
-        list.Spectra.Add(MakeMs2(0, 2, 500.0, CVID.MS_CID));
-        list.Spectra.Add(MakeMs2(1, 2, 500.002, CVID.MS_CID)); // 4 ppm off
-        list.Spectra.Add(MakeMs2(2, 2, 800.0, CVID.MS_CID));
-
-        var filtered = new SpectrumListFilter(list,
-            new PrecursorMzPredicate(new[] { 500.0 }, new MZTolerance(5, MZToleranceUnits.Ppm)));
-        Assert.AreEqual(2, filtered.Count); // 500.0 exact and 500.002 (within 5ppm)
+        Assert.AreEqual(1, noneOfCid.Count);
+        Assert.AreEqual(2, noneOfCid.SpectrumIdentity(0).Index);
     }
 
     [TestMethod]
-    public void PrecursorMz_ExcludeMode_Inverts()
+    public void PrecursorMz_ToleranceAndExcludeMode()
     {
-        var list = new SpectrumListSimple();
-        list.Spectra.Add(MakeMs2(0, 2, 500.0, CVID.MS_CID));
-        list.Spectra.Add(MakeMs2(1, 2, 800.0, CVID.MS_CID));
+        // Within 5 ppm of 500.0 → match 500.0 exactly + 500.002 (4 ppm off); skip 800.
+        var ppmList = new SpectrumListSimple();
+        ppmList.Spectra.Add(MakeMs2(0, 2, 500.0, CVID.MS_CID));
+        ppmList.Spectra.Add(MakeMs2(1, 2, 500.002, CVID.MS_CID));
+        ppmList.Spectra.Add(MakeMs2(2, 2, 800.0, CVID.MS_CID));
+        Assert.AreEqual(2, new SpectrumListFilter(ppmList,
+            new PrecursorMzPredicate(new[] { 500.0 }, new MZTolerance(5, MZToleranceUnits.Ppm))).Count);
 
-        var filtered = new SpectrumListFilter(list,
+        // FilterMode.Exclude inverts: keep what doesn't match.
+        var excludeList = new SpectrumListSimple();
+        excludeList.Spectra.Add(MakeMs2(0, 2, 500.0, CVID.MS_CID));
+        excludeList.Spectra.Add(MakeMs2(1, 2, 800.0, CVID.MS_CID));
+        var excluded = new SpectrumListFilter(excludeList,
             new PrecursorMzPredicate(new[] { 500.0 }, new MZTolerance(0.01), FilterMode.Exclude));
-        Assert.AreEqual(1, filtered.Count);
-        Assert.AreEqual(1, filtered.SpectrumIdentity(0).Index);
+        Assert.AreEqual(1, excluded.Count);
+        Assert.AreEqual(1, excluded.SpectrumIdentity(0).Index);
     }
 }

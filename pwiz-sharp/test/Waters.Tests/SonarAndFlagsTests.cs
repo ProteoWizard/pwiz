@@ -7,7 +7,8 @@ namespace Pwiz.Vendor.Waters.Tests;
 /// Verifies the new public helpers on <see cref="SpectrumList_Waters"/>: SONAR bin/m_z
 /// conversions, ion-mobility flags, and the calibration-scan-omitted signal. These mirror
 /// the cpp <c>SpectrumList_Waters</c> public API surface that downstream tools (Skyline,
-/// SONAR analysis) call.
+/// SONAR analysis) call. Tests are grouped by capability — one method per flag/feature —
+/// rather than per-fixture.
 /// </summary>
 [TestClass]
 public class SonarAndFlagsTests
@@ -34,48 +35,26 @@ public class SonarAndFlagsTests
     }
 
     [TestMethod]
-    public void SonarFile_HasSonarFunctions_ReportsTrue()
+    public void HasSonarFunctions_ReflectsScanType()
     {
-        var sl = Open("SONAR_Short.raw");
-        Assert.IsTrue(sl.HasSonarFunctions);
+        Assert.IsTrue(Open("SONAR_Short.raw").HasSonarFunctions, "SONAR file should report HasSonarFunctions");
+        Assert.IsFalse(Open("ATEHLSTLSEK_profile.raw").HasSonarFunctions, "non-SONAR file should not");
     }
 
     [TestMethod]
-    public void NonSonarFile_HasSonarFunctions_ReportsFalse()
+    public void HasIonMobility_AndCombinedIonMobility_FollowConfigAndFile()
     {
-        var sl = Open("ATEHLSTLSEK_profile.raw");
-        Assert.IsFalse(sl.HasSonarFunctions);
-    }
+        // HasIonMobility — file-level flag, independent of config.
+        Assert.IsTrue(Open("HDMSe_Short_noLM.raw").HasIonMobility, "IMS file should report HasIonMobility");
+        Assert.IsFalse(Open("ATEHLSTLSEK_profile.raw").HasIonMobility, "non-IMS file should not");
 
-    [TestMethod]
-    public void ImsFile_HasIonMobility_ReportsTrue()
-    {
-        var sl = Open("HDMSe_Short_noLM.raw");
-        Assert.IsTrue(sl.HasIonMobility);
-    }
-
-    [TestMethod]
-    public void NonImsFile_HasIonMobility_ReportsFalse()
-    {
-        var sl = Open("ATEHLSTLSEK_profile.raw");
-        Assert.IsFalse(sl.HasIonMobility);
-    }
-
-    [TestMethod]
-    public void HasCombinedIonMobility_FollowsConfigFlagAndFile()
-    {
-        // IMS file with combine off → false; with combine on → true.
-        var noCombine = Open("HDMSe_Short_noLM.raw");
-        Assert.IsFalse(noCombine.HasCombinedIonMobility);
-
-        var withCombine = Open("HDMSe_Short_noLM.raw",
-            new ReaderConfig { CombineIonMobilitySpectra = true });
-        Assert.IsTrue(withCombine.HasCombinedIonMobility);
-
-        // Non-IMS file always false even with combine on (config without backing data).
-        var nonIms = Open("ATEHLSTLSEK_profile.raw",
-            new ReaderConfig { CombineIonMobilitySpectra = true });
-        Assert.IsFalse(nonIms.HasCombinedIonMobility);
+        // HasCombinedIonMobility — only true when both file has IMS AND config has combine on.
+        Assert.IsFalse(Open("HDMSe_Short_noLM.raw").HasCombinedIonMobility,
+            "IMS file with combine off → false");
+        Assert.IsTrue(Open("HDMSe_Short_noLM.raw", new ReaderConfig { CombineIonMobilitySpectra = true })
+            .HasCombinedIonMobility, "IMS file with combine on → true");
+        Assert.IsFalse(Open("ATEHLSTLSEK_profile.raw", new ReaderConfig { CombineIonMobilitySpectra = true })
+            .HasCombinedIonMobility, "non-IMS file with combine on → still false");
     }
 
     [TestMethod]
@@ -101,8 +80,7 @@ public class SonarAndFlagsTests
 
             // With the flag on, the answer matches whether the file has a lockmass function.
             var slIgnore = Open(fixture, new ReaderConfig { IgnoreCalibrationScans = true });
-            bool hasLockmass = slIgnore.CalibrationSpectraAreOmitted;
-            anyWithLockmass |= hasLockmass;
+            anyWithLockmass |= slIgnore.CalibrationSpectraAreOmitted;
         }
         // Sanity: at least one fixture in this corpus has a lockmass function — otherwise the
         // test isn't actually exercising the true-branch and we'd silently pass.
@@ -110,29 +88,22 @@ public class SonarAndFlagsTests
     }
 
     [TestMethod]
-    public void Sonar_BinAndMzRoundTrip()
+    public void Sonar_BinMzRoundTripAndOutOfRangeSentinel()
     {
         var sl = Open("SONAR_Short.raw");
 
-        // Pick a precursor m/z near the middle of the SONAR scan range. Bin range covering
-        // a 1 Da window should contain at least one bin and the center bin should round-trip
-        // back to a m/z within the window.
+        // In-range: a 1 Da window around 600 m/z should resolve to a non-empty bin range, and
+        // the center bin should round-trip back to a m/z within the window.
         var (start, end) = sl.SonarMzToBinRange(precursorMz: 600.0, tolerance: 1.0);
         Assert.IsTrue(start >= 0 && end >= start, $"expected valid bin range, got ({start},{end})");
-
         int midBin = (start + end) / 2;
         double midMz = sl.SonarBinToPrecursorMz(midBin);
         Assert.IsTrue(Math.Abs(midMz - 600.0) < 5.0,
             $"bin {midBin} mapped to m/z {midMz}, expected ~600 ± 5");
-    }
 
-    [TestMethod]
-    public void Sonar_OutOfRangeQuery_ReturnsSentinel()
-    {
-        var sl = Open("SONAR_Short.raw");
-        // Way above any plausible SONAR calibration upper bound.
-        var (start, end) = sl.SonarMzToBinRange(precursorMz: 100000.0, tolerance: 0.1);
-        Assert.AreEqual(-1, start);
-        Assert.AreEqual(-1, end);
+        // Out-of-range query: SONAR scan range can't reach 100k m/z — both ends should be -1.
+        var (oobStart, oobEnd) = sl.SonarMzToBinRange(precursorMz: 100000.0, tolerance: 0.1);
+        Assert.AreEqual(-1, oobStart);
+        Assert.AreEqual(-1, oobEnd);
     }
 }
