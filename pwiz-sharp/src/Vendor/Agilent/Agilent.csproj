@@ -61,16 +61,24 @@
        Sequencing: AfterTargets="ExtractAgilentAssemblies" guarantees the SDK exists before
        we touch it; BeforeTargets="ResolveAssemblyReferences" makes the patched files visible
        to the reference-copy step that follows. We don't bother with Inputs/Outputs because
-       the patcher is fast (~1s) and the .prepatched-backed idempotency makes re-runs safe. -->
+       the patcher is fast (~1s) and the .prepatched-backed idempotency makes re-runs safe.
+
+       WorkingDirectory: the child `dotnet run` starts SDK resolution from its own cwd.
+       The outer build can run from above pwiz-sharp/ (e.g. CI invoking msbuild from the
+       repo root), in which case the child wouldn't see pwiz-sharp/global.json and would
+       pick whatever SDK is installed (10.x on the build agent — broken for the patcher's
+       net8.0 target). Anchoring the cwd inside pwiz-sharp/ so global.json applies. -->
   <PropertyGroup>
     <AgilentPatcherProj>$(MSBuildThisFileDirectory)..\..\..\build\AgilentPatcher\AgilentPatcher.csproj</AgilentPatcherProj>
+    <PwizSharpRoot>$(MSBuildThisFileDirectory)..\..\..</PwizSharpRoot>
   </PropertyGroup>
   <Target Name="PatchAgilentBeginInvoke"
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           AfterTargets="ExtractAgilentAssemblies"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths">
     <Message Importance="high" Text="Cecil-patching Agilent SDK (BaseDataAccess.dll, BaseCommon.dll) to remove BeginInvoke/EndInvoke." />
-    <Exec Command="dotnet run --project &quot;$(AgilentPatcherProj)&quot; -c Release -- &quot;$(AgilentAssembliesDir)&quot;" />
+    <Exec Command="dotnet run --project &quot;$(AgilentPatcherProj)&quot; -c Release -- &quot;$(AgilentAssembliesDir)&quot;"
+          WorkingDirectory="$(PwizSharpRoot)" />
   </Target>
 
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
