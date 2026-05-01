@@ -39,8 +39,10 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestConvertToStorageType()
         {
+            // Boxing a Nullable<T> with HasValue produces a boxed T, so assert
+            // against the underlying value type rather than the nullable wrapper.
             var nullableDateTime = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTime?));
-            Assert.IsInstanceOfType(nullableDateTime, typeof(DateTime?));
+            Assert.IsInstanceOfType(nullableDateTime, typeof(DateTime));
             var nullableFloat = ParquetReportExporter.ConvertToStorageType(1f, typeof(float?));
             Assert.IsInstanceOfType(nullableFloat, typeof(float?));
         }
@@ -62,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
             RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items),
                 rowItemExporter, new SilentProgressMonitor(), ref status);
             stream.Position = 0;
-            using var reader = ParquetReader.CreateAsync(stream).Result;
+            using var reader = ParquetReader.CreateAsync(stream).ConfigureAwait(false).GetAwaiter().GetResult();
             Assert.AreEqual(1, reader.Schema.Fields.Count);
         }
 
