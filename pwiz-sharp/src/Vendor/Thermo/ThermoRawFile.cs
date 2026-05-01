@@ -14,14 +14,22 @@ namespace Pwiz.Vendor.Thermo;
 /// </summary>
 public sealed class ThermoRawFile : IDisposable
 {
-    private readonly IRawFileThreadManager _manager;
+    // Mutable so Dispose() can null them out — the cpp `gcroot<>::reset()` equivalent.
+    // The Thermo SDK's IRawDataPlus / IRawFileThreadManager hold the native file handle
+    // through a CLR finalizer; just calling Dispose() on them isn't enough to release the
+    // file lock. We need (a) Dispose them, (b) drop our managed references so the GC can
+    // reach the SDK objects, (c) GC.Collect to run their finalizers. Without (b), the
+    // SDK objects stay rooted via this ThermoRawFile (which the SpectrumList_Thermo /
+    // ChromatogramList_Thermo wrappers keep alive), so GC.Collect can't reap them.
+    private IRawFileThreadManager? _manager;
+    private IRawDataPlus? _raw;
     private bool _disposed;
 
     public string Filename { get; }
-    public IRawDataPlus Raw { get; }
+    public IRawDataPlus Raw =>
+        _raw ?? throw new ObjectDisposedException(nameof(ThermoRawFile));
     public int FirstScan { get; }
     public int LastScan { get; }
-    public int ScanCount => LastScan - FirstScan + 1;
     public string RunId { get; }
     public string CreationDate { get; }
 
@@ -33,8 +41,8 @@ public sealed class ThermoRawFile : IDisposable
         Filename = filename;
 
         _manager = RawFileReaderAdapter.ThreadedFileFactory(filename);
-        Raw = _manager.CreateThreadAccessor();
-        Raw.IncludeReferenceAndExceptionData = true;
+        _raw = _manager.CreateThreadAccessor();
+        _raw.IncludeReferenceAndExceptionData = true;
 
         if (Raw.IsError)
             throw new InvalidDataException($"Thermo RAW file reports IsError: {filename}");
@@ -83,9 +91,6 @@ public sealed class ThermoRawFile : IDisposable
             _ => 1,
         };
     }
-
-    public string FilterString(int scanNumber) =>
-        Raw.GetFilterForScanNumber(scanNumber)?.ToString() ?? string.Empty;
 
     /// <summary>Diagnostic: dump trailer key/value pairs matching one of the given substrings.</summary>
     public string DebugDumpTrailers(int scanNumber, params string[] labelSubstrings)
@@ -391,6 +396,32 @@ public sealed class ThermoRawFile : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        _manager.Dispose();
+
+        // Mirror pwiz cpp's RawFileImpl::~RawFileImpl() x64 path (RawFile.cpp:400):
+        //
+        //     raw_.reset();           // drop the gcroot to IRawDataPlus
+        //     rawManager_.reset();    // drop the gcroot to IRawFileThreadManager
+        //     System::GC::Collect();  // run their finalizers synchronously
+        //
+        // Step 1: explicitly Dispose the SDK objects (in case the SDK closes the file
+        // synchronously on Dispose; some Thermo SDK versions do, some don't).
+        if (_raw is IDisposable rawDisposable)
+            try { rawDisposable.Dispose(); } catch { }
+        if (_manager is IDisposable mgrDisposable)
+            try { mgrDisposable.Dispose(); } catch { }
+
+        // Step 2: drop our managed references — this matches cpp's `gcroot::reset()`. After
+        // this, the SDK objects have no path back through us. If the SDK doesn't keep them
+        // in a static cache, they're now unreachable and can be finalized.
+        _raw = null;
+        _manager = null;
+
+        // Step 3: force the GC + finalizer cycle. The Thermo SDK on .NET 8 closes its
+        // native file handle in the IRawDataPlus / IRawFileThreadManager finalizer; without
+        // GC.Collect the .raw stays locked until the next "natural" GC pass, which can be
+        // arbitrarily delayed.
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
     }
 }

@@ -4,9 +4,10 @@ namespace Pwiz.Data.MsData.Spectra;
 
 /// <summary>
 /// Read-only access to a (possibly file-backed) collection of chromatograms.
-/// Port of pwiz::msdata::ChromatogramList.
+/// Port of pwiz::msdata::ChromatogramList. Implementations holding native handles override
+/// <see cref="IDisposable.Dispose"/>.
 /// </summary>
-public interface IChromatogramList
+public interface IChromatogramList : IDisposable
 {
     /// <summary>Number of chromatograms in the list.</summary>
     int Count { get; }
@@ -77,6 +78,21 @@ public abstract class ChromatogramListBase : IChromatogramList
         if (_warned.Add(hash))
             Console.Error.WriteLine(message);
     }
+
+    // Idempotent disposal — same pattern as SpectrumListBase.
+    private bool _disposed;
+
+    /// <summary>Idempotent disposal. Runs <see cref="DisposeCore"/> exactly once.</summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        DisposeCore();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>Subclasses with native handles override this to release them.</summary>
+    protected virtual void DisposeCore() { }
 }
 
 /// <summary>

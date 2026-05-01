@@ -164,6 +164,23 @@ public sealed class Spectrum : SpectrumIdentity
         BinaryDataArrays.Add(arr);
         return arr;
     }
+
+    // ----- cpp/CLI-shaped pass-throughs to Params -----
+    // SeeMS and other downstream code spell these on the Spectrum directly (no .Params.
+    // middle accessor). The pwiz-sharp idiom is via .Params; both shapes are supported.
+
+    /// <inheritdoc cref="ParamContainer.CvParam(CVID)"/>
+    public CVParam CvParam(CVID cvid) => Params.CvParam(cvid);
+    /// <inheritdoc cref="ParamContainer.CvParamChild(CVID)"/>
+    public CVParam CvParamChild(CVID cvid) => Params.CvParamChild(cvid);
+    /// <inheritdoc cref="ParamContainer.CvParamChildren(CVID)"/>
+    public List<CVParam> CvParamChildren(CVID cvid) => Params.CvParamChildren(cvid);
+    /// <inheritdoc cref="ParamContainer.HasCVParam(CVID)"/>
+    public bool HasCVParam(CVID cvid) => Params.HasCVParam(cvid);
+    /// <inheritdoc cref="ParamContainer.HasCVParamChild(CVID)"/>
+    public bool HasCVParamChild(CVID cvid) => Params.HasCVParamChild(cvid);
+    /// <inheritdoc cref="ParamContainer.UserParam(string)"/>
+    public UserParam UserParam(string name) => Params.UserParam(name);
 }
 
 /// <summary>Identifying metadata for a chromatogram. Port of pwiz::msdata::ChromatogramIdentity.</summary>
@@ -222,12 +239,27 @@ public sealed class Chromatogram : ChromatogramIdentity
     /// <summary>Returns the intensity binary array (<see cref="CVID.MS_intensity_array"/>), or null.</summary>
     public BinaryDataArray? GetIntensityArray() => GetArrayByCvid(CVID.MS_intensity_array);
 
-    private BinaryDataArray? GetArrayByCvid(CVID arrayType)
+    /// <summary>Returns the first binary array tagged with <paramref name="arrayType"/>, or null.</summary>
+    public BinaryDataArray? GetArrayByCvid(CVID arrayType)
     {
         foreach (var arr in BinaryDataArrays)
             if (arr.HasCVParam(arrayType)) return arr;
         return null;
     }
+
+    // ----- cpp/CLI-shaped pass-throughs to Params (see Spectrum equivalents) -----
+    /// <inheritdoc cref="ParamContainer.CvParam(CVID)"/>
+    public CVParam CvParam(CVID cvid) => Params.CvParam(cvid);
+    /// <inheritdoc cref="ParamContainer.CvParamChild(CVID)"/>
+    public CVParam CvParamChild(CVID cvid) => Params.CvParamChild(cvid);
+    /// <inheritdoc cref="ParamContainer.CvParamChildren(CVID)"/>
+    public List<CVParam> CvParamChildren(CVID cvid) => Params.CvParamChildren(cvid);
+    /// <inheritdoc cref="ParamContainer.HasCVParam(CVID)"/>
+    public bool HasCVParam(CVID cvid) => Params.HasCVParam(cvid);
+    /// <inheritdoc cref="ParamContainer.HasCVParamChild(CVID)"/>
+    public bool HasCVParamChild(CVID cvid) => Params.HasCVParamChild(cvid);
+    /// <inheritdoc cref="ParamContainer.UserParam(string)"/>
+    public UserParam UserParam(string name) => Params.UserParam(name);
 
     /// <summary>Copies time and intensity arrays into a flat list of <see cref="TimeIntensityPair"/>.</summary>
     public void GetTimeIntensityPairs(List<TimeIntensityPair> output)

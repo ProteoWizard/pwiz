@@ -22,7 +22,7 @@ namespace Pwiz.Vendor.Agilent;
 /// Skipped: ion-mobility frames (MIDAC), non-MS UV/DAD spectra, all-ions scan promotion. Each is
 /// a follow-up port; current scope covers the bulk of Q-TOF / TQ files.
 /// </remarks>
-public sealed class SpectrumList_Agilent : SpectrumListBase, IDisposable
+public sealed class SpectrumList_Agilent : SpectrumListBase
 {
     private readonly AgilentRawData _raw;
     private readonly bool _ownsRaw;
@@ -314,8 +314,9 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IDisposable
     };
 
     /// <inheritdoc/>
-    public void Dispose()
+    protected override void DisposeCore()
     {
         if (_ownsRaw) _raw.Dispose();
+        base.DisposeCore();
     }
 }

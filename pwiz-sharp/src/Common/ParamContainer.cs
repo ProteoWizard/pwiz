@@ -9,6 +9,15 @@ namespace Pwiz.Data.Common.Params;
 /// </summary>
 public class ParamContainer : IEquatable<ParamContainer>
 {
+    /// <summary>
+    /// Returns this container itself. Lets cpp/CLI-shaped client code that goes through
+    /// <c>x.Params.CvParam(...)</c> work uniformly across types — Spectrum and Chromatogram
+    /// hold a separate <c>Params</c> <see cref="ParamContainer"/> while Precursor / SelectedIon /
+    /// Scan / IsolationWindow / ScanWindow / ScanList / ProcessingMethod inherit directly from
+    /// this class. This self-referential property makes both shapes behave the same.
+    /// </summary>
+    public ParamContainer Params => this;
+
     /// <summary>References to ParamGroups defined elsewhere in the document.</summary>
     public List<ParamGroup> ParamGroups { get; } = new();
 

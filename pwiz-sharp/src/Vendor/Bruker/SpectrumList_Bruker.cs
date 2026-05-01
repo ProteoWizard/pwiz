@@ -15,7 +15,7 @@ namespace Pwiz.Vendor.Bruker;
 /// Port of pwiz::msdata::SpectrumList_Bruker. The vendor-agnostic split mirrors the C++ split
 /// between <c>SpectrumList_Bruker</c> and <c>CompassData</c>.
 /// </remarks>
-public sealed class SpectrumList_Bruker : SpectrumListBase, IDisposable, IVendorCentroidingSpectrumList
+public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSpectrumList
 {
     private readonly IBrukerData _data;
     private readonly IReadOnlyList<BrukerIndexEntry> _index;
@@ -84,8 +84,9 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IDisposable, IVendor
     }
 
     /// <inheritdoc/>
-    public void Dispose()
+    protected override void DisposeCore()
     {
         if (_owns) _data.Dispose();
+        base.DisposeCore();
     }
 }

@@ -7,8 +7,12 @@ using Pwiz.Data.MsData.Spectra;
 namespace Pwiz.Data.MsData;
 
 /// <summary>A single coherent run: spectra + chromatograms + default references.</summary>
-/// <remarks>Port of pwiz::msdata::Run.</remarks>
-public sealed class Run : ParamContainer
+/// <remarks>
+/// Port of pwiz::msdata::Run. Implements <see cref="IDisposable"/> so the SpectrumList /
+/// ChromatogramList (which may hold native vendor handles) get released when the enclosing
+/// <see cref="MSData"/> is disposed.
+/// </remarks>
+public sealed class Run : ParamContainer, IDisposable
 {
     /// <summary>Unique id for this run.</summary>
     public string Id { get; set; } = string.Empty;
@@ -41,4 +45,11 @@ public sealed class Run : ParamContainer
         && SpectrumList is null
         && ChromatogramList is null
         && base.IsEmpty;
+
+    /// <summary>Disposes the <see cref="SpectrumList"/> and <see cref="ChromatogramList"/>.</summary>
+    public void Dispose()
+    {
+        SpectrumList?.Dispose();
+        ChromatogramList?.Dispose();
+    }
 }

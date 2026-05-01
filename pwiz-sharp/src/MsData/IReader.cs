@@ -88,6 +88,58 @@ public sealed class ReaderConfig
     /// </summary>
     public List<MzMobilityWindow> IsolationMzAndMobilityFilter { get; set; } = new();
 
+    /// <summary>
+    /// When true, profile-mode peaks whose intensity is exactly zero are dropped from the
+    /// emitted m/z and intensity arrays. Some vendors emit zero-intensity flanking points
+    /// around real peaks; downstream tools (and SeeMS) prefer the trimmed form. Port of
+    /// <c>pwiz::msdata::Reader::Config::ignoreZeroIntensityPoints</c>.
+    /// </summary>
+    /// <remarks>
+    /// This flag is currently advisory: it round-trips through <see cref="ReaderConfig"/> but
+    /// no pwiz-sharp reader acts on it yet. The downstream filter
+    /// <c>SpectrumList_ZeroSamplesFilter</c> (in <c>Pwiz.Analysis</c>) covers the common case
+    /// when applied via <c>--filter "zeroSamples removeExtra"</c>.
+    /// </remarks>
+    public bool IgnoreZeroIntensityPoints { get; set; }
+
+    /// <summary>
+    /// When true, spectra with zero peaks survive into the output instead of being dropped.
+    /// Default false matches pwiz cpp's behavior of suppressing the empty-payload spectra
+    /// vendor SDKs sometimes emit at the start/end of an acquisition. Port of
+    /// <c>pwiz::msdata::Reader::Config::acceptZeroLengthSpectra</c>.
+    /// </summary>
+    /// <remarks>
+    /// Advisory like <see cref="IgnoreZeroIntensityPoints"/> — no pwiz-sharp reader currently
+    /// applies the filter. Round-tripping ensures SeeMS and msconvert-sharp can request it
+    /// today and behavior fills in as readers are upgraded.
+    /// </remarks>
+    public bool AcceptZeroLengthSpectra { get; set; }
+
+    /// <summary>
+    /// When true, MS2+ spectra without precursor info are kept rather than dropped. The
+    /// default (false) drops them, matching pwiz cpp. Port of
+    /// <c>pwiz::msdata::Reader::Config::allowMsMsWithoutPrecursor</c>.
+    /// </summary>
+    /// <remarks>
+    /// Advisory like the two above — round-tripped through the API so callers (SeeMS,
+    /// msconvert-sharp) can pass it without the option silently disappearing.
+    /// </remarks>
+    public bool AllowMsMsWithoutPrecursor { get; set; }
+
+    /// <summary>
+    /// For multi-run input files (multi-sample WIFF, multi-run MGF), the zero-based run index
+    /// to load. Default 0 = first run. Port of pwiz cpp's <c>runIndex</c> parameter on
+    /// <c>MSDataFile::read</c> (carried as a config field here so it round-trips through
+    /// <see cref="IReader.Read"/> alongside the other reader-wide options).
+    /// </summary>
+    /// <remarks>
+    /// Multi-run support isn't wired into the pwiz-sharp readers yet; right now every reader
+    /// loads run 0. SeeMS's <c>MSDataRunPath</c> already parses <c>path:N</c> URIs into
+    /// (filename, RunIndex) so when multi-run vendor reads land, the SeeMS call sites already
+    /// pass through the correct index.
+    /// </remarks>
+    public int RunIndex { get; set; }
+
     /// <summary>Default configuration.</summary>
     public static ReaderConfig Default { get; } = new();
 }

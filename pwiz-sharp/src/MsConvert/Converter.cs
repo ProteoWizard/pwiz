@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO.Compression;
 using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
@@ -6,6 +7,7 @@ using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Mgf;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Readers;
+using Pwiz.Util.Misc;
 using Pwiz.Vendor.Bruker;
 using Pwiz.Vendor.Thermo;
 using Pwiz.Vendor.Waters;
@@ -76,7 +78,9 @@ public sealed class Converter
     {
         if (_config.Verbose) _log.WriteLine($"reading {input}");
 
-        var msd = ReadAndProcess(input);
+        // `using` releases native vendor handles (Thermo IRawFileThreadManager, Bruker timsdata,
+        // etc.) once the output is written.
+        using var msd = ReadAndProcess(input);
         WriteOutput(msd, BuildOutputPath(input));
     }
 
@@ -85,11 +89,13 @@ public sealed class Converter
         if (_config.InputFiles.Count == 0)
             throw new InvalidOperationException("--merge requires at least one input.");
         // Start from the first file; subsequent files contribute their spectra/chromatograms in order.
-        var merged = ReadAndProcess(_config.InputFiles[0]);
+        using var merged = ReadAndProcess(_config.InputFiles[0]);
         foreach (var extra in _config.InputFiles.Skip(1))
         {
             if (_config.Verbose) _log.WriteLine($"merging {extra}");
-            var next = ReadAndProcess(extra);
+            // MergeRun copies the source's spectra into a SpectrumListSimple on `merged`, so once
+            // the merge completes we can release `next`'s vendor handle immediately.
+            using var next = ReadAndProcess(extra);
             MergeRun(merged, next);
         }
         // Choose an output name: --outfile wins, otherwise the first input's basename.
@@ -142,22 +148,62 @@ public sealed class Converter
             outputFile += ".gz";
         if (_config.Verbose) _log.WriteLine($"writing {outputFile}");
 
+        // In verbose mode, attach a console listener to the writer so per-spectrum progress
+        // shows up on the log. Period of 100 so smallish files still show at least one line of
+        // intermediate progress (the registry always fires on the final iteration).
+        IterationListenerRegistry? registry = null;
+        if (_config.Verbose)
+        {
+            registry = new IterationListenerRegistry();
+            registry.AddListener(new ConsoleProgressListener(_log), iterationPeriod: 100);
+        }
+
         using Stream output = OpenOutputStream(outputFile);
         switch (_config.Format)
         {
             case OutputFormat.Mzml:
-                new MzmlWriter(_config.EncoderConfig) { Indexed = !_config.NoIndex }.Write(msd, output);
+                new MzmlWriter(_config.EncoderConfig)
+                {
+                    Indexed = !_config.NoIndex,
+                    IterationListenerRegistry = registry,
+                }.Write(msd, output);
                 break;
             case OutputFormat.MzXml:
-                new Pwiz.Data.MsData.MzXml.MzxmlWriter(_config.EncoderConfig) { Indexed = !_config.NoIndex }.Write(msd, output);
+                new Pwiz.Data.MsData.MzXml.MzxmlWriter(_config.EncoderConfig)
+                {
+                    Indexed = !_config.NoIndex,
+                    IterationListenerRegistry = registry,
+                }.Write(msd, output);
                 break;
             case OutputFormat.Mgf:
                 using (var tw = new StreamWriter(output))
-                    new MgfSerializer().Write(msd, tw);
+                    new MgfSerializer { IterationListenerRegistry = registry }.Write(msd, tw);
                 break;
             default:
                 throw new NotImplementedException(
                     $"Output format {_config.Format} is accepted by the CLI but not yet implemented in msconvert-sharp.");
+        }
+    }
+
+    /// <summary>
+    /// Console progress listener used by msconvert-sharp's <c>-v</c> mode. Writes one line per
+    /// delivery to the configured log sink (typically stderr).
+    /// </summary>
+    private sealed class ConsoleProgressListener : IIterationListener
+    {
+        private readonly TextWriter _out;
+
+        public ConsoleProgressListener(TextWriter logSink) => _out = logSink;
+
+        public IterationStatus Update(IterationUpdate message)
+        {
+            string line = message.IterationCount > 0
+                ? string.Format(CultureInfo.InvariantCulture, "  {0}: {1}/{2}",
+                    message.Message, message.IterationIndex + 1, message.IterationCount)
+                : string.Format(CultureInfo.InvariantCulture, "  {0}: {1}",
+                    message.Message, message.IterationIndex + 1);
+            _out.WriteLine(line);
+            return IterationStatus.Ok;
         }
     }
 

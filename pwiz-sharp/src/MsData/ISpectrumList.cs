@@ -4,9 +4,10 @@ namespace Pwiz.Data.MsData.Spectra;
 
 /// <summary>
 /// Read-only access to a (possibly file-backed, possibly lazy) collection of spectra.
-/// Port of pwiz::msdata::SpectrumList.
+/// Port of pwiz::msdata::SpectrumList. Implementations that hold native handles (vendor
+/// readers) override <see cref="IDisposable.Dispose"/> to release them.
 /// </summary>
-public interface ISpectrumList
+public interface ISpectrumList : IDisposable
 {
     /// <summary>Number of spectra in the list.</summary>
     int Count { get; }
@@ -129,6 +130,31 @@ public abstract class SpectrumListBase : ISpectrumList
         if (_warned.Add(hash))
             Console.Error.WriteLine(message);
     }
+
+    // ----- Disposal -----
+    //
+    // Idempotent: multiple Dispose calls are safe. The real cleanup runs once, in
+    // <see cref="DisposeCore"/>; subsequent calls are no-ops. Vendor lists holding native
+    // handles override <see cref="DisposeCore"/> to release them.
+
+    private bool _disposed;
+
+    /// <summary>
+    /// Idempotent disposal. Runs <see cref="DisposeCore"/> exactly once on the first call.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        DisposeCore();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Subclasses that hold native handles (vendor lists) override this to release them.
+    /// Default: no-op (in-memory lists have nothing to release).
+    /// </summary>
+    protected virtual void DisposeCore() { }
 }
 
 /// <summary>

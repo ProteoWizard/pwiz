@@ -16,7 +16,7 @@ namespace Pwiz.Vendor.Sciex;
 /// (legacy only). Works against the <see cref="AbstractWiffFile"/> abstraction so the same code path
 /// covers both formats.
 /// </summary>
-public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
+public sealed class ChromatogramList_Sciex : ChromatogramListBase
 {
     private readonly AbstractWiffFile _wiff;
     private readonly bool _ownsWiff;
@@ -366,8 +366,9 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase, IDisposable
     }
 
     /// <inheritdoc/>
-    public void Dispose()
+    protected override void DisposeCore()
     {
         if (_ownsWiff) _wiff.Dispose();
+        base.DisposeCore();
     }
 }

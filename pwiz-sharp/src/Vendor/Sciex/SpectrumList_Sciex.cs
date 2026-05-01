@@ -14,7 +14,7 @@ namespace Pwiz.Vendor.Sciex;
 /// spectrum per surviving cycle, sorted by RT across all experiments. Works against the
 /// <see cref="AbstractWiffFile"/> abstraction so a single code path covers both SDKs.
 /// </summary>
-public sealed class SpectrumList_Sciex : SpectrumListBase, IDisposable
+public sealed class SpectrumList_Sciex : SpectrumListBase
 {
     private readonly AbstractWiffFile _wiff;
     private readonly bool _ownsWiff;
@@ -238,8 +238,9 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IDisposable
     };
 
     /// <inheritdoc/>
-    public void Dispose()
+    protected override void DisposeCore()
     {
         if (_ownsWiff) _wiff.Dispose();
+        base.DisposeCore();
     }
 }

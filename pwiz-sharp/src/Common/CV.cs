@@ -53,6 +53,24 @@ public sealed class CVTermInfo
         IsObsolete = false,
     };
 
+    /// <summary>Default constructor — produces an "Unknown" term.</summary>
+    public CVTermInfo() { }
+
+    /// <summary>Convenience constructor: copies fields from <see cref="CvLookup.CvTermInfo(CVID)"/>.
+    /// Mirrors the cpp <c>new CVTermInfo(cvid)</c> idiom that SeeMS and other downstream code use.</summary>
+    public CVTermInfo(CVID cvid)
+    {
+        var src = CvLookup.CvTermInfo(cvid);
+        Cvid = src.Cvid;
+        Id = src.Id;
+        Name = src.Name;
+        Def = src.Def;
+        IsObsolete = src.IsObsolete;
+        ParentsIsA = src.ParentsIsA;
+        ParentsPartOf = src.ParentsPartOf;
+        OtherRelations = src.OtherRelations;
+    }
+
     /// <summary>The enum value.</summary>
     public CVID Cvid { get; set; } = CVID.CVID_Unknown;
 

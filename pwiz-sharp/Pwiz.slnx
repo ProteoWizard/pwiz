@@ -4,7 +4,10 @@
     <Project Path="src/Common/Common.csproj" />
     <Project Path="src/MsData/MsData.csproj" />
     <Project Path="src/MsConvert/MsConvert.csproj" />
+    <Project Path="src/MSGraph/MSGraph.csproj" />
+    <Project Path="src/SeeMS/SeeMS.csproj" />
     <Project Path="src/Util/Util.csproj" />
+    <Project Path="src/ZedGraph/ZedGraph.csproj" />
     <Project Path="src/TestHarness/TestHarness.csproj" />
     <Project Path="src/Vendor/Agilent/Agilent.csproj" />
     <Project Path="src/Vendor/Bruker/Bruker.csproj" />

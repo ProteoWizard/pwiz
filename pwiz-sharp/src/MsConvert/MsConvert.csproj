@@ -16,6 +16,7 @@
          by default; flip the runtimeconfig switch so the Sciex.Data.SDK can deserialize its
          bundled assembly resources. -->
     <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+    <UseWindowsForms>False</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -74,15 +75,9 @@
       <_SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\vendor-assemblies\Sciex</_SciexAssembliesDir>
     </PropertyGroup>
     <MakeDir Directories="$(OutputPath)wiff2" />
-    <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll"
-          DestinationFiles="$(OutputPath)wiff2\System.Data.SQLite.dll"
-          OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll"
-          DestinationFiles="$(OutputPath)wiff2\SQLite.Interop.dll"
-          OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll"
-          DestinationFiles="$(OutputPath)wiff2\Unity.Abstractions.dll"
-          OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll" DestinationFiles="$(OutputPath)wiff2\System.Data.SQLite.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll" DestinationFiles="$(OutputPath)wiff2\SQLite.Interop.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll" DestinationFiles="$(OutputPath)wiff2\Unity.Abstractions.dll" OverwriteReadOnlyFiles="true" />
   </Target>
 
 </Project>

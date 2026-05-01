@@ -28,7 +28,7 @@ namespace Pwiz.Vendor.Thermo;
 /// precursor isolation window + selected ion + charge + activation, ion injection time,
 /// mass resolving power, FAIMS CV, lowest/highest observed m/z, binary arrays.
 /// </remarks>
-public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendorCentroidingSpectrumList
+public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSpectrumList
 {
     private readonly ThermoRawFile _raw;
     private readonly bool _ownsRaw;
@@ -80,10 +80,6 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
     private readonly bool _simAsSpectra;
     private readonly bool _srmAsSpectra;
     private readonly Pwiz.Data.MsData.Instruments.InstrumentConfiguration? _pdaIc;
-
-    /// <summary>Creates a spectrum list over <paramref name="raw"/> with no IC binding.</summary>
-    public SpectrumList_Thermo(ThermoRawFile raw, bool ownsRaw = true, bool simAsSpectra = false, bool srmAsSpectra = false)
-        : this(raw, ownsRaw, null, null, simAsSpectra, srmAsSpectra, null) { }
 
     internal SpectrumList_Thermo(ThermoRawFile raw, bool ownsRaw,
         Pwiz.Data.MsData.Instruments.InstrumentConfiguration? defaultInstrumentConfiguration,
@@ -922,8 +918,10 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IDisposable, IVendor
         }
     }
 
-    public void Dispose()
+    /// <inheritdoc/>
+    protected override void DisposeCore()
     {
         if (_ownsRaw) _raw.Dispose();
+        base.DisposeCore();
     }
 }

@@ -3,6 +3,7 @@ using Pwiz.Analysis.Filters;
 using Pwiz.Analysis.PeakFilters;
 using Pwiz.Analysis.PeakPicking;
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Spectra;
 using Pwiz.Util.Chemistry;
 using Pwiz.Util.Misc;
@@ -63,6 +64,36 @@ public static class SpectrumListFactory
         foreach (var spec in filterSpecs)
             inner = Wrap(inner, spec);
         return inner;
+    }
+
+    /// <summary>
+    /// MSData-shaped overload that mirrors pwiz cpp's <c>SpectrumListFactory::wrap(MSData&amp;,
+    /// const vector&lt;string&gt;&amp;)</c>. Wraps <see cref="MSData.Run"/>'s spectrum list
+    /// in-place and promotes any new <c>DataProcessing</c> from filter wrappers to the
+    /// document-level <see cref="MSData.DataProcessings"/> list. Returns the (possibly new)
+    /// inner spectrum list — same return as the cpp factory.
+    /// </summary>
+    public static ISpectrumList Wrap(MSData msd, IList<string> filterSpecs)
+    {
+        ArgumentNullException.ThrowIfNull(msd);
+        ArgumentNullException.ThrowIfNull(filterSpecs);
+
+        var sl = msd.Run.SpectrumList;
+        if (sl is null) return null!;
+
+        sl = Wrap(sl, filterSpecs);
+        msd.Run.SpectrumList = sl;
+
+        // Promote any new DataProcessing record on the wrapped list to the top-level
+        // DataProcessings list (matches Converter.ReadAndProcess in pwiz-sharp's msconvert).
+        var wrappedDp = sl.DataProcessing;
+        if (wrappedDp is not null)
+        {
+            int existing = msd.DataProcessings.FindIndex(d => d.Id == wrappedDp.Id);
+            if (existing >= 0) msd.DataProcessings[existing] = wrappedDp;
+            else msd.DataProcessings.Add(wrappedDp);
+        }
+        return sl;
     }
 
     private static string NormalizeName(string s) => s.Trim().ToLowerInvariant();

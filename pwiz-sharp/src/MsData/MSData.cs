@@ -7,8 +7,12 @@ using Pwiz.Data.MsData.Samples;
 namespace Pwiz.Data.MsData;
 
 /// <summary>Root element: captures the mass-spec run, metadata, and all associated descriptors.</summary>
-/// <remarks>Port of pwiz::msdata::MSData.</remarks>
-public sealed class MSData
+/// <remarks>
+/// Port of pwiz::msdata::MSData. Implements <see cref="IDisposable"/> so vendor-backed
+/// SpectrumList / ChromatogramList native handles get released when callers wrap the
+/// document in a `using`. Disposal cascades to <see cref="Run"/> and from there to the lists.
+/// </remarks>
+public sealed class MSData : IDisposable
 {
     /// <summary>pwiz software version string, emitted into softwareList / dataProcessing entries.</summary>
     public const string PwizVersion = "3.0.26056";
@@ -65,6 +69,9 @@ public sealed class MSData
 
     /// <summary>Number of filters applied to this document.</summary>
     public int CountFiltersApplied() => _nFiltersApplied;
+
+    /// <summary>Disposes the run (and its spectrum / chromatogram lists).</summary>
+    public void Dispose() => Run.Dispose();
 
     /// <summary>True iff all metadata and the run are empty.</summary>
     public bool IsEmpty =>

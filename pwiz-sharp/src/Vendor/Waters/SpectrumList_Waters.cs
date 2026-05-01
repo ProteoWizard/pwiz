@@ -15,7 +15,7 @@ namespace Pwiz.Vendor.Waters;
 /// (or per drift bin when ion mobility is enabled). Phase 1 of the port: no IMS, no DDA, no
 /// lockmass. Mirrors pwiz C++ <c>SpectrumList_Waters</c>.
 /// </summary>
-public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendorCentroidingSpectrumList, IIonMobilityCcsConversion
+public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSpectrumList, IIonMobilityCcsConversion
 {
     private readonly WatersRawFile _data;
 
@@ -695,8 +695,9 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IDisposable, IVendor
         double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v);
 
     /// <inheritdoc/>
-    public void Dispose()
+    protected override void DisposeCore()
     {
         if (_owns) _data.Dispose();
+        base.DisposeCore();
     }
 }
