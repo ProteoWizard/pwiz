@@ -38,11 +38,15 @@ namespace pwiz.OspreySharp.IO
     /// gap-fill targets for the file, and the refined RT calibration.
     ///
     /// Mirrors <c>osprey/crates/osprey/src/reconciliation_io.rs</c>.
-    /// Field declaration order is alphabetical at every nesting level so
-    /// Newtonsoft's <c>Formatting.Indented</c> emits keys in alphabetical
-    /// order and matches Rust's <c>serde_json::to_writer_pretty</c> byte
-    /// for byte. Cross-impl byte parity is verified by a sibling test in
-    /// each language.
+    /// Field declaration order is alphabetical at every nesting level
+    /// (matches Rust). All <see cref="double"/> values are routed through
+    /// <see cref="RoundtripDoubleConverter"/> on this side and through a
+    /// matching custom <c>serde_json</c> formatter on the Rust side, so
+    /// every f64 is emitted as the same canonical fixed-point decimal
+    /// form on both runtimes — sidestepping the
+    /// Newtonsoft-<c>R</c>/Grisu vs. Rust-<c>ryu</c> threshold
+    /// disagreement on small values like <c>4.58e-5</c>. Cross-impl byte
+    /// parity is verified by a sibling test in each language.
     /// </summary>
     public class ReconciliationFile
     {
@@ -111,7 +115,11 @@ namespace pwiz.OspreySharp.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            string json = JsonConvert.SerializeObject(file, Formatting.Indented);
+            var settings = new JsonSerializerSettings
+            {
+                Converters = { new RoundtripDoubleConverter() },
+            };
+            string json = JsonConvert.SerializeObject(file, Formatting.Indented, settings);
             // Newtonsoft's Formatting.Indented emits CRLF on Windows by
             // default; normalize to LF so cross-impl byte parity with the
             // Rust side (which always emits LF via serde_json) holds. Also

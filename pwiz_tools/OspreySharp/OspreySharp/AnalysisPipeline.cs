@@ -759,18 +759,13 @@ namespace pwiz.OspreySharp
                     // companion was already written above pre-compaction).
                     // Pairs with the --join-at-pass=1 --no-join Stage 6
                     // worker mode (next sprint).
-                    //
-                    // NOTE on gap_fill_targets: the C# port of
-                    // IdentifyGapFillTargets is still pending (TODO
-                    // Priority 1.3). Until it lands, this side emits an
-                    // empty gap_fill_targets array, which means cross-
-                    // impl byte parity for reconciliation.json will fail
-                    // on that array alone — fdr_scores.bin and the rest
-                    // of the JSON should match.
                     WriteReconciliationFiles(
                         perFileEntries,
                         reconciliationActions,
+                        consensus,
                         refinedCalibrations,
+                        perFileCalibrations,
+                        fullLibrary,
                         perFileParquetPaths,
                         config);
 
@@ -1355,7 +1350,10 @@ namespace pwiz.OspreySharp
         private void WriteReconciliationFiles(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions,
+            IReadOnlyList<PeptideConsensusRT> consensus,
             Dictionary<string, RTCalibration> refinedCalibrations,
+            IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
+            List<LibraryEntry> fullLibrary,
             Dictionary<string, string> perFileParquetPaths,
             OspreyConfig config)
         {
@@ -1363,6 +1361,44 @@ namespace pwiz.OspreySharp
             string libraryHash = config.LibraryIdentityHash();
             var actions = reconciliationActions
                 ?? new Dictionary<(string File, int Index), ReconcileAction>();
+
+            // Build the (modified_sequence, charge) → (target_id, decoy_id)
+            // and entry_id → precursor_mz lookups from the library. Decoy
+            // ID convention: target_id | 0x80000000 (mirrors Rust at
+            // pipeline.rs:3330-3340).
+            var libLookup = new Dictionary<(string ModifiedSequence, byte Charge),
+                (uint TargetEntryId, uint DecoyEntryId)>();
+            var libPrecursorMz = new Dictionary<uint, double>();
+            foreach (var entry in fullLibrary)
+            {
+                if (entry.IsDecoy)
+                    continue;
+                uint decoyId = entry.Id | 0x80000000u;
+                libLookup[(entry.ModifiedSequence, entry.Charge)] = (entry.Id, decoyId);
+                libPrecursorMz[entry.Id] = entry.PrecursorMz;
+            }
+
+            // Compute per-file gap-fill targets. Per-file isolation-window
+            // m/z intervals are not yet plumbed through C# (Stellar
+            // calibration.json carries no isolation_scheme today, so the
+            // filter is a no-op there); when extended to GPF datasets,
+            // pass a non-null dictionary here.
+            var perFileForGapFill = new List<KeyValuePair<string,
+                IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+            foreach (var kvp in perFileEntries)
+            {
+                perFileForGapFill.Add(new KeyValuePair<string,
+                    IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+            }
+            var gapFillByFile = GapFillTargetIdentifier.Identify(
+                consensus,
+                perFileForGapFill,
+                refinedCalibrations,
+                perFileCalibrations,
+                config.Reconciliation.ConsensusFdr,
+                libLookup,
+                libPrecursorMz,
+                perFileIsolationMz: null);
 
             foreach (var kvp in perFileEntries)
             {
@@ -1377,8 +1413,12 @@ namespace pwiz.OspreySharp
                     continue;
                 }
                 string reconPath = ReconciliationFile.PathForInput(sidecarBase);
+                IReadOnlyList<GapFillTarget> fileGapFill;
+                if (!gapFillByFile.TryGetValue(fileName, out fileGapFill))
+                    fileGapFill = Array.Empty<GapFillTarget>();
                 var reconFile = BuildReconciliationFile(
-                    fileName, fileEntries, actions, refinedCalibrations, searchHash, libraryHash);
+                    fileName, fileEntries, actions, fileGapFill,
+                    refinedCalibrations, searchHash, libraryHash);
                 try
                 {
                     ReconciliationFile.Save(reconPath, reconFile);
@@ -1443,14 +1483,15 @@ namespace pwiz.OspreySharp
         /// per-file <see cref="ReconciliationFile"/> wire format: filter to
         /// this file's actions, resolve each Vec index to its entry_id,
         /// split non-Keep actions into homogeneous use_cwt_peak / forced
-        /// arrays, and snapshot the refined RT calibration. Gap-fill
-        /// targets are emitted as empty until the C# port of
-        /// IdentifyGapFillTargets lands.
+        /// arrays, snapshot the refined RT calibration, and emit the
+        /// gap-fill targets for this file (already sorted by
+        /// <c>target_entry_id</c> by the identifier).
         /// </summary>
         private static ReconciliationFile BuildReconciliationFile(
             string fileName,
             IReadOnlyList<FdrEntry> fileEntries,
             IReadOnlyDictionary<(string File, int Index), ReconcileAction> actions,
+            IReadOnlyList<GapFillTarget> gapFillTargets,
             Dictionary<string, RTCalibration> refinedCalibrations,
             string searchHash,
             string libraryHash)
@@ -1506,11 +1547,30 @@ namespace pwiz.OspreySharp
                 };
             }
 
+            // Map per-file GapFillTarget records (already sorted by
+            // target_entry_id) to the wire form. Field-for-field copy.
+            var gap = new List<GapFillEntry>(gapFillTargets?.Count ?? 0);
+            if (gapFillTargets != null)
+            {
+                foreach (var g in gapFillTargets)
+                {
+                    gap.Add(new GapFillEntry
+                    {
+                        Charge = g.Charge,
+                        DecoyEntryId = g.DecoyEntryId,
+                        ExpectedRt = g.ExpectedRt,
+                        HalfWidth = g.HalfWidth,
+                        ModifiedSequence = g.ModifiedSequence,
+                        TargetEntryId = g.TargetEntryId,
+                    });
+                }
+            }
+
             return new ReconciliationFile
             {
                 ForcedIntegrationActions = forced,
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
-                GapFillTargets = new List<GapFillEntry>(), // TODO: port IdentifyGapFillTargets
+                GapFillTargets = gap,
                 LibraryHash = libraryHash,
                 RefinedRtCalibration = refinedJson,
                 SearchHash = searchHash,
