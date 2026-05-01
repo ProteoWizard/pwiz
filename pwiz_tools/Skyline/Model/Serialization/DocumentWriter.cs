@@ -656,8 +656,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteStartElement(EL.transition_data);
                 var transitionData = new SkylineDocumentProto.Types.TransitionData();
                 transitionData.Transitions.AddRange(node.Transitions.Select(transition => transition.ToTransitionProto(Settings, nodePep, node)));
-                byte[] bytes = transitionData.ToByteArray();
-                writer.WriteString(Convert.ToBase64String(bytes));
+                WriteBase64(writer, transitionData.ToByteArray());
                 writer.WriteEndElement();
             }
             else
@@ -841,7 +840,7 @@ namespace pwiz.Skyline.Model.Serialization
                     protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
                     byte[] bytes = protoResults.ToByteArray();
                     writer.WriteStartElement(EL.results_data);
-                    writer.WriteString(Convert.ToBase64String(bytes));
+                    WriteBase64(writer, bytes);
                     writer.WriteEndElement();
                 }
                 else
@@ -1028,6 +1027,12 @@ namespace pwiz.Skyline.Model.Serialization
             }
             if (started)
                 writer.WriteEndElement();
+        }
+
+        private static void WriteBase64(XmlWriter writer, byte[] bytes)
+        {
+            // Avoid calling XmlWriter.WriteBase64String because XNodeBuilder implementation throws NotSupportedException
+            writer.WriteString(Convert.ToBase64String(bytes));
         }
 
         /// <summary>
