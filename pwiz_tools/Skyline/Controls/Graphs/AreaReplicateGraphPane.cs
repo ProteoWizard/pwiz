@@ -1056,7 +1056,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!YAxis.Scale.MaxAuto && YAxis.Scale.Max == 100)
                     YAxis.Scale.MaxAuto = true;
             }
-            Legend.IsVisible = !IsMultiSelect && Settings.Default.ShowPeakAreaLegend;
+            Legend.IsVisible = (!IsMultiSelect || AreaGraphController.AreaGraphMultiPeptideDisplay ==
+                MultiPeptideDisplay.Cluster) && Settings.Default.ShowPeakAreaLegend;
             RemoveInvalidPointValues();
             AxisChange();
 
