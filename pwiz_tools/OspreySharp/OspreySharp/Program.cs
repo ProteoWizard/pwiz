@@ -96,7 +96,7 @@ namespace pwiz.OspreySharp
                     }
                 }
 
-                string normErr = NormalizeHpcArgs(joinAtPass, ref noJoinFlag, ref joinOnlyFlag);
+                string normErr = NormalizeHpcArgs(joinAtPass, ref noJoinFlag, ref joinOnlyFlag, out bool joinOnlyModifier);
                 if (normErr != null)
                 {
                     LogError(normErr);
@@ -104,7 +104,8 @@ namespace pwiz.OspreySharp
                 }
 
                 OspreyConfig config = ParseArgs(args);
-                string err = ValidateArgs(config, noJoinFlag, joinOnlyFlag);
+                config.StopAfterStage5 = joinOnlyModifier;
+                string err = ValidateArgs(config, noJoinFlag, joinOnlyFlag, joinOnlyModifier);
                 if (err != null)
                 {
                     LogError(err);
@@ -526,18 +527,21 @@ namespace pwiz.OspreySharp
         /// fan-out. <c>--join-at-pass=1</c> selects the post-Stage-4 entry
         /// point; <c>--join-at-pass=2</c> the post-Stage-6 entry point.
         ///
-        /// PR 1 wires the rename only — combinations that need the
-        /// Stage 5 → Stage 6 boundary persistence (--join-at-pass=1 with
-        /// either modifier) error as "not yet implemented", and
-        /// --join-at-pass=2 errors the same way until the Stage 6 →
-        /// Stage 7 path lands. Mirrors normalize_hpc_args() in
-        /// osprey/src/main.rs.
+        /// Status (post-PR-2): --join-at-pass=1 with --join-only is now
+        /// supported and writes the Stage 5 → Stage 6 boundary file pair
+        /// before exiting. Plain --join-at-pass=1 (no modifier) runs
+        /// Stages 5-8 from a Stage-4-parquet entry point. The remaining
+        /// "not yet implemented" combinations are --join-at-pass=1 with
+        /// --no-join (Stage 6 worker mode) and --join-at-pass=2. Mirrors
+        /// normalize_hpc_args() in osprey/src/main.rs.
         ///
         /// Returns null on success, or an error message string on failure.
         /// Internal so OspreySharp.Test can exercise it.
         /// </summary>
-        internal static string NormalizeHpcArgs(int? joinAtPass, ref bool noJoinFlag, ref bool joinOnlyFlag)
+        internal static string NormalizeHpcArgs(int? joinAtPass, ref bool noJoinFlag, ref bool joinOnlyFlag, out bool joinOnlyModifier)
         {
+            joinOnlyModifier = false;
+
             // Modifiers are mutually exclusive: can't be both per-file-only
             // and join-only simultaneously.
             if (noJoinFlag && joinOnlyFlag)
@@ -563,14 +567,17 @@ namespace pwiz.OspreySharp
             switch (joinAtPass.Value)
             {
                 case 1:
-                    // PR 2 will implement these modifier combinations
-                    // against persisted Stage 5 → Stage 6 boundary files.
-                    if (joinOnlyFlag)
-                        return "--join-at-pass=1 --join-only (run only Stage 5) is not yet implemented.";
                     if (noJoinFlag)
                         return "--join-at-pass=1 --no-join (run only Stage 6 from persisted Stage 5 outputs) is not yet implemented.";
-                    // Plain --join-at-pass=1: route through the existing
-                    // Stage 5+ entry path that reads joinOnlyFlag.
+                    // `--join-at-pass=1 --join-only` (modifier present) means
+                    // "run only the Stage 5 join phase, write boundary
+                    // files, exit before Stage 6 rescore." Plain
+                    // `--join-at-pass=1` (no modifier) runs Stages 5-8.
+                    // In both cases joinOnlyFlag drives the existing Stage
+                    // 5+ entry path; the modifier-vs-plain distinction is
+                    // captured separately for the post-planning early
+                    // exit decision.
+                    joinOnlyModifier = joinOnlyFlag;
                     joinOnlyFlag = true;
                     return null;
                 case 2:
@@ -586,7 +593,8 @@ namespace pwiz.OspreySharp
         /// message string on failure. Does not log warnings (those stay in
         /// <see cref="Main"/>). Internal so OspreySharp.Test can exercise it.
         /// </summary>
-        internal static string ValidateArgs(OspreyConfig config, bool noJoinFlag, bool joinOnlyFlag)
+        internal static string ValidateArgs(OspreyConfig config, bool noJoinFlag, bool joinOnlyFlag,
+            bool joinOnlyModifier)
         {
             if (noJoinFlag && joinOnlyFlag)
                 return "--no-join and --join-only are mutually exclusive.";
@@ -613,6 +621,26 @@ namespace pwiz.OspreySharp
                     return "--join-at-pass=1 cannot be combined with --input. Use --input-scores instead.";
                 if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
                     return "--join-at-pass=1 requires --library and --output.";
+                // `--join-at-pass=1 --join-only` (modifier present) writes the
+                // Stage 5 → Stage 6 boundary file pair, which is only
+                // meaningful when (a) there are siblings to reconcile against
+                // and (b) reconciliation is enabled. Reject early — running
+                // Stages 1-5 only to silently produce nothing useful (or to
+                // fall through to Stage 8 in single-file misconfigurations)
+                // is worse than failing fast with a clear message.
+                if (joinOnlyModifier)
+                {
+                    if (config.InputScores.Count < 2)
+                        return string.Format(
+                            "--join-at-pass=1 --join-only requires --input-scores with 2+ parquet files " +
+                            "(got {0}). The Stage 5 → Stage 6 boundary file pair is only meaningful for " +
+                            "multi-file fan-back-in.",
+                            config.InputScores.Count);
+                    if (!config.Reconciliation.Enabled)
+                        return "--join-at-pass=1 --join-only requires Reconciliation.Enabled = true " +
+                               "(got false from config). The Stage 5 → Stage 6 boundary file pair is " +
+                               "only meaningful when reconciliation runs.";
+                }
                 return null;
             }
 
