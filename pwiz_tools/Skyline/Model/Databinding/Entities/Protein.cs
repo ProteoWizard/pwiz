@@ -232,45 +232,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return new Dictionary<int, AbundanceValue>();
             }
 
-            var quantifiers = Peptides.Select(peptide => peptide.GetPeptideQuantifier()).ToList();
-            int replicateCount = SrmDocument.Settings.HasResults
-                ? SrmDocument.Settings.MeasuredResults.Chromatograms.Count : 0;
-            var srmSettings = SrmDocument.Settings;
-            var replicateQuantities = new List<Dictionary<IdentityPath, PeptideQuantifier.Quantity>>();
-            for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
-            {
-                var quantities = new Dictionary<IdentityPath, PeptideQuantifier.Quantity>();
-                foreach (var peptideQuantifier in quantifiers)
-                {
-                    foreach (var entry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, iReplicate,
-                                 false))
-                    {
-                        quantities.Add(entry.Key, entry.Value);
-                    }
-                }
-                replicateQuantities.Add(quantities);
-            }
-
-            var allTransitionIdentityPaths = replicateQuantities
-                .SelectMany(dict => dict.Where(kvp => !kvp.Value.Truncated).Select(kvp => kvp.Key)).ToHashSet();
-            if (allTransitionIdentityPaths.Count == 0)
-            {
-                allTransitionIdentityPaths = replicateQuantities.SelectMany(dict => dict.Keys).ToHashSet();
-            }
-
-            var proteinAbundanceRecords = new Dictionary<int, AbundanceValue>();
-            for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
-            {
-                var rawAbundance = PeptideQuantifier.SumTransitionQuantities(allTransitionIdentityPaths, replicateQuantities[iReplicate],
-                    srmSettings.PeptideSettings.Quantification);
-                if (rawAbundance != null)
-                {
-                    int quantityCount = replicateQuantities[iReplicate].Keys.Intersect(allTransitionIdentityPaths)
-                        .Count();
-                    proteinAbundanceRecords[iReplicate] = new AbundanceValue(rawAbundance.Raw, rawAbundance.Raw * quantityCount, rawAbundance.Message);
-                }
-            }
-            return proteinAbundanceRecords;
+            var peptideQuantifiers = Peptides.Select(peptide => peptide.GetPeptideQuantifier());
+            return new ProteinQuantifier(SrmDocument.Settings, peptideQuantifiers).CalculateProteinAbundances();
         }
 
 #pragma warning disable CS0612 // Type or member is obsolete
@@ -349,7 +312,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 #pragma warning restore CS0612 // Type or member is obsolete
-        private class CachedValues 
+        private class CachedValues
             : CachedValues<Protein, ImmutableList<Peptide>, IDictionary<ResultKey, ProteinResult>, IDictionary<int, AbundanceValue>>
         {
             protected override SrmDocument GetDocument(Protein owner)

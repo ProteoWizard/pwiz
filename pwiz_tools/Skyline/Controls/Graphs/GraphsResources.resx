@@ -244,6 +244,15 @@
   <data name="AreaReplicateGraphPane_UpdateGraph_Step__0_" xml:space="preserve">
     <value>Step {0}</value>
   </data>
+  <data name="AreaReplicateGraphPane_UpdateGraph_Aggregated_Abundance" xml:space="preserve">
+    <value>Aggregated Abundance</value>
+  </data>
+  <data name="AreaReplicateGraphPane_YAxis_Protein_Abundance" xml:space="preserve">
+    <value>Protein Abundance</value>
+  </data>
+  <data name="AreaReplicateGraphPane_YAxis_Protein_Abundance_From__0__Peptides" xml:space="preserve">
+    <value>Protein Abundance From {0} Peptides</value>
+  </data>
   <data name="AreaReplicateGraphPane_Tooltip_Total" xml:space="preserve">
     <value>Total:</value>
   </data>
@@ -380,6 +389,27 @@
   <data name="Extensions_CustomToString__2D_Histogram" xml:space="preserve">
     <value>2D Histogram</value>
   </data>
+  <data name="AreaRtLoessGraphPane_Global_Median" xml:space="preserve">
+    <value>Global Median</value>
+  </data>
+  <data name="AreaRtLoessGraphPane_Log2_Abundance" xml:space="preserve">
+    <value>Log2 Abundance</value>
+  </data>
+  <data name="AreaRtLoessGraphPane_Log2_Adjustment" xml:space="preserve">
+    <value>Log2 Adjustment</value>
+  </data>
+  <data name="AreaRtLoessGraphPane_No_RT_LOESS_Data" xml:space="preserve">
+    <value>No RT LOESS data available</value>
+  </data>
+  <data name="AreaRtLoessGraphPane_Retention_Time__min_" xml:space="preserve">
+    <value>Retention Time (min)</value>
+  </data>
+  <data name="AreaRtLoessGraphPane_RT_LOESS_Curves" xml:space="preserve">
+    <value>RT LOESS Curves</value>
+  </data>
+  <data name="AreaRtLoessGraphPane_RT_LOESS_Curves_Normalized" xml:space="preserve">
+    <value>RT LOESS Curves (Normalized)</value>
+  </data>
   <data name="Extensions_CustomToString_CV_2D_Histogram" xml:space="preserve">
     <value>CV 2D Histogram</value>
   </data>
@@ -400,6 +430,9 @@
   </data>
   <data name="Extensions_CustomToString_Replicate_Comparison" xml:space="preserve">
     <value>Replicate Comparison</value>
+  </data>
+  <data name="Extensions_CustomToString_RT_LOESS_Curves" xml:space="preserve">
+    <value>RT LOESS Curves</value>
   </data>
   <data name="Extensions_CustomToString_Run_To_Run_Regression" xml:space="preserve">
     <value>Run To Run Regression</value>

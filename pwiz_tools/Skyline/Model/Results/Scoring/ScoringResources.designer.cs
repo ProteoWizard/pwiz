@@ -90,6 +90,15 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default sum coelution score.
+        /// </summary>
+        public static string DefaultSumCoelutionScoreCalc_Name_Default_sum_coelution_score {
+            get {
+                return ResourceManager.GetString("DefaultSumCoelutionScoreCalc_Name_Default_sum_coelution_score", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while training the peak scoring model: {0}.
         /// </summary>
         public static string ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_ {
@@ -546,6 +555,15 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         public static string PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores {
             get {
                 return ResourceManager.GetString("PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sum coelution score.
+        /// </summary>
+        public static string SumCoelutionScoreCalc_Name_Sum_coelution_score {
+            get {
+                return ResourceManager.GetString("SumCoelutionScoreCalc_Name_Sum_coelution_score", resourceCulture);
             }
         }
     }

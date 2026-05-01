@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static readonly GroupComparisonDef EMPTY = new GroupComparisonDef
         {
             NormalizationMethod = NormalizeOption.NONE,
-            SummarizationMethod = SummarizationMethod.AVERAGING,
+            SummarizationMethod = SummarizationMethod.DEFAULT_FROM_SETTINGS,
             ConfidenceLevelTimes100 = 95,
             ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY,
             MsLevel = MsLevelOption.ALL
@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public GroupComparisonDef(string name) : base(name)
         {
             NormalizationMethod = NormalizeOption.NONE;
-            SummarizationMethod = SummarizationMethod.AVERAGING;
+            SummarizationMethod = SummarizationMethod.DEFAULT_FROM_SETTINGS;
             ConfidenceLevelTimes100 = 95;
             ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY;
             MsLevel = MsLevelOption.ALL;
