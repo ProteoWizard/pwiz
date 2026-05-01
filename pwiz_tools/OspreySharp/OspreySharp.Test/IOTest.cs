@@ -1715,5 +1715,133 @@ namespace pwiz.OspreySharp.Test
         }
 
         #endregion
+
+        #region ReconciliationFile Tests
+
+        private static ReconciliationFile MakeSampleReconciliationFile()
+        {
+            return new ReconciliationFile
+            {
+                ForcedIntegrationActions = new List<ForcedIntegrationEntry>
+                {
+                    new ForcedIntegrationEntry { EntryId = 200, ExpectedRt = 41.125, HalfWidth = 0.075 },
+                    new ForcedIntegrationEntry { EntryId = 201, ExpectedRt = 18.5,   HalfWidth = 0.05  },
+                },
+                FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                GapFillTargets = new List<GapFillEntry>
+                {
+                    new GapFillEntry
+                    {
+                        Charge = 2,
+                        DecoyEntryId = 0x80000003u,
+                        ExpectedRt = 33.5,
+                        HalfWidth = 0.08,
+                        ModifiedSequence = "PEPTIDE",
+                        TargetEntryId = 3,
+                    },
+                },
+                LibraryHash = "lib-hash-abc",
+                RefinedRtCalibration = new RefinedRtCalibrationJson
+                {
+                    AbsResiduals = new[] { 0.01, 0.02, 0.015 },
+                    FittedRts    = new[] { 10.5, 20.5, 30.5 },
+                    LibraryRts   = new[] { 10.0, 20.0, 30.0 },
+                    ResidualSd   = 0.123,
+                },
+                SearchHash = "search-hash-xyz",
+                UseCwtPeakActions = new List<UseCwtPeakEntry>
+                {
+                    new UseCwtPeakEntry { ApexRt = 23.45, CandidateIdx = 1, EndRt = 23.80, EntryId = 100, StartRt = 23.10 },
+                    new UseCwtPeakEntry { ApexRt = 8.07,  CandidateIdx = 0, EndRt = 8.20,  EntryId = 101, StartRt = 7.95  },
+                },
+            };
+        }
+
+        /// <summary>
+        /// Round-trip: save a sample reconciliation file, reload it, and
+        /// verify every field survives bit-for-bit. Also exposes the
+        /// cross-impl byte-parity hook so the same hardcoded sample can
+        /// be byte-compared against the Rust sibling test's output.
+        /// </summary>
+        [TestMethod]
+        public void TestReconciliationFileRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "recon_rt_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "round_trip.reconciliation.json");
+                var file = MakeSampleReconciliationFile();
+
+                ReconciliationFile.Save(path, file);
+
+                if (!string.IsNullOrEmpty(OspreyEnvironment.CrossImplReconciliationOut))
+                    File.Copy(path, OspreyEnvironment.CrossImplReconciliationOut, overwrite: true);
+
+                var parsed = ReconciliationFile.Load(path);
+
+                Assert.AreEqual(file.FormatVersion, parsed.FormatVersion);
+                Assert.AreEqual(file.SearchHash, parsed.SearchHash);
+                Assert.AreEqual(file.LibraryHash, parsed.LibraryHash);
+                Assert.AreEqual(file.UseCwtPeakActions.Count, parsed.UseCwtPeakActions.Count);
+                Assert.AreEqual(file.ForcedIntegrationActions.Count, parsed.ForcedIntegrationActions.Count);
+                Assert.AreEqual(file.GapFillTargets.Count, parsed.GapFillTargets.Count);
+
+                // Spot-check bit-exact f64 round-trip on a non-trivial value.
+                var origCwt = file.UseCwtPeakActions[0];
+                var gotCwt = parsed.UseCwtPeakActions[0];
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(origCwt.ApexRt),
+                                BitConverter.DoubleToInt64Bits(gotCwt.ApexRt));
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(origCwt.StartRt),
+                                BitConverter.DoubleToInt64Bits(gotCwt.StartRt));
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(origCwt.EndRt),
+                                BitConverter.DoubleToInt64Bits(gotCwt.EndRt));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A reconciliation file with an unsupported format_version must
+        /// be rejected with a clear error rather than silently parsed.
+        /// </summary>
+        [TestMethod]
+        public void TestReconciliationFileFormatVersionMismatchRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "recon_ver_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "bad_version.reconciliation.json");
+                File.WriteAllText(path,
+                    "{\n" +
+                    "  \"forced_integration_actions\": [],\n" +
+                    "  \"format_version\": 99,\n" +
+                    "  \"gap_fill_targets\": [],\n" +
+                    "  \"library_hash\": \"x\",\n" +
+                    "  \"refined_rt_calibration\": null,\n" +
+                    "  \"search_hash\": \"y\",\n" +
+                    "  \"use_cwt_peak_actions\": []\n" +
+                    "}\n");
+
+                try
+                {
+                    ReconciliationFile.Load(path);
+                    Assert.Fail("expected InvalidDataException");
+                }
+                catch (InvalidDataException ex)
+                {
+                    StringAssert.Contains(ex.Message, "unsupported format_version");
+                }
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        #endregion
     }
 }

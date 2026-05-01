@@ -98,6 +98,14 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public static readonly string CrossImplFdrSidecarOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT");
 
+        /// <summary>
+        /// OSPREY_CROSS_IMPL_RECONCILIATION_OUT: same idea as
+        /// CrossImplFdrSidecarOut but for the per-file
+        /// .reconciliation.json boundary file. Test-only hook; never set
+        /// in production.
+        /// </summary>
+        public static readonly string CrossImplReconciliationOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
+
         private static int ParseIntOrZero(string name)
         {
             string v = Environment.GetEnvironmentVariable(name);
