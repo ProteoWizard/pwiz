@@ -22,9 +22,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.Colors;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Themes;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -95,7 +97,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var globalRtGrid = rtLoessCurves.GetGlobalMedianRtGrid();
             var globalFittedValues = rtLoessCurves.GetGlobalMedianFittedValues();
 
-            var colors = GraphChromatogram.COLORS_GROUPS;
+            var colors = ColorPalettes.LARGE_PALETTE;
             var curvesByReplicate = new Dictionary<int, List<RtLoessCurves.RtLoessCurveInfo>>();
             foreach (var curveInfo in rtLoessCurves.GetCurves())
             {
@@ -107,7 +109,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 list.Add(curveInfo);
             }
 
-            int iColor = 0;
+            int iColor = 1;
             var measuredResults = document.MeasuredResults;
             if (measuredResults != null)
             {
