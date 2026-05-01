@@ -176,8 +176,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 finally
                 {
-                    int n = Interlocked.Increment(ref processed);
-                    productionMonitor.SetProgress(n * 50 / moleculeCount);
+                    lock (rtAreaData)
+                    {
+                        processed++;
+                        productionMonitor.SetProgress(processed * 50 / moleculeCount);
+                    }
                 }
             });
             return rtAreaData;
@@ -220,48 +223,64 @@ namespace pwiz.Skyline.Model.GroupComparison
             int fileCount = Math.Max(1, rtAreaData.Count);
             int filesProcessed = 0;
 
-            foreach (var kvp in rtAreaData)
+            ParallelEx.ForEach(rtAreaData.Keys, key =>
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                productionMonitor.SetProgress(50 + filesProcessed++ * 50 / fileCount);
-                var points = kvp.Value;
-                if (points.Count < 20)
-                    continue;
-
-                // Downsample and sort by RT
-                var weightedPoints = points.Select(p => new WeightedPoint(p.RetentionTime, p.Log2Area)).ToList();
-                if (binCount > 0)
-                {
-                    weightedPoints = AlignmentTarget.DownsamplePoints(weightedPoints, binCount).ToList();
-                }
-                weightedPoints = weightedPoints.OrderBy(pt => pt.X).ToList();
-                if (weightedPoints.Count < 3)
-                    continue;
-
+                if (cancellationToken.IsCancellationRequested)
+                    return;
                 try
                 {
-                    var loess = new LoessInterpolator(
-                        Math.Max(LOESS_BANDWIDTH, 2.0 / weightedPoints.Count),
-                        LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS);
-                    var xArray = weightedPoints.Select(pt => pt.X).ToArray();
-                    var smoothed = loess.Smooth(xArray,
-                        weightedPoints.Select(pt => pt.Y).ToArray(),
-                        weightedPoints.Select(pt => pt.Weight).ToArray(),
-                        cancellationToken);
-                    // Interpolate onto grid
-                    var gridValues = new double[RT_GRID_POINTS];
-                    for (int i = 0; i < RT_GRID_POINTS; i++)
-                    {
-                        gridValues[i] = LoessInterpolator.Interpolate(rtGrid[i], xArray, smoothed);
-                    }
+                    var points = rtAreaData[key];
+                    if (points.Count < 20)
+                        return;
 
-                    allCurves[kvp.Key] = new LoessCurve(rtGrid, gridValues);
+                    // Downsample and sort by RT
+                    var weightedPoints = points.Select(p => new WeightedPoint(p.RetentionTime, p.Log2Area)).ToList();
+                    if (binCount > 0)
+                    {
+                        weightedPoints = AlignmentTarget.DownsamplePoints(weightedPoints, binCount).ToList();
+                    }
+                    weightedPoints = weightedPoints.OrderBy(pt => pt.X).ToList();
+                    if (weightedPoints.Count < 3)
+                        return;
+
+                    try
+                    {
+                        var loess = new LoessInterpolator(
+                            Math.Max(LOESS_BANDWIDTH, 2.0 / weightedPoints.Count),
+                            LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS);
+                        var xArray = weightedPoints.Select(pt => pt.X).ToArray();
+                        var smoothed = loess.Smooth(xArray,
+                            weightedPoints.Select(pt => pt.Y).ToArray(),
+                            weightedPoints.Select(pt => pt.Weight).ToArray(),
+                            cancellationToken);
+                        // Interpolate onto grid
+                        var gridValues = new double[RT_GRID_POINTS];
+                        for (int i = 0; i < RT_GRID_POINTS; i++)
+                        {
+                            gridValues[i] = LoessInterpolator.Interpolate(rtGrid[i], xArray, smoothed);
+                        }
+
+                        var fitted = new LoessCurve(rtGrid, gridValues);
+                        lock (allCurves)
+                        {
+                            allCurves[key] = fitted;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Skip files where LOWESS fitting fails
+                    }
                 }
-                catch (Exception)
+                finally
                 {
-                    // Skip files where LOWESS fitting fails
+                    lock (allCurves)
+                    {
+                        filesProcessed++;
+                        productionMonitor.SetProgress(50 + filesProcessed * 50 / fileCount);
+                    }
                 }
-            }
+            });
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (allCurves.Count == 0)
                 return EMPTY;
