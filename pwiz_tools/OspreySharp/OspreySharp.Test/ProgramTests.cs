@@ -181,7 +181,7 @@ namespace pwiz.OspreySharp.Test
         public void TestNormalizeJoinAtPass1MapsToJoinOnly()
         {
             bool noJoin = false, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly);
+            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
             Assert.IsNull(err);
             Assert.IsTrue(joinOnly, "joinOnly should be set to true so existing Stage 5+ path runs");
             Assert.IsFalse(noJoin);
@@ -191,7 +191,7 @@ namespace pwiz.OspreySharp.Test
         public void TestNormalizeJoinAtPass2ErrorsUntilImplemented()
         {
             bool noJoin = false, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 2, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly);
+            string err = Program.NormalizeHpcArgs(joinAtPass: 2, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "not yet implemented");
         }
@@ -200,19 +200,25 @@ namespace pwiz.OspreySharp.Test
         public void TestNormalizeJoinAtPassInvalidValueErrors()
         {
             bool noJoin = false, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 3, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly);
+            string err = Program.NormalizeHpcArgs(joinAtPass: 3, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "must be 1 or 2");
         }
 
         [TestMethod]
-        public void TestNormalizeJoinAtPass1WithJoinOnlyModifierErrorsUntilImplemented()
+        public void TestNormalizeJoinAtPass1WithJoinOnlyModifierSetsStopFlag()
         {
-            // PR 2 will implement "run only Stage 5" via persisted plan files.
+            // `--join-at-pass=1 --join-only` means "run only Stage 5 + planning,
+            // write boundary files, exit." Both joinOnly (existing
+            // Stage 5+ entry path) and joinOnlyModifier (post-planning
+            // early exit signal) should be set.
             bool noJoin = false, joinOnly = true;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "not yet implemented");
+            string err = Program.NormalizeHpcArgs(
+                joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly,
+                joinOnlyModifier: out bool joinOnlyModifier);
+            Assert.IsNull(err);
+            Assert.IsTrue(joinOnly);
+            Assert.IsTrue(joinOnlyModifier);
         }
 
         [TestMethod]
@@ -220,7 +226,7 @@ namespace pwiz.OspreySharp.Test
         {
             // PR 2 will implement "run only Stage 6 from persisted Stage 5 outputs."
             bool noJoin = true, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly);
+            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "not yet implemented");
         }
@@ -229,7 +235,7 @@ namespace pwiz.OspreySharp.Test
         public void TestNormalizeJoinOnlyAloneErrorsNoEntryPoint()
         {
             bool noJoin = false, joinOnly = true;
-            string err = Program.NormalizeHpcArgs(joinAtPass: null, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly);
+            string err = Program.NormalizeHpcArgs(joinAtPass: null, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "modifier");
         }
@@ -238,7 +244,7 @@ namespace pwiz.OspreySharp.Test
         public void TestNormalizeNoJoinAndJoinOnlyModifiersAreMutex()
         {
             bool noJoin = true, joinOnly = true;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly);
+            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "mutually exclusive");
         }
@@ -249,7 +255,7 @@ namespace pwiz.OspreySharp.Test
             // Stage 1 entry path with `-i ...` + `--no-join` keeps its
             // existing meaning: do per-file work only = Stages 1-4.
             bool noJoin = true, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: null, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly);
+            string err = Program.NormalizeHpcArgs(joinAtPass: null, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
             Assert.IsNull(err);
             Assert.IsTrue(noJoin);
             Assert.IsFalse(joinOnly);
@@ -259,7 +265,7 @@ namespace pwiz.OspreySharp.Test
         public void TestNormalizeDefaultModeIsNoop()
         {
             bool noJoin = false, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: null, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly);
+            string err = Program.NormalizeHpcArgs(joinAtPass: null, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
             Assert.IsNull(err);
             Assert.IsFalse(noJoin);
             Assert.IsFalse(joinOnly);

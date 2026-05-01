@@ -39,7 +39,7 @@ namespace pwiz.OspreySharp.IO
     /// in <c>osprey/crates/osprey/src/pipeline.rs</c>. Cross-impl byte
     /// parity is verified by a separate harness script.
     ///
-    /// Format (32-byte header + N × 48-byte records, all little-endian):
+    /// Format (32-byte header + N × 52-byte records, all little-endian):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYFDR"
     ///   version       [8]      = u8 (= 2)
@@ -47,7 +47,8 @@ namespace pwiz.OspreySharp.IO
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
     ///   reserved      [24..32] = 8 bytes (zero)
-    ///   body          [32..]   = entry_count * 48 bytes:
+    ///   body          [32..]   = entry_count * 52 bytes:
+    ///                            u32 entry_id
     ///                            f64 svm_score
     ///                            f64 run_precursor_qvalue
     ///                            f64 run_peptide_qvalue
@@ -55,9 +56,15 @@ namespace pwiz.OspreySharp.IO
     ///                            f64 experiment_peptide_qvalue
     ///                            f64 pep
     /// </code>
-    /// Records are positional + post-compaction: index <c>i</c> in the
-    /// file corresponds to the in-memory <see cref="FdrEntry"/> at index
-    /// <c>i</c>, which has already been filtered to passing entries.
+    /// Records are post-compaction: every record corresponds to a stub
+    /// that passed first-pass FDR. The <c>entry_id</c> on each record
+    /// lets a Stage 6 worker assemble the post-compaction stub set by
+    /// joining the full parquet against the sidecar's entry_id set —
+    /// the worker does not need to re-run Percolator. In skip-Percolator
+    /// mode the order also matches the in-memory list position-for-
+    /// position, so the per-position
+    /// <c>entries[i].EntryId == record.entry_id</c> check doubles as a
+    /// corruption detector.
     /// </summary>
     public static class FdrScoresSidecar
     {
@@ -67,7 +74,7 @@ namespace pwiz.OspreySharp.IO
 
         public const byte FormatVersion = 2;
         public const int HeaderLength = 32;
-        public const int RecordLength = 48;
+        public const int RecordLength = 52;
 
         /// <summary>
         /// Pass identifier embedded in the header. Mirrors the Rust pass
@@ -135,15 +142,16 @@ namespace pwiz.OspreySharp.IO
                     bw.Write((ulong)entries.Count);                   // [16..24]
                     bw.Write(new byte[8]);                            // [24..32] reserved
 
-                    // Body: 48 bytes per entry
+                    // Body: 52 bytes per entry (entry_id + 6 f64s)
                     foreach (var e in entries)
                     {
-                        bw.Write(e.Score);                            // [0..8]
-                        bw.Write(e.RunPrecursorQvalue);               // [8..16]
-                        bw.Write(e.RunPeptideQvalue);                 // [16..24]
-                        bw.Write(e.ExperimentPrecursorQvalue);        // [24..32]
-                        bw.Write(e.ExperimentPeptideQvalue);          // [32..40]
-                        bw.Write(e.Pep);                              // [40..48]
+                        bw.Write(e.EntryId);                          // [0..4]
+                        bw.Write(e.Score);                            // [4..12]
+                        bw.Write(e.RunPrecursorQvalue);               // [12..20]
+                        bw.Write(e.RunPeptideQvalue);                 // [20..28]
+                        bw.Write(e.ExperimentPrecursorQvalue);        // [28..36]
+                        bw.Write(e.ExperimentPeptideQvalue);          // [36..44]
+                        bw.Write(e.Pep);                              // [44..52]
                     }
                 }
 
@@ -204,12 +212,15 @@ namespace pwiz.OspreySharp.IO
             {
                 int off = HeaderLength + i * RecordLength;
                 var e = entries[i];
-                e.Score                       = BitConverter.ToDouble(data, off + 0);
-                e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 8);
-                e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 16);
-                e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 24);
-                e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 32);
-                e.Pep                         = BitConverter.ToDouble(data, off + 40);
+                uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
+                if (recordEntryId != e.EntryId)
+                    return false;
+                e.Score                       = BitConverter.ToDouble(data, off + 4);
+                e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
+                e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);
+                e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
+                e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
+                e.Pep                         = BitConverter.ToDouble(data, off + 44);
             }
             return true;
         }

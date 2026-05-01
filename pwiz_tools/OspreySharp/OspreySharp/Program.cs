@@ -96,7 +96,7 @@ namespace pwiz.OspreySharp
                     }
                 }
 
-                string normErr = NormalizeHpcArgs(joinAtPass, ref noJoinFlag, ref joinOnlyFlag);
+                string normErr = NormalizeHpcArgs(joinAtPass, ref noJoinFlag, ref joinOnlyFlag, out bool joinOnlyModifier);
                 if (normErr != null)
                 {
                     LogError(normErr);
@@ -104,6 +104,7 @@ namespace pwiz.OspreySharp
                 }
 
                 OspreyConfig config = ParseArgs(args);
+                config.StopAfterStage5 = joinOnlyModifier;
                 string err = ValidateArgs(config, noJoinFlag, joinOnlyFlag);
                 if (err != null)
                 {
@@ -536,8 +537,10 @@ namespace pwiz.OspreySharp
         /// Returns null on success, or an error message string on failure.
         /// Internal so OspreySharp.Test can exercise it.
         /// </summary>
-        internal static string NormalizeHpcArgs(int? joinAtPass, ref bool noJoinFlag, ref bool joinOnlyFlag)
+        internal static string NormalizeHpcArgs(int? joinAtPass, ref bool noJoinFlag, ref bool joinOnlyFlag, out bool joinOnlyModifier)
         {
+            joinOnlyModifier = false;
+
             // Modifiers are mutually exclusive: can't be both per-file-only
             // and join-only simultaneously.
             if (noJoinFlag && joinOnlyFlag)
@@ -563,14 +566,17 @@ namespace pwiz.OspreySharp
             switch (joinAtPass.Value)
             {
                 case 1:
-                    // PR 2 will implement these modifier combinations
-                    // against persisted Stage 5 → Stage 6 boundary files.
-                    if (joinOnlyFlag)
-                        return "--join-at-pass=1 --join-only (run only Stage 5) is not yet implemented.";
                     if (noJoinFlag)
                         return "--join-at-pass=1 --no-join (run only Stage 6 from persisted Stage 5 outputs) is not yet implemented.";
-                    // Plain --join-at-pass=1: route through the existing
-                    // Stage 5+ entry path that reads joinOnlyFlag.
+                    // `--join-at-pass=1 --join-only` (modifier present) means
+                    // "run only the Stage 5 join phase, write boundary
+                    // files, exit before Stage 6 rescore." Plain
+                    // `--join-at-pass=1` (no modifier) runs Stages 5-8.
+                    // In both cases joinOnlyFlag drives the existing Stage
+                    // 5+ entry path; the modifier-vs-plain distinction is
+                    // captured separately for the post-planning early
+                    // exit decision.
+                    joinOnlyModifier = joinOnlyFlag;
                     joinOnlyFlag = true;
                     return null;
                 case 2:
