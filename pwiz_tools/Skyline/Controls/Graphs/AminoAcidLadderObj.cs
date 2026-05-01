@@ -206,12 +206,12 @@ namespace pwiz.Skyline.Controls.Graphs
             // 4. Residue labels at reference interval midpoints — neutral grey
             using (var font  = new Font(FONT_FACE, _fontSize * scaleFactor))
             using (var brush = new SolidBrush(LABEL_COLOR))
+            using (var fmt = new StringFormat
             {
-                var fmt = new StringFormat
-                {
-                    Alignment     = StringAlignment.Center,
-                    LineAlignment = StringAlignment.Far   // text bottom at labelY
-                };
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Far   // bottom of text at labelY
+            })
+            {
                 for (int i = 0; i < _intervalLabels.Length; i++)
                 {
                     float midX = (refScreenX[i] + refScreenX[i + 1]) / 2f;
