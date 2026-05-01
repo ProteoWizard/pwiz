@@ -2616,13 +2616,13 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool RtLoessShowNormalized {
+        [global::System.Configuration.DefaultSettingValueAttribute("Median")]
+        public string RtLoessShowValue {
             get {
-                return ((bool)(this["RtLoessShowNormalized"]));
+                return ((string)(this["RtLoessShowValue"]));
             }
             set {
-                this["RtLoessShowNormalized"] = value;
+                this["RtLoessShowValue"] = value;
             }
         }
 

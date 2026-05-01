@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         private readonly IList<KeyValuePair<int, ReplicateDetails>> _replicateIndexes;
         private readonly IList<KeyValuePair<int, ReplicateDetails>> _allReplicateIndexes;
         private QrFactorizationCache _qrFactorizationCache;
-        private Lazy<NormalizationData> _normalizationData;
+        private NormalizationDataProvider _normalizationData;
         private ImmutableList<int> _msLevels;
         public GroupComparer(GroupComparisonDef comparisonDef, SrmDocument document, QrFactorizationCache qrFactorizationCache)
         {
@@ -108,9 +108,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 _msLevels = ImmutableList.ValueOf(new[] { 1, 2 });
             }
 
-            _normalizationData = new Lazy<NormalizationData>(() =>
-                NormalizationData.GetNormalizationData(SrmDocument, ComparisonDef.UseZeroForMissingPeaks,
-                    ComparisonDef.QValueCutoff));
+            _normalizationData = new NormalizationDataProvider(SrmDocument, ComparisonDef.UseZeroForMissingPeaks,
+                    ComparisonDef.QValueCutoff);
         }
         public GroupComparisonDef ComparisonDef { get; private set; }
 
@@ -696,7 +695,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     QuantificationSettings quantificationSettings = SrmDocument.Settings.PeptideSettings.Quantification
                         .ChangeNormalizationMethod(normalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
-                    var peptideQuantifier = new PeptideQuantifier(_normalizationData, selector.Protein, peptide,
+                    var peptideQuantifier = new PeptideQuantifier(_normalizationData, selector.Protein.PeptideGroup, peptide,
                         quantificationSettings)
                     {
                         QValueCutoff = ComparisonDef.QValueCutoff
@@ -765,7 +764,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     QuantificationSettings quantificationSettings = SrmDocument.Settings.PeptideSettings.Quantification
                         .ChangeNormalizationMethod(normalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
-                    var peptideQuantifier = new PeptideQuantifier(_normalizationData, selector.Protein, peptide,
+                    var peptideQuantifier = new PeptideQuantifier(_normalizationData, selector.Protein.PeptideGroup, peptide,
                         quantificationSettings)
                     {
                         QValueCutoff = ComparisonDef.QValueCutoff

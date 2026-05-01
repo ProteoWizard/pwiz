@@ -17,16 +17,14 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Threading;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding
 {
     public class ReplicateSummaries
     {
         private readonly ImmutableSortedList<IsotopeLabelType, double>[] _allTotalAreas;
-        private NormalizationData _normalizationData;
         public ReplicateSummaries(SrmDocument document)
         {
             Document = document;
@@ -36,6 +34,7 @@ namespace pwiz.Skyline.Model.Databinding
                 replicateCount = Document.Settings.MeasuredResults.Chromatograms.Count;
             }
             _allTotalAreas = new ImmutableSortedList<IsotopeLabelType, double>[replicateCount];
+            NormalizationDataProvider = new NormalizationDataProvider(Document);
         }
         public ReplicateSummaries GetReplicateSummaries(SrmDocument document)
         {
@@ -102,15 +101,9 @@ namespace pwiz.Skyline.Model.Databinding
             return dictTotalAreas;
         }
 
-        public NormalizationData GetNormalizationData()
+        public NormalizationDataProvider NormalizationDataProvider
         {
-            var normalizationData = _normalizationData;
-            if (normalizationData == null)
-            {
-                normalizationData = NormalizationData.GetNormalizationData(Document, false, null);
-                Interlocked.CompareExchange(ref _normalizationData, normalizationData, null);
-            }
-            return _normalizationData;
-        }
+            get;}
+
     }
 }

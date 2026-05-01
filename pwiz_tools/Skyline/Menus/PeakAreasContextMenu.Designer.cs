@@ -39,7 +39,10 @@ namespace pwiz.Skyline.Menus
             this.areaCVHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaRtLoessContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.rtLoessShowNormalizedContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowMedianMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowNormalizationFactorMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowNormalizedMedianMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.barAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lineAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -144,12 +147,33 @@ namespace pwiz.Skyline.Menus
             this.areaRtLoessContextMenuItem.Name = "areaRtLoessContextMenuItem";
             resources.ApplyResources(this.areaRtLoessContextMenuItem, "areaRtLoessContextMenuItem");
             this.areaRtLoessContextMenuItem.Click += new System.EventHandler(this.areaRtLoessMenuItem_Click);
-            // 
-            // rtLoessShowNormalizedContextMenuItem
-            // 
-            this.rtLoessShowNormalizedContextMenuItem.Name = "rtLoessShowNormalizedContextMenuItem";
-            resources.ApplyResources(this.rtLoessShowNormalizedContextMenuItem, "rtLoessShowNormalizedContextMenuItem");
-            this.rtLoessShowNormalizedContextMenuItem.Click += new System.EventHandler(this.rtLoessShowNormalizedMenuItem_Click);
+            //
+            // rtLoessShowValueContextMenuItem
+            //
+            this.rtLoessShowValueContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.rtLoessShowMedianMenuItem,
+            this.rtLoessShowNormalizationFactorMenuItem,
+            this.rtLoessShowNormalizedMedianMenuItem});
+            this.rtLoessShowValueContextMenuItem.Name = "rtLoessShowValueContextMenuItem";
+            resources.ApplyResources(this.rtLoessShowValueContextMenuItem, "rtLoessShowValueContextMenuItem");
+            //
+            // rtLoessShowMedianMenuItem
+            //
+            this.rtLoessShowMedianMenuItem.Name = "rtLoessShowMedianMenuItem";
+            resources.ApplyResources(this.rtLoessShowMedianMenuItem, "rtLoessShowMedianMenuItem");
+            this.rtLoessShowMedianMenuItem.Click += new System.EventHandler(this.rtLoessShowMedianMenuItem_Click);
+            //
+            // rtLoessShowNormalizationFactorMenuItem
+            //
+            this.rtLoessShowNormalizationFactorMenuItem.Name = "rtLoessShowNormalizationFactorMenuItem";
+            resources.ApplyResources(this.rtLoessShowNormalizationFactorMenuItem, "rtLoessShowNormalizationFactorMenuItem");
+            this.rtLoessShowNormalizationFactorMenuItem.Click += new System.EventHandler(this.rtLoessShowNormalizationFactorMenuItem_Click);
+            //
+            // rtLoessShowNormalizedMedianMenuItem
+            //
+            this.rtLoessShowNormalizedMedianMenuItem.Name = "rtLoessShowNormalizedMedianMenuItem";
+            resources.ApplyResources(this.rtLoessShowNormalizedMedianMenuItem, "rtLoessShowNormalizedMedianMenuItem");
+            this.rtLoessShowNormalizedMedianMenuItem.Click += new System.EventHandler(this.rtLoessShowNormalizedMedianMenuItem_Click);
             // 
             // graphTypeToolStripMenuItem
             // 
@@ -443,7 +467,10 @@ namespace pwiz.Skyline.Menus
 
         private System.Windows.Forms.ContextMenuStrip contextMenuPeakAreas;
         private System.Windows.Forms.ToolStripMenuItem areaRtLoessContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem rtLoessShowNormalizedContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowValueContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowMedianMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowNormalizationFactorMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowNormalizedMedianMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;

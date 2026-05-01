@@ -17,21 +17,43 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     internal class AreaRtLoessGraphPane : SummaryGraphPane
     {
+        private readonly Receiver<ReferenceValue<SrmDocument>, RtLoessCurves> _calcListener;
+        private PaneProgressBar _progressBar;
+
         public AreaRtLoessGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
+            _calcListener = RtLoessCurves.PRODUCER.RegisterCustomer(graphSummary,
+                () => GraphSummary.UpdateUI(false));
+            _calcListener.ProgressChange += UpdateProgressHandler;
+        }
+
+        private void UpdateProgressHandler()
+        {
+            if (_calcListener.IsProcessing())
+            {
+                _progressBar ??= new PaneProgressBar(this);
+                _progressBar.UpdateProgress(_calcListener.GetProgressValue());
+            }
+            else
+            {
+                _progressBar?.Dispose();
+                _progressBar = null;
+            }
         }
 
         public override void UpdateGraph(bool selectionChanged)
@@ -46,24 +68,40 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            var normalizationData = NormalizationData.GetNormalizationData(document, false, null);
-            if (!normalizationData.HasRtLoessCurves)
+            try
+            {
+                if (!_calcListener.TryGetProduct(document, out var rtLoessCurves))
+                {
+                    return;
+                }
+
+                UpdateGraph(document, rtLoessCurves);
+            }
+            catch (Exception ex)
+            {
+                Title.Text = ex.Message;
+            }
+        }
+
+        private void UpdateGraph(SrmDocument document, RtLoessCurves rtLoessCurves)
+        {
+            if (!rtLoessCurves.HasCurves)
             {
                 Title.Text = GraphsResources.AreaRtLoessGraphPane_No_RT_LOESS_Data;
                 return;
             }
 
-            bool showNormalized = Settings.Default.RtLoessShowNormalized;
-            var globalRtGrid = normalizationData.GetGlobalMedianRtGrid();
-            var globalFittedValues = normalizationData.GetGlobalMedianFittedValues();
+            var showValue = AreaGraphController.RtLoessShowValue;
+            var globalRtGrid = rtLoessCurves.GetGlobalMedianRtGrid();
+            var globalFittedValues = rtLoessCurves.GetGlobalMedianFittedValues();
 
             var colors = GraphChromatogram.COLORS_GROUPS;
-            var curvesByReplicate = new Dictionary<int, List<NormalizationData.RtLoessCurveInfo>>();
-            foreach (var curveInfo in normalizationData.GetRtLoessCurves())
+            var curvesByReplicate = new Dictionary<int, List<RtLoessCurves.RtLoessCurveInfo>>();
+            foreach (var curveInfo in rtLoessCurves.GetCurves())
             {
                 if (!curvesByReplicate.TryGetValue(curveInfo.ReplicateIndex, out var list))
                 {
-                    list = new List<NormalizationData.RtLoessCurveInfo>();
+                    list = new List<RtLoessCurves.RtLoessCurveInfo>();
                     curvesByReplicate[curveInfo.ReplicateIndex] = list;
                 }
                 list.Add(curveInfo);
@@ -86,11 +124,21 @@ namespace pwiz.Skyline.Controls.Graphs
                         var pointPairList = new PointPairList();
                         for (int j = 0; j < curveInfo.RtGrid.Length; j++)
                         {
-                            // After normalization: subtract the adjustment (sample - median)
-                            // from the original, yielding the median curve for every sample
-                            double y = showNormalized && globalFittedValues != null
-                                ? globalFittedValues[j]
-                                : curveInfo.FittedValues[j];
+                            // FittedValues and globalFittedValues are in log2 space, so
+                            // "median divided by global median" becomes a subtraction.
+                            double y;
+                            switch (showValue)
+                            {
+                                case RtLoessShowValue.NormalizedMedian:
+                                    y = globalFittedValues?[j] ?? curveInfo.FittedValues[j];
+                                    break;
+                                case RtLoessShowValue.NormalizationFactor:
+                                    y = curveInfo.FittedValues[j] - (globalFittedValues?[j] ?? 0);
+                                    break;
+                                default:
+                                    y = curveInfo.FittedValues[j];
+                                    break;
+                            }
                             pointPairList.Add(curveInfo.RtGrid[j], y);
                         }
 
@@ -103,12 +151,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         curve.Line.IsOptimizedDraw = true;
                         curve.Symbol.IsVisible = false;
                         curve.Line.Width = 1.5f;
-                        curve.Label.IsVisible = false;
+                        curve.Label.IsVisible = true;
                     }
                 }
             }
 
-            if (globalRtGrid != null && globalFittedValues != null)
+            if (showValue != RtLoessShowValue.NormalizationFactor &&
+                globalRtGrid != null && globalFittedValues != null)
             {
                 var medianPoints = new PointPairList();
                 for (int j = 0; j < globalRtGrid.Length; j++)
@@ -126,14 +175,34 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             XAxis.Title.Text = GraphsResources.AreaRtLoessGraphPane_Retention_Time__min_;
-            YAxis.Title.Text = GraphsResources.AreaRtLoessGraphPane_Log2_Abundance;
-            Title.Text = showNormalized
-                ? GraphsResources.AreaRtLoessGraphPane_RT_LOESS_Curves_Normalized
-                : GraphsResources.AreaRtLoessGraphPane_RT_LOESS_Curves;
+            YAxis.Title.Text = showValue == RtLoessShowValue.NormalizationFactor
+                ? GraphsResources.AreaRtLoessGraphPane_Log2_Adjustment
+                : GraphsResources.AreaRtLoessGraphPane_Log2_Abundance;
+            switch (showValue)
+            {
+                case RtLoessShowValue.NormalizedMedian:
+                    Title.Text = GraphsResources.AreaRtLoessGraphPane_RT_LOESS_Curves_Normalized;
+                    break;
+                case RtLoessShowValue.NormalizationFactor:
+                    Title.Text = GraphsResources.AreaRtLoessGraphPane_RT_LOESS_Normalization_Factors;
+                    break;
+                default:
+                    Title.Text = GraphsResources.AreaRtLoessGraphPane_RT_LOESS_Curves;
+                    break;
+            }
 
-            Legend.IsVisible = !showNormalized && CurveList.Any(c => c.Label.IsVisible);
+            Legend.IsVisible = showValue != RtLoessShowValue.NormalizedMedian &&
+                               CurveList.Any(c => c.Label.IsVisible);
 
             AxisChange();
+        }
+
+        public override void OnClose(EventArgs e)
+        {
+            base.OnClose(e);
+            _calcListener.Dispose();
+            _progressBar?.Dispose();
+            _progressBar = null;
         }
     }
 }

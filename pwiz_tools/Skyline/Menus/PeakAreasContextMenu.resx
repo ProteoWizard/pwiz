@@ -694,11 +694,29 @@
   <data name="areaRtLoessContextMenuItem.Text" xml:space="preserve">
     <value>RT LOESS Curves</value>
   </data>
-  <data name="rtLoessShowNormalizedContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="rtLoessShowValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
-  <data name="rtLoessShowNormalizedContextMenuItem.Text" xml:space="preserve">
-    <value>Show Normalized</value>
+  <data name="rtLoessShowValueContextMenuItem.Text" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="rtLoessShowMedianMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowMedianMenuItem.Text" xml:space="preserve">
+    <value>Median</value>
+  </data>
+  <data name="rtLoessShowNormalizationFactorMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowNormalizationFactorMenuItem.Text" xml:space="preserve">
+    <value>Normalization Factor</value>
+  </data>
+  <data name="rtLoessShowNormalizedMedianMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowNormalizedMedianMenuItem.Text" xml:space="preserve">
+    <value>Normalized Median</value>
   </data>
   <data name="&gt;&gt;areaRtLoessContextMenuItem.Name" xml:space="preserve">
     <value>areaRtLoessContextMenuItem</value>
@@ -706,10 +724,28 @@
   <data name="&gt;&gt;areaRtLoessContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;rtLoessShowNormalizedContextMenuItem.Name" xml:space="preserve">
-    <value>rtLoessShowNormalizedContextMenuItem</value>
+  <data name="&gt;&gt;rtLoessShowValueContextMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowValueContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;rtLoessShowNormalizedContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;rtLoessShowValueContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowMedianMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowMedianMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowMedianMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowNormalizationFactorMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowNormalizationFactorMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowNormalizationFactorMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowNormalizedMedianMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowNormalizedMedianMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowNormalizedMedianMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

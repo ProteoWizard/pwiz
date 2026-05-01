@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             FiguresOfMeritCalculator = QuantificationSettings.GetFiguresOfMeritCalculator();
         }
 
-        public static CalibrationCurveFitter GetCalibrationCurveFitter(Lazy<NormalizationData> getNormalizationDataFunc, SrmSettings settings,
+        public static CalibrationCurveFitter GetCalibrationCurveFitter(NormalizationDataProvider getNormalizationDataFunc, SrmSettings settings,
             IdPeptideDocNode idPeptideDocNode)
         {
             var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(getNormalizationDataFunc, settings, idPeptideDocNode.PeptideGroup, idPeptideDocNode.PeptideDocNode);
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static CalibrationCurveFitter GetCalibrationCurveFitter(SrmDocument document,
             IdPeptideDocNode idPeptideDocNode)
         {
-            return GetCalibrationCurveFitter(NormalizationData.LazyNormalizationData(document), document.Settings,
+            return GetCalibrationCurveFitter(new NormalizationDataProvider(document), document.Settings,
                 idPeptideDocNode);
         }
 

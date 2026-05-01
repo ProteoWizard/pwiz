@@ -410,6 +410,9 @@
   <data name="AreaRtLoessGraphPane_RT_LOESS_Curves_Normalized" xml:space="preserve">
     <value>RT LOESS Curves (Normalized)</value>
   </data>
+  <data name="AreaRtLoessGraphPane_RT_LOESS_Normalization_Factors" xml:space="preserve">
+    <value>RT LOESS Normalization Factors</value>
+  </data>
   <data name="Extensions_CustomToString_CV_2D_Histogram" xml:space="preserve">
     <value>CV 2D Histogram</value>
   </data>

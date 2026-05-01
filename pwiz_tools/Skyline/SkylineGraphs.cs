@@ -3022,6 +3022,12 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
+        public void SetRtLoessShowValue(RtLoessShowValue showValue)
+        {
+            AreaGraphController.RtLoessShowValue = showValue;
+            UpdatePeakAreaGraph();
+        }
+
         public void SynchronizeSummaryZooming(GraphSummary graphSummary = null, ZoomState zoomState = null)
         {
             var activeGraphSummary = graphSummary ?? dockPanel.ActiveContent as GraphSummary;

@@ -268,9 +268,9 @@ namespace pwiz.Skyline.Model.Databinding
             return _replicateSummaries = replicateSummaries;
         }
 
-        public Lazy<NormalizationData> LazyNormalizationData
+        public NormalizationDataProvider LazyNormalizationData
         {
-            get { return new Lazy<NormalizationData>(() => GetReplicateSummaries().GetNormalizationData()); }
+            get { return GetReplicateSummaries().NormalizationDataProvider; }
         }
 
         public ChromDataCache ChromDataCache { get; private set; }

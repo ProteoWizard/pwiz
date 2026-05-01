@@ -65,8 +65,8 @@ namespace pwiz.Skyline.Menus
             }
             else if (graphType == GraphTypeSummary.rt_loess)
             {
-                rtLoessShowNormalizedContextMenuItem.Checked = Settings.Default.RtLoessShowNormalized;
-                menuStrip.Items.Insert(iInsert++, rtLoessShowNormalizedContextMenuItem);
+                UpdateRtLoessShowValueMenuItemCheckedState();
+                menuStrip.Items.Insert(iInsert++, rtLoessShowValueContextMenuItem);
             }
             else if (graphType != GraphTypeSummary.abundance && graphType != GraphTypeSummary.abundance_comparison)
             {
@@ -431,10 +431,21 @@ namespace pwiz.Skyline.Menus
         private void areaRtLoessMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.ShowPeakAreaRtLoessGraph();
 
-        private void rtLoessShowNormalizedMenuItem_Click(object sender, EventArgs e)
+        private void rtLoessShowMedianMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowValue(RtLoessShowValue.Median);
+
+        private void rtLoessShowNormalizationFactorMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowValue(RtLoessShowValue.NormalizationFactor);
+
+        private void rtLoessShowNormalizedMedianMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowValue(RtLoessShowValue.NormalizedMedian);
+
+        private void UpdateRtLoessShowValueMenuItemCheckedState()
         {
-            Settings.Default.RtLoessShowNormalized = !Settings.Default.RtLoessShowNormalized;
-            SkylineWindow.UpdatePeakAreaGraph();
+            var current = AreaGraphController.RtLoessShowValue;
+            rtLoessShowMedianMenuItem.Checked = current == RtLoessShowValue.Median;
+            rtLoessShowNormalizationFactorMenuItem.Checked = current == RtLoessShowValue.NormalizationFactor;
+            rtLoessShowNormalizedMedianMenuItem.Checked = current == RtLoessShowValue.NormalizedMedian;
         }
 
         private void barAreaGraphTypeMenuItem_Click(object sender, EventArgs e)

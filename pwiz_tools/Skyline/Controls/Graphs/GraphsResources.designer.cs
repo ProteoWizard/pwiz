@@ -573,7 +573,16 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("AreaRtLoessGraphPane_RT_LOESS_Curves_Normalized", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to RT LOESS Normalization Factors.
+        /// </summary>
+        public static string AreaRtLoessGraphPane_RT_LOESS_Normalization_Factors {
+            get {
+                return ResourceManager.GetString("AreaRtLoessGraphPane_RT_LOESS_Normalization_Factors", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Intensity.
         /// </summary>

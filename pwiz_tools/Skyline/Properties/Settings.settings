@@ -653,8 +653,8 @@
     <Setting Name="AreaCVLogScale" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="RtLoessShowNormalized" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+    <Setting Name="RtLoessShowValue" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Median</Value>
     </Setting>
     <Setting Name="AreaCVMinLog10Area" Type="System.Double" Scope="User">
       <Value Profile="(Default)">NaN</Value>
