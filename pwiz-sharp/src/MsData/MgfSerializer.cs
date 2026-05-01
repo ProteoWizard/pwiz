@@ -3,6 +3,7 @@ using System.Text;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 // CA1822: Keep Read/Write as instance methods — the public API is instance-based so future additions
 // (iteration listeners, progress callbacks, custom encoder config) don't break compatibility.
@@ -22,6 +23,11 @@ public sealed class MgfSerializer
 {
     private static readonly NumberFormatInfo s_invariant = CultureInfo.InvariantCulture.NumberFormat;
 
+    /// <summary>Optional listener registry that receives <see cref="IterationUpdate"/> messages
+    /// once per spectrum during the write loop. Updates fire for every input spectrum, including
+    /// the MS1s that are skipped on output (so progress reflects work-done over the full input).</summary>
+    public IterationListenerRegistry? IterationListenerRegistry { get; set; }
+
     // ---------- Write ----------
 
     /// <summary>Writes <paramref name="msd"/> as MGF text.</summary>
@@ -40,11 +46,14 @@ public sealed class MgfSerializer
         ArgumentNullException.ThrowIfNull(w);
         if (msd.Run.SpectrumList is null) return;
 
+        int count = msd.Run.SpectrumList.Count;
+        var registry = IterationListenerRegistry;
         int scansWritten = 0;
-        for (int i = 0; i < msd.Run.SpectrumList.Count; i++)
+        for (int i = 0; i < count; i++)
         {
             var spec = msd.Run.SpectrumList.GetSpectrum(i, getBinaryData: true);
             if (WriteSpectrum(w, spec)) scansWritten++;
+            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
         }
     }
 

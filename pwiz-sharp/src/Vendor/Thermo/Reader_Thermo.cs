@@ -245,38 +245,14 @@ public sealed class Reader_Thermo : IReader
     }
 
     /// <summary>
-    /// Translates a Thermo instrument model name (e.g. "LTQ FT") to the corresponding CV term.
-    /// Subset of pwiz's <c>translateAsInstrumentModel</c>; falls back to the generic
-    /// MS_Thermo_Electron_instrument_model for unknown strings.
+    /// Translates a Thermo instrument model name (e.g. <c>"LTQ FT"</c>, <c>"Orbitrap Fusion"</c>) to
+    /// the corresponding CV term. Delegates to <see cref="ThermoInstrumentModel.Translate"/>,
+    /// which is a hand-port of the cpp <c>nameToModelMapping</c> + <c>translateAsInstrumentModel</c>
+    /// pair (see <c>RawFileTypes.h</c> / <c>Reader_Thermo_Detail.cpp</c>) and recognizes the full
+    /// catalog of Thermo instruments (~100 entries with Exact / ExactNoSpaces / Contains /
+    /// ContainsNoSpaces match modes).
     /// </summary>
-    private static CVID TranslateInstrumentModel(string model)
-    {
-        if (string.IsNullOrEmpty(model)) return CVID.MS_Thermo_Electron_instrument_model;
-        string m = model.Trim().ToUpperInvariant();
-        return m switch
-        {
-            "LTQ FT" => CVID.MS_LTQ_FT,
-            "LTQ FT ULTRA" => CVID.MS_LTQ_FT_Ultra,
-            "LTQ ORBITRAP" => CVID.MS_LTQ_Orbitrap,
-            "LTQ ORBITRAP DISCOVERY" => CVID.MS_LTQ_Orbitrap_Discovery,
-            "LTQ ORBITRAP XL" => CVID.MS_LTQ_Orbitrap_XL,
-            "LTQ ORBITRAP VELOS" => CVID.MS_LTQ_Orbitrap_Velos,
-            "LTQ ORBITRAP ELITE" => CVID.MS_LTQ_Orbitrap_Elite,
-            "ORBITRAP FUSION" => CVID.MS_Orbitrap_Fusion,
-            "ORBITRAP FUSION LUMOS" => CVID.MS_Orbitrap_Fusion_Lumos,
-            "ORBITRAP ECLIPSE" => CVID.MS_Orbitrap_Eclipse,
-            "ORBITRAP EXPLORIS 240" => CVID.MS_Orbitrap_Exploris_240,
-            "ORBITRAP EXPLORIS 480" => CVID.MS_Orbitrap_Exploris_480,
-            "Q EXACTIVE" => CVID.MS_Q_Exactive,
-            "Q EXACTIVE PLUS" => CVID.MS_Q_Exactive_Plus,
-            "Q EXACTIVE HF" => CVID.MS_Q_Exactive_HF,
-            "Q EXACTIVE HF-X" => CVID.MS_Q_Exactive_HF_X,
-            "LTQ" => CVID.MS_LTQ,
-            "LTQ XL" => CVID.MS_LTQ_XL,
-            "LTQ VELOS" => CVID.MS_LTQ_Velos,
-            _ => CVID.MS_Thermo_Electron_instrument_model,
-        };
-    }
+    private static CVID TranslateInstrumentModel(string model) => ThermoInstrumentModel.Translate(model);
 
     private static (CVID analyzer, CVID detector) TranslateAnalyzer(
         ThermoFisher.CommonCore.Data.FilterEnums.MassAnalyzerType t)

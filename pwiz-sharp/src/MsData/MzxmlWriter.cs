@@ -9,6 +9,7 @@ using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Sources;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 using SystemEncoding = System.Text.Encoding;
 
 namespace Pwiz.Data.MsData.MzXml;
@@ -39,6 +40,10 @@ public sealed class MzxmlWriter
     /// <summary>When true, emit the <c>&lt;index&gt;</c> + <c>&lt;indexOffset&gt;</c> footer.
     /// Always emit a <c>&lt;sha1&gt;</c> trailer regardless (matches cpp).</summary>
     public bool Indexed { get; set; } = true;
+
+    /// <summary>Optional listener registry that receives <see cref="IterationUpdate"/> messages
+    /// once per scan during the scan-list write loop.</summary>
+    public IterationListenerRegistry? IterationListenerRegistry { get; set; }
 
     /// <summary>Creates a writer that encodes binary arrays per <paramref name="encoderConfig"/>.</summary>
     /// <remarks>
@@ -296,21 +301,23 @@ public sealed class MzxmlWriter
         CVID nativeIdFormat = GetDefaultNativeIdFormat(msd);
         var defaultSourceFile = msd.Run.DefaultSourceFile;
 
-        for (int i = 0; i < sl.Count; i++)
+        int count = sl.Count;
+        var registry = IterationListenerRegistry;
+        for (int i = 0; i < count; i++)
         {
             Spectrum spec;
             try { spec = sl.GetSpectrum(i, getBinaryData: true); }
-            catch { continue; }
+            catch { registry?.Broadcast(new IterationUpdate(i, count, "writing spectra")); continue; }
 
             // Skip Thermo non-MS spectra (cpp Serializer_mzXML.cpp:775-777).
             if (nativeIdFormat == CVID.MS_Thermo_nativeID_format
                 && !spec.Id.StartsWith("controllerType=0 controllerNumber=1", StringComparison.Ordinal))
-                continue;
+            { registry?.Broadcast(new IterationUpdate(i, count, "writing spectra")); continue; }
 
             // Skip spectra from a non-default source file.
             if (spec.SourceFile is not null && defaultSourceFile is not null
                 && !ReferenceEquals(spec.SourceFile, defaultSourceFile))
-                continue;
+            { registry?.Broadcast(new IterationUpdate(i, count, "writing spectra")); continue; }
 
             int scanNumber = ResolveScanNumber(nativeIdFormat, spec);
 
@@ -319,6 +326,7 @@ public sealed class MzxmlWriter
             RecordOffset(w, scanNumber, indentDepth: 2);
 
             WriteScan(w, spec, scanNumber, instrumentIndex);
+            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
         }
     }
 

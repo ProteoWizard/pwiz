@@ -10,6 +10,7 @@ using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Samples;
 using Pwiz.Data.MsData.Sources;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.Data.MsData.Mzml;
 
@@ -38,6 +39,11 @@ public sealed class MzmlWriter
     /// <summary>When true, wrap the mzML in an <c>&lt;indexedmzML&gt;</c> envelope with byte-offset
     /// indexes and an SHA-1 fileChecksum (matches pwiz C++ msconvert's default output).</summary>
     public bool Indexed { get; set; } = true;
+
+    /// <summary>Optional listener registry that receives <see cref="IterationUpdate"/> messages
+    /// once per spectrum during the spectrumList write loop. Drives msconvert's <c>-v</c>
+    /// progress output and any future progress UI.</summary>
+    public IterationListenerRegistry? IterationListenerRegistry { get; set; }
 
     /// <summary>Creates a writer that encodes binary arrays with the given config.</summary>
     public MzmlWriter(BinaryEncoderConfig? encoderConfig = null)
@@ -494,10 +500,16 @@ public sealed class MzmlWriter
         if (list.DataProcessing is not null)
             w.WriteAttributeString("defaultDataProcessingRef", list.DataProcessing.Id);
 
-        for (int i = 0; i < list.Count; i++)
+        int count = list.Count;
+        var registry = IterationListenerRegistry;
+        for (int i = 0; i < count; i++)
         {
             var spec = list.GetSpectrum(i, getBinaryData: true);
             WriteSpectrum(w, spec);
+
+            // Broadcast progress before moving on. Throttling is handled by the registry's
+            // per-listener period/timer settings; we just push every spectrum.
+            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
         }
 
         w.WriteEndElement();
