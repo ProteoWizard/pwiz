@@ -1754,6 +1754,7 @@ namespace pwiz.Skyline.Model.Results
                     chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null);
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
+                    // (No-op when this collector owns its own times — see ChromCollector.FillZeroes.)
                     if (ionScanCount > 1 && lenTimes > 1)
                     {
                         chromCollector.FillZeroes(chromIndex, lenTimes - 1, _blockWriter);
@@ -1782,6 +1783,7 @@ namespace pwiz.Skyline.Model.Results
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.
+            // (No-op for collectors that own their own times — see ChromCollector.AddPoint.)
             if (ionScanCount > 1 &&
                 (ionCount != ionScanCount || ionCount != collector.ProductIntensityMap.Count))
             {
