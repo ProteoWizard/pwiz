@@ -77,8 +77,13 @@
           AfterTargets="ExtractAgilentAssemblies"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths">
     <Message Importance="high" Text="Cecil-patching Agilent SDK (BaseDataAccess.dll, BaseCommon.dll) to remove BeginInvoke/EndInvoke." />
+    <!-- MSBuild's Exec task inherits the parent process's MSBUILD_EXE_PATH and MSBuildSDKsPath
+         env vars; the child `dotnet run` then routes through the parent's MSBuild (SDK 10 on
+         the build agent) instead of resolving SDK from its cwd / global.json (SDK 8). Clearing
+         them forces the child to do a fresh muxer-based SDK resolution. -->
     <Exec Command="dotnet run --project &quot;$(AgilentPatcherProj)&quot; -c Release -- &quot;$(AgilentAssembliesDir)&quot;"
-          WorkingDirectory="$(PwizSharpRoot)" />
+          WorkingDirectory="$(PwizSharpRoot)"
+          EnvironmentVariables="MSBUILD_EXE_PATH=;MSBuildSDKsPath=;MSBuildToolsPath=;MSBuildExtensionsPath=;DOTNET_HOST_PATH=" />
   </Target>
 
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
