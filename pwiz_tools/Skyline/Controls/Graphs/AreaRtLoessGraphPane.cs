@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Colors;
 using pwiz.Common.SystemUtil.Caching;
@@ -158,6 +159,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         curve.Symbol.IsVisible = false;
                         curve.Line.Width = 1.5f;
                         curve.Label.IsVisible = true;
+                        curve.Tag = curveInfo.ReplicateIndex;
                     }
                 }
             }
@@ -201,6 +203,60 @@ namespace pwiz.Skyline.Controls.Graphs
                                CurveList.Any(c => c.Label.IsVisible);
 
             AxisChange();
+        }
+
+        public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (TryFindReplicateIndexAt(sender, e.Location, out _))
+            {
+                sender.Cursor = Cursors.Hand;
+                return true;
+            }
+
+            return base.HandleMouseMoveEvent(sender, e);
+        }
+
+        public override void HandleMouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+                return;
+            if (!(sender is ZedGraphControl ctx))
+                return;
+            if (!TryFindReplicateIndexAt(ctx, e.Location, out var replicateIndex))
+                return;
+
+            var document = GraphSummary.DocumentUIContainer.DocumentUI;
+            if (!document.Settings.HasResults ||
+                replicateIndex < 0 ||
+                replicateIndex >= document.Settings.MeasuredResults.Chromatograms.Count)
+            {
+                return;
+            }
+            GraphSummary.StateProvider.SelectedResultsIndex = replicateIndex;
+            GraphSummary.Focus();
+        }
+
+        private bool TryFindReplicateIndexAt(ZedGraphControl sender, PointF mousePt, out int replicateIndex)
+        {
+            replicateIndex = -1;
+            using (var g = sender.CreateGraphics())
+            {
+                if (FindNearestObject(mousePt, g, out var nearestObj, out _) &&
+                    nearestObj is CurveItem curveItem && curveItem.Tag is int tagIndex)
+                {
+                    replicateIndex = tagIndex;
+                    return true;
+                }
+            }
+
+            if (FindNearestPoint(mousePt, out var nearestCurve, out _) &&
+                nearestCurve?.Tag is int pointIndex)
+            {
+                replicateIndex = pointIndex;
+                return true;
+            }
+
+            return false;
         }
 
         public override void OnClose(EventArgs e)
