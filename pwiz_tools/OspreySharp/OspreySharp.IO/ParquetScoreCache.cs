@@ -23,10 +23,11 @@
 
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Linq;
+using System.Threading.Tasks;
 using Parquet;
 using Parquet.Data;
-using Parquet.Thrift;
+using Parquet.Schema;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.IO
@@ -101,7 +102,7 @@ namespace pwiz.OspreySharp.IO
         private static readonly DataField FIELD_MODIFIED_SEQUENCE = new DataField<string>("modified_sequence");
         private static readonly DataField FIELD_CHARGE = new DataField<byte>("charge");
         private static readonly DataField FIELD_PRECURSOR_MZ = new DataField<double>("precursor_mz");
-        private static readonly DataField FIELD_PROTEIN_IDS = new DataField("protein_ids", DataType.String, hasNulls: true, isArray: false);
+        private static readonly DataField FIELD_PROTEIN_IDS = new DataField("protein_ids", typeof(string), isNullable: true, isArray: false);
         private static readonly DataField FIELD_SCAN_NUMBER = new DataField<uint>("scan_number");
         private static readonly DataField FIELD_APEX_RT = new DataField<double>("apex_rt");
         private static readonly DataField FIELD_START_RT = new DataField<double>("start_rt");
@@ -114,11 +115,11 @@ namespace pwiz.OspreySharp.IO
         // Rust's; populating them with the actual fragment/XIC/CWT byte
         // serialization is a future sprint (Stage 5+8 cross-impl works
         // without them).
-        private static readonly DataField FIELD_CWT_CANDIDATES = new DataField("cwt_candidates", DataType.ByteArray, hasNulls: true, isArray: false);
-        private static readonly DataField FIELD_FRAGMENT_MZS = new DataField("fragment_mzs", DataType.ByteArray, hasNulls: true, isArray: false);
-        private static readonly DataField FIELD_FRAGMENT_INTENSITIES = new DataField("fragment_intensities", DataType.ByteArray, hasNulls: true, isArray: false);
-        private static readonly DataField FIELD_REFERENCE_XIC_RTS = new DataField("reference_xic_rts", DataType.ByteArray, hasNulls: true, isArray: false);
-        private static readonly DataField FIELD_REFERENCE_XIC_INTENSITIES = new DataField("reference_xic_intensities", DataType.ByteArray, hasNulls: true, isArray: false);
+        private static readonly DataField FIELD_CWT_CANDIDATES = new DataField("cwt_candidates", typeof(byte[]), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_FRAGMENT_MZS = new DataField("fragment_mzs", typeof(byte[]), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_FRAGMENT_INTENSITIES = new DataField("fragment_intensities", typeof(byte[]), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_REFERENCE_XIC_RTS = new DataField("reference_xic_rts", typeof(byte[]), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_REFERENCE_XIC_INTENSITIES = new DataField("reference_xic_intensities", typeof(byte[]), isNullable: true, isArray: false);
         // Reader-only alias for the fragment_coelution_sum PIN feature
         // column (the same column is read both as a stub for FDR loading
         // and as one of the 21 PIN features). Not added to the write
@@ -133,7 +134,11 @@ namespace pwiz.OspreySharp.IO
             return fields;
         }
 
-        private static Schema BuildWriteSchema()
+        // Parquet.Net 4.x requires the DataField passed to DataColumn's ctor
+        // to be the same instance attached to the schema. The caller builds
+        // featureFields once and passes the array here so the same instances
+        // can be reused for the WriteColumnAsync calls.
+        private static ParquetSchema BuildWriteSchema(DataField[] featureFields)
         {
             // Order matches Rust's pipeline.rs build of `write_scores_parquet_with_metadata`.
             // Field order is informational only -- Parquet is name-indexed.
@@ -159,8 +164,8 @@ namespace pwiz.OspreySharp.IO
                 FIELD_REFERENCE_XIC_RTS,
                 FIELD_REFERENCE_XIC_INTENSITIES,
             };
-            fields.AddRange(BuildFeatureFields());
-            return new Schema(fields.ToArray());
+            fields.AddRange(featureFields);
+            return new ParquetSchema(fields.ToArray());
         }
 
         #endregion
@@ -182,8 +187,8 @@ namespace pwiz.OspreySharp.IO
                 return;
 
             int n = entries.Count;
-            var schema = BuildWriteSchema();
             var featureFields = BuildFeatureFields();
+            var schema = BuildWriteSchema(featureFields);
 
             // Build column arrays. Schema matches Rust's
             // write_scores_parquet_with_metadata; columns are name-indexed
@@ -240,37 +245,38 @@ namespace pwiz.OspreySharp.IO
                     Path.GetFileName(path)));
 
             using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
-            using (var writer = new ParquetWriter(schema, stream))
+            using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
             {
-                writer.CompressionMethod = CompressionMethod.Snappy;
+                writer.CompressionMethod = CompressionMethod.Zstd;
 
                 // Set custom metadata if provided
-                SetWriterMetadata(writer, metadata);
+                if (metadata != null && metadata.Count > 0)
+                    writer.CustomMetadata = metadata;
 
                 using (var group = writer.CreateRowGroup())
                 {
-                    group.WriteColumn(new DataColumn(FIELD_ENTRY_ID, entryIds));
-                    group.WriteColumn(new DataColumn(FIELD_IS_DECOY, isDecoys));
-                    group.WriteColumn(new DataColumn(FIELD_SEQUENCE, sequences));
-                    group.WriteColumn(new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences));
-                    group.WriteColumn(new DataColumn(FIELD_CHARGE, charges));
-                    group.WriteColumn(new DataColumn(FIELD_PRECURSOR_MZ, precursorMzs));
-                    group.WriteColumn(new DataColumn(FIELD_PROTEIN_IDS, proteinIds));
-                    group.WriteColumn(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers));
-                    group.WriteColumn(new DataColumn(FIELD_APEX_RT, apexRts));
-                    group.WriteColumn(new DataColumn(FIELD_START_RT, startRts));
-                    group.WriteColumn(new DataColumn(FIELD_END_RT, endRts));
-                    group.WriteColumn(new DataColumn(FIELD_BOUNDS_AREA, boundsAreas));
-                    group.WriteColumn(new DataColumn(FIELD_BOUNDS_SNR, boundsSnrs));
-                    group.WriteColumn(new DataColumn(FIELD_FILE_NAME, fileNames));
-                    group.WriteColumn(new DataColumn(FIELD_CWT_CANDIDATES, cwtCandidates));
-                    group.WriteColumn(new DataColumn(FIELD_FRAGMENT_MZS, fragmentMzs));
-                    group.WriteColumn(new DataColumn(FIELD_FRAGMENT_INTENSITIES, fragmentIntensities));
-                    group.WriteColumn(new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts));
-                    group.WriteColumn(new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_ENTRY_ID, entryIds)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_IS_DECOY, isDecoys)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_SEQUENCE, sequences)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_CHARGE, charges)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_PRECURSOR_MZ, precursorMzs)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_PROTEIN_IDS, proteinIds)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_APEX_RT, apexRts)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_START_RT, startRts)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_END_RT, endRts)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_BOUNDS_AREA, boundsAreas)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_BOUNDS_SNR, boundsSnrs)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FILE_NAME, fileNames)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_CWT_CANDIDATES, cwtCandidates)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FRAGMENT_MZS, fragmentMzs)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FRAGMENT_INTENSITIES, fragmentIntensities)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities)));
 
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        group.WriteColumn(new DataColumn(featureFields[f], featureArrays[f]));
+                        RunSync(group.WriteColumnAsync(new DataColumn(featureFields[f], featureArrays[f])));
                 }
             }
 
@@ -299,8 +305,8 @@ namespace pwiz.OspreySharp.IO
                 return;
 
             int n = entries.Count;
-            var schema = BuildWriteSchema();
             var featureFields = BuildFeatureFields();
+            var schema = BuildWriteSchema(featureFields);
 
             var entryIds = new uint[n];
             var isDecoys = new bool[n];
@@ -382,35 +388,36 @@ namespace pwiz.OspreySharp.IO
                     Path.GetFileName(path)));
 
             using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
-            using (var writer = new ParquetWriter(schema, stream))
+            using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
             {
-                writer.CompressionMethod = CompressionMethod.Snappy;
-                SetWriterMetadata(writer, metadata);
+                writer.CompressionMethod = CompressionMethod.Zstd;
+                if (metadata != null && metadata.Count > 0)
+                    writer.CustomMetadata = metadata;
 
                 using (var group = writer.CreateRowGroup())
                 {
-                    group.WriteColumn(new DataColumn(FIELD_ENTRY_ID, entryIds));
-                    group.WriteColumn(new DataColumn(FIELD_IS_DECOY, isDecoys));
-                    group.WriteColumn(new DataColumn(FIELD_SEQUENCE, sequences));
-                    group.WriteColumn(new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences));
-                    group.WriteColumn(new DataColumn(FIELD_CHARGE, charges));
-                    group.WriteColumn(new DataColumn(FIELD_PRECURSOR_MZ, precursorMzs));
-                    group.WriteColumn(new DataColumn(FIELD_PROTEIN_IDS, proteinIds));
-                    group.WriteColumn(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers));
-                    group.WriteColumn(new DataColumn(FIELD_APEX_RT, apexRts));
-                    group.WriteColumn(new DataColumn(FIELD_START_RT, startRts));
-                    group.WriteColumn(new DataColumn(FIELD_END_RT, endRts));
-                    group.WriteColumn(new DataColumn(FIELD_BOUNDS_AREA, boundsAreas));
-                    group.WriteColumn(new DataColumn(FIELD_BOUNDS_SNR, boundsSnrs));
-                    group.WriteColumn(new DataColumn(FIELD_FILE_NAME, fileNames));
-                    group.WriteColumn(new DataColumn(FIELD_CWT_CANDIDATES, cwtCandidates));
-                    group.WriteColumn(new DataColumn(FIELD_FRAGMENT_MZS, fragmentMzs));
-                    group.WriteColumn(new DataColumn(FIELD_FRAGMENT_INTENSITIES, fragmentIntensities));
-                    group.WriteColumn(new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts));
-                    group.WriteColumn(new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_ENTRY_ID, entryIds)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_IS_DECOY, isDecoys)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_SEQUENCE, sequences)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_CHARGE, charges)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_PRECURSOR_MZ, precursorMzs)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_PROTEIN_IDS, proteinIds)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_APEX_RT, apexRts)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_START_RT, startRts)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_END_RT, endRts)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_BOUNDS_AREA, boundsAreas)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_BOUNDS_SNR, boundsSnrs)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FILE_NAME, fileNames)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_CWT_CANDIDATES, cwtCandidates)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FRAGMENT_MZS, fragmentMzs)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FRAGMENT_INTENSITIES, fragmentIntensities)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts)));
+                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities)));
 
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        group.WriteColumn(new DataColumn(featureFields[f], featureArrays[f]));
+                        RunSync(group.WriteColumnAsync(new DataColumn(featureFields[f], featureArrays[f])));
                 }
             }
 
@@ -460,6 +467,42 @@ namespace pwiz.OspreySharp.IO
             return double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
         }
 
+        // Synchronously bridge an async Parquet.Net call. ConfigureAwait(false)
+        // avoids deadlock on a captured SynchronizationContext, and
+        // GetAwaiter().GetResult() unwraps the underlying exception instead
+        // of wrapping it in AggregateException.
+        private static T RunSync<T>(Task<T> task)
+        {
+            return task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static void RunSync(Task task)
+        {
+            task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        // Build a name -> DataField lookup from the reader's actual schema.
+        // Parquet.Net 4.x requires DataField instances passed to
+        // ReadColumnAsync to be attached to the schema being read, so we
+        // can't reuse our own static FIELD_* instances directly.
+        private static Dictionary<string, DataField> BuildFieldLookup(ParquetReader reader)
+        {
+            return reader.Schema.GetDataFields().ToDictionary(f => f.Name);
+        }
+
+        // Read a column by name, returning null if the column is absent so
+        // callers can tolerate partial schemas the same way the old `as T[]`
+        // casts did.
+        private static T ReadColumnByName<T>(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName, string name)
+            where T : class
+        {
+            DataField field;
+            if (!fieldsByName.TryGetValue(name, out field))
+                return null;
+            return RunSync(groupReader.ReadColumnAsync(field)).Data as T;
+        }
+
         #endregion
 
         #region Load FDR Stubs
@@ -475,21 +518,22 @@ namespace pwiz.OspreySharp.IO
             var stubs = new List<FdrEntry>();
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = new ParquetReader(stream))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
+                var fieldsByName = BuildFieldLookup(reader);
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
-                        var entryIdCol = groupReader.ReadColumn(FIELD_ENTRY_ID).Data as uint[];
-                        var isDecoyCol = groupReader.ReadColumn(FIELD_IS_DECOY).Data as bool[];
-                        var chargeCol = groupReader.ReadColumn(FIELD_CHARGE).Data as byte[];
-                        var scanCol = groupReader.ReadColumn(FIELD_SCAN_NUMBER).Data as uint[];
-                        var modseqCol = groupReader.ReadColumn(FIELD_MODIFIED_SEQUENCE).Data as string[];
-                        var apexCol = groupReader.ReadColumn(FIELD_APEX_RT).Data as double[];
-                        var startCol = groupReader.ReadColumn(FIELD_START_RT).Data as double[];
-                        var endCol = groupReader.ReadColumn(FIELD_END_RT).Data as double[];
-                        var coelutionCol = groupReader.ReadColumn(FIELD_COELUTION_SUM).Data as double[];
+                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
+                        var isDecoyCol = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
+                        var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
+                        var scanCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCAN_NUMBER.Name);
+                        var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
+                        var apexCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
+                        var startCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_START_RT.Name);
+                        var endCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_END_RT.Name);
+                        var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
 
                         if (entryIdCol == null || isDecoyCol == null)
                             continue;
@@ -531,13 +575,17 @@ namespace pwiz.OspreySharp.IO
         {
             var allCandidates = new List<List<CwtCandidate>>();
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = new ParquetReader(stream))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
+                var fieldsByName = BuildFieldLookup(reader);
+                DataField cwtField;
+                if (!fieldsByName.TryGetValue(FIELD_CWT_CANDIDATES.Name, out cwtField))
+                    return allCandidates;
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
-                        var col = groupReader.ReadColumn(FIELD_CWT_CANDIDATES);
+                        var col = RunSync(groupReader.ReadColumnAsync(cwtField));
                         // The cwt_candidates column is binary; if Parquet.Net
                         // hands back something other than byte[][] the
                         // schema or write path is wrong upstream and any
@@ -573,11 +621,11 @@ namespace pwiz.OspreySharp.IO
         public static List<double[]> LoadPinFeaturesFromParquet(string path)
         {
             var allFeatures = new List<double[]>();
-            var featureFields = BuildFeatureFields();
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = new ParquetReader(stream))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
+                var fieldsByName = BuildFieldLookup(reader);
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
@@ -586,7 +634,7 @@ namespace pwiz.OspreySharp.IO
                         var featureCols = new double[NUM_PIN_FEATURES][];
                         for (int f = 0; f < NUM_PIN_FEATURES; f++)
                         {
-                            featureCols[f] = groupReader.ReadColumn(featureFields[f]).Data as double[];
+                            featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
                         }
 
                         if (featureCols[0] == null)
@@ -608,86 +656,6 @@ namespace pwiz.OspreySharp.IO
             }
 
             return allFeatures;
-        }
-
-        #endregion
-
-        #region Writer Metadata
-
-        /// <summary>
-        /// Sets custom key-value metadata on a ParquetWriter via reflection.
-        /// ParquetNet stores the Thrift FileMetaData internally; we walk the
-        /// inheritance chain to find the internal _meta or _fileMeta field
-        /// and populate its Key_value_metadata list before the writer disposes
-        /// and writes the footer.
-        /// </summary>
-        private static void SetWriterMetadata(ParquetWriter writer, Dictionary<string, string> metadata)
-        {
-            if (metadata == null || metadata.Count == 0)
-                return;
-
-            try
-            {
-                // ParquetNet stores metadata on the internal ThriftFooter (_footer field).
-                // ThriftFooter has a CustomMetadata property (Dictionary<string,string>)
-                // and an internal _fileMeta of type FileMetaData with Key_value_metadata.
-
-                // 1) Try public CustomMetadata on ParquetWriter itself (newer versions)
-                var writerProp = writer.GetType().GetProperty("CustomMetadata",
-                    BindingFlags.Public | BindingFlags.Instance);
-                if (writerProp != null && writerProp.CanWrite)
-                {
-                    writerProp.SetValue(writer, metadata);
-                    return;
-                }
-
-                // 2) Find _footer field on ParquetWriter
-                var footerField = writer.GetType().GetField("_footer",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                if (footerField == null)
-                    return;
-
-                var footer = footerField.GetValue(writer);
-                if (footer == null)
-                    return;
-
-                var footerType = footer.GetType();
-
-                // 3) Try CustomMetadata property on the footer (ThriftFooter)
-                var footerProp = footerType.GetProperty("CustomMetadata",
-                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
-                if (footerProp != null && footerProp.CanWrite)
-                {
-                    footerProp.SetValue(footer, metadata);
-                    return;
-                }
-
-                // 4) Fall back to setting Key_value_metadata directly on _fileMeta
-                var fileMetaField = footerType.GetField("_fileMeta",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                if (fileMetaField == null)
-                    return;
-
-                var fileMeta = fileMetaField.GetValue(footer) as FileMetaData;
-                if (fileMeta == null)
-                    return;
-
-                if (fileMeta.Key_value_metadata == null)
-                    fileMeta.Key_value_metadata = new List<KeyValue>();
-
-                foreach (var kvp in metadata)
-                {
-                    fileMeta.Key_value_metadata.Add(new KeyValue
-                    {
-                        Key = kvp.Key,
-                        Value = kvp.Value,
-                    });
-                }
-            }
-            catch
-            {
-                // Metadata writing is best-effort; cache still functions without it
-            }
         }
 
         #endregion
@@ -717,15 +685,11 @@ namespace pwiz.OspreySharp.IO
             try
             {
                 using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (var reader = new ParquetReader(stream))
+                using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
                 {
-                    var fileMetadata = reader.ThriftMetadata.Key_value_metadata;
-                    if (fileMetadata == null)
+                    var metaDict = reader.CustomMetadata;
+                    if (metaDict == null)
                         return expected == null || expected.Count == 0;
-
-                    var metaDict = new Dictionary<string, string>();
-                    foreach (var kv in fileMetadata)
-                        metaDict[kv.Key] = kv.Value;
 
                     foreach (var kvp in expected)
                     {
@@ -755,17 +719,14 @@ namespace pwiz.OspreySharp.IO
         /// </summary>
         public static Dictionary<string, string> LoadFooterMetadata(string path)
         {
-            var result = new Dictionary<string, string>();
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = new ParquetReader(stream))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
-                var fileMetadata = reader.ThriftMetadata.Key_value_metadata;
-                if (fileMetadata == null)
-                    return result;
-                foreach (var kv in fileMetadata)
-                    result[kv.Key] = kv.Value;
+                var src = reader.CustomMetadata;
+                return src == null
+                    ? new Dictionary<string, string>()
+                    : new Dictionary<string, string>(src);
             }
-            return result;
         }
 
         /// <summary>

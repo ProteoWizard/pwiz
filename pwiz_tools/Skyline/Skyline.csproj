@@ -162,9 +162,31 @@
     <Reference Include="ParquetNet">
       <HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
     </Reference>
+    <Reference Include="IronCompress">
+      <HintPath>..\Shared\Lib\Parquet\IronCompress.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reflection.Emit.Lightweight">
       <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream">
+      <HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="Snappier">
+      <HintPath>..\Shared\Lib\Parquet\Snappier.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ZstdSharp">
+      <HintPath>..\Shared\Lib\Parquet\ZstdSharp.dll</HintPath>
+    </Reference>
+    <Content Include="..\Shared\Lib\Parquet\nironcompress.dll">
+      <Link>nironcompress.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
