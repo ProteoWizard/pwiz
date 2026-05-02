@@ -31,6 +31,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.CLI.Bruker.PrmScheduling;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model.DocSettings;
@@ -3942,7 +3943,7 @@ namespace pwiz.Skyline.Model
                 var libraryIonMobilities = Document.Settings.GetIonMobilities(Document.Molecules.SelectMany(
                         node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(Document.Settings, node)))
                     .ToArray(), null);
-                var result = Document.Settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, libraryIonMobilities, null, _oneOverK0UpperLimit);
+                var result = Document.Settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, libraryIonMobilities, null, _oneOverK0UpperLimit, eIonMobilityUnits.inverse_K0_Vsec_per_cm2);
                 if (result.HasIonMobilityValue)
                 {
                     ionMobility = result.IonMobility.Mobility.Value;

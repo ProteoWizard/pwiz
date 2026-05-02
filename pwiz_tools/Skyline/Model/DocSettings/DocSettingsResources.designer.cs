@@ -1071,7 +1071,29 @@ namespace pwiz.Skyline.Model.DocSettings {
                 return ResourceManager.GetString("SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;{0}&quot; has an explicit ion mobility value but the document contains multiple ion mobility units ({1}). Set the Explicit Ion Mobility Units column in the Document Grid..
+        /// </summary>
+        public static string SrmSettings_GetIonMobilityFilter_Peptide___0___has_an_explicit_ion_mobility_value_but_document_contains_multiple_ion_mobility_units___1____Set_the_Explicit_Ion_Mobility_Units_column_in_the_Document_Grid_ {
+            get {
+                return ResourceManager.GetString("SrmSettings_GetIonMobilityFilter_Peptide___0___has_an_explicit_ion_mobility_value" +
+                        "_but_document_contains_multiple_ion_mobility_units___1____Set_the_Explicit_Ion_M" +
+                        "obility_Units_column_in_the_Document_Grid_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;{0}&quot; has an explicit ion mobility value but no ion mobility units. Set the Explicit Ion Mobility Units column in the Document Grid..
+        /// </summary>
+        public static string SrmSettings_GetIonMobilityFilter_Peptide___0___has_an_explicit_ion_mobility_value_but_no_ion_mobility_units__Set_the_Explicit_Ion_Mobility_Units_column_in_the_Document_Grid_ {
+            get {
+                return ResourceManager.GetString("SrmSettings_GetIonMobilityFilter_Peptide___0___has_an_explicit_ion_mobility_value" +
+                        "_but_no_ion_mobility_units__Set_the_Explicit_Ion_Mobility_Units_column_in_the_Do" +
+                        "cument_Grid_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The modification &apos;{0}&apos; already exists with a different definition..
         /// </summary>

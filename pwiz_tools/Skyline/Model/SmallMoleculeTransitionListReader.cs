@@ -1587,13 +1587,24 @@ namespace pwiz.Skyline.Model
             {
                 if (declaredUnitsIM == eIonMobilityUnits.none)
                 {
-                    ShowTransitionError(new PasteError
+                    // Units column missing or empty - try to deduce from the target document
+                    // before erroring. Settings-level evidence is cached per-reader so the
+                    // expensive library scan only runs once per import.
+                    var candidates = GetCachedDocumentIonMobilityUnits(document);
+                    if (candidates.Count == 1)
                     {
-                        Column = INDEX_PRECURSOR_ION_MOBILITY,
-                        Line = row.Index,
-                        Message = ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units
-                    });
-                    return null;
+                        declaredUnitsIM = candidates.Single();
+                    }
+                    else
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = INDEX_PRECURSOR_ION_MOBILITY,
+                            Line = row.Index,
+                            Message = ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units
+                        });
+                        return null;
+                    }
                 }
                 ionMobility[declaredUnitsIM] = dtmp;
             }
@@ -1902,6 +1913,29 @@ namespace pwiz.Skyline.Model
         {
             return Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations +
                    $@" ({string.Join(@", ", ionMobility.Select(kvp => $@"{IonMobilityFilter.IonMobilityUnitsL10NString(kvp.Key)} = {kvp.Value}"))}";
+        }
+
+        private IReadOnlyCollection<eIonMobilityUnits> _cachedSettingsImUnits;
+
+        // Settings (results, IM library, spectral libraries) don't change during an import, so the
+        // expensive library-scanning settings-level deduction is cached once. The transition group
+        // walk is fast in-memory work and is redone every call so units added by previous rows in
+        // the same paste contribute to ambiguity detection on later rows.
+        private HashSet<eIonMobilityUnits> GetCachedDocumentIonMobilityUnits(SrmDocument document)
+        {
+            var units = new HashSet<eIonMobilityUnits>(_cachedSettingsImUnits ??=
+                TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(document.Settings));
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
+            {
+                var u = nodeGroup.ExplicitValues.IonMobilityUnits;
+                if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(u))
+                {
+                    units.Add(u);
+                    if (units.Count > 1)
+                        return units;
+                }
+            }
+            return units;
         }
 
         /// <summary>

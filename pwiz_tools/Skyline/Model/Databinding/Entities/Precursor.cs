@@ -354,8 +354,32 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
+                var unitsForSet = DocNode.ExplicitValues.IonMobilityUnits;
+                if (value.HasValue && unitsForSet == eIonMobilityUnits.none)
+                {
+                    // The user may not have set the IonMobilityUnits column yet. If the document
+                    // unambiguously implies a single unit, silently apply it along with the value -
+                    // saves the user a step and makes the audit log reflect the deduced unit.
+                    // If deduction is empty or ambiguous, accept the value with units=none and
+                    // let the user set the units column next; the safety net in
+                    // SrmSettings.GetIonMobilityFilter guards consumption of an unresolved state.
+                    // Settings + sibling transition groups on this peptide is sufficient evidence
+                    // and avoids walking the entire MoleculeTransitionGroups tree on every cell
+                    // edit during a large paste. The settings deduction is library-cached so the
+                    // expensive scan only runs once per document.
+                    var candidates = new HashSet<eIonMobilityUnits>(
+                        TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(SrmDocument.Settings));
+                    foreach (var siblingGroup in Peptide.DocNode.TransitionGroups)
+                    {
+                        var siblingUnits = siblingGroup.ExplicitValues.IonMobilityUnits;
+                        if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(siblingUnits))
+                            candidates.Add(siblingUnits);
+                    }
+                    if (candidates.Count == 1)
+                        unitsForSet = candidates.Single();
+                }
                 ChangeDocNode(EditColumnDescription(nameof(ExplicitIonMobility), value),
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, docNode.ExplicitValues.IonMobilityUnits)));
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, unitsForSet)));
             }
         }
 

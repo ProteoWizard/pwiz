@@ -1023,8 +1023,20 @@ namespace pwiz.Skyline.Model
                     imUnits = IonMobilityFilter.IonMobilityUnitsFromL10NString(ColumnString(Fields, Indices.ExplicitIonMobilityUnitsColumn));
                     if (imUnits == eIonMobilityUnits.none)
                     {
-                        ionMobility = null;
-                        return ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units;
+                        // User supplied an ion mobility value without specifying units - try to
+                        // deduce from the target document's settings before giving up. Cached
+                        // per-reader so a large transition list import doesn't rescan results
+                        // and libraries on every row.
+                        var candidates = GetCachedSettingsIonMobilityUnits();
+                        if (candidates.Count == 1)
+                        {
+                            imUnits = candidates.Single();
+                        }
+                        else
+                        {
+                            ionMobility = null;
+                            return ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units;
+                        }
                     }
                     declarations[imUnits] = im;
                 }
@@ -1044,6 +1056,13 @@ namespace pwiz.Skyline.Model
                 ionMobility = declarations.First().Value;
                 imUnits = declarations.First().Key;
                 return null; // No error
+            }
+
+            private IReadOnlyCollection<eIonMobilityUnits> _cachedSettingsImUnits;
+
+            private IReadOnlyCollection<eIonMobilityUnits> GetCachedSettingsIonMobilityUnits()
+            {
+                return _cachedSettingsImUnits ??= TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(Settings);
             }
 
             public ExplicitTransitionGroupValues ExplicitTransitionGroupValues

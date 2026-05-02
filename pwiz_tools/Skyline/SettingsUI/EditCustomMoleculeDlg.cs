@@ -140,10 +140,9 @@ namespace pwiz.Skyline.SettingsUI
             // Initialise the ion mobility units dropdown with L10N values
             foreach (eIonMobilityUnits t in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
-                var displayString = IonMobilityFilter.IonMobilityUnitsL10NString(t);
-                if (displayString != null) // Special value eIonMobilityUnits.unknown must not appear in list
+                if (IonMobilityFilter.IsUserSelectableIonMobilityUnit(t))
                 {
-                    comboBoxIonMobilityUnits.Items.Add(displayString);
+                    comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(t));
                 }
             }
 
@@ -623,11 +622,18 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return comboBoxIonMobilityUnits.SelectedIndex >= 0
-                    ? (eIonMobilityUnits) comboBoxIonMobilityUnits.SelectedIndex
-                    : eIonMobilityUnits.none;
+                // Look up by display string rather than relying on the dropdown index matching
+                // the enum value - they only line up today because the user-selectable enum
+                // members happen to occupy contiguous values starting at 0.
+                return IonMobilityFilter.IonMobilityUnitsFromL10NString(
+                    comboBoxIonMobilityUnits.SelectedItem as string);
             }
-            set { comboBoxIonMobilityUnits.SelectedIndex = (int) value; }
+            set
+            {
+                var idx = comboBoxIonMobilityUnits.Items.IndexOf(IonMobilityFilter.IonMobilityUnitsL10NString(value));
+                // Non-displayable values (waters_sonar, unknown) fall back to "None".
+                comboBoxIonMobilityUnits.SelectedIndex = idx >= 0 ? idx : 0;
+            }
         }
 
         public double? PrecursorCollisionEnergy
