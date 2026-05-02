@@ -1167,9 +1167,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
-                var ionMobilityUnitsL10NString = IonMobilityUnitsL10NString(u);
-                if (string.Equals(units, ionMobilityUnitsL10NString, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(units, u.ToString(), StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(units, u.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    result = u;
+                    return true;
+                }
+                // Skip the L10N match for non-user-selectable units; waters_sonar shares the
+                // localized "None" with eIonMobilityUnits.none and would otherwise win the match
+                // due to enum iteration order (waters_sonar = -1 visited before none = 0).
+                if (IsUserSelectableIonMobilityUnit(u) &&
+                    string.Equals(units, IonMobilityUnitsL10NString(u), StringComparison.OrdinalIgnoreCase))
                 {
                     result = u;
                     return true;
@@ -1185,7 +1192,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     Thread.CurrentThread.CurrentUICulture = tryCulture;
                     foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
                     {
-                        if (u != eIonMobilityUnits.none)
+                        if (u != eIonMobilityUnits.none && IsUserSelectableIonMobilityUnit(u))
                         {
                             var ionMobilityUnitsL10NString = IonMobilityUnitsL10NString(u);
                             if (string.Equals(units, ionMobilityUnitsL10NString, StringComparison.OrdinalIgnoreCase))

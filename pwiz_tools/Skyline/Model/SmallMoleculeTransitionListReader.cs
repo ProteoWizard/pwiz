@@ -1588,8 +1588,8 @@ namespace pwiz.Skyline.Model
                 if (declaredUnitsIM == eIonMobilityUnits.none)
                 {
                     // Units column missing or empty - try to deduce from the target document
-                    // before erroring. Cached per-reader so a large paste doesn't rescan the
-                    // document tree, results, and libraries on every row.
+                    // before erroring. Settings-level evidence is cached per-reader so the
+                    // expensive library scan only runs once per import.
                     var candidates = GetCachedDocumentIonMobilityUnits(document);
                     if (candidates.Count == 1)
                     {
@@ -1915,15 +1915,27 @@ namespace pwiz.Skyline.Model
                    $@" ({string.Join(@", ", ionMobility.Select(kvp => $@"{IonMobilityFilter.IonMobilityUnitsL10NString(kvp.Key)} = {kvp.Value}"))}";
         }
 
-        private IReadOnlyCollection<eIonMobilityUnits> _cachedDocImUnits;
+        private IReadOnlyCollection<eIonMobilityUnits> _cachedSettingsImUnits;
 
-        // Captured on first call and reused for the rest of the paste. Each row passes a slightly
-        // different document instance (rows are added incrementally), but the deduced unit set is
-        // monotonically non-decreasing, and once we deduce a unit we want every subsequent
-        // missing-units row in this paste to receive the same one.
-        private IReadOnlyCollection<eIonMobilityUnits> GetCachedDocumentIonMobilityUnits(SrmDocument document)
+        // Settings (results, IM library, spectral libraries) don't change during an import, so the
+        // expensive library-scanning settings-level deduction is cached once. The transition group
+        // walk is fast in-memory work and is redone every call so units added by previous rows in
+        // the same paste contribute to ambiguity detection on later rows.
+        private HashSet<eIonMobilityUnits> GetCachedDocumentIonMobilityUnits(SrmDocument document)
         {
-            return _cachedDocImUnits ??= TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(document);
+            var units = new HashSet<eIonMobilityUnits>(_cachedSettingsImUnits ??=
+                TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(document.Settings));
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
+            {
+                var u = nodeGroup.ExplicitValues.IonMobilityUnits;
+                if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(u))
+                {
+                    units.Add(u);
+                    if (units.Count > 1)
+                        return units;
+                }
+            }
+            return units;
         }
 
         /// <summary>
