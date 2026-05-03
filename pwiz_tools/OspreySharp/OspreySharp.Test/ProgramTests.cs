@@ -127,6 +127,40 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
+        public void TestValidateNoJoinWorkerHappyPath()
+        {
+            // --join-at-pass=1 --no-join (per-file rescore worker):
+            // requires --input-scores, --library, and --output. No
+            // --input mzML.
+            var config = new OspreyConfig
+            {
+                NoJoin = true,
+                InputScores = new List<string> { "a.scores.parquet" },
+                LibrarySource = LibrarySource.FromPath("ref.blib"),
+                OutputBlib = "out.blib",
+            };
+            Assert.IsNull(
+                Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false));
+        }
+
+        [TestMethod]
+        public void TestValidateNoJoinWorkerRequiresLibraryAndOutput()
+        {
+            // Worker mode without --library or --output — like the in-process
+            // --join-at-pass=1 path, both are required so the per-file
+            // parquet write-back has somewhere to go.
+            var config = new OspreyConfig
+            {
+                NoJoin = true,
+                InputScores = new List<string> { "a.scores.parquet" },
+                // missing LibrarySource and OutputBlib
+            };
+            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--library and --output");
+        }
+
+        [TestMethod]
         public void TestValidateNoJoinHappyPath()
         {
             var config = new OspreyConfig
@@ -274,13 +308,18 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
-        public void TestNormalizeJoinAtPass1WithNoJoinModifierErrorsUntilImplemented()
+        public void TestNormalizeJoinAtPass1WithNoJoinModifierKeepsBothFlags()
         {
-            // PR 2 will implement "run only Stage 6 from persisted Stage 5 outputs."
+            // --join-at-pass=1 --no-join is the per-file rescore worker
+            // mode. Normalize keeps noJoinFlag true and joinOnlyFlag false
+            // (they're not flipped); Main routes the combination to
+            // RescoreWorker.Run.
             bool noJoin = true, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "not yet implemented");
+            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out bool joinOnlyModifier);
+            Assert.IsNull(err, "got: {0}", err);
+            Assert.IsTrue(noJoin, "noJoinFlag should remain true");
+            Assert.IsFalse(joinOnly, "joinOnlyFlag should remain false");
+            Assert.IsFalse(joinOnlyModifier, "joinOnlyModifier should be false");
         }
 
         [TestMethod]
