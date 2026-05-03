@@ -30,6 +30,7 @@ using System.IO.Compression;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
 
 namespace pwiz.OspreySharp.Test
@@ -1959,6 +1960,272 @@ namespace pwiz.OspreySharp.Test
                     s,
                     parsedHi,
                     BitConverter.DoubleToInt64Bits(parsedHi));
+            }
+        }
+
+        #endregion
+
+        #region RescoreHydration Tests
+
+        /// <summary>
+        /// End-to-end round-trip: write a synthetic Stage 5 → Stage 6
+        /// boundary file pair (.scores.parquet + .1st-pass.fdr_scores.bin
+        /// + .reconciliation.json) for a single file, hydrate it via
+        /// <see cref="RescoreHydration.HydrateForRescore"/>, and assert
+        /// every piece of the in-memory state matches what was written.
+        /// Mirrors what the worker does at startup before driving the
+        /// rescore engine.
+        /// </summary>
+        [TestMethod]
+        public void TestRescoreHydrationRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "rescore_hydrate_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                const string stem = "sample1";
+                string parquetPath = Path.Combine(dir, stem + ".scores.parquet");
+                string mzmlSynthetic = Path.Combine(dir, stem + ".mzML");
+                string sidecarPath = FdrScoresSidecar.Pass1Path(mzmlSynthetic);
+                string reconPath = ReconciliationFile.PathForInput(mzmlSynthetic);
+
+                // 1. Build 3 synthetic scored entries and write the parquet.
+                var scoredEntries = new List<CoelutionScoredEntry>();
+                for (int i = 0; i < 3; i++)
+                {
+                    scoredEntries.Add(new CoelutionScoredEntry
+                    {
+                        EntryId = (uint)(100 + i),
+                        IsDecoy = i == 1,
+                        Sequence = "PEPTIDE",
+                        ModifiedSequence = "PEPTIDE",
+                        Charge = 2,
+                        PrecursorMz = 500.0 + i,
+                        ScanNumber = (uint)(1000 + i),
+                        ApexRt = 5.0 + i * 0.5,
+                        FileName = stem + ".mzML",
+                        PeakBounds = new XICPeakBounds
+                        {
+                            StartRt = 4.5 + i * 0.5,
+                            EndRt = 5.5 + i * 0.5,
+                        },
+                        Features = new CoelutionFeatureSet
+                        {
+                            CoelutionSum = 0.9 + i * 0.01,
+                            CoelutionMax = 0.95,
+                            NCoelutingFragments = 5,
+                            PeakApex = 1000.0,
+                            PeakArea = 5000.0,
+                            PeakSharpness = 0.8,
+                            Xcorr = 2.5,
+                            ConsecutiveIons = 3,
+                            ExplainedIntensity = 0.75,
+                            MassAccuracyMean = -0.5,
+                            AbsMassAccuracyMean = 0.5,
+                            RtDeviation = 0.1,
+                            AbsRtDeviation = 0.1,
+                            Ms1PrecursorCoelution = 0.85,
+                            Ms1IsotopeCosine = 0.92,
+                            MedianPolishCosine = 0.88,
+                            MedianPolishResidualRatio = 0.15,
+                            SgWeightedXcorr = 2.3,
+                            SgWeightedCosine = 0.87,
+                            MedianPolishMinFragmentR2 = 0.7,
+                            MedianPolishResidualCorrelation = 0.3,
+                        },
+                    });
+                }
+                ParquetScoreCache.WriteScoresParquet(parquetPath, scoredEntries,
+                    new Dictionary<string, string>
+                    {
+                        { "osprey.version", "1.0.0" },
+                        { "osprey.search_hash", "abc123" },
+                    });
+
+                // 2. Build matching FdrEntry list (same EntryId order +
+                //    distinct field values per record) and write the v3
+                //    sidecar.
+                var sidecarEntries = new List<FdrEntry>
+                {
+                    MakeFdrEntry(100, -3.5, 0.001, 0.02, runProteinQvalue: 0.42),
+                    MakeFdrEntry(101, -3.4, 0.002, 0.05, runProteinQvalue: 0.43),
+                    MakeFdrEntry(102, -3.3, 0.003, 0.08, runProteinQvalue: 0.44),
+                };
+                FdrScoresSidecar.Write(sidecarPath, sidecarEntries,
+                    FdrScoresSidecar.Pass.FirstPass);
+
+                // 3. Build a reconciliation.json envelope: one
+                //    UseCwtPeak action on entry 100, one ForcedIntegration
+                //    on entry 102, plus a refined cal and a single
+                //    gap-fill target.
+                var reconFile = new ReconciliationFile
+                {
+                    FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                    SearchHash = "abc123",
+                    LibraryHash = "lib-h",
+                    UseCwtPeakActions = new List<UseCwtPeakEntry>
+                    {
+                        new UseCwtPeakEntry
+                        {
+                            ApexRt = 5.07, CandidateIdx = 1,
+                            EndRt = 5.40, EntryId = 100, StartRt = 4.70,
+                        },
+                    },
+                    ForcedIntegrationActions = new List<ForcedIntegrationEntry>
+                    {
+                        new ForcedIntegrationEntry
+                            { EntryId = 102, ExpectedRt = 6.10, HalfWidth = 0.075 },
+                    },
+                    RefinedRtCalibration = new RefinedRtCalibrationJson
+                    {
+                        AbsResiduals = new[] { 0.01, 0.02, 0.015 },
+                        FittedRts = new[] { 10.5, 20.5, 30.5 },
+                        LibraryRts = new[] { 10.0, 20.0, 30.0 },
+                        ResidualSd = 0.123,
+                    },
+                    GapFillTargets = new List<GapFillEntry>
+                    {
+                        new GapFillEntry
+                        {
+                            Charge = 2,
+                            DecoyEntryId = 0x80000005u,
+                            ExpectedRt = 33.5,
+                            HalfWidth = 0.08,
+                            ModifiedSequence = "PEPTIDE",
+                            TargetEntryId = 5,
+                        },
+                    },
+                };
+                ReconciliationFile.Save(reconPath, reconFile);
+
+                // 4. Hydrate.
+                var inputs = RescoreHydration.HydrateForRescore(new[] { parquetPath });
+
+                // 5. Assert per-file entries: same fileName, same count,
+                //    Score / RunProteinQvalue overlaid bit-exactly.
+                Assert.AreEqual(1, inputs.PerFileEntries.Count);
+                Assert.AreEqual(stem, inputs.PerFileEntries[0].Key);
+                var got = inputs.PerFileEntries[0].Value;
+                Assert.AreEqual(3, got.Count);
+                for (int i = 0; i < 3; i++)
+                {
+                    Assert.AreEqual(sidecarEntries[i].EntryId, got[i].EntryId);
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(sidecarEntries[i].Score),
+                                    BitConverter.DoubleToInt64Bits(got[i].Score));
+                    Assert.AreEqual(
+                        BitConverter.DoubleToInt64Bits(sidecarEntries[i].RunProteinQvalue),
+                        BitConverter.DoubleToInt64Bits(got[i].RunProteinQvalue));
+                }
+
+                // 6. Assert reconciliation actions: keyed by
+                //    (fileName, vec_idx) where vec_idx is the row index
+                //    in PerFileEntries[0].Value.
+                Assert.AreEqual(2, inputs.ReconciliationActions.Count);
+                var useCwt = inputs.ReconciliationActions[(stem, 0)] as ReconcileAction.UseCwtPeak;
+                Assert.IsNotNull(useCwt, "expected UseCwtPeak at (stem, 0)");
+                Assert.AreEqual(1, useCwt.CandidateIndex);
+                Assert.AreEqual(5.07, useCwt.ApexRt);
+                Assert.AreEqual(4.70, useCwt.StartRt);
+                Assert.AreEqual(5.40, useCwt.EndRt);
+
+                var forced = inputs.ReconciliationActions[(stem, 2)]
+                    as ReconcileAction.ForcedIntegration;
+                Assert.IsNotNull(forced, "expected ForcedIntegration at (stem, 2)");
+                Assert.AreEqual(6.10, forced.ExpectedRt);
+                Assert.AreEqual(0.075, forced.HalfWidth);
+
+                // 7. Assert refined RT calibration is reconstructed.
+                Assert.IsTrue(inputs.RefinedCalibrations.ContainsKey(stem));
+
+                // 8. Assert gap-fill target round-trip.
+                Assert.IsTrue(inputs.PerFileGapFill.ContainsKey(stem));
+                var gap = inputs.PerFileGapFill[stem];
+                Assert.AreEqual(1, gap.Count);
+                Assert.AreEqual(5u, gap[0].TargetEntryId);
+                Assert.AreEqual(0x80000005u, gap[0].DecoyEntryId);
+                Assert.AreEqual(33.5, gap[0].ExpectedRt);
+                Assert.AreEqual(0.08, gap[0].HalfWidth);
+                Assert.AreEqual("PEPTIDE", gap[0].ModifiedSequence);
+                Assert.AreEqual((byte)2, gap[0].Charge);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// If the planner emits an entry_id that doesn't appear in the
+        /// stub list (e.g., parquet/boundary mismatch from a botched
+        /// rebuild), the hydrator must throw rather than silently
+        /// skipping the action — a Stage 6 worker proceeding with
+        /// missing actions would scramble gap-fill results.
+        /// </summary>
+        [TestMethod]
+        public void TestRescoreHydrationRejectsActionEntryIdNotInStubs()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "rescore_hyd_drift_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                const string stem = "sample1";
+                string parquetPath = Path.Combine(dir, stem + ".scores.parquet");
+                string mzmlSynthetic = Path.Combine(dir, stem + ".mzML");
+                string sidecarPath = FdrScoresSidecar.Pass1Path(mzmlSynthetic);
+                string reconPath = ReconciliationFile.PathForInput(mzmlSynthetic);
+
+                var scored = new List<CoelutionScoredEntry>
+                {
+                    new CoelutionScoredEntry
+                    {
+                        EntryId = 100, ModifiedSequence = "PEPTIDE", Sequence = "PEPTIDE",
+                        Charge = 2, PrecursorMz = 500.0, ScanNumber = 1000, ApexRt = 5.0,
+                        FileName = stem + ".mzML",
+                        PeakBounds = new XICPeakBounds { StartRt = 4.5, EndRt = 5.5 },
+                        Features = new CoelutionFeatureSet { CoelutionSum = 0.9 },
+                    },
+                };
+                ParquetScoreCache.WriteScoresParquet(parquetPath, scored,
+                    new Dictionary<string, string> { { "osprey.version", "1.0.0" } });
+                FdrScoresSidecar.Write(sidecarPath,
+                    new List<FdrEntry> { MakeFdrEntry(100, -3.5, 0.001, 0.02) },
+                    FdrScoresSidecar.Pass.FirstPass);
+
+                // entry_id 999 is NOT in the parquet/sidecar — drift!
+                var reconFile = new ReconciliationFile
+                {
+                    FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                    SearchHash = "x",
+                    LibraryHash = "y",
+                    UseCwtPeakActions = new List<UseCwtPeakEntry>
+                    {
+                        new UseCwtPeakEntry
+                        {
+                            ApexRt = 5.0, CandidateIdx = 0, EndRt = 5.5,
+                            EntryId = 999, StartRt = 4.5,
+                        },
+                    },
+                    ForcedIntegrationActions = new List<ForcedIntegrationEntry>(),
+                    GapFillTargets = new List<GapFillEntry>(),
+                };
+                ReconciliationFile.Save(reconPath, reconFile);
+
+                try
+                {
+                    RescoreHydration.HydrateForRescore(new[] { parquetPath });
+                    Assert.Fail("expected InvalidDataException for entry_id drift");
+                }
+                catch (InvalidDataException ex)
+                {
+                    StringAssert.Contains(ex.Message, "999");
+                    StringAssert.Contains(ex.Message, "not found in stubs");
+                }
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
             }
         }
 
