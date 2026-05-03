@@ -1562,7 +1562,8 @@ namespace pwiz.OspreySharp.Test
 
         #region FdrScoresSidecar Tests
 
-        private static FdrEntry MakeFdrEntry(uint id, double score, double q, double pep)
+        private static FdrEntry MakeFdrEntry(uint id, double score, double q, double pep,
+            double runProteinQvalue = 1.0)
         {
             return new FdrEntry
             {
@@ -1574,7 +1575,7 @@ namespace pwiz.OspreySharp.Test
                 Score = score,
                 RunPrecursorQvalue = q,
                 RunPeptideQvalue = q + 1.0e-9,
-                RunProteinQvalue = 1.0,
+                RunProteinQvalue = runProteinQvalue,
                 ExperimentPrecursorQvalue = q + 2.0e-9,
                 ExperimentPeptideQvalue = q + 3.0e-9,
                 ExperimentProteinQvalue = 1.0,
@@ -1595,11 +1596,16 @@ namespace pwiz.OspreySharp.Test
             try
             {
                 string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                // Distinct run_protein_qvalue per entry catches a writer that
+                // drops the v3 field. Values match Rust's
+                // fdr_scores_sidecar_v3_round_trip exactly so the
+                // OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT byte-parity gate compares
+                // identical inputs on both sides.
                 var entries = new List<FdrEntry>
                 {
-                    MakeFdrEntry(0, -3.5, 0.001, 0.02),
-                    MakeFdrEntry(1, -3.4, 0.002, 0.05),
-                    MakeFdrEntry(2, -3.3, 0.003, 0.08),
+                    MakeFdrEntry(0, -3.5, 0.001, 0.02, runProteinQvalue: 0.0042),
+                    MakeFdrEntry(1, -3.4, 0.002, 0.05, runProteinQvalue: 0.0123),
+                    MakeFdrEntry(2, -3.3, 0.003, 0.08, runProteinQvalue: 0.95),
                 };
 
                 FdrScoresSidecar.Write(path, entries, FdrScoresSidecar.Pass.FirstPass);
@@ -1642,6 +1648,8 @@ namespace pwiz.OspreySharp.Test
                                     BitConverter.DoubleToInt64Bits(loaded[i].ExperimentPeptideQvalue));
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].Pep),
                                     BitConverter.DoubleToInt64Bits(loaded[i].Pep));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunProteinQvalue),
+                                    BitConverter.DoubleToInt64Bits(loaded[i].RunProteinQvalue));
                 }
             }
             finally

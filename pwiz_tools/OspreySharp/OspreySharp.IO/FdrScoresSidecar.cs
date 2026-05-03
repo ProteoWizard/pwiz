@@ -30,38 +30,43 @@ namespace pwiz.OspreySharp.IO
 {
     /// <summary>
     /// Reader / writer for the per-file <c>.&lt;phase&gt;-pass.fdr_scores.bin</c>
-    /// sidecar: the v2 binary format that persists the full FDR statistics
-    /// for an entry (SVM discriminant + 4 q-values + PEP). Used at the
-    /// Stage 5 → Stage 6 boundary so a Stage 6 worker can run without
-    /// re-running first-pass Percolator.
+    /// sidecar: the v3 binary format that persists the full FDR statistics
+    /// for an entry (SVM discriminant + 4 q-values + PEP +
+    /// <c>run_protein_qvalue</c>). Used at the Stage 5 → Stage 6 boundary
+    /// so a Stage 6 worker can run without re-running first-pass Percolator
+    /// AND apply the same protein-rescue compaction predicate the in-process
+    /// pipeline uses.
     ///
     /// Mirrors <c>write_fdr_scores_sidecar</c> + <c>load_fdr_scores_sidecar</c>
     /// in <c>osprey/crates/osprey/src/pipeline.rs</c>. Cross-impl byte
-    /// parity is verified by a separate harness script.
+    /// parity is verified by a separate harness script via the
+    /// <c>OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT</c> test hook.
     ///
-    /// Format (32-byte header + N × 52-byte records, all little-endian):
+    /// Format (32-byte header + N × 60-byte records, all little-endian):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYFDR"
-    ///   version       [8]      = u8 (= 2)
+    ///   version       [8]      = u8 (= 3)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
     ///   reserved      [24..32] = 8 bytes (zero)
-    ///   body          [32..]   = entry_count * 52 bytes:
-    ///                            u32 entry_id
-    ///                            f64 svm_score
-    ///                            f64 run_precursor_qvalue
-    ///                            f64 run_peptide_qvalue
-    ///                            f64 experiment_precursor_qvalue
-    ///                            f64 experiment_peptide_qvalue
-    ///                            f64 pep
+    ///   body          [32..]   = entry_count * 60 bytes:
+    ///                            [0..4]   u32 entry_id
+    ///                            [4..12]  f64 svm_score
+    ///                            [12..20] f64 run_precursor_qvalue
+    ///                            [20..28] f64 run_peptide_qvalue
+    ///                            [28..36] f64 experiment_precursor_qvalue
+    ///                            [36..44] f64 experiment_peptide_qvalue
+    ///                            [44..52] f64 pep
+    ///                            [52..60] f64 run_protein_qvalue
     /// </code>
-    /// Records are written pre-compaction at the Stage 5 → Stage 6
-    /// boundary: every input entry contributes one record so q-values
-    /// are preserved even for entries that may not survive later
-    /// compaction. The pre-compaction call site is at the bottom of the
-    /// first-pass FDR block, just before the compaction loop runs,
-    /// mirroring Rust's <c>persist_fdr_scores</c> at
+    /// Records are written pre-compaction but POST first-pass protein
+    /// FDR at the Stage 5 → Stage 6 boundary: every input entry
+    /// contributes one record so q-values are preserved even for
+    /// entries that may not survive later compaction, AND so
+    /// <c>run_protein_qvalue</c> carries real values rather than the
+    /// default 1.0. Mirrors the post-protein-FDR
+    /// <c>persist_fdr_scores</c> call site in Rust's
     /// <c>pipeline.rs</c>. Each record carries the entry's
     /// <c>entry_id</c> for identity verification (the per-position
     /// <c>entries[i].EntryId == record.entry_id</c> check during load
@@ -73,6 +78,15 @@ namespace pwiz.OspreySharp.IO
     /// loader also rejects mismatches on the header <c>pass</c> byte
     /// so a 2nd-pass sidecar can never silently scramble 1st-pass
     /// stubs (or vice versa).
+    ///
+    /// v2 → v3 (2026-05-02): added <c>run_protein_qvalue</c> to
+    /// support the Stage 6 worker's compaction step. The in-process
+    /// pipeline filters pre-Stage-6 entries by
+    /// <c>run_peptide_qvalue ≤ 0.01</c> OR
+    /// <c>run_protein_qvalue ≤ 0.01</c> (the protein-rescue branch);
+    /// the v2 sidecar carried only the first half of that predicate,
+    /// so a rehydrated worker couldn't reproduce in-process compaction
+    /// when <c>--protein-fdr</c> is set. v3 closes that gap.
     /// </summary>
     public static class FdrScoresSidecar
     {
@@ -80,9 +94,9 @@ namespace pwiz.OspreySharp.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
 
-        public const byte FormatVersion = 2;
+        public const byte FormatVersion = 3;
         public const int HeaderLength = 32;
-        public const int RecordLength = 52;
+        public const int RecordLength = 60;
 
         /// <summary>
         /// Pass identifier embedded in the header. Mirrors the Rust pass
@@ -158,7 +172,7 @@ namespace pwiz.OspreySharp.IO
                     bw.Write((ulong)entries.Count);                   // [16..24]
                     bw.Write(new byte[8]);                            // [24..32] reserved
 
-                    // Body: 52 bytes per entry (entry_id + 6 f64s)
+                    // Body: 60 bytes per entry (entry_id + 7 f64s)
                     foreach (var e in entries)
                     {
                         bw.Write(e.EntryId);                          // [0..4]
@@ -168,6 +182,7 @@ namespace pwiz.OspreySharp.IO
                         bw.Write(e.ExperimentPrecursorQvalue);        // [28..36]
                         bw.Write(e.ExperimentPeptideQvalue);          // [36..44]
                         bw.Write(e.Pep);                              // [44..52]
+                        bw.Write(e.RunProteinQvalue);                 // [52..60]
                     }
                 }
 
@@ -245,6 +260,7 @@ namespace pwiz.OspreySharp.IO
                 e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
                 e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
                 e.Pep                         = BitConverter.ToDouble(data, off + 44);
+                e.RunProteinQvalue            = BitConverter.ToDouble(data, off + 52);
             }
             return true;
         }
