@@ -29,6 +29,7 @@ using System.IO;
 using System.IO.Compression;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
@@ -2227,6 +2228,155 @@ namespace pwiz.OspreySharp.Test
             {
                 try { Directory.Delete(dir, true); } catch (IOException) { }
             }
+        }
+
+        #endregion
+
+        #region RescoreCompaction Tests
+
+        /// <summary>
+        /// Worker compaction: drop non-passing entries by base_id and
+        /// re-key reconciliation actions from pre-compaction vec_idx to
+        /// post-compaction vec_idx. Mirrors what the in-process flow
+        /// does between first-pass FDR and Stage 6 — see
+        /// AnalysisPipeline's "First-pass compaction" block.
+        ///
+        /// Test layout (single file, five entries):
+        ///   idx 0: target id=1, peptide_q=0.005 (PASS peptide)
+        ///   idx 1: decoy  id=0x80000001, base=1 (retained via target's base_id)
+        ///   idx 2: target id=2, peptide_q=0.5  (FAIL — non-passing)
+        ///   idx 3: decoy  id=0x80000002, base=2 (dropped because base=2 not in pass set)
+        ///   idx 4: target id=3, peptide_q=0.5, protein_q=0.005 (PASS via protein-rescue)
+        ///
+        /// With ProteinFdr=0.01, base_ids {1, 3} pass. After compaction:
+        ///   idx 0: id=1, idx 1: id=0x80000001, idx 2: id=3.
+        ///
+        /// Reconciliation actions are seeded at:
+        ///   (f, 0) on id=1  → should remain at (f, 0)
+        ///   (f, 4) on id=3  → should move to (f, 2)
+        ///   (f, 2) on id=2  → should be dropped (entry compacted away)
+        /// </summary>
+        [TestMethod]
+        public void TestRescoreCompactionRekeysActionsAndDropsNonpassing()
+        {
+            const string fileName = "f1";
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
+                {
+                    MakeFdrEntryWithProteinQ(1u,           runPeptideQ: 0.005, runProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(0x80000001u,  runPeptideQ: 0.5,   runProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(2u,           runPeptideQ: 0.5,   runProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(0x80000002u,  runPeptideQ: 0.5,   runProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(3u,           runPeptideQ: 0.5,   runProteinQ: 0.005),
+                }),
+            };
+
+            var actions = new Dictionary<(string, int), ReconcileAction>
+            {
+                { (fileName, 0), new ReconcileAction.UseCwtPeak(0, 1.0, 2.0, 3.0) },
+                { (fileName, 4), new ReconcileAction.ForcedIntegration(7.0, 0.05) },
+                { (fileName, 2), new ReconcileAction.UseCwtPeak(1, 5.0, 6.0, 7.0) },
+            };
+
+            var inputs = new RescoreInputs
+            {
+                PerFileEntries = perFile,
+                ReconciliationActions = actions,
+                RefinedCalibrations = new Dictionary<string, RTCalibration>(),
+                PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
+            };
+
+            var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
+            {
+                RunFdr = 0.01,
+                ProteinFdr = 0.01,
+            });
+
+            // Compaction stats.
+            Assert.AreEqual(5, stats.EntriesBefore);
+            Assert.AreEqual(3, stats.EntriesAfter);
+            Assert.AreEqual(2, stats.FirstPassBaseIds);   // base_ids {1, 3}
+            Assert.AreEqual(1, stats.DroppedActions);     // the (f, 2) action
+
+            // Per-file list compacted.
+            Assert.AreEqual(1, inputs.PerFileEntries.Count);
+            var got = inputs.PerFileEntries[0].Value;
+            Assert.AreEqual(3, got.Count);
+            Assert.AreEqual(1u, got[0].EntryId);
+            Assert.AreEqual(0x80000001u, got[1].EntryId);
+            Assert.AreEqual(3u, got[2].EntryId);
+
+            // Reconciliation actions re-keyed.
+            Assert.AreEqual(2, inputs.ReconciliationActions.Count);
+            Assert.IsInstanceOfType(
+                inputs.ReconciliationActions[(fileName, 0)], typeof(ReconcileAction.UseCwtPeak));
+            Assert.IsInstanceOfType(
+                inputs.ReconciliationActions[(fileName, 2)],
+                typeof(ReconcileAction.ForcedIntegration));
+            // The action at the dropped entry is gone, NOT silently re-keyed
+            // to a different surviving entry.
+            Assert.IsFalse(inputs.ReconciliationActions.ContainsKey((fileName, 1)));
+        }
+
+        /// <summary>
+        /// With ProteinFdr=null (--protein-fdr not passed), the
+        /// protein-rescue branch is skipped entirely. An entry that
+        /// would have been retained via protein rescue (peptide_q
+        /// fails, protein_q passes) gets compacted away, taking any
+        /// action keyed to it with it.
+        /// </summary>
+        [TestMethod]
+        public void TestRescoreCompactionWithoutProteinFdrSkipsRescue()
+        {
+            const string fileName = "f1";
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
+                {
+                    MakeFdrEntryWithProteinQ(1u, runPeptideQ: 0.005, runProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(2u, runPeptideQ: 0.5,   runProteinQ: 0.005),
+                }),
+            };
+
+            var inputs = new RescoreInputs
+            {
+                PerFileEntries = perFile,
+                ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
+                RefinedCalibrations = new Dictionary<string, RTCalibration>(),
+                PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
+            };
+
+            var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
+            {
+                RunFdr = 0.01,
+                ProteinFdr = null,
+            });
+
+            // Only entry 1 passes; entry 2 dropped (no protein rescue).
+            Assert.AreEqual(1, stats.EntriesAfter);
+            Assert.AreEqual(1, stats.FirstPassBaseIds);
+            Assert.AreEqual(1u, inputs.PerFileEntries[0].Value[0].EntryId);
+        }
+
+        /// <summary>
+        /// Helper: build a minimal FdrEntry usable in compaction tests.
+        /// Sets the FDR fields the predicate inspects and leaves the
+        /// rest at their defaults.
+        /// </summary>
+        private static FdrEntry MakeFdrEntryWithProteinQ(uint id, double runPeptideQ,
+            double runProteinQ)
+        {
+            return new FdrEntry
+            {
+                EntryId = id,
+                ParquetIndex = id,
+                IsDecoy = (id & 0x80000000u) != 0,
+                Charge = 2,
+                RunPeptideQvalue = runPeptideQ,
+                RunProteinQvalue = runProteinQ,
+                ModifiedSequence = "PEPTIDE",
+            };
         }
 
         #endregion
