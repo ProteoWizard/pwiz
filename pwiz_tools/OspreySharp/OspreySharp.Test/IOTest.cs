@@ -24,9 +24,11 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.IO;
 
@@ -1336,7 +1338,7 @@ namespace pwiz.OspreySharp.Test
             if (hasPrecursor)
             {
                 precursorBlock = string.Format(
-                    System.Globalization.CultureInfo.InvariantCulture,
+                    CultureInfo.InvariantCulture,
                     @"
         <precursorList count=""1"">
           <precursor>
@@ -1356,7 +1358,7 @@ namespace pwiz.OspreySharp.Test
             }
 
             return string.Format(
-                System.Globalization.CultureInfo.InvariantCulture,
+                CultureInfo.InvariantCulture,
                 @"
       <spectrum index=""{0}"" defaultArrayLength=""{1}"" id=""scan={0}"">
         <cvParam cvRef=""MS"" accession=""MS:1000511"" value=""{2}"" />
@@ -1876,6 +1878,79 @@ namespace pwiz.OspreySharp.Test
             finally
             {
                 try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Mirror of the Rust regression test
+        /// <c>reconciliation_io::tests::serde_json_f64_roundtrip_is_bit_exact</c>.
+        /// On the Rust side, serde_json's default f64 parser is best-effort
+        /// and loses 1 ULP on some shortest-roundtrip strings (e.g.,
+        /// "3.1575921556296254" parses to 0x...878 instead of the correct
+        /// 0x...877). The fix on the Rust side is the `float_roundtrip`
+        /// feature flag on serde_json.
+        ///
+        /// .NET's <see cref="JsonTextReader"/> for <see cref="JsonToken.Float"/>
+        /// uses <c>double.Parse</c> internally, which has been correctly
+        /// rounded since Core 3.0. This test asserts that the same six
+        /// known-tricky values round-trip bit-exactly through Newtonsoft so
+        /// the C# Stage-N JSON path inherits the same byte-parity invariant
+        /// the Rust side now enforces. If a future Newtonsoft upgrade
+        /// regresses the f64 parser, this test surfaces it before any
+        /// cross-impl harness diff is taken.
+        /// </summary>
+        [TestMethod]
+        public void TestNewtonsoftJsonF64RoundtripIsBitExact()
+        {
+            double[] candidates =
+            {
+                3.1575921556296254,
+                3.1585537473115846,
+                3.1741410573166426,
+                BitConverter.Int64BitsToDouble(0x0010_0000_0000_0000L), // smallest normal
+                1.0,
+                0.0123,
+            };
+            foreach (var v in candidates)
+            {
+                string s = Diagnostics.FormatF64Roundtrip(v);
+
+                // Path 1: low-level JsonTextReader, the underlying f64
+                // parser used by every Newtonsoft deserialization path.
+                // FormatF64Roundtrip emits whole numbers as "1" (no
+                // decimal point), so the token type can be Integer or
+                // Float depending on the value -- both are valid sources
+                // of an f64 per JSON spec.
+                using (var sr = new StringReader(s))
+                using (var reader = new JsonTextReader(sr))
+                {
+                    Assert.IsTrue(reader.Read(),
+                        "JsonTextReader.Read returned false for {0}", s);
+                    Assert.IsTrue(reader.TokenType == JsonToken.Float ||
+                                  reader.TokenType == JsonToken.Integer,
+                        "Expected numeric token for {0}, got {1}", s, reader.TokenType);
+                    double parsed = Convert.ToDouble(reader.Value, CultureInfo.InvariantCulture);
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(v),
+                                    BitConverter.DoubleToInt64Bits(parsed),
+                        "JsonTextReader lost bits: input={0} ({1:X16}) -> str={2} -> parsed={3} ({4:X16})",
+                        v,
+                        BitConverter.DoubleToInt64Bits(v),
+                        s,
+                        parsed,
+                        BitConverter.DoubleToInt64Bits(parsed));
+                }
+
+                // Path 2: JsonConvert.DeserializeObject, the high-level
+                // path ReconciliationFile.Load goes through.
+                double parsedHi = JsonConvert.DeserializeObject<double>(s);
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(v),
+                                BitConverter.DoubleToInt64Bits(parsedHi),
+                    "JsonConvert.DeserializeObject lost bits: input={0} ({1:X16}) -> str={2} -> parsed={3} ({4:X16})",
+                    v,
+                    BitConverter.DoubleToInt64Bits(v),
+                    s,
+                    parsedHi,
+                    BitConverter.DoubleToInt64Bits(parsedHi));
             }
         }
 
