@@ -66,10 +66,12 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase
 
     private void CreateIndex()
     {
-        // TIC + BPC are always emitted (cpp does the same; wiff2 returns empty for BPC at the
-        // SDK level so the resulting array is empty but the entry exists).
+        // TIC always; BPC only for legacy .wiff (cpp ChromatogramList_ABI skips BPC for .wiff2,
+        // since the wiff2 SDK doesn't expose getBasePeakChromatogram).
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = ChromKind.Tic, ChromatogramType = CVID.MS_TIC_chromatogram });
-        _index.Add(new IndexEntry { Index = 1, Id = "BPC", Kind = ChromKind.Bpc, ChromatogramType = CVID.MS_basepeak_chromatogram });
+        bool isWiff2 = _wiff.WiffPath.EndsWith(".wiff2", StringComparison.OrdinalIgnoreCase);
+        if (!isWiff2)
+            _index.Add(new IndexEntry { Index = _index.Count, Id = "BPC", Kind = ChromKind.Bpc, ChromatogramType = CVID.MS_basepeak_chromatogram });
 
         for (int e = 0; e < _wiff.ExperimentCount; e++)
         {
