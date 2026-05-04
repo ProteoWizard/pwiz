@@ -64,35 +64,35 @@ public class SpectrumList_LockmassRefinerTests
     // refinement on a single MSTest entry per mode-combination.
 
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_None_AppliedAndUnapplied()
+    public void Lockmass_ATEHLSTLSEK_profile_None_AppliedAndUnapplied()
     {
         RunCase(PeakPickingMode.None, ddaProcessing: false, lockmassMz: 684.3469);
         RunCase(PeakPickingMode.None, ddaProcessing: false, lockmassMz: 0);
     }
 
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_Vendor_AppliedAndUnapplied()
+    public void Lockmass_ATEHLSTLSEK_profile_Vendor_AppliedAndUnapplied()
     {
         RunCase(PeakPickingMode.Vendor, ddaProcessing: false, lockmassMz: 684.3469);
         RunCase(PeakPickingMode.Vendor, ddaProcessing: false, lockmassMz: 0);
     }
 
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_Cwt_AppliedAndUnapplied()
+    public void Lockmass_ATEHLSTLSEK_profile_Cwt_AppliedAndUnapplied()
     {
         RunCase(PeakPickingMode.Cwt, ddaProcessing: false, lockmassMz: 684.3469);
         RunCase(PeakPickingMode.Cwt, ddaProcessing: false, lockmassMz: 0);
     }
 
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_VendorDda_AppliedAndUnapplied()
+    public void Lockmass_ATEHLSTLSEK_profile_VendorDda_AppliedAndUnapplied()
     {
         RunCase(PeakPickingMode.Vendor, ddaProcessing: true, lockmassMz: 684.3469);
         RunCase(PeakPickingMode.Vendor, ddaProcessing: true, lockmassMz: 0);
     }
 
     [TestMethod]
-    public void Lockmass_AtehlstlsekProfile_CwtDda_AppliedAndUnapplied()
+    public void Lockmass_ATEHLSTLSEK_profile_CwtDda_AppliedAndUnapplied()
     {
         RunCase(PeakPickingMode.Cwt, ddaProcessing: true, lockmassMz: 684.3469);
         RunCase(PeakPickingMode.Cwt, ddaProcessing: true, lockmassMz: 0);

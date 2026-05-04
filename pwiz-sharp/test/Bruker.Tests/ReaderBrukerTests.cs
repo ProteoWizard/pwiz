@@ -12,7 +12,8 @@ namespace Pwiz.Vendor.Bruker.Tests;
 /// Organized per-fixture (one <c>[TestMethod]</c> per <c>.d</c> directory) — each method runs
 /// every config variant we have a reference mzML for and aggregates per-call results into a
 /// single <see cref="TestResult"/>. Mirrors the cpp shape where one harness invocation tests
-/// one (predicate, config) and many invocations roll up to a single pass/fail.
+/// one (predicate, config) and many invocations roll up to a single pass/fail. Method names
+/// preserve the fixture filename's casing, with <c>.</c> / <c>-</c> normalized to <c>_</c>.
 /// </remarks>
 [TestClass]
 public class ReaderBrukerTests
@@ -31,9 +32,9 @@ public class ReaderBrukerTests
     }
 
     [TestMethod]
-    public void Reader_Bruker_MaldiTsf()
+    public void Reader_Bruker_20percLaser_100fold_1_0_H6_MS()
     {
-        // 20percLaser_100fold_1_0_H6_MS.d — MALDI TSF fixture.
+        // MALDI TSF fixture.
         // Coverage: base + ms1-centroid. (cpp also has ms2-centroid; not currently exercised.)
         var ctx = SetUp("20percLaser_100fold_1_0_H6_MS.d");
         if (ctx is null) return;
@@ -45,9 +46,9 @@ public class ReaderBrukerTests
     }
 
     [TestMethod]
-    public void Reader_Bruker_AutoMsMsTsf()
+    public void Reader_Bruker_timsTOF_autoMSMS_Urine_50s_neg()
     {
-        // timsTOF_autoMSMS_Urine_50s_neg.d — auto-MSMS TSF fixture.
+        // auto-MSMS TSF fixture.
         // Coverage: base + ms1-centroid + ms2-centroid.
         var ctx = SetUp("timsTOF_autoMSMS_Urine_50s_neg.d");
         if (ctx is null) return;
@@ -60,9 +61,9 @@ public class ReaderBrukerTests
     }
 
     [TestMethod]
-    public void Reader_Bruker_HelaPasefTdf()
+    public void Reader_Bruker_Hela_QC_PASEF_Slot1_first_6_frames()
     {
-        // Hela_QC_PASEF_Slot1-first-6-frames.d — PASEF TDF fixture.
+        // PASEF TDF fixture.
         // Coverage: base + 6 combineIMS variants (combineIMS, +ms1, +ms2, +centroid,
         // +ms1-centroid, +ms2-centroid). The mobility-array multiset diff lets us run with
         // SortAndJitter=false even though the cpp references were generated with it on.

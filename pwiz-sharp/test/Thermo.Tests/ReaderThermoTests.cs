@@ -13,10 +13,11 @@ namespace Pwiz.Vendor.Thermo.Tests;
 /// config variant we have a reference mzML for and aggregates per-call results into a single
 /// <see cref="FixtureRunContext"/>. The cpp test additionally runs ms1 / ms2 variants per
 /// fixture; reference mzMLs for those don't exist in the bundled test data, so we don't run
-/// them either.
+/// them either. Method names preserve the fixture filename's casing, with <c>.</c> / <c>-</c>
+/// normalized to <c>_</c>.
 /// </remarks>
 [TestClass]
-public class ReaderThermoHarnessTests
+public class ReaderThermoTests
 {
     private static string? FindTestDataRoot()
     {
@@ -32,9 +33,9 @@ public class ReaderThermoHarnessTests
     }
 
     [TestMethod]
-    public void Reader_Thermo_LtqVelos()
+    public void Reader_Thermo_090701_LTQVelos_unittest_01()
     {
-        // 090701-LTQVelos-unittest-01.raw — base + centroid.
+        // base + centroid.
         // NOTE: a centroid-globalChromatogramsAreMs1Only reference mzML exists but our reader
         // currently emits a 99-element TIC chromatogram instead of the expected MS1-only 30
         // (the GlobalChromatogramsAreMs1Only filter doesn't apply on the Thermo path yet).
@@ -49,9 +50,9 @@ public class ReaderThermoHarnessTests
     }
 
     [TestMethod]
-    public void Reader_Thermo_BsaFtEtd()
+    public void Reader_Thermo_BSA_FT_ETD()
     {
-        // BSA-FT-ETD.raw — base + centroid.
+        // base + centroid.
         var ctx = SetUp("BSA-FT-ETD.raw");
         if (ctx is null) return;
 
@@ -62,9 +63,9 @@ public class ReaderThermoHarnessTests
     }
 
     [TestMethod]
-    public void Reader_Thermo_BsaFtHcd()
+    public void Reader_Thermo_BSA_FT_HCD()
     {
-        // BSA-FT-HCD.raw — base + centroid.
+        // base + centroid.
         var ctx = SetUp("BSA-FT-HCD.raw");
         if (ctx is null) return;
 
@@ -75,9 +76,9 @@ public class ReaderThermoHarnessTests
     }
 
     [TestMethod]
-    public void Reader_Thermo_FtHcdMsx()
+    public void Reader_Thermo_FT_HCD_MSX()
     {
-        // FT-HCD-MSX.raw — base + centroid.
+        // base + centroid.
         var ctx = SetUp("FT-HCD-MSX.raw");
         if (ctx is null) return;
 
@@ -88,9 +89,9 @@ public class ReaderThermoHarnessTests
     }
 
     [TestMethod]
-    public void Reader_Thermo_ItHcdSps()
+    public void Reader_Thermo_IT_HCD_SPS()
     {
-        // IT-HCD-SPS.raw — base + centroid.
+        // base + centroid.
         var ctx = SetUp("IT-HCD-SPS.raw");
         if (ctx is null) return;
 
@@ -101,9 +102,9 @@ public class ReaderThermoHarnessTests
     }
 
     [TestMethod]
-    public void Reader_Thermo_IsolationMzOffset()
+    public void Reader_Thermo_IsolationMzOffset_ReportedMassOffset()
     {
-        // IsolationMzOffset-ReportedMassOffset.raw — base + centroid.
+        // base + centroid.
         var ctx = SetUp("IsolationMzOffset-ReportedMassOffset.raw");
         if (ctx is null) return;
 
@@ -114,9 +115,9 @@ public class ReaderThermoHarnessTests
     }
 
     [TestMethod]
-    public void Reader_Thermo_SourceCidTest()
+    public void Reader_Thermo_source_cid_test_3scans()
     {
-        // source_cid_test_3scans.raw — base + centroid.
+        // base + centroid.
         var ctx = SetUp("source_cid_test_3scans.raw");
         if (ctx is null) return;
 

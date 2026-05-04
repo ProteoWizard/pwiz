@@ -12,7 +12,8 @@ namespace Pwiz.Vendor.Waters.Tests;
 /// <remarks>
 /// Organized per-fixture (one <c>[TestMethod]</c> per <c>.raw</c> directory) — each method
 /// runs every config variant we have a reference mzML for and aggregates per-call results
-/// into a single <see cref="FixtureRunContext"/>.
+/// into a single <see cref="FixtureRunContext"/>. Method names preserve the fixture
+/// filename's casing, with <c>.</c> / <c>-</c> normalized to <c>_</c>.
 /// </remarks>
 [TestClass]
 public class ReaderWatersTests
@@ -31,7 +32,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_NfdmRaw()
+    public void Reader_Waters_091204_NFDM_008()
     {
         // Smallest fixture (~ 41 spectra) — basic (function, scan) flow without IMS or DDA.
         var ctx = SetUp("091204_NFDM_008.raw");
@@ -43,7 +44,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_Mix1CalCurve()
+    public void Reader_Waters_160109_Mix1_calcurve_070()
     {
         // 24-transition MRM acquisition; SRM chromatogram path (1 TIC + 24 SRM SIC chromatograms).
         var ctx = SetUp("160109_Mix1_calcurve_070.raw");
@@ -55,7 +56,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_AtehlstlsekProfile()
+    public void Reader_Waters_ATEHLSTLSEK_profile()
     {
         // 8 spectra of profile-mode TOF MS — IsContinuum=true path. Centroid variant exercises
         // Waters vendor centroid via MassLynx ScanProcessor + base-peak / TIC / m/z metadata recompute.
@@ -69,7 +70,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_AtehlstlsekLm684()
+    public void Reader_Waters_ATEHLSTLSEK_LM_684_3469()
     {
         // 8 spectra with lockmass=684.3469. Reference is uncorrected path; ddaProcessing variant
         // exercises MassLynx's DDA processor (GetDDAScanCount / Info / Scan) and produces 2
@@ -84,7 +85,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_AtehlstlsekLm785()
+    public void Reader_Waters_ATEHLSTLSEK_LM_785_8426()
     {
         var ctx = SetUp("ATEHLSTLSEK_LM_785.8426.raw");
         if (ctx is null) return;
@@ -95,7 +96,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_DdaIsolationWindow()
+    public void Reader_Waters_DDA_IsolationWindow()
     {
         // DDA isolation-window-offset path. Non-ddaProcessing exercises plain reading; the
         // ddaProcessing variant exercises per-file isolation-window offsets pushed onto the
@@ -110,7 +111,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_HdddaShort()
+    public void Reader_Waters_HDDDA_Short_noLM()
     {
         // 400 spectra (2 IMS functions × 200 drift bins). Exercises the most variants of any
         // Waters fixture: base, combineIMS, globalMs1OnlyChromatograms, centroidCwt,
@@ -140,7 +141,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_HdmseShort()
+    public void Reader_Waters_HDMSe_Short_noLM()
     {
         // 400 spectra MSe acquisition (function 0 = MS1, function 1 = high-energy MSn).
         var ctx = SetUp("HDMSe_Short_noLM.raw");
@@ -159,7 +160,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_HdmrmShort()
+    public void Reader_Waters_HDMRM_Short_noLM()
     {
         // 600 spectra HD-MRM acquisition.
         var ctx = SetUp("HDMRM_Short_noLM.raw");
@@ -179,7 +180,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_MseShort()
+    public void Reader_Waters_MSe_Short()
     {
         // Non-IMS MSe acquisition — exercises the same MSe heuristic as HDMSe but without the drift dimension.
         var ctx = SetUp("MSe_Short.raw");
@@ -192,7 +193,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_MinimalDda()
+    public void Reader_Waters_Minimal_DDA()
     {
         var ctx = SetUp("Minimal_DDA.raw");
         if (ctx is null) return;
@@ -204,7 +205,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_QcLcms2()
+    public void Reader_Waters_QC_LCMS2_2_23_268_1_1()
     {
         // pwiz C++ tests this one with indexRange = (0, 9): only the first 10 of 2360 spectra.
         // Exercises the analog channel path (TIC + System Pressure + 3 detector channels).
@@ -217,7 +218,7 @@ public class ReaderWatersTests
     }
 
     [TestMethod]
-    public void Reader_Waters_SonarShort()
+    public void Reader_Waters_SONAR_Short()
     {
         // SONAR (scanning quadrupole) — non-combine emits scanning_quadrupole_position
         // lower/upper userParams per scan; combine emits the corresponding bound-array CVs
