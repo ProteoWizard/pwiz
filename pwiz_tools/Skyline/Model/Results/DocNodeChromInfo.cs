@@ -561,6 +561,8 @@ namespace pwiz.Skyline.Model.Results
             Identified = 64,
             IdentifiedByAlignment = 128,
             HasPeakShape = 256,
+            HasIonMobilityError = 512,
+            HasCcsError = 1024,
         }
 
         private Flags _flags;
@@ -576,12 +578,14 @@ namespace pwiz.Skyline.Model.Results
             : this(fileId, optimizationStep, peak.MassError, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    ionMobility,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, peak.IsTruncated, 
-                   peak.PointsAcross, 
+                   peak.IsFwhmDegenerate, peak.IsTruncated,
+                   peak.PointsAcross,
                    peak.Identified, 0, 0,
-                   annotations, userSet, peak.IsForcedIntegration, 
+                   annotations, userSet, peak.IsForcedIntegration,
                    peak.PeakShapeValues)
         {
+            IonMobilityError = peak.IonMobilityError;
+            CcsError = peak.CcsError;
         }
 
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, float? massError,
@@ -627,6 +631,8 @@ namespace pwiz.Skyline.Model.Results
         public short OptimizationStep { get; private set; }
 
         private short _massError;
+        private short _ionMobilityError;
+        private short _ccsError;
 
         public float? MassError
         {
@@ -642,6 +648,40 @@ namespace pwiz.Skyline.Model.Results
             {
                 SetFlag(Flags.HasMassError, value.HasValue);
                 _massError = ChromPeak.To10x(value ?? 0);
+            }
+        }
+
+        public float? IonMobilityError
+        {
+            get
+            {
+                if (GetFlag(Flags.HasIonMobilityError))
+                {
+                    return _ionMobilityError / 10f;
+                }
+                return null;
+            }
+            private set
+            {
+                SetFlag(Flags.HasIonMobilityError, value.HasValue);
+                _ionMobilityError = ChromPeak.To10x(value ?? 0);
+            }
+        }
+
+        public float? CcsError
+        {
+            get
+            {
+                if (GetFlag(Flags.HasCcsError))
+                {
+                    return _ccsError / 10f;
+                }
+                return null;
+            }
+            private set
+            {
+                SetFlag(Flags.HasCcsError, value.HasValue);
+                _ccsError = ChromPeak.To10x(value ?? 0);
             }
         }
 
@@ -836,6 +876,8 @@ namespace pwiz.Skyline.Model.Results
         {
             var chromInfo = ImClone(this);
             chromInfo.MassError = peak.MassError;
+            chromInfo.IonMobilityError = peak.IonMobilityError;
+            chromInfo.CcsError = peak.CcsError;
             chromInfo.RetentionTime = peak.RetentionTime;
             chromInfo.StartRetentionTime = peak.StartTime;
             chromInfo.EndRetentionTime = peak.EndTime;
