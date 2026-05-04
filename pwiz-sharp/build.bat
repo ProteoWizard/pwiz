@@ -68,11 +68,11 @@ if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
 
 if %IAGREE%==1 (
     echo ##teamcity[message text='Vendor support: ENABLED']
-    set BUILD_TARGET=Pwiz.slnx
+    set BUILD_TARGET=Pwiz.sln
 ) else (
     echo ##teamcity[message text='Vendor support: DISABLED ^(no --i-agree-to-the-vendor-licenses^); building core only']
     REM # No-vendor build: build msconvert + tests that don't depend on vendors.
-    REM # Vendor projects in Pwiz.slnx are skipped via explicit project list.
+    REM # Vendor projects in Pwiz.sln are skipped via explicit project list.
     set BUILD_TARGET=src\MsConvert\MsConvert.csproj
 )
 
@@ -94,7 +94,7 @@ if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet build failed & goto error)
 REM # Test discovery: with vendor support, run the full slnx (all 8 projects).
 REM # Without vendor support, run only the projects that don't pull vendor refs.
 if %IAGREE%==1 (
-    set TEST_TARGET=Pwiz.slnx
+    set TEST_TARGET=Pwiz.sln
     set TEST_SUITE_NAME=pwiz-sharp ^(full^)
 ) else (
     REM # Bruker.Tests / Thermo.Tests / Waters.Tests reference vendor projects, so they
