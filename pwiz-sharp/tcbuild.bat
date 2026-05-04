@@ -26,10 +26,13 @@ REM # Args are forwarded verbatim to build.bat; see that script for flag
 REM # semantics. TC should pass --i-agree-to-the-vendor-licenses
 REM # --require-vendor-support --automated for the standard CI run.
 REM #
-REM # dotCover note: TeamCity's "dotCover" build feature attaches to the
-REM # configuration as a whole, not to a specific runner step, so it still
-REM # wraps the test process when build.bat invokes `dotnet test`. No
-REM # dotCover invocation needed in this script.
+REM # dotCover: TeamCity's coverage wrapping only attaches to the built-in
+REM # .NET runner, not Command Line steps, so build.bat invokes
+REM # `dotnet-dotCover dotnet -- test` itself when TEAMCITY_VERSION is set
+REM # (auto-enabled equivalent of --coverage). The snapshot drops at
+REM # pwiz-sharp\TestResults\coverage.dcvr and is announced via
+REM # ##teamcity[importData type='dotNetCoverage'] for TC's dotCover build
+REM # feature to ingest into the report UI.
 REM # ------------------------------------------------------------------------
 
 set SCRIPT_DIR=%~dp0

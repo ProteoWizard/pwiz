@@ -7,7 +7,7 @@ REM # ProteoWizard_CoreWindowsNet config; runs locally too.
 REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
-REM #             [--require-vendor-support] [--automated]
+REM #             [--require-vendor-support] [--automated] [--coverage]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -25,6 +25,19 @@ REM #
 REM #   --automated
 REM #       Tag the assembly InformationalVersion with "(automated build)"
 REM #       instead of "(developer build)". Mirrors cpp generate-version.jam.
+REM #
+REM #   --coverage
+REM #       Run the test step under JetBrains dotCover instead of `dotnet test`
+REM #       directly. Emits a snapshot at TestResults\coverage.dcvr and an HTML
+REM #       report at TestResults\coverage-report\. Requires the
+REM #       JetBrains.dotCover.CommandLineTools global tool (provides
+REM #       `dotnet-dotCover`).
+REM #
+REM #       Auto-enabled when TEAMCITY_VERSION is set. TeamCity's coverage
+REM #       wrapping only attaches to the built-in .NET runner, not Command
+REM #       Line steps, so the script has to invoke dotCover itself in CI;
+REM #       the importData service message hands the snapshot to TC's
+REM #       dotCover build feature for the report UI.
 REM # ------------------------------------------------------------------------
 
 REM # Resolve to the directory this script lives in so we work from pwiz-sharp/
@@ -37,6 +50,7 @@ set CONFIG=Release
 set IAGREE=0
 set REQUIRE_VENDOR=0
 set AUTOMATED=0
+set COVERAGE=0
 set ERROR_TEXT=
 
 REM # Parse args. First non-flag arg is the configuration (Debug|Release).
@@ -45,6 +59,7 @@ if "%~1"=="" goto endparse
 if /i "%~1"=="--i-agree-to-the-vendor-licenses" (set IAGREE=1) else ^
 if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
+if /i "%~1"=="--coverage" (set COVERAGE=1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
 if /i "%~1"=="Release" (set CONFIG=Release) else (
     echo Unrecognized argument: %~1 1>&2
@@ -61,6 +76,11 @@ if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
     set ERROR_TEXT=--require-vendor-support set but --i-agree-to-the-vendor-licenses was not passed; refusing to build a stripped artifact.
     goto error
 )
+
+REM # Auto-enable coverage under TeamCity since the TC dotCover build feature
+REM # only wraps its built-in .NET runner — not the Command Line runner that
+REM # invokes this script. Without this, CI builds would produce no coverage data.
+if defined TEAMCITY_VERSION set COVERAGE=1
 
 set MSBUILD_PROPS=-p:Configuration=%CONFIG%
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
@@ -121,8 +141,58 @@ REM #             is in env. Forced explicitly since the adapter's auto-enable c
 REM #             (TEAMCITY_PROJECT_NAME) doesn't see TC's env in plain Command Line steps.
 set TEST_LOGGERS=--logger:"trx" --logger:"console;verbosity=normal"
 if defined TEAMCITY_VERSION set TEST_LOGGERS=%TEST_LOGGERS% --logger:teamcity
-dotnet test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
-set EXIT=%ERRORLEVEL%
+
+if %COVERAGE%==1 (
+    REM # Run the test step under JetBrains dotCover. Snapshot is dropped at
+    REM # TestResults\coverage.dcvr; an HTML report is emitted alongside in
+    REM # TestResults\coverage-report\.
+    REM #
+    REM # Filters keep the report focused on production code:
+    REM #   +:module=Pwiz.*    — every assembly we ship (Pwiz.Util, Pwiz.Data.MsData,
+    REM #                       Pwiz.Vendor.*, Pwiz.Tools.MsConvert, Pwiz.TestHarness)
+    REM #   -:module=*.Tests   — exclude the test fixtures themselves
+    REM #   -:module=msconvert-sharp — exclude the wrapper exe (entry-point only)
+    REM #
+    REM # `dotnet-dotCover dotnet` is the cover-dotnet alias: spawns dotnet under
+    REM # the profiler with the args after `--`. Requires the
+    REM # JetBrains.dotCover.CommandLineTools 2023.x global tool installed via
+    REM #   dotnet tool install -g JetBrains.dotCover.CommandLineTools
+    where dotnet-dotCover >nul 2>nul
+    if !ERRORLEVEL! NEQ 0 (
+        set EXIT=2
+        set ERROR_TEXT=--coverage requested but dotnet-dotCover is not on PATH. Install with: dotnet tool install -g JetBrains.dotCover.CommandLineTools
+        goto error
+    )
+
+    set COVER_DIR=%SCRIPT_DIR%\TestResults
+    if not exist "!COVER_DIR!" mkdir "!COVER_DIR!"
+    set COVER_SNAPSHOT=!COVER_DIR!\coverage.dcvr
+    set COVER_REPORT_DIR=!COVER_DIR!\coverage-report
+    set COVER_FILTERS=+:module=Pwiz.*;-:module=*.Tests;-:module=msconvert-sharp
+
+    echo ##teamcity[progressMessage 'dotnet-dotCover dotnet test - snapshot at !COVER_SNAPSHOT!']
+    dotnet-dotCover dotnet --Output="!COVER_SNAPSHOT!" --Filters="!COVER_FILTERS!" --ReturnTargetExitCode -- test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
+    set EXIT=!ERRORLEVEL!
+
+    REM # Generate an HTML report from the snapshot — useful locally; on TC the
+    REM # dotCover build feature renders this from the snapshot directly.
+    if !EXIT! EQU 0 (
+        echo ##teamcity[progressMessage 'dotnet-dotCover report - HTML at !COVER_REPORT_DIR!']
+        if not exist "!COVER_REPORT_DIR!" mkdir "!COVER_REPORT_DIR!"
+        dotnet-dotCover report --Source="!COVER_SNAPSHOT!" --Output="!COVER_REPORT_DIR!\index.html" --ReportType=HTML --HideAutoProperties
+        set REPORT_EXIT=!ERRORLEVEL!
+        if !REPORT_EXIT! NEQ 0 (
+            echo ##teamcity[message text='dotCover report generation failed - snapshot is still at !COVER_SNAPSHOT!' status='WARNING']
+        )
+    )
+
+    REM # Emit the snapshot path as a TC service message so the dotCover build
+    REM # feature can pick it up. Harmless locally.
+    if defined TEAMCITY_VERSION echo ##teamcity[importData type='dotNetCoverage' tool='dotcover' path='!COVER_SNAPSHOT!']
+) else (
+    dotnet test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
+    set EXIT=!ERRORLEVEL!
+)
 
 if defined TEAMCITY_VERSION echo ##teamcity[testSuiteFinished name='%TEST_SUITE_NAME%']
 
