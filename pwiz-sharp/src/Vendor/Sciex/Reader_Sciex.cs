@@ -95,62 +95,64 @@ public sealed class Reader_Sciex : IReader
         result.Id = id;
         result.Run.Id = result.Id;
 
-        var sf = new SourceFile(Path.GetFileName(wiffPath), Path.GetFileName(wiffPath),
-            "file:///" + Path.GetDirectoryName(Path.GetFullPath(wiffPath))!.Replace('\\', '/'));
-        sf.Set(CVID.MS_ABI_WIFF_format);
-        sf.Set(CVID.MS_WIFF_nativeID_format);
-        result.FileDescription.SourceFiles.Add(sf);
-        result.Run.DefaultSourceFile = sf;
-
-        // fileContent — scan experiments for ms levels.
-        bool hasMs1 = false, hasMsn = false;
+        // fileDescription/fileContent — one CV term per distinct experiment kind in the run.
+        // Mirrors cpp Reader_ABI: non-MRM experiments get translateAsSpectrumType(); MRM
+        // experiments emit MS_SRM_chromatogram (because pwiz exposes MRMs as chromatograms,
+        // not spectra, in the default config).
         for (int e = 0; e < wiff.ExperimentCount; e++)
         {
             try
             {
-                int level = wiff.GetExperiment(e).GetMsLevelForCycle(1);
-                if (level == 1) hasMs1 = true;
-                else hasMsn = true;
+                var experimentType = wiff.GetExperiment(e).ExperimentType;
+                if (experimentType == WiffExperimentType.MRM)
+                    result.FileDescription.FileContent.Set(CVID.MS_SRM_chromatogram);
+                else
+                    result.FileDescription.FileContent.Set(Reader_Sciex_Detail.TranslateAsSpectrumType(experimentType));
             }
             catch { /* skip corrupt experiment */ }
         }
-        if (hasMs1) result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum);
-        if (hasMsn) result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
 
-        // Software entries.
-        var analyst = new Software("Analyst") { Version = string.Empty };
+        // SourceFile entries: cpp emits "WIFF" (the .wiff itself) and, when present, "WIFFSCAN"
+        // (the .wiff.scan companion file). Mirror that pair.
+        var sf = new SourceFile("WIFF", Path.GetFileName(wiffPath),
+            "file://" + Path.GetDirectoryName(Path.GetFullPath(wiffPath))!.Replace('\\', '/'));
+        sf.Set(CVID.MS_WIFF_nativeID_format);
+        sf.Set(CVID.MS_ABI_WIFF_format);
+        result.FileDescription.SourceFiles.Add(sf);
+        result.Run.DefaultSourceFile = sf;
+
+        string wiffScanPath = wiffPath + ".scan";
+        if (File.Exists(wiffScanPath))
+        {
+            var sfScan = new SourceFile("WIFFSCAN", Path.GetFileName(wiffScanPath),
+                "file://" + Path.GetDirectoryName(Path.GetFullPath(wiffScanPath))!.Replace('\\', '/'));
+            sfScan.Set(CVID.MS_WIFF_nativeID_format);
+            sfScan.Set(CVID.MS_ABI_WIFF_format);
+            result.FileDescription.SourceFiles.Add(sfScan);
+        }
+
+        // Software entries: matches cpp shapes.
+        var analyst = new Software("Analyst") { Version = "unknown" };
         analyst.Set(CVID.MS_Analyst);
         result.Software.Add(analyst);
-        var pwizSoftware = new Software("pwiz") { Version = MSData.PwizVersion };
+        var pwizSoftware = new Software("pwiz_Reader_ABI") { Version = MSData.PwizVersion };
         pwizSoftware.Set(CVID.MS_pwiz);
         result.Software.Add(pwizSoftware);
 
-        var dpReader = new DataProcessing("pwiz_Reader_Sciex_conversion");
+        // Single DataProcessing entry; cpp uses "pwiz_Reader_ABI_conversion" — match that.
+        var dpReader = new DataProcessing("pwiz_Reader_ABI_conversion");
         var pmReader = new ProcessingMethod { Order = 0, Software = pwizSoftware };
         pmReader.Set(CVID.MS_Conversion_to_mzML);
         dpReader.ProcessingMethods.Add(pmReader);
         result.DataProcessings.Add(dpReader);
-        var dpCommon = new DataProcessing("pwiz_Reader_conversion");
-        var pmCommon = new ProcessingMethod { Order = 0, Software = pwizSoftware };
-        pmCommon.Set(CVID.MS_Conversion_to_mzML);
-        dpCommon.ProcessingMethods.Add(pmCommon);
-        result.DataProcessings.Add(dpCommon);
 
-        // Single instrument config: cpp emits per-instrument-model components, but we go with
-        // the generic SCIEX model term + a MicroESI source + Q-TOF analyzer chain. A full table
-        // can land later when we have parity tests.
-        var ic = new InstrumentConfiguration("IC1");
-        var common = new ParamGroup("CommonInstrumentParams");
-        common.Set(CVID.MS_SCIEX_instrument_model);
-        if (!string.IsNullOrEmpty(wiff.InstrumentModelName))
-            common.UserParams.Add(new UserParam("instrument model", wiff.InstrumentModelName, "xsd:string"));
-        result.ParamGroups.Add(common);
-        ic.ParamGroups.Add(common);
-        ic.ComponentList.Add(new Component(CVID.MS_microelectrospray, 1));
-        ic.ComponentList.Add(new Component(CVID.MS_quadrupole, 2));
-        ic.ComponentList.Add(new Component(CVID.MS_quadrupole, 3));
-        ic.ComponentList.Add(new Component(CVID.MS_time_of_flight, 4));
-        ic.ComponentList.Add(new Component(CVID.MS_microchannel_plate_detector, 5));
+        // InstrumentConfiguration: pull the model from the SDK's instrument-name string,
+        // hand it to the cpp-port detail translator. cpp hardcodes the ion source as IonSpray
+        // (= MS_electrospray_ionization), which always wins over the SDK's IonSourceType.
+        var instrumentModel = Reader_Sciex_Detail.ParseInstrumentName(wiff.InstrumentModelName);
+        var ic = Reader_Sciex_Detail.TranslateAsInstrumentConfiguration(
+            instrumentModel, CVID.MS_electrospray_ionization);
+        ic.Software = analyst;
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
