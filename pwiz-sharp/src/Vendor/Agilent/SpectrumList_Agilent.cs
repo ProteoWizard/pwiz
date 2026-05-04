@@ -57,6 +57,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase
         public int RowNumber;
         public int ScanId;
         public AgScanType ScanType;
+        public bool IsNonMs { get; set; }  // true => UV/DAD spectrum, fetched via GetNonMsSpectrumByRow
     }
 
     /// <inheritdoc/>
@@ -90,6 +91,24 @@ public sealed class SpectrumList_Agilent : SpectrumListBase
                 ScanType = scanType,
             });
         }
+
+        // Append non-MS (UV/DAD) spectra after the MS run. cpp does the same in
+        // SpectrumList_Agilent::createIndex; ids look like `merged=<index> row=<rowNumber>`
+        // where rowNumber is the 0-based offset into the DAD time grid.
+        int nonMsCount = _raw.GetNonMsScanCount();
+        for (int row = 0; row < nonMsCount; row++)
+        {
+            int idx = _index.Count;
+            _index.Add(new IndexEntry
+            {
+                Index = idx,
+                Id = $"merged={idx} row={row}",
+                RowNumber = row,
+                ScanId = -1,
+                ScanType = AgScanType.Unspecified,
+                IsNonMs = true,
+            });
+        }
     }
 
     /// <inheritdoc/>
@@ -98,6 +117,9 @@ public sealed class SpectrumList_Agilent : SpectrumListBase
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
         var ie = _index[index];
+
+        if (ie.IsNonMs) return BuildNonMsSpectrum(index, ie, getBinaryData);
+
         var rec = _raw.GetScanRecord(ie.RowNumber);
 
         var spec = new Spectrum
@@ -211,6 +233,86 @@ public sealed class SpectrumList_Agilent : SpectrumListBase
         else
         {
             spec.Params.Set(CVID.MS_centroid_spectrum);
+        }
+
+        return spec;
+    }
+
+    /// <summary>
+    /// Builds a UV/DAD spectrum from <see cref="AgilentRawData.GetNonMsSpectrumByRow"/>.
+    /// Mirrors cpp <c>SpectrumList_Agilent::getNonMsSpectrum</c>: tags MS_EMR_spectrum +
+    /// MS_profile_spectrum, emits wavelength + intensity arrays, computes
+    /// MS_lowest/highest_observed_wavelength from the first / last non-zero intensity points.
+    /// </summary>
+    private Spectrum BuildNonMsSpectrum(int index, IndexEntry ie, bool getBinaryData)
+    {
+        var spec = new Spectrum
+        {
+            Index = index,
+            Id = ie.Id,
+        };
+        spec.Params.Set(CVID.MS_EMR_spectrum);
+        spec.Params.Set(CVID.MS_profile_spectrum);
+
+        spec.ScanList.Set(CVID.MS_no_combination);
+        var scan = new Scan { InstrumentConfiguration = _defaultIc };
+        spec.ScanList.Scans.Add(scan);
+
+        var sd = _raw.GetNonMsSpectrumByRow(ie.RowNumber);
+        if (sd is null)
+        {
+            spec.DefaultArrayLength = 0;
+            return spec;
+        }
+
+        try
+        {
+            var rt = sd.AcquiredTimeRange;
+            if (rt is not null && rt.Length > 0)
+                scan.Set(CVID.MS_scan_start_time, rt[0].Start, CVID.UO_minute);
+        }
+        catch { /* non-fatal */ }
+
+        double[] wavelengths = sd.XArray ?? Array.Empty<double>();
+        float[] yArray = sd.YArray ?? Array.Empty<float>();
+        int n = Math.Min(wavelengths.Length, yArray.Length);
+        spec.DefaultArrayLength = n;
+
+        // lowest/highest observed wavelength: first/last non-zero intensity points. cpp only
+        // checks the first 10 / last n for the lower bound in a quirk we mirror exactly.
+        if (n > 0)
+        {
+            int scanLow = Math.Min(10, n);
+            for (int i = 0; i < scanLow; i++)
+            {
+                if (yArray[i] != 0f)
+                {
+                    spec.Params.Set(CVID.MS_lowest_observed_wavelength, wavelengths[i], CVID.UO_nanometer);
+                    break;
+                }
+            }
+            for (int i = n - 1; i > 0; i--)
+            {
+                if (yArray[i] != 0f)
+                {
+                    spec.Params.Set(CVID.MS_highest_observed_wavelength, wavelengths[i], CVID.UO_nanometer);
+                    break;
+                }
+            }
+        }
+
+        if (getBinaryData && n > 0)
+        {
+            var w = new BinaryDataArray();
+            w.Set(CVID.MS_wavelength_array, "", CVID.UO_nanometer);
+            w.Data.Capacity = n;
+            for (int i = 0; i < n; i++) w.Data.Add(wavelengths[i]);
+            var y = new BinaryDataArray();
+            y.Set(CVID.MS_intensity_array, "", CVID.MS_number_of_detector_counts);
+            y.Data.Capacity = n;
+            for (int i = 0; i < n; i++) y.Data.Add(yArray[i]);
+            spec.BinaryDataArrays.Add(w);
+            spec.BinaryDataArrays.Add(y);
         }
 
         return spec;

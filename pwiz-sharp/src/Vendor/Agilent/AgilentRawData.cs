@@ -38,10 +38,13 @@ public sealed class AgilentRawData : IDisposable
     /// <summary>Number of scan records (mass spectra) in the file.</summary>
     public long TotalScansPresent => MSScanFileInformation.TotalScansPresent;
 
-    /// <summary>True if the file has any profile-mode data.</summary>
-    public bool HasProfileData =>
-        MSScanFileInformation.SpectraFormat == MSStorageMode.ProfileSpectrum
-        || MSScanFileInformation.SpectraFormat == MSStorageMode.Mixed;
+    /// <summary>True if the file has any MS profile data — checks for AcqData/MSProfile.bin
+    /// directly, mirroring cpp <c>MassHunterDataImpl</c>'s <c>hasProfileData_</c>. Necessary
+    /// because <c>MSScanFileInformation.SpectraFormat</c> flips to <c>Mixed</c> after a DAD
+    /// chromatogram fetch (the SDK reports any device's profile data as profile content),
+    /// which would otherwise fool the MS-vs-DAD branch into requesting MSProfile.bin from a
+    /// file that doesn't have it.</summary>
+    public bool HasProfileData => File.Exists(System.IO.Path.Combine(Path, "AcqData", "MSProfile.bin"));
 
     /// <summary>Top-level instrument family / device type from the file (Q-TOF / TQ / etc.).</summary>
     public DeviceType DeviceType => MSScanFileInformation.DeviceType;
@@ -131,6 +134,78 @@ public sealed class AgilentRawData : IDisposable
             try { return _reader as INonmsDataReader; }
             catch { return null; }
         }
+    }
+
+    /// <summary>
+    /// Cached time grid for non-MS (UV/DAD) spectra, in minutes. Populated lazily by
+    /// <see cref="GetNonMsScanCount"/> via the SDK's <c>GetChromatogram</c> with
+    /// <c>ChromType.ExtractedWavelength</c> + <c>DeviceName="DAD"</c>; mirrors cpp
+    /// <c>MassHunterDataImpl::initNonMsData</c>.
+    /// </summary>
+    private double[]? _dadTimes;
+
+    /// <summary>
+    /// Number of non-MS (UV/DAD) spectra in the file. Returns 0 when the file has no DAD
+    /// device. Caches the time grid so subsequent <see cref="GetNonMsSpectrumByRow"/> calls
+    /// can map a row index to a scan time.
+    /// </summary>
+    public int GetNonMsScanCount()
+    {
+        if (_dadTimes is not null) return _dadTimes.Length;
+        try
+        {
+            // Properties on BDAChromFilter / BDASpecFilter are explicitly implemented on the
+            // matching interface, so configuring them requires an interface-typed reference.
+            IBDAChromFilter filter = new BDAChromFilter();
+            filter.ChromatogramType = ChromType.ExtractedWavelength;
+            filter.DeviceName = "DAD";
+            var chromatograms = _reader.GetChromatogram(filter);
+            if (chromatograms is null || chromatograms.Length == 0)
+            {
+                _dadTimes = Array.Empty<double>();
+                return 0;
+            }
+            _dadTimes = chromatograms[0].XArray ?? Array.Empty<double>();
+            return _dadTimes.Length;
+        }
+        catch
+        {
+            _dadTimes = Array.Empty<double>();
+            return 0;
+        }
+    }
+
+    /// <summary>The cached DAD time grid (must call <see cref="GetNonMsScanCount"/> at least
+    /// once first). Indexed 0..N-1, in minutes.</summary>
+    public double[] NonMsScanTimes
+    {
+        get
+        {
+            if (_dadTimes is null) GetNonMsScanCount();
+            return _dadTimes ?? Array.Empty<double>();
+        }
+    }
+
+    /// <summary>
+    /// Returns the UV/DAD spectrum at <paramref name="rowIndex"/> (0-based, into
+    /// <see cref="NonMsScanTimes"/>) — mirrors cpp <c>MassHunterDataImpl::getNonMsSpectrum</c>.
+    /// X = wavelength (nm), Y = absorbance counts.
+    /// </summary>
+    public IBDASpecData? GetNonMsSpectrumByRow(int rowIndex)
+    {
+        var times = NonMsScanTimes;
+        if (rowIndex < 0 || rowIndex >= times.Length) return null;
+        try
+        {
+            double t = times[rowIndex];
+            IBDASpecFilter specFilter = new BDASpecFilter();
+            specFilter.SpectrumType = SpecType.UVSpectrum;
+            specFilter.ScanRange = new IRange[] { new MinMaxRange(t, t) };
+            var spectra = _reader.GetSpectrum(specFilter);
+            if (spectra is null || spectra.Length == 0) return null;
+            return spectra[0];
+        }
+        catch { return null; }
     }
 
     /// <inheritdoc/>
