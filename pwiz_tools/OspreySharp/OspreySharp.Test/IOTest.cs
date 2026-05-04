@@ -1557,5 +1557,328 @@ namespace pwiz.OspreySharp.Test
         }
 
         #endregion
+
+        #region FdrScoresSidecar Tests
+
+        private static FdrEntry MakeFdrEntry(uint id, double score, double q, double pep)
+        {
+            return new FdrEntry
+            {
+                EntryId = id,
+                ParquetIndex = id,
+                IsDecoy = false,
+                Charge = 2,
+                ScanNumber = 0,
+                Score = score,
+                RunPrecursorQvalue = q,
+                RunPeptideQvalue = q + 1.0e-9,
+                RunProteinQvalue = 1.0,
+                ExperimentPrecursorQvalue = q + 2.0e-9,
+                ExperimentPeptideQvalue = q + 3.0e-9,
+                ExperimentProteinQvalue = 1.0,
+                Pep = pep,
+                ModifiedSequence = "PEPTIDE",
+            };
+        }
+
+        /// <summary>
+        /// Round-trip: write entries via Write, then read them back via
+        /// TryRead and verify every numeric field survives bit-for-bit.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_rt_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                var entries = new List<FdrEntry>
+                {
+                    MakeFdrEntry(0, -3.5, 0.001, 0.02),
+                    MakeFdrEntry(1, -3.4, 0.002, 0.05),
+                    MakeFdrEntry(2, -3.3, 0.003, 0.08),
+                };
+
+                FdrScoresSidecar.Write(path, entries, FdrScoresSidecar.Pass.FirstPass);
+
+                // Cross-impl byte-parity hook: when the harness runs this test
+                // with OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT=<path> set, copy our
+                // output to that path so a sibling test on the Rust osprey
+                // side (using the same input data) can be byte-compared
+                // against ours. Same hardcoded entries on both sides; same
+                // format spec; the output files must match bit-for-bit.
+                if (!string.IsNullOrEmpty(OspreyEnvironment.CrossImplFdrSidecarOut))
+                    File.Copy(path, OspreyEnvironment.CrossImplFdrSidecarOut, overwrite: true);
+
+                // File size sanity check.
+                long size = new FileInfo(path).Length;
+                Assert.AreEqual(
+                    FdrScoresSidecar.HeaderLength + entries.Count * FdrScoresSidecar.RecordLength,
+                    size);
+
+                // Stubs with cleared FDR fields — TryRead must repopulate them.
+                var loaded = new List<FdrEntry>
+                {
+                    MakeFdrEntry(0, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(1, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(2, 0.0, 0.0, 0.0),
+                };
+                Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.FirstPass));
+
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].Score),
+                                    BitConverter.DoubleToInt64Bits(loaded[i].Score));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunPrecursorQvalue),
+                                    BitConverter.DoubleToInt64Bits(loaded[i].RunPrecursorQvalue));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunPeptideQvalue),
+                                    BitConverter.DoubleToInt64Bits(loaded[i].RunPeptideQvalue));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].ExperimentPrecursorQvalue),
+                                    BitConverter.DoubleToInt64Bits(loaded[i].ExperimentPrecursorQvalue));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].ExperimentPeptideQvalue),
+                                    BitConverter.DoubleToInt64Bits(loaded[i].ExperimentPeptideQvalue));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].Pep),
+                                    BitConverter.DoubleToInt64Bits(loaded[i].Pep));
+                }
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Pre-v2 sidecar files (no magic header, just raw f64 scores)
+        /// must be rejected by the v2 reader.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarV1FormatRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_v1_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                using (var fs = new FileStream(path, FileMode.Create))
+                using (var bw = new BinaryWriter(fs))
+                {
+                    bw.Write(0.1);
+                    bw.Write(0.2);
+                    bw.Write(0.3);
+                }
+
+                var entries = new List<FdrEntry>
+                {
+                    MakeFdrEntry(0, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(1, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(2, 0.0, 0.0, 0.0),
+                };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, entries, FdrScoresSidecar.Pass.FirstPass));
+                foreach (var e in entries)
+                    Assert.AreEqual(0.0, e.Score);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// If the sidecar's header entry-count disagrees with the
+        /// caller's stub list, the reader must refuse rather than silently
+        /// truncate or pad.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarCountMismatchRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_cm_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
+                    FdrScoresSidecar.Pass.FirstPass);
+
+                var wrongCount = new List<FdrEntry>
+                {
+                    MakeFdrEntry(0, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(1, 0.0, 0.0, 0.0),
+                };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, wrongCount, FdrScoresSidecar.Pass.FirstPass));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A 1st-pass sidecar must NOT load into a TryRead call that
+        /// expects 2nd-pass (and vice versa) — would otherwise scramble
+        /// q-values silently because the records are positionally
+        /// compatible but semantically different.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarPassMismatchRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_pm_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.fdr_scores.bin");
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry>
+                    {
+                        MakeFdrEntry(0, -3.5, 0.001, 0.02),
+                        MakeFdrEntry(1, -2.1, 0.005, 0.04),
+                    },
+                    FdrScoresSidecar.Pass.FirstPass);
+
+                var stubs = new List<FdrEntry>
+                {
+                    MakeFdrEntry(0, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(1, 0.0, 0.0, 0.0),
+                };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, stubs, FdrScoresSidecar.Pass.SecondPass));
+                foreach (var s in stubs)
+                    Assert.AreEqual(0.0, s.Score);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        #endregion
+
+        #region ReconciliationFile Tests
+
+        private static ReconciliationFile MakeSampleReconciliationFile()
+        {
+            return new ReconciliationFile
+            {
+                ForcedIntegrationActions = new List<ForcedIntegrationEntry>
+                {
+                    new ForcedIntegrationEntry { EntryId = 200, ExpectedRt = 41.125, HalfWidth = 0.075 },
+                    new ForcedIntegrationEntry { EntryId = 201, ExpectedRt = 18.5,   HalfWidth = 0.05  },
+                },
+                FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                GapFillTargets = new List<GapFillEntry>
+                {
+                    new GapFillEntry
+                    {
+                        Charge = 2,
+                        DecoyEntryId = 0x80000003u,
+                        ExpectedRt = 33.5,
+                        HalfWidth = 0.08,
+                        ModifiedSequence = "PEPTIDE",
+                        TargetEntryId = 3,
+                    },
+                },
+                LibraryHash = "lib-hash-abc",
+                RefinedRtCalibration = new RefinedRtCalibrationJson
+                {
+                    AbsResiduals = new[] { 0.01, 0.02, 0.015 },
+                    FittedRts    = new[] { 10.5, 20.5, 30.5 },
+                    LibraryRts   = new[] { 10.0, 20.0, 30.0 },
+                    ResidualSd   = 0.123,
+                },
+                SearchHash = "search-hash-xyz",
+                UseCwtPeakActions = new List<UseCwtPeakEntry>
+                {
+                    new UseCwtPeakEntry { ApexRt = 23.45, CandidateIdx = 1, EndRt = 23.80, EntryId = 100, StartRt = 23.10 },
+                    new UseCwtPeakEntry { ApexRt = 8.07,  CandidateIdx = 0, EndRt = 8.20,  EntryId = 101, StartRt = 7.95  },
+                },
+            };
+        }
+
+        /// <summary>
+        /// Round-trip: save a sample reconciliation file, reload it, and
+        /// verify every field survives bit-for-bit. Also exposes the
+        /// cross-impl byte-parity hook so the same hardcoded sample can
+        /// be byte-compared against the Rust sibling test's output.
+        /// </summary>
+        [TestMethod]
+        public void TestReconciliationFileRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "recon_rt_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "round_trip.reconciliation.json");
+                var file = MakeSampleReconciliationFile();
+
+                ReconciliationFile.Save(path, file);
+
+                if (!string.IsNullOrEmpty(OspreyEnvironment.CrossImplReconciliationOut))
+                    File.Copy(path, OspreyEnvironment.CrossImplReconciliationOut, overwrite: true);
+
+                var parsed = ReconciliationFile.Load(path);
+
+                Assert.AreEqual(file.FormatVersion, parsed.FormatVersion);
+                Assert.AreEqual(file.SearchHash, parsed.SearchHash);
+                Assert.AreEqual(file.LibraryHash, parsed.LibraryHash);
+                Assert.AreEqual(file.UseCwtPeakActions.Count, parsed.UseCwtPeakActions.Count);
+                Assert.AreEqual(file.ForcedIntegrationActions.Count, parsed.ForcedIntegrationActions.Count);
+                Assert.AreEqual(file.GapFillTargets.Count, parsed.GapFillTargets.Count);
+
+                // Spot-check bit-exact f64 round-trip on a non-trivial value.
+                var origCwt = file.UseCwtPeakActions[0];
+                var gotCwt = parsed.UseCwtPeakActions[0];
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(origCwt.ApexRt),
+                                BitConverter.DoubleToInt64Bits(gotCwt.ApexRt));
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(origCwt.StartRt),
+                                BitConverter.DoubleToInt64Bits(gotCwt.StartRt));
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(origCwt.EndRt),
+                                BitConverter.DoubleToInt64Bits(gotCwt.EndRt));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A reconciliation file with an unsupported format_version must
+        /// be rejected with a clear error rather than silently parsed.
+        /// </summary>
+        [TestMethod]
+        public void TestReconciliationFileFormatVersionMismatchRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "recon_ver_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "bad_version.reconciliation.json");
+                File.WriteAllText(path,
+                    "{\n" +
+                    "  \"forced_integration_actions\": [],\n" +
+                    "  \"format_version\": 99,\n" +
+                    "  \"gap_fill_targets\": [],\n" +
+                    "  \"library_hash\": \"x\",\n" +
+                    "  \"refined_rt_calibration\": null,\n" +
+                    "  \"search_hash\": \"y\",\n" +
+                    "  \"use_cwt_peak_actions\": []\n" +
+                    "}\n");
+
+                try
+                {
+                    ReconciliationFile.Load(path);
+                    Assert.Fail("expected InvalidDataException");
+                }
+                catch (InvalidDataException ex)
+                {
+                    StringAssert.Contains(ex.Message, "unsupported format_version");
+                }
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        #endregion
     }
 }

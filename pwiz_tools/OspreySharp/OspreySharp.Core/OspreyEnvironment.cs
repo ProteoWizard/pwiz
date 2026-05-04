@@ -20,15 +20,21 @@
 
 using System;
 
-namespace pwiz.OspreySharp
+namespace pwiz.OspreySharp.Core
 {
     /// <summary>
     /// Central access point for OSPREY_* environment variables that control
     /// production behavior (throttling, fast-iteration early exits, algorithm
-    /// variants). A separate OspreyDiagnostics class (coming next) covers the
-    /// diagnostic-dump env vars. Values are read once at process start and
-    /// cached as readonly static fields so callers never reach for
+    /// variants). A separate OspreyDiagnostics class covers the diagnostic-dump
+    /// env vars. Values are read once at process start and cached as readonly
+    /// static fields so callers never reach for
     /// <see cref="Environment.GetEnvironmentVariable(string)"/> inline.
+    ///
+    /// Lives in OspreySharp.Core so every project below the main pipeline
+    /// (FDR, Chromatography, Scoring, ML, IO) can read it without
+    /// depending on the main project (which would create a cycle). See
+    /// "OspreySharp project layering" in
+    /// <c>ai/docs/osprey-development-guide.md</c>.
     /// </summary>
     public static class OspreyEnvironment
     {
@@ -81,6 +87,25 @@ namespace pwiz.OspreySharp
         /// </summary>
         public static readonly string LoadCalibrationPath = Environment.GetEnvironmentVariable(@"OSPREY_LOAD_CALIBRATION");
 
+        /// <summary>
+        /// OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT: when a unit test is run under
+        /// the cross-impl harness, the round-trip test for the v2
+        /// .fdr_scores.bin format also copies its output to this path, so a
+        /// sibling Rust unit test (with the same hardcoded inputs) can be
+        /// byte-compared against ours. Test-only hook; never set in
+        /// production. The harness verifies cross-impl byte parity once both
+        /// sides have written their copy.
+        /// </summary>
+        public static readonly string CrossImplFdrSidecarOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT");
+
+        /// <summary>
+        /// OSPREY_CROSS_IMPL_RECONCILIATION_OUT: same idea as
+        /// CrossImplFdrSidecarOut but for the per-file
+        /// .reconciliation.json boundary file. Test-only hook; never set
+        /// in production.
+        /// </summary>
+        public static readonly string CrossImplReconciliationOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
+
         private static int ParseIntOrZero(string name)
         {
             string v = Environment.GetEnvironmentVariable(name);
@@ -88,11 +113,6 @@ namespace pwiz.OspreySharp
                 return 0;
             int.TryParse(v, out int result);
             return result;
-        }
-
-        private static bool IsOne(string name)
-        {
-            return Environment.GetEnvironmentVariable(name) == @"1";
         }
 
         private static bool IsSet(string name)

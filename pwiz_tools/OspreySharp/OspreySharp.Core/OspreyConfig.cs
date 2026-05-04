@@ -112,6 +112,16 @@ namespace pwiz.OspreySharp.Core
         public List<string> InputScores { get; set; }
 
         /// <summary>
+        /// HPC: when true, exit after Stage 5 + reconciliation planning,
+        /// having written the boundary files
+        /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
+        /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
+        /// Skips Stage 6 + 7 + 8. Set by the
+        /// <c>--join-at-pass=1 --join-only</c> flag combination.
+        /// </summary>
+        public bool StopAfterStage5 { get; set; }
+
+        /// <summary>
         /// How many files will actually run concurrently in the current
         /// invocation. Set by the pipeline before per-file ProcessFile()
         /// calls; used to divide the inner main-search thread budget so
@@ -176,12 +186,15 @@ namespace pwiz.OspreySharp.Core
         }
 
         /// <summary>
-        /// Compute a fast identity hash for the library file (path + size + mtime).
-        /// Filesystem metadata only -- no content hashing. Same recipe as the
-        /// Rust impl's library_identity_hash so same-impl HPC handoff
-        /// (--no-join then --join-only on the same OS / library) gets matching
-        /// hashes; cross-impl handoff is not bit-compatible because path
-        /// formatting and mtime serialization differ between Rust and .NET.
+        /// Compute a fast identity hash for the library file (file name + size
+        /// + mtime). Filesystem metadata only -- no content hashing. The
+        /// directory portion is deliberately NOT in the hash so the same
+        /// library identifies identically across Rust / .NET / OS variations
+        /// (drive letter case, forward vs back slash, relative vs absolute,
+        /// HPC node-local vs shared paths). Mirrors the
+        /// <c>reconciliation_parameter_hash</c> precedent that hashes only
+        /// sorted file stems for the input set. Same recipe as Rust's
+        /// <c>library_identity_hash</c>.
         /// </summary>
         public string LibraryIdentityHash()
         {
@@ -189,7 +202,10 @@ namespace pwiz.OspreySharp.Core
             using (var sha256 = SHA256.Create())
             {
                 var sb = new StringBuilder();
-                sb.AppendFormat("path:{0}\n", libPath);
+                string fileName = string.IsNullOrEmpty(libPath)
+                    ? string.Empty
+                    : Path.GetFileName(libPath);
+                sb.AppendFormat("file_name:{0}\n", fileName);
                 if (!string.IsNullOrEmpty(libPath) && File.Exists(libPath))
                 {
                     var info = new FileInfo(libPath);

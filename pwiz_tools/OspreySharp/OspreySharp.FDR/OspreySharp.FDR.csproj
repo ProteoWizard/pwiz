@@ -6,8 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="OspreySharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
     <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj" />
+    <ProjectReference Include="..\OspreySharp.Chromatography\OspreySharp.Chromatography.csproj" />
   </ItemGroup>
 
 </Project>
