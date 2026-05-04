@@ -114,6 +114,17 @@ namespace pwiz.OspreySharp
             double? proteinGate = config.ProteinFdr;
 
             // 1. Build the passing base_id set across all files.
+            //    Decoys are excluded from the predicate by design: target/decoy
+            //    pairs share the same `base_id`, so a passing TARGET retains
+            //    its paired decoy automatically via the base_id retain step
+            //    below. Including decoys in the predicate would let a decoy
+            //    peptide whose parent protein passes protein-FDR rescue
+            //    itself via the protein-rescue clause, inflating the base_id
+            //    set beyond what the in-process pipeline's compaction
+            //    produces (AnalysisPipeline.cs:517 has the matching
+            //    `if (entry.IsDecoy) continue;` filter, and
+            //    `pipeline.rs:3879` and `rescore.rs:457` on the Rust side
+            //    have the matching `!e.is_decoy &&` predicate).
             var firstPassBaseIds = new HashSet<uint>();
             int entriesBefore = 0;
             foreach (var kvp in inputs.PerFileEntries)
@@ -121,6 +132,8 @@ namespace pwiz.OspreySharp
                 entriesBefore += kvp.Value.Count;
                 foreach (var e in kvp.Value)
                 {
+                    if (e.IsDecoy)
+                        continue;
                     if (e.RunPeptideQvalue <= peptideGate ||
                         (proteinGate.HasValue && e.RunProteinQvalue <= proteinGate.Value))
                     {

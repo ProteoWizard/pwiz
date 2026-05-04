@@ -2360,6 +2360,57 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
+        /// Decoys are excluded from the predicate by design: a passing
+        /// target retains its paired decoy automatically via the
+        /// base_id retain step. If decoys WERE allowed in the
+        /// predicate, a decoy peptide whose paired-target's protein
+        /// passes protein-FDR would self-rescue via the protein-rescue
+        /// clause, inflating the base_id set beyond what the
+        /// in-process pipeline produces (AnalysisPipeline.cs:517 has
+        /// the matching `if (entry.IsDecoy) continue;` filter; Rust
+        /// rescore.rs:457 has the matching `!e.is_decoy &&`).
+        ///
+        /// Test layout: a single decoy with a passing protein_q AND a
+        /// failing peptide_q. Without the decoy filter, the decoy's
+        /// base_id would land in firstPassBaseIds via protein-rescue.
+        /// With the filter, the decoy is skipped — and since no target
+        /// shares its base_id, no entries survive at all.
+        /// </summary>
+        [TestMethod]
+        public void TestRescoreCompactionSkipsDecoysInPredicate()
+        {
+            const string fileName = "f1";
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
+                {
+                    // Lone decoy with a passing protein_q. No paired target.
+                    MakeFdrEntryWithProteinQ(0x80000007u, runPeptideQ: 0.5, runProteinQ: 0.005),
+                }),
+            };
+
+            var inputs = new RescoreInputs
+            {
+                PerFileEntries = perFile,
+                ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
+                RefinedCalibrations = new Dictionary<string, RTCalibration>(),
+                PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
+            };
+
+            var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
+            {
+                RunFdr = 0.01,
+                ProteinFdr = 0.01,
+            });
+
+            // Decoy is filtered before predicate; no base_ids passed; the
+            // entry is then dropped by the base_id retain step.
+            Assert.AreEqual(0, stats.FirstPassBaseIds);
+            Assert.AreEqual(0, stats.EntriesAfter);
+            Assert.AreEqual(0, inputs.PerFileEntries[0].Value.Count);
+        }
+
+        /// <summary>
         /// Helper: build a minimal FdrEntry usable in compaction tests.
         /// Sets the FDR fields the predicate inspects and leaves the
         /// rest at their defaults.
