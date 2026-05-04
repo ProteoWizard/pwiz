@@ -44,9 +44,15 @@ internal sealed class Wiff2File : AbstractWiffFile
             try
             {
                 if (string.IsNullOrEmpty(_msSample.StartTimestamp)) return null;
+                // cpp WiffFile2.ipp:484-500 + VendorReaderTestHarness.cpp:343 (which forces
+                // adjustToHostTime=false): parse the SDK timestamp via .NET DateTime.Parse
+                // — for TZ-tagged input that converts to system local — then emit the
+                // resulting LOCAL components Z-suffixed without further conversion. Matches
+                // both the cpp reader's runtime output and the test reference mzMLs, which
+                // were generated on the same agent's local timezone.
                 if (DateTime.TryParse(_msSample.StartTimestamp,
                         System.Globalization.CultureInfo.InvariantCulture,
-                        System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                        System.Globalization.DateTimeStyles.None,
                         out var dt))
                     return dt.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
             }
@@ -64,6 +70,22 @@ internal sealed class Wiff2File : AbstractWiffFile
                 foreach (var det in _msSample.InstrumentDetails ?? Array.Empty<IInstrumentDetail>())
                 {
                     if (det.DeviceType == 0) return det.DeviceModelName;
+                }
+            }
+            catch { }
+            return null;
+        }
+    }
+
+    public override string? InstrumentSerialNumber
+    {
+        get
+        {
+            try
+            {
+                foreach (var det in _msSample.InstrumentDetails ?? Array.Empty<IInstrumentDetail>())
+                {
+                    if (det.DeviceType == 0) return det.SerialNumber;
                 }
             }
             catch { }
@@ -116,11 +138,21 @@ internal sealed class Wiff2File : AbstractWiffFile
     {
         if (_disposed) return;
         _disposed = true;
+        // Close every source the sample touched, not just the first — multi-source
+        // wiff2 files (rare but the SDK reports them) leave handles dangling otherwise.
         try
         {
-            if (_msSample.Sources is { Length: > 0 } sources) _api.CloseFile(sources[0]);
+            if (_msSample.Sources is { Length: > 0 } sources)
+                foreach (var src in sources)
+                    try { _api.CloseFile(src); } catch { }
         }
         catch { }
+        // ISampleDataApi may itself be IDisposable (some SDK builds expose it); release
+        // it so the underlying SQLite connection / file mapping unwinds.
+        if (_api is IDisposable apiDisposable)
+        {
+            try { apiDisposable.Dispose(); } catch { }
+        }
     }
 }
 
@@ -208,18 +240,25 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
         return (Array.Empty<double>(), Array.Empty<double>());
     }
 
+    private (double[] Times, double[] Intensities)? _ticCache;
     public override (double[] Times, double[] Intensities) GetTic()
     {
+        if (_ticCache is { } cached) return cached;
         try
         {
             var req = _api.RequestFactory.CreateExperimentTicReadRequest();
             req.SampleId = _sample.Id;
             req.ExperimentId = _exp.Id;
             var tic = _api.GetExperimentTic(req);
-            return (tic.XValues ?? Array.Empty<double>(),
-                    tic.YValues ?? Array.Empty<double>());
+            _ticCache = (tic.XValues ?? Array.Empty<double>(),
+                         tic.YValues ?? Array.Empty<double>());
+            return _ticCache.Value;
         }
-        catch { return (Array.Empty<double>(), Array.Empty<double>()); }
+        catch
+        {
+            _ticCache = (Array.Empty<double>(), Array.Empty<double>());
+            return _ticCache.Value;
+        }
     }
 
     // wiff2 has no MRM/SIM transitions (cpp WiffFile2 returns 0).
@@ -337,11 +376,17 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
 
     // The wiff2 SDK's IIsolationWindow.LowerOffset/UpperOffset are misnamed — they're absolute
     // m/z bounds of the isolation window, not offsets from the target m/z. mzML expects
-    // half-window-widths from the target. Convert here so SpectrumList_Sciex always sees
-    // proper offsets regardless of which SDK provided them.
+    // half-window-widths from the target. cpp's SpectrumList_ABI guards on both bounds being
+    // > 0 before emitting offsets (ABI/SpectrumList_ABI.cpp:203); mirror that here so
+    // unset/zero SDK values (which signal "no isolation window specified") don't produce
+    // a bogus offset == target_m_z.
     public override double IsolationLowerOffset =>
-        _iso is null ? 0 : Math.Max(0, _iso.IsolationWindowTarget - _iso.LowerOffset);
+        _iso is null || _iso.LowerOffset <= 0 || _iso.UpperOffset <= 0
+            ? 0
+            : Math.Max(0, _iso.IsolationWindowTarget - _iso.LowerOffset);
     public override double IsolationUpperOffset =>
-        _iso is null ? 0 : Math.Max(0, _iso.UpperOffset - _iso.IsolationWindowTarget);
+        _iso is null || _iso.LowerOffset <= 0 || _iso.UpperOffset <= 0
+            ? 0
+            : Math.Max(0, _iso.UpperOffset - _iso.IsolationWindowTarget);
     public override double ElectronKineticEnergy => _exp.ElectronKe ?? 0;
 }

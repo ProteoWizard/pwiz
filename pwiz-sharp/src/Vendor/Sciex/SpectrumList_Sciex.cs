@@ -128,7 +128,9 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         => GetSpectrumImpl(index, getBinaryData, centroid: false);
 
     /// <inheritdoc/>
-    public string VendorCentroidName => "Sciex peak picking";
+    // cpp SpectrumList_PeakPicker.cpp:139 — "ABI/Analyst peak picking" for the Sciex
+    // (mode_ == 3) branch. Match exactly so the dataProcessing userParam string diffs out.
+    public string VendorCentroidName => "ABI/Analyst peak picking";
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData)
@@ -157,9 +159,8 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         var scan = new Scan { InstrumentConfiguration = _defaultIc };
         spec.ScanList.Scans.Add(scan);
 
-        // 1-based experiment number; matches cpp's `msExperiment->getExperimentNumber()`.
-        scan.Set(CVID.MS_preset_scan_configuration, ie.ExperimentIndex + 1);
-
+        // cpp SpectrumList_ABI emits scan start time BEFORE preset scan configuration; mirror
+        // that order so msdiff sees an exact match.
         try
         {
             double rtMin = exp.GetRetentionTime(ie.Cycle);
@@ -167,23 +168,22 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         }
         catch { /* not all experiments have RT */ }
 
+        // 1-based experiment number; matches cpp's `msExperiment->getExperimentNumber()`.
+        scan.Set(CVID.MS_preset_scan_configuration, ie.ExperimentIndex + 1);
+
         if (exp.StartMass < exp.EndMass)
             scan.ScanWindows.Add(new ScanWindow(exp.StartMass, exp.EndMass, CVID.MS_m_z));
 
         // Profile vs centroid + AddZeros padding for profile data are handled inside the
         // AbstractWiffSpectrum implementation (legacy: AddZeros via Clearcore2; wiff2: AddFramingZeros
-        // via the SDK request).
-        // addZeros stays true on profile reads (cpp: same — adds framing zeros around peaks
-        // for profile data); turn it off on centroid reads since the SDK's centroid path
-        // already returns one point per peak.
-        var ms = exp.GetSpectrum(ie.Cycle, addZeros: !centroid, centroid: centroid);
+        // via the SDK request). cpp WiffFile2.ipp:803 always passes addZeros=true (regardless
+        // of doCentroid); mirror that so the SDK returns the same point density and the swath
+        // centroid output matches the cpp reference exactly (765 points/spectrum on the
+        // swath.api fixture, vs 255 with addZeros=false).
+        var ms = exp.GetSpectrum(ie.Cycle, addZeros: true, centroid: centroid);
 
         if (ms is not null)
         {
-            // When the caller asked for centroid (via GetCentroidSpectrum), the SDK either
-            // returned centroid data (wiff2) or returned what the file has (legacy WIFF —
-            // centroid arg is advisory there). Tag MS_centroid_spectrum unconditionally on
-            // the centroid path so SpectrumList_PeakPicker sees it and skips its own CWT.
             spec.Params.Set(centroid || ms.CentroidMode ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
 
             if (msLevel > 1 && ms.HasPrecursorInfo)
@@ -216,9 +216,12 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
                 spec.Precursors.Add(precursor);
             }
 
-            // TIC: cpp ABI emits unconditionally from spectrum->getSumY() as detector-count.
-            // We compute from YValues (no precomputed sum-Y on AbstractWiffSpectrum). YValues
-            // is already loaded by GetSpectrum so no extra cost.
+            // TIC: cpp WiffFile2.ipp:718 reads `spectrum->getSumY()` from a precomputed per-cycle
+            // intensities array (`experiment->cycleIntensities()`). Summing the centroided
+            // YValues here doesn't match — centroiding redistributes intensity across fewer
+            // bins so the total ends up smaller than the raw cycle TIC. Use the SDK's per-cycle
+            // value instead via AbstractWiffExperiment.GetCycleTic, which the wiff2 path
+            // implements by caching GetExperimentTic.
             //
             // Base peak (MS_base_peak_intensity / MS_base_peak_m_z): NOT emitted here. cpp gets
             // these from a separate per-cycle SDK metadata array (basePeakIntensities[cycle-1])
@@ -231,9 +234,7 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             double[] ys = ms.YValues;
             int len = Math.Min(xs.Length, ys.Length);
 
-            double tic = 0;
-            for (int i = 0; i < len; i++) tic += ys[i];
-            spec.Params.Set(CVID.MS_total_ion_current, tic, CVID.MS_number_of_detector_counts);
+            spec.Params.Set(CVID.MS_total_ion_current, exp.GetCycleTic(ie.Cycle), CVID.MS_number_of_detector_counts);
 
             if (getBinaryData)
             {

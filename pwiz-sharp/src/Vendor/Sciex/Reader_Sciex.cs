@@ -153,6 +153,10 @@ public sealed class Reader_Sciex : IReader
         var ic = Reader_Sciex_Detail.TranslateAsInstrumentConfiguration(
             instrumentModel, CVID.MS_electrospray_ionization);
         ic.Software = analyst;
+        // cpp Reader_ABI.cpp:165 — instrument serial number when the SDK exposes one.
+        var serial = wiff.InstrumentSerialNumber;
+        if (!string.IsNullOrEmpty(serial))
+            ic.Set(CVID.MS_instrument_serial_number, serial);
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 

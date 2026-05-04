@@ -50,6 +50,15 @@ internal sealed class WiffFile : AbstractWiffFile
         }
     }
 
+    public override string? InstrumentSerialNumber
+    {
+        get
+        {
+            try { return _sample.Details.InstrumentSerialNumber; }
+            catch { return null; }
+        }
+    }
+
     public override int AdcChannelCount
     {
         get

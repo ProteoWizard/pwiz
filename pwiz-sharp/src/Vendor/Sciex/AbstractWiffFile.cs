@@ -37,6 +37,10 @@ public abstract class AbstractWiffFile : IDisposable
     /// <summary>Instrument model name from the first MS device, or null.</summary>
     public abstract string? InstrumentModelName { get; }
 
+    /// <summary>Instrument serial number from the first MS device, or null/empty
+    /// when the SDK doesn't expose one (e.g. legacy WIFF, where cpp also returns "").</summary>
+    public abstract string? InstrumentSerialNumber { get; }
+
     /// <summary>Number of ADC channels (legacy only — wiff2 returns 0).</summary>
     public abstract int AdcChannelCount { get; }
 
@@ -115,6 +119,18 @@ public abstract class AbstractWiffExperiment
 
     /// <summary>TIC (times, intensities) for this experiment.</summary>
     public abstract (double[] Times, double[] Intensities) GetTic();
+
+    /// <summary>Per-cycle TIC value as cpp <c>spectrum->getSumY()</c> reports it
+    /// (sourced from <c>experiment->cycleIntensities()[cycle-1]</c>). Used to fill
+    /// the per-spectrum <c>MS_total_ion_current</c> cvParam without summing the
+    /// post-centroid YValues, which lose intensity relative to the raw cycle TIC.
+    /// Returns 0 when the SDK doesn't expose cycle intensities.</summary>
+    public virtual double GetCycleTic(int cycle1Based)
+    {
+        var (_, intensities) = GetTic();
+        int idx = cycle1Based - 1;
+        return idx >= 0 && idx < intensities.Length ? intensities[idx] : 0;
+    }
 
     /// <summary>SRM transitions for an MRM experiment (empty for wiff2 / non-MRM).</summary>
     public abstract IReadOnlyList<WiffMrmTarget> SrmTransitions { get; }
