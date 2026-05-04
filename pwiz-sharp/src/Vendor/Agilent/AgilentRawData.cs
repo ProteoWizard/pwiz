@@ -121,6 +121,18 @@ public sealed class AgilentRawData : IDisposable
         catch { return null; }
     }
 
+    /// <summary>The non-MS data reader interface (UV/DAD/pressure/flow signals), or null when
+    /// the underlying SDK reader doesn't implement it. Mirrors cpp <c>MassHunterDataImpl</c>'s
+    /// <c>(MHDAC::INonmsDataReader^) reader_</c> downcast.</summary>
+    public INonmsDataReader? NonMsDataReader
+    {
+        get
+        {
+            try { return _reader as INonmsDataReader; }
+            catch { return null; }
+        }
+    }
+
     /// <inheritdoc/>
     public void Dispose()
     {

@@ -91,17 +91,9 @@ public sealed class Reader_Agilent : IReader
         result.Id = Path.GetFileNameWithoutExtension(dirName);
         result.Run.Id = result.Id;
 
-        // sourceFile points at AcqData/MSScan.bin (matches cpp Serializer_mzXML translation
-        // table).
-        var sf = new SourceFile("MSScan.bin", "MSScan.bin",
-            "file:///" + Path.Combine(Path.GetFullPath(dotDPath), "AcqData").Replace('\\', '/'));
-        sf.Set(CVID.MS_Agilent_MassHunter_format);
-        sf.Set(CVID.MS_Agilent_MassHunter_nativeID_format);
-        result.FileDescription.SourceFiles.Add(sf);
-        result.Run.DefaultSourceFile = sf;
-
-        // fileContent: if the file has any MS spectra, declare both MS1 and MSn (cheap heuristic).
-        // Cpp walks scan records; doing the same keeps parity with reference mzMLs.
+        // fileDescription/fileContent: per-spectrum-type CV terms based on actual scan content,
+        // plus a representation tag (centroid / profile / mixed) from the storage mode, plus
+        // chromatogram CV terms for TIC / SIM / SRM. Mirrors cpp Reader_Agilent::fillInMetadata.
         bool hasMs1 = false, hasMsn = false;
         for (int i = 0, end = (int)raw.TotalScansPresent; i < end; i++)
         {
@@ -115,6 +107,51 @@ public sealed class Reader_Agilent : IReader
         if (hasMs1) result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum);
         if (hasMsn) result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
 
+        // Spectrum representation: storage mode tells us whether the file has profile,
+        // centroid, or both. cpp uses MSStorageMode_ProfileSpectrum / _PeakDetectedSpectrum /
+        // _Mixed; the SDK enum has the same shape.
+        try
+        {
+            var storage = raw.MSScanFileInformation.SpectraFormat;
+            if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.Mixed)
+            {
+                result.FileDescription.FileContent.Set(CVID.MS_centroid_spectrum);
+                result.FileDescription.FileContent.Set(CVID.MS_Continuum_Mass_Spectrum);
+            }
+            else if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.ProfileSpectrum)
+                result.FileDescription.FileContent.Set(CVID.MS_Continuum_Mass_Spectrum);
+            else if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.PeakDetectedSpectrum)
+                result.FileDescription.FileContent.Set(CVID.MS_centroid_spectrum);
+        }
+        catch { /* SDK may not expose SpectraFormat for some file types */ }
+
+        // cpp always tags TIC chromatogram in fileContent regardless of whether one is emitted.
+        result.FileDescription.FileContent.Set(CVID.MS_TIC_chromatogram);
+
+        // sourceFileList: one entry per file under AcqData/, mirroring cpp. The .bin file
+        // (typically MSScan.bin or MSPeak.bin) is selected as the run's defaultSourceFile.
+        // Skips the post-processing artifact extensions cpp also skips.
+        string acqDataPath = Path.Combine(Path.GetFullPath(dotDPath), "AcqData");
+        SourceFile? defaultSf = null;
+        if (Directory.Exists(acqDataPath))
+        {
+            foreach (var filePath in Directory.EnumerateFiles(acqDataPath))
+            {
+                string ext = Path.GetExtension(filePath).ToLowerInvariant();
+                if (ext is ".mzxml" or ".mzdata" or ".mgf" or ".ms2" or ".txt")
+                    continue;
+
+                string filename = Path.GetFileName(filePath);
+                var srcFile = new SourceFile(filename, filename,
+                    "file:///" + Path.GetFullPath(acqDataPath).Replace('\\', '/'));
+                srcFile.Set(CVID.MS_Agilent_MassHunter_nativeID_format);
+                srcFile.Set(CVID.MS_Agilent_MassHunter_format);
+                result.FileDescription.SourceFiles.Add(srcFile);
+                if (ext == ".bin") defaultSf = srcFile;
+            }
+        }
+        if (defaultSf is not null) result.Run.DefaultSourceFile = defaultSf;
+
         // Software entries: MassHunter (acquisition) + pwiz (conversion). Version comes from the
         // SDK; cpp uses the SchemaDefaultDirectory string but rawfile->Version is more useful.
         var massHunter = new Software("MassHunter") { Version = raw.Version };
@@ -124,22 +161,18 @@ public sealed class Reader_Agilent : IReader
         pwizSoftware.Set(CVID.MS_pwiz);
         result.Software.Add(pwizSoftware);
 
-        // dataProcessing: pwiz conversion.
+        // Single DataProcessing entry — cpp emits exactly one (pwiz_Reader_Agilent_conversion).
         var dpReader = new DataProcessing("pwiz_Reader_Agilent_conversion");
         var pmReader = new ProcessingMethod { Order = 0, Software = pwizSoftware };
         pmReader.Set(CVID.MS_Conversion_to_mzML);
         dpReader.ProcessingMethods.Add(pmReader);
         result.DataProcessings.Add(dpReader);
 
-        var dpCommon = new DataProcessing("pwiz_Reader_conversion");
-        var pmCommon = new ProcessingMethod { Order = 0, Software = pwizSoftware };
-        pmCommon.Set(CVID.MS_Conversion_to_mzML);
-        dpCommon.ProcessingMethods.Add(pmCommon);
-        result.DataProcessings.Add(dpCommon);
-
         // Instrument config: cpp emits one per ionization mode; we emit one combined config
-        // matching the device type. Multi-source files become a follow-up port.
+        // matching the device type. Multi-source files become a follow-up port. softwareRef
+        // points at MassHunter so the mzML emits instrumentConfiguration/@softwareRef="MassHunter".
         var ic = BuildInstrumentConfiguration(raw);
+        ic.Software = massHunter;
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
@@ -147,14 +180,19 @@ public sealed class Reader_Agilent : IReader
         try { result.Run.StartTimeStamp = raw.AcquisitionTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture); }
         catch { /* not all files expose a parseable timestamp */ }
 
-        // Spectrum list: hand the raw object to the SpectrumList; SpectrumList owns it.
+        // Spectrum list owns the raw handle; chromatogram list shares without owning so a
+        // single Dispose chain releases the SDK file. cpp uses the same shared_ptr split.
         bool simAsSpectra = config?.SimAsSpectra ?? false;
         bool srmAsSpectra = config?.SrmAsSpectra ?? false;
-        var list = new SpectrumList_Agilent(raw, ownsRaw: true, ic, simAsSpectra, srmAsSpectra)
+        bool globalChromsAreMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
+        result.Run.SpectrumList = new SpectrumList_Agilent(raw, ownsRaw: true, ic, simAsSpectra, srmAsSpectra)
         {
             Dp = dpReader,
         };
-        result.Run.SpectrumList = list;
+        result.Run.ChromatogramList = new ChromatogramList_Agilent(raw, ownsRaw: false, globalChromsAreMs1Only)
+        {
+            Dp = dpReader,
+        };
     }
 
     private static InstrumentConfiguration BuildInstrumentConfiguration(AgilentRawData raw)
