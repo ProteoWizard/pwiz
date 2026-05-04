@@ -81,7 +81,7 @@ public sealed class Converter
         // `using` releases native vendor handles (Thermo IRawFileThreadManager, Bruker timsdata,
         // etc.) once the output is written.
         using var msd = ReadAndProcess(input);
-        WriteOutput(msd, BuildOutputPath(input));
+        WriteOutput(msd, BuildOutputPath(input, msd));
     }
 
     private void ConvertMerged()
@@ -99,7 +99,7 @@ public sealed class Converter
             MergeRun(merged, next);
         }
         // Choose an output name: --outfile wins, otherwise the first input's basename.
-        string outputFile = BuildOutputPath(_config.InputFiles[0]);
+        string outputFile = BuildOutputPath(_config.InputFiles[0], merged);
         WriteOutput(merged, outputFile);
     }
 
@@ -252,14 +252,28 @@ public sealed class Converter
             new UserParam("contact info", contents, "xsd:string"));
     }
 
-    private string BuildOutputPath(string input)
+    private string BuildOutputPath(string input, MSData msd)
     {
         string ext = _config.OutputExtension ?? DefaultExtension(_config.Format);
         if (!ext.StartsWith('.')) ext = "." + ext;
 
-        string name = !string.IsNullOrEmpty(_config.OutFile)
-            ? _config.OutFile
-            : Path.GetFileNameWithoutExtension(input) + ext;
+        string name;
+        if (!string.IsNullOrEmpty(_config.OutFile))
+        {
+            name = _config.OutFile;
+        }
+        else
+        {
+            // cpp msconvert names the output by the run id, which vendor readers populate as
+            // <input-stem>-<sample-name> for multi-sample formats (Sciex WIFF / WIFF2) and
+            // <input-stem> otherwise. Mirror that so multi-sample WIFFs get one
+            // disambiguated mzML per sample (e.g. PressureTrace1-6500SysSuit1269.mzML)
+            // rather than colliding on PressureTrace1.mzML across runs.
+            string baseName = !string.IsNullOrEmpty(msd.Run.Id)
+                ? msd.Run.Id
+                : Path.GetFileNameWithoutExtension(input);
+            name = baseName + ext;
+        }
         return Path.Combine(_config.OutputPath, name);
     }
 

@@ -62,7 +62,11 @@ public class ConverterTests
         ms2.SetMZIntensityArrays(new[] { 150.0, 250.0, 350.0 }, new[] { 50.0, 500.0, 150.0 }, CVID.MS_number_of_detector_counts);
         list.Spectra.Add(ms2);
 
-        msd.Run.Id = "run";
+        // Keep the run id aligned with the input filename stem so the output name
+        // round-trips to "input.mzML" — Converter.BuildOutputPath uses msd.Run.Id
+        // as the basename (matching cpp msconvert), and most real mzML files do
+        // have run id == source-file stem.
+        msd.Run.Id = "input";
         msd.Run.SpectrumList = list;
 
         string path = Path.Combine(_tempDir, "input.mzML");
