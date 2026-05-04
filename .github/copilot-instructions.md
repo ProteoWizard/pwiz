@@ -65,6 +65,8 @@ throw new IOException(Resources.ErrorMessage_CannotOpenFile);
 
 **Exception**: Debug-only strings using `$@""` format are acceptable (e.g., `Debug.WriteLine`, `ToString()`, internal exception messages never shown to users).
 
+**Do NOT flag**: Missing entries in localized resx siblings (`*.ja.resx`, `*.zh-CHS.resx`) when a new entry is added to the master `*.resx`. Translations are handled by a separate translator workflow; the .NET resource fallback (localized missing -> master) means JP/ZH users see English until translators sync, which is the intended steady state.
+
 ### 3. Translation-Proof Testing (CRITICAL)
 
 **NEVER accept English text literals in test assertion comparisons.**
@@ -272,6 +274,7 @@ if (condition)
 - Verbose variable names (Skyline prefers clarity)
 - Long methods (common in UI code with many form controls)
 - Patterns from legacy code (don't require refactoring unless touched)
+- Missing entries in localized resx siblings (`*.ja.resx`, `*.zh-CHS.resx`) when a new entry is added to the master `*.resx` — translations are handled separately by dedicated translators.
 
 ## Additional Context
 
