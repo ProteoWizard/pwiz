@@ -110,10 +110,18 @@ REM # in the build's Tests tab. Mirrors Skyline TestRunner's pattern.
 if defined TEAMCITY_VERSION echo ##teamcity[testSuiteStarted name='%TEST_SUITE_NAME%']
 
 echo ##teamcity[progressMessage 'dotnet test (%CONFIG%)']
-REM # --logger trx writes test results files that TeamCity's test-results step
-REM # can ingest; --logger console gives readable stdout. dotnet test auto-emits
-REM # ##teamcity[testStarted/Finished] markers when TEAMCITY_VERSION is set.
-dotnet test %TEST_TARGET% --no-build %MSBUILD_PROPS% --logger:"trx" --logger:"console;verbosity=normal"
+REM # Loggers:
+REM #   trx     — TeamCity's "XML report processing" build feature can also ingest these;
+REM #             local dev gets a TestResults\<name>.trx for IDE consumption.
+REM #   console — readable stdout for humans / CI logs.
+REM #   teamcity — TeamCity.VSTest.TestAdapter (referenced from test/Directory.Build.targets)
+REM #             registers itself under this name and emits per-test service messages
+REM #             (##teamcity[testStarted/testFinished/testFailed]) when TEAMCITY_VERSION
+REM #             is in env. Forced explicitly since the adapter's auto-enable check
+REM #             (TEAMCITY_PROJECT_NAME) doesn't see TC's env in plain Command Line steps.
+set TEST_LOGGERS=--logger:"trx" --logger:"console;verbosity=normal"
+if defined TEAMCITY_VERSION set TEST_LOGGERS=%TEST_LOGGERS% --logger:teamcity
+dotnet test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
 set EXIT=%ERRORLEVEL%
 
 if defined TEAMCITY_VERSION echo ##teamcity[testSuiteFinished name='%TEST_SUITE_NAME%']
