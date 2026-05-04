@@ -454,6 +454,9 @@ public sealed class MzmlWriter
         if (!chrom.Precursor.IsEmpty)
             WritePrecursor(w, chrom.Precursor);
 
+        if (!chrom.Product.IsEmpty)
+            WriteProduct(w, chrom.Product);
+
         int totalArrays = chrom.BinaryDataArrays.Count + chrom.IntegerDataArrays.Count;
         if (totalArrays > 0)
         {
@@ -577,6 +580,15 @@ public sealed class MzmlWriter
             w.WriteEndElement();
         }
 
+        if (spec.Products.Count > 0)
+        {
+            w.WriteStartElement("productList");
+            MzmlXml.WriteCountAttr(w, spec.Products.Count);
+            foreach (var p in spec.Products)
+                WriteProduct(w, p);
+            w.WriteEndElement();
+        }
+
         if (spec.BinaryDataArrays.Count > 0)
         {
             w.WriteStartElement("binaryDataArrayList");
@@ -619,6 +631,15 @@ public sealed class MzmlWriter
         MzmlXml.WriteParams(w, p.Activation);
         w.WriteEndElement();
 
+        w.WriteEndElement();
+    }
+
+    private static void WriteProduct(XmlWriter w, Product p)
+    {
+        w.WriteStartElement("product");
+        w.WriteStartElement("isolationWindow");
+        MzmlXml.WriteParams(w, p.IsolationWindow);
+        w.WriteEndElement();
         w.WriteEndElement();
     }
 
