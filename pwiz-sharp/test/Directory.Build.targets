@@ -1,0 +1,17 @@
+<Project>
+
+  <!-- TeamCity.VSTest.TestAdapter emits ##teamcity[testStarted/testFinished/testFailed]
+       service messages when TEAMCITY_VERSION is in the environment, so per-test results
+       show up in the TeamCity UI when the build runs through a plain Command Line step
+       (tcbuild.bat) instead of TC's bundled .NET runner. No-op locally where
+       TEAMCITY_VERSION is unset. Equivalent to the C++ build's teamcity-test-decoration.
+
+       Loaded from Directory.Build.targets (not .props) so the project's TargetFramework
+       is already set when this PackageReference is evaluated. Adding it via .props
+       breaks restore with NETSDK1013 (TargetFramework='') because NuGet evaluates the
+       package's build/ shims before TargetFramework propagates from the parent props. -->
+  <ItemGroup>
+    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.40" />
+  </ItemGroup>
+
+</Project>
