@@ -23,19 +23,25 @@ namespace pwiz.Skyline.Model.Results
     {
         public double TotalIntensity { get; set; }
         public double MeanMassError { get; set; }
+        public double MeanIonMobilityError { get; set; }
         bool _highAcc;
+        bool _hasIonMobility;
         ChromExtractor _extractor;
         private double _targetMz;
+        private double _targetIonMobility;
 
 
-        public IntensityAccumulator(bool highAcc, ChromExtractor extractor, double targetMz)
+        public IntensityAccumulator(bool highAcc, ChromExtractor extractor, double targetMz,
+            double? targetIonMobility = null)
         {
             _highAcc = highAcc;
             _extractor = extractor;
             _targetMz = targetMz;
+            _hasIonMobility = targetIonMobility.HasValue;
+            _targetIonMobility = targetIonMobility ?? 0;
         }
 
-        public void AddPoint(double mz, double intensity)
+        public void AddPoint(double mz, double intensity, double? ionMobility = null)
         {
             if (_extractor == ChromExtractor.summed)
                 TotalIntensity += intensity;
@@ -43,22 +49,33 @@ namespace pwiz.Skyline.Model.Results
             {
                 TotalIntensity = intensity;
                 MeanMassError = 0;
+                MeanIonMobilityError = 0;
             }
+
+            if (TotalIntensity <= 0.0)
+                return;
 
             // Accumulate weighted mean mass error for summed, or take a single
             // mass error of the most intense peak for base peak.
             if (_highAcc && (_extractor == ChromExtractor.summed || MeanMassError == 0))
             {
-                if (TotalIntensity > 0.0)
-                {
-                    double deltaPeak = mz - _targetMz;
-                    MeanMassError += (deltaPeak - MeanMassError) * intensity / TotalIntensity;
-                }
+                double deltaPeakMz = mz - _targetMz;
+                MeanMassError += (deltaPeakMz - MeanMassError) * intensity / TotalIntensity;
+            }
+
+            // Same pattern for ion mobility: intensity-weighted center of gravity
+            // of the IM values across the IM extraction band, expressed later as
+            // % error vs. the target IM (and converted to % CCS error in the caller).
+            if (_hasIonMobility && ionMobility.HasValue &&
+                (_extractor == ChromExtractor.summed || MeanIonMobilityError == 0))
+            {
+                double deltaPeakIm = ionMobility.Value - _targetIonMobility;
+                MeanIonMobilityError += (deltaPeakIm - MeanIonMobilityError) * intensity / TotalIntensity;
             }
         }
         public override string ToString() // Debug convenience, not user facing
         {
-            return $@"mz:{_targetMz} i:{TotalIntensity} e:{MeanMassError:F6}";
+            return $@"mz:{_targetMz} im:{_targetIonMobility} i:{TotalIntensity} mzErr:{MeanMassError:F6} imErr:{MeanIonMobilityError:F6}";
         }
     }
 }
