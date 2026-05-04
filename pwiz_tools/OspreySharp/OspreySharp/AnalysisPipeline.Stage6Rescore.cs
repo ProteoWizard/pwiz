@@ -269,6 +269,16 @@ namespace pwiz.OspreySharp
                 "Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
                 stats.TotalRescored, stats.TotalReconciliation));
 
+            // Cross-impl bisection seam: dump per-precursor state
+            // immediately after the rescore loop. Mirrors Rust's
+            // dump_stage6_rescored call from rescore::run_rescore.
+            if (OspreyDiagnostics.DumpRescored)
+            {
+                OspreyDiagnostics.WriteStage6RescoredDump(inputs.PerFileEntries);
+                if (OspreyDiagnostics.RescoredOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
+            }
+
             // Phase 1 success: in-memory state matches what the in-process
             // pipeline holds at the same seam. Phases 2 (gap-fill) and
             // 3 (parquet write-back) are the next steps; until then, the
@@ -415,6 +425,8 @@ namespace pwiz.OspreySharp
                 fileNameToIdx[Path.GetFileNameWithoutExtension(config.InputFiles[i])] = i;
 
             int totalRescored = 0;
+            int totalGapCwt = 0;
+            int totalGapForced = 0;
             int nTotalFiles = perFileEntries.Count;
 
             for (int fileNum = 0; fileNum < nTotalFiles; fileNum++)
@@ -557,11 +569,28 @@ namespace pwiz.OspreySharp
                 // entry_id. Preserve the original ParquetIndex so the
                 // future write-back step can target the right Parquet row
                 // (post-compaction Vec position != Parquet row index).
+                //
+                // Mirror Rust's to_fdr_entry semantics: post-rescore stubs
+                // carry default Score (0.0), q-values (1.0), and Pep
+                // (1.0). Percolator (Stage 7, second-pass FDR) recomputes
+                // these from the new Features. Without this reset the
+                // OspreySharp ScoreCandidate's `Score = coelutionSum`
+                // initializer (AnalysisPipeline.cs ~line 4088) bleeds
+                // through, producing 173k rows of post-rescore divergence
+                // vs the Rust worker's rust_stage6_rescored.tsv.
                 int nOverlay = 0;
                 foreach (var entry in rescored)
                 {
                     if (entryIdToIdx.TryGetValue(entry.EntryId, out int idx))
                     {
+                        entry.Score = 0.0;
+                        entry.RunPrecursorQvalue = 1.0;
+                        entry.RunPeptideQvalue = 1.0;
+                        entry.RunProteinQvalue = 1.0;
+                        entry.ExperimentPrecursorQvalue = 1.0;
+                        entry.ExperimentPeptideQvalue = 1.0;
+                        entry.ExperimentProteinQvalue = 1.0;
+                        entry.Pep = 1.0;
                         entry.ParquetIndex = fdrEntries[idx].ParquetIndex;
                         fdrEntries[idx] = entry;
                         nOverlay++;
@@ -573,17 +602,177 @@ namespace pwiz.OspreySharp
                     "  {0} of {1} existing entries re-scored ({2:F1}s)",
                     nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
 
-                // PHASE 2 (gap-fill) and PHASE 3 (parquet write-back) are
-                // the next steps in the C# port. The Rust side has both at
-                // pipeline.rs:2924-3110.
+                // PHASE 2 — gap-fill two-pass.
+                //
+                // For each gap-fill target the planner identified (peptides
+                // confidently identified in sibling replicates but missing
+                // here), score both the TARGET and the paired DECOY against
+                // the spectra at the consensus RT. Two-pass strategy:
+                //
+                //   Pass 1 — CWT: PrefilterEnabled=false, no boundary
+                //   overrides. Lets CWT peak detection find a natural peak
+                //   inside the rt-tolerance window around the consensus RT.
+                //   Catches the easy gap-fills where there's a real peak we
+                //   just missed in Stage 4.
+                //
+                //   Pass 2 — Forced: for entries CWT didn't find, force an
+                //   integration window at expected_rt +- half_width via
+                //   boundary overrides. Catches the hard gap-fills where
+                //   no peak rises above CWT's threshold but we want to
+                //   integrate at the expected RT for quantification.
+                //
+                // Both passes append new FdrEntry stubs to fdr_entries with
+                // ParquetIndex = uint.MaxValue (the gap-fill sentinel).
+                // Phase 3 (parquet write-back) reassigns the sentinel to a
+                // real row index as the entries are appended to the per-file
+                // .scores.parquet. Mirrors the Rust gap-fill block at
+                // pipeline.rs:2924-3014.
+                int nGapCwt = 0;
+                int nGapForced = 0;
+                if (gapFillTargets.Count > 0)
+                {
+                    // Build target+decoy id set from gap_fill_targets.
+                    var gapFillIds = new HashSet<uint>();
+                    foreach (var gf in gapFillTargets)
+                    {
+                        gapFillIds.Add(gf.TargetEntryId);
+                        gapFillIds.Add(gf.DecoyEntryId);
+                    }
+                    var gapFillLibrary = new List<LibraryEntry>(gapFillIds.Count);
+                    foreach (var libEntry in fullLibrary)
+                    {
+                        if (gapFillIds.Contains(libEntry.Id))
+                            gapFillLibrary.Add(libEntry);
+                    }
+
+                    HashSet<uint> cwtHitIds;
+                    if (gapFillLibrary.Count > 0)
+                    {
+                        // Pass 1: CWT pass with prefilter disabled. Clone
+                        // config so the disable doesn't bleed into other
+                        // files (OspreyConfig.ShallowClone gives us a new
+                        // instance whose mutations are local to this file).
+                        var cwtConfig = config.ShallowClone();
+                        cwtConfig.PrefilterEnabled = false;
+                        var cwtContext = new ScoringContext(cwtConfig, fileName);
+                        // No BoundaryOverrides — CWT picks peaks freely.
+
+                        var swCwt = Stopwatch.StartNew();
+                        var cwtResults = RunCoelutionScoring(
+                            gapFillLibrary, spectra, ms1Spectra,
+                            isolationWindows, rtCal,
+                            ms2Cal, ms1Cal,
+                            cwtContext);
+                        swCwt.Stop();
+
+                        cwtHitIds = new HashSet<uint>();
+                        foreach (var entry in cwtResults)
+                            cwtHitIds.Add(entry.EntryId);
+                        nGapCwt = cwtResults.Count;
+
+                        // Append CWT results as new FdrEntry stubs with the
+                        // gap-fill sentinel + score-reset (mirroring Rust
+                        // to_fdr_entry semantics for new stubs).
+                        foreach (var entry in cwtResults)
+                        {
+                            entry.ParquetIndex = uint.MaxValue;
+                            entry.Score = 0.0;
+                            entry.RunPrecursorQvalue = 1.0;
+                            entry.RunPeptideQvalue = 1.0;
+                            entry.RunProteinQvalue = 1.0;
+                            entry.ExperimentPrecursorQvalue = 1.0;
+                            entry.ExperimentPeptideQvalue = 1.0;
+                            entry.ExperimentProteinQvalue = 1.0;
+                            entry.Pep = 1.0;
+                            fdrEntries.Add(entry);
+                        }
+
+                        LogInfo(string.Format(
+                            "  Gap-fill CWT: {0} hits ({1:F1}s)",
+                            nGapCwt, swCwt.Elapsed.TotalSeconds));
+                    }
+                    else
+                    {
+                        cwtHitIds = new HashSet<uint>();
+                    }
+
+                    // Pass 2: Forced integration for entries CWT missed.
+                    // For each gap-fill target, check both the target_id
+                    // and decoy_id; either or both may have missed the CWT
+                    // pass.
+                    var forcedOverrides = new Dictionary<uint, (double Apex, double Start, double End)>();
+                    var forcedIds = new HashSet<uint>();
+                    foreach (var gf in gapFillTargets)
+                    {
+                        double start = gf.ExpectedRt - gf.HalfWidth;
+                        double end = gf.ExpectedRt + gf.HalfWidth;
+                        if (!cwtHitIds.Contains(gf.TargetEntryId))
+                        {
+                            forcedOverrides[gf.TargetEntryId] = (gf.ExpectedRt, start, end);
+                            forcedIds.Add(gf.TargetEntryId);
+                        }
+                        if (!cwtHitIds.Contains(gf.DecoyEntryId))
+                        {
+                            forcedOverrides[gf.DecoyEntryId] = (gf.ExpectedRt, start, end);
+                            forcedIds.Add(gf.DecoyEntryId);
+                        }
+                    }
+
+                    if (forcedOverrides.Count > 0)
+                    {
+                        var forcedLibrary = new List<LibraryEntry>(forcedIds.Count);
+                        foreach (var libEntry in gapFillLibrary)
+                        {
+                            if (forcedIds.Contains(libEntry.Id))
+                                forcedLibrary.Add(libEntry);
+                        }
+
+                        var forcedContext = new ScoringContext(config, fileName);
+                        forcedContext.BoundaryOverrides = forcedOverrides;
+
+                        var swForced = Stopwatch.StartNew();
+                        var forcedResults = RunCoelutionScoring(
+                            forcedLibrary, spectra, ms1Spectra,
+                            isolationWindows, rtCal,
+                            ms2Cal, ms1Cal,
+                            forcedContext);
+                        swForced.Stop();
+                        nGapForced = forcedResults.Count;
+
+                        foreach (var entry in forcedResults)
+                        {
+                            entry.ParquetIndex = uint.MaxValue;
+                            entry.Score = 0.0;
+                            entry.RunPrecursorQvalue = 1.0;
+                            entry.RunPeptideQvalue = 1.0;
+                            entry.RunProteinQvalue = 1.0;
+                            entry.ExperimentPrecursorQvalue = 1.0;
+                            entry.ExperimentPeptideQvalue = 1.0;
+                            entry.ExperimentProteinQvalue = 1.0;
+                            entry.Pep = 1.0;
+                            fdrEntries.Add(entry);
+                        }
+
+                        LogInfo(string.Format(
+                            "  Gap-fill forced: {0} integrated ({1:F1}s)",
+                            nGapForced, swForced.Elapsed.TotalSeconds));
+                    }
+
+                    totalGapCwt += nGapCwt;
+                    totalGapForced += nGapForced;
+                    totalRescored += nGapCwt + nGapForced;
+                }
+
+                // PHASE 3 (reconciled parquet write-back) is the next step.
+                // Rust does this at pipeline.rs:3050-3110.
             }
 
             return new RescoreStats
             {
                 TotalRescored = totalRescored,
                 TotalReconciliation = totalReconciliation,
-                TotalGapCwt = 0,
-                TotalGapForced = 0,
+                TotalGapCwt = totalGapCwt,
+                TotalGapForced = totalGapForced,
             };
         }
 

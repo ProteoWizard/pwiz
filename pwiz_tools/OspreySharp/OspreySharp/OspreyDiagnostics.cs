@@ -118,6 +118,20 @@ namespace pwiz.OspreySharp
         public static readonly bool PercolatorOnly = IsOne(@"OSPREY_PERCOLATOR_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_RESCORED: dump per-precursor state AFTER the
+        /// per-file Stage 6 rescore loop completes (consensus +
+        /// reconciliation overlay, plus gap-fill stubs once Phase 2
+        /// lands). Same column shape as DumpPercolator so
+        /// Compare-Percolator.ps1 reuses for the diff. Output:
+        /// cs_stage6_rescored.tsv. Mirrors Rust's
+        /// dump_stage6_rescored / OSPREY_DUMP_RESCORED gate.
+        /// </summary>
+        public static readonly bool DumpRescored = IsOne(@"OSPREY_DUMP_RESCORED");
+
+        /// <summary>OSPREY_RESCORED_ONLY: exit after cs_stage6_rescored.tsv dump.</summary>
+        public static readonly bool RescoredOnly = IsOne(@"OSPREY_RESCORED_ONLY");
+
+        /// <summary>
         /// OSPREY_DUMP_CONSENSUS: dump the per-peptide consensus RT planning
         /// state at the start of Stage 6 (cs_stage6_consensus.tsv) for
         /// cross-impl parity at the planning checkpoint.
@@ -951,6 +965,74 @@ namespace pwiz.OspreySharp
                 }
             }
             LogAction(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
+        }
+
+        /// <summary>
+        /// Dump per-precursor state AFTER the Stage 6 per-file rescore
+        /// loop completes (consensus + reconciliation overlay applied,
+        /// gap-fill stubs appended once Phase 2 lands). Same columns as
+        /// <see cref="WriteStage5PercolatorDump"/> + same sort + same
+        /// G17 / FormatF64Roundtrip formatting so Compare-Percolator.ps1
+        /// can be reused for the diff. Output: cs_stage6_rescored.tsv,
+        /// matching Rust's rust_stage6_rescored.tsv from
+        /// dump_stage6_rescored.
+        ///
+        /// This is the high-level Phase 1 byte-parity gate: if it
+        /// passes, the boundary-overrides rescore + (eventual) gap-fill
+        /// outputs match Rust's. If it fails, drill into the
+        /// fine-grained OSPREY_DUMP_MP_INPUTS / OSPREY_DUMP_PREDICT_RT
+        /// ladder to localize the divergence (those mirrors are tracked
+        /// for the pre-PR cleanup).
+        /// </summary>
+        public static void WriteStage6RescoredDump(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+        {
+            const string path = @"cs_stage6_rescored.tsv";
+            var inv = CultureInfo.InvariantCulture;
+
+            var rows = new List<KeyValuePair<string, FdrEntry>>();
+            foreach (var kvp in perFileEntries)
+            {
+                string fileName = kvp.Key;
+                foreach (var e in kvp.Value)
+                    rows.Add(new KeyValuePair<string, FdrEntry>(fileName, e));
+            }
+            // OrderBy/ThenBy is STABLE — preserves insertion order for ties.
+            // Required because gap-fill (Phase 2) appends new stubs with
+            // ParquetIndex = uint.MaxValue alongside an existing
+            // post-compaction stub for the same (file_name, EntryId)
+            // (e.g., decoy paired with a target that already passed
+            // first-pass FDR). Stable sort keeps the hydrated stub first
+            // and the gap-fill stub second, matching Rust's
+            // Vec::sort_by behavior. List<T>.Sort is UNSTABLE and would
+            // shuffle the dup pair non-deterministically across runs.
+            rows = rows
+                .OrderBy(r => r.Key, StringComparer.Ordinal)
+                .ThenBy(r => r.Value.EntryId)
+                .ToList();
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	run_protein_q	experiment_precursor_q	experiment_peptide_q");
+                foreach (var row in rows)
+                {
+                    var e = row.Value;
+                    sw.Write(row.Key);
+                    sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.ModifiedSequence ?? string.Empty);
+                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunProteinQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
+                }
+            }
+            LogAction(string.Format(@"Wrote Stage 6 rescored dump: {0} ({1} rows)", path, rows.Count));
         }
 
         // ---- Stage 6 planning dumps ----

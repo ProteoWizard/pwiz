@@ -813,6 +813,16 @@ namespace pwiz.OspreySharp
                     LogInfo(string.Format(
                         "Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
                         rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
+
+                    // Cross-impl bisection seam: dump per-precursor state
+                    // immediately after the rescore loop. Mirrors Rust's
+                    // dump_stage6_rescored call from pipeline.rs.
+                    if (OspreyDiagnostics.DumpRescored)
+                    {
+                        OspreyDiagnostics.WriteStage6RescoredDump(perFileEntries);
+                        if (OspreyDiagnostics.RescoredOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
+                    }
                 }
 
                 // Stage 8: Protein FDR (optional)
