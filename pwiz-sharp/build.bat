@@ -29,9 +29,9 @@ REM #
 REM #   --coverage
 REM #       Run the test step under JetBrains dotCover instead of `dotnet test`
 REM #       directly. Emits a snapshot at TestResults\coverage.dcvr and an HTML
-REM #       report at TestResults\coverage-report\. Requires the
-REM #       JetBrains.dotCover.CommandLineTools global tool (provides
-REM #       `dotnet-dotCover`).
+REM #       report at TestResults\coverage-report\. dotCover is restored from
+REM #       the local tool manifest at .config\dotnet-tools.json — no global
+REM #       install needed, and the version is pinned in source.
 REM #
 REM #       Auto-enabled when TEAMCITY_VERSION is set. TeamCity's coverage
 REM #       wrapping only attaches to the built-in .NET runner, not Command
@@ -153,29 +153,18 @@ if %COVERAGE%==1 (
     REM #   -:module=*.Tests   — exclude the test fixtures themselves
     REM #   -:module=msconvert-sharp — exclude the wrapper exe (entry-point only)
     REM #
-    REM # `dotnet-dotCover dotnet` is the cover-dotnet alias: spawns dotnet under
-    REM # the profiler with the args after `--`. Requires the
-    REM # JetBrains.dotCover.CommandLineTools 2023.x global tool installed via
-    REM #   dotnet tool install -g JetBrains.dotCover.CommandLineTools
-    REM # dotnet-dotCover is shipped as a global tool; `dotnet tool install -g`
-    REM # drops it under %USERPROFILE%\.dotnet\tools but TeamCity agents (and
-    REM # fresh PowerShell sessions) often don't have that on PATH yet — `where`
-    REM # returns nothing even though the install succeeded. Probe explicitly,
-    REM # adding the standard tool dir to PATH for this session if needed before
-    REM # giving up. Mirrors the workaround the dotnet-tools docs recommend for CI.
-    where dotnet-dotCover >nul 2>nul
+    REM # dotCover ships as a dotnet tool. We use a LOCAL tool manifest
+    REM # (.config\dotnet-tools.json) and `dotnet tool restore` so the build is
+    REM # self-contained — TC agents don't need a separate global install, and
+    REM # the version is pinned in source. After restore the tool is invoked as
+    REM # `dotnet dotcover` (the local-tool dispatcher matches the manifest's
+    REM # "dotnet-dotCover" command name minus the `dotnet-` prefix).
+    echo ##teamcity[progressMessage 'dotnet tool restore - local manifest .config\dotnet-tools.json']
+    dotnet tool restore
     if !ERRORLEVEL! NEQ 0 (
-        if exist "%USERPROFILE%\.dotnet\tools\dotnet-dotCover.exe" (
-            set "PATH=%USERPROFILE%\.dotnet\tools;!PATH!"
-        ) else if exist "%DOTNET_TOOLS%\dotnet-dotCover.exe" (
-            set "PATH=%DOTNET_TOOLS%;!PATH!"
-        )
-        where dotnet-dotCover >nul 2>nul
-        if !ERRORLEVEL! NEQ 0 (
-            set EXIT=2
-            set ERROR_TEXT=--coverage requested but dotnet-dotCover is not on PATH ^(checked %%USERPROFILE%%\.dotnet\tools and %%DOTNET_TOOLS%%^). Install with: dotnet tool install -g JetBrains.dotCover.CommandLineTools
-            goto error
-        )
+        set EXIT=2
+        set ERROR_TEXT=`dotnet tool restore` failed; see .config\dotnet-tools.json. Coverage cannot run.
+        goto error
     )
 
     set COVER_DIR=%SCRIPT_DIR%\TestResults
@@ -184,16 +173,16 @@ if %COVERAGE%==1 (
     set COVER_REPORT_DIR=!COVER_DIR!\coverage-report
     set COVER_FILTERS=+:module=Pwiz.*;-:module=*.Tests;-:module=msconvert-sharp
 
-    echo ##teamcity[progressMessage 'dotnet-dotCover dotnet test - snapshot at !COVER_SNAPSHOT!']
-    dotnet-dotCover dotnet --Output="!COVER_SNAPSHOT!" --Filters="!COVER_FILTERS!" --ReturnTargetExitCode -- test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
+    echo ##teamcity[progressMessage 'dotnet dotcover dotnet test - snapshot at !COVER_SNAPSHOT!']
+    dotnet dotcover dotnet --Output="!COVER_SNAPSHOT!" --Filters="!COVER_FILTERS!" --ReturnTargetExitCode -- test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
     set EXIT=!ERRORLEVEL!
 
     REM # Generate an HTML report from the snapshot — useful locally; on TC the
     REM # dotCover build feature renders this from the snapshot directly.
     if !EXIT! EQU 0 (
-        echo ##teamcity[progressMessage 'dotnet-dotCover report - HTML at !COVER_REPORT_DIR!']
+        echo ##teamcity[progressMessage 'dotnet dotcover report - HTML at !COVER_REPORT_DIR!']
         if not exist "!COVER_REPORT_DIR!" mkdir "!COVER_REPORT_DIR!"
-        dotnet-dotCover report --Source="!COVER_SNAPSHOT!" --Output="!COVER_REPORT_DIR!\index.html" --ReportType=HTML --HideAutoProperties
+        dotnet dotcover report --Source="!COVER_SNAPSHOT!" --Output="!COVER_REPORT_DIR!\index.html" --ReportType=HTML --HideAutoProperties
         set REPORT_EXIT=!ERRORLEVEL!
         if !REPORT_EXIT! NEQ 0 (
             echo ##teamcity[message text='dotCover report generation failed - snapshot is still at !COVER_SNAPSHOT!' status='WARNING']
