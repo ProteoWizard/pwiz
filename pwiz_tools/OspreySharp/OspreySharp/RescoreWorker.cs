@@ -121,6 +121,16 @@ namespace pwiz.OspreySharp
                 inputs.TotalGapFillTargets,
                 inputs.RefinedCalibrations.Count));
 
+            // Cross-impl bisection seam: dump the per-precursor q-values
+            // that were just hydrated from .1st-pass.fdr_scores.bin so
+            // the result can be diffed against Rust's
+            // rust_stage5_percolator.tsv via Compare-Percolator.ps1.
+            // If the diff is non-empty, the divergence is in hydration
+            // (sidecar parsing); if empty, divergence (if any) is
+            // downstream of this seam (compaction or rescore).
+            if (OspreyDiagnostics.DumpPercolator)
+                OspreyDiagnostics.WriteStage5PercolatorDump(inputs.PerFileEntries);
+
             RescoreCompaction.Stats stats;
             try
             {
