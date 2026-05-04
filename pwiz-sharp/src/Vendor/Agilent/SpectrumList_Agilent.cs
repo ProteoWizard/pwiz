@@ -228,6 +228,34 @@ public sealed class SpectrumList_Agilent : SpectrumListBase
                 var doubleY = new double[y.Length];
                 for (int i = 0; i < y.Length; i++) doubleY[i] = y[i];
                 spec.SetMZIntensityArrays(SliceDouble(x, y.Length), doubleY, CVID.MS_number_of_detector_counts);
+
+                // cpp SpectrumList_Agilent.cpp:514-533: lowest/highest observed m/z come from
+                // the first / last non-zero-intensity points in the trimmed data. The "first
+                // 10" window for lowest is a perf shortcut from cpp — Agilent profile data
+                // begins with framing zeros, so the first non-zero typically lies in the first
+                // few samples; capping at 10 avoids scanning the whole array. Highest scans
+                // backward from the end. With centroided data (or post-trim profile), the
+                // first/last samples are already non-zero so the loops short-circuit.
+                if (x.Length > 0 && y.Length > 0)
+                {
+                    int loBound = Math.Min(10, y.Length);
+                    for (int i = 0; i < loBound; i++)
+                    {
+                        if (y[i] > 0)
+                        {
+                            spec.Params.Set(CVID.MS_lowest_observed_m_z, x[i], CVID.MS_m_z);
+                            break;
+                        }
+                    }
+                    for (int i = y.Length - 1; i >= 0; i--)
+                    {
+                        if (y[i] > 0)
+                        {
+                            spec.Params.Set(CVID.MS_highest_observed_m_z, x[i], CVID.MS_m_z);
+                            break;
+                        }
+                    }
+                }
             }
         }
         else

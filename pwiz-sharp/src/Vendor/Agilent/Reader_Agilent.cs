@@ -218,11 +218,19 @@ public sealed class Reader_Agilent : IReader
         ic.ParamGroups.Add(commonInstrumentParams);
 
         // Ion source: pick the first ionization mode that's set in the bitmask (cpp emits one
-        // IC per mode; we collapse to the first for now).
+        // IC per mode; we collapse to the first for now). If the SDK reports a mode none of the
+        // cpp translators recognize (e.g. Agilent's MMI / "Multi Mode Ionization"), cpp's
+        // Reader_Agilent_Detail.cpp:55-57 loop over the recognized-mode set is empty, so cpp
+        // returns no configuration; Reader_Agilent.cpp:104 then resize(1)s the vector to a
+        // single empty IC (paramGroupRef + softwareRef only). Mirror that — an unknown source
+        // also means we don't have a defensible analyzer/detector chain to emit either.
         var ionMode = raw.MSScanFileInformation.IonModes;
         var sourceCv = TranslateIonization(ionMode);
+        if (sourceCv == CVID.CVID_Unknown)
+            return ic;
+
         var inletCv = TranslateInlet(ionMode);
-        var src = new Component(sourceCv == CVID.CVID_Unknown ? CVID.MS_electrospray_ionization : sourceCv, 1);
+        var src = new Component(sourceCv, 1);
         if (inletCv != CVID.CVID_Unknown) src.Set(inletCv);
         ic.ComponentList.Add(src);
 
