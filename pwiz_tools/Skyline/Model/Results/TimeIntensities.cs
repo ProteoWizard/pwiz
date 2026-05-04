@@ -28,28 +28,47 @@ namespace pwiz.Skyline.Model.Results
     public class TimeIntensities : Immutable
     {
         public static readonly TimeIntensities EMPTY = new TimeIntensities(ImmutableList<float>.EMPTY, ImmutableList<float>.EMPTY, null, null);
-        
+
         public TimeIntensities(IEnumerable<float> times, IEnumerable<float> intensities) : this(times, intensities, null, null)
         {
         }
-        
-        public TimeIntensities(IEnumerable<float> times, IEnumerable<float> intensities, IEnumerable<float> massErrors, IEnumerable<int> scanIds)
+
+        public TimeIntensities(IEnumerable<float> times, IEnumerable<float> intensities, IEnumerable<float> massErrors, IEnumerable<int> scanIds,
+            IEnumerable<float> ionMobilityErrors = null, IEnumerable<float> ccsErrors = null)
         {
             Times = ImmutableList<float>.ValueOf(times);
             Intensities = ImmutableList.ValueOf(intensities);
             MassErrors = ImmutableList<float>.ValueOf(massErrors);
             ScanIds = ImmutableList<int>.ValueOf(scanIds);
+            IonMobilityErrors = ImmutableList<float>.ValueOf(ionMobilityErrors);
+            CcsErrors = ImmutableList<float>.ValueOf(ccsErrors);
         }
 
         public ImmutableList<float> Times { get; private set; }
         public ImmutableList<float> Intensities { get; private set; }
         public ImmutableList<float> MassErrors { get; private set; }
+        // Per-time-point % IM error (intensity-weighted IM centroid vs. target IM, in percent).
+        // Null when no IM filter window is in use or the source uses non-convertible IM units.
+        public ImmutableList<float> IonMobilityErrors { get; private set; }
+        // Per-time-point % CCS error. Null when CCS conversion is not available
+        // (e.g. FAIMS, waters_sonar, or no per-precursor target CCS).
+        public ImmutableList<float> CcsErrors { get; private set; }
         public ImmutableList<int> ScanIds { get; private set; }
         public int NumPoints { get { return Times.Count; } }
 
         public TimeIntensities ChangeMassErrors(IEnumerable<float> massErrors)
         {
             return ChangeProp(ImClone(this), im => im.MassErrors = ImmutableList.ValueOf(massErrors));
+        }
+
+        public TimeIntensities ChangeIonMobilityErrors(IEnumerable<float> ionMobilityErrors)
+        {
+            return ChangeProp(ImClone(this), im => im.IonMobilityErrors = ImmutableList.ValueOf(ionMobilityErrors));
+        }
+
+        public TimeIntensities ChangeCcsErrors(IEnumerable<float> ccsErrors)
+        {
+            return ChangeProp(ImClone(this), im => im.CcsErrors = ImmutableList.ValueOf(ccsErrors));
         }
 
         public TimeIntensities ChangeScanIds(IEnumerable<int> scanIds)
@@ -283,7 +302,9 @@ namespace pwiz.Skyline.Model.Results
                 SubList(Times, firstIndex, lastIndex),
                 SubList(Intensities, firstIndex, lastIndex),
                 SubList(MassErrors, firstIndex, lastIndex),
-                SubList(ScanIds, firstIndex, lastIndex));
+                SubList(ScanIds, firstIndex, lastIndex),
+                SubList(IonMobilityErrors, firstIndex, lastIndex),
+                SubList(CcsErrors, firstIndex, lastIndex));
         }
 
         private static IEnumerable<T> SubList<T>(IList<T> list, int firstIndex, int lastIndex)
