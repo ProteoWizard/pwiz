@@ -168,10 +168,27 @@ public sealed class Reader_Agilent : IReader
         dpReader.ProcessingMethods.Add(pmReader);
         result.DataProcessings.Add(dpReader);
 
+        // CommonInstrumentParams ParamGroup — cpp Reader_Agilent.cpp:82-100. Registered at
+        // the document level so it serializes as <referenceableParamGroupList> AND referenced
+        // by every InstrumentConfiguration via paramGroupRef. cpp's content:
+        //   - cvParam: Agilent instrument model (or specific model CVID)
+        //   - userParam: "instrument model" = device-name string (only when cvid is the generic
+        //     MS_Agilent_instrument_model)
+        //   - cvParam: instrument serial number = SerialNumber from AcqData/Devices.xml
+        var commonInstrumentParams = new ParamGroup("CommonInstrumentParams");
+        commonInstrumentParams.Set(CVID.MS_Agilent_instrument_model);
+        var deviceName = raw.GetDeviceName(raw.DeviceType);
+        if (!string.IsNullOrEmpty(deviceName))
+            commonInstrumentParams.UserParams.Add(new UserParam("instrument model", deviceName));
+        var serialNumber = raw.GetDeviceSerialNumber(raw.DeviceType);
+        if (!string.IsNullOrEmpty(serialNumber))
+            commonInstrumentParams.Set(CVID.MS_instrument_serial_number, serialNumber);
+        result.ParamGroups.Add(commonInstrumentParams);
+
         // Instrument config: cpp emits one per ionization mode; we emit one combined config
         // matching the device type. Multi-source files become a follow-up port. softwareRef
         // points at MassHunter so the mzML emits instrumentConfiguration/@softwareRef="MassHunter".
-        var ic = BuildInstrumentConfiguration(raw);
+        var ic = BuildInstrumentConfiguration(raw, commonInstrumentParams);
         ic.Software = massHunter;
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
@@ -195,12 +212,10 @@ public sealed class Reader_Agilent : IReader
         };
     }
 
-    private static InstrumentConfiguration BuildInstrumentConfiguration(AgilentRawData raw)
+    private static InstrumentConfiguration BuildInstrumentConfiguration(AgilentRawData raw, ParamGroup commonInstrumentParams)
     {
         var ic = new InstrumentConfiguration("IC1");
-        var common = new ParamGroup("CommonInstrumentParams");
-        common.Set(CVID.MS_Agilent_instrument_model);
-        ic.ParamGroups.Add(common);
+        ic.ParamGroups.Add(commonInstrumentParams);
 
         // Ion source: pick the first ionization mode that's set in the bitmask (cpp emits one
         // IC per mode; we collapse to the first for now).

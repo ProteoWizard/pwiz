@@ -49,6 +49,54 @@ public sealed class AgilentRawData : IDisposable
     /// <summary>Top-level instrument family / device type from the file (Q-TOF / TQ / etc.).</summary>
     public DeviceType DeviceType => MSScanFileInformation.DeviceType;
 
+    /// <summary>Friendly device name reported by the SDK (e.g. <c>"TandemQuadrupole"</c>).
+    /// Mirrors cpp <c>MassHunterDataImpl::getDeviceName</c>.</summary>
+    public string GetDeviceName(DeviceType deviceType)
+    {
+        try { return FileInformation.GetDeviceName(deviceType) ?? string.Empty; }
+        catch { return string.Empty; }
+    }
+
+    private List<AgilentDeviceInfo>? _devicesCache;
+
+    /// <summary>Devices listed in <c>AcqData/Devices.xml</c>. cpp <c>XmlMetadataParser</c>
+    /// parses the same file to populate <c>devices_</c> for serial number lookup; the SDK
+    /// itself doesn't expose serial numbers.</summary>
+    public IReadOnlyList<AgilentDeviceInfo> Devices
+    {
+        get
+        {
+            if (_devicesCache is not null) return _devicesCache;
+            _devicesCache = new List<AgilentDeviceInfo>();
+            try
+            {
+                var devicesXmlPath = System.IO.Path.Combine(Path, "AcqData", "Devices.xml");
+                if (!File.Exists(devicesXmlPath)) return _devicesCache;
+                var doc = System.Xml.Linq.XDocument.Load(devicesXmlPath);
+                foreach (var dev in doc.Descendants("Device"))
+                {
+                    _devicesCache.Add(new AgilentDeviceInfo(
+                        Name: (string?)dev.Element("Name") ?? string.Empty,
+                        ModelNumber: (string?)dev.Element("ModelNumber") ?? string.Empty,
+                        SerialNumber: ((string?)dev.Element("SerialNumber") ?? string.Empty).Trim(),
+                        TypeRaw: (string?)dev.Element("Type") ?? string.Empty));
+                }
+            }
+            catch { /* best-effort */ }
+            return _devicesCache;
+        }
+    }
+
+    /// <summary>Per-device serial number lookup (cpp <c>MassHunterData::getDeviceSerialNumber</c>).
+    /// Returns empty when the SDK doesn't report one.</summary>
+    public string GetDeviceSerialNumber(DeviceType deviceType)
+    {
+        foreach (var d in Devices)
+            if (int.TryParse(d.TypeRaw, out int t) && t == (int)deviceType)
+                return d.SerialNumber;
+        return string.Empty;
+    }
+
     /// <summary>Acquisition timestamp (local clock).</summary>
     public DateTime AcquisitionTime => FileInformation.AcquisitionTime;
 
@@ -232,3 +280,7 @@ public sealed class AgilentRawData : IDisposable
             || File.Exists(System.IO.Path.Combine(acqData, "MSPeak.bin"));
     }
 }
+
+/// <summary>One row from <c>AcqData/Devices.xml</c>. <see cref="TypeRaw"/> is the integer
+/// device type as a string (matching the underlying SDK <c>DeviceType</c> enum value).</summary>
+public sealed record AgilentDeviceInfo(string Name, string ModelNumber, string SerialNumber, string TypeRaw);

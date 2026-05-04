@@ -222,7 +222,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase
                 float[] y = specData.YArray ?? Array.Empty<float>();
                 int len = Math.Min(Math.Min(x.Length, y.Length), n);
                 if (isProfile && len >= 3)
-                    (x, var y2) = TrimProfileZeros(x, y, len);
+                    (x, y) = TrimProfileZeros(x, y, len);
                 else
                     y = SliceFloat(y, len);
                 var doubleY = new double[y.Length];
