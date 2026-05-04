@@ -1005,6 +1005,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly float _skewness;
         private readonly float _kurtosis;
         private readonly float _shapeCorrelation;
+        private short _ionMobilityError;
+        private short _ccsError;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1016,9 +1018,10 @@ namespace pwiz.Skyline.Model.Results
             peak_truncated =        0x0010,
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
-            has_peak_shape = 0x0080,
+            has_peak_shape =        0x0080,
+            ion_mobility_error_known = 0x0100,
+            ccs_error_known =       0x0200,
 
-            // This is the last available flag
             mass_error_known =      0x8000,
         }
 
@@ -1052,6 +1055,9 @@ namespace pwiz.Skyline.Model.Results
             _backgroundArea = backgroundArea;
             _height = height;
             _fwhm = fwhm;
+            _ionMobilityError = 0;
+            _ccsError = 0;
+            flagValues &= ~(FlagValues.ion_mobility_error_known | FlagValues.ccs_error_known);
             if (massError.HasValue)
             {
                 flagValues |= FlagValues.mass_error_known;
@@ -1147,12 +1153,16 @@ namespace pwiz.Skyline.Model.Results
             }
 
             _massError = 0;
-            if (massErrors != null)
+            _ionMobilityError = 0;
+            _ccsError = 0;
+            var ionMobilityErrors = timeIntensities.IonMobilityErrors;
+            if (massErrors != null || ionMobilityErrors != null)
             {
-                // Mass error is mean of mass errors in the peak, weighted by intensity
+                // Errors are intensity-weighted means across the peak. Background intensity
+                // is subtracted to reduce noise contribution.
                 double massError = 0;
+                double ionMobilityError = 0;
                 double totalIntensity = 0;
-                // Subtract background intensity to reduce noise contribution to this mean value
                 double backgroundIntensity = Math.Min(intensities[peak.StartIndex], intensities[peak.EndIndex]);
                 for (int i = peak.StartIndex; i <= peak.EndIndex; i++)
                 {
@@ -1160,15 +1170,28 @@ namespace pwiz.Skyline.Model.Results
                     if (intensity <= 0)
                         continue;
 
-                    double massErrorLocal = massErrors[i];
                     totalIntensity += intensity;
-                    massError += (massErrorLocal - massError)*intensity/totalIntensity;
+                    if (massErrors != null)
+                    {
+                        massError += (massErrors[i] - massError) * intensity / totalIntensity;
+                    }
+                    if (ionMobilityErrors != null)
+                    {
+                        ionMobilityError += (ionMobilityErrors[i] - ionMobilityError) * intensity / totalIntensity;
+                    }
                 }
-                // Only if intensity exceded the background at least once
                 if (totalIntensity > 0)
                 {
-                    _flagValues |= FlagValues.mass_error_known;
-                    _massError = To10x(massError);
+                    if (massErrors != null)
+                    {
+                        _flagValues |= FlagValues.mass_error_known;
+                        _massError = To10x(massError);
+                    }
+                    if (ionMobilityErrors != null)
+                    {
+                        _flagValues |= FlagValues.ion_mobility_error_known;
+                        _ionMobilityError = To10x(ionMobilityError);
+                    }
                 }
             }
             if (rawTimes != null)
@@ -1281,6 +1304,47 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        // % IM error (intensity-weighted IM centroid vs. target IM, in percent),
+        // stored as 10x scaled-short like mass error.
+        public float? IonMobilityError
+        {
+            get
+            {
+                if ((_flagValues & FlagValues.ion_mobility_error_known) == 0)
+                    return null;
+                return _ionMobilityError / 10f;
+            }
+        }
+
+        // % CCS error (CCS at intensity-weighted IM centroid vs. target CCS, in percent),
+        // stored as 10x scaled-short. Computed at peak detection in ChromCacheBuilder.
+        public float? CcsError
+        {
+            get
+            {
+                if ((_flagValues & FlagValues.ccs_error_known) == 0)
+                    return null;
+                return _ccsError / 10f;
+            }
+        }
+
+        // Apply CCS error after construction (CCS conversion needs document context).
+        public ChromPeak WithCcsError(double? ccsError)
+        {
+            var copy = this;
+            if (ccsError.HasValue)
+            {
+                copy._flagValues |= FlagValues.ccs_error_known;
+                copy._ccsError = To10x(ccsError.Value);
+            }
+            else
+            {
+                copy._flagValues &= ~FlagValues.ccs_error_known;
+                copy._ccsError = 0;
+            }
+            return copy;
+        }
+
         public PeakShapeValues? PeakShapeValues
         {
             get
@@ -1326,7 +1390,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 36;
             }
-            return 52;
+            if (formatVersion < CacheFormatVersion.Twenty)
+            {
+                return 52;
+            }
+            return 56;
         }
 
         public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
