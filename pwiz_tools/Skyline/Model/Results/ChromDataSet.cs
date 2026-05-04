@@ -1425,6 +1425,8 @@ namespace pwiz.Skyline.Model.Results
             ChromGroupHeaderInfo.FlagValues flags = 0;
             if (groupOfTimeIntensities.HasMassErrors)
                 flags |= ChromGroupHeaderInfo.FlagValues.has_mass_errors;
+            if (groupOfTimeIntensities.HasIonMobilityErrors)
+                flags |= ChromGroupHeaderInfo.FlagValues.has_ion_mobility_errors;
             if (Extractor == ChromExtractor.base_peak)
                 flags |= ChromGroupHeaderInfo.FlagValues.extracted_base_peak;
             else if (Extractor == ChromExtractor.qc)

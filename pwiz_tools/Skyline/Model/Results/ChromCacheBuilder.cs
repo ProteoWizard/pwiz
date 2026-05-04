@@ -1369,6 +1369,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     chromTran.MissingMassErrors = true;
                 }
+                if (groupOfTimeIntensities.HasIonMobilityErrors && chromData.TimeIntensities.IonMobilityErrors == null)
+                {
+                    chromTran.MissingIonMobilityErrors = true;
+                }
                 _listTransitions.Add(chromTran);
 
                 // Make sure all transitions have the same number of peaks, as this is a cache requirement

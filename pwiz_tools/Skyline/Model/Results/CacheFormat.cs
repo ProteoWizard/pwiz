@@ -44,7 +44,8 @@ namespace pwiz.Skyline.Model.Results
         Seventeen = 17, // Adds optimization step to ChromTransition
         Eighteen = 18, // Add Spectrum Class Filter to ChromGroupHeaderInfo
         Nineteen = 19, // Add max peak score to ChromGroupHeaderInfo
-        CURRENT = Nineteen,
+        Twenty = 20, // Add per-time-point ion mobility error to chromatograms
+        CURRENT = Twenty,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
