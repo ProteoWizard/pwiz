@@ -58,33 +58,25 @@
   <h1>Osprey / OspreySharp DIA pipeline workflow</h1>
   <p class="sub">
     Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
-    output. Color indicates port status of the OspreySharp (C#) implementation
-    against the Osprey (Rust) reference. Stages 1-4 match within the
-    <code>Test-Features.ps1</code> 1e-6 tolerance gate on Stellar + Astral
-    (21 PIN features, 317K matched entries); a 0.5% row-count gap and a
-    ~2% per-CWT-candidate ULP-level <code>area</code> drift remain to be
-    explained or upgraded to true bit-identity. Stage 5 is bit-identical
-    on Stellar 1-file AND 3-file (end-of-stage dump: score + pep + 4
-    q-values across 1,388,872 FdrEntry rows at max_diff = 0; multi-file
-    required an experiment_precursor_qvalue propagation fix in C#'s
-    Percolator FDR). Stage 6 planning + reconciliation planner output
-    are bit-identical with Rust across all nine cross-impl dumps on
-    Stellar (172,548 reconciliation actions) AND Astral (248,711) 3-file.
-    The 168-cell Astral <code>experiment_precursor_q</code> diff seen in
-    earlier runs was identified as a Rust ryu vs .NET R formatter
-    tie-break choice (same f64 bits, different shortest-roundtrip
-    decimal); the harness now does a bit-aware fallback comparison that
-    correctly accepts these as equal. Remaining Stage 6 substages are
-    the second-pass re-score (per-file rescoring at locked boundaries
-    plus gap-fill) and the second-pass Percolator SVM (gray boxes
-    below); once those land and their cross-impl dumps go byte-identical,
-    Stage 6 closes. Green badges = regression tests; purple badges =
-    C#/Rust perf ratio.
+    output. Pipeline restructured 2026-04-30 to align stages with the
+    join / per-file-fan-out boundaries that matter for HPC distribution.
+    Stages 1-4 (per-file scoring) match within the
+    <code>Test-Features.ps1</code> 1e-6 tolerance gate on Stellar +
+    Astral. Stage 5 (first-pass FDR + reconciliation planning — the
+    first join) is bit-identical on Stellar + Astral 3-file across all
+    nine cross-impl dumps. Stage 6 (per-file rescore + gap-fill +
+    reconciled parquet write-back — the second per-file fan-out) is
+    in progress: orchestrator landed in OspreySharp but not yet exercised
+    end-to-end. Stages 7 (second-pass Percolator) and 8 (protein FDR +
+    .blib output) are the remaining joins. Color indicates port status
+    of the OspreySharp (C#) implementation against the Osprey (Rust)
+    reference. Green badges = regression tests; purple badges = C#/Rust
+    perf ratio.
   </p>
 </header>
 
 <main>
-<svg class="pipeline" viewBox="0 0 1200 2240" xmlns="http://www.w3.org/2000/svg">
+<svg class="pipeline" viewBox="0 0 1200 2540" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <!-- Arrowhead for control flow between stages -->
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
@@ -105,6 +97,12 @@
                    text-transform: uppercase; letter-spacing: 1.5px; }
     .phase-title { font-size: 16px; font-weight: 600; fill: #1a237e; }
     .phase-note  { font-size: 11px; fill: #546e7a; font-style: italic; }
+    .phase-shape-fanout { font-size: 11px; font-weight: 700;
+                          fill: #1565c0; text-transform: uppercase;
+                          letter-spacing: 1px; }
+    .phase-shape-join   { font-size: 11px; font-weight: 700;
+                          fill: #c62828; text-transform: uppercase;
+                          letter-spacing: 1px; }
 
     .stage-title { font-size: 13px; font-weight: 600; fill: #263238; }
     .stage-desc  { font-size: 11px; fill: #455a64; }
@@ -155,7 +153,7 @@
 <g transform="translate(40, 40)">
   <text class="title">Osprey / OspreySharp DIA search pipeline</text>
   <text class="subtitle" y="22">
-    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-16, Session 16 (Stages 1-4 complete; 21 PIN features bit-identical on Stellar + Astral; 3-file parallel = 0.59x Rust on Stellar / 0.12x Rust on Astral)
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-04-30: Stages 1-4 + Stage 5 (with reconciliation planning) bit-identical on Stellar + Astral 3-file. Stage 6 per-file rescore orchestrator landed; gap-fill + parquet write-back next.
   </text>
 </g>
 
@@ -339,88 +337,106 @@
 </g>
 
 <!-- ================================================================= -->
-<!-- STAGE 4 -> 5 SEAM: HPC scoring split                               -->
+<!-- STAGE 4 -> 5 SEAM: HPC fan-out / first join                        -->
 <!-- ================================================================= -->
 <g transform="translate(0, 1310)">
   <text x="600" y="14" text-anchor="middle" style="font-size: 10px; fill: #555;">
-    --no-join exits here (per-file .scores.parquet on disk); --join-only resumes from those parquets on a merge node
+    --no-join exits here (per-file .scores.parquet on disk); --join-at-pass=1 resumes here on a coordinator node
   </text>
 </g>
 
 <!-- ================================================================= -->
-<!-- STAGE 5 FIRST-PASS FDR                                             -->
+<!-- STAGE 5 FIRST-PASS FDR + RECONCILIATION PLANNING (FIRST JOIN)      -->
 <!-- ================================================================= -->
 <path class="flow" d="M 600 1300 L 600 1340" marker-end="url(#arrow)"/>
 
 <g transform="translate(0, 1340)">
-  <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="8"/>
+  <rect class="phase-bg" x="40" y="0" width="1120" height="500" rx="8"/>
   <text class="phase-label" x="60" y="24">stage 5</text>
-  <text class="phase-title" x="60" y="42">First-pass FDR (Percolator SVM)</text>
-  <text class="phase-note"  x="60" y="58">Semi-supervised SVM training with target-decoy competition. Produces precursor-level and peptide-level q-values at run and experiment levels.</text>
-  <text class="phase-note"  x="60" y="72">Stellar 1-file AND 3-file: bit-identical cross-impl on score + pep + 4 q-values, max_diff = 0. Multi-file required experiment_precursor_qvalue propagation by base_id (a2972ab6d).</text>
+  <text class="phase-title" x="60" y="42">First-pass FDR + reconciliation planning</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-file representation</text>
+  <text class="phase-note"  x="60" y="58">First join in the pipeline. Runs Percolator SVM on the joined per-file scores, computes cross-run consensus RTs,</text>
+  <text class="phase-note"  x="60" y="72">refits per-file calibration, and emits a per-(file, entry) reconciliation plan. All work that needs all-file representation lives here.</text>
 
-  <!-- Stage 5 perf badge (C# join-only wall clock on single-file Stellar;
-       Rust measured 2026-04-22 = 66s at dump-exit point). -->
-  <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">137s (2.1x Rust)</tspan></text>
+  <!-- Sub-phase 1: first-pass Percolator -->
+  <text class="phase-label" x="80" y="92" fill="#2e7d32">first-pass percolator</text>
 
-  <rect class="st-done" x="80" y="80" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="100" text-anchor="middle">Best-per-precursor subsampling (across files)</text>
-  <text class="stage-desc"  x="600" y="114" text-anchor="middle">subsample + fold dump matches byte-for-byte on single-file Stellar (3-file pending)</text>
+  <rect class="st-done" x="80" y="102" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="122" text-anchor="middle">Best-per-precursor subsampling (across files)</text>
+  <text class="stage-desc"  x="600" y="136" text-anchor="middle">subsample + fold dump bit-identical on Stellar 3-file (1,388,872 rows)</text>
 
-  <rect class="st-done" x="80" y="140" width="1040" height="60" rx="4"/>
-  <text class="stage-title" x="600" y="160" text-anchor="middle">Iterative non-negative SVM (3-fold stratified CV by peptide)</text>
-  <text class="stage-desc"  x="600" y="176" text-anchor="middle">grid search for C; Percolator-style positive training set; per-fold SVM weights match byte-for-byte</text>
-  <text class="stage-desc"  x="600" y="190" text-anchor="middle">cross-fold score calibration (Granholm 2012); standardizer mean/std match within 1e-12</text>
+  <rect class="st-done" x="80" y="162" width="1040" height="56" rx="4"/>
+  <text class="stage-title" x="600" y="182" text-anchor="middle">Iterative non-negative SVM (3-fold stratified CV by peptide)</text>
+  <text class="stage-desc"  x="600" y="196" text-anchor="middle">grid search for C; Percolator-style positive training set; per-fold SVM weights match byte-for-byte</text>
+  <text class="stage-desc"  x="600" y="210" text-anchor="middle">cross-fold score calibration (Granholm 2012); standardizer mean/std match within 1e-12</text>
 
-  <rect class="st-done" x="80" y="218" width="1040" height="32" rx="4"/>
-  <text class="stage-title" x="600" y="238" text-anchor="middle">Target-decoy competition + q-values (run + experiment x precursor + peptide) + FDR compaction</text>
+  <rect class="st-done" x="80" y="236" width="1040" height="32" rx="4"/>
+  <text class="stage-title" x="600" y="256" text-anchor="middle">Target-decoy competition + q-values (run + experiment x precursor + peptide) + first-pass compaction + first-pass protein FDR</text>
 
-  <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
-  <path class="flow" d="M 600 200 L 600 216" marker-end="url(#arrow)"/>
+  <!-- Sub-phase 2: reconciliation planning -->
+  <text class="phase-label" x="80" y="296" fill="#ef6c00">reconciliation planning</text>
+
+  <rect class="st-done" x="80" y="306" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="326" text-anchor="middle">Multi-charge consensus per file (post-compaction)</text>
+  <text class="stage-desc"  x="600" y="340" text-anchor="middle">SelectRescoreTargets dump bit-identical (31,270 rows on Stellar 3-file)</text>
+
+  <rect class="st-done" x="80" y="366" width="1040" height="56" rx="4"/>
+  <text class="stage-title" x="600" y="386" text-anchor="middle">Cross-run consensus RTs + per-file calibration refit</text>
+  <text class="stage-desc"  x="600" y="400" text-anchor="middle">sigmoid(score)-weighted median, hard run_precursor_qvalue gate, optional protein-FDR rescue</text>
+  <text class="stage-desc"  x="600" y="414" text-anchor="middle">consensus + inv_predict + loess_fit + refit dumps bit-identical on Stellar + Astral 3-file</text>
+
+  <rect class="st-done" x="80" y="440" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="460" text-anchor="middle">Reconciliation plan: per-(file, entry) {Keep | UseCwtPeak | ForcedIntegration}</text>
+  <text class="stage-desc"  x="600" y="474" text-anchor="middle">reconciliation dump bit-identical on Stellar (172,548 actions) + Astral (248,711 actions)</text>
+
+  <!-- Inter-substep arrows (sub-phase 1) -->
+  <path class="flow" d="M 600 144 L 600 160" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 218 L 600 234" marker-end="url(#arrow)"/>
+  <!-- Inter-substep arrows (sub-phase 2) -->
+  <path class="flow" d="M 600 348 L 600 364" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 422 L 600 438" marker-end="url(#arrow)"/>
 </g>
 
 <!-- ================================================================= -->
-<!-- STAGE 6 REFINEMENT                                                 -->
+<!-- STAGE 5 -> 6 SEAM: planning result drives per-file fan-out          -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1600 L 600 1640" marker-end="url(#arrow)"/>
+<g transform="translate(0, 1850)">
+  <text x="600" y="14" text-anchor="middle" style="font-size: 10px; fill: #555;">
+    --join-at-pass=1 --join-only would stop here (future: plan files to disk for HPC fan-back-out); --join-at-pass=1 continues
+  </text>
+</g>
 
-<g transform="translate(0, 1640)">
+<!-- ================================================================= -->
+<!-- STAGE 6 PER-FILE RESCORE (SECOND PER-FILE FAN-OUT)                  -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 1840 L 600 1880" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 1880)">
   <rect class="phase-bg-active" x="40" y="0" width="1120" height="260" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 6</text>
-  <text class="phase-title" x="60" y="42">Refinement (post-FDR)</text>
-  <text class="phase-note"  x="60" y="58">
-    Multi-charge consensus + cross-run reconciliation adjust peak boundaries
-    across replicates, then re-score at locked boundaries and re-run FDR.
-    Planning checkpoint + reconciliation planner output byte-identical with
-    Rust on Stellar + Astral 3-file; per-file re-score and second-pass
-    Percolator are the remaining substages.
-  </text>
+  <text class="phase-title" x="60" y="42">Per-file rescore + gap-fill + parquet write-back</text>
+  <text class="phase-shape-fanout" x="1115" y="24" text-anchor="end">per-file — N nodes</text>
+  <text class="phase-note"  x="60" y="58">Second per-file fan-out. Each file independently reloads its mzML, re-invokes the search engine with the reconciled boundary overrides,</text>
+  <text class="phase-note"  x="60" y="72">runs the gap-fill two-pass for missing precursors, and writes reconciled scores back to its .scores.parquet. No cross-file work.</text>
 
-  <rect class="st-done" x="80" y="80" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="100" text-anchor="middle">Multi-charge consensus</text>
-  <text class="stage-desc"  x="600" y="114" text-anchor="middle">SelectRescoreTargets ported; rescore-target dump bit-identical with Rust by entry_id (31,270 rows on Stellar 3-file, after first-pass compaction)</text>
+  <rect class="st-partial" x="80" y="90" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="110" text-anchor="middle">Per-file rescore at reconciled boundaries</text>
+  <text class="stage-desc"  x="600" y="124" text-anchor="middle">RescorePerFile orchestrator landed (consensus + reconciliation); not yet validated</text>
 
-  <rect class="st-done" x="80" y="140" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="160" text-anchor="middle">Cross-run reconciliation</text>
-  <text class="stage-desc"  x="600" y="174" text-anchor="middle">ConsensusRts.Compute + CalibrationRefit.Refit + ReconciliationPlanner.Plan wired; 9/9 cross-impl Stage 6 dumps byte-identical with Rust on Stellar (172,548 reconciliation actions) + Astral (248,711) 3-file</text>
+  <rect class="st-missing" x="80" y="148" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="168" text-anchor="middle">Gap-fill (two-pass: CWT with prefilter off, then forced integration)</text>
+  <text class="stage-desc"  x="600" y="182" text-anchor="middle">port IdentifyGapFillTargets; append gap-fill stubs with parquet_index = uint.MaxValue</text>
 
-  <rect class="st-missing" x="80" y="200" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="220" text-anchor="middle">Second-pass re-score</text>
-  <text class="stage-desc"  x="600" y="234" text-anchor="middle">re-invoke search engine with reconciled boundary overrides; gap-fill missing precursors via two-pass CWT + forced integration; write reconciled scores back to per-file .scores.parquet</text>
+  <rect class="st-missing" x="80" y="206" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="226" text-anchor="middle">Reconciled parquet write-back (replace by ParquetIndex, append gap-fill, write reconciliation metadata)</text>
+  <text class="stage-desc"  x="600" y="240" text-anchor="middle">final per-file parquet output of Phase C — feeds Stage 7 second-pass Percolator</text>
 
-  <rect class="st-missing" x="80" y="260" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="280" text-anchor="middle">Second-pass Percolator SVM</text>
-  <text class="stage-desc"  x="600" y="294" text-anchor="middle">single Percolator pass on the re-scored + gap-filled pool; final run + experiment q-values at precursor + peptide levels</text>
+  <path class="flow" d="M 600 132 L 600 146" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 190 L 600 204" marker-end="url(#arrow)"/>
 
-  <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
-  <path class="flow" d="M 600 182 L 600 198" marker-end="url(#arrow)"/>
-  <path class="flow" d="M 600 242 L 600 258" marker-end="url(#arrow)"/>
-
-  <!-- "You are here" callout — pointing at the second-pass re-score box.
-       Multi-charge consensus, cross-run reconciliation, and the
-       reconciliation planner output all shipped byte-identical;
-       per-file re-score is next. -->
-  <g transform="translate(820, 195)">
+  <!-- "You are here" callout — currently working the per-file rescore
+       row. Gap-fill and parquet write-back are still missing/stubbed. -->
+  <g transform="translate(820, 85)">
     <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
     <text class="you-are-here" x="136" y="10">YOU ARE</text>
     <text class="you-are-here" x="136" y="26">HERE</text>
@@ -428,32 +444,49 @@
 </g>
 
 <!-- ================================================================= -->
-<!-- STAGE 7 PROTEIN FDR                                                -->
+<!-- STAGE 6 -> 7 SEAM: reconciled parquets feed second-pass Percolator -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1960 L 600 2000" marker-end="url(#arrow)"/>
-
-<g transform="translate(0, 2000)">
-  <rect class="phase-bg" x="40" y="0" width="1120" height="100" rx="6"/>
-  <text class="phase-label" x="60" y="24">stage 7</text>
-  <text class="phase-title" x="60" y="42">Protein FDR</text>
-
-  <rect class="st-unverif" x="80" y="50" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="70" text-anchor="middle">Parsimony + picked-protein FDR (TDC on best peptide scores)</text>
-  <text class="stage-desc"  x="600" y="84" text-anchor="middle">bipartite graph, subset elimination, greedy razor assignment</text>
+<g transform="translate(0, 2150)">
+  <text x="600" y="14" text-anchor="middle" style="font-size: 10px; fill: #555;">
+    --join-at-pass=2 --input-scores ... resumes here from reconciled per-file parquets (second join begins)
+  </text>
 </g>
 
 <!-- ================================================================= -->
-<!-- STAGE 8 OUTPUT                                                     -->
+<!-- STAGE 7 SECOND-PASS PERCOLATOR (SECOND JOIN)                        -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2100 L 600 2140" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2140 L 600 2180" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2140)">
-  <rect class="phase-bg" x="40" y="0" width="1120" height="90" rx="6"/>
+<g transform="translate(0, 2180)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="120" rx="6"/>
+  <text class="phase-label" x="60" y="24">stage 7</text>
+  <text class="phase-title" x="60" y="42">Second-pass Percolator SVM</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-file representation</text>
+
+  <rect class="st-missing" x="80" y="62" width="1040" height="46" rx="4"/>
+  <text class="stage-title" x="600" y="82" text-anchor="middle">Single Percolator pass on the reconciled + gap-filled pool</text>
+  <text class="stage-desc"  x="600" y="96" text-anchor="middle">final run + experiment q-values at precursor + peptide levels; OSPREY_DUMP_REFINED_FDR cross-impl bisection dump (planned)</text>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 8 PROTEIN FDR + OUTPUT (FINAL JOIN)                          -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 2300 L 600 2340" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 2340)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="160" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 8</text>
-  <text class="phase-title" x="60" y="42">Output</text>
+  <text class="phase-title" x="60" y="42">Protein FDR + output</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — final coordinator phase</text>
 
-  <rect class="st-partial" x="80" y="50" width="1040" height="32" rx="4"/>
-  <text class="stage-title" x="600" y="70" text-anchor="middle">BiblioSpecLite .blib (RefSpectra, RetentionTimes, Modifications, Proteins, Osprey fragment tables)</text>
+  <rect class="st-unverif" x="80" y="62" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="82" text-anchor="middle">Parsimony + picked-protein FDR (Savitski 2015, TDC on best peptide score)</text>
+  <text class="stage-desc"  x="600" y="96" text-anchor="middle">bipartite graph, identical-set grouping, subset elimination, greedy razor assignment</text>
+
+  <rect class="st-partial" x="80" y="118" width="1040" height="32" rx="4"/>
+  <text class="stage-title" x="600" y="138" text-anchor="middle">BiblioSpecLite .blib (RefSpectra, RetentionTimes, Modifications, Proteins, Osprey fragment tables)</text>
+
+  <path class="flow" d="M 600 104 L 600 116" marker-end="url(#arrow)"/>
 </g>
 
 </svg>
@@ -518,39 +551,46 @@
     1,388,872 row dump byte-identical on Stellar 3-file.
   </p>
   <p>
-    <strong>Stage 6 planning checkpoint (2026-04-25):</strong> the
-    Stage 6 entry block in OspreySharp now runs first-pass protein FDR,
-    multi-charge consensus, cross-run consensus RTs, and per-file
-    calibration refit. Three new diagnostic dumps land on each side
-    (<code>OSPREY_DUMP_CONSENSUS</code> /
-    <code>OSPREY_DUMP_MULTICHARGE</code> /
-    <code>OSPREY_DUMP_REFIT</code>, with matching <code>_ONLY</code>
-    early-exits) and a sibling harness
-    <code>Compare-Stage6-Planning.ps1</code> byte-compares the four
-    dumps (Stage 5 percolator + the three Stage 6 planning dumps).
-    On Stellar 3-file: stage5_percolator + multicharge + calibration are
-    bit-identical; consensus is 99.999% bit-identical (1/87343 rows on
-    a borderline protein-FDR rescue); inv_predict is 99.99966%
-    (1/292512 rows, same root cause); refit ULP at LOESS-fit residual
-    stats. The InversePredict ULP that previously diverged on every
-    consensus row was traced to <code>serde_json</code>'s default f64
-    parser disagreeing with .NET's correctly-rounded
-    <code>double.Parse</code> on full-precision values; routing Rust
-    f64 array deserialization through <code>f64::from_str</code>
-    closes the arithmetic gap. Driver branches:
-    <code>maccoss/osprey:feature/stage6-planning-diagnostics</code>
-    and <code>ProteoWizard/pwiz:Skyline/work/20260423_osprey_sharp_stage6</code>.
+    <strong>Stage 5 reconciliation planning (2026-04-29):</strong> after
+    the 2026-04-30 pipeline restructure, what was previously called
+    "Stage 6 planning" now lives in Stage 5 alongside first-pass
+    Percolator. Multi-charge consensus, cross-run consensus RTs, per-file
+    calibration refit, and the reconciliation planner all run in the
+    same join phase that ends at the per-(file, entry) reconciliation
+    plan. Nine cross-impl dumps (<code>stage5_percolator</code>,
+    <code>protein_fdr</code>, <code>calibration</code>,
+    <code>inv_predict</code>, <code>consensus</code>,
+    <code>multicharge</code>, <code>loess_fit</code>, <code>refit</code>,
+    <code>reconciliation</code>) byte-identical on Stellar (172,548
+    reconciliation actions) and Astral (248,711) 3-file. The harness
+    <code>Compare-Stage6-Planning.ps1</code> drives all nine via
+    <code>--join-at-pass=1</code> with per-dump <code>_ONLY</code>
+    early-exits.
   </p>
   <p>
-    Next targets: localize the borderline first-pass-protein-FDR rescue
-    that produces the 1-row consensus / inv_predict diff (likely a
-    tie-break in protein-group construction at exactly 1% q-value);
-    bisect the LOESS-fit ULP that affects refit r²/sd/mad
-    (independent of InversePredict). Then wire
-    <code>ReconciliationPlanner.Plan</code>, gap-fill, and second-pass
-    Percolator. Stage 7 protein FDR + Stage 8 .blib output parity
-    follow once Stage 6 is fully proven. See
-    <code>ai/todos/active/TODO-20260423_osprey_sharp_stage6.md</code>.
+    <strong>Pipeline restructure + CLI rename (2026-04-30):</strong>
+    stages renumbered to align with join / per-file-fan-out boundaries
+    that matter for HPC distribution. Stage 5 absorbs reconciliation
+    planning (single first-join phase). Stage 6 is now per-file rescore
+    only (second per-file fan-out). Stage 7 is the second join
+    (second-pass Percolator). Stage 8 absorbs Protein FDR + .blib
+    output (final coordinator phase). CLI matrix: <code>--no-join</code>
+    runs only per-file work, <code>--join-only</code> runs only joined
+    work, <code>--join-at-pass=&lt;1|2&gt;</code> selects entry-point
+    parquets (Stage 4 outputs vs reconciled Stage 6 outputs).
+    Plan-file persistence between Stage 5 and Stage 6 deferred to a
+    future sprint — single-machine flow runs them in one process for
+    now.
+  </p>
+  <p>
+    <strong>Next targets:</strong> exercise the new Stage 6
+    <code>RescorePerFile</code> orchestrator end-to-end (gap-fill +
+    parquet write-back not yet implemented). Add
+    <code>OSPREY_DUMP_REFINED_RESCORE</code> intermediate dump or
+    diff reconciled parquets directly. Once Stage 6 is byte-identical,
+    advance into Stage 7 (second-pass Percolator + new
+    <code>OSPREY_DUMP_REFINED_FDR</code>) then Stage 8. See
+    <code>ai/todos/active/TODO-20260429_osprey_sharp_stage6.md</code>.
   </p>
 </footer>
 </body>
