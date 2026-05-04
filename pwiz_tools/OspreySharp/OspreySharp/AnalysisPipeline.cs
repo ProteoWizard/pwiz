@@ -49,7 +49,7 @@ namespace pwiz.OspreySharp
     /// 4. Protein FDR (optional)
     /// 5. Write blib output
     /// </summary>
-    public class AnalysisPipeline
+    public partial class AnalysisPipeline
     {
         private const int NUM_PIN_FEATURES = 21;
 
@@ -796,11 +796,23 @@ namespace pwiz.OspreySharp
                         return 0;
                     }
 
-                    // Per-file rescore + gap-fill + second-pass FDR are
-                    // deferred to a later commit. Without those, single-run
-                    // analysis still produces valid output from the
-                    // first-pass FDR results above.
-                    LogInfo(@"Stage 6 per-file rescore: not yet implemented");
+                    // Stage 6 per-file rescore: PHASE 1 of the C# port —
+                    // existing entries (consensus + reconciliation overlay).
+                    // Gap-fill two-pass + reconciled .scores.parquet
+                    // write-back are the next porting phases. Mirrors the
+                    // Rust call site at pipeline.rs:run_analysis ~line 3850.
+                    var rescoreStats = ExecuteStage6Rescore(
+                        perFileEntries,
+                        perFileConsensusTargets,
+                        reconciliationActions ?? new Dictionary<(string, int), ReconcileAction>(),
+                        refinedCalibrations,
+                        perFileCalibrations,
+                        perFileGapFill: null,
+                        fullLibrary,
+                        config);
+                    LogInfo(string.Format(
+                        "Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
+                        rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
                 }
 
                 // Stage 8: Protein FDR (optional)
@@ -846,7 +858,7 @@ namespace pwiz.OspreySharp
         /// Load spectral library from the configured source, using binary cache
         /// when available. Matches Rust's .libcache mechanism for fast reload.
         /// </summary>
-        private List<LibraryEntry> LoadLibrary(OspreyConfig config)
+        internal List<LibraryEntry> LoadLibrary(OspreyConfig config)
         {
             string path = config.LibrarySource.Path;
             string cachePath = path + ".libcache";
@@ -930,7 +942,7 @@ namespace pwiz.OspreySharp
         /// Modifies <paramref name="validTargets"/> to contain only targets that
         /// produced valid decoys (Rust: library = valid_targets; library.extend(decoys)).
         /// </summary>
-        private List<LibraryEntry> GenerateDecoys(
+        internal List<LibraryEntry> GenerateDecoys(
             List<LibraryEntry> targets, OspreyConfig config,
             out List<LibraryEntry> validTargets)
         {

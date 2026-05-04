@@ -21,7 +21,6 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp
@@ -89,82 +88,14 @@ namespace pwiz.OspreySharp
         /// </summary>
         public static int Run(OspreyConfig config)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            if (config.InputScores == null || config.InputScores.Count == 0)
-            {
-                Program.LogError(
-                    "--join-at-pass=1 --no-join requires --input-scores <path...>.");
-                return 1;
-            }
-
-            Program.LogInfo(string.Format(
-                "--join-at-pass=1 --no-join: per-file rescore worker starting on {0} parquet(s)",
-                config.InputScores.Count));
-
-            RescoreInputs inputs;
-            try
-            {
-                inputs = RescoreHydration.HydrateForRescore(config.InputScores);
-            }
-            catch (Exception ex)
-            {
-                Program.LogError(string.Format(
-                    "--join-at-pass=1 --no-join: hydration failed: {0}", ex.Message));
-                return 1;
-            }
-            Program.LogInfo(string.Format(
-                "Hydrated {0} file(s); {1} pre-compaction stubs, {2} reconciliation actions, " +
-                "{3} gap-fill candidates, {4} refined RT calibration(s)",
-                inputs.PerFileEntries.Count,
-                inputs.TotalStubs,
-                inputs.TotalActions,
-                inputs.TotalGapFillTargets,
-                inputs.RefinedCalibrations.Count));
-
-            // Cross-impl bisection seam: dump the per-precursor q-values
-            // that were just hydrated from .1st-pass.fdr_scores.bin so
-            // the result can be diffed against Rust's
-            // rust_stage5_percolator.tsv via Compare-Percolator.ps1.
-            // If the diff is non-empty, the divergence is in hydration
-            // (sidecar parsing); if empty, divergence (if any) is
-            // downstream of this seam (compaction or rescore).
-            if (OspreyDiagnostics.DumpPercolator)
-                OspreyDiagnostics.WriteStage5PercolatorDump(inputs.PerFileEntries);
-
-            RescoreCompaction.Stats stats;
-            try
-            {
-                stats = RescoreCompaction.Apply(inputs, config);
-            }
-            catch (Exception ex)
-            {
-                Program.LogError(string.Format(
-                    "--join-at-pass=1 --no-join: compaction failed: {0}", ex.Message));
-                return 1;
-            }
-            Program.LogInfo(string.Format(
-                "Worker compaction: {0} -> {1} entries ({2} surviving base_ids), " +
-                "{3} reconciliation actions retained ({4} dropped)",
-                stats.EntriesBefore,
-                stats.EntriesAfter,
-                stats.FirstPassBaseIds,
-                inputs.ReconciliationActions.Count,
-                stats.DroppedActions));
-
-            // Foundation is in place; the rescore engine itself
-            // (boundary-overrides search + gap-fill two-pass + reconciled
-            // parquet write-back) is the next porting effort. Until it
-            // lands, the worker can't produce reconciled .scores.parquet
-            // output, so return non-zero with a clear pointer rather
-            // than letting a downstream --join-at-pass=2 invocation
-            // silently consume stale Stage 4 parquets.
-            Program.LogError(
-                "--join-at-pass=1 --no-join: hydration + compaction completed cleanly, but " +
-                "the per-file rescore engine (boundary-overrides search + gap-fill + reconciled " +
-                "parquet write-back) is not yet ported to OspreySharp. The in-process pipeline " +
-                "stubs this out with the same message. Both sides will lift together once the " +
-                "C# rescore engine port lands.");
-            return 2;
+            // Thin facade — all worker logic lives on AnalysisPipeline so
+            // it can share the in-process Stage 6 code path. Keeps
+            // Program.Main's dispatch unchanged while letting the heavy
+            // lifting (library load, hydration, compaction, rescore loop,
+            // future gap-fill + parquet write-back) live alongside the
+            // rest of the pipeline.
+            var pipeline = new AnalysisPipeline();
+            return pipeline.RunWorker(config);
         }
     }
 }
