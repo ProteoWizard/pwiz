@@ -1751,7 +1751,8 @@ namespace pwiz.Skyline.Model.Results
                 ChromCollector chromCollector;
                 if (!collector.ProductIntensityMap.TryGetValue(productFilter, out chromCollector))
                 {
-                    chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null);
+                    chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null,
+                        spectrum.IonMobilityErrors != null);
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
                     if (ionScanCount > 1 && lenTimes > 1)
@@ -1773,7 +1774,8 @@ namespace pwiz.Skyline.Model.Results
                 chromCollector.AddPoint(chromIndex,
                     intensity,
                     spectrum.MassErrors != null ? spectrum.MassErrors[j] : (float?)null,
-                    _blockWriter);
+                    _blockWriter,
+                    spectrum.IonMobilityErrors != null ? spectrum.IonMobilityErrors[j] : (float?)null);
             }
 
             // Add data for chromatogram graph.
