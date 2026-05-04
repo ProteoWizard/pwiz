@@ -335,7 +335,13 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
         }
     }
 
-    public override double IsolationLowerOffset => _iso?.LowerOffset ?? 0;
-    public override double IsolationUpperOffset => _iso?.UpperOffset ?? 0;
+    // The wiff2 SDK's IIsolationWindow.LowerOffset/UpperOffset are misnamed — they're absolute
+    // m/z bounds of the isolation window, not offsets from the target m/z. mzML expects
+    // half-window-widths from the target. Convert here so SpectrumList_Sciex always sees
+    // proper offsets regardless of which SDK provided them.
+    public override double IsolationLowerOffset =>
+        _iso is null ? 0 : Math.Max(0, _iso.IsolationWindowTarget - _iso.LowerOffset);
+    public override double IsolationUpperOffset =>
+        _iso is null ? 0 : Math.Max(0, _iso.UpperOffset - _iso.IsolationWindowTarget);
     public override double ElectronKineticEnergy => _exp.ElectronKe ?? 0;
 }
