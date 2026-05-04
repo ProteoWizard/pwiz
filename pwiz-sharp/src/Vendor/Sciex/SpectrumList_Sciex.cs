@@ -1,3 +1,4 @@
+using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Processing;
@@ -14,7 +15,7 @@ namespace Pwiz.Vendor.Sciex;
 /// spectrum per surviving cycle, sorted by RT across all experiments. Works against the
 /// <see cref="AbstractWiffFile"/> abstraction so a single code path covers both SDKs.
 /// </summary>
-public sealed class SpectrumList_Sciex : SpectrumListBase
+public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpectrumList
 {
     private readonly AbstractWiffFile _wiff;
     private readonly bool _ownsWiff;
@@ -124,6 +125,16 @@ public sealed class SpectrumList_Sciex : SpectrumListBase
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+        => GetSpectrumImpl(index, getBinaryData, centroid: false);
+
+    /// <inheritdoc/>
+    public string VendorCentroidName => "Sciex peak picking";
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData)
+        => GetSpectrumImpl(index, getBinaryData, centroid: true);
+
+    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool centroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -162,11 +173,18 @@ public sealed class SpectrumList_Sciex : SpectrumListBase
         // Profile vs centroid + AddZeros padding for profile data are handled inside the
         // AbstractWiffSpectrum implementation (legacy: AddZeros via Clearcore2; wiff2: AddFramingZeros
         // via the SDK request).
-        var ms = exp.GetSpectrum(ie.Cycle, addZeros: true, centroid: false);
+        // addZeros stays true on profile reads (cpp: same — adds framing zeros around peaks
+        // for profile data); turn it off on centroid reads since the SDK's centroid path
+        // already returns one point per peak.
+        var ms = exp.GetSpectrum(ie.Cycle, addZeros: !centroid, centroid: centroid);
 
         if (ms is not null)
         {
-            spec.Params.Set(ms.CentroidMode ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
+            // When the caller asked for centroid (via GetCentroidSpectrum), the SDK either
+            // returned centroid data (wiff2) or returned what the file has (legacy WIFF —
+            // centroid arg is advisory there). Tag MS_centroid_spectrum unconditionally on
+            // the centroid path so SpectrumList_PeakPicker sees it and skips its own CWT.
+            spec.Params.Set(centroid || ms.CentroidMode ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
 
             if (msLevel > 1 && ms.HasPrecursorInfo)
             {
