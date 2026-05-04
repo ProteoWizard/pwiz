@@ -146,6 +146,9 @@ public sealed class SpectrumList_Sciex : SpectrumListBase
         var scan = new Scan { InstrumentConfiguration = _defaultIc };
         spec.ScanList.Scans.Add(scan);
 
+        // 1-based experiment number; matches cpp's `msExperiment->getExperimentNumber()`.
+        scan.Set(CVID.MS_preset_scan_configuration, ie.ExperimentIndex + 1);
+
         try
         {
             double rtMin = exp.GetRetentionTime(ie.Cycle);
@@ -195,17 +198,33 @@ public sealed class SpectrumList_Sciex : SpectrumListBase
                 spec.Precursors.Add(precursor);
             }
 
+            // TIC: cpp ABI emits unconditionally from spectrum->getSumY() as detector-count.
+            // We compute from YValues (no precomputed sum-Y on AbstractWiffSpectrum). YValues
+            // is already loaded by GetSpectrum so no extra cost.
+            //
+            // Base peak (MS_base_peak_intensity / MS_base_peak_m_z): NOT emitted here. cpp gets
+            // these from a separate per-cycle SDK metadata array (basePeakIntensities[cycle-1])
+            // that the legacy WIFF SDK exposes but the wiff2 SDK doesn't, so cpp emits for
+            // legacy and skips for wiff2. To match that we'd need a TryGetBasePeak surface on
+            // AbstractWiffSpectrum with a wiff2 implementation that returns false; deferring
+            // until we have a legacy-WIFF reference fixture with spectra to validate against
+            // (current legacy fixtures are chromatogram-only).
+            double[] xs = ms.XValues;
+            double[] ys = ms.YValues;
+            int len = Math.Min(xs.Length, ys.Length);
+
+            double tic = 0;
+            for (int i = 0; i < len; i++) tic += ys[i];
+            spec.Params.Set(CVID.MS_total_ion_current, tic, CVID.MS_number_of_detector_counts);
+
             if (getBinaryData)
             {
-                double[] x = ms.XValues;
-                double[] y = ms.YValues;
-                int n = Math.Min(x.Length, y.Length);
-                spec.DefaultArrayLength = n;
-                if (n > 0) spec.SetMZIntensityArrays(SliceDouble(x, n), SliceDouble(y, n), CVID.MS_number_of_detector_counts);
+                spec.DefaultArrayLength = len;
+                if (len > 0) spec.SetMZIntensityArrays(SliceDouble(xs, len), SliceDouble(ys, len), CVID.MS_number_of_detector_counts);
             }
             else
             {
-                spec.DefaultArrayLength = ms.XValues.Length;
+                spec.DefaultArrayLength = xs.Length;
             }
         }
         else

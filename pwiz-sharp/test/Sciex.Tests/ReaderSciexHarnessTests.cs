@@ -47,11 +47,12 @@ public class ReaderSciexHarnessTests
         ctx.Check();
     }
 
-    // wiff2 fixtures (swath.api.wiff2, 7600ZenoTOFMSMS_EAD_TestData.wiff2) load through the
-    // side-by-side Wiff2LoadContext but their full-diff check fails on spectrum-level
-    // emission gaps (missing MS_TIC / MS_preset_scan_configuration cvParams per spectrum,
-    // 4-hour startTimeStamp timezone drift) that live in SpectrumList_Wiff2, not the metadata
-    // path Reader_Sciex_Detail covers. Re-add those test methods once those gaps close.
+    // wiff2 fixtures still fail full diff on (a) startTimeStamp timezone interpretation in
+    // Wiff2File and (b) chromatogram count (we emit TIC + BPC, cpp emits TIC only). swath.api
+    // has additional spectrum-level diffs (isolation-window offsets stored as absolute m/z
+    // bounds; CWT peak picker keeps ~3x more points than the vendor centroider). Each is its
+    // own follow-up. Re-add Reader_Sciex_ZenoTofMsMsEad / Reader_Sciex_SwathApi when those
+    // close out.
 
     private static FixtureRunContext? SetUp(string fixtureFileName)
     {
