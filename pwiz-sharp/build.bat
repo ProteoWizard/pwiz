@@ -157,11 +157,25 @@ if %COVERAGE%==1 (
     REM # the profiler with the args after `--`. Requires the
     REM # JetBrains.dotCover.CommandLineTools 2023.x global tool installed via
     REM #   dotnet tool install -g JetBrains.dotCover.CommandLineTools
+    REM # dotnet-dotCover is shipped as a global tool; `dotnet tool install -g`
+    REM # drops it under %USERPROFILE%\.dotnet\tools but TeamCity agents (and
+    REM # fresh PowerShell sessions) often don't have that on PATH yet — `where`
+    REM # returns nothing even though the install succeeded. Probe explicitly,
+    REM # adding the standard tool dir to PATH for this session if needed before
+    REM # giving up. Mirrors the workaround the dotnet-tools docs recommend for CI.
     where dotnet-dotCover >nul 2>nul
     if !ERRORLEVEL! NEQ 0 (
-        set EXIT=2
-        set ERROR_TEXT=--coverage requested but dotnet-dotCover is not on PATH. Install with: dotnet tool install -g JetBrains.dotCover.CommandLineTools
-        goto error
+        if exist "%USERPROFILE%\.dotnet\tools\dotnet-dotCover.exe" (
+            set "PATH=%USERPROFILE%\.dotnet\tools;!PATH!"
+        ) else if exist "%DOTNET_TOOLS%\dotnet-dotCover.exe" (
+            set "PATH=%DOTNET_TOOLS%;!PATH!"
+        )
+        where dotnet-dotCover >nul 2>nul
+        if !ERRORLEVEL! NEQ 0 (
+            set EXIT=2
+            set ERROR_TEXT=--coverage requested but dotnet-dotCover is not on PATH ^(checked %%USERPROFILE%%\.dotnet\tools and %%DOTNET_TOOLS%%^). Install with: dotnet tool install -g JetBrains.dotCover.CommandLineTools
+            goto error
+        )
     )
 
     set COVER_DIR=%SCRIPT_DIR%\TestResults
