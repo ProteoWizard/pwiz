@@ -170,7 +170,8 @@ namespace pwiz.Skyline.Model.Results
             raw_chromatograms = 0x20,
             dda_acquisition_method = 0x40,
             extracted_qc_trace = 0x80,
-            has_max_peak_score = 0x100
+            has_max_peak_score = 0x100,
+            has_ion_mobility_errors = 0x200
         }
 
         /// <summary>
@@ -339,6 +340,7 @@ namespace pwiz.Skyline.Model.Results
         public FlagValues Flags { get { return _flagBits; } }
 
         public bool HasMassErrors { get { return (Flags & FlagValues.has_mass_errors) != 0; } }
+        public bool HasIonMobilityErrors { get { return (Flags & FlagValues.has_ion_mobility_errors) != 0; } }
         public bool HasMs1ScanIds { get { return (Flags & FlagValues.has_ms1_scan_ids) != 0; } }
         public bool HasFragmentScanIds { get { return (Flags & FlagValues.has_frag_scan_ids) != 0; } }
         public bool HasSimScanIds { get { return (Flags & FlagValues.has_sim_scan_ids) != 0; } }
@@ -795,6 +797,7 @@ namespace pwiz.Skyline.Model.Results
             sim = 0x03,
 
             missing_mass_errors = 0x04,
+            missing_ion_mobility_errors = 0x08,
         }
 
         const FlagValues MASK_SOURCE = (FlagValues) 0x03;
@@ -863,6 +866,12 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return (Flags & FlagValues.missing_mass_errors) != 0; }
             set { Flags = (Flags & ~FlagValues.missing_mass_errors) | (value ? FlagValues.missing_mass_errors : 0); }
+        }
+
+        public bool MissingIonMobilityErrors
+        {
+            get { return (Flags & FlagValues.missing_ion_mobility_errors) != 0; }
+            set { Flags = (Flags & ~FlagValues.missing_ion_mobility_errors) | (value ? FlagValues.missing_ion_mobility_errors : 0); }
         }
 
         public static FlagValues GetSourceFlags(ChromSource source)

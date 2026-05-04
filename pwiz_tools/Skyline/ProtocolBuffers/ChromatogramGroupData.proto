@@ -19,6 +19,7 @@ message ChromatogramGroupData {
 		repeated float massErrorsDeprecated = 3;
 		repeated sint32 massErrors100X = 5;
 		int32 scanIdListIndex = 4; // One-based index into "scanIdLists" or zero if no scanIds
+		repeated sint32 ionMobilityErrors100X = 6; // Per-time-point % IM error scaled by 100x
 	}
 	message TimeIntervals {
 		repeated float startTimes = 1;
