@@ -259,6 +259,9 @@ maximum intensity for the precursor.</value>
   <data name="CAS" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
+  <data name="CcsErrorPercent">
+    <value>The difference between the expected and measured collisional cross section (CCS) values expressed as a percent of the expected value</value>
+  </data>
   <data name="Chosen">
     <value>True if the peak boundaries of the candidate peak are the same as the integration boundaries that are used for all of the transitions in the peak group.</value>
   </data>
@@ -606,6 +609,9 @@ between the peak integration boundaries.</value>
   </data>
   <data name="IonFormula">
     <value>An atomic chemical formula for the fully charged (and possibly isotope labeled) ion to be measured in a mass spectrometer.</value>
+  </data>
+  <data name="IonMobilityErrorPercent">
+    <value>The difference between the expected and measured ion mobility values expressed as a percent of the expected value (intensity-weighted across the peak)</value>
   </data>
   <data name="IonMobilityFragment">
     <value>Center of the ion mobility filter window used in chromatogram extraction for a fragment ion. This may differ from the value for precursor ions , as fragment ions may move faster due to more energetic collisions,</value>

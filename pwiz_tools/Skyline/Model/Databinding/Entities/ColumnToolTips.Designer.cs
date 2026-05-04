@@ -521,7 +521,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
                 return ResourceManager.GetString("CAS", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The difference between the expected and measured collisional cross section (CCS) values expressed as a percent of the expected value.
+        /// </summary>
+        public static string CcsErrorPercent {
+            get {
+                return ResourceManager.GetString("CcsErrorPercent", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to True if the peak boundaries of the candidate peak are the same as the integration boundaries that are used for all of the transitions in the peak group..
         /// </summary>
@@ -1529,6 +1538,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The difference between the expected and measured ion mobility values expressed as a percent of the expected value (intensity-weighted across the peak).
+        /// </summary>
+        public static string IonMobilityErrorPercent {
+            get {
+                return ResourceManager.GetString("IonMobilityErrorPercent", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Center of the ion mobility filter window used in chromatogram extraction for a fragment ion. This may differ from the value for precursor ions , as fragment ions may move faster due to more energetic collisions,.
         /// </summary>
