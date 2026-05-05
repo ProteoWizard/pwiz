@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using pwiz.SkylineTestUtil;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
@@ -17,13 +12,13 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestParseSpectrumClassFilter()
         {
-            var filter1 = SpectrumClassFilter.ParseFilterString("DissociationMethod = 'CID' and CollisionEnergy = 20.0 and MsLevel = 2");
+            var filter1 = SpectrumClassFilter.ParseFilterString(string.Format("DissociationMethod = 'CID' and CollisionEnergy = {0:F1} and MsLevel = 2", 20));
             Assert.IsNotNull(filter1);
             var filter2 = SpectrumClassFilter.ParseFilterString("MsLevel = 1");
             Assert.IsNotNull(filter2);
-            var filter3 = SpectrumClassFilter.ParseFilterString("(DissociationMethod = 'CID' and CollisionEnergy = 20.0 and MsLevel = 2) or (MsLevel = 1)");
+            var filter3 = SpectrumClassFilter.ParseFilterString(string.Format("(DissociationMethod = 'CID' and CollisionEnergy = {0:F1} and MsLevel = 2) or (MsLevel = 1)", 20));
             Assert.IsNotNull(filter3);
-            var filter4 = SpectrumClassFilter.ParseFilterString("(DissociationMethod = 'CID' and CollisionEnergy = 20.0 and MsLevel = 2) or MsLevel = 1");
+            var filter4 = SpectrumClassFilter.ParseFilterString(string.Format("(DissociationMethod = 'CID' and CollisionEnergy = {0:F1} and MsLevel = 2) or MsLevel = 1", 20));
             Assert.IsNotNull(filter4);
         }
 
