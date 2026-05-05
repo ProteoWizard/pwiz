@@ -129,6 +129,9 @@ namespace pwiz.SkylineTestUtil
 
         private static string TryGetDialogText(Form dialog)
         {
+            // Best-effort diagnostic: this runs on a background thread, so any property access
+            // can throw if the dialog is disposed mid-call or cross-thread checks are enabled.
+            // Wrap the entire method so a throw here never breaks the watchdog loop.
             try
             {
                 // ThreadExceptionDialog's main message text is in a TextBox child control.
@@ -137,12 +140,12 @@ namespace pwiz.SkylineTestUtil
                 {
                     return textBox.Text;
                 }
+                return dialog.Text ?? @"<no text>";
             }
             catch
             {
-                // Ignore - best-effort diagnostic.
+                return @"<unavailable>";
             }
-            return dialog.Text ?? @"<no text>";
         }
     }
 }
