@@ -30,6 +30,22 @@ public class DiffConfig
     /// <summary>Ignore the <c>dataProcessingRef</c> field and the contents of the DataProcessings list.</summary>
     public bool IgnoreDataProcessing { get; set; }
 
+    /// <summary>Skip the <c>run/startTimeStamp</c> attribute when diffing. Used by vendor
+    /// readers whose SDK doesn't populate the acquisition timestamp under .NET Core (e.g. the
+    /// Shimadzu C# SDK leaves <c>SampleInfo.AnalysisDate</c> at <see cref="System.DateTime.MinValue"/>
+    /// because its internal initialization relies on BinaryFormatter paths that are no longer
+    /// supported), so the only way to keep parity with cpp reference mzMLs is to ignore the
+    /// attribute rather than encode a synthetic date.</summary>
+    public bool IgnoreStartTimeStamp { get; set; }
+
+    /// <summary>Skip <c>MS_SHA_1</c> cvParams on <c>SourceFile</c>s when diffing. The harness
+    /// recomputes the hash of the on-disk source file, so a mismatch with a reference mzML
+    /// indicates the *file* changed since the reference was generated — not a parity bug in
+    /// the reader. This is a real "test data drift" signal, but for vendor reader parity we
+    /// only care about whether the *output mzML* matches the cpp output for the *current* file
+    /// content. Turn this on to filter the noise.</summary>
+    public bool IgnoreSourceFileChecksum { get; set; }
+
     /// <summary>Maximum number of differences to include in the human-readable report (default 50).</summary>
     public int MaxDifferencesToReport { get; set; } = 50;
 }

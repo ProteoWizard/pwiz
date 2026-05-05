@@ -119,7 +119,7 @@ public sealed class MzmlWriter
         w.WriteAttributeString("xsi", "schemaLocation", null,
             "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd");
         if (!string.IsNullOrEmpty(msd.Accession)) w.WriteAttributeString("accession", msd.Accession);
-        if (!string.IsNullOrEmpty(msd.Id)) w.WriteAttributeString("id", msd.Id);
+        if (!string.IsNullOrEmpty(msd.Id)) w.WriteAttributeString("id",XmlIdEncoding.Encode(msd.Id));
         w.WriteAttributeString("version", string.IsNullOrEmpty(msd.Version) ? "1.1.0" : msd.Version);
 
         WriteCvList(w, msd.CVs);
@@ -186,7 +186,7 @@ public sealed class MzmlWriter
         foreach (var (id, pos) in offsets)
         {
             w.WriteStartElement("offset");
-            w.WriteAttributeString("idRef", id);
+            w.WriteAttributeString("idRef", XmlIdEncoding.Encode(id));
             w.WriteString(pos.ToString(CultureInfo.InvariantCulture));
             w.WriteEndElement();
         }
@@ -231,7 +231,7 @@ public sealed class MzmlWriter
         foreach (var cv in cvs)
         {
             w.WriteStartElement("cv");
-            w.WriteAttributeString("id", cv.Id);
+            w.WriteAttributeString("id",XmlIdEncoding.Encode(cv.Id));
             w.WriteAttributeString("fullName", cv.FullName);
             w.WriteAttributeString("version", cv.Version);
             w.WriteAttributeString("URI", cv.Uri);
@@ -257,7 +257,7 @@ public sealed class MzmlWriter
             foreach (var sf in fd.SourceFiles)
             {
                 w.WriteStartElement("sourceFile");
-                w.WriteAttributeString("id", sf.Id);
+                w.WriteAttributeString("id",XmlIdEncoding.Encode(sf.Id));
                 w.WriteAttributeString("name", sf.Name);
                 w.WriteAttributeString("location", sf.Location);
                 MzmlXml.WriteParams(w, sf);
@@ -286,7 +286,7 @@ public sealed class MzmlWriter
         foreach (var g in groups)
         {
             w.WriteStartElement("referenceableParamGroup");
-            w.WriteAttributeString("id", g.Id);
+            w.WriteAttributeString("id",XmlIdEncoding.Encode(g.Id));
             MzmlXml.WriteParams(w, g);
             w.WriteEndElement();
         }
@@ -303,7 +303,7 @@ public sealed class MzmlWriter
         foreach (var s in samples)
         {
             w.WriteStartElement("sample");
-            w.WriteAttributeString("id", s.Id);
+            w.WriteAttributeString("id",XmlIdEncoding.Encode(s.Id));
             if (!string.IsNullOrEmpty(s.Name)) w.WriteAttributeString("name", s.Name);
             MzmlXml.WriteParams(w, s);
             w.WriteEndElement();
@@ -321,7 +321,7 @@ public sealed class MzmlWriter
         foreach (var sw in software)
         {
             w.WriteStartElement("software");
-            w.WriteAttributeString("id", sw.Id);
+            w.WriteAttributeString("id",XmlIdEncoding.Encode(sw.Id));
             w.WriteAttributeString("version", sw.Version);
             MzmlXml.WriteParams(w, sw);
             w.WriteEndElement();
@@ -339,7 +339,7 @@ public sealed class MzmlWriter
         foreach (var ic in ics)
         {
             w.WriteStartElement("instrumentConfiguration");
-            w.WriteAttributeString("id", ic.Id);
+            w.WriteAttributeString("id",XmlIdEncoding.Encode(ic.Id));
             MzmlXml.WriteParams(w, ic);
 
             if (ic.ComponentList.Count > 0)
@@ -366,7 +366,7 @@ public sealed class MzmlWriter
             if (ic.Software is not null)
             {
                 w.WriteStartElement("softwareRef");
-                w.WriteAttributeString("ref", ic.Software.Id);
+                w.WriteAttributeString("ref", XmlIdEncoding.Encode(ic.Software.Id));
                 w.WriteEndElement();
             }
 
@@ -385,12 +385,12 @@ public sealed class MzmlWriter
         foreach (var dp in dps)
         {
             w.WriteStartElement("dataProcessing");
-            w.WriteAttributeString("id", dp.Id);
+            w.WriteAttributeString("id",XmlIdEncoding.Encode(dp.Id));
             foreach (var pm in dp.ProcessingMethods)
             {
                 w.WriteStartElement("processingMethod");
                 w.WriteAttributeString("order", pm.Order.ToString(CultureInfo.InvariantCulture));
-                if (pm.Software is not null) w.WriteAttributeString("softwareRef", pm.Software.Id);
+                if (pm.Software is not null) w.WriteAttributeString("softwareRef", XmlIdEncoding.Encode(pm.Software.Id));
                 MzmlXml.WriteParams(w, pm);
                 w.WriteEndElement();
             }
@@ -404,14 +404,14 @@ public sealed class MzmlWriter
     private void WriteRun(XmlWriter w, Run run)
     {
         w.WriteStartElement("run");
-        w.WriteAttributeString("id", run.Id);
+        w.WriteAttributeString("id",XmlIdEncoding.Encode(run.Id));
         _runDefaultIcId = run.DefaultInstrumentConfiguration?.Id;
         if (run.DefaultInstrumentConfiguration is not null)
-            w.WriteAttributeString("defaultInstrumentConfigurationRef", run.DefaultInstrumentConfiguration.Id);
-        if (run.Sample is not null) w.WriteAttributeString("sampleRef", run.Sample.Id);
+            w.WriteAttributeString("defaultInstrumentConfigurationRef", XmlIdEncoding.Encode(run.DefaultInstrumentConfiguration.Id));
+        if (run.Sample is not null) w.WriteAttributeString("sampleRef", XmlIdEncoding.Encode(run.Sample.Id));
         if (!string.IsNullOrEmpty(run.StartTimeStamp)) w.WriteAttributeString("startTimeStamp", run.StartTimeStamp);
         if (run.DefaultSourceFile is not null)
-            w.WriteAttributeString("defaultSourceFileRef", run.DefaultSourceFile.Id);
+            w.WriteAttributeString("defaultSourceFileRef", XmlIdEncoding.Encode(run.DefaultSourceFile.Id));
 
         MzmlXml.WriteParams(w, run);
 
@@ -429,7 +429,7 @@ public sealed class MzmlWriter
         w.WriteStartElement("chromatogramList");
         MzmlXml.WriteCountAttr(w, list.Count);
         if (list.DataProcessing is not null)
-            w.WriteAttributeString("defaultDataProcessingRef", list.DataProcessing.Id);
+            w.WriteAttributeString("defaultDataProcessingRef", XmlIdEncoding.Encode(list.DataProcessing.Id));
 
         for (int i = 0; i < list.Count; i++)
         {
@@ -444,10 +444,10 @@ public sealed class MzmlWriter
         RecordOffset(w, chrom.Id, _chromatogramOffsets, indentDepth: Indexed ? 4 : 3);
         w.WriteStartElement("chromatogram");
         w.WriteAttributeString("index", chrom.Index.ToString(CultureInfo.InvariantCulture));
-        w.WriteAttributeString("id", chrom.Id);
+        w.WriteAttributeString("id",XmlIdEncoding.Encode(chrom.Id));
         w.WriteAttributeString("defaultArrayLength", chrom.DefaultArrayLength.ToString(CultureInfo.InvariantCulture));
         if (chrom.DataProcessing is not null)
-            w.WriteAttributeString("dataProcessingRef", chrom.DataProcessing.Id);
+            w.WriteAttributeString("dataProcessingRef", XmlIdEncoding.Encode(chrom.DataProcessing.Id));
 
         MzmlXml.WriteParams(w, chrom.Params);
 
@@ -480,7 +480,7 @@ public sealed class MzmlWriter
         w.WriteStartElement("binaryDataArray");
         w.WriteAttributeString("arrayLength", arr.Data.Count.ToString(CultureInfo.InvariantCulture));
         w.WriteAttributeString("encodedLength", base64.Length.ToString(CultureInfo.InvariantCulture));
-        if (arr.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", arr.DataProcessing.Id);
+        if (arr.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", XmlIdEncoding.Encode(arr.DataProcessing.Id));
 
         MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_64_bit_integer));
         MzmlXml.WriteCvParam(w, new CVParam(_encoderConfig.Compression switch
@@ -501,7 +501,7 @@ public sealed class MzmlWriter
         w.WriteStartElement("spectrumList");
         MzmlXml.WriteCountAttr(w, list.Count);
         if (list.DataProcessing is not null)
-            w.WriteAttributeString("defaultDataProcessingRef", list.DataProcessing.Id);
+            w.WriteAttributeString("defaultDataProcessingRef", XmlIdEncoding.Encode(list.DataProcessing.Id));
 
         int count = list.Count;
         var registry = IterationListenerRegistry;
@@ -524,11 +524,11 @@ public sealed class MzmlWriter
         RecordOffset(w, spec.Id, _spectrumOffsets, indentDepth: Indexed ? 4 : 3);
         w.WriteStartElement("spectrum");
         w.WriteAttributeString("index", spec.Index.ToString(CultureInfo.InvariantCulture));
-        w.WriteAttributeString("id", spec.Id);
+        w.WriteAttributeString("id",XmlIdEncoding.Encode(spec.Id));
         if (!string.IsNullOrEmpty(spec.SpotId)) w.WriteAttributeString("spotID", spec.SpotId);
         w.WriteAttributeString("defaultArrayLength", spec.DefaultArrayLength.ToString(CultureInfo.InvariantCulture));
-        if (spec.SourceFile is not null) w.WriteAttributeString("sourceFileRef", spec.SourceFile.Id);
-        if (spec.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", spec.DataProcessing.Id);
+        if (spec.SourceFile is not null) w.WriteAttributeString("sourceFileRef", XmlIdEncoding.Encode(spec.SourceFile.Id));
+        if (spec.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", XmlIdEncoding.Encode(spec.DataProcessing.Id));
 
         MzmlXml.WriteParams(w, spec.Params);
 
@@ -544,12 +544,12 @@ public sealed class MzmlWriter
                 // run's defaultInstrumentConfigurationRef — matches pwiz C++'s serializer.
                 if (scan.InstrumentConfiguration is not null &&
                     scan.InstrumentConfiguration.Id != _runDefaultIcId)
-                    w.WriteAttributeString("instrumentConfigurationRef", scan.InstrumentConfiguration.Id);
-                if (scan.SourceFile is not null) w.WriteAttributeString("sourceFileRef", scan.SourceFile.Id);
+                    w.WriteAttributeString("instrumentConfigurationRef", XmlIdEncoding.Encode(scan.InstrumentConfiguration.Id));
+                if (scan.SourceFile is not null) w.WriteAttributeString("sourceFileRef", XmlIdEncoding.Encode(scan.SourceFile.Id));
                 if (!string.IsNullOrEmpty(scan.ExternalSpectrumId))
                     w.WriteAttributeString("externalSpectrumID", scan.ExternalSpectrumId);
                 if (!string.IsNullOrEmpty(scan.SpectrumId))
-                    w.WriteAttributeString("spectrumRef", scan.SpectrumId);
+                    w.WriteAttributeString("spectrumRef", XmlIdEncoding.Encode(scan.SpectrumId));
 
                 MzmlXml.WriteParams(w, scan);
 
@@ -604,11 +604,11 @@ public sealed class MzmlWriter
     private static void WritePrecursor(XmlWriter w, Precursor p)
     {
         w.WriteStartElement("precursor");
-        if (p.SourceFile is not null) w.WriteAttributeString("sourceFileRef", p.SourceFile.Id);
+        if (p.SourceFile is not null) w.WriteAttributeString("sourceFileRef", XmlIdEncoding.Encode(p.SourceFile.Id));
         if (!string.IsNullOrEmpty(p.ExternalSpectrumId))
             w.WriteAttributeString("externalSpectrumID", p.ExternalSpectrumId);
         if (!string.IsNullOrEmpty(p.SpectrumId))
-            w.WriteAttributeString("spectrumRef", p.SpectrumId);
+            w.WriteAttributeString("spectrumRef", XmlIdEncoding.Encode(p.SpectrumId));
 
         w.WriteStartElement("isolationWindow");
         MzmlXml.WriteParams(w, p.IsolationWindow);
@@ -662,7 +662,7 @@ public sealed class MzmlWriter
         // Readers (including pwiz's msdiff) use this to slice the base64 blob out of the XML,
         // so a mismatch makes decoding fail at that spectrum.
         w.WriteAttributeString("encodedLength", base64.Length.ToString(CultureInfo.InvariantCulture));
-        if (arr.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", arr.DataProcessing.Id);
+        if (arr.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", XmlIdEncoding.Encode(arr.DataProcessing.Id));
 
         // Emit precision / compression / array-type CV params before user-added ones,
         // matching pwiz's canonical ordering so byte-level diffs line up.

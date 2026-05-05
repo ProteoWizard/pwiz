@@ -86,6 +86,17 @@ public sealed record ReaderTestConfig
     /// <summary>Optional floating-point precision override for the MSData diff.</summary>
     public double? DiffPrecision { get; set; }
 
+    /// <summary>Pass-through for <see cref="DiffConfig.IgnoreStartTimeStamp"/>. Vendor readers
+    /// whose SDK can't reliably extract the acquisition timestamp under .NET 8 turn this on so
+    /// the diff stays focused on data parity rather than failing on a missing attribute.</summary>
+    public bool IgnoreStartTimeStamp { get; set; }
+
+    /// <summary>Pass-through for <see cref="DiffConfig.IgnoreSourceFileChecksum"/>. Turn on
+    /// when the on-disk source file has been refreshed since the cpp reference mzML was
+    /// generated and the SHA-1 baked into the reference no longer matches what the harness
+    /// computes from the live file.</summary>
+    public bool IgnoreSourceFileChecksum { get; set; }
+
     /// <summary>If set, only this single run index is tested (for multi-run inputs).</summary>
     public int? RunIndex { get; set; }
 
@@ -154,6 +165,8 @@ public sealed record ReaderTestConfig
     {
         var dc = new DiffConfig();
         if (DiffPrecision.HasValue) dc.Precision = DiffPrecision.Value;
+        dc.IgnoreStartTimeStamp = IgnoreStartTimeStamp;
+        dc.IgnoreSourceFileChecksum = IgnoreSourceFileChecksum;
         return dc;
     }
 

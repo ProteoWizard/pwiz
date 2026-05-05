@@ -3,6 +3,86 @@ using System.Globalization;
 namespace Pwiz.Data.Common.Params;
 
 /// <summary>
+/// Encodes pwiz C++-style XML <c>id</c> / <c>idref</c> attribute values. Mirrors cpp
+/// <c>encode_xml_id</c> (XMLWriter.cpp:369) — first character must be NCNameStartChar
+/// (<c>[A-Za-z_]</c>); subsequent characters must be NCNameChar (<c>[A-Za-z0-9_.-]</c>);
+/// anything else (including UTF-8 multi-byte sequences) gets replaced with
+/// <c>_xNNNN_</c> per byte. Used by MzmlWriter so unicode / space-bearing run ids and
+/// software ids round-trip with the cpp reference mzMLs.
+/// </summary>
+public static class XmlIdEncoding
+{
+    /// <summary>Returns <paramref name="id"/> encoded for use as an XML id/idref. Empty
+    /// input round-trips as empty (cpp throws but the writer guards beforehand).</summary>
+    public static string Encode(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return id;
+        // UTF-8 byte-oriented encoding to match cpp's per-byte loop. Walk the byte
+        // representation; emit valid NCName bytes literally, encode everything else.
+        var bytes = System.Text.Encoding.UTF8.GetBytes(id);
+        var sb = new System.Text.StringBuilder(bytes.Length);
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            byte b = bytes[i];
+            bool ok = i == 0 ? IsNCNameStartChar(b) : IsNCNameChar(b);
+            if (ok)
+            {
+                sb.Append((char)b);
+            }
+            else
+            {
+                sb.Append("_x").Append(b.ToString("x4", CultureInfo.InvariantCulture)).Append('_');
+            }
+        }
+        return sb.ToString();
+    }
+
+    private static bool IsNCNameStartChar(byte c) =>
+        (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_';
+
+    private static bool IsNCNameChar(byte c) =>
+        IsNCNameStartChar(c) || (c >= '0' && c <= '9') || c == '.' || c == '-';
+
+    /// <summary>Reverses <see cref="Encode"/> — collapses every <c>_xNNNN_</c> escape back to
+    /// its source byte. cpp's reader decodes on the way in so the in-memory MSData id matches
+    /// what the file's writer started with; mirror that so a round-trip read/write of a cpp
+    /// reference mzML keeps the same logical IDs.</summary>
+    public static string Decode(string s)
+    {
+        if (string.IsNullOrEmpty(s) || !s.Contains("_x", System.StringComparison.Ordinal))
+            return s;
+        var bytes = new System.Collections.Generic.List<byte>(s.Length);
+        int i = 0;
+        while (i < s.Length)
+        {
+            // Match _xNNNN_ — exactly four hex digits framed by underscores.
+            if (i + 6 < s.Length && s[i] == '_' && s[i + 1] == 'x' && s[i + 6] == '_'
+                && IsHex(s[i + 2]) && IsHex(s[i + 3]) && IsHex(s[i + 4]) && IsHex(s[i + 5]))
+            {
+                int b = (HexVal(s[i + 2]) << 12) | (HexVal(s[i + 3]) << 8) | (HexVal(s[i + 4]) << 4) | HexVal(s[i + 5]);
+                // b is the original byte value (cpp encodes with leading 0s up to 4 hex digits).
+                bytes.Add((byte)b);
+                i += 7;
+            }
+            else
+            {
+                // Literal char — fall back to UTF-8 encoding (handles non-ASCII passthrough).
+                foreach (byte ub in System.Text.Encoding.UTF8.GetBytes(new[] { s[i] }))
+                    bytes.Add(ub);
+                i++;
+            }
+        }
+        return System.Text.Encoding.UTF8.GetString(bytes.ToArray());
+    }
+
+    private static bool IsHex(char c) =>
+        (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+
+    private static int HexVal(char c) =>
+        c <= '9' ? c - '0' : (c | 0x20) - 'a' + 10;
+}
+
+/// <summary>
 /// Formats doubles the way pwiz C++ does in XML / mzML output.
 /// </summary>
 /// <remarks>
@@ -28,6 +108,14 @@ public static class PwizFloat
 
     /// <summary>Formats <paramref name="value"/> in pwiz's canonical XML form.</summary>
     public static string ToPwizString(double value) => Format(value, Precision);
+
+    /// <summary>Mirrors C printf <c>%.10g</c> formatting — the cpp Shimadzu chromatogram-id
+    /// builder uses this for Q1/Q3/CE values: up to 10 significant digits, trailing zeros
+    /// stripped, no decimal point on whole numbers (e.g. <c>1059</c> not <c>1059.0</c>;
+    /// <c>50.647</c> kept). Different from <see cref="ToKarmaNoSci"/> (which keeps the
+    /// trailing <c>.0</c> for karma natural-real form).</summary>
+    public static string ToPrintfG10(double v) =>
+        v.ToString("G10", CultureInfo.InvariantCulture);
 
     /// <summary>Mirrors <c>boost::spirit::karma::nosci</c> double formatting that the cpp
     /// vendor readers use to build chromatogram IDs (e.g.

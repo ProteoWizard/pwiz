@@ -171,7 +171,10 @@ public static class MSDataDiff
         DiffStrings(a.Id, b.Id, ctx, "id");
         DiffStrings(a.Name, b.Name, ctx, "name");
         DiffStrings(a.Location, b.Location, ctx, "location");
-        DiffParamContainerBody(a, b, ctx);
+        if (ctx.Config.IgnoreSourceFileChecksum)
+            DiffParamContainerWithoutCv(a, b, ctx, CVID.MS_SHA_1);
+        else
+            DiffParamContainerBody(a, b, ctx);
     }
 
     private static void DiffSoftware(Software a, Software b, Context ctx)
@@ -237,7 +240,8 @@ public static class MSDataDiff
     {
         using var _ = ctx.Push("run");
         DiffStrings(a.Id, b.Id, ctx, "id");
-        DiffStrings(a.StartTimeStamp, b.StartTimeStamp, ctx, "startTimeStamp");
+        if (!ctx.Config.IgnoreStartTimeStamp)
+            DiffStrings(a.StartTimeStamp, b.StartTimeStamp, ctx, "startTimeStamp");
         DiffStrings(a.DefaultInstrumentConfiguration?.Id ?? "",
                     b.DefaultInstrumentConfiguration?.Id ?? "",
                     ctx, "defaultInstrumentConfigurationRef");

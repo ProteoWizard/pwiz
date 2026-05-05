@@ -215,6 +215,7 @@ public static class VendorReaderTestHarness
             PreferOnlyMsLevel = config.PreferOnlyMsLevel,
             CombineIonMobilitySpectra = config.CombineIonMobilitySpectra,
             SimAsSpectra = config.SimAsSpectra,
+            SrmAsSpectra = config.SrmAsSpectra,
             SortAndJitter = config.SortAndJitter,
             PeakPicking = config.PeakPicking,
             DdaProcessing = config.DdaProcessing,

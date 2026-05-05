@@ -60,7 +60,7 @@ public sealed class MzmlReader
             if (r.LocalName == "mzML")
             {
                 msd.Accession = r.GetAttribute("accession") ?? string.Empty;
-                msd.Id = r.GetAttribute("id") ?? string.Empty;
+                msd.Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty;
                 msd.Version = r.GetAttribute("version") ?? string.Empty;
                 ReadMzmlBody(r, msd);
                 break;
@@ -101,7 +101,7 @@ public sealed class MzmlReader
             {
                 msd.CVs.Add(new CV
                 {
-                    Id = r.GetAttribute("id") ?? string.Empty,
+                    Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty,
                     FullName = r.GetAttribute("fullName") ?? string.Empty,
                     Version = r.GetAttribute("version") ?? string.Empty,
                     Uri = r.GetAttribute("URI") ?? string.Empty,
@@ -156,7 +156,7 @@ public sealed class MzmlReader
             {
                 var sf = new SourceFile
                 {
-                    Id = r.GetAttribute("id") ?? string.Empty,
+                    Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty,
                     Name = r.GetAttribute("name") ?? string.Empty,
                     Location = r.GetAttribute("location") ?? string.Empty,
                 };
@@ -178,7 +178,7 @@ public sealed class MzmlReader
         {
             if (r.LocalName == "referenceableParamGroup" && r.NodeType == XmlNodeType.Element)
             {
-                var pg = new ParamGroup(r.GetAttribute("id") ?? string.Empty);
+                var pg = new ParamGroup(XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty);
                 if (MzmlXml.MoveToFirstChildElement(r))
                     MzmlXml.ReadParams(r, pg, _paramGroupById);
                 msd.ParamGroups.Add(pg);
@@ -197,7 +197,7 @@ public sealed class MzmlReader
         {
             if (r.LocalName == "sample" && r.NodeType == XmlNodeType.Element)
             {
-                var s = new Sample(r.GetAttribute("id") ?? string.Empty, r.GetAttribute("name") ?? string.Empty);
+                var s = new Sample(XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty, r.GetAttribute("name") ?? string.Empty);
                 if (MzmlXml.MoveToFirstChildElement(r))
                     MzmlXml.ReadParams(r, s, _paramGroupById);
                 msd.Samples.Add(s);
@@ -216,7 +216,7 @@ public sealed class MzmlReader
         {
             if (r.LocalName == "software" && r.NodeType == XmlNodeType.Element)
             {
-                var sw = new Software(r.GetAttribute("id") ?? string.Empty)
+                var sw = new Software(XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty)
                 {
                     Version = r.GetAttribute("version") ?? string.Empty,
                 };
@@ -238,7 +238,7 @@ public sealed class MzmlReader
         {
             if (r.LocalName == "instrumentConfiguration" && r.NodeType == XmlNodeType.Element)
             {
-                var ic = new InstrumentConfiguration(r.GetAttribute("id") ?? string.Empty);
+                var ic = new InstrumentConfiguration(XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty);
                 ReadInstrumentConfiguration(r, ic);
                 msd.InstrumentConfigurations.Add(ic);
                 _instrumentById[ic.Id] = ic;
@@ -263,7 +263,7 @@ public sealed class MzmlReader
                     ReadComponentList(r, ic.ComponentList);
                     break;
                 case "softwareRef":
-                    string? swRef = r.GetAttribute("ref");
+                    string? swRef = XmlIdEncoding.Decode(r.GetAttribute("ref") ?? string.Empty);
                     if (swRef is not null && _softwareById.TryGetValue(swRef, out var sw))
                         ic.Software = sw;
                     MzmlXml.SkipElement(r);
@@ -306,7 +306,7 @@ public sealed class MzmlReader
         {
             if (r.LocalName == "dataProcessing" && r.NodeType == XmlNodeType.Element)
             {
-                var dp = new DataProcessing(r.GetAttribute("id") ?? string.Empty);
+                var dp = new DataProcessing(XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty);
                 if (MzmlXml.MoveToFirstChildElement(r))
                 {
                     while (r.NodeType != XmlNodeType.EndElement)
@@ -317,7 +317,7 @@ public sealed class MzmlReader
                             {
                                 Order = int.Parse(r.GetAttribute("order") ?? "0", CultureInfo.InvariantCulture),
                             };
-                            string? swRef = r.GetAttribute("softwareRef");
+                            string? swRef = XmlIdEncoding.Decode(r.GetAttribute("softwareRef") ?? string.Empty);
                             if (swRef is not null && _softwareById.TryGetValue(swRef, out var sw))
                                 pm.Software = sw;
                             if (MzmlXml.MoveToFirstChildElement(r))
@@ -339,21 +339,21 @@ public sealed class MzmlReader
 
     private void ReadRun(XmlReader r, MSData msd)
     {
-        msd.Run.Id = r.GetAttribute("id") ?? string.Empty;
+        msd.Run.Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty;
         msd.Run.StartTimeStamp = r.GetAttribute("startTimeStamp") ?? string.Empty;
 
-        string? icRef = r.GetAttribute("defaultInstrumentConfigurationRef");
+        string? icRef = XmlIdEncoding.Decode(r.GetAttribute("defaultInstrumentConfigurationRef") ?? string.Empty);
         if (icRef is not null && _instrumentById.TryGetValue(icRef, out var ic))
         {
             msd.Run.DefaultInstrumentConfiguration = ic;
             _runDefaultIc = ic;
         }
 
-        string? sampleRef = r.GetAttribute("sampleRef");
+        string? sampleRef = XmlIdEncoding.Decode(r.GetAttribute("sampleRef") ?? string.Empty);
         if (sampleRef is not null && _sampleById.TryGetValue(sampleRef, out var sample))
             msd.Run.Sample = sample;
 
-        string? sfRef = r.GetAttribute("defaultSourceFileRef");
+        string? sfRef = XmlIdEncoding.Decode(r.GetAttribute("defaultSourceFileRef") ?? string.Empty);
         if (sfRef is not null && _sourceFileById.TryGetValue(sfRef, out var sf))
             msd.Run.DefaultSourceFile = sf;
 
@@ -381,7 +381,7 @@ public sealed class MzmlReader
     private void ReadSpectrumList(XmlReader r, MSData msd)
     {
         var list = new SpectrumListSimple();
-        string? dpRef = r.GetAttribute("defaultDataProcessingRef");
+        string? dpRef = XmlIdEncoding.Decode(r.GetAttribute("defaultDataProcessingRef") ?? string.Empty);
         if (dpRef is not null && _dpById.TryGetValue(dpRef, out var dp))
             list.Dp = dp;
 
@@ -405,15 +405,15 @@ public sealed class MzmlReader
         var spec = new Spectrum
         {
             Index = int.Parse(r.GetAttribute("index") ?? "0", CultureInfo.InvariantCulture),
-            Id = r.GetAttribute("id") ?? string.Empty,
+            Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty,
             SpotId = r.GetAttribute("spotID") ?? string.Empty,
             DefaultArrayLength = int.Parse(r.GetAttribute("defaultArrayLength") ?? "0", CultureInfo.InvariantCulture),
         };
 
-        string? sfRef = r.GetAttribute("sourceFileRef");
+        string? sfRef = XmlIdEncoding.Decode(r.GetAttribute("sourceFileRef") ?? string.Empty);
         if (sfRef is not null && _sourceFileById.TryGetValue(sfRef, out var sf)) spec.SourceFile = sf;
 
-        string? dpRef = r.GetAttribute("dataProcessingRef");
+        string? dpRef = XmlIdEncoding.Decode(r.GetAttribute("dataProcessingRef") ?? string.Empty);
         if (dpRef is not null && _dpById.TryGetValue(dpRef, out var dp)) spec.DataProcessing = dp;
 
         if (!MzmlXml.MoveToFirstChildElement(r)) { r.Read(); return spec; }
@@ -449,7 +449,7 @@ public sealed class MzmlReader
             if (r.LocalName == "scan" && r.NodeType == XmlNodeType.Element)
             {
                 var scan = new Scan();
-                string? icRef = r.GetAttribute("instrumentConfigurationRef");
+                string? icRef = XmlIdEncoding.Decode(r.GetAttribute("instrumentConfigurationRef") ?? string.Empty);
                 if (icRef is not null && _instrumentById.TryGetValue(icRef, out var ic))
                     scan.InstrumentConfiguration = ic;
                 else
@@ -457,7 +457,7 @@ public sealed class MzmlReader
                     scan.InstrumentConfiguration = _runDefaultIc;
                 // Bruker combined-IMS spectra carry one <scan spectrumRef="frame=N scan=M">
                 // per merged scan; preserve the link for round-trip parity.
-                scan.SpectrumId = r.GetAttribute("spectrumRef") ?? string.Empty;
+                scan.SpectrumId = XmlIdEncoding.Decode(r.GetAttribute("spectrumRef") ?? string.Empty) ?? string.Empty;
 
                 if (MzmlXml.MoveToFirstChildElement(r))
                 {
@@ -504,9 +504,9 @@ public sealed class MzmlReader
                 var p = new Precursor
                 {
                     ExternalSpectrumId = r.GetAttribute("externalSpectrumID") ?? string.Empty,
-                    SpectrumId = r.GetAttribute("spectrumRef") ?? string.Empty,
+                    SpectrumId = XmlIdEncoding.Decode(r.GetAttribute("spectrumRef") ?? string.Empty) ?? string.Empty,
                 };
-                string? sfRef = r.GetAttribute("sourceFileRef");
+                string? sfRef = XmlIdEncoding.Decode(r.GetAttribute("sourceFileRef") ?? string.Empty);
                 if (sfRef is not null && _sourceFileById.TryGetValue(sfRef, out var sf)) p.SourceFile = sf;
 
                 if (MzmlXml.MoveToFirstChildElement(r))
@@ -588,7 +588,7 @@ public sealed class MzmlReader
         // Parse cvParams first (keep them on a temp ParamContainer) so we can decide int vs double.
         var tempParams = new ParamContainer();
         string? base64 = null;
-        string? dpRef = r.GetAttribute("dataProcessingRef");
+        string? dpRef = XmlIdEncoding.Decode(r.GetAttribute("dataProcessingRef") ?? string.Empty);
         DataProcessing? dp = null;
         if (dpRef is not null) _dpById.TryGetValue(dpRef, out dp);
 
@@ -670,7 +670,7 @@ public sealed class MzmlReader
     private void ReadChromatogramList(XmlReader r, MSData msd)
     {
         var list = new ChromatogramListSimple();
-        string? dpRef = r.GetAttribute("defaultDataProcessingRef");
+        string? dpRef = XmlIdEncoding.Decode(r.GetAttribute("defaultDataProcessingRef") ?? string.Empty);
         if (dpRef is not null && _dpById.TryGetValue(dpRef, out var dp))
             list.Dp = dp;
 
@@ -691,10 +691,10 @@ public sealed class MzmlReader
         var chrom = new Chromatogram
         {
             Index = int.Parse(r.GetAttribute("index") ?? "0", CultureInfo.InvariantCulture),
-            Id = r.GetAttribute("id") ?? string.Empty,
+            Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty,
             DefaultArrayLength = int.Parse(r.GetAttribute("defaultArrayLength") ?? "0", CultureInfo.InvariantCulture),
         };
-        string? dpRef = r.GetAttribute("dataProcessingRef");
+        string? dpRef = XmlIdEncoding.Decode(r.GetAttribute("dataProcessingRef") ?? string.Empty);
         if (dpRef is not null && _dpById.TryGetValue(dpRef, out var dp)) chrom.DataProcessing = dp;
 
         if (!MzmlXml.MoveToFirstChildElement(r)) { r.Read(); return chrom; }
@@ -718,8 +718,8 @@ public sealed class MzmlReader
     private void ReadChromatogramPrecursor(XmlReader r, Precursor p)
     {
         p.ExternalSpectrumId = r.GetAttribute("externalSpectrumID") ?? string.Empty;
-        p.SpectrumId = r.GetAttribute("spectrumRef") ?? string.Empty;
-        string? sfRef = r.GetAttribute("sourceFileRef");
+        p.SpectrumId = XmlIdEncoding.Decode(r.GetAttribute("spectrumRef") ?? string.Empty) ?? string.Empty;
+        string? sfRef = XmlIdEncoding.Decode(r.GetAttribute("sourceFileRef") ?? string.Empty);
         if (sfRef is not null && _sourceFileById.TryGetValue(sfRef, out var sf)) p.SourceFile = sf;
 
         if (!MzmlXml.MoveToFirstChildElement(r)) { r.Read(); return; }
