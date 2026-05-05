@@ -34,7 +34,7 @@ namespace pwiz.SkylineTestUtil
     /// recording its exception text in <see cref="Program.TestExceptions"/>.
     ///
     /// Why: A ThreadExceptionDialog can appear when WinForms catches an exception inside a
-    /// reentrant WndProc dispatch (e.g. <see cref="Form.WmClose"/> calling
+    /// reentrant WndProc dispatch (e.g. Form.WmClose calling
     /// <see cref="EventWaitHandle.Set"/> on a disposed SafeWaitHandle during teardown). When
     /// that happens, <see cref="Application.ThreadException"/> is sometimes bypassed and the
     /// dialog appears anyway, blocking the UI thread in a nested message loop.
