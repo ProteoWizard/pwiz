@@ -121,10 +121,10 @@ public sealed class ShimadzuRawData : IDisposable
             }
             catch { /* mirrors cpp: tolerate failure */ }
 
-            // Build segment / event topology and discover ScanCount + msLevels by walking
-            // each (segment, event) and asking the SDK for the highest scan number reachable
-            // before endTime. cpp ShimadzuReader.cpp:244-292.
-            var chromatogramMng = _dataObject.MS.Chromatogram;
+            // Warm the SDK before any chromatogram-side calls. cpp does the same. The SDK's
+            // Q-TOF backend (Shimadzu.LabSolutions.IO.MassRawData.Qtfl.QtflRawDataMain) needs
+            // this priming on .NET 8 — without it MassChromatogramMng.SegmentCount throws
+            // RuntimeBinderException on a null inner field.
             try
             {
                 var dummySpectrum = new ShimadzuIO.Generic.MassSpectrumObject();
@@ -132,20 +132,43 @@ public sealed class ShimadzuRawData : IDisposable
             }
             catch { /* warming the SDK; cpp does the same */ }
 
-            int startTime, endTime;
-            _dataObject.MS.Parameters.GetAnalysisTime(out startTime, out endTime, 0);
+            int endTime = 0;
+            try
+            {
+                int startTime;
+                _dataObject.MS.Parameters.GetAnalysisTime(out startTime, out endTime, 0);
+            }
+            catch { /* on SDK failure, leave endTime=0; RetTimeToScan will return E_INVALIDARG and we'll fall back */ }
 
-            SegmentCount = chromatogramMng.SegmentCount;
+            // Build segment / event topology from the EventInfo list we already populated.
+            // cpp uses MS.Chromatogram.SegmentCount + EventCount(seg) + GetEventNo(seg, j) for
+            // the same purpose, but those route through QtflRawDataMain which throws on .NET 8
+            // for Q-TOF files (TeamCity reproduction; local sometimes works because of process
+            // state). The EventInfo list carries each event's Segment + Event number, which is
+            // all we actually need — the chromatogramMng calls only added an *order* within a
+            // segment that the rest of the wrapper never depends on.
+            var segmentToEvents = new SortedDictionary<short, SortedSet<short>>();
+            foreach (var evt in _eventInfo.Values)
+            {
+                if (evt.Segment <= 0) continue;
+                if (!segmentToEvents.TryGetValue(evt.Segment, out var set))
+                    segmentToEvents[evt.Segment] = set = new SortedSet<short>();
+                set.Add(evt.Event);
+            }
+            SegmentCount = segmentToEvents.Count == 0 ? 0 : segmentToEvents.Keys.Max();
+
             uint lastScanNumber = 0;
+            // Materialize segments 1..SegmentCount in order so empty segments still get an entry
+            // (matches cpp which iterates by segment index).
             for (short seg = 1; seg <= SegmentCount; seg++)
             {
                 var eventNumbers = new List<short>();
-                short eventCount = chromatogramMng.EventCount(seg);
-                for (short j = 1; j <= eventCount; j++)
-                {
-                    short eventNo = chromatogramMng.GetEventNo(seg, j);
-                    eventNumbers.Add(eventNo);
+                if (segmentToEvents.TryGetValue(seg, out var eventSet))
+                    eventNumbers.AddRange(eventSet);
+                _eventNumbersBySegment.Add(eventNumbers);
 
+                foreach (short eventNo in eventNumbers)
+                {
                     var info = TryGetEventInfo(eventNo);
                     if (info is null) continue;
                     if (!srmAsSpectra && info.AnalysisMode == ShimadzuIO.Generic.AcqModes.MRM)
@@ -170,7 +193,6 @@ public sealed class ShimadzuRawData : IDisposable
                     if (eventLastScanNumber > lastScanNumber)
                         lastScanNumber = eventLastScanNumber;
                 }
-                _eventNumbersBySegment.Add(eventNumbers);
             }
             ScanCount = (int)lastScanNumber;
 
