@@ -378,7 +378,18 @@ namespace pwiz.Skyline.EditUI
                 return false;
             }
 
-            FilterPages = FilterPages.ReplaceClause(CurrentPageIndex, currentFilter);
+            if (CurrentPageIndex == FilterPages.Pages.Count)
+            {
+                if (currentFilter.FilterSpecs.Any(spec => spec.Operation != FilterOperations.OP_HAS_ANY_VALUE))
+                {
+                    FilterPages = new FilterPages(FilterPages.Pages.Append(SpectrumClassFilter.GenericFilterPage),
+                        FilterPages.Clauses.Append(currentFilter));
+                }
+            }
+            else
+            {
+                FilterPages = FilterPages.ReplaceClause(CurrentPageIndex, currentFilter);
+            }
             return true;
         }
 
@@ -438,6 +449,45 @@ namespace pwiz.Skyline.EditUI
             }
 
             throw new ArgumentException(@"Invalid property path " + propertyPath);
+        }
+
+        private void dataGridViewEx1_CellErrorTextNeeded(object sender, DataGridViewCellErrorTextNeededEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= _rowList.Count)
+            {
+                return;
+            }
+
+            if (e.ColumnIndex == valueColumn.Index)
+            {
+                var row = _rowList[e.RowIndex];
+                if (string.IsNullOrEmpty(row.Property))
+                {
+                    return;
+                }
+                if (!_propertyColumns.TryGetValue(row.Property, out var propertyColumnDescriptor))
+                {
+                    return;
+                }
+
+                var filterOperation = FilterOperations.ListOperations()
+                    .FirstOrDefault(op => op.DisplayName == row.Operation);
+                if (filterOperation == null || filterOperation == FilterOperations.OP_HAS_ANY_VALUE)
+                {
+                    return;
+                }
+
+                try
+                {
+                    FilterPredicate.Parse(_rootColumn.DataSchema, propertyColumnDescriptor.PropertyType,
+                        filterOperation,
+                        row.Value);
+                }
+                catch (Exception ex)
+                {
+                    e.ErrorText = ex.Message;
+                }
+            }
         }
     }
 }

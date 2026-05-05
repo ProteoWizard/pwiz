@@ -77,7 +77,7 @@ namespace pwiz.Common.DataBinding.Filtering
         public FilterPages ReplaceClause(int pageIndex, FilterClause clause)
         {
             return ChangeProp(ImClone(this), im =>
-                im.Clauses = pageIndex == im.Clauses.Count ? im.Clauses.Append(clause).ToImmutable() : im.Clauses.ReplaceAt(pageIndex, clause)
+                im.Clauses = im.Clauses.ReplaceAt(pageIndex, clause)
             );
         }
 

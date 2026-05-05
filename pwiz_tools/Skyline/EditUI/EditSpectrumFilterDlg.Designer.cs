@@ -39,6 +39,9 @@ namespace pwiz.Skyline.EditUI
             this.btnOk = new System.Windows.Forms.Button();
             this.panelClauses = new System.Windows.Forms.Panel();
             this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.valueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.toolStripFilter = new System.Windows.Forms.ToolStrip();
             this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
             this.lblDescription = new System.Windows.Forms.Label();
@@ -48,9 +51,6 @@ namespace pwiz.Skyline.EditUI
             this.tabPageNewAlternative = new System.Windows.Forms.TabPage();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.buttonPanel = new System.Windows.Forms.Panel();
-            this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.valueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelClauses.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.toolStripFilter.SuspendLayout();
@@ -129,8 +129,34 @@ namespace pwiz.Skyline.EditUI
             dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridViewEx1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            this.dataGridViewEx1.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridViewEx1_CellErrorTextNeeded);
             this.dataGridViewEx1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewEx1_DataError);
             this.dataGridViewEx1.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewEx1_EditingControlShowing);
+            // 
+            // propertyColumn
+            // 
+            this.propertyColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.propertyColumn.DataPropertyName = "Property";
+            resources.ApplyResources(this.propertyColumn, "propertyColumn");
+            this.propertyColumn.Name = "propertyColumn";
+            this.propertyColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.propertyColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // operationColumn
+            // 
+            this.operationColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.operationColumn.DataPropertyName = "Operation";
+            resources.ApplyResources(this.operationColumn, "operationColumn");
+            this.operationColumn.Name = "operationColumn";
+            this.operationColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.operationColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // valueColumn
+            // 
+            this.valueColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.valueColumn.DataPropertyName = "Value";
+            resources.ApplyResources(this.valueColumn, "valueColumn");
+            this.valueColumn.Name = "valueColumn";
             // 
             // toolStripFilter
             // 
@@ -189,31 +215,6 @@ namespace pwiz.Skyline.EditUI
             this.buttonPanel.Controls.Add(this.btnCancel);
             resources.ApplyResources(this.buttonPanel, "buttonPanel");
             this.buttonPanel.Name = "buttonPanel";
-            // 
-            // propertyColumn
-            // 
-            this.propertyColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.propertyColumn.DataPropertyName = "Property";
-            resources.ApplyResources(this.propertyColumn, "propertyColumn");
-            this.propertyColumn.Name = "propertyColumn";
-            this.propertyColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.propertyColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // operationColumn
-            // 
-            this.operationColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.operationColumn.DataPropertyName = "Operation";
-            resources.ApplyResources(this.operationColumn, "operationColumn");
-            this.operationColumn.Name = "operationColumn";
-            this.operationColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.operationColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // valueColumn
-            // 
-            this.valueColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.valueColumn.DataPropertyName = "Value";
-            resources.ApplyResources(this.valueColumn, "valueColumn");
-            this.valueColumn.Name = "valueColumn";
             // 
             // EditSpectrumFilterDlg
             // 
