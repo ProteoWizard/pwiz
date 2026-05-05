@@ -127,6 +127,45 @@ public sealed class ReaderConfig
     public bool AllowMsMsWithoutPrecursor { get; set; }
 
     /// <summary>
+    /// When true (default, matches cpp), if the vendor file's acquisition timestamp doesn't
+    /// carry a time zone the reader treats the wall-clock value as if it had been recorded in
+    /// the host machine's local time and converts to UTC for the emitted <c>startTimeStamp</c>.
+    /// When false, the reader treats the unknown-TZ timestamp as already being UTC.
+    /// Port of <c>pwiz::msdata::Reader::Config::adjustUnknownTimeZonesToHostTimeZone</c>
+    /// (default <c>true</c> in <c>Reader.cpp:48</c>). The vendor harness flips this off so
+    /// reference mzMLs don't drift with the build agent's time zone.
+    /// </summary>
+    public bool AdjustUnknownTimeZonesToHostTimeZone { get; set; } = true;
+
+    /// <summary>
+    /// Encodes <paramref name="sdkDate"/> as an mzML <c>startTimeStamp</c> attribute string
+    /// (<c>YYYY-MM-DDTHH:MM:SSZ</c>), applying the cpp-equivalent host-tz adjustment when
+    /// <see cref="AdjustUnknownTimeZonesToHostTimeZone"/> is set. Returns <c>null</c> for the
+    /// default <see cref="DateTime"/>.
+    /// </summary>
+    /// <remarks>
+    /// Mirrors cpp <c>ShimadzuReader.cpp:365-388</c> / <c>WiffFile.cpp::getSampleAcquisitionTime</c>:
+    /// take the SDK's <see cref="DateTime"/> (typically <c>Kind=Local</c> on the host), convert
+    /// to UTC via <see cref="DateTime.ToUniversalTime"/>, and — if the flag is set — add
+    /// <c>universal_time - local_time</c> back, producing the local wall-clock value tagged
+    /// with a <c>Z</c> suffix. cpp's logic is questionable as a "real" UTC value but it's the
+    /// canonical msconvert behavior, so we match byte-for-byte.
+    /// </remarks>
+    public string? FormatStartTimeStamp(DateTime sdkDate)
+    {
+        if (sdkDate == default) return null;
+        DateTime utc = sdkDate.ToUniversalTime();
+        if (AdjustUnknownTimeZonesToHostTimeZone)
+        {
+            // GetUtcOffset is local-minus-UTC (e.g. -04:00 on EDT). Subtracting a negative
+            // value adds, mirroring cpp's `pt + (universal_time - local_time)`.
+            TimeSpan localOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
+            utc = utc.Subtract(localOffset);
+        }
+        return $"{utc.Year:D4}-{utc.Month:D2}-{utc.Day:D2}T{utc.Hour:D2}:{utc.Minute:D2}:{utc.Second:D2}Z";
+    }
+
+    /// <summary>
     /// For multi-run input files (multi-sample WIFF, multi-run MGF), the zero-based run index
     /// to load. Default 0 = first run. Port of pwiz cpp's <c>runIndex</c> parameter on
     /// <c>MSDataFile::read</c> (carried as a config field here so it round-trips through

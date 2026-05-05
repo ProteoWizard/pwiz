@@ -63,8 +63,12 @@ public sealed class ShimadzuRawData : IDisposable
         }
     }
 
-    /// <summary>Acquisition timestamp (UTC).</summary>
-    public DateTime AnalysisDateUtc { get; private set; }
+    /// <summary>Raw acquisition timestamp from the SDK, with <see cref="DateTime.Kind"/> preserved
+    /// so the consumer can apply the optional host-time-zone adjustment via
+    /// <c>ReaderConfig.FormatStartTimeStamp</c>. May be <see cref="DateTime.MinValue"/> if the
+    /// SDK didn't populate <c>SampleInfo.AnalysisDate</c> (regression under .NET 8) or its
+    /// fallback <c>FilePropTag.GeneratedDateTime</c>.</summary>
+    public DateTime AnalysisDateRaw { get; private set; }
 
     /// <summary>Opens <paramref name="lcdPath"/>. Must be a .lcd file.</summary>
     /// <param name="lcdPath">Path to the Shimadzu .lcd file.</param>
@@ -88,22 +92,20 @@ public sealed class ShimadzuRawData : IDisposable
             try { SystemName = _dataObject.IO.SystemName() ?? string.Empty; }
             catch { SystemName = string.Empty; }
 
-            // cpp reads SampleInfo.AnalysisDate.ToUniversalTime() (ShimadzuReader.cpp:370). Under
-            // .NET 8 the C# SDK leaves SampleInfo.AnalysisDate at DateTime.MinValue (its loader
-            // depends on BinaryFormatter paths whose default behavior changed in .NET Core), so
-            // also try FilePropTag.GeneratedDateTime — the file-level "generated" timestamp the
-            // SDK does populate. The cpp reference mzMLs were written with the cpp value (often
-            // tens of seconds off from GeneratedDateTime), so the Shimadzu test config sets
-            // IgnoreStartTimeStamp; keeping the fallback means production msconvert-sharp output
-            // still has *a* timestamp instead of nothing.
+            // cpp reads SampleInfo.AnalysisDate (ShimadzuReader.cpp:370). Under .NET 8 the C#
+            // SDK leaves it at DateTime.MinValue (loader depends on BinaryFormatter paths whose
+            // default behavior changed in .NET Core), so fall back to FilePropTag.GeneratedDateTime
+            // — the file-level "generated" timestamp the SDK does populate. The two are typically
+            // tens of seconds apart on the same .lcd; the harness ignores startTimeStamp diffs
+            // so the reference mzMLs don't drift either way.
             try
             {
                 var sdkDate = _dataObject.SampleInfo.AnalysisDate;
                 if (sdkDate == default)
                     sdkDate = _dataObject.FilePropTag.GeneratedDateTime;
-                AnalysisDateUtc = sdkDate == default ? default : sdkDate.ToUniversalTime();
+                AnalysisDateRaw = sdkDate;
             }
-            catch { AnalysisDateUtc = default; }
+            catch { AnalysisDateRaw = default; }
 
             // Build event-info map (event, channel) -> MassEventInfo. cpp ShimadzuReader.cpp:227-241.
             try

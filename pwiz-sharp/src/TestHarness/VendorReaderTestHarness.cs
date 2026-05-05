@@ -216,6 +216,9 @@ public static class VendorReaderTestHarness
             CombineIonMobilitySpectra = config.CombineIonMobilitySpectra,
             SimAsSpectra = config.SimAsSpectra,
             SrmAsSpectra = config.SrmAsSpectra,
+            // cpp VendorReaderTestHarness.cpp:343 sets adjustUnknownTimeZonesToHostTimeZone=false
+            // so reference mzMLs don't pick up the build agent's local TZ. Mirror that here.
+            AdjustUnknownTimeZonesToHostTimeZone = false,
             SortAndJitter = config.SortAndJitter,
             PeakPicking = config.PeakPicking,
             DdaProcessing = config.DdaProcessing,

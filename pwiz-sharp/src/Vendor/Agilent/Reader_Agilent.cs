@@ -155,11 +155,12 @@ public sealed class Reader_Agilent : IReader
                     continue;
 
                 string filename = Path.GetFileName(filePath);
-                // cpp emits sourceFile.location with native separators (backslashes on Windows
-                // via boost::filesystem::path::string()). Don't translate to forward slashes —
-                // both forms are valid file:// URIs and matching cpp keeps msdiff clean.
+                // cpp Reader_Agilent.cpp:176 uses BFS_GENERIC_STRING (forward slashes) where
+                // Shimadzu / Sciex / Bruker / Thermo / Waters use native (backslashes). The
+                // reference mzMLs were written with forward slashes for this reader, so keep
+                // the slash translation here. The choice is per-reader in cpp; we mirror it.
                 var srcFile = new SourceFile(filename, filename,
-                    "file:///" + Path.GetFullPath(acqDataPath));
+                    "file:///" + Path.GetFullPath(acqDataPath).Replace('\\', '/'));
                 srcFile.Set(CVID.MS_Agilent_MassHunter_nativeID_format);
                 srcFile.Set(CVID.MS_Agilent_MassHunter_format);
                 result.FileDescription.SourceFiles.Add(srcFile);

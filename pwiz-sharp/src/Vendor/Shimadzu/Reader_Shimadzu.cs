@@ -58,8 +58,9 @@ public sealed class Reader_Shimadzu : IReader
 #else
         result.CVs.AddRange(MSData.DefaultCVList);
 
-        bool srmAsSpectra = config?.SrmAsSpectra ?? false;
-        bool globalChromsAreMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
+        var effectiveConfig = config ?? new ReaderConfig();
+        bool srmAsSpectra = effectiveConfig.SrmAsSpectra;
+        bool globalChromsAreMs1Only = effectiveConfig.GlobalChromatogramsAreMs1Only;
 
         var raw = new ShimadzuRawData(filename, srmAsSpectra);
 
@@ -74,7 +75,7 @@ public sealed class Reader_Shimadzu : IReader
 
         try
         {
-            FillMetadata(result, filename, raw, srmAsSpectra, globalChromsAreMs1Only);
+            FillMetadata(result, filename, raw, srmAsSpectra, globalChromsAreMs1Only, effectiveConfig);
         }
         catch
         {
@@ -86,7 +87,7 @@ public sealed class Reader_Shimadzu : IReader
 
 #if !NO_VENDOR_SUPPORT
     private static void FillMetadata(MSData result, string lcdPath, ShimadzuRawData raw,
-        bool srmAsSpectra, bool globalChromsAreMs1Only)
+        bool srmAsSpectra, bool globalChromsAreMs1Only, ReaderConfig config)
     {
         string fileName = Path.GetFileName(lcdPath);
         string runId = Path.GetFileNameWithoutExtension(fileName);
@@ -145,13 +146,11 @@ public sealed class Reader_Shimadzu : IReader
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
-        // Acquisition timestamp.
-        if (raw.AnalysisDateUtc != default)
-        {
-            var t = raw.AnalysisDateUtc;
-            result.Run.StartTimeStamp =
-                $"{t.Year:D4}-{t.Month:D2}-{t.Day:D2}T{t.Hour:D2}:{t.Minute:D2}:{t.Second:D2}Z";
-        }
+        // Acquisition timestamp. Encoding (incl. the cpp-equivalent host-tz adjustment) lives
+        // on ReaderConfig so every vendor reader can share the same logic + flag wiring.
+        string? startTime = config.FormatStartTimeStamp(raw.AnalysisDateRaw);
+        if (startTime is not null)
+            result.Run.StartTimeStamp = startTime;
 
         // Spectrum list owns the raw handle; chromatogram list shares without owning so a single
         // Dispose chain releases the SDK file. cpp uses the same shared_ptr split.
