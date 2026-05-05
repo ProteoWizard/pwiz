@@ -39,10 +39,15 @@ namespace pwiz.Skyline.Model.Results
         private SortedBlockedList<float> Times { get; set; }
         private BlockedList<float> MassErrors { get; set; }
         private BlockedList<int> Scans { get; set; }
+        // True when this collector owns its own time array (single-time mode).
+        // Distinct from "Times != null", which also becomes true after SetTimes
+        // attaches a shared time list in grouped/shared mode.
+        private readonly bool _ownsTimes;
 
         public ChromCollector(int statusId, bool hasTimes, bool hasMassErrors)
         {
             StatusId = statusId;
+            _ownsTimes = hasTimes;
             Intensities = new BlockedList<float>();
             if (hasTimes)
                 Times = new SortedBlockedList<float>();
@@ -78,7 +83,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void AddPoint(int chromatogramIndex, float intensity, float? massError, BlockWriter writer)
         {
-            if (Times != null && Intensities.Count >= Times.Count)
+            if (_ownsTimes && Intensities.Count >= Times.Count)
                 return;
             if (MassErrors != null)
                 // ReSharper disable once PossibleInvalidOperationException
@@ -94,7 +99,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void FillZeroes(int chromatogramIndex, int count, BlockWriter writer)
         {
-            if (Times != null)
+            if (_ownsTimes)
                 return;
             if (MassErrors != null)
                 MassErrors.FillZeroes(chromatogramIndex, count, writer);
