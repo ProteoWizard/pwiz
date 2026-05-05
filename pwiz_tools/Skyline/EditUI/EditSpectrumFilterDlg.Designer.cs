@@ -39,9 +39,6 @@ namespace pwiz.Skyline.EditUI
             this.btnOk = new System.Windows.Forms.Button();
             this.panelClauses = new System.Windows.Forms.Panel();
             this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.valueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.toolStripFilter = new System.Windows.Forms.ToolStrip();
             this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
             this.lblDescription = new System.Windows.Forms.Label();
@@ -51,6 +48,9 @@ namespace pwiz.Skyline.EditUI
             this.tabPageNewAlternative = new System.Windows.Forms.TabPage();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.buttonPanel = new System.Windows.Forms.Panel();
+            this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.valueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelClauses.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.toolStripFilter.SuspendLayout();
@@ -132,28 +132,6 @@ namespace pwiz.Skyline.EditUI
             this.dataGridViewEx1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewEx1_DataError);
             this.dataGridViewEx1.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewEx1_EditingControlShowing);
             // 
-            // propertyColumn
-            // 
-            this.propertyColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.propertyColumn.DataPropertyName = "Property";
-            this.propertyColumn.Name = "propertyColumn";
-            this.propertyColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.propertyColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // operationColumn
-            // 
-            this.operationColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.operationColumn.DataPropertyName = "Operation";
-            this.operationColumn.Name = "operationColumn";
-            this.operationColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.operationColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // valueColumn
-            // 
-            this.valueColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.valueColumn.DataPropertyName = "Value";
-            this.valueColumn.Name = "valueColumn";
-            // 
             // toolStripFilter
             // 
             resources.ApplyResources(this.toolStripFilter, "toolStripFilter");
@@ -212,6 +190,31 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.buttonPanel, "buttonPanel");
             this.buttonPanel.Name = "buttonPanel";
             // 
+            // propertyColumn
+            // 
+            this.propertyColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.propertyColumn.DataPropertyName = "Property";
+            resources.ApplyResources(this.propertyColumn, "propertyColumn");
+            this.propertyColumn.Name = "propertyColumn";
+            this.propertyColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.propertyColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // operationColumn
+            // 
+            this.operationColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.operationColumn.DataPropertyName = "Operation";
+            resources.ApplyResources(this.operationColumn, "operationColumn");
+            this.operationColumn.Name = "operationColumn";
+            this.operationColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.operationColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // valueColumn
+            // 
+            this.valueColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.valueColumn.DataPropertyName = "Value";
+            resources.ApplyResources(this.valueColumn, "valueColumn");
+            this.valueColumn.Name = "valueColumn";
+            // 
             // EditSpectrumFilterDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -249,9 +252,6 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.Panel panelClauses;
         private System.Windows.Forms.ToolStrip toolStripFilter;
         private System.Windows.Forms.ToolStripButton btnDeleteFilter;
-        private System.Windows.Forms.DataGridViewComboBoxColumn propertyColumn;
-        private System.Windows.Forms.DataGridViewComboBoxColumn operationColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn valueColumn;
         private System.Windows.Forms.Label lblDescription;
         private System.Windows.Forms.Panel panelEditor;
         private System.Windows.Forms.TabControl tabClauses;
@@ -259,5 +259,8 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.TabPage tabPageNewAlternative;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Panel buttonPanel;
+        private System.Windows.Forms.DataGridViewComboBoxColumn propertyColumn;
+        private System.Windows.Forms.DataGridViewComboBoxColumn operationColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn valueColumn;
     }
 }
