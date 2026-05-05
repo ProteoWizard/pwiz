@@ -274,7 +274,16 @@ namespace pwiz.Common.DataBinding.Filtering
 
         protected override bool ValueEqualsOperand(double value, PrecisionNumber operand)
         {
-            return operand.EqualsWithinPrecision(value);
+            var doubleOperand = operand.ToDouble();
+            if (Equals(value, doubleOperand))
+            {
+                return true;
+            }
+
+            // Multiply the tolerance by ten ninths so that the tolerance is effective 0.555555...
+            // That way, we match any number which would be within 0.5 when rounded to some precision
+            var tolerance = (double) (operand.Tolerance * 10 / 9);
+            return value >= doubleOperand - tolerance && value <= doubleOperand + tolerance;
         }
 
         protected override bool TryConvertColumnValue(object value, out double columnValue)
