@@ -1,6 +1,7 @@
 #if !NO_VENDOR_SUPPORT
 using Agilent.MassSpectrometry.DataAnalysis;
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
 
@@ -43,15 +44,16 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
         CreateIndex();
     }
 
-    private enum ChromKind { Tic, AbsorptionSignal }
+    private enum ChromKind { Tic, AbsorptionSignal, Srm, Sim }
 
     private sealed class IndexEntry : ChromatogramIdentity
     {
         public ChromKind Kind;
         public CVID ChromatogramType;
-        public string? DeviceNameAndOrdinal; // null for TIC
-        public string? SignalName;           // null for TIC
-        public IDeviceInfo? Device;          // null for TIC
+        public string? DeviceNameAndOrdinal; // null for TIC / SRM / SIM
+        public string? SignalName;           // null for TIC / SRM / SIM
+        public IDeviceInfo? Device;          // null for TIC / SRM / SIM
+        public int TransitionIndex = -1;     // index into AgilentRawData.Transitions for SRM/SIM
     }
 
     /// <inheritdoc/>
@@ -65,6 +67,43 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
         // TIC always comes first. cpp does the same; the run-level TIC is supported on every
         // Agilent file type with MS data.
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = ChromKind.Tic, ChromatogramType = CVID.MS_TIC_chromatogram });
+
+        // SRM / SIM transitions next (cpp ChromatogramList_Agilent.cpp:266-294 builds the same
+        // order: TIC, then one chromatogram per transition from MassHunterData::getTransitions).
+        // Id format mirrors cpp's boost.spirit.karma generator output:
+        //   SRM: "<polarity>SRM SIC Q1=<q1> Q3=<q3> start=<t> end=<t>"
+        //   SIM: "SIM SIC Q1=<q1> start=<t> end=<t>"
+        var transitions = _raw.Transitions;
+        for (int i = 0; i < transitions.Count; i++)
+        {
+            var t = transitions[i];
+            string id;
+            CVID type;
+            if (t.Type == AgTransitionType.Mrm)
+            {
+                string pol = t.Polarity switch
+                {
+                    AgTransitionPolarity.Positive => "+ ",
+                    AgTransitionPolarity.Negative => "- ",
+                    _ => string.Empty,
+                };
+                id = $"{pol}SRM SIC Q1={PwizFloat.ToKarmaNoSci(t.Q1)} Q3={PwizFloat.ToKarmaNoSci(t.Q3)} start={PwizFloat.ToKarmaNoSci(t.TimeStart)} end={PwizFloat.ToKarmaNoSci(t.TimeEnd)}";
+                type = CVID.MS_SRM_chromatogram;
+            }
+            else
+            {
+                id = $"SIM SIC Q1={PwizFloat.ToKarmaNoSci(t.Q1)} start={PwizFloat.ToKarmaNoSci(t.TimeStart)} end={PwizFloat.ToKarmaNoSci(t.TimeEnd)}";
+                type = CVID.MS_SIM_chromatogram;
+            }
+            _index.Add(new IndexEntry
+            {
+                Index = _index.Count,
+                Id = id,
+                Kind = t.Type == AgTransitionType.Mrm ? ChromKind.Srm : ChromKind.Sim,
+                ChromatogramType = type,
+                TransitionIndex = i,
+            });
+        }
 
         // Non-MS signals: UV/DAD/pressure/flow chromatograms. cpp pairs each signal's
         // ISignalInfo (used to fetch the data) with the corresponding SignalDescription pulled
@@ -178,9 +217,72 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
             case ChromKind.AbsorptionSignal:
                 FillSignal(c, ie, getBinaryData);
                 break;
+
+            case ChromKind.Srm:
+            case ChromKind.Sim:
+                FillTransition(c, ie, getBinaryData);
+                break;
         }
 
         return c;
+    }
+
+    private void FillTransition(Chromatogram c, IndexEntry ie, bool getBinaryData)
+    {
+        if (ie.TransitionIndex < 0)
+        {
+            c.DefaultArrayLength = 0;
+            return;
+        }
+        var transitions = _raw.Transitions;
+        if (ie.TransitionIndex >= transitions.Count)
+        {
+            c.DefaultArrayLength = 0;
+            return;
+        }
+        var t = transitions[ie.TransitionIndex];
+
+        // Polarity tag mirrors cpp ChromatogramList_Agilent.cpp:139-141 / :174-176.
+        if (t.Polarity == AgTransitionPolarity.Positive) c.Params.Set(CVID.MS_positive_scan);
+        else if (t.Polarity == AgTransitionPolarity.Negative) c.Params.Set(CVID.MS_negative_scan);
+
+        // Precursor / product isolation windows. SRM has both Q1 and Q3 bounds; SIM has Q1
+        // only. cpp also emits MS_CID + collision energy on the precursor activation, but the
+        // collision energy comes from the chromatogram object; we'll wire that in if/when
+        // a fixture surfaces a non-zero CE diff.
+        c.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, t.Q1, CVID.MS_m_z);
+        if (ie.Kind == ChromKind.Srm)
+        {
+            c.Precursor.Activation.Set(CVID.MS_CID);
+            // cpp ChromatogramList_Agilent.cpp:144 — collision energy reads as a unit-less
+            // scalar from the SDK (no unit cvParam attached). Match that.
+            c.Precursor.Activation.Set(CVID.MS_collision_energy, t.CollisionEnergy);
+            c.Product.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, t.Q3, CVID.MS_m_z);
+        }
+
+        // Binary data — pull from the cached chromatogram the SDK returned during transition
+        // discovery. cpp also caches by reference (member array) for the same 50x perf reason.
+        var chrom = _raw.GetTransitionChromatogram(ie.TransitionIndex);
+        if (chrom is null)
+        {
+            c.DefaultArrayLength = 0;
+            return;
+        }
+        var x = chrom.XArray ?? Array.Empty<double>();
+        var y = chrom.YArray ?? Array.Empty<float>();
+        int n = Math.Min(x.Length, y.Length);
+        c.DefaultArrayLength = n;
+        if (getBinaryData && n > 0)
+        {
+            var times = new BinaryDataArray();
+            times.Set(CVID.MS_time_array, "", CVID.UO_minute);
+            for (int i = 0; i < n; i++) times.Data.Add(x[i]);
+            var inten = new BinaryDataArray();
+            inten.Set(CVID.MS_intensity_array, "", CVID.MS_number_of_detector_counts);
+            for (int i = 0; i < n; i++) inten.Data.Add(y[i]);
+            c.BinaryDataArrays.Add(times);
+            c.BinaryDataArrays.Add(inten);
+        }
     }
 
     private void FillTic(Chromatogram c, bool getBinaryData)

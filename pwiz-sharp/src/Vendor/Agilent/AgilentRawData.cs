@@ -223,6 +223,145 @@ public sealed class AgilentRawData : IDisposable
         }
     }
 
+    private List<AgilentTransition>? _transitionsCache;
+    private List<IBDAChromData?>? _transitionChromCache;
+
+    /// <summary>SRM (MultipleReactionMode) and SIM (SelectedIonMonitoring) transitions
+    /// declared by the file. Mirrors cpp <c>MassHunterDataImpl::initTransitions</c> /
+    /// <c>getTransitions</c>: queries the SDK with <c>ChromType.MultipleReactionMode</c>
+    /// then <c>ChromType.SelectedIonMonitoring</c>, builds a transition record from each
+    /// chromatogram's <c>MZOfInterest</c> / <c>MeasuredMassRange</c> / <c>IonPolarity</c>
+    /// / <c>AcquiredTimeRange</c>, and caches both the metadata and the chromatogram
+    /// data (cpp comments that re-fetching SRM data costs a 50x perf hit on large files).
+    /// MRM transitions are emitted before SIM, matching cpp's index ordering.</summary>
+    public IReadOnlyList<AgilentTransition> Transitions
+    {
+        get
+        {
+            if (_transitionsCache is not null) return _transitionsCache;
+            EnsureTransitionsLoaded();
+            return _transitionsCache!;
+        }
+    }
+
+    /// <summary>Returns the cached chromatogram for <paramref name="transitionIndex"/>,
+    /// or null when the SDK didn't return one (defensive — shouldn't happen for valid
+    /// transitions). Index aligns with <see cref="Transitions"/>.</summary>
+    public IBDAChromData? GetTransitionChromatogram(int transitionIndex)
+    {
+        if (_transitionsCache is null) EnsureTransitionsLoaded();
+        if (_transitionChromCache is null || transitionIndex < 0 || transitionIndex >= _transitionChromCache.Count)
+            return null;
+        return _transitionChromCache[transitionIndex];
+    }
+
+    private void EnsureTransitionsLoaded()
+    {
+        // Build (transition, chrom) pairs, then sort matching cpp's `set<Transition>` order
+        // (operator<: type → ionPolarity → Q1 → Q3 → timeStart → timeEnd ascending). Preserving
+        // the chromatogram pointer alongside the transition keeps GetTransitionChromatogram
+        // aligned with the public Transitions list after sort.
+        var staged = new List<(AgilentTransition T, IBDAChromData? C)>();
+        try
+        {
+            // MRM first (cpp does the same ordering — `transitions_.insert(t)` is into a set
+            // sorted by Q1/Q3, but the per-type discovery order matches cpp's array layout).
+            IBDAChromFilter filter = new BDAChromFilter();
+            filter.DoCycleSum = false;
+            filter.ExtractOneChromatogramPerScanSegment = true;
+            filter.ChromatogramType = ChromType.MultipleReactionMode;
+            var mrmChroms = _reader.GetChromatogram(filter);
+            if (mrmChroms is not null)
+            {
+                foreach (var c in mrmChroms)
+                {
+                    if (c.MZOfInterest is null || c.MZOfInterest.Length == 0) continue;
+                    if (c.MeasuredMassRange is null || c.MeasuredMassRange.Length == 0) continue;
+                    var mzRange = c.MZOfInterest[0];
+                    var prodRange = c.MeasuredMassRange[0];
+                    double q1 = mzRange.Start;
+                    double q3 = prodRange.Start;
+                    var pol = c.IonPolarity switch
+                    {
+                        IonPolarity.Positive => AgTransitionPolarity.Positive,
+                        IonPolarity.Negative => AgTransitionPolarity.Negative,
+                        _ => AgTransitionPolarity.Unassigned,
+                    };
+                    double startTime = 0, endTime = 0;
+                    if (c.AcquiredTimeRange is { Length: > 0 })
+                    {
+                        startTime = c.AcquiredTimeRange[0].Start;
+                        endTime = c.AcquiredTimeRange[0].End;
+                    }
+                    staged.Add((new AgilentTransition(
+                        Type: AgTransitionType.Mrm,
+                        Q1: q1, Q3: q3,
+                        Polarity: pol,
+                        TimeStart: startTime, TimeEnd: endTime,
+                        CollisionEnergy: c.CollisionEnergy), c));
+                }
+            }
+
+            // SIM: only Q1 (selection mass) is meaningful; Q3 stays at 0.
+            filter.ChromatogramType = ChromType.SelectedIonMonitoring;
+            var simChroms = _reader.GetChromatogram(filter);
+            if (simChroms is not null)
+            {
+                foreach (var c in simChroms)
+                {
+                    if (c.MeasuredMassRange is null || c.MeasuredMassRange.Length == 0) continue;
+                    double q1 = c.MeasuredMassRange[0].Start;
+                    var pol = c.IonPolarity switch
+                    {
+                        IonPolarity.Positive => AgTransitionPolarity.Positive,
+                        IonPolarity.Negative => AgTransitionPolarity.Negative,
+                        _ => AgTransitionPolarity.Unassigned,
+                    };
+                    double startTime = 0, endTime = 0;
+                    if (c.AcquiredTimeRange is { Length: > 0 })
+                    {
+                        startTime = c.AcquiredTimeRange[0].Start;
+                        endTime = c.AcquiredTimeRange[0].End;
+                    }
+                    staged.Add((new AgilentTransition(
+                        Type: AgTransitionType.Sim,
+                        Q1: q1, Q3: 0,
+                        Polarity: pol,
+                        TimeStart: startTime, TimeEnd: endTime,
+                        CollisionEnergy: 0), c));
+                }
+            }
+        }
+        catch { /* SDK quirks shouldn't take down the whole list */ }
+
+        // cpp Transition::operator< (MassHunterData.cpp:261-279) — type, then polarity, Q1,
+        // Q3, time start, time end ascending.
+        staged.Sort((a, b) =>
+        {
+            int cmp = ((int)a.T.Type).CompareTo((int)b.T.Type);
+            if (cmp != 0) return cmp;
+            cmp = ((int)a.T.Polarity).CompareTo((int)b.T.Polarity);
+            if (cmp != 0) return cmp;
+            cmp = a.T.Q1.CompareTo(b.T.Q1);
+            if (cmp != 0) return cmp;
+            cmp = a.T.Q3.CompareTo(b.T.Q3);
+            if (cmp != 0) return cmp;
+            cmp = a.T.TimeStart.CompareTo(b.T.TimeStart);
+            if (cmp != 0) return cmp;
+            return a.T.TimeEnd.CompareTo(b.T.TimeEnd);
+        });
+
+        var transList = new List<AgilentTransition>(staged.Count);
+        var chromList = new List<IBDAChromData?>(staged.Count);
+        foreach (var (t, c) in staged)
+        {
+            transList.Add(t);
+            chromList.Add(c);
+        }
+        _transitionsCache = transList;
+        _transitionChromCache = chromList;
+    }
+
     /// <summary>The cached DAD time grid (must call <see cref="GetNonMsScanCount"/> at least
     /// once first). Indexed 0..N-1, in minutes.</summary>
     public double[] NonMsScanTimes
@@ -284,3 +423,22 @@ public sealed class AgilentRawData : IDisposable
 /// <summary>One row from <c>AcqData/Devices.xml</c>. <see cref="TypeRaw"/> is the integer
 /// device type as a string (matching the underlying SDK <c>DeviceType</c> enum value).</summary>
 public sealed record AgilentDeviceInfo(string Name, string ModelNumber, string SerialNumber, string TypeRaw);
+
+/// <summary>SRM (multi-reaction) vs SIM (selected-ion-monitoring) transition kind.</summary>
+public enum AgTransitionType { Mrm, Sim }
+
+/// <summary>Mirrors cpp <c>IonPolarity</c> integer values exactly so transition sort order
+/// (which compares polarity numerically per <c>Transition::operator&lt;</c>) matches the
+/// reference. cpp: Positive=0, Negative=1, Unassigned=2.</summary>
+public enum AgTransitionPolarity { Positive = 0, Negative = 1, Unassigned = 2 }
+
+/// <summary>One Agilent SRM/SIM transition. <see cref="Q3"/> is unused for
+/// <see cref="AgTransitionType.Sim"/> (always 0). <see cref="TimeStart"/>/<see cref="TimeEnd"/>
+/// are the segment time range in minutes (0/0 when the SDK doesn't expose one).
+/// <see cref="CollisionEnergy"/> is the activation collision energy in eV (0 for SIM).</summary>
+public sealed record AgilentTransition(
+    AgTransitionType Type,
+    double Q1, double Q3,
+    AgTransitionPolarity Polarity,
+    double TimeStart, double TimeEnd,
+    double CollisionEnergy);

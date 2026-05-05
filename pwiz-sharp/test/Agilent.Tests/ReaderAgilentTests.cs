@@ -93,25 +93,32 @@ public class ReaderAgilentTests
     public void Reader_Agilent_reserpine_MS2sim_010()
     {
         // SIM (selected-ion-monitoring) acquisition. Spectrum list is empty by
-        // default; chromatogram list has one TIC + one SIM transition (cpp).
-        // C# port currently emits TIC only — SIM/SRM transition support pending.
-        Assert.Inconclusive("SRM/SIM transition chromatograms pending — cpp emits 2 vs sharp 1");
+        // default; chromatogram list has TIC + one SIM transition.
+        var ctx = SetUp("reserpine-MS2sim-010.d");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig());
+        ctx.Check();
     }
 
     [TestMethod]
     public void Reader_Agilent_MRM_Neg_C5()
     {
         // MRM acquisition. Spectrum list empty; chromatogram list has TIC + 4
-        // SRM transitions (cpp). C# port currently emits TIC only.
-        Assert.Inconclusive("SRM/SIM transition chromatograms pending — cpp emits 5 vs sharp 1");
+        // SRM transitions, each with Q1/Q3 in the id and collision energy on the
+        // precursor activation.
+        var ctx = SetUp("MRM Neg C5.d");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig());
+        ctx.Check();
     }
 
     [TestMethod]
     public void Reader_Agilent_Thyrxox_5_TS_Diff_Scan_B()
     {
         // Q-TOF with differential scan, 233 spectra + 17 chromatograms (cpp). The
-        // 16 extra chromatograms beyond TIC are device/instrument curves the C#
-        // ChromatogramList_Agilent doesn't surface yet (cpp's getSignals() loop).
+        // 16 chromatograms beyond TIC are device/instrument curves; the C# port
+        // doesn't yet emit those, so this stays Inconclusive until the
+        // getSignals()/InstrumentCurves loop ports.
         Assert.Inconclusive("Device/instrument-curve chromatograms pending — cpp emits 17 vs sharp 1");
     }
 

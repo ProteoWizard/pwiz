@@ -29,6 +29,30 @@ public static class PwizFloat
     /// <summary>Formats <paramref name="value"/> in pwiz's canonical XML form.</summary>
     public static string ToPwizString(double value) => Format(value, Precision);
 
+    /// <summary>Mirrors <c>boost::spirit::karma::nosci</c> double formatting that the cpp
+    /// vendor readers use to build chromatogram IDs (e.g.
+    /// <c>"- SRM SIC Q1=309.0 Q3=228.996 start=0.00005 end=4.505483333"</c>): always fixed
+    /// notation (never scientific), up to 9 fractional digits, trailing zeros stripped past
+    /// the first one — so whole numbers keep the trailing <c>.0</c> and fractional values
+    /// keep just enough digits to be unambiguous. <c>karma::nosci</c> with pwiz's precision
+    /// policy produces this form; the chromatogram reference mzMLs it generated diff per-byte
+    /// against G-format output otherwise.
+    /// Used by ChromatogramList_Agilent (and any future vendor reader that builds composite
+    /// chromatogram IDs from per-transition floats).</summary>
+    public static string ToKarmaNoSci(double v)
+    {
+        if (v == 0) return "0.0";
+        // Always fixed notation — cpp's karma::nosci suppresses scientific even for very
+        // small magnitudes (0.00005 stays "0.00005", not "5E-05"). 9 fractional digits
+        // matches the precision the reference mzMLs were generated with.
+        string fixedStr = v.ToString("F9", CultureInfo.InvariantCulture);
+        int dot = fixedStr.IndexOf('.');
+        if (dot < 0) return fixedStr + ".0";
+        int end = fixedStr.Length;
+        while (end > dot + 2 && fixedStr[end - 1] == '0') end--;
+        return fixedStr[..end];
+    }
+
     private static string Format(double value, int precision)
     {
         if (double.IsNaN(value)) return "nan";
