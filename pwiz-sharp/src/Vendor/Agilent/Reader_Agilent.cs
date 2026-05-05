@@ -94,39 +94,52 @@ public sealed class Reader_Agilent : IReader
         // fileDescription/fileContent: per-spectrum-type CV terms based on actual scan content,
         // plus a representation tag (centroid / profile / mixed) from the storage mode, plus
         // chromatogram CV terms for TIC / SIM / SRM. Mirrors cpp Reader_Agilent::fillInMetadata.
-        bool hasMs1 = false, hasMsn = false;
-        for (int i = 0, end = (int)raw.TotalScansPresent; i < end; i++)
-        {
-            int level;
-            try { level = raw.GetScanRecord(i).MSLevel == global::Agilent.MassSpectrometry.DataAnalysis.MSLevel.MSMS ? 2 : 1; }
-            catch { continue; }
-            if (level == 1) hasMs1 = true;
-            else if (level >= 2) hasMsn = true;
-            if (hasMs1 && hasMsn) break;
-        }
-        if (hasMs1) result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum);
-        if (hasMsn) result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
+        // cpp Reader_Agilent.cpp:124-129 + 154-157 reads scan types from the file's bitmask
+        // and emits one fileContent CVID per type seen. Match exactly so e.g. NL files don't
+        // misclassify as plain MSn, MRM/SIM files declare their chromatogram types, etc.
+        var scanTypes = raw.ScanTypes;
+        bool anySpectrumScanType = false;
+        if (scanTypes.HasFlag(global::Agilent.MassSpectrometry.DataAnalysis.MSScanType.Scan))
+        { result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum); anySpectrumScanType = true; }
+        if (scanTypes.HasFlag(global::Agilent.MassSpectrometry.DataAnalysis.MSScanType.ProductIon))
+        { result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum); anySpectrumScanType = true; }
+        if (scanTypes.HasFlag(global::Agilent.MassSpectrometry.DataAnalysis.MSScanType.PrecursorIon))
+        { result.FileDescription.FileContent.Set(CVID.MS_precursor_ion_spectrum); anySpectrumScanType = true; }
+        if (scanTypes.HasFlag(global::Agilent.MassSpectrometry.DataAnalysis.MSScanType.NeutralLoss))
+        { result.FileDescription.FileContent.Set(CVID.MS_constant_neutral_loss_spectrum); anySpectrumScanType = true; }
+        if (scanTypes.HasFlag(global::Agilent.MassSpectrometry.DataAnalysis.MSScanType.NeutralGain))
+        { result.FileDescription.FileContent.Set(CVID.MS_constant_neutral_gain_spectrum); anySpectrumScanType = true; }
 
         // Spectrum representation: storage mode tells us whether the file has profile,
-        // centroid, or both. cpp uses MSStorageMode_ProfileSpectrum / _PeakDetectedSpectrum /
-        // _Mixed; the SDK enum has the same shape.
-        try
+        // centroid, or both. cpp Reader_Agilent.cpp:132 guards this on fileContent being
+        // non-empty — the storage tag only describes the spectrum content, so for chromatogram-
+        // only files (MRM/SIM that declare no MS scan types) it must be skipped, otherwise
+        // we end up with fileContent listing centroid_spectrum + SRM_chromatogram and no
+        // matching MS scan-type cvParam.
+        if (anySpectrumScanType)
         {
-            var storage = raw.MSScanFileInformation.SpectraFormat;
-            if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.Mixed)
+            try
             {
-                result.FileDescription.FileContent.Set(CVID.MS_centroid_spectrum);
-                result.FileDescription.FileContent.Set(CVID.MS_Continuum_Mass_Spectrum);
+                var storage = raw.MSScanFileInformation.SpectraFormat;
+                if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.Mixed)
+                {
+                    result.FileDescription.FileContent.Set(CVID.MS_centroid_spectrum);
+                    result.FileDescription.FileContent.Set(CVID.MS_profile_spectrum);
+                }
+                else if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.ProfileSpectrum)
+                    result.FileDescription.FileContent.Set(CVID.MS_profile_spectrum);
+                else if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.PeakDetectedSpectrum)
+                    result.FileDescription.FileContent.Set(CVID.MS_centroid_spectrum);
             }
-            else if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.ProfileSpectrum)
-                result.FileDescription.FileContent.Set(CVID.MS_Continuum_Mass_Spectrum);
-            else if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.PeakDetectedSpectrum)
-                result.FileDescription.FileContent.Set(CVID.MS_centroid_spectrum);
+            catch { /* SDK may not expose SpectraFormat for some file types */ }
         }
-        catch { /* SDK may not expose SpectraFormat for some file types */ }
 
         // cpp always tags TIC chromatogram in fileContent regardless of whether one is emitted.
         result.FileDescription.FileContent.Set(CVID.MS_TIC_chromatogram);
+        if (scanTypes.HasFlag(global::Agilent.MassSpectrometry.DataAnalysis.MSScanType.SelectedIon))
+            result.FileDescription.FileContent.Set(CVID.MS_SIM_chromatogram);
+        if (scanTypes.HasFlag(global::Agilent.MassSpectrometry.DataAnalysis.MSScanType.MultipleReaction))
+            result.FileDescription.FileContent.Set(CVID.MS_SRM_chromatogram);
 
         // sourceFileList: one entry per file under AcqData/, mirroring cpp. The .bin file
         // (typically MSScan.bin or MSPeak.bin) is selected as the run's defaultSourceFile.

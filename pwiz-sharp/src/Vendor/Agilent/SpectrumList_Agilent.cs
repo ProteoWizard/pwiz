@@ -144,9 +144,14 @@ public sealed class SpectrumList_Agilent : SpectrumListBase
         else if (rec.IonPolarity == AgPolarity.Negative) spec.Params.Set(CVID.MS_negative_scan);
 
         // Run-level base peak / TIC / RT come from the scan record (faster than the full spec).
+        // cpp routes base-peak-intensity / TIC through float arrays
+        // (BinaryData<float> getBpcIntensities / getTicIntensities), so the rendered cvParam
+        // value picks up boost lexical_cast<string>(float) precision = 6 significant figures.
+        // Cast to float here to mirror — without this, the SDK's full-precision double
+        // produces 12-digit values that miss the cpp reference by per-spectrum string diff.
         spec.Params.Set(CVID.MS_base_peak_m_z, rec.BasePeakMZ, CVID.MS_m_z);
-        spec.Params.Set(CVID.MS_base_peak_intensity, rec.BasePeakIntensity, CVID.MS_number_of_detector_counts);
-        spec.Params.Set(CVID.MS_total_ion_current, rec.Tic, CVID.MS_number_of_detector_counts);
+        spec.Params.Set(CVID.MS_base_peak_intensity, (float)rec.BasePeakIntensity, CVID.MS_number_of_detector_counts);
+        spec.Params.Set(CVID.MS_total_ion_current, (float)rec.Tic, CVID.MS_number_of_detector_counts);
         scan.Set(CVID.MS_scan_start_time, rec.RetentionTime, CVID.UO_minute);
 
         // Precursor: cpp uses MZOfInterest from the ScanRecord plus full spectrum metadata for
