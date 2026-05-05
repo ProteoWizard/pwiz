@@ -114,8 +114,10 @@ public sealed class Reader_Sciex : IReader
 
         // SourceFile entries: cpp emits "WIFF" (the .wiff itself) and, when present, "WIFFSCAN"
         // (the .wiff.scan companion file). Mirror that pair.
+        // cpp emits sourceFile.location with native separators (backslashes on Windows via
+        // boost::filesystem::path::string()); keep the same form for msdiff parity.
         var sf = new SourceFile("WIFF", Path.GetFileName(wiffPath),
-            "file://" + Path.GetDirectoryName(Path.GetFullPath(wiffPath))!.Replace('\\', '/'));
+            "file://" + Path.GetDirectoryName(Path.GetFullPath(wiffPath))!);
         sf.Set(CVID.MS_WIFF_nativeID_format);
         sf.Set(CVID.MS_ABI_WIFF_format);
         result.FileDescription.SourceFiles.Add(sf);
@@ -125,7 +127,7 @@ public sealed class Reader_Sciex : IReader
         if (File.Exists(wiffScanPath))
         {
             var sfScan = new SourceFile("WIFFSCAN", Path.GetFileName(wiffScanPath),
-                "file://" + Path.GetDirectoryName(Path.GetFullPath(wiffScanPath))!.Replace('\\', '/'));
+                "file://" + Path.GetDirectoryName(Path.GetFullPath(wiffScanPath))!);
             sfScan.Set(CVID.MS_WIFF_nativeID_format);
             sfScan.Set(CVID.MS_ABI_WIFF_format);
             result.FileDescription.SourceFiles.Add(sfScan);

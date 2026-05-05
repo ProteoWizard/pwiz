@@ -155,8 +155,11 @@ public sealed class Reader_Agilent : IReader
                     continue;
 
                 string filename = Path.GetFileName(filePath);
+                // cpp emits sourceFile.location with native separators (backslashes on Windows
+                // via boost::filesystem::path::string()). Don't translate to forward slashes —
+                // both forms are valid file:// URIs and matching cpp keeps msdiff clean.
                 var srcFile = new SourceFile(filename, filename,
-                    "file:///" + Path.GetFullPath(acqDataPath).Replace('\\', '/'));
+                    "file:///" + Path.GetFullPath(acqDataPath));
                 srcFile.Set(CVID.MS_Agilent_MassHunter_nativeID_format);
                 srcFile.Set(CVID.MS_Agilent_MassHunter_format);
                 result.FileDescription.SourceFiles.Add(srcFile);

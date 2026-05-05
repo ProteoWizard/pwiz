@@ -111,9 +111,12 @@ public sealed class Reader_Shimadzu : IReader
         }
 
         // sourceFile: one entry for the .lcd, with Shimadzu Biotech LCD + nativeID format CVs.
+        // cpp Reader_Shimadzu.cpp:139 emits the location as "file:///" + path.string() — boost
+        // returns native separators on Windows (backslashes), so we keep them too rather than
+        // forcing forward slashes. Both forms are valid file:// URIs; matching cpp byte-for-byte
+        // keeps msdiff parity clean.
         string parentDir = Path.GetDirectoryName(Path.GetFullPath(lcdPath)) ?? string.Empty;
-        var sourceFile = new SourceFile(fileName, fileName,
-            "file:///" + parentDir.Replace('\\', '/'));
+        var sourceFile = new SourceFile(fileName, fileName, "file:///" + parentDir);
         sourceFile.Set(CVID.MS_Shimadzu_Biotech_QTOF_nativeID_format);
         sourceFile.Set(CVID.MS_Shimadzu_Biotech_LCD_format);
         result.FileDescription.SourceFiles.Add(sourceFile);
