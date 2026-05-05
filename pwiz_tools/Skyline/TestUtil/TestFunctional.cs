@@ -2756,7 +2756,9 @@ namespace pwiz.SkylineTestUtil
             // Watchdog that auto-dismisses any ThreadExceptionDialog that appears during teardown.
             // Without this, an unhandled WinForms exception (e.g. ObjectDisposedException from
             // EventWaitHandle.Set inside Form.WmClose) opens a modal dialog that hangs the test
-            // runner indefinitely until HangDetection fires 30 minutes later.
+            // runner indefinitely until HangDetection fires 30 minutes later. If the watchdog
+            // fires it records the dialog text via Program.AddTestException, which surfaces as
+            // an Assert.Fail in RunFunctionalTest so the underlying bug is not silently masked.
             using var threadExceptionDialogCanceler = new ThreadExceptionDialogCanceler();
 
             if (_pauseAndContinueForm is { IsDisposed: false })

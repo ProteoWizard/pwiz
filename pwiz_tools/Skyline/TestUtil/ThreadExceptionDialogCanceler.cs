@@ -29,15 +29,25 @@ namespace pwiz.SkylineTestUtil
 {
     /// <summary>
     /// Background watchdog that dismisses any <see cref="ThreadExceptionDialog"/> that appears
-    /// during test teardown. A modal ThreadExceptionDialog hangs the test runner indefinitely;
-    /// this canceler turns the hang into a logged failure by force-closing the dialog and
-    /// recording its exception text in <see cref="Program.TestExceptions"/>.
+    /// during test teardown.
     ///
-    /// Why: A ThreadExceptionDialog can appear when WinForms catches an exception inside a
-    /// reentrant WndProc dispatch (e.g. Form.WmClose calling
-    /// <see cref="EventWaitHandle.Set"/> on a disposed SafeWaitHandle during teardown). When
-    /// that happens, <see cref="Application.ThreadException"/> is sometimes bypassed and the
-    /// dialog appears anyway, blocking the UI thread in a nested message loop.
+    /// If this watchdog ever fires it indicates a real bug: an exception escaped
+    /// <see cref="Application.ThreadException"/> (either an unhandled exception in test code,
+    /// or a framework race like the one this fix targets). The watchdog does not paper over
+    /// that bug - it converts a 30-minute UI-thread hang into a fast, loud test failure so a
+    /// developer has something actionable to investigate.
+    ///
+    /// Failure path: the captured dialog text is recorded via
+    /// <see cref="Program.AddTestException"/>, which is checked by
+    /// <c>AbstractFunctionalTest.RunFunctionalTest</c> at the end of the run and surfaced as
+    /// an <c>Assert.Fail</c> with the dialog body printed between separator lines.
+    ///
+    /// Why a ThreadExceptionDialog can appear during teardown: WinForms can catch an
+    /// exception inside a reentrant WndProc dispatch (e.g. Form.WmClose calling
+    /// <see cref="EventWaitHandle.Set"/> on a disposed SafeWaitHandle), and in that
+    /// reentrant path our registered <see cref="Application.ThreadException"/> handler is
+    /// sometimes bypassed and the default dialog appears, blocking the UI thread in a
+    /// nested message loop.
     /// </summary>
     public class ThreadExceptionDialogCanceler : IDisposable
     {
