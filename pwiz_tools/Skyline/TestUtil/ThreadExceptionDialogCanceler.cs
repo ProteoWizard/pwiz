@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -41,6 +42,12 @@ namespace pwiz.SkylineTestUtil
     public class ThreadExceptionDialogCanceler : IDisposable
     {
         private bool _disposed;
+
+        // Dialogs we have already logged and dispatched a dismiss for. Tracking by reference
+        // prevents the 500ms loop from flooding Program.TestExceptions and queueing redundant
+        // BeginInvoke callbacks if a dialog cannot be dismissed promptly (e.g. UI thread stuck
+        // in another nested loop). New dialogs that appear later are still handled.
+        private readonly HashSet<ThreadExceptionDialog> _handled = new HashSet<ThreadExceptionDialog>();
 
         public ThreadExceptionDialogCanceler()
         {
@@ -80,7 +87,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private static void DismissOpenDialogs()
+        private void DismissOpenDialogs()
         {
             var dialogs = FormUtil.OpenForms.OfType<ThreadExceptionDialog>().ToList();
             foreach (var dialog in dialogs)
@@ -88,6 +95,11 @@ namespace pwiz.SkylineTestUtil
                 if (dialog.IsDisposed || !dialog.IsHandleCreated)
                 {
                     continue;
+                }
+
+                if (!_handled.Add(dialog))
+                {
+                    continue; // Already logged and dismissal scheduled for this dialog
                 }
 
                 Console.WriteLine(@"*** ThreadExceptionDialog detected during test teardown - dismissing");
