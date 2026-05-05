@@ -60,7 +60,9 @@ public sealed class MzmlReader
             if (r.LocalName == "mzML")
             {
                 msd.Accession = r.GetAttribute("accession") ?? string.Empty;
-                msd.Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty;
+                // cpp IO.cpp:3442 reads msd.id raw ("not an XML:ID"). Mirror that so a round-trip
+                // read/write of a cpp-written mzML keeps the original id bytes.
+                msd.Id = r.GetAttribute("id") ?? string.Empty;
                 msd.Version = r.GetAttribute("version") ?? string.Empty;
                 ReadMzmlBody(r, msd);
                 break;
@@ -405,7 +407,8 @@ public sealed class MzmlReader
         var spec = new Spectrum
         {
             Index = int.Parse(r.GetAttribute("index") ?? "0", CultureInfo.InvariantCulture),
-            Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty,
+            // spectrum.id is raw per cpp IO.cpp:2716 ("not an XML:ID"). Free-form scan strings.
+            Id = r.GetAttribute("id") ?? string.Empty,
             SpotId = r.GetAttribute("spotID") ?? string.Empty,
             DefaultArrayLength = int.Parse(r.GetAttribute("defaultArrayLength") ?? "0", CultureInfo.InvariantCulture),
         };
@@ -691,7 +694,8 @@ public sealed class MzmlReader
         var chrom = new Chromatogram
         {
             Index = int.Parse(r.GetAttribute("index") ?? "0", CultureInfo.InvariantCulture),
-            Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty,
+            // chromatogram.id is raw per cpp ("not an XML:ID"). E.g. "TIC", "- SRM SIC Q1=309.0 ...".
+            Id = r.GetAttribute("id") ?? string.Empty,
             DefaultArrayLength = int.Parse(r.GetAttribute("defaultArrayLength") ?? "0", CultureInfo.InvariantCulture),
         };
         string? dpRef = XmlIdEncoding.Decode(r.GetAttribute("dataProcessingRef") ?? string.Empty);

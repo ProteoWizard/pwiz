@@ -119,7 +119,11 @@ public sealed class MzmlWriter
         w.WriteAttributeString("xsi", "schemaLocation", null,
             "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd");
         if (!string.IsNullOrEmpty(msd.Accession)) w.WriteAttributeString("accession", msd.Accession);
-        if (!string.IsNullOrEmpty(msd.Id)) w.WriteAttributeString("id",XmlIdEncoding.Encode(msd.Id));
+        // cpp IO.cpp:3383 emits msd.id raw with the comment "not an XML:ID" — the mzML element
+        // id is a free-form document identifier per spec, not constrained to NCName, and cpp's
+        // reader at IO.cpp:3442 likewise skips decode_xml_id. Encoding here would make our
+        // output diverge from cpp msconvert on every input where the run name starts with a digit.
+        if (!string.IsNullOrEmpty(msd.Id)) w.WriteAttributeString("id", msd.Id);
         w.WriteAttributeString("version", string.IsNullOrEmpty(msd.Version) ? "1.1.0" : msd.Version);
 
         WriteCvList(w, msd.CVs);
@@ -140,7 +144,7 @@ public sealed class MzmlWriter
         w.WriteStartElement("indexedmzML", MzmlXml.MzmlNamespace);
         w.WriteAttributeString("xmlns", "xsi", null, "http://www.w3.org/2001/XMLSchema-instance");
         w.WriteAttributeString("xsi", "schemaLocation", null,
-            "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/mzML1.1.2_idx.xsd");
+            "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.2_idx.xsd");
 
         WriteMzmlElement(msd, w);
 
@@ -186,7 +190,11 @@ public sealed class MzmlWriter
         foreach (var (id, pos) in offsets)
         {
             w.WriteStartElement("offset");
-            w.WriteAttributeString("idRef", XmlIdEncoding.Encode(id));
+            // Index idRef references the spectrum/chromatogram element's raw id (which cpp
+            // also writes raw — see WriteSpectrum / WriteChromatogram). Encoding it here
+            // would break the indexedmzML guarantee that idRef byte-for-byte matches the
+            // target element's id attribute.
+            w.WriteAttributeString("idRef", id);
             w.WriteString(pos.ToString(CultureInfo.InvariantCulture));
             w.WriteEndElement();
         }
@@ -444,7 +452,9 @@ public sealed class MzmlWriter
         RecordOffset(w, chrom.Id, _chromatogramOffsets, indentDepth: Indexed ? 4 : 3);
         w.WriteStartElement("chromatogram");
         w.WriteAttributeString("index", chrom.Index.ToString(CultureInfo.InvariantCulture));
-        w.WriteAttributeString("id",XmlIdEncoding.Encode(chrom.Id));
+        // cpp IO.cpp:2833 emits chromatogram.id raw ("not an XML:ID"); reader IO.cpp doesn't
+        // decode it either. Chromatogram ids are free-form ("TIC", "- SRM SIC Q1=309.0 ...").
+        w.WriteAttributeString("id", chrom.Id);
         w.WriteAttributeString("defaultArrayLength", chrom.DefaultArrayLength.ToString(CultureInfo.InvariantCulture));
         if (chrom.DataProcessing is not null)
             w.WriteAttributeString("dataProcessingRef", XmlIdEncoding.Encode(chrom.DataProcessing.Id));
@@ -524,7 +534,10 @@ public sealed class MzmlWriter
         RecordOffset(w, spec.Id, _spectrumOffsets, indentDepth: Indexed ? 4 : 3);
         w.WriteStartElement("spectrum");
         w.WriteAttributeString("index", spec.Index.ToString(CultureInfo.InvariantCulture));
-        w.WriteAttributeString("id",XmlIdEncoding.Encode(spec.Id));
+        // cpp IO.cpp:2611 emits spectrum.id raw ("not an XML:ID"); reader IO.cpp:2716 skips
+        // decode_xml_id. Vendor scan IDs (e.g. "scan=1", "merged=0 frame=0", "controllerType=0
+        // controllerNumber=1 scan=1") are free-form strings, not constrained to NCName.
+        w.WriteAttributeString("id", spec.Id);
         if (!string.IsNullOrEmpty(spec.SpotId)) w.WriteAttributeString("spotID", spec.SpotId);
         w.WriteAttributeString("defaultArrayLength", spec.DefaultArrayLength.ToString(CultureInfo.InvariantCulture));
         if (spec.SourceFile is not null) w.WriteAttributeString("sourceFileRef", XmlIdEncoding.Encode(spec.SourceFile.Id));
