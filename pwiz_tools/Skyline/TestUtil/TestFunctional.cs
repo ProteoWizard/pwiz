@@ -2753,6 +2753,12 @@ namespace pwiz.SkylineTestUtil
 
         private void EndTest()
         {
+            // Watchdog that auto-dismisses any ThreadExceptionDialog that appears during teardown.
+            // Without this, an unhandled WinForms exception (e.g. ObjectDisposedException from
+            // EventWaitHandle.Set inside Form.WmClose) opens a modal dialog that hangs the test
+            // runner indefinitely until HangDetection fires 30 minutes later.
+            using var threadExceptionDialogCanceler = new ThreadExceptionDialogCanceler();
+
             if (_pauseAndContinueForm is { IsDisposed: false })
             {
                 RunUI(() => _pauseAndContinueForm.Close());
@@ -2862,6 +2868,44 @@ namespace pwiz.SkylineTestUtil
                     CloseOpenForm(ownedForm, openForms);
                 }
 
+                if (formToClose.IsDisposed)
+                {
+                    // Already gone - skip the Close() call which would re-trigger WmClose and could
+                    // hit a SafeWaitHandle race during EventWaitHandle.Set in the modal-event path.
+                    return;
+                }
+
+                // ThreadExceptionDialog is a reentrant-modal form whose internal modal-event
+                // SafeWaitHandle has been observed to throw ObjectDisposedException during
+                // Form.Close -> WmClose -> EventWaitHandle.Set on perf-test teardown (see
+                // ThreadExceptionDialogCanceler). Dismiss via DialogResult so WinForms uses the
+                // asynchronous PostMessage path, not synchronous SendMessage from this stack.
+                if (formToClose is ThreadExceptionDialog teDlg)
+                {
+                    // ReSharper disable LocalizableElement
+                    Console.WriteLine("\n\nDismissing open ThreadExceptionDialog during teardown\n"); // Not L10N
+                    // ReSharper restore LocalizableElement
+                    Program.AddTestException(new InvalidOperationException(
+                        @"ThreadExceptionDialog was open at end of test - earlier exception escaped Application.ThreadException handler"));
+                    RunUI(() =>
+                    {
+                        try
+                        {
+                            if (!teDlg.IsDisposed)
+                                teDlg.DialogResult = DialogResult.Cancel;
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Already gone - fine
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Handle destroyed mid-close - fine
+                        }
+                    });
+                    return;
+                }
+
                 var messageDlg = formToClose as CommonAlertDlg;
                 // ReSharper disable LocalizableElement
                 if (messageDlg == null)
@@ -2874,11 +2918,20 @@ namespace pwiz.SkylineTestUtil
                 {
                     try
                     {
-                        formToClose.Close();
+                        if (!formToClose.IsDisposed)
+                            formToClose.Close();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Race: form was disposed between IsDisposed check and Close
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Handle was destroyed mid-close
                     }
                     catch
                     {
-                        // Ignore exceptions
+                        // Ignore other exceptions
                     }
                 });
             }
