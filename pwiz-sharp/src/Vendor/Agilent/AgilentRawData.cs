@@ -1,5 +1,6 @@
 using System.Globalization;
 using Agilent.MassSpectrometry.DataAnalysis;
+using Agilent.MassSpectrometry.MIDAC;
 
 #pragma warning disable CA1707
 
@@ -49,6 +50,66 @@ public sealed class AgilentRawData : IDisposable
     /// <summary>Top-level instrument family / device type from the file (Q-TOF / TQ / etc.).</summary>
     public DeviceType DeviceType => MSScanFileInformation.DeviceType;
 
+    private IMidacImsReader? _imsReader;
+    private bool? _hasImsData;
+
+    /// <summary>True when the .d directory contains Agilent ion-mobility data (IMSFrame.bin
+    /// etc.). Mirrors cpp <c>MassHunterData::hasIonMobilityData</c>.</summary>
+    public bool HasIonMobilityData
+    {
+        get
+        {
+            if (_hasImsData is bool v) return v;
+            try { v = MidacFileAccess.FileHasImsData(Path); }
+            catch { v = false; }
+            _hasImsData = v;
+            return v;
+        }
+    }
+
+    /// <summary>MIDAC reader for IM data (lazy). Returns null when the file isn't IM. The
+    /// reader is owned by this <see cref="AgilentRawData"/> and disposed in <see cref="Dispose"/>.</summary>
+    public IMidacImsReader? ImsReader
+    {
+        get
+        {
+            if (_imsReader is not null) return _imsReader;
+            if (!HasIonMobilityData) return null;
+            try { _imsReader = MidacFileAccess.ImsDataReader(Path); }
+            catch { _imsReader = null; }
+            return _imsReader;
+        }
+    }
+
+    private int[]? _imsFrameNumbersCache;
+
+    /// <summary>1-based frame numbers for all IM frames in the file (in acquisition order).
+    /// Mirrors cpp <c>imsReader_-&gt;FilteredFrameNumbers(nullptr)</c> — passing null means
+    /// "no filter, all frames".</summary>
+    public int[] ImsFrameNumbers
+    {
+        get
+        {
+            if (_imsFrameNumbersCache is not null) return _imsFrameNumbersCache;
+            var reader = ImsReader;
+            if (reader is null) { _imsFrameNumbersCache = Array.Empty<int>(); return _imsFrameNumbersCache; }
+            try { _imsFrameNumbersCache = reader.FilteredFrameNumbers((IMidacMsFiltersSpec?)null) ?? Array.Empty<int>(); }
+            catch { _imsFrameNumbersCache = Array.Empty<int>(); }
+            return _imsFrameNumbersCache;
+        }
+    }
+
+    /// <summary>Number of IM frames in the file. 0 when not an IM file.</summary>
+    public int ImsFrameCount => ImsFrameNumbers.Length;
+
+    /// <summary>1-based frame number for the i-th IM frame (0-based <paramref name="i"/>).
+    /// Returns the value MIDAC expects for <c>FrameInfo</c> / <c>FrameMs</c> calls.</summary>
+    public int ImsFrameNumber(int i)
+    {
+        var nums = ImsFrameNumbers;
+        return i >= 0 && i < nums.Length ? nums[i] : 0;
+    }
+
     /// <summary>Friendly device name reported by the SDK (e.g. <c>"TandemQuadrupole"</c>).
     /// Mirrors cpp <c>MassHunterDataImpl::getDeviceName</c>.</summary>
     public string GetDeviceName(DeviceType deviceType)
@@ -97,8 +158,31 @@ public sealed class AgilentRawData : IDisposable
         return string.Empty;
     }
 
-    /// <summary>Acquisition timestamp (local clock).</summary>
-    public DateTime AcquisitionTime => FileInformation.AcquisitionTime;
+    /// <summary>Acquisition timestamp (local clock). For IM files, prefers the MIDAC
+    /// <c>FileInfo.AcquisitionDate</c> (cpp <c>MidacDataImpl::getAcquisitionTime</c>) since
+    /// it reports the timestamp the reference mzMLs were generated against — the MassSpec
+    /// SDK's <c>FileInformation.AcquisitionTime</c> for the same .d directory comes back
+    /// with a different value.</summary>
+    public DateTime AcquisitionTime
+    {
+        get
+        {
+            if (HasIonMobilityData)
+            {
+                var ims = ImsReader;
+                if (ims is not null)
+                {
+                    try
+                    {
+                        var fi = ims.FileInfo;
+                        if (fi is not null) return fi.AcquisitionDate;
+                    }
+                    catch { /* fall through to MassSpec SDK */ }
+                }
+            }
+            return FileInformation.AcquisitionTime;
+        }
+    }
 
     /// <summary>Bitmask of MS scan types present in the file.</summary>
     public MSScanType ScanTypes => MSScanFileInformation.ScanTypes;
@@ -402,6 +486,11 @@ public sealed class AgilentRawData : IDisposable
         _disposed = true;
         try { _reader?.CloseDataFile(); }
         catch { /* SDK may throw on bogus state — best-effort close */ }
+        if (_imsReader is not null)
+        {
+            try { _imsReader.Close(); } catch { }
+            _imsReader = null;
+        }
     }
 
     /// <summary>

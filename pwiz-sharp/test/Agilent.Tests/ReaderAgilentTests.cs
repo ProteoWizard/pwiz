@@ -115,11 +115,11 @@ public class ReaderAgilentTests
     [TestMethod]
     public void Reader_Agilent_Thyrxox_5_TS_Diff_Scan_B()
     {
-        // Q-TOF with differential scan, 233 spectra + 17 chromatograms (cpp). The
-        // 16 chromatograms beyond TIC are device/instrument curves; the C# port
-        // doesn't yet emit those, so this stays Inconclusive until the
-        // getSignals()/InstrumentCurves loop ports.
-        Assert.Inconclusive("Device/instrument-curve chromatograms pending — cpp emits 17 vs sharp 1");
+        // Q-TOF with differential scan, 233 spectra + TIC + 16 SRM transitions.
+        var ctx = SetUp("Thyrxox 5 TS Diff Scan B.d");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig());
+        ctx.Check();
     }
 
     // -------------------- IM fixtures --------------------
@@ -131,29 +131,50 @@ public class ReaderAgilentTests
     // *-combineIMS.mzML references fails on spectrum count. Re-enable these once
     // SpectrumList_Agilent grows a per-frame combine path.
 
+    // IM fixtures use combineIonMobilitySpectra=true to match the cpp test config tier
+    // (Reader_Agilent_Test.cpp:64-65). Reference mzMLs are named <run>-combineIMS.mzML.
+
     [TestMethod]
     public void Reader_Agilent_ImsSynthAllIons()
     {
-        // IM-QTOF, 1192 drift-bin spectra (sharp) vs 97 frame-combined (cpp default).
-        // Currently fails the harness diff; mark Inconclusive until combineIMS lands.
-        Assert.Inconclusive("IMS combine-mode parity pending: cpp default is per-frame combined, sharp emits per-drift-bin");
+        var ctx = SetUp("ImsSynthAllIons.d");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig { CombineIonMobilitySpectra = true });
+        ctx.Check();
     }
 
     [TestMethod]
     public void Reader_Agilent_ImsSynthCCS()
     {
-        Assert.Inconclusive("IMS combine-mode parity pending");
+        var ctx = SetUp("ImsSynthCCS.d");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig { CombineIonMobilitySpectra = true });
+        ctx.Check();
     }
 
     [TestMethod]
     public void Reader_Agilent_ImsSynth_Chrom()
     {
-        Assert.Inconclusive("IMS combine-mode parity pending");
+        var ctx = SetUp("ImsSynth_Chrom.d");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig { CombineIonMobilitySpectra = true });
+        ctx.Check();
     }
 
     [TestMethod]
     public void Reader_Agilent_GFb_4Scan_TimeSegs_1530_100ng()
     {
-        Assert.Inconclusive("IMS combine-mode parity pending");
+        // cpp Reader_Agilent_Test.cpp:67-71 runs GFb only with the
+        // globalChromatogramsAreMs1Only + indexRange=(0,0) config tier — those flags steer
+        // the reference filename to *-combineIMS-globalChromatogramsAreMs1Only.mzML.
+        var ctx = SetUp("GFb_4Scan_TimeSegs_1530_100ng.d");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig
+        {
+            CombineIonMobilitySpectra = true,
+            GlobalChromatogramsAreMs1Only = true,
+            IndexRange = (0, 0),
+        });
+        ctx.Check();
     }
 }

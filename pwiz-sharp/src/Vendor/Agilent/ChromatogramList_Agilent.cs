@@ -1,5 +1,6 @@
 #if !NO_VENDOR_SUPPORT
 using Agilent.MassSpectrometry.DataAnalysis;
+using Agilent.MassSpectrometry.MIDAC;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Processing;
@@ -81,9 +82,12 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
             CVID type;
             if (t.Type == AgTransitionType.Mrm)
             {
+                // cpp ChromatogramListBase::polarityStringForFilter — empty for positive (so
+                // chromatogram IDs round-trip cleanly with the historical "no polarity prefix
+                // means positive" convention), "- " for negative. We previously prepended
+                // "+ " for positive which made every positive-mode SRM ID diff vs cpp.
                 string pol = t.Polarity switch
                 {
-                    AgTransitionPolarity.Positive => "+ ",
                     AgTransitionPolarity.Negative => "- ",
                     _ => string.Empty,
                 };
@@ -290,21 +294,60 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
         // Build TIC by walking scan records (RetentionTime, TIC). cpp does the same in
         // MassHunterDataImpl ctor: SDK's GetTIC() returns an IBDAChromData but populating it
         // is awkward and the per-scan-record path mirrors what cpp emits exactly.
+        // For IM files, the per-frame TIC from MIDAC's frameInfo (which is what cpp's
+        // MidacDataImpl::getTicIntensities returns) gives NaN for frames with no data; the
+        // MassSpec SDK's rec.Tic gives 0.0 for those same frames. Mirror cpp's value.
         int total = (int)_raw.TotalScansPresent;
         bool onlyMs1 = _globalChromsAreMs1Only;
+        bool isIms = _raw.HasIonMobilityData;
+        var imsReader = isIms ? _raw.ImsReader : null;
         var times = new List<double>(total);
         var intensities = new List<double>(total);
         var msLevels = new List<long>(total);
-        for (int i = 0; i < total; i++)
+        if (isIms && imsReader is not null)
         {
-            IMSScanRecord rec;
-            try { rec = _raw.GetScanRecord(i); }
-            catch { continue; }
-            int level = rec.MSLevel == MSLevel.MSMS ? 2 : 1;
-            if (onlyMs1 && level != 1) continue;
-            times.Add(rec.RetentionTime);
-            intensities.Add(rec.Tic);
-            msLevels.Add(level);
+            // IM path: one entry per MIDAC frame. Use per-frame Tic (NaN for empty frames).
+            int frames = _raw.ImsFrameCount;
+            for (int i = 0; i < frames; i++)
+            {
+                int frameNumber = _raw.ImsFrameNumber(i);
+                IMidacFrameInfo? info = null;
+                try { info = imsReader.FrameInfo(frameNumber); } catch { }
+                if (info is null) continue;
+                int level = 1;
+                double rt = 0;
+                double tic = double.NaN;
+                try { rt = info.AcqTimeRange?.Min ?? 0; } catch { }
+                try { tic = info.Tic; } catch { }
+                try
+                {
+                    var details = info.SpectrumDetails;
+                    if (details is not null)
+                    {
+                        int lvl = (int)(object)details.MsLevel!;
+                        level = lvl == 2 ? 2 : 1;
+                    }
+                }
+                catch { }
+                if (onlyMs1 && level != 1) continue;
+                times.Add(rt);
+                intensities.Add(tic);
+                msLevels.Add(level);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < total; i++)
+            {
+                IMSScanRecord rec;
+                try { rec = _raw.GetScanRecord(i); }
+                catch { continue; }
+                int level = rec.MSLevel == MSLevel.MSMS ? 2 : 1;
+                if (onlyMs1 && level != 1) continue;
+                times.Add(rec.RetentionTime);
+                intensities.Add(rec.Tic);
+                msLevels.Add(level);
+            }
         }
         c.DefaultArrayLength = times.Count;
         if (getBinaryData && times.Count > 0)

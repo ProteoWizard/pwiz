@@ -206,8 +206,17 @@ public sealed class Reader_Agilent : IReader
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
-        // Acquisition timestamp from the file info.
-        try { result.Run.StartTimeStamp = raw.AcquisitionTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture); }
+        // Acquisition timestamp from the file info. cpp emits the local-clock components
+        // unmodified with a Z suffix (adjustToHostTime=false in the test config), so we do
+        // the same — AgilentRawData.AcquisitionTime selects MIDAC's FileInfo.AcquisitionDate
+        // for IM files vs MassSpec SDK FileInformation.AcquisitionTime for non-IM, mirroring
+        // cpp's MidacDataImpl::getAcquisitionTime / MassHunterDataImpl::getAcquisitionTime split.
+        try
+        {
+            var t = raw.AcquisitionTime;
+            result.Run.StartTimeStamp =
+                $"{t.Year:D4}-{t.Month:D2}-{t.Day:D2}T{t.Hour:D2}:{t.Minute:D2}:{t.Second:D2}Z";
+        }
         catch { /* not all files expose a parseable timestamp */ }
 
         // Spectrum list owns the raw handle; chromatogram list shares without owning so a
@@ -215,7 +224,8 @@ public sealed class Reader_Agilent : IReader
         bool simAsSpectra = config?.SimAsSpectra ?? false;
         bool srmAsSpectra = config?.SrmAsSpectra ?? false;
         bool globalChromsAreMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
-        result.Run.SpectrumList = new SpectrumList_Agilent(raw, ownsRaw: true, ic, simAsSpectra, srmAsSpectra)
+        bool combineIms = config?.CombineIonMobilitySpectra ?? false;
+        result.Run.SpectrumList = new SpectrumList_Agilent(raw, ownsRaw: true, ic, simAsSpectra, srmAsSpectra, combineIms)
         {
             Dp = dpReader,
         };
@@ -237,6 +247,15 @@ public sealed class Reader_Agilent : IReader
         // returns no configuration; Reader_Agilent.cpp:104 then resize(1)s the vector to a
         // single empty IC (paramGroupRef + softwareRef only). Mirror that — an unknown source
         // also means we don't have a defensible analyzer/detector chain to emit either.
+        //
+        // IM files take the same empty-IC path: cpp's MidacDataImpl::getIonModes reads from
+        // imsReader->FileInfo->TfsMsDetails->IonizationMode (a different field than the
+        // MassSpec SDK's MSScanFileInformation.IonModes that sharp reads), and the value
+        // typically isn't one of the recognized bits — so cpp's ionModeSet ends up empty.
+        // The MassSpec SDK doesn't have visibility into the IM-specific TFS details, so we
+        // can't make the bitmask match cpp; force-empty IC for IM files instead.
+        if (raw.HasIonMobilityData)
+            return ic;
         var ionMode = raw.MSScanFileInformation.IonModes;
         var sourceCv = TranslateIonization(ionMode);
         if (sourceCv == CVID.CVID_Unknown)
