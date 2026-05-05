@@ -1,6 +1,7 @@
 using System.Globalization;
 using Agilent.MassSpectrometry.DataAnalysis;
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Processing;
@@ -199,6 +200,32 @@ public sealed class SpectrumList_Agilent : SpectrumListBase
             // Profile-vs-centroid CV. mzML wants exactly one of these per spectrum.
             bool isProfile = specData.MSStorageMode == MSStorageMode.ProfileSpectrum;
             spec.Params.Set(isProfile ? CVID.MS_profile_spectrum : CVID.MS_centroid_spectrum);
+
+            // cpp SpectrumList_Agilent.cpp:339-340: when the SDK reports centroided storage on
+            // a non-IM scan, tag the scan window so consumers know the lower/upper limits came
+            // from the centroided peak range (specData.MeasuredMassRange) rather than the
+            // configured acquisition window. mzML doesn't have a CVID for this so cpp uses a
+            // bare userParam.
+            if (!isProfile && scan.ScanWindows.Count > 0)
+                scan.ScanWindows[^1].UserParams.Add(new UserParam("centroided min/max"));
+
+            // cpp SpectrumList_Agilent.cpp:375-387: for NL/NG (and all-ions MS2) the precursor
+            // needs a broad isolation window covering the whole scan mass range plus a sentinel
+            // selected ion at the midpoint — mzML's selectedIonList has minOccurs=1, so omitting
+            // it produces an invalid file. The "real" precursor info lives in MS_analyzer_scan_offset
+            // (set earlier on the scan) for NL/NG, and there's no specific precursor m/z, so cpp
+            // synthesizes a placeholder mid-window ion to satisfy the schema.
+            if (precursor is not null && isNeutralLossOrGain && range is not null)
+            {
+                double width = (range.End - range.Start) * 0.5;
+                double targetMz = range.Start + width;
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, targetMz, CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, width, CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, width, CVID.MS_m_z);
+                var sentinel = new SelectedIon();
+                sentinel.Set(CVID.MS_selected_ion_m_z, targetMz, CVID.MS_m_z);
+                precursor.SelectedIons.Add(sentinel);
+            }
 
             // Fill in precursor charge + intensity from the full spectrum data when present.
             if (precursor is not null && precursor.SelectedIons.Count > 0)
