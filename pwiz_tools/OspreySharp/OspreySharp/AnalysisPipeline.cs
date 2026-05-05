@@ -3404,6 +3404,25 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
+        /// IComparer&lt;double&gt; implementing IEEE 754-2008 total order
+        /// (matches Rust's f64::total_cmp). Key property versus the
+        /// default Comparer&lt;double&gt;: distinguishes -0.0 &lt; +0.0,
+        /// orders NaNs consistently. Required wherever a stable sort
+        /// needs to mirror Rust's slice::sort_by(... .total_cmp(...))
+        /// — pair with LINQ OrderBy/OrderByDescending (stable per
+        /// .NET contract) to match Rust byte-for-byte.
+        /// </summary>
+        private static readonly IComparer<double> TotalOrderComparer =
+            Comparer<double>.Create((a, b) =>
+            {
+                long la = BitConverter.DoubleToInt64Bits(a);
+                long lb = BitConverter.DoubleToInt64Bits(b);
+                if (la < 0) la ^= 0x7FFFFFFFFFFFFFFFL;
+                if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
+                return la.CompareTo(lb);
+            });
+
+        /// <summary>
         /// Build a one-element peak list at the supplied (apex, start, end)
         /// RT triple, mapped onto the reference XIC's RT axis. Returns null
         /// when the resulting index range is degenerate. Mirrors the
@@ -4204,16 +4223,18 @@ namespace pwiz.OspreySharp
             if (capturedPeaks != null && capturedPeaks.Count > 0 && topN > 0)
             {
                 // Rust scored_candidates.sort_by at pipeline.rs:7329 is
-                // STABLE (slice::sort_by is stable). List<T>.Sort with
-                // Comparison<T> is introsort, which is unstable and
-                // reorders ties; for entries where two CWT candidates
-                // tie on rank score, the unstable sort picks a
-                // different "top N" than Rust (~1 entry per Stellar
-                // file). Use LINQ OrderByDescending (stable per .NET
-                // contract) and then assign back to keep the rest of
-                // the loop unchanged.
+                // STABLE (slice::sort_by is stable) AND uses f64::total_cmp,
+                // which distinguishes -0.0 < +0.0. The default
+                // Comparer<double> treats them equal, so two peaks whose
+                // rank_score = coelution * rt_penalty * intensityWeight
+                // collapses to a signed zero (intensityWeight = 0 when
+                // ref_xic intensity at apex is 0; sign comes from
+                // coelution) compare as tied under standard <, while
+                // Rust orders them positive-then-negative. Pair LINQ
+                // OrderByDescending (stable per .NET contract) with
+                // TotalOrderComparer to match Rust byte-for-byte.
                 capturedPeaks = capturedPeaks
-                    .OrderByDescending(p => p.rankScore)
+                    .OrderByDescending(p => p.rankScore, TotalOrderComparer)
                     .ToList();
                 int kept = Math.Min(topN, capturedPeaks.Count);
                 cwtCandidatesOut = new List<CwtCandidate>(kept);
