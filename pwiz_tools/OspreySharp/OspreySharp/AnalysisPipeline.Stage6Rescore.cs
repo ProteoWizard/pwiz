@@ -241,9 +241,22 @@ namespace pwiz.OspreySharp
                 "Worker original calibrations: {0}/{1} files loaded",
                 perFileCalibrations.Count, inputs.PerFileEntries.Count));
 
-            // PHASE 1 dispatch: existing-entry rescore (consensus +
-            // reconciliation overlay) only. Phases 2 (gap-fill) and 3
-            // (parquet write-back) land in subsequent commits.
+            // Per-file parquet paths from --input-scores. Stage 6
+            // write-back rewrites these in place with reconciliation
+            // metadata, mirroring how Rust's worker uses
+            // per_file_cache_paths.
+            var perFileParquetPaths = new Dictionary<string, string>();
+            for (int i = 0; i < config.InputScores.Count; i++)
+            {
+                string parquetPath = config.InputScores[i];
+                string fileName = RescoreHydration.SyntheticInputFromParquet(parquetPath);
+                fileName = Path.GetFileNameWithoutExtension(fileName);
+                if (!string.IsNullOrEmpty(fileName))
+                    perFileParquetPaths[fileName] = parquetPath;
+            }
+
+            // Phases 1 + 2 + 3 of the rescore engine. Phase 3 rewrites
+            // each per-file .scores.parquet with reconciliation metadata.
             RescoreStats stats;
             try
             {
@@ -254,6 +267,7 @@ namespace pwiz.OspreySharp
                     inputs.RefinedCalibrations,
                     perFileCalibrations,
                     inputs.PerFileGapFill,
+                    perFileParquetPaths,
                     fullLibrary,
                     config);
             }
@@ -266,8 +280,10 @@ namespace pwiz.OspreySharp
             }
 
             Program.LogInfo(string.Format(
-                "Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
-                stats.TotalRescored, stats.TotalReconciliation));
+                "Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions, " +
+                "{2} gap-fill via CWT, {3} gap-fill via forced)",
+                stats.TotalRescored, stats.TotalReconciliation,
+                stats.TotalGapCwt, stats.TotalGapForced));
 
             // Cross-impl bisection seam: dump per-precursor state
             // immediately after the rescore loop. Mirrors Rust's
@@ -279,18 +295,23 @@ namespace pwiz.OspreySharp
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
             }
 
-            // Phase 1 success: in-memory state matches what the in-process
-            // pipeline holds at the same seam. Phases 2 (gap-fill) and
-            // 3 (parquet write-back) are the next steps; until then, the
-            // worker can't produce reconciled .scores.parquet output, so
-            // exit non-zero with a pointer rather than letting downstream
-            // consumers see stale Stage 4 parquets.
-            Program.LogError(
-                "--join-at-pass=1 --no-join: PHASE 1 (consensus + reconciliation rescore) " +
-                "completed cleanly. Phases 2 (gap-fill) and 3 (reconciled parquet write-back) " +
-                "are not yet ported; the worker has not written reconciled .scores.parquet " +
-                "output. Both will land in subsequent commits.");
-            return 2;
+            // Flush the median-polish inputs dump (no-op when
+            // OSPREY_DUMP_MP_INPUTS is unset).
+            OspreyDiagnostics.CloseMpInputsDump();
+
+            // Flush the predict() inputs/outputs dump (no-op when
+            // OSPREY_DUMP_PREDICT_RT is unset).
+            OspreyDiagnostics.ClosePredictRtDump();
+
+            // Flush the CWT path summary dump (no-op when
+            // OSPREY_DUMP_CWT_PATH is unset).
+            OspreyDiagnostics.CloseCwtPathDump();
+
+            Program.LogInfo(
+                "--join-at-pass=1 --no-join: rescore complete. Reconciled .scores.parquet " +
+                "files written. (C# parity gap: fragment_mzs / fragment_intensities / " +
+                "ref_xic_* / bounds_area / bounds_snr columns null, tracked for follow-up.)");
+            return 0;
         }
 
         /// <summary>
@@ -305,6 +326,130 @@ namespace pwiz.OspreySharp
         {
             if (value != null)
                 dict[key] = value;
+        }
+
+        /// <summary>
+        /// Phase 3 — write the reconciled per-file <c>.scores.parquet</c>.
+        ///
+        /// Reload the original Stage 4 parquet's full per-row data
+        /// (identity, boundaries, 21 PIN features, CWT candidate lists),
+        /// replace re-scored rows in place by <see cref="FdrEntry.ParquetIndex"/>
+        /// (NOT by post-compaction Vec position; the two diverge after
+        /// first-pass FDR drops non-passing entries), append gap-fill
+        /// rows at the end, reassign each gap-fill stub's
+        /// <see cref="FdrEntry.ParquetIndex"/> to the actual row it now
+        /// occupies, then write back via
+        /// <see cref="ParquetScoreCache.WriteScoresParquet(string, List{FdrEntry}, Dictionary{string, string}, Dictionary{uint, LibraryEntry}, string)"/>
+        /// with reconciliation metadata
+        /// (<c>osprey.reconciled = "true"</c> +
+        /// <c>osprey.reconciliation_hash = config.ReconciliationParameterHash()</c>).
+        /// Mirrors Rust pipeline.rs:3050-3110.
+        ///
+        /// Known C# parity gap (tracked for follow-up): the binary blob
+        /// columns <c>fragment_mzs</c>, <c>fragment_intensities</c>,
+        /// <c>reference_xic_rts</c>, <c>reference_xic_intensities</c>,
+        /// plus <c>bounds_area</c> and <c>bounds_snr</c>, are NOT carried
+        /// through by <see cref="FdrEntry"/> today and the
+        /// WriteScoresParquet FdrEntry overload writes them as null/zero.
+        /// Rust's reconciled parquet has them populated. End-of-Stage-6
+        /// byte-parity will report a diff on these columns until the C#
+        /// scoring path is extended to populate them.
+        /// </summary>
+        private void WriteReconciledParquet(string parquetPath, List<FdrEntry> fdrEntries,
+            string fileName, List<LibraryEntry> fullLibrary, OspreyConfig config)
+        {
+            // 1. Reload the original parquet's per-row state.
+            List<FdrEntry> fullEntries;
+            try
+            {
+                fullEntries = ParquetScoreCache.LoadFullFdrEntries(parquetPath);
+            }
+            catch (Exception ex)
+            {
+                LogWarning(string.Format(
+                    "Stage 6 write-back: failed to reload {0}: {1} (skipping)",
+                    parquetPath, ex.Message));
+                return;
+            }
+            int origRowCount = fullEntries.Count;
+
+            // 2. Replace re-scored rows (Phase 1 + Phase 2 existing-entry
+            //    overlay) by ParquetIndex. Detect rescored entries by
+            //    Features != null — hydration's LoadFdrStubsFromParquet
+            //    does NOT populate Features, so unchanged post-compaction
+            //    stubs have Features=null and we leave their corresponding
+            //    fullEntries row alone (preserving Features + CwtCandidates
+            //    + the binary blob columns loaded from the original
+            //    parquet). Rescored entries have Features populated by
+            //    RunCoelutionScoring. Gap-fill stubs have ParquetIndex =
+            //    uint.MaxValue and are appended next.
+            int nReplaced = 0;
+            foreach (var entry in fdrEntries)
+            {
+                if (entry.ParquetIndex == uint.MaxValue)
+                    continue;
+                if (entry.Features == null)
+                    continue;  // hydrated stub, never re-scored
+                int pqIdx = (int)entry.ParquetIndex;
+                if (pqIdx < 0 || pqIdx >= fullEntries.Count)
+                {
+                    LogWarning(string.Format(
+                        "Stage 6 write-back: ParquetIndex {0} out of range for {1} ({2} rows)",
+                        pqIdx, fileName, fullEntries.Count));
+                    continue;
+                }
+                fullEntries[pqIdx] = entry;
+                nReplaced++;
+            }
+
+            // 3. Append gap-fill rows at the end. Reassign each gap-fill
+            //    stub's ParquetIndex to its new row position so a
+            //    downstream --join-at-pass=2 worker can locate its
+            //    features.
+            int nAppended = 0;
+            foreach (var entry in fdrEntries)
+            {
+                if (entry.ParquetIndex != uint.MaxValue)
+                    continue;
+                entry.ParquetIndex = (uint)fullEntries.Count;
+                fullEntries.Add(entry);
+                nAppended++;
+            }
+
+            // 4. Build libraryById for the WriteScoresParquet sequence /
+            //    precursor_mz / protein_ids columns.
+            var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
+            foreach (var libEntry in fullLibrary)
+                libraryById[libEntry.Id] = libEntry;
+
+            // 5. Reconciliation metadata (mirrors Rust
+            //    build_reconciled_metadata). osprey.version is what the
+            //    next reload's CacheValidity check compares against.
+            var metadata = new Dictionary<string, string>
+            {
+                { @"osprey.version", Program.VERSION },
+                { @"osprey.search_hash", config.SearchParameterHash() },
+                { @"osprey.library_hash", config.LibraryIdentityHash() },
+                { @"osprey.reconciled", @"true" },
+                { @"osprey.reconciliation_hash", config.ReconciliationParameterHash() },
+            };
+
+            try
+            {
+                ParquetScoreCache.WriteScoresParquet(parquetPath, fullEntries,
+                    metadata, libraryById, fileName);
+            }
+            catch (Exception ex)
+            {
+                LogWarning(string.Format(
+                    "Stage 6 write-back: failed to write reconciled scores for {0}: {1}",
+                    fileName, ex.Message));
+                return;
+            }
+
+            LogInfo(string.Format(
+                "  Wrote reconciled parquet for {0}: {1} rows ({2} replaced + {3} appended; original {4} rows)",
+                fileName, fullEntries.Count, nReplaced, nAppended, origRowCount));
         }
 
         /// <summary>
@@ -372,6 +517,7 @@ namespace pwiz.OspreySharp
             IReadOnlyDictionary<string, RTCalibration> refinedCalibrations,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             IReadOnlyDictionary<string, List<GapFillTarget>> perFileGapFill,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config)
         {
@@ -530,12 +676,31 @@ namespace pwiz.OspreySharp
                 // and read here — same disk-roundtrip path the worker uses.
                 LoadMassCalibrations(inputFile,
                     out MzCalibrationResult ms2Cal,
-                    out MzCalibrationResult ms1Cal);
+                    out MzCalibrationResult ms1Cal,
+                    out double? rtMadFromCalJson);
 
                 // Pick the RT calibration: refined (from Stage 6 planning's
                 // calibration refit) wins; original first-pass falls back.
                 if (!refinedCalibrations.TryGetValue(fileName, out RTCalibration rtCal))
                     perFileCalibrations.TryGetValue(fileName, out rtCal);
+
+                // Set the original .calibration.json MAD on the scoring
+                // context so RunCoelutionScoring picks it up for the
+                // rt_tolerance derivation. Mirrors Rust run_search at
+                // pipeline.rs:6776-6815, which reads
+                // `cal_params.rt_calibration.mad` (the first-pass MAD)
+                // -- not the refined cal's stats MAD, which would give
+                // a much smaller (and hence MinRtTolerance-clamped)
+                // tolerance and produce divergent windows.
+
+                // Bisection seam: dump the cal's library_rts +
+                // fitted_values once per file. Mirrors Rust's
+                // dump_predict_rt_arrays at pipeline.rs ~2886.
+                if (rtCal != null)
+                {
+                    OspreyDiagnostics.WritePredictRtArrays(
+                        fileName, rtCal.LibraryRts, rtCal.FittedValues);
+                }
 
                 // Build the scoring context with the boundary overrides.
                 // RunCoelutionScoring inspects context.BoundaryOverrides
@@ -543,6 +708,7 @@ namespace pwiz.OspreySharp
                 // peak-construction path.
                 var context = new ScoringContext(config, fileName);
                 context.BoundaryOverrides = boundaryOverrides;
+                context.OriginalRtMad = rtMadFromCalJson;
 
                 // Build isolation windows from the loaded spectra (same as
                 // the first-pass ProcessFile path).
@@ -655,6 +821,7 @@ namespace pwiz.OspreySharp
                         var cwtConfig = config.ShallowClone();
                         cwtConfig.PrefilterEnabled = false;
                         var cwtContext = new ScoringContext(cwtConfig, fileName);
+                        cwtContext.OriginalRtMad = rtMadFromCalJson;
                         // No BoundaryOverrides — CWT picks peaks freely.
 
                         var swCwt = Stopwatch.StartNew();
@@ -729,6 +896,7 @@ namespace pwiz.OspreySharp
 
                         var forcedContext = new ScoringContext(config, fileName);
                         forcedContext.BoundaryOverrides = forcedOverrides;
+                        forcedContext.OriginalRtMad = rtMadFromCalJson;
 
                         var swForced = Stopwatch.StartNew();
                         var forcedResults = RunCoelutionScoring(
@@ -763,8 +931,23 @@ namespace pwiz.OspreySharp
                     totalRescored += nGapCwt + nGapForced;
                 }
 
-                // PHASE 3 (reconciled parquet write-back) is the next step.
-                // Rust does this at pipeline.rs:3050-3110.
+                // PHASE 3 — reconciled parquet write-back.
+                //
+                // Reload the original Stage 4 parquet, replace re-scored
+                // rows by ParquetIndex (NOT vec position; post-compaction
+                // Vec position diverges from Parquet row), append gap-fill
+                // rows, reassign each gap-fill stub's ParquetIndex to its
+                // actual new row in the rewritten parquet, and write the
+                // merged list back with reconciliation metadata
+                // (osprey.reconciled = "true" + osprey.reconciliation_hash).
+                // Mirrors Rust pipeline.rs:3050-3110.
+                if (perFileParquetPaths != null &&
+                    perFileParquetPaths.TryGetValue(fileName, out string parquetPath) &&
+                    File.Exists(parquetPath))
+                {
+                    WriteReconciledParquet(parquetPath, fdrEntries, fileName,
+                        fullLibrary, config);
+                }
             }
 
             return new RescoreStats
@@ -814,18 +997,30 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
-        /// Load MS2 + MS1 mass calibrations from the sibling
-        /// .calibration.json that the original Stage 2 wrote. Returns
-        /// uncalibrated results if the file is missing or the relevant
-        /// section is absent. Mirrors the Rust load_calibration block at
-        /// pipeline.rs:2893-2900 + the ms2/ms1 unpacking the in-process
-        /// AnalysisPipeline does at lines 1154-1183.
+        /// Load MS2 + MS1 mass calibrations and the original Stage-4 RT
+        /// calibration MAD from the sibling .calibration.json that
+        /// Stage 2 wrote. Returns uncalibrated results / null MAD if the
+        /// file is missing or the relevant section is absent. Mirrors
+        /// the Rust load_calibration block at pipeline.rs:2893-2900 +
+        /// the ms2/ms1 unpacking the in-process AnalysisPipeline does
+        /// at lines 1154-1183.
+        ///
+        /// The <paramref name="rtMadFromCalJson"/> output carries the
+        /// original first-pass MAD of absolute residuals -- this is the
+        /// value Rust's run_search uses to derive `rt_tolerance` (see
+        /// pipeline.rs:6776-6815). It must come from the per-file
+        /// .calibration.json, NOT from the refined calibration's
+        /// abs_residuals (which post-Stage-5 LOESS refit is roughly an
+        /// order of magnitude tighter and would clamp the tolerance to
+        /// MinRtTolerance = 0.5, ~28% smaller than what Rust uses).
         /// </summary>
         private void LoadMassCalibrations(string inputFile,
-            out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal)
+            out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
+            out double? rtMadFromCalJson)
         {
             ms2Cal = MzCalibrationResult.Uncalibrated();
             ms1Cal = MzCalibrationResult.Uncalibrated();
+            rtMadFromCalJson = null;
 
             string parent = Path.GetDirectoryName(Path.GetFullPath(inputFile));
             if (string.IsNullOrEmpty(parent))
@@ -871,6 +1066,14 @@ namespace pwiz.OspreySharp
                     AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
                     Calibrated = true
                 };
+            }
+            // The MAD is what Rust's run_search uses for rt_tolerance
+            // derivation; emit it from here (not from the refined cal's
+            // abs_residuals) so the C# rescore matches Rust's window
+            // size byte-for-byte.
+            if (calParams.RtCalibration != null && calParams.RtCalibration.MAD.HasValue)
+            {
+                rtMadFromCalJson = calParams.RtCalibration.MAD.Value;
             }
         }
     }

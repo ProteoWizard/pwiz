@@ -132,6 +132,51 @@ namespace pwiz.OspreySharp
         public static readonly bool RescoredOnly = IsOne(@"OSPREY_RESCORED_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_MP_INPUTS: bisection-grade diagnostic that dumps
+        /// the inputs to every per-entry tukey_median_polish call from
+        /// the Stage 6 rescore path. One row per (entry, apex_scan,
+        /// frag_pos, scan_idx) carrying (rt, intensity). Output:
+        /// cs_stage6_mp_inputs.tsv. Format mirrors Rust's
+        /// dump_mp_inputs (diagnostics.rs ~line 265) byte-for-byte so
+        /// the two files are diffable directly:
+        /// <c>diff &lt;(sort -k1,1n -k2,2n -k3,3n cs_stage6_mp_inputs.tsv) &lt;(sort ... rust)</c>.
+        /// PASS == zero diff lines after sort. FAIL == first row that
+        /// disagrees, identifying whether peak_xics divergence is
+        /// upstream (XIC extraction / peak picking) or downstream
+        /// (median polish / peak shape feature compute).
+        /// </summary>
+        public static readonly bool DumpMpInputs = IsOne(@"OSPREY_DUMP_MP_INPUTS");
+
+        /// <summary>
+        /// OSPREY_DUMP_PREDICT_RT: bisection-grade diagnostic that
+        /// captures the per-file <c>library_rts</c> /
+        /// <c>fitted_values</c> arrays of the active RT calibration AND
+        /// every (entry_id, library_rt -> expected_rt) call into
+        /// <c>RTCalibration.Predict</c> from the Stage 6 rescore search
+        /// path. Output: cs_stage6_predict_rt.tsv. Two-section TSV
+        /// sharing one five-column header; mirrors Rust's
+        /// dump_predict_rt_arrays + dump_predict_rt_call (diagnostics.rs
+        /// ~line 365 / 397). Use to narrow apex-divergence root cause:
+        /// if the cal_arrays sections diverge, JSON round-trip is
+        /// lossy; if predict_calls diverge despite identical arrays,
+        /// hidden RTCalibration state is leaking; if both match, the
+        /// divergence is downstream of RT calibration.
+        /// </summary>
+        public static readonly bool DumpPredictRt = IsOne(@"OSPREY_DUMP_PREDICT_RT");
+
+        /// <summary>
+        /// OSPREY_DUMP_CWT_PATH: per-(file, entry) dump of CWT path
+        /// counts. Six columns: file_name, entry_id, n_cwt_peaks,
+        /// n_final_peaks (after MP polish + ref_xic fallbacks),
+        /// n_scored (peaks that pass apex-acceptance filter), and a
+        /// "scored" flag (1 if ScoreCandidate returned non-null, else
+        /// 0). Use this to localize which entries diverge cross-impl
+        /// and at which seam: CWT detection, fallback path, or
+        /// apex-acceptance filter. Output: cs_stage6_cwt_path.tsv.
+        /// </summary>
+        public static readonly bool DumpCwtPath = IsOne(@"OSPREY_DUMP_CWT_PATH");
+
+        /// <summary>
         /// OSPREY_DUMP_CONSENSUS: dump the per-peptide consensus RT planning
         /// state at the start of Stage 6 (cs_stage6_consensus.tsv) for
         /// cross-impl parity at the planning checkpoint.
@@ -791,6 +836,29 @@ namespace pwiz.OspreySharp
                             xic.FragmentIndex, i, F10(xic.RetentionTimes[i]), F10(xic.Intensities[i])));
                     }
                 }
+
+                // CWT CONSENSUS: per-scan median consensus value across
+                // the fragment CWT coefficients. Cross-impl diff at this
+                // section pinpoints the first scan where the consensus
+                // signal diverges -- the seam upstream of peak detection.
+                // Use round-trip-safe formatting so f64 bits compare
+                // exactly between Rust (format_f64_roundtrip) and C#.
+                var xicList = xics is List<XicData> xicL ? xicL : new List<XicData>(xics);
+                double[] consensusSig = CwtPeakDetector.GetConsensusSignal(
+                    xicList, out double cwtSigma);
+                dw.WriteLine("# CWT CONSENSUS (sigma, scan_idx, value)");
+                dw.WriteLine(string.Format(inv,
+                    "# sigma={0}", Diagnostics.FormatF64Roundtrip(cwtSigma)));
+                if (consensusSig != null)
+                {
+                    dw.WriteLine("consensus\tscan_idx\tvalue");
+                    for (int i = 0; i < consensusSig.Length; i++)
+                    {
+                        dw.WriteLine(string.Format(inv,
+                            "consensus\t{0}\t{1}",
+                            i, Diagnostics.FormatF64Roundtrip(consensusSig[i])));
+                    }
+                }
             }
             LogAction(string.Format(inv,
                 @"[BISECT] Search XIC dump for entry {0}: {1} xics, {2} scans -> {3}",
@@ -852,6 +920,291 @@ namespace pwiz.OspreySharp
                             "input\t{0}\t{1}\t{2:F10}", xi, s, peakXics[xi].Value[s]));
             }
             LogAction(@"[BISECT] Wrote median polish diagnostic: cs_mp_diag.txt");
+        }
+
+        // ----- Median polish inputs (cross-impl bisection) -----
+
+        // Persistent thread-safe writer for cs_stage6_mp_inputs.tsv.
+        // Lazily opened on first WriteMpInputsRow call; flushed in
+        // CloseMpInputsDump when the rescore loop finishes. Holding the
+        // writer open across calls amortizes the OS-level append cost
+        // over millions of rows (peak_xics fires once per scoring call,
+        // each row is small -- per-call open/close would dominate).
+        private static StreamWriter _mpInputsWriter;
+        private static readonly object _mpInputsLock = new object();
+
+        /// <summary>
+        /// Append one tukey_median_polish input matrix to
+        /// cs_stage6_mp_inputs.tsv. Format: one row per (entry,
+        /// apex_scan, frag_pos, scan_idx) with columns
+        /// <c>entry_id</c>, <c>apex_scan</c>, <c>frag_pos</c>,
+        /// <c>frag_idx</c>, <c>scan_idx</c>, <c>rt</c>, <c>intensity</c>
+        /// -- byte-for-byte identical to Rust's
+        /// <c>diagnostics::dump_mp_inputs</c>. <paramref name="peakXics"/>
+        /// is the same <c>(frag_idx, intensity[])</c> list passed to
+        /// <c>TukeyMedianPolish.Compute</c>; <paramref name="peakRts"/>
+        /// is the shared scan-index-aligned RT vector.
+        /// </summary>
+        public static void WriteMpInputsRow(uint entryId, uint apexScan,
+            IList<KeyValuePair<int, double[]>> peakXics, double[] peakRts)
+        {
+            if (!DumpMpInputs)
+                return;
+            // Build the buffer outside the lock: each call emits 6×N_scans
+            // rows; per-call sort order doesn't matter (bisection sorts
+            // post-hoc), so multiple threads can build their buffers in
+            // parallel and only serialize on the file write.
+            var sb = new StringBuilder(peakXics.Count * peakRts.Length * 48);
+            for (int fragPos = 0; fragPos < peakXics.Count; fragPos++)
+            {
+                int fragIdx = peakXics[fragPos].Key;
+                double[] intensities = peakXics[fragPos].Value;
+                int n = Math.Min(intensities.Length, peakRts.Length);
+                for (int scanIdx = 0; scanIdx < n; scanIdx++)
+                {
+                    sb.Append(entryId).Append('\t')
+                      .Append(apexScan).Append('\t')
+                      .Append(fragPos).Append('\t')
+                      .Append(fragIdx).Append('\t')
+                      .Append(scanIdx).Append('\t')
+                      .Append(Diagnostics.FormatF64Roundtrip(peakRts[scanIdx])).Append('\t')
+                      .Append(Diagnostics.FormatF64Roundtrip(intensities[scanIdx])).Append('\n');
+                }
+            }
+            string payload = sb.ToString();
+            lock (_mpInputsLock)
+            {
+                if (_mpInputsWriter == null)
+                {
+                    _mpInputsWriter = new StreamWriter(@"cs_stage6_mp_inputs.tsv");
+                    _mpInputsWriter.WriteLine(
+                        "# entry_id\tapex_scan\tfrag_pos\tfrag_idx\tscan_idx\trt\tintensity");
+                    LogAction(
+                        @"[BISECT] OSPREY_DUMP_MP_INPUTS active: writing tukey_median_polish inputs to cs_stage6_mp_inputs.tsv");
+                }
+                _mpInputsWriter.Write(payload);
+            }
+        }
+
+        /// <summary>
+        /// Flush and close the cs_stage6_mp_inputs.tsv writer at the end
+        /// of the rescore loop. Safe to call when the writer was never
+        /// opened (no-op).
+        /// </summary>
+        public static void CloseMpInputsDump()
+        {
+            lock (_mpInputsLock)
+            {
+                if (_mpInputsWriter == null)
+                    return;
+                _mpInputsWriter.Flush();
+                _mpInputsWriter.Dispose();
+                _mpInputsWriter = null;
+            }
+        }
+
+        // ----- RT calibration predict() inputs/outputs (cross-impl bisection) -----
+
+        // Persistent thread-safe writer for cs_stage6_predict_rt.tsv.
+        // Lazily opened on first dump call. Two sections share the same
+        // header: cal_arrays rows are emitted once per file at the top
+        // of the rescore loop; predict_calls rows are emitted from
+        // every per-entry rescore search invocation. The bisection
+        // workflow handles the duplicates the predict-call site can
+        // produce (same entry_id scored across multiple windows) with
+        // post-hoc `sort -u`.
+        private static StreamWriter _predictRtWriter;
+        private static readonly object _predictRtLock = new object();
+
+        private static void OpenPredictRtWriterLocked()
+        {
+            // Caller must hold _predictRtLock.
+            if (_predictRtWriter != null)
+                return;
+            _predictRtWriter = new StreamWriter(@"cs_stage6_predict_rt.tsv");
+            _predictRtWriter.WriteLine(
+                "# section\tfile_name_or_entry_id\tarray_or_apex\tidx_or_lib_rt\tvalue_or_expected_rt");
+            LogAction(
+                @"[BISECT] OSPREY_DUMP_PREDICT_RT active: writing predict() inputs/outputs to cs_stage6_predict_rt.tsv");
+        }
+
+        /// <summary>
+        /// Dump the RT calibration's <c>library_rts</c> and
+        /// <c>fitted_values</c> arrays for a file. Append-only -- if
+        /// the rescore loop reuses a file's calibration twice, expect
+        /// duplicate cal_arrays rows. The bisection workflow uses
+        /// <c>sort -u</c> post-hoc to collapse them. Mirrors Rust's
+        /// dump_predict_rt_arrays.
+        /// </summary>
+        public static void WritePredictRtArrays(string fileName, double[] libraryRts, double[] fittedValues)
+        {
+            if (!DumpPredictRt)
+                return;
+            if (libraryRts == null || fittedValues == null)
+                return;
+            var inv = CultureInfo.InvariantCulture;
+            var sb = new StringBuilder((libraryRts.Length + fittedValues.Length) * 64);
+            for (int i = 0; i < libraryRts.Length; i++)
+            {
+                sb.Append("cal_arrays\t").Append(fileName)
+                  .Append("\tlibrary_rts\t").Append(i.ToString(inv))
+                  .Append('\t').Append(Diagnostics.FormatF64Roundtrip(libraryRts[i]))
+                  .Append('\n');
+            }
+            for (int i = 0; i < fittedValues.Length; i++)
+            {
+                sb.Append("cal_arrays\t").Append(fileName)
+                  .Append("\tfitted_values\t").Append(i.ToString(inv))
+                  .Append('\t').Append(Diagnostics.FormatF64Roundtrip(fittedValues[i]))
+                  .Append('\n');
+            }
+            string payload = sb.ToString();
+            lock (_predictRtLock)
+            {
+                OpenPredictRtWriterLocked();
+                _predictRtWriter.Write(payload);
+            }
+        }
+
+        /// <summary>
+        /// Dump a single <c>RTCalibration.Predict</c> input/output
+        /// pair. Same entry_id may appear many times (once per
+        /// per-window candidate). Mirrors Rust's dump_predict_rt_call.
+        /// </summary>
+        public static void WritePredictRtCall(uint entryId, double libraryRt, double expectedRt)
+        {
+            if (!DumpPredictRt)
+                return;
+            string line = string.Concat(
+                "predict_calls\t", entryId.ToString(CultureInfo.InvariantCulture),
+                "\t-\t", Diagnostics.FormatF64Roundtrip(libraryRt),
+                "\t", Diagnostics.FormatF64Roundtrip(expectedRt),
+                "\n");
+            lock (_predictRtLock)
+            {
+                OpenPredictRtWriterLocked();
+                _predictRtWriter.Write(line);
+            }
+        }
+
+        // ----- CWT path summary (cross-impl bisection) -----
+
+        // Persistent thread-safe writer for cs_stage6_cwt_path.tsv.
+        // Lazy-opened on first WriteCwtPathRow call. Threaded scoring
+        // serializes only on the file write itself; the row-build
+        // happens lock-free.
+        private static StreamWriter _cwtPathWriter;
+        private static readonly object _cwtPathLock = new object();
+
+        /// <summary>
+        /// Append one per-(file, entry) row to cs_stage6_cwt_path.tsv
+        /// describing how the CWT detection / fallback / apex-filter
+        /// pipeline behaved for this entry. Use to bisect the cross-
+        /// impl divergence in the rescore set: entries where Rust and
+        /// C# disagree on `scored` flag identify the seam at which
+        /// the rescore engines diverge.
+        ///
+        /// The sigma + consensus-signal stats (l1, max_abs, argmax) are
+        /// computed inside this method by re-running the first half of
+        /// <see cref="CwtPeakDetector.GetConsensusSignal"/> on
+        /// <paramref name="xics"/>, gated by the env-var check above so
+        /// production callers pay nothing when the dump is off. Mirrors
+        /// the Rust side, where <c>dump_cwt_path</c> calls
+        /// <c>get_consensus_signal</c> only after its <c>OnceLock</c>
+        /// writer probe has confirmed the dump is active.
+        /// </summary>
+        public static void WriteCwtPathRow(string fileName, uint entryId,
+            int nCwtPeaks, int nFinalPeaks, int nScored, bool scored,
+            List<XicData> xics)
+        {
+            if (!DumpCwtPath)
+                return;
+            // Recompute sigma + consensus signal here so production
+            // callers don't carry diagnostic state. consensus_l1 (sum
+            // of |consensus[i]|) gives a single-number cross-impl
+            // signature on the consensus signal -- if it matches, the
+            // divergence is in the peak finder (apex enumeration or
+            // boundary extension); if it doesn't, the divergence is
+            // upstream in convolve or median.
+            double sigma = 0.0;
+            double consensusL1 = 0.0;
+            double consensusMaxAbs = 0.0;
+            int consensusArgmax = -1;
+            if (xics != null)
+            {
+                double[] consensus = CwtPeakDetector.GetConsensusSignal(xics, out sigma);
+                if (consensus != null)
+                {
+                    double sum = 0.0;
+                    double maxAbs = 0.0;
+                    int argmax = -1;
+                    for (int i = 0; i < consensus.Length; i++)
+                    {
+                        double a = Math.Abs(consensus[i]);
+                        sum += a;
+                        if (a > maxAbs) { maxAbs = a; argmax = i; }
+                    }
+                    consensusL1 = sum;
+                    consensusMaxAbs = maxAbs;
+                    consensusArgmax = argmax;
+                }
+            }
+            var inv = CultureInfo.InvariantCulture;
+            string line = string.Concat(
+                fileName, '\t',
+                entryId.ToString(inv), '\t',
+                nCwtPeaks.ToString(inv), '\t',
+                nFinalPeaks.ToString(inv), '\t',
+                nScored.ToString(inv), '\t',
+                (scored ? "1" : "0"), '\t',
+                Diagnostics.FormatF64Roundtrip(sigma), '\t',
+                Diagnostics.FormatF64Roundtrip(consensusL1), '\t',
+                Diagnostics.FormatF64Roundtrip(consensusMaxAbs), '\t',
+                consensusArgmax.ToString(inv), '\n');
+            lock (_cwtPathLock)
+            {
+                if (_cwtPathWriter == null)
+                {
+                    _cwtPathWriter = new StreamWriter(@"cs_stage6_cwt_path.tsv");
+                    _cwtPathWriter.WriteLine(
+                        "file_name\tentry_id\tn_cwt_peaks\tn_final_peaks\tn_scored\tscored\tsigma\tconsensus_l1\tconsensus_max_abs\tconsensus_argmax");
+                    LogAction(
+                        @"[BISECT] OSPREY_DUMP_CWT_PATH active: writing CWT path summary to cs_stage6_cwt_path.tsv");
+                }
+                _cwtPathWriter.Write(line);
+            }
+        }
+
+        /// <summary>
+        /// Flush and close the cs_stage6_cwt_path.tsv writer. Safe to
+        /// call when the writer was never opened (no-op).
+        /// </summary>
+        public static void CloseCwtPathDump()
+        {
+            lock (_cwtPathLock)
+            {
+                if (_cwtPathWriter == null)
+                    return;
+                _cwtPathWriter.Flush();
+                _cwtPathWriter.Dispose();
+                _cwtPathWriter = null;
+            }
+        }
+
+        /// <summary>
+        /// Flush and close the cs_stage6_predict_rt.tsv writer. Safe
+        /// to call when the writer was never opened (no-op).
+        /// </summary>
+        public static void ClosePredictRtDump()
+        {
+            lock (_predictRtLock)
+            {
+                if (_predictRtWriter == null)
+                    return;
+                _predictRtWriter.Flush();
+                _predictRtWriter.Dispose();
+                _predictRtWriter = null;
+            }
         }
 
         // ----- Env var parsing helpers -----
