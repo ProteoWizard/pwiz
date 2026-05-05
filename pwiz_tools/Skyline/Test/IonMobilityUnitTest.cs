@@ -180,6 +180,65 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
+        /// Verify that <see cref="TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits"/>
+        /// reports the full set of distinct units across all transition groups in the document.
+        /// Callers that want to auto-populate a single unit must require Count == 1 - otherwise
+        /// silently picking would risk mis-interpreting incompatible units (FAIMS vs TIMS vs DT).
+        /// </summary>
+        [TestMethod]
+        public void TestDocumentIonMobilityUnitsDeduction()
+        {
+            var settings = SrmSettingsList.GetDefault();
+
+            // Distinct valid AA suffixes so each peptide has a unique sequence.
+            var aaSuffix = new[] { 'K', 'R', 'L', 'M' };
+            SrmDocument BuildDoc(params eIonMobilityUnits[] groupUnits)
+            {
+                var groups = groupUnits.Select((u, i) =>
+                {
+                    var peptide = new Peptide(@"PEPTIDE" + aaSuffix[i]);
+                    var tg = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+                    var explicitValues = u == eIonMobilityUnits.none
+                        ? ExplicitTransitionGroupValues.EMPTY
+                        : ExplicitTransitionGroupValues.Create(null, 0.85, u, null);
+                    var tran = new Transition(tg, IonType.y, 3, 0, Adduct.SINGLY_PROTONATED);
+                    var nodeTran = new TransitionDocNode(tran, null, TypedMass.ZERO_MONO_MASSH,
+                        TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY);
+                    var nodeTg = new TransitionGroupDocNode(tg, Annotations.EMPTY, settings,
+                        null, null, explicitValues, null, new[] { nodeTran }, false);
+                    var nodePep = new PeptideDocNode(peptide, settings, null, null, ExplicitRetentionTimeInfo.EMPTY,
+                        new[] { nodeTg }, false);
+                    return new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, @"PepGroup" + aaSuffix[i],
+                        null, new[] { nodePep });
+                }).ToArray();
+                return (SrmDocument)new SrmDocument(settings).ChangeChildren(groups);
+            }
+
+            // Empty document - no candidates.
+            var units = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(BuildDoc());
+            Assert.AreEqual(0, units.Count);
+
+            // Single transition group with explicit units - one candidate.
+            units = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(
+                BuildDoc(eIonMobilityUnits.drift_time_msec));
+            Assert.AreEqual(1, units.Count);
+            Assert.IsTrue(units.Contains(eIonMobilityUnits.drift_time_msec));
+
+            // Two groups with conflicting units - ambiguous, callers must NOT auto-pick.
+            units = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(
+                BuildDoc(eIonMobilityUnits.drift_time_msec, eIonMobilityUnits.inverse_K0_Vsec_per_cm2));
+            Assert.AreEqual(2, units.Count);
+            Assert.IsTrue(units.Contains(eIonMobilityUnits.drift_time_msec));
+            Assert.IsTrue(units.Contains(eIonMobilityUnits.inverse_K0_Vsec_per_cm2));
+
+            // Group with units=none alongside one with units - the none entry is ignored.
+            units = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(
+                BuildDoc(eIonMobilityUnits.none, eIonMobilityUnits.drift_time_msec));
+            Assert.AreEqual(1, units.Count);
+            Assert.IsTrue(units.Contains(eIonMobilityUnits.drift_time_msec));
+        }
+
+        /// <summary>
         /// Regression test for exception 74341: peptide with ExplicitIonMobility value but
         /// IonMobilityUnits == none crashed <see cref="SrmSettings.GetIonMobilityFilter"/>
         /// with "Nullable object must have a value" (reached via Bruker timsTOF method export).

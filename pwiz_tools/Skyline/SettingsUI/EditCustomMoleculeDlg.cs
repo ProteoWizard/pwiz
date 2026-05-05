@@ -584,25 +584,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (!string.IsNullOrEmpty(textIonMobility.Text) && Equals(IonMobilityUnits, eIonMobilityUnits.none))
             {
-                // Try to set a reasonable value for ion mobility units
-
-                // First look for any other explicit ion mobility values in the document
+                // Only auto-populate when the document unambiguously implies a single unit.
+                // FAIMS, TIMS, and drift_time_msec are semantically incompatible - silently
+                // picking the first-seen unit would risk mis-interpreting the user's value.
+                // When ambiguous (or there is no evidence), leave units=none and let the user pick.
                 var doc = _parent?.Document;
-                var node =
-                    doc?.MoleculeTransitionGroups.FirstOrDefault(n =>
-                        n.ExplicitValues.IonMobilityUnits != eIonMobilityUnits.none);
-                if (node != null)
-                {
-                    IonMobilityUnits = node.ExplicitValues.IonMobilityUnits;
+                if (doc == null)
                     return;
-                }
-
-                // Then try the ion mobility library if any
-                var filters = doc?.Settings.TransitionSettings.IonMobilityFiltering;
-                if (filters != null)
-                {
-                    IonMobilityUnits = filters.GetFirstSeenIonMobilityUnits();
-                }
+                var candidates = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(doc);
+                if (candidates.Count == 1)
+                    IonMobilityUnits = candidates.Single();
             }
         }
 
