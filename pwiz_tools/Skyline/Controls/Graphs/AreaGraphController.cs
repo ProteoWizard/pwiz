@@ -62,6 +62,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum MultiPeptideDisplay { Line, Cluster, Aggregate }
 
+    public enum RtLoessShowValue { Median, NormalizationFactor, NormalizedMedian }
+
     public sealed class AreaGraphController : GraphSummary.IControllerSplit
     {
         public static GraphTypeSummary GraphType
@@ -80,6 +82,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return Helpers.ParseEnum(Settings.Default.AreaGraphMultiPeptideDisplay, MultiPeptideDisplay.Line); }
             set { Settings.Default.AreaGraphMultiPeptideDisplay = value.ToString(); }
+        }
+
+        public static RtLoessShowValue RtLoessShowValue
+        {
+            get { return Helpers.ParseEnum(Settings.Default.RtLoessShowValue, RtLoessShowValue.Median); }
+            set { Settings.Default.RtLoessShowValue = value.ToString(); }
         }
 
         public static NormalizeOption AreaNormalizeOption
@@ -199,7 +207,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public void OnResultsIndexChanged()
         {
             if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */ ||
-                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single
+                    || GraphSummary.GraphPanes.OfType<AreaRtLoessGraphPane>().Any())
                 GraphSummary.UpdateUI();
         }
 

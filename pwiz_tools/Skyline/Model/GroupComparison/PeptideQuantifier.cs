@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NHibernate.Hql.Ast.ANTLR.Tree;
 using pwiz.Common.Collections;
-using pwiz.Common.DataAnalysis;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
@@ -13,8 +11,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public class PeptideQuantifier
     {
-        private readonly Lazy<NormalizationData> _normalizationData;
-        public PeptideQuantifier(Lazy<NormalizationData> normalizationData, PeptideGroup peptideGroup, PeptideDocNode peptideDocNode,
+        private readonly NormalizationDataProvider _normalizationData;
+        public PeptideQuantifier(NormalizationDataProvider normalizationData, PeptideGroup peptideGroup, PeptideDocNode peptideDocNode,
             QuantificationSettings quantificationSettings)
         {
             PeptideGroup = peptideGroup;
@@ -23,20 +21,21 @@ namespace pwiz.Skyline.Model.GroupComparison
             _normalizationData = normalizationData;
         }
 
-        public PeptideQuantifier(Lazy<NormalizationData> normalizationData,
+        public PeptideQuantifier(NormalizationDataProvider normalizationData,
+            Lazy<RtLoessCurves> rtLoessCurves,
             PeptideGroupDocNode peptideGroupDocNode, PeptideDocNode peptideDocNode,
-            QuantificationSettings quantificationSettings) : this(normalizationData,
+            QuantificationSettings quantificationSettings) : this(normalizationData, 
             peptideGroupDocNode.PeptideGroup, peptideDocNode, quantificationSettings)
         {
         }
 
-        public static PeptideQuantifier GetPeptideQuantifier(Lazy<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroup peptideGroup, PeptideDocNode peptide)
+        public static PeptideQuantifier GetPeptideQuantifier(NormalizationDataProvider normalizationDataProvider, SrmSettings srmSettings, PeptideGroup peptideGroup, PeptideDocNode peptide)
         {
             var mods = srmSettings.PeptideSettings.Modifications;
             // Quantify on all label types which are not internal standards.
             ICollection<IsotopeLabelType> labelTypes = ImmutableList.ValueOf(mods.GetModificationTypes()
                 .Except(mods.InternalStandardTypes));
-            return new PeptideQuantifier(getNormalizationDataFunc, peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
+            return new PeptideQuantifier(normalizationDataProvider, peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
             {
                 MeasuredLabelTypes = labelTypes,
                 IncludeTruncatedPeaks = srmSettings.TransitionSettings.Instrument.TriggeredAcquisition
@@ -47,12 +46,12 @@ namespace pwiz.Skyline.Model.GroupComparison
             PeptideDocNode peptide)
         {
 
-            return GetPeptideQuantifier(NormalizationData.LazyNormalizationData(document), document.Settings, peptideGroup, peptide);
+            return GetPeptideQuantifier(new NormalizationDataProvider(document), document.Settings, peptideGroup, peptide);
         }
-        public static PeptideQuantifier GetPeptideQuantifier(Lazy<NormalizationData> getNormalizationDataFunc, SrmSettings settings, PeptideGroupDocNode peptideGroupDocNode,
+        public static PeptideQuantifier GetPeptideQuantifier(NormalizationDataProvider normalizationData, SrmSettings settings, PeptideGroupDocNode peptideGroupDocNode,
             PeptideDocNode peptide)
         {
-            return GetPeptideQuantifier(getNormalizationDataFunc, settings, peptideGroupDocNode.PeptideGroup, peptide);
+            return GetPeptideQuantifier(normalizationData, settings, peptideGroupDocNode.PeptideGroup, peptide);
         }
 
         public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document,
@@ -399,7 +398,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 else if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
                 {
-                    var normalizationData = _normalizationData.Value;
+                    var normalizationData = _normalizationData.GetNormalizationData();
                     if (null == normalizationData)
                     {
                         throw new InvalidOperationException(string.Format(@"Normalization method '{0}' is not supported here.", NormalizationMethod));
@@ -423,12 +422,12 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 else if (Equals(normalizationMethod, NormalizationMethod.RT_LOESS))
                 {
-                    var normalizationData = _normalizationData.Value;
-                    if (null == normalizationData)
+                    var rtLoessCurves = _normalizationData.GetRtLoessCurves();
+                    if (null == rtLoessCurves)
                     {
                         throw new InvalidOperationException(string.Format(@"Normalization method '{0}' is not supported here.", NormalizationMethod));
                     }
-                    double? rtLoessAdjustment = normalizationData.GetRtLoessAdjustment(
+                    double? rtLoessAdjustment = rtLoessCurves.GetAdjustment(
                         replicateIndex, chromInfo.FileId, chromInfo.RetentionTime);
                     if (!rtLoessAdjustment.HasValue)
                     {

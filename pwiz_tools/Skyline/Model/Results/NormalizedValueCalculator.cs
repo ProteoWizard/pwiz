@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using EnvDTE;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.DocSettings;
@@ -33,21 +34,13 @@ namespace pwiz.Skyline.Model.Results
     {
         public static readonly NormalizedValueCalculator DEFAULT =
             new NormalizedValueCalculator(new SrmDocument(SrmSettingsList.GetDefault()));
-        private readonly Lazy<NormalizationData> _normalizationData;
+        private readonly NormalizationDataProvider _normalizationData;
         private readonly Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo> _fileInfos;
 
-        public NormalizedValueCalculator(SrmDocument document, NormalizationData normalizationData = null)
+        public NormalizedValueCalculator(SrmDocument document, NormalizationDataProvider normalizationDataProvider = null)
         {
             Document = document;
-            if (normalizationData == null)
-            {
-                _normalizationData = new Lazy<NormalizationData>(() =>
-                    NormalizationData.GetNormalizationData(document, false, null));
-            }
-            else
-            {
-                _normalizationData = new Lazy<NormalizationData>(()=>normalizationData);
-            }
+            _normalizationData = normalizationDataProvider ?? new NormalizationDataProvider(document, null, null);
             _fileInfos = new Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo>();
             if (document.MeasuredResults != null)
             {
@@ -100,8 +93,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (Equals(normalizationMethod, NormalizationMethod.RT_LOESS))
             {
-                var normalizationData = _normalizationData.Value;
-                var rtLoessAdjustment = normalizationData.GetRtLoessAdjustment(replicateIndex,
+                var rtLoessAdjustment = _normalizationData.GetRtLoessCurves().GetAdjustment(replicateIndex,
                     transitionChromInfo.FileId, transitionChromInfo.RetentionTime);
                 if (!rtLoessAdjustment.HasValue)
                     return null;
@@ -191,8 +183,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (!transitionGroupChromInfo.RetentionTime.HasValue)
                     return null;
-                var normalizationData = _normalizationData.Value;
-                var rtLoessAdjustment = normalizationData.GetRtLoessAdjustment(replicateIndex,
+                var rtLoessAdjustment = _normalizationData.GetRtLoessCurves().GetAdjustment(replicateIndex,
                     transitionGroupChromInfo.FileId, transitionGroupChromInfo.RetentionTime.Value);
                 if (!rtLoessAdjustment.HasValue)
                     return null;
@@ -437,7 +428,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
             {
-                var normalizationData = _normalizationData.Value;
+                var normalizationData = _normalizationData.GetNormalizationData();
                 var medianAdjustment = normalizationData.GetLog2Median(replicateIndex, fileId) - normalizationData.GetMedianLog2Median();
                 if (!medianAdjustment.HasValue)
                 {
@@ -465,12 +456,9 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
-        public Lazy<NormalizationData> LazyNormalizationData
+        public NormalizationDataProvider GetNormalizationDataProvider()
         {
-            get
-            {
-                return _normalizationData;
-            }
+            return _normalizationData;
         }
 
         public NormalizationMethod NormalizationMethodForMolecule(PeptideDocNode peptideDocNode, NormalizeOption normalizeOption)
@@ -567,27 +555,34 @@ namespace pwiz.Skyline.Model.Results
             {
                 var document = parameter.Document;
                 return new NormalizedValueCalculator(document,
-                    NormalizationData.PRODUCER.GetResult(dependencies, new NormalizationData.Parameters(document)));
+                    new NormalizationDataProvider(document, NormalizationData.PRODUCER.GetResult(dependencies, new NormalizationData.Parameters(document)),
+                        RtLoessCurves.PRODUCER.GetResult(dependencies, new ReferenceValue<SrmDocument>(document))));
             }
 
             public override IEnumerable<WorkOrder> GetInputs(Params workParameter)
             {
                 var normalizeOption = workParameter.NormalizeOption;
                 SrmDocument document = workParameter.Document;
+                var inputs = new List<WorkOrder>();
 
-                if (NeedsNormalizationData(normalizeOption?.NormalizationMethod) ||
-                    NeedsNormalizationData(document.Settings.PeptideSettings.Quantification.NormalizationMethod))
+                if (IsNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS, normalizeOption, document))
                 {
-                    return ImmutableList.Singleton(NormalizationData.PRODUCER.MakeWorkOrder(new NormalizationData.Parameters(document)));
+                    inputs.Add(NormalizationData.PRODUCER.MakeWorkOrder(new NormalizationData.Parameters(document)));
                 }
 
-                return Array.Empty<WorkOrder>();
+                if (IsNormalizationMethod(NormalizationMethod.RT_LOESS, normalizeOption, document))
+                {
+                    inputs.Add(RtLoessCurves.PRODUCER.MakeWorkOrder(document));
+                }
+
+                return inputs;
             }
 
-            private static bool NeedsNormalizationData(NormalizationMethod normalizationMethod)
+            private static bool IsNormalizationMethod(NormalizationMethod method, NormalizeOption normalizeOption,
+                SrmDocument document)
             {
-                return Equals(NormalizationMethod.EQUALIZE_MEDIANS, normalizationMethod) ||
-                       Equals(NormalizationMethod.RT_LOESS, normalizationMethod);
+                return Equals(method, normalizeOption?.NormalizationMethod) || Equals(method,
+                    document.Settings.PeptideSettings.Quantification.NormalizationMethod);
             }
         }
 
