@@ -69,7 +69,12 @@ public sealed class ReaderList : IReader
         ArgumentNullException.ThrowIfNull(filename);
         ArgumentNullException.ThrowIfNull(result);
 
-        string? head = Directory.Exists(filename) ? null : ReadHead(filename);
+        // Remote / URL inputs (UNIFI sample-result endpoints, waters_connect) skip the
+        // file-system probe — Directory.Exists / File.OpenRead would normalize the URL as a
+        // local path and throw. cpp ReaderList does the same: identify by string shape first.
+        bool isUrl = filename.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                  || filename.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        string? head = isUrl || Directory.Exists(filename) ? null : ReadHead(filename);
         var reader = IdentifyReader(filename, head);
         if (reader is null)
         {

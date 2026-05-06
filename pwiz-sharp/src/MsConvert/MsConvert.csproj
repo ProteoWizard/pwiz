@@ -38,6 +38,7 @@
     <ProjectReference Include="..\Vendor\Agilent\Agilent.csproj" />
     <ProjectReference Include="..\Vendor\Sciex\Sciex.csproj" />
     <ProjectReference Include="..\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="..\Vendor\UNIFI\UNIFI.csproj" />
     <!-- Sciex.Wiff2 is a runtime-only plugin: built as a build dependency, but its assembly is
          deliberately NOT referenced (would land in deps.json / TPA). Wiff2LoadContext loads
          Pwiz.Vendor.Sciex.Wiff2.dll on demand into a side-by-side ALC so its bundled
