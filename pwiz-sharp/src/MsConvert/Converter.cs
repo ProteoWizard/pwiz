@@ -41,6 +41,7 @@ public sealed class Converter
         _readers.Add(new Pwiz.Vendor.Shimadzu.Reader_Shimadzu());
         _readers.Add(new Pwiz.Vendor.UNIFI.Reader_UNIFI());
         _readers.Add(new Pwiz.Vendor.UIMF.Reader_UIMF());
+        _readers.Add(new Pwiz.Vendor.Mobilion.Reader_Mobilion());
     }
 
     /// <summary>Processes every configured input file. Returns the count that succeeded.</summary>

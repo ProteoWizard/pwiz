@@ -233,6 +233,7 @@ public static class VendorReaderTestHarness
             GlobalChromatogramsAreMs1Only = config.GlobalChromatogramsAreMs1Only,
             IgnoreCalibrationScans = config.IgnoreCalibrationScans,
             IsolationMzAndMobilityFilter = config.IsolationMzAndMobilityFilter,
+            IgnoreZeroIntensityPoints = config.IgnoreZeroIntensityPoints,
         };
         try
         {
