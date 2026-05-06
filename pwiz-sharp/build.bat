@@ -124,23 +124,28 @@ if %IAGREE%==1 (
 )
 
 REM # TeamCity test decoration: wrap the dotnet test run in a testSuite so the
-REM # individual test results (already TeamCity-formatted by the dotnet test
-REM # runner when TEAMCITY_VERSION is set in env) roll up under one suite name
-REM # in the build's Tests tab. Mirrors Skyline TestRunner's pattern.
+REM # individual test results (imported from per-assembly trx files at the end)
+REM # roll up under one suite name in the build's Tests tab.
 if defined TEAMCITY_VERSION echo ##teamcity[testSuiteStarted name='%TEST_SUITE_NAME%']
 
 echo ##teamcity[progressMessage 'dotnet test (%CONFIG%)']
 REM # Loggers:
-REM #   trx     — TeamCity's "XML report processing" build feature can also ingest these;
-REM #             local dev gets a TestResults\<name>.trx for IDE consumption.
-REM #   console — readable stdout for humans / CI logs.
-REM #   teamcity — TeamCity.VSTest.TestAdapter (referenced from test/Directory.Build.targets)
-REM #             registers itself under this name and emits per-test service messages
-REM #             (##teamcity[testStarted/testFinished/testFailed]) when TEAMCITY_VERSION
-REM #             is in env. Forced explicitly since the adapter's auto-enable check
-REM #             (TEAMCITY_PROJECT_NAME) doesn't see TC's env in plain Command Line steps.
-set TEST_LOGGERS=--logger:"trx" --logger:"console;verbosity=normal"
-if defined TEAMCITY_VERSION set TEST_LOGGERS=%TEST_LOGGERS% --logger:teamcity
+REM #   trx     — per-assembly XML files written under %TC_TEST_RESULTS%. We don't
+REM #             use --logger:teamcity any more: when `dotnet test` runs the solution,
+REM #             test assemblies execute in parallel against a shared stdout. The SCIEX
+REM #             Clearcore2 SDK's log4net output (~30 IoC lines per CreateSampleDataApi
+REM #             call + 5-10 lines per API call, all containing raw `[`/`]` chars)
+REM #             collides mid-line with `##teamcity[testFinished ...]` service messages.
+REM #             TC silently drops the malformed messages and the affected tests vanish
+REM #             from the count — observed in builds 3974560/3974563/3974564, same
+REM #             commit, totals 221/238/191 driven by log-flood corruption. Per-assembly
+REM #             trx files write to disk independently, then we emit one
+REM #             `##teamcity[importData type='vstest' ...]` at the end to ingest the
+REM #             whole batch — no service-message corruption is possible.
+REM #   console — readable stdout for humans / local CI logs.
+set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
+if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
+set TEST_LOGGERS=--logger:"trx" --logger:"console;verbosity=normal" --results-directory:"%TC_TEST_RESULTS%"
 
 if %COVERAGE%==1 (
     REM # Run the test step under JetBrains dotCover. Snapshot is dropped at
@@ -196,6 +201,10 @@ if %COVERAGE%==1 (
     dotnet test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
     set EXIT=!ERRORLEVEL!
 )
+
+REM # Import every per-assembly trx into TC. type='vstest' is the documented importer
+REM # for VSTest TRX. Wildcards are supported.
+if defined TEAMCITY_VERSION echo ##teamcity[importData type='vstest' path='%TC_TEST_RESULTS%\*.trx']
 
 if defined TEAMCITY_VERSION echo ##teamcity[testSuiteFinished name='%TEST_SUITE_NAME%']
 
