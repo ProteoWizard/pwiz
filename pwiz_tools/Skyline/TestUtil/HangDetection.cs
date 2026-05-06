@@ -127,17 +127,15 @@ namespace pwiz.SkylineTestUtil
                     TimeSpan cycleDuration = TimeSpan.FromTicks(100);
                     long minCycleCount = duration.Ticks / cycleDuration.Ticks;
 
-                    // Poll for a stray ThreadExceptionDialog at most every 500ms while we are
-                    // blocked waiting for the action to complete. If WinForms catches an exception
-                    // inside a reentrant WndProc (e.g. EventWaitHandle.Set on a disposed
-                    // SafeWaitHandle during teardown) it can bypass our Application.ThreadException
-                    // handler and pop the default dialog. The UI thread is then wedged in the
-                    // dialog's nested message loop, so the caller's Invoke never returns and this
-                    // wait would otherwise time out only at the full duration. Dismissing the
-                    // dialog releases the UI thread; recording the exception ensures the test
-                    // fails loudly so the underlying bug is investigated rather than masked.
-                    var dialogPollInterval = TimeSpan.FromMilliseconds(500);
-                    var nextDialogPoll = TimeSpan.Zero;
+                    // While blocked waiting for the action to complete, also watch for a stray
+                    // ThreadExceptionDialog. If WinForms catches an exception inside a reentrant
+                    // WndProc (e.g. EventWaitHandle.Set on a disposed SafeWaitHandle during
+                    // teardown) it can bypass our Application.ThreadException handler and pop the
+                    // default dialog. The UI thread is then wedged in the dialog's nested message
+                    // loop, so the caller's Invoke never returns and this wait would otherwise
+                    // time out only at the full duration. Dismissing the dialog releases the UI
+                    // thread; recording the exception ensures the test fails loudly so the
+                    // underlying bug is investigated rather than masked.
                     var handledDialogs = new HashSet<ThreadExceptionDialog>();
 
                     for (long cycleIndex = 0; ; cycleIndex++)
@@ -153,18 +151,14 @@ namespace pwiz.SkylineTestUtil
                             break;
                         }
 
-                        if (stopWatch.Elapsed >= nextDialogPoll)
+                        try
                         {
-                            nextDialogPoll = stopWatch.Elapsed + dialogPollInterval;
-                            try
-                            {
-                                DismissThreadExceptionDialogs(handledDialogs);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.Out.WriteLine(
-                                    @"HangDetection: error checking for ThreadExceptionDialog: {0}", ex);
-                            }
+                            DismissThreadExceptionDialogs(handledDialogs);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Out.WriteLine(
+                                @"HangDetection: error checking for ThreadExceptionDialog: {0}", ex);
                         }
 
                         Monitor.Wait(_lock, cycleDuration);
