@@ -112,6 +112,16 @@ namespace pwiz.OspreySharp.Core
         public List<string> InputScores { get; set; }
 
         /// <summary>
+        /// HPC: when true, exit after Stage 5 + reconciliation planning,
+        /// having written the boundary files
+        /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
+        /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
+        /// Skips Stage 6 + 7 + 8. Set by the
+        /// <c>--join-at-pass=1 --join-only</c> flag combination.
+        /// </summary>
+        public bool StopAfterStage5 { get; set; }
+
+        /// <summary>
         /// How many files will actually run concurrently in the current
         /// invocation. Set by the pipeline before per-file ProcessFile()
         /// calls; used to divide the inner main-search thread budget so
