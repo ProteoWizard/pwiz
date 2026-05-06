@@ -217,8 +217,8 @@
 <!-- n_data__vendor_readers__ABI__T2D -->
 <g id="node22" class="node">
 <title>n_data__vendor_readers__ABI__T2D</title>
-<path fill="#f5a8a8" stroke="#a02020" d="M472,-362C472,-362 442,-362 442,-362 436,-362 430,-356 430,-350 430,-350 430,-338 430,-338 430,-332 436,-326 442,-326 442,-326 472,-326 472,-326 478,-326 484,-332 484,-338 484,-338 484,-350 484,-350 484,-356 478,-362 472,-362"/>
-<text xml:space="preserve" text-anchor="middle" x="457" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#3d0a0a">T2D</text>
+<path fill="#dcdcdc" stroke="#888888" d="M472,-362C472,-362 442,-362 442,-362 436,-362 430,-356 430,-350 430,-350 430,-338 430,-338 430,-332 436,-326 442,-326 442,-326 472,-326 472,-326 478,-326 484,-332 484,-338 484,-338 484,-350 484,-350 484,-356 478,-362 472,-362"/>
+<text xml:space="preserve" text-anchor="start" x="447.25" y="-342.05" font-family="Segoe UI" text-decoration="line-through" font-size="11.00" fill="#555555">T2D</text>
 </g>
 <!-- n_data__vendor_readers__Agilent -->
 <g id="node23" class="node">
@@ -235,8 +235,8 @@
 <!-- n_data__vendor_readers__Mobilion -->
 <g id="node25" class="node">
 <title>n_data__vendor_readers__Mobilion</title>
-<path fill="#f5a8a8" stroke="#a02020" d="M707.5,-362C707.5,-362 670.5,-362 670.5,-362 664.5,-362 658.5,-356 658.5,-350 658.5,-350 658.5,-338 658.5,-338 658.5,-332 664.5,-326 670.5,-326 670.5,-326 707.5,-326 707.5,-326 713.5,-326 719.5,-332 719.5,-338 719.5,-338 719.5,-350 719.5,-350 719.5,-356 713.5,-362 707.5,-362"/>
-<text xml:space="preserve" text-anchor="middle" x="689" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#3d0a0a">Mobilion</text>
+<path fill="#9ee5a3" stroke="#2c7a32" d="M707.5,-362C707.5,-362 670.5,-362 670.5,-362 664.5,-362 658.5,-356 658.5,-350 658.5,-350 658.5,-338 658.5,-338 658.5,-332 664.5,-326 670.5,-326 670.5,-326 707.5,-326 707.5,-326 713.5,-326 719.5,-332 719.5,-338 719.5,-338 719.5,-350 719.5,-350 719.5,-356 713.5,-362 707.5,-362"/>
+<text xml:space="preserve" text-anchor="middle" x="689" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#0a3d10">Mobilion</text>
 </g>
 <!-- n_data__vendor_readers__Shimadzu -->
 <g id="node26" class="node">

@@ -54,13 +54,14 @@ STATUS = {
     "data/tradata": "none",
 
     # vendor readers — every Reader_Foo with a TC test fixture is now green;
-    # 'partial' marks readers whose .NET 8 SDK has known feature gaps vs cpp.
+    # 'partial' marks readers whose .NET 8 SDK has known feature gaps vs cpp;
+    # 'skipped' marks readers we deliberately won't port (rendered with strikethrough).
     "data/vendor_readers": "full",            # ExtendedReaderList dispatcher
-    "data/vendor_readers/ABI": "partial",     # Wiff2 path full (4/4 tests); legacy Wiff not ported
-    "data/vendor_readers/ABI/T2D": "none",
+    "data/vendor_readers/ABI": "partial",     # WIFF1 + WIFF2 paths green (4/4 tests); cpp's simAsSpectra/srmAsSpectra variants not yet wired
+    "data/vendor_readers/ABI/T2D": "skipped", # 32-bit-only, requires SCIEX vendor app on host; not used in modern workflows
     "data/vendor_readers/Agilent": "full",    # 11/11 tests, IM combineIMS done
     "data/vendor_readers/Bruker": "full",     # 10/10 tests
-    "data/vendor_readers/Mobilion": "none",
+    "data/vendor_readers/Mobilion": "full",   # 2 tests; 4 cpp config variants per fixture, 4-of-4 PARITY with msconvert-cpp
     "data/vendor_readers/Shimadzu": "full",   # 2/2 tests
     "data/vendor_readers/Thermo": "full",     # 13/13 tests
     "data/vendor_readers/UIMF": "full",       # 2 tests; 1/1 fixture (BSA_10ugml_CID)
@@ -233,6 +234,10 @@ def main():
             "full":    ("#9ee5a3", "#2c7a32", "#0a3d10"),
             "partial": ("#ffe48a", "#a87000", "#4a3000"),
             "none":    ("#f5a8a8", "#a02020", "#3d0a0a"),
+            # Won't-port: muted gray fill, dashed-style border via the node block
+            # below (Graphviz `style` is per-node so the strikethrough effect is
+            # done in the label HTML, not via fillcolor).
+            "skipped": ("#dcdcdc", "#888888", "#555555"),
         }
 
         # Group modules at the "leaf-1" level — i.e., the directory immediately
@@ -323,7 +328,11 @@ def main():
             # Inside a cluster, the cluster header already shows the parent path —
             # use just the leaf component to keep boxes compact.
             label = parts[-1]
-            print(f'{indent}{node_id(m)} [label="{label}", fillcolor="{fill}", color="{stroke}", fontcolor="{text}"];')
+            # 'skipped' nodes get a strikethrough (HTML <s> wrapper) so it reads as
+            # "won't port" at a glance even before the legend is consulted.
+            # Graphviz HTML labels are written with angle-bracket delimiters, no quotes.
+            label_attr = f"<<s>{label}</s>>" if status == "skipped" else f'"{label}"'
+            print(f'{indent}{node_id(m)} [label={label_attr}, fillcolor="{fill}", color="{stroke}", fontcolor="{text}"];')
 
         # Pick a representative node per cluster for use as edge endpoints. Edges
         # use lhead/ltail to attach to the cluster boundary instead of the node.
@@ -357,6 +366,7 @@ def main():
     print("    classDef full fill:#9ee5a3,stroke:#2c7a32,color:#0a3d10")
     print("    classDef partial fill:#ffe48a,stroke:#a87000,color:#4a3000")
     print("    classDef none fill:#f5a8a8,stroke:#a02020,color:#3d0a0a")
+    print("    classDef skipped fill:#dcdcdc,stroke:#888888,color:#555555")
     print()
     # Group nodes by rank (highest rank first, so they appear at the top of TD output).
     by_rank: dict[int, list[str]] = {}
