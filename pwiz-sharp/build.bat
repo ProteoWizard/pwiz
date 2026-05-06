@@ -202,9 +202,11 @@ if %COVERAGE%==1 (
     set EXIT=!ERRORLEVEL!
 )
 
-REM # Import every per-assembly trx into TC. type='vstest' is the documented importer
-REM # for VSTest TRX. Wildcards are supported.
-if defined TEAMCITY_VERSION echo ##teamcity[importData type='vstest' path='%TC_TEST_RESULTS%\*.trx']
+REM # Import every per-assembly trx into TC, wrapping each in its own
+REM # testSuiteStarted/Finished pair so the Tests tab shows per-assembly suites
+REM # instead of one undifferentiated "VSTest" pile. The helper script reads each
+REM # trx's <UnitTest storage="..."> attribute to identify the source assembly.
+if defined TEAMCITY_VERSION pwsh -NoLogo -NoProfile -File "%SCRIPT_DIR%\scripts\Import-TrxResults.ps1" -ResultsDir "%TC_TEST_RESULTS%"
 
 if defined TEAMCITY_VERSION echo ##teamcity[testSuiteFinished name='%TEST_SUITE_NAME%']
 
