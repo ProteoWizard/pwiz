@@ -58,6 +58,20 @@ namespace pwiz.OspreySharp
     /// </summary>
     public static class OspreyDiagnostics
     {
+        /// <summary>
+        /// Newline used by every Stage 6 cross-impl bisection dump writer.
+        /// MUST be `"\n"` (not <see cref="Environment.NewLine"/>, which is
+        /// `"\r\n"` on Windows) so headers emitted via
+        /// <see cref="System.IO.StreamWriter.WriteLine(string)"/> match the
+        /// `\n`-terminated payload rows we build manually with
+        /// <see cref="System.Text.StringBuilder.Append(char)"/>. Mixed
+        /// newlines break the byte-for-byte diff against the corresponding
+        /// `rust_*.tsv` dumps that this tooling depends on. Apply via
+        /// <c>writer.NewLine = LF;</c> immediately after constructing each
+        /// dump <see cref="System.IO.StreamWriter"/>.
+        /// </summary>
+        private const string LF = "\n";
+
         // ----- Env-var gate flags (read once at process start) -----
 
         /// <summary>
@@ -977,6 +991,7 @@ namespace pwiz.OspreySharp
                 if (_mpInputsWriter == null)
                 {
                     _mpInputsWriter = new StreamWriter(@"cs_stage6_mp_inputs.tsv");
+                    _mpInputsWriter.NewLine = LF;
                     _mpInputsWriter.WriteLine(
                         "# entry_id\tapex_scan\tfrag_pos\tfrag_idx\tscan_idx\trt\tintensity");
                     LogAction(
@@ -1022,6 +1037,7 @@ namespace pwiz.OspreySharp
             if (_predictRtWriter != null)
                 return;
             _predictRtWriter = new StreamWriter(@"cs_stage6_predict_rt.tsv");
+            _predictRtWriter.NewLine = LF;
             _predictRtWriter.WriteLine(
                 "# section\tfile_name_or_entry_id\tarray_or_apex\tidx_or_lib_rt\tvalue_or_expected_rt");
             LogAction(
@@ -1166,6 +1182,7 @@ namespace pwiz.OspreySharp
                 if (_cwtPathWriter == null)
                 {
                     _cwtPathWriter = new StreamWriter(@"cs_stage6_cwt_path.tsv");
+                    _cwtPathWriter.NewLine = LF;
                     _cwtPathWriter.WriteLine(
                         "file_name\tentry_id\tn_cwt_peaks\tn_final_peaks\tn_scored\tscored\tsigma\tconsensus_l1\tconsensus_max_abs\tconsensus_argmax");
                     LogAction(

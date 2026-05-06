@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -177,7 +178,7 @@ namespace pwiz.OspreySharp.IO
             Dictionary<string, string> metadata)
         {
             if (path == null)
-                throw new System.ArgumentNullException(nameof(path));
+                throw new ArgumentNullException(nameof(path));
             if (entries == null || entries.Count == 0)
                 return;
 
@@ -294,7 +295,7 @@ namespace pwiz.OspreySharp.IO
             string fileName)
         {
             if (path == null)
-                throw new System.ArgumentNullException(nameof(path));
+                throw new ArgumentNullException(nameof(path));
             if (entries == null || entries.Count == 0)
                 return;
 
@@ -360,8 +361,13 @@ namespace pwiz.OspreySharp.IO
                 // empty row for downstream consumers. When that lands in
                 // maccoss/osprey, revert this branch to the original
                 // "skip null/empty" form.
+                // Use Array.Empty<>() (not `new List<>()`) on the null
+                // branch so we still emit the 4-byte zero-count blob
+                // without allocating a fresh List per empty row.
+                // CwtCandidateCodec.Encode takes IReadOnlyList<CwtCandidate>
+                // which both List<T> and T[] satisfy.
                 cwtCandidates[i] = CwtCandidateCodec.Encode(
-                    entry.CwtCandidates ?? new List<CwtCandidate>());
+                    entry.CwtCandidates ?? (IReadOnlyList<CwtCandidate>)Array.Empty<CwtCandidate>());
 
                 LibraryEntry libEntry = null;
                 if (libraryById != null)
@@ -580,10 +586,6 @@ namespace pwiz.OspreySharp.IO
         #region Load PIN Features
 
         /// <summary>
-        /// Load only the 21 PIN feature columns from a Parquet cache.
-        /// Returns a list of feature vectors (one double[] per row).
-        /// </summary>
-        /// <summary>
         /// Load FdrEntry stubs + 21-feature PIN vectors + CWT candidate
         /// lists from a Parquet cache, joined per row. Returns
         /// <see cref="FdrEntry"/> objects with <see cref="FdrEntry.Features"/>
@@ -672,6 +674,10 @@ namespace pwiz.OspreySharp.IO
             return entries;
         }
 
+        /// <summary>
+        /// Load only the 21 PIN feature columns from a Parquet cache.
+        /// Returns a list of feature vectors (one double[] per row).
+        /// </summary>
         public static List<double[]> LoadPinFeaturesFromParquet(string path)
         {
             var allFeatures = new List<double[]>();
@@ -969,7 +975,7 @@ namespace pwiz.OspreySharp.IO
             IEnumerable<string> paths,
             OspreyConfig config,
             string currentVersion,
-            System.Action<string> logWarning)
+            Action<string> logWarning)
         {
             string expectedSearch = config.SearchParameterHash();
             string expectedLibrary = config.LibraryIdentityHash();
@@ -981,7 +987,7 @@ namespace pwiz.OspreySharp.IO
                 {
                     kv = LoadFooterMetadata(path);
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     return string.Format("{0}: cannot read parquet metadata: {1}", path, ex.Message);
                 }

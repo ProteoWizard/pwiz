@@ -30,19 +30,8 @@ namespace pwiz.OspreySharp
     /// per-file rescore worker. Mirrors <c>run_rescore</c> in
     /// <c>osprey/crates/osprey/src/rescore.rs</c>.
     ///
-    /// Today this entry point handles the foundation pieces only:
-    /// hydration of the Stage 5 → Stage 6 boundary files
-    /// (<see cref="RescoreHydration.HydrateForRescore"/>) followed by
-    /// worker compaction (<see cref="RescoreCompaction.Apply"/>). The
-    /// per-file rescore engine itself (boundary-overrides search +
-    /// gap-fill two-pass + reconciled parquet write-back) is not yet
-    /// ported; the in-process pipeline at
-    /// <c>AnalysisPipeline.Run</c> also stubs it out with the same
-    /// "Stage 6 per-file rescore: not yet implemented" log line. Both
-    /// sides will lift together once the C# rescore engine port
-    /// lands.
-    ///
-    /// What this entry point does deliver today:
+    /// End-to-end behavior (cross-impl byte-parity validated on
+    /// Stellar + Astral as of 2026-05-06):
     /// <list type="bullet">
     ///   <item>
     ///     Validates the CLI shape (<c>--input-scores</c>,
@@ -59,32 +48,34 @@ namespace pwiz.OspreySharp
     ///     targets.
     ///   </item>
     ///   <item>
-    ///     Reproduces the in-process compaction predicate
-    ///     (peptide-FDR OR protein-rescue) so the post-hydrate
-    ///     in-memory state matches what the in-process pipeline holds
-    ///     at the same seam.
+    ///     Reproduces the in-process compaction predicate (peptide-FDR
+    ///     OR protein-rescue) so the post-hydrate in-memory state
+    ///     matches what the in-process pipeline holds at the same seam.
     ///   </item>
     ///   <item>
-    ///     Logs the hydrated / compacted counts so a future cross-impl
-    ///     bit-parity diagnostic dump can verify both sides reach
-    ///     identical state at the Stage 5 → Stage 6 seam.
+    ///     Runs the per-file rescore engine: consensus + reconciliation
+    ///     overlay (Phase 1), gap-fill two-pass with prefilter-off CWT
+    ///     and forced-integration fallback (Phase 2), and reconciled
+    ///     parquet write-back with `osprey.reconciled` /
+    ///     `osprey.reconciliation_hash` footer metadata (Phase 3).
     ///   </item>
     /// </list>
     ///
-    /// Returns a non-zero exit code with a clear message until the
-    /// rescore engine lands; do NOT swallow this as success.
+    /// Returns 0 on full success, non-zero with an explanatory log
+    /// line on any failure (library load, hydration, compaction, or
+    /// rescore loop). Six per-row blob columns (<c>fragment_mzs</c>,
+    /// <c>fragment_intensities</c>, <c>reference_xic_rts</c>,
+    /// <c>reference_xic_intensities</c>, <c>bounds_area</c>,
+    /// <c>bounds_snr</c>) are written as null/zero today — tracked as
+    /// follow-up against
+    /// <c>ai/todos/backlog/brendanx67/TODO-ospreysharp_missing_scoring_columns.md</c>.
     /// </summary>
     public static class RescoreWorker
     {
         /// <summary>
         /// Run the per-file rescore worker on the boundary files
         /// referenced by <see cref="OspreyConfig.InputScores"/>.
-        ///
-        /// Returns 0 on full success (foundation runs cleanly + rescore
-        /// engine completes) or non-zero with an explanatory log line
-        /// on any failure. Today's stub returns a non-zero exit code
-        /// after hydration + compaction succeed because the rescore
-        /// engine isn't ported yet.
+        /// Returns 0 on success, non-zero on failure.
         /// </summary>
         public static int Run(OspreyConfig config)
         {

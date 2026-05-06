@@ -824,6 +824,16 @@ namespace pwiz.OspreySharp
                         if (OspreyDiagnostics.RescoredOnly)
                             OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
                     }
+
+                    // Flush + close the persistent per-process diagnostic
+                    // dump writers (no-ops when their env vars are unset).
+                    // Mirrors the worker-mode close calls in
+                    // AnalysisPipeline.Stage6Rescore.Run; without these,
+                    // the in-process pipeline path can leave the writers
+                    // unflushed and produce truncated bisection dumps.
+                    OspreyDiagnostics.CloseMpInputsDump();
+                    OspreyDiagnostics.ClosePredictRtDump();
+                    OspreyDiagnostics.CloseCwtPathDump();
                 }
 
                 // Stage 8: Protein FDR (optional)

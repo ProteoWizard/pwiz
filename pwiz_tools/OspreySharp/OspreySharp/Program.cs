@@ -114,8 +114,13 @@ namespace pwiz.OspreySharp
                 bool joinOnly = joinOnlyFlag
                                 || (config.InputScores != null && config.InputScores.Count > 0);
 
-                // Non-fatal warning: --no-join with --output supplied.
-                if (config.NoJoin && !string.IsNullOrEmpty(config.OutputBlib))
+                // Non-fatal warning: --no-join with --output supplied — but
+                // ONLY for the Stage 1-4 worker mode (`--no-join --input
+                // ...`) where --output truly is ignored. The Stage 6 worker
+                // mode (`--join-at-pass=1 --no-join --input-scores ...`)
+                // requires --output (per ValidateArgs at line ~642), so
+                // the warning would be incorrect/confusing there.
+                if (config.NoJoin && !joinOnly && !string.IsNullOrEmpty(config.OutputBlib))
                 {
                     LogWarning("--no-join: --output is ignored (no blib is written). " +
                                "Per-file `.scores.parquet` files will be written next to each input mzML.");
