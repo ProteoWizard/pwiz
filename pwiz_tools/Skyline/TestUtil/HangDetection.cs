@@ -21,8 +21,11 @@ using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -124,6 +127,19 @@ namespace pwiz.SkylineTestUtil
                     TimeSpan cycleDuration = TimeSpan.FromTicks(100);
                     long minCycleCount = duration.Ticks / cycleDuration.Ticks;
 
+                    // Poll for a stray ThreadExceptionDialog at most every 500ms while we are
+                    // blocked waiting for the action to complete. If WinForms catches an exception
+                    // inside a reentrant WndProc (e.g. EventWaitHandle.Set on a disposed
+                    // SafeWaitHandle during teardown) it can bypass our Application.ThreadException
+                    // handler and pop the default dialog. The UI thread is then wedged in the
+                    // dialog's nested message loop, so the caller's Invoke never returns and this
+                    // wait would otherwise time out only at the full duration. Dismissing the
+                    // dialog releases the UI thread; recording the exception ensures the test
+                    // fails loudly so the underlying bug is investigated rather than masked.
+                    var dialogPollInterval = TimeSpan.FromMilliseconds(500);
+                    var nextDialogPoll = TimeSpan.Zero;
+                    var handledDialogs = new HashSet<ThreadExceptionDialog>();
+
                     for (long cycleIndex = 0; ; cycleIndex++)
                     {
                         if (!_waitDuration.HasValue || _disposed)
@@ -137,9 +153,87 @@ namespace pwiz.SkylineTestUtil
                             break;
                         }
 
+                        if (stopWatch.Elapsed >= nextDialogPoll)
+                        {
+                            nextDialogPoll = stopWatch.Elapsed + dialogPollInterval;
+                            try
+                            {
+                                DismissThreadExceptionDialogs(handledDialogs);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.Out.WriteLine(
+                                    @"HangDetection: error checking for ThreadExceptionDialog: {0}", ex);
+                            }
+                        }
+
                         Monitor.Wait(_lock, cycleDuration);
                     }
                 }
+            }
+        }
+
+        private static void DismissThreadExceptionDialogs(HashSet<ThreadExceptionDialog> handled)
+        {
+            var dialogs = FormUtil.OpenForms.OfType<ThreadExceptionDialog>().ToList();
+            foreach (var dialog in dialogs)
+            {
+                if (dialog.IsDisposed || !dialog.IsHandleCreated)
+                {
+                    continue;
+                }
+
+                // Track by reference: prevents redundant log entries and queued BeginInvoke
+                // callbacks if the UI thread is slow to process the dismissal. New dialogs
+                // that appear later are still handled.
+                if (!handled.Add(dialog))
+                {
+                    continue;
+                }
+
+                Console.Out.WriteLine(
+                    @"*** ThreadExceptionDialog detected during InterruptAfter wait - dismissing");
+                Program.AddTestException(new InvalidOperationException(
+                    string.Format(@"ThreadExceptionDialog appeared while waiting for UI action: {0}",
+                        TryGetDialogText(dialog))));
+
+                CommonActionUtil.SafeBeginInvoke(dialog, () =>
+                {
+                    try
+                    {
+                        // Setting DialogResult posts WM_CLOSE asynchronously (PostMessage),
+                        // avoiding the synchronous Form.Close -> WmClose path that triggered
+                        // the original SafeWaitHandle race during teardown.
+                        if (!dialog.IsDisposed)
+                        {
+                            dialog.DialogResult = DialogResult.Cancel;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Out.WriteLine(@"Failed to dismiss ThreadExceptionDialog: {0}", ex);
+                    }
+                });
+            }
+        }
+
+        private static string TryGetDialogText(Form dialog)
+        {
+            // Best-effort diagnostic: this runs on a background thread, so any property access
+            // can throw if the dialog is disposed mid-call. Wrap so a throw never breaks the
+            // watchdog loop.
+            try
+            {
+                var textBox = dialog.Controls.OfType<TextBox>().FirstOrDefault(tb => tb.Multiline);
+                if (textBox != null && !string.IsNullOrEmpty(textBox.Text))
+                {
+                    return textBox.Text;
+                }
+                return dialog.Text ?? @"<no text>";
+            }
+            catch
+            {
+                return @"<unavailable>";
             }
         }
 

@@ -219,7 +219,6 @@
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />
     <Compile Include="TestFunctional.cs" />
-    <Compile Include="ThreadExceptionDialogCanceler.cs" />
     <Compile Include="TypeInspector.cs" />
     <Compile Include="ArdiaTestUtil.cs" />
     <Compile Include="WatersConnectTestUtil.cs" />

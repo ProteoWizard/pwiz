@@ -2753,14 +2753,6 @@ namespace pwiz.SkylineTestUtil
 
         private void EndTest()
         {
-            // Watchdog that auto-dismisses any ThreadExceptionDialog that appears during teardown.
-            // Without this, an unhandled WinForms exception (e.g. ObjectDisposedException from
-            // EventWaitHandle.Set inside Form.WmClose) opens a modal dialog that hangs the test
-            // runner indefinitely until HangDetection fires 30 minutes later. If the watchdog
-            // fires it records the dialog text via Program.AddTestException, which surfaces as
-            // an Assert.Fail in RunFunctionalTest so the underlying bug is not silently masked.
-            using var threadExceptionDialogCanceler = new ThreadExceptionDialogCanceler();
-
             if (_pauseAndContinueForm is { IsDisposed: false })
             {
                 RunUI(() => _pauseAndContinueForm.Close());
@@ -2880,8 +2872,9 @@ namespace pwiz.SkylineTestUtil
                 // ThreadExceptionDialog is a reentrant-modal form whose internal modal-event
                 // SafeWaitHandle has been observed to throw ObjectDisposedException during
                 // Form.Close -> WmClose -> EventWaitHandle.Set on perf-test teardown (see
-                // ThreadExceptionDialogCanceler). Dismiss via DialogResult so WinForms uses the
-                // asynchronous PostMessage path, not synchronous SendMessage from this stack.
+                // HangDetection.DismissThreadExceptionDialogs). Dismiss via DialogResult so
+                // WinForms uses the asynchronous PostMessage path, not synchronous SendMessage
+                // from this stack.
                 if (formToClose is ThreadExceptionDialog teDlg)
                 {
                     // ReSharper disable LocalizableElement
