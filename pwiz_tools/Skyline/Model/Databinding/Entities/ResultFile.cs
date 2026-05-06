@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                var normalizationData = DataSchema.GetReplicateSummaries().NormalizationDataProvider.GetNormalizationData();
+                var normalizationData = DataSchema.NormalizedValueCalculator.GetNormalizationData();
                 var log2Median = normalizationData.GetLog2Median(Replicate.ReplicateIndex, ChromFileInfoId);
                 if (log2Median.HasValue)
                 {

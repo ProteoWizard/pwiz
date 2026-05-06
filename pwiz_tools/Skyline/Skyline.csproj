@@ -595,7 +595,6 @@
     <Compile Include="Model\Databinding\DsvReportExporter.cs" />
     <Compile Include="Model\Databinding\ColumnResolver.cs" />
     <Compile Include="Model\GroupComparison\MedianPolisher.cs" />
-    <Compile Include="Model\Results\INormalizationDataProvider.cs" />
     <Compile Include="ToolsUI\ReportDefinitionReader.cs" />
     <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />

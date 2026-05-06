@@ -16,47 +16,78 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using EnvDTE;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace pwiz.Skyline.Model.Results
 {
     public class NormalizedValueCalculator
     {
         public static readonly NormalizedValueCalculator DEFAULT =
-            new NormalizedValueCalculator(new SrmDocument(SrmSettingsList.GetDefault()));
-        private readonly NormalizationDataProvider _normalizationData;
+            new NormalizedValueCalculator(CancellationToken.None, new SrmDocument(SrmSettingsList.GetDefault()));
+
+        private readonly Params _params;
+        private NormalizationData _normalizationData;
+        private RtLoessCurves _rtLoessCurves;
         private readonly Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo> _fileInfos;
 
-        public NormalizedValueCalculator(SrmDocument document, NormalizationDataProvider normalizationDataProvider = null)
+        public NormalizedValueCalculator(CancellationToken cancellationToken, SrmDocument document) : this(new Params(document, NormalizeOption.DEFAULT))
         {
-            Document = document;
-            _normalizationData = normalizationDataProvider ?? new NormalizationDataProvider(document, null, null);
+            CancellationToken = cancellationToken;
+        }
+
+        public NormalizedValueCalculator(Params parameters)
+        {
+            _params = parameters;
             _fileInfos = new Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo>();
-            if (document.MeasuredResults != null)
+            if (Document.MeasuredResults != null)
             {
-                var chromatograms = document.Settings.MeasuredResults.Chromatograms;
+                var chromatograms = Document.Settings.MeasuredResults.Chromatograms;
                 for (int resultsIndex = 0; resultsIndex < chromatograms.Count; resultsIndex++)
                 {
                     foreach (var chromFileInfo in chromatograms[resultsIndex].MSDataFileInfos)
                     {
-                        _fileInfos.Add(chromFileInfo.FileId, new FileInfo(chromFileInfo, resultsIndex, document.Settings));
+                        _fileInfos.Add(chromFileInfo.FileId, new FileInfo(chromFileInfo, resultsIndex, Document.Settings));
                     }
                 }
             }
-
         }
 
-        public SrmDocument Document { get; private set; }
+        public CancellationToken CancellationToken { get; }
+
+        public NormalizationData GetNormalizationData()
+        {
+            lock (this)
+            {
+                _normalizationData??= NormalizationData.GetNormalizationData(Document, _params.TreatMissingValuesAsZero, _params.QValueCutoff);
+                return _normalizationData;
+            }
+        }
+
+        public RtLoessCurves GetRtLoessCurves()
+        {
+            lock (this)
+            {
+                _rtLoessCurves ??= RtLoessCurves.GetRtLoessCurves(CancellationToken, Document);
+                return _rtLoessCurves;
+            }
+        }
+
+
+        public SrmDocument Document
+        {
+            get { return _params.Document; }
+        }
 
         public bool SimpleRatios
         {
@@ -93,7 +124,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (Equals(normalizationMethod, NormalizationMethod.RT_LOESS))
             {
-                var rtLoessAdjustment = _normalizationData.GetRtLoessCurves().GetAdjustment(replicateIndex,
+                var rtLoessAdjustment = GetRtLoessCurves().GetAdjustment(replicateIndex,
                     transitionChromInfo.FileId, transitionChromInfo.RetentionTime);
                 if (!rtLoessAdjustment.HasValue)
                     return null;
@@ -183,7 +214,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (!transitionGroupChromInfo.RetentionTime.HasValue)
                     return null;
-                var rtLoessAdjustment = _normalizationData.GetRtLoessCurves().GetAdjustment(replicateIndex,
+                var rtLoessAdjustment = GetRtLoessCurves().GetAdjustment(replicateIndex,
                     transitionGroupChromInfo.FileId, transitionGroupChromInfo.RetentionTime.Value);
                 if (!rtLoessAdjustment.HasValue)
                     return null;
@@ -428,7 +459,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
             {
-                var normalizationData = _normalizationData.GetNormalizationData();
+                var normalizationData = GetNormalizationData();
                 var medianAdjustment = normalizationData.GetLog2Median(replicateIndex, fileId) - normalizationData.GetMedianLog2Median();
                 if (!medianAdjustment.HasValue)
                 {
@@ -454,11 +485,6 @@ namespace pwiz.Skyline.Model.Results
 
             denominator = null;
             return false;
-        }
-
-        public NormalizationDataProvider GetNormalizationDataProvider()
-        {
-            return _normalizationData;
         }
 
         public NormalizationMethod NormalizationMethodForMolecule(PeptideDocNode peptideDocNode, NormalizeOption normalizeOption)
@@ -554,9 +580,11 @@ namespace pwiz.Skyline.Model.Results
             public override NormalizedValueCalculator ProduceResult(ProductionMonitor productionMonitor, Params parameter, IDictionary<WorkOrder, object> dependencies)
             {
                 var document = parameter.Document;
-                return new NormalizedValueCalculator(document,
-                    new NormalizationDataProvider(document, NormalizationData.PRODUCER.GetResult(dependencies, new NormalizationData.Parameters(document)),
-                        RtLoessCurves.PRODUCER.GetResult(dependencies, new ReferenceValue<SrmDocument>(document))));
+                return new NormalizedValueCalculator(parameter)
+                {
+                    _normalizationData = NormalizationData.PRODUCER.GetResult(dependencies, parameter.NormalizationDataParameters),
+                    _rtLoessCurves = RtLoessCurves.PRODUCER.GetResult(dependencies, new ReferenceValue<SrmDocument>(document))
+                };
             }
 
             public override IEnumerable<WorkOrder> GetInputs(Params workParameter)
@@ -567,7 +595,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (IsNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS, normalizeOption, document))
                 {
-                    inputs.Add(NormalizationData.PRODUCER.MakeWorkOrder(new NormalizationData.Parameters(document)));
+                    inputs.Add(NormalizationData.PRODUCER.MakeWorkOrder(workParameter.NormalizationDataParameters));
                 }
 
                 if (IsNormalizationMethod(NormalizationMethod.RT_LOESS, normalizeOption, document))
@@ -586,7 +614,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public class Params
+        public class Params : Immutable
         {
             public Params(SrmDocument document, NormalizeOption normalizeOption)
             {
@@ -596,6 +624,20 @@ namespace pwiz.Skyline.Model.Results
             
             public SrmDocument Document { get; }
             public NormalizeOption NormalizeOption { get; }
+
+            public bool TreatMissingValuesAsZero { get; private set; }
+            public double? QValueCutoff { get; private set; }
+
+            public NormalizationData.Parameters NormalizationDataParameters => new NormalizationData.Parameters(Document, TreatMissingValuesAsZero, QValueCutoff);
+
+            public Params ChangeLegacyGroupComparisonParams(bool treatMissingValuesAsZero, double? qValueCutoff)
+            {
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.TreatMissingValuesAsZero = treatMissingValuesAsZero;
+                    im.QValueCutoff = qValueCutoff;
+                });
+            }
 
             protected bool Equals(Params other)
             {

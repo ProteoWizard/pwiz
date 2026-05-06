@@ -453,7 +453,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public PeptideQuantifier GetPeptideQuantifier()
         {
-            var quantifier = PeptideQuantifier.GetPeptideQuantifier(DataSchema.GetReplicateSummaries().NormalizationDataProvider, 
+            var quantifier = PeptideQuantifier.GetPeptideQuantifier(DataSchema.NormalizedValueCalculator, 
                 SrmDocument.Settings, Protein.DocNode.PeptideGroup, DocNode);
             return quantifier;
         }
@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             protected override CalibrationCurveFitter CalculateValue(Peptide owner)
             {
-                return CalibrationCurveFitter.GetCalibrationCurveFitter(owner.DataSchema.GetReplicateSummaries().NormalizationDataProvider,
+                return CalibrationCurveFitter.GetCalibrationCurveFitter(owner.DataSchema.NormalizedValueCalculator,
                     owner.SrmDocument.Settings,
                     new IdPeptideDocNode(owner.Protein.DocNode.PeptideGroup, owner.DocNode));
             }

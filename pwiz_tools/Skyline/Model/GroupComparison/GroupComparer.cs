@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         private readonly IList<KeyValuePair<int, ReplicateDetails>> _replicateIndexes;
         private readonly IList<KeyValuePair<int, ReplicateDetails>> _allReplicateIndexes;
         private QrFactorizationCache _qrFactorizationCache;
-        private NormalizationDataProvider _normalizationData;
+        private NormalizedValueCalculator _normalizationData;
         private ImmutableList<int> _msLevels;
         public GroupComparer(GroupComparisonDef comparisonDef, SrmDocument document, QrFactorizationCache qrFactorizationCache)
         {
@@ -108,8 +108,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 _msLevels = ImmutableList.ValueOf(new[] { 1, 2 });
             }
 
-            _normalizationData = new NormalizationDataProvider(SrmDocument, ComparisonDef.UseZeroForMissingPeaks,
-                    ComparisonDef.QValueCutoff);
+            _normalizationData = new NormalizedValueCalculator(new NormalizedValueCalculator.Params(SrmDocument, NormalizeOption.DEFAULT).ChangeLegacyGroupComparisonParams(ComparisonDef.UseZeroForMissingPeaks, ComparisonDef.QValueCutoff));
         }
         public GroupComparisonDef ComparisonDef { get; private set; }
 

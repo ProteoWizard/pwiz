@@ -747,7 +747,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     !(nodeArray[1] is PeptideDocNode peptideDocNode))
                     continue;
                 peptideQuantifiers.Add(PeptideQuantifier.GetPeptideQuantifier(
-                    normalizedValueCalculator.GetNormalizationDataProvider(), document.Settings,
+                    normalizedValueCalculator, document.Settings,
                     peptideGroup.PeptideGroup, peptideDocNode));
             }
             if (peptideQuantifiers.Count == 0)
@@ -1751,7 +1751,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var document = NormalizedValueCalculator.Document;
                 CalibrationCurve calibrationCurve = null;
                 var calibrationCurveFitter =
-                    CalibrationCurveFitter.GetCalibrationCurveFitter(NormalizedValueCalculator.GetNormalizationDataProvider(),
+                    CalibrationCurveFitter.GetCalibrationCurveFitter(NormalizedValueCalculator,
                         document.Settings, new IdPeptideDocNode(peptideGroup.PeptideGroup, peptideDocNode));
                 if (_normalizeOption == NormalizeOption.CALIBRATED)
                 {

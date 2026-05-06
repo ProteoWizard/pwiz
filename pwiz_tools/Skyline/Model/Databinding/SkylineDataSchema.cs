@@ -49,7 +49,6 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<ImmutableSortedList<ResultKey, Replicate>> _replicates;
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
         private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
-        private readonly CachedValue<NormalizedValueCalculator> _normalizedValueCalculator;
         private readonly CachedValue<PeakBoundaryImputer> _peakBoundaryImputer;
         private ElementRefs _elementRefCache;
 
@@ -67,8 +66,8 @@ namespace pwiz.Skyline.Model.Databinding
             _replicates = CachedValue.Create(this, CreateReplicateList);
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _annotationCalculator = CachedValue.Create(this, () => new AnnotationCalculator(this));
-            _normalizedValueCalculator = CachedValue.Create(this, () => new NormalizedValueCalculator(Document));
             _peakBoundaryImputer = CachedValue.Create(this, ()=>new PeakBoundaryImputer(Document));
+            NormalizedValueCalculator = new NormalizedValueCalculator(QueryLock.CancellationToken, Document);
         }
 
         public override string DefaultUiMode
@@ -235,6 +234,7 @@ namespace pwiz.Skyline.Model.Databinding
             using (QueryLock.CancelAndGetWriteLock())
             {
                 _document = _documentContainer.Document;
+                NormalizedValueCalculator = new NormalizedValueCalculator(QueryLock.CancellationToken, Document);
                 if (!_document.DeferSettingsChanges)
                 {
                     _elementRefCache = null;
@@ -268,11 +268,6 @@ namespace pwiz.Skyline.Model.Databinding
             return _replicateSummaries = replicateSummaries;
         }
 
-        public NormalizationDataProvider LazyNormalizationData
-        {
-            get { return GetReplicateSummaries().NormalizationDataProvider; }
-        }
-
         public ChromDataCache ChromDataCache { get; private set; }
 
         public ElementRefs ElementRefs
@@ -291,7 +286,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public NormalizedValueCalculator NormalizedValueCalculator
         {
-            get { return _normalizedValueCalculator.Value; }
+            get; private set;
         }
 
         public override PropertyDescriptor GetPropertyDescriptor(Type type, string name)

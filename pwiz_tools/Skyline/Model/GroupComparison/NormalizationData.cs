@@ -338,9 +338,6 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public class Parameters
         {
-            public Parameters(SrmDocument document) : this(document, false, null)
-            {
-            }
             public Parameters(SrmDocument document, bool treatMissingAsZero, double? qValueCutoff)
             {
                 Document = document;

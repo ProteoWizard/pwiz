@@ -115,10 +115,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ComputeCurves(productionMonitor, rtAreaData);
         }
 
-        public static Lazy<RtLoessCurves> LazyRtLoessCurves(SrmDocument document)
+        public static RtLoessCurves GetRtLoessCurves(CancellationToken cancellationToken, SrmDocument document)
         {
-            return new Lazy<RtLoessCurves>(() => ProduceRtLoessCurves(new ProductionMonitor(CancellationToken.None,
-                _ => { }), document));
+            return ProduceRtLoessCurves(new ProductionMonitor(cancellationToken, _ => { }), document);
         }
 
 
@@ -218,7 +217,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             // Fit LOWESS per file and evaluate on grid
-            int binCount = Settings.Default.RtRegressionBinCount;
+            int binCount = 500;
             var allCurves = new Dictionary<FileDataKey, LoessCurve>();
             int fileCount = Math.Max(1, rtAreaData.Count);
             int filesProcessed = 0;

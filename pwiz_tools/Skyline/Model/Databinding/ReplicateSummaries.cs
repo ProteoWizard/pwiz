@@ -34,7 +34,6 @@ namespace pwiz.Skyline.Model.Databinding
                 replicateCount = Document.Settings.MeasuredResults.Chromatograms.Count;
             }
             _allTotalAreas = new ImmutableSortedList<IsotopeLabelType, double>[replicateCount];
-            NormalizationDataProvider = new NormalizationDataProvider(Document);
         }
         public ReplicateSummaries GetReplicateSummaries(SrmDocument document)
         {
@@ -100,10 +99,5 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return dictTotalAreas;
         }
-
-        public NormalizationDataProvider NormalizationDataProvider
-        {
-            get;}
-
     }
 }

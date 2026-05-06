@@ -11,8 +11,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public class PeptideQuantifier
     {
-        private readonly NormalizationDataProvider _normalizationData;
-        public PeptideQuantifier(NormalizationDataProvider normalizationData, PeptideGroup peptideGroup, PeptideDocNode peptideDocNode,
+        private readonly NormalizedValueCalculator _normalizationData;
+        public PeptideQuantifier(NormalizedValueCalculator normalizationData, PeptideGroup peptideGroup, PeptideDocNode peptideDocNode,
             QuantificationSettings quantificationSettings)
         {
             PeptideGroup = peptideGroup;
@@ -21,43 +21,18 @@ namespace pwiz.Skyline.Model.GroupComparison
             _normalizationData = normalizationData;
         }
 
-        public PeptideQuantifier(NormalizationDataProvider normalizationData,
-            Lazy<RtLoessCurves> rtLoessCurves,
-            PeptideGroupDocNode peptideGroupDocNode, PeptideDocNode peptideDocNode,
-            QuantificationSettings quantificationSettings) : this(normalizationData, 
-            peptideGroupDocNode.PeptideGroup, peptideDocNode, quantificationSettings)
-        {
-        }
 
-        public static PeptideQuantifier GetPeptideQuantifier(NormalizationDataProvider normalizationDataProvider, SrmSettings srmSettings, PeptideGroup peptideGroup, PeptideDocNode peptide)
+        public static PeptideQuantifier GetPeptideQuantifier(NormalizedValueCalculator normalizedValueCalculator, SrmSettings srmSettings, PeptideGroup peptideGroup, PeptideDocNode peptide)
         {
             var mods = srmSettings.PeptideSettings.Modifications;
             // Quantify on all label types which are not internal standards.
             ICollection<IsotopeLabelType> labelTypes = ImmutableList.ValueOf(mods.GetModificationTypes()
                 .Except(mods.InternalStandardTypes));
-            return new PeptideQuantifier(normalizationDataProvider, peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
+            return new PeptideQuantifier(normalizedValueCalculator, peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
             {
                 MeasuredLabelTypes = labelTypes,
                 IncludeTruncatedPeaks = srmSettings.TransitionSettings.Instrument.TriggeredAcquisition
             };
-        }
-
-        public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document, PeptideGroup peptideGroup,
-            PeptideDocNode peptide)
-        {
-
-            return GetPeptideQuantifier(new NormalizationDataProvider(document), document.Settings, peptideGroup, peptide);
-        }
-        public static PeptideQuantifier GetPeptideQuantifier(NormalizationDataProvider normalizationData, SrmSettings settings, PeptideGroupDocNode peptideGroupDocNode,
-            PeptideDocNode peptide)
-        {
-            return GetPeptideQuantifier(normalizationData, settings, peptideGroupDocNode.PeptideGroup, peptide);
-        }
-
-        public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document,
-            PeptideGroupDocNode peptideGroupDocNode, PeptideDocNode peptideDocNode)
-        {
-            return GetPeptideQuantifier(document, peptideGroupDocNode.PeptideGroup, peptideDocNode);
         }
 
         public PeptideGroup  PeptideGroup  { get; private set; }

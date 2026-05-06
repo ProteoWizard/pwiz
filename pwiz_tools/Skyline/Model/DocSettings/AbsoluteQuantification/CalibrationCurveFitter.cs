@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             FiguresOfMeritCalculator = QuantificationSettings.GetFiguresOfMeritCalculator();
         }
 
-        public static CalibrationCurveFitter GetCalibrationCurveFitter(NormalizationDataProvider getNormalizationDataFunc, SrmSettings settings,
+        public static CalibrationCurveFitter GetCalibrationCurveFitter(NormalizedValueCalculator getNormalizationDataFunc, SrmSettings settings,
             IdPeptideDocNode idPeptideDocNode)
         {
             var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(getNormalizationDataFunc, settings, idPeptideDocNode.PeptideGroup, idPeptideDocNode.PeptideDocNode);
@@ -65,7 +66,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static CalibrationCurveFitter GetCalibrationCurveFitter(SrmDocument document,
             IdPeptideDocNode idPeptideDocNode)
         {
-            return GetCalibrationCurveFitter(new NormalizationDataProvider(document), document.Settings,
+            return GetCalibrationCurveFitter(new NormalizedValueCalculator(CancellationToken.None, document), document.Settings,
                 idPeptideDocNode);
         }
 
