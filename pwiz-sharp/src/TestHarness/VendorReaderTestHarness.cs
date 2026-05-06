@@ -325,11 +325,21 @@ public static class VendorReaderTestHarness
         MangleSourceFileLocations(sourceName, msd.FileDescription.SourceFiles);
         ManglePwizSoftware(msd);
 
-        // 3. Locate the reference mzML and read it.
+        // 3. Locate the reference mzML and read it. Prefer a pwiz-sharp-specific
+        // override at <test-assembly-dir>/Reference/<filename> if present, else fall
+        // back to the cpp tree at <rootPath>/<filename>. The override path lets us
+        // ship pwiz-sharp-only references (e.g. fixtures cpp doesn't carry, or
+        // intermediate references during alignment work) without retriggering every
+        // cpp vendor TC config — pwiz-sharp/test/<Vendor>.Tests/Reference/ is opt-in
+        // per test project (csproj copies Reference/*.mzML into bin). See
+        // pwiz-sharp/test/UNIFI.Tests/Reference/README.md for the rationale.
         string referenceFilename = config.ResultFilename(msd.Run.Id + ".mzML");
-        string referencePath = Path.Combine(rootPath, referenceFilename);
+        string overridePath = Path.Combine(AppContext.BaseDirectory, "Reference", referenceFilename);
+        string cppPath = Path.Combine(rootPath, referenceFilename);
+        string referencePath = File.Exists(overridePath) ? overridePath : cppPath;
         if (!File.Exists(referencePath))
-            throw new FileNotFoundException($"reference mzML not found: {referencePath}");
+            throw new FileNotFoundException(
+                $"reference mzML not found at {cppPath} or override {overridePath}");
         MSData referenceMsd;
         using (var fs = File.OpenRead(referencePath))
             referenceMsd = new MzmlReader().Read(fs);
