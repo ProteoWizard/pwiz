@@ -154,7 +154,7 @@ public class SpectrumListFactoryTests
     {
         // Register a stub, invoke it via Wrap, then restore a no-op so it doesn't bleed into other tests.
         int callCount = 0;
-        SpectrumListFactory.Register("rot13", (_, inner) => { callCount++; return inner; });
+        SpectrumListFactory.Register("rot13", (_, inner, _) => { callCount++; return inner; });
         try
         {
             SpectrumListFactory.Wrap(BuildMixedList(), "rot13 whatever");
@@ -162,7 +162,7 @@ public class SpectrumListFactoryTests
         }
         finally
         {
-            SpectrumListFactory.Register("rot13", (_, inner) => inner);
+            SpectrumListFactory.Register("rot13", (_, inner, _) => inner);
         }
     }
 }
