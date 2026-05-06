@@ -159,32 +159,49 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         var scan = new Scan { InstrumentConfiguration = _defaultIc };
         spec.ScanList.Scans.Add(scan);
 
-        // cpp SpectrumList_ABI emits scan start time BEFORE preset scan configuration; mirror
-        // that order so msdiff sees an exact match.
-        try
-        {
-            double rtMin = exp.GetRetentionTime(ie.Cycle);
-            scan.Set(CVID.MS_scan_start_time, rtMin, CVID.UO_minute);
-        }
-        catch { /* not all experiments have RT */ }
-
-        // 1-based experiment number; matches cpp's `msExperiment->getExperimentNumber()`.
-        scan.Set(CVID.MS_preset_scan_configuration, ie.ExperimentIndex + 1);
-
-        if (exp.StartMass < exp.EndMass)
-            scan.ScanWindows.Add(new ScanWindow(exp.StartMass, exp.EndMass, CVID.MS_m_z));
-
         // Profile vs centroid + AddZeros padding for profile data are handled inside the
         // AbstractWiffSpectrum implementation (legacy: AddZeros via Clearcore2; wiff2: AddFramingZeros
         // via the SDK request). cpp WiffFile2.ipp:803 always passes addZeros=true (regardless
         // of doCentroid); mirror that so the SDK returns the same point density and the swath
         // centroid output matches the cpp reference exactly (765 points/spectrum on the
-        // swath.api fixture, vs 255 with addZeros=false).
+        // swath.api fixture, vs 255 with addZeros=false). Fetched here (before scan-window /
+        // start-time emission) because the spectrum's StartTimeMinutes is the cpp-equivalent
+        // start time and is preferred over the experiment-cycle RT when the SDK reports it.
         var ms = exp.GetSpectrum(ie.Cycle, addZeros: true, centroid: centroid);
+
+        // cpp SpectrumList_ABI.cpp:139-141: scan_start_time comes from the spectrum's
+        // StartRT, not the experiment's per-cycle RT (the latter is one cycle later for
+        // legacy WIFF). When the SDK doesn't surface StartRT (wiff2), fall back to the
+        // experiment-cycle RT so existing wiff2 references still match.
+        double rtMin = ms?.StartTimeMinutes ?? 0;
+        if (rtMin <= 0)
+        {
+            try { rtMin = exp.GetRetentionTime(ie.Cycle); } catch { /* not all experiments have RT */ }
+        }
+        if (rtMin > 0) scan.Set(CVID.MS_scan_start_time, rtMin, CVID.UO_minute);
+
+        // 1-based experiment number; matches cpp's `msExperiment->getExperimentNumber()`.
+        scan.Set(CVID.MS_preset_scan_configuration, ie.ExperimentIndex + 1);
+
+        // cpp SpectrumList_ABI.cpp:152-154: scan window comes from
+        // experiment->getAcquisitionMassRange, which returns (0, 0) for MRM/SIM and
+        // (StartMass, EndMass) for full-scan. cpp pushes a ScanWindow unconditionally,
+        // so MRM-as-spectra references include a `[0, 0]` scan window (the SDK throws
+        // when we'd ask StartMass on an MRM; treat the throw as "(0, 0)").
+        double scanLo = 0, scanHi = 0;
+        try { scanLo = exp.StartMass; scanHi = exp.EndMass; }
+        catch (ArgumentException) { /* MRM / SIM — keep (0, 0) */ }
+        scan.ScanWindows.Add(new ScanWindow(scanLo, scanHi, CVID.MS_m_z));
 
         if (ms is not null)
         {
-            spec.Params.Set(centroid || ms.CentroidMode ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
+            // cpp WiffFile.cpp:738: pointsAreContinuous = !CentroidMode && expType != MRM && expType != SIM.
+            // Mark MRM/SIM as centroid regardless of the SDK's CentroidMode flag (each
+            // transition is a stick, not a continuum).
+            bool isTransition = ms.ExperimentType is WiffExperimentType.MRM or WiffExperimentType.SIM;
+            spec.Params.Set(centroid || ms.CentroidMode || isTransition
+                ? CVID.MS_centroid_spectrum
+                : CVID.MS_profile_spectrum);
 
             if (msLevel > 1 && ms.HasPrecursorInfo)
             {
@@ -223,18 +240,19 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             // value instead via AbstractWiffExperiment.GetCycleTic, which the wiff2 path
             // implements by caching GetExperimentTic.
             //
-            // Base peak (MS_base_peak_intensity / MS_base_peak_m_z): NOT emitted here. cpp gets
-            // these from a separate per-cycle SDK metadata array (basePeakIntensities[cycle-1])
-            // that the legacy WIFF SDK exposes but the wiff2 SDK doesn't, so cpp emits for
-            // legacy and skips for wiff2. To match that we'd need a TryGetBasePeak surface on
-            // AbstractWiffSpectrum with a wiff2 implementation that returns false; deferring
-            // until we have a legacy-WIFF reference fixture with spectra to validate against
-            // (current legacy fixtures are chromatogram-only).
+            // Base peak (MS_base_peak_intensity / MS_base_peak_m_z): legacy WIFF surfaces these
+            // per-spectrum; wiff2 doesn't. WiffSpectrum.BasePeak returns null on wiff2 so the
+            // CV params are emitted only when the SDK actually has them, matching cpp.
             double[] xs = ms.XValues;
             double[] ys = ms.YValues;
             int len = Math.Min(xs.Length, ys.Length);
 
             spec.Params.Set(CVID.MS_total_ion_current, exp.GetCycleTic(ie.Cycle), CVID.MS_number_of_detector_counts);
+            if (ms.BasePeak is var (bpMz, bpIntensity))
+            {
+                spec.Params.Set(CVID.MS_base_peak_m_z, bpMz, CVID.MS_m_z);
+                spec.Params.Set(CVID.MS_base_peak_intensity, bpIntensity, CVID.MS_number_of_detector_counts);
+            }
 
             if (getBinaryData)
             {

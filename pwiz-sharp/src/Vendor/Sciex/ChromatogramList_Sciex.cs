@@ -337,8 +337,12 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase
         if (ie.Polarity == WiffPolarity.Positive) c.Params.Set(CVID.MS_positive_scan);
         else if (ie.Polarity == WiffPolarity.Negative) c.Params.Set(CVID.MS_negative_scan);
 
+        // Match cpp mzML serialization: cpp uses %.17g equivalent to emit doubles at
+        // full precision (so 0.3 → "0.29999999999999999"). C#'s "R" format gives the
+        // shortest round-trip ("0.3"); "G17" gives 17 significant digits — what cpp
+        // emits — and keeps the harness's userParam string-compare clean.
         c.Params.UserParams.Add(new UserParam("MS_dwell_time",
-            (ie.DwellTimeMs / 1000.0).ToString(CultureInfo.InvariantCulture), "xs:float"));
+            (ie.DwellTimeMs / 1000.0).ToString("G17", CultureInfo.InvariantCulture), "xs:float"));
 
         // SIC for the transition; legacy uses GetExtractedIonChromatogram. wiff2 returns empty
         // (cpp WiffFile2 stubs to 0).

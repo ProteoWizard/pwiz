@@ -267,6 +267,11 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
     public override (double[] Times, double[] Intensities) GetSic(int transitionIndex)
         => (Array.Empty<double>(), Array.Empty<double>());
 
+    // wiff2 SDK doesn't surface per-cycle base-peak metadata; cpp's WiffFile2 path
+    // skips emitting MS_base_peak_* on wiff2 spectra. Returning null lets the
+    // SpectrumList omit those CV params (matching the cpp wiff2 references).
+    public override (double Mz, double Intensity)? GetBasePeak(int cycle1Based) => null;
+
     private void EnsureCyclesLoaded()
     {
         if (_cyclesCache is not null || _retentionFetchFailed) return;
@@ -389,4 +394,20 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
             ? 0
             : Math.Max(0, _iso.UpperOffset - _iso.IsolationWindowTarget);
     public override double ElectronKineticEnergy => _exp.ElectronKe ?? 0;
+
+    // wiff2 SDK doesn't surface a per-spectrum StartRT; cpp's WiffFile2 path falls
+    // back to the experiment-cycle RT, which the spectrum-list already plumbs as
+    // its primary scan_start_time. Returning 0 makes SpectrumList_Sciex skip the
+    // StartTimeMinutes override and keep the cycle RT for wiff2 spectra.
+    public override double StartTimeMinutes => 0;
+
+    // Per the existing comment in SpectrumList_Sciex, the wiff2 SDK doesn't expose
+    // per-cycle base-peak metadata; cpp emits these only for legacy WIFF.
+    public override (double Mz, double Intensity)? BasePeak => null;
+
+    // wiff2 doesn't go through SrmAsSpectra/SimAsSpectra (the wiff2 reader rejects
+    // MRM/SIM experiments outright per cpp SpectrumList_ABI.cpp:288-292), so a
+    // wiff2 spectrum's experiment type is never MRM or SIM here. The MS / Product
+    // / Precursor distinction doesn't change XValues handling, so default to MS.
+    public override WiffExperimentType ExperimentType => WiffExperimentType.MS;
 }

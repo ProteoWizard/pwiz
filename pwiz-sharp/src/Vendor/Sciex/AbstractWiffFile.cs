@@ -141,6 +141,16 @@ public abstract class AbstractWiffExperiment
     /// <summary>Selected ion chromatogram for the SRM/SIM transition at
     /// <paramref name="transitionIndex"/>. Empty for wiff2.</summary>
     public abstract (double[] Times, double[] Intensities) GetSic(int transitionIndex);
+
+    /// <summary>cpp <c>experiment->basePeakIntensities()[cycle-1]</c> /
+    /// <c>basePeakMZs()[cycle-1]</c>: per-cycle base peak. Returns null when the SDK
+    /// can't supply it (wiff2; or when initialization fails). Implementations should
+    /// cache the BPC since each spectrum asks for one cycle's worth.</summary>
+    public abstract (double Mz, double Intensity)? GetBasePeak(int cycle1Based);
+
+    /// <summary>Releases SDK objects held by this experiment. WiffFile.Dispose
+    /// cascades through here before closing the provider. No-op on wiff2.</summary>
+    public virtual void Dispose() { }
 }
 
 /// <summary>One mass spectrum (one cycle of one experiment). Mirrors cpp <c>Spectrum</c>.</summary>
@@ -178,6 +188,25 @@ public abstract class AbstractWiffSpectrum
 
     /// <summary>Electron kinetic energy for EAD spectra (eV; 0 if not set).</summary>
     public abstract double ElectronKineticEnergy { get; }
+
+    /// <summary>cpp <c>spectrumInfo->StartRT</c> — retention time at the start of this
+    /// spectrum's cycle, in minutes. Differs from the experiment-level
+    /// <c>GetRTFromExperimentCycle</c> by one cycle on legacy WIFF (the experiment
+    /// returns the RT at the cycle's measurement; this returns the RT at the cycle's
+    /// start). Reference mzMLs were generated with <c>StartRT</c>; matching it is
+    /// required for harness parity. Returns 0 if the SDK can't report it.</summary>
+    public abstract double StartTimeMinutes { get; }
+
+    /// <summary>cpp <c>spectrumInfo->BasePeak{MZ,Intensity}</c> — per-cycle base-peak
+    /// metadata exposed by the legacy WIFF SDK (and not by wiff2). Returns null when
+    /// the SDK doesn't surface them; the spectrum-list emits base-peak CV params
+    /// only when a value comes back.</summary>
+    public abstract (double Mz, double Intensity)? BasePeak { get; }
+
+    /// <summary>cpp <c>experiment->getExperimentType()</c> reflected onto the spectrum.
+    /// SpectrumList_Sciex needs this to override XValues / set centroid for MRM/SIM
+    /// without going back through the experiment-list lookup it already did once.</summary>
+    public abstract WiffExperimentType ExperimentType { get; }
 }
 
 /// <summary>Sciex experiment kind, normalized across the legacy and wiff2 SDKs.</summary>

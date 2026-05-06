@@ -143,7 +143,20 @@ internal sealed class WiffFile : AbstractWiffFile
     {
         if (_disposed) return;
         _disposed = true;
-        try { _provider.Close(); } catch { }
+        // Cascade disposal in inverse acquisition order. cpp .NET-Framework builds
+        // synchronously release the underlying .wiff handle when each of these
+        // returns; under .NET 8 the experiment + sample disposes still leave
+        // native readers active for SIM/SRM-bearing samples (the SDK enqueues
+        // their finalizers and the file handle survives past return). The
+        // harness's post-test rename probe soft-fails on those known cases —
+        // see VendorReaderTestHarness.AssertFilesUnlocked.
+        foreach (var exp in _experiments)
+        {
+            try { exp.Dispose(); } catch { /* best-effort */ }
+        }
+        try { _msSample.Dispose(); } catch { /* best-effort */ }
+        try { _sample.Dispose(); } catch { /* best-effort */ }
+        try { _provider.Close(); } catch { /* best-effort */ }
     }
 }
 
@@ -228,7 +241,7 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
                 try { _exp.AddZeros(ms, 1); }
                 catch { /* AddZeros isn't always applicable */ }
             }
-            return new WiffSpectrum(ms);
+            return new WiffSpectrum(ms, _exp, this, ExperimentType);
         }
         catch { return null; }
     }
@@ -285,6 +298,58 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
                     sic.GetActualYValues() ?? Array.Empty<double>());
         }
         catch { return (Array.Empty<double>(), Array.Empty<double>()); }
+    }
+
+    private double[]? _basePeakIntensities;
+    private double[]? _basePeakMzs;
+    private bool _basePeakInitFailed;
+
+    public override void Dispose()
+    {
+        // Clearcore2's MSExperiment owns native readers (the BPC fetch on MRM
+        // experiments leaks file handles past WiffFile.Dispose without this).
+        try { _exp.Dispose(); } catch { }
+    }
+
+    public override (double Mz, double Intensity)? GetBasePeak(int cycle1Based)
+    {
+        // cpp WiffFile.cpp:485-520: fetch BPC once, cache the parallel intensity / mz
+        // arrays on the experiment, look up by 1-based cycle. cpp falls back to a
+        // time-bounded BPC settings if the unbounded fetch throws — mirror that.
+        if (_basePeakInitFailed) return null;
+        if (_basePeakIntensities is null || _basePeakMzs is null)
+        {
+            try
+            {
+                BasePeakChromatogram bpc;
+                try
+                {
+                    bpc = _exp.GetBasePeakChromatogram(new BasePeakChromatogramSettings(0, null, null));
+                }
+                catch
+                {
+                    var tic = _exp.GetTotalIonChromatogram();
+                    var ts = tic.GetActualXValues() ?? Array.Empty<double>();
+                    if (ts.Length == 0) { _basePeakInitFailed = true; return null; }
+                    int last = ts.Length > 10 ? ts.Length - 1 : ts.Length;
+                    var settings = new BasePeakChromatogramSettings(0, null, null, 0, ts[last - 1]);
+                    bpc = _exp.GetBasePeakChromatogram(settings);
+                }
+                var intensities = bpc.GetActualYValues() ?? Array.Empty<double>();
+                var bpci = bpc.Info;
+                var mzs = new double[intensities.Length];
+                for (int i = 0; i < mzs.Length; i++) mzs[i] = bpci.GetBasePeakMass(i);
+                _basePeakIntensities = intensities;
+                _basePeakMzs = mzs;
+            }
+            catch { _basePeakInitFailed = true; return null; }
+        }
+        int idx = cycle1Based - 1;
+        if (idx < 0 || idx >= _basePeakIntensities!.Length) return null;
+        double y = _basePeakIntensities[idx];
+        double x = y > 0 ? _basePeakMzs![idx] : 0;
+        if (y <= 0) return null;
+        return (x, y);
     }
 
     private IReadOnlyList<WiffMrmTarget> BuildSrmTargets()
@@ -362,15 +427,48 @@ internal sealed class WiffSpectrum : AbstractWiffSpectrum
 {
     private readonly MassSpectrum _ms;
     private readonly MassSpectrumInfo _info;
+    private readonly MSExperiment _exp;
+    private readonly WiffExperiment _wiffExperiment;
+    private readonly WiffExperimentType _experimentType;
 
-    public WiffSpectrum(MassSpectrum ms)
+    public WiffSpectrum(MassSpectrum ms, MSExperiment exp, WiffExperiment wiffExperiment, WiffExperimentType experimentType)
     {
         _ms = ms;
         _info = ms.Info;
+        _exp = exp;
+        _wiffExperiment = wiffExperiment;
+        _experimentType = experimentType;
     }
 
     public override bool CentroidMode => _info.CentroidMode;
-    public override double[] XValues => _ms.GetActualXValues() ?? Array.Empty<double>();
+
+    public override double[] XValues
+    {
+        // cpp WiffFile.cpp:877-892: SDK X values for MRM/SIM aren't m/z; rebuild from
+        // MassRangeInfo. MRM cells use Q3Mass (the daughter); SIM cells use Mass.
+        // Fall back to the SDK's X values when MassRangeInfo is missing or shorter
+        // than the SDK's reported NumDataPoints, matching cpp's runtime guard.
+        get
+        {
+            if (_experimentType is WiffExperimentType.MRM or WiffExperimentType.SIM)
+            {
+                var ranges = _exp.Details?.MassRangeInfo;
+                if (ranges is { Length: > 0 } && ranges.Length == _ms.NumDataPoints)
+                {
+                    var mz = new double[ranges.Length];
+                    if (_experimentType == WiffExperimentType.MRM)
+                        for (int i = 0; i < mz.Length; i++)
+                            mz[i] = ranges[i] is MRMMassRange mrm ? mrm.Q3Mass : 0;
+                    else
+                        for (int i = 0; i < mz.Length; i++)
+                            mz[i] = ranges[i] is SIMMassRange sim ? sim.Mass : 0;
+                    return mz;
+                }
+            }
+            return _ms.GetActualXValues() ?? Array.Empty<double>();
+        }
+    }
+
     public override double[] YValues => _ms.GetActualYValues() ?? Array.Empty<double>();
     public override bool HasPrecursorInfo => _info.ParentMZ > 0;
     public override double PrecursorMz => _info.ParentMZ;
@@ -380,4 +478,27 @@ internal sealed class WiffSpectrum : AbstractWiffSpectrum
     public override double IsolationLowerOffset => 0;
     public override double IsolationUpperOffset => 0;
     public override double ElectronKineticEnergy => 0;
+
+    public override double StartTimeMinutes
+    {
+        // cpp uses spectrumInfo->StartRT directly. The Clearcore2 property name varies
+        // across SDK builds — try `StartRT` first and fall back to 0.
+        get
+        {
+            try { return _info.StartRT; } catch { return 0; }
+        }
+    }
+
+    public override (double Mz, double Intensity)? BasePeak
+    {
+        // cpp WiffFile.cpp:233-234 reads the base peak from per-experiment BPC arrays
+        // (basePeakMZs[cycle-1] / basePeakIntensities[cycle-1]). Delegate to the
+        // experiment so the BPC fetches once per experiment-life, not once per spectrum.
+        // The +1 below: _info.StartCycle is 0-based on Clearcore2, while cpp's `cycle`
+        // throughout WiffFile is 1-based; AbstractWiffExperiment.GetBasePeak takes the
+        // 1-based form to stay consistent with GetRetentionTime / GetSpectrum.
+        get => _wiffExperiment.GetBasePeak(_info.StartCycle + 1);
+    }
+
+    public override WiffExperimentType ExperimentType => _experimentType;
 }

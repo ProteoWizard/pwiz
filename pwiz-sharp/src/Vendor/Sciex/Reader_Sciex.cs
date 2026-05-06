@@ -58,7 +58,12 @@ public sealed class Reader_Sciex : IReader
 #else
         result.CVs.AddRange(MSData.DefaultCVList);
 
-        var wiff = AbstractWiffFile.Open(filename, sampleIndex0: 0);
+        // Multi-sample WIFF1 inputs (Enolase_repeats_AQv1.4.2.wiff has 10 samples) need
+        // the caller to select which sample to load. cpp ports this as the runIndex
+        // parameter on Reader::read; ReaderConfig.RunIndex round-trips it through the
+        // pwiz-sharp call surface. Default 0 = first sample, matching cpp.
+        int sampleIndex0 = config?.RunIndex ?? 0;
+        var wiff = AbstractWiffFile.Open(filename, sampleIndex0);
         try
         {
             FillMetadata(result, filename, wiff, config);

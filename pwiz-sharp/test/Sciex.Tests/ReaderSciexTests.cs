@@ -50,6 +50,49 @@ public class ReaderSciexTests
     }
 
     [TestMethod]
+    public void Reader_Sciex_50uMpyrone_8uL_01_simAsSpectra()
+    {
+        // cpp Reader_ABI_Test.cpp:96-101: 50uMpyrone-8uL-01.wiff with simAsSpectra=true
+        // and indexRange=(0, 100). The fixture was added to d:/test/ABI in 2018 but
+        // never landed in the pwiz repo, so the corresponding cpp config went
+        // untested for years; we now ship it under Reader_ABI_Test.data/ alongside the
+        // generated reference mzML so both pwiz-sharp and cpp pipelines exercise the
+        // SIM-as-spectra emission path.
+        var ctx = SetUp("50uMpyrone-8uL-01.wiff");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig
+        {
+            SimAsSpectra = true,
+            IndexRange = (0, 100),
+            // Reference mzML's startTimeStamp was generated on a different host TZ
+            // than this checkout's build; the WIFF SDK reports acquisition time as
+            // a naive datetime, so the wall-clock value drifts by the TZ offset
+            // when re-encoded. The data parity is what we care about.
+            IgnoreStartTimeStamp = true,
+        });
+        ctx.Check();
+    }
+
+    [TestMethod]
+    public void Reader_Sciex_Enolase_repeats_AQv1_4_2_srmAsSpectra()
+    {
+        // cpp Reader_ABI_Test.cpp:103-108: re-run Enolase with srmAsSpectra=true and
+        // runIndex=3 (i.e. sample index 4 in 1-based numbering — En_04). The reference
+        // mzML "Enolase_repeats_AQv1.4.2-20070918_En_04-srmSpectra.mzML" was generated
+        // with that exact (sample, flag) pair; loading any other sample misses the SRM
+        // experiment shape it was captured from.
+        var ctx = SetUp("Enolase_repeats_AQv1.4.2.wiff");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig
+        {
+            SrmAsSpectra = true,
+            RunIndex = 3,
+            IndexRange = (0, 100),
+        });
+        ctx.Check();
+    }
+
+    [TestMethod]
     public void Reader_Sciex_7600ZenoTOFMSMS_EAD_TestData()
     {
         // wiff2 single-sample file, ZenoTOF 7600 (Q-ToF + Zeno trap).
