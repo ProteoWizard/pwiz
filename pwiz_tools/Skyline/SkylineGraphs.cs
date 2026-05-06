@@ -1105,6 +1105,7 @@ namespace pwiz.Skyline
 
         void GraphSpectrum.IStateProvider.BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
+            PrepareZedGraphContextMenu(zedGraphControl, menuStrip);
             using var spectrumContextMenu = new SpectrumContextMenu(this);
             spectrumContextMenu.BuildSpectrumMenu(isProteomic, zedGraphControl, menuStrip);
         }

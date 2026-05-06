@@ -298,9 +298,20 @@ namespace pwiz.OspreySharp.Chromatography
                     for (int i = 0; i < n; i++)
                     {
                         double u = absResiduals[i] / s;
-                        weights[i] = Math.Abs(u) < 1.0
-                            ? Math.Pow(1.0 - u * u, 2)
-                            : 0.0;
+                        if (Math.Abs(u) < 1.0)
+                        {
+                            // (1 - u^2)^2 via direct multiplication, NOT Math.Pow.
+                            // Math.Pow(t, 2) in .NET routes through exp(2*log(t))
+                            // and diverges from t*t at the last ULP. Rust's
+                            // f64::powi(2) is identical to t*t, so the bisquare
+                            // weight only matches cross-impl when this is t*t.
+                            double t = 1.0 - u * u;
+                            weights[i] = t * t;
+                        }
+                        else
+                        {
+                            weights[i] = 0.0;
+                        }
                     }
                 }
 

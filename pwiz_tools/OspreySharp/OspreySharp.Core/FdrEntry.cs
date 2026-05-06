@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 
 namespace pwiz.OspreySharp.Core
 {
@@ -56,6 +57,16 @@ namespace pwiz.OspreySharp.Core
         /// (e.g., for stubs loaded from a Parquet cache without features).
         /// </summary>
         public double[] Features { get; set; }
+
+        /// <summary>
+        /// All CWT-detected peak candidates evaluated during coelution scoring,
+        /// not just the winning peak. Populated by the scoring path; null on
+        /// stubs loaded from Parquet without the cwt_candidates column. Stage 6
+        /// reconciliation reads this list to decide whether a per-file peak
+        /// boundary should be replaced by an inter-replicate consensus
+        /// boundary, mirroring Rust CoelutionScoredEntry::cwt_candidates.
+        /// </summary>
+        public List<CwtCandidate> CwtCandidates { get; set; }
 
         public FdrEntry()
         {

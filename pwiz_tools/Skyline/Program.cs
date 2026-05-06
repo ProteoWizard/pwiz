@@ -656,6 +656,16 @@ namespace pwiz.Skyline
                     Settings.Default.SettingsUpgradeRequired = false;
                     Settings.Default.Save();
                 }
+
+                // Seed ShowHeatmapFullScan from the pre-3-button SumScansFullScan on
+                // first run so existing users who had stick-only (SumScansFullScan=true)
+                // don't get a jarring 4-pane default.
+                if (!Settings.Default.ShowHeatmapFullScanSeeded)
+                {
+                    Settings.Default.ShowHeatmapFullScan = !Settings.Default.SumScansFullScan;
+                    Settings.Default.ShowHeatmapFullScanSeeded = true;
+                    Settings.Default.Save();
+                }
             }
         }
 

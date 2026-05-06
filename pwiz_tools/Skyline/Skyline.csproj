@@ -464,6 +464,9 @@
     <Compile Include="Controls\Graphs\DetectionToolbarProperties.Designer.cs">
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\ClickThroughToolStrip.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
     <Compile Include="Controls\Graphs\LabelLayoutRunner.cs" />
     <Compile Include="Controls\Graphs\MatchExpressionListDlg.cs">
@@ -3048,6 +3051,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.ja.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.zh-CHS.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
