@@ -79,7 +79,7 @@ digraph pwiz_modules {
     n_data__vendor_readers__Mobilion [label="Mobilion", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
     n_data__vendor_readers__Shimadzu [label="Shimadzu", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_data__vendor_readers__Thermo [label="Thermo", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
-    n_data__vendor_readers__UIMF [label="UIMF", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_data__vendor_readers__UIMF [label="UIMF", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_data__vendor_readers__UNIFI [label="UNIFI", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_data__vendor_readers__Waters [label="Waters", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
   }

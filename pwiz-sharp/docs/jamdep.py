@@ -63,7 +63,7 @@ STATUS = {
     "data/vendor_readers/Mobilion": "none",
     "data/vendor_readers/Shimadzu": "full",   # 2/2 tests
     "data/vendor_readers/Thermo": "full",     # 13/13 tests
-    "data/vendor_readers/UIMF": "none",
+    "data/vendor_readers/UIMF": "full",       # 2 tests; 1/1 fixture (BSA_10ugml_CID)
     "data/vendor_readers/UNIFI": "full",      # 44 tests; 4/4 live-harness fixtures
     "data/vendor_readers/Waters": "full",     # 20/20 tests
 
