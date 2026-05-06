@@ -111,41 +111,42 @@ dotnet build %BUILD_TARGET% --no-restore -nologo %MSBUILD_PROPS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet build failed & goto error)
 
-REM # Test discovery: with vendor support, run the full slnx (all 8 projects).
-REM # Without vendor support, run only the projects that don't pull vendor refs.
+REM # Test discovery: with vendor support, run all 12 test projects via the
+REM # solution. Without vendor support, run only the projects that don't pull
+REM # vendor refs (Bruker.Tests / Thermo.Tests / Waters.Tests / Agilent.Tests /
+REM # Sciex.Tests / Shimadzu.Tests / UNIFI.Tests reference vendor projects).
 if %IAGREE%==1 (
     set TEST_TARGET=Pwiz.sln
-    set TEST_SUITE_NAME=pwiz-sharp ^(full^)
 ) else (
-    REM # Bruker.Tests / Thermo.Tests / Waters.Tests reference vendor projects, so they
-    REM # can't build in NO_VENDOR_SUPPORT mode.
     set TEST_TARGET=test\Util.Tests\Util.Tests.csproj test\Common.Tests\Common.Tests.csproj test\MsData.Tests\MsData.Tests.csproj test\Analysis.Tests\Analysis.Tests.csproj test\MsConvert.Tests\MsConvert.Tests.csproj
-    set TEST_SUITE_NAME=pwiz-sharp ^(core^)
 )
 
-REM # TeamCity test decoration: wrap the dotnet test run in a testSuite so the
-REM # individual test results (imported from per-assembly trx files at the end)
-REM # roll up under one suite name in the build's Tests tab.
-if defined TEAMCITY_VERSION echo ##teamcity[testSuiteStarted name='%TEST_SUITE_NAME%']
-
-echo ##teamcity[progressMessage 'dotnet test (%CONFIG%)']
+REM # Single `dotnet test` invocation: msbuild runs the per-project VSTest target
+REM # in parallel, and each project's TC.VSTest.TestAdapter emits
+REM # ##teamcity[testStarted name='<asm>: <fqn>' suiteName='<asm>' ...] events.
+REM # We deliberately do NOT wrap with our own ##teamcity[testSuiteStarted ...] —
+REM # the outer wrapper would override the per-test suiteName attribute and lump
+REM # everything under one suite. With no wrapper, TC honors the adapter's
+REM # suiteName and produces per-assembly suites in the Tests tab.
+REM #
+REM # Stdout-corruption mitigation: the SCIEX Clearcore2 SDK's log4net default
+REM # appender used to flood stdout with `[INFO]`/`[DEBUG]` lines that mid-line
+REM # interleaved with `##teamcity[testFinished ...]` messages and got TC to drop
+REM # the malformed messages. Sciex.Tests/SilenceSciexSdkLogging silences the SDK
+REM # via log4net.LogManager.GetRepository().Threshold = Off, so the only thing
+REM # writing TC service messages on the build's stdout is the test adapter
+REM # itself — there's no concurrent writer left to corrupt the stream.
+REM #
 REM # Loggers:
-REM #   trx     — per-assembly XML files written under %TC_TEST_RESULTS%. We don't
-REM #             use --logger:teamcity any more: when `dotnet test` runs the solution,
-REM #             test assemblies execute in parallel against a shared stdout. The SCIEX
-REM #             Clearcore2 SDK's log4net output (~30 IoC lines per CreateSampleDataApi
-REM #             call + 5-10 lines per API call, all containing raw `[`/`]` chars)
-REM #             collides mid-line with `##teamcity[testFinished ...]` service messages.
-REM #             TC silently drops the malformed messages and the affected tests vanish
-REM #             from the count — observed in builds 3974560/3974563/3974564, same
-REM #             commit, totals 221/238/191 driven by log-flood corruption. Per-assembly
-REM #             trx files write to disk independently, then we emit one
-REM #             `##teamcity[importData type='vstest' ...]` at the end to ingest the
-REM #             whole batch — no service-message corruption is possible.
+REM #   trx     — per-assembly TRX files for IDE consumption / coverage replay.
 REM #   console — readable stdout for humans / local CI logs.
+REM #   teamcity — TC service messages (only when TEAMCITY_VERSION is set).
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
 set TEST_LOGGERS=--logger:"trx" --logger:"console;verbosity=normal" --results-directory:"%TC_TEST_RESULTS%"
+if defined TEAMCITY_VERSION set TEST_LOGGERS=%TEST_LOGGERS% --logger:teamcity
+
+echo ##teamcity[progressMessage 'dotnet test (%CONFIG%)']
 
 if %COVERAGE%==1 (
     REM # Run the test step under JetBrains dotCover. Snapshot is dropped at
@@ -172,7 +173,7 @@ if %COVERAGE%==1 (
         goto error
     )
 
-    set COVER_DIR=%SCRIPT_DIR%\TestResults
+    set COVER_DIR=%TC_TEST_RESULTS%
     if not exist "!COVER_DIR!" mkdir "!COVER_DIR!"
     set COVER_SNAPSHOT=!COVER_DIR!\coverage.dcvr
     set COVER_REPORT_DIR=!COVER_DIR!\coverage-report
@@ -201,14 +202,6 @@ if %COVERAGE%==1 (
     dotnet test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
     set EXIT=!ERRORLEVEL!
 )
-
-REM # Import every per-assembly trx into TC, wrapping each in its own
-REM # testSuiteStarted/Finished pair so the Tests tab shows per-assembly suites
-REM # instead of one undifferentiated "VSTest" pile. The helper script reads each
-REM # trx's <UnitTest storage="..."> attribute to identify the source assembly.
-if defined TEAMCITY_VERSION pwsh -NoLogo -NoProfile -File "%SCRIPT_DIR%\scripts\Import-TrxResults.ps1" -ResultsDir "%TC_TEST_RESULTS%"
-
-if defined TEAMCITY_VERSION echo ##teamcity[testSuiteFinished name='%TEST_SUITE_NAME%']
 
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet test failed & goto error)
 
