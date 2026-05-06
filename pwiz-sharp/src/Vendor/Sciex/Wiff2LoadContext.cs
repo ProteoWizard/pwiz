@@ -72,6 +72,18 @@ internal sealed class Wiff2LoadContext : AssemblyLoadContext
         if (File.Exists(wiff2Sqlite))
             _bundle["System.Data.SQLite"] = File.ReadAllBytes(wiff2Sqlite);
 
+        // OFX.Logging stub (no-op LogManager). OFX.Core.OFXApp does
+        //   Type.GetType("OFX.Logging.LogManager,OFX.Logging")
+        // during init; without OFX.Logging.dll it falls back to its DefaultLogManager
+        // which spams stdout via a Stream that bypasses Console.SetOut. We ship a stub
+        // OFX.Logging.dll (built from src/Vendor/Sciex/OfxLoggingStub) and bundle it
+        // here so the Type.GetType lookup resolves THIS ALC's copy — the LogManager's
+        // ILogManager interface must come from the same OFX.Core.Contracts the SDK is
+        // using inside this ALC, otherwise the cast to ILogManager fails.
+        string ofxStub = Path.Combine(AppContext.BaseDirectory, "OFX.Logging.dll");
+        if (File.Exists(ofxStub))
+            _bundle["OFX.Logging"] = File.ReadAllBytes(ofxStub);
+
         // Trigger SmartAssembly's resolver so anything we don't have cached can still resolve
         // through it (and so the SDK's licensing / Unity wire-up can run).
         try

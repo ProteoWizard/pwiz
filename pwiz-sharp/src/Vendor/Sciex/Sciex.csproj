@@ -6,13 +6,18 @@
     <Description>Sciex / ABI WIFF reader. References Sciex's managed Clearcore2 + WiffReader assemblies.</Description>
   </PropertyGroup>
 
-  <!-- Wiff2/ is a separate sub-project (Sciex.Wiff2.csproj). Exclude its sources and build
-       output so MSBuild's default .cs glob doesn't try to compile them into Sciex.dll. -->
+  <!-- Wiff2/ and OfxLoggingStub/ are separate sub-projects. Exclude their sources and
+       build output so MSBuild's default .cs glob doesn't try to compile them into
+       Sciex.dll. -->
   <ItemGroup>
     <Compile Remove="Wiff2\**" />
     <None Remove="Wiff2\**" />
     <Content Remove="Wiff2\**" />
     <EmbeddedResource Remove="Wiff2\**" />
+    <Compile Remove="OfxLoggingStub\**" />
+    <None Remove="OfxLoggingStub\**" />
+    <Content Remove="OfxLoggingStub\**" />
+    <EmbeddedResource Remove="OfxLoggingStub\**" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -31,6 +36,15 @@
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\MsData\MsData.csproj" />
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+    <!-- OFX.Logging.dll: a runtime-only stub built from OfxLoggingStub/. The SCIEX
+         SDK's OFX framework does Type.GetType("OFX.Logging.LogManager,OFX.Logging");
+         providing a no-op LogManager prevents OFX from falling back to its noisy
+         DefaultLogManager (which bypasses Console.SetOut). The Content+CopyTo pattern
+         doesn't propagate through Sciex.dll, so each runtime consumer (Sciex.Tests,
+         MsConvert) repeats the reference in its own csproj. The .wiff2 path also
+         needs Wiff2LoadContext.Load to bundle the stub into its ALC so the
+         LogManager's ILogManager interface comes from the same OFX.Core.Contracts
+         the SDK is using inside that ALC. -->
   </ItemGroup>
 
   <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted

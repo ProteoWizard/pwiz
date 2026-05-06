@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Stub OFX.Logging.dll: OFX.Core.OFXApp does
+       `Type.GetType("OFX.Logging.LogManager,OFX.Logging")` during init; when that
+       returns null (no OFX.Logging.dll on the probe path) it falls back to
+       DefaultLogManager which spams stdout (one [WARN] per init plus [DEBUG] for
+       every Clearcore2 SDK call). We can't filter the spam at the C# layer because
+       DefaultLogManager bypasses Console.SetOut by holding a direct reference to
+       the underlying stdout Stream. Easier to keep DefaultLogManager from being
+       used at all: ship an assembly literally named OFX.Logging containing a
+       no-op LogManager that implements OFX.Core.Contracts.ILogManager.
+       The assembly lands in the Sciex test output via a project reference from
+       Sciex.csproj. -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- Critical: assembly name must be exactly "OFX.Logging" for OFX's
+         Type.GetType("...,OFX.Logging") lookup to find it. -->
+    <AssemblyName>OFX.Logging</AssemblyName>
+    <RootNamespace>OFX.Logging</RootNamespace>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <Description>No-op stub for OFX.Logging so the SCIEX SDK's OFX framework loads our
+      silent LogManager instead of falling back to the noisy DefaultLogManager.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- We need OFX.Core.Contracts (where ILogManager / ILog live) to compile against,
+         but it's already in the Sciex output via the SDK extraction. Reference the
+         already-extracted DLL from vendor-assemblies; this stub only needs the
+         interface definitions, not any of OFX.Core's runtime code. -->
+    <Reference Include="OFX.Core.Contracts">
+      <HintPath>..\..\..\..\vendor-assemblies\Sciex\OFX.Core.Contracts.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

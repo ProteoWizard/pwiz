@@ -3,21 +3,24 @@ using System.Reflection;
 namespace Pwiz.Vendor.Sciex.Tests;
 
 /// <summary>
-/// Hard-caps the SCIEX Clearcore2 SDK's log4net output to <c>OFF</c> before any test runs.
-/// The SDK ships log4net wired to a default ConsoleAppender and emits ~30 IoC-registration
-/// lines per <c>CreateSampleDataApi()</c> call plus 5–10 lines per API request. When TC runs
-/// <c>dotnet test</c> for several assemblies in parallel against a shared stdout, those
-/// <c>[INFO]</c>/<c>[DEBUG]</c> lines collide with <c>##teamcity[testFinished ...]</c>
-/// service messages — TC drops the malformed messages and the affected tests silently
-/// disappear from the count (observed: builds 3974560/3974563/3974564, same commit, totals
-/// 221/238/191 driven by log-flood-induced corruption).
+/// Hard-caps SCIEX Clearcore2 SDK <b>log4net</b> output to <c>OFF</c> before any test runs.
+/// Pairs with <c>OFX.Logging.dll</c> (built from the OfxLoggingStub project): together they
+/// silence the two independent logging frameworks the SDK uses.
+/// <list type="bullet">
+///   <item><b>log4net</b> — used by parts of Clearcore2 / wiff2 RFLight. Silenced here by
+///   reflecting against <c>log4net.LogManager</c> and setting the default repository's
+///   threshold to <c>Off</c>.</item>
+///   <item><b>OFX</b> — falls back to a noisy <c>DefaultLogManager</c> when it can't load
+///   <c>OFX.Logging.LogManager,OFX.Logging</c>. The <c>OfxLoggingStub</c> project ships a
+///   no-op <c>OFX.Logging.dll</c> so OFX uses our silent log manager. <c>Console.SetOut</c>
+///   doesn't help — OFX's DefaultLogManager bypasses <c>Console.Out</c> by holding a direct
+///   reference to the underlying stdout stream — which is why the stub-DLL approach is the
+///   one that actually works.</item>
+/// </list>
+/// Both flooded stdout enough that <c>##teamcity[testFinished ...]</c> service messages
+/// got truncated/corrupted in TC, dropping tests from the count. Builds 3974560 / 3974563
+/// / 3974564 hit the same commit with totals 221 / 238 / 191.
 /// </summary>
-/// <remarks>
-/// We reach the SDK's log4net via reflection rather than a direct package reference because
-/// log4net is an internal dependency of the SDK; it's not exposed in pwiz-sharp's deps.json.
-/// The SDK assemblies load log4net at first use, and reflecting against
-/// <c>Assembly.Load("log4net")</c> finds whichever instance they loaded.
-/// </remarks>
 [TestClass]
 public static class SilenceSciexSdkLogging
 {

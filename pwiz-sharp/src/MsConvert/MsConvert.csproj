@@ -51,6 +51,13 @@
       <OutputItemType>Content</OutputItemType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </ProjectReference>
+    <!-- OFX.Logging stub: see comment in Sciex.csproj. -->
+    <ProjectReference Include="..\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj"
+                      Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
