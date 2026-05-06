@@ -53,18 +53,19 @@ STATUS = {
     "data/identdata": "none",
     "data/tradata": "none",
 
-    # vendor readers
-    "data/vendor_readers": "partial",  # the ExtendedReaderList itself
-    "data/vendor_readers/ABI": "partial",
+    # vendor readers — every Reader_Foo with a TC test fixture is now green;
+    # 'partial' marks readers whose .NET 8 SDK has known feature gaps vs cpp.
+    "data/vendor_readers": "full",            # ExtendedReaderList dispatcher
+    "data/vendor_readers/ABI": "partial",     # Wiff2 path full (4/4 tests); legacy Wiff not ported
     "data/vendor_readers/ABI/T2D": "none",
-    "data/vendor_readers/Agilent": "partial",
-    "data/vendor_readers/Bruker": "partial",
+    "data/vendor_readers/Agilent": "full",    # 11/11 tests, IM combineIMS done
+    "data/vendor_readers/Bruker": "full",     # 10/10 tests
     "data/vendor_readers/Mobilion": "none",
-    "data/vendor_readers/Shimadzu": "none",
-    "data/vendor_readers/Thermo": "full",
+    "data/vendor_readers/Shimadzu": "full",   # 2/2 tests
+    "data/vendor_readers/Thermo": "full",     # 13/13 tests
     "data/vendor_readers/UIMF": "none",
-    "data/vendor_readers/UNIFI": "none",
-    "data/vendor_readers/Waters": "full",
+    "data/vendor_readers/UNIFI": "full",      # 44 tests; 4/4 live-harness fixtures
+    "data/vendor_readers/Waters": "full",     # 20/20 tests
 
     # analysis
     "analysis/calibration": "none",

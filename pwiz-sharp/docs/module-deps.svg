@@ -223,14 +223,14 @@
 <!-- n_data__vendor_readers__Agilent -->
 <g id="node23" class="node">
 <title>n_data__vendor_readers__Agilent</title>
-<path fill="#ffe48a" stroke="#a87000" d="M548,-362C548,-362 518,-362 518,-362 512,-362 506,-356 506,-350 506,-350 506,-338 506,-338 506,-332 512,-326 518,-326 518,-326 548,-326 548,-326 554,-326 560,-332 560,-338 560,-338 560,-350 560,-350 560,-356 554,-362 548,-362"/>
-<text xml:space="preserve" text-anchor="middle" x="533" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#4a3000">Agilent</text>
+<path fill="#9ee5a3" stroke="#2c7a32" d="M548,-362C548,-362 518,-362 518,-362 512,-362 506,-356 506,-350 506,-350 506,-338 506,-338 506,-332 512,-326 518,-326 518,-326 548,-326 548,-326 554,-326 560,-332 560,-338 560,-338 560,-350 560,-350 560,-356 554,-362 548,-362"/>
+<text xml:space="preserve" text-anchor="middle" x="533" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#0a3d10">Agilent</text>
 </g>
 <!-- n_data__vendor_readers__Bruker -->
 <g id="node24" class="node">
 <title>n_data__vendor_readers__Bruker</title>
-<path fill="#ffe48a" stroke="#a87000" d="M624,-362C624,-362 594,-362 594,-362 588,-362 582,-356 582,-350 582,-350 582,-338 582,-338 582,-332 588,-326 594,-326 594,-326 624,-326 624,-326 630,-326 636,-332 636,-338 636,-338 636,-350 636,-350 636,-356 630,-362 624,-362"/>
-<text xml:space="preserve" text-anchor="middle" x="609" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#4a3000">Bruker</text>
+<path fill="#9ee5a3" stroke="#2c7a32" d="M624,-362C624,-362 594,-362 594,-362 588,-362 582,-356 582,-350 582,-350 582,-338 582,-338 582,-332 588,-326 594,-326 594,-326 624,-326 624,-326 630,-326 636,-332 636,-338 636,-338 636,-350 636,-350 636,-356 630,-362 624,-362"/>
+<text xml:space="preserve" text-anchor="middle" x="609" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#0a3d10">Bruker</text>
 </g>
 <!-- n_data__vendor_readers__Mobilion -->
 <g id="node25" class="node">
@@ -241,8 +241,8 @@
 <!-- n_data__vendor_readers__Shimadzu -->
 <g id="node26" class="node">
 <title>n_data__vendor_readers__Shimadzu</title>
-<path fill="#f5a8a8" stroke="#a02020" d="M794,-362C794,-362 754,-362 754,-362 748,-362 742,-356 742,-350 742,-350 742,-338 742,-338 742,-332 748,-326 754,-326 754,-326 794,-326 794,-326 800,-326 806,-332 806,-338 806,-338 806,-350 806,-350 806,-356 800,-362 794,-362"/>
-<text xml:space="preserve" text-anchor="middle" x="774" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#3d0a0a">Shimadzu</text>
+<path fill="#9ee5a3" stroke="#2c7a32" d="M794,-362C794,-362 754,-362 754,-362 748,-362 742,-356 742,-350 742,-350 742,-338 742,-338 742,-332 748,-326 754,-326 754,-326 794,-326 794,-326 800,-326 806,-332 806,-338 806,-338 806,-350 806,-350 806,-356 800,-362 794,-362"/>
+<text xml:space="preserve" text-anchor="middle" x="774" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#0a3d10">Shimadzu</text>
 </g>
 <!-- n_data__vendor_readers__Thermo -->
 <g id="node27" class="node">
@@ -259,8 +259,8 @@
 <!-- n_data__vendor_readers__UNIFI -->
 <g id="node29" class="node">
 <title>n_data__vendor_readers__UNIFI</title>
-<path fill="#f5a8a8" stroke="#a02020" d="M1022,-362C1022,-362 992,-362 992,-362 986,-362 980,-356 980,-350 980,-350 980,-338 980,-338 980,-332 986,-326 992,-326 992,-326 1022,-326 1022,-326 1028,-326 1034,-332 1034,-338 1034,-338 1034,-350 1034,-350 1034,-356 1028,-362 1022,-362"/>
-<text xml:space="preserve" text-anchor="middle" x="1007" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#3d0a0a">UNIFI</text>
+<path fill="#9ee5a3" stroke="#2c7a32" d="M1022,-362C1022,-362 992,-362 992,-362 986,-362 980,-356 980,-350 980,-350 980,-338 980,-338 980,-332 986,-326 992,-326 992,-326 1022,-326 1022,-326 1028,-326 1034,-332 1034,-338 1034,-338 1034,-350 1034,-350 1034,-356 1028,-362 1022,-362"/>
+<text xml:space="preserve" text-anchor="middle" x="1007" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#0a3d10">UNIFI</text>
 </g>
 <!-- n_data__vendor_readers__Waters -->
 <g id="node30" class="node">
