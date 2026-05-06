@@ -295,6 +295,16 @@ public static class VendorReaderTestHarness
         // We materialize the requested range into a SpectrumListSimple so the subsequent
         // diff sees only those spectra (and the SpectrumIdentity index numbers stay 0-based
         // contiguous, matching the cpp output).
+        // Most vendor readers (Mobilion, Sciex, Agilent, Shimadzu, ...) build their
+        // SpectrumList and ChromatogramList around shared backing data, so disposing
+        // the SpectrumList tears down state the parallel ChromatogramList still needs
+        // for the diff. We orphan the original SL here (replaced with `simple`) but
+        // hold a reference until the diff is done, then dispose explicitly to release
+        // SDK handles deterministically — without that, MSData.Dispose only cascades
+        // into `simple` (a managed-only list with no SDK handles) and the original SL
+        // leaks until GC catches up. cpp's harness doesn't have this problem because
+        // its IndexRange path operates on the shared SpectrumList directly.
+        ISpectrumList? orphanedSpectrumList = null;
         if (config.IndexRange is { } range && msd.Run.SpectrumList is { } sl)
         {
             int start = Math.Max(0, range.Start);
@@ -306,14 +316,7 @@ public static class VendorReaderTestHarness
                 spec.Index = i - start;
                 simple.Spectra.Add(spec);
             }
-            // Dispose the original vendor-backed SpectrumList NOW. Once we replace
-            // msd.Run.SpectrumList with `simple` it's orphaned, and MSData.Dispose
-            // would only ever cascade into `simple` (a managed-only list with no
-            // SDK handles to release). The Sciex MRM/SIM path holds enough native
-            // state that GC alone doesn't reliably release the WIFF before the
-            // post-test rename probe runs — explicit dispose here closes the
-            // chain deterministically.
-            sl.Dispose();
+            orphanedSpectrumList = sl;
             msd.Run.SpectrumList = simple;
         }
 
@@ -341,6 +344,12 @@ public static class VendorReaderTestHarness
         string diff = MSDataDiff.Describe(msd, referenceMsd, diffConfig);
         if (diff.Length > 0)
             throw new InvalidOperationException(diff);
+
+        // The diff is done; the parallel ChromatogramList (which may share backing
+        // data with the orphaned SpectrumList) won't be touched again until
+        // MSData.Dispose at function exit, where the disposal cascade is idempotent.
+        // Safe to release the orphaned SL's SDK handles here.
+        orphanedSpectrumList?.Dispose();
 
         // 6. mzXML round-trip: write to mzXML, parse it back, verify the spectrum data made the
         // round trip. mzXML loses most metadata (instrument config, multi-scan combineIMS,
