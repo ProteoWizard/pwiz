@@ -25,7 +25,23 @@
       silent LogManager instead of falling back to the noisy DefaultLogManager.</Description>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!-- The vendor archive (vendor_api_ABI.7z) is extracted by Sciex.csproj's
+       ExtractSciexAssemblies target. On a clean checkout / TC build that target
+       hasn't run yet by the time MSBuild starts compiling OfxLoggingStub, so the
+       <Reference HintPath> below resolves to a missing file (CS0234 / CS0246
+       cascade). ProjectReference with ReferenceOutputAssembly=false forces Sciex
+       to build first — that runs the extraction — without dragging Sciex.dll's
+       managed reference into our compile. ReferenceOutputAssembly default is
+       true, which would break the type-identity isolation we need: the stub's
+       ILogManager must come from the SAME OFX.Core.Contracts.dll instance OFX
+       sees in the wiff2 ALC, not from a copy that travelled through Sciex's
+       deps.json. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <ProjectReference Include="..\Sciex.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+    </ProjectReference>
+
     <!-- We need OFX.Core.Contracts (where ILogManager / ILog live) to compile against,
          but it's already in the Sciex output via the SDK extraction. Reference the
          already-extracted DLL from vendor-assemblies; this stub only needs the
@@ -34,6 +50,15 @@
       <HintPath>..\..\..\..\vendor-assemblies\Sciex\OFX.Core.Contracts.dll</HintPath>
       <Private>false</Private>
     </Reference>
+  </ItemGroup>
+
+  <!-- Without IAgreeToVendorLicenses the SDK isn't extracted, so the OFX.Core.Contracts
+       reference can't resolve. Skip LogManager.cs in that mode — the project still
+       produces an empty OFX.Logging.dll, but no consumer references it (the
+       ProjectReference entries in Sciex.Tests / MsConvert are conditional too) so the
+       empty dll just sits in the output unused. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="LogManager.cs" />
   </ItemGroup>
 
 </Project>
