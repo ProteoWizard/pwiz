@@ -16,9 +16,7 @@ namespace Pwiz.Vendor.Agilent.Tests;
 ///   - + globalChromatogramsAreMs1Only + indexRange=(0,0) on a subset (lines 67-71)
 ///   - + ignoreZeroIntensityPoints on IM (line 73)
 ///   - + isolationMzAndMobilityFilter=(40,1) on IM (lines 76-77)
-/// We start with the default-config tier; the IM-config tiers are listed in
-/// <c>combineIMS</c> blocks but currently <c>Inconclusive</c> until the IM
-/// combine-mode parity gap closes.
+/// All tiers are exercised — the IM combine-mode parity gap is closed.
 /// </summary>
 [TestClass]
 public class ReaderAgilentTests

@@ -175,8 +175,16 @@ public static class VendorReaderTestHarness
             catch (Exception e)
             {
                 result.FailedTests++;
+                // Preserve the full exception chain (type + message + stack) so flaky vendor-SDK
+                // failures surface a useful call site in TC instead of just the bare message.
+                // RuntimeBinderException's Message is "Cannot perform runtime binding on a null
+                // reference" which is useless without the stack frame that hit the dynamic call.
                 result.FailureMessages.Add(
-                    $"{Path.GetFileName(entry.TrimEnd('/', '\\'))}: {e.Message}");
+                    $"{Path.GetFileName(entry.TrimEnd('/', '\\'))}: {e.GetType().Name}: {e.Message}\n"
+                    + Indent(e.StackTrace ?? "(no stack trace)", 2)
+                    + (e.InnerException is null
+                        ? string.Empty
+                        : "\n  ---> " + Indent(e.InnerException.ToString(), 6).TrimStart()));
             }
         }
 
@@ -542,6 +550,15 @@ public static class VendorReaderTestHarness
     /// fixture so it's directly comparable to a freshly-read vendor MSData. Port of
     /// <c>hackInMemoryMSData</c>.
     /// </summary>
+    /// <summary>Prefixes every non-empty line of <paramref name="text"/> with
+    /// <paramref name="spaces"/> spaces. Used to nest stack traces under the failure header.</summary>
+    private static string Indent(string text, int spaces)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        string pad = new(' ', spaces);
+        return string.Join('\n', text.Split('\n').Select(l => l.Length == 0 ? l : pad + l));
+    }
+
     public static void HackInMemoryMSData(string sourceName, MSData msd)
     {
         ArgumentNullException.ThrowIfNull(msd);
