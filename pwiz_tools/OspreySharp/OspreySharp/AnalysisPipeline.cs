@@ -4705,52 +4705,66 @@ namespace pwiz.OspreySharp
             massAccuracyMean = 0.0;
             absMassAccuracyMean = 0.0;
 
-            if (apexSpectrum.Mzs == null || apexSpectrum.Mzs.Length == 0 ||
-                candidate.Fragments == null || candidate.Fragments.Count == 0)
-                return;
-
+            // Do NOT early-return when apex spectrum or candidate fragments
+            // are empty. Rust's compute_mass_accuracy
+            // (osprey-scoring/src/lib.rs:464) handles empty inputs by
+            // returning (0.0, tolerance, tolerance) — so a candidate that
+            // reaches this function with no matchable fragments still
+            // contributes the calibrated tolerance as its abs mass error.
+            // The early-return form left absMassAccuracyMean at 0 instead,
+            // producing ~65 divergent rows on Astral (file 49: 2 rows,
+            // 55: 27 rows, 60: 36 rows). Let the matching loop run with
+            // zero iterations and fall through to the nMatched==0 fallback
+            // at the bottom of the function for cross-impl symmetry.
             double totalIntensity = 0.0;
-            for (int i = 0; i < apexSpectrum.Intensities.Length; i++)
-                totalIntensity += apexSpectrum.Intensities[i];
+            if (apexSpectrum.Intensities != null)
+            {
+                for (int i = 0; i < apexSpectrum.Intensities.Length; i++)
+                    totalIntensity += apexSpectrum.Intensities[i];
+            }
 
             double matchedIntensity = 0.0;
             double massErrSum = 0.0;
             double absMassErrSum = 0.0;
             int nMatched = 0;
 
-            foreach (var frag in candidate.Fragments)
+            if (apexSpectrum.Mzs != null && apexSpectrum.Intensities != null &&
+                candidate.Fragments != null)
             {
-                double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
-                double lower = frag.Mz - tolDa;
-                double upper = frag.Mz + tolDa;
-
-                int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
-                double bestError = double.MaxValue;
-                double bestIntensity = 0.0;
-                double bestMz = 0.0;
-                bool found = false;
-
-                // Match closest peak by m/z (not most intense).
-                // Matches Rust SpectralScorer::match_fragments in lib.rs:2239.
-                for (int k = lo; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
+                foreach (var frag in candidate.Fragments)
                 {
-                    double errorDa = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
-                    if (errorDa < bestError)
+                    double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
+                    double lower = frag.Mz - tolDa;
+                    double upper = frag.Mz + tolDa;
+
+                    int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                    double bestError = double.MaxValue;
+                    double bestIntensity = 0.0;
+                    double bestMz = 0.0;
+                    bool found = false;
+
+                    // Match closest peak by m/z (not most intense).
+                    // Matches Rust SpectralScorer::match_fragments in lib.rs:2239.
+                    for (int k = lo; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
                     {
-                        bestError = errorDa;
-                        bestIntensity = apexSpectrum.Intensities[k];
-                        bestMz = apexSpectrum.Mzs[k];
-                        found = true;
+                        double errorDa = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
+                        if (errorDa < bestError)
+                        {
+                            bestError = errorDa;
+                            bestIntensity = apexSpectrum.Intensities[k];
+                            bestMz = apexSpectrum.Mzs[k];
+                            found = true;
+                        }
                     }
-                }
 
-                if (found)
-                {
-                    matchedIntensity += bestIntensity;
-                    double err = config.FragmentTolerance.MassError(frag.Mz, bestMz);
-                    massErrSum += err;
-                    absMassErrSum += Math.Abs(err);
-                    nMatched++;
+                    if (found)
+                    {
+                        matchedIntensity += bestIntensity;
+                        double err = config.FragmentTolerance.MassError(frag.Mz, bestMz);
+                        massErrSum += err;
+                        absMassErrSum += Math.Abs(err);
+                        nMatched++;
+                    }
                 }
             }
 
