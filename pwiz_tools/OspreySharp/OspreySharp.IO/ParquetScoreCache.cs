@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -182,7 +183,7 @@ namespace pwiz.OspreySharp.IO
             Dictionary<string, string> metadata)
         {
             if (path == null)
-                throw new System.ArgumentNullException(nameof(path));
+                throw new ArgumentNullException(nameof(path));
             if (entries == null || entries.Count == 0)
                 return;
 
@@ -300,7 +301,7 @@ namespace pwiz.OspreySharp.IO
             string fileName)
         {
             if (path == null)
-                throw new System.ArgumentNullException(nameof(path));
+                throw new ArgumentNullException(nameof(path));
             if (entries == null || entries.Count == 0)
                 return;
 
@@ -319,14 +320,17 @@ namespace pwiz.OspreySharp.IO
             var apexRts = new double[n];
             var startRts = new double[n];
             var endRts = new double[n];
-            var boundsAreas = new double[n];   // not on FdrEntry; left at 0
-            var boundsSnrs = new double[n];    // not on FdrEntry; left at 0
+            var boundsAreas = new double[n];
+            var boundsSnrs = new double[n];
             var fileNames = new string[n];
-            // The cwt_candidates column carries the per-entry CWT peak list
-            // for Stage 6 reconciliation (encoded via CwtCandidateCodec to
-            // match Rust's binary layout). The fragments and XIC blobs are
-            // still nullable placeholders -- they're not consumed by any
-            // current Stage 6 path.
+            // The blob columns below carry per-entry binary payloads
+            // matching Rust pipeline.rs:1620-1645's encoding:
+            //   cwt_candidates             = u32 LE count + N×(6×f64 LE)
+            //   fragment_mzs               = M×f64 LE   (no count prefix)
+            //   fragment_intensities       = M×f32 LE   (no count prefix)
+            //   reference_xic_rts          = K×f64 LE
+            //   reference_xic_intensities  = K×f64 LE
+            // Length is recovered on read as bytes / sizeof(element).
             var cwtCandidates = new byte[n][];
             var fragmentMzs = new byte[n][];
             var fragmentIntensities = new byte[n][];
@@ -347,14 +351,38 @@ namespace pwiz.OspreySharp.IO
                 apexRts[i] = entry.ApexRt;
                 startRts[i] = entry.StartRt;
                 endRts[i] = entry.EndRt;
+                boundsAreas[i] = entry.BoundsArea;
+                boundsSnrs[i] = entry.BoundsSnr;
                 fileNames[i] = fileName ?? string.Empty;
+                fragmentMzs[i] = EncodeF64Blob(entry.FragmentMzs);
+                fragmentIntensities[i] = EncodeF32Blob(entry.FragmentIntensities);
+                refXicRts[i] = EncodeF64Blob(entry.ReferenceXicRts);
+                refXicIntensities[i] = EncodeF64Blob(entry.ReferenceXicIntensities);
 
-                // Encode CWT candidate list (mirrors Rust binary layout).
-                // Leave the cell null when the entry has no captured candidates
-                // -- LoadCwtCandidatesFromParquet treats null/short cells as
-                // empty, matching the Rust loader's tolerance.
-                if (entry.CwtCandidates != null && entry.CwtCandidates.Count > 0)
-                    cwtCandidates[i] = CwtCandidateCodec.Encode(entry.CwtCandidates);
+                // Mirror Rust's invariant: every row carries a cwt_candidates
+                // blob, even when the candidate list is empty. Rust's
+                // pipeline.rs::write_scores_parquet (at the cwt_candidates
+                // serialization site) unconditionally appends a 4-byte
+                // little-endian count prefix, so an entry with zero
+                // candidates becomes a 4-byte zero-length blob, never a
+                // null cell. ~57k post-compaction stubs per Stellar file
+                // had no peaks; without this normalization C# emitted
+                // null cells while Rust emitted empty blobs, producing
+                // a spurious cross-impl parquet diff at end-of-Stage-6.
+                //
+                // TODO(osprey-rust): the proper fix is on the Rust side --
+                // pipeline.rs should write null for empty candidate lists,
+                // which is more parquet-idiomatic and saves 4 bytes per
+                // empty row for downstream consumers. When that lands in
+                // maccoss/osprey, revert this branch to the original
+                // "skip null/empty" form.
+                // Use Array.Empty<>() (not `new List<>()`) on the null
+                // branch so we still emit the 4-byte zero-count blob
+                // without allocating a fresh List per empty row.
+                // CwtCandidateCodec.Encode takes IReadOnlyList<CwtCandidate>
+                // which both List<T> and T[] satisfy.
+                cwtCandidates[i] = CwtCandidateCodec.Encode(
+                    entry.CwtCandidates ?? (IReadOnlyList<CwtCandidate>)Array.Empty<CwtCandidate>());
 
                 LibraryEntry libEntry = null;
                 if (libraryById != null)
@@ -503,6 +531,89 @@ namespace pwiz.OspreySharp.IO
             return RunSync(groupReader.ReadColumnAsync(field)).Data as T;
         }
 
+        /// <summary>
+        /// Encode an array of f64 values as a little-endian byte blob with
+        /// no length prefix — bytes / 8 recovers the count on read. Mirrors
+        /// Rust pipeline.rs:1620-1623 (`v.to_le_bytes().flat_map(...)`)
+        /// byte-for-byte. A null or empty input encodes as a zero-length
+        /// blob, NOT a null cell, so the column is non-nullable in
+        /// practice.
+        /// </summary>
+        private static byte[] EncodeF64Blob(double[] values)
+        {
+            if (values == null || values.Length == 0)
+                return Array.Empty<byte>();
+            var buf = new byte[values.Length * 8];
+            for (int i = 0; i < values.Length; i++)
+            {
+                long bits = BitConverter.DoubleToInt64Bits(values[i]);
+                System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(
+                    new Span<byte>(buf, i * 8, 8), bits);
+            }
+            return buf;
+        }
+
+        /// <summary>
+        /// Encode an array of f32 values as a little-endian byte blob with
+        /// no length prefix — bytes / 4 recovers the count on read. Mirrors
+        /// Rust pipeline.rs:1626-1631 byte-for-byte. Used for
+        /// `fragment_intensities` (f32 in both impls). Uses a single
+        /// <see cref="Buffer.BlockCopy"/> over the underlying float[] storage
+        /// (allocation-free per element); the IEEE-754 little-endian byte
+        /// layout matches the Rust blob exactly on LE hosts (x64/x86 — both
+        /// pwiz target archs are LE), avoiding net472's missing
+        /// <c>BitConverter.SingleToInt32Bits</c>.
+        /// </summary>
+        private static byte[] EncodeF32Blob(float[] values)
+        {
+            if (values == null || values.Length == 0)
+                return Array.Empty<byte>();
+            var buf = new byte[values.Length * 4];
+            Buffer.BlockCopy(values, 0, buf, 0, buf.Length);
+            return buf;
+        }
+
+        /// <summary>
+        /// Inverse of <see cref="EncodeF64Blob"/>. Returns an empty array
+        /// for null or empty input (preserves <see cref="EncodeF64Blob"/>'s
+        /// invariant). Throws if the byte length is not a multiple of 8.
+        /// </summary>
+        private static double[] DecodeF64Blob(byte[] blob)
+        {
+            if (blob == null || blob.Length == 0)
+                return Array.Empty<double>();
+            if (blob.Length % 8 != 0)
+                throw new InvalidDataException(string.Format(
+                    "f64 blob length {0} is not a multiple of 8", blob.Length));
+            int n = blob.Length / 8;
+            var values = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                long bits = System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(
+                    new ReadOnlySpan<byte>(blob, i * 8, 8));
+                values[i] = BitConverter.Int64BitsToDouble(bits);
+            }
+            return values;
+        }
+
+        /// <summary>
+        /// Inverse of <see cref="EncodeF32Blob"/>. Returns an empty array
+        /// for null or empty input. Throws if the byte length is not a
+        /// multiple of 4.
+        /// </summary>
+        private static float[] DecodeF32Blob(byte[] blob)
+        {
+            if (blob == null || blob.Length == 0)
+                return Array.Empty<float>();
+            if (blob.Length % 4 != 0)
+                throw new InvalidDataException(string.Format(
+                    "f32 blob length {0} is not a multiple of 4", blob.Length));
+            int n = blob.Length / 4;
+            var values = new float[n];
+            Buffer.BlockCopy(blob, 0, values, 0, blob.Length);
+            return values;
+        }
+
         #endregion
 
         #region Load FDR Stubs
@@ -613,6 +724,105 @@ namespace pwiz.OspreySharp.IO
         #endregion
 
         #region Load PIN Features
+
+        /// <summary>
+        /// Load FdrEntry stubs + 21-feature PIN vectors + CWT candidate
+        /// lists from a Parquet cache, joined per row. Returns
+        /// <see cref="FdrEntry"/> objects with <see cref="FdrEntry.Features"/>
+        /// and <see cref="FdrEntry.CwtCandidates"/> populated, ready to
+        /// feed into the Phase 3 reconciled parquet write-back step.
+        ///
+        /// Equivalent to calling <see cref="LoadFdrStubsFromParquet"/>,
+        /// <see cref="LoadPinFeaturesFromParquet"/>, and
+        /// <see cref="LoadCwtCandidatesFromParquet"/> separately and
+        /// zipping them by row index — but does it in a single parquet
+        /// open. Mirrors the columns Rust's <c>load_scores_parquet</c>
+        /// loads. Decodes the four binary blob columns (<c>fragment_mzs</c>,
+        /// <c>fragment_intensities</c>, <c>reference_xic_rts</c>,
+        /// <c>reference_xic_intensities</c>) and the <c>bounds_area</c> /
+        /// <c>bounds_snr</c> scalars onto the matching <see cref="FdrEntry"/>
+        /// fields so the Stage 6 reconciled parquet write-back round-
+        /// trips them for every row, not just freshly rescored rows.
+        /// </summary>
+        public static List<FdrEntry> LoadFullFdrEntries(string path)
+        {
+            var entries = new List<FdrEntry>();
+            var featureFields = BuildFeatureFields();
+
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
+                        var isDecoyCol = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
+                        var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
+                        var scanCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCAN_NUMBER.Name);
+                        var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
+                        var apexCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
+                        var startCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_START_RT.Name);
+                        var endCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_END_RT.Name);
+                        var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
+                        var cwtCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_CWT_CANDIDATES.Name);
+                        var boundsAreaCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_AREA.Name);
+                        var boundsSnrCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_SNR.Name);
+                        var fragMzCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_MZS.Name);
+                        var fragIntCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_INTENSITIES.Name);
+                        var refXicRtsCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_RTS.Name);
+                        var refXicIntsCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_INTENSITIES.Name);
+
+                        if (entryIdCol == null || isDecoyCol == null)
+                            continue;
+
+                        var featureCols = new double[NUM_PIN_FEATURES][];
+                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, featureFields[f].Name);
+
+                        int rowCount = entryIdCol.Length;
+                        for (int row = 0; row < rowCount; row++)
+                        {
+                            var features = new double[NUM_PIN_FEATURES];
+                            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            {
+                                double v = featureCols[f] != null ? featureCols[f][row] : 0.0;
+                                features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+                            }
+
+                            List<CwtCandidate> cwt = null;
+                            if (cwtCol != null && cwtCol[row] != null && cwtCol[row].Length > 0)
+                                cwt = CwtCandidateCodec.Decode(cwtCol[row]);
+
+                            entries.Add(new FdrEntry
+                            {
+                                EntryId = entryIdCol[row],
+                                ParquetIndex = (uint)entries.Count,
+                                IsDecoy = isDecoyCol[row],
+                                Charge = chargeCol != null ? chargeCol[row] : (byte)0,
+                                ScanNumber = scanCol != null ? scanCol[row] : 0u,
+                                ApexRt = apexCol != null ? apexCol[row] : 0.0,
+                                StartRt = startCol != null ? startCol[row] : 0.0,
+                                EndRt = endCol != null ? endCol[row] : 0.0,
+                                CoelutionSum = coelutionCol != null ? coelutionCol[row] : 0.0,
+                                ModifiedSequence = modseqCol != null ? modseqCol[row] : string.Empty,
+                                Features = features,
+                                CwtCandidates = cwt,
+                                BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
+                                BoundsSnr = boundsSnrCol != null ? boundsSnrCol[row] : 0.0,
+                                FragmentMzs = DecodeF64Blob(fragMzCol != null ? fragMzCol[row] : null),
+                                FragmentIntensities = DecodeF32Blob(fragIntCol != null ? fragIntCol[row] : null),
+                                ReferenceXicRts = DecodeF64Blob(refXicRtsCol != null ? refXicRtsCol[row] : null),
+                                ReferenceXicIntensities = DecodeF64Blob(refXicIntsCol != null ? refXicIntsCol[row] : null),
+                            });
+                        }
+                    }
+                }
+            }
+
+            return entries;
+        }
 
         /// <summary>
         /// Load only the 21 PIN feature columns from a Parquet cache.
@@ -828,7 +1038,7 @@ namespace pwiz.OspreySharp.IO
             IEnumerable<string> paths,
             OspreyConfig config,
             string currentVersion,
-            System.Action<string> logWarning)
+            Action<string> logWarning)
         {
             string expectedSearch = config.SearchParameterHash();
             string expectedLibrary = config.LibraryIdentityHash();
@@ -840,7 +1050,7 @@ namespace pwiz.OspreySharp.IO
                 {
                     kv = LoadFooterMetadata(path);
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     return string.Format("{0}: cannot read parquet metadata: {1}", path, ex.Message);
                 }
