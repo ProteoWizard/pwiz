@@ -142,13 +142,30 @@ public sealed class ShimadzuRawData : IDisposable
             }
             catch { /* on SDK failure, leave endTime=0; RetTimeToScan will return E_INVALIDARG and we'll fall back */ }
 
+            // Touch MS.Chromatogram.{SegmentCount, EventCount, GetEventNo} to prime
+            // QtflRawDataMain's lazy init. cpp depends on this same sequence (ShimadzuReader.cpp:255-264);
+            // on .NET 8 the priming flips RetTimeToScan from RuntimeBinderException-on-null
+            // to a working dispatch. We don't keep the return values — the EventInfo path
+            // below builds the topology — but the side effect of the calls matters.
+            try
+            {
+                var chromMng = _dataObject.MS.Chromatogram;
+                short segCount = (short)chromMng.SegmentCount;
+                for (short s = 1; s <= segCount; s++)
+                {
+                    short evCount = (short)chromMng.EventCount(s);
+                    for (short e = 1; e <= evCount; e++)
+                        chromMng.GetEventNo(s, e);
+                }
+            }
+            catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { /* QTFL backend unusable — fall back below */ }
+            catch (NullReferenceException) { /* same */ }
+            catch (System.Reflection.TargetInvocationException) { /* SDK wraps binding failures */ }
+
             // Build segment / event topology from the EventInfo list we already populated.
-            // cpp uses MS.Chromatogram.SegmentCount + EventCount(seg) + GetEventNo(seg, j) for
-            // the same purpose, but those route through QtflRawDataMain which throws on .NET 8
-            // for Q-TOF files (TeamCity reproduction; local sometimes works because of process
-            // state). The EventInfo list carries each event's Segment + Event number, which is
-            // all we actually need — the chromatogramMng calls only added an *order* within a
-            // segment that the rest of the wrapper never depends on.
+            // The Chromatogram-side iteration above is for SDK priming only; the EventInfo
+            // map carries each event's Segment + Event number, which is all we actually need
+            // for the loop below.
             var segmentToEvents = new SortedDictionary<short, SortedSet<short>>();
             foreach (var evt in _eventInfo.Values)
             {
