@@ -1,12 +1,12 @@
-using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Vendor.Waters;
 
 #pragma warning disable CA1707
 
-namespace Pwiz.Vendor.Waters;
+namespace Pwiz.Analysis;
 
 /// <summary>
 /// SpectrumList wrapper that routes <see cref="GetSpectrum"/> calls through Waters'

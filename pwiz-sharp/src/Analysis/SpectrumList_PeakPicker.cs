@@ -194,16 +194,3 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
     }
 }
 
-/// <summary>
-/// Implemented by vendor spectrum lists that can emit centroided spectra natively. The
-/// <see cref="SpectrumList_PeakPicker"/> uses this to defer to vendor centroiding when the
-/// caller sets <c>preferVendorPeakPicking=true</c>.
-/// </summary>
-public interface IVendorCentroidingSpectrumList
-{
-    /// <summary>Human-readable label for the vendor's peak picking method.</summary>
-    string VendorCentroidName { get; }
-
-    /// <summary>Returns a centroided spectrum at <paramref name="index"/>.</summary>
-    Spectrum GetCentroidSpectrum(int index, bool getBinaryData);
-}

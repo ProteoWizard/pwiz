@@ -1,4 +1,3 @@
-using Pwiz.Analysis;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
 

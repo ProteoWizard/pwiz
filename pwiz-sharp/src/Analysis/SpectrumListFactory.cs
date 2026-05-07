@@ -221,8 +221,40 @@ public static class SpectrumListFactory
             return new SpectrumListTitleMaker(msd, inner, args);
         };
 
+#if !NO_VENDOR_SUPPORT
+        // Vendor-specific: SpectrumList_LockmassRefiner reaches into SpectrumList_Waters'
+        // lockmass-aware overloads, so it's only compiled when Waters is available. cpp's
+        // jumpTable_ has the same entry; we gate it here instead of #ifdef'ing the whole file.
+        map["lockmassrefiner"] = (args, inner, _) => ParseLockmassRefiner(args, inner);
+#endif
+
         return map;
     }
+
+#if !NO_VENDOR_SUPPORT
+    private static SpectrumList_LockmassRefiner ParseLockmassRefiner(string args, ISpectrumList inner)
+    {
+        // cpp filterCreator_lockmassRefiner — three key=value pairs.
+        double mz = double.Parse(TakeKeyValue(ref args, "mz=", "0"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+        double mzNeg = double.Parse(TakeKeyValue(ref args, "mzNegIons=", "0"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+        double tol = double.Parse(TakeKeyValue(ref args, "tol=", "1.0"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+
+        args = args.Trim();
+        if (!string.IsNullOrEmpty(args))
+            throw new ArgumentException(
+                $"lockmassRefiner: unhandled text remaining in argument string: \"{args}\"");
+
+        if ((mz <= 0 && mzNeg <= 0) || tol <= 0)
+            throw new ArgumentException("lockmassRefiner: lockmassMz and lockmassTolerance must be positive real numbers");
+
+        if (mzNeg <= 0) mzNeg = mz;
+
+        return new SpectrumList_LockmassRefiner(inner, mz, mzNeg, tol);
+    }
+#endif
 
     /// <summary>
     /// Parses the <c>peakPicking</c> filter argument string and returns a wrapped list.

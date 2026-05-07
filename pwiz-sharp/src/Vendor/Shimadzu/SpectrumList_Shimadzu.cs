@@ -1,5 +1,4 @@
 using System.Globalization;
-using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Instruments;

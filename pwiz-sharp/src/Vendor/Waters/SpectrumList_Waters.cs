@@ -1,5 +1,4 @@
 using System.Globalization;
-using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Processing;
@@ -297,10 +296,12 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         GetSpectrumImpl(index, getBinaryData, doCentroid: true, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
 
     /// <summary>
-    /// Lockmass-aware vendor centroid path — used by <see cref="SpectrumList_LockmassRefiner"/>
-    /// when an outer <see cref="Pwiz.Analysis.SpectrumList_PeakPicker"/> requests centroids.
+    /// Lockmass-aware vendor centroid path — used by <c>SpectrumList_LockmassRefiner</c>
+    /// (in <c>Pwiz.Analysis</c>) when an outer peak picker requests centroids. Vendor-specific
+    /// extension surface: not part of <see cref="ISpectrumList"/>, only meaningful when the
+    /// inner reader is a <see cref="SpectrumList_Waters"/>.
     /// </summary>
-    internal Spectrum GetCentroidSpectrumWithLockmass(int index, bool getBinaryData,
+    public Spectrum GetCentroidSpectrumWithLockmass(int index, bool getBinaryData,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance) =>
         GetSpectrumImpl(index, getBinaryData, doCentroid: true, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
 
@@ -309,13 +310,14 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         GetSpectrumImpl(index, getBinaryData, doCentroid: false, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
 
     /// <summary>
-    /// Lockmass-aware overload used by <see cref="SpectrumList_LockmassRefiner"/>. When
-    /// either <paramref name="lockmassMzPos"/> or <paramref name="lockmassMzNeg"/> is non-zero,
-    /// the corresponding correction is applied to the underlying SDK reader before peaks are
-    /// fetched (so the binary data the SDK returns is already gain-adjusted) and the SET_MASS
-    /// scan-stat used for the MS2 isolation window is corrected via the per-RT gain factor.
+    /// Lockmass-aware overload — vendor-specific extension surface for the analysis-side
+    /// <c>SpectrumList_LockmassRefiner</c> wrapper. When either <paramref name="lockmassMzPos"/>
+    /// or <paramref name="lockmassMzNeg"/> is non-zero, the corresponding correction is applied
+    /// to the underlying SDK reader before peaks are fetched (so the binary data the SDK
+    /// returns is already gain-adjusted) and the SET_MASS scan-stat used for the MS2 isolation
+    /// window is corrected via the per-RT gain factor.
     /// </summary>
-    internal Spectrum GetSpectrumWithLockmass(int index, bool getBinaryData,
+    public Spectrum GetSpectrumWithLockmass(int index, bool getBinaryData,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance, bool doCentroid = false) =>
         GetSpectrumImpl(index, getBinaryData, doCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
 

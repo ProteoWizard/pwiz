@@ -1,4 +1,3 @@
-using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Processing;

@@ -12,4 +12,19 @@
     <ProjectReference Include="..\MsData\MsData.csproj" />
   </ItemGroup>
 
+  <!-- Vendor-specific filter wrappers live in Pwiz.Analysis to mirror cpp's project layout
+       (cpp's pwiz/analysis/spectrum_processing/SpectrumList_LockmassRefiner.cpp #includes
+       pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp). The dependency on the
+       Waters SDK is opt-in: vendor builds pull in Waters; no-vendor builds drop the file
+       and the corresponding factory dispatch entry via NO_VENDOR_SUPPORT. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <ProjectReference Include="..\Vendor\Waters\Waters.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="SpectrumList_LockmassRefiner.cs" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
 </Project>
