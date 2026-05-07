@@ -117,6 +117,17 @@ public class ReaderSciexTests
 
     private static FixtureRunContext? SetUp(string fixtureFileName)
     {
+        // pwiz-sharp-only fixtures live under <test-bin>/Reference/. Cpp-tree fixtures
+        // live under pwiz/data/vendor_readers/ABI/Reader_ABI_Test.data/. Prefer the
+        // override location so we can ship pwiz-sharp-only data without retriggering
+        // the cpp vendor TC configs; fall back to the cpp tree for everything else.
+        string overrideRoot = Path.Combine(AppContext.BaseDirectory, "Reference");
+        if (File.Exists(Path.Combine(overrideRoot, fixtureFileName)))
+        {
+            return new FixtureRunContext(new Reader_Sciex(), overrideRoot,
+                new IsNamedRawFile(fixtureFileName), fixtureFileName);
+        }
+
         string? root = FindTestDataRoot();
         if (root is null) { Assert.Inconclusive("Sciex test data tree not found."); return null; }
         if (!File.Exists(Path.Combine(root, fixtureFileName)))

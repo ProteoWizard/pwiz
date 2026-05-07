@@ -14,13 +14,21 @@
     <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
   </ItemGroup>
 
-  <!-- Reference/ holds pwiz-sharp-specific reference mzMLs that override the cpp
-       tree's copies during diff (VendorReaderTestHarness checks
-       <bin>/Reference/<filename> first, then falls back to the cpp tree). Copying
-       these to bin keeps edits to pwiz-sharp references from retriggering the cpp
-       vendor TC configs. README.md documents the policy. -->
+  <!-- Reference/ holds pwiz-sharp-specific reference mzMLs AND, for fixtures the cpp
+       tree doesn't ship, the source vendor data (.wiff / .wiff.scan etc.). Both kinds
+       are picked up by VendorReaderTestHarness — checks <bin>/Reference/<filename>
+       first, then falls back to the cpp tree. Copying these to bin keeps edits to
+       pwiz-sharp references from retriggering the cpp vendor TC configs. The split
+       is temporary: once the port is complete the location will be consolidated.
+       README.md documents the policy. -->
   <ItemGroup>
     <None Update="Reference\*.mzML">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Reference\*.wiff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Reference\*.wiff.scan">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
