@@ -5,7 +5,7 @@ using Pwiz.Data.MsData.Spectra;
 using Pwiz.Util.Chemistry;
 using Pwiz.Util.Misc;
 
-namespace Pwiz.Analysis.Tests;
+namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 
 /// <summary>
 /// Tests for the wrapper-style filters in Tier 1: <see cref="SpectrumListMzWindow"/>,

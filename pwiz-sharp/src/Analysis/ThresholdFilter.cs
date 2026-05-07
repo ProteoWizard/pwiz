@@ -34,7 +34,7 @@ public enum ThresholdingOrientation
 /// Intensity-based peak filter applied to the m/z + intensity arrays of a <see cref="Spectrum"/>.
 /// Port of pwiz::analysis::ThresholdFilter.
 /// </summary>
-public sealed class ThresholdFilter
+public sealed class ThresholdFilter : ISpectrumDataFilter
 {
     /// <summary>How the <see cref="Threshold"/> value is interpreted.</summary>
     public ThresholdingBy By { get; }
@@ -215,14 +215,15 @@ public sealed class ThresholdFilter
 }
 
 /// <summary>
-/// Wraps an <see cref="ISpectrumList"/> and applies a <see cref="ThresholdFilter"/> on every loaded spectrum.
+/// Wraps an <see cref="ISpectrumList"/> and applies an <see cref="ISpectrumDataFilter"/> on
+/// every spectrum loaded with binary data. Mirror of cpp's <c>SpectrumList_PeakFilter</c>.
 /// </summary>
 public sealed class SpectrumListPeakFilter : SpectrumListWrapper
 {
-    private readonly ThresholdFilter _filter;
+    private readonly ISpectrumDataFilter _filter;
 
     /// <summary>Creates a peak-filter wrapper around <paramref name="inner"/>.</summary>
-    public SpectrumListPeakFilter(ISpectrumList inner, ThresholdFilter filter) : base(inner)
+    public SpectrumListPeakFilter(ISpectrumList inner, ISpectrumDataFilter filter) : base(inner)
     {
         ArgumentNullException.ThrowIfNull(filter);
         _filter = filter;

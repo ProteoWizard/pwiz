@@ -1,8 +1,9 @@
 using Pwiz.Analysis;
+using Pwiz.Analysis.PeakFilters;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
 
-namespace Pwiz.Analysis.Tests;
+namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 
 [TestClass]
 public class SpectrumListFactoryTests
@@ -163,6 +164,29 @@ public class SpectrumListFactoryTests
         finally
         {
             SpectrumListFactory.Register("rot13", (_, inner, _) => inner);
+        }
+    }
+
+    [TestMethod]
+    public void Wrap_Tier2Filters_DispatchByName()
+    {
+        // Per-filter argument-string parse + builder check, mirroring the spirit of cpp's
+        // SpectrumListFactoryTest.cpp (cpp covers each filterCreator_* by argument string).
+        var inner = new SpectrumListSimple();
+        var cases = new (string Filter, Type ExpectedType)[]
+        {
+            ("ms2denoise 6 30 false",                         typeof(SpectrumListPeakFilter)),
+            ("ms2denoise",                                    typeof(SpectrumListPeakFilter)),
+            ("ms2deisotope hi_res mzTol=0.02",                typeof(SpectrumListPeakFilter)),
+            ("ms2deisotope Poisson minCharge=1 maxCharge=4",  typeof(SpectrumListPeakFilter)),
+            ("etdfilter true true true false 3.1 mz",         typeof(SpectrumListPeakFilter)),
+            ("etdfilter",                                     typeof(SpectrumListPeakFilter)),
+            ("scansumming precursorTol=0.05 scanTimeTol=10",  typeof(SpectrumListScanSummer)),
+        };
+        foreach (var (filter, expectedType) in cases)
+        {
+            var wrapped = SpectrumListFactory.Wrap(inner, filter);
+            Assert.IsInstanceOfType(wrapped, expectedType, $"filter '{filter}' produced {wrapped.GetType().Name}");
         }
     }
 }

@@ -1,6 +1,6 @@
 using Pwiz.Analysis.PeakPicking;
 
-namespace Pwiz.Analysis.Tests;
+namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 
 [TestClass]
 public class PeakPickingTests

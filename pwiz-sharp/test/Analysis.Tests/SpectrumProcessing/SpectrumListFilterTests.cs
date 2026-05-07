@@ -9,7 +9,7 @@ using Pwiz.Data.MsData.Spectra;
 using Pwiz.Util.Chemistry;
 using Pwiz.Util.Misc;
 
-namespace Pwiz.Analysis.Tests.Filters;
+namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 
 /// <summary>
 /// Mirrors cpp <c>SpectrumList_FilterTest.cpp</c>: a single synthetic <see cref="ISpectrumList"/>

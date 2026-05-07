@@ -2,7 +2,7 @@ using Pwiz.Analysis.PeakFilters;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
 
-namespace Pwiz.Analysis.Tests.PeakFilters;
+namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 
 [TestClass]
 public class MetadataAndZeroSamplesTests

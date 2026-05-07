@@ -4,7 +4,7 @@
 // representative inputs (so any divergence in higher-level tests can be isolated).
 using Pwiz.Analysis.PeakPicking;
 
-namespace Pwiz.Analysis.Tests;
+namespace Pwiz.Analysis.Tests.PeakDetect;
 
 [TestClass]
 public class CwtPeakDetectorReferenceTests

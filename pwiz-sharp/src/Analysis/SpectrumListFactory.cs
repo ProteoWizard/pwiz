@@ -221,6 +221,12 @@ public static class SpectrumListFactory
             return new SpectrumListTitleMaker(msd, inner, args);
         };
 
+        // Tier 2 ports — peak transforms + scan summer.
+        map["ms2denoise"] = (args, inner, _) => ParseMs2Denoise(args, inner);
+        map["ms2deisotope"] = (args, inner, _) => ParseMs2Deisotope(args, inner);
+        map["etdfilter"] = (args, inner, _) => ParseEtdFilter(args, inner);
+        map["scansumming"] = (args, inner, _) => ParseScanSumming(args, inner);
+
 #if !NO_VENDOR_SUPPORT
         // Vendor-specific: SpectrumList_LockmassRefiner reaches into SpectrumList_Waters'
         // lockmass-aware overloads, so it's only compiled when Waters is available. cpp's
@@ -230,31 +236,6 @@ public static class SpectrumListFactory
 
         return map;
     }
-
-#if !NO_VENDOR_SUPPORT
-    private static SpectrumList_LockmassRefiner ParseLockmassRefiner(string args, ISpectrumList inner)
-    {
-        // cpp filterCreator_lockmassRefiner — three key=value pairs.
-        double mz = double.Parse(TakeKeyValue(ref args, "mz=", "0"),
-            NumberStyles.Float, CultureInfo.InvariantCulture);
-        double mzNeg = double.Parse(TakeKeyValue(ref args, "mzNegIons=", "0"),
-            NumberStyles.Float, CultureInfo.InvariantCulture);
-        double tol = double.Parse(TakeKeyValue(ref args, "tol=", "1.0"),
-            NumberStyles.Float, CultureInfo.InvariantCulture);
-
-        args = args.Trim();
-        if (!string.IsNullOrEmpty(args))
-            throw new ArgumentException(
-                $"lockmassRefiner: unhandled text remaining in argument string: \"{args}\"");
-
-        if ((mz <= 0 && mzNeg <= 0) || tol <= 0)
-            throw new ArgumentException("lockmassRefiner: lockmassMz and lockmassTolerance must be positive real numbers");
-
-        if (mzNeg <= 0) mzNeg = mz;
-
-        return new SpectrumList_LockmassRefiner(inner, mz, mzNeg, tol);
-    }
-#endif
 
     /// <summary>
     /// Parses the <c>peakPicking</c> filter argument string and returns a wrapped list.
@@ -676,4 +657,160 @@ public static class SpectrumListFactory
         };
         return new SpectrumListFilter(inner, new ThermoScanFilterPredicate(matchString, matchExact, inverse));
     }
+
+    // ----- Tier 2 filter parsers -----
+
+    private static SpectrumListPeakFilter ParseMs2Denoise(string args, ISpectrumList inner)
+    {
+        // cpp filterCreator_MS2Denoise — args: "[<peaks_in_window> [<window_width_Da> [multicharge_relax]]]"
+        var tokens = args.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        int peaks = 6;
+        double window = 30.0;
+        bool relax = false;
+        if (tokens.Length > 0) peaks = int.Parse(tokens[0], CultureInfo.InvariantCulture);
+        if (tokens.Length > 1) window = double.Parse(tokens[1], NumberStyles.Float, CultureInfo.InvariantCulture);
+        if (tokens.Length > 2) relax = bool.Parse(tokens[2]);
+        return new SpectrumListPeakFilter(inner, new Ms2NoiseFilter(peaks, window, relax));
+    }
+
+    private static SpectrumListPeakFilter ParseMs2Deisotope(string args, ISpectrumList inner)
+    {
+        // cpp filterCreator_MS2Deisotope — args: "[hi_res [mzTol=<mzTol>]] [Poisson [minCharge=<int>] [maxCharge=<int>]]"
+        // Backwards-compat: "hi_res 0.05" treats the bare number as the matching tolerance.
+        bool hires = false;
+        bool poisson = false;
+        MZTolerance tol = new(0.5);
+        int minCharge = 1, maxCharge = 3;
+
+        var trimmed = args.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+            return new SpectrumListPeakFilter(inner, new Ms2Deisotoper(tol));
+
+        // Take leading mode keyword.
+        var firstSpace = trimmed.IndexOf(' ');
+        string head = firstSpace < 0 ? trimmed : trimmed[..firstSpace];
+        string rest = firstSpace < 0 ? string.Empty : trimmed[(firstSpace + 1)..].TrimStart();
+
+        if (string.Equals(head, "Poisson", StringComparison.OrdinalIgnoreCase)) poisson = true;
+        else if (string.Equals(head, "hi_res", StringComparison.OrdinalIgnoreCase))
+        {
+            hires = true;
+            tol = new MZTolerance(0.01);
+        }
+        else throw new ArgumentException($"ms2Deisotope: invalid keyword '{head}' (expected 'hi_res' or 'Poisson')");
+
+        // Parse remaining tokens — mix of "key=value" pairs and (only when hires + first) a bare double.
+        var keyValues = rest.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < keyValues.Length; i++)
+        {
+            string token = keyValues[i];
+            if (hires && i == 0 && double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out var bareTol))
+            {
+                tol = new MZTolerance(bareTol);
+                continue;
+            }
+
+            int eq = token.IndexOf('=');
+            if (eq < 0)
+                throw new ArgumentException($"ms2Deisotope: expected key=value, got '{token}'");
+            string key = token[..eq];
+            string value = token[(eq + 1)..];
+            if (string.Equals(key, "mzTol", StringComparison.OrdinalIgnoreCase))
+                tol = ParseToleranceLoose(value);
+            else if (string.Equals(key, "minCharge", StringComparison.OrdinalIgnoreCase))
+                minCharge = int.Parse(value, CultureInfo.InvariantCulture);
+            else if (string.Equals(key, "maxCharge", StringComparison.OrdinalIgnoreCase))
+                maxCharge = int.Parse(value, CultureInfo.InvariantCulture);
+            else
+                throw new ArgumentException($"ms2Deisotope: unknown key '{key}'");
+        }
+
+        if (minCharge < 0 || maxCharge < 0 || minCharge > maxCharge)
+            throw new ArgumentException("ms2Deisotope: invalid charge range");
+
+        return new SpectrumListPeakFilter(inner,
+            new Ms2Deisotoper(tol, hires, poisson, minCharge, maxCharge));
+    }
+
+    private static SpectrumListPeakFilter ParseEtdFilter(string args, ISpectrumList inner)
+    {
+        // cpp filterCreator_ETDFilter — args: "[<removePrecursor> [<removeChgRed> [<removeNeutralLoss> [<blanket> [<mzTol>]]]]]"
+        var tokens = args.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        bool removePrecursor = tokens.Length > 0 ? ParseBool(tokens[0]) : true;
+        bool removeChargeReduced = tokens.Length > 1 ? ParseBool(tokens[1]) : true;
+        bool removeNeutralLoss = tokens.Length > 2 ? ParseBool(tokens[2]) : true;
+        bool blanket = tokens.Length > 3 ? ParseBool(tokens[3]) : true;
+
+        // Tolerance is a bare "<value> <units>" pair (e.g. "3.1 mz" or "5 ppm"); cpp uses
+        // istringstream's operator>> on MZTolerance which reads two whitespace-separated tokens.
+        MZTolerance tol = new(3.1);
+        if (tokens.Length > 4)
+        {
+            string tolText = tokens[4];
+            if (tokens.Length > 5) tolText = tolText + " " + tokens[5];
+            tol = ParseToleranceLoose(tolText);
+        }
+
+        // cpp: removeNeutralLoss=true → use the default formulae list;
+        //      removeNeutralLoss=false → pass an empty list (blanket flag is independent).
+        var nlOverride = removeNeutralLoss ? null : Array.Empty<string>();
+        var filter = new EtdPrecursorMassFilter(tol, removePrecursor, removeChargeReduced, blanket, nlOverride);
+        return new SpectrumListPeakFilter(inner, filter);
+    }
+
+    private static bool ParseBool(string s) =>
+        !(string.Equals(s, "false", StringComparison.OrdinalIgnoreCase) || s == "0");
+
+    /// <summary>Parses a tolerance string allowing the bare-double form (units default to m/z) —
+    /// matches cpp's <c>lexical_cast&lt;double&gt;</c> fallback in filterCreator_MS2Deisotope and
+    /// the istream extractor for MZTolerance used by filterCreator_ETDFilter.</summary>
+    private static MZTolerance ParseToleranceLoose(string s)
+    {
+        if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var bare))
+            return new MZTolerance(bare);
+        return MZTolerance.Parse(s);
+    }
+
+    private static SpectrumListScanSummer ParseScanSumming(string args, ISpectrumList inner)
+    {
+        // cpp filterCreator_scanSummer — key=value pairs precursorTol, scanTimeTol, ionMobilityTol, sumMs1.
+        double precursorTol = double.Parse(TakeKeyValue(ref args, "precursorTol=", "0.05"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+        double scanTimeTol = double.Parse(TakeKeyValue(ref args, "scanTimeTol=", "10"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+        double ionMobilityTol = double.Parse(TakeKeyValue(ref args, "ionMobilityTol=", "0.01"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+        bool sumMs1 = bool.Parse(TakeKeyValue(ref args, "sumMs1=", "false"));
+
+        if (args.Contains('=', StringComparison.Ordinal))
+            throw new ArgumentException(
+                $"scansumming: unused argument(s) '{args}'; supported keys are precursorTol, scanTimeTol, ionMobilityTol, sumMs1");
+
+        return new SpectrumListScanSummer(inner, precursorTol, scanTimeTol, ionMobilityTol, sumMs1);
+    }
+
+#if !NO_VENDOR_SUPPORT
+    private static SpectrumList_LockmassRefiner ParseLockmassRefiner(string args, ISpectrumList inner)
+    {
+        // cpp filterCreator_lockmassRefiner — three key=value pairs.
+        double mz = double.Parse(TakeKeyValue(ref args, "mz=", "0"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+        double mzNeg = double.Parse(TakeKeyValue(ref args, "mzNegIons=", "0"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+        double tol = double.Parse(TakeKeyValue(ref args, "tol=", "1.0"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+
+        args = args.Trim();
+        if (!string.IsNullOrEmpty(args))
+            throw new ArgumentException(
+                $"lockmassRefiner: unhandled text remaining in argument string: \"{args}\"");
+
+        if ((mz <= 0 && mzNeg <= 0) || tol <= 0)
+            throw new ArgumentException("lockmassRefiner: lockmassMz and lockmassTolerance must be positive real numbers");
+
+        if (mzNeg <= 0) mzNeg = mz;
+
+        return new SpectrumList_LockmassRefiner(inner, mz, mzNeg, tol);
+    }
+#endif
 }
