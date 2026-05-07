@@ -170,7 +170,7 @@ if %COVERAGE%==1 (
     set COVER_REPORT_DIR=!COVER_DIR!\coverage-report
     set COVER_FILTERS=+:module=Pwiz.*;-:module=*.Tests;-:module=msconvert-sharp
 
-    echo ##teamcity[progressMessage 'pwsh Run-Tests-Parallel.ps1 (with coverage)']
+    echo ##teamcity[progressMessage 'pwsh Run-Tests-Parallel.ps1 ^(with coverage^)']
     pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\Run-Tests-Parallel.ps1" -TestProjects "%TEST_TARGET%" %PS_FLAGS% -TestResultsDir "!COVER_DIR!" -CoverageSnapshotDir "!COVER_DIR!" -CoverageFilters "!COVER_FILTERS!"
     set EXIT=!ERRORLEVEL!
 

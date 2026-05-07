@@ -36,7 +36,7 @@
           Outputs="$(BrukerAssembliesDir)\timsdata.dll;$(BrukerAssembliesDir)\baf2sql_c.dll">
     <MakeDir Directories="$(BrukerAssembliesDir)" />
     <!-- timsdata.dll is the TDF/TSF reader; baf2sql_c.dll is the SQL-cached BAF reader. -->
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; vendor_api\Bruker\x64\timsdata.dll vendor_api\Bruker\x64\baf2sql_c.dll" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; vendor_api\Bruker\x64\timsdata.dll vendor_api\Bruker\x64\baf2sql_c.dll" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout. -->
     <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\x64\timsdata.dll;$(BrukerAssembliesDir)\vendor_api\Bruker\x64\baf2sql_c.dll"
           DestinationFolder="$(BrukerAssembliesDir)"

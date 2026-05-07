@@ -45,7 +45,7 @@
           Inputs="$(MobilionArchive)"
           Outputs="$(MobilionAssembliesDir)\MBI_SDK.dll;$(MobilionAssembliesDir)\MBIFile.h">
     <MakeDir Directories="$(MobilionAssembliesDir)" />
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(MobilionAssembliesDir)&quot; &quot;$(MobilionArchive)&quot;" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(MobilionAssembliesDir)&quot; &quot;$(MobilionArchive)&quot;" StandardOutputImportance="low" />
     <!-- 7za extracts to vendor_api/Mobilion/ inside the dest; flatten so the
          shim's #include paths and the linker's library search resolve directly. -->
     <ItemGroup>

@@ -60,7 +60,7 @@
       flattened RawFileReader DLL.
       -->
     <MakeDir Directories="$(ThermoAssembliesDir)" />
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ThermoAssembliesDir)&quot; &quot;$(ThermoArchive)&quot; vendor_api\Thermo\*.dll" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ThermoAssembliesDir)&quot; &quot;$(ThermoArchive)&quot; vendor_api\Thermo\*.dll" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout so <HintPath> entries stay simple. -->
     <ItemGroup>
       <_ThermoDll Include="$(ThermoAssembliesDir)\vendor_api\Thermo\*.dll" />

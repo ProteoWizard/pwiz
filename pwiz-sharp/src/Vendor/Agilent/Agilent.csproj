@@ -52,7 +52,7 @@
           Inputs="$(AgilentArchive)"
           Outputs="$(AgilentAssembliesDir)\MassSpecDataReader.dll;$(AgilentAssembliesDir)\BaseDataAccess.dll;$(AgilentAssembliesDir)\MIDAC.dll">
     <MakeDir Directories="$(AgilentAssembliesDir)" />
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(AgilentAssembliesDir)&quot; &quot;$(AgilentArchive)&quot; vendor_api\Agilent\x64\*.dll vendor_api\Agilent\x64\*.config" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(AgilentAssembliesDir)&quot; &quot;$(AgilentArchive)&quot; vendor_api\Agilent\x64\*.dll vendor_api\Agilent\x64\*.config" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout so the references below are stable. -->
     <ItemGroup>
       <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.dll" />
@@ -93,7 +93,8 @@
          them forces the child to do a fresh muxer-based SDK resolution. -->
     <Exec Command="dotnet run --project &quot;$(AgilentPatcherProj)&quot; -c Release -- &quot;$(AgilentAssembliesDir)&quot;"
           WorkingDirectory="$(PwizSharpRoot)"
-          EnvironmentVariables="MSBUILD_EXE_PATH=;MSBuildSDKsPath=;MSBuildToolsPath=;MSBuildExtensionsPath=;DOTNET_HOST_PATH=" />
+          EnvironmentVariables="MSBUILD_EXE_PATH=;MSBuildSDKsPath=;MSBuildToolsPath=;MSBuildExtensionsPath=;DOTNET_HOST_PATH="
+          StandardOutputImportance="low" />
   </Target>
 
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are

@@ -48,7 +48,7 @@
          native helpers used by the file-format readers (CompressedTLMRawDataReader, CRHAKEI2,
          IOModuleQTFL, etc.). The cpp pwiz_aux project ships both x86 and x64 directories;
          pwiz-sharp only builds x64. -->
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ShimadzuAssembliesDir)&quot; &quot;$(ShimadzuArchive)&quot; &quot;vendor_api\Shimadzu\*.dll&quot; &quot;vendor_api\Shimadzu\x64\*.dll&quot;" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ShimadzuAssembliesDir)&quot; &quot;$(ShimadzuArchive)&quot; &quot;vendor_api\Shimadzu\*.dll&quot; &quot;vendor_api\Shimadzu\x64\*.dll&quot;" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout so the references below are stable. -->
     <ItemGroup>
       <_ShimadzuExtractedTop Include="$(ShimadzuAssembliesDir)\vendor_api\Shimadzu\*.dll" />
