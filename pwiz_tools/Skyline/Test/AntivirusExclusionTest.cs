@@ -37,9 +37,9 @@ namespace pwiz.SkylineTest
     // Checks performed for each test directory:
     //   - Antivirus (behavioral): write the standard EICAR test string and verify it
     //     survives. See https://www.eicar.org/download-anti-malware-testfile/
-    //   - Cloud-storage placeholders: directory has none of Offline / ReparsePoint /
-    //     RecallOnOpen / RecallOnDataAccess attributes (catches OneDrive Files-on-Demand,
-    //     Dropbox Smart Sync, Google Drive File Stream, Box Drive, etc.).
+    //   - Cloud-synchronized directory: directory does not have any of the Files-on-Demand
+    //     attributes (Offline / ReparsePoint / RecallOnOpen / RecallOnDataAccess) that cloud
+    //     sync providers set on directories they manage (OneDrive, Dropbox, Google Drive, Box).
     //   - OneDrive sync root: directory is not under any account's UserFolder per HKCU.
     //   - Windows Search index: directory is not in the SystemIndex crawl scope.
     //
@@ -57,13 +57,41 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void AaantivirusTestExclusion() // Intentional misspelling to encourage this as first test in nightlies
         {
+            // The original test was an Assert.Fail check on the Skyline runtime build output
+            // directory only.  We're now also checking the test data download subfolders, and
+            // adding three new check types (cloud placeholder, OneDrive, Windows Search index).
+            // These newly-covered situations were formerly tolerated, so for now we only warn
+            // on them rather than fail the test - flip these warnOnly flags off once the fleet
+            // is brought up to spec.
+            //
+            // Failures are accumulated rather than fail-fast so a single run reports every
+            // problem across every directory, not just the first one we trip over.
+            var failures = new List<string>();
+            var firstDirectory = true;
             foreach (var directory in GetDirectoriesToCheck())
             {
-                CheckDirectory(directory);
-                CheckCloudPlaceholder(directory);
-                CheckOneDriveSyncRoot(directory);
-                CheckWindowsSearchIndex(directory);
+                CheckDirectory(directory, warnOnly: !firstDirectory, failures: failures);
+                CheckCloudPlaceholder(directory, warnOnly: true, failures: failures);
+                CheckOneDriveSyncRoot(directory, warnOnly: true, failures: failures);
+                CheckWindowsSearchIndex(directory, warnOnly: true, failures: failures);
+                firstDirectory = false;
             }
+            if (failures.Count > 0)
+            {
+                var header = failures.Count == 1
+                    ? @"AntivirusExclusionTest detected 1 problem:"
+                    : $@"AntivirusExclusionTest detected {failures.Count} problems:";
+                Assert.Fail(header + Environment.NewLine + Environment.NewLine +
+                    string.Join(Environment.NewLine + Environment.NewLine, failures));
+            }
+        }
+
+        private static void WarnOrFail(string message, bool warnOnly, List<string> failures)
+        {
+            if (warnOnly)
+                Console.WriteLine(@"# WARNING (formerly tolerated, will be promoted to failure later): " + message);
+            else
+                failures.Add(message);
         }
 
         private static IEnumerable<string> GetDirectoriesToCheck()
@@ -79,7 +107,7 @@ namespace pwiz.SkylineTest
             }
         }
 
-        private static void CheckDirectory(string directory)
+        private static void CheckDirectory(string directory, bool warnOnly, List<string> failures)
         {
             var eicarTestString = @"X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"; // See https://www.eicar.org/download-anti-malware-testfile/
             if (!Directory.Exists(directory))
@@ -104,7 +132,7 @@ namespace pwiz.SkylineTest
             }
             if (!eicarTestString.Equals(test))
             {
-                Assert.Fail($"Could not read contents of the (completely harmless!) antivirus test file \"{eicarTestFile}\", probably because it was quarantined by antivirus software.  If your antivirus flagged on \"{eicarTestFilename}\", don't panic - that's part of the test (see https://www.eicar.org/download-anti-malware-testfile/).  Now go exclude that directory from further antivirus scrutiny, as it causes file locking problems in the tests.");
+                WarnOrFail($"Could not read contents of the (completely harmless!) antivirus test file \"{eicarTestFile}\", probably because it was quarantined by antivirus software.  If your antivirus flagged on \"{eicarTestFilename}\", don't panic - that's part of the test (see https://www.eicar.org/download-anti-malware-testfile/).  Now go exclude that directory from further antivirus scrutiny, as it causes file locking problems in the tests.", warnOnly, failures);
             }
             if (File.Exists(eicarTestFile))  // Don't leave this lying around - it can cause problems with automated backups etc
             {
@@ -124,20 +152,23 @@ namespace pwiz.SkylineTest
             (int)FileAttributes.Offline | (int)FileAttributes.ReparsePoint |
             FILE_ATTRIBUTE_RECALL_ON_OPEN | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS;
 
-        private static void CheckCloudPlaceholder(string directory)
+        private static void CheckCloudPlaceholder(string directory, bool warnOnly, List<string> failures)
         {
             if (!Directory.Exists(directory))
                 return;
             var attrs = (int)File.GetAttributes(directory);
             if ((attrs & CLOUD_PLACEHOLDER_MASK) != 0)
             {
-                Assert.Fail($"Directory \"{directory}\" has cloud-placeholder file attributes set (0x{attrs:X8}).  " +
-                    @"Cloud sync (OneDrive, Dropbox, Google Drive, Box, etc.) can stall, lock, or rehydrate " +
-                    @"files during tests, producing intermittent hangs.  Move the directory out of any cloud-synced location.");
+                WarnOrFail($"Directory \"{directory}\" appears to be cloud-synchronized " +
+                    $"(e.g. OneDrive, Dropbox, Google Drive, Box, etc.) - " +
+                    $"file attributes 0x{attrs:X8} include flags set by Files-on-Demand cloud storage.  " +
+                    @"Such services can stall, lock, or rehydrate files during tests, producing intermittent hangs.  " +
+                    @"Move the directory out of any cloud-synced location.",
+                    warnOnly, failures);
             }
         }
 
-        private static void CheckOneDriveSyncRoot(string directory)
+        private static void CheckOneDriveSyncRoot(string directory, bool warnOnly, List<string> failures)
         {
             if (!Directory.Exists(directory))
                 return;
@@ -153,8 +184,9 @@ namespace pwiz.SkylineTest
                             continue;
                         if (IsPathUnder(directory, userFolder))
                         {
-                            Assert.Fail($"Directory \"{directory}\" is inside OneDrive sync root \"{userFolder}\" (account \"{accountName}\").  " +
-                                @"OneDrive can stall, lock, or rehydrate files during tests.  Move the directory outside any OneDrive sync folder.");
+                            WarnOrFail($"Directory \"{directory}\" is inside OneDrive sync root \"{userFolder}\" (account \"{accountName}\").  " +
+                                @"OneDrive can stall, lock, or rehydrate files during tests.  Move the directory outside any OneDrive sync folder.",
+                                warnOnly, failures);
                         }
                     }
                 }
@@ -175,7 +207,7 @@ namespace pwiz.SkylineTest
 
         private static readonly Guid CLSID_CSearchManager = new Guid(@"7D096C5F-AC08-4F1F-BEB7-5C22C517CE39");
 
-        private static void CheckWindowsSearchIndex(string directory)
+        private static void CheckWindowsSearchIndex(string directory, bool warnOnly, List<string> failures)
         {
             if (!Directory.Exists(directory))
                 return;
@@ -195,9 +227,10 @@ namespace pwiz.SkylineTest
                     return;
                 if (included)
                 {
-                    Assert.Fail($"Directory \"{directory}\" is in the Windows Search index crawl scope.  " +
+                    WarnOrFail($"Directory \"{directory}\" is in the Windows Search index crawl scope.  " +
                         @"Indexing can lock files (e.g. SQLite BUSY on .blib loads) and produce intermittent test hangs.  " +
-                        @"Open Indexing Options in Control Panel and remove this directory from the indexed locations.");
+                        @"Open Indexing Options in Control Panel and remove this directory from the indexed locations.",
+                        warnOnly, failures);
                 }
             }
             catch (COMException)
