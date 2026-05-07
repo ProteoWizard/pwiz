@@ -38,8 +38,9 @@ namespace pwiz.SkylineTest
     //   - Antivirus (behavioral): write the standard EICAR test string and verify it
     //     survives. See https://www.eicar.org/download-anti-malware-testfile/
     //   - Cloud-synchronized directory: directory does not have any of the Files-on-Demand
-    //     attributes (Offline / ReparsePoint / RecallOnOpen / RecallOnDataAccess) that cloud
-    //     sync providers set on directories they manage (OneDrive, Dropbox, Google Drive, Box).
+    //     attributes (Offline / RecallOnOpen / RecallOnDataAccess) that cloud sync providers
+    //     set on directories they manage (OneDrive, Dropbox, Google Drive, Box).  ReparsePoint
+    //     alone isn't sufficient evidence - junctions/symlinks/mount points have it too.
     //   - OneDrive sync root: directory is not under any account's UserFolder per HKCU.
     //   - Windows Search index: directory is not in the SystemIndex crawl scope.
     //
@@ -146,10 +147,14 @@ namespace pwiz.SkylineTest
 
         // FILE_ATTRIBUTE_RECALL_ON_OPEN and FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS are used
         // by Windows Files-on-Demand cloud sync but are not in the .NET FileAttributes enum.
+        // ReparsePoint is intentionally NOT in the mask: it's also set on junctions, symlinks,
+        // and mount points, which are not necessarily cloud-synced and would yield false
+        // positives.  OneDrive sync roots typically have one of the cloud-specific flags
+        // below, and the OneDrive registry walk catches the rest.
         private const int FILE_ATTRIBUTE_RECALL_ON_OPEN = 0x00040000;
         private const int FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS = 0x00400000;
         private const int CLOUD_PLACEHOLDER_MASK =
-            (int)FileAttributes.Offline | (int)FileAttributes.ReparsePoint |
+            (int)FileAttributes.Offline |
             FILE_ATTRIBUTE_RECALL_ON_OPEN | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS;
 
         private static void CheckCloudPlaceholder(string directory, bool warnOnly, List<string> failures)
@@ -223,7 +228,12 @@ namespace pwiz.SkylineTest
                     return;
                 if (catalog.GetCrawlScopeManager(out var csm) != 0 || csm == null)
                     return;
-                if (csm.IncludedInCrawlScope(Path.GetFullPath(directory), out var included) != 0)
+                // IncludedInCrawlScope's parameter is documented as a URL.  Convert to a
+                // file:// URL with a trailing separator so it's interpreted as a directory
+                // rather than a file.
+                var fullPath = Path.GetFullPath(directory).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+                var fileUrl = new Uri(fullPath).AbsoluteUri;
+                if (csm.IncludedInCrawlScope(fileUrl, out var included) != 0)
                     return;
                 if (included)
                 {
@@ -233,9 +243,10 @@ namespace pwiz.SkylineTest
                         warnOnly, failures);
                 }
             }
-            catch (COMException)
+            catch (Exception)
             {
-                // Search service unavailable / RPC failure - best-effort, don't fail the test on probe failure
+                // Search service unavailable, RPC failure, COM marshaling/cast errors, etc.
+                // Best-effort probe - don't fail the whole test on a probe-side failure.
             }
         }
 
