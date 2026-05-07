@@ -5756,7 +5756,7 @@ namespace pwiz.OspreySharp
             // important property is that the gate level matches Rust's
             // default `FdrLevel::Precursor`, NOT a hardcoded Peptide.
             var peptideGateLevel = config.FdrLevel;
-            var detectedPeptides = new HashSet<string>();
+            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)

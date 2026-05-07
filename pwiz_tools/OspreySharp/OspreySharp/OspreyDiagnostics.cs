@@ -1802,9 +1802,12 @@ namespace pwiz.OspreySharp
             var rows = new List<Stage7Row>(parsimony.Groups.Count);
             foreach (var g in parsimony.Groups)
             {
-                bool isTargetWinner = fdrResult.GroupQvalues.ContainsKey(g.Id);
+                // Target-winner status and q-value come from the same map.
+                // Single TryGetValue keeps the two fields consistent (and
+                // saves one lookup per group on large parsimony results).
                 double groupQvalue;
-                if (!fdrResult.GroupQvalues.TryGetValue(g.Id, out groupQvalue))
+                bool isTargetWinner = fdrResult.GroupQvalues.TryGetValue(g.Id, out groupQvalue);
+                if (!isTargetWinner)
                     groupQvalue = 1.0;
                 double bestScore;
                 if (!fdrResult.GroupScores.TryGetValue(g.Id, out bestScore))

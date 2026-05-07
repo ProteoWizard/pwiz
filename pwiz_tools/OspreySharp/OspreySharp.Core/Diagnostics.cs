@@ -44,18 +44,18 @@ namespace pwiz.OspreySharp.Core
         /// <c>-0</c> -> <c>"0"</c> (normalizing away the sign so .NET's
         /// behaviour for signed zero doesn't leak into diffs).
         ///
-        /// Finite non-zero values: start from <c>G17</c> (which round-trips
-        /// by the IEEE 754 guarantee, always), expand any scientific form
-        /// to fixed decimal (Rust's f64 Display never uses 'e' notation),
-        /// then trim trailing digits one at a time while
-        /// <c>double.Parse</c> still returns the same f64 bits. This gives
-        /// the shortest-roundtrip decimal (same property ryu guarantees on
-        /// the Rust side) on both net472 and net8.0 -- importantly, we do
-        /// NOT use <c>ToString("Gp")</c> for <c>p</c> less than 17 as the
-        /// precision knob, because .NET Framework 4.7.2's G&lt;p&gt; is not
-        /// shortest-roundtrip-correct (known pre-.NET-Core-3.0 "R" /
-        /// G&lt;p&gt; bug). <c>double.Parse</c> on both frameworks is
-        /// round-trip-correct, so trim-from-G17 is safe.
+        /// Finite non-zero values: bounded <c>G1..G17</c> shortest-roundtrip
+        /// search (see <see cref="ShortestRoundTrip"/>) — try each precision
+        /// in increasing order, return the first <c>v.ToString("Gp")</c>
+        /// candidate that <c>double.Parse</c> accepts back to the original
+        /// f64 bits. <c>G17</c> always round-trips by the IEEE 754 guarantee,
+        /// so the loop terminates. Then expand any scientific form to fixed
+        /// decimal (Rust's f64 Display never uses 'e' notation). The
+        /// per-precision <c>G&lt;p&gt;</c> + parse-check loop is what gives
+        /// shortest-roundtrip output on both net472 and net8.0; the prior
+        /// "R" + G17 fallback emitted one digit more than ryu on
+        /// .NET Framework 4.7.2 for many values that the parse-check loop
+        /// gets right.
         /// </summary>
         public static string FormatF64Roundtrip(double v)
         {
