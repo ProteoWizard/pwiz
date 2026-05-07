@@ -111,60 +111,52 @@ dotnet build %BUILD_TARGET% --no-restore -nologo %MSBUILD_PROPS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet build failed & goto error)
 
-REM # Test discovery: with vendor support, run all 12 test projects via the
-REM # solution. Without vendor support, run only the projects that don't pull
-REM # vendor refs (Bruker.Tests / Thermo.Tests / Waters.Tests / Agilent.Tests /
-REM # Sciex.Tests / Shimadzu.Tests / UNIFI.Tests reference vendor projects).
-if %IAGREE%==1 (
-    set TEST_TARGET=Pwiz.sln
-) else (
-    set TEST_TARGET=test\Util.Tests\Util.Tests.csproj test\Common.Tests\Common.Tests.csproj test\MsData.Tests\MsData.Tests.csproj test\Analysis.Tests\Analysis.Tests.csproj test\MsConvert.Tests\MsConvert.Tests.csproj
-)
+REM # Test discovery: with vendor support, every test csproj under test\.
+REM # Without vendor support, only the projects that don't pull vendor refs
+REM # (Bruker.Tests / Thermo.Tests / Waters.Tests / Agilent.Tests /
+REM # Sciex.Tests / Shimadzu.Tests / UNIFI.Tests / UIMF.Tests / Mobilion.Tests
+REM # all reference vendor projects).
+set TEST_TARGET=test\Util.Tests\Util.Tests.csproj test\Common.Tests\Common.Tests.csproj test\MsData.Tests\MsData.Tests.csproj test\Analysis.Tests\Analysis.Tests.csproj test\MsConvert.Tests\MsConvert.Tests.csproj
+if %IAGREE%==1 set TEST_TARGET=%TEST_TARGET% test\Agilent.Tests\Agilent.Tests.csproj test\Bruker.Tests\Bruker.Tests.csproj test\Mobilion.Tests\Mobilion.Tests.csproj test\Sciex.Tests\Sciex.Tests.csproj test\Shimadzu.Tests\Shimadzu.Tests.csproj test\Thermo.Tests\Thermo.Tests.csproj test\UIMF.Tests\UIMF.Tests.csproj test\UNIFI.Tests\UNIFI.Tests.csproj test\Waters.Tests\Waters.Tests.csproj
 
-REM # Single `dotnet test` invocation: msbuild runs the per-project VSTest target
-REM # in parallel, and each project's TC.VSTest.TestAdapter emits
-REM # ##teamcity[testStarted name='<asm>: <fqn>' suiteName='<asm>' ...] events.
-REM # We deliberately do NOT wrap with our own ##teamcity[testSuiteStarted ...] —
-REM # the outer wrapper would override the per-test suiteName attribute and lump
-REM # everything under one suite. With no wrapper, TC honors the adapter's
-REM # suiteName and produces per-assembly suites in the Tests tab.
+REM # Test step: scripts\Run-Tests-Parallel.ps1 spawns one parallel
+REM # `dotnet test <project>` job per csproj, each redirected to its own log
+REM # file. After every job finishes, the script concatenates per-project logs
+REM # to its own stdout in declared order. Wall-clock matches the previous
+REM # solution-level parallel run; TC service messages from each project's
+REM # teamcity logger appear contiguously instead of byte-interleaving with
+REM # sibling projects.
 REM #
-REM # Stdout-corruption mitigation: the SCIEX Clearcore2 SDK's log4net default
-REM # appender used to flood stdout with `[INFO]`/`[DEBUG]` lines that mid-line
-REM # interleaved with `##teamcity[testFinished ...]` messages and got TC to drop
-REM # the malformed messages. Sciex.Tests/SilenceSciexSdkLogging silences the SDK
-REM # via log4net.LogManager.GetRepository().Threshold = Off, so the only thing
-REM # writing TC service messages on the build's stdout is the test adapter
-REM # itself — there's no concurrent writer left to corrupt the stream.
+REM # Background: MSBuild's solution-level VSTest target runs per-project tests
+REM # in parallel by default. Each project's TC.VSTest.TestAdapter writes
+REM # ##teamcity[testFinished ...] messages to the SAME process stdout.
+REM # Concurrent writes interleaved at the byte level — build 3976906 line 665
+REM # showed mid-stream merge of MsData.Tests with UNIFI.Tests producing
+REM # "test\MsData.Te##teamcity[testFinished name='UNIFI.Tests..." — TC parser
+REM # dropped the malformed messages — variable test counts across builds
+REM # 3975154 / 3976893 / 3976906 (249 / 266 / 260). Per-project file logging
+REM # eliminates the interleaving; serial concatenation preserves message
+REM # ordering within each project.
 REM #
-REM # Loggers:
-REM #   trx     — per-assembly TRX files for IDE consumption / coverage replay.
-REM #   console — readable stdout for humans / local CI logs.
-REM #   teamcity — TC service messages (only when TEAMCITY_VERSION is set).
+REM # The Sciex SDK silencing (Sciex.Tests/SilenceSciexSdkLogging) remains
+REM # necessary: it suppresses log4net [INFO]/[DEBUG] lines that would
+REM # otherwise interleave with teamcity messages WITHIN a single project.
+REM #
+REM # Coverage: when --coverage / TEAMCITY_VERSION is set, each per-project
+REM # `dotnet test` runs under `dotnet dotcover dotnet -- test ...`. The script
+REM # writes per-project snapshots and merges them into coverage.dcvr via
+REM # `dotnet dotcover merge` — same final artifact shape as the previous
+REM # single-snapshot flow.
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
-set TEST_LOGGERS=--logger:"trx" --logger:"console;verbosity=normal" --results-directory:"%TC_TEST_RESULTS%"
-if defined TEAMCITY_VERSION set TEST_LOGGERS=%TEST_LOGGERS% --logger:teamcity
+
+set PS_FLAGS=-Configuration %CONFIG%
+if %IAGREE%==1 set PS_FLAGS=%PS_FLAGS% -IAgreeToVendorLicenses
+if %AUTOMATED%==1 set PS_FLAGS=%PS_FLAGS% -AutomatedBuild
 
 echo ##teamcity[progressMessage 'dotnet test (%CONFIG%)']
 
 if %COVERAGE%==1 (
-    REM # Run the test step under JetBrains dotCover. Snapshot is dropped at
-    REM # TestResults\coverage.dcvr; an HTML report is emitted alongside in
-    REM # TestResults\coverage-report\.
-    REM #
-    REM # Filters keep the report focused on production code:
-    REM #   +:module=Pwiz.*    — every assembly we ship (Pwiz.Util, Pwiz.Data.MsData,
-    REM #                       Pwiz.Vendor.*, Pwiz.Tools.MsConvert, Pwiz.TestHarness)
-    REM #   -:module=*.Tests   — exclude the test fixtures themselves
-    REM #   -:module=msconvert-sharp — exclude the wrapper exe (entry-point only)
-    REM #
-    REM # dotCover ships as a dotnet tool. We use a LOCAL tool manifest
-    REM # (.config\dotnet-tools.json) and `dotnet tool restore` so the build is
-    REM # self-contained — TC agents don't need a separate global install, and
-    REM # the version is pinned in source. After restore the tool is invoked as
-    REM # `dotnet dotcover` (the local-tool dispatcher matches the manifest's
-    REM # "dotnet-dotCover" command name minus the `dotnet-` prefix).
     echo ##teamcity[progressMessage 'dotnet tool restore - local manifest .config\dotnet-tools.json']
     dotnet tool restore
     if !ERRORLEVEL! NEQ 0 (
@@ -175,16 +167,14 @@ if %COVERAGE%==1 (
 
     set COVER_DIR=%TC_TEST_RESULTS%
     if not exist "!COVER_DIR!" mkdir "!COVER_DIR!"
-    set COVER_SNAPSHOT=!COVER_DIR!\coverage.dcvr
     set COVER_REPORT_DIR=!COVER_DIR!\coverage-report
     set COVER_FILTERS=+:module=Pwiz.*;-:module=*.Tests;-:module=msconvert-sharp
 
-    echo ##teamcity[progressMessage 'dotnet dotcover dotnet test - snapshot at !COVER_SNAPSHOT!']
-    dotnet dotcover dotnet --Output="!COVER_SNAPSHOT!" --Filters="!COVER_FILTERS!" --ReturnTargetExitCode -- test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
+    echo ##teamcity[progressMessage 'pwsh Run-Tests-Parallel.ps1 (with coverage)']
+    pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\Run-Tests-Parallel.ps1" -TestProjects "%TEST_TARGET%" %PS_FLAGS% -TestResultsDir "!COVER_DIR!" -CoverageSnapshotDir "!COVER_DIR!" -CoverageFilters "!COVER_FILTERS!"
     set EXIT=!ERRORLEVEL!
 
-    REM # Generate an HTML report from the snapshot — useful locally; on TC the
-    REM # dotCover build feature renders this from the snapshot directly.
+    set COVER_SNAPSHOT=!COVER_DIR!\coverage.dcvr
     if !EXIT! EQU 0 (
         echo ##teamcity[progressMessage 'dotnet dotcover report - HTML at !COVER_REPORT_DIR!']
         if not exist "!COVER_REPORT_DIR!" mkdir "!COVER_REPORT_DIR!"
@@ -199,7 +189,8 @@ if %COVERAGE%==1 (
     REM # feature can pick it up. Harmless locally.
     if defined TEAMCITY_VERSION echo ##teamcity[importData type='dotNetCoverage' tool='dotcover' path='!COVER_SNAPSHOT!']
 ) else (
-    dotnet test %TEST_TARGET% --no-build %MSBUILD_PROPS% %TEST_LOGGERS%
+    echo ##teamcity[progressMessage 'pwsh Run-Tests-Parallel.ps1']
+    pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\Run-Tests-Parallel.ps1" -TestProjects "%TEST_TARGET%" %PS_FLAGS% -TestResultsDir "%TC_TEST_RESULTS%"
     set EXIT=!ERRORLEVEL!
 )
 
