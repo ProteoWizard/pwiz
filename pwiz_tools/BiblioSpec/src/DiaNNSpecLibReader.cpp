@@ -949,6 +949,94 @@ class DiaNNSpecLibReader::Impl
             return parquetReader_->num_rows();
         }
     };
+
+    // Populate `lib` from a DIA-NN v2+ report-lib.parquet file (one row per fragment).
+    // Decoy rows are skipped; only target precursors are loaded.
+    void loadSpecLibFromParquet(const string& filepath, Library& lib)
+    {
+        Reader<16> reader;
+        reader.open_file(filepath);
+        reader.read_header(io::ignore_extra_column,
+            "Precursor.Id", "Modified.Sequence", "Precursor.Charge", "Precursor.Mz",
+            "RT", "IM", "Q.Value", "Decoy", "Proteotypic", "Flags",
+            "Product.Mz", "Relative.Intensity", "Fragment.Type",
+            "Fragment.Charge", "Fragment.Series.Number", "Fragment.Loss.Type");
+
+        std::string precursorId, modSeq, fragType, fragLoss;
+        int64_t charge, decoy, proteotypic, flags, fragCharge, fragSeries;
+        float precursorMz, rt, im, qvalue, productMz, relInten;
+
+        std::string lastPrecursorId;
+        size_t currentIdx = std::numeric_limits<size_t>::max();
+
+        while (reader.read_row(precursorId, modSeq, charge, precursorMz,
+                               rt, im, qvalue, decoy, proteotypic, flags,
+                               productMz, relInten, fragType, fragCharge, fragSeries, fragLoss))
+        {
+            if (decoy != 0)
+                continue;
+
+            if (precursorId != lastPrecursorId)
+            {
+                lib.entries.emplace_back();
+                currentIdx = lib.entries.size() - 1;
+                auto& e = lib.entries[currentIdx];
+                e.lib = &lib;
+                e.name = precursorId;
+                e.target.index = static_cast<int>(currentIdx);
+                e.target.charge = static_cast<int>(charge);
+                e.target.length = static_cast<int>(modSeq.size());
+                e.target.mz = precursorMz;
+                e.target.iRT = rt;
+                e.target.sRT = 0.0f;
+                e.target.iIM = im;
+                e.target.sIM = 0.0f;
+                e.target.lib_qvalue = qvalue;
+                e.proteotypic = static_cast<int>(proteotypic);
+                e.entry_flags = static_cast<int>(flags);
+                lib.precursors.push_back(precursorId);
+                lastPrecursorId = precursorId;
+            }
+
+            int ftype = fragType.empty() ? 0 : fragType[0];
+
+            int ltype = loss_none;
+            if (fragLoss.empty() || fragLoss == "noloss") ltype = loss_none;
+            else if (fragLoss == "H2O") ltype = loss_H2O;
+            else if (fragLoss == "NH3") ltype = loss_NH3;
+            else if (fragLoss == "CO") ltype = loss_CO;
+            else if (fragLoss == "N") ltype = loss_N;
+            else ltype = loss_other;
+
+            lib.entries[currentIdx].target.fragments.emplace_back(
+                productMz, relInten,
+                static_cast<int>(fragCharge),
+                ftype,
+                static_cast<int>(fragSeries),
+                ltype);
+        }
+        reader.close();
+
+        lib.iRT_min = std::numeric_limits<double>::max();
+        lib.iRT_max = std::numeric_limits<double>::lowest();
+        for (auto& e : lib.entries)
+        {
+            e.lib = &lib;
+            lib.entryByModPeptideAndCharge.emplace(e.name, std::ref(e));
+            lib.iRT_min = std::min(lib.iRT_min, (double)e.target.iRT);
+            lib.iRT_max = std::max(lib.iRT_max, (double)e.target.iRT);
+        }
+        if (lib.entries.empty())
+            lib.iRT_min = lib.iRT_max = 0.0;
+
+        lib.from_speclib = true;
+        // Skip assemble_elution_groups/elution_group_index: their outputs (eg, elution_groups,
+        // co_elution[_index]) are not consumed by parseFile() or getSpectrum(), and the upstream
+        // to_eg() helper assumes a populated UniMod table that the parquet path doesn't provide.
+
+        Verbosity::status("Spectral library (parquet) loaded: %d precursors.",
+                          (int) lib.entries.size());
+    }
 };
 
 DiaNNSpecLibReader::DiaNNSpecLibReader(BlibBuilder& maker, const char* specLibFile, const ProgressIndicator* parent_progress)
@@ -975,10 +1063,36 @@ DiaNNSpecLibReader::~DiaNNSpecLibReader()
 bool DiaNNSpecLibReader::parseFile()
 {
     {
-        ifstream specLibStream(impl_->specLibFile_, ios::binary);
-        if (!specLibStream)
-            Verbosity::error("failed to open stream for speclib %s", impl_->specLibFile_);
-        impl_->specLib.read(specLibStream);
+        // Prefer DIA-NN v2's report-lib.parquet over the binary .skyline.speclib sibling
+        // (or the user passes the parquet directly). Fall back to the binary path otherwise.
+        string libParquetPath;
+#ifdef USE_PARQUET_READER
+        string specLibStr = impl_->specLibFile_;
+        if (bal::iends_with(specLibStr, ".parquet.skyline.speclib"))
+        {
+            string candidate = specLibStr.substr(0, specLibStr.size() - strlen(".skyline.speclib"));
+            if (bfs::exists(candidate) && Impl::Reader<1>::is_parquet(candidate))
+                libParquetPath = candidate;
+        }
+        else if (bal::iends_with(specLibStr, ".parquet"))
+        {
+            if (bfs::exists(specLibStr) && Impl::Reader<1>::is_parquet(specLibStr))
+                libParquetPath = specLibStr;
+        }
+#endif
+
+        if (!libParquetPath.empty())
+        {
+            Verbosity::status("Reading library entries from parquet %s.", libParquetPath.c_str());
+            impl_->loadSpecLibFromParquet(libParquetPath, impl_->specLib);
+        }
+        else
+        {
+            ifstream specLibStream(impl_->specLibFile_, ios::binary);
+            if (!specLibStream)
+                Verbosity::error("failed to open stream for speclib %s", impl_->specLibFile_);
+            impl_->specLib.read(specLibStream);
+        }
         Verbosity::status("Read %d entries from speclib.", impl_->specLib.entries.size());
     }
     string specLibFile = impl_->specLibFile_;
