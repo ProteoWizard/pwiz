@@ -347,7 +347,9 @@ namespace pwiz.Skyline.Model.Databinding
             { typeof(float), typeof(float?) },
             { typeof(bool), typeof(bool?) },
             { typeof(decimal), typeof(decimal?) },
-            // Parquet.Net 5.x dropped DateTimeOffset support — use DateTime?
+            // Old call sites wrapped DateTime as DateTimeOffset with a local-Kind
+            // assumption that wasn't actually valid; store DateTime? directly so
+            // the value goes through unchanged.
             { typeof(DateTime), typeof(DateTime?) }
         };
 

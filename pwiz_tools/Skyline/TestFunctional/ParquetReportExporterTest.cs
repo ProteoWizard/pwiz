@@ -66,6 +66,12 @@ namespace pwiz.SkylineTestFunctional
             stream.Position = 0;
             using var reader = ParquetReader.CreateAsync(stream).ConfigureAwait(false).GetAwaiter().GetResult();
             Assert.AreEqual(1, reader.Schema.Fields.Count);
+            // Exercise the data-read path so an array/list write or decode regression
+            // would surface here instead of only in downstream consumers.
+            using var groupReader = reader.OpenRowGroupReader(0);
+            var dataField = reader.Schema.GetDataFields().Single();
+            var col = groupReader.ReadColumnAsync(dataField).ConfigureAwait(false).GetAwaiter().GetResult();
+            Assert.IsNotNull(col.Data);
         }
 
         class MyObject
