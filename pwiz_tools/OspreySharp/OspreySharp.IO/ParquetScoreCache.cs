@@ -707,11 +707,11 @@ namespace pwiz.OspreySharp.IO
                         var blobs = col.Data as byte[][];
                         if (blobs == null)
                         {
+                            // Parquet.Net 4.x types col.Data as non-null IArray.
                             throw new InvalidDataException(string.Format(
                                 "{0}: cwt_candidates column in row group {1} " +
                                 "decoded as {2}, expected byte[][] -- parquet schema mismatch",
-                                Path.GetFileName(path), g,
-                                col.Data == null ? "null" : col.Data.GetType().Name));
+                                Path.GetFileName(path), g, col.Data.GetType().Name));
                         }
                         for (int row = 0; row < blobs.Length; row++)
                             allCandidates.Add(CwtCandidateCodec.Decode(blobs[row]));
@@ -897,10 +897,10 @@ namespace pwiz.OspreySharp.IO
                 using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
                 {
+                    // Parquet.Net 4.x types CustomMetadata as a non-null
+                    // IReadOnlyDictionary; an empty file simply yields an
+                    // empty dictionary, so no null guard is needed.
                     var metaDict = reader.CustomMetadata;
-                    if (metaDict == null)
-                        return expected == null || expected.Count == 0;
-
                     foreach (var kvp in expected)
                     {
                         string value;
@@ -932,10 +932,9 @@ namespace pwiz.OspreySharp.IO
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
-                var src = reader.CustomMetadata;
-                return src == null
-                    ? new Dictionary<string, string>()
-                    : new Dictionary<string, string>(src);
+                // Parquet.Net 4.x's CustomMetadata is non-null
+                // (empty dictionary when no metadata is present).
+                return new Dictionary<string, string>(reader.CustomMetadata);
             }
         }
 
