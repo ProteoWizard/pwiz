@@ -34,7 +34,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using TestRunnerLib.PInvoke;
-using Exception = System.Exception;
 
 namespace TestRunnerLib
 {

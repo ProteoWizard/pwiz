@@ -31,6 +31,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.CLI.Bruker.PrmScheduling;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model.DocSettings;
@@ -211,6 +212,8 @@ namespace pwiz.Skyline.Model
         public const string THERMO_FUSION_LUMOS_REG = "OrbitrapFusionLumos";
         public const string THERMO_ECLIPSE = "Thermo Eclipse";      // q-orbe/ltq
         public const string THERMO_ECLIPSE_REG = "OrbitrapEclipse";
+        public const string THERMO_EXCEDION_PRO = "Thermo Excedion Pro"; // q-orbi
+        public const string THERMO_EXCEDION_PRO_REG = "OrbitrapExcedionPro";
         public const string THERMO_ASTRAL = "Thermo Astral";        // q-orbi/tof
         public const string THERMO_ASTRAL_REG = "OrbitrapAstral";
         public const string THERMO_ASTRAL_ZOOM = "Thermo Astral Zoom";        // q-orbi/tof
@@ -314,6 +317,7 @@ namespace pwiz.Skyline.Model
                 { THERMO_FUSION, EXT_THERMO },
                 { THERMO_FUSION_LUMOS, EXT_THERMO },
                 { THERMO_ECLIPSE, EXT_THERMO },
+                { THERMO_EXCEDION_PRO, EXT_THERMO },
                 { THERMO_ASTRAL, EXT_THERMO },
                 { THERMO_ASTRAL_ZOOM, EXT_THERMO },
                 { WATERS_XEVO_TQ_MASS_LYNX, EXT_WATERS },
@@ -330,6 +334,7 @@ namespace pwiz.Skyline.Model
                 { THERMO_EXPLORIS, THERMO_EXPLORIS_REG },
                 { THERMO_FUSION_LUMOS, THERMO_FUSION_LUMOS_REG },
                 { THERMO_ECLIPSE, THERMO_ECLIPSE_REG },
+                { THERMO_EXCEDION_PRO, THERMO_EXCEDION_PRO_REG },
                 { THERMO_ASTRAL, THERMO_ASTRAL_REG },
                 { THERMO_ASTRAL_ZOOM, THERMO_ASTRAL_ZOOM_REG },
                 { THERMO_ASCEND, THERMO_ASCEND_REG },
@@ -403,6 +408,7 @@ namespace pwiz.Skyline.Model
                    Equals(type, THERMO_FUSION) ||
                    Equals(type, THERMO_FUSION_LUMOS) ||
                    Equals(type, THERMO_ECLIPSE) ||
+                   Equals(type, THERMO_EXCEDION_PRO) ||
                    Equals(type, THERMO_ASTRAL) ||
                    Equals(type, THERMO_ASTRAL_ZOOM) ||
                    Equals(type, AGILENT_TOF) ||
@@ -613,6 +619,7 @@ namespace pwiz.Skyline.Model
                     else
                         return ExportThermoSureQuantMethod(doc, path, template, instrumentType);
                 case ExportInstrumentType.THERMO_ECLIPSE:
+                case ExportInstrumentType.THERMO_EXCEDION_PRO:
                 case ExportInstrumentType.THERMO_EXPLORIS:
                 case ExportInstrumentType.THERMO_FUSION_LUMOS:
                 case ExportInstrumentType.THERMO_ASTRAL:
@@ -3936,7 +3943,7 @@ namespace pwiz.Skyline.Model
                 var libraryIonMobilities = Document.Settings.GetIonMobilities(Document.Molecules.SelectMany(
                         node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(Document.Settings, node)))
                     .ToArray(), null);
-                var result = Document.Settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, libraryIonMobilities, null, _oneOverK0UpperLimit);
+                var result = Document.Settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, libraryIonMobilities, null, _oneOverK0UpperLimit, eIonMobilityUnits.inverse_K0_Vsec_per_cm2);
                 if (result.HasIonMobilityValue)
                 {
                     ionMobility = result.IonMobility.Mobility.Value;

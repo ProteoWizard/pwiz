@@ -1867,7 +1867,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (peakRmi != null)
             {
                 if (_toolTip == null)
-                    _toolTip = new NodeTip(this) { Parent = graphControl };
+                    _toolTip = new NodeTip(this) { Parent = graphControl, AutoHideDelay = 10000 };
                 _toolTip.SetTipProvider(new ToolTipImplementation(peakRmi), new Rectangle(e.Location, new Size()), e.Location);
                 return;
             }

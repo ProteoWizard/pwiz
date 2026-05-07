@@ -380,6 +380,12 @@
   <data name="Extensions_CustomToString__2D_Histogram" xml:space="preserve">
     <value>2D Histogram</value>
   </data>
+  <data name="Extensions_CustomToString_CV_2D_Histogram" xml:space="preserve">
+    <value>CV 2D Histogram</value>
+  </data>
+  <data name="Extensions_CustomToString_CV_Histogram" xml:space="preserve">
+    <value>CV Histogram</value>
+  </data>
   <data name="Extensions_CustomToString_Detections_Histogram" xml:space="preserve">
     <value>Histogram</value>
   </data>
@@ -535,6 +541,18 @@ Here are the last 3 errors:
   <data name="GraphFullScan_SetSpectraUI__peak_type_not_available" xml:space="preserve">
     <value>{0} spectra are not available in this data file. Showing {1} instead.</value>
   </data>
+  <data name="GraphFullScan_ToolTip_mz" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="GraphFullScan_ToolTip_Intensity" xml:space="preserve">
+    <value>Intensity</value>
+  </data>
+  <data name="GraphFullScan_ToolTip_Transition" xml:space="preserve">
+    <value>Transition</value>
+  </data>
+  <data name="GraphFullScan_ToolTip_Summed_Intensity" xml:space="preserve">
+    <value>Summed Intensity</value>
+  </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
     <value>{0:0.0000}</value>
   </data>
@@ -561,6 +579,18 @@ Here are the last 3 errors:
   </data>
   <data name="MassErrorHistogram2DGraphPane_Graph_Retention_Time" xml:space="preserve">
     <value>Retention Time</value>
+  </data>
+  <data name="MassErrorHistogram2DGraphPane_ToolTip_Count_Format" xml:space="preserve">
+    <value>{0} across {1} replicates</value>
+  </data>
+  <data name="MassErrorHistogram2DGraphPane_ToolTip_Peptides" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="MassErrorHistogram2DGraphPane_ToolTip_Plus_N_More" xml:space="preserve">
+    <value> +{0} more</value>
+  </data>
+  <data name="MassErrorHistogram2DGraphPane_ToolTip_Transitions" xml:space="preserve">
+    <value>Transitions</value>
   </data>
   <data name="MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable" xml:space="preserve">
     <value>Mass Errors Unavailable</value>
@@ -591,6 +621,12 @@ Here are the last 3 errors:
   </data>
   <data name="PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_" xml:space="preserve">
     <value>{0} CV in {1}</value>
+  </data>
+  <data name="MassErrorBinFinder_DisplayName_Peptides" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="MassErrorBinFinder_GetDisplayText_Mass_Error" xml:space="preserve">
+    <value>{0} ppm</value>
   </data>
   <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
     <value>Peptide</value>
@@ -718,6 +754,15 @@ Here are the last 3 errors:
   <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
     <value>Relative Abundance</value>
   </data>
+  <data name="Extensions_CustomToString_Relative_Abundance_Comparison" xml:space="preserve">
+    <value>Relative Abundance Comparison</value>
+  </data>
+  <data name="AreaAbundanceComparisonGraphPane_XAxis_Replicate" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="AreaAbundanceComparisonGraphPane_Outliers" xml:space="preserve">
+    <value>Outliers</value>
+  </data>
   <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
     <value>Protein Rank</value>
   </data>
@@ -745,6 +790,9 @@ Here are the last 3 errors:
   <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
     <value>Rank</value>
   </data>
+  <data name="RelativeAbundanceGraph_ToolTip_Replicate_All" xml:space="preserve">
+    <value>All</value>
+  </data>
   <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
     <value>No quantitative chromatograms found</value>
   </data>
@@ -762,5 +810,14 @@ Here are the last 3 errors:
   </data>
   <data name="GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate" xml:space="preserve">
 	  <value>Exemplary Replicate</value>
+  </data>
+  <data name="LabelLayoutRunner_Start_Label_layout" xml:space="preserve">
+    <value>Label layout</value>
+  </data>
+  <data name="GraphFullScan_MobilogramRequiresHeatmap" xml:space="preserve">
+    <value>Heatmap must be visible to show mobilogram</value>
+  </data>
+  <data name="GraphFullScan_ToggleSonarHeatmap" xml:space="preserve">
+    <value>Show SONAR Heatmap</value>
   </data>
 </root>

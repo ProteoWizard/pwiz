@@ -46,6 +46,7 @@ namespace pwiz.Skyline.SettingsUI
                 SettingsUIResources.EditFragmentLossDlg_EditFragmentLossDlg_A_verage_loss_,
                 SettingsUIResources.EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_)
             {
+                AllowNegativeAtomCounts = true,
                 Location = new Point(12,9),
                 TabIndex = 0
             };

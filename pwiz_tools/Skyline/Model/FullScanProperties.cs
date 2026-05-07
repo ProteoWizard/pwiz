@@ -129,9 +129,9 @@ namespace pwiz.Skyline.Model
                 res.WindowGroup = spectrum.WindowGroup.ToString(CultureInfo.CurrentCulture); // For Bruker PASEF MS2
             }
 
-            if (spectrum.Metadata.SourceOffsetVoltage.HasValue)
+            if (spectrum.Metadata.SourceOffsetVoltage != 0)
             {
-                res.SourceOffsetVoltage = spectrum.Metadata.SourceOffsetVoltage.Value.ToString(Formats.OPT_PARAMETER, CultureInfo.CurrentCulture);
+                res.SourceOffsetVoltage = spectrum.Metadata.SourceOffsetVoltage.ToString(Formats.OPT_PARAMETER, CultureInfo.CurrentCulture);
             }
             return res;
         }

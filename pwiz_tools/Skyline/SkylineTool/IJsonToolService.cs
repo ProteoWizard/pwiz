@@ -239,6 +239,40 @@ namespace SkylineTool
         /// <param name="filePath">Output file path.</param>
         /// <returns>The file path written to.</returns>
         string GetDefaultSettings(string filePath);
+        /// <summary>
+        /// Changes the order of nodes in the Targets tree and Replicates based on the
+        /// order of <paramref name="elementLocators"/>. Elements which are not included in
+        /// elementLocators will be moved to the end of their parent's list of children.
+        /// </summary>
+        void ReorderElements(string[] elementLocators);
+
+        // --- UI mode ---
+
+        /// <summary>
+        /// Returns the current UI mode: "proteomic", "small_molecules", or "mixed".
+        /// </summary>
+        string GetUiMode();
+
+        /// <summary>
+        /// Sets the UI mode.
+        /// </summary>
+        /// <param name="mode">"proteomic", "small_molecules", or "mixed".</param>
+        void SetUiMode(string mode);
+
+        // --- Undo/redo ---
+
+        /// <summary>
+        /// Returns the full undo/redo stack with descriptions and indices.
+        /// Negative indices = undo steps, positive = redo steps.
+        /// </summary>
+        UndoRedoEntry[] GetUndoRedo();
+
+        /// <summary>
+        /// Navigates to a specific point in the undo/redo stack by index.
+        /// Negative indices undo, positive indices redo.
+        /// </summary>
+        /// <param name="index">Target position in the undo/redo stack.</param>
+        void SetUndoRedoPosition(int index);
 
         // --- UI state ---
 

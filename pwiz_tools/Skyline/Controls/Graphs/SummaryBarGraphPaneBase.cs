@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var size = _table.CalcDimensions(g);
                     var offset = new Size(0, -(int)(size.Height + size.Height / _table.Count));
                     if (_tip == null)
-                        _tip = new NodeTip(_parent);
+                        _tip = new NodeTip(_parent) { AutoHideDelay = 10000 };
                     _tip.SetTipProvider(TipProvider, new Rectangle(basePoint.Screen(offset), new Size()), cursorPos);
                 }
                 _isVisible = true;
@@ -147,6 +147,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     ).ToList();
                 }
             }
+
+            public TableDesc TipTable => _table;
 
             #endregion
             private class UserPoint

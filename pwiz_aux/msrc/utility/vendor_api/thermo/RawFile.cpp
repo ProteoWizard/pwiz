@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
 #include <boost/xpressive/xpressive.hpp>
+#include <filesystem>
 
 using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
@@ -318,7 +319,15 @@ RawFileImpl::RawFileImpl(const string& filename)
         setCurrentController(Controller_MS, 1);
 
 #else // is WIN64
-        auto managedFilename = ToSystemString(filename);
+        // Canonicalize path before handing to Thermo's RawFileReader: Wine 10.6-staging mishandles
+        // symlinked paths inside the SDK's memory-mapped I/O, surfacing as a misleading "Corrupt RAW
+        // file" error. Same pattern as the WIFF2 fix in commit 521213f86c.
+        // Fall back to the raw filename if canonical() throws — it can fail on some filesystems
+        // (e.g., ramdisks on the EC2 build agent).
+        std::string canonicalFilename;
+        try { canonicalFilename = std::filesystem::canonical(std::filesystem::u8path(filename)).u8string(); }
+        catch (const std::filesystem::filesystem_error&) { canonicalFilename = filename; }
+        auto managedFilename = ToSystemString(canonicalFilename);
         rawManager_ = RawFileReaderAdapter::ThreadedFileFactory(managedFilename);
         raw_ = rawManager_->CreateThreadAccessor();
         //raw_ = RawFileReaderAdapter::FileFactory(managedFilename);

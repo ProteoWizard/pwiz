@@ -223,12 +223,6 @@
   <data name="transitionsContextMenuItem.Text" xml:space="preserve">
     <value>Transitions</value>
   </data>
-  <data name="relativeAbundanceFormattingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="relativeAbundanceFormattingMenuItem.Text" xml:space="preserve">
-    <value>Formatting...</value>
-  </data>
   <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
@@ -710,12 +704,6 @@
     <value>splitGraphContextMenuItem</value>
   </data>
   <data name="&gt;&gt;splitGraphContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;relativeAbundanceFormattingMenuItem.Name" xml:space="preserve">
-    <value>relativeAbundanceFormattingMenuItem</value>
-  </data>
-  <data name="&gt;&gt;relativeAbundanceFormattingMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;transformChromContextMenuItem.Name" xml:space="preserve">

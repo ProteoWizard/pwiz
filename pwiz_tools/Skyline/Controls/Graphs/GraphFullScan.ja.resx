@@ -216,9 +216,6 @@
   <data name="spectrumBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 22</value>
   </data>
-  <data name="spectrumBtn.ToolTipText" xml:space="preserve">
-    <value>2Dスペクトルを表示</value>
-  </data>
   <data name="filterBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>

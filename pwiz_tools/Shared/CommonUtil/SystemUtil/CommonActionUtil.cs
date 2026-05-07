@@ -24,32 +24,51 @@ namespace pwiz.Common.SystemUtil
 {
     public static class CommonActionUtil
     {
-        public static Thread RunAsync(Action action)
+        /// <summary>
+        /// Callback for reporting unhandled exceptions from background threads.
+        /// Set by the host application (e.g. Skyline sets this to Program.ReportException)
+        /// to surface exceptions in the UI instead of swallowing them.
+        /// </summary>
+        public static Action<Exception> ExceptionReporter { get; set; }
+
+        public static Thread RunAsync(Action action, string threadName = null)
         {
-            var thread = new Thread(() => RunNow(action));
+            var thread = new Thread(() => RunNow(action, threadName));
             thread.Start();
             return thread;
         }
 
-        public static void RunNow(Action action)
+        public static void RunNow(Action action, string threadName = null)
         {
             try
             {
+                LocalizationHelper.InitThread(threadName);
                 action();
             }
+            catch (OperationCanceledException) {}
             catch (Exception e)
             {
                 HandleException(e);
             }
         }
 
+        // CONSIDER: Currently silently swallows unhandled exceptions for processes that
+        // don't set an ExceptionReporter. All EXEs using CommonActionUtil should be required
+        // to explicitly set an ExceptionReporter (even a silent one) before calling RunAsync.
+        // See https://github.com/ProteoWizard/pwiz/issues/4128
         public static void HandleException(Exception exception)
         {
             if (exception == null)
-            {
                 return;
+
+            try
+            {
+                ExceptionReporter?.Invoke(exception);
             }
-            Messages.WriteAsyncDebugMessage(@"Unhandled Exception: {0}", exception); // N.B. see TraceWarningListener for output details
+            catch (Exception)
+            {
+                // Prevent failures in the reporter from crashing the background thread
+            }
         }
 
         /// <summary>
@@ -82,7 +101,7 @@ namespace pwiz.Common.SystemUtil
 
             try
             {
-                control.BeginInvoke(action);    // TIME-OF-USE
+                control.BeginInvoke(new Action(() => RunNow(action)));    // TIME-OF-USE
                 return true;
             }
             catch (Exception)

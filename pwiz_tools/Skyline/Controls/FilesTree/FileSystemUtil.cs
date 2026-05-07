@@ -60,6 +60,11 @@ namespace pwiz.Skyline.Controls.FilesTree
                 && path.IndexOfAny(new[] { '\\', '/' }, lastColon + 1) < 0;
         }
 
+        /// <summary>
+        /// Resolves a path via <see cref="Path.GetFullPath(string)"/>. Returns null for
+        /// null input or paths with illegal characters; returns the original path for
+        /// unsupported formats (e.g. ADS paths with colons). Callers must null-check.
+        /// </summary>
         public static string Normalize(string path)
         {
             if (path == null)
@@ -70,7 +75,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 return Path.GetFullPath(path);
             }
             catch (NotSupportedException) { return path; }
-            catch (ArgumentException) { return path; }
+            catch (ArgumentException) { return null; }
         }
 
         /// <summary>

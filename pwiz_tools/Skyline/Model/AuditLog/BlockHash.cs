@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static Stream CreateWriteStream(string path)
         {
-            return new HashingStream(new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, 4096,
+            return new HashingStream(new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, 0x20000,
                 FileOptions.SequentialScan), false);
         }
 

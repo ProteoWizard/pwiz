@@ -22,15 +22,12 @@ using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.ElementLocators;
@@ -381,15 +378,14 @@ namespace pwiz.Skyline.ToolsUI
 
         private static ZedGraphControl TryGetZedGraphControl(DockableFormEx form)
         {
-            switch (form)
+            // Use reflection to find any public property that returns ZedGraphControl,
+            // so that new graph forms are automatically supported.
+            foreach (var prop in form.GetType().GetProperties())
             {
-                case GraphSummary gs: return gs.GraphControl;
-                case GraphChromatogram gc: return gc.GraphControl;
-                case GraphSpectrum gsp: return gsp.ZedGraphControl;
-                case GraphFullScan gfs: return gfs.ZedGraphControl;
-                case CalibrationForm cf: return cf.ZedGraphControl;
-                default: return null;
+                if (typeof(ZedGraphControl).IsAssignableFrom(prop.PropertyType) && prop.GetIndexParameters().Length == 0)
+                    return prop.GetValue(form) as ZedGraphControl;
             }
+            return null;
         }
 
         /// <summary>
@@ -467,56 +463,6 @@ namespace pwiz.Skyline.ToolsUI
             string timestamp = DateTime.Now.ToString(@"yyyyMMdd-HHmmss");
             return Path.Combine(GetMcpTmpDir(),
                 string.Format(@"{0}-{1}-{2}{3}", prefix, safe, timestamp, extension));
-        }
-
-        // Private helpers - TeeTextWriter
-
-        /// <summary>
-        /// A TextWriter that writes to two underlying writers simultaneously.
-        /// Used to capture command output while also echoing to the Immediate Window.
-        /// </summary>
-        private class TeeTextWriter : TextWriter
-        {
-            private readonly TextWriter _writer1;
-            private readonly TextWriter _writer2;
-
-            public TeeTextWriter(TextWriter writer1, TextWriter writer2)
-            {
-                _writer1 = writer1;
-                _writer2 = writer2;
-            }
-
-            public override Encoding Encoding => _writer1.Encoding;
-
-            public override void Write(char value)
-            {
-                _writer1.Write(value);
-                _writer2.Write(value);
-            }
-
-            public override void Write(string value)
-            {
-                _writer1.Write(value);
-                _writer2.Write(value);
-            }
-
-            public override void WriteLine(string value)
-            {
-                _writer1.WriteLine(value);
-                _writer2.WriteLine(value);
-            }
-
-            public override void WriteLine()
-            {
-                _writer1.WriteLine();
-                _writer2.WriteLine();
-            }
-
-            public override void Flush()
-            {
-                _writer1.Flush();
-                _writer2.Flush();
-            }
         }
     }
 }

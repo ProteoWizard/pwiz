@@ -370,7 +370,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForRegression();
             RunUI(() =>
             {
-                SkylineWindow.SetupCalculatorChooser();
                 SkylineWindow.ChooseCalculator(irtCalc);
             });
             WaitForRegression();

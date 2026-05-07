@@ -25,8 +25,11 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.Skyline;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -67,6 +70,11 @@ namespace pwiz.SkylineTestFunctional
             // Molecule mode: switch and verify uimode on report definitions
             RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
             TestAddReportMoleculeMode(server);
+
+            // Audit log reset when applying saved settings to new document
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
+            using (new AuditLogList.IgnoreTestChecksScope())
+                TestAuditLogResetOnSettingsChange(server);
         }
 
         #region Settings list enumeration and inspection
@@ -224,6 +232,78 @@ namespace pwiz.SkylineTestFunctional
 
         #endregion
 
+        #region Audit log reset on settings change
+
+        /// <summary>
+        /// Tests the new CLI paths (--new, --settings-name) via RunCommand, verifies
+        /// Settings Profiles visibility through GetSettingsListNames, and tests
+        /// the audit log reset behavior.
+        /// </summary>
+        /// <remarks>
+        /// Scenario 1: --new (non-default settings) then --settings-name=Default + Reset = empty audit log
+        /// Scenario 2: --new (non-default settings) then Reset = one audit entry (diff from defaults)
+        /// </remarks>
+        private void TestAuditLogResetOnSettingsChange(JsonToolServer server)
+        {
+            var defaultSettings = SrmSettingsList.GetDefault();
+
+            // Verify Settings Profiles are visible through the settings list API
+            string profilesName = JsonToolServer.GetSettingsListName<SrmSettingsList>();
+            string[] profileNames = server.GetSettingsListNames(profilesName);
+            Assert.IsTrue(profileNames.Length > 0, @"Should have at least one settings profile");
+            Assert.IsTrue(profileNames.Contains(defaultSettings.Name),
+                @"Default settings should appear in settings profiles list");
+
+            // Apply non-default settings and enable audit logging so that
+            // NewDocument creates documents with a start_log_existing_doc entry.
+            // Note: DataSettings.DEFAULT already has AuditLogging=true, so we only
+            // need to change a non-data setting to get a non-default document.
+            RunUI(() =>
+            {
+                SkylineWindow.ChangeSettings(
+                    SkylineWindow.DocumentUI.Settings
+                        .ChangePeptideFilter(f => f.ChangeExcludeNTermAAs(99)),
+                    true); // store=true writes to list[0]
+            });
+
+            // --new via RunCommand: picks up non-default settings from list[0]
+            server.RunCommand(CommandArgs.ARG_NEW, CommandArgs.ARG_DISCARD_CHANGES);
+            WaitForDocumentLoaded();
+            Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AuditLogging,
+                @"New document should have audit logging enabled (DataSettings.DEFAULT)");
+            int initialCount = SkylineWindow.Document.AuditLog.AuditLogEntries.Count;
+            Assert.IsTrue(initialCount > 0,
+                @"New document with non-default settings should have initial audit entry");
+
+            // Scenario 1: --settings-name=Default via RunCommand, then reset audit log.
+            // Default settings include AuditLogging=true, so reset can strip the log.
+            // This is the core tutorial use case: new document + default settings = clean audit log.
+            server.RunCommand(CommandArgs.ARG_DOC_SETTINGS_NAME + @"Default");
+            Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AuditLogging,
+                @"Default settings should preserve audit logging");
+            RunUI(() => SkylineWindow.ResetInitialAuditLogEntry());
+            Assert.AreEqual(0, SkylineWindow.Document.AuditLog.AuditLogEntries.Count,
+                @"After --settings-name=Default on empty document, audit log should be empty");
+
+            // --new again (list[0] still has non-default settings)
+            server.RunCommand(CommandArgs.ARG_NEW, CommandArgs.ARG_DISCARD_CHANGES);
+            WaitForDocumentLoaded();
+            Assert.IsTrue(SkylineWindow.Document.AuditLog.AuditLogEntries.Count > 0,
+                @"New document should have initial audit entry again");
+
+            // Scenario 2: Just reset the initial entry without changing settings.
+            // The document still has non-default settings, so the recomputed
+            // initial entry should reflect the diff from defaults.
+            RunUI(() => SkylineWindow.ResetInitialAuditLogEntry());
+            Assert.AreEqual(1, SkylineWindow.Document.AuditLog.AuditLogEntries.Count,
+                @"After reset on document with non-default settings, should have one audit entry");
+
+            // Restore defaults for subsequent tests
+            server.RunCommand(CommandArgs.ARG_DOC_SETTINGS_NAME + @"Default");
+        }
+
+        #endregion
+
         #region Settings list selection (Get/Set selected items)
 
         private void TestSettingsListSelection(JsonToolServer server)
@@ -248,13 +328,13 @@ namespace pwiz.SkylineTestFunctional
 
             // Error: empty array for single-select list
             AssertEx.ThrowsException<ArgumentException>(() =>
-                server.SelectSettingsListItems(enzymesName, new string[0]));
+                server.SelectSettingsListItems(enzymesName, Array.Empty<string>()));
 
             // Clear selection: empty array for multi-select list
             string staticModsName = JsonToolServer.GetSettingsListName<StaticModList>();
             string[] originalMods = Settings.Default.StaticModList.GetSelectedItems(
                 SkylineWindow.Document.Settings);
-            server.SelectSettingsListItems(staticModsName, new string[0]);
+            server.SelectSettingsListItems(staticModsName, Array.Empty<string>());
             AssertEx.AreEqual(0, SkylineWindow.Document.Settings.PeptideSettings
                 .Modifications.StaticModifications.Count);
             // Restore

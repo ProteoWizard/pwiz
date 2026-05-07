@@ -146,19 +146,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Executables\AssortResources\CsProjFile.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\CsProjFile.cs">
       <Link>CsProjFile.cs</Link>
     </Compile>
-    <Compile Include="..\Executables\AssortResources\ResourceAssorter.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\ResourceAssorter.cs">
       <Link>ResourceAssorter.cs</Link>
     </Compile>
-    <Compile Include="..\Executables\AssortResources\ResourceFile.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\ResourceFile.cs">
       <Link>ResourceFile.cs</Link>
     </Compile>
-    <Compile Include="..\Executables\AssortResources\ResourceIdentifiers.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\ResourceIdentifiers.cs">
       <Link>ResourceIdentifiers.cs</Link>
     </Compile>
-    <Compile Include="..\Executables\AssortResources\ResourceReference.cs">
+    <Compile Include="..\Executables\DevTools\AssortResources\ResourceReference.cs">
       <Link>ResourceReference.cs</Link>
     </Compile>
     <Compile Include="AbstractLibraryBuilderModificationSupportTest.cs" />
