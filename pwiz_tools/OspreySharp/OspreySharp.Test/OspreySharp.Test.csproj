@@ -12,8 +12,27 @@
     <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
     <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Parquet.Net" Version="3.10.0" />
+    <PackageReference Include="Parquet.Net" Version="4.25.0" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <!--
+      Parquet.Net writes use IronCompress + ZstdSharp for Zstd compression,
+      which needs the native nironcompress.dll deployed alongside the test
+      assembly. Exe projects (e.g. OspreySharp) get this for free because the
+      SDK infers a RuntimeIdentifier and unwraps runtimes/win-x64/native/*;
+      library/test projects don't, so we add IronCompress explicitly with
+      GeneratePathProperty so the Content copy below can pull the native
+      binary into the test bin for net472. net8.0 resolves the native dep
+      via deps.json automatically and needs no extra wiring.
+    -->
+    <PackageReference Include="IronCompress" Version="1.5.2" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Content Include="$(PkgIronCompress)\runtimes\win-x64\native\nironcompress.dll">
+      <Link>nironcompress.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
   </ItemGroup>
 
   <!-- net472 needs System.Memory explicitly; net8 has it built in. -->
