@@ -4325,18 +4325,29 @@ namespace pwiz.OspreySharp
             // pipeline.rs:6538. Use the SAFE indices (clipped by the
             // post-rank apex recompute) for non-override entries; the
             // override path's bestPeak retains its original boundaries.
-            int refSi = Math.Max(0, Math.Min(bestPeak.StartIndex,
-                refXicIntensities.Length - 1));
-            int refEi = Math.Max(refSi, Math.Min(bestPeak.EndIndex,
-                refXicIntensities.Length - 1));
-            int refLen = refEi - refSi + 1;
-            double[] refXicRts = new double[refLen];
-            double[] refXicInts = new double[refLen];
             double[] refXicRtsAll = xics[refXicIdx].RetentionTimes;
-            for (int i = 0; i < refLen; i++)
+            int refMaxLen = Math.Min(
+                refXicRtsAll != null ? refXicRtsAll.Length : 0,
+                refXicIntensities != null ? refXicIntensities.Length : 0);
+            double[] refXicRts;
+            double[] refXicInts;
+            if (refMaxLen == 0)
             {
-                refXicRts[i] = refXicRtsAll[refSi + i];
-                refXicInts[i] = refXicIntensities[refSi + i];
+                refXicRts = new double[0];
+                refXicInts = new double[0];
+            }
+            else
+            {
+                int refSi = Math.Max(0, Math.Min(bestPeak.StartIndex, refMaxLen - 1));
+                int refEi = Math.Max(refSi, Math.Min(bestPeak.EndIndex, refMaxLen - 1));
+                int refLen = refEi - refSi + 1;
+                refXicRts = new double[refLen];
+                refXicInts = new double[refLen];
+                for (int i = 0; i < refLen; i++)
+                {
+                    refXicRts[i] = refXicRtsAll[refSi + i];
+                    refXicInts[i] = refXicIntensities[refSi + i];
+                }
             }
 
             var entry = new FdrEntry

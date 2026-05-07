@@ -514,22 +514,19 @@ namespace pwiz.OspreySharp.IO
         /// Encode an array of f32 values as a little-endian byte blob with
         /// no length prefix — bytes / 4 recovers the count on read. Mirrors
         /// Rust pipeline.rs:1626-1631 byte-for-byte. Used for
-        /// `fragment_intensities` (f32 in both impls). Uses
-        /// <see cref="BitConverter.GetBytes(float)"/> + <see cref="Buffer.BlockCopy"/>
-        /// so we get the same impl on net472 (no `SingleToInt32Bits`) and
-        /// net8.0; correctness relies on the build targeting an LE machine
-        /// (x64 / x86 — both pwiz target archs are LE).
+        /// `fragment_intensities` (f32 in both impls). Uses a single
+        /// <see cref="Buffer.BlockCopy"/> over the underlying float[] storage
+        /// (allocation-free per element); the IEEE-754 little-endian byte
+        /// layout matches the Rust blob exactly on LE hosts (x64/x86 — both
+        /// pwiz target archs are LE), avoiding net472's missing
+        /// <c>BitConverter.SingleToInt32Bits</c>.
         /// </summary>
         private static byte[] EncodeF32Blob(float[] values)
         {
             if (values == null || values.Length == 0)
                 return Array.Empty<byte>();
             var buf = new byte[values.Length * 4];
-            for (int i = 0; i < values.Length; i++)
-            {
-                byte[] bytes = BitConverter.GetBytes(values[i]);
-                Buffer.BlockCopy(bytes, 0, buf, i * 4, 4);
-            }
+            Buffer.BlockCopy(values, 0, buf, 0, buf.Length);
             return buf;
         }
 
@@ -570,8 +567,7 @@ namespace pwiz.OspreySharp.IO
                     "f32 blob length {0} is not a multiple of 4", blob.Length));
             int n = blob.Length / 4;
             var values = new float[n];
-            for (int i = 0; i < n; i++)
-                values[i] = BitConverter.ToSingle(blob, i * 4);
+            Buffer.BlockCopy(blob, 0, values, 0, blob.Length);
             return values;
         }
 
