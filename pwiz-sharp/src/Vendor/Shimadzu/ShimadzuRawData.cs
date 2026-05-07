@@ -160,6 +160,11 @@ public sealed class ShimadzuRawData : IDisposable
             SegmentCount = segmentToEvents.Count == 0 ? 0 : segmentToEvents.Keys.Max();
 
             uint lastScanNumber = 0;
+            // Track whether RetTimeToScan actually FAILED for an event we tried to query
+            // (vs. the event being skipped on purpose, e.g. MRM under srmAsSpectra=false).
+            // The fallback below only runs in the genuine-failure case so that SRM-only files
+            // don't grow phantom spectra under default config.
+            bool retTimeToScanCalledAndFailed = false;
             // Materialize segments 1..SegmentCount in order so empty segments still get an entry
             // (matches cpp which iterates by segment index).
             for (short seg = 1; seg <= SegmentCount; seg++)
@@ -176,10 +181,12 @@ public sealed class ShimadzuRawData : IDisposable
                     if (!srmAsSpectra && info.AnalysisMode == ShimadzuIO.Generic.AcqModes.MRM)
                         continue;
 
-                    uint eventLastScanNumber;
-                    var rt2sn = _dataObject.MS.Spectrum.RetTimeToScan(out eventLastScanNumber, endTime, eventNo);
-                    if (ShimadzuIO.Generic.Tool.Failed(rt2sn) || eventLastScanNumber == 0)
+                    uint eventLastScanNumber = TryGetEventLastScanNumber(seg, eventNo, endTime);
+                    if (eventLastScanNumber == 0)
+                    {
+                        retTimeToScanCalledAndFailed = true;
                         continue;
+                    }
 
                     if (_msLevels.Count < 2)
                     {
@@ -196,6 +203,19 @@ public sealed class ShimadzuRawData : IDisposable
                         lastScanNumber = eventLastScanNumber;
                 }
             }
+
+            // Fallback only when at least one event was attempted but every attempt returned 0.
+            // The Q-TOF SDK on .NET 8 sometimes throws RuntimeBinderException through
+            // QtflRawDataMain.RTimeToScan (see TC build 3975296); when that happens for every
+            // event of a file, lastScanNumber stays 0 and we'd otherwise produce no spectra.
+            // Sum per-event TIC chromatogram point counts to recover a usable scan count.
+            // This is approximate vs. cpp's exact max-scan-number approach but agrees on the
+            // common case where scan numbers are 1..N contiguous. Crucially we DO NOT run the
+            // fallback when there were zero attempts (e.g. SRM-only file under default config),
+            // since that would invent spectra the cpp reference mzML doesn't carry.
+            if (lastScanNumber == 0 && retTimeToScanCalledAndFailed)
+                lastScanNumber = SumScanCountsFromTics();
+
             ScanCount = (int)lastScanNumber;
 
             // Precursor map: cpp ShimadzuReader.cpp:294-313 builds precursor info from
@@ -232,6 +252,52 @@ public sealed class ShimadzuRawData : IDisposable
             try { _dataObject.IO.Close(); } catch { /* best-effort */ }
             throw;
         }
+    }
+
+    /// <summary>Wraps <c>RetTimeToScan</c> per event with explicit catches around the SDK's
+    /// known failure modes. Returns 0 on any failure (caller treats 0 as "no scan", same as
+    /// the SDK's documented zero-return). The Q-TOF backend
+    /// <c>QtflRawDataMain.RTimeToScan</c> uses C# <c>dynamic</c> dispatch on a field that's
+    /// not always initialized for Q-TOF Negative-mode files; we observed it throwing
+    /// <c>RuntimeBinderException</c> in TC build 3975296. Catching it lets the caller fall back
+    /// to TIC-derived scan counting.</summary>
+    private uint TryGetEventLastScanNumber(short seg, short eventNo, int endTime)
+    {
+        try
+        {
+            uint scan;
+            var rt2sn = _dataObject.MS.Spectrum.RetTimeToScan(out scan, endTime, eventNo);
+            if (ShimadzuIO.Generic.Tool.Failed(rt2sn)) return 0;
+            return scan;
+        }
+        catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { return 0; }
+        catch (NullReferenceException) { return 0; }
+    }
+
+    /// <summary>Sums per-event TIC chromatogram point counts across all segments + events to
+    /// approximate the file's total scan count. Used as a fallback when
+    /// <see cref="TryGetEventLastScanNumber"/> fails for every event.</summary>
+    private uint SumScanCountsFromTics()
+    {
+        var chromMng = _dataObject.MS.Chromatogram;
+        uint total = 0;
+        for (short seg = 1; seg <= SegmentCount; seg++)
+        {
+            foreach (short eventNo in _eventNumbersBySegment[seg - 1])
+            {
+                try
+                {
+                    ShimadzuIO.Generic.MassChromatogramObject tic;
+                    var result = chromMng.GetTICChromatogram(out tic, seg, eventNo);
+                    if (ShimadzuIO.Generic.Tool.Failed(result) || tic is null) continue;
+                    int len = tic.RetTimeList?.Length ?? 0;
+                    if (len > 0) total += (uint)len;
+                }
+                catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { /* skip */ }
+                catch (NullReferenceException) { /* skip */ }
+            }
+        }
+        return total;
     }
 
     /// <summary>Returns the SDK <c>MassSpectrumObject</c> for <paramref name="scanNumber"/>.</summary>
