@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -177,7 +178,7 @@ namespace pwiz.OspreySharp.IO
             Dictionary<string, string> metadata)
         {
             if (path == null)
-                throw new System.ArgumentNullException(nameof(path));
+                throw new ArgumentNullException(nameof(path));
             if (entries == null || entries.Count == 0)
                 return;
 
@@ -294,7 +295,7 @@ namespace pwiz.OspreySharp.IO
             string fileName)
         {
             if (path == null)
-                throw new System.ArgumentNullException(nameof(path));
+                throw new ArgumentNullException(nameof(path));
             if (entries == null || entries.Count == 0)
                 return;
 
@@ -343,12 +344,30 @@ namespace pwiz.OspreySharp.IO
                 endRts[i] = entry.EndRt;
                 fileNames[i] = fileName ?? string.Empty;
 
-                // Encode CWT candidate list (mirrors Rust binary layout).
-                // Leave the cell null when the entry has no captured candidates
-                // -- LoadCwtCandidatesFromParquet treats null/short cells as
-                // empty, matching the Rust loader's tolerance.
-                if (entry.CwtCandidates != null && entry.CwtCandidates.Count > 0)
-                    cwtCandidates[i] = CwtCandidateCodec.Encode(entry.CwtCandidates);
+                // Mirror Rust's invariant: every row carries a cwt_candidates
+                // blob, even when the candidate list is empty. Rust's
+                // pipeline.rs::write_scores_parquet (at the cwt_candidates
+                // serialization site) unconditionally appends a 4-byte
+                // little-endian count prefix, so an entry with zero
+                // candidates becomes a 4-byte zero-length blob, never a
+                // null cell. ~57k post-compaction stubs per Stellar file
+                // had no peaks; without this normalization C# emitted
+                // null cells while Rust emitted empty blobs, producing
+                // a spurious cross-impl parquet diff at end-of-Stage-6.
+                //
+                // TODO(osprey-rust): the proper fix is on the Rust side --
+                // pipeline.rs should write null for empty candidate lists,
+                // which is more parquet-idiomatic and saves 4 bytes per
+                // empty row for downstream consumers. When that lands in
+                // maccoss/osprey, revert this branch to the original
+                // "skip null/empty" form.
+                // Use Array.Empty<>() (not `new List<>()`) on the null
+                // branch so we still emit the 4-byte zero-count blob
+                // without allocating a fresh List per empty row.
+                // CwtCandidateCodec.Encode takes IReadOnlyList<CwtCandidate>
+                // which both List<T> and T[] satisfy.
+                cwtCandidates[i] = CwtCandidateCodec.Encode(
+                    entry.CwtCandidates ?? (IReadOnlyList<CwtCandidate>)Array.Empty<CwtCandidate>());
 
                 LibraryEntry libEntry = null;
                 if (libraryById != null)
@@ -565,6 +584,95 @@ namespace pwiz.OspreySharp.IO
         #endregion
 
         #region Load PIN Features
+
+        /// <summary>
+        /// Load FdrEntry stubs + 21-feature PIN vectors + CWT candidate
+        /// lists from a Parquet cache, joined per row. Returns
+        /// <see cref="FdrEntry"/> objects with <see cref="FdrEntry.Features"/>
+        /// and <see cref="FdrEntry.CwtCandidates"/> populated, ready to
+        /// feed into the Phase 3 reconciled parquet write-back step.
+        ///
+        /// Equivalent to calling <see cref="LoadFdrStubsFromParquet"/>,
+        /// <see cref="LoadPinFeaturesFromParquet"/>, and
+        /// <see cref="LoadCwtCandidatesFromParquet"/> separately and
+        /// zipping them by row index — but does it in a single parquet
+        /// open. Mirrors the columns Rust's <c>load_scores_parquet</c>
+        /// loads, minus the binary blob columns
+        /// (<c>fragment_mzs</c>, <c>fragment_intensities</c>,
+        /// <c>reference_xic_rts</c>, <c>reference_xic_intensities</c>)
+        /// which have no <see cref="FdrEntry"/> field counterpart and
+        /// are NOT round-tripped by the write-back path today. The
+        /// resulting reconciled parquet will have those four columns
+        /// null/empty even for rows whose source parquet had them
+        /// populated; this is a known C# limitation tracked for a
+        /// follow-up.
+        /// </summary>
+        public static List<FdrEntry> LoadFullFdrEntries(string path)
+        {
+            var entries = new List<FdrEntry>();
+            var featureFields = BuildFeatureFields();
+
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = new ParquetReader(stream))
+            {
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var entryIdCol = groupReader.ReadColumn(FIELD_ENTRY_ID).Data as uint[];
+                        var isDecoyCol = groupReader.ReadColumn(FIELD_IS_DECOY).Data as bool[];
+                        var chargeCol = groupReader.ReadColumn(FIELD_CHARGE).Data as byte[];
+                        var scanCol = groupReader.ReadColumn(FIELD_SCAN_NUMBER).Data as uint[];
+                        var modseqCol = groupReader.ReadColumn(FIELD_MODIFIED_SEQUENCE).Data as string[];
+                        var apexCol = groupReader.ReadColumn(FIELD_APEX_RT).Data as double[];
+                        var startCol = groupReader.ReadColumn(FIELD_START_RT).Data as double[];
+                        var endCol = groupReader.ReadColumn(FIELD_END_RT).Data as double[];
+                        var coelutionCol = groupReader.ReadColumn(FIELD_COELUTION_SUM).Data as double[];
+                        var cwtCol = groupReader.ReadColumn(FIELD_CWT_CANDIDATES).Data as byte[][];
+
+                        if (entryIdCol == null || isDecoyCol == null)
+                            continue;
+
+                        var featureCols = new double[NUM_PIN_FEATURES][];
+                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            featureCols[f] = groupReader.ReadColumn(featureFields[f]).Data as double[];
+
+                        int rowCount = entryIdCol.Length;
+                        for (int row = 0; row < rowCount; row++)
+                        {
+                            var features = new double[NUM_PIN_FEATURES];
+                            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            {
+                                double v = featureCols[f] != null ? featureCols[f][row] : 0.0;
+                                features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+                            }
+
+                            List<CwtCandidate> cwt = null;
+                            if (cwtCol != null && cwtCol[row] != null && cwtCol[row].Length > 0)
+                                cwt = CwtCandidateCodec.Decode(cwtCol[row]);
+
+                            entries.Add(new FdrEntry
+                            {
+                                EntryId = entryIdCol[row],
+                                ParquetIndex = (uint)entries.Count,
+                                IsDecoy = isDecoyCol[row],
+                                Charge = chargeCol != null ? chargeCol[row] : (byte)0,
+                                ScanNumber = scanCol != null ? scanCol[row] : 0u,
+                                ApexRt = apexCol != null ? apexCol[row] : 0.0,
+                                StartRt = startCol != null ? startCol[row] : 0.0,
+                                EndRt = endCol != null ? endCol[row] : 0.0,
+                                CoelutionSum = coelutionCol != null ? coelutionCol[row] : 0.0,
+                                ModifiedSequence = modseqCol != null ? modseqCol[row] : string.Empty,
+                                Features = features,
+                                CwtCandidates = cwt,
+                            });
+                        }
+                    }
+                }
+            }
+
+            return entries;
+        }
 
         /// <summary>
         /// Load only the 21 PIN feature columns from a Parquet cache.
@@ -867,7 +975,7 @@ namespace pwiz.OspreySharp.IO
             IEnumerable<string> paths,
             OspreyConfig config,
             string currentVersion,
-            System.Action<string> logWarning)
+            Action<string> logWarning)
         {
             string expectedSearch = config.SearchParameterHash();
             string expectedLibrary = config.LibraryIdentityHash();
@@ -879,7 +987,7 @@ namespace pwiz.OspreySharp.IO
                 {
                     kv = LoadFooterMetadata(path);
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     return string.Format("{0}: cannot read parquet metadata: {1}", path, ex.Message);
                 }

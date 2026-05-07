@@ -57,6 +57,21 @@ namespace pwiz.OspreySharp.Scoring
         /// </summary>
         public IReadOnlyDictionary<uint, (double Apex, double Start, double End)> BoundaryOverrides { get; set; }
 
+        /// <summary>
+        /// The first-pass RT MAD (median absolute deviation of residuals)
+        /// from the per-file <c>.calibration.json</c>, kept separate from
+        /// any refined calibration's <c>abs_residuals</c>. The Stage 6
+        /// rescore search uses this value -- not the refined cal's stats
+        /// MAD -- to derive <c>rt_tolerance</c>, mirroring Rust's
+        /// <c>run_search</c> which reads
+        /// <c>cal_params.rt_calibration.mad</c> from the calibration JSON
+        /// (see <c>osprey/crates/osprey/src/pipeline.rs:6776-6815</c>).
+        /// Null when the JSON omits the MAD field; <c>RunCoelutionScoring</c>
+        /// then falls back to computing MAD from the rt calibration's
+        /// abs_residuals.
+        /// </summary>
+        public double? OriginalRtMad { get; set; }
+
         public ScoringContext(OspreyConfig config, string fileName)
         {
             Config = config;

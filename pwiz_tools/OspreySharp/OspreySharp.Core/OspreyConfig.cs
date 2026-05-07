@@ -225,6 +225,60 @@ namespace pwiz.OspreySharp.Core
                 return result.ToString();
             }
         }
+
+        /// <summary>
+        /// SHA-256 of (search hash + reconciliation parameters + run FDR
+        /// + sorted file stems). Mirrors Rust
+        /// <c>OspreyConfig::reconciliation_parameter_hash</c> in
+        /// <c>crates/osprey-core/src/config.rs</c> and is written into
+        /// reconciled <c>.scores.parquet</c> footer metadata under
+        /// <c>osprey.reconciliation_hash</c>. The hash invalidates the
+        /// cache on any reconciliation parameter change OR on any change
+        /// to the multi-file set (file_stems are sorted to make the
+        /// hash invariant to invocation order).
+        /// </summary>
+        public string ReconciliationParameterHash()
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var ic = System.Globalization.CultureInfo.InvariantCulture;
+                var sb = new StringBuilder();
+                sb.Append(SearchParameterHash());
+                sb.AppendFormat(ic, "reconciliation.enabled:{0}\n",
+                    Reconciliation.Enabled ? "true" : "false");
+                sb.AppendFormat(ic, "reconciliation.consensus_fdr:{0}\n",
+                    Reconciliation.ConsensusFdr);
+                sb.AppendFormat(ic, "run_fdr:{0}\n", RunFdr);
+                // Mirror Rust's `format!("file_stems:{:?}\n", stems)` output
+                // exactly. {:?} on Vec<String> yields ["a", "b"] with the
+                // brackets and double-quoted, comma-space-separated values.
+                var stems = new List<string>(InputFiles?.Count ?? 0);
+                if (InputFiles != null)
+                {
+                    foreach (var path in InputFiles)
+                    {
+                        string stem = Path.GetFileNameWithoutExtension(path);
+                        if (!string.IsNullOrEmpty(stem))
+                            stems.Add(stem);
+                    }
+                }
+                stems.Sort(StringComparer.Ordinal);
+                var stemsList = new StringBuilder("[");
+                for (int i = 0; i < stems.Count; i++)
+                {
+                    if (i > 0) stemsList.Append(", ");
+                    stemsList.Append('"').Append(stems[i]).Append('"');
+                }
+                stemsList.Append(']');
+                sb.AppendFormat(ic, "file_stems:{0}\n", stemsList.ToString());
+
+                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
+                var result = new StringBuilder(64);
+                for (int i = 0; i < hashBytes.Length; i++)
+                    result.Append(hashBytes[i].ToString("x2"));
+                return result.ToString();
+            }
+        }
     }
 
     /// <summary>

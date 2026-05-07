@@ -38,7 +38,7 @@ namespace pwiz.OspreySharp
         // Tracks the Rust Osprey upstream version this OspreySharp port
         // is aligned with. Used in parquet footer metadata; the Phase 3
         // validator requires same major.minor across cross-impl handoff.
-        internal const string VERSION = "26.4.0";
+        internal const string VERSION = "26.5.0";
         internal const string VERSION_STRING = VERSION;
 
         static int Main(string[] args)
@@ -114,8 +114,13 @@ namespace pwiz.OspreySharp
                 bool joinOnly = joinOnlyFlag
                                 || (config.InputScores != null && config.InputScores.Count > 0);
 
-                // Non-fatal warning: --no-join with --output supplied.
-                if (config.NoJoin && !string.IsNullOrEmpty(config.OutputBlib))
+                // Non-fatal warning: --no-join with --output supplied — but
+                // ONLY for the Stage 1-4 worker mode (`--no-join --input
+                // ...`) where --output truly is ignored. The Stage 6 worker
+                // mode (`--join-at-pass=1 --no-join --input-scores ...`)
+                // requires --output (per ValidateArgs at line ~642), so
+                // the warning would be incorrect/confusing there.
+                if (config.NoJoin && !joinOnly && !string.IsNullOrEmpty(config.OutputBlib))
                 {
                     LogWarning("--no-join: --output is ignored (no blib is written). " +
                                "Per-file `.scores.parquet` files will be written next to each input mzML.");
@@ -159,6 +164,16 @@ namespace pwiz.OspreySharp
                     LogInfo(string.Format("Protein FDR: {0:P1}", config.ProteinFdr.Value));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
+
+                // Stage 6 worker mode (--join-at-pass=1 --no-join)
+                // routes to a separate entry point so the in-process
+                // AnalysisPipeline doesn't have to fan out a fourth
+                // "joinOnly with the modifier inverted" code path.
+                if (config.NoJoin && config.InputScores != null
+                    && config.InputScores.Count > 0)
+                {
+                    return RescoreWorker.Run(config);
+                }
 
                 // Run the pipeline
                 var pipeline = new AnalysisPipeline();
@@ -568,7 +583,14 @@ namespace pwiz.OspreySharp
             {
                 case 1:
                     if (noJoinFlag)
-                        return "--join-at-pass=1 --no-join (run only Stage 6 from persisted Stage 5 outputs) is not yet implemented.";
+                    {
+                        // `--join-at-pass=1 --no-join` is the per-file
+                        // rescore worker entry point. noJoinFlag stays
+                        // true; joinOnlyFlag stays false. Dispatch in
+                        // Main routes to RescoreWorker.Run instead of
+                        // the in-process AnalysisPipeline.Run.
+                        return null;
+                    }
                     // `--join-at-pass=1 --join-only` (modifier present) means
                     // "run only the Stage 5 join phase, write boundary
                     // files, exit before Stage 6 rescore." Plain
@@ -607,8 +629,24 @@ namespace pwiz.OspreySharp
 
             if (config.NoJoin)
             {
-                if (joinOnly)
-                    return "--no-join cannot be combined with --input-scores.";
+                // Two distinct --no-join modes (mutually exclusive):
+                //   - Standalone --no-join: Stage 1-4 worker (mzML in,
+                //     per-file .scores.parquet out).
+                //   - --join-at-pass=1 --no-join: Stage 6 worker (Stage 4
+                //     parquets + boundary files in, reconciled per-file
+                //     parquets out).
+                // The Stage 6 worker mode is identified by the presence of
+                // --input-scores; the Stage 1-4 worker mode is identified
+                // by --input. Reject the cross.
+                if (hasInputScores)
+                {
+                    if (config.InputFiles.Count > 0)
+                        return "--join-at-pass=1 --no-join cannot be combined with --input. " +
+                               "Use --input-scores; mzML paths are derived from the parquet stems.";
+                    if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
+                        return "--join-at-pass=1 --no-join requires --library and --output.";
+                    return null;
+                }
                 if (config.InputFiles.Count == 0)
                     return "--no-join requires --input <mzML...>.";
                 if (config.LibrarySource == null)
