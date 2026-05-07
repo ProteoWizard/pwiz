@@ -25,14 +25,34 @@ public sealed class ThermoRawFile : IDisposable
     private IRawDataPlus? _raw;
     private bool _disposed;
 
+    /// <summary>The on-disk path the file was opened from.</summary>
     public string Filename { get; }
+
+    /// <summary>The active SDK <see cref="IRawDataPlus"/> handle for the MS controller.
+    /// Throws <see cref="ObjectDisposedException"/> after <see cref="Dispose"/>.</summary>
     public IRawDataPlus Raw =>
         _raw ?? throw new ObjectDisposedException(nameof(ThermoRawFile));
+
+    /// <summary>1-based index of the first MS scan in the file (cpp <c>RunHeader::FirstSpectrum</c>).</summary>
     public int FirstScan { get; }
+
+    /// <summary>1-based index of the last MS scan in the file (cpp <c>RunHeader::LastSpectrum</c>).</summary>
     public int LastScan { get; }
+
+    /// <summary>Run id used as the <c>id</c> on the emitted <see cref="Pwiz.Data.MsData.Run"/> —
+    /// the source filename without its extension, matching cpp.</summary>
     public string RunId { get; }
+
+    /// <summary>Acquisition timestamp encoded for mzML <c>startTimeStamp</c>. cpp emits the
+    /// instrument's local-clock value verbatim with a "Z" suffix; we mirror that
+    /// (strictly incorrect ISO-8601 but matches the reference mzML fixtures byte-for-byte).</summary>
     public string CreationDate { get; }
 
+    /// <summary>Opens <paramref name="filename"/>, validates it carries usable MS data, selects
+    /// the first MS controller, and reads the run header / acquisition timestamp.</summary>
+    /// <exception cref="FileNotFoundException">No file at the given path.</exception>
+    /// <exception cref="InvalidDataException">SDK reports the file is errored, mid-acquisition,
+    /// or has no MS controllers.</exception>
     public ThermoRawFile(string filename)
     {
         ArgumentNullException.ThrowIfNull(filename);
@@ -67,9 +87,13 @@ public sealed class ThermoRawFile : IDisposable
         catch { CreationDate = string.Empty; }
     }
 
+    /// <summary>SDK <c>RetentionTimeFromScanNumber</c> in minutes for a 1-based scan number.</summary>
     public double RetentionTimeMinutes(int scanNumber) =>
         Raw.RetentionTimeFromScanNumber(scanNumber);
 
+    /// <summary>Maps the SDK's <c>MSOrderType</c> for the given scan to a 1..10 ms level.
+    /// Neutral-loss/-gain and parent-ion scans (<c>Nl</c>/<c>Ng</c>/<c>Par</c>) are MS2; unknown
+    /// orders default to MS1 to mirror cpp.</summary>
     public int MsLevel(int scanNumber)
     {
         var order = Raw.GetFilterForScanNumber(scanNumber).MSOrder;
@@ -392,6 +416,7 @@ public sealed class ThermoRawFile : IDisposable
         }
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (_disposed) return;

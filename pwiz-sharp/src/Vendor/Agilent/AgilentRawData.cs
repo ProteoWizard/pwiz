@@ -514,12 +514,29 @@ public sealed class AgilentRawData : IDisposable
 public sealed record AgilentDeviceInfo(string Name, string ModelNumber, string SerialNumber, string TypeRaw);
 
 /// <summary>SRM (multi-reaction) vs SIM (selected-ion-monitoring) transition kind.</summary>
-public enum AgTransitionType { Mrm, Sim }
+public enum AgTransitionType
+{
+    /// <summary>Multi-reaction monitoring (Q1 → fragment Q3).</summary>
+    Mrm,
+
+    /// <summary>Selected-ion monitoring (single Q1 isolation, no fragmentation).</summary>
+    Sim,
+}
 
 /// <summary>Mirrors cpp <c>IonPolarity</c> integer values exactly so transition sort order
 /// (which compares polarity numerically per <c>Transition::operator&lt;</c>) matches the
 /// reference. cpp: Positive=0, Negative=1, Unassigned=2.</summary>
-public enum AgTransitionPolarity { Positive = 0, Negative = 1, Unassigned = 2 }
+public enum AgTransitionPolarity
+{
+    /// <summary>Positive ion mode.</summary>
+    Positive = 0,
+
+    /// <summary>Negative ion mode.</summary>
+    Negative = 1,
+
+    /// <summary>Polarity not reported by the SDK for this transition.</summary>
+    Unassigned = 2,
+}
 
 /// <summary>One Agilent SRM/SIM transition. <see cref="Q3"/> is unused for
 /// <see cref="AgTransitionType.Sim"/> (always 0). <see cref="TimeStart"/>/<see cref="TimeEnd"/>

@@ -37,12 +37,12 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
     /// <inheritdoc/>
     public override DataProcessing? DataProcessing => Dp;
 
+    private readonly bool _sortAndJitter;
+
     /// <summary>
     /// Creates a spectrum list over the given Bruker analysis handle. Index is built eagerly so
     /// the caller sees a stable <see cref="Count"/> immediately.
     /// </summary>
-    private readonly bool _sortAndJitter;
-
     public SpectrumList_Bruker(
         IBrukerData data,
         bool owns = true,

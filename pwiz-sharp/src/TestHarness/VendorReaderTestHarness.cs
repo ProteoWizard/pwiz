@@ -602,11 +602,6 @@ public static class VendorReaderTestHarness
         }
     }
 
-    /// <summary>
-    /// Post-read normalization applied to the <b>reference</b> MSData loaded from the mzML
-    /// fixture so it's directly comparable to a freshly-read vendor MSData. Port of
-    /// <c>hackInMemoryMSData</c>.
-    /// </summary>
     /// <summary>Prefixes every non-empty line of <paramref name="text"/> with
     /// <paramref name="spaces"/> spaces. Used to nest stack traces under the failure header.</summary>
     private static string Indent(string text, int spaces)
@@ -616,6 +611,11 @@ public static class VendorReaderTestHarness
         return string.Join('\n', text.Split('\n').Select(l => l.Length == 0 ? l : pad + l));
     }
 
+    /// <summary>
+    /// Post-read normalization applied to the <b>reference</b> MSData loaded from the mzML
+    /// fixture so it's directly comparable to a freshly-read vendor MSData. Port of
+    /// <c>hackInMemoryMSData</c>.
+    /// </summary>
     public static void HackInMemoryMSData(string sourceName, MSData msd)
     {
         ArgumentNullException.ThrowIfNull(msd);

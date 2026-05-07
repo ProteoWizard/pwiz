@@ -159,8 +159,10 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         public int ControllerNumber = 1;
     }
 
+    /// <inheritdoc/>
     public override int Count => _index.Count;
 
+    /// <inheritdoc/>
     public override SpectrumIdentity SpectrumIdentity(int index) => _index[index];
 
     private void CreateIndex()
@@ -242,6 +244,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData) =>
         GetSpectrumImpl(index, getBinaryData, preferCentroid: true);
 
+    /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
         GetSpectrumImpl(index, getBinaryData, preferCentroid: false);
 
