@@ -4032,17 +4032,35 @@ namespace pwiz.OspreySharp
                         newApexIdx = i;
                     }
                 }
+                // Rust pipeline.rs:7433-7444 RECOMPUTES `peak.area` and
+                // `peak.signal_to_noise` from `ref_xic[si..=ei]` here, NOT
+                // preserving the original CWT detection's values. The
+                // original area/SNR came from the consensus signal's
+                // boundary (which can differ from the CWT apex's
+                // [start..end] in the ref_xic). Preserving them produces
+                // ~560 bounds_area / ~546 bounds_snr divergent rows on
+                // Stellar where the parquet reports the WRONG (consensus-
+                // boundary) area for the WINNING (ref_xic-boundary) peak.
+                // peak_area / peak_sharpness as PIN features already
+                // recompute correctly via ComputePeakShapeFeatures; this
+                // recompute keeps the parquet's bounds_area / bounds_snr
+                // consistent with that.
+                double[] refRtsAll = xics[refXicIdx].RetentionTimes;
+                double newArea = PeakDetector.TrapezoidalArea(
+                    refRtsAll, refXicIntensities, si, ei);
+                double newSnr = PeakDetector.ComputeSnr(
+                    refXicIntensities, newApexIdx, si, ei);
                 bestPeak = new XICPeakBounds
                 {
-                    ApexRt = xics[refXicIdx].RetentionTimes[newApexIdx],
+                    ApexRt = refRtsAll[newApexIdx],
                     ApexIntensity = newApexVal,
                     ApexIndex = newApexIdx,
-                    StartRt = xics[refXicIdx].RetentionTimes[si],
-                    EndRt = xics[refXicIdx].RetentionTimes[ei],
+                    StartRt = refRtsAll[si],
+                    EndRt = refRtsAll[ei],
                     StartIndex = si,
                     EndIndex = ei,
-                    Area = bestPeak.Area,
-                    SignalToNoise = bestPeak.SignalToNoise,
+                    Area = newArea,
+                    SignalToNoise = newSnr,
                 };
             }
 
@@ -4281,7 +4299,57 @@ namespace pwiz.OspreySharp
                 }
             }
 
-            // Build FdrEntry
+            // Build FdrEntry. The six blob/scalar fields below mirror
+            // Rust CoelutionScoredEntry::{fragment_mzs, fragment_intensities,
+            // reference_xic, peak.area, peak.signal_to_noise} so the
+            // reconciled .scores.parquet write-back can produce byte-
+            // identical blob columns for cross-impl validation.
+            //
+            // FragmentMzs / FragmentIntensities iterate the FULL library
+            // fragment list (not just the top-N used by XIC extraction)
+            // because Rust's parquet writer at pipeline.rs:1620-1631
+            // serializes every library fragment.
+            int nFrags = candidate.Fragments?.Count ?? 0;
+            double[] fragMzs = new double[nFrags];
+            float[] fragInts = new float[nFrags];
+            for (int fi = 0; fi < nFrags; fi++)
+            {
+                fragMzs[fi] = candidate.Fragments[fi].Mz;
+                fragInts[fi] = candidate.Fragments[fi].RelativeIntensity;
+            }
+
+            // ReferenceXic{Rts,Intensities} are sliced from the highest-
+            // total-intensity fragment XIC across the winning peak's
+            // [si..=ei] window, matching Rust's
+            // `ref_xic[peak.start_index..=peak.end_index].to_vec()` at
+            // pipeline.rs:6538. Use the SAFE indices (clipped by the
+            // post-rank apex recompute) for non-override entries; the
+            // override path's bestPeak retains its original boundaries.
+            double[] refXicRtsAll = xics[refXicIdx].RetentionTimes;
+            int refMaxLen = Math.Min(
+                refXicRtsAll != null ? refXicRtsAll.Length : 0,
+                refXicIntensities != null ? refXicIntensities.Length : 0);
+            double[] refXicRts;
+            double[] refXicInts;
+            if (refMaxLen == 0)
+            {
+                refXicRts = new double[0];
+                refXicInts = new double[0];
+            }
+            else
+            {
+                int refSi = Math.Max(0, Math.Min(bestPeak.StartIndex, refMaxLen - 1));
+                int refEi = Math.Max(refSi, Math.Min(bestPeak.EndIndex, refMaxLen - 1));
+                int refLen = refEi - refSi + 1;
+                refXicRts = new double[refLen];
+                refXicInts = new double[refLen];
+                for (int i = 0; i < refLen; i++)
+                {
+                    refXicRts[i] = refXicRtsAll[refSi + i];
+                    refXicInts[i] = refXicIntensities[refSi + i];
+                }
+            }
+
             var entry = new FdrEntry
             {
                 EntryId = candidate.Id,
@@ -4295,7 +4363,13 @@ namespace pwiz.OspreySharp
                 Score = coelutionSum,
                 ModifiedSequence = candidate.ModifiedSequence,
                 Features = features,
-                CwtCandidates = cwtCandidatesOut
+                CwtCandidates = cwtCandidatesOut,
+                FragmentMzs = fragMzs,
+                FragmentIntensities = fragInts,
+                ReferenceXicRts = refXicRts,
+                ReferenceXicIntensities = refXicInts,
+                BoundsArea = bestPeak.Area,
+                BoundsSnr = bestPeak.SignalToNoise,
             };
 
             if (!overrideBounds.HasValue)

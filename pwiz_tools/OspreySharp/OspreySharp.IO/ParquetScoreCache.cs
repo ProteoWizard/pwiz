@@ -314,14 +314,17 @@ namespace pwiz.OspreySharp.IO
             var apexRts = new double[n];
             var startRts = new double[n];
             var endRts = new double[n];
-            var boundsAreas = new double[n];   // not on FdrEntry; left at 0
-            var boundsSnrs = new double[n];    // not on FdrEntry; left at 0
+            var boundsAreas = new double[n];
+            var boundsSnrs = new double[n];
             var fileNames = new string[n];
-            // The cwt_candidates column carries the per-entry CWT peak list
-            // for Stage 6 reconciliation (encoded via CwtCandidateCodec to
-            // match Rust's binary layout). The fragments and XIC blobs are
-            // still nullable placeholders -- they're not consumed by any
-            // current Stage 6 path.
+            // The blob columns below carry per-entry binary payloads
+            // matching Rust pipeline.rs:1620-1645's encoding:
+            //   cwt_candidates             = u32 LE count + N×(6×f64 LE)
+            //   fragment_mzs               = M×f64 LE   (no count prefix)
+            //   fragment_intensities       = M×f32 LE   (no count prefix)
+            //   reference_xic_rts          = K×f64 LE
+            //   reference_xic_intensities  = K×f64 LE
+            // Length is recovered on read as bytes / sizeof(element).
             var cwtCandidates = new byte[n][];
             var fragmentMzs = new byte[n][];
             var fragmentIntensities = new byte[n][];
@@ -342,7 +345,13 @@ namespace pwiz.OspreySharp.IO
                 apexRts[i] = entry.ApexRt;
                 startRts[i] = entry.StartRt;
                 endRts[i] = entry.EndRt;
+                boundsAreas[i] = entry.BoundsArea;
+                boundsSnrs[i] = entry.BoundsSnr;
                 fileNames[i] = fileName ?? string.Empty;
+                fragmentMzs[i] = EncodeF64Blob(entry.FragmentMzs);
+                fragmentIntensities[i] = EncodeF32Blob(entry.FragmentIntensities);
+                refXicRts[i] = EncodeF64Blob(entry.ReferenceXicRts);
+                refXicIntensities[i] = EncodeF64Blob(entry.ReferenceXicIntensities);
 
                 // Mirror Rust's invariant: every row carries a cwt_candidates
                 // blob, even when the candidate list is empty. Rust's
@@ -479,6 +488,89 @@ namespace pwiz.OspreySharp.IO
             return double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
         }
 
+        /// <summary>
+        /// Encode an array of f64 values as a little-endian byte blob with
+        /// no length prefix — bytes / 8 recovers the count on read. Mirrors
+        /// Rust pipeline.rs:1620-1623 (`v.to_le_bytes().flat_map(...)`)
+        /// byte-for-byte. A null or empty input encodes as a zero-length
+        /// blob, NOT a null cell, so the column is non-nullable in
+        /// practice.
+        /// </summary>
+        private static byte[] EncodeF64Blob(double[] values)
+        {
+            if (values == null || values.Length == 0)
+                return Array.Empty<byte>();
+            var buf = new byte[values.Length * 8];
+            for (int i = 0; i < values.Length; i++)
+            {
+                long bits = BitConverter.DoubleToInt64Bits(values[i]);
+                System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(
+                    new Span<byte>(buf, i * 8, 8), bits);
+            }
+            return buf;
+        }
+
+        /// <summary>
+        /// Encode an array of f32 values as a little-endian byte blob with
+        /// no length prefix — bytes / 4 recovers the count on read. Mirrors
+        /// Rust pipeline.rs:1626-1631 byte-for-byte. Used for
+        /// `fragment_intensities` (f32 in both impls). Uses a single
+        /// <see cref="Buffer.BlockCopy"/> over the underlying float[] storage
+        /// (allocation-free per element); the IEEE-754 little-endian byte
+        /// layout matches the Rust blob exactly on LE hosts (x64/x86 — both
+        /// pwiz target archs are LE), avoiding net472's missing
+        /// <c>BitConverter.SingleToInt32Bits</c>.
+        /// </summary>
+        private static byte[] EncodeF32Blob(float[] values)
+        {
+            if (values == null || values.Length == 0)
+                return Array.Empty<byte>();
+            var buf = new byte[values.Length * 4];
+            Buffer.BlockCopy(values, 0, buf, 0, buf.Length);
+            return buf;
+        }
+
+        /// <summary>
+        /// Inverse of <see cref="EncodeF64Blob"/>. Returns an empty array
+        /// for null or empty input (preserves <see cref="EncodeF64Blob"/>'s
+        /// invariant). Throws if the byte length is not a multiple of 8.
+        /// </summary>
+        private static double[] DecodeF64Blob(byte[] blob)
+        {
+            if (blob == null || blob.Length == 0)
+                return Array.Empty<double>();
+            if (blob.Length % 8 != 0)
+                throw new InvalidDataException(string.Format(
+                    "f64 blob length {0} is not a multiple of 8", blob.Length));
+            int n = blob.Length / 8;
+            var values = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                long bits = System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(
+                    new ReadOnlySpan<byte>(blob, i * 8, 8));
+                values[i] = BitConverter.Int64BitsToDouble(bits);
+            }
+            return values;
+        }
+
+        /// <summary>
+        /// Inverse of <see cref="EncodeF32Blob"/>. Returns an empty array
+        /// for null or empty input. Throws if the byte length is not a
+        /// multiple of 4.
+        /// </summary>
+        private static float[] DecodeF32Blob(byte[] blob)
+        {
+            if (blob == null || blob.Length == 0)
+                return Array.Empty<float>();
+            if (blob.Length % 4 != 0)
+                throw new InvalidDataException(string.Format(
+                    "f32 blob length {0} is not a multiple of 4", blob.Length));
+            int n = blob.Length / 4;
+            var values = new float[n];
+            Buffer.BlockCopy(blob, 0, values, 0, blob.Length);
+            return values;
+        }
+
         #endregion
 
         #region Load FDR Stubs
@@ -597,15 +689,12 @@ namespace pwiz.OspreySharp.IO
         /// <see cref="LoadCwtCandidatesFromParquet"/> separately and
         /// zipping them by row index — but does it in a single parquet
         /// open. Mirrors the columns Rust's <c>load_scores_parquet</c>
-        /// loads, minus the binary blob columns
-        /// (<c>fragment_mzs</c>, <c>fragment_intensities</c>,
-        /// <c>reference_xic_rts</c>, <c>reference_xic_intensities</c>)
-        /// which have no <see cref="FdrEntry"/> field counterpart and
-        /// are NOT round-tripped by the write-back path today. The
-        /// resulting reconciled parquet will have those four columns
-        /// null/empty even for rows whose source parquet had them
-        /// populated; this is a known C# limitation tracked for a
-        /// follow-up.
+        /// loads. Decodes the four binary blob columns (<c>fragment_mzs</c>,
+        /// <c>fragment_intensities</c>, <c>reference_xic_rts</c>,
+        /// <c>reference_xic_intensities</c>) and the <c>bounds_area</c> /
+        /// <c>bounds_snr</c> scalars onto the matching <see cref="FdrEntry"/>
+        /// fields so the Stage 6 reconciled parquet write-back round-
+        /// trips them for every row, not just freshly rescored rows.
         /// </summary>
         public static List<FdrEntry> LoadFullFdrEntries(string path)
         {
@@ -629,6 +718,12 @@ namespace pwiz.OspreySharp.IO
                         var endCol = groupReader.ReadColumn(FIELD_END_RT).Data as double[];
                         var coelutionCol = groupReader.ReadColumn(FIELD_COELUTION_SUM).Data as double[];
                         var cwtCol = groupReader.ReadColumn(FIELD_CWT_CANDIDATES).Data as byte[][];
+                        var boundsAreaCol = groupReader.ReadColumn(FIELD_BOUNDS_AREA).Data as double[];
+                        var boundsSnrCol = groupReader.ReadColumn(FIELD_BOUNDS_SNR).Data as double[];
+                        var fragMzCol = groupReader.ReadColumn(FIELD_FRAGMENT_MZS).Data as byte[][];
+                        var fragIntCol = groupReader.ReadColumn(FIELD_FRAGMENT_INTENSITIES).Data as byte[][];
+                        var refXicRtsCol = groupReader.ReadColumn(FIELD_REFERENCE_XIC_RTS).Data as byte[][];
+                        var refXicIntsCol = groupReader.ReadColumn(FIELD_REFERENCE_XIC_INTENSITIES).Data as byte[][];
 
                         if (entryIdCol == null || isDecoyCol == null)
                             continue;
@@ -665,6 +760,12 @@ namespace pwiz.OspreySharp.IO
                                 ModifiedSequence = modseqCol != null ? modseqCol[row] : string.Empty,
                                 Features = features,
                                 CwtCandidates = cwt,
+                                BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
+                                BoundsSnr = boundsSnrCol != null ? boundsSnrCol[row] : 0.0,
+                                FragmentMzs = DecodeF64Blob(fragMzCol != null ? fragMzCol[row] : null),
+                                FragmentIntensities = DecodeF32Blob(fragIntCol != null ? fragIntCol[row] : null),
+                                ReferenceXicRts = DecodeF64Blob(refXicRtsCol != null ? refXicRtsCol[row] : null),
+                                ReferenceXicIntensities = DecodeF64Blob(refXicIntsCol != null ? refXicIntsCol[row] : null),
                             });
                         }
                     }
