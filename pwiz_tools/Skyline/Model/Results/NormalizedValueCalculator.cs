@@ -25,6 +25,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -39,6 +40,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly Params _params;
         private NormalizationData _normalizationData;
         private RtLoessCurves _rtLoessCurves;
+        private PolishedPeptideAbundances _polishedPeptideAbundances;
         private readonly Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo> _fileInfos;
 
         public NormalizedValueCalculator(CancellationToken cancellationToken, SrmDocument document) : this(new Params(document, NormalizeOption.DEFAULT))
@@ -80,6 +82,21 @@ namespace pwiz.Skyline.Model.Results
             {
                 _rtLoessCurves ??= RtLoessCurves.GetRtLoessCurves(CancellationToken, Document);
                 return _rtLoessCurves;
+            }
+        }
+
+        public PolishedPeptideAbundances GetPolishedPeptideAbundances()
+        {
+            lock (this)
+            {
+                if (_polishedPeptideAbundances == null)
+                {
+                    var stopWatch = Stopwatch.StartNew();
+                    _polishedPeptideAbundances = PolishedPeptideAbundances.Get(CancellationToken, Document);
+                    Console.Out.WriteLine("Calculated PolishedPeptideAbundances for document {0} in {1}", Document.RevisionIndex, stopWatch.Elapsed);
+                }
+                
+                return _polishedPeptideAbundances;
             }
         }
 

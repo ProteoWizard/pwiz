@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             // Fit LOWESS per file and evaluate on grid
-            int binCount = 500;
+            int binCount = AlignmentTarget.DEFAULT_LOESS_BIN_COUNT;
             var allCurves = new Dictionary<FileDataKey, LoessCurve>();
             int fileCount = Math.Max(1, rtAreaData.Count);
             int filesProcessed = 0;

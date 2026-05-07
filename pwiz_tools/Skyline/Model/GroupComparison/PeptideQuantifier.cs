@@ -110,8 +110,16 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public IDictionary<IdentityPath, Quantity> GetTransitionIntensities(SrmSettings srmSettings, int replicateIndex, bool treatMissingAsZero)
         {
+            return GetTransitionIntensities(srmSettings, replicateIndex, treatMissingAsZero, NormalizationMethod);
+        }
+
+        public IDictionary<IdentityPath, Quantity> GetTransitionIntensities(SrmSettings srmSettings, int replicateIndex,
+            bool treatMissingAsZero, NormalizationMethod normalizationMethod)
+        {
             var quantities = new Dictionary<IdentityPath, Quantity>();
-            var transitionsToNormalizeAgainst = GetTransitionsToNormalizeAgainst(srmSettings, PeptideDocNode, replicateIndex);
+            var transitionsToNormalizeAgainst = normalizationMethod is NormalizationMethod.RatioToLabel
+                ? GetTransitionsToNormalizeAgainst(srmSettings, PeptideDocNode, replicateIndex)
+                : null;
             foreach (var precursor in PeptideDocNode.TransitionGroups)
             {
                 if (SkipTransitionGroup(precursor))
@@ -124,7 +132,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     {
                         continue;
                     }
-                    var quantity = GetTransitionQuantity(srmSettings, transitionsToNormalizeAgainst, NormalizationMethod, replicateIndex, precursor,
+                    var quantity = GetTransitionQuantity(srmSettings, transitionsToNormalizeAgainst, normalizationMethod, replicateIndex, precursor,
                         transition, treatMissingAsZero);
                     if (null != quantity)
                     {
@@ -152,6 +160,34 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public double?[] GetMedianPolishQuantities(SrmSettings settings, HashSet<int> replicateIndexes)
         {
+            // For NormalizationMethod=EQUALIZE_MEDIANS or RT_LOESS combined with
+            // SummarizationMethod=MEDIANPOLISH, the normalization factor must be derived
+            // from the post-rollup peptide abundances, not from the raw transition values.
+            // (This matches skyline-prism's pipeline, where median normalization and
+            // RT-lowess normalization run after the transition-to-peptide rollup.)
+            // To do that, polish on un-normalized transition areas first, then subtract a
+            // per-replicate adjustment computed from all peptides' polished values.
+            var nm = NormalizationMethod;
+            bool peptideLevelAdjustment = Equals(nm, NormalizationMethod.EQUALIZE_MEDIANS)
+                                          || Equals(nm, NormalizationMethod.RT_LOESS);
+            var nmForPolish = peptideLevelAdjustment ? NormalizationMethod.NONE : nm;
+
+            var polished = MedianPolishWithMethod(settings, replicateIndexes, nmForPolish);
+            if (peptideLevelAdjustment)
+            {
+                ApplyPeptideLevelAdjustment(settings, polished, nm);
+            }
+            return polished;
+        }
+
+        public double?[] PolishUnnormalizedTransitions(SrmSettings settings, HashSet<int> replicateIndexes)
+        {
+            return MedianPolishWithMethod(settings, replicateIndexes, NormalizationMethod.NONE);
+        }
+
+        private double?[] MedianPolishWithMethod(SrmSettings settings, HashSet<int> replicateIndexes,
+            NormalizationMethod normalizationMethod)
+        {
             if (settings.MeasuredResults == null)
             {
                 return Array.Empty<double?>();
@@ -162,7 +198,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             // Collect transition data for ALL replicates
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
-                var transitionIntensities = GetTransitionIntensities(settings, iReplicate, false);
+                var transitionIntensities = GetTransitionIntensities(settings, iReplicate, false, normalizationMethod);
                 var abundances = new Dictionary<IdentityPath, double>();
                 foreach (var entry in transitionIntensities)
                 {
@@ -180,6 +216,91 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             return new MedianPolisher() { IncludeScaleFactor = true }.Polish(replicateValues, replicateIndexes);
+        }
+
+        private void ApplyPeptideLevelAdjustment(SrmSettings settings, double?[] polished,
+            NormalizationMethod normalizationMethod)
+        {
+            var polishedAbundances = _normalizationData.GetPolishedPeptideAbundances();
+            if (polishedAbundances == null || !polishedAbundances.HasData)
+            {
+                return;
+            }
+            bool useRtLoess = Equals(normalizationMethod, NormalizationMethod.RT_LOESS);
+            var measuredResults = settings.MeasuredResults;
+            for (int iReplicate = 0; iReplicate < polished.Length; iReplicate++)
+            {
+                if (!polished[iReplicate].HasValue)
+                {
+                    continue;
+                }
+                if (measuredResults == null || iReplicate >= measuredResults.Chromatograms.Count)
+                {
+                    continue;
+                }
+                var chromatogramSet = measuredResults.Chromatograms[iReplicate];
+                double? totalAdjustment = null;
+                int adjustmentCount = 0;
+                foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
+                {
+                    double? adj;
+                    if (useRtLoess)
+                    {
+                        double peptideRt = GetPeptideRtForReplicate(iReplicate);
+                        if (double.IsNaN(peptideRt))
+                        {
+                            continue;
+                        }
+                        adj = polishedAbundances.GetRtLoessAdjustment(iReplicate, fileInfo.FileId, peptideRt);
+                    }
+                    else
+                    {
+                        adj = polishedAbundances.GetMedianAdjustment(iReplicate, fileInfo.FileId);
+                    }
+                    if (adj.HasValue)
+                    {
+                        totalAdjustment = (totalAdjustment ?? 0) + adj.Value;
+                        adjustmentCount++;
+                    }
+                }
+                if (adjustmentCount == 0)
+                {
+                    polished[iReplicate] = null;
+                    continue;
+                }
+                polished[iReplicate] -= totalAdjustment.Value / adjustmentCount;
+            }
+        }
+
+        private double GetPeptideRtForReplicate(int replicateIndex)
+        {
+            double sum = 0;
+            int count = 0;
+            foreach (var transitionGroup in PeptideDocNode.TransitionGroups)
+            {
+                if (transitionGroup.Results == null || replicateIndex >= transitionGroup.Results.Count)
+                {
+                    continue;
+                }
+                var chromInfos = transitionGroup.Results[replicateIndex];
+                if (chromInfos.IsEmpty)
+                {
+                    continue;
+                }
+                foreach (var chromInfo in chromInfos)
+                {
+                    if (chromInfo.OptimizationStep != 0)
+                    {
+                        continue;
+                    }
+                    if (chromInfo.RetentionTime.HasValue)
+                    {
+                        sum += chromInfo.RetentionTime.Value;
+                        count++;
+                    }
+                }
+            }
+            return count > 0 ? sum / count : double.NaN;
         }
 
         public double GetIsotopologArea(SrmSettings settings, int replicateIndex, IsotopeLabelType labelType)
