@@ -5739,22 +5739,28 @@ namespace pwiz.OspreySharp
             var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
             LogInfo(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
 
-            // Get detected peptide set (targets passing run-level FDR)
+            // Get detected peptide set: targets passing experiment-level
+            // peptide-level FDR (matches Rust pipeline.rs second-pass parsimony
+            // input which filters on
+            // `effective_experiment_qvalue(peptide_gate_level) <= experiment_fdr`).
+            // The prior code filtered on RUN-level q-values, which let
+            // single-replicate-passing peptides into the parsimony graph that
+            // shouldn't be there per Savitski's experiment-level convention.
             var detectedPeptides = new HashSet<string>();
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
                 {
                     if (!entry.IsDecoy &&
-                        entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                        entry.EffectiveExperimentQvalue(FdrLevel.Peptide) <= config.ExperimentFdr)
                     {
                         detectedPeptides.Add(entry.ModifiedSequence);
                     }
                 }
             }
 
-            LogInfo(string.Format("Detected {0} unique peptides at {1:P1} FDR",
-                detectedPeptides.Count, config.RunFdr));
+            LogInfo(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR",
+                detectedPeptides.Count, config.ExperimentFdr));
             LogInfo(string.Format(
                 "[COUNT] Detected peptides for protein FDR: {0} unique",
                 detectedPeptides.Count));
@@ -5767,9 +5773,11 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[COUNT] Protein parsimony groups: {0}", parsimony.Groups.Count));
 
-            // Compute protein FDR
-            double qvalueGate = config.RunFdr * 2.0; // relaxed gate for protein scoring
-            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, qvalueGate);
+            // Compute protein FDR. Gate is config.RunFdr (1x) per Savitski's
+            // convention, matching Rust pipeline.rs:4389
+            // (compute_protein_fdr at config.run_fdr). The previous 2x gate
+            // was a divergence from Rust that has since been corrected.
+            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
 
             // Count passing proteins
             int passingProteins = 0;
@@ -5784,6 +5792,17 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[COUNT] Protein groups passing FDR: {0} at {1:P0}",
                 passingProteins, config.ProteinFdr.Value));
+
+            // Stage 7 cross-impl bisection dump (no-op unless
+            // OSPREY_DUMP_STAGE7_PROTEIN_FDR=1). Fires before propagation so
+            // the dumped state captures the picked-protein computation in
+            // isolation, matching Rust diagnostics.dump_stage7_protein_fdr.
+            if (OspreyDiagnostics.DumpStage7ProteinFdr)
+            {
+                OspreyDiagnostics.WriteStage7ProteinFdrDump(parsimony, proteinFdr);
+                if (OspreyDiagnostics.Stage7ProteinFdrOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
+            }
 
             // Propagate protein q-values to FdrEntry stubs
             ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr, true, true);

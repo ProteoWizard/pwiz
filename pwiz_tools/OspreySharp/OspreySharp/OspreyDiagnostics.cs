@@ -279,6 +279,21 @@ namespace pwiz.OspreySharp
         public static readonly bool ProteinFdrOnly = IsOne(@"OSPREY_PROTEIN_FDR_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_STAGE7_PROTEIN_FDR: dump per-protein-group state at the
+        /// end of second-pass picked-protein FDR (Stage 7 authoritative protein
+        /// FDR) to cs_stage7_protein_fdr.tsv. Mirrors Rust dump_stage7_protein_fdr.
+        /// One row per protein group present in the parsimony result with
+        /// columns accessions, n_unique, n_shared, best_peptide_score,
+        /// group_qvalue, is_target_winner. Sort order
+        /// (is_target_winner DESC, group_qvalue ASC, accessions ASC) keeps the
+        /// target-winner rows that drive FDR calibration at the top.
+        /// </summary>
+        public static readonly bool DumpStage7ProteinFdr = IsOne(@"OSPREY_DUMP_STAGE7_PROTEIN_FDR");
+
+        /// <summary>OSPREY_STAGE7_PROTEIN_FDR_ONLY: exit after cs_stage7_protein_fdr.tsv dump.</summary>
+        public static readonly bool Stage7ProteinFdrOnly = IsOne(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
+
+        /// <summary>
         /// OSPREY_DUMP_LOESS_FIT: dump the per-point LOESS fit state of the
         /// Stage 6 refit RTCalibration to cs_stage6_loess_fit.tsv. Used to
         /// bisect the refit ULP divergence: if (library_rt, fitted_value,
@@ -1751,6 +1766,101 @@ namespace pwiz.OspreySharp
             LogAction(string.Format(
                 @"Wrote Stage 6 first-pass protein FDR dump: {0} ({1} rows)",
                 path, rows.Count));
+        }
+
+        /// <summary>
+        /// Dump per-protein-group state at the end of second-pass picked-protein
+        /// FDR (Stage 7 authoritative protein FDR) to cs_stage7_protein_fdr.tsv.
+        /// Mirrors Rust dump_stage7_protein_fdr.
+        ///
+        /// One row per protein group present in the parsimony result. The
+        /// is_target_winner column captures the pairwise pick outcome: true if
+        /// the target side scored at or above the decoy side for this group
+        /// (or the group has only a target side); false otherwise. Groups with
+        /// no winner emit group_qvalue = 1.0, best_peptide_score = NaN,
+        /// is_target_winner = false.
+        ///
+        /// Sort order: (is_target_winner DESC, group_qvalue ASC, accessions ASC).
+        /// Targets-first keeps calibration-relevant rows at the top.
+        ///
+        /// Columns: accessions, n_unique, n_shared, best_peptide_score,
+        /// group_qvalue, is_target_winner.
+        ///
+        /// The numeric group_id is intentionally omitted because
+        /// BuildProteinParsimony assigns it in dictionary iteration order, which
+        /// is non-deterministic across runs. Joining on accessions instead
+        /// keeps the dump diff-stable for cross-impl bisection.
+        /// </summary>
+        public static void WriteStage7ProteinFdrDump(
+            ProteinParsimonyResult parsimony,
+            ProteinFdrResult fdrResult)
+        {
+            const string path = @"cs_stage7_protein_fdr.tsv";
+
+            // Build rows with stable accessions ordering. parsimony.Groups[i].Accessions
+            // is built by iterating a Dictionary; sort for determinism.
+            var rows = new List<Stage7Row>(parsimony.Groups.Count);
+            foreach (var g in parsimony.Groups)
+            {
+                bool isTargetWinner = fdrResult.GroupQvalues.ContainsKey(g.Id);
+                double groupQvalue;
+                if (!fdrResult.GroupQvalues.TryGetValue(g.Id, out groupQvalue))
+                    groupQvalue = 1.0;
+                double bestScore;
+                if (!fdrResult.GroupScores.TryGetValue(g.Id, out bestScore))
+                    bestScore = double.NaN;
+
+                var accs = new List<string>(g.Accessions);
+                accs.Sort(StringComparer.Ordinal);
+
+                rows.Add(new Stage7Row
+                {
+                    Accessions = string.Join(@";", accs),
+                    NUnique = g.UniquePeptides.Count,
+                    NShared = g.SharedPeptides.Count,
+                    BestPeptideScore = bestScore,
+                    GroupQvalue = groupQvalue,
+                    IsTargetWinner = isTargetWinner,
+                });
+            }
+
+            rows.Sort((a, b) =>
+            {
+                // Target winners first (DESC on bool == true before false).
+                int cmp = b.IsTargetWinner.CompareTo(a.IsTargetWinner);
+                if (cmp != 0) return cmp;
+                cmp = a.GroupQvalue.CompareTo(b.GroupQvalue);
+                if (cmp != 0) return cmp;
+                return string.CompareOrdinal(a.Accessions, b.Accessions);
+            });
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"accessions	n_unique	n_shared	best_peptide_score	group_qvalue	is_target_winner");
+                foreach (var r in rows)
+                {
+                    sw.Write(r.Accessions);
+                    sw.Write('\t'); sw.Write(r.NUnique.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t'); sw.Write(r.NShared.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.BestPeptideScore));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.GroupQvalue));
+                    sw.Write('\t'); sw.WriteLine(r.IsTargetWinner ? @"true" : @"false");
+                }
+            }
+            LogAction(string.Format(
+                @"Wrote Stage 7 second-pass protein FDR dump: {0} ({1} rows)",
+                path, rows.Count));
+        }
+
+        private struct Stage7Row
+        {
+            public string Accessions;
+            public int NUnique;
+            public int NShared;
+            public double BestPeptideScore;
+            public double GroupQvalue;
+            public bool IsTargetWinner;
         }
 
         /// <summary>
