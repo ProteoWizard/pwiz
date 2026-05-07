@@ -5740,27 +5740,37 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
 
             // Get detected peptide set: targets passing experiment-level
-            // peptide-level FDR (matches Rust pipeline.rs second-pass parsimony
-            // input which filters on
-            // `effective_experiment_qvalue(peptide_gate_level) <= experiment_fdr`).
-            // The prior code filtered on RUN-level q-values, which let
-            // single-replicate-passing peptides into the parsimony graph that
-            // shouldn't be there per Savitski's experiment-level convention.
+            // q-value at the configured fdr_level (matches Rust pipeline.rs
+            // second-pass parsimony input which filters on
+            // `effective_experiment_qvalue(peptide_gate_level) <= experiment_fdr`
+            // where peptide_gate_level = config.fdr_level (Peptide if config
+            // is Protein, otherwise the config value). The Rust default
+            // `FdrLevel::Precursor` means a default run filters on precursor-
+            // level experiment q-values, NOT peptide-level. Matching that
+            // here prevents losing ~1500 peptides to an unintentionally
+            // stricter Peptide-level gate.
+            // Rust pipeline.rs:4510 maps `FdrLevel::Protein -> Peptide` and
+            // passes other variants through. C#'s FdrLevel enum doesn't
+            // include `Protein` (just Precursor/Peptide/Both), so the remap
+            // is a no-op here -- pass config.FdrLevel through directly. The
+            // important property is that the gate level matches Rust's
+            // default `FdrLevel::Precursor`, NOT a hardcoded Peptide.
+            var peptideGateLevel = config.FdrLevel;
             var detectedPeptides = new HashSet<string>();
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
                 {
                     if (!entry.IsDecoy &&
-                        entry.EffectiveExperimentQvalue(FdrLevel.Peptide) <= config.ExperimentFdr)
+                        entry.EffectiveExperimentQvalue(peptideGateLevel) <= config.ExperimentFdr)
                     {
                         detectedPeptides.Add(entry.ModifiedSequence);
                     }
                 }
             }
 
-            LogInfo(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR",
-                detectedPeptides.Count, config.ExperimentFdr));
+            LogInfo(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR ({2})",
+                detectedPeptides.Count, config.ExperimentFdr, peptideGateLevel));
             LogInfo(string.Format(
                 "[COUNT] Detected peptides for protein FDR: {0} unique",
                 detectedPeptides.Count));

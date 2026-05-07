@@ -67,17 +67,38 @@ namespace pwiz.OspreySharp.Core
 
             var inv = CultureInfo.InvariantCulture;
 
-            // Preferred path: use "R" (shortest-roundtrip) and verify by
-            // parse. On .NET Core 3.0+ / .NET 5+ this matches Rust's ryu
-            // exactly for values in the decimal range; scientific form
-            // gets expanded below. On .NET Framework 4.7.2 "R" has a
-            // known bug for a small minority of values where the output
-            // fails to round-trip; detect via parse-check and fall back
-            // to G17 (always round-trips by IEEE 754 guarantee).
-            string s = v.ToString(@"R", inv);
-            if (double.Parse(s, NumberStyles.Float, inv) != v)
-                s = v.ToString(@"G17", inv);
+            // Always use the shortest-roundtrip search rather than "R", to
+            // match Rust's ryu output exactly. On .NET Framework 4.7.2,
+            // "R" round-trips for most values but often produces one
+            // digit more than ryu (e.g. ryu emits "12.50611897910133",
+            // "R" emits "12.506118979101331"). The G&lt;p&gt; loop below
+            // is bounded at 17 iterations per value and only fires for
+            // diagnostic dumps gated by env vars, so the cost is bounded
+            // and not on any production hot path.
+            string s = ShortestRoundTrip(v, inv);
             return ExpandScientificToFixed(s, inv);
+        }
+
+        /// <summary>
+        /// Find the shortest digit count that still round-trips for this
+        /// double, mirroring Rust's ryu output. .NET Framework 4.7.2's
+        /// "R" formatter is round-trip-correct on most values but typically
+        /// emits one digit more than ryu does; the G&lt;p&gt; loop below
+        /// finds the actual minimum precision needed.
+        /// </summary>
+        private static string ShortestRoundTrip(double v, CultureInfo inv)
+        {
+            // Try G1 through G17. G17 is guaranteed to round-trip by IEEE
+            // 754; we hit it last only if every shorter precision fails.
+            for (int p = 1; p <= 17; p++)
+            {
+                string candidate = v.ToString(@"G" + p.ToString(inv), inv);
+                if (double.Parse(candidate, NumberStyles.Float, inv) == v)
+                    return candidate;
+            }
+            // Pathological: G17 always round-trips by IEEE 754 guarantee;
+            // this branch should be unreachable.
+            return v.ToString(@"G17", inv);
         }
 
         /// <summary>

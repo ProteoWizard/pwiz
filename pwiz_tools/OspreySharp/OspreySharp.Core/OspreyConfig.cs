@@ -89,8 +89,15 @@ namespace pwiz.OspreySharp.Core
         /// <summary>How to handle shared peptides for protein inference.</summary>
         public SharedPeptideMode SharedPeptides { get; set; } = SharedPeptideMode.All;
 
-        /// <summary>FDR filtering level for output.</summary>
-        public FdrLevel FdrLevel { get; set; } = FdrLevel.Both;
+        /// <summary>
+        /// FDR filtering level. Default <see cref="FdrLevel.Precursor"/> matches
+        /// Rust osprey-core/src/config.rs (FdrLevel::default() = Precursor).
+        /// Cross-impl bisection requires identical defaults; the previous
+        /// <c>Both</c> default silently shifted every downstream q-value-gated
+        /// step (compaction, Stage 7 detected-peptides filter, blib output)
+        /// toward a stricter pool than Rust uses.
+        /// </summary>
+        public FdrLevel FdrLevel { get; set; } = FdrLevel.Precursor;
 
         /// <summary>Number of threads to use.</summary>
         public int NThreads { get; set; } = Environment.ProcessorCount;
