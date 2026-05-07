@@ -100,6 +100,18 @@ namespace pwiz.Skyline.Controls.Databinding
             Close();
         }
 
+        public void OkDialog(string fileName)
+        {
+            Settings.Default.ExportDirectory = Path.GetDirectoryName(fileName);
+            var rowExporter = ReportExporters.ForFilenameExtension(GetDataSchemaLocalizer(), Path.GetExtension(fileName));
+            if (!ExportReport(fileName, rowExporter))
+            {
+                return;
+            }
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);

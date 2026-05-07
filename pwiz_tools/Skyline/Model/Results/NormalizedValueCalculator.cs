@@ -48,6 +48,11 @@ namespace pwiz.Skyline.Model.Results
             CancellationToken = cancellationToken;
         }
 
+        public NormalizedValueCalculator(SrmDocument document) : this(CancellationToken.None, document)
+        {
+
+        }
+
         public NormalizedValueCalculator(Params parameters)
         {
             _params = parameters;
