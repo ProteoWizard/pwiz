@@ -753,7 +753,7 @@ class DiaNNSpecLibReader::Impl
             {
                 table_.reset();
                 columnArrays_.clear();
-                reader_.release();
+                reader_.reset();
             }
 
             void read_header_helper(int fieldIndex, const char* columnName)
@@ -1070,7 +1070,7 @@ bool DiaNNSpecLibReader::parseFile()
         string specLibStr = impl_->specLibFile_;
         if (bal::iends_with(specLibStr, ".parquet.skyline.speclib"))
         {
-            string candidate = specLibStr.substr(0, specLibStr.size() - strlen(".skyline.speclib"));
+            string candidate = specLibStr.substr(0, specLibStr.size() - (sizeof(".skyline.speclib") - 1));
             if (bfs::exists(candidate) && Impl::Reader<1>::is_parquet(candidate))
                 libParquetPath = candidate;
         }
