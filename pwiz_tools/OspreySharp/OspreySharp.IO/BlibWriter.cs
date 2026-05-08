@@ -385,6 +385,104 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
+        /// Add a row to <c>OspreyPeakBoundaries</c> for a passing
+        /// precursor's best run. Mirrors Rust
+        /// <c>BlibWriter::add_peak_boundaries</c>; one row per
+        /// <c>RefSpectra</c> in the canonical Rust output.
+        /// </summary>
+        public void AddPeakBoundaries(long refId, string fileName,
+            double startRt, double endRt, double apexRt,
+            double apexIntensity, double integratedArea)
+        {
+            using (var cmd = new SQLiteCommand(_conn))
+            {
+                cmd.CommandText = @"INSERT INTO OspreyPeakBoundaries (
+                    RefSpectraID, FileName, StartRT, EndRT, ApexRT, ApexIntensity, IntegratedArea
+                ) VALUES (@r, @f, @s, @e, @a, @ai, @ia)";
+                cmd.Parameters.AddWithValue("@r", refId);
+                cmd.Parameters.AddWithValue("@f", fileName);
+                cmd.Parameters.AddWithValue("@s", startRt);
+                cmd.Parameters.AddWithValue("@e", endRt);
+                cmd.Parameters.AddWithValue("@a", apexRt);
+                cmd.Parameters.AddWithValue("@ai", apexIntensity);
+                cmd.Parameters.AddWithValue("@ia", integratedArea);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Add a row to <c>OspreyRunScores</c> for a passing
+        /// precursor's best run. Mirrors Rust
+        /// <c>BlibWriter::add_run_scores</c>; one row per
+        /// <c>RefSpectra</c> in the canonical Rust output.
+        /// </summary>
+        public void AddRunScores(long refId, string fileName,
+            double runQValue, double discriminantScore, double posteriorErrorProb)
+        {
+            using (var cmd = new SQLiteCommand(_conn))
+            {
+                cmd.CommandText = @"INSERT INTO OspreyRunScores (
+                    RefSpectraID, FileName, RunQValue, DiscriminantScore, PosteriorErrorProb
+                ) VALUES (@r, @f, @q, @d, @p)";
+                cmd.Parameters.AddWithValue("@r", refId);
+                cmd.Parameters.AddWithValue("@f", fileName);
+                cmd.Parameters.AddWithValue("@q", runQValue);
+                cmd.Parameters.AddWithValue("@d", discriminantScore);
+                cmd.Parameters.AddWithValue("@p", posteriorErrorProb);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Add a row to <c>OspreyExperimentScores</c> for a passing
+        /// precursor. Mirrors Rust
+        /// <c>BlibWriter::add_experiment_scores</c>; one row per
+        /// <c>RefSpectra</c>.
+        /// </summary>
+        public void AddExperimentScores(long refId,
+            double experimentQValue, int nRunsDetected, int nRunsSearched)
+        {
+            using (var cmd = new SQLiteCommand(_conn))
+            {
+                cmd.CommandText = @"INSERT INTO OspreyExperimentScores (
+                    RefSpectraID, ExperimentQValue, NRunsDetected, NRunsSearched
+                ) VALUES (@r, @q, @nd, @ns)";
+                cmd.Parameters.AddWithValue("@r", refId);
+                cmd.Parameters.AddWithValue("@q", experimentQValue);
+                cmd.Parameters.AddWithValue("@nd", nRunsDetected);
+                cmd.Parameters.AddWithValue("@ns", nRunsSearched);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Add a row to <c>OspreyCoefficients</c> for a single scan
+        /// within a chromatographic peak's coefficient time series.
+        /// Mirrors Rust <c>BlibWriter::add_coefficient</c>; many rows
+        /// per <c>RefSpectra</c> (one per scan in the peak).
+        /// Currently emitted with zero rows by both implementations
+        /// (the per-scan coefficient time series is not plumbed
+        /// through Stage 7 yet); the table is reserved for the
+        /// chromatogram-export feature.
+        /// </summary>
+        public void AddCoefficient(long refId, string fileName,
+            uint scanNumber, double rt, double coefficient)
+        {
+            using (var cmd = new SQLiteCommand(_conn))
+            {
+                cmd.CommandText = @"INSERT INTO OspreyCoefficients (
+                    RefSpectraID, FileName, ScanNumber, RT, Coefficient
+                ) VALUES (@r, @f, @s, @t, @c)";
+                cmd.Parameters.AddWithValue("@r", refId);
+                cmd.Parameters.AddWithValue("@f", fileName);
+                cmd.Parameters.AddWithValue("@s", scanNumber);
+                cmd.Parameters.AddWithValue("@t", rt);
+                cmd.Parameters.AddWithValue("@c", coefficient);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
         /// Update spectrum count in LibInfo, create indices, and checkpoint WAL.
         /// </summary>
         public void FinalizeDatabase()
@@ -397,6 +495,8 @@ namespace pwiz.OspreySharp.IO
                 CREATE INDEX IF NOT EXISTS idx_refspectra_mz ON RefSpectra(precursorMZ);
                 CREATE INDEX IF NOT EXISTS idx_peaks_refid ON RefSpectraPeaks(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_mods_refid ON Modifications(RefSpectraID);
+                CREATE INDEX IF NOT EXISTS idx_boundaries_refid ON OspreyPeakBoundaries(RefSpectraID);
+                CREATE INDEX IF NOT EXISTS idx_runscores_refid ON OspreyRunScores(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_rettimes_refid ON RetentionTimes(RefSpectraID)");
 
             ExecuteNonQuery("PRAGMA wal_checkpoint(TRUNCATE)");
@@ -662,6 +762,47 @@ namespace pwiz.OspreySharp.IO
                 CREATE TABLE OspreyMetadata (
                     Key TEXT PRIMARY KEY,
                     Value TEXT
+                );
+
+                CREATE TABLE OspreyPeakBoundaries (
+                    id INTEGER PRIMARY KEY,
+                    RefSpectraID INTEGER,
+                    FileName TEXT,
+                    StartRT REAL,
+                    EndRT REAL,
+                    ApexRT REAL,
+                    ApexIntensity REAL,
+                    IntegratedArea REAL,
+                    FOREIGN KEY (RefSpectraID) REFERENCES RefSpectra(id)
+                );
+
+                CREATE TABLE OspreyRunScores (
+                    id INTEGER PRIMARY KEY,
+                    RefSpectraID INTEGER,
+                    FileName TEXT,
+                    RunQValue REAL,
+                    DiscriminantScore REAL,
+                    PosteriorErrorProb REAL,
+                    FOREIGN KEY (RefSpectraID) REFERENCES RefSpectra(id)
+                );
+
+                CREATE TABLE OspreyExperimentScores (
+                    id INTEGER PRIMARY KEY,
+                    RefSpectraID INTEGER,
+                    ExperimentQValue REAL,
+                    NRunsDetected INTEGER,
+                    NRunsSearched INTEGER,
+                    FOREIGN KEY (RefSpectraID) REFERENCES RefSpectra(id)
+                );
+
+                CREATE TABLE OspreyCoefficients (
+                    id INTEGER PRIMARY KEY,
+                    RefSpectraID INTEGER,
+                    FileName TEXT,
+                    ScanNumber INTEGER,
+                    RT REAL,
+                    Coefficient REAL,
+                    FOREIGN KEY (RefSpectraID) REFERENCES RefSpectra(id)
                 );
             ");
 

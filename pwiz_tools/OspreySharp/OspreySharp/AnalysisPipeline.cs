@@ -5971,6 +5971,7 @@ namespace pwiz.OspreySharp
                     // Use the pre-built index for O(1) lookup by (modseq, charge).
                     string lookupKey = entry.ModifiedSequence + "|" + entry.Charge;
                     List<KeyValuePair<string, FdrEntry>> observations;
+                    int nRunsDetected = 1; // Best run is always one detection
                     if (entriesByPrecursor.TryGetValue(lookupKey, out observations))
                     {
                         foreach (var obs in observations)
@@ -5990,8 +5991,36 @@ namespace pwiz.OspreySharp
                                 fileEntry.EndRt,
                                 fileEntry.EffectiveRunQvalue(config.FdrLevel),
                                 false);
+                            // Count cross-file observations that pass FDR for the
+                            // OspreyExperimentScores.NRunsDetected column.
+                            if (passesFdr)
+                                nRunsDetected++;
                         }
                     }
+
+                    // Osprey extension tables — one row per RefSpectra each, mirroring
+                    // Rust pipeline.rs:6255-6272 byte-for-byte. Best-run-only semantics
+                    // for OspreyPeakBoundaries + OspreyRunScores; experiment-level for
+                    // OspreyExperimentScores. Note the four 0.0 fields below are the
+                    // same "not yet plumbed through Stage 7 plan entries" placeholders
+                    // Rust currently writes:
+                    //   PeakBoundaries.ApexIntensity (Rust: apex_coefficient = 0.0)
+                    //   RunScores.DiscriminantScore (Rust: dot_product not avail = 0.0)
+                    //   RunScores.PosteriorErrorProb (Rust: PEP not avail = 0.0)
+                    // When Rust starts plumbing real values through, this block updates
+                    // in lockstep to keep cross-impl parity.
+                    writer.AddPeakBoundaries(refId, fileName,
+                        entry.StartRt, entry.EndRt, entry.ApexRt,
+                        0.0, // ApexIntensity — matches Rust's apex_coefficient placeholder
+                        entry.BoundsArea);
+                    writer.AddRunScores(refId, fileName,
+                        entry.EffectiveRunQvalue(config.FdrLevel),
+                        0.0, // DiscriminantScore — matches Rust's dot_product placeholder
+                        0.0); // PosteriorErrorProb — matches Rust's PEP placeholder
+                    writer.AddExperimentScores(refId,
+                        entry.EffectiveExperimentQvalue(config.FdrLevel),
+                        nRunsDetected,
+                        perFileEntries.Count);
                 }
 
                 writer.Commit();
