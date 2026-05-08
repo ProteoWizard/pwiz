@@ -204,24 +204,32 @@ namespace pwiz.SkylineTest
         {
             if (!Directory.Exists(directory))
                 return;
-            using (var accountsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\OneDrive\Accounts"))
+            try
             {
-                if (accountsKey == null)
-                    return; // OneDrive not installed for this user
-                foreach (var accountName in accountsKey.GetSubKeyNames())
+                using (var accountsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\OneDrive\Accounts"))
                 {
-                    using (var accountKey = accountsKey.OpenSubKey(accountName))
+                    if (accountsKey == null)
+                        return; // OneDrive not installed for this user
+                    foreach (var accountName in accountsKey.GetSubKeyNames())
                     {
-                        if (!(accountKey?.GetValue(@"UserFolder") is string userFolder) || string.IsNullOrEmpty(userFolder))
-                            continue;
-                        if (IsPathUnder(directory, userFolder))
+                        using (var accountKey = accountsKey.OpenSubKey(accountName))
                         {
-                            WarnOrFail($"Directory \"{directory}\" is inside OneDrive sync root \"{userFolder}\" (account \"{accountName}\").  " +
-                                @"OneDrive can stall, lock, or rehydrate files during tests.  Move the directory outside any OneDrive sync folder.",
-                                warnOnly, failures);
+                            if (!(accountKey?.GetValue(@"UserFolder") is string userFolder) || string.IsNullOrEmpty(userFolder))
+                                continue;
+                            if (IsPathUnder(directory, userFolder))
+                            {
+                                WarnOrFail($"Directory \"{directory}\" is inside OneDrive sync root \"{userFolder}\" (account \"{accountName}\").  " +
+                                    @"OneDrive can stall, lock, or rehydrate files during tests.  Move the directory outside any OneDrive sync folder.",
+                                    warnOnly, failures);
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex) when (ex is System.Security.SecurityException || ex is UnauthorizedAccessException || ex is IOException)
+            {
+                // Registry access denied / unavailable - best-effort probe, don't fail the whole test.
+                Console.WriteLine($"# Note: OneDrive registry probe failed for \"{directory}\": {ex.GetType().Name}: {ex.Message}");
             }
         }
 
@@ -253,17 +261,20 @@ namespace pwiz.SkylineTest
         {
             if (!Directory.Exists(directory))
                 return;
+            ISearchManager mgr = null;
+            ISearchCatalogManager catalog = null;
+            ISearchCrawlScopeManager csm = null;
             try
             {
                 var managerType = Type.GetTypeFromCLSID(CLSID_CSearchManager);
                 if (managerType == null)
                     return; // Search service component not registered on this machine
-                var mgr = (ISearchManager)Activator.CreateInstance(managerType);
+                mgr = (ISearchManager)Activator.CreateInstance(managerType);
                 if (mgr == null)
                     return;
-                if (mgr.GetCatalog(@"SystemIndex", out var catalog) != 0 || catalog == null)
+                if (mgr.GetCatalog(@"SystemIndex", out catalog) != 0 || catalog == null)
                     return;
-                if (catalog.GetCrawlScopeManager(out var csm) != 0 || csm == null)
+                if (catalog.GetCrawlScopeManager(out csm) != 0 || csm == null)
                     return;
                 // IncludedInCrawlScope's parameter is documented as a URL.  Convert to a
                 // file:// URL with a trailing separator so it's interpreted as a directory
@@ -286,6 +297,14 @@ namespace pwiz.SkylineTest
                 // Best-effort probe - don't fail the whole test, but emit a note so probe-side breakage
                 // is visible in test logs (and distinguishable from "directory not indexed").
                 Console.WriteLine($"# Note: Windows Search index probe failed for \"{directory}\": {ex.GetType().Name}: {ex.Message}");
+            }
+            finally
+            {
+                // Release COM RCWs in reverse construction order so we don't hold references
+                // past the probe in this long-running test process.
+                if (csm != null) Marshal.ReleaseComObject(csm);
+                if (catalog != null) Marshal.ReleaseComObject(catalog);
+                if (mgr != null) Marshal.ReleaseComObject(mgr);
             }
         }
 
