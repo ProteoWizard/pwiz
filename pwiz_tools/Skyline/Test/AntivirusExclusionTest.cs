@@ -158,7 +158,7 @@ namespace pwiz.SkylineTest
                 catch (Exception ex)
                 {
                     // Cleanup is best-effort; a failure here shouldn't prevent reporting other findings.
-                    Console.WriteLine($"# Note: could not clean up \"{eicarTestFile}\": {ex.GetType().Name}: {ex.Message}");
+                    Console.WriteLine($@"# Note: could not clean up antivirus test file ""{eicarTestFile}"": {ex.GetType().Name}: {ex.Message}");
                 }
             }
         }
@@ -186,16 +186,16 @@ namespace pwiz.SkylineTest
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
-                Console.WriteLine($"# Note: could not query file attributes of \"{directory}\": {ex.GetType().Name}: {ex.Message}");
+                Console.WriteLine($@"# Note:  while checking for potential background task file locks, could not query file attributes of ""{directory}"": {ex.GetType().Name}: {ex.Message}");
                 return;
             }
             if ((attrs & CLOUD_PLACEHOLDER_MASK) != 0)
             {
                 WarnOrFail($"Directory \"{directory}\" appears to be cloud-synchronized " +
-                    $"(e.g. OneDrive, Dropbox, Google Drive, Box, etc.) - " +
-                    $"file attributes 0x{attrs:X8} include flags set by Files-on-Demand cloud storage.  " +
-                    @"Such services can stall, lock, or rehydrate files during tests, producing intermittent hangs.  " +
-                    @"Move the directory out of any cloud-synced location.",
+                           $"(e.g. OneDrive, Dropbox, Google Drive, Box, etc.) - " +
+                           $"file attributes 0x{attrs:X8} include flags set by Files-on-Demand cloud storage.  " +
+                           @"Such services can stall, lock, or rehydrate files during tests, producing intermittent hangs.  " +
+                           @"Move the directory out of any cloud-synced location.",
                     warnOnly, failures);
             }
         }
@@ -229,7 +229,7 @@ namespace pwiz.SkylineTest
             catch (Exception ex) when (ex is System.Security.SecurityException || ex is UnauthorizedAccessException || ex is IOException)
             {
                 // Registry access denied / unavailable - best-effort probe, don't fail the whole test.
-                Console.WriteLine($"# Note: OneDrive registry probe failed for \"{directory}\": {ex.GetType().Name}: {ex.Message}");
+                Console.WriteLine($@"# Note: while checking for potential background task file locks, OneDrive registry probe failed for ""{directory}"": {ex.GetType().Name}: {ex.Message}");
             }
         }
 
@@ -244,7 +244,7 @@ namespace pwiz.SkylineTest
             }
             catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException || ex is PathTooLongException || ex is System.Security.SecurityException)
             {
-                Console.WriteLine($"# Note: could not normalize path comparison (\"{child}\" vs \"{parent}\"): {ex.GetType().Name}: {ex.Message}");
+                Console.WriteLine($@"# Note: while checking for potential background task file locks, could not normalize path comparison (""{child}"" vs ""{parent}""): {ex.GetType().Name}: {ex.Message}");
                 return false;
             }
             if (c.Length < p.Length)
@@ -296,7 +296,7 @@ namespace pwiz.SkylineTest
                 // Search service unavailable, RPC failure, COM marshaling/cast errors, bad GUID/vtable etc.
                 // Best-effort probe - don't fail the whole test, but emit a note so probe-side breakage
                 // is visible in test logs (and distinguishable from "directory not indexed").
-                Console.WriteLine($"# Note: Windows Search index probe failed for \"{directory}\": {ex.GetType().Name}: {ex.Message}");
+                Console.WriteLine($@"# Note: while checking for potential background task file locks, Windows Search index probe failed for ""{directory}"": {ex.GetType().Name}: {ex.Message}");
             }
             finally
             {
