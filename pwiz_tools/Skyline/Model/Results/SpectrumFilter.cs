@@ -317,6 +317,11 @@ namespace pwiz.Skyline.Model.Results
                             if (EnabledMs)
                             {
                                 filterCount += filter.AddQ1FilterValues(GetMS1MzValues(nodeGroup), calcWindowsQ1);
+                                // Plumb expected isotope proportions for the IM idotp guard.
+                                // Order must match the m/z order used by GetMS1MzValues - which
+                                // iterates IsotopeDist by peak index 0..CountPeaks-1.
+                                if (nodeGroup.IsotopeDist != null && nodeGroup.IsotopeDist.CountPeaks > 1)
+                                    filter.SetExpectedIsotopeProportions(nodeGroup.IsotopeDist.ExpectedProportions);
                             }
 
                             if (EnabledMsMs)

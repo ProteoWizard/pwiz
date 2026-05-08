@@ -39,6 +39,10 @@ namespace pwiz.SkylineTest
             TestBasePeakKeepsMostIntense();
             TestNotTracking();
             TestNullIonMobilityIgnored();
+            TestIdotpGuardKeepsMatchingBinsAndDropsInterferents();
+            TestIdotpGuardEmptyInputs();
+            TestIdotpGuardMissingExpectedSignalRejection();
+            TestIdotpGuardUnionsImKeysAcrossChannels();
         }
 
         // Summed extractor: ObservedIonMobility comes from COG of the IM histogram
@@ -113,6 +117,78 @@ namespace pwiz.SkylineTest
             acc.AddPoint(TARGET_MZ, 30, null); // no IM, must not perturb the histogram
             Assert.AreEqual(1, acc.IonMobilityIntensityBins.Count);
             Assert.AreEqual(1.4, acc.ObservedIonMobility, EPSILON);
+        }
+
+        // Idotp guard: the IM bin where the cross-channel intensity vector matches
+        // the expected envelope survives; the bin with a wildly mismatched vector
+        // (e.g. an interferent dominating M+1) is rejected, even when its raw
+        // intensity is high. Surviving bins reduce via COG-bin-index over total
+        // intensity, so the answer is the IM at the matched bin.
+        private static void TestIdotpGuardKeepsMatchingBinsAndDropsInterferents()
+        {
+            // Expected envelope: M0 ~= 0.55, M+1 ~= 0.30, M+2 ~= 0.15 (typical for a small peptide).
+            var expected = new[] { 0.55f, 0.30f, 0.15f };
+            // Channel histograms (IM -> summed intensity):
+            //   IM=1.10: M0=110, M+1=60, M+2=30  (vector ~ envelope -> high idotp, kept)
+            //   IM=1.20: M0=20,  M+1=200, M+2=10 (M+1 dominated by interferent -> low idotp, rejected)
+            var perChannel = new Dictionary<double, double>[3];
+            perChannel[0] = new Dictionary<double, double> { { 1.10, 110 }, { 1.20, 20 } };
+            perChannel[1] = new Dictionary<double, double> { { 1.10, 60  }, { 1.20, 200 } };
+            perChannel[2] = new Dictionary<double, double> { { 1.10, 30  }, { 1.20, 10 } };
+
+            var resolved = IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(perChannel, expected);
+            Assert.IsTrue(resolved.HasValue);
+            Assert.AreEqual(1.10, resolved.Value, EPSILON);
+        }
+
+        private static void TestIdotpGuardEmptyInputs()
+        {
+            var expected = new[] { 0.5f, 0.5f };
+            // Null channel array
+            Assert.IsNull(IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(null, expected));
+            // Null expected proportions
+            Assert.IsNull(IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(
+                new[] { new Dictionary<double, double> { { 1.0, 10 } } }, null));
+            // Empty per-channel dicts
+            var emptyChannels = new[] { new Dictionary<double, double>(), new Dictionary<double, double>() };
+            Assert.IsNull(IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(emptyChannels, expected));
+        }
+
+        // A bin where M0 is expected (>=10% of the envelope) but observed signal
+        // is zero must be rejected even if the dot product of remaining channels
+        // happens to look fine - mirrors IonMobilityFinder's missing-where-expected
+        // guard.
+        private static void TestIdotpGuardMissingExpectedSignalRejection()
+        {
+            var expected = new[] { 0.55f, 0.30f, 0.15f };
+            // Single bin at IM=1.10 with M0 missing (zero) but M+1, M+2 present.
+            var perChannel = new Dictionary<double, double>[3];
+            perChannel[0] = new Dictionary<double, double>();             // M0 missing
+            perChannel[1] = new Dictionary<double, double> { { 1.10, 30 } };
+            perChannel[2] = new Dictionary<double, double> { { 1.10, 15 } };
+
+            var resolved = IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(perChannel, expected);
+            Assert.IsNull(resolved);
+        }
+
+        // Channels can disagree on which IMs they observed. The resolver takes
+        // the union of IM keys across channels, treating absent entries as zero.
+        // This covers the realistic case where M+2 is sparse compared to M0.
+        private static void TestIdotpGuardUnionsImKeysAcrossChannels()
+        {
+            var expected = new[] { 0.55f, 0.30f, 0.15f };
+            // M0 sees IMs at 1.10 and 1.20; M+1 only sees 1.10; M+2 only sees 1.20.
+            // The expected:[0.55, 0.30, 0.15] matches at neither bin (each has a
+            // zero where >=10% is expected), so both are rejected by the missing-
+            // signal guard. This both verifies union behavior and that the guard
+            // doesn't create an observed-IM out of fragmentary signal.
+            var perChannel = new Dictionary<double, double>[3];
+            perChannel[0] = new Dictionary<double, double> { { 1.10, 110 }, { 1.20, 110 } };
+            perChannel[1] = new Dictionary<double, double> { { 1.10, 60 } };
+            perChannel[2] = new Dictionary<double, double> { { 1.20, 30 } };
+
+            var resolved = IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(perChannel, expected);
+            Assert.IsNull(resolved);
         }
     }
 }
