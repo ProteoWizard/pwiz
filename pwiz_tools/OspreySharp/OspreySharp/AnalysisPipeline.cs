@@ -5988,6 +5988,29 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[COUNT] Best-per-precursor for blib: {0}", bestByPrecursor.Count));
 
+            // Compute best (min) experiment_precursor_qvalue per (modseq, charge)
+            // across all files. This is the value Rust writes into the .blib's
+            // RefSpectra.score and OspreyExperimentScores.ExperimentQValue
+            // columns (pipeline.rs:4670-4683 + 4795). NOT max(precursor,
+            // peptide) — the experiment-level peptide q-value isn't used at
+            // the .blib write site at all.
+            var bestExpPrecursorQ = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var fileKvpExp in perFileEntries)
+            {
+                foreach (var e in fileKvpExp.Value)
+                {
+                    if (e.IsDecoy) continue;
+                    string keyExp = e.ModifiedSequence + "|" + e.Charge;
+                    if (!passingPrecursors.Contains(keyExp)) continue;
+                    double existingExp;
+                    if (!bestExpPrecursorQ.TryGetValue(keyExp, out existingExp)
+                        || e.ExperimentPrecursorQvalue < existingExp)
+                    {
+                        bestExpPrecursorQ[keyExp] = e.ExperimentPrecursorQvalue;
+                    }
+                }
+            }
+
             // Pre-index all per-file target entries by (ModifiedSequence, Charge) for O(1)
             // lookup of cross-file observations. Without this, the inner loop below is
             // O(N_passing * N_total) which is ~70 billion ops for typical experiments.
@@ -6087,19 +6110,27 @@ namespace pwiz.OspreySharp
                         intensities[i] = libEntry.Fragments[i].RelativeIntensity;
                     }
 
-                    // RefSpectra.score is the experiment-level q-value at FdrLevel.Both
-                    // (max(precursor, peptide)) — Skyline's GENERIC Q-VALUE convention.
-                    // Mirrors Rust pipeline.rs:6166 and the LightFdr.experiment_qvalue
-                    // assignment at pipeline.rs:4705 which fixes Both regardless of
-                    // the user's --fdr-level choice.
-                    double scoreQvalue = entry.EffectiveExperimentQvalue(FdrLevel.Both);
+                    // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value
+                    // (min across all observations of this (modseq, charge)
+                    // precursor in the experiment). Mirrors Rust
+                    // pipeline.rs:4670-4683 which builds best_exp_q from
+                    // e.experiment_precursor_qvalue (NOT max(precursor,
+                    // peptide), despite the misleading LightFdr.experiment_qvalue
+                    // = effective_experiment_qvalue(Both) at pipeline.rs:4705 —
+                    // BlibPlanEntry.experiment_qvalue at pipeline.rs:4795
+                    // overrides with best_exp_q.get(...) which is precursor-only).
+                    // The same value feeds OspreyExperimentScores.ExperimentQValue
+                    // below.
+                    string lookupKey = entry.ModifiedSequence + "|" + entry.Charge;
+                    double scoreQvalue;
+                    if (!bestExpPrecursorQ.TryGetValue(lookupKey, out scoreQvalue))
+                        scoreQvalue = entry.ExperimentPrecursorQvalue;
 
                     // Compute nRunsDetected up-front so AddSpectrum can pass it
                     // through to RefSpectra.copies (matches Rust pipeline.rs:6179
                     // which passes n_runs_detected = group.len()). Was hardcoded
                     // to 1 before this fix; the same count is reused by
                     // OspreyExperimentScores below.
-                    string lookupKey = entry.ModifiedSequence + "|" + entry.Charge;
                     List<KeyValuePair<string, FdrEntry>> observations;
                     int nRunsDetected = 1;
                     if (entriesByPrecursor.TryGetValue(lookupKey, out observations) &&
@@ -6203,7 +6234,7 @@ namespace pwiz.OspreySharp
                         0.0, // DiscriminantScore — matches Rust's dot_product placeholder
                         0.0); // PosteriorErrorProb — matches Rust's PEP placeholder
                     writer.AddExperimentScores(refId,
-                        entry.EffectiveExperimentQvalue(FdrLevel.Both),
+                        scoreQvalue, // Same value as RefSpectra.score: min(experiment_precursor_qvalue) across observations
                         nRunsDetected,
                         perFileEntries.Count);
                 }
