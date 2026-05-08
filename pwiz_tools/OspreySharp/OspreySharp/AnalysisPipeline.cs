@@ -5961,8 +5961,16 @@ namespace pwiz.OspreySharp
                 Directory.CreateDirectory(outputDir);
 
             // Deduplicate by modified_sequence + charge — keep best by
-            // experiment_precursor_qvalue (matches Rust's best-per-precursor
-            // selection in pipeline.rs:4670-4683).
+            // EffectiveRunQvalue(FdrLevel.Both). Matches Rust
+            // pipeline.rs:6133-6138 which picks `best = min_by(run_qvalue)`
+            // from the precursor group. The blib's downstream
+            // OspreyRunScores / OspreyPeakBoundaries / RefSpectra
+            // (peak boundaries + retention time) all source from this
+            // best run, so the cross-impl best-file choice has to match
+            // exactly or the per-file rows split into disjoint sets.
+            // (Earlier this dedup keyed on ExperimentPrecursorQvalue,
+            // producing a 26002+26002 only-rust/only-cs key split on
+            // OspreyRunScores/PeakBoundaries.)
             var bestByPrecursor = new Dictionary<string, KeyValuePair<string, FdrEntry>>(
                 StringComparer.Ordinal);
             foreach (var kvp in passingEntries)
@@ -5970,8 +5978,8 @@ namespace pwiz.OspreySharp
                 string key = kvp.Value.ModifiedSequence + "_" + kvp.Value.Charge;
                 KeyValuePair<string, FdrEntry> existing;
                 if (!bestByPrecursor.TryGetValue(key, out existing) ||
-                    kvp.Value.ExperimentPrecursorQvalue <
-                    existing.Value.ExperimentPrecursorQvalue)
+                    kvp.Value.EffectiveRunQvalue(FdrLevel.Both) <
+                    existing.Value.EffectiveRunQvalue(FdrLevel.Both))
                 {
                     bestByPrecursor[key] = kvp;
                 }
@@ -6013,12 +6021,17 @@ namespace pwiz.OspreySharp
             {
                 writer.BeginBatch();
 
-                // Pre-create source file IDs once (instead of lazily inside the loop)
+                // Pre-create source file IDs once (instead of lazily inside the loop).
+                // SpectrumSourceFiles.idFileName carries the library filename
+                // (Skyline expects this — see Rust pipeline.rs:6110 + blib.rs:435).
+                // The library file is the "ID source" because that's what the IDs
+                // came from; the mzML file is the spectrum source.
+                string libraryIdName = Path.GetFileName(config.LibrarySource.Path);
                 var sourceFileIds = new Dictionary<string, long>();
                 foreach (var kvp in perFileEntries)
                 {
                     sourceFileIds[kvp.Key] = writer.AddSourceFile(
-                        kvp.Key + ".mzML", kvp.Key + ".mzML", fdrThreshold);
+                        kvp.Key + ".mzML", libraryIdName, fdrThreshold);
                 }
 
                 foreach (var kvp in bestByPrecursor.Values)
@@ -6048,6 +6061,20 @@ namespace pwiz.OspreySharp
                     // the user's --fdr-level choice.
                     double scoreQvalue = entry.EffectiveExperimentQvalue(FdrLevel.Both);
 
+                    // Compute nRunsDetected up-front so AddSpectrum can pass it
+                    // through to RefSpectra.copies (matches Rust pipeline.rs:6179
+                    // which passes n_runs_detected = group.len()). Was hardcoded
+                    // to 1 before this fix; the same count is reused by
+                    // OspreyExperimentScores below.
+                    string lookupKey = entry.ModifiedSequence + "|" + entry.Charge;
+                    List<KeyValuePair<string, FdrEntry>> observations;
+                    int nRunsDetected = 1;
+                    if (entriesByPrecursor.TryGetValue(lookupKey, out observations) &&
+                        observations.Count > 0)
+                    {
+                        nRunsDetected = observations.Count;
+                    }
+
                     long refId = writer.AddSpectrum(
                         libEntry.Sequence,
                         libEntry.ModifiedSequence,
@@ -6057,7 +6084,7 @@ namespace pwiz.OspreySharp
                         entry.StartRt,
                         entry.EndRt,
                         mzs, intensities,
-                        scoreQvalue, fileId, 1, 0.0);
+                        scoreQvalue, fileId, nRunsDetected, 0.0);
 
                     // Add modifications
                     if (libEntry.Modifications != null && libEntry.Modifications.Count > 0)
@@ -6075,10 +6102,7 @@ namespace pwiz.OspreySharp
                     // run by lowest run_qvalue. Mirrors Rust pipeline.rs:6191-6243
                     // exactly. Uses FdrLevel.Both for the run-level q-value, matching
                     // the LightFdr.run_qvalue assignment at pipeline.rs:4704.
-                    string lookupKey = entry.ModifiedSequence + "|" + entry.Charge;
-                    List<KeyValuePair<string, FdrEntry>> observations;
-                    int nRunsDetected = 0;
-                    if (entriesByPrecursor.TryGetValue(lookupKey, out observations))
+                    if (observations != null)
                     {
                         // Compute the fallback ID-line file: if NO run passes
                         // run-level FDR (post-second-pass q-values can shift
@@ -6123,12 +6147,8 @@ namespace pwiz.OspreySharp
                                 fileEntry.EndRt,
                                 runQ,
                                 isBest);
-                            if (passesFdr)
-                                nRunsDetected++;
                         }
                     }
-                    if (nRunsDetected == 0)
-                        nRunsDetected = 1; // best run is always at least one detection
 
                     // Osprey extension tables — one row per RefSpectra each, mirroring
                     // Rust pipeline.rs:6255-6272 byte-for-byte. Best-run-only semantics
@@ -6146,11 +6166,11 @@ namespace pwiz.OspreySharp
                         0.0, // ApexIntensity — matches Rust's apex_coefficient placeholder
                         entry.BoundsArea);
                     writer.AddRunScores(refId, fileName,
-                        entry.EffectiveRunQvalue(config.FdrLevel),
+                        entry.EffectiveRunQvalue(FdrLevel.Both),
                         0.0, // DiscriminantScore — matches Rust's dot_product placeholder
                         0.0); // PosteriorErrorProb — matches Rust's PEP placeholder
                     writer.AddExperimentScores(refId,
-                        entry.EffectiveExperimentQvalue(config.FdrLevel),
+                        entry.EffectiveExperimentQvalue(FdrLevel.Both),
                         nRunsDetected,
                         perFileEntries.Count);
                 }
