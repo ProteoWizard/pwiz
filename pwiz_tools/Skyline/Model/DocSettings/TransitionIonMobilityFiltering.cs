@@ -122,10 +122,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 var dict = IonMobilityLibrary.GetIonMobilityLibKeyMap();
                 var val =
                     dict?.AsDictionary().Values.FirstOrDefault
-                        (v => v.Any(l => l.IonMobility.Units != eIonMobilityUnits.none));
+                        (v => v.Any(l => IonMobilityFilter.IsExplicitIonMobilityMeasurement(l.IonMobility.Units)));
                 if (val != null)
                 {
-                    var item = val.FirstOrDefault(i => i.IonMobility.Units != eIonMobilityUnits.none);
+                    var item = val.FirstOrDefault(i => IonMobilityFilter.IsExplicitIonMobilityMeasurement(i.IonMobility.Units));
                     if (item!=null)
                     {
                         return item.IonMobility.Units;
@@ -134,6 +134,82 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             return eIonMobilityUnits.none; // Didn't find anything
+        }
+
+        /// <summary>
+        /// Collect the distinct non-none ion mobility units implied by settings-level sources:
+        /// per-file units from imported results, the ion mobility library, and any active spectral
+        /// libraries. Used to deduce units when only <see cref="SrmSettings"/> is in scope - e.g.
+        /// from within a settings method recovering from an explicit ion mobility value lacking
+        /// units. Zero results means no deduction is possible; exactly one means we can deduce
+        /// unambiguously; more than one means the document contains conflicting evidence (e.g.
+        /// mixed FAIMS and TIMS) and we must not silently pick. Short-circuits once two distinct
+        /// units have been seen, since further scanning can only confirm ambiguity.
+        /// </summary>
+        public static HashSet<eIonMobilityUnits> GetSettingsIonMobilityUnits(SrmSettings settings)
+        {
+            var units = new HashSet<eIonMobilityUnits>();
+
+            // Imported results carry the instrument-native unit per file - most authoritative.
+            var results = settings.MeasuredResults;
+            if (results != null)
+            {
+                foreach (var chromSet in results.Chromatograms)
+                {
+                    foreach (var fileInfo in chromSet.MSDataFileInfos)
+                    {
+                        if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(fileInfo.IonMobilityUnits))
+                            units.Add(fileInfo.IonMobilityUnits);
+                    }
+                    if (units.Count > 1)
+                        return units;
+                }
+            }
+
+            // Ion mobility library.
+            var imFiltering = settings.TransitionSettings.IonMobilityFiltering;
+            if (imFiltering != null)
+            {
+                var libUnits = imFiltering.GetFirstSeenIonMobilityUnits();
+                if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(libUnits))
+                    units.Add(libUnits);
+            }
+
+            if (units.Count > 1)
+                return units; // Already ambiguous - skip the remaining library scan.
+
+            // Active spectral libraries. Each library caches its own distinct-units result so
+            // repeated calls (e.g. during a bulk Document Grid paste) avoid re-scanning.
+            var peptideLibraries = settings.PeptideSettings.Libraries;
+            if (peptideLibraries != null && peptideLibraries.HasLibraries && peptideLibraries.IsLoaded)
+                units.UnionWith(peptideLibraries.GetDistinctIonMobilityUnits());
+
+            return units;
+        }
+
+        /// <summary>
+        /// Extends <see cref="GetSettingsIonMobilityUnits"/> with sibling transition groups that
+        /// already have explicit units set. Used when the full document tree is in scope, e.g.
+        /// the Document Grid setter that writes an explicit ion mobility value. Siblings are
+        /// scanned first as they are cheap and often already carry the answer once the user is
+        /// mid-paste on a large document.
+        /// </summary>
+        public static HashSet<eIonMobilityUnits> GetDocumentIonMobilityUnits(SrmDocument document)
+        {
+            var units = new HashSet<eIonMobilityUnits>();
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
+            {
+                var u = nodeGroup.ExplicitValues.IonMobilityUnits;
+                if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(u))
+                {
+                    units.Add(u);
+                    if (units.Count > 1)
+                        return units; // Already ambiguous - no need to consult settings sources.
+                }
+            }
+
+            units.UnionWith(GetSettingsIonMobilityUnits(document.Settings));
+            return units;
         }
 
         public IonMobilityAndCCS GetIonMobilityFilter(LibKey ion, double mz,
@@ -1052,6 +1128,29 @@ namespace pwiz.Skyline.Model.DocSettings
             return units == eIonMobilityUnits.compensation_V;
         }
 
+        /// <summary>
+        /// Units that can appear in a user-facing selection (dropdown, error-message list, etc.).
+        /// <see cref="eIonMobilityUnits.waters_sonar"/> is excluded because it is an internal
+        /// marker for Waters SONAR data (which uses IMS hardware for m/z filtering) and collides
+        /// with <see cref="eIonMobilityUnits.none"/> in <see cref="IonMobilityUnitsL10NString"/>.
+        /// <see cref="eIonMobilityUnits.unknown"/> is excluded because it is only used during
+        /// deserialization of older Skyline documents.
+        /// </summary>
+        public static bool IsUserSelectableIonMobilityUnit(eIonMobilityUnits units)
+        {
+            return units != eIonMobilityUnits.unknown && units != eIonMobilityUnits.waters_sonar;
+        }
+
+        /// <summary>
+        /// Units that represent a real ion mobility measurement. Excludes the "none" sentinel in
+        /// addition to the types excluded by <see cref="IsUserSelectableIonMobilityUnit"/>.
+        /// Used when collecting the distinct units implied by a document or library.
+        /// </summary>
+        public static bool IsExplicitIonMobilityMeasurement(eIonMobilityUnits units)
+        {
+            return IsUserSelectableIonMobilityUnit(units) && units != eIonMobilityUnits.none;
+        }
+
         public static eIonMobilityUnits IonMobilityUnitsFromL10NString(string units)
         {
             if (TryParseIonMobilityUnits(units, out var result))
@@ -1068,9 +1167,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
-                var ionMobilityUnitsL10NString = IonMobilityUnitsL10NString(u);
-                if (string.Equals(units, ionMobilityUnitsL10NString, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(units, u.ToString(), StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(units, u.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    result = u;
+                    return true;
+                }
+                // Skip the L10N match for non-user-selectable units; waters_sonar shares the
+                // localized "None" with eIonMobilityUnits.none and would otherwise win the match
+                // due to enum iteration order (waters_sonar = -1 visited before none = 0).
+                if (IsUserSelectableIonMobilityUnit(u) &&
+                    string.Equals(units, IonMobilityUnitsL10NString(u), StringComparison.OrdinalIgnoreCase))
                 {
                     result = u;
                     return true;
@@ -1086,7 +1192,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     Thread.CurrentThread.CurrentUICulture = tryCulture;
                     foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
                     {
-                        if (u != eIonMobilityUnits.none)
+                        if (u != eIonMobilityUnits.none && IsUserSelectableIonMobilityUnit(u))
                         {
                             var ionMobilityUnitsL10NString = IonMobilityUnitsL10NString(u);
                             if (string.Equals(units, ionMobilityUnitsL10NString, StringComparison.OrdinalIgnoreCase))
@@ -1120,7 +1226,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     Thread.CurrentThread.CurrentUICulture = tryCulture;
                     foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
                     {
-                        if (u != eIonMobilityUnits.none && u!= eIonMobilityUnits.unknown)
+                        if (IsExplicitIonMobilityMeasurement(u))
                             result.Add(IonMobilityUnitsL10NString(u));
                     }
                 }
