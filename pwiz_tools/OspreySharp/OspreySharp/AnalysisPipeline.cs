@@ -5863,8 +5863,12 @@ namespace pwiz.OspreySharp
                 }
             }
 
-            // Stage 2: passing precursors, with fallback to best charge per peptide
-            var passingPrecursors = new HashSet<string>(StringComparer.Ordinal);
+            // Stage 2: passing precursors, with fallback to best charge per peptide.
+            // Tuple keys (modseq, charge) avoid the separator-collision risk of
+            // string concatenation and skip a string allocation per lookup —
+            // same shape as Rust's HashMap<(Arc<str>, u8), ...> at
+            // pipeline.rs:4630.
+            var passingPrecursors = new HashSet<(string, byte)>();
             var bestChargePerPeptide = new Dictionary<string, KeyValuePair<byte, double>>(
                 StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
@@ -5873,9 +5877,8 @@ namespace pwiz.OspreySharp
                 {
                     if (e.IsDecoy || !passingPeptides.Contains(e.ModifiedSequence))
                         continue;
-                    string key = e.ModifiedSequence + "|" + e.Charge;
                     if (e.ExperimentPrecursorQvalue <= expThreshold)
-                        passingPrecursors.Add(key);
+                        passingPrecursors.Add((e.ModifiedSequence, e.Charge));
                     KeyValuePair<byte, double> existing;
                     if (!bestChargePerPeptide.TryGetValue(e.ModifiedSequence, out existing)
                         || e.ExperimentPrecursorQvalue < existing.Value)
@@ -5885,28 +5888,20 @@ namespace pwiz.OspreySharp
                     }
                 }
             }
-            // Fallback: peptides with no precursor-passing charge state keep their best
+            // Fallback: peptides with no precursor-passing charge state keep their best.
+            // The OR check (`best.Value <= expThreshold`) is the substantive one — if
+            // best has q <= threshold, the loop above already added it to passingPrecursors;
+            // the Contains check is redundant defensive belt-and-suspenders.
             int nFallback = 0;
             foreach (var peptide in passingPeptides)
             {
-                bool hasPassing = false;
                 KeyValuePair<byte, double> best;
                 if (!bestChargePerPeptide.TryGetValue(peptide, out best))
                     continue;
-                string fallbackKey = peptide + "|" + best.Key;
-                // Quick check: is any charge of this peptide already in passingPrecursors?
-                // We can derive this from whether the fallback key is already there OR
-                // any other charge for this peptide is. The exact set is small enough
-                // that a linear scan over precursors with this prefix is fine, but the
-                // simpler check suffices because best is already the lowest-qvalue
-                // charge — if it itself didn't pass, no other did either.
-                hasPassing = passingPrecursors.Contains(fallbackKey)
-                    || best.Value <= expThreshold;
-                if (!hasPassing)
-                {
-                    passingPrecursors.Add(fallbackKey);
-                    nFallback++;
-                }
+                if (best.Value <= expThreshold)
+                    continue; // already in passingPrecursors
+                passingPrecursors.Add((peptide, best.Key));
+                nFallback++;
             }
             if (nFallback > 0)
             {
@@ -5914,7 +5909,6 @@ namespace pwiz.OspreySharp
                     "{0} peptides had no charge state passing precursor-level FDR; best charge state kept as fallback",
                     nFallback));
             }
-
 
             // Collect passing entries for downstream best-per-precursor selection.
             // A precursor is admitted iff (modseq, charge) is in passingPrecursors.
@@ -5926,9 +5920,7 @@ namespace pwiz.OspreySharp
             // is interpreted by Rust as a computation-enable flag, not a
             // hard blib filter. Mirror that: keep the (modseq, charge)
             // membership check from Stages 1+2 and don't apply
-            // ExperimentProteinQvalue here. Closed 22/27 only-in-Rust on
-            // Stellar 3-file (the remaining 5 have modifications upstream of
-            // perFileEntries — separate bisection).
+            // ExperimentProteinQvalue here.
             var passingEntries = new List<KeyValuePair<string, FdrEntry>>();
             foreach (var kvp in perFileEntries)
             {
@@ -5936,8 +5928,7 @@ namespace pwiz.OspreySharp
                 {
                     if (entry.IsDecoy)
                         continue;
-                    string key = entry.ModifiedSequence + "|" + entry.Charge;
-                    if (!passingPrecursors.Contains(key))
+                    if (!passingPrecursors.Contains((entry.ModifiedSequence, entry.Charge)))
                         continue;
                     passingEntries.Add(
                         new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
@@ -5960,7 +5951,7 @@ namespace pwiz.OspreySharp
             if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
                 Directory.CreateDirectory(outputDir);
 
-            // Deduplicate by modified_sequence + charge — keep best by
+            // Deduplicate by (modseq, charge) — keep best by
             // EffectiveRunQvalue(FdrLevel.Both). Matches Rust
             // pipeline.rs:6133-6138 which picks `best = min_by(run_qvalue)`
             // from the precursor group. The blib's downstream
@@ -5971,11 +5962,10 @@ namespace pwiz.OspreySharp
             // (Earlier this dedup keyed on ExperimentPrecursorQvalue,
             // producing a 26002+26002 only-rust/only-cs key split on
             // OspreyRunScores/PeakBoundaries.)
-            var bestByPrecursor = new Dictionary<string, KeyValuePair<string, FdrEntry>>(
-                StringComparer.Ordinal);
+            var bestByPrecursor = new Dictionary<(string, byte), KeyValuePair<string, FdrEntry>>();
             foreach (var kvp in passingEntries)
             {
-                string key = kvp.Value.ModifiedSequence + "_" + kvp.Value.Charge;
+                var key = (kvp.Value.ModifiedSequence, kvp.Value.Charge);
                 KeyValuePair<string, FdrEntry> existing;
                 if (!bestByPrecursor.TryGetValue(key, out existing) ||
                     kvp.Value.EffectiveRunQvalue(FdrLevel.Both) <
@@ -5994,13 +5984,13 @@ namespace pwiz.OspreySharp
             // columns (pipeline.rs:4670-4683 + 4795). NOT max(precursor,
             // peptide) — the experiment-level peptide q-value isn't used at
             // the .blib write site at all.
-            var bestExpPrecursorQ = new Dictionary<string, double>(StringComparer.Ordinal);
+            var bestExpPrecursorQ = new Dictionary<(string, byte), double>();
             foreach (var fileKvpExp in perFileEntries)
             {
                 foreach (var e in fileKvpExp.Value)
                 {
                     if (e.IsDecoy) continue;
-                    string keyExp = e.ModifiedSequence + "|" + e.Charge;
+                    var keyExp = (e.ModifiedSequence, e.Charge);
                     if (!passingPrecursors.Contains(keyExp)) continue;
                     double existingExp;
                     if (!bestExpPrecursorQ.TryGetValue(keyExp, out existingExp)
@@ -6022,9 +6012,9 @@ namespace pwiz.OspreySharp
             // boundary so quantification across charges integrates the same
             // RT region. Key: (modseq, fileName); value: (apexRt, startRt,
             // endRt) from the min-run-qvalue entry across charges.
-            var sharedBoundsKey = new Func<string, string, string>((modseq, fileName) =>
-                modseq + "" + fileName);
-            var sharedBounds = new Dictionary<string, double[]>(StringComparer.Ordinal);
+            // Tuple key matches Rust HashMap<(Arc<str>, u16), ...> at
+            // pipeline.rs:6027 directly — no string concat or separator needed.
+            var sharedBounds = new Dictionary<(string, string), double[]>();
             // For each (modseq, file), track the (apex, start, end, run_q) of best entry
             foreach (var fileKvpBounds in perFileEntries)
             {
@@ -6032,9 +6022,8 @@ namespace pwiz.OspreySharp
                 foreach (var e in fileKvpBounds.Value)
                 {
                     if (e.IsDecoy) continue;
-                    string keyB = e.ModifiedSequence + "|" + e.Charge;
-                    if (!passingPrecursors.Contains(keyB)) continue;
-                    string sk = sharedBoundsKey(e.ModifiedSequence, boundsFile);
+                    if (!passingPrecursors.Contains((e.ModifiedSequence, e.Charge))) continue;
+                    var sk = (e.ModifiedSequence, boundsFile);
                     double rq = e.EffectiveRunQvalue(FdrLevel.Both);
                     double[] existingB;
                     if (!sharedBounds.TryGetValue(sk, out existingB) || rq < existingB[3])
@@ -6048,8 +6037,7 @@ namespace pwiz.OspreySharp
             // lookup of cross-file observations. Without this, the inner loop below is
             // O(N_passing * N_total) which is ~70 billion ops for typical experiments.
             var entriesByPrecursor =
-                new Dictionary<string, List<KeyValuePair<string, FdrEntry>>>(
-                    StringComparer.Ordinal);
+                new Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>>();
             int nCrossFileObservations = 0;
             foreach (var fileKvp in perFileEntries)
             {
@@ -6058,7 +6046,7 @@ namespace pwiz.OspreySharp
                 {
                     if (fileEntry.IsDecoy)
                         continue;
-                    string key = fileEntry.ModifiedSequence + "|" + fileEntry.Charge;
+                    var key = (fileEntry.ModifiedSequence, fileEntry.Charge);
                     List<KeyValuePair<string, FdrEntry>> list;
                     if (!entriesByPrecursor.TryGetValue(key, out list))
                     {
@@ -6163,7 +6151,7 @@ namespace pwiz.OspreySharp
                     // overrides with best_exp_q.get(...) which is precursor-only).
                     // The same value feeds OspreyExperimentScores.ExperimentQValue
                     // below.
-                    string lookupKey = entry.ModifiedSequence + "|" + entry.Charge;
+                    var lookupKey = (entry.ModifiedSequence, entry.Charge);
                     double scoreQvalue;
                     if (!bestExpPrecursorQ.TryGetValue(lookupKey, out scoreQvalue))
                         scoreQvalue = entry.ExperimentPrecursorQvalue;
@@ -6184,7 +6172,7 @@ namespace pwiz.OspreySharp
                     // Use shared peak boundaries when the same peptide
                     // is detected at multiple charges in this file (Rust
                     // pipeline.rs:6160-6164 + 6219-6222).
-                    string sharedKey = sharedBoundsKey(entry.ModifiedSequence, fileName);
+                    var sharedKey = (entry.ModifiedSequence, fileName);
                     double sharedApex = entry.ApexRt;
                     double sharedStart = entry.StartRt;
                     double sharedEnd = entry.EndRt;
@@ -6261,7 +6249,7 @@ namespace pwiz.OspreySharp
                             // Apply shared peak boundaries for this peptide
                             // in this run's file (cross-charge sharing —
                             // Rust pipeline.rs:6219-6222).
-                            string runSharedKey = sharedBoundsKey(fileEntry.ModifiedSequence, obs.Key);
+                            var runSharedKey = (fileEntry.ModifiedSequence, obs.Key);
                             double runApex = fileEntry.ApexRt;
                             double runStart = fileEntry.StartRt;
                             double runEnd = fileEntry.EndRt;

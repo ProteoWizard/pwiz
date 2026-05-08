@@ -77,6 +77,10 @@ namespace pwiz.OspreySharp.IO
         private SQLiteCommand _cmdInsertProtein;
         private SQLiteCommand _cmdInsertRefSpectraProtein;
         private SQLiteCommand _cmdInsertRetentionTime;
+        private SQLiteCommand _cmdInsertPeakBoundaries;
+        private SQLiteCommand _cmdInsertRunScores;
+        private SQLiteCommand _cmdInsertExperimentScores;
+        private SQLiteCommand _cmdInsertCoefficient;
 
         /// <summary>
         /// Creates a new blib file at the given path. If the file already exists, it is removed first.
@@ -184,6 +188,51 @@ namespace pwiz.OspreySharp.IO
             _cmdInsertRetentionTime.Parameters.Add("@score", System.Data.DbType.Double);
             _cmdInsertRetentionTime.Parameters.Add("@best", System.Data.DbType.Int32);
             _cmdInsertRetentionTime.Prepare();
+
+            _cmdInsertPeakBoundaries = new SQLiteCommand(_conn);
+            _cmdInsertPeakBoundaries.CommandText = @"INSERT INTO OspreyPeakBoundaries (
+                RefSpectraID, FileName, StartRT, EndRT, ApexRT, ApexIntensity, IntegratedArea
+            ) VALUES (@r, @f, @s, @e, @a, @ai, @ia)";
+            _cmdInsertPeakBoundaries.Parameters.Add("@r", System.Data.DbType.Int64);
+            _cmdInsertPeakBoundaries.Parameters.Add("@f", System.Data.DbType.String);
+            _cmdInsertPeakBoundaries.Parameters.Add("@s", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Parameters.Add("@e", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Parameters.Add("@a", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Parameters.Add("@ai", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Parameters.Add("@ia", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Prepare();
+
+            _cmdInsertRunScores = new SQLiteCommand(_conn);
+            _cmdInsertRunScores.CommandText = @"INSERT INTO OspreyRunScores (
+                RefSpectraID, FileName, RunQValue, DiscriminantScore, PosteriorErrorProb
+            ) VALUES (@r, @f, @q, @d, @p)";
+            _cmdInsertRunScores.Parameters.Add("@r", System.Data.DbType.Int64);
+            _cmdInsertRunScores.Parameters.Add("@f", System.Data.DbType.String);
+            _cmdInsertRunScores.Parameters.Add("@q", System.Data.DbType.Double);
+            _cmdInsertRunScores.Parameters.Add("@d", System.Data.DbType.Double);
+            _cmdInsertRunScores.Parameters.Add("@p", System.Data.DbType.Double);
+            _cmdInsertRunScores.Prepare();
+
+            _cmdInsertExperimentScores = new SQLiteCommand(_conn);
+            _cmdInsertExperimentScores.CommandText = @"INSERT INTO OspreyExperimentScores (
+                RefSpectraID, ExperimentQValue, NRunsDetected, NRunsSearched
+            ) VALUES (@r, @q, @nd, @ns)";
+            _cmdInsertExperimentScores.Parameters.Add("@r", System.Data.DbType.Int64);
+            _cmdInsertExperimentScores.Parameters.Add("@q", System.Data.DbType.Double);
+            _cmdInsertExperimentScores.Parameters.Add("@nd", System.Data.DbType.Int32);
+            _cmdInsertExperimentScores.Parameters.Add("@ns", System.Data.DbType.Int32);
+            _cmdInsertExperimentScores.Prepare();
+
+            _cmdInsertCoefficient = new SQLiteCommand(_conn);
+            _cmdInsertCoefficient.CommandText = @"INSERT INTO OspreyCoefficients (
+                RefSpectraID, FileName, ScanNumber, RT, Coefficient
+            ) VALUES (@r, @f, @s, @t, @c)";
+            _cmdInsertCoefficient.Parameters.Add("@r", System.Data.DbType.Int64);
+            _cmdInsertCoefficient.Parameters.Add("@f", System.Data.DbType.String);
+            _cmdInsertCoefficient.Parameters.Add("@s", System.Data.DbType.Int32);
+            _cmdInsertCoefficient.Parameters.Add("@t", System.Data.DbType.Double);
+            _cmdInsertCoefficient.Parameters.Add("@c", System.Data.DbType.Double);
+            _cmdInsertCoefficient.Prepare();
         }
 
         /// <summary>
@@ -394,20 +443,14 @@ namespace pwiz.OspreySharp.IO
             double startRt, double endRt, double apexRt,
             double apexIntensity, double integratedArea)
         {
-            using (var cmd = new SQLiteCommand(_conn))
-            {
-                cmd.CommandText = @"INSERT INTO OspreyPeakBoundaries (
-                    RefSpectraID, FileName, StartRT, EndRT, ApexRT, ApexIntensity, IntegratedArea
-                ) VALUES (@r, @f, @s, @e, @a, @ai, @ia)";
-                cmd.Parameters.AddWithValue("@r", refId);
-                cmd.Parameters.AddWithValue("@f", fileName);
-                cmd.Parameters.AddWithValue("@s", startRt);
-                cmd.Parameters.AddWithValue("@e", endRt);
-                cmd.Parameters.AddWithValue("@a", apexRt);
-                cmd.Parameters.AddWithValue("@ai", apexIntensity);
-                cmd.Parameters.AddWithValue("@ia", integratedArea);
-                cmd.ExecuteNonQuery();
-            }
+            _cmdInsertPeakBoundaries.Parameters["@r"].Value = refId;
+            _cmdInsertPeakBoundaries.Parameters["@f"].Value = fileName;
+            _cmdInsertPeakBoundaries.Parameters["@s"].Value = startRt;
+            _cmdInsertPeakBoundaries.Parameters["@e"].Value = endRt;
+            _cmdInsertPeakBoundaries.Parameters["@a"].Value = apexRt;
+            _cmdInsertPeakBoundaries.Parameters["@ai"].Value = apexIntensity;
+            _cmdInsertPeakBoundaries.Parameters["@ia"].Value = integratedArea;
+            _cmdInsertPeakBoundaries.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -419,18 +462,12 @@ namespace pwiz.OspreySharp.IO
         public void AddRunScores(long refId, string fileName,
             double runQValue, double discriminantScore, double posteriorErrorProb)
         {
-            using (var cmd = new SQLiteCommand(_conn))
-            {
-                cmd.CommandText = @"INSERT INTO OspreyRunScores (
-                    RefSpectraID, FileName, RunQValue, DiscriminantScore, PosteriorErrorProb
-                ) VALUES (@r, @f, @q, @d, @p)";
-                cmd.Parameters.AddWithValue("@r", refId);
-                cmd.Parameters.AddWithValue("@f", fileName);
-                cmd.Parameters.AddWithValue("@q", runQValue);
-                cmd.Parameters.AddWithValue("@d", discriminantScore);
-                cmd.Parameters.AddWithValue("@p", posteriorErrorProb);
-                cmd.ExecuteNonQuery();
-            }
+            _cmdInsertRunScores.Parameters["@r"].Value = refId;
+            _cmdInsertRunScores.Parameters["@f"].Value = fileName;
+            _cmdInsertRunScores.Parameters["@q"].Value = runQValue;
+            _cmdInsertRunScores.Parameters["@d"].Value = discriminantScore;
+            _cmdInsertRunScores.Parameters["@p"].Value = posteriorErrorProb;
+            _cmdInsertRunScores.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -442,17 +479,11 @@ namespace pwiz.OspreySharp.IO
         public void AddExperimentScores(long refId,
             double experimentQValue, int nRunsDetected, int nRunsSearched)
         {
-            using (var cmd = new SQLiteCommand(_conn))
-            {
-                cmd.CommandText = @"INSERT INTO OspreyExperimentScores (
-                    RefSpectraID, ExperimentQValue, NRunsDetected, NRunsSearched
-                ) VALUES (@r, @q, @nd, @ns)";
-                cmd.Parameters.AddWithValue("@r", refId);
-                cmd.Parameters.AddWithValue("@q", experimentQValue);
-                cmd.Parameters.AddWithValue("@nd", nRunsDetected);
-                cmd.Parameters.AddWithValue("@ns", nRunsSearched);
-                cmd.ExecuteNonQuery();
-            }
+            _cmdInsertExperimentScores.Parameters["@r"].Value = refId;
+            _cmdInsertExperimentScores.Parameters["@q"].Value = experimentQValue;
+            _cmdInsertExperimentScores.Parameters["@nd"].Value = nRunsDetected;
+            _cmdInsertExperimentScores.Parameters["@ns"].Value = nRunsSearched;
+            _cmdInsertExperimentScores.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -468,18 +499,12 @@ namespace pwiz.OspreySharp.IO
         public void AddCoefficient(long refId, string fileName,
             uint scanNumber, double rt, double coefficient)
         {
-            using (var cmd = new SQLiteCommand(_conn))
-            {
-                cmd.CommandText = @"INSERT INTO OspreyCoefficients (
-                    RefSpectraID, FileName, ScanNumber, RT, Coefficient
-                ) VALUES (@r, @f, @s, @t, @c)";
-                cmd.Parameters.AddWithValue("@r", refId);
-                cmd.Parameters.AddWithValue("@f", fileName);
-                cmd.Parameters.AddWithValue("@s", scanNumber);
-                cmd.Parameters.AddWithValue("@t", rt);
-                cmd.Parameters.AddWithValue("@c", coefficient);
-                cmd.ExecuteNonQuery();
-            }
+            _cmdInsertCoefficient.Parameters["@r"].Value = refId;
+            _cmdInsertCoefficient.Parameters["@f"].Value = fileName;
+            _cmdInsertCoefficient.Parameters["@s"].Value = (int)scanNumber;
+            _cmdInsertCoefficient.Parameters["@t"].Value = rt;
+            _cmdInsertCoefficient.Parameters["@c"].Value = coefficient;
+            _cmdInsertCoefficient.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -529,6 +554,10 @@ namespace pwiz.OspreySharp.IO
                 if (_cmdInsertProtein != null) { _cmdInsertProtein.Dispose(); _cmdInsertProtein = null; }
                 if (_cmdInsertRefSpectraProtein != null) { _cmdInsertRefSpectraProtein.Dispose(); _cmdInsertRefSpectraProtein = null; }
                 if (_cmdInsertRetentionTime != null) { _cmdInsertRetentionTime.Dispose(); _cmdInsertRetentionTime = null; }
+                if (_cmdInsertPeakBoundaries != null) { _cmdInsertPeakBoundaries.Dispose(); _cmdInsertPeakBoundaries = null; }
+                if (_cmdInsertRunScores != null) { _cmdInsertRunScores.Dispose(); _cmdInsertRunScores = null; }
+                if (_cmdInsertExperimentScores != null) { _cmdInsertExperimentScores.Dispose(); _cmdInsertExperimentScores = null; }
+                if (_cmdInsertCoefficient != null) { _cmdInsertCoefficient.Dispose(); _cmdInsertCoefficient = null; }
                 if (_conn != null)
                 {
                     _conn.Close();
