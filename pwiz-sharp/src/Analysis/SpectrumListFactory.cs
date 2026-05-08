@@ -240,6 +240,13 @@ public static class SpectrumListFactory
         // chargeStatePredictor — predict precursor charge from MS2 intensity distribution.
         map["chargestatepredictor"] = (args, inner, _) => ParseChargeStatePredictor(args, inner);
 
+        // mzRefiner — m/z calibration shift derived from search-engine identifications.
+        map["mzrefiner"] = (args, _, msd) =>
+        {
+            ArgumentNullException.ThrowIfNull(msd, "mzRefiner needs the source MSData for instrument-config inspection.");
+            return ParseMzRefiner(args, msd);
+        };
+
 #if !NO_VENDOR_SUPPORT
         // Vendor-specific: SpectrumList_LockmassRefiner reaches into SpectrumList_Waters'
         // lockmass-aware overloads, so it's only compiled when Waters is available. cpp's
@@ -839,6 +846,20 @@ public static class SpectrumListFactory
             "overlap_only" or "overlaponly" => SpectrumListDemux.Optimization.OverlapOnly,
             _ => throw new ArgumentException($"demultiplex: unknown optimization '{s}'"),
         };
+
+    private static SpectrumList_MZRefiner ParseMzRefiner(string args, MSData msd)
+    {
+        // cpp filterCreator_mzRefine: positional arguments in order
+        //   identFile, cvTerm, range[, msLevels[, step][, maxStep]]
+        var tokens = args.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (tokens.Length < 3)
+            throw new ArgumentException("mzRefiner expects: identFile cvTerm range [msLevels]");
+        string identFile = tokens[0];
+        string cvTerm = tokens[1];
+        string rangeSet = tokens[2];
+        var msLevels = tokens.Length > 3 ? ParseIntegerSet(tokens[3]) : new IntegerSet(1, 2);
+        return new SpectrumList_MZRefiner(msd, identFile, cvTerm, rangeSet, msLevels);
+    }
 
     private static SpectrumList_ChargeStateCalculator ParseChargeStatePredictor(string args, ISpectrumList inner)
     {
