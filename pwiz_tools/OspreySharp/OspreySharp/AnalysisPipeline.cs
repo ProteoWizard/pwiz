@@ -6011,6 +6011,39 @@ namespace pwiz.OspreySharp
                 }
             }
 
+            // Build shared peak boundaries per (peptide, file): when the same
+            // peptide is detected at multiple charge states in the same run,
+            // all charges share the boundaries from the charge with lowest
+            // run_qvalue. Mirrors Rust pipeline.rs:6020-6063
+            // (build_shared_boundaries_from_plan). Without this, charge-N's
+            // RefSpectra row gets charge-N's own boundaries, but Rust gives
+            // charge-N the boundaries of whatever charge happened to score
+            // best in that file — Skyline wants the consistent peptide-level
+            // boundary so quantification across charges integrates the same
+            // RT region. Key: (modseq, fileName); value: (apexRt, startRt,
+            // endRt) from the min-run-qvalue entry across charges.
+            var sharedBoundsKey = new Func<string, string, string>((modseq, fileName) =>
+                modseq + "" + fileName);
+            var sharedBounds = new Dictionary<string, double[]>(StringComparer.Ordinal);
+            // For each (modseq, file), track the (apex, start, end, run_q) of best entry
+            foreach (var fileKvpBounds in perFileEntries)
+            {
+                string boundsFile = fileKvpBounds.Key;
+                foreach (var e in fileKvpBounds.Value)
+                {
+                    if (e.IsDecoy) continue;
+                    string keyB = e.ModifiedSequence + "|" + e.Charge;
+                    if (!passingPrecursors.Contains(keyB)) continue;
+                    string sk = sharedBoundsKey(e.ModifiedSequence, boundsFile);
+                    double rq = e.EffectiveRunQvalue(FdrLevel.Both);
+                    double[] existingB;
+                    if (!sharedBounds.TryGetValue(sk, out existingB) || rq < existingB[3])
+                    {
+                        sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq };
+                    }
+                }
+            }
+
             // Pre-index all per-file target entries by (ModifiedSequence, Charge) for O(1)
             // lookup of cross-file observations. Without this, the inner loop below is
             // O(N_passing * N_total) which is ~70 billion ops for typical experiments.
@@ -6139,14 +6172,29 @@ namespace pwiz.OspreySharp
                         nRunsDetected = observations.Count;
                     }
 
+                    // Use shared peak boundaries when the same peptide
+                    // is detected at multiple charges in this file (Rust
+                    // pipeline.rs:6160-6164 + 6219-6222).
+                    string sharedKey = sharedBoundsKey(entry.ModifiedSequence, fileName);
+                    double sharedApex = entry.ApexRt;
+                    double sharedStart = entry.StartRt;
+                    double sharedEnd = entry.EndRt;
+                    double[] sharedVals;
+                    if (sharedBounds.TryGetValue(sharedKey, out sharedVals))
+                    {
+                        sharedApex = sharedVals[0];
+                        sharedStart = sharedVals[1];
+                        sharedEnd = sharedVals[2];
+                    }
+
                     long refId = writer.AddSpectrum(
                         libEntry.Sequence,
                         libEntry.ModifiedSequence,
                         libEntry.PrecursorMz,
                         libEntry.Charge,
-                        entry.ApexRt,
-                        entry.StartRt,
-                        entry.EndRt,
+                        sharedApex,
+                        sharedStart,
+                        sharedEnd,
                         mzs, intensities,
                         scoreQvalue, fileId, nRunsDetected, 0.0);
 
@@ -6201,14 +6249,29 @@ namespace pwiz.OspreySharp
                                 (!anyPassesRunFdr && obs.Key == bestRunFile);
                             bool isBest = obs.Key == fileName;
 
+                            // Apply shared peak boundaries for this peptide
+                            // in this run's file (cross-charge sharing —
+                            // Rust pipeline.rs:6219-6222).
+                            string runSharedKey = sharedBoundsKey(fileEntry.ModifiedSequence, obs.Key);
+                            double runApex = fileEntry.ApexRt;
+                            double runStart = fileEntry.StartRt;
+                            double runEnd = fileEntry.EndRt;
+                            double[] runShared;
+                            if (sharedBounds.TryGetValue(runSharedKey, out runShared))
+                            {
+                                runApex = runShared[0];
+                                runStart = runShared[1];
+                                runEnd = runShared[2];
+                            }
+
                             double? rtForIdLine = null;
                             if (showIdLine)
-                                rtForIdLine = fileEntry.ApexRt;
+                                rtForIdLine = runApex;
                             writer.AddRetentionTime(
                                 refId, srcId,
                                 rtForIdLine,
-                                fileEntry.StartRt,
-                                fileEntry.EndRt,
+                                runStart,
+                                runEnd,
                                 runQ,
                                 isBest);
                         }
@@ -6225,8 +6288,10 @@ namespace pwiz.OspreySharp
                     //   RunScores.PosteriorErrorProb (Rust: PEP not avail = 0.0)
                     // When Rust starts plumbing real values through, this block updates
                     // in lockstep to keep cross-impl parity.
+                    // OspreyPeakBoundaries uses the shared boundaries for
+                    // this (peptide, file) — same source as RefSpectra above.
                     writer.AddPeakBoundaries(refId, fileName,
-                        entry.StartRt, entry.EndRt, entry.ApexRt,
+                        sharedStart, sharedEnd, sharedApex,
                         0.0, // ApexIntensity — matches Rust's apex_coefficient placeholder
                         entry.BoundsArea);
                     writer.AddRunScores(refId, fileName,
