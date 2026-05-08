@@ -30,6 +30,9 @@ public sealed class SpectrumIdentificationItem : IdentifiableParamContainer
     /// <summary>Peptide-evidence entries (one per protein the matched peptide maps into).</summary>
     public List<PeptideEvidence> PeptideEvidencePtr { get; } = new();
 
+    /// <summary>Per-ion fragmentation results (b3, y5, ...). Most search engines leave this empty.</summary>
+    public List<IonType> Fragmentation { get; } = new();
+
     /// <inheritdoc/>
     public override bool IsEmpty =>
         base.IsEmpty
@@ -40,5 +43,6 @@ public sealed class SpectrumIdentificationItem : IdentifiableParamContainer
         && PeptidePtr is null
         && Rank == 0
         && !PassThreshold
-        && PeptideEvidencePtr.Count == 0;
+        && PeptideEvidencePtr.Count == 0
+        && Fragmentation.Count == 0;
 }

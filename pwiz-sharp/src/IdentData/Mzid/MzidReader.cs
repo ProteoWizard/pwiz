@@ -30,7 +30,6 @@ public sealed class MzidReader
         };
 
         using var xr = XmlReader.Create(stream, settings);
-        var refs = new ReferenceMaps();
 
         while (xr.Read())
         {
@@ -42,83 +41,75 @@ public sealed class MzidReader
                     target.Name = xr.GetAttribute("name") ?? string.Empty;
                     target.CreationDate = xr.GetAttribute("creationDate") ?? string.Empty;
                     break;
+                case "cv":
+                    target.Cvs.Add(new CV
+                    {
+                        Id = xr.GetAttribute("id") ?? string.Empty,
+                        FullName = xr.GetAttribute("fullName") ?? string.Empty,
+                        Uri = xr.GetAttribute("uri") ?? string.Empty,
+                        Version = xr.GetAttribute("version") ?? string.Empty,
+                    });
+                    break;
                 case "AnalysisSoftware":
-                    var sw = ReadAnalysisSoftware(xr);
-                    target.AnalysisSoftwareList.Add(sw);
-                    if (!string.IsNullOrEmpty(sw.Id)) refs.Software[sw.Id] = sw;
+                    target.AnalysisSoftwareList.Add(ReadAnalysisSoftware(xr));
                     break;
                 case "Provider":
-                    target.Provider.Id = xr.GetAttribute("id") ?? string.Empty;
-                    target.Provider.Name = xr.GetAttribute("name") ?? string.Empty;
-                    var asRef = xr.GetAttribute("analysisSoftware_ref");
-                    if (!string.IsNullOrEmpty(asRef) && refs.Software.TryGetValue(asRef, out var providerSw))
-                        target.Provider.AnalysisSoftwarePtr = providerSw;
+                    ReadProviderInto(xr, target.Provider);
+                    break;
+                case "Person":
+                case "Organization":
+                    target.AuditCollection.Add(ReadContact(xr));
+                    break;
+                case "Sample":
+                    target.AnalysisSampleCollection.Samples.Add(ReadSample(xr));
+                    break;
+                case "SourceFile":
+                    target.DataCollection.Inputs.SourceFile.Add(ReadSourceFile(xr));
+                    break;
+                case "BibliographicReference":
+                    target.BibliographicReferences.Add(ReadBibliographicReference(xr));
                     break;
                 case "DBSequence":
-                    var dbs = ReadDBSequence(xr, refs.SearchDb);
-                    target.SequenceCollection.DBSequences.Add(dbs);
-                    if (!string.IsNullOrEmpty(dbs.Id)) refs.DbSequence[dbs.Id] = dbs;
+                    target.SequenceCollection.DBSequences.Add(ReadDBSequence(xr));
                     break;
                 case "Peptide":
-                    var pep = ReadPeptide(xr);
-                    target.SequenceCollection.Peptides.Add(pep);
-                    if (!string.IsNullOrEmpty(pep.Id)) refs.Peptide[pep.Id] = pep;
+                    target.SequenceCollection.Peptides.Add(ReadPeptide(xr));
                     break;
                 case "PeptideEvidence":
-                    var pe = ReadPeptideEvidence(xr, refs.Peptide, refs.DbSequence);
-                    target.SequenceCollection.PeptideEvidence.Add(pe);
-                    if (!string.IsNullOrEmpty(pe.Id)) refs.PeptideEvidence[pe.Id] = pe;
+                    target.SequenceCollection.PeptideEvidence.Add(ReadPeptideEvidence(xr));
                     break;
                 case "SpectraData":
-                    var sd = ReadSpectraData(xr);
-                    target.DataCollection.Inputs.SpectraData.Add(sd);
-                    if (!string.IsNullOrEmpty(sd.Id)) refs.SpectraData[sd.Id] = sd;
+                    target.DataCollection.Inputs.SpectraData.Add(ReadSpectraData(xr));
                     break;
                 case "SearchDatabase":
-                    var db = ReadSearchDatabase(xr);
-                    target.DataCollection.Inputs.SearchDatabase.Add(db);
-                    if (!string.IsNullOrEmpty(db.Id)) refs.SearchDb[db.Id] = db;
+                    target.DataCollection.Inputs.SearchDatabase.Add(ReadSearchDatabase(xr));
                     break;
                 case "SpectrumIdentificationList":
-                    var sil = ReadSpectrumIdentificationList(xr, refs);
-                    target.DataCollection.AnalysisData.SpectrumIdentificationList.Add(sil);
-                    if (!string.IsNullOrEmpty(sil.Id)) refs.SpectrumIdList[sil.Id] = sil;
+                    target.DataCollection.AnalysisData.SpectrumIdentificationList.Add(ReadSpectrumIdentificationList(xr));
                     break;
                 case "SpectrumIdentificationProtocol":
-                    var sip = ReadSpectrumIdentificationProtocol(xr, refs);
-                    target.AnalysisProtocolCollection.SpectrumIdentificationProtocol.Add(sip);
-                    if (!string.IsNullOrEmpty(sip.Id)) refs.SpectrumIdProtocol[sip.Id] = sip;
+                    target.AnalysisProtocolCollection.SpectrumIdentificationProtocol.Add(ReadSpectrumIdentificationProtocol(xr));
                     break;
                 case "ProteinDetectionProtocol":
-                    var pdp = ReadProteinDetectionProtocol(xr, refs);
-                    target.AnalysisProtocolCollection.ProteinDetectionProtocol.Add(pdp);
-                    if (!string.IsNullOrEmpty(pdp.Id)) refs.ProteinDetProtocol[pdp.Id] = pdp;
+                    target.AnalysisProtocolCollection.ProteinDetectionProtocol.Add(ReadProteinDetectionProtocol(xr));
                     break;
                 case "SpectrumIdentification":
-                    target.AnalysisCollection.SpectrumIdentification.Add(ReadSpectrumIdentification(xr, refs));
+                    target.AnalysisCollection.SpectrumIdentification.Add(ReadSpectrumIdentification(xr));
                     break;
                 case "ProteinDetection":
-                    ReadProteinDetectionInto(xr, target.AnalysisCollection.ProteinDetection, refs);
+                    ReadProteinDetectionInto(xr, target.AnalysisCollection.ProteinDetection);
                     break;
                 case "ProteinDetectionList":
-                    target.DataCollection.AnalysisData.ProteinDetectionListPtr =
-                        ReadProteinDetectionList(xr, refs);
+                    target.DataCollection.AnalysisData.ProteinDetectionListPtr = ReadProteinDetectionList(xr);
                     break;
             }
         }
-    }
 
-    private sealed class ReferenceMaps
-    {
-        public Dictionary<string, AnalysisSoftware> Software { get; } = new(StringComparer.Ordinal);
-        public Dictionary<string, DBSequence> DbSequence { get; } = new(StringComparer.Ordinal);
-        public Dictionary<string, Peptide> Peptide { get; } = new(StringComparer.Ordinal);
-        public Dictionary<string, PeptideEvidence> PeptideEvidence { get; } = new(StringComparer.Ordinal);
-        public Dictionary<string, SpectraData> SpectraData { get; } = new(StringComparer.Ordinal);
-        public Dictionary<string, SearchDatabase> SearchDb { get; } = new(StringComparer.Ordinal);
-        public Dictionary<string, SpectrumIdentificationList> SpectrumIdList { get; } = new(StringComparer.Ordinal);
-        public Dictionary<string, SpectrumIdentificationProtocol> SpectrumIdProtocol { get; } = new(StringComparer.Ordinal);
-        public Dictionary<string, ProteinDetectionProtocol> ProteinDetProtocol { get; } = new(StringComparer.Ordinal);
+        // Replace stub references created during parse with the populated objects from the
+        // tree's id→object lookup tables. This covers both forward refs (e.g. DBSequence's
+        // searchDatabase_ref pointing at a SearchDatabase that appears later in the document)
+        // and cross-section refs.
+        References.Resolve(target);
     }
 
     private static AnalysisSoftware ReadAnalysisSoftware(XmlReader xr)
@@ -136,16 +127,167 @@ public sealed class MzidReader
         while (sub.Read())
         {
             if (sub.NodeType != XmlNodeType.Element) continue;
-            if (sub.LocalName == "Customizations") sw.Customizations = sub.ReadElementContentAsString();
+            if (sub.LocalName == "Customizations") sw.Customizations = ReadElementText(sub);
             else if (sub.LocalName == "SoftwareName")
                 ReadParamContainerInto(sub, sw.SoftwareName);
-            // ContactRole intentionally skipped for now.
+            else if (sub.LocalName == "ContactRole")
+                sw.ContactRolePtr = ReadContactRole(sub);
         }
         return sw;
     }
 
-    private static DBSequence ReadDBSequence(XmlReader xr,
-        Dictionary<string, SearchDatabase> searchDbById)
+    private static ContactRole ReadContactRole(XmlReader xr)
+    {
+        var cr = new ContactRole();
+        // contact_ref → stub Contact; References.Resolve replaces it after the doc is parsed.
+        var contactRef = xr.GetAttribute("contact_ref");
+        if (!string.IsNullOrEmpty(contactRef)) cr.ContactPtr = new Person { Id = contactRef };
+        if (xr.IsEmptyElement) return cr;
+        using var sub = xr.ReadSubtree();
+        while (sub.Read())
+        {
+            if (sub.NodeType != XmlNodeType.Element) continue;
+            if (sub.LocalName == "Role")
+            {
+                using var roleSub = sub.ReadSubtree();
+                while (roleSub.Read())
+                    if (roleSub.NodeType == XmlNodeType.Element && roleSub.LocalName == "cvParam")
+                        cr.Role = ReadCvParam(roleSub);
+            }
+        }
+        return cr;
+    }
+
+    private static Contact ReadContact(XmlReader xr)
+    {
+        var elementName = xr.LocalName;
+        Contact contact = elementName == "Person" ? new Person() : new Organization();
+        contact.Id = xr.GetAttribute("id") ?? string.Empty;
+        contact.Name = xr.GetAttribute("name") ?? string.Empty;
+        if (contact is Person p)
+        {
+            p.LastName = xr.GetAttribute("lastName") ?? string.Empty;
+            p.FirstName = xr.GetAttribute("firstName") ?? string.Empty;
+            p.MidInitials = xr.GetAttribute("midInitials") ?? string.Empty;
+        }
+        if (xr.IsEmptyElement) return contact;
+        using var sub = xr.ReadSubtree();
+        while (sub.Read())
+        {
+            if (sub.NodeType != XmlNodeType.Element) continue;
+            if (sub.LocalName is "cvParam" or "userParam") ReadOneParamInto(sub, contact);
+            else if (contact is Person person && sub.LocalName == "Affiliation")
+            {
+                var orgRef = sub.GetAttribute("organization_ref");
+                if (!string.IsNullOrEmpty(orgRef))
+                {
+                    // Defer: organizations might appear later in the audit collection.
+                    person.Affiliations.Add(new Organization { Id = orgRef });
+                }
+            }
+            else if (contact is Organization org && sub.LocalName == "Parent")
+            {
+                var parentRef = sub.GetAttribute("organization_ref");
+                if (!string.IsNullOrEmpty(parentRef))
+                    org.Parent = new Organization { Id = parentRef };
+            }
+        }
+        return contact;
+    }
+
+    private static Sample ReadSample(XmlReader xr)
+    {
+        var s = new Sample
+        {
+            Id = xr.GetAttribute("id") ?? string.Empty,
+            Name = xr.GetAttribute("name") ?? string.Empty,
+        };
+        if (xr.IsEmptyElement) return s;
+        using var sub = xr.ReadSubtree();
+        while (sub.Read())
+        {
+            if (sub.NodeType != XmlNodeType.Element) continue;
+            switch (sub.LocalName)
+            {
+                case "ContactRole":
+                    s.ContactRole.Add(ReadContactRole(sub));
+                    break;
+                case "SubSample":
+                    var sampleRef = sub.GetAttribute("sample_ref");
+                    if (!string.IsNullOrEmpty(sampleRef))
+                        s.SubSamples.Add(new Sample { Id = sampleRef });
+                    break;
+                case "cvParam":
+                case "userParam":
+                    ReadOneParamInto(sub, s);
+                    break;
+            }
+        }
+        return s;
+    }
+
+    private static SourceFile ReadSourceFile(XmlReader xr)
+    {
+        var sf = new SourceFile
+        {
+            Id = xr.GetAttribute("id") ?? string.Empty,
+            Name = xr.GetAttribute("name") ?? string.Empty,
+            Location = xr.GetAttribute("location") ?? string.Empty,
+        };
+        if (xr.IsEmptyElement) return sf;
+        using var sub = xr.ReadSubtree();
+        while (sub.Read())
+        {
+            if (sub.NodeType != XmlNodeType.Element) continue;
+            if (sub.LocalName == "FileFormat")
+            {
+                using var ff = sub.ReadSubtree();
+                while (ff.Read())
+                    if (ff.NodeType == XmlNodeType.Element && ff.LocalName == "cvParam")
+                        sf.FileFormat = ReadCvParam(ff);
+            }
+            else if (sub.LocalName is "cvParam" or "userParam") ReadOneParamInto(sub, sf);
+        }
+        return sf;
+    }
+
+    private static BibliographicReference ReadBibliographicReference(XmlReader xr)
+    {
+        var br = new BibliographicReference
+        {
+            Id = xr.GetAttribute("id") ?? string.Empty,
+            Name = xr.GetAttribute("name") ?? string.Empty,
+            Authors = xr.GetAttribute("authors") ?? string.Empty,
+            Publication = xr.GetAttribute("publication") ?? string.Empty,
+            Publisher = xr.GetAttribute("publisher") ?? string.Empty,
+            Editor = xr.GetAttribute("editor") ?? string.Empty,
+            Volume = xr.GetAttribute("volume") ?? string.Empty,
+            Issue = xr.GetAttribute("issue") ?? string.Empty,
+            Pages = xr.GetAttribute("pages") ?? string.Empty,
+            Title = xr.GetAttribute("title") ?? string.Empty,
+        };
+        if (int.TryParse(xr.GetAttribute("year"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var y))
+            br.Year = y;
+        return br;
+    }
+
+    private static void ReadProviderInto(XmlReader xr, Provider p)
+    {
+        p.Id = xr.GetAttribute("id") ?? string.Empty;
+        p.Name = xr.GetAttribute("name") ?? string.Empty;
+        var asRef = xr.GetAttribute("analysisSoftware_ref");
+        if (!string.IsNullOrEmpty(asRef)) p.AnalysisSoftwarePtr = new AnalysisSoftware { Id = asRef };
+        if (xr.IsEmptyElement) return;
+        using var sub = xr.ReadSubtree();
+        while (sub.Read())
+        {
+            if (sub.NodeType != XmlNodeType.Element) continue;
+            if (sub.LocalName == "ContactRole")
+                p.ContactRolePtr = ReadContactRole(sub);
+        }
+    }
+
+    private static DBSequence ReadDBSequence(XmlReader xr)
     {
         var d = new DBSequence
         {
@@ -156,15 +298,14 @@ public sealed class MzidReader
         if (int.TryParse(xr.GetAttribute("length"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var len))
             d.Length = len;
         var sdRef = xr.GetAttribute("searchDatabase_ref");
-        if (!string.IsNullOrEmpty(sdRef) && searchDbById.TryGetValue(sdRef, out var db))
-            d.SearchDatabasePtr = db;
+        if (!string.IsNullOrEmpty(sdRef)) d.SearchDatabasePtr = new SearchDatabase { Id = sdRef };
 
         if (xr.IsEmptyElement) return d;
         using var sub = xr.ReadSubtree();
         while (sub.Read())
         {
             if (sub.NodeType != XmlNodeType.Element) continue;
-            if (sub.LocalName == "Seq") d.Seq = sub.ReadElementContentAsString();
+            if (sub.LocalName == "Seq") d.Seq = ReadElementText(sub);
             else if (sub.LocalName is "cvParam" or "userParam") ReadOneParamInto(sub, d);
         }
         return d;
@@ -186,10 +327,13 @@ public sealed class MzidReader
             switch (sub.LocalName)
             {
                 case "PeptideSequence":
-                    p.PeptideSequence = sub.ReadElementContentAsString();
+                    p.PeptideSequence = ReadElementText(sub);
                     break;
                 case "Modification":
                     p.Modifications.Add(ReadModification(sub));
+                    break;
+                case "SubstitutionModification":
+                    p.SubstitutionModifications.Add(ReadSubstitutionModification(sub));
                     break;
                 case "cvParam":
                 case "userParam":
@@ -198,6 +342,22 @@ public sealed class MzidReader
             }
         }
         return p;
+    }
+
+    private static SubstitutionModification ReadSubstitutionModification(XmlReader xr)
+    {
+        var sm = new SubstitutionModification();
+        var orig = xr.GetAttribute("originalResidue");
+        if (!string.IsNullOrEmpty(orig)) sm.OriginalResidue = orig[0];
+        var repl = xr.GetAttribute("replacementResidue");
+        if (!string.IsNullOrEmpty(repl)) sm.ReplacementResidue = repl[0];
+        if (int.TryParse(xr.GetAttribute("location"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var loc))
+            sm.Location = loc;
+        if (double.TryParse(xr.GetAttribute("avgMassDelta"), NumberStyles.Float, CultureInfo.InvariantCulture, out var avg))
+            sm.AvgMassDelta = avg;
+        if (double.TryParse(xr.GetAttribute("monoisotopicMassDelta"), NumberStyles.Float, CultureInfo.InvariantCulture, out var mono))
+            sm.MonoisotopicMassDelta = mono;
+        return sm;
     }
 
     private static Modification ReadModification(XmlReader xr)
@@ -222,8 +382,7 @@ public sealed class MzidReader
         return m;
     }
 
-    private static PeptideEvidence ReadPeptideEvidence(XmlReader xr,
-        Dictionary<string, Peptide> peptideById, Dictionary<string, DBSequence> dbSequenceById)
+    private static PeptideEvidence ReadPeptideEvidence(XmlReader xr)
     {
         var pe = new PeptideEvidence
         {
@@ -231,11 +390,9 @@ public sealed class MzidReader
             Name = xr.GetAttribute("name") ?? string.Empty,
         };
         var pepRef = xr.GetAttribute("peptide_ref");
-        if (!string.IsNullOrEmpty(pepRef) && peptideById.TryGetValue(pepRef, out var pep))
-            pe.PeptidePtr = pep;
+        if (!string.IsNullOrEmpty(pepRef)) pe.PeptidePtr = new Peptide { Id = pepRef };
         var dbRef = xr.GetAttribute("dBSequence_ref");
-        if (!string.IsNullOrEmpty(dbRef) && dbSequenceById.TryGetValue(dbRef, out var db))
-            pe.DBSequencePtr = db;
+        if (!string.IsNullOrEmpty(dbRef)) pe.DBSequencePtr = new DBSequence { Id = dbRef };
         if (int.TryParse(xr.GetAttribute("start"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var s)) pe.Start = s;
         if (int.TryParse(xr.GetAttribute("end"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var e)) pe.End = e;
         var pre = xr.GetAttribute("pre"); if (!string.IsNullOrEmpty(pre)) pe.Pre = pre[0];
@@ -302,12 +459,20 @@ public sealed class MzidReader
         while (sub.Read())
         {
             if (sub.NodeType != XmlNodeType.Element) continue;
-            if (sub.LocalName is "cvParam" or "userParam") ReadOneParamInto(sub, d);
+            if (sub.LocalName == "FileFormat")
+            {
+                using var ff = sub.ReadSubtree();
+                while (ff.Read())
+                    if (ff.NodeType == XmlNodeType.Element && ff.LocalName == "cvParam")
+                        d.FileFormat = ReadCvParam(ff);
+            }
+            else if (sub.LocalName == "DatabaseName") ReadParamContainerInto(sub, d.DatabaseName);
+            else if (sub.LocalName is "cvParam" or "userParam") ReadOneParamInto(sub, d);
         }
         return d;
     }
 
-    private static SpectrumIdentificationList ReadSpectrumIdentificationList(XmlReader xr, ReferenceMaps refs)
+    private static SpectrumIdentificationList ReadSpectrumIdentificationList(XmlReader xr)
     {
         var sil = new SpectrumIdentificationList
         {
@@ -321,15 +486,30 @@ public sealed class MzidReader
         while (sub.Read())
         {
             if (sub.NodeType != XmlNodeType.Element) continue;
-            if (sub.LocalName == "SpectrumIdentificationResult")
-                sil.SpectrumIdentificationResult.Add(ReadSpectrumIdentificationResult(sub, refs));
+            if (sub.LocalName == "FragmentationTable")
+            {
+                using var ftSub = sub.ReadSubtree();
+                while (ftSub.Read())
+                {
+                    if (ftSub.NodeType != XmlNodeType.Element || ftSub.LocalName != "Measure") continue;
+                    var m = new Measure
+                    {
+                        Id = ftSub.GetAttribute("id") ?? string.Empty,
+                        Name = ftSub.GetAttribute("name") ?? string.Empty,
+                    };
+                    if (!ftSub.IsEmptyElement) ReadParamContainerInto(ftSub, m);
+                    sil.FragmentationTable.Add(m);
+                }
+            }
+            else if (sub.LocalName == "SpectrumIdentificationResult")
+                sil.SpectrumIdentificationResult.Add(ReadSpectrumIdentificationResult(sub));
             else if (sub.LocalName is "cvParam" or "userParam")
                 ReadOneParamInto(sub, sil);
         }
         return sil;
     }
 
-    private static SpectrumIdentificationResult ReadSpectrumIdentificationResult(XmlReader xr, ReferenceMaps refs)
+    private static SpectrumIdentificationResult ReadSpectrumIdentificationResult(XmlReader xr)
     {
         var sir = new SpectrumIdentificationResult
         {
@@ -338,22 +518,21 @@ public sealed class MzidReader
             SpectrumID = xr.GetAttribute("spectrumID") ?? string.Empty,
         };
         var sdRef = xr.GetAttribute("spectraData_ref");
-        if (!string.IsNullOrEmpty(sdRef) && refs.SpectraData.TryGetValue(sdRef, out var sd))
-            sir.SpectraDataPtr = sd;
+        if (!string.IsNullOrEmpty(sdRef)) sir.SpectraDataPtr = new SpectraData { Id = sdRef };
         if (xr.IsEmptyElement) return sir;
         using var sub = xr.ReadSubtree();
         while (sub.Read())
         {
             if (sub.NodeType != XmlNodeType.Element) continue;
             if (sub.LocalName == "SpectrumIdentificationItem")
-                sir.SpectrumIdentificationItem.Add(ReadSpectrumIdentificationItem(sub, refs));
+                sir.SpectrumIdentificationItem.Add(ReadSpectrumIdentificationItem(sub));
             else if (sub.LocalName is "cvParam" or "userParam")
                 ReadOneParamInto(sub, sir);
         }
         return sir;
     }
 
-    private static SpectrumIdentificationItem ReadSpectrumIdentificationItem(XmlReader xr, ReferenceMaps refs)
+    private static SpectrumIdentificationItem ReadSpectrumIdentificationItem(XmlReader xr)
     {
         var sii = new SpectrumIdentificationItem
         {
@@ -367,8 +546,7 @@ public sealed class MzidReader
         if (int.TryParse(xr.GetAttribute("rank"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var r)) sii.Rank = r;
         if (bool.TryParse(xr.GetAttribute("passThreshold"), out var pt)) sii.PassThreshold = pt;
         var pepRef = xr.GetAttribute("peptide_ref");
-        if (!string.IsNullOrEmpty(pepRef) && refs.Peptide.TryGetValue(pepRef, out var p))
-            sii.PeptidePtr = p;
+        if (!string.IsNullOrEmpty(pepRef)) sii.PeptidePtr = new Peptide { Id = pepRef };
         if (xr.IsEmptyElement) return sii;
         using var sub = xr.ReadSubtree();
         while (sub.Read())
@@ -377,8 +555,14 @@ public sealed class MzidReader
             if (sub.LocalName == "PeptideEvidenceRef")
             {
                 var peRef = sub.GetAttribute("peptideEvidence_ref");
-                if (!string.IsNullOrEmpty(peRef) && refs.PeptideEvidence.TryGetValue(peRef, out var pe))
-                    sii.PeptideEvidencePtr.Add(pe);
+                if (!string.IsNullOrEmpty(peRef)) sii.PeptideEvidencePtr.Add(new PeptideEvidence { Id = peRef });
+            }
+            else if (sub.LocalName == "Fragmentation")
+            {
+                using var fragSub = sub.ReadSubtree();
+                while (fragSub.Read())
+                    if (fragSub.NodeType == XmlNodeType.Element && fragSub.LocalName == "IonType")
+                        sii.Fragmentation.Add(ReadIonType(fragSub));
             }
             else if (sub.LocalName is "cvParam" or "userParam")
             {
@@ -388,9 +572,42 @@ public sealed class MzidReader
         return sii;
     }
 
+    private static IonType ReadIonType(XmlReader xr)
+    {
+        var ion = new IonType();
+        var idx = xr.GetAttribute("index");
+        if (!string.IsNullOrEmpty(idx))
+            foreach (var tok in idx.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                if (int.TryParse(tok, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))
+                    ion.Index.Add(v);
+        if (int.TryParse(xr.GetAttribute("charge"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var charge))
+            ion.Charge = charge;
+        if (xr.IsEmptyElement) return ion;
+        using var sub = xr.ReadSubtree();
+        while (sub.Read())
+        {
+            if (sub.NodeType != XmlNodeType.Element) continue;
+            if (sub.LocalName == "cvParam") ion.Type = ReadCvParam(sub);
+            else if (sub.LocalName == "FragmentArray")
+            {
+                var fa = new FragmentArray();
+                var measureRef = sub.GetAttribute("measure_ref");
+                if (!string.IsNullOrEmpty(measureRef))
+                    fa.MeasurePtr = new Measure { Id = measureRef };
+                var values = sub.GetAttribute("values");
+                if (!string.IsNullOrEmpty(values))
+                    foreach (var tok in values.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                        if (double.TryParse(tok, NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
+                            fa.Values.Add(d);
+                ion.FragmentArray.Add(fa);
+            }
+        }
+        return ion;
+    }
+
     // -------- protocol / analysis-collection helpers --------
 
-    private static SpectrumIdentificationProtocol ReadSpectrumIdentificationProtocol(XmlReader xr, ReferenceMaps refs)
+    private static SpectrumIdentificationProtocol ReadSpectrumIdentificationProtocol(XmlReader xr)
     {
         var sip = new SpectrumIdentificationProtocol
         {
@@ -398,8 +615,7 @@ public sealed class MzidReader
             Name = xr.GetAttribute("name") ?? string.Empty,
         };
         var asRef = xr.GetAttribute("analysisSoftware_ref");
-        if (!string.IsNullOrEmpty(asRef) && refs.Software.TryGetValue(asRef, out var sw))
-            sip.AnalysisSoftwarePtr = sw;
+        if (!string.IsNullOrEmpty(asRef)) sip.AnalysisSoftwarePtr = new AnalysisSoftware { Id = asRef };
         if (xr.IsEmptyElement) return sip;
 
         using var sub = xr.ReadSubtree();
@@ -472,12 +688,16 @@ public sealed class MzidReader
         {
             if (sub.NodeType != XmlNodeType.Element) continue;
             if (sub.LocalName == "SpecificityRules")
-                using (var sr = sub.ReadSubtree())
-                    while (sr.Read())
-                        if (sr.NodeType == XmlNodeType.Element && sr.LocalName == "cvParam")
-                            sm.SpecificityRules = ReadCvParam(sr);
+            {
+                using var sr = sub.ReadSubtree();
+                while (sr.Read())
+                    if (sr.NodeType == XmlNodeType.Element && sr.LocalName == "cvParam")
+                        sm.SpecificityRules = ReadCvParam(sr);
+            }
             else if (sub.LocalName is "cvParam" or "userParam")
+            {
                 ReadOneParamInto(sub, sm);
+            }
         }
         return sm;
     }
@@ -500,7 +720,7 @@ public sealed class MzidReader
         while (sub.Read())
         {
             if (sub.NodeType != XmlNodeType.Element) continue;
-            if (sub.LocalName == "SiteRegexp") e.SiteRegexp = sub.ReadElementContentAsString();
+            if (sub.LocalName == "SiteRegexp") e.SiteRegexp = ReadElementText(sub);
             else if (sub.LocalName == "EnzymeName") ReadParamContainerInto(sub, e.EnzymeName);
         }
         return e;
@@ -585,7 +805,7 @@ public sealed class MzidReader
         return dt;
     }
 
-    private static ProteinDetectionProtocol ReadProteinDetectionProtocol(XmlReader xr, ReferenceMaps refs)
+    private static ProteinDetectionProtocol ReadProteinDetectionProtocol(XmlReader xr)
     {
         var pdp = new ProteinDetectionProtocol
         {
@@ -593,8 +813,7 @@ public sealed class MzidReader
             Name = xr.GetAttribute("name") ?? string.Empty,
         };
         var asRef = xr.GetAttribute("analysisSoftware_ref");
-        if (!string.IsNullOrEmpty(asRef) && refs.Software.TryGetValue(asRef, out var sw))
-            pdp.AnalysisSoftwarePtr = sw;
+        if (!string.IsNullOrEmpty(asRef)) pdp.AnalysisSoftwarePtr = new AnalysisSoftware { Id = asRef };
         if (xr.IsEmptyElement) return pdp;
         using var sub = xr.ReadSubtree();
         while (sub.Read())
@@ -606,7 +825,7 @@ public sealed class MzidReader
         return pdp;
     }
 
-    private static SpectrumIdentification ReadSpectrumIdentification(XmlReader xr, ReferenceMaps refs)
+    private static SpectrumIdentification ReadSpectrumIdentification(XmlReader xr)
     {
         var si = new SpectrumIdentification
         {
@@ -615,11 +834,11 @@ public sealed class MzidReader
             ActivityDate = xr.GetAttribute("activityDate") ?? string.Empty,
         };
         var protoRef = xr.GetAttribute("spectrumIdentificationProtocol_ref");
-        if (!string.IsNullOrEmpty(protoRef) && refs.SpectrumIdProtocol.TryGetValue(protoRef, out var sip))
-            si.SpectrumIdentificationProtocolPtr = sip;
+        if (!string.IsNullOrEmpty(protoRef))
+            si.SpectrumIdentificationProtocolPtr = new SpectrumIdentificationProtocol { Id = protoRef };
         var listRef = xr.GetAttribute("spectrumIdentificationList_ref");
-        if (!string.IsNullOrEmpty(listRef) && refs.SpectrumIdList.TryGetValue(listRef, out var sil))
-            si.SpectrumIdentificationListPtr = sil;
+        if (!string.IsNullOrEmpty(listRef))
+            si.SpectrumIdentificationListPtr = new SpectrumIdentificationList { Id = listRef };
         if (xr.IsEmptyElement) return si;
         using var sub = xr.ReadSubtree();
         while (sub.Read())
@@ -628,29 +847,26 @@ public sealed class MzidReader
             if (sub.LocalName == "InputSpectra")
             {
                 var sdRef = sub.GetAttribute("spectraData_ref");
-                if (!string.IsNullOrEmpty(sdRef) && refs.SpectraData.TryGetValue(sdRef, out var sd))
-                    si.InputSpectra.Add(sd);
+                if (!string.IsNullOrEmpty(sdRef)) si.InputSpectra.Add(new SpectraData { Id = sdRef });
             }
             else if (sub.LocalName == "SearchDatabaseRef")
             {
                 var dbRef = sub.GetAttribute("searchDatabase_ref");
-                if (!string.IsNullOrEmpty(dbRef) && refs.SearchDb.TryGetValue(dbRef, out var db))
-                    si.SearchDatabase.Add(db);
+                if (!string.IsNullOrEmpty(dbRef)) si.SearchDatabase.Add(new SearchDatabase { Id = dbRef });
             }
         }
         return si;
     }
 
-    private static void ReadProteinDetectionInto(XmlReader xr, ProteinDetection pd, ReferenceMaps refs)
+    private static void ReadProteinDetectionInto(XmlReader xr, ProteinDetection pd)
     {
         pd.Id = xr.GetAttribute("id") ?? string.Empty;
         pd.Name = xr.GetAttribute("name") ?? string.Empty;
         pd.ActivityDate = xr.GetAttribute("activityDate") ?? string.Empty;
         var protoRef = xr.GetAttribute("proteinDetectionProtocol_ref");
-        if (!string.IsNullOrEmpty(protoRef) && refs.ProteinDetProtocol.TryGetValue(protoRef, out var pdp))
-            pd.ProteinDetectionProtocolPtr = pdp;
-        // proteinDetectionList_ref / inputSpectrumIdentifications: ID-only refs we resolve later
-        // when ProteinDetectionList is encountered, if present.
+        if (!string.IsNullOrEmpty(protoRef)) pd.ProteinDetectionProtocolPtr = new ProteinDetectionProtocol { Id = protoRef };
+        var listRef = xr.GetAttribute("proteinDetectionList_ref");
+        if (!string.IsNullOrEmpty(listRef)) pd.ProteinDetectionListPtr = new ProteinDetectionList { Id = listRef };
         if (xr.IsEmptyElement) return;
         using var sub = xr.ReadSubtree();
         while (sub.Read())
@@ -659,13 +875,12 @@ public sealed class MzidReader
             if (sub.LocalName == "InputSpectrumIdentifications")
             {
                 var sirRef = sub.GetAttribute("spectrumIdentificationList_ref");
-                if (!string.IsNullOrEmpty(sirRef) && refs.SpectrumIdList.TryGetValue(sirRef, out var sil))
-                    pd.InputSpectrumIdentifications.Add(sil);
+                if (!string.IsNullOrEmpty(sirRef)) pd.InputSpectrumIdentifications.Add(new SpectrumIdentificationList { Id = sirRef });
             }
         }
     }
 
-    private static ProteinDetectionList ReadProteinDetectionList(XmlReader xr, ReferenceMaps refs)
+    private static ProteinDetectionList ReadProteinDetectionList(XmlReader xr)
     {
         var pdl = new ProteinDetectionList
         {
@@ -678,14 +893,14 @@ public sealed class MzidReader
         {
             if (sub.NodeType != XmlNodeType.Element) continue;
             if (sub.LocalName == "ProteinAmbiguityGroup")
-                pdl.ProteinAmbiguityGroup.Add(ReadProteinAmbiguityGroup(sub, refs));
+                pdl.ProteinAmbiguityGroup.Add(ReadProteinAmbiguityGroup(sub));
             else if (sub.LocalName is "cvParam" or "userParam")
                 ReadOneParamInto(sub, pdl);
         }
         return pdl;
     }
 
-    private static ProteinAmbiguityGroup ReadProteinAmbiguityGroup(XmlReader xr, ReferenceMaps refs)
+    private static ProteinAmbiguityGroup ReadProteinAmbiguityGroup(XmlReader xr)
     {
         var pag = new ProteinAmbiguityGroup
         {
@@ -698,14 +913,14 @@ public sealed class MzidReader
         {
             if (sub.NodeType != XmlNodeType.Element) continue;
             if (sub.LocalName == "ProteinDetectionHypothesis")
-                pag.ProteinDetectionHypothesis.Add(ReadProteinDetectionHypothesis(sub, refs));
+                pag.ProteinDetectionHypothesis.Add(ReadProteinDetectionHypothesis(sub));
             else if (sub.LocalName is "cvParam" or "userParam")
                 ReadOneParamInto(sub, pag);
         }
         return pag;
     }
 
-    private static ProteinDetectionHypothesis ReadProteinDetectionHypothesis(XmlReader xr, ReferenceMaps refs)
+    private static ProteinDetectionHypothesis ReadProteinDetectionHypothesis(XmlReader xr)
     {
         var pdh = new ProteinDetectionHypothesis
         {
@@ -714,8 +929,7 @@ public sealed class MzidReader
         };
         if (bool.TryParse(xr.GetAttribute("passThreshold"), out var pt)) pdh.PassThreshold = pt;
         var dbRef = xr.GetAttribute("dBSequence_ref");
-        if (!string.IsNullOrEmpty(dbRef) && refs.DbSequence.TryGetValue(dbRef, out var db))
-            pdh.DBSequencePtr = db;
+        if (!string.IsNullOrEmpty(dbRef)) pdh.DBSequencePtr = new DBSequence { Id = dbRef };
         if (xr.IsEmptyElement) return pdh;
         using var sub = xr.ReadSubtree();
         while (sub.Read())
@@ -725,8 +939,7 @@ public sealed class MzidReader
             {
                 var ph = new PeptideHypothesis();
                 var peRef = sub.GetAttribute("peptideEvidence_ref");
-                if (!string.IsNullOrEmpty(peRef) && refs.PeptideEvidence.TryGetValue(peRef, out var pe))
-                    ph.PeptideEvidencePtr = pe;
+                if (!string.IsNullOrEmpty(peRef)) ph.PeptideEvidencePtr = new PeptideEvidence { Id = peRef };
                 pdh.PeptideHypothesis.Add(ph);
             }
             else if (sub.LocalName is "cvParam" or "userParam")
@@ -775,5 +988,18 @@ public sealed class MzidReader
     {
         if (string.IsNullOrEmpty(accession)) return CVID.CVID_Unknown;
         return CvLookup.CvTermInfo(accession).Cvid;
+    }
+
+    /// <summary>Reads the text content of the current element, leaving the reader positioned on
+    /// its <c>EndElement</c>. Avoids the advancement-past-next-sibling behavior of
+    /// <see cref="XmlReader.ReadElementContentAsString()"/>, which would cause our outer
+    /// while-loops to skip whatever element follows.</summary>
+    private static string ReadElementText(XmlReader sub)
+    {
+        if (sub.IsEmptyElement) return string.Empty;
+        var sb = new System.Text.StringBuilder();
+        while (sub.Read() && sub.NodeType != XmlNodeType.EndElement)
+            if (sub.NodeType is XmlNodeType.Text or XmlNodeType.CDATA) sb.Append(sub.Value);
+        return sb.ToString();
     }
 }

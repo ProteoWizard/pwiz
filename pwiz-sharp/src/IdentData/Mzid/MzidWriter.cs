@@ -67,17 +67,12 @@ public sealed class MzidWriter
 
     private static void WriteCvList(XmlWriter w, IList<CV> cvs)
     {
+        // mzIdentML 1.1 schema requires at least one cv, so production-quality output should
+        // populate Cvs. We emit a cvList only when one is provided to keep round-trip parity:
+        // synthesizing a default would surface in the round-trip as an extra element.
+        if (cvs.Count == 0) return;
         w.WriteStartElement("cvList", MzidNs);
-        if (cvs.Count == 0)
-        {
-            // Always emit a default cv entry — mzIdentML schema requires at least one.
-            WriteCv(w, "PSI-MS", "Proteomics Standards Initiative Mass Spectrometry Vocabularies",
-                "https://www.psidev.info/psi-ms.obo", "");
-        }
-        else
-        {
-            foreach (var cv in cvs) WriteCv(w, cv.Id, cv.FullName, cv.Uri, cv.Version);
-        }
+        foreach (var cv in cvs) WriteCv(w, cv.Id, cv.FullName, cv.Uri, cv.Version);
         w.WriteEndElement();
     }
 
@@ -599,6 +594,18 @@ public sealed class MzidWriter
         WriteIdentifiableAttrs(w, sil.Id, sil.Name);
         if (sil.NumSequencesSearched != 0)
             w.WriteAttributeString("numSequencesSearched", InvLong(sil.NumSequencesSearched));
+        if (sil.FragmentationTable.Count > 0)
+        {
+            w.WriteStartElement("FragmentationTable", MzidNs);
+            foreach (var m in sil.FragmentationTable)
+            {
+                w.WriteStartElement("Measure", MzidNs);
+                WriteIdentifiableAttrs(w, m.Id, m.Name);
+                WriteParamContainer(w, m);
+                w.WriteEndElement();
+            }
+            w.WriteEndElement();
+        }
         foreach (var sir in sil.SpectrumIdentificationResult) WriteSpectrumIdentificationResult(w, sir);
         WriteParamContainer(w, sil);
         w.WriteEndElement();
@@ -634,7 +641,32 @@ public sealed class MzidWriter
             if (!string.IsNullOrEmpty(pe.Id)) w.WriteAttributeString("peptideEvidence_ref", pe.Id);
             w.WriteEndElement();
         }
+        if (sii.Fragmentation.Count > 0)
+        {
+            w.WriteStartElement("Fragmentation", MzidNs);
+            foreach (var ion in sii.Fragmentation) WriteIonType(w, ion);
+            w.WriteEndElement();
+        }
         WriteParamContainer(w, sii);
+        w.WriteEndElement();
+    }
+
+    private static void WriteIonType(XmlWriter w, IonType ion)
+    {
+        w.WriteStartElement("IonType", MzidNs);
+        if (ion.Index.Count > 0)
+            w.WriteAttributeString("index", string.Join(' ', ion.Index.Select(InvInt)));
+        if (ion.Charge != 0) w.WriteAttributeString("charge", InvInt(ion.Charge));
+        WriteCvParam(w, ion.Type);
+        foreach (var fa in ion.FragmentArray)
+        {
+            w.WriteStartElement("FragmentArray", MzidNs);
+            if (fa.MeasurePtr is not null && !string.IsNullOrEmpty(fa.MeasurePtr.Id))
+                w.WriteAttributeString("measure_ref", fa.MeasurePtr.Id);
+            if (fa.Values.Count > 0)
+                w.WriteAttributeString("values", string.Join(' ', fa.Values.Select(InvDouble)));
+            w.WriteEndElement();
+        }
         w.WriteEndElement();
     }
 
