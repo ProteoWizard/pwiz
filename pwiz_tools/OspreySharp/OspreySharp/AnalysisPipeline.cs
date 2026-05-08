@@ -6039,7 +6039,12 @@ namespace pwiz.OspreySharp
                         intensities[i] = libEntry.Fragments[i].RelativeIntensity;
                     }
 
-                    double qvalue = entry.EffectiveRunQvalue(config.FdrLevel);
+                    // RefSpectra.score is the experiment-level q-value at FdrLevel.Both
+                    // (max(precursor, peptide)) — Skyline's GENERIC Q-VALUE convention.
+                    // Mirrors Rust pipeline.rs:6166 and the LightFdr.experiment_qvalue
+                    // assignment at pipeline.rs:4705 which fixes Both regardless of
+                    // the user's --fdr-level choice.
+                    double scoreQvalue = entry.EffectiveExperimentQvalue(FdrLevel.Both);
 
                     long refId = writer.AddSpectrum(
                         libEntry.Sequence,
@@ -6050,7 +6055,7 @@ namespace pwiz.OspreySharp
                         entry.StartRt,
                         entry.EndRt,
                         mzs, intensities,
-                        qvalue, fileId, 1, 0.0);
+                        scoreQvalue, fileId, 1, 0.0);
 
                     // Add modifications
                     if (libEntry.Modifications != null && libEntry.Modifications.Count > 0)
@@ -6060,36 +6065,65 @@ namespace pwiz.OspreySharp
                     if (libEntry.ProteinIds != null && libEntry.ProteinIds.Count > 0)
                         writer.AddProteinMapping(refId, libEntry.ProteinIds);
 
-                    // Add per-file retention times for cross-file observations.
-                    // Use the pre-built index for O(1) lookup by (modseq, charge).
+                    // Per-file RetentionTimes — one row for EVERY run where this
+                    // precursor was detected, including the best-run/RefSpectra-source
+                    // run itself. retentionTime (which drives Skyline ID-line
+                    // display) is populated iff the run passes run-level FDR, OR
+                    // (fallback) no run passes run-level FDR and this is the best
+                    // run by lowest run_qvalue. Mirrors Rust pipeline.rs:6191-6243
+                    // exactly. Uses FdrLevel.Both for the run-level q-value, matching
+                    // the LightFdr.run_qvalue assignment at pipeline.rs:4704.
                     string lookupKey = entry.ModifiedSequence + "|" + entry.Charge;
                     List<KeyValuePair<string, FdrEntry>> observations;
-                    int nRunsDetected = 1; // Best run is always one detection
+                    int nRunsDetected = 0;
                     if (entriesByPrecursor.TryGetValue(lookupKey, out observations))
                     {
+                        // Compute the fallback ID-line file: if NO run passes
+                        // run-level FDR (post-second-pass q-values can shift
+                        // slightly above threshold even when the precursor passes
+                        // experiment-level), the run with the lowest run_qvalue
+                        // gets the ID line so every blib RefSpectra has at least
+                        // one ID line.
+                        bool anyPassesRunFdr = false;
+                        string bestRunFile = null;
+                        double bestRunQ = double.MaxValue;
                         foreach (var obs in observations)
                         {
-                            if (obs.Key == fileName)
-                                continue;
+                            double rq = obs.Value.EffectiveRunQvalue(FdrLevel.Both);
+                            if (rq <= fdrThreshold)
+                                anyPassesRunFdr = true;
+                            if (rq < bestRunQ)
+                            {
+                                bestRunQ = rq;
+                                bestRunFile = obs.Key;
+                            }
+                        }
 
+                        foreach (var obs in observations)
+                        {
                             long srcId = sourceFileIds[obs.Key];
                             var fileEntry = obs.Value;
-                            bool passesFdr = fileEntry.EffectiveRunQvalue(config.FdrLevel)
-                                <= fdrThreshold;
+                            double runQ = fileEntry.EffectiveRunQvalue(FdrLevel.Both);
+                            bool passesFdr = runQ <= fdrThreshold;
+                            // Show an ID line if this run passes run-level FDR,
+                            // OR if no run passes and this is the fallback best.
+                            bool showIdLine = passesFdr ||
+                                (!anyPassesRunFdr && obs.Key == bestRunFile);
+                            bool isBest = obs.Key == fileName;
 
                             writer.AddRetentionTime(
                                 refId, srcId,
-                                passesFdr ? fileEntry.ApexRt : null,
+                                showIdLine ? (double?)fileEntry.ApexRt : null,
                                 fileEntry.StartRt,
                                 fileEntry.EndRt,
-                                fileEntry.EffectiveRunQvalue(config.FdrLevel),
-                                false);
-                            // Count cross-file observations that pass FDR for the
-                            // OspreyExperimentScores.NRunsDetected column.
+                                runQ,
+                                isBest);
                             if (passesFdr)
                                 nRunsDetected++;
                         }
                     }
+                    if (nRunsDetected == 0)
+                        nRunsDetected = 1; // best run is always at least one detection
 
                     // Osprey extension tables — one row per RefSpectra each, mirroring
                     // Rust pipeline.rs:6255-6272 byte-for-byte. Best-run-only semantics
