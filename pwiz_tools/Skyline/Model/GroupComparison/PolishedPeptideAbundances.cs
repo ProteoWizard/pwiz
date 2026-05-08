@@ -48,20 +48,50 @@ namespace pwiz.Skyline.Model.GroupComparison
     public class PolishedPeptideAbundances
     {
         public static readonly PolishedPeptideAbundances EMPTY = new PolishedPeptideAbundances(
-            new Dictionary<FileDataKey, FileSummary>(), 0, double.NaN);
+            new Dictionary<FileDataKey, FileSummary>(),
+            new Dictionary<ReferenceValue<PeptideDocNode>, double?[]>(),
+            0, double.NaN);
 
         private const int RT_GRID_POINTS = 100;
         private const double LOESS_BANDWIDTH = 0.3;
 
         private readonly IDictionary<FileDataKey, FileSummary> _fileSummaries;
+        private readonly IDictionary<ReferenceValue<PeptideDocNode>, double?[]> _polishedByPeptide;
         private readonly double _medianOfMedians;
 
-        private PolishedPeptideAbundances(IDictionary<FileDataKey, FileSummary> fileSummaries,
+        private PolishedPeptideAbundances(
+            IDictionary<FileDataKey, FileSummary> fileSummaries,
+            IDictionary<ReferenceValue<PeptideDocNode>, double?[]> polishedByPeptide,
             int peptideCount, double medianOfMedians)
         {
             _fileSummaries = fileSummaries;
+            _polishedByPeptide = polishedByPeptide;
             PeptideCount = peptideCount;
             _medianOfMedians = medianOfMedians;
+        }
+
+        /// <summary>
+        /// Returns the median-polished log2 abundance for the given peptide in the given
+        /// replicate, or null if the peptide was not polished or the replicate index is
+        /// out of range. The value is the polish row effect (plus the standard scale
+        /// factor) on the un-normalized log2 transition input - i.e. the value you'd
+        /// take 2^x of to get a linear "MedianPolishedArea".
+        /// </summary>
+        public double? GetPolishedLog2Abundance(PeptideDocNode peptide, int replicateIndex)
+        {
+            if (peptide == null)
+            {
+                return null;
+            }
+            if (!_polishedByPeptide.TryGetValue(new ReferenceValue<PeptideDocNode>(peptide), out var arr))
+            {
+                return null;
+            }
+            if (replicateIndex < 0 || replicateIndex >= arr.Length)
+            {
+                return null;
+            }
+            return arr[replicateIndex];
         }
 
         public int PeptideCount { get; }
@@ -137,6 +167,9 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             // Per (replicateIndex, chromFileInfoId): list of log2 polished peptide abundances.
             var polishedPerFile = new Dictionary<FileDataKey, List<RtAreaPoint>>();
+            // Per peptide: full polished log2 array indexed by replicate. Used by the
+            // PeptideResult.MedianPolishedArea report column.
+            var polishedByPeptide = new Dictionary<ReferenceValue<PeptideDocNode>, double?[]>();
             int peptideCount = 0;
 
             var moleculeGroupMolecules =
@@ -162,6 +195,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                     if (polished == null)
                     {
                         return;
+                    }
+                    lock (polishedByPeptide)
+                    {
+                        polishedByPeptide[new ReferenceValue<PeptideDocNode>(peptide)] = polished;
                     }
 
                     for (int iReplicate = 0; iReplicate < replicateCount && iReplicate < polished.Length; iReplicate++)
@@ -211,11 +248,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return EMPTY;
             }
 
-            return BuildSummaries(polishedPerFile, peptideCount, cancellationToken);
+            return BuildSummaries(polishedPerFile, polishedByPeptide, peptideCount, cancellationToken);
         }
 
         private static PolishedPeptideAbundances BuildSummaries(
-            IDictionary<FileDataKey, List<RtAreaPoint>> polishedPerFile, int peptideCount,
+            IDictionary<FileDataKey, List<RtAreaPoint>> polishedPerFile,
+            IDictionary<ReferenceValue<PeptideDocNode>, double?[]> polishedByPeptide,
+            int peptideCount,
             CancellationToken cancellationToken)
         {
             // Per-file log2 medians.
@@ -238,7 +277,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             double medianOfMedians = summaries.Values.Select(s => s.Log2Median).Median();
-            var result = new PolishedPeptideAbundances(summaries, peptideCount, medianOfMedians);
+            var result = new PolishedPeptideAbundances(summaries, polishedByPeptide, peptideCount, medianOfMedians);
 
             // Build LOWESS curves on a shared RT grid.
             double rtMin = double.MaxValue;
@@ -306,7 +345,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 loessByKey.TryGetValue(kvp.Key, out var fittedForKey);
                 summariesWithLoess.Add(kvp.Key, new FileSummary(kvp.Value.Log2Median, fittedForKey));
             }
-            var resultWithLoess = new PolishedPeptideAbundances(summariesWithLoess, peptideCount, medianOfMedians)
+            var resultWithLoess = new PolishedPeptideAbundances(summariesWithLoess, polishedByPeptide, peptideCount, medianOfMedians)
             {
                 _loessRtGrid = rtGrid,
                 _globalLoessFitted = globalFitted,

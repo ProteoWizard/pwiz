@@ -14,7 +14,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             List<int> includedIndexes =
                 Enumerable.Range(0, values.Count).Where(i => false != include?.Contains(i)).ToList();
             var keys = includedIndexes.SelectMany(i => values[i].Keys).Distinct().ToList();
-            var matrix = new double?[includedIndexes.Count, keys.Count];
+            // Build the polish matrix as (keys x replicates), so the algorithm sweeps
+            // per-key (transition or peptide) medians first and per-replicate medians
+            // second. Median polish is not transpose-invariant for finite iterations -
+            // when many cells share the same imputed value, the sweep order chooses
+            // which axis absorbs the few standout measurements. This orientation
+            // matches skyline-prism's tukey_median_polish, where the matrix is shaped
+            // (transitions x samples) / (peptides x samples).
+            var matrix = new double?[keys.Count, includedIndexes.Count];
             var result = new double?[values.Count];
             if (keys.Count == 0)
             {
@@ -34,23 +41,23 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return result;
             }
 
-            for (int iRow = 0; iRow < includedIndexes.Count; iRow++)
+            for (int iCol = 0; iCol < includedIndexes.Count; iCol++)
             {
-                var replicateValues = values[includedIndexes[iRow]];
-                for (int iKey = 0; iKey < keys.Count; iKey++)
+                var replicateValues = values[includedIndexes[iCol]];
+                for (int iRow = 0; iRow < keys.Count; iRow++)
                 {
-                    if (replicateValues.TryGetValue(keys[iKey], out var value))
+                    if (replicateValues.TryGetValue(keys[iRow], out var value))
                     {
-                        matrix[iRow, iKey] = value;
+                        matrix[iRow, iCol] = value;
                     }
                 }
             }
 
             double scaleFactor = IncludeScaleFactor ? Math.Log(keys.Count, 2) : 0;
             var medianPolish = MedianPolish.GetMedianPolish(matrix);
-            for (int iRow = 0; iRow < includedIndexes.Count; iRow++)
+            for (int iCol = 0; iCol < includedIndexes.Count; iCol++)
             {
-                result[includedIndexes[iRow]] = medianPolish.OverallConstant + medianPolish.RowEffects[iRow] + scaleFactor;
+                result[includedIndexes[iCol]] = medianPolish.OverallConstant + medianPolish.ColumnEffects[iCol] + scaleFactor;
             }
 
             if (include != null)
@@ -65,11 +72,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                     var deviations = new List<double>();
 
                     var replicateValues = values[iReplicate];
-                    for (int iKey = 0; iKey < keys.Count; iKey++)
+                    for (int iRow = 0; iRow < keys.Count; iRow++)
                     {
-                        if (replicateValues.TryGetValue(keys[iKey], out var value))
+                        if (replicateValues.TryGetValue(keys[iRow], out var value))
                         {
-                            deviations.Add(value - medianPolish.ColumnEffects[iKey]);
+                            // Per-key effects (transitions/peptides) live in RowEffects
+                            // now that the matrix is (keys x replicates).
+                            deviations.Add(value - medianPolish.RowEffects[iRow]);
                         }
                     }
 

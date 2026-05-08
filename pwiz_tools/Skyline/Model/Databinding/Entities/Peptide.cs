@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private readonly Protein _protein;
         private readonly CachedValues _cachedValues = new CachedValues();
+        private readonly CachedValue<double?[]> _polishedAbundancesLog2;
         public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath) : this(new Protein(dataSchema, identityPath.GetPathTo(0)), identityPath.Child)
         {
         }
@@ -52,6 +53,27 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public Peptide(Protein protein, Identity peptide) : base(protein.DataSchema, new IdentityPath(protein.IdentityPath, peptide))
         {
             _protein = protein;
+            _polishedAbundancesLog2 = CachedValue.Create(DataSchema, CalculatePolishedAbundancesLog2);
+        }
+
+        private double?[] CalculatePolishedAbundancesLog2()
+        {
+            var settings = SrmDocument.Settings;
+            var quantifier = PeptideQuantifier.GetPeptideQuantifier(
+                DataSchema.NormalizedValueCalculator, settings,
+                Protein.DocNode.PeptideGroup, DocNode);
+            return quantifier.PolishUnnormalizedTransitions(
+                settings, PeptideQuantifier.GetMedianPolishReplicates(settings));
+        }
+
+        /// <summary>
+        /// Returns the median-polished log2 abundance of un-normalized transition areas
+        /// for this peptide, indexed by replicate. Cached and recomputed only when the
+        /// document changes. Used by <see cref="PeptideResult.MedianPolishedArea"/>.
+        /// </summary>
+        internal double?[] GetMedianPolishedLog2Abundances()
+        {
+            return _polishedAbundancesLog2.Value;
         }
 
         [OneToMany(ForeignKey = "Peptide")]

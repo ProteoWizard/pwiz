@@ -616,6 +616,7 @@
     <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
     <Compile Include="Model\Databinding\DsvReportExporter.cs" />
     <Compile Include="Model\Databinding\ColumnResolver.cs" />
+    <Compile Include="Model\DocSettings\MedianPolishResult.cs" />
     <Compile Include="Model\GroupComparison\MedianPolisher.cs" />
     <Compile Include="ToolsUI\ReportDefinitionReader.cs" />
     <Compile Include="Model\Databinding\RowFactories.cs" />

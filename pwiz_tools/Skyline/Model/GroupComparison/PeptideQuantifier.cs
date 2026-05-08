@@ -193,23 +193,74 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return Array.Empty<double?>();
             }
 
-            var replicateValues = new List<IDictionary<IdentityPath, double>>();
             int replicateCount = settings.MeasuredResults.Chromatograms.Count;
-            // Collect transition data for ALL replicates
+
+            // Pass 1: collect per-replicate transition quantities, all observed transition
+            // keys, and the positive raw intensities used to derive an imputation value.
+            var perReplicateQuantities = new List<Dictionary<IdentityPath, Quantity>>(replicateCount);
+            var allKeys = new HashSet<IdentityPath>();
+            var positiveIntensities = new List<double>();
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
                 var transitionIntensities = GetTransitionIntensities(settings, iReplicate, false, normalizationMethod);
-                var abundances = new Dictionary<IdentityPath, double>();
+                var quantities = new Dictionary<IdentityPath, Quantity>();
                 foreach (var entry in transitionIntensities)
                 {
-                    if (!entry.Value.Truncated)
+                    if (entry.Value.Truncated)
                     {
-                        double log2Abundance = GroupComparer.CalcLog2Abundance(
-                            entry.Value.Intensity, entry.Value.Denominator);
-                        if (!double.IsNaN(log2Abundance) && !double.IsInfinity(log2Abundance))
-                        {
-                            abundances[entry.Key] = log2Abundance;
-                        }
+                        continue;
+                    }
+                    quantities[entry.Key] = entry.Value;
+                    allKeys.Add(entry.Key);
+                    if (entry.Value.Intensity > 0)
+                    {
+                        positiveIntensities.Add(entry.Value.Intensity);
+                    }
+                }
+                perReplicateQuantities.Add(quantities);
+            }
+
+            // Per-peptide imputation value for missing or zero cells. Mirrors skyline-prism:
+            // impute = max(0.5 * P1(positive intensities for this peptide), 1.0). Filling
+            // every gap with the same low-positive value keeps the polish from treating
+            // missing measurements as outliers, and matches how skyline-prism builds the
+            // transition-by-sample matrix before its median polish.
+            double imputeIntensity = 1.0;
+            if (positiveIntensities.Count > 0)
+            {
+                double p1 = new Util.Statistics(positiveIntensities).Percentile(0.01);
+                imputeIntensity = Math.Max(p1 * 0.5, 1.0);
+            }
+
+            // Pass 2: build the log2 polish input. Every transition key contributes to
+            // every replicate; cells with no observation or zero area are filled with
+            // imputeIntensity (paired with the denominator from any other replicate's
+            // observation of the same key, or 1.0 if the key was never observed with a
+            // valid denominator - the latter does not happen for un-normalized polish).
+            var replicateValues = new List<IDictionary<IdentityPath, double>>(replicateCount);
+            for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+            {
+                var quantities = perReplicateQuantities[iReplicate];
+                var abundances = new Dictionary<IdentityPath, double>();
+                foreach (var key in allKeys)
+                {
+                    quantities.TryGetValue(key, out var q);
+                    double intensity;
+                    double denominator;
+                    if (q != null && q.Intensity > 0)
+                    {
+                        intensity = q.Intensity;
+                        denominator = q.Denominator;
+                    }
+                    else
+                    {
+                        intensity = imputeIntensity;
+                        denominator = q?.Denominator ?? 1.0;
+                    }
+                    double log2Abundance = GroupComparer.CalcLog2Abundance(intensity, denominator);
+                    if (!double.IsNaN(log2Abundance) && !double.IsInfinity(log2Abundance))
+                    {
+                        abundances[key] = log2Abundance;
                     }
                 }
                 replicateValues.Add(abundances);
