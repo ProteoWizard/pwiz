@@ -442,6 +442,12 @@
   <data name="SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec" xml:space="preserve">
     <value>Settings missing library spec.</value>
   </data>
+  <data name="SrmSettings_GetIonMobilityFilter_Peptide___0___has_an_explicit_ion_mobility_value_but_document_contains_multiple_ion_mobility_units___1____Set_the_Explicit_Ion_Mobility_Units_column_in_the_Document_Grid_" xml:space="preserve">
+    <value>"{0}" has an explicit ion mobility value but the document contains multiple ion mobility units ({1}). Set the Explicit Ion Mobility Units column in the Document Grid.</value>
+  </data>
+  <data name="SrmSettings_GetIonMobilityFilter_Peptide___0___has_an_explicit_ion_mobility_value_but_no_ion_mobility_units__Set_the_Explicit_Ion_Mobility_Units_column_in_the_Document_Grid_" xml:space="preserve">
+    <value>"{0}" has an explicit ion mobility value but no ion mobility units. Set the Explicit Ion Mobility Units column in the Document Grid.</value>
+  </data>
   <data name="SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition" xml:space="preserve">
     <value>The modification '{0}' already exists with a different definition.</value>
   </data>

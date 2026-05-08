@@ -392,7 +392,7 @@ namespace pwiz.OspreySharp.Test
             Assert.IsTrue(config.PrefilterEnabled);
             Assert.AreEqual(0.01, config.ExperimentFdr, TOLERANCE);
             Assert.AreEqual(FdrMethod.Percolator, config.FdrMethod);
-            Assert.AreEqual(FdrLevel.Both, config.FdrLevel);
+            Assert.AreEqual(FdrLevel.Precursor, config.FdrLevel);
             Assert.AreEqual(SharedPeptideMode.All, config.SharedPeptides);
         }
 

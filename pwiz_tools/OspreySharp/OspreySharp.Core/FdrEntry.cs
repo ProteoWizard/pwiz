@@ -68,6 +68,57 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public List<CwtCandidate> CwtCandidates { get; set; }
 
+        /// <summary>
+        /// Library fragment m/z list for this entry, mirroring Rust
+        /// CoelutionScoredEntry::fragment_mzs. Populated at scoring time
+        /// from the candidate's full fragment list (NOT just the top-N
+        /// used by XIC extraction). Null on stubs loaded from Parquet
+        /// before the column is read back. Carried through to the
+        /// reconciled .scores.parquet's `fragment_mzs` blob column for
+        /// downstream consumers (Skyline blib export, etc.).
+        /// </summary>
+        public double[] FragmentMzs { get; set; }
+
+        /// <summary>
+        /// Library fragment relative intensities for this entry, mirroring
+        /// Rust CoelutionScoredEntry::fragment_intensities. Same length /
+        /// ordering as <see cref="FragmentMzs"/>. f32 to match the
+        /// underlying LibraryFragment representation.
+        /// </summary>
+        public float[] FragmentIntensities { get; set; }
+
+        /// <summary>
+        /// Reference XIC retention times across the WINNING peak's
+        /// boundary (i.e. ref_xic[bestPeak.StartIndex..=bestPeak.EndIndex]).
+        /// Mirrors Rust CoelutionScoredEntry::reference_xic's first
+        /// component — the per-scan RT axis the apex / peak shape was
+        /// computed from.
+        /// </summary>
+        public double[] ReferenceXicRts { get; set; }
+
+        /// <summary>
+        /// Reference XIC intensities across the WINNING peak's boundary.
+        /// Mirrors Rust CoelutionScoredEntry::reference_xic's second
+        /// component. Same length as <see cref="ReferenceXicRts"/>.
+        /// </summary>
+        public double[] ReferenceXicIntensities { get; set; }
+
+        /// <summary>
+        /// Peak area within the WINNING peak's boundary (trapezoidal
+        /// integration on the reference XIC). Distinct from Stage 4's
+        /// `peak_area` (the original CWT peak's area) — for Stage 6
+        /// override / reconciled entries this reflects the reconciled
+        /// boundary, not the original CWT detection.
+        /// </summary>
+        public double BoundsArea { get; set; }
+
+        /// <summary>
+        /// Peak SNR within the WINNING peak's boundary. Distinct from
+        /// Stage 4's `signal_to_noise` (the original CWT peak's SNR);
+        /// reflects the reconciled boundary on Stage 6 override entries.
+        /// </summary>
+        public double BoundsSnr { get; set; }
+
         public FdrEntry()
         {
             RunPrecursorQvalue = 1.0;
