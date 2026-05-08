@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
             dda_acquisition_method = 0x40,
             extracted_qc_trace = 0x80,
             has_max_peak_score = 0x100,
-            has_ion_mobility_errors = 0x200
+            has_observed_ion_mobilities = 0x200
         }
 
         /// <summary>
@@ -340,7 +340,7 @@ namespace pwiz.Skyline.Model.Results
         public FlagValues Flags { get { return _flagBits; } }
 
         public bool HasMassErrors { get { return (Flags & FlagValues.has_mass_errors) != 0; } }
-        public bool HasIonMobilityErrors { get { return (Flags & FlagValues.has_ion_mobility_errors) != 0; } }
+        public bool HasObservedIonMobilities { get { return (Flags & FlagValues.has_observed_ion_mobilities) != 0; } }
         public bool HasMs1ScanIds { get { return (Flags & FlagValues.has_ms1_scan_ids) != 0; } }
         public bool HasFragmentScanIds { get { return (Flags & FlagValues.has_frag_scan_ids) != 0; } }
         public bool HasSimScanIds { get { return (Flags & FlagValues.has_sim_scan_ids) != 0; } }
@@ -797,7 +797,7 @@ namespace pwiz.Skyline.Model.Results
             sim = 0x03,
 
             missing_mass_errors = 0x04,
-            missing_ion_mobility_errors = 0x08,
+            missing_observed_ion_mobility = 0x08,
         }
 
         const FlagValues MASK_SOURCE = (FlagValues) 0x03;
@@ -868,10 +868,10 @@ namespace pwiz.Skyline.Model.Results
             set { Flags = (Flags & ~FlagValues.missing_mass_errors) | (value ? FlagValues.missing_mass_errors : 0); }
         }
 
-        public bool MissingIonMobilityErrors
+        public bool MissingObservedIonMobility
         {
-            get { return (Flags & FlagValues.missing_ion_mobility_errors) != 0; }
-            set { Flags = (Flags & ~FlagValues.missing_ion_mobility_errors) | (value ? FlagValues.missing_ion_mobility_errors : 0); }
+            get { return (Flags & FlagValues.missing_observed_ion_mobility) != 0; }
+            set { Flags = (Flags & ~FlagValues.missing_observed_ion_mobility) | (value ? FlagValues.missing_observed_ion_mobility : 0); }
         }
 
         public static FlagValues GetSourceFlags(ChromSource source)
@@ -1005,8 +1005,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly float _skewness;
         private readonly float _kurtosis;
         private readonly float _shapeCorrelation;
-        private short _ionMobilityError;
-        private short _ccsError;
+        private float _observedIonMobility;
+        private float _observedCcs;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1019,8 +1019,8 @@ namespace pwiz.Skyline.Model.Results
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
             has_peak_shape =        0x0080,
-            ion_mobility_error_known = 0x0100,
-            ccs_error_known =       0x0200,
+            observed_ion_mobility_known = 0x0100,
+            observed_ccs_known =    0x0200,
 
             mass_error_known =      0x8000,
         }
@@ -1055,9 +1055,9 @@ namespace pwiz.Skyline.Model.Results
             _backgroundArea = backgroundArea;
             _height = height;
             _fwhm = fwhm;
-            _ionMobilityError = 0;
-            _ccsError = 0;
-            flagValues &= ~(FlagValues.ion_mobility_error_known | FlagValues.ccs_error_known);
+            _observedIonMobility = 0;
+            _observedCcs = 0;
+            flagValues &= ~(FlagValues.observed_ion_mobility_known | FlagValues.observed_ccs_known);
             if (massError.HasValue)
             {
                 flagValues |= FlagValues.mass_error_known;
@@ -1153,15 +1153,20 @@ namespace pwiz.Skyline.Model.Results
             }
 
             _massError = 0;
-            _ionMobilityError = 0;
-            _ccsError = 0;
-            var ionMobilityErrors = timeIntensities.IonMobilityErrors;
-            if (massErrors != null || ionMobilityErrors != null)
+            _observedIonMobility = 0;
+            _observedCcs = 0;
+            var observedIonMobilities = timeIntensities.ObservedIonMobilities;
+            if (massErrors != null || observedIonMobilities != null)
             {
-                // Errors are intensity-weighted means across the peak. Background intensity
-                // is subtracted to reduce noise contribution.
+                // Mass error is an intensity-weighted mean across the peak (m/z is
+                // a linearly-averageable coordinate). Observed IM is the IM at the
+                // peak's intensity center-of-gravity scan in RT-index space (RT is
+                // linear); each observedIonMobilities[i] is itself a per-scan
+                // representative IM produced by IntensityAccumulator without
+                // averaging IM values, so reading the IM at the COG-RT scan keeps
+                // the whole pipeline free of IM-value averaging.
                 double massError = 0;
-                double ionMobilityError = 0;
+                double weightedRtIndexSum = 0;
                 double totalIntensity = 0;
                 double backgroundIntensity = Math.Min(intensities[peak.StartIndex], intensities[peak.EndIndex]);
                 for (int i = peak.StartIndex; i <= peak.EndIndex; i++)
@@ -1175,9 +1180,9 @@ namespace pwiz.Skyline.Model.Results
                     {
                         massError += (massErrors[i] - massError) * intensity / totalIntensity;
                     }
-                    if (ionMobilityErrors != null)
+                    if (observedIonMobilities != null)
                     {
-                        ionMobilityError += (ionMobilityErrors[i] - ionMobilityError) * intensity / totalIntensity;
+                        weightedRtIndexSum += i * intensity;
                     }
                 }
                 if (totalIntensity > 0)
@@ -1187,10 +1192,14 @@ namespace pwiz.Skyline.Model.Results
                         _flagValues |= FlagValues.mass_error_known;
                         _massError = To10x(massError);
                     }
-                    if (ionMobilityErrors != null)
+                    if (observedIonMobilities != null)
                     {
-                        _flagValues |= FlagValues.ion_mobility_error_known;
-                        _ionMobilityError = To10x(ionMobilityError);
+                        int cogRt = (int)Math.Round(weightedRtIndexSum / totalIntensity);
+                        if (cogRt >= 0 && cogRt < observedIonMobilities.Count)
+                        {
+                            _flagValues |= FlagValues.observed_ion_mobility_known;
+                            _observedIonMobility = observedIonMobilities[cogRt];
+                        }
                     }
                 }
             }
@@ -1304,43 +1313,44 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        // % IM error (intensity-weighted IM centroid vs. target IM, in percent),
-        // stored as 10x scaled-short like mass error.
-        public float? IonMobilityError
+        // Intensity-weighted observed ion mobility across the peak window (raw IM units,
+        // matching IonMobilityFilter.IonMobility.Units). Computed during peak construction.
+        public float? ObservedIonMobility
         {
             get
             {
-                if ((_flagValues & FlagValues.ion_mobility_error_known) == 0)
+                if ((_flagValues & FlagValues.observed_ion_mobility_known) == 0)
                     return null;
-                return _ionMobilityError / 10f;
+                return _observedIonMobility;
             }
         }
 
-        // % CCS error (CCS at intensity-weighted IM centroid vs. target CCS, in percent),
-        // stored as 10x scaled-short. Computed at peak detection in ChromCacheBuilder.
-        public float? CcsError
+        // Observed collision cross section in sq Angstroms. Set only when the source
+        // data file is a vendor format that exposes an IM-CCS conversion (a vendor-supplied
+        // black box); open formats like mzML and mz5 do not, so this stays null for them.
+        // Applied via WithObservedCcs after the peak is constructed, while the file is open.
+        public float? ObservedCcs
         {
             get
             {
-                if ((_flagValues & FlagValues.ccs_error_known) == 0)
+                if ((_flagValues & FlagValues.observed_ccs_known) == 0)
                     return null;
-                return _ccsError / 10f;
+                return _observedCcs;
             }
         }
 
-        // Apply CCS error after construction (CCS conversion needs document context).
-        public ChromPeak WithCcsError(double? ccsError)
+        public ChromPeak WithObservedCcs(double? observedCcs)
         {
             var copy = this;
-            if (ccsError.HasValue)
+            if (observedCcs.HasValue)
             {
-                copy._flagValues |= FlagValues.ccs_error_known;
-                copy._ccsError = To10x(ccsError.Value);
+                copy._flagValues |= FlagValues.observed_ccs_known;
+                copy._observedCcs = (float)observedCcs.Value;
             }
             else
             {
-                copy._flagValues &= ~FlagValues.ccs_error_known;
-                copy._ccsError = 0;
+                copy._flagValues &= ~FlagValues.observed_ccs_known;
+                copy._observedCcs = 0;
             }
             return copy;
         }
@@ -1394,7 +1404,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 52;
             }
-            return 56;
+            return 60;
         }
 
         public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)

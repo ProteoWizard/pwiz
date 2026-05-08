@@ -492,6 +492,8 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _ionMobilityFunctionsProvider != null;  } }
 
+        public IIonMobilityFunctionsProvider IonMobilityFunctionsProvider => _ionMobilityFunctionsProvider;
+
         public eIonMobilityUnits IonMobilityUnits
         {
             get

@@ -18,6 +18,7 @@
  */
 
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -113,6 +114,106 @@ namespace pwiz.SkylineTest
                     AssertEx.AreEqual(60 * slope * (peakStartTime + peakEndTime) / 2 * (peakEndTime - peakStartTime), peak.Area, .001);
                 }
             }
+        }
+
+        [TestMethod]
+        public unsafe void TestChromPeakStructSize()
+        {
+            // v20 added ObservedIonMobility and ObservedCcs as floats. Locking in
+            // the struct size guards against accidental layout drift, since the
+            // cache writes peaks via Marshal.SizeOf<ChromPeak>().
+            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.Nineteen));
+            Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.Twenty));
+            Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
+            Assert.AreEqual(60, sizeof(ChromPeak));
+            Assert.AreEqual(60, Marshal.SizeOf<ChromPeak>());
+        }
+
+        [TestMethod]
+        public void TestChromPeakObservedCcsRoundTrip()
+        {
+            // ObservedCcs is set via WithObservedCcs (called by ApplyObservedCcs in
+            // the cache builder while the source file is open). Empty peak with no
+            // CCS should report null; round-trip through WithObservedCcs sets the
+            // flag and the value, and clearing with null clears both.
+            ChromPeak peak = ChromPeak.EMPTY;
+            Assert.IsNull(peak.ObservedCcs);
+
+            peak = peak.WithObservedCcs(345.67);
+            Assert.IsNotNull(peak.ObservedCcs);
+            Assert.AreEqual(345.67f, peak.ObservedCcs.Value, .001);
+
+            peak = peak.WithObservedCcs(null);
+            Assert.IsNull(peak.ObservedCcs);
+        }
+
+        [TestMethod]
+        public void TestTimeIntensitiesInterpolatePreservesObservedIonMobilities()
+        {
+            // Regression: ChromData.Interpolate used to drop ObservedIonMobilities
+            // by reconstructing a TimeIntensities from individual fields without it,
+            // which silently zeroed observed IM through the entire cache build.
+            // The fix is to interpolate directly off RawTimeIntensities, but this
+            // also exercises that TimeIntensities.Interpolate itself preserves the
+            // ObservedIonMobilities array (interpolating values along with intensities).
+            var times = new[] { 1f, 2f, 3f };
+            var intensities = new[] { 10f, 20f, 30f };
+            var observedIms = new[] { 1.10f, 1.20f, 1.30f };
+            var ti = new TimeIntensities(times, intensities, null, null, observedIms);
+            Assert.IsNotNull(ti.ObservedIonMobilities);
+            Assert.AreEqual(3, ti.ObservedIonMobilities.Count);
+
+            // Interpolating onto the same time grid should preserve all 3 values.
+            var same = ti.Interpolate(times, false);
+            Assert.IsNotNull(same.ObservedIonMobilities);
+            Assert.AreEqual(3, same.ObservedIonMobilities.Count);
+            for (int i = 0; i < 3; i++)
+                Assert.AreEqual(observedIms[i], same.ObservedIonMobilities[i], .0001);
+
+            // Interpolating onto a finer grid also preserves the array (size grows).
+            var finer = ti.Interpolate(new[] { 1f, 1.5f, 2f, 2.5f, 3f }, false);
+            Assert.IsNotNull(finer.ObservedIonMobilities);
+            Assert.AreEqual(5, finer.ObservedIonMobilities.Count);
+        }
+
+        [TestMethod]
+        public void TestTimeIntensitiesTruncatePreservesObservedIonMobilities()
+        {
+            var times = new[] { 1f, 2f, 3f, 4f, 5f };
+            var intensities = new[] { 10f, 20f, 30f, 40f, 50f };
+            var observedIms = new[] { 1.1f, 1.2f, 1.3f, 1.4f, 1.5f };
+            var ti = new TimeIntensities(times, intensities, null, null, observedIms);
+
+            var truncated = ti.Truncate(2.0, 4.0);
+            Assert.IsNotNull(truncated.ObservedIonMobilities);
+            Assert.AreEqual(truncated.NumPoints, truncated.ObservedIonMobilities.Count);
+            // Slice should be {1.2, 1.3, 1.4}
+            Assert.AreEqual(1.2f, truncated.ObservedIonMobilities[0], .0001);
+            Assert.AreEqual(1.4f, truncated.ObservedIonMobilities[truncated.NumPoints - 1], .0001);
+        }
+
+        [TestMethod]
+        public void TestTimeIntensitiesInterpolateTimePreservesObservedIonMobilities()
+        {
+            var times = new[] { 1f, 2f };
+            var intensities = new[] { 10f, 20f };
+            var observedIms = new[] { 1.0f, 2.0f };
+            var ti = new TimeIntensities(times, intensities, null, null, observedIms);
+
+            // Insert a midpoint via InterpolateTime; the new point should get an
+            // intensity-weighted observed IM (the single-point variant Skyline
+            // already uses elsewhere in the constructor).
+            var withMidpoint = ti.InterpolateTime(1.5f);
+            Assert.AreEqual(3, withMidpoint.NumPoints);
+            Assert.IsNotNull(withMidpoint.ObservedIonMobilities);
+            Assert.AreEqual(3, withMidpoint.ObservedIonMobilities.Count);
+            Assert.AreEqual(1.0f, withMidpoint.ObservedIonMobilities[0]);
+            Assert.AreEqual(2.0f, withMidpoint.ObservedIonMobilities[2]);
+            // Midpoint value falls between the bracketing values (the precise number
+            // depends on the intensity-weighted formula in TimeIntensities, but it
+            // must be in [1.0, 2.0]).
+            float mid = withMidpoint.ObservedIonMobilities[1];
+            Assert.IsTrue(mid >= 1.0f && mid <= 2.0f, $@"midpoint observed IM {mid} not bracketed");
         }
 
         [TestMethod]

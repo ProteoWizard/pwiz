@@ -2687,7 +2687,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
                 return ResourceManager.GetString("NumberOfPoints", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Observed CCS.
+        /// </summary>
+        public static string ObservedCcs {
+            get {
+                return ResourceManager.GetString("ObservedCcs", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Observed Ion Mobility.
+        /// </summary>
+        public static string ObservedIonMobility {
+            get {
+                return ResourceManager.GetString("ObservedIonMobility", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Opt Collision Energy.
         /// </summary>

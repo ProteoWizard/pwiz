@@ -612,8 +612,8 @@ namespace pwiz.Skyline.Model.Results
             Identified = 64,
             IdentifiedByAlignment = 128,
             HasPeakShape = 256,
-            HasIonMobilityError = 512,
-            HasCcsError = 1024,
+            HasObservedIonMobility = 512,
+            HasObservedCcs = 1024,
         }
 
         private Flags _flags;
@@ -629,16 +629,15 @@ namespace pwiz.Skyline.Model.Results
             : this(fileId, optimizationStep, peak.MassError, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    ionMobility,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, peak.IsTruncated,
-                   peak.PointsAcross,
+                   peak.IsFwhmDegenerate, peak.IsTruncated, 
+                   peak.PointsAcross, 
                    peak.Identified, 0, 0,
-                   annotations, userSet, peak.IsForcedIntegration,
+                   annotations, userSet, peak.IsForcedIntegration, 
                    peak.PeakShapeValues)
         {
-            IonMobilityError = peak.IonMobilityError;
-            CcsError = peak.CcsError;
+            ObservedIonMobility = peak.ObservedIonMobility;
+            ObservedCcs = peak.ObservedCcs;
         }
-
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, float? massError,
                                    float retentionTime, float startRetentionTime, float endRetentionTime,
                                    IonMobilityFilter ionMobility,
@@ -682,8 +681,8 @@ namespace pwiz.Skyline.Model.Results
         public short OptimizationStep { get; private set; }
 
         private short _massError;
-        private short _ionMobilityError;
-        private short _ccsError;
+        private float _observedIonMobility;
+        private float _observedCcs;
 
         public float? MassError
         {
@@ -702,37 +701,37 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public float? IonMobilityError
+        public float? ObservedIonMobility
         {
             get
             {
-                if (GetFlag(Flags.HasIonMobilityError))
+                if (GetFlag(Flags.HasObservedIonMobility))
                 {
-                    return _ionMobilityError / 10f;
+                    return _observedIonMobility;
                 }
                 return null;
             }
             private set
             {
-                SetFlag(Flags.HasIonMobilityError, value.HasValue);
-                _ionMobilityError = ChromPeak.To10x(value ?? 0);
+                SetFlag(Flags.HasObservedIonMobility, value.HasValue);
+                _observedIonMobility = value ?? 0;
             }
         }
 
-        public float? CcsError
+        public float? ObservedCcs
         {
             get
             {
-                if (GetFlag(Flags.HasCcsError))
+                if (GetFlag(Flags.HasObservedCcs))
                 {
-                    return _ccsError / 10f;
+                    return _observedCcs;
                 }
                 return null;
             }
             private set
             {
-                SetFlag(Flags.HasCcsError, value.HasValue);
-                _ccsError = ChromPeak.To10x(value ?? 0);
+                SetFlag(Flags.HasObservedCcs, value.HasValue);
+                _observedCcs = value ?? 0;
             }
         }
 
@@ -883,6 +882,8 @@ namespace pwiz.Skyline.Model.Results
                    step == OptimizationStep &&
                    Equals(IonMobility, ionMobilityFilter) &&    // Unlikely to change, but still confirm
                    Equals(peak.MassError, MassError) &&
+                   Equals(peak.ObservedIonMobility, ObservedIonMobility) &&
+                   Equals(peak.ObservedCcs, ObservedCcs) &&
                    peak.RetentionTime == RetentionTime &&
                    peak.StartTime == StartRetentionTime &&
                    peak.EndTime == EndRetentionTime &&
@@ -904,6 +905,8 @@ namespace pwiz.Skyline.Model.Results
             return ReferenceEquals(fileId, FileId) &&
                    step == OptimizationStep &&
                    Equals(peak.MassError, MassError) &&
+                   Equals(peak.ObservedIonMobility, ObservedIonMobility) &&
+                   Equals(peak.ObservedCcs, ObservedCcs) &&
                    IsEqualTolerant(peak.RetentionTime, RetentionTime, tol) &&
                    IsEqualTolerant(peak.StartTime, StartRetentionTime, tol) &&
                    IsEqualTolerant(peak.EndTime, EndRetentionTime, tol) &&
@@ -927,8 +930,8 @@ namespace pwiz.Skyline.Model.Results
         {
             var chromInfo = ImClone(this);
             chromInfo.MassError = peak.MassError;
-            chromInfo.IonMobilityError = peak.IonMobilityError;
-            chromInfo.CcsError = peak.CcsError;
+            chromInfo.ObservedIonMobility = peak.ObservedIonMobility;
+            chromInfo.ObservedCcs = peak.ObservedCcs;
             chromInfo.RetentionTime = peak.RetentionTime;
             chromInfo.StartRetentionTime = peak.StartTime;
             chromInfo.EndRetentionTime = peak.EndTime;
