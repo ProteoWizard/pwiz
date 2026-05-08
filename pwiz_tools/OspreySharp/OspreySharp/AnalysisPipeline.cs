@@ -6017,6 +6017,39 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[COUNT] Cross-file observations to write: {0}", nCrossFileObservations));
 
+            // Diagnostic: dump per-best-precursor q-values for cross-impl
+            // bisection of the RefSpectra.score / OspreyExperimentScores
+            // gap. Rust and C# agree on run-q-values (RetentionTimes.score
+            // and OspreyRunScores PASS) but disagree on experiment-peptide-q
+            // for ~42k of 45k entries. Schema:
+            //   modseq <tab> charge <tab> file <tab> entry_id <tab>
+            //   run_prec_q <tab> run_pept_q <tab> exp_prec_q <tab> exp_pept_q
+            // Sort key = (modseq, charge). Compared externally against a
+            // Rust-side dump produced by mirroring this code on the Rust
+            // side (pipeline.rs blib write loop) under the same env-var
+            // gate. Gated by OSPREY_DUMP_BLIB_QVALUES=1; zero overhead
+            // when unset. Temporary — remove once peptide-q drift is
+            // bisected and fixed.
+            if (Environment.GetEnvironmentVariable(@"OSPREY_DUMP_BLIB_QVALUES") == @"1")
+            {
+                var rows = new List<string>();
+                foreach (var kvp in bestByPrecursor.Values)
+                {
+                    var e = kvp.Value;
+                    rows.Add(string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "{0}\t{1}\t{2}\t{3}\t{4:R}\t{5:R}\t{6:R}\t{7:R}",
+                        e.ModifiedSequence, e.Charge, kvp.Key, e.EntryId,
+                        e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                        e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue));
+                }
+                rows.Sort(StringComparer.Ordinal);
+                rows.Insert(0, "modseq\tcharge\tfile\tentry_id\trun_prec_q\trun_pept_q\texp_prec_q\texp_pept_q");
+                File.WriteAllLines(@"cs_blib_qvalues.tsv", rows);
+                LogInfo(string.Format(
+                    @"Wrote cs_blib_qvalues.tsv ({0} best-per-precursor q-value rows)", rows.Count - 1));
+            }
+
             using (var writer = new BlibWriter(config.OutputBlib))
             {
                 writer.BeginBatch();
