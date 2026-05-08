@@ -227,6 +227,9 @@ public static class SpectrumListFactory
         map["etdfilter"] = (args, inner, _) => ParseEtdFilter(args, inner);
         map["scansumming"] = (args, inner, _) => ParseScanSumming(args, inner);
 
+        // demultiplex — DIA / MSX demux via NNLS solve.
+        map["demultiplex"] = (args, inner, _) => ParseDemultiplex(args, inner);
+
 #if !NO_VENDOR_SUPPORT
         // Vendor-specific: SpectrumList_LockmassRefiner reaches into SpectrumList_Waters'
         // lockmass-aware overloads, so it's only compiled when Waters is available. cpp's
@@ -788,6 +791,44 @@ public static class SpectrumListFactory
 
         return new SpectrumListScanSummer(inner, precursorTol, scanTimeTol, ionMobilityTol, sumMs1);
     }
+
+    private static SpectrumListDemux ParseDemultiplex(string args, ISpectrumList inner)
+    {
+        // cpp filterCreator_demux — all key=value pairs.
+        var p = new SpectrumListDemux.Params
+        {
+            MassError = ParseToleranceLoose(TakeKeyValue(ref args, "massError=", "10 ppm")),
+            NnlsMaxIter = int.Parse(TakeKeyValue(ref args, "nnlsMaxIter=", "50"), CultureInfo.InvariantCulture),
+            NnlsEps = double.Parse(TakeKeyValue(ref args, "nnlsEps=", "1e-10"), NumberStyles.Float, CultureInfo.InvariantCulture),
+            // cpp inverts these flags ("noWeighting" → !applyWeighting, "noSumNormalize" → !regularizeSums) so the
+            // CLI defaults to true; mirror exactly.
+            ApplyWeighting = !bool.Parse(TakeKeyValue(ref args, "noWeighting=", "false")),
+            DemuxBlockExtra = double.Parse(TakeKeyValue(ref args, "demuxBlockExtra=", "0"), NumberStyles.Float, CultureInfo.InvariantCulture),
+            VariableFill = bool.Parse(TakeKeyValue(ref args, "variableFill=", "false")),
+            RegularizeSums = !bool.Parse(TakeKeyValue(ref args, "noSumNormalize=", "false")),
+            InterpolateRetentionTime = bool.Parse(TakeKeyValue(ref args, "interpolateRT=", "true")),
+            MinimumWindowSize = double.Parse(TakeKeyValue(ref args, "minWindowSize=", "0.2"), NumberStyles.Float, CultureInfo.InvariantCulture),
+            RemoveNonOverlappingEdges = bool.Parse(TakeKeyValue(ref args, "removeNonOverlappingEdges=", "false")),
+            Optimization = ParseOptimization(TakeKeyValue(ref args, "optimization=", "none")),
+        };
+
+        args = args.Trim();
+        if (!string.IsNullOrEmpty(args))
+            throw new ArgumentException($"demultiplex: unhandled text in argument string: \"{args}\"");
+
+        if (p.MassError.Value <= 0 || p.NnlsEps <= 0 || p.DemuxBlockExtra < 0)
+            throw new ArgumentException("demultiplex: massError and nnlsEps must be > 0; demuxBlockExtra must be ≥ 0");
+
+        return new SpectrumListDemux(inner, p);
+    }
+
+    private static SpectrumListDemux.Optimization ParseOptimization(string s) =>
+        s.ToLowerInvariant() switch
+        {
+            "none" => SpectrumListDemux.Optimization.None,
+            "overlap_only" or "overlaponly" => SpectrumListDemux.Optimization.OverlapOnly,
+            _ => throw new ArgumentException($"demultiplex: unknown optimization '{s}'"),
+        };
 
 #if !NO_VENDOR_SUPPORT
     private static SpectrumList_LockmassRefiner ParseLockmassRefiner(string args, ISpectrumList inner)
