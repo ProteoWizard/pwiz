@@ -230,6 +230,16 @@ public static class SpectrumListFactory
         // demultiplex — DIA / MSX demux via NNLS solve.
         map["demultiplex"] = (args, inner, _) => ParseDemultiplex(args, inner);
 
+        // precursorRefine — recentroid MS2 precursor m/z using surrounding MS1 scans.
+        map["precursorrefine"] = (_, _, msd) =>
+        {
+            ArgumentNullException.ThrowIfNull(msd, "precursorRefine needs the source MSData for instrument-config inspection.");
+            return new SpectrumList_PrecursorRefine(msd);
+        };
+
+        // chargeStatePredictor — predict precursor charge from MS2 intensity distribution.
+        map["chargestatepredictor"] = (args, inner, _) => ParseChargeStatePredictor(args, inner);
+
 #if !NO_VENDOR_SUPPORT
         // Vendor-specific: SpectrumList_LockmassRefiner reaches into SpectrumList_Waters'
         // lockmass-aware overloads, so it's only compiled when Waters is available. cpp's
@@ -829,6 +839,26 @@ public static class SpectrumListFactory
             "overlap_only" or "overlaponly" => SpectrumListDemux.Optimization.OverlapOnly,
             _ => throw new ArgumentException($"demultiplex: unknown optimization '{s}'"),
         };
+
+    private static SpectrumList_ChargeStateCalculator ParseChargeStatePredictor(string args, ISpectrumList inner)
+    {
+        bool overrideExisting = bool.Parse(TakeKeyValue(ref args, "overrideExistingCharge=", "false"));
+        int maxCharge = int.Parse(TakeKeyValue(ref args, "maxMultipleCharge=", "3"), CultureInfo.InvariantCulture);
+        int minCharge = int.Parse(TakeKeyValue(ref args, "minMultipleCharge=", "2"), CultureInfo.InvariantCulture);
+        double singleChargeFraction = double.Parse(TakeKeyValue(ref args, "singleChargeFractionTIC=", "0.9"),
+            NumberStyles.Float, CultureInfo.InvariantCulture);
+        int maxKnown = int.Parse(TakeKeyValue(ref args, "maxKnownCharge=", "0"), CultureInfo.InvariantCulture);
+        bool makeMs2 = bool.Parse(TakeKeyValue(ref args, "makeMS2=", "false"));
+
+        args = args.Trim();
+        if (!string.IsNullOrEmpty(args))
+            throw new ArgumentException($"chargeStatePredictor: unhandled text in argument string: \"{args}\"");
+        if (minCharge > maxCharge)
+            throw new ArgumentException("chargeStatePredictor: minMultipleCharge must be ≤ maxMultipleCharge");
+
+        return new SpectrumList_ChargeStateCalculator(inner, overrideExisting, maxCharge, minCharge,
+            singleChargeFraction, maxKnown, makeMs2);
+    }
 
 #if !NO_VENDOR_SUPPORT
     private static SpectrumList_LockmassRefiner ParseLockmassRefiner(string args, ISpectrumList inner)

@@ -6,6 +6,87 @@ namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 public class PeakPickingTests
 {
     [TestMethod]
+    public void SavitzkyGolaySmoother_GeneratesTextbookCoefficients()
+    {
+        // Reference values from Savitzky & Golay 1964 Table I (smoothing column). Exact rationals
+        // expressed as small integers / denominator; coefficient generation is least-squares
+        // exact so equality to ~1e-12 is appropriate.
+        // Window=5, order=2: [-3, 12, 17, 12, -3] / 35
+        var c5o2 = SavitzkyGolaySmoother.GenerateCoefficients(2, 2, 2);
+        var expected5o2 = new[] { -3, 12, 17, 12, -3 }.Select(v => v / 35.0).ToArray();
+        for (int i = 0; i < 5; i++) Assert.AreEqual(expected5o2[i], c5o2[i], 1e-12);
+
+        // Window=7, order=2: [-2, 3, 6, 7, 6, 3, -2] / 21
+        var c7o2 = SavitzkyGolaySmoother.GenerateCoefficients(3, 3, 2);
+        var expected7o2 = new[] { -2, 3, 6, 7, 6, 3, -2 }.Select(v => v / 21.0).ToArray();
+        for (int i = 0; i < 7; i++) Assert.AreEqual(expected7o2[i], c7o2[i], 1e-12);
+
+        // Window=9, order=2: [-21, 14, 39, 54, 59, 54, 39, 14, -21] / 231
+        var c9o2 = SavitzkyGolaySmoother.GenerateCoefficients(4, 4, 2);
+        var expected9o2 = new[] { -21, 14, 39, 54, 59, 54, 39, 14, -21 }.Select(v => v / 231.0).ToArray();
+        for (int i = 0; i < 9; i++) Assert.AreEqual(expected9o2[i], c9o2[i], 1e-12);
+
+        // Window=11, order=4: [18, -45, -10, 60, 120, 143, 120, 60, -10, -45, 18] / 429
+        var c11o4 = SavitzkyGolaySmoother.GenerateCoefficients(5, 5, 4);
+        var expected11o4 = new[] { 18, -45, -10, 60, 120, 143, 120, 60, -10, -45, 18 }.Select(v => v / 429.0).ToArray();
+        for (int i = 0; i < 11; i++) Assert.AreEqual(expected11o4[i], c11o4[i], 1e-12);
+    }
+
+    [TestMethod]
+    public void SavitzkyGolaySmoother_ConstructorRejectsBadInputs()
+    {
+        Assert.ThrowsException<ArgumentException>(() => new SavitzkyGolaySmoother(1, 5));    // order < 2
+        Assert.ThrowsException<ArgumentException>(() => new SavitzkyGolaySmoother(21, 25));  // order > 20
+        Assert.ThrowsException<ArgumentException>(() => new SavitzkyGolaySmoother(2, 4));    // even window
+        Assert.ThrowsException<ArgumentException>(() => new SavitzkyGolaySmoother(2, 3));    // window < 5
+        Assert.ThrowsException<ArgumentException>(() => new SavitzkyGolaySmoother(7, 5));    // order > window
+    }
+
+    [TestMethod]
+    public void SavitzkyGolaySmoother_Smooth()
+    {
+        string root = FindSgFixtureDir();
+        var xRaw = LoadDoubles(Path.Combine(root, "case00_o2_w11.xRaw.txt"));
+        var yRaw = LoadDoubles(Path.Combine(root, "case00_o2_w11.yRaw.txt"));
+        var xSmoothedExpected = LoadDoubles(Path.Combine(root, "case00_o2_w11.xSmoothed.txt"));
+        var ySmoothedExpected = LoadDoubles(Path.Combine(root, "case00_o2_w11.ySmoothed.txt"));
+
+        Assert.AreEqual(xRaw.Length, yRaw.Length, "xRaw / yRaw length mismatch");
+        Assert.AreEqual(xSmoothedExpected.Length, ySmoothedExpected.Length);
+
+        var xOut = new List<double>();
+        var yOut = new List<double>();
+        new SavitzkyGolaySmoother(polynomialOrder: 2, windowSize: 11).Smooth(xRaw, yRaw, xOut, yOut);
+
+        Assert.AreEqual(xSmoothedExpected.Length, xOut.Count);
+        Assert.AreEqual(ySmoothedExpected.Length, yOut.Count);
+        for (int j = 0; j < yOut.Count; j++)
+            Assert.AreEqual(ySmoothedExpected[j], yOut[j], 1e-5, $"smoothed[{j}] diverged");
+    }
+
+    private static string FindSgFixtureDir()
+    {
+        string? dir = AppContext.BaseDirectory;
+        while (!string.IsNullOrEmpty(dir))
+        {
+            string c = Path.Combine(dir, "test", "Analysis.Tests", "SpectrumProcessing", "SavitzkyGolayTest.data");
+            if (Directory.Exists(c)) return c;
+            dir = Path.GetDirectoryName(dir);
+        }
+        Assert.Inconclusive("SavitzkyGolayTest.data not found");
+        throw new InvalidOperationException("unreachable");
+    }
+
+    private static double[] LoadDoubles(string path)
+    {
+        // Match cpp parseDoubleArray: clamp negatives to 0.
+        return File.ReadAllText(path)
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => System.Math.Max(0.0, double.Parse(t, System.Globalization.CultureInfo.InvariantCulture)))
+            .ToArray();
+    }
+
+    [TestMethod]
     public void ZeroSampleFiller_PadsOpenFlanks()
     {
         // A peak already flanked by zeros needs no insert.
