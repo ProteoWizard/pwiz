@@ -1025,6 +1025,21 @@ class DiaNNSpecLibReader::Impl
             lib.entryByModPeptideAndCharge.emplace(e.name, std::ref(e));
             lib.iRT_min = std::min(lib.iRT_min, (double)e.target.iRT);
             lib.iRT_max = std::max(lib.iRT_max, (double)e.target.iRT);
+
+            // Normalize fragment intensities to max=1 and sort descending — matches the
+            // canonical layout in the binary .skyline.speclib. DIA-NN writes pre-normalized
+            // intensities to parquet for predicted libraries, but raw observed intensities
+            // for MBR/analyzed libraries; either way this pass is idempotent.
+            auto& frags = e.target.fragments;
+            if (!frags.empty())
+            {
+                float maxInten = 0;
+                for (const auto& f : frags) maxInten = std::max(maxInten, f.height);
+                if (maxInten > 0)
+                    for (auto& f : frags) f.height /= maxInten;
+                std::stable_sort(frags.begin(), frags.end(),
+                    [](const Product& a, const Product& b) { return a.height > b.height; });
+            }
         }
         if (lib.entries.empty())
             lib.iRT_min = lib.iRT_max = 0.0;
