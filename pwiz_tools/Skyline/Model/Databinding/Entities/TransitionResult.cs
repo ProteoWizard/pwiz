@@ -83,10 +83,34 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? Height { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.Height; } }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? MassErrorPPM { get { return ChromInfo.MassError; } }
+        [Format(Formats.IonMobility, NullValue = TextUtil.EXCEL_NA)]
+        public double? ObservedIonMobility { get { return ChromInfo.ObservedIonMobility; } }
+        [Format(Formats.CCS, NullValue = TextUtil.EXCEL_NA)]
+        public double? ObservedCcs { get { return ChromInfo.ObservedCcs; } }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
-        public double? IonMobilityErrorPercent { get { return ChromInfo.IonMobilityError; } }
+        public double? IonMobilityErrorPercent
+        {
+            get
+            {
+                var observed = ChromInfo.ObservedIonMobility;
+                var target = ChromInfo.IonMobility?.IonMobility?.Mobility;
+                if (!observed.HasValue || !target.HasValue || target.Value == 0)
+                    return null;
+                return 100.0 * (observed.Value - target.Value) / target.Value;
+            }
+        }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
-        public double? CcsErrorPercent { get { return ChromInfo.CcsError; } }
+        public double? CcsErrorPercent
+        {
+            get
+            {
+                var observed = ChromInfo.ObservedCcs;
+                var target = ChromInfo.IonMobility?.CollisionalCrossSectionSqA;
+                if (!observed.HasValue || !target.HasValue || target.Value == 0)
+                    return null;
+                return 100.0 * (observed.Value - target.Value) / target.Value;
+            }
+        }
         public bool? Truncated { get { return ChromInfo.IsTruncated; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PeakRank { get { return ChromInfo.IsEmpty ? (int?)null : ChromInfo.Rank; } }

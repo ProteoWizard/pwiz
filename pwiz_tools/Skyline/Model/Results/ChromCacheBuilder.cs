@@ -60,6 +60,11 @@ namespace pwiz.Skyline.Model.Results
         // Accessed only on the write thread
         private readonly RetentionTimePredictor _retentionTimePredictor;
 
+        // Captured from the chromatogram provider while the data file is open;
+        // used inside _writeLock to compute per-peak % CCS error from the
+        // observed IM centroid stored on each ChromPeak.
+        private IIonMobilityFunctionsProvider _ionMobilityConverter;
+
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
 
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
@@ -256,6 +261,7 @@ namespace pwiz.Skyline.Model.Results
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
                     _currentFileInfo.HasMidasSpectra = provider.HasMidasSpectra;
                     _currentFileInfo.IsSrm = provider.IsSrm;
+                    _ionMobilityConverter = provider.IonMobilityFunctionsProvider;
 
                     // Start multiple threads to perform peak scoring.
                     _chromDataSets = new QueueWorker<PeptideChromDataSets>(null, ScoreWriteChromDataSets);
@@ -1369,9 +1375,9 @@ namespace pwiz.Skyline.Model.Results
                 {
                     chromTran.MissingMassErrors = true;
                 }
-                if (groupOfTimeIntensities.HasIonMobilityErrors && chromData.TimeIntensities.IonMobilityErrors == null)
+                if (groupOfTimeIntensities.HasObservedIonMobilities && chromData.TimeIntensities.ObservedIonMobilities == null)
                 {
-                    chromTran.MissingIonMobilityErrors = true;
+                    chromTran.MissingObservedIonMobility = true;
                 }
                 _listTransitions.Add(chromTran);
 
@@ -1396,10 +1402,46 @@ namespace pwiz.Skyline.Model.Results
                     for (int i = 0; i < chromData.Peaks.Count; i++)
                         chromData.Peaks[i] = chromData.Peaks[i].RemoveMassError();
                 }
+                ApplyObservedCcs(chromDataSet, chromData);
                 CacheFormat.ChromPeakSerializer().WriteItems(_fsPeaks.FileStream, chromData.Peaks);
             }
 
             AddChromGroup(new ChromGroupHeaderEntry(indexInFile, header));
+        }
+
+        // Convert each peak's observed IM to observed CCS using the source file's
+        // vendor-supplied IM-CCS conversion (a vendor black box). Open formats like
+        // mzML and mz5 don't expose this conversion, in which case ProvidesCollisionalCrossSectionConverter
+        // is false and we leave ObservedCcs null. Done here while the file is still
+        // open; the converted value is persisted on the peak so reports can show CCS
+        // without the file later.
+        private void ApplyObservedCcs(ChromDataSet chromDataSet, ChromData chromData)
+        {
+            if (_ionMobilityConverter == null || !_ionMobilityConverter.ProvidesCollisionalCrossSectionConverter)
+                return;
+            var nodeGroup = chromDataSet.NodeGroup;
+            if (nodeGroup == null)
+                return;
+            int charge = nodeGroup.PrecursorCharge;
+            if (charge == 0)
+                return;
+            var imFilter = chromData.Key.IonMobilityFilter;
+            if (IonMobilityFilter.IsNullOrEmpty(imFilter) || !imFilter.HasIonMobilityValue)
+                return;
+            var imUnits = imFilter.IonMobility.Units;
+            double mz = chromDataSet.PrecursorMz;
+            for (int i = 0; i < chromData.Peaks.Count; i++)
+            {
+                var peak = chromData.Peaks[i];
+                var observedIm = peak.ObservedIonMobility;
+                if (!observedIm.HasValue)
+                    continue;
+                var imValue = IonMobilityValue.GetIonMobilityValue(observedIm.Value, imUnits);
+                double observedCcs = _ionMobilityConverter.CCSFromIonMobility(imValue, mz, charge, nodeGroup);
+                if (observedCcs == 0 || double.IsNaN(observedCcs))
+                    continue;
+                chromData.Peaks[i] = peak.WithObservedCcs(observedCcs);
+            }
         }
     }
 

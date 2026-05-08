@@ -2764,7 +2764,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
                 return ResourceManager.GetString("NumberOfPoints", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Collision cross section in square Angstroms, computed from the observed ion mobility using the source instrument's vendor-supplied conversion. Available only for vendor formats that expose this conversion; open formats such as mzML and mz5 will leave this blank..
+        /// </summary>
+        public static string ObservedCcs {
+            get {
+                return ResourceManager.GetString("ObservedCcs", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Intensity-weighted ion mobility centroid across the peak, in the same units as the IM extraction filter..
+        /// </summary>
+        public static string ObservedIonMobility {
+            get {
+                return ResourceManager.GetString("ObservedIonMobility", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The collision energy value corresponding to the OptStep if
         ///collision energy optimization is being performed.

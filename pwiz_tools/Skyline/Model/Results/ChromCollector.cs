@@ -38,12 +38,11 @@ namespace pwiz.Skyline.Model.Results
         private BlockedList<float> Intensities { get; set; }
         private SortedBlockedList<float> Times { get; set; }
         private BlockedList<float> MassErrors { get; set; }
-        private BlockedList<float> IonMobilityErrors { get; set; }
-        private BlockedList<float> CcsErrors { get; set; }
+        private BlockedList<float> ObservedIonMobilities { get; set; }
         private BlockedList<int> Scans { get; set; }
 
         public ChromCollector(int statusId, bool hasTimes, bool hasMassErrors,
-            bool hasIonMobilityErrors = false, bool hasCcsErrors = false)
+            bool hasObservedIonMobilities = false)
         {
             StatusId = statusId;
             Intensities = new BlockedList<float>();
@@ -51,10 +50,8 @@ namespace pwiz.Skyline.Model.Results
                 Times = new SortedBlockedList<float>();
             if (hasMassErrors)
                 MassErrors = new BlockedList<float>();
-            if (hasIonMobilityErrors)
-                IonMobilityErrors = new BlockedList<float>();
-            if (hasCcsErrors)
-                CcsErrors = new BlockedList<float>();
+            if (hasObservedIonMobilities)
+                ObservedIonMobilities = new BlockedList<float>();
         }
 
         public bool IsSetTimes { get { return Times != null; } }
@@ -76,33 +73,30 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Add intensity, mass error, IM error, and CCS error (if needed) to the given chromatogram.
-        /// IM and CCS errors are expressed as percent (intensity-weighted centroid vs. target).
+        /// Add intensity, mass error, and observed IM (if tracked) to the given chromatogram.
+        /// Observed IM is the intensity-weighted centroid in raw IM units; observed CCS is
+        /// derived per-peak at write time, not stored per time point.
         /// </summary>
         public void AddPoint(int chromatogramIndex, float intensity, float? massError, BlockWriter writer,
-            float? ionMobilityError = null, float? ccsError = null)
+            float? observedIonMobility = null)
         {
             if (MassErrors != null)
                 // ReSharper disable once PossibleInvalidOperationException
                 MassErrors.Add(chromatogramIndex, massError.Value, writer); // If massError is required, this won't be null (and if it is, we want to hear about it)
-            if (IonMobilityErrors != null)
-                IonMobilityErrors.Add(chromatogramIndex, ionMobilityError ?? 0f, writer);
-            if (CcsErrors != null)
-                CcsErrors.Add(chromatogramIndex, ccsError ?? 0f, writer);
+            if (ObservedIonMobilities != null)
+                ObservedIonMobilities.Add(chromatogramIndex, observedIonMobility ?? 0f, writer);
             Intensities.Add(chromatogramIndex, intensity, writer);
         }
 
         /// <summary>
-        /// Fill a number of intensity, mass error, IM error, and CCS error values for the given chromatogram with zeroes.
+        /// Fill a number of intensity, mass error, and observed IM values for the given chromatogram with zeroes.
         /// </summary>
         public void FillZeroes(int chromatogramIndex, int count, BlockWriter writer)
         {
             if (MassErrors != null)
                 MassErrors.FillZeroes(chromatogramIndex, count, writer);
-            if (IonMobilityErrors != null)
-                IonMobilityErrors.FillZeroes(chromatogramIndex, count, writer);
-            if (CcsErrors != null)
-                CcsErrors.FillZeroes(chromatogramIndex, count, writer);
+            if (ObservedIonMobilities != null)
+                ObservedIonMobilities.FillZeroes(chromatogramIndex, count, writer);
             Intensities.FillZeroes(chromatogramIndex, count, writer);
         }
 
@@ -128,11 +122,8 @@ namespace pwiz.Skyline.Model.Results
             var massErrors = MassErrors != null
                 ? MassErrors.ToArray(bytesFromDisk)
                 : null;
-            var ionMobilityErrors = IonMobilityErrors != null
-                ? IonMobilityErrors.ToArray(bytesFromDisk)
-                : null;
-            var ccsErrors = CcsErrors != null
-                ? CcsErrors.ToArray(bytesFromDisk)
+            var observedIonMobilities = ObservedIonMobilities != null
+                ? ObservedIonMobilities.ToArray(bytesFromDisk)
                 : null;
             var scanIds = Scans != null
                 ? Scans.ToArray(bytesFromDisk)
@@ -153,8 +144,7 @@ namespace pwiz.Skyline.Model.Results
                 var filteredTimes = new float[validCount];
                 var filteredIntensities = new float[validCount];
                 var filteredMassErrors = massErrors != null ? new float[validCount] : null;
-                var filteredIonMobilityErrors = ionMobilityErrors != null ? new float[validCount] : null;
-                var filteredCcsErrors = ccsErrors != null ? new float[validCount] : null;
+                var filteredObservedIonMobilities = observedIonMobilities != null ? new float[validCount] : null;
                 var filteredScanIds = scanIds != null ? new int[validCount] : null;
                 int j = 0;
                 for (int i = 0; i < intensities.Length; i++)
@@ -165,10 +155,8 @@ namespace pwiz.Skyline.Model.Results
                         filteredIntensities[j] = intensities[i];
                         if (filteredMassErrors != null)
                             filteredMassErrors[j] = massErrors[i];
-                        if (filteredIonMobilityErrors != null)
-                            filteredIonMobilityErrors[j] = ionMobilityErrors[i];
-                        if (filteredCcsErrors != null)
-                            filteredCcsErrors[j] = ccsErrors[i];
+                        if (filteredObservedIonMobilities != null)
+                            filteredObservedIonMobilities[j] = observedIonMobilities[i];
                         if (filteredScanIds != null)
                             filteredScanIds[j] = scanIds[i];
                         j++;
@@ -177,8 +165,7 @@ namespace pwiz.Skyline.Model.Results
                 times = filteredTimes;
                 intensities = filteredIntensities;
                 massErrors = filteredMassErrors;
-                ionMobilityErrors = filteredIonMobilityErrors;
-                ccsErrors = filteredCcsErrors;
+                observedIonMobilities = filteredObservedIonMobilities;
                 scanIds = filteredScanIds;
             }
 
@@ -195,13 +182,12 @@ namespace pwiz.Skyline.Model.Results
                     string.Format(ResultsResources.ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_,
                     intensities.Length, massErrors.Length));
             }
-            timeIntensities = new TimeIntensities(times, intensities, massErrors, scanIds, ionMobilityErrors, ccsErrors);
+            timeIntensities = new TimeIntensities(times, intensities, massErrors, scanIds, observedIonMobilities);
             // Release memory.
             Times = null;
             Intensities = null;
             MassErrors = null;
-            IonMobilityErrors = null;
-            CcsErrors = null;
+            ObservedIonMobilities = null;
             Scans = null;
         }
     }

@@ -219,14 +219,29 @@ namespace pwiz.Skyline.Model.Results
             float[] extractedIntensities = new float[targetCount];
             float[] massErrors = highAcc ? new float[targetCount] : null;
             double[] meanErrors = highAcc ? new double[targetCount] : null;
-            // Track ion mobility error (intensity-weighted center of gravity vs. target IM)
-            // whenever we have a finite IM extraction window that isn't FAIMS (CV is discrete).
-            bool trackIonMobilityError = MinIonMobilityValue.HasValue && !HasIonMobilityFAIMS();
-            double? targetIonMobility = trackIonMobilityError
-                ? (MinIonMobilityValue.Value + MaxIonMobilityValue.Value) / 2
-                : (double?)null;
-            float[] ionMobilityErrors = trackIonMobilityError ? new float[targetCount] : null;
-            double[] meanIonMobilityErrors = trackIonMobilityError ? new double[targetCount] : null;
+            // Track the observed IM whenever we have a finite IM window that isn't
+            // FAIMS (CV is discrete and would not yield a meaningful centroid).
+            // For summed extraction we accumulate (IM -> summed intensity) histograms
+            // per target and resolve to a single observed IM via COG-bin-index at
+            // end-of-call (see IntensityAccumulator.CogIonMobility). For base-peak
+            // extraction we just carry the IM at the strongest peak per target.
+            bool trackIonMobility = MinIonMobilityValue.HasValue && !HasIonMobilityFAIMS();
+            float[] observedIonMobilities = trackIonMobility ? new float[targetCount] : null;
+            Dictionary<double, double>[] perTargetIonMobilityIntensityBins = null;
+            double[] basePeakIonMobilities = null;
+            if (trackIonMobility)
+            {
+                if (Extractor == ChromExtractor.summed)
+                {
+                    perTargetIonMobilityIntensityBins = new Dictionary<double, double>[targetCount];
+                    for (int i = 0; i < targetCount; i++)
+                        perTargetIonMobilityIntensityBins[i] = new Dictionary<double, double>();
+                }
+                else
+                {
+                    basePeakIonMobilities = new double[targetCount];
+                }
+            }
             bool[] hasScanWindowCoverage = null; // Lazily initialized when narrow scan windows are detected
 
             int spectrumCount = 0;
@@ -352,12 +367,15 @@ namespace pwiz.Skyline.Model.Results
                     
                     // TODO:(bspratt) for full frame diaPASEF MS2, try not sorting - make IM the initial binary search range (and deal with mz that rolls over)
 
-                    // Add the intensity values of all peaks that pass the filter
-                    var accumulator = new IntensityAccumulator(highAcc, Extractor, targetMz, targetIonMobility)
+                    // Add the intensity values of all peaks that pass the filter.
+                    // The IM histogram (for summed) is mutated in place across spectra at
+                    // this RT; the base-peak IM (for base_peak) is loaded/saved per spectrum.
+                    var accumulator = new IntensityAccumulator(highAcc, Extractor, targetMz, trackIonMobility,
+                        perTargetIonMobilityIntensityBins?[targetIndex])
                     {
                         TotalIntensity = extractedIntensities[targetIndex], // Start with the value from the previous spectrum, if any
                         MeanMassError = highAcc ? meanErrors[targetIndex] : 0,
-                        MeanIonMobilityError = trackIonMobilityError ? meanIonMobilityErrors[targetIndex] : 0
+                        BasePeakIonMobility = basePeakIonMobilities != null ? basePeakIonMobilities[targetIndex] : 0
                     };
 
                     var isMs2DiaPasefWithoutPrecursorIM = spectrum.WindowGroup > 0 && !MinIonMobilityValue.HasValue;
@@ -389,10 +407,12 @@ namespace pwiz.Skyline.Model.Results
                     extractedIntensities[targetIndex] = (float) accumulator.TotalIntensity;
                     if (meanErrors != null)
                         meanErrors[targetIndex] = accumulator.MeanMassError;
-                    if (meanIonMobilityErrors != null)
-                        meanIonMobilityErrors[targetIndex] = accumulator.MeanIonMobilityError;
+                    if (basePeakIonMobilities != null)
+                        basePeakIonMobilities[targetIndex] = accumulator.BasePeakIonMobility;
+                    // perTargetIonMobilityIntensityBins[targetIndex] is mutated in place
+                    // by the accumulator and resolved to a COG-bin-index IM after the loop.
                 }
-                
+
             }
             if (spectrumCount == 0)
             {
@@ -403,12 +423,18 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < targetCount; i++)
                     massErrors[i] = (float)SequenceMassCalc.GetPpm(productFilters[i].TargetMz, meanErrors[i]);
             }
-            if (meanIonMobilityErrors != null)
+            if (observedIonMobilities != null)
             {
-                // Convert weighted-mean IM delta to percent error vs. the target IM.
-                var imTarget = targetIonMobility.Value;
-                for (int i = 0; i < targetCount; i++)
-                    ionMobilityErrors[i] = imTarget != 0 ? (float)(100.0 * meanIonMobilityErrors[i] / imTarget) : 0f;
+                if (perTargetIonMobilityIntensityBins != null)
+                {
+                    for (int i = 0; i < targetCount; i++)
+                        observedIonMobilities[i] = (float)IntensityAccumulator.CogIonMobility(perTargetIonMobilityIntensityBins[i]);
+                }
+                else if (basePeakIonMobilities != null)
+                {
+                    for (int i = 0; i < targetCount; i++)
+                        observedIonMobilities[i] = (float)basePeakIonMobilities[i];
+                }
             }
 
             // If we summed across spectra of different retention times, scale per
@@ -429,7 +455,7 @@ namespace pwiz.Skyline.Model.Results
                 productFilters,
                 extractedIntensities,
                 massErrors,
-                ionMobilityErrors);
+                observedIonMobilities);
             // Only set coverage if some targets were not covered (i.e. not all true)
             if (hasScanWindowCoverage != null && hasScanWindowCoverage.Any(c => !c))
                 result.HasScanWindowCoverage = hasScanWindowCoverage;

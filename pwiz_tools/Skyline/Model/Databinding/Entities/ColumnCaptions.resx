@@ -993,6 +993,12 @@
   <data name="NumberOfPoints">
     <value>Number of Points</value>
   </data>
+  <data name="ObservedCcs">
+    <value>Observed CCS</value>
+  </data>
+  <data name="ObservedIonMobility">
+    <value>Observed Ion Mobility</value>
+  </data>
   <data name="OptCollisionEnergy">
     <value>Opt Collision Energy</value>
   </data>

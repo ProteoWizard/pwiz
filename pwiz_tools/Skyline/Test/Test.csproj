@@ -238,6 +238,7 @@
     <Compile Include="FragmentedMoleculeTest.cs" />
     <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="IdentityTest.cs" />
+    <Compile Include="IntensityAccumulatorTest.cs" />
     <Compile Include="InternetAccessTest.cs" />
     <Compile Include="IonMobilityUnitTest.cs" />
     <Compile Include="IpiToUniprotTest.cs" />
