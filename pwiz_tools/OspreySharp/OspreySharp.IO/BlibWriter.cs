@@ -881,41 +881,42 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
-        /// Zlib-compress a byte buffer. Returns raw bytes when the
-        /// compressed output isn't materially smaller. BiblioSpec readers
-        /// determine compression by comparing blob length to expected
-        /// uncompressed size, so the choice of threshold doesn't affect
-        /// downstream consumers — but it MUST match Rust's
-        /// <c>compress_bytes</c> behaviour for cross-impl byte parity.
+        /// Zlib-compress a byte buffer using DotNetZip's Ionic.Zlib at
+        /// level 6 (the BiblioSpec convention — same as
+        /// <c>pwiz.Skyline.Util.Extensions.UtilDB.Compress</c>). Returns
+        /// raw bytes when the compressed output isn't smaller.
         ///
-        /// Rust's <c>flate2</c> (with <c>Compression::default()</c> = level
-        /// 6) typically produces 3-4 more bytes of deflate overhead than
-        /// .NET's <c>DeflateStream</c> on the small fragment-array inputs
-        /// (~160 bytes) Stage 7 emits. As a result, Rust falls back to
-        /// raw on inputs where C# would compress, splitting the .blib
-        /// blob bytes cross-impl. Setting the savings threshold to require
-        /// strictly more than 4 bytes of savings papers over the
-        /// flate2-vs-DeflateStream micro-difference: if C# can only save
-        /// 1-4 bytes, it falls back to raw — same choice Rust makes.
+        /// Why Ionic.Zlib and not <c>System.IO.Compression.DeflateStream</c>:
+        /// .NET's built-in DeflateStream produces a 4-byte-shorter
+        /// non-stock-zlib variant on small inputs (huffman-table /
+        /// end-of-block encoding choices), which splits cross-impl byte
+        /// parity against Rust osprey's <c>flate2</c> (stock zlib output)
+        /// AND against Skyline's existing BlibData writer (also Ionic.Zlib).
+        /// Routing through the same library Skyline uses gives both
+        /// directions of parity for free and aligns with the long-term
+        /// plan to share the BiblioSpec writer across Skyline / Osprey
+        /// (potentially Skyline's BlibData -> Shared/BiblioSpec, or a
+        /// future C# port of pwiz_tools/BiblioSpec).
         /// </summary>
         private static byte[] CompressBytes(byte[] raw)
         {
+            const int level = 6; // matches Skyline UtilDB.Compress + Rust flate2 Compression::default()
+            byte[] compressed;
             using (var ms = new MemoryStream())
             {
-                // Write 2-byte zlib header
-                ms.WriteByte(0x78);
-                ms.WriteByte(0x9C);
-                using (var deflate = new DeflateStream(ms, CompressionMode.Compress, true))
+                using (var z = new Ionic.Zlib.ZlibStream(
+                    ms, Ionic.Zlib.CompressionMode.Compress,
+                    Ionic.Zlib.CompressionLevel.Level0 + level, true))
                 {
-                    deflate.Write(raw, 0, raw.Length);
+                    z.Write(raw, 0, raw.Length);
                 }
-                byte[] compressed = ms.ToArray();
-                // Match Rust's compression-or-raw decision boundary on
-                // small inputs by requiring a >4-byte savings.
-                if (compressed.Length + 4 >= raw.Length)
-                    return raw;
-                return compressed;
+                compressed = ms.ToArray();
             }
+            // BiblioSpec reader convention: blob length < expected
+            // uncompressed size -> compressed; otherwise -> raw.
+            if (compressed.Length >= raw.Length)
+                return raw;
+            return compressed;
         }
 
         /// <summary>
