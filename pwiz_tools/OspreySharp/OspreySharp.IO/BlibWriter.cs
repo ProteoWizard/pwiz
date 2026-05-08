@@ -497,6 +497,8 @@ namespace pwiz.OspreySharp.IO
                 CREATE INDEX IF NOT EXISTS idx_mods_refid ON Modifications(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_boundaries_refid ON OspreyPeakBoundaries(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_runscores_refid ON OspreyRunScores(RefSpectraID);
+                CREATE INDEX IF NOT EXISTS idx_expscores_refid ON OspreyExperimentScores(RefSpectraID);
+                CREATE INDEX IF NOT EXISTS idx_coefficients_refid ON OspreyCoefficients(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_rettimes_refid ON RetentionTimes(RefSpectraID)");
 
             ExecuteNonQuery("PRAGMA wal_checkpoint(TRUNCATE)");
@@ -910,13 +912,12 @@ namespace pwiz.OspreySharp.IO
             // crates/osprey/Cargo.toml. The combination delivers PASS on
             // Compare-Blib-Crossimpl.ps1 for both Stellar 3-file and Astral
             // 3-file, with byte-identical RefSpectraPeaks blobs.
-            const int level = 6;
             byte[] compressed;
             using (var ms = new MemoryStream())
             {
                 using (var z = new Ionic.Zlib.ZlibStream(
                     ms, Ionic.Zlib.CompressionMode.Compress,
-                    Ionic.Zlib.CompressionLevel.Level0 + level, true))
+                    Ionic.Zlib.CompressionLevel.Level6, true))
                 {
                     z.Write(raw, 0, raw.Length);
                 }

@@ -6100,10 +6100,19 @@ namespace pwiz.OspreySharp
                         e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue));
                 }
                 rows.Sort(StringComparer.Ordinal);
-                rows.Insert(0, "modseq\tcharge\tfile\tentry_id\trun_prec_q\trun_pept_q\texp_prec_q\texp_pept_q");
-                File.WriteAllLines(@"cs_blib_qvalues.tsv", rows);
+                // \n newlines (not Environment.NewLine) so the dump
+                // byte-diffs against the corresponding Rust-side TSVs.
+                // Same convention as OspreyDiagnostics — see its `LF`
+                // field doc comment.
+                using (var w = new StreamWriter(@"cs_blib_qvalues.tsv"))
+                {
+                    w.NewLine = "\n";
+                    w.WriteLine("modseq\tcharge\tfile\tentry_id\trun_prec_q\trun_pept_q\texp_prec_q\texp_pept_q");
+                    foreach (var row in rows)
+                        w.WriteLine(row);
+                }
                 LogInfo(string.Format(
-                    @"Wrote cs_blib_qvalues.tsv ({0} best-per-precursor q-value rows)", rows.Count - 1));
+                    @"Wrote cs_blib_qvalues.tsv ({0} best-per-precursor q-value rows)", rows.Count));
             }
 
             using (var writer = new BlibWriter(config.OutputBlib))
