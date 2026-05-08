@@ -149,7 +149,23 @@ namespace pwiz.Skyline.Model.Results
         public ExtractedSpectrum FilterQ1SpectrumList(MsDataSpectrum[] spectra, bool isSimSpectra = false)
         {
             var filters = isSimSpectra ? SimProductFilters : Ms1ProductFilters;
-            return FilterSpectrumList(spectra, filters, HighAccQ1, false);
+            // The idotp guard runs only for genuine MS1 isotope channels (not SIM,
+            // not TIC/BPC). SIM filters share m/z ordering with Ms1ProductFilters
+            // but aren't an isotope envelope per se, so we don't pass the
+            // expected proportions in that case.
+            var expectedProportions = (!isSimSpectra && Q1 != 0) ? _expectedIsotopeProportions : null;
+            return FilterSpectrumList(spectra, filters, HighAccQ1, false, expectedProportions);
+        }
+
+        // MS1 isotope channel proportions matching Ms1ProductFilters in order.
+        // Set by SpectrumFilter when the precursor has an isotope distribution;
+        // null when there's no isotope envelope (e.g., MS2 product ions, all-ions
+        // extraction, or precursors configured without isotope peaks).
+        private IList<float> _expectedIsotopeProportions;
+
+        public void SetExpectedIsotopeProportions(IEnumerable<float> proportions)
+        {
+            _expectedIsotopeProportions = proportions?.ToArray();
         }
 
         public ExtractedSpectrum FilterQ3SpectrumList(MsDataSpectrum[] spectra, bool useIonMobilityHighEnergyOffset)
@@ -183,7 +199,8 @@ namespace pwiz.Skyline.Model.Results
                                                             (Ms2ProductFilters.Any() &&
                                                              spectrum.Metadata.ScanWindowLowerLimit < Ms2ProductFilters.Last().TargetMz &&
                                                              spectrum.Metadata.ScanWindowUpperLimit > Ms2ProductFilters.First().TargetMz));
-            return FilterSpectrumList(filteredSpectra.ToArray(), Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
+            // MS2 fragments are not an isotope envelope - guard does not apply here.
+            return FilterSpectrumList(filteredSpectra.ToArray(), Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset, null);
         }
 
         /// <summary>
@@ -198,7 +215,8 @@ namespace pwiz.Skyline.Model.Results
         /// trying to measure ions per injection, basically).
         /// </summary>
         private ExtractedSpectrum FilterSpectrumList(MsDataSpectrum[] spectra,
-            SpectrumProductFilter[] productFilters, bool highAcc, bool useIonMobilityHighEnergyOffset)
+            SpectrumProductFilter[] productFilters, bool highAcc, bool useIonMobilityHighEnergyOffset,
+            IList<float> expectedIsotopeProportions)
         {
 
             if (HasIonMobilityFAIMS() && spectra.All(s => !Equals(IonMobilityInfo.IonMobility, s.IonMobility)))
@@ -427,8 +445,25 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (perTargetIonMobilityIntensityBins != null)
                 {
-                    for (int i = 0; i < targetCount; i++)
-                        observedIonMobilities[i] = (float)IntensityAccumulator.CogIonMobility(perTargetIonMobilityIntensityBins[i]);
+                    // For MS1 isotope-channel groups, run the cross-isotope idotp guard.
+                    // It returns a single observed IM that's assigned to every channel
+                    // (they share the same physical IM). On null, fall through to
+                    // per-channel COG so we still produce *some* observed IM.
+                    double? guardedIonMobility = expectedIsotopeProportions != null
+                        ? IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(
+                            perTargetIonMobilityIntensityBins, expectedIsotopeProportions)
+                        : null;
+                    if (guardedIonMobility.HasValue)
+                    {
+                        var im = (float)guardedIonMobility.Value;
+                        for (int i = 0; i < targetCount; i++)
+                            observedIonMobilities[i] = im;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < targetCount; i++)
+                            observedIonMobilities[i] = (float)IntensityAccumulator.CogIonMobility(perTargetIonMobilityIntensityBins[i]);
+                    }
                 }
                 else if (basePeakIonMobilities != null)
                 {

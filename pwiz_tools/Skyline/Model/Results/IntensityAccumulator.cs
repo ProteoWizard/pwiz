@@ -19,11 +19,21 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
     public class IntensityAccumulator
     {
+        // Idotp threshold for keeping an IM bin in the cross-isotope COG reduction.
+        // Below this, the bin is treated as interferent-dominated and discarded.
+        // Mirrors the 0.7 cutoff that's commonly accepted as "good fit" in Skyline UI.
+        public const double IDOTP_THRESHOLD_FOR_ION_MOBILITY_GUARD = 0.7;
+
+        // Reject an IM bin when at least this fraction of the expected isotope envelope
+        // has zero observed signal - mirrors IonMobilityFinder.EvaluateBestIonMobilityValue.
+        public const double EXPECTED_PROPORTION_FOR_MISSING_GUARD = 0.10;
+
         public double TotalIntensity { get; set; }
         public double MeanMassError { get; set; }
 
@@ -126,14 +136,8 @@ namespace pwiz.Skyline.Model.Results
         /// COG bin. Averaging bin positions rather than IM values keeps this correct
         /// for non-linear IM coordinates such as 1/K0.
         ///
-        /// TODO (bspratt): add an interference guard. The histogram already gives us
-        /// the per-target intensity-vs-IM picture; if SpectrumFilter retained these
-        /// per-target histograms across all isotope targets of a precursor, a post-
-        /// extraction step could discount IM bins whose isotope distribution
-        /// disagrees with the expected envelope (idotp guard, the way
-        /// IonMobilityFinder.EvaluateBestIonMobilityValue does on unfiltered data).
-        /// Asymmetry summary stats over the same histogram are also worth keeping
-        /// (cf. the TODO in IonMobilityFinder).
+        /// For interference rejection, see ResolveObservedIonMobilityWithIdotpGuard,
+        /// which combines per-isotope histograms before COG.
         /// </summary>
         public static double CogIonMobility(Dictionary<double, double> ionMobilityIntensityBins)
         {
@@ -161,6 +165,89 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString() // Debug convenience, not user facing
         {
             return $@"mz:{_targetMz} i:{TotalIntensity} mzErr:{MeanMassError:F6} im:{ObservedIonMobility:F6}";
+        }
+
+        /// <summary>
+        /// Cross-isotope idotp guard for the observed-IM reduction. Combines the
+        /// per-channel (IM -> summed intensity) histograms of an MS1 isotope group
+        /// into a single Dict[IM, double[channels]] (taking the union of IM keys,
+        /// zero-filling channels that didn't observe a triplet at a given IM),
+        /// then drops IM bins whose isotope intensity vector doesn't match the
+        /// expected envelope (low idotp, or missing signal where >=10% expected).
+        /// The surviving bins are reduced via COG-bin-index, weighted by total
+        /// intensity across isotopes at each bin.
+        ///
+        /// Returns null when no bin survives the guard (e.g., all bins are
+        /// interferent-dominated, or input is empty); the caller may fall back to
+        /// per-channel COG in that case.
+        /// </summary>
+        public static double? ResolveObservedIonMobilityWithIdotpGuard(
+            Dictionary<double, double>[] perChannelBins,
+            IList<float> expectedProportions)
+        {
+            if (perChannelBins == null || perChannelBins.Length == 0 || expectedProportions == null)
+                return null;
+            int channelCount = Math.Min(perChannelBins.Length, expectedProportions.Count);
+            if (channelCount == 0)
+                return null;
+
+            var unionIms = new SortedSet<double>();
+            for (int c = 0; c < channelCount; c++)
+            {
+                if (perChannelBins[c] == null)
+                    continue;
+                foreach (var im in perChannelBins[c].Keys)
+                    unionIms.Add(im);
+            }
+            if (unionIms.Count == 0)
+                return null;
+
+            var expectedVector = new double[channelCount];
+            for (int c = 0; c < channelCount; c++)
+                expectedVector[c] = expectedProportions[c];
+            var statExpected = new Statistics(expectedVector);
+
+            var survivingBins = new Dictionary<double, double>();
+            var observed = new double[channelCount];
+            foreach (var im in unionIms)
+            {
+                Array.Clear(observed, 0, observed.Length);
+                double total = 0;
+                for (int c = 0; c < channelCount; c++)
+                {
+                    if (perChannelBins[c] != null &&
+                        perChannelBins[c].TryGetValue(im, out var intensity))
+                    {
+                        observed[c] = intensity;
+                        total += intensity;
+                    }
+                }
+                if (total <= 0)
+                    continue;
+
+                if (HasMissingExpectedSignal(observed, expectedVector))
+                    continue;
+
+                var statObserved = new Statistics(observed);
+                var idotp = statExpected.Angle(statObserved);
+                if (double.IsNaN(idotp) || idotp < IDOTP_THRESHOLD_FOR_ION_MOBILITY_GUARD)
+                    continue;
+
+                survivingBins[im] = total;
+            }
+            if (survivingBins.Count == 0)
+                return null;
+            return CogIonMobility(survivingBins);
+        }
+
+        private static bool HasMissingExpectedSignal(double[] observed, double[] expected)
+        {
+            for (int c = 0; c < observed.Length; c++)
+            {
+                if (expected[c] >= EXPECTED_PROPORTION_FOR_MISSING_GUARD && observed[c] == 0)
+                    return true;
+            }
+            return false;
         }
     }
 }
