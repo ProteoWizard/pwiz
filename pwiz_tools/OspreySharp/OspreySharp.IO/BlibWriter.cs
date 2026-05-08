@@ -77,6 +77,10 @@ namespace pwiz.OspreySharp.IO
         private SQLiteCommand _cmdInsertProtein;
         private SQLiteCommand _cmdInsertRefSpectraProtein;
         private SQLiteCommand _cmdInsertRetentionTime;
+        private SQLiteCommand _cmdInsertPeakBoundaries;
+        private SQLiteCommand _cmdInsertRunScores;
+        private SQLiteCommand _cmdInsertExperimentScores;
+        private SQLiteCommand _cmdInsertCoefficient;
 
         /// <summary>
         /// Creates a new blib file at the given path. If the file already exists, it is removed first.
@@ -184,6 +188,51 @@ namespace pwiz.OspreySharp.IO
             _cmdInsertRetentionTime.Parameters.Add("@score", System.Data.DbType.Double);
             _cmdInsertRetentionTime.Parameters.Add("@best", System.Data.DbType.Int32);
             _cmdInsertRetentionTime.Prepare();
+
+            _cmdInsertPeakBoundaries = new SQLiteCommand(_conn);
+            _cmdInsertPeakBoundaries.CommandText = @"INSERT INTO OspreyPeakBoundaries (
+                RefSpectraID, FileName, StartRT, EndRT, ApexRT, ApexIntensity, IntegratedArea
+            ) VALUES (@r, @f, @s, @e, @a, @ai, @ia)";
+            _cmdInsertPeakBoundaries.Parameters.Add("@r", System.Data.DbType.Int64);
+            _cmdInsertPeakBoundaries.Parameters.Add("@f", System.Data.DbType.String);
+            _cmdInsertPeakBoundaries.Parameters.Add("@s", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Parameters.Add("@e", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Parameters.Add("@a", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Parameters.Add("@ai", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Parameters.Add("@ia", System.Data.DbType.Double);
+            _cmdInsertPeakBoundaries.Prepare();
+
+            _cmdInsertRunScores = new SQLiteCommand(_conn);
+            _cmdInsertRunScores.CommandText = @"INSERT INTO OspreyRunScores (
+                RefSpectraID, FileName, RunQValue, DiscriminantScore, PosteriorErrorProb
+            ) VALUES (@r, @f, @q, @d, @p)";
+            _cmdInsertRunScores.Parameters.Add("@r", System.Data.DbType.Int64);
+            _cmdInsertRunScores.Parameters.Add("@f", System.Data.DbType.String);
+            _cmdInsertRunScores.Parameters.Add("@q", System.Data.DbType.Double);
+            _cmdInsertRunScores.Parameters.Add("@d", System.Data.DbType.Double);
+            _cmdInsertRunScores.Parameters.Add("@p", System.Data.DbType.Double);
+            _cmdInsertRunScores.Prepare();
+
+            _cmdInsertExperimentScores = new SQLiteCommand(_conn);
+            _cmdInsertExperimentScores.CommandText = @"INSERT INTO OspreyExperimentScores (
+                RefSpectraID, ExperimentQValue, NRunsDetected, NRunsSearched
+            ) VALUES (@r, @q, @nd, @ns)";
+            _cmdInsertExperimentScores.Parameters.Add("@r", System.Data.DbType.Int64);
+            _cmdInsertExperimentScores.Parameters.Add("@q", System.Data.DbType.Double);
+            _cmdInsertExperimentScores.Parameters.Add("@nd", System.Data.DbType.Int32);
+            _cmdInsertExperimentScores.Parameters.Add("@ns", System.Data.DbType.Int32);
+            _cmdInsertExperimentScores.Prepare();
+
+            _cmdInsertCoefficient = new SQLiteCommand(_conn);
+            _cmdInsertCoefficient.CommandText = @"INSERT INTO OspreyCoefficients (
+                RefSpectraID, FileName, ScanNumber, RT, Coefficient
+            ) VALUES (@r, @f, @s, @t, @c)";
+            _cmdInsertCoefficient.Parameters.Add("@r", System.Data.DbType.Int64);
+            _cmdInsertCoefficient.Parameters.Add("@f", System.Data.DbType.String);
+            _cmdInsertCoefficient.Parameters.Add("@s", System.Data.DbType.Int32);
+            _cmdInsertCoefficient.Parameters.Add("@t", System.Data.DbType.Double);
+            _cmdInsertCoefficient.Parameters.Add("@c", System.Data.DbType.Double);
+            _cmdInsertCoefficient.Prepare();
         }
 
         /// <summary>
@@ -385,6 +434,80 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
+        /// Add a row to <c>OspreyPeakBoundaries</c> for a passing
+        /// precursor's best run. Mirrors Rust
+        /// <c>BlibWriter::add_peak_boundaries</c>; one row per
+        /// <c>RefSpectra</c> in the canonical Rust output.
+        /// </summary>
+        public void AddPeakBoundaries(long refId, string fileName,
+            double startRt, double endRt, double apexRt,
+            double apexIntensity, double integratedArea)
+        {
+            _cmdInsertPeakBoundaries.Parameters["@r"].Value = refId;
+            _cmdInsertPeakBoundaries.Parameters["@f"].Value = fileName;
+            _cmdInsertPeakBoundaries.Parameters["@s"].Value = startRt;
+            _cmdInsertPeakBoundaries.Parameters["@e"].Value = endRt;
+            _cmdInsertPeakBoundaries.Parameters["@a"].Value = apexRt;
+            _cmdInsertPeakBoundaries.Parameters["@ai"].Value = apexIntensity;
+            _cmdInsertPeakBoundaries.Parameters["@ia"].Value = integratedArea;
+            _cmdInsertPeakBoundaries.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Add a row to <c>OspreyRunScores</c> for a passing
+        /// precursor's best run. Mirrors Rust
+        /// <c>BlibWriter::add_run_scores</c>; one row per
+        /// <c>RefSpectra</c> in the canonical Rust output.
+        /// </summary>
+        public void AddRunScores(long refId, string fileName,
+            double runQValue, double discriminantScore, double posteriorErrorProb)
+        {
+            _cmdInsertRunScores.Parameters["@r"].Value = refId;
+            _cmdInsertRunScores.Parameters["@f"].Value = fileName;
+            _cmdInsertRunScores.Parameters["@q"].Value = runQValue;
+            _cmdInsertRunScores.Parameters["@d"].Value = discriminantScore;
+            _cmdInsertRunScores.Parameters["@p"].Value = posteriorErrorProb;
+            _cmdInsertRunScores.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Add a row to <c>OspreyExperimentScores</c> for a passing
+        /// precursor. Mirrors Rust
+        /// <c>BlibWriter::add_experiment_scores</c>; one row per
+        /// <c>RefSpectra</c>.
+        /// </summary>
+        public void AddExperimentScores(long refId,
+            double experimentQValue, int nRunsDetected, int nRunsSearched)
+        {
+            _cmdInsertExperimentScores.Parameters["@r"].Value = refId;
+            _cmdInsertExperimentScores.Parameters["@q"].Value = experimentQValue;
+            _cmdInsertExperimentScores.Parameters["@nd"].Value = nRunsDetected;
+            _cmdInsertExperimentScores.Parameters["@ns"].Value = nRunsSearched;
+            _cmdInsertExperimentScores.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Add a row to <c>OspreyCoefficients</c> for a single scan
+        /// within a chromatographic peak's coefficient time series.
+        /// Mirrors Rust <c>BlibWriter::add_coefficient</c>; many rows
+        /// per <c>RefSpectra</c> (one per scan in the peak).
+        /// Currently emitted with zero rows by both implementations
+        /// (the per-scan coefficient time series is not plumbed
+        /// through Stage 7 yet); the table is reserved for the
+        /// chromatogram-export feature.
+        /// </summary>
+        public void AddCoefficient(long refId, string fileName,
+            uint scanNumber, double rt, double coefficient)
+        {
+            _cmdInsertCoefficient.Parameters["@r"].Value = refId;
+            _cmdInsertCoefficient.Parameters["@f"].Value = fileName;
+            _cmdInsertCoefficient.Parameters["@s"].Value = (int)scanNumber;
+            _cmdInsertCoefficient.Parameters["@t"].Value = rt;
+            _cmdInsertCoefficient.Parameters["@c"].Value = coefficient;
+            _cmdInsertCoefficient.ExecuteNonQuery();
+        }
+
+        /// <summary>
         /// Update spectrum count in LibInfo, create indices, and checkpoint WAL.
         /// </summary>
         public void FinalizeDatabase()
@@ -397,6 +520,10 @@ namespace pwiz.OspreySharp.IO
                 CREATE INDEX IF NOT EXISTS idx_refspectra_mz ON RefSpectra(precursorMZ);
                 CREATE INDEX IF NOT EXISTS idx_peaks_refid ON RefSpectraPeaks(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_mods_refid ON Modifications(RefSpectraID);
+                CREATE INDEX IF NOT EXISTS idx_boundaries_refid ON OspreyPeakBoundaries(RefSpectraID);
+                CREATE INDEX IF NOT EXISTS idx_runscores_refid ON OspreyRunScores(RefSpectraID);
+                CREATE INDEX IF NOT EXISTS idx_expscores_refid ON OspreyExperimentScores(RefSpectraID);
+                CREATE INDEX IF NOT EXISTS idx_coefficients_refid ON OspreyCoefficients(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_rettimes_refid ON RetentionTimes(RefSpectraID)");
 
             ExecuteNonQuery("PRAGMA wal_checkpoint(TRUNCATE)");
@@ -427,6 +554,10 @@ namespace pwiz.OspreySharp.IO
                 if (_cmdInsertProtein != null) { _cmdInsertProtein.Dispose(); _cmdInsertProtein = null; }
                 if (_cmdInsertRefSpectraProtein != null) { _cmdInsertRefSpectraProtein.Dispose(); _cmdInsertRefSpectraProtein = null; }
                 if (_cmdInsertRetentionTime != null) { _cmdInsertRetentionTime.Dispose(); _cmdInsertRetentionTime = null; }
+                if (_cmdInsertPeakBoundaries != null) { _cmdInsertPeakBoundaries.Dispose(); _cmdInsertPeakBoundaries = null; }
+                if (_cmdInsertRunScores != null) { _cmdInsertRunScores.Dispose(); _cmdInsertRunScores = null; }
+                if (_cmdInsertExperimentScores != null) { _cmdInsertExperimentScores.Dispose(); _cmdInsertExperimentScores = null; }
+                if (_cmdInsertCoefficient != null) { _cmdInsertCoefficient.Dispose(); _cmdInsertCoefficient = null; }
                 if (_conn != null)
                 {
                     _conn.Close();
@@ -663,6 +794,47 @@ namespace pwiz.OspreySharp.IO
                     Key TEXT PRIMARY KEY,
                     Value TEXT
                 );
+
+                CREATE TABLE OspreyPeakBoundaries (
+                    id INTEGER PRIMARY KEY,
+                    RefSpectraID INTEGER,
+                    FileName TEXT,
+                    StartRT REAL,
+                    EndRT REAL,
+                    ApexRT REAL,
+                    ApexIntensity REAL,
+                    IntegratedArea REAL,
+                    FOREIGN KEY (RefSpectraID) REFERENCES RefSpectra(id)
+                );
+
+                CREATE TABLE OspreyRunScores (
+                    id INTEGER PRIMARY KEY,
+                    RefSpectraID INTEGER,
+                    FileName TEXT,
+                    RunQValue REAL,
+                    DiscriminantScore REAL,
+                    PosteriorErrorProb REAL,
+                    FOREIGN KEY (RefSpectraID) REFERENCES RefSpectra(id)
+                );
+
+                CREATE TABLE OspreyExperimentScores (
+                    id INTEGER PRIMARY KEY,
+                    RefSpectraID INTEGER,
+                    ExperimentQValue REAL,
+                    NRunsDetected INTEGER,
+                    NRunsSearched INTEGER,
+                    FOREIGN KEY (RefSpectraID) REFERENCES RefSpectra(id)
+                );
+
+                CREATE TABLE OspreyCoefficients (
+                    id INTEGER PRIMARY KEY,
+                    RefSpectraID INTEGER,
+                    FileName TEXT,
+                    ScanNumber INTEGER,
+                    RT REAL,
+                    Coefficient REAL,
+                    FOREIGN KEY (RefSpectraID) REFERENCES RefSpectra(id)
+                );
             ");
 
             // Insert LibInfo
@@ -740,25 +912,51 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
-        /// Zlib-compress a byte buffer. Returns raw bytes if compression does not reduce size.
-        /// BiblioSpec readers determine compression by comparing blob length to expected uncompressed size.
+        /// Zlib-compress a byte buffer using DotNetZip's Ionic.Zlib at
+        /// level 6 (the BiblioSpec convention — same as
+        /// <c>pwiz.Skyline.Util.Extensions.UtilDB.Compress</c>). Returns
+        /// raw bytes when the compressed output isn't smaller.
+        ///
+        /// Why Ionic.Zlib and not <c>System.IO.Compression.DeflateStream</c>:
+        /// .NET's built-in DeflateStream produces a 4-byte-shorter
+        /// non-stock-zlib variant on small inputs (huffman-table /
+        /// end-of-block encoding choices), which splits cross-impl byte
+        /// parity against Rust osprey's <c>flate2</c> (stock zlib output)
+        /// AND against Skyline's existing BlibData writer (also Ionic.Zlib).
+        /// Routing through the same library Skyline uses gives both
+        /// directions of parity for free and aligns with the long-term
+        /// plan to share the BiblioSpec writer across Skyline / Osprey
+        /// (potentially Skyline's BlibData -> Shared/BiblioSpec, or a
+        /// future C# port of pwiz_tools/BiblioSpec).
         /// </summary>
         private static byte[] CompressBytes(byte[] raw)
         {
+            // Use DotNetZip's Ionic.Zlib at level 6, matching Skyline's
+            // pwiz.Skyline.Util.Extensions.UtilDB.Compress (the canonical
+            // ProteoWizard BlibData writer in Skyline/Util/Extensions/
+            // UtilDB.cs:109-200). Cross-impl byte parity with Rust osprey
+            // additionally requires Rust's flate2 to use the `zlib-default`
+            // backend (vendored stock zlib via libz-sys), which produces
+            // identical deflate bytes to Ionic.Zlib. Configured in
+            // crates/osprey/Cargo.toml. The combination delivers PASS on
+            // Compare-Blib-Crossimpl.ps1 for both Stellar 3-file and Astral
+            // 3-file, with byte-identical RefSpectraPeaks blobs.
+            byte[] compressed;
             using (var ms = new MemoryStream())
             {
-                // Write 2-byte zlib header
-                ms.WriteByte(0x78);
-                ms.WriteByte(0x9C);
-                using (var deflate = new DeflateStream(ms, CompressionMode.Compress, true))
+                using (var z = new Ionic.Zlib.ZlibStream(
+                    ms, Ionic.Zlib.CompressionMode.Compress,
+                    Ionic.Zlib.CompressionLevel.Level6, true))
                 {
-                    deflate.Write(raw, 0, raw.Length);
+                    z.Write(raw, 0, raw.Length);
                 }
-                byte[] compressed = ms.ToArray();
-                if (compressed.Length >= raw.Length)
-                    return raw;
-                return compressed;
+                compressed = ms.ToArray();
             }
+            // BiblioSpec reader convention: blob length < expected
+            // uncompressed size -> compressed; otherwise -> raw.
+            if (compressed.Length >= raw.Length)
+                return raw;
+            return compressed;
         }
 
         /// <summary>
