@@ -5915,8 +5915,20 @@ namespace pwiz.OspreySharp
                     nFallback));
             }
 
+
             // Collect passing entries for downstream best-per-precursor selection.
             // A precursor is admitted iff (modseq, charge) is in passingPrecursors.
+            //
+            // No protein-FDR gate here: Rust only filters the .blib by protein
+            // FDR when `--fdr-level=protein` (the FdrLevel::Protein variant
+            // routes through the peptide-gate's effective_experiment_qvalue).
+            // C#'s FdrLevel enum doesn't include Protein, and `--protein-fdr`
+            // is interpreted by Rust as a computation-enable flag, not a
+            // hard blib filter. Mirror that: keep the (modseq, charge)
+            // membership check from Stages 1+2 and don't apply
+            // ExperimentProteinQvalue here. Closed 22/27 only-in-Rust on
+            // Stellar 3-file (the remaining 5 have modifications upstream of
+            // perFileEntries — separate bisection).
             var passingEntries = new List<KeyValuePair<string, FdrEntry>>();
             foreach (var kvp in perFileEntries)
             {
@@ -5927,16 +5939,6 @@ namespace pwiz.OspreySharp
                     string key = entry.ModifiedSequence + "|" + entry.Charge;
                     if (!passingPrecursors.Contains(key))
                         continue;
-
-                    // If protein FDR is enabled, also check protein q-value.
-                    // Use experiment-level protein q-value so the gate is
-                    // experiment-wide, consistent with Stage 1/2 above.
-                    if (config.ProteinFdr.HasValue &&
-                        entry.ExperimentProteinQvalue > config.ProteinFdr.Value)
-                    {
-                        continue;
-                    }
-
                     passingEntries.Add(
                         new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
                 }
@@ -6111,9 +6113,12 @@ namespace pwiz.OspreySharp
                                 (!anyPassesRunFdr && obs.Key == bestRunFile);
                             bool isBest = obs.Key == fileName;
 
+                            double? rtForIdLine = null;
+                            if (showIdLine)
+                                rtForIdLine = fileEntry.ApexRt;
                             writer.AddRetentionTime(
                                 refId, srcId,
-                                showIdLine ? (double?)fileEntry.ApexRt : null,
+                                rtForIdLine,
                                 fileEntry.StartRt,
                                 fileEntry.EndRt,
                                 runQ,
@@ -6153,9 +6158,20 @@ namespace pwiz.OspreySharp
                 writer.Commit();
 
                 // Add metadata
-                writer.AddMetadata("osprey_version", Program.VERSION_STRING);
-                writer.AddMetadata("search_parameter_hash", config.SearchParameterHash());
-                writer.AddMetadata("n_passing_precursors", bestByPrecursor.Count.ToString());
+                // OspreyMetadata key set must match Rust's
+                // write_blib_from_plan (pipeline.rs:6078-6081) byte-for-byte.
+                // The previous C#-only keys (search_parameter_hash,
+                // n_passing_precursors) are dropped: search_parameter_hash
+                // is already on every reconciled .scores.parquet (where it's
+                // used for cache validation, the actual purpose), and
+                // n_passing_precursors is recoverable as
+                // SELECT COUNT(*) FROM RefSpectra.
+                writer.AddMetadata(@"osprey_version", Program.VERSION_STRING);
+                writer.AddMetadata(@"search_mode", @"coelution");
+                writer.AddMetadata(@"run_fdr",
+                    config.RunFdr.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                writer.AddMetadata(@"experiment_fdr",
+                    config.ExperimentFdr.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
                 writer.FinalizeDatabase();
             }
