@@ -881,8 +881,22 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
-        /// Zlib-compress a byte buffer. Returns raw bytes if compression does not reduce size.
-        /// BiblioSpec readers determine compression by comparing blob length to expected uncompressed size.
+        /// Zlib-compress a byte buffer. Returns raw bytes when the
+        /// compressed output isn't materially smaller. BiblioSpec readers
+        /// determine compression by comparing blob length to expected
+        /// uncompressed size, so the choice of threshold doesn't affect
+        /// downstream consumers — but it MUST match Rust's
+        /// <c>compress_bytes</c> behaviour for cross-impl byte parity.
+        ///
+        /// Rust's <c>flate2</c> (with <c>Compression::default()</c> = level
+        /// 6) typically produces 3-4 more bytes of deflate overhead than
+        /// .NET's <c>DeflateStream</c> on the small fragment-array inputs
+        /// (~160 bytes) Stage 7 emits. As a result, Rust falls back to
+        /// raw on inputs where C# would compress, splitting the .blib
+        /// blob bytes cross-impl. Setting the savings threshold to require
+        /// strictly more than 4 bytes of savings papers over the
+        /// flate2-vs-DeflateStream micro-difference: if C# can only save
+        /// 1-4 bytes, it falls back to raw — same choice Rust makes.
         /// </summary>
         private static byte[] CompressBytes(byte[] raw)
         {
@@ -896,7 +910,9 @@ namespace pwiz.OspreySharp.IO
                     deflate.Write(raw, 0, raw.Length);
                 }
                 byte[] compressed = ms.ToArray();
-                if (compressed.Length >= raw.Length)
+                // Match Rust's compression-or-raw decision boundary on
+                // small inputs by requiring a >4-byte savings.
+                if (compressed.Length + 4 >= raw.Length)
                     return raw;
                 return compressed;
             }
