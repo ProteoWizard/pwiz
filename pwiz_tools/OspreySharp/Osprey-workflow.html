@@ -66,12 +66,15 @@
     first join) is bit-identical on Stellar + Astral 3-file across all
     nine cross-impl dumps. Stage 6 (per-file rescore + gap-fill +
     reconciled parquet write-back — the second per-file fan-out) is
-    in progress: orchestrator landed in OspreySharp but not yet exercised
-    end-to-end. Stages 7 (second-pass Percolator) and 8 (protein FDR +
-    .blib output) are the remaining joins. Color indicates port status
-    of the OspreySharp (C#) implementation against the Osprey (Rust)
-    reference. Green badges = regression tests; purple badges = C#/Rust
-    perf ratio.
+    bit-identical on Stellar + Astral 3-file (allowlist empty after
+    pwiz #4188). Stage 7 (second-pass Percolator + protein FDR
+    parsimony + picked-protein TDC — the second join) is cross-impl
+    parity at 1e-9 absolute on Stellar 6204/6204 groups + Astral
+    11779/11779 groups via <code>Compare-Stage7-Crossimpl.ps1</code>.
+    Stage 8 (.blib output — final coordinator phase) is the remaining
+    join. Color indicates port status of the OspreySharp (C#)
+    implementation against the Osprey (Rust) reference. Green badges =
+    regression tests; purple badges = C#/Rust perf ratio.
   </p>
 </header>
 
@@ -153,7 +156,7 @@
 <g transform="translate(40, 40)">
   <text class="title">Osprey / OspreySharp DIA search pipeline</text>
   <text class="subtitle" y="22">
-    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-05-06: Stages 1-6 cross-impl byte-parity end-to-end on Stellar + Astral 3-file (post-rescore q-values match max_diff=0; reconciled .scores.parquet diff 3/3 PASS modulo six allowlisted blob columns the C# scoring path doesn't yet write). Stage 7 second-pass Percolator is the next cross-impl validation target.
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-05-07: Stages 1-7 cross-impl parity end-to-end on Stellar + Astral 3-file. Stages 1-6 byte-parity (post-rescore q-values match max_diff=0; reconciled .scores.parquet 3/3 PASS, allowlist now empty after pwiz #4188 closed the six previously-allowlisted blob columns). Stage 7 protein FDR (parsimony + picked-protein TDC) numerically equivalent at 1e-9 absolute via Compare-Stage7-Crossimpl.ps1: 6204/6204 groups on Stellar and 11779/11779 on Astral, max abs diff 1.776e-15 on best_peptide_score, exact match on group_qvalue + n_unique + n_shared + is_target_winner. Stage 8 (.blib output) is the next cross-impl validation target.
   </text>
 </g>
 
@@ -450,23 +453,14 @@
 <path class="flow" d="M 600 2140 L 600 2180" marker-end="url(#arrow)"/>
 
 <g transform="translate(0, 2180)">
-  <rect class="phase-bg-active" x="40" y="0" width="1120" height="120" rx="6"/>
+  <rect class="phase-bg" x="40" y="0" width="1120" height="120" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 7</text>
   <text class="phase-title" x="60" y="42">Second-pass Percolator SVM</text>
   <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-file representation</text>
 
-  <rect class="st-missing" x="80" y="62" width="1040" height="46" rx="4"/>
+  <rect class="st-done" x="80" y="62" width="1040" height="46" rx="4"/>
   <text class="stage-title" x="600" y="82" text-anchor="middle">Single Percolator pass on the reconciled + gap-filled pool</text>
-  <text class="stage-desc"  x="600" y="96" text-anchor="middle">final run + experiment q-values at precursor + peptide levels; OSPREY_DUMP_REFINED_FDR cross-impl bisection dump (planned)</text>
-
-  <!-- "You are here" callout — Stage 6 cross-impl byte-parity landed
-       (Stellar + Astral); Stage 7 second-pass Percolator is the next
-       per-stage cross-impl validation target. -->
-  <g transform="translate(820, 57)">
-    <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
-    <text class="you-are-here" x="136" y="10">YOU ARE</text>
-    <text class="you-are-here" x="136" y="26">HERE</text>
-  </g>
+  <text class="stage-desc"  x="600" y="96" text-anchor="middle">final run + experiment q-values at precursor + peptide levels (cross-impl PASS at 1e-9 via the protein-FDR-dump gate which transitively covers second-pass Percolator scores)</text>
 </g>
 
 <!-- ================================================================= -->
@@ -475,19 +469,28 @@
 <path class="flow" d="M 600 2300 L 600 2340" marker-end="url(#arrow)"/>
 
 <g transform="translate(0, 2340)">
-  <rect class="phase-bg" x="40" y="0" width="1120" height="160" rx="6"/>
+  <rect class="phase-bg-active" x="40" y="0" width="1120" height="160" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 8</text>
   <text class="phase-title" x="60" y="42">Protein FDR + output</text>
   <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — final coordinator phase</text>
 
-  <rect class="st-unverif" x="80" y="62" width="1040" height="42" rx="4"/>
+  <rect class="st-done" x="80" y="62" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="82" text-anchor="middle">Parsimony + picked-protein FDR (Savitski 2015, TDC on best peptide score)</text>
-  <text class="stage-desc"  x="600" y="96" text-anchor="middle">bipartite graph, identical-set grouping, subset elimination, greedy razor assignment</text>
+  <text class="stage-desc"  x="600" y="96" text-anchor="middle">bipartite graph, identical-set grouping, subset elimination, greedy razor assignment (cross-impl PASS Stellar 6204/6204 + Astral 11779/11779 via Compare-Stage7-Crossimpl.ps1)</text>
 
   <rect class="st-partial" x="80" y="118" width="1040" height="32" rx="4"/>
-  <text class="stage-title" x="600" y="138" text-anchor="middle">BiblioSpecLite .blib (RefSpectra, RetentionTimes, Modifications, Proteins, Osprey fragment tables)</text>
+  <text class="stage-title" x="600" y="138" text-anchor="middle">BiblioSpecLite .blib (RefSpectra, RetentionTimes, Modifications, Proteins, Osprey fragment tables) — next cross-impl validation target</text>
 
   <path class="flow" d="M 600 104 L 600 116" marker-end="url(#arrow)"/>
+
+  <!-- "You are here" callout — Stage 7 protein FDR cross-impl PASS
+       (Stellar + Astral); Stage 8 .blib output is the next
+       cross-impl validation target. -->
+  <g transform="translate(820, 117)">
+    <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
+    <text class="you-are-here" x="136" y="10">YOU ARE</text>
+    <text class="you-are-here" x="136" y="26">HERE</text>
+  </g>
 </g>
 
 </svg>
@@ -584,14 +587,15 @@
     now.
   </p>
   <p>
-    <strong>Next targets:</strong> exercise the new Stage 6
-    <code>RescorePerFile</code> orchestrator end-to-end (gap-fill +
-    parquet write-back not yet implemented). Add
-    <code>OSPREY_DUMP_REFINED_RESCORE</code> intermediate dump or
-    diff reconciled parquets directly. Once Stage 6 is byte-identical,
-    advance into Stage 7 (second-pass Percolator + new
-    <code>OSPREY_DUMP_REFINED_FDR</code>) then Stage 8. See
-    <code>ai/todos/active/TODO-20260429_osprey_sharp_stage6.md</code>.
+    <strong>Next target — Stage 8 (.blib output cross-impl):</strong>
+    Stages 1-7 are now cross-impl parity end-to-end on Stellar +
+    Astral. The remaining work is byte/row parity on the
+    BiblioSpecLite <code>.blib</code> SQLite output: per-table content
+    diffs (RefSpectra, RetentionTimes, Modifications, Proteins, Osprey
+    fragment tables) and the row-set semantics that drive Skyline ID
+    lines (NULL <code>retentionTime</code> for runs that don't pass
+    run-level FDR but pass experiment-level via another replicate).
+    See <code>ai/todos/active/TODO-20260507_osprey_sharp_stage8.md</code>.
   </p>
 </footer>
 </body>
