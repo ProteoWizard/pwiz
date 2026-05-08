@@ -185,8 +185,7 @@
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="ExportHugeParquetReportTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
-    <Compile Include="MedianPolishSmallTest.cs" />
-    <Compile Include="MedianPolishTest.cs" />
+    <Compile Include="MedianPolishScenariosTest.cs" />
     <Compile Include="ParquetReportExporterTest.cs" />
     <Compile Include="MedianDocumentRetentionTimesTest.cs" />
     <Compile Include="OpenPeakAreasFromStartPageTest.cs" />
