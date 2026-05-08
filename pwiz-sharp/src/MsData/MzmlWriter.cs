@@ -679,8 +679,14 @@ public sealed class MzmlWriter
 
         // Emit precision / compression / array-type CV params before user-added ones,
         // matching pwiz's canonical ordering so byte-level diffs line up.
+        // EmitEncodingCvParams handles precision + compression + numpress; the array's other
+        // params (m/z array, intensity array, units, ...) come from MzmlXml.WriteParams. We
+        // FILTER the encoding-related ones out of arr.CVParams so we don't double-emit them
+        // (e.g. an m/z array round-tripped from a 64-bit input would pick up its source
+        // "64-bit float" CV plus the writer's chosen "32-bit float" — and a downstream reader
+        // would then decode using the wrong precision and report 2× the peak count).
         EmitEncodingCvParams(w, cfg);
-        MzmlXml.WriteParams(w, arr);
+        WriteArrayParamsExcludingEncoding(w, arr);
 
         w.WriteStartElement("binary");
         w.WriteString(base64);
@@ -724,6 +730,37 @@ public sealed class MzmlWriter
         }
         return CVID.CVID_Unknown;
     }
+
+    /// <summary>Emits all CV / user / referenceableParamGroup entries on <paramref name="arr"/>
+    /// EXCEPT the precision / compression / numpress CV params — those are emitted from the
+    /// resolved <see cref="BinaryEncoderConfig"/> by <see cref="EmitEncodingCvParams"/>. The
+    /// array may carry stale encoding CVs from its source (e.g. a 64-bit float term inherited
+    /// from the input mzML); writing both that and the writer's chosen precision produces an
+    /// XML element with two conflicting precision params, and the reader picks the second one
+    /// — yielding wrongly-decoded binary data.</summary>
+    private static void WriteArrayParamsExcludingEncoding(XmlWriter w, BinaryDataArray arr)
+    {
+        foreach (var pg in arr.ParamGroups)
+        {
+            w.WriteStartElement("referenceableParamGroupRef");
+            w.WriteAttributeString("ref", pg.Id);
+            w.WriteEndElement();
+        }
+        foreach (var cv in arr.CVParams)
+            if (!IsEncodingCv(cv.Cvid)) MzmlXml.WriteCvParam(w, cv);
+        foreach (var u in arr.UserParams) MzmlXml.WriteUserParam(w, u);
+    }
+
+    private static bool IsEncodingCv(CVID cv) => cv switch
+    {
+        CVID.MS_64_bit_float or CVID.MS_32_bit_float => true,
+        CVID.MS_64_bit_integer or CVID.MS_32_bit_integer => true,
+        CVID.MS_zlib_compression or CVID.MS_no_compression => true,
+        CVID.MS_MS_Numpress_linear_prediction_compression => true,
+        CVID.MS_MS_Numpress_positive_integer_compression => true,
+        CVID.MS_MS_Numpress_short_logged_float_compression => true,
+        _ => false,
+    };
 
     private static void EmitEncodingCvParams(XmlWriter w, BinaryEncoderConfig cfg)
     {
