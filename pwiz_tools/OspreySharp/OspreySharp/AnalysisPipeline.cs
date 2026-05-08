@@ -5831,31 +5831,121 @@ namespace pwiz.OspreySharp
             Dictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config)
         {
-            // Determine effective FDR threshold
-            double fdrThreshold = config.RunFdr;
+            // Two-stage blib output gate, mirroring Rust pipeline.rs:4596-4668.
+            //
+            // Stage 1 (peptide gate): the configured FdrLevel determines which
+            // peptide identities are eligible for output. EXPERIMENT-level
+            // q-value, not run-level — letting in any precursor that merely
+            // passed run-level FDR in some replicate would admit identifications
+            // upstream Rust filters out, and was the source of a 483-row
+            // RefSpectra over-count (Stellar 3-file) before this fix.
+            //
+            // Stage 2 (precursor gate): within each eligible peptide, include
+            // only charge states that individually pass
+            // experiment_precursor_qvalue <= experiment_fdr. If NO charge state
+            // of a peptide passes precursor-level FDR (possible because
+            // peptide-level FDR aggregates across charges), include the best
+            // charge state (lowest experiment_precursor_qvalue) as a
+            // representative.
+            double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
+            double expThreshold = config.ExperimentFdr;
 
-            // Collect passing entries
+            // Stage 1: passing peptides
+            var passingPeptides = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    if (e.IsDecoy)
+                        continue;
+                    if (e.EffectiveExperimentQvalue(config.FdrLevel) <= expThreshold)
+                        passingPeptides.Add(e.ModifiedSequence);
+                }
+            }
+
+            // Stage 2: passing precursors, with fallback to best charge per peptide
+            var passingPrecursors = new HashSet<string>(StringComparer.Ordinal);
+            var bestChargePerPeptide = new Dictionary<string, KeyValuePair<byte, double>>(
+                StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    if (e.IsDecoy || !passingPeptides.Contains(e.ModifiedSequence))
+                        continue;
+                    string key = e.ModifiedSequence + "|" + e.Charge;
+                    if (e.ExperimentPrecursorQvalue <= expThreshold)
+                        passingPrecursors.Add(key);
+                    KeyValuePair<byte, double> existing;
+                    if (!bestChargePerPeptide.TryGetValue(e.ModifiedSequence, out existing)
+                        || e.ExperimentPrecursorQvalue < existing.Value)
+                    {
+                        bestChargePerPeptide[e.ModifiedSequence] =
+                            new KeyValuePair<byte, double>(e.Charge, e.ExperimentPrecursorQvalue);
+                    }
+                }
+            }
+            // Fallback: peptides with no precursor-passing charge state keep their best
+            int nFallback = 0;
+            foreach (var peptide in passingPeptides)
+            {
+                bool hasPassing = false;
+                KeyValuePair<byte, double> best;
+                if (!bestChargePerPeptide.TryGetValue(peptide, out best))
+                    continue;
+                string fallbackKey = peptide + "|" + best.Key;
+                // Quick check: is any charge of this peptide already in passingPrecursors?
+                // We can derive this from whether the fallback key is already there OR
+                // any other charge for this peptide is. The exact set is small enough
+                // that a linear scan over precursors with this prefix is fine, but the
+                // simpler check suffices because best is already the lowest-qvalue
+                // charge — if it itself didn't pass, no other did either.
+                hasPassing = passingPrecursors.Contains(fallbackKey)
+                    || best.Value <= expThreshold;
+                if (!hasPassing)
+                {
+                    passingPrecursors.Add(fallbackKey);
+                    nFallback++;
+                }
+            }
+            if (nFallback > 0)
+            {
+                LogInfo(string.Format(
+                    "{0} peptides had no charge state passing precursor-level FDR; best charge state kept as fallback",
+                    nFallback));
+            }
+
+            // Collect passing entries for downstream best-per-precursor selection.
+            // A precursor is admitted iff (modseq, charge) is in passingPrecursors.
             var passingEntries = new List<KeyValuePair<string, FdrEntry>>();
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
                 {
-                    if (!entry.IsDecoy &&
-                        entry.EffectiveRunQvalue(config.FdrLevel) <= fdrThreshold)
-                    {
-                        // If protein FDR is enabled, also check protein q-value
-                        if (config.ProteinFdr.HasValue &&
-                            entry.RunProteinQvalue > config.ProteinFdr.Value)
-                        {
-                            continue;
-                        }
+                    if (entry.IsDecoy)
+                        continue;
+                    string key = entry.ModifiedSequence + "|" + entry.Charge;
+                    if (!passingPrecursors.Contains(key))
+                        continue;
 
-                        passingEntries.Add(
-                            new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
+                    // If protein FDR is enabled, also check protein q-value.
+                    // Use experiment-level protein q-value so the gate is
+                    // experiment-wide, consistent with Stage 1/2 above.
+                    if (config.ProteinFdr.HasValue &&
+                        entry.ExperimentProteinQvalue > config.ProteinFdr.Value)
+                    {
+                        continue;
                     }
+
+                    passingEntries.Add(
+                        new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
                 }
             }
 
+            LogInfo(string.Format(
+                "[COUNT] Stage 1 passing peptides: {0}", passingPeptides.Count));
+            LogInfo(string.Format(
+                "[COUNT] Stage 2 passing precursors: {0}", passingPrecursors.Count));
             LogInfo(string.Format("Writing {0} passing entries to blib", passingEntries.Count));
 
             if (passingEntries.Count == 0)
@@ -5868,15 +5958,18 @@ namespace pwiz.OspreySharp
             if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
                 Directory.CreateDirectory(outputDir);
 
-            // Deduplicate by modified_sequence + charge (keep best q-value)
-            var bestByPrecursor = new Dictionary<string, KeyValuePair<string, FdrEntry>>();
+            // Deduplicate by modified_sequence + charge — keep best by
+            // experiment_precursor_qvalue (matches Rust's best-per-precursor
+            // selection in pipeline.rs:4670-4683).
+            var bestByPrecursor = new Dictionary<string, KeyValuePair<string, FdrEntry>>(
+                StringComparer.Ordinal);
             foreach (var kvp in passingEntries)
             {
                 string key = kvp.Value.ModifiedSequence + "_" + kvp.Value.Charge;
                 KeyValuePair<string, FdrEntry> existing;
                 if (!bestByPrecursor.TryGetValue(key, out existing) ||
-                    kvp.Value.EffectiveRunQvalue(config.FdrLevel) <
-                    existing.Value.EffectiveRunQvalue(config.FdrLevel))
+                    kvp.Value.ExperimentPrecursorQvalue <
+                    existing.Value.ExperimentPrecursorQvalue)
                 {
                     bestByPrecursor[key] = kvp;
                 }
