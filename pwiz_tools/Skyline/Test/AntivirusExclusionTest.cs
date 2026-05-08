@@ -118,30 +118,48 @@ namespace pwiz.SkylineTest
 
             var eicarTestFilename = $@"eicar_fake_threat_{LocalizationHelper.CurrentCulture.ThreeLetterISOLanguageName}.com";
             var eicarTestFile = Path.Combine(directory, eicarTestFilename);
-            if (!File.Exists(eicarTestFile))
-            {
-                File.WriteAllText(eicarTestFile, eicarTestString); // If we are being watched, this should get removed immediately
-            }
-            string test = string.Empty;
             try
             {
-                test = File.ReadAllText(eicarTestFile); // This should succeed - if not we are probably under antivirus scrutiny, which can mess with other tests
+                if (!File.Exists(eicarTestFile))
+                {
+                    File.WriteAllText(eicarTestFile, eicarTestString); // If we are being watched, this should get removed immediately
+                }
+                string test = string.Empty;
+                try
+                {
+                    test = File.ReadAllText(eicarTestFile); // This should succeed - if not we are probably under antivirus scrutiny, which can mess with other tests
+                }
+                catch
+                {
+                    // Do nothing - covered by the equality check below
+                }
+                if (!eicarTestString.Equals(test))
+                {
+                    WarnOrFail($"Could not read contents of the (completely harmless!) antivirus test file \"{eicarTestFile}\", probably because it was quarantined by antivirus software.  If your antivirus flagged on \"{eicarTestFilename}\", don't panic - that's part of the test (see https://www.eicar.org/download-anti-malware-testfile/).  Now go exclude that directory from further antivirus scrutiny, as it causes file locking problems in the tests.", warnOnly, failures);
+                }
             }
-            catch
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Security.SecurityException)
             {
-                 // Do nothing
-            }
-            if (!eicarTestString.Equals(test))
-            {
-                WarnOrFail($"Could not read contents of the (completely harmless!) antivirus test file \"{eicarTestFile}\", probably because it was quarantined by antivirus software.  If your antivirus flagged on \"{eicarTestFilename}\", don't panic - that's part of the test (see https://www.eicar.org/download-anti-malware-testfile/).  Now go exclude that directory from further antivirus scrutiny, as it causes file locking problems in the tests.", warnOnly, failures);
+                // Antivirus blocking the create/write outright is the same diagnostic conclusion as quarantining after the write.
+                WarnOrFail($"Antivirus interference suspected for \"{eicarTestFile}\": {ex.GetType().Name}: {ex.Message}.  " +
+                    @"Now go exclude that directory from further antivirus scrutiny, as it causes file locking problems in the tests.",
+                    warnOnly, failures);
             }
             if (File.Exists(eicarTestFile))  // Don't leave this lying around - it can cause problems with automated backups etc
             {
-                TryHelper.TryTwice(() =>
+                try
                 {
-                    File.WriteAllText(eicarTestFile, string.Empty); // So antivirus doesn't flag on recycle bin
-                    File.Delete(eicarTestFile);
-                });
+                    TryHelper.TryTwice(() =>
+                    {
+                        File.WriteAllText(eicarTestFile, string.Empty); // So antivirus doesn't flag on recycle bin
+                        File.Delete(eicarTestFile);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // Cleanup is best-effort; a failure here shouldn't prevent reporting other findings.
+                    Console.WriteLine($"# Note: could not clean up \"{eicarTestFile}\": {ex.GetType().Name}: {ex.Message}");
+                }
             }
         }
 
@@ -161,7 +179,16 @@ namespace pwiz.SkylineTest
         {
             if (!Directory.Exists(directory))
                 return;
-            var attrs = (int)File.GetAttributes(directory);
+            int attrs;
+            try
+            {
+                attrs = (int)File.GetAttributes(directory);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                Console.WriteLine($"# Note: could not query file attributes of \"{directory}\": {ex.GetType().Name}: {ex.Message}");
+                return;
+            }
             if ((attrs & CLOUD_PLACEHOLDER_MASK) != 0)
             {
                 WarnOrFail($"Directory \"{directory}\" appears to be cloud-synchronized " +
@@ -200,8 +227,18 @@ namespace pwiz.SkylineTest
 
         private static bool IsPathUnder(string child, string parent)
         {
-            var c = Path.GetFullPath(child).TrimEnd('\\', '/');
-            var p = Path.GetFullPath(parent).TrimEnd('\\', '/');
+            string c, p;
+            try
+            {
+                // Registry-derived paths can contain unexpanded env vars (e.g. %UserProfile%) or be malformed.
+                c = Path.GetFullPath(Environment.ExpandEnvironmentVariables(child)).TrimEnd('\\', '/');
+                p = Path.GetFullPath(Environment.ExpandEnvironmentVariables(parent)).TrimEnd('\\', '/');
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException || ex is PathTooLongException || ex is System.Security.SecurityException)
+            {
+                Console.WriteLine($"# Note: could not normalize path comparison (\"{child}\" vs \"{parent}\"): {ex.GetType().Name}: {ex.Message}");
+                return false;
+            }
             if (c.Length < p.Length)
                 return false;
             if (!c.StartsWith(p, StringComparison.OrdinalIgnoreCase))
@@ -243,10 +280,12 @@ namespace pwiz.SkylineTest
                         warnOnly, failures);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Search service unavailable, RPC failure, COM marshaling/cast errors, etc.
-                // Best-effort probe - don't fail the whole test on a probe-side failure.
+                // Search service unavailable, RPC failure, COM marshaling/cast errors, bad GUID/vtable etc.
+                // Best-effort probe - don't fail the whole test, but emit a note so probe-side breakage
+                // is visible in test logs (and distinguishable from "directory not indexed").
+                Console.WriteLine($"# Note: Windows Search index probe failed for \"{directory}\": {ex.GetType().Name}: {ex.Message}");
             }
         }
 
