@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -127,6 +128,43 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
             Assert.AreEqual(60, sizeof(ChromPeak));
             Assert.AreEqual(60, Marshal.SizeOf<ChromPeak>());
+        }
+
+        [TestMethod]
+        public void TestChromPeakV19CacheCompat()
+        {
+            // A v19 cache wrote ChromPeak as 52 bytes - the observed IM/CCS fields
+            // and the observed_ion_mobility_known / observed_ccs_known flag bits
+            // did not exist. When the v20 reader encounters those records, the
+            // trailing 8 bytes (where the new floats now live) are zero-padded by
+            // StructSerializer and the unset flag bits make the getters return
+            // null. This locks in that contract by round-tripping through a
+            // 52-byte StructSerializer, which truncates on write and zero-pads on
+            // read - the same shape as a real v19-on-disk record.
+            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.Nineteen));
+
+            // Build a peak with mass error set but no observed IM/CCS - the
+            // constructor explicitly clears observed_ion_mobility_known /
+            // observed_ccs_known, matching what a v19-written record looks like.
+            var peak = new ChromPeak(1f, 0.5f, 1.5f, 100f, 5f, 50f, 0.5f,
+                ChromPeak.FlagValues.time_normalized, 0.0, 1, null);
+            Assert.IsNull(peak.ObservedIonMobility);
+            Assert.IsNull(peak.ObservedCcs);
+
+            var v19Serializer = ChromPeak.StructSerializer(52);
+            using (var stream = new MemoryStream())
+            {
+                v19Serializer.WriteItems(stream, new[] { peak });
+                Assert.AreEqual(52, stream.Length);
+                stream.Position = 0;
+                var roundTripped = v19Serializer.ReadArray(stream, 1)[0];
+                Assert.IsNull(roundTripped.ObservedIonMobility);
+                Assert.IsNull(roundTripped.ObservedCcs);
+                // Sanity: data that did fit in 52 bytes round-trips intact.
+                Assert.AreEqual(peak.RetentionTime, roundTripped.RetentionTime);
+                Assert.AreEqual(peak.Area, roundTripped.Area);
+                Assert.AreEqual(peak.MassError, roundTripped.MassError);
+            }
         }
 
         [TestMethod]
