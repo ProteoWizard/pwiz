@@ -900,7 +900,17 @@ namespace pwiz.OspreySharp.IO
         /// </summary>
         private static byte[] CompressBytes(byte[] raw)
         {
-            const int level = 6; // matches Skyline UtilDB.Compress + Rust flate2 Compression::default()
+            // Use DotNetZip's Ionic.Zlib at level 6, matching Skyline's
+            // pwiz.Skyline.Util.Extensions.UtilDB.Compress (the canonical
+            // ProteoWizard BlibData writer in Skyline/Util/Extensions/
+            // UtilDB.cs:109-200). Cross-impl byte parity with Rust osprey
+            // additionally requires Rust's flate2 to use the `zlib-default`
+            // backend (vendored stock zlib via libz-sys), which produces
+            // identical deflate bytes to Ionic.Zlib. Configured in
+            // crates/osprey/Cargo.toml. The combination delivers PASS on
+            // Compare-Blib-Crossimpl.ps1 for both Stellar 3-file and Astral
+            // 3-file, with byte-identical RefSpectraPeaks blobs.
+            const int level = 6;
             byte[] compressed;
             using (var ms = new MemoryStream())
             {
