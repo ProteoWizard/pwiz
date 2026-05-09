@@ -621,16 +621,24 @@ namespace pwiz.OspreySharp
                 // around persist_fdr_scores at line ~3180. Stage 6 workers
                 // re-derive the post-compaction set by applying the q-value
                 // threshold themselves, so they need every entry's q-values
-                // — not just the survivors.
-                int fdrSidecarFailures = WriteFdrScoresSidecars(
-                    perFileEntries, perFileParquetPaths, config);
-                if (fdrSidecarFailures > 0 && config.StopAfterStage5)
+                // — not just the survivors. Skipped on --join-at-pass=2:
+                // the 1st-pass sidecar is what we just LOADED from to seed
+                // entries, so re-writing produces the same bytes (any
+                // divergence would be a sidecar-load bug, not a write
+                // requirement). Saves ~6s I/O per --join-at-pass=2 invocation.
+                int fdrSidecarFailures = 0;
+                if (!config.ExpectReconciledInput)
                 {
-                    LogError(string.Format(
-                        "--join-at-pass=1 --join-only: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
-                        "writes failed; boundary file pair is incomplete. See warnings above.",
-                        fdrSidecarFailures, perFileEntries.Count));
-                    return 1;
+                    fdrSidecarFailures = WriteFdrScoresSidecars(
+                        perFileEntries, perFileParquetPaths, config);
+                    if (fdrSidecarFailures > 0 && config.StopAfterStage5)
+                    {
+                        LogError(string.Format(
+                            "--join-at-pass=1 --join-only: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
+                            "writes failed; boundary file pair is incomplete. See warnings above.",
+                            fdrSidecarFailures, perFileEntries.Count));
+                        return 1;
+                    }
                 }
 
                 if (perFileEntries.Count > 0)
