@@ -586,8 +586,16 @@ namespace pwiz.OspreySharp
                 // symmetric set. Sets RunProteinQvalue on every FdrEntry,
                 // which Stage 6 reconciliation reads via the protein-rescue
                 // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
-                // ("First-pass protein FDR").
-                if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
+                // ("First-pass protein FDR"). Skipped on
+                // --join-at-pass=2: the 1st-pass FDR sidecar loaded above
+                // already carries RunProteinQvalue from the original
+                // straight-through pipeline. Re-running the deterministic
+                // protein-FDR computation on identical inputs would just
+                // overwrite the loaded values with the same numbers
+                // (~17s on Astral 1-file; saves duplicate work on every
+                // post-Stage-6 rehydration entry).
+                if (config.ProteinFdr.HasValue && perFileEntries.Count > 0
+                    && !config.ExpectReconciledInput)
                 {
                     LogInfo("");
                     LogInfo("First-pass protein FDR");
