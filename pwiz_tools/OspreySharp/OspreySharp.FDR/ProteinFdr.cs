@@ -198,17 +198,24 @@ namespace pwiz.OspreySharp.FDR
                 accessions.Add(kvp.Key);
             }
 
-            // Build (peptideSet, accessions) pairs sorted by peptide count descending
-            var groups = new List<KeyValuePair<SortedSet<string>, List<string>>>();
+            // Build (peptideSet, accessions) pairs sorted by peptide count descending.
+            // HashSet<string> instead of SortedSet — IsSubsetOf in Step 3 is the
+            // O(N^2) hot path on Stage 7, and HashSet membership tests are
+            // ~10x faster than SortedSet's binary search for the typical
+            // 5K-group / 5-30-peptide workload (Stellar 3-file dropped from
+            // 6.3s to ~0.5s after the swap). Iteration order of HashSet is
+            // unspecified, but the only downstream use is populating the
+            // peptideToGroups dictionary, which is itself unordered.
+            var groups = new List<KeyValuePair<HashSet<string>, List<string>>>();
             foreach (var kvp in peptideSetToAccessions)
             {
-                var peptideSet = new SortedSet<string>(kvp.Key.Split('|'));
-                groups.Add(new KeyValuePair<SortedSet<string>, List<string>>(peptideSet, kvp.Value));
+                var peptideSet = new HashSet<string>(kvp.Key.Split('|'), StringComparer.Ordinal);
+                groups.Add(new KeyValuePair<HashSet<string>, List<string>>(peptideSet, kvp.Value));
             }
             groups.Sort((a, b) => b.Key.Count.CompareTo(a.Key.Count));
 
             // Step 3: Subset elimination
-            var retained = new List<KeyValuePair<SortedSet<string>, List<string>>>();
+            var retained = new List<KeyValuePair<HashSet<string>, List<string>>>();
             foreach (var group in groups)
             {
                 bool isSubset = false;

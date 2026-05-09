@@ -305,5 +305,71 @@ namespace pwiz.OspreySharp.IO
             }
             return true;
         }
+
+        /// <summary>
+        /// Overlay sidecar scores onto <paramref name="entriesByEntryId"/>
+        /// without requiring a parquet stub list. Same validation rules as
+        /// <see cref="TryRead(string,IList{FdrEntry},Pass)"/>, but the
+        /// caller supplies an entry_id-keyed dictionary directly so we
+        /// skip rereading the source parquet just to size-check the
+        /// sidecar. Used by --join-at-pass=2 Stage 7 where the compacted
+        /// entry list already covers every sidecar record we care about.
+        /// </summary>
+        public static bool TryReadOverlay(string path,
+            IDictionary<uint, FdrEntry> entriesByEntryId, Pass expectedPass)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (entriesByEntryId == null) throw new ArgumentNullException(nameof(entriesByEntryId));
+
+            byte[] data;
+            try
+            {
+                data = File.ReadAllBytes(path);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (data.Length < HeaderLength)
+                return false;
+            for (int i = 0; i < Magic.Length; i++)
+            {
+                if (data[i] != Magic[i])
+                    return false;
+            }
+            byte version = data[8];
+            if (version != FormatVersion)
+                return false;
+            byte passByte = data[9];
+            if (passByte != (byte)expectedPass)
+                return false;
+            ulong headerCount = BitConverter.ToUInt64(data, 16);
+            int expectedLen = HeaderLength + (int)headerCount * RecordLength;
+            if (data.Length != expectedLen)
+                return false;
+
+            for (int rec = 0; rec < (int)headerCount; rec++)
+            {
+                int off = HeaderLength + rec * RecordLength;
+                uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
+                if (!entriesByEntryId.TryGetValue(recordEntryId, out FdrEntry e))
+                {
+                    // Sidecar can carry entries not in the (possibly
+                    // compacted) caller dict — that's expected for
+                    // --join-at-pass=2 where compaction has already
+                    // dropped failing precursors. Skip silently.
+                    continue;
+                }
+                e.Score                       = BitConverter.ToDouble(data, off + 4);
+                e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
+                e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);
+                e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
+                e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
+                e.Pep                         = BitConverter.ToDouble(data, off + 44);
+                e.RunProteinQvalue            = BitConverter.ToDouble(data, off + 52);
+            }
+            return true;
+        }
     }
 }

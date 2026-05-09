@@ -693,19 +693,10 @@ namespace pwiz.OspreySharp
                     {
                         string fileName = kvp.Key;
                         var entries = kvp.Value;
-                        // The 2nd-pass sidecar was written pre-compaction
-                        // (every stub, passing or not), but we have a
-                        // compacted list now. Build a parallel stub list
-                        // from the original parquet to size the load,
-                        // then overlay scores onto our compacted set by
-                        // entry_id.
-                        string parquetPath;
-                        if (!perFileParquetPaths.TryGetValue(fileName, out parquetPath))
-                        {
-                            LogError(string.Format(
-                                "--join-at-pass=2: no parquet path tracked for {0}", fileName));
-                            return 1;
-                        }
+                        // Sidecar overlay onto the compacted entry list.
+                        // The sidecar carries entry_ids per record, so we
+                        // skip the parquet re-read that earlier versions
+                        // used purely to size-check the load.
                         string inputFile2;
                         if (!inputByFileName2.TryGetValue(fileName, out inputFile2))
                         {
@@ -743,32 +734,23 @@ namespace pwiz.OspreySharp
                                 "falling back to 1st-pass (matches Rust single-file behavior)",
                                 fileName));
                         }
-                        // Reload all stubs (pre-compaction count) so the
-                        // sidecar size check passes. Then overlay onto
-                        // the compacted list by entry_id.
-                        var fullStubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
-                        if (!FdrScoresSidecar.TryRead(sidecarPath, fullStubs, expectedPass))
+                        // Overlay sidecar scores directly onto the
+                        // compacted list by entry_id. The sidecar's binary
+                        // format carries entry_ids per record, so we don't
+                        // need to re-read the parquet to size-match — that
+                        // re-read used to dominate Stage 7 cs walls (~7s
+                        // on Stellar 3-file). TryReadOverlay tolerates
+                        // sidecar entries that aren't in the compacted
+                        // dict (failing precursors dropped by compaction).
+                        var entriesByEntryId = new Dictionary<uint, FdrEntry>(entries.Count);
+                        for (int i = 0; i < entries.Count; i++)
+                            entriesByEntryId[entries[i].EntryId] = entries[i];
+                        if (!FdrScoresSidecar.TryReadOverlay(sidecarPath, entriesByEntryId, expectedPass))
                         {
                             LogError(string.Format(
                                 "--join-at-pass=2: sidecar at {0} failed to load (expected {1}).",
                                 sidecarPath, expectedPass));
                             return 1;
-                        }
-                        var stubsById = new Dictionary<uint, FdrEntry>(fullStubs.Count);
-                        foreach (var s in fullStubs) stubsById[s.EntryId] = s;
-                        for (int i = 0; i < entries.Count; i++)
-                        {
-                            FdrEntry stub;
-                            if (stubsById.TryGetValue(entries[i].EntryId, out stub))
-                            {
-                                entries[i].Score = stub.Score;
-                                entries[i].RunPrecursorQvalue = stub.RunPrecursorQvalue;
-                                entries[i].RunPeptideQvalue = stub.RunPeptideQvalue;
-                                entries[i].ExperimentPrecursorQvalue = stub.ExperimentPrecursorQvalue;
-                                entries[i].ExperimentPeptideQvalue = stub.ExperimentPeptideQvalue;
-                                entries[i].Pep = stub.Pep;
-                                entries[i].RunProteinQvalue = stub.RunProteinQvalue;
-                            }
                         }
                     }
                     LogInfo(string.Format(
