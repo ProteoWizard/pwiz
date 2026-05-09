@@ -231,10 +231,10 @@ namespace pwiz.OspreySharp
                 // .scores.parquet on disk to lazily load CWT candidates —
                 // matches Rust's end-to-end behavior, which always writes
                 // the parquet sidecar regardless of --no-join.
-                Dictionary<string, string> noJoinMetadata = null;
+                Dictionary<string, string> parquetFooterMetadata = null;
                 if (!joinOnly)
                 {
-                    noJoinMetadata = new Dictionary<string, string>
+                    parquetFooterMetadata = new Dictionary<string, string>
                     {
                         { "osprey.version", Program.VERSION },
                         { "osprey.search_hash", config.SearchParameterHash() },
@@ -367,7 +367,7 @@ namespace pwiz.OspreySharp
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
                     LogInfo("");
                     LogInfo(string.Format("===== Processing file 1/1: {0} =====", inputFile));
-                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
+                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                 }
@@ -386,7 +386,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
                         if (fileResult != null)
                             perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                     }
@@ -410,7 +410,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
                         if (fileResult != null)
                             fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
                     });
@@ -430,7 +430,7 @@ namespace pwiz.OspreySharp
                 // from config.InputFiles so Stage 6 reconciliation can locate
                 // each file's freshly-written .scores.parquet to lazy-load CWT
                 // candidates from. ProcessFile writes the parquet whenever
-                // noJoinMetadata != null (now always set in non-joinOnly mode).
+                // parquetFooterMetadata != null (now always set in non-joinOnly mode).
                 if (!joinOnly)
                 {
                     foreach (string inputFile in config.InputFiles)
@@ -1412,7 +1412,7 @@ namespace pwiz.OspreySharp
         private List<FdrEntry> ProcessFile(
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, OspreyConfig config,
-            Dictionary<string, string> noJoinMetadata,
+            Dictionary<string, string> parquetFooterMetadata,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrationsOut)
         {
             if (inputFile == null)
@@ -1642,6 +1642,8 @@ namespace pwiz.OspreySharp
             scoredEntries = DeduplicateDoubleCounting(
                 scoredEntries, fullLibrary, spectra, ms2Cal,
                 isolationWindows, config);
+            nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
+            nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
             LogInfo(string.Format(
                 "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
                 fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
@@ -1670,7 +1672,7 @@ namespace pwiz.OspreySharp
             // in Run() against the original (un-mutated) outer config — see
             // Run() for why. Skipped only in --join-only mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
-            if (noJoinMetadata != null)
+            if (parquetFooterMetadata != null)
             {
                 string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
                 // Build a per-file lookup so the writer can pull
@@ -1682,7 +1684,7 @@ namespace pwiz.OspreySharp
                     libraryById[entry.Id] = entry;
                 var swParquet = Stopwatch.StartNew();
                 ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, noJoinMetadata, libraryById, fileName);
+                    parquetPath, scoredEntries, parquetFooterMetadata, libraryById, fileName);
                 swParquet.Stop();
                 LogInfo(string.Format(
                     "Wrote {0} scored entries to {1} ({2:F1}s)",
@@ -5545,12 +5547,9 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
-        /// Deduplicate scored entries: keep best target and best decoy per base_id.
-        /// </summary>
-        /// <summary>
         /// Within each isolation window, drop scored entries whose top-6
         /// fragment lists overlap >= 50% with another same-class entry
-        /// elutring within +/-5 spectra. Of each colliding pair, the
+        /// eluting within +/-5 spectra. Of each colliding pair, the
         /// entry with the higher coelution_sum survives. Mirrors
         /// osprey/crates/osprey/src/pipeline.rs::deduplicate_double_counting
         /// so the same precursor cannot be counted twice from a shared

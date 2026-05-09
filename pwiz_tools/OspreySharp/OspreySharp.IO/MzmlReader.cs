@@ -338,9 +338,9 @@ namespace pwiz.OspreySharp.IO
             }
 
             if (mzArray == null)
-                mzArray = new double[0];
+                mzArray = Array.Empty<double>();
             if (intensityArray == null)
-                intensityArray = new float[0];
+                intensityArray = Array.Empty<float>();
             EnsureSortedSpectrum(spectrumIndex, ref mzArray, ref intensityArray);
 
             // Build spectrum based on MS level
@@ -617,8 +617,8 @@ namespace pwiz.OspreySharp.IO
                     intensityArray = DecodeBinaryArrayAsFloat(arrayInfo);
             }
 
-            mzArray = mzArray ?? new double[0];
-            intensityArray = intensityArray ?? new float[0];
+            mzArray = mzArray ?? Array.Empty<double>();
+            intensityArray = intensityArray ?? Array.Empty<float>();
             EnsureSortedSpectrum(raw.Index, ref mzArray, ref intensityArray);
 
             return new DecodedSpectrum
@@ -651,10 +651,16 @@ namespace pwiz.OspreySharp.IO
         /// (matches Rust slice::sort_by); Array.Sort on parallel arrays is
         /// unstable introsort and would reorder ties differently.
         /// </summary>
-        private static void EnsureSortedSpectrum(uint scanNumber,
+        private static void EnsureSortedSpectrum(uint spectrumIndex,
             ref double[] mzArray, ref float[] intensityArray)
         {
             if (mzArray == null || mzArray.Length < 2)
+                return;
+            // Defensive guard: a malformed mzML where the m/z and intensity
+            // arrays are not the same length would IndexOutOfRange on the
+            // permutation step. Skip sorting in that case (downstream code
+            // already has its own length checks).
+            if (intensityArray == null || intensityArray.Length != mzArray.Length)
                 return;
             bool sorted = true;
             for (int i = 1; i < mzArray.Length; i++)
@@ -668,7 +674,7 @@ namespace pwiz.OspreySharp.IO
             if (sorted)
                 return;
             Console.Error.WriteLine(
-                $"[unsorted-spectrum] scan_number={scanNumber} n_peaks={mzArray.Length}");
+                $"[unsorted-spectrum] spectrum_index={spectrumIndex} n_peaks={mzArray.Length}");
             int n = mzArray.Length;
             double[] keyMz = mzArray;
             int[] order = Enumerable.Range(0, n)
