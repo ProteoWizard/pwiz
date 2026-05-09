@@ -744,25 +744,69 @@ namespace pwiz.OspreySharp
                 // initializer (AnalysisPipeline.cs ~line 4088) bleeds
                 // through, producing 173k rows of post-rescore divergence
                 // vs the Rust worker's rust_stage6_rescored.tsv.
-                int nOverlay = 0;
+                //
+                // Pass 1: index the rescored results by entry_id so we
+                // can look up successful re-scores in the second pass.
+                var rescoredByEntryId = new Dictionary<uint, FdrEntry>();
                 foreach (var entry in rescored)
                 {
-                    if (entryIdToIdx.TryGetValue(entry.EntryId, out int idx))
+                    rescoredByEntryId[entry.EntryId] = entry;
+                }
+
+                // Pass 2: iterate every combined target. Successful
+                // re-scores get the new entry overlaid with reset
+                // discriminant fields. Targets where RunCoelutionScoring
+                // returned no entry (no peak found at the override
+                // boundary) STILL get their existing fdrEntries[idx]
+                // reset to default discriminant values. Without this,
+                // ~9956 multi-charge consensus targets on Stellar 1-file
+                // retain their first-pass Percolator scores in the
+                // post-rescore dump while Rust's writes score=0/q=1
+                // because Rust's worker emits zeroed stubs for every
+                // override regardless of peak success.
+                int nOverlay = 0;
+                int nNoPeak = 0;
+                foreach (var kvp in combinedTargets)
+                {
+                    int idx = kvp.Key;
+                    uint entryId = fdrEntries[idx].EntryId;
+                    if (rescoredByEntryId.TryGetValue(entryId, out FdrEntry rescoredEntry))
                     {
-                        entry.Score = 0.0;
-                        entry.RunPrecursorQvalue = 1.0;
-                        entry.RunPeptideQvalue = 1.0;
-                        entry.RunProteinQvalue = 1.0;
-                        entry.ExperimentPrecursorQvalue = 1.0;
-                        entry.ExperimentPeptideQvalue = 1.0;
-                        entry.ExperimentProteinQvalue = 1.0;
-                        entry.Pep = 1.0;
-                        entry.ParquetIndex = fdrEntries[idx].ParquetIndex;
-                        fdrEntries[idx] = entry;
+                        rescoredEntry.Score = 0.0;
+                        rescoredEntry.RunPrecursorQvalue = 1.0;
+                        rescoredEntry.RunPeptideQvalue = 1.0;
+                        rescoredEntry.RunProteinQvalue = 1.0;
+                        rescoredEntry.ExperimentPrecursorQvalue = 1.0;
+                        rescoredEntry.ExperimentPeptideQvalue = 1.0;
+                        rescoredEntry.ExperimentProteinQvalue = 1.0;
+                        rescoredEntry.Pep = 1.0;
+                        rescoredEntry.ParquetIndex = fdrEntries[idx].ParquetIndex;
+                        fdrEntries[idx] = rescoredEntry;
                         nOverlay++;
+                    }
+                    else
+                    {
+                        // No peak at the override boundary — reset to
+                        // defaults in place to match Rust's behavior.
+                        var existing = fdrEntries[idx];
+                        existing.Score = 0.0;
+                        existing.RunPrecursorQvalue = 1.0;
+                        existing.RunPeptideQvalue = 1.0;
+                        existing.RunProteinQvalue = 1.0;
+                        existing.ExperimentPrecursorQvalue = 1.0;
+                        existing.ExperimentPeptideQvalue = 1.0;
+                        existing.ExperimentProteinQvalue = 1.0;
+                        existing.Pep = 1.0;
+                        nNoPeak++;
                     }
                 }
                 totalRescored += nOverlay;
+                if (nNoPeak > 0)
+                {
+                    LogInfo(string.Format(
+                        "  {0} targets had no peak at override boundary (reset to defaults)",
+                        nNoPeak));
+                }
 
                 LogInfo(string.Format(
                     "  {0} of {1} existing entries re-scored ({2:F1}s)",

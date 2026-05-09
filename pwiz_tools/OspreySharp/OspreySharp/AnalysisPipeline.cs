@@ -188,6 +188,22 @@ namespace pwiz.OspreySharp
                 bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
                 int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
 
+                // In --input-scores mode without explicit -i, synthesize
+                // InputFiles from the parquet stems so downstream code
+                // (Stage 6 rescore's fileNameToIdx in particular) can map
+                // each file_name back to a real (synthetic) input path.
+                // Mirrors RescoreWorker.RunWorker's synthesis at
+                // AnalysisPipeline.Stage6Rescore.cs:104 and Rust's
+                // run_analysis idempotent synthesis at
+                // pipeline.rs ~line 3144.
+                if (joinOnly && (config.InputFiles == null || config.InputFiles.Count == 0))
+                {
+                    var synthetic = new List<string>(config.InputScores.Count);
+                    foreach (var p in config.InputScores)
+                        synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
+                    config.InputFiles = synthetic;
+                }
+
                 // Pre-compute the parquet footer metadata ONCE, against the
                 // unmutated outer config. ProcessFile clones the config per
                 // file and mutates FragmentTolerance during MS2 calibration,
@@ -658,7 +674,15 @@ namespace pwiz.OspreySharp
                         "Stage 6 consensus: {0} target peptides, {1} decoy peptides",
                         nTargets, nDecoys));
 
-                    if (OspreyDiagnostics.DumpConsensus)
+                    // Skip the dump on empty consensus to match Rust's
+                    // dump_stage6_consensus, which silently elides the
+                    // file when there is nothing to write (the dump is
+                    // gated on Some(file) in Rust, derived from
+                    // !consensus.is_empty()). Without this gate, C#
+                    // emits a header-only cs_stage6_consensus.tsv and
+                    // Test-Regression sees an asymmetric-absence FAIL
+                    // even though both sides agree on the empty result.
+                    if (OspreyDiagnostics.DumpConsensus && consensus.Count > 0)
                     {
                         OspreyDiagnostics.WriteStage6ConsensusDump(consensus);
                         if (OspreyDiagnostics.ConsensusOnly)
