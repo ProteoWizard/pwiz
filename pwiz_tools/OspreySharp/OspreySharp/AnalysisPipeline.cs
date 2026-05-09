@@ -126,7 +126,24 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("[COUNT] Library targets loaded: {0}", nLibraryTargets));
 
                 List<LibraryEntry> decoys;
-                if (!config.DecoysInLibrary)
+                if (config.ExpectReconciledInput)
+                {
+                    // --join-at-pass=2: decoy LibraryEntries are unused
+                    // downstream. The reconciled parquet already carries
+                    // both target and decoy FDR rows with their stage-1-4
+                    // scores; Stage 5 is skipped, Stage 6 is skipped, and
+                    // the protein-parsimony / blib write paths both filter
+                    // on `entry.IsDecoy` (only target LibraryEntries get
+                    // looked up by entry_id). Skipping the rebuild saves
+                    // ~45s on Astral 1-file (BuildDecoyFromSequence +
+                    // RecalculateFragments dominated the Stage 7+blib
+                    // hotspot list). dotTrace OWN-time on Astral 1-file
+                    // Stage 7 cs run before this fix:
+                    //   BuildDecoyFromSequence  total=45665 ms (89% wall)
+                    //   GenerateDecoys.<>b__0   total=46792 ms
+                    decoys = new List<LibraryEntry>();
+                }
+                else if (!config.DecoysInLibrary)
                 {
                     List<LibraryEntry> validTargets;
                     decoys = GenerateDecoys(library, config, out validTargets);
