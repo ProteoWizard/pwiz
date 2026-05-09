@@ -49,7 +49,7 @@ namespace pwiz.OspreySharp
     /// 4. Protein FDR (optional)
     /// 5. Write blib output
     /// </summary>
-    public class AnalysisPipeline
+    public partial class AnalysisPipeline
     {
         private const int NUM_PIN_FEATURES = 21;
 
@@ -796,11 +796,44 @@ namespace pwiz.OspreySharp
                         return 0;
                     }
 
-                    // Per-file rescore + gap-fill + second-pass FDR are
-                    // deferred to a later commit. Without those, single-run
-                    // analysis still produces valid output from the
-                    // first-pass FDR results above.
-                    LogInfo(@"Stage 6 per-file rescore: not yet implemented");
+                    // Stage 6 per-file rescore: PHASE 1 of the C# port —
+                    // existing entries (consensus + reconciliation overlay).
+                    // Gap-fill two-pass + reconciled .scores.parquet
+                    // write-back are the next porting phases. Mirrors the
+                    // Rust call site at pipeline.rs:run_analysis ~line 3850.
+                    var rescoreStats = ExecuteStage6Rescore(
+                        perFileEntries,
+                        perFileConsensusTargets,
+                        reconciliationActions ?? new Dictionary<(string, int), ReconcileAction>(),
+                        refinedCalibrations,
+                        perFileCalibrations,
+                        perFileGapFill: null,
+                        perFileParquetPaths,
+                        fullLibrary,
+                        config);
+                    LogInfo(string.Format(
+                        "Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
+                        rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
+
+                    // Cross-impl bisection seam: dump per-precursor state
+                    // immediately after the rescore loop. Mirrors Rust's
+                    // dump_stage6_rescored call from pipeline.rs.
+                    if (OspreyDiagnostics.DumpRescored)
+                    {
+                        OspreyDiagnostics.WriteStage6RescoredDump(perFileEntries);
+                        if (OspreyDiagnostics.RescoredOnly)
+                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
+                    }
+
+                    // Flush + close the persistent per-process diagnostic
+                    // dump writers (no-ops when their env vars are unset).
+                    // Mirrors the worker-mode close calls in
+                    // AnalysisPipeline.Stage6Rescore.Run; without these,
+                    // the in-process pipeline path can leave the writers
+                    // unflushed and produce truncated bisection dumps.
+                    OspreyDiagnostics.CloseMpInputsDump();
+                    OspreyDiagnostics.ClosePredictRtDump();
+                    OspreyDiagnostics.CloseCwtPathDump();
                 }
 
                 // Stage 8: Protein FDR (optional)
@@ -846,7 +879,7 @@ namespace pwiz.OspreySharp
         /// Load spectral library from the configured source, using binary cache
         /// when available. Matches Rust's .libcache mechanism for fast reload.
         /// </summary>
-        private List<LibraryEntry> LoadLibrary(OspreyConfig config)
+        internal List<LibraryEntry> LoadLibrary(OspreyConfig config)
         {
             string path = config.LibrarySource.Path;
             string cachePath = path + ".libcache";
@@ -930,7 +963,7 @@ namespace pwiz.OspreySharp
         /// Modifies <paramref name="validTargets"/> to contain only targets that
         /// produced valid decoys (Rust: library = valid_targets; library.extend(decoys)).
         /// </summary>
-        private List<LibraryEntry> GenerateDecoys(
+        internal List<LibraryEntry> GenerateDecoys(
             List<LibraryEntry> targets, OspreyConfig config,
             out List<LibraryEntry> validTargets)
         {
@@ -2806,13 +2839,15 @@ namespace pwiz.OspreySharp
                 }
                 else
                 {
-                    var indexed = new List<KeyValuePair<int, float>>(nFragsForErrors);
-                    for (int ti = 0; ti < nFragsForErrors; ti++)
-                        indexed.Add(new KeyValuePair<int, float>(ti, entry.Fragments[ti].RelativeIntensity));
-                    indexed.Sort((a, b) => b.Value.CompareTo(a.Value));
-                    topErrorIndices = new int[nTopForErrors];
-                    for (int ti = 0; ti < nTopForErrors; ti++)
-                        topErrorIndices[ti] = indexed[ti].Key;
+                    // LINQ OrderByDescending is stable per .NET contract;
+                    // List<T>.Sort with Comparison<T> is unstable
+                    // (introsort) and produces different top-N picks
+                    // than Rust's stable slice::sort_by on RelativeIntensity
+                    // ties. Match Rust by using the stable sort.
+                    topErrorIndices = Enumerable.Range(0, nFragsForErrors)
+                        .OrderByDescending(ti => entry.Fragments[ti].RelativeIntensity)
+                        .Take(nTopForErrors)
+                        .ToArray();
                 }
 
                 foreach (int fragIdx in topErrorIndices)
@@ -2913,13 +2948,13 @@ namespace pwiz.OspreySharp
             }
             else
             {
-                var indexed = new List<KeyValuePair<int, float>>(nFrags);
-                for (int i = 0; i < nFrags; i++)
-                    indexed.Add(new KeyValuePair<int, float>(i, entry.Fragments[i].RelativeIntensity));
-                indexed.Sort((a, b) => b.Value.CompareTo(a.Value));
-                topIndices = new int[nTop];
-                for (int i = 0; i < nTop; i++)
-                    topIndices[i] = indexed[i].Key;
+                // Stable sort matching Rust slice::sort_by on
+                // RelativeIntensity ties; List<T>.Sort with
+                // Comparison<T> is introsort and unstable.
+                topIndices = Enumerable.Range(0, nFrags)
+                    .OrderByDescending(i => entry.Fragments[i].RelativeIntensity)
+                    .Take(nTop)
+                    .ToArray();
             }
 
             int nScans = candidateSpectra.Count;
@@ -3024,9 +3059,51 @@ namespace pwiz.OspreySharp
             // never shrinks, so gen-2 keeps the arrays for the full run.
             context.EnsureXcorrScratchPool(scorer.BinConfig.NBins);
 
+            // Apply MS2 calibration to a LOCAL copy of the spectra
+            // list, mirroring Rust run_search at pipeline.rs:6750-6772
+            // which builds `calibrated_spectra` and then operates on
+            // it via `spectra_ref`. Do NOT mutate the input parameter
+            // -- the Stage 6 rescore loop calls RunCoelutionScoring
+            // multiple times per file (rescore + gap-fill CWT +
+            // gap-fill forced) sharing the same spectra list, and
+            // mutating in place applies the m/z offset cumulatively
+            // across calls (mz - mean -> mz - 2*mean -> mz - 3*mean),
+            // which produces wrong fragment matches in the second and
+            // third calls. Verified via per-entry XIC dump: scan 8
+            // for entry 10110 had Rust intensity = 0 (peak shifted
+            // out of tolerance after a single calibration) but C#
+            // intensity = 8873 (peak still in range because the
+            // accumulated calibration moved a different peak in).
+            List<Spectrum> calibratedSpectra;
+            if (ms2Calibration.Calibrated)
+            {
+                calibratedSpectra = new List<Spectrum>(spectra.Count);
+                for (int si = 0; si < spectra.Count; si++)
+                {
+                    var s = spectra[si];
+                    double[] correctedMzs = new double[s.Mzs.Length];
+                    for (int mi = 0; mi < s.Mzs.Length; mi++)
+                        correctedMzs[mi] = MzCalibration.ApplyCalibration(s.Mzs[mi], ms2Calibration);
+                    calibratedSpectra.Add(new Spectrum
+                    {
+                        ScanNumber = s.ScanNumber,
+                        RetentionTime = s.RetentionTime,
+                        PrecursorMz = s.PrecursorMz,
+                        IsolationWindow = s.IsolationWindow,
+                        Mzs = correctedMzs,
+                        Intensities = s.Intensities
+                    });
+                }
+            }
+            else
+            {
+                // No calibration -> alias the input list (no copy).
+                calibratedSpectra = spectra;
+            }
+
             // Group spectra by isolation window center (rounded key) for efficient lookup
             var spectraByWindowKey = new Dictionary<int, List<Spectrum>>();
-            foreach (var spectrum in spectra)
+            foreach (var spectrum in calibratedSpectra)
             {
                 int key = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
                 List<Spectrum> list;
@@ -3054,16 +3131,26 @@ namespace pwiz.OspreySharp
             double rtSigmaGlobal;
             if (rtCalibration != null)
             {
-                var stats = rtCalibration.Stats();
-                double robustSd = stats.MAD * 1.4826;
+                // Mirror Rust run_search at pipeline.rs:6776-6815: prefer
+                // the per-file .calibration.json's rt_calibration.mad
+                // (the FIRST-PASS MAD), and only fall back to the
+                // calibration's stats MAD when that JSON value is absent.
+                // This is the difference between using ~0.144 (broad
+                // first-pass spread) and ~0.012 (narrow refined-cal
+                // spread that gets clamped to MinRtTolerance), which
+                // costs ~28% of window width and produces ~33k divergent
+                // best-peak picks per Stellar file.
+                double mad = context.OriginalRtMad ?? rtCalibration.Stats().MAD;
+                double robustSd = mad * 1.4826;
                 double rtToleranceMad = robustSd * 3.0;
                 rtToleranceGlobal = Math.Max(
                     config.RtCalibration.MinRtTolerance,
                     Math.Min(config.RtCalibration.MaxRtTolerance, rtToleranceMad));
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
                 LogInfo(string.Format(
-                    "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3})",
-                    rtToleranceGlobal, stats.MAD));
+                    "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
+                    rtToleranceGlobal, mad,
+                    context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
             }
             else
             {
@@ -3092,43 +3179,15 @@ namespace pwiz.OspreySharp
                     "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
                     calTol, unitStr));
 
-                // Use calibrated tolerance for all downstream scoring
+                // Use calibrated tolerance for all downstream scoring.
+                // (Spectra were already calibrated above into the local
+                // calibratedSpectra list before spectraByWindowKey was
+                // built, so no rebuild is needed here.)
                 config.FragmentTolerance = searchFragTol;
 
-                // Apply m/z offset correction to all spectra
                 LogInfo(string.Format(
                     "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
                     ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
-                for (int si = 0; si < spectra.Count; si++)
-                {
-                    var s = spectra[si];
-                    double[] correctedMzs = new double[s.Mzs.Length];
-                    for (int mi = 0; mi < s.Mzs.Length; mi++)
-                        correctedMzs[mi] = MzCalibration.ApplyCalibration(s.Mzs[mi], ms2Calibration);
-                    spectra[si] = new Spectrum
-                    {
-                        ScanNumber = s.ScanNumber,
-                        RetentionTime = s.RetentionTime,
-                        PrecursorMz = s.PrecursorMz,
-                        IsolationWindow = s.IsolationWindow,
-                        Mzs = correctedMzs,
-                        Intensities = s.Intensities
-                    };
-                }
-
-                // Rebuild the window lookup after m/z correction
-                spectraByWindowKey.Clear();
-                foreach (var spectrum in spectra)
-                {
-                    int key = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
-                    List<Spectrum> list;
-                    if (!spectraByWindowKey.TryGetValue(key, out list))
-                    {
-                        list = new List<Spectrum>();
-                        spectraByWindowKey[key] = list;
-                    }
-                    list.Add(spectrum);
-                }
             }
 
             // Per-entry search XIC diagnostic: log the intent once at start.
@@ -3355,6 +3414,25 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
+        /// IComparer&lt;double&gt; implementing IEEE 754-2008 total order
+        /// (matches Rust's f64::total_cmp). Key property versus the
+        /// default Comparer&lt;double&gt;: distinguishes -0.0 &lt; +0.0,
+        /// orders NaNs consistently. Required wherever a stable sort
+        /// needs to mirror Rust's slice::sort_by(... .total_cmp(...))
+        /// — pair with LINQ OrderBy/OrderByDescending (stable per
+        /// .NET contract) to match Rust byte-for-byte.
+        /// </summary>
+        private static readonly IComparer<double> TotalOrderComparer =
+            Comparer<double>.Create((a, b) =>
+            {
+                long la = BitConverter.DoubleToInt64Bits(a);
+                long lb = BitConverter.DoubleToInt64Bits(b);
+                if (la < 0) la ^= 0x7FFFFFFFFFFFFFFFL;
+                if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
+                return la.CompareTo(lb);
+            });
+
+        /// <summary>
         /// Build a one-element peak list at the supplied (apex, start, end)
         /// RT triple, mapped onto the reference XIC's RT axis. Returns null
         /// when the resulting index range is degenerate. Mirrors the
@@ -3366,7 +3444,17 @@ namespace pwiz.OspreySharp
             List<XicData> xics)
         {
             // Reference XIC = highest total-intensity fragment, matching
-            // the CWT-path selection further down in ScoreCandidate.
+            // Rust run_search at pipeline.rs:7140-7148 which uses
+            // `xics.max_by(|a, b| sum_a.total_cmp(&sum_b))` (returns
+            // the LAST equal element on ties). Use `>=` to match -- a
+            // strict `>` would keep the FIRST equal element here while
+            // every other ref_xic selection in this file (including
+            // the rank-scoring loop further down) uses `>=`, so an
+            // override entry whose top two fragments tie on total
+            // intensity would have BuildOverridePeaks pick a different
+            // ref than the rank loop expects. That mismatch shows up
+            // as ~32k peak_apex divergent rows in the reconciled
+            // parquet vs the Rust output.
             int refIdx = 0;
             double refTotal = -1.0;
             for (int f = 0; f < xics.Count; f++)
@@ -3375,7 +3463,7 @@ namespace pwiz.OspreySharp
                 var ints = xics[f].Intensities;
                 for (int j = 0; j < ints.Length; j++)
                     total += ints[j];
-                if (total > refTotal) { refTotal = total; refIdx = f; }
+                if (total >= refTotal) { refTotal = total; refIdx = f; }
             }
             var rtArr = xics[refIdx].RetentionTimes;
             var intArr = xics[refIdx].Intensities;
@@ -3459,6 +3547,15 @@ namespace pwiz.OspreySharp
             double expectedRt = rtCalibration != null
                 ? rtCalibration.Predict(candidate.RetentionTime)
                 : candidate.RetentionTime;
+            // Bisection seam: dump (entry_id, library_rt -> expected_rt)
+            // for every per-window candidate scoring. Mirrors Rust's
+            // dump_predict_rt_call at pipeline.rs ~7014. Pair with
+            // WritePredictRtArrays at the top of the rescore loop to
+            // narrow whether RT divergences come from cal arrays
+            // diverging or from Predict() output differing on identical
+            // arrays.
+            OspreyDiagnostics.WritePredictRtCall(
+                candidate.Id, candidate.RetentionTime, expectedRt);
             double rtTolerance = globalRtTolerance;
 
             if (diag)
@@ -3487,31 +3584,47 @@ namespace pwiz.OspreySharp
             // Half-width is rtTolerance plus max(rtTolerance, 0.1) —
             // tight-calibration runs get a 0.1 min floor of extra context;
             // wider runs scale with rtTolerance.
-            double rtLo, rtHi;
+            // Two filter shapes mirroring Rust pipeline.rs:7031-7065 byte-
+            // for-byte. The override branch uses [rtLo, rtHi]; the
+            // normal-search branch uses |rt - expectedRt| <= xicHalfWidth.
+            // Mathematically identical but NOT f64-equivalent at the
+            // boundary -- writing out the precomputed `rtHi = expectedRt
+            // + xicHalfWidth` and comparing `rt <= rtHi` can include /
+            // exclude a boundary scan that the abs-diff form would not,
+            // because the two arithmetic chains round differently in the
+            // last bit. Without the abs-diff form, ~1k entries per
+            // Stellar file pick a different best apex than Rust because a
+            // single boundary spectrum slips into one side's window and
+            // not the other's, cascading through CWT peak detection.
+            int startScan = -1, endScan = -1;
             if (overrideBounds.HasValue)
             {
                 var ob = overrideBounds.Value;
                 double peakWidth = Math.Max(0.1, ob.End - ob.Start);
                 double margin = Math.Max(0.2, peakWidth);
-                rtLo = ob.Start - margin;
-                rtHi = ob.End + margin;
+                double rtLo = ob.Start - margin;
+                double rtHi = ob.End + margin;
+                for (int i = 0; i < nScans; i++)
+                {
+                    if (windowRts[i] >= rtLo && windowRts[i] <= rtHi)
+                    {
+                        if (startScan < 0)
+                            startScan = i;
+                        endScan = i;
+                    }
+                }
             }
             else
             {
                 double xicHalfWidth = rtTolerance + Math.Max(rtTolerance, 0.1);
-                rtLo = expectedRt - xicHalfWidth;
-                rtHi = expectedRt + xicHalfWidth;
-            }
-            int startScan = -1, endScan = -1;
-            for (int i = 0; i < nScans; i++)
-            {
-                if (windowRts[i] > rtHi)
-                    break;
-                if (windowRts[i] >= rtLo)
+                for (int i = 0; i < nScans; i++)
                 {
-                    if (startScan < 0)
-                        startScan = i;
-                    endScan = i;
+                    if (Math.Abs(windowRts[i] - expectedRt) <= xicHalfWidth)
+                    {
+                        if (startScan < 0)
+                            startScan = i;
+                        endScan = i;
+                    }
                 }
             }
 
@@ -3533,8 +3646,8 @@ namespace pwiz.OspreySharp
                 else
                 {
                     LogInfo(string.Format(
-                        "[DIAG] {0}: no scans in RT window [{1:F3}..{2:F3}]",
-                        candidate.ModifiedSequence, rtLo, rtHi));
+                        "[DIAG] {0}: no scans in RT window around expected_rt={1:F3}",
+                        candidate.ModifiedSequence, expectedRt));
                 }
             }
 
@@ -3580,7 +3693,11 @@ namespace pwiz.OspreySharp
             var xics = ExtractFragmentXics(
                 candidate, windowSpectra, windowRts, startScan, endScan, config);
 
-            // Per-entry search XIC diagnostic (thread-safe: unique file per entry_id)
+            // Per-entry search XIC diagnostic. Fires for every scoring
+            // path; if the entry is scored twice (consensus + override)
+            // the LAST call wins on disk. Caller can isolate by
+            // limiting OSPREY_DIAG_SEARCH_ENTRY_IDS to the right
+            // entries, or by tagging the dump filename with the path.
             if (OspreyDiagnostics.ShouldDumpSearchXicFor(candidate.Id))
             {
                 OspreyDiagnostics.WriteSearchXicDump(
@@ -3618,6 +3735,14 @@ namespace pwiz.OspreySharp
                 peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
                 peaksFromCwt = peaks.Count > 0;
             }
+            // Snapshot CWT consensus peak count for the OSPREY_DUMP_CWT_PATH
+            // dump. The dump only fires for non-override entries (the
+            // override path bypasses CWT entirely on both Rust and C#);
+            // call sites below gate on `!overrideBounds.HasValue`. Sigma
+            // + consensus-signal stats are computed inside
+            // OspreyDiagnostics.WriteCwtPathRow when the dump is active,
+            // so production callers carry only this single int.
+            int diagNCwtPeaks = peaks.Count;
 
             if (peaks.Count == 0)
             {
@@ -3677,7 +3802,15 @@ namespace pwiz.OspreySharp
                 }
             }
             if (peaks.Count == 0)
+            {
+                if (!overrideBounds.HasValue)
+                {
+                    OspreyDiagnostics.WriteCwtPathRow(
+                        context.FileName, candidate.Id,
+                        diagNCwtPeaks, 0, 0, false, xics);
+                }
                 return null;
+            }
 
             // Rust scores each candidate peak by mean pairwise fragment
             // correlation weighted by a Gaussian RT penalty and an intensity
@@ -3691,8 +3824,13 @@ namespace pwiz.OspreySharp
             // position gets RT penalty=1.0; 5-sigma away gets ~0.01.
 
             // Reference XIC = highest total-intensity fragment. Matches Rust
-            // run_search which selects ref_xic before CWT and reuses it for
-            // apex intensity lookup.
+            // run_search at pipeline.rs:7140-7148 which uses
+            // `xics.max_by(|a, b| sum_a.total_cmp(&sum_b))`. Rust's
+            // `Iterator::max_by` returns the LAST equal element on ties
+            // (per std doc), so use `>=` here, NOT `>`. Without this,
+            // ~33k Stellar entries pick the first tied fragment as ref_xic
+            // while Rust picks the last, producing divergent
+            // peak_apex / peak_sharpness in the reconciled parquet.
             int refXicIdx = 0;
             double refXicBestTotal = -1.0;
             for (int f = 0; f < xics.Count; f++)
@@ -3700,19 +3838,34 @@ namespace pwiz.OspreySharp
                 double total = 0.0;
                 for (int i = 0; i < xics[f].Intensities.Length; i++)
                     total += xics[f].Intensities[i];
-                if (total > refXicBestTotal) { refXicBestTotal = total; refXicIdx = f; }
+                if (total >= refXicBestTotal) { refXicBestTotal = total; refXicIdx = f; }
             }
             double[] refXicIntensities = xics[refXicIdx].Intensities;
 
             XICPeakBounds bestPeak = null;
             double bestRankScore = double.MinValue;
             int bestPeakIdx = -1;
+            int diagNScored = 0; // peaks that pass apex-acceptance
             double twoSigmaSq = 2.0 * rtSigma * rtSigma;
-            // Capture every CWT-passed peak with its raw coelution score and
-            // rank score for the top-N CwtCandidate list assigned below
-            // (Stage 6 reconciliation input). Mirrors Rust run_search's
-            // scored_candidates collection at pipeline.rs:6790-6806.
-            var capturedPeaks = peaksFromCwt
+            // Capture every scored peak with its raw coelution score
+            // and rank score for the top-N CwtCandidate list assigned
+            // below (Stage 6 reconciliation input). Mirrors Rust
+            // run_search's scored_candidates collection at
+            // pipeline.rs:7261-7327, which fires for the non-override
+            // path -- the override branch (pipeline.rs:7155-7223)
+            // returns at line 7223 BEFORE reaching the cwt_top_n
+            // code, so override entries leave cwt_candidates as the
+            // default empty `Vec::new()` on the rescored
+            // CoelutionScoredEntry.
+            //
+            // Build for CWT-OR-FALLBACK paths (anything reaching the
+            // rank-scoring loop without an override). Earlier C#
+            // versions gated this on `peaksFromCwt` (CWT-consensus
+            // success only) which left fallback-path entries with
+            // empty cwt_candidates blobs while Rust still populated
+            // them; that produced the last 5 / 3 / 2 cwt_candidates
+            // divergent rows per Stellar file.
+            var capturedPeaks = !overrideBounds.HasValue
                 ? new List<(XICPeakBounds peak, double coelutionScore, double rankScore)>(peaks.Count)
                 : null;
             for (int pi = 0; pi < peaks.Count; pi++)
@@ -3734,6 +3887,7 @@ namespace pwiz.OspreySharp
                 double rtResidual = Math.Abs(peakApexRt - expectedRt);
                 if (!overrideBounds.HasValue && rtResidual > rtTolerance)
                     continue;
+                diagNScored++;
 
                 double sum = 0.0;
                 int count = 0;
@@ -3839,13 +3993,90 @@ namespace pwiz.OspreySharp
             }
 
             if (bestPeak == null)
+            {
+                if (!overrideBounds.HasValue)
+                {
+                    OspreyDiagnostics.WriteCwtPathRow(
+                        context.FileName, candidate.Id,
+                        diagNCwtPeaks, peaks.Count, diagNScored, false, xics);
+                }
                 return null;
+            }
+
+            // For CWT-path entries (no override), Rust pipeline.rs:7406-7424
+            // RECOMPUTES the peak's apex_index / apex_intensity using
+            // ref_xic[si..=ei] (the highest-total-intensity single
+            // fragment), discarding the apex_index that came out of
+            // detect_cwt_consensus_peaks (which used ref_signal -- the
+            // SUM of all fragment intensities). When a peak's max in
+            // the summed signal sits at a different scan than the max
+            // in the single ref_xic, leaving the consensus apex_index
+            // in place produces divergent peak_apex / peak_sharpness
+            // vs Rust on the reconciled .scores.parquet (~32k rows on
+            // Stellar before this fix). Override entries are excluded
+            // because Rust's override branch (pipeline.rs:7155-7223)
+            // uses the override-supplied apex_index directly without
+            // refining it -- match by skipping the recompute.
+            if (!overrideBounds.HasValue)
+            {
+                int si = bestPeak.StartIndex;
+                int ei = bestPeak.EndIndex;
+                int newApexIdx = si;
+                double newApexVal = refXicIntensities[si];
+                for (int i = si + 1; i <= ei; i++)
+                {
+                    // Use `>=` to match Rust's `max_by` last-on-tie.
+                    if (refXicIntensities[i] >= newApexVal)
+                    {
+                        newApexVal = refXicIntensities[i];
+                        newApexIdx = i;
+                    }
+                }
+                // Rust pipeline.rs:7433-7444 RECOMPUTES `peak.area` and
+                // `peak.signal_to_noise` from `ref_xic[si..=ei]` here, NOT
+                // preserving the original CWT detection's values. The
+                // original area/SNR came from the consensus signal's
+                // boundary (which can differ from the CWT apex's
+                // [start..end] in the ref_xic). Preserving them produces
+                // ~560 bounds_area / ~546 bounds_snr divergent rows on
+                // Stellar where the parquet reports the WRONG (consensus-
+                // boundary) area for the WINNING (ref_xic-boundary) peak.
+                // peak_area / peak_sharpness as PIN features already
+                // recompute correctly via ComputePeakShapeFeatures; this
+                // recompute keeps the parquet's bounds_area / bounds_snr
+                // consistent with that.
+                double[] refRtsAll = xics[refXicIdx].RetentionTimes;
+                double newArea = PeakDetector.TrapezoidalArea(
+                    refRtsAll, refXicIntensities, si, ei);
+                double newSnr = PeakDetector.ComputeSnr(
+                    refXicIntensities, newApexIdx, si, ei);
+                bestPeak = new XICPeakBounds
+                {
+                    ApexRt = refRtsAll[newApexIdx],
+                    ApexIntensity = newApexVal,
+                    ApexIndex = newApexIdx,
+                    StartRt = refRtsAll[si],
+                    EndRt = refRtsAll[ei],
+                    StartIndex = si,
+                    EndIndex = ei,
+                    Area = newArea,
+                    SignalToNoise = newSnr,
+                };
+            }
 
             int apexGlobalIdx = startScan + bestPeak.ApexIndex;
 
             // Score at the apex spectrum
             if (apexGlobalIdx < 0 || apexGlobalIdx >= windowSpectra.Count)
+            {
+                if (!overrideBounds.HasValue)
+                {
+                    OspreyDiagnostics.WriteCwtPathRow(
+                        context.FileName, candidate.Id,
+                        diagNCwtPeaks, peaks.Count, diagNScored, false, xics);
+                }
                 return null;
+            }
 
             var apexSpectrum = windowSpectra[apexGlobalIdx];
 
@@ -3954,6 +4185,14 @@ namespace pwiz.OspreySharp
                     peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
                 }
 
+                // Bisection seam: dump (frag_pos, frag_idx, scan_idx, rt,
+                // intensity) for every median-polish call. Mirrors the
+                // Rust diagnostics::dump_mp_inputs at pipeline.rs:6494.
+                // Use the same input buffers passed to the median polish
+                // so we capture the exact data the algorithm sees.
+                OspreyDiagnostics.WriteMpInputsRow(
+                    candidate.Id, apexSpectrum.ScanNumber, peakXics, peakRts);
+
                 var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
                 if (polish != null)
                 {
@@ -4011,12 +4250,20 @@ namespace pwiz.OspreySharp
                 : 0;
             if (capturedPeaks != null && capturedPeaks.Count > 0 && topN > 0)
             {
-                capturedPeaks.Sort((a, b) =>
-                {
-                    if (TotalOrderGreater(a.rankScore, b.rankScore)) return -1;
-                    if (TotalOrderGreater(b.rankScore, a.rankScore)) return 1;
-                    return 0;
-                });
+                // Rust scored_candidates.sort_by at pipeline.rs:7329 is
+                // STABLE (slice::sort_by is stable) AND uses f64::total_cmp,
+                // which distinguishes -0.0 < +0.0. The default
+                // Comparer<double> treats them equal, so two peaks whose
+                // rank_score = coelution * rt_penalty * intensityWeight
+                // collapses to a signed zero (intensityWeight = 0 when
+                // ref_xic intensity at apex is 0; sign comes from
+                // coelution) compare as tied under standard <, while
+                // Rust orders them positive-then-negative. Pair LINQ
+                // OrderByDescending (stable per .NET contract) with
+                // TotalOrderComparer to match Rust byte-for-byte.
+                capturedPeaks = capturedPeaks
+                    .OrderByDescending(p => p.rankScore, TotalOrderComparer)
+                    .ToList();
                 int kept = Math.Min(topN, capturedPeaks.Count);
                 cwtCandidatesOut = new List<CwtCandidate>(kept);
                 double[] refRts = xics[refXicIdx].RetentionTimes;
@@ -4052,7 +4299,57 @@ namespace pwiz.OspreySharp
                 }
             }
 
-            // Build FdrEntry
+            // Build FdrEntry. The six blob/scalar fields below mirror
+            // Rust CoelutionScoredEntry::{fragment_mzs, fragment_intensities,
+            // reference_xic, peak.area, peak.signal_to_noise} so the
+            // reconciled .scores.parquet write-back can produce byte-
+            // identical blob columns for cross-impl validation.
+            //
+            // FragmentMzs / FragmentIntensities iterate the FULL library
+            // fragment list (not just the top-N used by XIC extraction)
+            // because Rust's parquet writer at pipeline.rs:1620-1631
+            // serializes every library fragment.
+            int nFrags = candidate.Fragments?.Count ?? 0;
+            double[] fragMzs = new double[nFrags];
+            float[] fragInts = new float[nFrags];
+            for (int fi = 0; fi < nFrags; fi++)
+            {
+                fragMzs[fi] = candidate.Fragments[fi].Mz;
+                fragInts[fi] = candidate.Fragments[fi].RelativeIntensity;
+            }
+
+            // ReferenceXic{Rts,Intensities} are sliced from the highest-
+            // total-intensity fragment XIC across the winning peak's
+            // [si..=ei] window, matching Rust's
+            // `ref_xic[peak.start_index..=peak.end_index].to_vec()` at
+            // pipeline.rs:6538. Use the SAFE indices (clipped by the
+            // post-rank apex recompute) for non-override entries; the
+            // override path's bestPeak retains its original boundaries.
+            double[] refXicRtsAll = xics[refXicIdx].RetentionTimes;
+            int refMaxLen = Math.Min(
+                refXicRtsAll != null ? refXicRtsAll.Length : 0,
+                refXicIntensities != null ? refXicIntensities.Length : 0);
+            double[] refXicRts;
+            double[] refXicInts;
+            if (refMaxLen == 0)
+            {
+                refXicRts = new double[0];
+                refXicInts = new double[0];
+            }
+            else
+            {
+                int refSi = Math.Max(0, Math.Min(bestPeak.StartIndex, refMaxLen - 1));
+                int refEi = Math.Max(refSi, Math.Min(bestPeak.EndIndex, refMaxLen - 1));
+                int refLen = refEi - refSi + 1;
+                refXicRts = new double[refLen];
+                refXicInts = new double[refLen];
+                for (int i = 0; i < refLen; i++)
+                {
+                    refXicRts[i] = refXicRtsAll[refSi + i];
+                    refXicInts[i] = refXicIntensities[refSi + i];
+                }
+            }
+
             var entry = new FdrEntry
             {
                 EntryId = candidate.Id,
@@ -4066,9 +4363,21 @@ namespace pwiz.OspreySharp
                 Score = coelutionSum,
                 ModifiedSequence = candidate.ModifiedSequence,
                 Features = features,
-                CwtCandidates = cwtCandidatesOut
+                CwtCandidates = cwtCandidatesOut,
+                FragmentMzs = fragMzs,
+                FragmentIntensities = fragInts,
+                ReferenceXicRts = refXicRts,
+                ReferenceXicIntensities = refXicInts,
+                BoundsArea = bestPeak.Area,
+                BoundsSnr = bestPeak.SignalToNoise,
             };
 
+            if (!overrideBounds.HasValue)
+            {
+                OspreyDiagnostics.WriteCwtPathRow(
+                    context.FileName, candidate.Id,
+                    diagNCwtPeaks, peaks.Count, diagNScored, true, xics);
+            }
             return entry;
         }
 
@@ -4097,14 +4406,14 @@ namespace pwiz.OspreySharp
                     return mzs;
                 }
 
-                // Find top 6 by intensity
-                var indices = new int[frags.Count];
-                for (int i = 0; i < indices.Length; i++) indices[i] = i;
-                Array.Sort(indices, (a, b) =>
-                    frags[b].RelativeIntensity.CompareTo(frags[a].RelativeIntensity));
-                var result = new double[nTop];
-                for (int i = 0; i < nTop; i++)
-                    result[i] = frags[indices[i]].Mz;
+                // Find top 6 by intensity, stable on ties to match
+                // Rust slice::sort_by. Array.Sort with Comparison<T>
+                // is introsort and unstable.
+                var result = Enumerable.Range(0, frags.Count)
+                    .OrderByDescending(i => frags[i].RelativeIntensity)
+                    .Take(nTop)
+                    .Select(i => frags[i].Mz)
+                    .ToArray();
                 return result;
             });
         }
@@ -4178,13 +4487,20 @@ namespace pwiz.OspreySharp
             }
             else
             {
-                var indexed = new List<KeyValuePair<int, float>>(nFrags);
-                for (int i = 0; i < nFrags; i++)
-                    indexed.Add(new KeyValuePair<int, float>(i, candidate.Fragments[i].RelativeIntensity));
-                indexed.Sort((a, b) => b.Value.CompareTo(a.Value));
-                topIndices = new int[nTop];
-                for (int i = 0; i < nTop; i++)
-                    topIndices[i] = indexed[i].Key;
+                // Rust's `indexed.sort_by(|a, b| b.1.total_cmp(&a.1))` at
+                // osprey-scoring/src/lib.rs:528 is STABLE (slice::sort_by
+                // is stable). Switch from `List<T>.Sort` (introsort,
+                // unstable) to LINQ `OrderByDescending` (stable per .NET
+                // contract) so that ties on RelativeIntensity preserve
+                // the library's fragment order, matching Rust. Without
+                // this, a peptide with two fragments at equal relative
+                // intensity can land different fragments in its top-N on
+                // the C# side, which cascades through XIC extraction →
+                // peak detection → rankScore → bestPeak selection.
+                topIndices = Enumerable.Range(0, nFrags)
+                    .OrderByDescending(i => candidate.Fragments[i].RelativeIntensity)
+                    .Take(nTop)
+                    .ToArray();
             }
 
             // Build shared RT array for this range
@@ -4316,17 +4632,22 @@ namespace pwiz.OspreySharp
             if (start > end)
                 return;
 
-            // Use reference XIC (highest total intensity), matching Rust pipeline.rs.
-            // Rust computes peak_apex, peak_area, peak_sharpness from ref_xic only.
+            // Use reference XIC (highest total intensity), matching Rust
+            // pipeline.rs:7140-7148. Rust's `xics.iter().max_by(...)`
+            // returns the LAST equal element on ties (per Iterator::max_by
+            // doc), so use `>=` here, NOT `>`. Without this, the first
+            // tied fragment wins on the C# side while Rust picks the
+            // last, producing divergent peak_apex / peak_area /
+            // peak_sharpness when fragments tie on total intensity.
             int refIdx = 0;
-            double bestTotal = 0.0;
+            double bestTotal = -1.0;
             for (int f = 0; f < xics.Count; f++)
             {
                 double total = 0.0;
                 double[] inten = xics[f].Intensities;
                 for (int i = 0; i < inten.Length; i++)
                     total += inten[i];
-                if (total > bestTotal)
+                if (total >= bestTotal)
                 {
                     bestTotal = total;
                     refIdx = f;
@@ -4336,21 +4657,27 @@ namespace pwiz.OspreySharp
             double[] refInten = xics[refIdx].Intensities;
             double[] refRts = xics[refIdx].RetentionTimes;
 
-            // Apex: max intensity in the reference XIC over the peak range.
-            // Matches Rust: ref_xic[si..=ei].max_by(intensity). On ties
-            // Rust's Iterator::max_by keeps the LAST equal element (see
-            // std::cmp::max_by returning v2 on Ordering::Equal); use `>=`
-            // here to match so flat-top peaks pick the same apex scan.
-            double apexVal = 0.0;
-            int apexIdx = start;
-            for (int i = start; i <= end; i++)
-            {
-                if (refInten[i] >= apexVal)
-                {
-                    apexVal = refInten[i];
-                    apexIdx = i;
-                }
-            }
+            // peak_apex == intensity at peak.ApexIndex in the reference
+            // XIC. This matches Rust pipeline.rs:6547 which sets
+            // `peak_apex: peak.apex_intensity` (the value already
+            // assigned in BuildOverridePeaks / the CWT-path FindPeaks).
+            //
+            // Earlier C# implementations recomputed apex as the local
+            // max in `ref_xic[start..=end]`. That recomputation diverges
+            // from Rust on the OVERRIDE path: there, Rust deliberately
+            // uses the override-supplied apex_index even when a
+            // different scan in [start..=end] has higher intensity (the
+            // override is the authoritative apex for reconciliation /
+            // gap-fill scoring). The local-max approach put C# at
+            // ~32k row peak_apex / peak_sharpness divergence vs Rust on
+            // the reconciled .scores.parquet.
+            //
+            // Use peak.ApexIndex (clipped above) and look up the
+            // intensity directly. Sharpness slopes below also use this
+            // apex position so the left/right edges align with what
+            // Rust computes.
+            int apexIdx = apex;
+            double apexVal = refInten[apexIdx];
             peakApex = apexVal;
 
             // Area: trapezoidal integration on the reference XIC.
@@ -4462,52 +4789,66 @@ namespace pwiz.OspreySharp
             massAccuracyMean = 0.0;
             absMassAccuracyMean = 0.0;
 
-            if (apexSpectrum.Mzs == null || apexSpectrum.Mzs.Length == 0 ||
-                candidate.Fragments == null || candidate.Fragments.Count == 0)
-                return;
-
+            // Do NOT early-return when apex spectrum or candidate fragments
+            // are empty. Rust's compute_mass_accuracy
+            // (osprey-scoring/src/lib.rs:464) handles empty inputs by
+            // returning (0.0, tolerance, tolerance) — so a candidate that
+            // reaches this function with no matchable fragments still
+            // contributes the calibrated tolerance as its abs mass error.
+            // The early-return form left absMassAccuracyMean at 0 instead,
+            // producing ~65 divergent rows on Astral (file 49: 2 rows,
+            // 55: 27 rows, 60: 36 rows). Let the matching loop run with
+            // zero iterations and fall through to the nMatched==0 fallback
+            // at the bottom of the function for cross-impl symmetry.
             double totalIntensity = 0.0;
-            for (int i = 0; i < apexSpectrum.Intensities.Length; i++)
-                totalIntensity += apexSpectrum.Intensities[i];
+            if (apexSpectrum.Intensities != null)
+            {
+                for (int i = 0; i < apexSpectrum.Intensities.Length; i++)
+                    totalIntensity += apexSpectrum.Intensities[i];
+            }
 
             double matchedIntensity = 0.0;
             double massErrSum = 0.0;
             double absMassErrSum = 0.0;
             int nMatched = 0;
 
-            foreach (var frag in candidate.Fragments)
+            if (apexSpectrum.Mzs != null && apexSpectrum.Intensities != null &&
+                candidate.Fragments != null)
             {
-                double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
-                double lower = frag.Mz - tolDa;
-                double upper = frag.Mz + tolDa;
-
-                int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
-                double bestError = double.MaxValue;
-                double bestIntensity = 0.0;
-                double bestMz = 0.0;
-                bool found = false;
-
-                // Match closest peak by m/z (not most intense).
-                // Matches Rust SpectralScorer::match_fragments in lib.rs:2239.
-                for (int k = lo; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
+                foreach (var frag in candidate.Fragments)
                 {
-                    double errorDa = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
-                    if (errorDa < bestError)
+                    double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
+                    double lower = frag.Mz - tolDa;
+                    double upper = frag.Mz + tolDa;
+
+                    int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                    double bestError = double.MaxValue;
+                    double bestIntensity = 0.0;
+                    double bestMz = 0.0;
+                    bool found = false;
+
+                    // Match closest peak by m/z (not most intense).
+                    // Matches Rust SpectralScorer::match_fragments in lib.rs:2239.
+                    for (int k = lo; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
                     {
-                        bestError = errorDa;
-                        bestIntensity = apexSpectrum.Intensities[k];
-                        bestMz = apexSpectrum.Mzs[k];
-                        found = true;
+                        double errorDa = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
+                        if (errorDa < bestError)
+                        {
+                            bestError = errorDa;
+                            bestIntensity = apexSpectrum.Intensities[k];
+                            bestMz = apexSpectrum.Mzs[k];
+                            found = true;
+                        }
                     }
-                }
 
-                if (found)
-                {
-                    matchedIntensity += bestIntensity;
-                    double err = config.FragmentTolerance.MassError(frag.Mz, bestMz);
-                    massErrSum += err;
-                    absMassErrSum += Math.Abs(err);
-                    nMatched++;
+                    if (found)
+                    {
+                        matchedIntensity += bestIntensity;
+                        double err = config.FragmentTolerance.MassError(frag.Mz, bestMz);
+                        massErrSum += err;
+                        absMassErrSum += Math.Abs(err);
+                        nMatched++;
+                    }
                 }
             }
 
@@ -4828,14 +5169,15 @@ namespace pwiz.OspreySharp
             }
             else
             {
-                // Find top 6 indices by intensity
-                var indices = new int[entry.Fragments.Count];
-                for (int i = 0; i < indices.Length; i++) indices[i] = i;
-                Array.Sort(indices, (a, b) =>
-                    entry.Fragments[b].RelativeIntensity.CompareTo(
-                        entry.Fragments[a].RelativeIntensity));
+                // Stable top-6 by RelativeIntensity, matching Rust
+                // slice::sort_by ties (Array.Sort with Comparison<T>
+                // is introsort and unstable).
+                var indices = Enumerable.Range(0, entry.Fragments.Count)
+                    .OrderByDescending(i => entry.Fragments[i].RelativeIntensity)
+                    .Take(nTop)
+                    .ToArray();
 
-                for (int t = 0; t < nTop; t++)
+                for (int t = 0; t < indices.Length; t++)
                 {
                     if (SpectralScorer.HasMatch(entry.Fragments[indices[t]].Mz,
                         spectrum.Mzs, config.FragmentTolerance))
@@ -5397,22 +5739,38 @@ namespace pwiz.OspreySharp
             var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
             LogInfo(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
 
-            // Get detected peptide set (targets passing run-level FDR)
-            var detectedPeptides = new HashSet<string>();
+            // Get detected peptide set: targets passing experiment-level
+            // q-value at the configured fdr_level (matches Rust pipeline.rs
+            // second-pass parsimony input which filters on
+            // `effective_experiment_qvalue(peptide_gate_level) <= experiment_fdr`
+            // where peptide_gate_level = config.fdr_level (Peptide if config
+            // is Protein, otherwise the config value). The Rust default
+            // `FdrLevel::Precursor` means a default run filters on precursor-
+            // level experiment q-values, NOT peptide-level. Matching that
+            // here prevents losing ~1500 peptides to an unintentionally
+            // stricter Peptide-level gate.
+            // Rust pipeline.rs:4510 maps `FdrLevel::Protein -> Peptide` and
+            // passes other variants through. C#'s FdrLevel enum doesn't
+            // include `Protein` (just Precursor/Peptide/Both), so the remap
+            // is a no-op here -- pass config.FdrLevel through directly. The
+            // important property is that the gate level matches Rust's
+            // default `FdrLevel::Precursor`, NOT a hardcoded Peptide.
+            var peptideGateLevel = config.FdrLevel;
+            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
                 {
                     if (!entry.IsDecoy &&
-                        entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                        entry.EffectiveExperimentQvalue(peptideGateLevel) <= config.ExperimentFdr)
                     {
                         detectedPeptides.Add(entry.ModifiedSequence);
                     }
                 }
             }
 
-            LogInfo(string.Format("Detected {0} unique peptides at {1:P1} FDR",
-                detectedPeptides.Count, config.RunFdr));
+            LogInfo(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR ({2})",
+                detectedPeptides.Count, config.ExperimentFdr, peptideGateLevel));
             LogInfo(string.Format(
                 "[COUNT] Detected peptides for protein FDR: {0} unique",
                 detectedPeptides.Count));
@@ -5425,9 +5783,11 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[COUNT] Protein parsimony groups: {0}", parsimony.Groups.Count));
 
-            // Compute protein FDR
-            double qvalueGate = config.RunFdr * 2.0; // relaxed gate for protein scoring
-            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, qvalueGate);
+            // Compute protein FDR. Gate is config.RunFdr (1x) per Savitski's
+            // convention, matching Rust pipeline.rs:4389
+            // (compute_protein_fdr at config.run_fdr). The previous 2x gate
+            // was a divergence from Rust that has since been corrected.
+            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
 
             // Count passing proteins
             int passingProteins = 0;
@@ -5442,6 +5802,17 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[COUNT] Protein groups passing FDR: {0} at {1:P0}",
                 passingProteins, config.ProteinFdr.Value));
+
+            // Stage 7 cross-impl bisection dump (no-op unless
+            // OSPREY_DUMP_STAGE7_PROTEIN_FDR=1). Fires before propagation so
+            // the dumped state captures the picked-protein computation in
+            // isolation, matching Rust diagnostics.dump_stage7_protein_fdr.
+            if (OspreyDiagnostics.DumpStage7ProteinFdr)
+            {
+                OspreyDiagnostics.WriteStage7ProteinFdrDump(parsimony, proteinFdr);
+                if (OspreyDiagnostics.Stage7ProteinFdrOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
+            }
 
             // Propagate protein q-values to FdrEntry stubs
             ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr, true, true);
@@ -5460,31 +5831,114 @@ namespace pwiz.OspreySharp
             Dictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config)
         {
-            // Determine effective FDR threshold
-            double fdrThreshold = config.RunFdr;
+            // Two-stage blib output gate, mirroring Rust pipeline.rs:4596-4668.
+            //
+            // Stage 1 (peptide gate): the configured FdrLevel determines which
+            // peptide identities are eligible for output. EXPERIMENT-level
+            // q-value, not run-level — letting in any precursor that merely
+            // passed run-level FDR in some replicate would admit identifications
+            // upstream Rust filters out, and was the source of a 483-row
+            // RefSpectra over-count (Stellar 3-file) before this fix.
+            //
+            // Stage 2 (precursor gate): within each eligible peptide, include
+            // only charge states that individually pass
+            // experiment_precursor_qvalue <= experiment_fdr. If NO charge state
+            // of a peptide passes precursor-level FDR (possible because
+            // peptide-level FDR aggregates across charges), include the best
+            // charge state (lowest experiment_precursor_qvalue) as a
+            // representative.
+            double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
+            double expThreshold = config.ExperimentFdr;
 
-            // Collect passing entries
+            // Stage 1: passing peptides
+            var passingPeptides = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    if (e.IsDecoy)
+                        continue;
+                    if (e.EffectiveExperimentQvalue(config.FdrLevel) <= expThreshold)
+                        passingPeptides.Add(e.ModifiedSequence);
+                }
+            }
+
+            // Stage 2: passing precursors, with fallback to best charge per peptide.
+            // Tuple keys (modseq, charge) avoid the separator-collision risk of
+            // string concatenation and skip a string allocation per lookup —
+            // same shape as Rust's HashMap<(Arc<str>, u8), ...> at
+            // pipeline.rs:4630.
+            var passingPrecursors = new HashSet<(string, byte)>();
+            var bestChargePerPeptide = new Dictionary<string, KeyValuePair<byte, double>>(
+                StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    if (e.IsDecoy || !passingPeptides.Contains(e.ModifiedSequence))
+                        continue;
+                    if (e.ExperimentPrecursorQvalue <= expThreshold)
+                        passingPrecursors.Add((e.ModifiedSequence, e.Charge));
+                    KeyValuePair<byte, double> existing;
+                    if (!bestChargePerPeptide.TryGetValue(e.ModifiedSequence, out existing)
+                        || e.ExperimentPrecursorQvalue < existing.Value)
+                    {
+                        bestChargePerPeptide[e.ModifiedSequence] =
+                            new KeyValuePair<byte, double>(e.Charge, e.ExperimentPrecursorQvalue);
+                    }
+                }
+            }
+            // Fallback: peptides with no precursor-passing charge state keep their best.
+            // The OR check (`best.Value <= expThreshold`) is the substantive one — if
+            // best has q <= threshold, the loop above already added it to passingPrecursors;
+            // the Contains check is redundant defensive belt-and-suspenders.
+            int nFallback = 0;
+            foreach (var peptide in passingPeptides)
+            {
+                KeyValuePair<byte, double> best;
+                if (!bestChargePerPeptide.TryGetValue(peptide, out best))
+                    continue;
+                if (best.Value <= expThreshold)
+                    continue; // already in passingPrecursors
+                passingPrecursors.Add((peptide, best.Key));
+                nFallback++;
+            }
+            if (nFallback > 0)
+            {
+                LogInfo(string.Format(
+                    "{0} peptides had no charge state passing precursor-level FDR; best charge state kept as fallback",
+                    nFallback));
+            }
+
+            // Collect passing entries for downstream best-per-precursor selection.
+            // A precursor is admitted iff (modseq, charge) is in passingPrecursors.
+            //
+            // No protein-FDR gate here: Rust only filters the .blib by protein
+            // FDR when `--fdr-level=protein` (the FdrLevel::Protein variant
+            // routes through the peptide-gate's effective_experiment_qvalue).
+            // C#'s FdrLevel enum doesn't include Protein, and `--protein-fdr`
+            // is interpreted by Rust as a computation-enable flag, not a
+            // hard blib filter. Mirror that: keep the (modseq, charge)
+            // membership check from Stages 1+2 and don't apply
+            // ExperimentProteinQvalue here.
             var passingEntries = new List<KeyValuePair<string, FdrEntry>>();
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
                 {
-                    if (!entry.IsDecoy &&
-                        entry.EffectiveRunQvalue(config.FdrLevel) <= fdrThreshold)
-                    {
-                        // If protein FDR is enabled, also check protein q-value
-                        if (config.ProteinFdr.HasValue &&
-                            entry.RunProteinQvalue > config.ProteinFdr.Value)
-                        {
-                            continue;
-                        }
-
-                        passingEntries.Add(
-                            new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
-                    }
+                    if (entry.IsDecoy)
+                        continue;
+                    if (!passingPrecursors.Contains((entry.ModifiedSequence, entry.Charge)))
+                        continue;
+                    passingEntries.Add(
+                        new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
                 }
             }
 
+            LogInfo(string.Format(
+                "[COUNT] Stage 1 passing peptides: {0}", passingPeptides.Count));
+            LogInfo(string.Format(
+                "[COUNT] Stage 2 passing precursors: {0}", passingPrecursors.Count));
             LogInfo(string.Format("Writing {0} passing entries to blib", passingEntries.Count));
 
             if (passingEntries.Count == 0)
@@ -5497,15 +5951,25 @@ namespace pwiz.OspreySharp
             if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
                 Directory.CreateDirectory(outputDir);
 
-            // Deduplicate by modified_sequence + charge (keep best q-value)
-            var bestByPrecursor = new Dictionary<string, KeyValuePair<string, FdrEntry>>();
+            // Deduplicate by (modseq, charge) — keep best by
+            // EffectiveRunQvalue(FdrLevel.Both). Matches Rust
+            // pipeline.rs:6133-6138 which picks `best = min_by(run_qvalue)`
+            // from the precursor group. The blib's downstream
+            // OspreyRunScores / OspreyPeakBoundaries / RefSpectra
+            // (peak boundaries + retention time) all source from this
+            // best run, so the cross-impl best-file choice has to match
+            // exactly or the per-file rows split into disjoint sets.
+            // (Earlier this dedup keyed on ExperimentPrecursorQvalue,
+            // producing a 26002+26002 only-rust/only-cs key split on
+            // OspreyRunScores/PeakBoundaries.)
+            var bestByPrecursor = new Dictionary<(string, byte), KeyValuePair<string, FdrEntry>>();
             foreach (var kvp in passingEntries)
             {
-                string key = kvp.Value.ModifiedSequence + "_" + kvp.Value.Charge;
+                var key = (kvp.Value.ModifiedSequence, kvp.Value.Charge);
                 KeyValuePair<string, FdrEntry> existing;
                 if (!bestByPrecursor.TryGetValue(key, out existing) ||
-                    kvp.Value.EffectiveRunQvalue(config.FdrLevel) <
-                    existing.Value.EffectiveRunQvalue(config.FdrLevel))
+                    kvp.Value.EffectiveRunQvalue(FdrLevel.Both) <
+                    existing.Value.EffectiveRunQvalue(FdrLevel.Both))
                 {
                     bestByPrecursor[key] = kvp;
                 }
@@ -5514,12 +5978,66 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[COUNT] Best-per-precursor for blib: {0}", bestByPrecursor.Count));
 
+            // Compute best (min) experiment_precursor_qvalue per (modseq, charge)
+            // across all files. This is the value Rust writes into the .blib's
+            // RefSpectra.score and OspreyExperimentScores.ExperimentQValue
+            // columns (pipeline.rs:4670-4683 + 4795). NOT max(precursor,
+            // peptide) — the experiment-level peptide q-value isn't used at
+            // the .blib write site at all.
+            var bestExpPrecursorQ = new Dictionary<(string, byte), double>();
+            foreach (var fileKvpExp in perFileEntries)
+            {
+                foreach (var e in fileKvpExp.Value)
+                {
+                    if (e.IsDecoy) continue;
+                    var keyExp = (e.ModifiedSequence, e.Charge);
+                    if (!passingPrecursors.Contains(keyExp)) continue;
+                    double existingExp;
+                    if (!bestExpPrecursorQ.TryGetValue(keyExp, out existingExp)
+                        || e.ExperimentPrecursorQvalue < existingExp)
+                    {
+                        bestExpPrecursorQ[keyExp] = e.ExperimentPrecursorQvalue;
+                    }
+                }
+            }
+
+            // Build shared peak boundaries per (peptide, file): when the same
+            // peptide is detected at multiple charge states in the same run,
+            // all charges share the boundaries from the charge with lowest
+            // run_qvalue. Mirrors Rust pipeline.rs:6020-6063
+            // (build_shared_boundaries_from_plan). Without this, charge-N's
+            // RefSpectra row gets charge-N's own boundaries, but Rust gives
+            // charge-N the boundaries of whatever charge happened to score
+            // best in that file — Skyline wants the consistent peptide-level
+            // boundary so quantification across charges integrates the same
+            // RT region. Key: (modseq, fileName); value: (apexRt, startRt,
+            // endRt) from the min-run-qvalue entry across charges.
+            // Tuple key matches Rust HashMap<(Arc<str>, u16), ...> at
+            // pipeline.rs:6027 directly — no string concat or separator needed.
+            var sharedBounds = new Dictionary<(string, string), double[]>();
+            // For each (modseq, file), track the (apex, start, end, run_q) of best entry
+            foreach (var fileKvpBounds in perFileEntries)
+            {
+                string boundsFile = fileKvpBounds.Key;
+                foreach (var e in fileKvpBounds.Value)
+                {
+                    if (e.IsDecoy) continue;
+                    if (!passingPrecursors.Contains((e.ModifiedSequence, e.Charge))) continue;
+                    var sk = (e.ModifiedSequence, boundsFile);
+                    double rq = e.EffectiveRunQvalue(FdrLevel.Both);
+                    double[] existingB;
+                    if (!sharedBounds.TryGetValue(sk, out existingB) || rq < existingB[3])
+                    {
+                        sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq };
+                    }
+                }
+            }
+
             // Pre-index all per-file target entries by (ModifiedSequence, Charge) for O(1)
             // lookup of cross-file observations. Without this, the inner loop below is
             // O(N_passing * N_total) which is ~70 billion ops for typical experiments.
             var entriesByPrecursor =
-                new Dictionary<string, List<KeyValuePair<string, FdrEntry>>>(
-                    StringComparer.Ordinal);
+                new Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>>();
             int nCrossFileObservations = 0;
             foreach (var fileKvp in perFileEntries)
             {
@@ -5528,7 +6046,7 @@ namespace pwiz.OspreySharp
                 {
                     if (fileEntry.IsDecoy)
                         continue;
-                    string key = fileEntry.ModifiedSequence + "|" + fileEntry.Charge;
+                    var key = (fileEntry.ModifiedSequence, fileEntry.Charge);
                     List<KeyValuePair<string, FdrEntry>> list;
                     if (!entriesByPrecursor.TryGetValue(key, out list))
                     {
@@ -5543,16 +6061,63 @@ namespace pwiz.OspreySharp
             LogInfo(string.Format(
                 "[COUNT] Cross-file observations to write: {0}", nCrossFileObservations));
 
+            // Diagnostic: dump per-best-precursor q-values for cross-impl
+            // bisection of the RefSpectra.score / OspreyExperimentScores
+            // gap. Rust and C# agree on run-q-values (RetentionTimes.score
+            // and OspreyRunScores PASS) but disagree on experiment-peptide-q
+            // for ~42k of 45k entries. Schema:
+            //   modseq <tab> charge <tab> file <tab> entry_id <tab>
+            //   run_prec_q <tab> run_pept_q <tab> exp_prec_q <tab> exp_pept_q
+            // Sort key = (modseq, charge). Compared externally against a
+            // Rust-side dump produced by mirroring this code on the Rust
+            // side (pipeline.rs blib write loop) under the same env-var
+            // gate. Gated by OSPREY_DUMP_BLIB_QVALUES=1; zero overhead
+            // when unset. Temporary — remove once peptide-q drift is
+            // bisected and fixed.
+            if (Environment.GetEnvironmentVariable(@"OSPREY_DUMP_BLIB_QVALUES") == @"1")
+            {
+                var rows = new List<string>();
+                foreach (var kvp in bestByPrecursor.Values)
+                {
+                    var e = kvp.Value;
+                    rows.Add(string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "{0}\t{1}\t{2}\t{3}\t{4:R}\t{5:R}\t{6:R}\t{7:R}",
+                        e.ModifiedSequence, e.Charge, kvp.Key, e.EntryId,
+                        e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                        e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue));
+                }
+                rows.Sort(StringComparer.Ordinal);
+                // \n newlines (not Environment.NewLine) so the dump
+                // byte-diffs against the corresponding Rust-side TSVs.
+                // Same convention as OspreyDiagnostics — see its `LF`
+                // field doc comment.
+                using (var w = new StreamWriter(@"cs_blib_qvalues.tsv"))
+                {
+                    w.NewLine = "\n";
+                    w.WriteLine("modseq\tcharge\tfile\tentry_id\trun_prec_q\trun_pept_q\texp_prec_q\texp_pept_q");
+                    foreach (var row in rows)
+                        w.WriteLine(row);
+                }
+                LogInfo(string.Format(
+                    @"Wrote cs_blib_qvalues.tsv ({0} best-per-precursor q-value rows)", rows.Count));
+            }
+
             using (var writer = new BlibWriter(config.OutputBlib))
             {
                 writer.BeginBatch();
 
-                // Pre-create source file IDs once (instead of lazily inside the loop)
+                // Pre-create source file IDs once (instead of lazily inside the loop).
+                // SpectrumSourceFiles.idFileName carries the library filename
+                // (Skyline expects this — see Rust pipeline.rs:6110 + blib.rs:435).
+                // The library file is the "ID source" because that's what the IDs
+                // came from; the mzML file is the spectrum source.
+                string libraryIdName = Path.GetFileName(config.LibrarySource.Path);
                 var sourceFileIds = new Dictionary<string, long>();
                 foreach (var kvp in perFileEntries)
                 {
                     sourceFileIds[kvp.Key] = writer.AddSourceFile(
-                        kvp.Key + ".mzML", kvp.Key + ".mzML", fdrThreshold);
+                        kvp.Key + ".mzML", libraryIdName, fdrThreshold);
                 }
 
                 foreach (var kvp in bestByPrecursor.Values)
@@ -5575,18 +6140,60 @@ namespace pwiz.OspreySharp
                         intensities[i] = libEntry.Fragments[i].RelativeIntensity;
                     }
 
-                    double qvalue = entry.EffectiveRunQvalue(config.FdrLevel);
+                    // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value
+                    // (min across all observations of this (modseq, charge)
+                    // precursor in the experiment). Mirrors Rust
+                    // pipeline.rs:4670-4683 which builds best_exp_q from
+                    // e.experiment_precursor_qvalue (NOT max(precursor,
+                    // peptide), despite the misleading LightFdr.experiment_qvalue
+                    // = effective_experiment_qvalue(Both) at pipeline.rs:4705 —
+                    // BlibPlanEntry.experiment_qvalue at pipeline.rs:4795
+                    // overrides with best_exp_q.get(...) which is precursor-only).
+                    // The same value feeds OspreyExperimentScores.ExperimentQValue
+                    // below.
+                    var lookupKey = (entry.ModifiedSequence, entry.Charge);
+                    double scoreQvalue;
+                    if (!bestExpPrecursorQ.TryGetValue(lookupKey, out scoreQvalue))
+                        scoreQvalue = entry.ExperimentPrecursorQvalue;
+
+                    // Compute nRunsDetected up-front so AddSpectrum can pass it
+                    // through to RefSpectra.copies (matches Rust pipeline.rs:6179
+                    // which passes n_runs_detected = group.len()). Was hardcoded
+                    // to 1 before this fix; the same count is reused by
+                    // OspreyExperimentScores below.
+                    List<KeyValuePair<string, FdrEntry>> observations;
+                    int nRunsDetected = 1;
+                    if (entriesByPrecursor.TryGetValue(lookupKey, out observations) &&
+                        observations.Count > 0)
+                    {
+                        nRunsDetected = observations.Count;
+                    }
+
+                    // Use shared peak boundaries when the same peptide
+                    // is detected at multiple charges in this file (Rust
+                    // pipeline.rs:6160-6164 + 6219-6222).
+                    var sharedKey = (entry.ModifiedSequence, fileName);
+                    double sharedApex = entry.ApexRt;
+                    double sharedStart = entry.StartRt;
+                    double sharedEnd = entry.EndRt;
+                    double[] sharedVals;
+                    if (sharedBounds.TryGetValue(sharedKey, out sharedVals))
+                    {
+                        sharedApex = sharedVals[0];
+                        sharedStart = sharedVals[1];
+                        sharedEnd = sharedVals[2];
+                    }
 
                     long refId = writer.AddSpectrum(
                         libEntry.Sequence,
                         libEntry.ModifiedSequence,
                         libEntry.PrecursorMz,
                         libEntry.Charge,
-                        entry.ApexRt,
-                        entry.StartRt,
-                        entry.EndRt,
+                        sharedApex,
+                        sharedStart,
+                        sharedEnd,
                         mzs, intensities,
-                        qvalue, fileId, 1, 0.0);
+                        scoreQvalue, fileId, nRunsDetected, 0.0);
 
                     // Add modifications
                     if (libEntry.Modifications != null && libEntry.Modifications.Count > 0)
@@ -5596,39 +6203,121 @@ namespace pwiz.OspreySharp
                     if (libEntry.ProteinIds != null && libEntry.ProteinIds.Count > 0)
                         writer.AddProteinMapping(refId, libEntry.ProteinIds);
 
-                    // Add per-file retention times for cross-file observations.
-                    // Use the pre-built index for O(1) lookup by (modseq, charge).
-                    string lookupKey = entry.ModifiedSequence + "|" + entry.Charge;
-                    List<KeyValuePair<string, FdrEntry>> observations;
-                    if (entriesByPrecursor.TryGetValue(lookupKey, out observations))
+                    // Per-file RetentionTimes — one row for EVERY run where this
+                    // precursor was detected, including the best-run/RefSpectra-source
+                    // run itself. retentionTime (which drives Skyline ID-line
+                    // display) is populated iff the run passes run-level FDR, OR
+                    // (fallback) no run passes run-level FDR and this is the best
+                    // run by lowest run_qvalue. Mirrors Rust pipeline.rs:6191-6243
+                    // exactly. Uses FdrLevel.Both for the run-level q-value, matching
+                    // the LightFdr.run_qvalue assignment at pipeline.rs:4704.
+                    if (observations != null)
                     {
+                        // Compute the fallback ID-line file: if NO run passes
+                        // run-level FDR (post-second-pass q-values can shift
+                        // slightly above threshold even when the precursor passes
+                        // experiment-level), the run with the lowest run_qvalue
+                        // gets the ID line so every blib RefSpectra has at least
+                        // one ID line.
+                        bool anyPassesRunFdr = false;
+                        string bestRunFile = null;
+                        double bestRunQ = double.MaxValue;
                         foreach (var obs in observations)
                         {
-                            if (obs.Key == fileName)
-                                continue;
+                            double rq = obs.Value.EffectiveRunQvalue(FdrLevel.Both);
+                            if (rq <= fdrThreshold)
+                                anyPassesRunFdr = true;
+                            if (rq < bestRunQ)
+                            {
+                                bestRunQ = rq;
+                                bestRunFile = obs.Key;
+                            }
+                        }
 
+                        foreach (var obs in observations)
+                        {
                             long srcId = sourceFileIds[obs.Key];
                             var fileEntry = obs.Value;
-                            bool passesFdr = fileEntry.EffectiveRunQvalue(config.FdrLevel)
-                                <= fdrThreshold;
+                            double runQ = fileEntry.EffectiveRunQvalue(FdrLevel.Both);
+                            bool passesFdr = runQ <= fdrThreshold;
+                            // Show an ID line if this run passes run-level FDR,
+                            // OR if no run passes and this is the fallback best.
+                            bool showIdLine = passesFdr ||
+                                (!anyPassesRunFdr && obs.Key == bestRunFile);
+                            bool isBest = obs.Key == fileName;
 
+                            // Apply shared peak boundaries for this peptide
+                            // in this run's file (cross-charge sharing —
+                            // Rust pipeline.rs:6219-6222).
+                            var runSharedKey = (fileEntry.ModifiedSequence, obs.Key);
+                            double runApex = fileEntry.ApexRt;
+                            double runStart = fileEntry.StartRt;
+                            double runEnd = fileEntry.EndRt;
+                            double[] runShared;
+                            if (sharedBounds.TryGetValue(runSharedKey, out runShared))
+                            {
+                                runApex = runShared[0];
+                                runStart = runShared[1];
+                                runEnd = runShared[2];
+                            }
+
+                            double? rtForIdLine = null;
+                            if (showIdLine)
+                                rtForIdLine = runApex;
                             writer.AddRetentionTime(
                                 refId, srcId,
-                                passesFdr ? fileEntry.ApexRt : null,
-                                fileEntry.StartRt,
-                                fileEntry.EndRt,
-                                fileEntry.EffectiveRunQvalue(config.FdrLevel),
-                                false);
+                                rtForIdLine,
+                                runStart,
+                                runEnd,
+                                runQ,
+                                isBest);
                         }
                     }
+
+                    // Osprey extension tables — one row per RefSpectra each, mirroring
+                    // Rust pipeline.rs:6255-6272 byte-for-byte. Best-run-only semantics
+                    // for OspreyPeakBoundaries + OspreyRunScores; experiment-level for
+                    // OspreyExperimentScores. Note the four 0.0 fields below are the
+                    // same "not yet plumbed through Stage 7 plan entries" placeholders
+                    // Rust currently writes:
+                    //   PeakBoundaries.ApexIntensity (Rust: apex_coefficient = 0.0)
+                    //   RunScores.DiscriminantScore (Rust: dot_product not avail = 0.0)
+                    //   RunScores.PosteriorErrorProb (Rust: PEP not avail = 0.0)
+                    // When Rust starts plumbing real values through, this block updates
+                    // in lockstep to keep cross-impl parity.
+                    // OspreyPeakBoundaries uses the shared boundaries for
+                    // this (peptide, file) — same source as RefSpectra above.
+                    writer.AddPeakBoundaries(refId, fileName,
+                        sharedStart, sharedEnd, sharedApex,
+                        0.0, // ApexIntensity — matches Rust's apex_coefficient placeholder
+                        entry.BoundsArea);
+                    writer.AddRunScores(refId, fileName,
+                        entry.EffectiveRunQvalue(FdrLevel.Both),
+                        0.0, // DiscriminantScore — matches Rust's dot_product placeholder
+                        0.0); // PosteriorErrorProb — matches Rust's PEP placeholder
+                    writer.AddExperimentScores(refId,
+                        scoreQvalue, // Same value as RefSpectra.score: min(experiment_precursor_qvalue) across observations
+                        nRunsDetected,
+                        perFileEntries.Count);
                 }
 
                 writer.Commit();
 
                 // Add metadata
-                writer.AddMetadata("osprey_version", Program.VERSION_STRING);
-                writer.AddMetadata("search_parameter_hash", config.SearchParameterHash());
-                writer.AddMetadata("n_passing_precursors", bestByPrecursor.Count.ToString());
+                // OspreyMetadata key set must match Rust's
+                // write_blib_from_plan (pipeline.rs:6078-6081) byte-for-byte.
+                // The previous C#-only keys (search_parameter_hash,
+                // n_passing_precursors) are dropped: search_parameter_hash
+                // is already on every reconciled .scores.parquet (where it's
+                // used for cache validation, the actual purpose), and
+                // n_passing_precursors is recoverable as
+                // SELECT COUNT(*) FROM RefSpectra.
+                writer.AddMetadata(@"osprey_version", Program.VERSION_STRING);
+                writer.AddMetadata(@"search_mode", @"coelution");
+                writer.AddMetadata(@"run_fdr",
+                    config.RunFdr.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                writer.AddMetadata(@"experiment_fdr",
+                    config.ExperimentFdr.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
                 writer.FinalizeDatabase();
             }

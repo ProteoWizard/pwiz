@@ -58,6 +58,20 @@ namespace pwiz.OspreySharp
     /// </summary>
     public static class OspreyDiagnostics
     {
+        /// <summary>
+        /// Newline used by every Stage 6 cross-impl bisection dump writer.
+        /// MUST be `"\n"` (not <see cref="Environment.NewLine"/>, which is
+        /// `"\r\n"` on Windows) so headers emitted via
+        /// <see cref="System.IO.StreamWriter.WriteLine(string)"/> match the
+        /// `\n`-terminated payload rows we build manually with
+        /// <see cref="System.Text.StringBuilder.Append(char)"/>. Mixed
+        /// newlines break the byte-for-byte diff against the corresponding
+        /// `rust_*.tsv` dumps that this tooling depends on. Apply via
+        /// <c>writer.NewLine = LF;</c> immediately after constructing each
+        /// dump <see cref="System.IO.StreamWriter"/>.
+        /// </summary>
+        private const string LF = "\n";
+
         // ----- Env-var gate flags (read once at process start) -----
 
         /// <summary>
@@ -116,6 +130,65 @@ namespace pwiz.OspreySharp
 
         /// <summary>OSPREY_PERCOLATOR_ONLY: exit after cs_stage5_percolator.tsv dump.</summary>
         public static readonly bool PercolatorOnly = IsOne(@"OSPREY_PERCOLATOR_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_RESCORED: dump per-precursor state AFTER the
+        /// per-file Stage 6 rescore loop completes (consensus +
+        /// reconciliation overlay, plus gap-fill stubs once Phase 2
+        /// lands). Same column shape as DumpPercolator so
+        /// Compare-Percolator.ps1 reuses for the diff. Output:
+        /// cs_stage6_rescored.tsv. Mirrors Rust's
+        /// dump_stage6_rescored / OSPREY_DUMP_RESCORED gate.
+        /// </summary>
+        public static readonly bool DumpRescored = IsOne(@"OSPREY_DUMP_RESCORED");
+
+        /// <summary>OSPREY_RESCORED_ONLY: exit after cs_stage6_rescored.tsv dump.</summary>
+        public static readonly bool RescoredOnly = IsOne(@"OSPREY_RESCORED_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_MP_INPUTS: bisection-grade diagnostic that dumps
+        /// the inputs to every per-entry tukey_median_polish call from
+        /// the Stage 6 rescore path. One row per (entry, apex_scan,
+        /// frag_pos, scan_idx) carrying (rt, intensity). Output:
+        /// cs_stage6_mp_inputs.tsv. Format mirrors Rust's
+        /// dump_mp_inputs (diagnostics.rs ~line 265) byte-for-byte so
+        /// the two files are diffable directly:
+        /// <c>diff &lt;(sort -k1,1n -k2,2n -k3,3n cs_stage6_mp_inputs.tsv) &lt;(sort ... rust)</c>.
+        /// PASS == zero diff lines after sort. FAIL == first row that
+        /// disagrees, identifying whether peak_xics divergence is
+        /// upstream (XIC extraction / peak picking) or downstream
+        /// (median polish / peak shape feature compute).
+        /// </summary>
+        public static readonly bool DumpMpInputs = IsOne(@"OSPREY_DUMP_MP_INPUTS");
+
+        /// <summary>
+        /// OSPREY_DUMP_PREDICT_RT: bisection-grade diagnostic that
+        /// captures the per-file <c>library_rts</c> /
+        /// <c>fitted_values</c> arrays of the active RT calibration AND
+        /// every (entry_id, library_rt -> expected_rt) call into
+        /// <c>RTCalibration.Predict</c> from the Stage 6 rescore search
+        /// path. Output: cs_stage6_predict_rt.tsv. Two-section TSV
+        /// sharing one five-column header; mirrors Rust's
+        /// dump_predict_rt_arrays + dump_predict_rt_call (diagnostics.rs
+        /// ~line 365 / 397). Use to narrow apex-divergence root cause:
+        /// if the cal_arrays sections diverge, JSON round-trip is
+        /// lossy; if predict_calls diverge despite identical arrays,
+        /// hidden RTCalibration state is leaking; if both match, the
+        /// divergence is downstream of RT calibration.
+        /// </summary>
+        public static readonly bool DumpPredictRt = IsOne(@"OSPREY_DUMP_PREDICT_RT");
+
+        /// <summary>
+        /// OSPREY_DUMP_CWT_PATH: per-(file, entry) dump of CWT path
+        /// counts. Six columns: file_name, entry_id, n_cwt_peaks,
+        /// n_final_peaks (after MP polish + ref_xic fallbacks),
+        /// n_scored (peaks that pass apex-acceptance filter), and a
+        /// "scored" flag (1 if ScoreCandidate returned non-null, else
+        /// 0). Use this to localize which entries diverge cross-impl
+        /// and at which seam: CWT detection, fallback path, or
+        /// apex-acceptance filter. Output: cs_stage6_cwt_path.tsv.
+        /// </summary>
+        public static readonly bool DumpCwtPath = IsOne(@"OSPREY_DUMP_CWT_PATH");
 
         /// <summary>
         /// OSPREY_DUMP_CONSENSUS: dump the per-peptide consensus RT planning
@@ -204,6 +277,21 @@ namespace pwiz.OspreySharp
 
         /// <summary>OSPREY_PROTEIN_FDR_ONLY: exit after cs_stage6_protein_fdr.tsv dump.</summary>
         public static readonly bool ProteinFdrOnly = IsOne(@"OSPREY_PROTEIN_FDR_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_STAGE7_PROTEIN_FDR: dump per-protein-group state at the
+        /// end of second-pass picked-protein FDR (Stage 7 authoritative protein
+        /// FDR) to cs_stage7_protein_fdr.tsv. Mirrors Rust dump_stage7_protein_fdr.
+        /// One row per protein group present in the parsimony result with
+        /// columns accessions, n_unique, n_shared, best_peptide_score,
+        /// group_qvalue, is_target_winner. Sort order
+        /// (is_target_winner DESC, group_qvalue ASC, accessions ASC) keeps the
+        /// target-winner rows that drive FDR calibration at the top.
+        /// </summary>
+        public static readonly bool DumpStage7ProteinFdr = IsOne(@"OSPREY_DUMP_STAGE7_PROTEIN_FDR");
+
+        /// <summary>OSPREY_STAGE7_PROTEIN_FDR_ONLY: exit after cs_stage7_protein_fdr.tsv dump.</summary>
+        public static readonly bool Stage7ProteinFdrOnly = IsOne(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_LOESS_FIT: dump the per-point LOESS fit state of the
@@ -777,6 +865,29 @@ namespace pwiz.OspreySharp
                             xic.FragmentIndex, i, F10(xic.RetentionTimes[i]), F10(xic.Intensities[i])));
                     }
                 }
+
+                // CWT CONSENSUS: per-scan median consensus value across
+                // the fragment CWT coefficients. Cross-impl diff at this
+                // section pinpoints the first scan where the consensus
+                // signal diverges -- the seam upstream of peak detection.
+                // Use round-trip-safe formatting so f64 bits compare
+                // exactly between Rust (format_f64_roundtrip) and C#.
+                var xicList = xics is List<XicData> xicL ? xicL : new List<XicData>(xics);
+                double[] consensusSig = CwtPeakDetector.GetConsensusSignal(
+                    xicList, out double cwtSigma);
+                dw.WriteLine("# CWT CONSENSUS (sigma, scan_idx, value)");
+                dw.WriteLine(string.Format(inv,
+                    "# sigma={0}", Diagnostics.FormatF64Roundtrip(cwtSigma)));
+                if (consensusSig != null)
+                {
+                    dw.WriteLine("consensus\tscan_idx\tvalue");
+                    for (int i = 0; i < consensusSig.Length; i++)
+                    {
+                        dw.WriteLine(string.Format(inv,
+                            "consensus\t{0}\t{1}",
+                            i, Diagnostics.FormatF64Roundtrip(consensusSig[i])));
+                    }
+                }
             }
             LogAction(string.Format(inv,
                 @"[BISECT] Search XIC dump for entry {0}: {1} xics, {2} scans -> {3}",
@@ -838,6 +949,294 @@ namespace pwiz.OspreySharp
                             "input\t{0}\t{1}\t{2:F10}", xi, s, peakXics[xi].Value[s]));
             }
             LogAction(@"[BISECT] Wrote median polish diagnostic: cs_mp_diag.txt");
+        }
+
+        // ----- Median polish inputs (cross-impl bisection) -----
+
+        // Persistent thread-safe writer for cs_stage6_mp_inputs.tsv.
+        // Lazily opened on first WriteMpInputsRow call; flushed in
+        // CloseMpInputsDump when the rescore loop finishes. Holding the
+        // writer open across calls amortizes the OS-level append cost
+        // over millions of rows (peak_xics fires once per scoring call,
+        // each row is small -- per-call open/close would dominate).
+        private static StreamWriter _mpInputsWriter;
+        private static readonly object _mpInputsLock = new object();
+
+        /// <summary>
+        /// Append one tukey_median_polish input matrix to
+        /// cs_stage6_mp_inputs.tsv. Format: one row per (entry,
+        /// apex_scan, frag_pos, scan_idx) with columns
+        /// <c>entry_id</c>, <c>apex_scan</c>, <c>frag_pos</c>,
+        /// <c>frag_idx</c>, <c>scan_idx</c>, <c>rt</c>, <c>intensity</c>
+        /// -- byte-for-byte identical to Rust's
+        /// <c>diagnostics::dump_mp_inputs</c>. <paramref name="peakXics"/>
+        /// is the same <c>(frag_idx, intensity[])</c> list passed to
+        /// <c>TukeyMedianPolish.Compute</c>; <paramref name="peakRts"/>
+        /// is the shared scan-index-aligned RT vector.
+        /// </summary>
+        public static void WriteMpInputsRow(uint entryId, uint apexScan,
+            IList<KeyValuePair<int, double[]>> peakXics, double[] peakRts)
+        {
+            if (!DumpMpInputs)
+                return;
+            // Build the buffer outside the lock: each call emits 6×N_scans
+            // rows; per-call sort order doesn't matter (bisection sorts
+            // post-hoc), so multiple threads can build their buffers in
+            // parallel and only serialize on the file write.
+            var sb = new StringBuilder(peakXics.Count * peakRts.Length * 48);
+            for (int fragPos = 0; fragPos < peakXics.Count; fragPos++)
+            {
+                int fragIdx = peakXics[fragPos].Key;
+                double[] intensities = peakXics[fragPos].Value;
+                int n = Math.Min(intensities.Length, peakRts.Length);
+                for (int scanIdx = 0; scanIdx < n; scanIdx++)
+                {
+                    sb.Append(entryId).Append('\t')
+                      .Append(apexScan).Append('\t')
+                      .Append(fragPos).Append('\t')
+                      .Append(fragIdx).Append('\t')
+                      .Append(scanIdx).Append('\t')
+                      .Append(Diagnostics.FormatF64Roundtrip(peakRts[scanIdx])).Append('\t')
+                      .Append(Diagnostics.FormatF64Roundtrip(intensities[scanIdx])).Append('\n');
+                }
+            }
+            string payload = sb.ToString();
+            lock (_mpInputsLock)
+            {
+                if (_mpInputsWriter == null)
+                {
+                    _mpInputsWriter = new StreamWriter(@"cs_stage6_mp_inputs.tsv");
+                    _mpInputsWriter.NewLine = LF;
+                    _mpInputsWriter.WriteLine(
+                        "# entry_id\tapex_scan\tfrag_pos\tfrag_idx\tscan_idx\trt\tintensity");
+                    LogAction(
+                        @"[BISECT] OSPREY_DUMP_MP_INPUTS active: writing tukey_median_polish inputs to cs_stage6_mp_inputs.tsv");
+                }
+                _mpInputsWriter.Write(payload);
+            }
+        }
+
+        /// <summary>
+        /// Flush and close the cs_stage6_mp_inputs.tsv writer at the end
+        /// of the rescore loop. Safe to call when the writer was never
+        /// opened (no-op).
+        /// </summary>
+        public static void CloseMpInputsDump()
+        {
+            lock (_mpInputsLock)
+            {
+                if (_mpInputsWriter == null)
+                    return;
+                _mpInputsWriter.Flush();
+                _mpInputsWriter.Dispose();
+                _mpInputsWriter = null;
+            }
+        }
+
+        // ----- RT calibration predict() inputs/outputs (cross-impl bisection) -----
+
+        // Persistent thread-safe writer for cs_stage6_predict_rt.tsv.
+        // Lazily opened on first dump call. Two sections share the same
+        // header: cal_arrays rows are emitted once per file at the top
+        // of the rescore loop; predict_calls rows are emitted from
+        // every per-entry rescore search invocation. The bisection
+        // workflow handles the duplicates the predict-call site can
+        // produce (same entry_id scored across multiple windows) with
+        // post-hoc `sort -u`.
+        private static StreamWriter _predictRtWriter;
+        private static readonly object _predictRtLock = new object();
+
+        private static void OpenPredictRtWriterLocked()
+        {
+            // Caller must hold _predictRtLock.
+            if (_predictRtWriter != null)
+                return;
+            _predictRtWriter = new StreamWriter(@"cs_stage6_predict_rt.tsv");
+            _predictRtWriter.NewLine = LF;
+            _predictRtWriter.WriteLine(
+                "# section\tfile_name_or_entry_id\tarray_or_apex\tidx_or_lib_rt\tvalue_or_expected_rt");
+            LogAction(
+                @"[BISECT] OSPREY_DUMP_PREDICT_RT active: writing predict() inputs/outputs to cs_stage6_predict_rt.tsv");
+        }
+
+        /// <summary>
+        /// Dump the RT calibration's <c>library_rts</c> and
+        /// <c>fitted_values</c> arrays for a file. Append-only -- if
+        /// the rescore loop reuses a file's calibration twice, expect
+        /// duplicate cal_arrays rows. The bisection workflow uses
+        /// <c>sort -u</c> post-hoc to collapse them. Mirrors Rust's
+        /// dump_predict_rt_arrays.
+        /// </summary>
+        public static void WritePredictRtArrays(string fileName, double[] libraryRts, double[] fittedValues)
+        {
+            if (!DumpPredictRt)
+                return;
+            if (libraryRts == null || fittedValues == null)
+                return;
+            var inv = CultureInfo.InvariantCulture;
+            var sb = new StringBuilder((libraryRts.Length + fittedValues.Length) * 64);
+            for (int i = 0; i < libraryRts.Length; i++)
+            {
+                sb.Append("cal_arrays\t").Append(fileName)
+                  .Append("\tlibrary_rts\t").Append(i.ToString(inv))
+                  .Append('\t').Append(Diagnostics.FormatF64Roundtrip(libraryRts[i]))
+                  .Append('\n');
+            }
+            for (int i = 0; i < fittedValues.Length; i++)
+            {
+                sb.Append("cal_arrays\t").Append(fileName)
+                  .Append("\tfitted_values\t").Append(i.ToString(inv))
+                  .Append('\t').Append(Diagnostics.FormatF64Roundtrip(fittedValues[i]))
+                  .Append('\n');
+            }
+            string payload = sb.ToString();
+            lock (_predictRtLock)
+            {
+                OpenPredictRtWriterLocked();
+                _predictRtWriter.Write(payload);
+            }
+        }
+
+        /// <summary>
+        /// Dump a single <c>RTCalibration.Predict</c> input/output
+        /// pair. Same entry_id may appear many times (once per
+        /// per-window candidate). Mirrors Rust's dump_predict_rt_call.
+        /// </summary>
+        public static void WritePredictRtCall(uint entryId, double libraryRt, double expectedRt)
+        {
+            if (!DumpPredictRt)
+                return;
+            string line = string.Concat(
+                "predict_calls\t", entryId.ToString(CultureInfo.InvariantCulture),
+                "\t-\t", Diagnostics.FormatF64Roundtrip(libraryRt),
+                "\t", Diagnostics.FormatF64Roundtrip(expectedRt),
+                "\n");
+            lock (_predictRtLock)
+            {
+                OpenPredictRtWriterLocked();
+                _predictRtWriter.Write(line);
+            }
+        }
+
+        // ----- CWT path summary (cross-impl bisection) -----
+
+        // Persistent thread-safe writer for cs_stage6_cwt_path.tsv.
+        // Lazy-opened on first WriteCwtPathRow call. Threaded scoring
+        // serializes only on the file write itself; the row-build
+        // happens lock-free.
+        private static StreamWriter _cwtPathWriter;
+        private static readonly object _cwtPathLock = new object();
+
+        /// <summary>
+        /// Append one per-(file, entry) row to cs_stage6_cwt_path.tsv
+        /// describing how the CWT detection / fallback / apex-filter
+        /// pipeline behaved for this entry. Use to bisect the cross-
+        /// impl divergence in the rescore set: entries where Rust and
+        /// C# disagree on `scored` flag identify the seam at which
+        /// the rescore engines diverge.
+        ///
+        /// The sigma + consensus-signal stats (l1, max_abs, argmax) are
+        /// computed inside this method by re-running the first half of
+        /// <see cref="CwtPeakDetector.GetConsensusSignal"/> on
+        /// <paramref name="xics"/>, gated by the env-var check above so
+        /// production callers pay nothing when the dump is off. Mirrors
+        /// the Rust side, where <c>dump_cwt_path</c> calls
+        /// <c>get_consensus_signal</c> only after its <c>OnceLock</c>
+        /// writer probe has confirmed the dump is active.
+        /// </summary>
+        public static void WriteCwtPathRow(string fileName, uint entryId,
+            int nCwtPeaks, int nFinalPeaks, int nScored, bool scored,
+            List<XicData> xics)
+        {
+            if (!DumpCwtPath)
+                return;
+            // Recompute sigma + consensus signal here so production
+            // callers don't carry diagnostic state. consensus_l1 (sum
+            // of |consensus[i]|) gives a single-number cross-impl
+            // signature on the consensus signal -- if it matches, the
+            // divergence is in the peak finder (apex enumeration or
+            // boundary extension); if it doesn't, the divergence is
+            // upstream in convolve or median.
+            double sigma = 0.0;
+            double consensusL1 = 0.0;
+            double consensusMaxAbs = 0.0;
+            int consensusArgmax = -1;
+            if (xics != null)
+            {
+                double[] consensus = CwtPeakDetector.GetConsensusSignal(xics, out sigma);
+                if (consensus != null)
+                {
+                    double sum = 0.0;
+                    double maxAbs = 0.0;
+                    int argmax = -1;
+                    for (int i = 0; i < consensus.Length; i++)
+                    {
+                        double a = Math.Abs(consensus[i]);
+                        sum += a;
+                        if (a > maxAbs) { maxAbs = a; argmax = i; }
+                    }
+                    consensusL1 = sum;
+                    consensusMaxAbs = maxAbs;
+                    consensusArgmax = argmax;
+                }
+            }
+            var inv = CultureInfo.InvariantCulture;
+            string line = string.Concat(
+                fileName, '\t',
+                entryId.ToString(inv), '\t',
+                nCwtPeaks.ToString(inv), '\t',
+                nFinalPeaks.ToString(inv), '\t',
+                nScored.ToString(inv), '\t',
+                (scored ? "1" : "0"), '\t',
+                Diagnostics.FormatF64Roundtrip(sigma), '\t',
+                Diagnostics.FormatF64Roundtrip(consensusL1), '\t',
+                Diagnostics.FormatF64Roundtrip(consensusMaxAbs), '\t',
+                consensusArgmax.ToString(inv), '\n');
+            lock (_cwtPathLock)
+            {
+                if (_cwtPathWriter == null)
+                {
+                    _cwtPathWriter = new StreamWriter(@"cs_stage6_cwt_path.tsv");
+                    _cwtPathWriter.NewLine = LF;
+                    _cwtPathWriter.WriteLine(
+                        "file_name\tentry_id\tn_cwt_peaks\tn_final_peaks\tn_scored\tscored\tsigma\tconsensus_l1\tconsensus_max_abs\tconsensus_argmax");
+                    LogAction(
+                        @"[BISECT] OSPREY_DUMP_CWT_PATH active: writing CWT path summary to cs_stage6_cwt_path.tsv");
+                }
+                _cwtPathWriter.Write(line);
+            }
+        }
+
+        /// <summary>
+        /// Flush and close the cs_stage6_cwt_path.tsv writer. Safe to
+        /// call when the writer was never opened (no-op).
+        /// </summary>
+        public static void CloseCwtPathDump()
+        {
+            lock (_cwtPathLock)
+            {
+                if (_cwtPathWriter == null)
+                    return;
+                _cwtPathWriter.Flush();
+                _cwtPathWriter.Dispose();
+                _cwtPathWriter = null;
+            }
+        }
+
+        /// <summary>
+        /// Flush and close the cs_stage6_predict_rt.tsv writer. Safe
+        /// to call when the writer was never opened (no-op).
+        /// </summary>
+        public static void ClosePredictRtDump()
+        {
+            lock (_predictRtLock)
+            {
+                if (_predictRtWriter == null)
+                    return;
+                _predictRtWriter.Flush();
+                _predictRtWriter.Dispose();
+                _predictRtWriter = null;
+            }
         }
 
         // ----- Env var parsing helpers -----
@@ -932,7 +1331,7 @@ namespace pwiz.OspreySharp
             using (var sw = new StreamWriter(path))
             {
                 sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_precursor_q	experiment_peptide_q");
+                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	run_protein_q	experiment_precursor_q	experiment_peptide_q");
                 foreach (var row in rows)
                 {
                     var e = row.Value;
@@ -945,11 +1344,80 @@ namespace pwiz.OspreySharp
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunProteinQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
                     sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
                 }
             }
             LogAction(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
+        }
+
+        /// <summary>
+        /// Dump per-precursor state AFTER the Stage 6 per-file rescore
+        /// loop completes (consensus + reconciliation overlay applied,
+        /// gap-fill stubs appended once Phase 2 lands). Same columns as
+        /// <see cref="WriteStage5PercolatorDump"/> + same sort + same
+        /// G17 / FormatF64Roundtrip formatting so Compare-Percolator.ps1
+        /// can be reused for the diff. Output: cs_stage6_rescored.tsv,
+        /// matching Rust's rust_stage6_rescored.tsv from
+        /// dump_stage6_rescored.
+        ///
+        /// This is the high-level Phase 1 byte-parity gate: if it
+        /// passes, the boundary-overrides rescore + (eventual) gap-fill
+        /// outputs match Rust's. If it fails, drill into the
+        /// fine-grained OSPREY_DUMP_MP_INPUTS / OSPREY_DUMP_PREDICT_RT
+        /// ladder to localize the divergence (those mirrors are tracked
+        /// for the pre-PR cleanup).
+        /// </summary>
+        public static void WriteStage6RescoredDump(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+        {
+            const string path = @"cs_stage6_rescored.tsv";
+            var inv = CultureInfo.InvariantCulture;
+
+            var rows = new List<KeyValuePair<string, FdrEntry>>();
+            foreach (var kvp in perFileEntries)
+            {
+                string fileName = kvp.Key;
+                foreach (var e in kvp.Value)
+                    rows.Add(new KeyValuePair<string, FdrEntry>(fileName, e));
+            }
+            // OrderBy/ThenBy is STABLE — preserves insertion order for ties.
+            // Required because gap-fill (Phase 2) appends new stubs with
+            // ParquetIndex = uint.MaxValue alongside an existing
+            // post-compaction stub for the same (file_name, EntryId)
+            // (e.g., decoy paired with a target that already passed
+            // first-pass FDR). Stable sort keeps the hydrated stub first
+            // and the gap-fill stub second, matching Rust's
+            // Vec::sort_by behavior. List<T>.Sort is UNSTABLE and would
+            // shuffle the dup pair non-deterministically across runs.
+            rows = rows
+                .OrderBy(r => r.Key, StringComparer.Ordinal)
+                .ThenBy(r => r.Value.EntryId)
+                .ToList();
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	run_protein_q	experiment_precursor_q	experiment_peptide_q");
+                foreach (var row in rows)
+                {
+                    var e = row.Value;
+                    sw.Write(row.Key);
+                    sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.ModifiedSequence ?? string.Empty);
+                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunProteinQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
+                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
+                }
+            }
+            LogAction(string.Format(@"Wrote Stage 6 rescored dump: {0} ({1} rows)", path, rows.Count));
         }
 
         // ---- Stage 6 planning dumps ----
@@ -1298,6 +1766,104 @@ namespace pwiz.OspreySharp
             LogAction(string.Format(
                 @"Wrote Stage 6 first-pass protein FDR dump: {0} ({1} rows)",
                 path, rows.Count));
+        }
+
+        /// <summary>
+        /// Dump per-protein-group state at the end of second-pass picked-protein
+        /// FDR (Stage 7 authoritative protein FDR) to cs_stage7_protein_fdr.tsv.
+        /// Mirrors Rust dump_stage7_protein_fdr.
+        ///
+        /// One row per protein group present in the parsimony result. The
+        /// is_target_winner column captures the pairwise pick outcome: true if
+        /// the target side scored at or above the decoy side for this group
+        /// (or the group has only a target side); false otherwise. Groups with
+        /// no winner emit group_qvalue = 1.0, best_peptide_score = NaN,
+        /// is_target_winner = false.
+        ///
+        /// Sort order: (is_target_winner DESC, group_qvalue ASC, accessions ASC).
+        /// Targets-first keeps calibration-relevant rows at the top.
+        ///
+        /// Columns: accessions, n_unique, n_shared, best_peptide_score,
+        /// group_qvalue, is_target_winner.
+        ///
+        /// The numeric group_id is intentionally omitted because
+        /// BuildProteinParsimony assigns it in dictionary iteration order, which
+        /// is non-deterministic across runs. Joining on accessions instead
+        /// keeps the dump diff-stable for cross-impl bisection.
+        /// </summary>
+        public static void WriteStage7ProteinFdrDump(
+            ProteinParsimonyResult parsimony,
+            ProteinFdrResult fdrResult)
+        {
+            const string path = @"cs_stage7_protein_fdr.tsv";
+
+            // Build rows with stable accessions ordering. parsimony.Groups[i].Accessions
+            // is built by iterating a Dictionary; sort for determinism.
+            var rows = new List<Stage7Row>(parsimony.Groups.Count);
+            foreach (var g in parsimony.Groups)
+            {
+                // Target-winner status and q-value come from the same map.
+                // Single TryGetValue keeps the two fields consistent (and
+                // saves one lookup per group on large parsimony results).
+                double groupQvalue;
+                bool isTargetWinner = fdrResult.GroupQvalues.TryGetValue(g.Id, out groupQvalue);
+                if (!isTargetWinner)
+                    groupQvalue = 1.0;
+                double bestScore;
+                if (!fdrResult.GroupScores.TryGetValue(g.Id, out bestScore))
+                    bestScore = double.NaN;
+
+                var accs = new List<string>(g.Accessions);
+                accs.Sort(StringComparer.Ordinal);
+
+                rows.Add(new Stage7Row
+                {
+                    Accessions = string.Join(@";", accs),
+                    NUnique = g.UniquePeptides.Count,
+                    NShared = g.SharedPeptides.Count,
+                    BestPeptideScore = bestScore,
+                    GroupQvalue = groupQvalue,
+                    IsTargetWinner = isTargetWinner,
+                });
+            }
+
+            rows.Sort((a, b) =>
+            {
+                // Target winners first (DESC on bool == true before false).
+                int cmp = b.IsTargetWinner.CompareTo(a.IsTargetWinner);
+                if (cmp != 0) return cmp;
+                cmp = a.GroupQvalue.CompareTo(b.GroupQvalue);
+                if (cmp != 0) return cmp;
+                return string.CompareOrdinal(a.Accessions, b.Accessions);
+            });
+
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"accessions	n_unique	n_shared	best_peptide_score	group_qvalue	is_target_winner");
+                foreach (var r in rows)
+                {
+                    sw.Write(r.Accessions);
+                    sw.Write('\t'); sw.Write(r.NUnique.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t'); sw.Write(r.NShared.ToString(CultureInfo.InvariantCulture));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.BestPeptideScore));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.GroupQvalue));
+                    sw.Write('\t'); sw.WriteLine(r.IsTargetWinner ? @"true" : @"false");
+                }
+            }
+            LogAction(string.Format(
+                @"Wrote Stage 7 second-pass protein FDR dump: {0} ({1} rows)",
+                path, rows.Count));
+        }
+
+        private struct Stage7Row
+        {
+            public string Accessions;
+            public int NUnique;
+            public int NShared;
+            public double BestPeptideScore;
+            public double GroupQvalue;
+            public bool IsTargetWinner;
         }
 
         /// <summary>
