@@ -1066,6 +1066,45 @@ namespace pwiz.OspreySharp
                         swProtein.Elapsed.TotalSeconds));
                 }
 
+                // Persist post-Stage-7 per-file 2nd-pass FDR scores so a
+                // subsequent --join-at-pass=2 invocation can rehydrate
+                // the q-value pool without re-running Stages 5-7.
+                // Skipped on --join-at-pass=2 itself (we just loaded
+                // them; no need to round-trip). Mirrors Rust's
+                // persist_fdr_scores Pass=Second call at the same
+                // pipeline.rs point.
+                if (!config.ExpectReconciledInput
+                    && perFileParquetPaths.Count > 0)
+                {
+                    int pass2Failures = 0;
+                    foreach (var kvp in perFileEntries)
+                    {
+                        string fileName = kvp.Key;
+                        string parquetPath;
+                        if (!perFileParquetPaths.TryGetValue(fileName, out parquetPath))
+                            continue;
+                        try
+                        {
+                            FdrScoresSidecar.Write(
+                                FdrScoresSidecar.Pass2Path(parquetPath),
+                                kvp.Value, FdrScoresSidecar.Pass.SecondPass);
+                        }
+                        catch (Exception ex)
+                        {
+                            LogWarning(string.Format(
+                                "Failed to write 2nd-pass FDR sidecar for {0}: {1}",
+                                fileName, ex.Message));
+                            pass2Failures++;
+                        }
+                    }
+                    if (pass2Failures == 0)
+                    {
+                        LogInfo(string.Format(
+                            "Wrote 2nd-pass FDR sidecars for {0} file(s)",
+                            perFileEntries.Count));
+                    }
+                }
+
                 // Stage 9: Write output blib
                 LogInfo("");
                 LogInfo(string.Format("Writing output to {0}...", config.OutputBlib));
