@@ -105,6 +105,11 @@ namespace pwiz.OspreySharp
 
                 OspreyConfig config = ParseArgs(args);
                 config.StopAfterStage5 = joinOnlyModifier;
+                // --join-at-pass=2 sets the strict-reconciled-input gate;
+                // the pipeline asserts every --input-scores parquet has
+                // osprey.reconciled = "true" via ParquetScoreCache
+                // validation. Mirrors Rust's main.rs:613 wiring.
+                config.ExpectReconciledInput = joinAtPass.HasValue && joinAtPass.Value == 2;
                 string err = ValidateArgs(config, noJoinFlag, joinOnlyFlag, joinOnlyModifier);
                 if (err != null)
                 {
@@ -603,7 +608,22 @@ namespace pwiz.OspreySharp
                     joinOnlyFlag = true;
                     return null;
                 case 2:
-                    return "--join-at-pass=2 (Stage 6 reconciled-parquet input) is not yet implemented.";
+                    if (noJoinFlag)
+                    {
+                        return "--join-at-pass=2 --no-join: per-file Stage 7 worker mode is not implemented (reconciled input + Stage 7-8 in-process is the supported path).";
+                    }
+                    // `--join-at-pass=2` is the post-Stage-6 entry point.
+                    // The pipeline reads reconciled .scores.parquet via
+                    // --input-scores plus the per-file
+                    // .{1st,2nd}-pass.fdr_scores.bin sidecars, skips
+                    // Stages 1-6, and runs Stages 7-8. ExpectReconciledInput
+                    // is set on the config after NormalizeHpcArgs by the
+                    // caller (Main needs the joinAtPass value to be visible
+                    // there). Routes through the same joinOnly path Stage 5+
+                    // input-scores uses; the in-pipeline reconciled-parquet
+                    // gate enforces the strict input contract.
+                    joinOnlyFlag = true;
+                    return null;
                 default:
                     return string.Format("--join-at-pass must be 1 or 2 (got {0}).", joinAtPass.Value);
             }

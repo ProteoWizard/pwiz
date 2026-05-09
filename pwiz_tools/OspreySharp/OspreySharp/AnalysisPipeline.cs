@@ -432,6 +432,55 @@ namespace pwiz.OspreySharp
                     "Coelution analysis complete. {0} total scored entries across {1} files",
                     totalScored, nFiles));
 
+                // --join-at-pass=2: load the 1st-pass FDR scores sidecar for
+                // each file onto the freshly-loaded stubs. The sidecar
+                // carries the persisted SVM scores + q-values from the
+                // straight-through pipeline run that produced these
+                // reconciled parquets. Without this load, RunFirstPassProteinFdr
+                // and the compaction step (next) would see uninitialized
+                // entry.Score = 0 / q = 1 for every entry — every protein
+                // group would tie at score 0 and the picked-protein FDR
+                // would collapse. Mirrors Rust pipeline.rs:3823 sidecar
+                // load order (1st-pass first, then 2nd-pass after
+                // compaction).
+                if (config.ExpectReconciledInput)
+                {
+                    foreach (var kvp in perFileEntries)
+                    {
+                        string fileName = kvp.Key;
+                        var entries = kvp.Value;
+                        // Resolve the sidecar path by file_name (synthetic
+                        // input path produced earlier by the InputFiles
+                        // synthesis above). FdrScoresSidecar.Pass1Path
+                        // builds <stem>.1st-pass.fdr_scores.bin.
+                        string parquetPath;
+                        string sidecarPath = perFileParquetPaths.TryGetValue(fileName, out parquetPath)
+                            ? FdrScoresSidecar.Pass1Path(parquetPath)
+                            : null;
+                        if (sidecarPath == null || !File.Exists(sidecarPath))
+                        {
+                            LogError(string.Format(
+                                "--join-at-pass=2: missing 1st-pass FDR sidecar for {0} " +
+                                "(expected at {1}). Re-run a straight-through pipeline to " +
+                                "produce the sidecar.",
+                                fileName, sidecarPath ?? "<unresolved>"));
+                            return 1;
+                        }
+                        if (!FdrScoresSidecar.TryRead(sidecarPath, entries,
+                                FdrScoresSidecar.Pass.FirstPass))
+                        {
+                            LogError(string.Format(
+                                "--join-at-pass=2: 1st-pass sidecar at {0} failed to load " +
+                                "(magic / version / pass-byte / count / size mismatch).",
+                                sidecarPath));
+                            return 1;
+                        }
+                    }
+                    LogInfo(string.Format(
+                        "--join-at-pass=2: loaded 1st-pass FDR sidecars for {0} file(s)",
+                        perFileEntries.Count));
+                }
+
                 if (perFileEntries.Count == 0 || totalScored == 0)
                 {
                     LogWarning("No scored entries found. Cannot perform FDR control.");
@@ -452,15 +501,29 @@ namespace pwiz.OspreySharp
                 }
 
                 // Stage 5: First-pass FDR
-                LogInfo("");
-                LogInfo(string.Format("Running {0} FDR control on coelution results...",
-                    config.FdrMethod));
+                // Skipped under --join-at-pass=2: the 1st-pass sidecar
+                // loaded above already carries the SVM scores + q-values
+                // from the straight-through pipeline run that produced
+                // the reconciled parquets. Re-running Percolator here
+                // would re-train SVMs on the same data and drift vs the
+                // sidecar. Mirrors Rust's compute_fdr_from_stubs skip
+                // (pipeline.rs:3916 "if !can_skip_fdr || expect_reconciled_input").
+                if (!config.ExpectReconciledInput)
+                {
+                    LogInfo("");
+                    LogInfo(string.Format("Running {0} FDR control on coelution results...",
+                        config.FdrMethod));
 
-                var swFdr = Stopwatch.StartNew();
-                RunFdr(perFileEntries, fullLibrary, config);
-                swFdr.Stop();
-                LogInfo(string.Format("[TIMING] Percolator/Simple FDR: {0:F1}s",
-                    swFdr.Elapsed.TotalSeconds));
+                    var swFdr = Stopwatch.StartNew();
+                    RunFdr(perFileEntries, fullLibrary, config);
+                    swFdr.Stop();
+                    LogInfo(string.Format("[TIMING] Percolator/Simple FDR: {0:F1}s",
+                        swFdr.Elapsed.TotalSeconds));
+                }
+                else
+                {
+                    LogInfo("--join-at-pass=2: skipping first-pass Percolator (sidecar provides q-values).");
+                }
 
                 // Log first-pass results
                 int passingTargets = 0;
@@ -569,6 +632,78 @@ namespace pwiz.OspreySharp
                         beforeCount, afterCount, firstPassBaseIds.Count));
                 }
 
+                // --join-at-pass=2: re-load the 2nd-pass FDR sidecar onto
+                // the post-compaction stub list. The 2nd-pass scores +
+                // q-values are what Stage 7 (protein FDR) and the blib
+                // writer consume. Loading happens AFTER compaction
+                // because the sidecar count must match the in-memory
+                // entry count, and compaction has just shrunk the list
+                // to the passing-base_id subset. Mirrors Rust's load-
+                // order inversion at pipeline.rs:4030-4076.
+                if (config.ExpectReconciledInput)
+                {
+                    foreach (var kvp in perFileEntries)
+                    {
+                        string fileName = kvp.Key;
+                        var entries = kvp.Value;
+                        // The 2nd-pass sidecar was written pre-compaction
+                        // (every stub, passing or not), but we have a
+                        // compacted list now. Build a parallel stub list
+                        // from the original parquet to size the load,
+                        // then overlay scores onto our compacted set by
+                        // entry_id. Simpler approach: just reload from
+                        // parquet into a fresh full list, run TryRead,
+                        // then map back into the compacted list.
+                        string parquetPath;
+                        if (!perFileParquetPaths.TryGetValue(fileName, out parquetPath))
+                        {
+                            LogError(string.Format(
+                                "--join-at-pass=2: no parquet path tracked for {0}", fileName));
+                            return 1;
+                        }
+                        string sidecarPath = FdrScoresSidecar.Pass2Path(parquetPath);
+                        if (!File.Exists(sidecarPath))
+                        {
+                            LogError(string.Format(
+                                "--join-at-pass=2: missing 2nd-pass FDR sidecar for {0} " +
+                                "(expected at {1}). Re-run a straight-through pipeline to " +
+                                "produce it.", fileName, sidecarPath));
+                            return 1;
+                        }
+                        // Reload all stubs (pre-compaction count) so the
+                        // sidecar size check passes. Then overlay onto
+                        // the compacted list by entry_id.
+                        var fullStubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                        if (!FdrScoresSidecar.TryRead(sidecarPath, fullStubs,
+                                FdrScoresSidecar.Pass.SecondPass))
+                        {
+                            LogError(string.Format(
+                                "--join-at-pass=2: 2nd-pass sidecar at {0} failed to load.",
+                                sidecarPath));
+                            return 1;
+                        }
+                        var stubsById = new Dictionary<uint, FdrEntry>(fullStubs.Count);
+                        foreach (var s in fullStubs) stubsById[s.EntryId] = s;
+                        for (int i = 0; i < entries.Count; i++)
+                        {
+                            FdrEntry stub;
+                            if (stubsById.TryGetValue(entries[i].EntryId, out stub))
+                            {
+                                entries[i].Score = stub.Score;
+                                entries[i].RunPrecursorQvalue = stub.RunPrecursorQvalue;
+                                entries[i].RunPeptideQvalue = stub.RunPeptideQvalue;
+                                entries[i].ExperimentPrecursorQvalue = stub.ExperimentPrecursorQvalue;
+                                entries[i].ExperimentPeptideQvalue = stub.ExperimentPeptideQvalue;
+                                entries[i].Pep = stub.Pep;
+                                entries[i].RunProteinQvalue = stub.RunProteinQvalue;
+                            }
+                        }
+                    }
+                    LogInfo(string.Format(
+                        "--join-at-pass=2: loaded 2nd-pass FDR sidecars for {0} file(s)",
+                        perFileEntries.Count));
+                }
+
                 // Stage 6: planning checkpoint — multi-charge consensus +
                 // cross-run consensus RTs + per-file calibration refit. The
                 // execution side (per-file rescore at locked boundaries +
@@ -586,7 +721,17 @@ namespace pwiz.OspreySharp
                 // single-file behavior. The earlier `Count > 1` guard
                 // silently produced different output between Rust and C#
                 // on single-file experiments.
-                if (perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
+                //
+                // --join-at-pass=2 SKIPS Stage 6 entirely. The reconciled
+                // .scores.parquet + 2nd-pass sidecar combination already
+                // carries the post-Stage-6 state (including any rescored
+                // entries' final SVM scores). Re-running Stage 6 here
+                // would re-apply multi-charge consensus + reconciliation
+                // on top of already-reconciled data and drift vs the
+                // straight-through pipeline. Mirrors Rust's
+                // pipeline.rs:3823 expect_reconciled_input gate.
+                if (!config.ExpectReconciledInput
+                    && perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
                 {
                     LogInfo("");
                     LogInfo("Stage 6: planning");
