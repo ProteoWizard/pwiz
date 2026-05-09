@@ -201,11 +201,32 @@ namespace pwiz.OspreySharp.IO
         /// Read per-file FDR scores from <paramref name="path"/> into
         /// <paramref name="entries"/>. Returns true on success, false on
         /// any of: missing file, bad magic, unsupported version, pass-byte
-        /// mismatch against <paramref name="expectedPass"/>, count
-        /// mismatch, or size mismatch. Records are positional, so the
-        /// caller's <paramref name="entries"/> list must already be sized
-        /// to match the FdrEntry sequence the sidecar was written from
-        /// (pre-compaction at the Stage 5 → Stage 6 boundary).
+        /// mismatch against <paramref name="expectedPass"/>, or size
+        /// mismatch (file length doesn't match header count + record
+        /// width).
+        ///
+        /// Records are matched to entries by <c>entry_id</c>, NOT by
+        /// position. This handles two multi-file realities:
+        /// <list type="bullet">
+        /// <item>The 1st-pass sidecar is written PRE-gap-fill (stage 5
+        /// boundary), so its row count is smaller than the reconciled
+        /// parquet's row count after Stage 6 appends gap-fill stubs.
+        /// Gap-fill stubs in <paramref name="entries"/> get no record
+        /// applied — they keep their default (Score=0, q=1) values.</item>
+        /// <item>The 2nd-pass sidecar is written POST-compaction +
+        /// post-rescore + post-gap-fill, so its row count is smaller
+        /// than the full reconciled parquet's row count. Entries not
+        /// in the sidecar get no record applied.</item>
+        /// </list>
+        /// Single-file (or any case where sidecar count == entry count)
+        /// degenerates to position-based loading because the entry_id
+        /// dictionary lookup matches one-to-one. The original strict
+        /// position+entry_id check this method previously enforced was
+        /// hiding the post-compaction / post-gap-fill mismatch on
+        /// multi-file runs (1644-row delta on Stellar 3-file
+        /// stage6_rescored.tsv was rooted in the 1st-pass loader
+        /// rejecting Rust's pre-gap-fill sidecar against the post-gap-
+        /// fill parquet load).
         /// </summary>
         public static bool TryRead(string path, IList<FdrEntry> entries, Pass expectedPass)
         {
@@ -240,20 +261,40 @@ namespace pwiz.OspreySharp.IO
                 return false;
             // bytes 10..16 reserved, ignored
             ulong headerCount = BitConverter.ToUInt64(data, 16);
-            if (headerCount != (ulong)entries.Count)
-                return false;
-
-            int expectedLen = HeaderLength + entries.Count * RecordLength;
+            // Reject sidecars whose declared count exceeds physical
+            // record capacity. (headerCount can validly be < entries
+            // count — see comment above on pre-gap-fill / post-
+            // compaction sidecars.)
+            int expectedLen = HeaderLength + (int)headerCount * RecordLength;
             if (data.Length != expectedLen)
                 return false;
 
+            // Build lookup so position-skewed entries align by entry_id.
+            // Single-file degenerates to a 1:1 map (no perf cost vs the
+            // old positional walk).
+            var byEntryId = new Dictionary<uint, int>(entries.Count);
             for (int i = 0; i < entries.Count; i++)
+                byEntryId[entries[i].EntryId] = i;
+
+            for (int rec = 0; rec < (int)headerCount; rec++)
             {
-                int off = HeaderLength + i * RecordLength;
-                var e = entries[i];
+                int off = HeaderLength + rec * RecordLength;
                 uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
-                if (recordEntryId != e.EntryId)
+                if (!byEntryId.TryGetValue(recordEntryId, out int entryIdx))
+                {
+                    // Sidecar carries an entry the caller's stub list
+                    // doesn't contain. The caller is expected to pass
+                    // a SUPERSET of the sidecar's entries (the post-
+                    // rescore parquet for the 1st-pass sidecar, for
+                    // example) — a record that fails to find its
+                    // entry_id signals the sidecar was written from a
+                    // different parquet (or from a different binary
+                    // version with different entry_id assignment). That
+                    // is corruption, not the gap-fill or post-compaction
+                    // case we tolerate, and must be rejected.
                     return false;
+                }
+                var e = entries[entryIdx];
                 e.Score                       = BitConverter.ToDouble(data, off + 4);
                 e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
                 e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);

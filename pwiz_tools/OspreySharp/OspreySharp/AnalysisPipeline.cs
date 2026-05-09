@@ -1041,6 +1041,15 @@ namespace pwiz.OspreySharp
                     // companion was already written above pre-compaction).
                     // Pairs with the --join-at-pass=1 --no-join Stage 6
                     // worker mode (next sprint).
+                    //
+                    // Surfaces gap-fill targets via out param so the in-
+                    // process Stage 6 rescore call below can execute them.
+                    // Without that, gap-fill plans only landed in the
+                    // .reconciliation.json envelope and never ran in-
+                    // process — hidden on single-file runs (no inter-
+                    // replicate consensus -> 0 gap-fill plans), surfaced
+                    // on Stellar 3-file as a 1644-row stage6_rescored.tsv
+                    // delta vs Rust (1641 CWT + 3 forced gap-fill entries).
                     int reconWriteFailures = WriteReconciliationFiles(
                         perFileEntries,
                         reconciliationActions,
@@ -1049,7 +1058,8 @@ namespace pwiz.OspreySharp
                         perFileCalibrations,
                         fullLibrary,
                         perFileParquetPaths,
-                        config);
+                        config,
+                        out var perFileGapFillForRescore);
 
                     if (config.StopAfterStage5)
                     {
@@ -1069,18 +1079,17 @@ namespace pwiz.OspreySharp
                         return 0;
                     }
 
-                    // Stage 6 per-file rescore: PHASE 1 of the C# port —
-                    // existing entries (consensus + reconciliation overlay).
-                    // Gap-fill two-pass + reconciled .scores.parquet
-                    // write-back are the next porting phases. Mirrors the
-                    // Rust call site at pipeline.rs:run_analysis ~line 3850.
+                    // Stage 6 per-file rescore: consensus + reconciliation
+                    // overlay (Phase 1) plus gap-fill two-pass (Phase 2).
+                    // Mirrors the Rust call site at
+                    // pipeline.rs:run_analysis ~line 3850.
                     var rescoreStats = ExecuteStage6Rescore(
                         perFileEntries,
                         perFileConsensusTargets,
                         reconciliationActions ?? new Dictionary<(string, int), ReconcileAction>(),
                         refinedCalibrations,
                         perFileCalibrations,
-                        perFileGapFill: null,
+                        perFileGapFill: perFileGapFillForRescore,
                         perFileParquetPaths,
                         fullLibrary,
                         config);
@@ -1760,7 +1769,8 @@ namespace pwiz.OspreySharp
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             List<LibraryEntry> fullLibrary,
             Dictionary<string, string> perFileParquetPaths,
-            OspreyConfig config)
+            OspreyConfig config,
+            out Dictionary<string, List<GapFillTarget>> gapFillByFileOut)
         {
             string searchHash = config.SearchParameterHash();
             string libraryHash = config.LibraryIdentityHash();
@@ -1820,6 +1830,22 @@ namespace pwiz.OspreySharp
                 libLookup,
                 libPrecursorMz,
                 perFileIsolationMz: null);
+
+            // Mirror gapFillByFile into the out param for the in-process
+            // Stage 6 rescore caller. Identify returns IReadOnlyList<>;
+            // ExecuteStage6Rescore's perFileGapFill type is
+            // IReadOnlyDictionary<string, List<GapFillTarget>>, so build
+            // a List<> per file. The conversion is per-file (3-15 files
+            // typical), each list 100-3000 GapFillTarget structs.
+            gapFillByFileOut = new Dictionary<string, List<GapFillTarget>>(
+                gapFillByFile.Count, StringComparer.Ordinal);
+            foreach (var kvp in gapFillByFile)
+            {
+                var copy = new List<GapFillTarget>(kvp.Value.Count);
+                foreach (var g in kvp.Value)
+                    copy.Add(g);
+                gapFillByFileOut[kvp.Key] = copy;
+            }
 
             int failures = 0;
             foreach (var kvp in perFileEntries)
