@@ -560,7 +560,17 @@ namespace pwiz.OspreySharp
                 // pass exists to prove cross-impl byte parity at the start
                 // of Stage 6 via the three planning dumps below. Mirrors
                 // pipeline.rs Stage 6 entry block at lines 3208-3273.
-                if (perFileEntries.Count > 1 && config.Reconciliation.Enabled)
+                // Stage 6 runs even with a single file: multi-charge
+                // consensus needs multiple charge states of the same
+                // peptide (which can exist within a single run), and the
+                // rescore loop applies the consensus targets it produces.
+                // Cross-run reconciliation degenerates to zero actions on
+                // a single file, but the planning checkpoint and the
+                // multi-charge rescore must still execute to match Rust's
+                // single-file behavior. The earlier `Count > 1` guard
+                // silently produced different output between Rust and C#
+                // on single-file experiments.
+                if (perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
                 {
                     LogInfo("");
                     LogInfo("Stage 6: planning");
@@ -1322,6 +1332,14 @@ namespace pwiz.OspreySharp
                 nScoredTargets,
                 nScoredDecoys,
                 fileName));
+
+            // Drop double-counted entries (different precursors that latch
+            // onto the same chromatographic feature within an isolation
+            // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
+            // same call site, between scoring and pair-deduplication.
+            scoredEntries = DeduplicateDoubleCounting(
+                scoredEntries, fullLibrary, spectra, ms2Cal,
+                isolationWindows, config);
             LogInfo(string.Format(
                 "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
                 fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
@@ -5210,6 +5228,270 @@ namespace pwiz.OspreySharp
         /// <summary>
         /// Deduplicate scored entries: keep best target and best decoy per base_id.
         /// </summary>
+        /// <summary>
+        /// Within each isolation window, drop scored entries whose top-6
+        /// fragment lists overlap >= 50% with another same-class entry
+        /// elutring within +/-5 spectra. Of each colliding pair, the
+        /// entry with the higher coelution_sum survives. Mirrors
+        /// osprey/crates/osprey/src/pipeline.rs::deduplicate_double_counting
+        /// so the same precursor cannot be counted twice from a shared
+        /// chromatographic feature.
+        /// </summary>
+        private List<FdrEntry> DeduplicateDoubleCounting(
+            List<FdrEntry> entries,
+            List<LibraryEntry> library,
+            IList<Spectrum> spectra,
+            MzCalibrationResult ms2Cal,
+            List<IsolationWindow> isolationWindows,
+            OspreyConfig config)
+        {
+            int originalCount = entries.Count;
+            if (originalCount == 0 || isolationWindows == null || isolationWindows.Count == 0)
+                return entries;
+
+            // Effective fragment tolerance: 3-sigma from MS2 calibration when
+            // calibrated, falling back to the configured value. Floors at
+            // 0.05 Da / 1 ppm so a tightly fit calibration cannot collapse
+            // the matcher to a sub-isotope window.
+            double fragTolValue;
+            ToleranceUnit fragTolUnit;
+            if (ms2Cal != null && ms2Cal.Calibrated)
+            {
+                double tol3sd = 3.0 * ms2Cal.SD;
+                fragTolUnit = string.Equals(ms2Cal.Unit, "Th", StringComparison.OrdinalIgnoreCase)
+                    ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
+                double minTol = fragTolUnit == ToleranceUnit.Mz ? 0.05 : 1.0;
+                fragTolValue = Math.Max(tol3sd, minTol);
+            }
+            else
+            {
+                fragTolValue = config.FragmentTolerance.Tolerance;
+                fragTolUnit  = config.FragmentTolerance.Unit;
+            }
+
+            // RT neighborhood = 5 x median spectrum spacing.
+            double rtNeighborhood;
+            {
+                var sortedRts = new List<double>(spectra.Count);
+                foreach (var s in spectra) sortedRts.Add(s.RetentionTime);
+                sortedRts.Sort();
+                // Dedup adjacent identicals
+                int writeIdx = 0;
+                for (int i = 0; i < sortedRts.Count; i++)
+                {
+                    if (i == 0 || sortedRts[i] != sortedRts[i - 1])
+                    {
+                        sortedRts[writeIdx++] = sortedRts[i];
+                    }
+                }
+                if (writeIdx < sortedRts.Count) sortedRts.RemoveRange(writeIdx, sortedRts.Count - writeIdx);
+                if (sortedRts.Count < 2)
+                {
+                    rtNeighborhood = 0.25; // 5 * 0.05 fallback
+                }
+                else
+                {
+                    var intervals = new List<double>(sortedRts.Count - 1);
+                    for (int i = 1; i < sortedRts.Count; i++)
+                        intervals.Add(sortedRts[i] - sortedRts[i - 1]);
+                    intervals.Sort();
+                    rtNeighborhood = 5.0 * intervals[intervals.Count / 2];
+                }
+            }
+
+            // Library lookup by EntryId (Id may not be array-index aligned).
+            var libIdMap = new Dictionary<uint, int>(library.Count);
+            for (int i = 0; i < library.Count; i++) libIdMap[library[i].Id] = i;
+
+            // Resolve each entry's precursor m/z from the library by
+            // EntryId. FdrEntry is a lightweight stub (no PrecursorMz);
+            // the library knows. Entries whose EntryId is missing from
+            // the library are excluded from dedup (and from the
+            // partition below) — they're left untouched downstream.
+            int n = entries.Count;
+            double[] entryMz = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                int libIdx;
+                entryMz[i] = libIdMap.TryGetValue(entries[i].EntryId, out libIdx)
+                    ? library[libIdx].PrecursorMz
+                    : double.NaN;
+            }
+
+            // Per-window entry indices via sorted-mz partition. Exclusive
+            // upper bound [lower, upper) makes every entry belong to at
+            // most one window — no cross-window write conflicts.
+            int[] mzSortedIdx = new int[n];
+            for (int i = 0; i < n; i++) mzSortedIdx[i] = i;
+            Array.Sort(mzSortedIdx, (a, b) => entryMz[a].CompareTo(entryMz[b]));
+            double[] mzSortedVal = new double[n];
+            for (int i = 0; i < n; i++) mzSortedVal[i] = entryMz[mzSortedIdx[i]];
+
+            int LowerBoundLt(double v)
+            {
+                int lo = 0, hi = mzSortedVal.Length;
+                while (lo < hi) { int m = (lo + hi) >> 1;
+                    if (mzSortedVal[m] < v) lo = m + 1; else hi = m; }
+                return lo;
+            }
+
+            var windowEntries = new List<int[]>(isolationWindows.Count);
+            foreach (var w in isolationWindows)
+            {
+                int lo = LowerBoundLt(w.LowerBound);
+                int hi = LowerBoundLt(w.UpperBound);
+                int len = hi - lo;
+                int[] arr = new int[len];
+                for (int i = 0; i < len; i++) arr[i] = mzSortedIdx[lo + i];
+                windowEntries.Add(arr);
+            }
+
+            // Removal flags. Each entry is in at most one window so a plain
+            // bool[] is safe under per-window parallelism.
+            bool[] removed = new bool[n];
+
+            Parallel.ForEach(windowEntries, indices =>
+            {
+                if (indices.Length < 2) return;
+
+                int[] rtSorted = (int[])indices.Clone();
+                // Stable sort: apex_rt then base_id then entry_id (matches
+                // Rust's deterministic tiebreaker for the dedup pass).
+                Array.Sort(rtSorted, (a, b) =>
+                {
+                    int c = entries[a].ApexRt.CompareTo(entries[b].ApexRt);
+                    if (c != 0) return c;
+                    uint baseA = entries[a].EntryId & 0x7FFFFFFFu;
+                    uint baseB = entries[b].EntryId & 0x7FFFFFFFu;
+                    c = baseA.CompareTo(baseB);
+                    if (c != 0) return c;
+                    return entries[a].EntryId.CompareTo(entries[b].EntryId);
+                });
+
+                for (int iPos = 0; iPos < rtSorted.Length; iPos++)
+                {
+                    int idxA = rtSorted[iPos];
+                    if (removed[idxA]) continue;
+                    double apexA = entries[idxA].ApexRt;
+
+                    for (int jPos = iPos + 1; jPos < rtSorted.Length; jPos++)
+                    {
+                        int idxB = rtSorted[jPos];
+                        double apexB = entries[idxB].ApexRt;
+                        if (apexB - apexA > rtNeighborhood) break;
+                        if (removed[idxB]) continue;
+                        if (entries[idxA].IsDecoy != entries[idxB].IsDecoy) continue;
+
+                        int libIdxA, libIdxB;
+                        if (!libIdMap.TryGetValue(entries[idxA].EntryId, out libIdxA)) continue;
+                        if (!libIdMap.TryGetValue(entries[idxB].EntryId, out libIdxB)) continue;
+
+                        var fragsA = library[libIdxA].Fragments;
+                        var fragsB = library[libIdxB].Fragments;
+                        int overlap = CountTopNFragmentOverlap(fragsA, fragsB, 6,
+                            fragTolValue, fragTolUnit);
+                        int minA = Math.Min(fragsA.Count, 6);
+                        int minB = Math.Min(fragsB.Count, 6);
+                        int threshold = (int)Math.Ceiling(Math.Min(minA, minB) * 0.5);
+                        if (overlap < threshold) continue;
+
+                        if (entries[idxA].CoelutionSum >= entries[idxB].CoelutionSum)
+                        {
+                            removed[idxB] = true;
+                        }
+                        else
+                        {
+                            removed[idxA] = true;
+                            break; // idxA is gone; further pairs irrelevant
+                        }
+                    }
+                }
+            });
+
+            int removedCount = 0;
+            int removedTargets = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (!removed[i]) continue;
+                removedCount++;
+                if (!entries[i].IsDecoy) removedTargets++;
+            }
+            int removedDecoys = removedCount - removedTargets;
+            if (removedCount > 0)
+            {
+                LogInfo(string.Format(
+                    "Double-counting deduplication: removed {0} entries " +
+                    "({1} targets, {2} decoys; {3} remaining)",
+                    removedCount, removedTargets, removedDecoys,
+                    originalCount - removedCount));
+            }
+
+            var kept = new List<FdrEntry>(originalCount - removedCount);
+            for (int i = 0; i < n; i++)
+                if (!removed[i]) kept.Add(entries[i]);
+            return kept;
+        }
+
+        /// <summary>
+        /// Count how many of the top-N (by intensity) m/z values from
+        /// <paramref name="fragsA"/> have a match within tolerance in
+        /// the top-N of <paramref name="fragsB"/>. Mirrors
+        /// osprey/crates/osprey/src/pipeline.rs::count_topn_fragment_overlap.
+        /// </summary>
+        private static int CountTopNFragmentOverlap(
+            IList<LibraryFragment> fragsA, IList<LibraryFragment> fragsB,
+            int n, double tolerance, ToleranceUnit unit)
+        {
+            double[] topA = TopNFragmentMzs(fragsA, n);
+            double[] topB = TopNFragmentMzs(fragsB, n);
+            Array.Sort(topB);
+            int matches = 0;
+            for (int i = 0; i < topA.Length; i++)
+            {
+                double mz = topA[i];
+                double tolDa = unit == ToleranceUnit.Ppm ? mz * tolerance / 1e6 : tolerance;
+                double lo = mz - tolDa;
+                double hi = mz + tolDa;
+                int idx = LowerBoundDouble(topB, lo);
+                if (idx < topB.Length && topB[idx] <= hi) matches++;
+            }
+            return matches;
+        }
+
+        /// <summary>Get m/z values of top-N fragments by intensity (stable on ties).</summary>
+        private static double[] TopNFragmentMzs(IList<LibraryFragment> fragments, int n)
+        {
+            if (fragments.Count <= n)
+            {
+                var all = new double[fragments.Count];
+                for (int i = 0; i < fragments.Count; i++) all[i] = fragments[i].Mz;
+                return all;
+            }
+            // Stable sort by descending intensity (matches Rust slice::sort_by).
+            var idx = new int[fragments.Count];
+            for (int i = 0; i < idx.Length; i++) idx[i] = i;
+            Array.Sort(idx, (a, b) =>
+            {
+                int c = fragments[b].RelativeIntensity.CompareTo(fragments[a].RelativeIntensity);
+                return c != 0 ? c : a.CompareTo(b);
+            });
+            var top = new double[n];
+            for (int i = 0; i < n; i++) top[i] = fragments[idx[i]].Mz;
+            return top;
+        }
+
+        /// <summary>Smallest index i where arr[i] >= v (sorted ascending).</summary>
+        private static int LowerBoundDouble(double[] arr, double v)
+        {
+            int lo = 0, hi = arr.Length;
+            while (lo < hi)
+            {
+                int m = (lo + hi) >> 1;
+                if (arr[m] < v) lo = m + 1; else hi = m;
+            }
+            return lo;
+        }
+
         private List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
         {
             // Group by base_id (mask off high bit)
