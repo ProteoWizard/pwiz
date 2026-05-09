@@ -753,7 +753,7 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --protein-fdr <threshold>     Protein-level FDR threshold (optional)");
             Console.Error.WriteLine("    --threads <count>             Number of threads (default: all cores)");
             Console.Error.WriteLine("    --fdr-method <method>         FDR method: percolator, simple (default: percolator)");
-            Console.Error.WriteLine("    --fdr-level <level>           FDR level: precursor, peptide, both (default: both)");
+            Console.Error.WriteLine("    --fdr-level <level>           FDR level: precursor, peptide, both (default: precursor)");
             Console.Error.WriteLine("    --shared-peptides <mode>      Shared peptide handling: all, razor, unique (default: all)");
             Console.Error.WriteLine("    --report <file>               Write TSV report to file");
             Console.Error.WriteLine("    --no-prefilter                Disable coelution signal pre-filter");

@@ -193,10 +193,13 @@ namespace pwiz.OspreySharp
                 // file and mutates FragmentTolerance during MS2 calibration,
                 // so reading config.SearchParameterHash() inside ProcessFile
                 // would produce a hash that the join-only validator would
-                // not recognize. Dictionary stays null in non-NoJoin runs
-                // (no parquet writing happens then).
+                // not recognize. Built unconditionally (in any non-joinOnly
+                // mode) because Stage 6 reconciliation needs the per-file
+                // .scores.parquet on disk to lazily load CWT candidates —
+                // matches Rust's end-to-end behavior, which always writes
+                // the parquet sidecar regardless of --no-join.
                 Dictionary<string, string> noJoinMetadata = null;
-                if (config.NoJoin)
+                if (!joinOnly)
                 {
                     noJoinMetadata = new Dictionary<string, string>
                     {
@@ -389,6 +392,20 @@ namespace pwiz.OspreySharp
                 swAllFiles.Stop();
                 LogInfo(string.Format("[TIMING] All files processed: {0:F1}s",
                     swAllFiles.Elapsed.TotalSeconds));
+
+                // End-to-end (non-joinOnly) modes: populate perFileParquetPaths
+                // from config.InputFiles so Stage 6 reconciliation can locate
+                // each file's freshly-written .scores.parquet to lazy-load CWT
+                // candidates from. ProcessFile writes the parquet whenever
+                // noJoinMetadata != null (now always set in non-joinOnly mode).
+                if (!joinOnly)
+                {
+                    foreach (string inputFile in config.InputFiles)
+                    {
+                        string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                        perFileParquetPaths[fileName] = ParquetScoreCache.GetScoresPath(inputFile);
+                    }
+                }
 
                 int totalScored = 0;
                 foreach (var kvp in perFileEntries)
@@ -1323,13 +1340,16 @@ namespace pwiz.OspreySharp
                 WriteFeatureDump(inputFile, fileName, scoredEntries);
             }
 
-            // --no-join: persist the full FdrEntry results (with features) to
-            // {stem}.scores.parquet so a subsequent --join-only invocation can
-            // pick them up without re-running Stages 1-4. Same path convention
-            // as Rust (`scores_path_for_input`). Snappy-compressed; cross-impl
-            // ZSTD/Snappy compatibility tracked as a Phase 4 follow-up.
-            // The metadata dictionary is precomputed in Run() against the
-            // original (un-mutated) outer config -- see Run() for why.
+            // Persist the full FdrEntry results (with features) to
+            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
+            // CWT candidates per file, and (b) a subsequent --join-only
+            // invocation can pick them up without re-running Stages 1-4.
+            // Same path convention as Rust (`scores_path_for_input`).
+            // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
+            // as a Phase 4 follow-up. The metadata dictionary is precomputed
+            // in Run() against the original (un-mutated) outer config — see
+            // Run() for why. Skipped only in --join-only mode (no Stages 1-4
+            // ran here, so there is nothing fresh to persist).
             if (noJoinMetadata != null)
             {
                 string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
@@ -1345,7 +1365,7 @@ namespace pwiz.OspreySharp
                     parquetPath, scoredEntries, noJoinMetadata, libraryById, fileName);
                 swParquet.Stop();
                 LogInfo(string.Format(
-                    "[--no-join] Wrote {0} scored entries to {1} ({2:F1}s)",
+                    "Wrote {0} scored entries to {1} ({2:F1}s)",
                     scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
             }
 
