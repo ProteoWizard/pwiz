@@ -2547,7 +2547,7 @@ namespace pwiz.OspreySharp
             var swLda = Stopwatch.StartNew();
             var matchArray = matches.ToArray();
             // Sort deterministically by (base_id, entry_id) so LDA sees a stable order.
-            Array.Sort(matchArray, (a, b) =>
+            Array.Sort(matchArray, (a, b) => // Array.Sort OK: comparator's secondary key is the unique EntryId, so no ties
             {
                 uint baseA = a.EntryId & 0x7FFFFFFF;
                 uint baseB = b.EntryId & 0x7FFFFFFF;
@@ -5660,7 +5660,7 @@ namespace pwiz.OspreySharp
             // most one window — no cross-window write conflicts.
             int[] mzSortedIdx = new int[n];
             for (int i = 0; i < n; i++) mzSortedIdx[i] = i;
-            Array.Sort(mzSortedIdx, (a, b) => entryMz[a].CompareTo(entryMz[b]));
+            Array.Sort(mzSortedIdx, (a, b) => entryMz[a].CompareTo(entryMz[b])); // Array.Sort OK: tied entryMz partition into the same window; per-window order is then re-derived inside the window loop. TODO(parity): audit whether stable order is needed if downstream becomes order-sensitive.
             double[] mzSortedVal = new double[n];
             for (int i = 0; i < n; i++) mzSortedVal[i] = entryMz[mzSortedIdx[i]];
 
@@ -5694,7 +5694,7 @@ namespace pwiz.OspreySharp
                 int[] rtSorted = (int[])indices.Clone();
                 // Stable sort: apex_rt then base_id then entry_id (matches
                 // Rust's deterministic tiebreaker for the dedup pass).
-                Array.Sort(rtSorted, (a, b) =>
+                Array.Sort(rtSorted, (a, b) => // Array.Sort OK: comparator's terminal key is the unique EntryId, so no ties
                 {
                     int c = entries[a].ApexRt.CompareTo(entries[b].ApexRt);
                     if (c != 0) return c;
@@ -5781,7 +5781,7 @@ namespace pwiz.OspreySharp
         {
             double[] topA = TopNFragmentMzs(fragsA, n);
             double[] topB = TopNFragmentMzs(fragsB, n);
-            Array.Sort(topB);
+            Array.Sort(topB); // Array.Sort OK: single primitive array used only for binary-search of m/z; tie-ordering doesn't affect match-or-not
             int matches = 0;
             for (int i = 0; i < topA.Length; i++)
             {
@@ -5807,7 +5807,7 @@ namespace pwiz.OspreySharp
             // Stable sort by descending intensity (matches Rust slice::sort_by).
             var idx = new int[fragments.Count];
             for (int i = 0; i < idx.Length; i++) idx[i] = i;
-            Array.Sort(idx, (a, b) =>
+            Array.Sort(idx, (a, b) => // Array.Sort OK: comparator's secondary key is the unique fragment index, so no ties
             {
                 int c = fragments[b].RelativeIntensity.CompareTo(fragments[a].RelativeIntensity);
                 return c != 0 ? c : a.CompareTo(b);

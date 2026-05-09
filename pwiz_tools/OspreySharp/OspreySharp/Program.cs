@@ -730,7 +730,7 @@ namespace pwiz.OspreySharp
                 if (found.Length == 0)
                     throw new ArgumentException(string.Format(
                         "No *.scores.parquet files found in --input-scores directory: {0}", dir));
-                Array.Sort(found, StringComparer.Ordinal);
+                Array.Sort(found, StringComparer.Ordinal); // Array.Sort OK: filenames are unique, no ties possible
                 return new List<string>(found);
             }
 
