@@ -445,17 +445,24 @@ namespace pwiz.OspreySharp
                 // compaction).
                 if (config.ExpectReconciledInput)
                 {
+                    // Build a fileName -> synthetic input path map so we
+                    // can resolve sidecar paths via FdrScoresSidecar
+                    // (which expects an mzML-style stem, not a parquet
+                    // stem). config.InputFiles was synthesized earlier
+                    // by RescoreHydration.SyntheticInputFromParquet,
+                    // which strips the trailing ".scores" — Pass1Path
+                    // then builds <dir>/<file_name>.1st-pass.fdr_scores.bin.
+                    var inputByFileName = new Dictionary<string, string>();
+                    foreach (var inputFile in config.InputFiles)
+                        inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
                     foreach (var kvp in perFileEntries)
                     {
                         string fileName = kvp.Key;
                         var entries = kvp.Value;
-                        // Resolve the sidecar path by file_name (synthetic
-                        // input path produced earlier by the InputFiles
-                        // synthesis above). FdrScoresSidecar.Pass1Path
-                        // builds <stem>.1st-pass.fdr_scores.bin.
-                        string parquetPath;
-                        string sidecarPath = perFileParquetPaths.TryGetValue(fileName, out parquetPath)
-                            ? FdrScoresSidecar.Pass1Path(parquetPath)
+                        string inputFile;
+                        string sidecarPath = inputByFileName.TryGetValue(fileName, out inputFile)
+                            ? FdrScoresSidecar.Pass1Path(inputFile)
                             : null;
                         if (sidecarPath == null || !File.Exists(sidecarPath))
                         {
@@ -642,6 +649,13 @@ namespace pwiz.OspreySharp
                 // order inversion at pipeline.rs:4030-4076.
                 if (config.ExpectReconciledInput)
                 {
+                    // Same input-by-fileName map shape as the 1st-pass
+                    // load above (sidecar paths derive from input file
+                    // stem, not parquet stem).
+                    var inputByFileName2 = new Dictionary<string, string>();
+                    foreach (var inputFile in config.InputFiles)
+                        inputByFileName2[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
                     foreach (var kvp in perFileEntries)
                     {
                         string fileName = kvp.Key;
@@ -651,9 +665,7 @@ namespace pwiz.OspreySharp
                         // compacted list now. Build a parallel stub list
                         // from the original parquet to size the load,
                         // then overlay scores onto our compacted set by
-                        // entry_id. Simpler approach: just reload from
-                        // parquet into a fresh full list, run TryRead,
-                        // then map back into the compacted list.
+                        // entry_id.
                         string parquetPath;
                         if (!perFileParquetPaths.TryGetValue(fileName, out parquetPath))
                         {
@@ -661,25 +673,52 @@ namespace pwiz.OspreySharp
                                 "--join-at-pass=2: no parquet path tracked for {0}", fileName));
                             return 1;
                         }
-                        string sidecarPath = FdrScoresSidecar.Pass2Path(parquetPath);
-                        if (!File.Exists(sidecarPath))
+                        string inputFile2;
+                        if (!inputByFileName2.TryGetValue(fileName, out inputFile2))
                         {
                             LogError(string.Format(
-                                "--join-at-pass=2: missing 2nd-pass FDR sidecar for {0} " +
-                                "(expected at {1}). Re-run a straight-through pipeline to " +
-                                "produce it.", fileName, sidecarPath));
+                                "--join-at-pass=2: no synthetic input path for {0}", fileName));
                             return 1;
+                        }
+                        // Prefer 2nd-pass sidecar; fall back to 1st-pass.
+                        // Rust skips 2nd-pass sidecar write on single-file
+                        // runs (pipeline.rs:4489 gates on input_files > 1)
+                        // and reuses 1st-pass SVM scores in that case. The
+                        // 2nd-pass sidecar's distinct contents arise only
+                        // when reconciliation actually rescores entries
+                        // (multi-file Stellar+Astral). Without this
+                        // fallback, single-file --join-at-pass=2 errors
+                        // even though the 1st-pass scores are equivalent.
+                        string sidecarPath = FdrScoresSidecar.Pass2Path(inputFile2);
+                        FdrScoresSidecar.Pass expectedPass = FdrScoresSidecar.Pass.SecondPass;
+                        if (!File.Exists(sidecarPath))
+                        {
+                            string pass1Path = FdrScoresSidecar.Pass1Path(inputFile2);
+                            if (!File.Exists(pass1Path))
+                            {
+                                LogError(string.Format(
+                                    "--join-at-pass=2: neither 2nd-pass nor 1st-pass FDR " +
+                                    "sidecar found for {0} (looked at {1} and {2}). Re-run a " +
+                                    "straight-through pipeline to produce them.",
+                                    fileName, sidecarPath, pass1Path));
+                                return 1;
+                            }
+                            sidecarPath = pass1Path;
+                            expectedPass = FdrScoresSidecar.Pass.FirstPass;
+                            LogInfo(string.Format(
+                                "--join-at-pass=2: 2nd-pass sidecar missing for {0}; " +
+                                "falling back to 1st-pass (matches Rust single-file behavior)",
+                                fileName));
                         }
                         // Reload all stubs (pre-compaction count) so the
                         // sidecar size check passes. Then overlay onto
                         // the compacted list by entry_id.
                         var fullStubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
-                        if (!FdrScoresSidecar.TryRead(sidecarPath, fullStubs,
-                                FdrScoresSidecar.Pass.SecondPass))
+                        if (!FdrScoresSidecar.TryRead(sidecarPath, fullStubs, expectedPass))
                         {
                             LogError(string.Format(
-                                "--join-at-pass=2: 2nd-pass sidecar at {0} failed to load.",
-                                sidecarPath));
+                                "--join-at-pass=2: sidecar at {0} failed to load (expected {1}).",
+                                sidecarPath, expectedPass));
                             return 1;
                         }
                         var stubsById = new Dictionary<uint, FdrEntry>(fullStubs.Count);
@@ -1056,6 +1095,55 @@ namespace pwiz.OspreySharp
                 // Stage 8: Protein FDR (optional)
                 if (config.ProteinFdr.HasValue)
                 {
+                    // Persist post-Stage-6 per-file 2nd-pass FDR scores
+                    // BEFORE RunProteinFdr. The sidecar holds Score +
+                    // run/experiment precursor/peptide q-values + Pep +
+                    // RunProteinQvalue (the latter set by
+                    // RunFirstPassProteinFdr earlier); none of those
+                    // fields are mutated by RunProteinFdr, which only
+                    // sets ExperimentProteinQvalue via
+                    // PropagateProteinQvalues. Writing here lets the
+                    // OSPREY_STAGE7_PROTEIN_FDR_ONLY early exit (used
+                    // by stage6 isolation in Test-Regression) leave the
+                    // sidecar on disk for downstream --join-at-pass=2
+                    // rehydration. Skipped on --join-at-pass=2 itself
+                    // (sidecar already loaded; no need to round-trip).
+                    if (!config.ExpectReconciledInput
+                        && perFileParquetPaths.Count > 0)
+                    {
+                        var inputByFileName3 = new Dictionary<string, string>();
+                        foreach (var inputFile in config.InputFiles)
+                            inputByFileName3[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+                        int pass2Failures = 0;
+                        foreach (var kvp in perFileEntries)
+                        {
+                            string fileName = kvp.Key;
+                            string inputFile3;
+                            if (!inputByFileName3.TryGetValue(fileName, out inputFile3))
+                                continue;
+                            try
+                            {
+                                FdrScoresSidecar.Write(
+                                    FdrScoresSidecar.Pass2Path(inputFile3),
+                                    kvp.Value, FdrScoresSidecar.Pass.SecondPass);
+                            }
+                            catch (Exception ex)
+                            {
+                                LogWarning(string.Format(
+                                    "Failed to write 2nd-pass FDR sidecar for {0}: {1}",
+                                    fileName, ex.Message));
+                                pass2Failures++;
+                            }
+                        }
+                        if (pass2Failures == 0)
+                        {
+                            LogInfo(string.Format(
+                                "Wrote 2nd-pass FDR sidecars for {0} file(s)",
+                                perFileEntries.Count));
+                        }
+                    }
+
                     LogInfo("");
                     LogInfo(string.Format("Running protein-level FDR at {0:P1}...",
                         config.ProteinFdr.Value));
@@ -1064,45 +1152,6 @@ namespace pwiz.OspreySharp
                     swProtein.Stop();
                     LogInfo(string.Format("[TIMING] Protein FDR: {0:F1}s",
                         swProtein.Elapsed.TotalSeconds));
-                }
-
-                // Persist post-Stage-7 per-file 2nd-pass FDR scores so a
-                // subsequent --join-at-pass=2 invocation can rehydrate
-                // the q-value pool without re-running Stages 5-7.
-                // Skipped on --join-at-pass=2 itself (we just loaded
-                // them; no need to round-trip). Mirrors Rust's
-                // persist_fdr_scores Pass=Second call at the same
-                // pipeline.rs point.
-                if (!config.ExpectReconciledInput
-                    && perFileParquetPaths.Count > 0)
-                {
-                    int pass2Failures = 0;
-                    foreach (var kvp in perFileEntries)
-                    {
-                        string fileName = kvp.Key;
-                        string parquetPath;
-                        if (!perFileParquetPaths.TryGetValue(fileName, out parquetPath))
-                            continue;
-                        try
-                        {
-                            FdrScoresSidecar.Write(
-                                FdrScoresSidecar.Pass2Path(parquetPath),
-                                kvp.Value, FdrScoresSidecar.Pass.SecondPass);
-                        }
-                        catch (Exception ex)
-                        {
-                            LogWarning(string.Format(
-                                "Failed to write 2nd-pass FDR sidecar for {0}: {1}",
-                                fileName, ex.Message));
-                            pass2Failures++;
-                        }
-                    }
-                    if (pass2Failures == 0)
-                    {
-                        LogInfo(string.Format(
-                            "Wrote 2nd-pass FDR sidecars for {0} file(s)",
-                            perFileEntries.Count));
-                    }
                 }
 
                 // Stage 9: Write output blib
