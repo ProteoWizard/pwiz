@@ -627,11 +627,20 @@ namespace pwiz.OspreySharp
                     if (OspreyDiagnostics.DumpInvPredict)
                         invPredictTrace = new List<InvPredictRecord>();
 
-                    var consensus = ConsensusRts.Compute(
-                        perFileForRecon, perFileCalibrations,
-                        config.Reconciliation.ConsensusFdr,
-                        config.ProteinFdr ?? 0.0,
-                        invPredictTrace);
+                    // Cross-file consensus is only meaningful with > 1 file.
+                    // Mirrors Rust pipeline.rs:4146 where reconciliation_enabled
+                    // requires per_file_entries.len() > 1 — single-file runs
+                    // skip consensus computation, refit, and reconciliation
+                    // entirely, leaving multi-charge consensus rescore as the
+                    // only Stage 6 work performed.
+                    IReadOnlyList<PeptideConsensusRT> consensus =
+                        perFileEntries.Count > 1
+                            ? ConsensusRts.Compute(
+                                perFileForRecon, perFileCalibrations,
+                                config.Reconciliation.ConsensusFdr,
+                                config.ProteinFdr ?? 0.0,
+                                invPredictTrace)
+                            : Array.Empty<PeptideConsensusRT>();
 
                     if (invPredictTrace != null)
                     {
@@ -753,7 +762,15 @@ namespace pwiz.OspreySharp
                         perFileForPlan.Add(new KeyValuePair<string,
                             IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
                     }
-                    if (perFileCwtCandidates.Count == perFileEntries.Count)
+                    // Match Rust pipeline.rs:4223: only run the reconciliation
+                    // planner when the cross-file consensus is non-empty.
+                    // Single-file runs (or any case where no peptide had
+                    // enough cross-replicate evidence to form a consensus
+                    // RT) degenerate to zero reconciliation actions in
+                    // Rust; C# previously planned regardless and produced
+                    // ~22k spurious use_cwt actions on Stellar single-file.
+                    if (perFileCwtCandidates.Count == perFileEntries.Count
+                        && consensus.Count > 0)
                     {
                         reconciliationActions = ReconciliationPlanner.Plan(
                             consensus,
@@ -765,6 +782,10 @@ namespace pwiz.OspreySharp
                         LogInfo(string.Format(
                             "Stage 6 reconciliation: {0} per-(file, entry) actions planned",
                             reconciliationActions.Count));
+                    }
+                    else if (consensus.Count == 0)
+                    {
+                        LogInfo("Stage 6 reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
                     }
                     else
                     {
