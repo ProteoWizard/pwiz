@@ -26,6 +26,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using pwiz.OspreySharp.Core;
@@ -340,6 +341,51 @@ namespace pwiz.OspreySharp.IO
                 mzArray = new double[0];
             if (intensityArray == null)
                 intensityArray = new float[0];
+
+            // Some mzML producers emit peaks that are not strictly ascending in
+            // m/z (observed in a HeLa Astral 3 mz DIA file: ~1 row in 1.7M had
+            // a single inverted pair of consecutive centroids). Downstream
+            // fragment matching binary-searches the spectrum; the Rust
+            // partition_point and BinarySearchLowerBound here use procedurally
+            // different step patterns, so an unsorted region produces
+            // undefined-behavior divergence between the two impls (Astral
+            // file 55 entry_id=885629 sg_weighted_cosine cross-impl 5.89e-3
+            // diff). Sort once at load time so every downstream consumer sees
+            // a well-defined ordering. The leading O(n) sortedness check is
+            // the common-case fast path; the OrderBy permutation only runs
+            // on inversions. LINQ OrderBy is stable (matches Rust slice::
+            // sort_by); Array.Sort on parallel arrays is unstable introsort
+            // and would reorder ties differently from Rust on tied m/z.
+            if (mzArray.Length >= 2)
+            {
+                bool sorted = true;
+                for (int i = 1; i < mzArray.Length; i++)
+                {
+                    if (mzArray[i] < mzArray[i - 1])
+                    {
+                        sorted = false;
+                        break;
+                    }
+                }
+                if (!sorted)
+                {
+                    Console.Error.WriteLine(string.Format(
+                        "[unsorted-spectrum] scan_number={0} n_peaks={1}",
+                        spectrumIndex, mzArray.Length));
+                    int n = mzArray.Length;
+                    int[] order = System.Linq.Enumerable.Range(0, n)
+                        .OrderBy(i => mzArray[i]).ToArray();
+                    double[] sortedMzs = new double[n];
+                    float[] sortedInts = new float[n];
+                    for (int i = 0; i < n; i++)
+                    {
+                        sortedMzs[i] = mzArray[order[i]];
+                        sortedInts[i] = intensityArray[order[i]];
+                    }
+                    mzArray = sortedMzs;
+                    intensityArray = sortedInts;
+                }
+            }
 
             // Build spectrum based on MS level
             if (msLevel == 1)
