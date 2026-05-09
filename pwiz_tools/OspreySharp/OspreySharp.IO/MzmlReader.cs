@@ -667,12 +667,11 @@ namespace pwiz.OspreySharp.IO
             }
             if (sorted)
                 return;
-            Console.Error.WriteLine(string.Format(
-                "[unsorted-spectrum] scan_number={0} n_peaks={1}",
-                scanNumber, mzArray.Length));
+            Console.Error.WriteLine(
+                $"[unsorted-spectrum] scan_number={scanNumber} n_peaks={mzArray.Length}");
             int n = mzArray.Length;
             double[] keyMz = mzArray;
-            int[] order = System.Linq.Enumerable.Range(0, n)
+            int[] order = Enumerable.Range(0, n)
                 .OrderBy(i => keyMz[i]).ToArray();
             double[] sortedMzs = new double[n];
             float[] sortedInts = new float[n];

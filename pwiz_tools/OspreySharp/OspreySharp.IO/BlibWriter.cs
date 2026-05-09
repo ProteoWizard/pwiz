@@ -275,7 +275,11 @@ namespace pwiz.OspreySharp.IO
 
         /// <summary>
         /// Add a detected peptide spectrum. Returns the RefSpectra row ID.
-        /// Score should be a raw q-value (lower is better).
+        /// Score should be a raw q-value (lower is better). The mzs and
+        /// intensities are zlib-compressed inline; for large libraries
+        /// (~100K+ spectra) the caller should pre-compress in parallel via
+        /// <see cref="CompressMzs"/> / <see cref="CompressIntensities"/>
+        /// and use the precompressed overload instead.
         /// </summary>
         public long AddSpectrum(string peptideSeq, string peptideModSeq,
             double precursorMz, int precursorCharge,
@@ -283,11 +287,35 @@ namespace pwiz.OspreySharp.IO
             double[] mzs, float[] intensities,
             double score, long fileId, int copies, double totalIonCurrent)
         {
+            byte[] mzBlob = CompressMzs(mzs);
+            byte[] intBlob = CompressIntensities(intensities);
+            return AddSpectrumPrecompressed(peptideSeq, peptideModSeq,
+                precursorMz, precursorCharge,
+                retentionTime, startTime, endTime,
+                mzBlob, intBlob, mzs.Length,
+                score, fileId, copies, totalIonCurrent);
+        }
+
+        /// <summary>
+        /// Add a detected peptide spectrum where mz and intensity blobs are
+        /// already zlib-compressed by the caller. Used when the caller
+        /// pre-compressed in a parallel pre-pass to amortize zlib cost
+        /// across cores while keeping the SQLite insert single-threaded
+        /// (matches Skyline's BlibDb pattern in BlibData/BlibDb.cs:546).
+        /// On a 3-file Stellar run the sequential <c>AddSpectrum</c> wall
+        /// is ~26s C# vs ~14s Rust; pre-compressing in parallel pulls C#
+        /// roughly into line with Rust's flate2 wall. The numPeaks count
+        /// is needed because the compressed blob no longer carries it
+        /// implicitly.
+        /// </summary>
+        public long AddSpectrumPrecompressed(string peptideSeq, string peptideModSeq,
+            double precursorMz, int precursorCharge,
+            double retentionTime, double startTime, double endTime,
+            byte[] mzBlob, byte[] intBlob, int numPeaks,
+            double score, long fileId, int copies, double totalIonCurrent)
+        {
             string cleanSeq = StripFlankingChars(peptideSeq);
             string cleanModSeq = ConvertUnimodToMass(StripFlankingChars(peptideModSeq));
-
-            byte[] mzBlob = CompressBytes(DoublesToBytes(mzs));
-            byte[] intBlob = CompressBytes(FloatsToBytes(intensities));
 
             string specIdInFile = _nextSpecId.ToString();
             _nextSpecId++;
@@ -297,7 +325,7 @@ namespace pwiz.OspreySharp.IO
             _cmdInsertRefSpectra.Parameters["@charge"].Value = precursorCharge;
             _cmdInsertRefSpectra.Parameters["@modseq"].Value = cleanModSeq;
             _cmdInsertRefSpectra.Parameters["@copies"].Value = copies;
-            _cmdInsertRefSpectra.Parameters["@numPeaks"].Value = mzs.Length;
+            _cmdInsertRefSpectra.Parameters["@numPeaks"].Value = numPeaks;
             _cmdInsertRefSpectra.Parameters["@rt"].Value = retentionTime;
             _cmdInsertRefSpectra.Parameters["@startTime"].Value = startTime;
             _cmdInsertRefSpectra.Parameters["@endTime"].Value = endTime;
@@ -316,6 +344,26 @@ namespace pwiz.OspreySharp.IO
             _cmdInsertRefSpectraPeaks.ExecuteNonQuery();
 
             return refId;
+        }
+
+        /// <summary>
+        /// Pre-compress an mzs array (double[]) into the deflate blob the
+        /// blib stores in <c>RefSpectraPeaks.peakMZ</c>. Pure (no shared
+        /// state); safe to call from multiple threads.
+        /// </summary>
+        public static byte[] CompressMzs(double[] mzs)
+        {
+            return CompressBytes(DoublesToBytes(mzs));
+        }
+
+        /// <summary>
+        /// Pre-compress an intensities array (float[]) into the deflate blob
+        /// the blib stores in <c>RefSpectraPeaks.peakIntensity</c>. Pure (no
+        /// shared state); safe to call from multiple threads.
+        /// </summary>
+        public static byte[] CompressIntensities(float[] intensities)
+        {
+            return CompressBytes(FloatsToBytes(intensities));
         }
 
         /// <summary>

@@ -162,7 +162,7 @@
 <g transform="translate(40, 40)">
   <text class="title">Osprey / OspreySharp DIA search pipeline</text>
   <text class="subtitle" y="22">
-    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-05-08: end-to-end cross-impl parity from Stage 1 through Stage 7 on Stellar + Astral 3-file. Stages 1-6 byte-parity (post-rescore q-values match max_diff=0; reconciled .scores.parquet 3/3 PASS, allowlist empty after pwiz #4188). Stage 7 protein FDR (parsimony + picked-protein TDC): cross-impl PASS at 1e-9 absolute via Compare-Stage7-Crossimpl.ps1 (Stellar 6204/6204, Astral 11779/11779 protein groups; max abs diff 1.776e-15 on best_peptide_score). Stage 7 .blib output: cross-impl PASS via Compare-Blib-Crossimpl.ps1 (Stellar 45153 + Astral 129352 RefSpectra; every per-table SQL row+column matches including byte-identical RefSpectraPeaks blobs after switching the Rust flate2 backend to stock zlib and the C# writer to DotNetZip / Ionic.Zlib level 6, the same library Skyline's BlibData has used since 2009). First end-to-end OspreySharp port at full cross-impl parity.
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-05-09: end-to-end cross-impl parity from Stage 1 through Stage 7 + .blib on Stellar + Astral 3-file, including the previously-divergent Astral file-55 (sg_weighted_cosine 5.89e-3 row-level diff closed by sorting non-monotonic mzML centroids at load time; pwiz a3a15eb764 + osprey 9a137d8). Stages 1-6 byte-parity (post-rescore q-values match max_diff=0; reconciled .scores.parquet 3/3 PASS, allowlist empty after pwiz #4188). Stage 7 protein FDR (parsimony + picked-protein TDC): cross-impl PASS at 1e-9 absolute via Compare-Stage7-Crossimpl.ps1 (Stellar 6204/6204, Astral 11779/11779 protein groups; max abs diff 1.776e-15 on best_peptide_score). Stage 7 .blib output: cross-impl PASS via Compare-Blib-Crossimpl.ps1 (Stellar 45153 + Astral 129352 RefSpectra; every per-table SQL row+column matches including byte-identical RefSpectraPeaks blobs after switching the Rust flate2 backend to stock zlib and the C# writer to DotNetZip / Ionic.Zlib level 6, the same library Skyline's BlibData has used since 2009). First end-to-end OspreySharp port at full cross-impl parity.
   </text>
 </g>
 
@@ -504,25 +504,60 @@
     per-file MS2-calibration tolerance.
   </p>
   <p>
-    <strong>Performance (Session 14-16, <code>Bench-Scoring.ps1</code> warm-cache
-    wall clock):</strong>
-    <em>Stellar</em> (median of 5) - single file: C# 22.7s vs Rust 23.2s =
-    <strong>1.0x (tied)</strong>. 3-file sequential: C# 63.9s vs Rust 83.4s =
-    <strong>0.77x (C# 1.3x faster)</strong>. 3-file parallel: C# 49.5s vs Rust 83.4s =
-    <strong>0.59x (C# 1.7x faster)</strong>.
-    <em>Astral</em> (single iteration, ~100x larger main-search workload) - single
-    file: C# 110.7s vs Rust ~917s = <strong>0.12x (C# 8.3x faster)</strong>.
-    3-file sequential: C# 380.1s vs Rust 2751.2s = <strong>0.14x (C# 7.2x faster)</strong>.
-    3-file parallel: C# 342.3s vs Rust 2751.2s = <strong>0.12x (C# 8.0x faster,
-    ~97% parallel efficiency)</strong>. Rust has no file-level parallelism, so 3-file
-    Rust is strictly 3x single-file; C# par-3 exploits the full 32-core box via
-    per-file thread scaling that sidesteps oversubscription.
-    Key optimizations: <code>XcorrScratchPool</code> (eliminates LOH churn on the
-    ~100K-bin HRAM scratch), per-window pre-preprocessed XCorr cache with f32
-    narrowing, pooled <code>visitedBins</code> for O(n_fragments) selective clear,
-    per-file thread scaling to avoid oversubscription when files run in parallel,
-    and a mzML read gate that serializes disk I/O across concurrent
+    <strong>Performance, end-to-end stage-by-stage 3-file regression (2026-05-09,
+    <code>Test-Regression.ps1 -Files All</code>):</strong>
+    Wall-clock per stage from the post-sort-fix run (Tag <code>post_sort_fix</code>),
+    same binaries, same dataset, side-by-side rust vs C#. C# wins or ties on
+    Stage 1-4 and Stage 6 on both datasets; the remaining gaps are Stage 5
+    (Percolator + reconciliation planning, the largest absolute gap), Stage 7
+    (small absolute, large ratio), and the .blib write (sequential per-spectrum
+    zlib compression).
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Stage</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:30</td><td style="text-align: right; padding: 1px 12px;">1:08</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.76× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">8:26</td><td style="text-align: right; padding: 1px 12px;">11:17</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.34×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:54</td><td style="text-align: right; padding: 1px 12px;">4:08</td><td style="text-align: right; padding: 1px 12px; color: #b54708;"><strong>2.18×</strong></td><td style="text-align: right; padding: 1px 12px;">3:30</td><td style="text-align: right; padding: 1px 12px;">2:45</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.79× (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">4:10</td><td style="text-align: right; padding: 1px 12px;">3:34</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.86× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">12:45</td><td style="text-align: right; padding: 1px 12px;">17:30</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.37×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px;">0:10</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">3.33× (small abs)</td><td style="text-align: right; padding: 1px 12px;">0:15</td><td style="text-align: right; padding: 1px 12px;">0:30</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">2.0× (small abs)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:14</td><td style="text-align: right; padding: 1px 12px;">0:26</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.86×</td><td style="text-align: right; padding: 1px 12px;">0:55</td><td style="text-align: right; padding: 1px 12px;">0:45</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81× (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>7:51</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>9:26</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>1.20×</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>~25:50</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>~32:50</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>1.27×</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>Stage 1-4 perf foundations</strong> (carried over from the
+    Sessions 14-16 micro-bench, still in effect):
+    <code>XcorrScratchPool</code> (eliminates LOH churn on the ~100K-bin HRAM
+    scratch), per-window pre-preprocessed XCorr cache with f32 narrowing,
+    pooled <code>visitedBins</code> for O(n_fragments) selective clear,
+    per-file thread scaling to avoid oversubscription when files run in
+    parallel, and a mzML read gate that serializes disk I/O across concurrent
     <code>ProcessFile</code> calls.
+  </p>
+  <p>
+    <strong>Remaining C# perf items</strong> (Mike-facing summary):
+    (1) Stage 5 cs Stellar 2.18× slower — Percolator SVM training is the
+    likely dominant cost; needs a dotTrace profile to confirm.
+    (2) Blib write — <em>resolved 2026-05-09</em>: per-spectrum
+    <code>Ionic.Zlib</code> compression now runs in parallel
+    (<code>BlibWriter.CompressMzs</code> / <code>CompressIntensities</code>
+    pre-compress under <code>Parallel.For</code>; SQLite insert stays
+    sequential, output byte-identical). Astral 3-file blib stage flips
+    from cs-slower to <strong>cs-faster than rust</strong> (44.7s vs 55.1s,
+    0.81×); Stellar 3-file pending re-measurement.
+    (3) Stage 7 cs Stellar 3.33× slower has alarming ratio but tiny absolute
+    wall (0:10); only worth investigating if Astral 3-file shows a larger
+    absolute gap. Rust-side perf work is no longer in scope.
   </p>
   <p>
     <strong>Stage 5 (2026-04-22):</strong> single-file Stellar cross-impl

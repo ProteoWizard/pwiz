@@ -633,14 +633,12 @@ namespace pwiz.OspreySharp
                 // map for the post-scoring overlay step. Also collect the
                 // subset of library ids the search engine needs to score.
                 var boundaryOverrides = new Dictionary<uint, (double Apex, double Start, double End)>();
-                var entryIdToIdx = new Dictionary<uint, int>();
                 var subsetIds = new HashSet<uint>();
                 foreach (var kvp in combinedTargets)
                 {
                     int idx = kvp.Key;
                     uint entryId = fdrEntries[idx].EntryId;
                     boundaryOverrides[entryId] = kvp.Value;
-                    entryIdToIdx[entryId] = idx;
                     subsetIds.Add(entryId);
                 }
 

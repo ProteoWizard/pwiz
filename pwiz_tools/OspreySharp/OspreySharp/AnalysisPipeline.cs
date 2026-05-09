@@ -6759,8 +6759,44 @@ namespace pwiz.OspreySharp
                         kvp.Key + ".mzML", libraryIdName, fdrThreshold);
                 }
 
-                foreach (var kvp in bestByPrecursor.Values)
+                // Parallel pre-compress pass. Per-spectrum zlib (Ionic.Zlib
+                // level 6) dominates the blib write wall (~12s of the
+                // observed 26s C# Stellar 3-file blib run); the SQLite
+                // INSERT itself is fast and must stay sequential because
+                // BlibWriter holds a single connection. Pre-compute
+                // (mzBlob, intBlob, numPeaks) for every entry in parallel,
+                // then drive AddSpectrumPrecompressed in iteration order
+                // so RefSpectra row IDs stay deterministic. Mirrors the
+                // Skyline BlibDb pattern in Model/Lib/BlibData/BlibDb.cs.
+                var blibEntries = bestByPrecursor.Values.ToList();
+                int blibN = blibEntries.Count;
+                var blibMzBlobs = new byte[blibN][];
+                var blibIntBlobs = new byte[blibN][];
+                var blibNumPeaks = new int[blibN];
+                Parallel.For(0, blibN,
+                    new ParallelOptions { MaxDegreeOfParallelism = config.NThreads },
+                    i =>
+                    {
+                        var entry = blibEntries[i].Value;
+                        LibraryEntry libEntryP;
+                        if (!libraryById.TryGetValue(entry.EntryId, out libEntryP))
+                            return;
+                        int nFrags = libEntryP.Fragments.Count;
+                        var mzsP = new double[nFrags];
+                        var intsP = new float[nFrags];
+                        for (int j = 0; j < nFrags; j++)
+                        {
+                            mzsP[j] = libEntryP.Fragments[j].Mz;
+                            intsP[j] = libEntryP.Fragments[j].RelativeIntensity;
+                        }
+                        blibMzBlobs[i] = BlibWriter.CompressMzs(mzsP);
+                        blibIntBlobs[i] = BlibWriter.CompressIntensities(intsP);
+                        blibNumPeaks[i] = nFrags;
+                    });
+
+                for (int blibIdx = 0; blibIdx < blibN; blibIdx++)
                 {
+                    var kvp = blibEntries[blibIdx];
                     string fileName = kvp.Key;
                     var entry = kvp.Value;
 
@@ -6770,14 +6806,9 @@ namespace pwiz.OspreySharp
 
                     long fileId = sourceFileIds[fileName];
 
-                    // Extract fragment arrays from library
-                    double[] mzs = new double[libEntry.Fragments.Count];
-                    float[] intensities = new float[libEntry.Fragments.Count];
-                    for (int i = 0; i < libEntry.Fragments.Count; i++)
-                    {
-                        mzs[i] = libEntry.Fragments[i].Mz;
-                        intensities[i] = libEntry.Fragments[i].RelativeIntensity;
-                    }
+                    byte[] mzBlobPre = blibMzBlobs[blibIdx];
+                    byte[] intBlobPre = blibIntBlobs[blibIdx];
+                    int numPeaksPre = blibNumPeaks[blibIdx];
 
                     // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value
                     // (min across all observations of this (modseq, charge)
@@ -6823,7 +6854,7 @@ namespace pwiz.OspreySharp
                         sharedEnd = sharedVals[2];
                     }
 
-                    long refId = writer.AddSpectrum(
+                    long refId = writer.AddSpectrumPrecompressed(
                         libEntry.Sequence,
                         libEntry.ModifiedSequence,
                         libEntry.PrecursorMz,
@@ -6831,7 +6862,7 @@ namespace pwiz.OspreySharp
                         sharedApex,
                         sharedStart,
                         sharedEnd,
-                        mzs, intensities,
+                        mzBlobPre, intBlobPre, numPeaksPre,
                         scoreQvalue, fileId, nRunsDetected, 0.0);
 
                     // Add modifications
