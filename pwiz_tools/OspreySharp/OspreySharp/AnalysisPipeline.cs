@@ -1123,76 +1123,23 @@ namespace pwiz.OspreySharp
                     OspreyDiagnostics.CloseCwtPathDump();
                 }
 
-                // Stage 8: Protein FDR (optional)
-                if (config.ProteinFdr.HasValue)
+                // Merge-node phase: 2nd-pass FDR sidecar persistence (when
+                // applicable), run-wide protein FDR, blib output. Driven
+                // through the Phase A task-based pipeline so the
+                // boundary between Stage 6 (per-file rescore) and the
+                // post-second-join merge work is explicit. The Pipeline
+                // logs per-task timings; the inline log+timing wrappers
+                // that used to bracket each substep here have moved into
+                // MergeNodeTask alongside the substeps themselves.
+                var mergeCtx = new Tasks.PipelineContext(
+                    config, LogInfo, LogWarning, LogError);
+                var mergePipeline = new Tasks.Pipeline(new Tasks.OspreyTask[]
                 {
-                    // Persist post-Stage-6 per-file 2nd-pass FDR scores
-                    // BEFORE RunProteinFdr. The sidecar holds Score +
-                    // run/experiment precursor/peptide q-values + Pep +
-                    // RunProteinQvalue (the latter set by
-                    // RunFirstPassProteinFdr earlier); none of those
-                    // fields are mutated by RunProteinFdr, which only
-                    // sets ExperimentProteinQvalue via
-                    // PropagateProteinQvalues. Writing here lets the
-                    // OSPREY_STAGE7_PROTEIN_FDR_ONLY early exit (used
-                    // by stage6 isolation in Test-Regression) leave the
-                    // sidecar on disk for downstream --join-at-pass=2
-                    // rehydration. Skipped on --join-at-pass=2 itself
-                    // (sidecar already loaded; no need to round-trip).
-                    if (!config.ExpectReconciledInput
-                        && perFileParquetPaths.Count > 0)
-                    {
-                        var inputByFileName3 = new Dictionary<string, string>();
-                        foreach (var inputFile in config.InputFiles)
-                            inputByFileName3[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
-
-                        int pass2Failures = 0;
-                        foreach (var kvp in perFileEntries)
-                        {
-                            string fileName = kvp.Key;
-                            string inputFile3;
-                            if (!inputByFileName3.TryGetValue(fileName, out inputFile3))
-                                continue;
-                            try
-                            {
-                                FdrScoresSidecar.Write(
-                                    FdrScoresSidecar.Pass2Path(inputFile3),
-                                    kvp.Value, FdrScoresSidecar.Pass.SecondPass);
-                            }
-                            catch (Exception ex)
-                            {
-                                LogWarning(string.Format(
-                                    "Failed to write 2nd-pass FDR sidecar for {0}: {1}",
-                                    fileName, ex.Message));
-                                pass2Failures++;
-                            }
-                        }
-                        if (pass2Failures == 0)
-                        {
-                            LogInfo(string.Format(
-                                "Wrote 2nd-pass FDR sidecars for {0} file(s)",
-                                perFileEntries.Count));
-                        }
-                    }
-
-                    LogInfo("");
-                    LogInfo(string.Format("Running protein-level FDR at {0:P1}...",
-                        config.ProteinFdr.Value));
-                    var swProtein = Stopwatch.StartNew();
-                    RunProteinFdr(perFileEntries, fullLibrary, config);
-                    swProtein.Stop();
-                    LogInfo(string.Format("[TIMING] Protein FDR: {0:F1}s",
-                        swProtein.Elapsed.TotalSeconds));
-                }
-
-                // Stage 9: Write output blib
-                LogInfo("");
-                LogInfo(string.Format("Writing output to {0}...", config.OutputBlib));
-                var swBlib = Stopwatch.StartNew();
-                WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config);
-                swBlib.Stop();
-                LogInfo(string.Format("[TIMING] Blib output: {0:F1}s",
-                    swBlib.Elapsed.TotalSeconds));
+                    new MergeNode.MergeNodeTask(
+                        this, perFileEntries, fullLibrary,
+                        libraryById, perFileParquetPaths)
+                });
+                mergePipeline.Execute(mergeCtx);
 
                 stopwatch.Stop();
                 LogInfo("");
@@ -6379,8 +6326,10 @@ namespace pwiz.OspreySharp
 
         /// <summary>
         /// Run protein-level FDR using parsimony and picked-protein competition.
+        /// Internal so <c>MergeNodeTask</c> can drive it from the Phase A
+        /// task-based pipeline.
         /// </summary>
-        private void RunProteinFdr(
+        internal void RunProteinFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config)
@@ -6475,7 +6424,7 @@ namespace pwiz.OspreySharp
         /// <summary>
         /// Write passing entries to a BiblioSpec blib file.
         /// </summary>
-        private void WriteBlibOutput(
+        internal void WriteBlibOutput(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             List<LibraryEntry> fullLibrary,
             Dictionary<uint, LibraryEntry> libraryById,
