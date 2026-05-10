@@ -619,6 +619,18 @@ namespace pwiz.OspreySharp
                 }
                 string inputFile = config.InputFiles[inputIdx];
 
+                // Clone the outer config for this file's ScoringContexts.
+                // RunCoelutionScoring reassigns config.FragmentTolerance to
+                // the MS2-calibrated tolerance (AnalysisPipeline.cs ~line 3552);
+                // without a per-file clone the mutation persists on the outer
+                // config, leaks into subsequent files, AND poisons the
+                // WriteReconciledParquet hash stamp (config.SearchParameterHash()
+                // would then reflect the calibrated tolerance, not the value
+                // a fresh --join-at-pass=2 invocation recomputes from CLI
+                // defaults — causing search_hash mismatch errors). Mirrors
+                // the per-file clone pattern in ProcessFile.
+                var fileConfig = config.ShallowClone();
+
                 LogInfo(string.Format(
                     "Re-scoring file {0}/{1}: {2}", fileNum + 1, nTotalFiles, fileName));
                 LogInfo(string.Format(
@@ -704,7 +716,7 @@ namespace pwiz.OspreySharp
                 // RunCoelutionScoring inspects context.BoundaryOverrides
                 // inside ScoreCandidate and routes through the override
                 // peak-construction path.
-                var context = new ScoringContext(config, fileName);
+                var context = new ScoringContext(fileConfig, fileName);
                 context.BoundaryOverrides = boundaryOverrides;
                 context.OriginalRtMad = rtMadFromCalJson;
 
@@ -857,10 +869,10 @@ namespace pwiz.OspreySharp
                     if (gapFillLibrary.Count > 0)
                     {
                         // Pass 1: CWT pass with prefilter disabled. Clone
-                        // config so the disable doesn't bleed into other
-                        // files (OspreyConfig.ShallowClone gives us a new
-                        // instance whose mutations are local to this file).
-                        var cwtConfig = config.ShallowClone();
+                        // fileConfig (already a per-file clone) so the
+                        // disable is scoped to this CWT pass and doesn't
+                        // affect the forced-integration pass below.
+                        var cwtConfig = fileConfig.ShallowClone();
                         cwtConfig.PrefilterEnabled = false;
                         var cwtContext = new ScoringContext(cwtConfig, fileName);
                         cwtContext.OriginalRtMad = rtMadFromCalJson;
@@ -936,7 +948,7 @@ namespace pwiz.OspreySharp
                                 forcedLibrary.Add(libEntry);
                         }
 
-                        var forcedContext = new ScoringContext(config, fileName);
+                        var forcedContext = new ScoringContext(fileConfig, fileName);
                         forcedContext.BoundaryOverrides = forcedOverrides;
                         forcedContext.OriginalRtMad = rtMadFromCalJson;
 
