@@ -53,7 +53,12 @@ namespace pwiz.OspreySharp.IO
             (byte)'O', (byte)'S', (byte)'P', (byte)'R',
             (byte)'S', (byte)'P', (byte)'C', 0
         };
-        private const uint VERSION = 1;
+        // VERSION 2 (2026-05-09): mzML load now sorts non-monotonic centroids
+        // before caching, so caches written by VERSION 1 may contain unsorted
+        // peaks that produce undefined-behavior divergence in fragment matching.
+        // Old caches are invalidated on this version bump so the fresh load
+        // path (which sorts) re-populates them.
+        private const uint VERSION = 2;
 
         /// <summary>
         /// Save spectra to a binary cache file.

@@ -126,7 +126,24 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("[COUNT] Library targets loaded: {0}", nLibraryTargets));
 
                 List<LibraryEntry> decoys;
-                if (!config.DecoysInLibrary)
+                if (config.ExpectReconciledInput)
+                {
+                    // --join-at-pass=2: decoy LibraryEntries are unused
+                    // downstream. The reconciled parquet already carries
+                    // both target and decoy FDR rows with their stage-1-4
+                    // scores; Stage 5 is skipped, Stage 6 is skipped, and
+                    // the protein-parsimony / blib write paths both filter
+                    // on `entry.IsDecoy` (only target LibraryEntries get
+                    // looked up by entry_id). Skipping the rebuild saves
+                    // ~45s on Astral 1-file (BuildDecoyFromSequence +
+                    // RecalculateFragments dominated the Stage 7+blib
+                    // hotspot list). dotTrace OWN-time on Astral 1-file
+                    // Stage 7 cs run before this fix:
+                    //   BuildDecoyFromSequence  total=45665 ms (89% wall)
+                    //   GenerateDecoys.<>b__0   total=46792 ms
+                    decoys = new List<LibraryEntry>();
+                }
+                else if (!config.DecoysInLibrary)
                 {
                     List<LibraryEntry> validTargets;
                     decoys = GenerateDecoys(library, config, out validTargets);
@@ -188,17 +205,36 @@ namespace pwiz.OspreySharp
                 bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
                 int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
 
+                // In --input-scores mode without explicit -i, synthesize
+                // InputFiles from the parquet stems so downstream code
+                // (Stage 6 rescore's fileNameToIdx in particular) can map
+                // each file_name back to a real (synthetic) input path.
+                // Mirrors RescoreWorker.RunWorker's synthesis at
+                // AnalysisPipeline.Stage6Rescore.cs:104 and Rust's
+                // run_analysis idempotent synthesis at
+                // pipeline.rs ~line 3144.
+                if (joinOnly && (config.InputFiles == null || config.InputFiles.Count == 0))
+                {
+                    var synthetic = new List<string>(config.InputScores.Count);
+                    foreach (var p in config.InputScores)
+                        synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
+                    config.InputFiles = synthetic;
+                }
+
                 // Pre-compute the parquet footer metadata ONCE, against the
                 // unmutated outer config. ProcessFile clones the config per
                 // file and mutates FragmentTolerance during MS2 calibration,
                 // so reading config.SearchParameterHash() inside ProcessFile
                 // would produce a hash that the join-only validator would
-                // not recognize. Dictionary stays null in non-NoJoin runs
-                // (no parquet writing happens then).
-                Dictionary<string, string> noJoinMetadata = null;
-                if (config.NoJoin)
+                // not recognize. Built unconditionally (in any non-joinOnly
+                // mode) because Stage 6 reconciliation needs the per-file
+                // .scores.parquet on disk to lazily load CWT candidates —
+                // matches Rust's end-to-end behavior, which always writes
+                // the parquet sidecar regardless of --no-join.
+                Dictionary<string, string> parquetFooterMetadata = null;
+                if (!joinOnly)
                 {
-                    noJoinMetadata = new Dictionary<string, string>
+                    parquetFooterMetadata = new Dictionary<string, string>
                     {
                         { "osprey.version", Program.VERSION },
                         { "osprey.search_hash", config.SearchParameterHash() },
@@ -331,7 +367,7 @@ namespace pwiz.OspreySharp
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
                     LogInfo("");
                     LogInfo(string.Format("===== Processing file 1/1: {0} =====", inputFile));
-                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
+                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                 }
@@ -350,7 +386,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
                         if (fileResult != null)
                             perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                     }
@@ -374,7 +410,7 @@ namespace pwiz.OspreySharp
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         LogInfo(string.Format("===== Processing file {0}/{1}: {2} =====",
                             fileIdx + 1, config.InputFiles.Count, inputFile));
-                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, noJoinMetadata, perFileCalibrations);
+                        var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
                         if (fileResult != null)
                             fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
                     });
@@ -390,6 +426,20 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("[TIMING] All files processed: {0:F1}s",
                     swAllFiles.Elapsed.TotalSeconds));
 
+                // End-to-end (non-joinOnly) modes: populate perFileParquetPaths
+                // from config.InputFiles so Stage 6 reconciliation can locate
+                // each file's freshly-written .scores.parquet to lazy-load CWT
+                // candidates from. ProcessFile writes the parquet whenever
+                // parquetFooterMetadata != null (now always set in non-joinOnly mode).
+                if (!joinOnly)
+                {
+                    foreach (string inputFile in config.InputFiles)
+                    {
+                        string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                        perFileParquetPaths[fileName] = ParquetScoreCache.GetScoresPath(inputFile);
+                    }
+                }
+
                 int totalScored = 0;
                 foreach (var kvp in perFileEntries)
                     totalScored += kvp.Value.Count;
@@ -398,6 +448,62 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format(
                     "Coelution analysis complete. {0} total scored entries across {1} files",
                     totalScored, nFiles));
+
+                // --join-at-pass=2: load the 1st-pass FDR scores sidecar for
+                // each file onto the freshly-loaded stubs. The sidecar
+                // carries the persisted SVM scores + q-values from the
+                // straight-through pipeline run that produced these
+                // reconciled parquets. Without this load, RunFirstPassProteinFdr
+                // and the compaction step (next) would see uninitialized
+                // entry.Score = 0 / q = 1 for every entry — every protein
+                // group would tie at score 0 and the picked-protein FDR
+                // would collapse. Mirrors Rust pipeline.rs:3823 sidecar
+                // load order (1st-pass first, then 2nd-pass after
+                // compaction).
+                if (config.ExpectReconciledInput)
+                {
+                    // Build a fileName -> synthetic input path map so we
+                    // can resolve sidecar paths via FdrScoresSidecar
+                    // (which expects an mzML-style stem, not a parquet
+                    // stem). config.InputFiles was synthesized earlier
+                    // by RescoreHydration.SyntheticInputFromParquet,
+                    // which strips the trailing ".scores" — Pass1Path
+                    // then builds <dir>/<file_name>.1st-pass.fdr_scores.bin.
+                    var inputByFileName = new Dictionary<string, string>();
+                    foreach (var inputFile in config.InputFiles)
+                        inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+                    foreach (var kvp in perFileEntries)
+                    {
+                        string fileName = kvp.Key;
+                        var entries = kvp.Value;
+                        string inputFile;
+                        string sidecarPath = inputByFileName.TryGetValue(fileName, out inputFile)
+                            ? FdrScoresSidecar.Pass1Path(inputFile)
+                            : null;
+                        if (sidecarPath == null || !File.Exists(sidecarPath))
+                        {
+                            LogError(string.Format(
+                                "--join-at-pass=2: missing 1st-pass FDR sidecar for {0} " +
+                                "(expected at {1}). Re-run a straight-through pipeline to " +
+                                "produce the sidecar.",
+                                fileName, sidecarPath ?? "<unresolved>"));
+                            return 1;
+                        }
+                        if (!FdrScoresSidecar.TryRead(sidecarPath, entries,
+                                FdrScoresSidecar.Pass.FirstPass))
+                        {
+                            LogError(string.Format(
+                                "--join-at-pass=2: 1st-pass sidecar at {0} failed to load " +
+                                "(magic / version / pass-byte / count / size mismatch).",
+                                sidecarPath));
+                            return 1;
+                        }
+                    }
+                    LogInfo(string.Format(
+                        "--join-at-pass=2: loaded 1st-pass FDR sidecars for {0} file(s)",
+                        perFileEntries.Count));
+                }
 
                 if (perFileEntries.Count == 0 || totalScored == 0)
                 {
@@ -419,15 +525,29 @@ namespace pwiz.OspreySharp
                 }
 
                 // Stage 5: First-pass FDR
-                LogInfo("");
-                LogInfo(string.Format("Running {0} FDR control on coelution results...",
-                    config.FdrMethod));
+                // Skipped under --join-at-pass=2: the 1st-pass sidecar
+                // loaded above already carries the SVM scores + q-values
+                // from the straight-through pipeline run that produced
+                // the reconciled parquets. Re-running Percolator here
+                // would re-train SVMs on the same data and drift vs the
+                // sidecar. Mirrors Rust's compute_fdr_from_stubs skip
+                // (pipeline.rs:3916 "if !can_skip_fdr || expect_reconciled_input").
+                if (!config.ExpectReconciledInput)
+                {
+                    LogInfo("");
+                    LogInfo(string.Format("Running {0} FDR control on coelution results...",
+                        config.FdrMethod));
 
-                var swFdr = Stopwatch.StartNew();
-                RunFdr(perFileEntries, fullLibrary, config);
-                swFdr.Stop();
-                LogInfo(string.Format("[TIMING] Percolator/Simple FDR: {0:F1}s",
-                    swFdr.Elapsed.TotalSeconds));
+                    var swFdr = Stopwatch.StartNew();
+                    RunFdr(perFileEntries, fullLibrary, config);
+                    swFdr.Stop();
+                    LogInfo(string.Format("[TIMING] Percolator/Simple FDR: {0:F1}s",
+                        swFdr.Elapsed.TotalSeconds));
+                }
+                else
+                {
+                    LogInfo("--join-at-pass=2: skipping first-pass Percolator (sidecar provides q-values).");
+                }
 
                 // Log first-pass results
                 int passingTargets = 0;
@@ -466,8 +586,16 @@ namespace pwiz.OspreySharp
                 // symmetric set. Sets RunProteinQvalue on every FdrEntry,
                 // which Stage 6 reconciliation reads via the protein-rescue
                 // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
-                // ("First-pass protein FDR").
-                if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
+                // ("First-pass protein FDR"). Skipped on
+                // --join-at-pass=2: the 1st-pass FDR sidecar loaded above
+                // already carries RunProteinQvalue from the original
+                // straight-through pipeline. Re-running the deterministic
+                // protein-FDR computation on identical inputs would just
+                // overwrite the loaded values with the same numbers
+                // (~17s on Astral 1-file; saves duplicate work on every
+                // post-Stage-6 rehydration entry).
+                if (config.ProteinFdr.HasValue && perFileEntries.Count > 0
+                    && !config.ExpectReconciledInput)
                 {
                     LogInfo("");
                     LogInfo("First-pass protein FDR");
@@ -493,16 +621,24 @@ namespace pwiz.OspreySharp
                 // around persist_fdr_scores at line ~3180. Stage 6 workers
                 // re-derive the post-compaction set by applying the q-value
                 // threshold themselves, so they need every entry's q-values
-                // — not just the survivors.
-                int fdrSidecarFailures = WriteFdrScoresSidecars(
-                    perFileEntries, perFileParquetPaths, config);
-                if (fdrSidecarFailures > 0 && config.StopAfterStage5)
+                // — not just the survivors. Skipped on --join-at-pass=2:
+                // the 1st-pass sidecar is what we just LOADED from to seed
+                // entries, so re-writing produces the same bytes (any
+                // divergence would be a sidecar-load bug, not a write
+                // requirement). Saves ~6s I/O per --join-at-pass=2 invocation.
+                int fdrSidecarFailures = 0;
+                if (!config.ExpectReconciledInput)
                 {
-                    LogError(string.Format(
-                        "--join-at-pass=1 --join-only: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
-                        "writes failed; boundary file pair is incomplete. See warnings above.",
-                        fdrSidecarFailures, perFileEntries.Count));
-                    return 1;
+                    fdrSidecarFailures = WriteFdrScoresSidecars(
+                        perFileEntries, perFileParquetPaths, config);
+                    if (fdrSidecarFailures > 0 && config.StopAfterStage5)
+                    {
+                        LogError(string.Format(
+                            "--join-at-pass=1 --join-only: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
+                            "writes failed; boundary file pair is incomplete. See warnings above.",
+                            fdrSidecarFailures, perFileEntries.Count));
+                        return 1;
+                    }
                 }
 
                 if (perFileEntries.Count > 0)
@@ -536,6 +672,99 @@ namespace pwiz.OspreySharp
                         beforeCount, afterCount, firstPassBaseIds.Count));
                 }
 
+                // --join-at-pass=2: re-load the 2nd-pass FDR sidecar onto
+                // the post-compaction stub list. The 2nd-pass scores +
+                // q-values are what Stage 7 (protein FDR) and the blib
+                // writer consume. Loading happens AFTER compaction
+                // because the 2nd-pass sidecar was written from the
+                // post-compaction state — overlaying it before compaction
+                // would either silently miss records (if the pre-compaction
+                // entries dict happens to also contain compaction-dropped
+                // entry_ids that the 2nd-pass never saw) or scramble
+                // q-values on entries the 2nd-pass had already discarded.
+                // TryReadOverlay tolerates count mismatch (records whose
+                // entry_id is unknown to the caller's dict are skipped),
+                // so the constraint here is correctness-of-state, not
+                // size-equality. Mirrors Rust's load-order inversion at
+                // pipeline.rs:4030-4076.
+                if (config.ExpectReconciledInput)
+                {
+                    // Same input-by-fileName map shape as the 1st-pass
+                    // load above (sidecar paths derive from input file
+                    // stem, not parquet stem).
+                    var inputByFileName2 = new Dictionary<string, string>();
+                    foreach (var inputFile in config.InputFiles)
+                        inputByFileName2[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+                    foreach (var kvp in perFileEntries)
+                    {
+                        string fileName = kvp.Key;
+                        var entries = kvp.Value;
+                        // Sidecar overlay onto the compacted entry list.
+                        // The sidecar carries entry_ids per record, so we
+                        // skip the parquet re-read that earlier versions
+                        // used purely to size-check the load.
+                        string inputFile2;
+                        if (!inputByFileName2.TryGetValue(fileName, out inputFile2))
+                        {
+                            LogError(string.Format(
+                                "--join-at-pass=2: no synthetic input path for {0}", fileName));
+                            return 1;
+                        }
+                        // Prefer 2nd-pass sidecar; fall back to 1st-pass.
+                        // Rust skips 2nd-pass sidecar write on single-file
+                        // runs (pipeline.rs:4489 gates on input_files > 1)
+                        // and reuses 1st-pass SVM scores in that case. The
+                        // 2nd-pass sidecar's distinct contents arise only
+                        // when reconciliation actually rescores entries
+                        // (multi-file Stellar+Astral). Without this
+                        // fallback, single-file --join-at-pass=2 errors
+                        // even though the 1st-pass scores are equivalent.
+                        string sidecarPath = FdrScoresSidecar.Pass2Path(inputFile2);
+                        FdrScoresSidecar.Pass expectedPass = FdrScoresSidecar.Pass.SecondPass;
+                        if (!File.Exists(sidecarPath))
+                        {
+                            string pass1Path = FdrScoresSidecar.Pass1Path(inputFile2);
+                            if (!File.Exists(pass1Path))
+                            {
+                                LogError(string.Format(
+                                    "--join-at-pass=2: neither 2nd-pass nor 1st-pass FDR " +
+                                    "sidecar found for {0} (looked at {1} and {2}). Re-run a " +
+                                    "straight-through pipeline to produce them.",
+                                    fileName, sidecarPath, pass1Path));
+                                return 1;
+                            }
+                            sidecarPath = pass1Path;
+                            expectedPass = FdrScoresSidecar.Pass.FirstPass;
+                            LogInfo(string.Format(
+                                "--join-at-pass=2: 2nd-pass sidecar missing for {0}; " +
+                                "falling back to 1st-pass (matches Rust single-file behavior)",
+                                fileName));
+                        }
+                        // Overlay sidecar scores directly onto the
+                        // compacted list by entry_id. The sidecar's binary
+                        // format carries entry_ids per record, so we don't
+                        // need to re-read the parquet to size-match — that
+                        // re-read used to dominate Stage 7 cs walls (~7s
+                        // on Stellar 3-file). TryReadOverlay tolerates
+                        // sidecar entries that aren't in the compacted
+                        // dict (failing precursors dropped by compaction).
+                        var entriesByEntryId = new Dictionary<uint, FdrEntry>(entries.Count);
+                        for (int i = 0; i < entries.Count; i++)
+                            entriesByEntryId[entries[i].EntryId] = entries[i];
+                        if (!FdrScoresSidecar.TryReadOverlay(sidecarPath, entriesByEntryId, expectedPass))
+                        {
+                            LogError(string.Format(
+                                "--join-at-pass=2: sidecar at {0} failed to load (expected {1}).",
+                                sidecarPath, expectedPass));
+                            return 1;
+                        }
+                    }
+                    LogInfo(string.Format(
+                        "--join-at-pass=2: loaded 2nd-pass FDR sidecars for {0} file(s)",
+                        perFileEntries.Count));
+                }
+
                 // Stage 6: planning checkpoint — multi-charge consensus +
                 // cross-run consensus RTs + per-file calibration refit. The
                 // execution side (per-file rescore at locked boundaries +
@@ -543,7 +772,27 @@ namespace pwiz.OspreySharp
                 // pass exists to prove cross-impl byte parity at the start
                 // of Stage 6 via the three planning dumps below. Mirrors
                 // pipeline.rs Stage 6 entry block at lines 3208-3273.
-                if (perFileEntries.Count > 1 && config.Reconciliation.Enabled)
+                // Stage 6 runs even with a single file: multi-charge
+                // consensus needs multiple charge states of the same
+                // peptide (which can exist within a single run), and the
+                // rescore loop applies the consensus targets it produces.
+                // Cross-run reconciliation degenerates to zero actions on
+                // a single file, but the planning checkpoint and the
+                // multi-charge rescore must still execute to match Rust's
+                // single-file behavior. The earlier `Count > 1` guard
+                // silently produced different output between Rust and C#
+                // on single-file experiments.
+                //
+                // --join-at-pass=2 SKIPS Stage 6 entirely. The reconciled
+                // .scores.parquet + 2nd-pass sidecar combination already
+                // carries the post-Stage-6 state (including any rescored
+                // entries' final SVM scores). Re-running Stage 6 here
+                // would re-apply multi-charge consensus + reconciliation
+                // on top of already-reconciled data and drift vs the
+                // straight-through pipeline. Mirrors Rust's
+                // pipeline.rs:3823 expect_reconciled_input gate.
+                if (!config.ExpectReconciledInput
+                    && perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
                 {
                     LogInfo("");
                     LogInfo("Stage 6: planning");
@@ -600,11 +849,20 @@ namespace pwiz.OspreySharp
                     if (OspreyDiagnostics.DumpInvPredict)
                         invPredictTrace = new List<InvPredictRecord>();
 
-                    var consensus = ConsensusRts.Compute(
-                        perFileForRecon, perFileCalibrations,
-                        config.Reconciliation.ConsensusFdr,
-                        config.ProteinFdr ?? 0.0,
-                        invPredictTrace);
+                    // Cross-file consensus is only meaningful with > 1 file.
+                    // Mirrors Rust pipeline.rs:4146 where reconciliation_enabled
+                    // requires per_file_entries.len() > 1 — single-file runs
+                    // skip consensus computation, refit, and reconciliation
+                    // entirely, leaving multi-charge consensus rescore as the
+                    // only Stage 6 work performed.
+                    IReadOnlyList<PeptideConsensusRT> consensus =
+                        perFileEntries.Count > 1
+                            ? ConsensusRts.Compute(
+                                perFileForRecon, perFileCalibrations,
+                                config.Reconciliation.ConsensusFdr,
+                                config.ProteinFdr ?? 0.0,
+                                invPredictTrace)
+                            : Array.Empty<PeptideConsensusRT>();
 
                     if (invPredictTrace != null)
                     {
@@ -622,7 +880,15 @@ namespace pwiz.OspreySharp
                         "Stage 6 consensus: {0} target peptides, {1} decoy peptides",
                         nTargets, nDecoys));
 
-                    if (OspreyDiagnostics.DumpConsensus)
+                    // Skip the dump on empty consensus to match Rust's
+                    // dump_stage6_consensus, which silently elides the
+                    // file when there is nothing to write (the dump is
+                    // gated on Some(file) in Rust, derived from
+                    // !consensus.is_empty()). Without this gate, C#
+                    // emits a header-only cs_stage6_consensus.tsv and
+                    // Test-Regression sees an asymmetric-absence FAIL
+                    // even though both sides agree on the empty result.
+                    if (OspreyDiagnostics.DumpConsensus && consensus.Count > 0)
                     {
                         OspreyDiagnostics.WriteStage6ConsensusDump(consensus);
                         if (OspreyDiagnostics.ConsensusOnly)
@@ -726,7 +992,15 @@ namespace pwiz.OspreySharp
                         perFileForPlan.Add(new KeyValuePair<string,
                             IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
                     }
-                    if (perFileCwtCandidates.Count == perFileEntries.Count)
+                    // Match Rust pipeline.rs:4223: only run the reconciliation
+                    // planner when the cross-file consensus is non-empty.
+                    // Single-file runs (or any case where no peptide had
+                    // enough cross-replicate evidence to form a consensus
+                    // RT) degenerate to zero reconciliation actions in
+                    // Rust; C# previously planned regardless and produced
+                    // ~22k spurious use_cwt actions on Stellar single-file.
+                    if (perFileCwtCandidates.Count == perFileEntries.Count
+                        && consensus.Count > 0)
                     {
                         reconciliationActions = ReconciliationPlanner.Plan(
                             consensus,
@@ -738,6 +1012,10 @@ namespace pwiz.OspreySharp
                         LogInfo(string.Format(
                             "Stage 6 reconciliation: {0} per-(file, entry) actions planned",
                             reconciliationActions.Count));
+                    }
+                    else if (consensus.Count == 0)
+                    {
+                        LogInfo("Stage 6 reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
                     }
                     else
                     {
@@ -768,6 +1046,15 @@ namespace pwiz.OspreySharp
                     // companion was already written above pre-compaction).
                     // Pairs with the --join-at-pass=1 --no-join Stage 6
                     // worker mode (next sprint).
+                    //
+                    // Surfaces gap-fill targets via out param so the in-
+                    // process Stage 6 rescore call below can execute them.
+                    // Without that, gap-fill plans only landed in the
+                    // .reconciliation.json envelope and never ran in-
+                    // process — hidden on single-file runs (no inter-
+                    // replicate consensus -> 0 gap-fill plans), surfaced
+                    // on Stellar 3-file as a 1644-row stage6_rescored.tsv
+                    // delta vs Rust (1641 CWT + 3 forced gap-fill entries).
                     int reconWriteFailures = WriteReconciliationFiles(
                         perFileEntries,
                         reconciliationActions,
@@ -776,7 +1063,8 @@ namespace pwiz.OspreySharp
                         perFileCalibrations,
                         fullLibrary,
                         perFileParquetPaths,
-                        config);
+                        config,
+                        out var perFileGapFillForRescore);
 
                     if (config.StopAfterStage5)
                     {
@@ -796,18 +1084,17 @@ namespace pwiz.OspreySharp
                         return 0;
                     }
 
-                    // Stage 6 per-file rescore: PHASE 1 of the C# port —
-                    // existing entries (consensus + reconciliation overlay).
-                    // Gap-fill two-pass + reconciled .scores.parquet
-                    // write-back are the next porting phases. Mirrors the
-                    // Rust call site at pipeline.rs:run_analysis ~line 3850.
+                    // Stage 6 per-file rescore: consensus + reconciliation
+                    // overlay (Phase 1) plus gap-fill two-pass (Phase 2).
+                    // Mirrors the Rust call site at
+                    // pipeline.rs:run_analysis ~line 3850.
                     var rescoreStats = ExecuteStage6Rescore(
                         perFileEntries,
                         perFileConsensusTargets,
                         reconciliationActions ?? new Dictionary<(string, int), ReconcileAction>(),
                         refinedCalibrations,
                         perFileCalibrations,
-                        perFileGapFill: null,
+                        perFileGapFill: perFileGapFillForRescore,
                         perFileParquetPaths,
                         fullLibrary,
                         config);
@@ -839,6 +1126,55 @@ namespace pwiz.OspreySharp
                 // Stage 8: Protein FDR (optional)
                 if (config.ProteinFdr.HasValue)
                 {
+                    // Persist post-Stage-6 per-file 2nd-pass FDR scores
+                    // BEFORE RunProteinFdr. The sidecar holds Score +
+                    // run/experiment precursor/peptide q-values + Pep +
+                    // RunProteinQvalue (the latter set by
+                    // RunFirstPassProteinFdr earlier); none of those
+                    // fields are mutated by RunProteinFdr, which only
+                    // sets ExperimentProteinQvalue via
+                    // PropagateProteinQvalues. Writing here lets the
+                    // OSPREY_STAGE7_PROTEIN_FDR_ONLY early exit (used
+                    // by stage6 isolation in Test-Regression) leave the
+                    // sidecar on disk for downstream --join-at-pass=2
+                    // rehydration. Skipped on --join-at-pass=2 itself
+                    // (sidecar already loaded; no need to round-trip).
+                    if (!config.ExpectReconciledInput
+                        && perFileParquetPaths.Count > 0)
+                    {
+                        var inputByFileName3 = new Dictionary<string, string>();
+                        foreach (var inputFile in config.InputFiles)
+                            inputByFileName3[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+                        int pass2Failures = 0;
+                        foreach (var kvp in perFileEntries)
+                        {
+                            string fileName = kvp.Key;
+                            string inputFile3;
+                            if (!inputByFileName3.TryGetValue(fileName, out inputFile3))
+                                continue;
+                            try
+                            {
+                                FdrScoresSidecar.Write(
+                                    FdrScoresSidecar.Pass2Path(inputFile3),
+                                    kvp.Value, FdrScoresSidecar.Pass.SecondPass);
+                            }
+                            catch (Exception ex)
+                            {
+                                LogWarning(string.Format(
+                                    "Failed to write 2nd-pass FDR sidecar for {0}: {1}",
+                                    fileName, ex.Message));
+                                pass2Failures++;
+                            }
+                        }
+                        if (pass2Failures == 0)
+                        {
+                            LogInfo(string.Format(
+                                "Wrote 2nd-pass FDR sidecars for {0} file(s)",
+                                perFileEntries.Count));
+                        }
+                    }
+
                     LogInfo("");
                     LogInfo(string.Format("Running protein-level FDR at {0:P1}...",
                         config.ProteinFdr.Value));
@@ -1083,7 +1419,7 @@ namespace pwiz.OspreySharp
         private List<FdrEntry> ProcessFile(
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, OspreyConfig config,
-            Dictionary<string, string> noJoinMetadata,
+            Dictionary<string, string> parquetFooterMetadata,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrationsOut)
         {
             if (inputFile == null)
@@ -1305,6 +1641,16 @@ namespace pwiz.OspreySharp
                 nScoredTargets,
                 nScoredDecoys,
                 fileName));
+
+            // Drop double-counted entries (different precursors that latch
+            // onto the same chromatographic feature within an isolation
+            // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
+            // same call site, between scoring and pair-deduplication.
+            scoredEntries = DeduplicateDoubleCounting(
+                scoredEntries, fullLibrary, spectra, ms2Cal,
+                isolationWindows, config);
+            nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
+            nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
             LogInfo(string.Format(
                 "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
                 fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
@@ -1323,14 +1669,17 @@ namespace pwiz.OspreySharp
                 WriteFeatureDump(inputFile, fileName, scoredEntries);
             }
 
-            // --no-join: persist the full FdrEntry results (with features) to
-            // {stem}.scores.parquet so a subsequent --join-only invocation can
-            // pick them up without re-running Stages 1-4. Same path convention
-            // as Rust (`scores_path_for_input`). Snappy-compressed; cross-impl
-            // ZSTD/Snappy compatibility tracked as a Phase 4 follow-up.
-            // The metadata dictionary is precomputed in Run() against the
-            // original (un-mutated) outer config -- see Run() for why.
-            if (noJoinMetadata != null)
+            // Persist the full FdrEntry results (with features) to
+            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
+            // CWT candidates per file, and (b) a subsequent --join-only
+            // invocation can pick them up without re-running Stages 1-4.
+            // Same path convention as Rust (`scores_path_for_input`).
+            // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
+            // as a Phase 4 follow-up. The metadata dictionary is precomputed
+            // in Run() against the original (un-mutated) outer config — see
+            // Run() for why. Skipped only in --join-only mode (no Stages 1-4
+            // ran here, so there is nothing fresh to persist).
+            if (parquetFooterMetadata != null)
             {
                 string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
                 // Build a per-file lookup so the writer can pull
@@ -1342,10 +1691,10 @@ namespace pwiz.OspreySharp
                     libraryById[entry.Id] = entry;
                 var swParquet = Stopwatch.StartNew();
                 ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, noJoinMetadata, libraryById, fileName);
+                    parquetPath, scoredEntries, parquetFooterMetadata, libraryById, fileName);
                 swParquet.Stop();
                 LogInfo(string.Format(
-                    "[--no-join] Wrote {0} scored entries to {1} ({2:F1}s)",
+                    "Wrote {0} scored entries to {1} ({2:F1}s)",
                     scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
             }
 
@@ -1427,7 +1776,8 @@ namespace pwiz.OspreySharp
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             List<LibraryEntry> fullLibrary,
             Dictionary<string, string> perFileParquetPaths,
-            OspreyConfig config)
+            OspreyConfig config,
+            out Dictionary<string, List<GapFillTarget>> gapFillByFileOut)
         {
             string searchHash = config.SearchParameterHash();
             string libraryHash = config.LibraryIdentityHash();
@@ -1487,6 +1837,22 @@ namespace pwiz.OspreySharp
                 libLookup,
                 libPrecursorMz,
                 perFileIsolationMz: null);
+
+            // Mirror gapFillByFile into the out param for the in-process
+            // Stage 6 rescore caller. Identify returns IReadOnlyList<>;
+            // ExecuteStage6Rescore's perFileGapFill type is
+            // IReadOnlyDictionary<string, List<GapFillTarget>>, so build
+            // a List<> per file. The conversion is per-file (3-15 files
+            // typical), each list 100-3000 GapFillTarget structs.
+            gapFillByFileOut = new Dictionary<string, List<GapFillTarget>>(
+                gapFillByFile.Count, StringComparer.Ordinal);
+            foreach (var kvp in gapFillByFile)
+            {
+                var copy = new List<GapFillTarget>(kvp.Value.Count);
+                foreach (var g in kvp.Value)
+                    copy.Add(g);
+                gapFillByFileOut[kvp.Key] = copy;
+            }
 
             int failures = 0;
             foreach (var kvp in perFileEntries)
@@ -2172,7 +2538,7 @@ namespace pwiz.OspreySharp
             var swLda = Stopwatch.StartNew();
             var matchArray = matches.ToArray();
             // Sort deterministically by (base_id, entry_id) so LDA sees a stable order.
-            Array.Sort(matchArray, (a, b) =>
+            Array.Sort(matchArray, (a, b) => // Array.Sort OK: comparator's secondary key is the unique EntryId, so no ties
             {
                 uint baseA = a.EntryId & 0x7FFFFFFF;
                 uint baseB = b.EntryId & 0x7FFFFFFF;
@@ -5188,8 +5554,275 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
-        /// Deduplicate scored entries: keep best target and best decoy per base_id.
+        /// Within each isolation window, drop scored entries whose top-6
+        /// fragment lists overlap >= 50% with another same-class entry
+        /// eluting within +/-5 spectra. Of each colliding pair, the
+        /// entry with the higher coelution_sum survives. Mirrors
+        /// osprey/crates/osprey/src/pipeline.rs::deduplicate_double_counting
+        /// so the same precursor cannot be counted twice from a shared
+        /// chromatographic feature.
         /// </summary>
+        private List<FdrEntry> DeduplicateDoubleCounting(
+            List<FdrEntry> entries,
+            List<LibraryEntry> library,
+            IList<Spectrum> spectra,
+            MzCalibrationResult ms2Cal,
+            List<IsolationWindow> isolationWindows,
+            OspreyConfig config)
+        {
+            int originalCount = entries.Count;
+            if (originalCount == 0 || isolationWindows == null || isolationWindows.Count == 0)
+                return entries;
+
+            // Effective fragment tolerance: 3-sigma from MS2 calibration when
+            // calibrated, falling back to the configured value. Floors at
+            // 0.05 Da / 1 ppm so a tightly fit calibration cannot collapse
+            // the matcher to a sub-isotope window.
+            double fragTolValue;
+            ToleranceUnit fragTolUnit;
+            if (ms2Cal != null && ms2Cal.Calibrated)
+            {
+                double tol3sd = 3.0 * ms2Cal.SD;
+                fragTolUnit = string.Equals(ms2Cal.Unit, "Th", StringComparison.OrdinalIgnoreCase)
+                    ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
+                double minTol = fragTolUnit == ToleranceUnit.Mz ? 0.05 : 1.0;
+                fragTolValue = Math.Max(tol3sd, minTol);
+            }
+            else
+            {
+                fragTolValue = config.FragmentTolerance.Tolerance;
+                fragTolUnit  = config.FragmentTolerance.Unit;
+            }
+
+            // RT neighborhood = 5 x median spectrum spacing.
+            double rtNeighborhood;
+            {
+                var sortedRts = new List<double>(spectra.Count);
+                foreach (var s in spectra) sortedRts.Add(s.RetentionTime);
+                sortedRts.Sort();
+                // Dedup adjacent identicals
+                int writeIdx = 0;
+                for (int i = 0; i < sortedRts.Count; i++)
+                {
+                    if (i == 0 || sortedRts[i] != sortedRts[i - 1])
+                    {
+                        sortedRts[writeIdx++] = sortedRts[i];
+                    }
+                }
+                if (writeIdx < sortedRts.Count) sortedRts.RemoveRange(writeIdx, sortedRts.Count - writeIdx);
+                if (sortedRts.Count < 2)
+                {
+                    rtNeighborhood = 0.25; // 5 * 0.05 fallback
+                }
+                else
+                {
+                    var intervals = new List<double>(sortedRts.Count - 1);
+                    for (int i = 1; i < sortedRts.Count; i++)
+                        intervals.Add(sortedRts[i] - sortedRts[i - 1]);
+                    intervals.Sort();
+                    rtNeighborhood = 5.0 * intervals[intervals.Count / 2];
+                }
+            }
+
+            // Library lookup by EntryId (Id may not be array-index aligned).
+            var libIdMap = new Dictionary<uint, int>(library.Count);
+            for (int i = 0; i < library.Count; i++) libIdMap[library[i].Id] = i;
+
+            // Resolve each entry's precursor m/z from the library by
+            // EntryId. FdrEntry is a lightweight stub (no PrecursorMz);
+            // the library knows. Entries whose EntryId is missing from
+            // the library are excluded from dedup (and from the
+            // partition below) — they're left untouched downstream.
+            int n = entries.Count;
+            double[] entryMz = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                int libIdx;
+                entryMz[i] = libIdMap.TryGetValue(entries[i].EntryId, out libIdx)
+                    ? library[libIdx].PrecursorMz
+                    : double.NaN;
+            }
+
+            // Per-window entry indices via sorted-mz partition. Exclusive
+            // upper bound [lower, upper) makes every entry belong to at
+            // most one window — no cross-window write conflicts.
+            int[] mzSortedIdx = new int[n];
+            for (int i = 0; i < n; i++) mzSortedIdx[i] = i;
+            Array.Sort(mzSortedIdx, (a, b) => entryMz[a].CompareTo(entryMz[b])); // Array.Sort OK: tied entryMz partition into the same window; per-window order is then re-derived inside the window loop. TODO(parity): audit whether stable order is needed if downstream becomes order-sensitive.
+            double[] mzSortedVal = new double[n];
+            for (int i = 0; i < n; i++) mzSortedVal[i] = entryMz[mzSortedIdx[i]];
+
+            int LowerBoundLt(double v)
+            {
+                int lo = 0, hi = mzSortedVal.Length;
+                while (lo < hi) { int m = (lo + hi) >> 1;
+                    if (mzSortedVal[m] < v) lo = m + 1; else hi = m; }
+                return lo;
+            }
+
+            var windowEntries = new List<int[]>(isolationWindows.Count);
+            foreach (var w in isolationWindows)
+            {
+                int lo = LowerBoundLt(w.LowerBound);
+                int hi = LowerBoundLt(w.UpperBound);
+                int len = hi - lo;
+                int[] arr = new int[len];
+                for (int i = 0; i < len; i++) arr[i] = mzSortedIdx[lo + i];
+                windowEntries.Add(arr);
+            }
+
+            // Removal flags. Each entry with a library mapping is in at
+            // most one window so a plain bool[] is safe under per-window
+            // parallelism. Entries without a library mapping (EntryId
+            // missing from libIdMap; entryMz = NaN) can land in multiple
+            // windows via the LowerBoundLt scan, but the inner pair
+            // loop's libIdMap.TryGetValue short-circuits before any
+            // write to removed[], so the bool[] still has at most one
+            // writer per slot.
+            bool[] removed = new bool[n];
+
+            Parallel.ForEach(windowEntries, indices =>
+            {
+                if (indices.Length < 2) return;
+
+                int[] rtSorted = (int[])indices.Clone();
+                // Stable sort: apex_rt then base_id then entry_id (matches
+                // Rust's deterministic tiebreaker for the dedup pass).
+                Array.Sort(rtSorted, (a, b) => // Array.Sort OK: comparator's terminal key is the unique EntryId, so no ties
+                {
+                    int c = entries[a].ApexRt.CompareTo(entries[b].ApexRt);
+                    if (c != 0) return c;
+                    uint baseA = entries[a].EntryId & 0x7FFFFFFFu;
+                    uint baseB = entries[b].EntryId & 0x7FFFFFFFu;
+                    c = baseA.CompareTo(baseB);
+                    if (c != 0) return c;
+                    return entries[a].EntryId.CompareTo(entries[b].EntryId);
+                });
+
+                for (int iPos = 0; iPos < rtSorted.Length; iPos++)
+                {
+                    int idxA = rtSorted[iPos];
+                    if (removed[idxA]) continue;
+                    double apexA = entries[idxA].ApexRt;
+
+                    for (int jPos = iPos + 1; jPos < rtSorted.Length; jPos++)
+                    {
+                        int idxB = rtSorted[jPos];
+                        double apexB = entries[idxB].ApexRt;
+                        if (apexB - apexA > rtNeighborhood) break;
+                        if (removed[idxB]) continue;
+                        if (entries[idxA].IsDecoy != entries[idxB].IsDecoy) continue;
+
+                        int libIdxA, libIdxB;
+                        if (!libIdMap.TryGetValue(entries[idxA].EntryId, out libIdxA)) continue;
+                        if (!libIdMap.TryGetValue(entries[idxB].EntryId, out libIdxB)) continue;
+
+                        var fragsA = library[libIdxA].Fragments;
+                        var fragsB = library[libIdxB].Fragments;
+                        int overlap = CountTopNFragmentOverlap(fragsA, fragsB, 6,
+                            fragTolValue, fragTolUnit);
+                        int minA = Math.Min(fragsA.Count, 6);
+                        int minB = Math.Min(fragsB.Count, 6);
+                        int threshold = (int)Math.Ceiling(Math.Min(minA, minB) * 0.5);
+                        if (overlap < threshold) continue;
+
+                        if (entries[idxA].CoelutionSum >= entries[idxB].CoelutionSum)
+                        {
+                            removed[idxB] = true;
+                        }
+                        else
+                        {
+                            removed[idxA] = true;
+                            break; // idxA is gone; further pairs irrelevant
+                        }
+                    }
+                }
+            });
+
+            int removedCount = 0;
+            int removedTargets = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (!removed[i]) continue;
+                removedCount++;
+                if (!entries[i].IsDecoy) removedTargets++;
+            }
+            int removedDecoys = removedCount - removedTargets;
+            if (removedCount > 0)
+            {
+                LogInfo(string.Format(
+                    "Double-counting deduplication: removed {0} entries " +
+                    "({1} targets, {2} decoys; {3} remaining)",
+                    removedCount, removedTargets, removedDecoys,
+                    originalCount - removedCount));
+            }
+
+            var kept = new List<FdrEntry>(originalCount - removedCount);
+            for (int i = 0; i < n; i++)
+                if (!removed[i]) kept.Add(entries[i]);
+            return kept;
+        }
+
+        /// <summary>
+        /// Count how many of the top-N (by intensity) m/z values from
+        /// <paramref name="fragsA"/> have a match within tolerance in
+        /// the top-N of <paramref name="fragsB"/>. Mirrors
+        /// osprey/crates/osprey/src/pipeline.rs::count_topn_fragment_overlap.
+        /// </summary>
+        private static int CountTopNFragmentOverlap(
+            IList<LibraryFragment> fragsA, IList<LibraryFragment> fragsB,
+            int n, double tolerance, ToleranceUnit unit)
+        {
+            double[] topA = TopNFragmentMzs(fragsA, n);
+            double[] topB = TopNFragmentMzs(fragsB, n);
+            Array.Sort(topB); // Array.Sort OK: single primitive array used only for binary-search of m/z; tie-ordering doesn't affect match-or-not
+            int matches = 0;
+            for (int i = 0; i < topA.Length; i++)
+            {
+                double mz = topA[i];
+                double tolDa = unit == ToleranceUnit.Ppm ? mz * tolerance / 1e6 : tolerance;
+                double lo = mz - tolDa;
+                double hi = mz + tolDa;
+                int idx = LowerBoundDouble(topB, lo);
+                if (idx < topB.Length && topB[idx] <= hi) matches++;
+            }
+            return matches;
+        }
+
+        /// <summary>Get m/z values of top-N fragments by intensity (stable on ties).</summary>
+        private static double[] TopNFragmentMzs(IList<LibraryFragment> fragments, int n)
+        {
+            if (fragments.Count <= n)
+            {
+                var all = new double[fragments.Count];
+                for (int i = 0; i < fragments.Count; i++) all[i] = fragments[i].Mz;
+                return all;
+            }
+            // Stable sort by descending intensity (matches Rust slice::sort_by).
+            var idx = new int[fragments.Count];
+            for (int i = 0; i < idx.Length; i++) idx[i] = i;
+            Array.Sort(idx, (a, b) => // Array.Sort OK: comparator's secondary key is the unique fragment index, so no ties
+            {
+                int c = fragments[b].RelativeIntensity.CompareTo(fragments[a].RelativeIntensity);
+                return c != 0 ? c : a.CompareTo(b);
+            });
+            var top = new double[n];
+            for (int i = 0; i < n; i++) top[i] = fragments[idx[i]].Mz;
+            return top;
+        }
+
+        /// <summary>Smallest index i where arr[i] >= v (sorted ascending).</summary>
+        private static int LowerBoundDouble(double[] arr, double v)
+        {
+            int lo = 0, hi = arr.Length;
+            while (lo < hi)
+            {
+                int m = (lo + hi) >> 1;
+                if (arr[m] < v) lo = m + 1; else hi = m;
+            }
+            return lo;
+        }
+
         private List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
         {
             // Group by base_id (mask off high bit)
@@ -6120,8 +6753,44 @@ namespace pwiz.OspreySharp
                         kvp.Key + ".mzML", libraryIdName, fdrThreshold);
                 }
 
-                foreach (var kvp in bestByPrecursor.Values)
+                // Parallel pre-compress pass. Per-spectrum zlib (Ionic.Zlib
+                // level 6) dominates the blib write wall (~12s of the
+                // observed 26s C# Stellar 3-file blib run); the SQLite
+                // INSERT itself is fast and must stay sequential because
+                // BlibWriter holds a single connection. Pre-compute
+                // (mzBlob, intBlob, numPeaks) for every entry in parallel,
+                // then drive AddSpectrumPrecompressed in iteration order
+                // so RefSpectra row IDs stay deterministic. Mirrors the
+                // Skyline BlibDb pattern in Model/Lib/BlibData/BlibDb.cs.
+                var blibEntries = bestByPrecursor.Values.ToList();
+                int blibN = blibEntries.Count;
+                var blibMzBlobs = new byte[blibN][];
+                var blibIntBlobs = new byte[blibN][];
+                var blibNumPeaks = new int[blibN];
+                Parallel.For(0, blibN,
+                    new ParallelOptions { MaxDegreeOfParallelism = config.NThreads },
+                    i =>
+                    {
+                        var entry = blibEntries[i].Value;
+                        LibraryEntry libEntryP;
+                        if (!libraryById.TryGetValue(entry.EntryId, out libEntryP))
+                            return;
+                        int nFrags = libEntryP.Fragments.Count;
+                        var mzsP = new double[nFrags];
+                        var intsP = new float[nFrags];
+                        for (int j = 0; j < nFrags; j++)
+                        {
+                            mzsP[j] = libEntryP.Fragments[j].Mz;
+                            intsP[j] = libEntryP.Fragments[j].RelativeIntensity;
+                        }
+                        blibMzBlobs[i] = BlibWriter.CompressMzs(mzsP);
+                        blibIntBlobs[i] = BlibWriter.CompressIntensities(intsP);
+                        blibNumPeaks[i] = nFrags;
+                    });
+
+                for (int blibIdx = 0; blibIdx < blibN; blibIdx++)
                 {
+                    var kvp = blibEntries[blibIdx];
                     string fileName = kvp.Key;
                     var entry = kvp.Value;
 
@@ -6131,14 +6800,9 @@ namespace pwiz.OspreySharp
 
                     long fileId = sourceFileIds[fileName];
 
-                    // Extract fragment arrays from library
-                    double[] mzs = new double[libEntry.Fragments.Count];
-                    float[] intensities = new float[libEntry.Fragments.Count];
-                    for (int i = 0; i < libEntry.Fragments.Count; i++)
-                    {
-                        mzs[i] = libEntry.Fragments[i].Mz;
-                        intensities[i] = libEntry.Fragments[i].RelativeIntensity;
-                    }
+                    byte[] mzBlobPre = blibMzBlobs[blibIdx];
+                    byte[] intBlobPre = blibIntBlobs[blibIdx];
+                    int numPeaksPre = blibNumPeaks[blibIdx];
 
                     // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value
                     // (min across all observations of this (modseq, charge)
@@ -6184,7 +6848,7 @@ namespace pwiz.OspreySharp
                         sharedEnd = sharedVals[2];
                     }
 
-                    long refId = writer.AddSpectrum(
+                    long refId = writer.AddSpectrumPrecompressed(
                         libEntry.Sequence,
                         libEntry.ModifiedSequence,
                         libEntry.PrecursorMz,
@@ -6192,7 +6856,7 @@ namespace pwiz.OspreySharp
                         sharedApex,
                         sharedStart,
                         sharedEnd,
-                        mzs, intensities,
+                        mzBlobPre, intBlobPre, numPeaksPre,
                         scoreQvalue, fileId, nRunsDetected, 0.0);
 
                     // Add modifications

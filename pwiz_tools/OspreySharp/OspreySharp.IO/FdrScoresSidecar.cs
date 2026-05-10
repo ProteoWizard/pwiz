@@ -110,6 +110,28 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
+        /// Compute <c>HeaderLength + headerCount * RecordLength</c> with
+        /// overflow detection. Returns false if the result would not fit
+        /// in <see cref="int"/> (a corrupt or malicious sidecar with a
+        /// huge headerCount would otherwise wrap silently and let the
+        /// size check pass spuriously, leading to out-of-bounds reads in
+        /// the record loop).
+        /// </summary>
+        private static bool TryComputeExpectedLen(ulong headerCount, out int expectedLen)
+        {
+            try
+            {
+                expectedLen = checked(HeaderLength + (int)headerCount * RecordLength);
+                return true;
+            }
+            catch (OverflowException)
+            {
+                expectedLen = 0;
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Path for the first-pass FDR scores sidecar of a given input
         /// file: <c>&lt;dir&gt;/&lt;stem&gt;.1st-pass.fdr_scores.bin</c>.
         /// Mirrors Rust's <c>fdr_scores_path_pass1</c>.
@@ -201,11 +223,32 @@ namespace pwiz.OspreySharp.IO
         /// Read per-file FDR scores from <paramref name="path"/> into
         /// <paramref name="entries"/>. Returns true on success, false on
         /// any of: missing file, bad magic, unsupported version, pass-byte
-        /// mismatch against <paramref name="expectedPass"/>, count
-        /// mismatch, or size mismatch. Records are positional, so the
-        /// caller's <paramref name="entries"/> list must already be sized
-        /// to match the FdrEntry sequence the sidecar was written from
-        /// (pre-compaction at the Stage 5 → Stage 6 boundary).
+        /// mismatch against <paramref name="expectedPass"/>, or size
+        /// mismatch (file length doesn't match header count + record
+        /// width).
+        ///
+        /// Records are matched to entries by <c>entry_id</c>, NOT by
+        /// position. This handles two multi-file realities:
+        /// <list type="bullet">
+        /// <item>The 1st-pass sidecar is written PRE-gap-fill (stage 5
+        /// boundary), so its row count is smaller than the reconciled
+        /// parquet's row count after Stage 6 appends gap-fill stubs.
+        /// Gap-fill stubs in <paramref name="entries"/> get no record
+        /// applied — they keep their default (Score=0, q=1) values.</item>
+        /// <item>The 2nd-pass sidecar is written POST-compaction +
+        /// post-rescore + post-gap-fill, so its row count is smaller
+        /// than the full reconciled parquet's row count. Entries not
+        /// in the sidecar get no record applied.</item>
+        /// </list>
+        /// Single-file (or any case where sidecar count == entry count)
+        /// degenerates to position-based loading because the entry_id
+        /// dictionary lookup matches one-to-one. The original strict
+        /// position+entry_id check this method previously enforced was
+        /// hiding the post-compaction / post-gap-fill mismatch on
+        /// multi-file runs (1644-row delta on Stellar 3-file
+        /// stage6_rescored.tsv was rooted in the 1st-pass loader
+        /// rejecting Rust's pre-gap-fill sidecar against the post-gap-
+        /// fill parquet load).
         /// </summary>
         public static bool TryRead(string path, IList<FdrEntry> entries, Pass expectedPass)
         {
@@ -240,20 +283,110 @@ namespace pwiz.OspreySharp.IO
                 return false;
             // bytes 10..16 reserved, ignored
             ulong headerCount = BitConverter.ToUInt64(data, 16);
-            if (headerCount != (ulong)entries.Count)
+            // Reject sidecars whose declared count exceeds physical
+            // record capacity. (headerCount can validly be < entries
+            // count — see comment above on pre-gap-fill / post-
+            // compaction sidecars.) Use checked arithmetic so a
+            // corrupt or malicious sidecar with a huge headerCount
+            // is rejected loudly instead of wrapping int silently.
+            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
                 return false;
-
-            int expectedLen = HeaderLength + entries.Count * RecordLength;
             if (data.Length != expectedLen)
                 return false;
 
+            // Build lookup so position-skewed entries align by entry_id.
+            // Single-file degenerates to a 1:1 map (no perf cost vs the
+            // old positional walk).
+            var byEntryId = new Dictionary<uint, int>(entries.Count);
             for (int i = 0; i < entries.Count; i++)
+                byEntryId[entries[i].EntryId] = i;
+
+            for (int rec = 0; rec < (int)headerCount; rec++)
             {
-                int off = HeaderLength + i * RecordLength;
-                var e = entries[i];
+                int off = HeaderLength + rec * RecordLength;
                 uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
-                if (recordEntryId != e.EntryId)
+                if (!byEntryId.TryGetValue(recordEntryId, out int entryIdx))
+                {
+                    // Sidecar carries an entry the caller's stub list
+                    // doesn't contain. The caller is expected to pass
+                    // a SUPERSET of the sidecar's entries (the post-
+                    // rescore parquet for the 1st-pass sidecar, for
+                    // example) — a record that fails to find its
+                    // entry_id signals the sidecar was written from a
+                    // different parquet (or from a different binary
+                    // version with different entry_id assignment). That
+                    // is corruption, not the gap-fill or post-compaction
+                    // case we tolerate, and must be rejected.
                     return false;
+                }
+                var e = entries[entryIdx];
+                e.Score                       = BitConverter.ToDouble(data, off + 4);
+                e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
+                e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);
+                e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
+                e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
+                e.Pep                         = BitConverter.ToDouble(data, off + 44);
+                e.RunProteinQvalue            = BitConverter.ToDouble(data, off + 52);
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Overlay sidecar scores onto <paramref name="entriesByEntryId"/>
+        /// without requiring a parquet stub list. Same validation rules as
+        /// <see cref="TryRead(string,IList{FdrEntry},Pass)"/>, but the
+        /// caller supplies an entry_id-keyed dictionary directly so we
+        /// skip rereading the source parquet just to size-check the
+        /// sidecar. Used by --join-at-pass=2 Stage 7 where the compacted
+        /// entry list already covers every sidecar record we care about.
+        /// </summary>
+        public static bool TryReadOverlay(string path,
+            IDictionary<uint, FdrEntry> entriesByEntryId, Pass expectedPass)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (entriesByEntryId == null) throw new ArgumentNullException(nameof(entriesByEntryId));
+
+            byte[] data;
+            try
+            {
+                data = File.ReadAllBytes(path);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (data.Length < HeaderLength)
+                return false;
+            for (int i = 0; i < Magic.Length; i++)
+            {
+                if (data[i] != Magic[i])
+                    return false;
+            }
+            byte version = data[8];
+            if (version != FormatVersion)
+                return false;
+            byte passByte = data[9];
+            if (passByte != (byte)expectedPass)
+                return false;
+            ulong headerCount = BitConverter.ToUInt64(data, 16);
+            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                return false;
+            if (data.Length != expectedLen)
+                return false;
+
+            for (int rec = 0; rec < (int)headerCount; rec++)
+            {
+                int off = HeaderLength + rec * RecordLength;
+                uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
+                if (!entriesByEntryId.TryGetValue(recordEntryId, out FdrEntry e))
+                {
+                    // Sidecar can carry entries not in the (possibly
+                    // compacted) caller dict — that's expected for
+                    // --join-at-pass=2 where compaction has already
+                    // dropped failing precursors. Skip silently.
+                    continue;
+                }
                 e.Score                       = BitConverter.ToDouble(data, off + 4);
                 e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
                 e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);

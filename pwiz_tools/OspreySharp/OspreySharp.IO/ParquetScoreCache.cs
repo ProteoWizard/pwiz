@@ -1071,6 +1071,28 @@ namespace pwiz.OspreySharp.IO
                     return err;
                 if (warning != null && logWarning != null)
                     logWarning(warning);
+
+                // --join-at-pass=2 strict reconciled-input gate. Mirrors
+                // Rust pipeline.rs:3313-3344: every input parquet must
+                // carry osprey.reconciled = "true" so the operator
+                // cannot mix raw Stage 4 parquets into a Stages 7-8-only
+                // run. Failing fast here is the contract that lets the
+                // post-Stage-6 entry point be a useful HPC boundary
+                // (sidecar fanout across compute nodes).
+                if (config.ExpectReconciledInput)
+                {
+                    string cachedReconciled;
+                    kv.TryGetValue("osprey.reconciled", out cachedReconciled);
+                    if (!string.Equals(cachedReconciled, "true", StringComparison.Ordinal))
+                    {
+                        return string.Format(
+                            "--join-at-pass=2 requires a reconciled (post-Stage-6) parquet, " +
+                            "but {0} has osprey.reconciled = '{1}'. Either it is a Stage 4 " +
+                            "(raw) parquet — in which case use --join-at-pass=1 — or run a " +
+                            "full pipeline first to produce reconciled parquets.",
+                            path, cachedReconciled ?? "<unset>");
+                    }
+                }
             }
             return null;
         }

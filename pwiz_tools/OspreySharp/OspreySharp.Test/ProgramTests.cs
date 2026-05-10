@@ -274,12 +274,28 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
-        public void TestNormalizeJoinAtPass2ErrorsUntilImplemented()
+        public void TestNormalizeJoinAtPass2InProcessSucceeds()
         {
+            // `--join-at-pass=2` (without --no-join) is the post-Stage-6
+            // reconciled-parquet entry point. Routes through the existing
+            // joinOnly Stage 5+ path; the in-pipeline reconciled-input
+            // gate enforces the strict input contract.
             bool noJoin = false, joinOnly = false;
             string err = Program.NormalizeHpcArgs(joinAtPass: 2, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
+            Assert.IsNull(err);
+            Assert.IsTrue(joinOnly, "joinOnly should be set so Stage 5+ input-scores path runs");
+            Assert.IsFalse(noJoin);
+        }
+
+        [TestMethod]
+        public void TestNormalizeJoinAtPass2NoJoinNotImplemented()
+        {
+            // `--join-at-pass=2 --no-join` is the per-file Stage 7 worker
+            // mode (not yet ported); should still error.
+            bool noJoin = true, joinOnly = false;
+            string err = Program.NormalizeHpcArgs(joinAtPass: 2, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "not yet implemented");
+            StringAssert.Contains(err, "not implemented");
         }
 
         [TestMethod]

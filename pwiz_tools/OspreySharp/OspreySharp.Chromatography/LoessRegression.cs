@@ -327,7 +327,7 @@ namespace pwiz.OspreySharp.Chromatography
             if (values == null || values.Length == 0)
                 return 0.0;
             double[] sorted = (double[])values.Clone();
-            Array.Sort(sorted);
+            Array.Sort(sorted); // Array.Sort OK: median of single primitive array, no parallel data
             int mid = sorted.Length / 2;
             return sorted.Length % 2 == 0
                 ? (sorted[mid - 1] + sorted[mid]) / 2.0
@@ -362,7 +362,7 @@ namespace pwiz.OspreySharp.Chromatography
             if (values == null || values.Length == 0)
                 return 0.0;
             double[] sorted = (double[])values.Clone();
-            Array.Sort(sorted);
+            Array.Sort(sorted); // Array.Sort OK: percentile of single primitive array, no parallel data
             // Round half away from zero to match Rust's f64::round(). The
             // default Math.Round uses banker's rounding (round-to-even),
             // which disagrees on exactly .5 values -- e.g. n=6398, p=0.50
