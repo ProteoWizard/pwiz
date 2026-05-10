@@ -21,6 +21,7 @@
     <ProjectReference Include="..\OspreySharp.Chromatography\OspreySharp.Chromatography.csproj" />
     <ProjectReference Include="..\OspreySharp.Scoring\OspreySharp.Scoring.csproj" />
     <ProjectReference Include="..\OspreySharp.FDR\OspreySharp.FDR.csproj" />
+    <ProjectReference Include="..\OspreySharp.Tasks\OspreySharp.Tasks.csproj" />
   </ItemGroup>
 
 </Project>
