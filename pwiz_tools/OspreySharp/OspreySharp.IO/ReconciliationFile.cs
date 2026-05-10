@@ -136,18 +136,15 @@ namespace pwiz.OspreySharp.IO
             if (!json.EndsWith("\n", StringComparison.Ordinal))
                 json += "\n";
 
-            string tmpPath = path + ".tmp";
-            try
+            // Atomic write via FileSaver: a sibling temp file is
+            // promoted to the destination on Commit; on exception, the
+            // using-block disposes FileSaver which deletes the temp
+            // without touching the destination. See
+            // OspreySharp.IO.FileSaver for details.
+            using (var saver = new FileSaver(path))
             {
-                File.WriteAllText(tmpPath, json);
-                if (File.Exists(path))
-                    File.Delete(path);
-                File.Move(tmpPath, path);
-            }
-            finally
-            {
-                if (File.Exists(tmpPath))
-                    File.Delete(tmpPath);
+                File.WriteAllText(saver.SafeName, json);
+                saver.Commit();
             }
         }
 
