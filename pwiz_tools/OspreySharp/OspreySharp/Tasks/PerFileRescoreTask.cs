@@ -85,7 +85,7 @@ namespace pwiz.OspreySharp.PerFileRescore
 
         public override string Name => @"PerFileRescore";
 
-        public override void Run(PipelineContext ctx)
+        public override bool Run(PipelineContext ctx)
         {
             var rescoreStats = _pipeline.ExecuteStage6Rescore(
                 _perFileEntries,
@@ -120,6 +120,7 @@ namespace pwiz.OspreySharp.PerFileRescore
             OspreyDiagnostics.CloseMpInputsDump();
             OspreyDiagnostics.ClosePredictRtDump();
             OspreyDiagnostics.CloseCwtPathDump();
+            return true;
         }
     }
 }

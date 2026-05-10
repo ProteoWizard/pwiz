@@ -59,9 +59,17 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Run each task in order against <paramref name="ctx"/>.
         /// Per-task wall time is logged via
-        /// <see cref="PipelineContext.LogInfo"/>.
+        /// <see cref="PipelineContext.LogInfo"/>. Stops at the first
+        /// task whose <see cref="OspreyTask.Run"/> returns <c>false</c>
+        /// and propagates that signal back to the caller. The caller
+        /// is responsible for inspecting <see cref="PipelineContext.ExitCode"/>
+        /// to choose its own return code.
         /// </summary>
-        public void Execute(PipelineContext ctx)
+        /// <returns>
+        /// <c>true</c> if every task ran to completion; <c>false</c> if
+        /// any task short-circuited the pipeline.
+        /// </returns>
+        public bool Execute(PipelineContext ctx)
         {
             if (ctx == null)
                 throw new ArgumentNullException(nameof(ctx));
@@ -69,11 +77,14 @@ namespace pwiz.OspreySharp.Tasks
             {
                 var sw = Stopwatch.StartNew();
                 ctx.LogInfo(string.Format(@"[task] {0}: starting", task.Name));
-                task.Run(ctx);
+                bool keepGoing = task.Run(ctx);
                 sw.Stop();
                 ctx.LogInfo(string.Format(@"[task] {0}: done ({1:F1}s)",
                     task.Name, sw.Elapsed.TotalSeconds));
+                if (!keepGoing)
+                    return false;
             }
+            return true;
         }
     }
 }

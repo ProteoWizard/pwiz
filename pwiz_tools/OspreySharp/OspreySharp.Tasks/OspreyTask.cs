@@ -61,7 +61,16 @@ namespace pwiz.OspreySharp.Tasks
         /// read upstream-task outputs from <paramref name="ctx"/> and
         /// must persist any outputs downstream tasks depend on back to
         /// <paramref name="ctx"/>.
+        ///
+        /// Returns <c>true</c> on success (pipeline continues to the
+        /// next task) or <c>false</c> to short-circuit the pipeline
+        /// driver. A task returning <c>false</c> is responsible for
+        /// having already logged the reason; if the failure should
+        /// produce a non-zero process exit code, the task must set
+        /// <see cref="PipelineContext.ExitCode"/> before returning.
+        /// Mirrors the boolean-return early-exit pattern in
+        /// <c>pwiz_tools/Skyline/CommandLine.cs</c>.
         /// </summary>
-        public abstract void Run(PipelineContext ctx);
+        public abstract bool Run(PipelineContext ctx);
     }
 }

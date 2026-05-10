@@ -70,7 +70,7 @@ namespace pwiz.OspreySharp.MergeNode
 
         public override string Name => @"MergeNode";
 
-        public override void Run(PipelineContext ctx)
+        public override bool Run(PipelineContext ctx)
         {
             var config = ctx.Config;
 
@@ -143,6 +143,7 @@ namespace pwiz.OspreySharp.MergeNode
             swBlib.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] Blib output: {0:F1}s",
                 swBlib.Elapsed.TotalSeconds));
+            return true;
         }
     }
 }
