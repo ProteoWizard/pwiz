@@ -61,12 +61,18 @@ namespace pwiz.OspreySharp.IO
 
         /// <summary>
         /// Allocate a sibling temp file for <paramref name="fileName"/>.
+        /// Resolves <paramref name="fileName"/> against the current
+        /// working directory so a bare-filename argument (no directory
+        /// component) lands the temp file alongside its destination
+        /// rather than failing inside <see cref="Path.GetDirectoryName"/>
+        /// downstream. Diverges from the SharedBatch original which
+        /// happens to never see relative paths.
         /// </summary>
         public FileSaver(string fileName)
         {
-            RealName = fileName;
+            RealName = Path.GetFullPath(fileName);
 
-            string dirName = Path.GetDirectoryName(fileName);
+            string dirName = Path.GetDirectoryName(RealName);
             string tempName = GetTempFileName(dirName, TEMP_PREFIX);
 
             if (!Equals(dirName, tempName))
@@ -74,23 +80,32 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
-        /// Atomically replace the final destination with the temp file.
-        /// No-op if the temp file is missing (e.g. already committed,
-        /// or the caller never wrote to it).
+        /// Replace the final destination with the temp file. No-op if
+        /// the temp file is missing (e.g. already committed, or the
+        /// caller never wrote to it). When the destination already
+        /// exists, it is deleted first; the underlying File.Move is
+        /// not atomic across the (delete, move) pair, so a crash in
+        /// that narrow window can leave the destination missing with
+        /// the temp still present (recoverable by hand or by re-running
+        /// the pipeline). Diverges from the SharedBatch original which
+        /// throws on overwrite -- OspreySharp's per-file artifacts are
+        /// re-written by every pipeline run, so overwrite is the
+        /// common case.
         /// </summary>
         public void Commit()
         {
             if (!File.Exists(SafeName)) return;
 
-            try
-            {
-                File.Move(SafeName, RealName);
-                Dispose();
-            }
-            catch (Exception e)
-            {
-                Trace.TraceWarning(@"Exception in FileSaver.Commit: {0}", e);
-            }
+            // Diverges from the SharedBatch original which catches the
+            // exception and writes to Trace.TraceWarning. OspreySharp's
+            // CLI logging path doesn't subscribe to Trace, so swallowing
+            // the exception there silently drops the file. Let it
+            // propagate so the caller's try/catch can log via
+            // AnalysisPipeline.LogWarning / LogError.
+            if (File.Exists(RealName))
+                File.Delete(RealName);
+            File.Move(SafeName, RealName);
+            Dispose();
         }
 
         /// <summary>
