@@ -1084,43 +1084,27 @@ namespace pwiz.OspreySharp
                         return 0;
                     }
 
-                    // Stage 6 per-file rescore: consensus + reconciliation
-                    // overlay (Phase 1) plus gap-fill two-pass (Phase 2).
-                    // Mirrors the Rust call site at
-                    // pipeline.rs:run_analysis ~line 3850.
-                    var rescoreStats = ExecuteStage6Rescore(
-                        perFileEntries,
-                        perFileConsensusTargets,
-                        reconciliationActions ?? new Dictionary<(string, int), ReconcileAction>(),
-                        refinedCalibrations,
-                        perFileCalibrations,
-                        perFileGapFill: perFileGapFillForRescore,
-                        perFileParquetPaths,
-                        fullLibrary,
-                        config);
-                    LogInfo(string.Format(
-                        "Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
-                        rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
-
-                    // Cross-impl bisection seam: dump per-precursor state
-                    // immediately after the rescore loop. Mirrors Rust's
-                    // dump_stage6_rescored call from pipeline.rs.
-                    if (OspreyDiagnostics.DumpRescored)
+                    // Stage 6 per-file rescore: driven by PerFileRescoreTask.
+                    // Encapsulates ExecuteStage6Rescore + the cross-impl
+                    // bisection dump + the per-process diagnostic-writer
+                    // close calls that pair with it. Mirrors the Rust
+                    // call site at pipeline.rs:run_analysis ~line 3850.
+                    var rescoreCtx = new Tasks.PipelineContext(
+                        config, LogInfo, LogWarning, LogError);
+                    var rescorePipeline = new Tasks.Pipeline(new Tasks.OspreyTask[]
                     {
-                        OspreyDiagnostics.WriteStage6RescoredDump(perFileEntries);
-                        if (OspreyDiagnostics.RescoredOnly)
-                            OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
-                    }
-
-                    // Flush + close the persistent per-process diagnostic
-                    // dump writers (no-ops when their env vars are unset).
-                    // Mirrors the worker-mode close calls in
-                    // AnalysisPipeline.Stage6Rescore.Run; without these,
-                    // the in-process pipeline path can leave the writers
-                    // unflushed and produce truncated bisection dumps.
-                    OspreyDiagnostics.CloseMpInputsDump();
-                    OspreyDiagnostics.ClosePredictRtDump();
-                    OspreyDiagnostics.CloseCwtPathDump();
+                        new PerFileRescore.PerFileRescoreTask(
+                            this,
+                            perFileEntries,
+                            perFileConsensusTargets,
+                            reconciliationActions,
+                            refinedCalibrations,
+                            perFileCalibrations,
+                            perFileGapFillForRescore,
+                            perFileParquetPaths,
+                            fullLibrary)
+                    });
+                    rescorePipeline.Execute(rescoreCtx);
                 }
 
                 // Merge-node phase: 2nd-pass FDR sidecar persistence (when
