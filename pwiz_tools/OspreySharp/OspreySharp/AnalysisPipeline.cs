@@ -3589,15 +3589,24 @@ namespace pwiz.OspreySharp
             ProfilerHooks.LogMemoryStats(LogInfo, "pre-main-search");
             ProfilerHooks.StartMeasure();
 
-            // Process each isolation window (parallelizable)
+            // Process each isolation window (parallelizable). Per-window
+            // results land in windowResults[wIdx] so the final flatten is
+            // deterministic in window order regardless of completion order.
+            // A naive AddRange-under-lock pattern interleaves rows in
+            // completion order, which leaves the row set identical but
+            // the row sequence (and hence the parquet bytes) different
+            // across same-input runs — breaking byte-level reproducibility
+            // gates like the Test-Snapshot.ps1 regression harness.
+            var windowResults = new List<FdrEntry>[windowsToScore.Count];
             object lockObj = new object();
 
-            Parallel.ForEach(windowsToScore, new ParallelOptions
+            Parallel.For(0, windowsToScore.Count, new ParallelOptions
             {
                 MaxDegreeOfParallelism = config.NThreads
             },
-            window =>
+            wIdx =>
             {
+                var window = windowsToScore[wIdx];
                 var swWindow = Stopwatch.StartNew();
                 var windowEntries = ScoreWindow(
                     window, fullLibrary, spectraByWindowKey, ms1Spectra,
@@ -3612,17 +3621,25 @@ namespace pwiz.OspreySharp
                     CandidateCount = windowEntries.Count
                 });
 
+                windowResults[wIdx] = windowEntries;
+
                 lock (lockObj)
                 {
-                    allEntries.AddRange(windowEntries);
                     windowsProcessed++;
                     if (windowsProcessed % 10 == 0 || windowsProcessed == windowsToScore.Count)
                     {
-                        LogInfo(string.Format("  Scored {0}/{1} isolation windows ({2} entries so far)",
-                            windowsProcessed, windowsToScore.Count, allEntries.Count));
+                        LogInfo(string.Format("  Scored {0}/{1} isolation windows",
+                            windowsProcessed, windowsToScore.Count));
                     }
                 }
             });
+
+            // Flatten in deterministic window-index order.
+            for (int wIdx = 0; wIdx < windowResults.Length; wIdx++)
+            {
+                if (windowResults[wIdx] != null)
+                    allEntries.AddRange(windowResults[wIdx]);
+            }
 
             ProfilerHooks.SaveAndStopMeasure();
             ProfilerHooks.LogMemoryStats(LogInfo, "post-main-search");
