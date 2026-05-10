@@ -110,6 +110,28 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
+        /// Compute <c>HeaderLength + headerCount * RecordLength</c> with
+        /// overflow detection. Returns false if the result would not fit
+        /// in <see cref="int"/> (a corrupt or malicious sidecar with a
+        /// huge headerCount would otherwise wrap silently and let the
+        /// size check pass spuriously, leading to out-of-bounds reads in
+        /// the record loop).
+        /// </summary>
+        private static bool TryComputeExpectedLen(ulong headerCount, out int expectedLen)
+        {
+            try
+            {
+                expectedLen = checked(HeaderLength + (int)headerCount * RecordLength);
+                return true;
+            }
+            catch (OverflowException)
+            {
+                expectedLen = 0;
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Path for the first-pass FDR scores sidecar of a given input
         /// file: <c>&lt;dir&gt;/&lt;stem&gt;.1st-pass.fdr_scores.bin</c>.
         /// Mirrors Rust's <c>fdr_scores_path_pass1</c>.
@@ -264,8 +286,11 @@ namespace pwiz.OspreySharp.IO
             // Reject sidecars whose declared count exceeds physical
             // record capacity. (headerCount can validly be < entries
             // count — see comment above on pre-gap-fill / post-
-            // compaction sidecars.)
-            int expectedLen = HeaderLength + (int)headerCount * RecordLength;
+            // compaction sidecars.) Use checked arithmetic so a
+            // corrupt or malicious sidecar with a huge headerCount
+            // is rejected loudly instead of wrapping int silently.
+            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                return false;
             if (data.Length != expectedLen)
                 return false;
 
@@ -345,7 +370,8 @@ namespace pwiz.OspreySharp.IO
             if (passByte != (byte)expectedPass)
                 return false;
             ulong headerCount = BitConverter.ToUInt64(data, 16);
-            int expectedLen = HeaderLength + (int)headerCount * RecordLength;
+            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                return false;
             if (data.Length != expectedLen)
                 return false;
 

@@ -1768,6 +1768,46 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
+        /// A corrupt or malicious sidecar with a huge headerCount would
+        /// otherwise wrap int when computing
+        /// <c>HeaderLength + headerCount * RecordLength</c> and let the
+        /// size check pass spuriously, leading to out-of-bounds reads in
+        /// the record loop. Both <see cref="FdrScoresSidecar.TryRead"/>
+        /// and <see cref="FdrScoresSidecar.TryReadOverlay"/> must reject
+        /// the load via the checked-arithmetic guard.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarOversizedHeaderRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_oversized_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                // Write a valid 1-entry sidecar to get the right magic /
+                // version / pass byte layout, then truncate to header-only
+                // and overwrite headerCount with ulong.MaxValue.
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) },
+                    FdrScoresSidecar.Pass.FirstPass);
+                byte[] header = File.ReadAllBytes(path);
+                Array.Resize(ref header, FdrScoresSidecar.HeaderLength);
+                BitConverter.GetBytes(ulong.MaxValue).CopyTo(header, 16);
+                File.WriteAllBytes(path, header);
+
+                var entries = new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, entries, FdrScoresSidecar.Pass.FirstPass));
+
+                var dict = new Dictionary<uint, FdrEntry> { { 0, entries[0] } };
+                Assert.IsFalse(FdrScoresSidecar.TryReadOverlay(path, dict, FdrScoresSidecar.Pass.FirstPass));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
         /// A 1st-pass sidecar must NOT load into a TryRead call that
         /// expects 2nd-pass (and vice versa) — would otherwise scramble
         /// q-values silently because the records are positionally

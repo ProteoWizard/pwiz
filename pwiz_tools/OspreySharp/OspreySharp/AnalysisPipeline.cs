@@ -676,10 +676,17 @@ namespace pwiz.OspreySharp
                 // the post-compaction stub list. The 2nd-pass scores +
                 // q-values are what Stage 7 (protein FDR) and the blib
                 // writer consume. Loading happens AFTER compaction
-                // because the sidecar count must match the in-memory
-                // entry count, and compaction has just shrunk the list
-                // to the passing-base_id subset. Mirrors Rust's load-
-                // order inversion at pipeline.rs:4030-4076.
+                // because the 2nd-pass sidecar was written from the
+                // post-compaction state — overlaying it before compaction
+                // would either silently miss records (if the pre-compaction
+                // entries dict happens to also contain compaction-dropped
+                // entry_ids that the 2nd-pass never saw) or scramble
+                // q-values on entries the 2nd-pass had already discarded.
+                // TryReadOverlay tolerates count mismatch (records whose
+                // entry_id is unknown to the caller's dict are skipped),
+                // so the constraint here is correctness-of-state, not
+                // size-equality. Mirrors Rust's load-order inversion at
+                // pipeline.rs:4030-4076.
                 if (config.ExpectReconciledInput)
                 {
                     // Same input-by-fileName map shape as the 1st-pass
@@ -5664,8 +5671,14 @@ namespace pwiz.OspreySharp
                 windowEntries.Add(arr);
             }
 
-            // Removal flags. Each entry is in at most one window so a plain
-            // bool[] is safe under per-window parallelism.
+            // Removal flags. Each entry with a library mapping is in at
+            // most one window so a plain bool[] is safe under per-window
+            // parallelism. Entries without a library mapping (EntryId
+            // missing from libIdMap; entryMz = NaN) can land in multiple
+            // windows via the LowerBoundLt scan, but the inner pair
+            // loop's libIdMap.TryGetValue short-circuits before any
+            // write to removed[], so the bool[] still has at most one
+            // writer per slot.
             bool[] removed = new bool[n];
 
             Parallel.ForEach(windowEntries, indices =>

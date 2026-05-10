@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using pwiz.OspreySharp.Core;
@@ -651,6 +652,14 @@ namespace pwiz.OspreySharp.IO
         /// (matches Rust slice::sort_by); Array.Sort on parallel arrays is
         /// unstable introsort and would reorder ties differently.
         /// </summary>
+        // Cap on [unsorted-spectrum] log lines per process — otherwise an
+        // Astral 3-file run with millions of spectra and a 0.07% inversion
+        // rate produces thousands of interleaved lines from concurrent
+        // ProcessFile calls. After the cap, we suppress further lines
+        // (the first ones already prove the case is happening).
+        private static int s_unsortedLogCount;
+        private const int MaxUnsortedLogLines = 10;
+
         private static void EnsureSortedSpectrum(uint spectrumIndex,
             ref double[] mzArray, ref float[] intensityArray)
         {
@@ -662,19 +671,38 @@ namespace pwiz.OspreySharp.IO
             // already has its own length checks).
             if (intensityArray == null || intensityArray.Length != mzArray.Length)
                 return;
+            // Walk the array once: detect NaN m/z (malformed mzML — fail
+            // loudly so a user report surfaces) and check sortedness in
+            // the same pass. NaN comparison semantics differ between
+            // Comparer<double>.Default and Rust's total_cmp, so we cannot
+            // sort consistently across impls; better to refuse the
+            // spectrum than silently diverge.
             bool sorted = true;
-            for (int i = 1; i < mzArray.Length; i++)
+            for (int i = 0; i < mzArray.Length; i++)
             {
-                if (mzArray[i] < mzArray[i - 1])
+                if (double.IsNaN(mzArray[i]))
                 {
-                    sorted = false;
-                    break;
+                    throw new InvalidDataException(string.Format(
+                        "NaN m/z at index {0} of spectrum_index={1} (n_peaks={2}); " +
+                        "cannot sort or fragment-match a malformed centroid array.",
+                        i, spectrumIndex, mzArray.Length));
                 }
+                if (i > 0 && mzArray[i] < mzArray[i - 1])
+                    sorted = false;
             }
             if (sorted)
                 return;
-            Console.Error.WriteLine(
-                $"[unsorted-spectrum] spectrum_index={spectrumIndex} n_peaks={mzArray.Length}");
+            int logCount = Interlocked.Increment(ref s_unsortedLogCount);
+            if (logCount <= MaxUnsortedLogLines)
+            {
+                Console.Error.WriteLine(
+                    $"[unsorted-spectrum] spectrum_index={spectrumIndex} n_peaks={mzArray.Length}");
+                if (logCount == MaxUnsortedLogLines)
+                {
+                    Console.Error.WriteLine(
+                        $"[unsorted-spectrum] suppressing further lines (>{MaxUnsortedLogLines} per process)");
+                }
+            }
             int n = mzArray.Length;
             double[] keyMz = mzArray;
             int[] order = Enumerable.Range(0, n)
