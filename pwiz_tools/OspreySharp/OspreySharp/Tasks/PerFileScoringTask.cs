@@ -64,14 +64,8 @@ namespace pwiz.OspreySharp.PerFileScoring
     /// instance properties for FirstJoinTask + downstream tasks to
     /// consume after this one completes successfully.
     /// </summary>
-    internal sealed class PerFileScoringTask : OspreyTask
+    internal sealed class PerFileScoringTask : AbstractScoringTask
     {
-        // Calibration-tuning constants moved with the calibration
-        // helpers from AnalysisPipeline. CAL_TOP_N_FRAGMENTS is
-        // internal because shared scoring code in AnalysisPipeline
-        // (_pipeline.ExtractTopNFragmentXics) still reads it; the others are
-        // task-private.
-        internal const int CAL_TOP_N_FRAGMENTS = 6;
         private const double MIN_SNR_FOR_RT_CAL = 5.0;
         private const double MIN_COELUTION_CORR_SCORE = 0.5;
         private const int MIN_COELUTION_SPECTRA = 3;
@@ -94,12 +88,6 @@ namespace pwiz.OspreySharp.PerFileScoring
         }
 
         private readonly AnalysisPipeline _pipeline;
-
-        // PipelineContext is set on Run entry so the moved
-        // ProcessFile / RunCalibration / LoadSpectra (and their
-        // helpers) can log through the same callbacks the
-        // pipeline driver uses.
-        private PipelineContext _ctx;
 
         public PerFileScoringTask(AnalysisPipeline pipeline)
         {
@@ -128,7 +116,7 @@ namespace pwiz.OspreySharp.PerFileScoring
 
             // Stage 1: Load library + generate decoys
             var swLibrary = Stopwatch.StartNew();
-            var library = _pipeline.LoadLibrary(config);
+            var library = LoadLibrary(config);
             if (library == null || library.Count == 0)
             {
                 ctx.LogError(@"Library is empty after loading");
@@ -165,7 +153,7 @@ namespace pwiz.OspreySharp.PerFileScoring
             }
             else if (!config.DecoysInLibrary)
             {
-                decoys = _pipeline.GenerateDecoys(library, config, out List<LibraryEntry> validTargets);
+                decoys = GenerateDecoys(library, config, out List<LibraryEntry> validTargets);
                 library = validTargets;
             }
             else
@@ -614,7 +602,7 @@ namespace pwiz.OspreySharp.PerFileScoring
                 fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
 
             // Extract isolation windows from spectra
-            var isolationWindows = _pipeline.ExtractIsolationWindows(spectra);
+            var isolationWindows = ExtractIsolationWindows(spectra);
             _ctx.LogInfo(string.Format("Found {0} unique isolation windows", isolationWindows.Count));
             _ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
                 fileName, isolationWindows.Count));
@@ -741,7 +729,7 @@ namespace pwiz.OspreySharp.PerFileScoring
 
             // Run coelution scoring across all isolation windows
             var swScoring = Stopwatch.StartNew();
-            var scoredEntries = _pipeline.RunCoelutionScoring(
+            var scoredEntries = RunCoelutionScoring(
                 fullLibrary, spectra, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
@@ -767,7 +755,7 @@ namespace pwiz.OspreySharp.PerFileScoring
             // onto the same chromatographic feature within an isolation
             // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
             // same call site, between scoring and pair-deduplication.
-            scoredEntries = _pipeline.DeduplicateDoubleCounting(
+            scoredEntries = DeduplicateDoubleCounting(
                 scoredEntries, fullLibrary, spectra, ms2Cal,
                 isolationWindows, config);
             nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
@@ -778,7 +766,7 @@ namespace pwiz.OspreySharp.PerFileScoring
 
             // Deduplicate: keep best target and best decoy per base_id
             int nBeforeDedup = scoredEntries.Count;
-            scoredEntries = _pipeline.DeduplicatePairs(scoredEntries);
+            scoredEntries = DeduplicatePairs(scoredEntries);
             int nAfterDedup = scoredEntries.Count;
             _ctx.LogInfo(string.Format(
                 "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
@@ -852,7 +840,7 @@ namespace pwiz.OspreySharp.PerFileScoring
             };
 
             var sorted = scoredEntries
-                .Where(e => e.Features != null && e.Features.Length == AnalysisPipeline.NUM_PIN_FEATURES)
+                .Where(e => e.Features != null && e.Features.Length == NUM_PIN_FEATURES)
                 .OrderBy(e => e.ModifiedSequence, StringComparer.Ordinal)
                 .ThenBy(e => e.Charge)
                 .ThenBy(e => e.ScanNumber)
@@ -873,7 +861,7 @@ namespace pwiz.OspreySharp.PerFileScoring
                         e.ScanNumber.ToString(),
                         e.Charge.ToString()
                     };
-                    for (int i = 0; i < AnalysisPipeline.NUM_PIN_FEATURES; i++)
+                    for (int i = 0; i < NUM_PIN_FEATURES; i++)
                         cols.Add(e.Features[i].ToString("G17"));
                     cols.Add(e.ModifiedSequence ?? "");
                     writer.WriteLine(string.Join("\t", cols));
@@ -887,7 +875,7 @@ namespace pwiz.OspreySharp.PerFileScoring
         /// <summary>
         /// Load spectra from mzML file or spectra cache. When multiple
         /// files are processed in parallel, the mzML parse is gated so
-        /// only one disk scan runs at a time (see AnalysisPipeline.s_mzmlReadGate).
+        /// only one disk scan runs at a time (see s_mzmlReadGate).
         /// </summary>
         private void LoadSpectra(string inputFile, bool serializeMzmlRead,
             out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra)
@@ -915,7 +903,7 @@ namespace pwiz.OspreySharp.PerFileScoring
             _ctx.LogInfo(string.Format("Parsing mzML: {0}", inputFile));
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
-                AnalysisPipeline.s_mzmlReadGate.Wait();
+                s_mzmlReadGate.Wait();
             try
             {
                 mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
@@ -923,7 +911,7 @@ namespace pwiz.OspreySharp.PerFileScoring
             finally
             {
                 if (serializeMzmlRead)
-                    AnalysisPipeline.s_mzmlReadGate.Release();
+                    s_mzmlReadGate.Release();
             }
             ms2Spectra = mzmlResult.Ms2Spectra;
             ms1Spectra = mzmlResult.Ms1Spectra;
@@ -1200,7 +1188,7 @@ namespace pwiz.OspreySharp.PerFileScoring
                 var pp = new double[kvp.Value.Count][];
                 for (int i = 0; i < kvp.Value.Count; i++)
                 {
-                    float[] f32pp = AnalysisPipeline.s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
+                    float[] f32pp = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
                     var widened = new double[f32pp.Length];
                     for (int k = 0; k < f32pp.Length; k++)
                         widened[k] = f32pp[k];
@@ -1742,7 +1730,7 @@ namespace pwiz.OspreySharp.PerFileScoring
                 var spec = windowSpectra[si];
                 if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
                     continue;
-                if (!AnalysisPipeline.HasTopNFragmentMatch(entry, spec.Mzs, config.FragmentTolerance))
+                if (!HasTopNFragmentMatch(entry, spec.Mzs, config.FragmentTolerance))
                     continue;
                 candidateSpectra.Add(spec);
                 candidateWindowIndices.Add(si);
@@ -1765,7 +1753,7 @@ namespace pwiz.OspreySharp.PerFileScoring
             int currentPass = calibrationModel != null ? 2 : 1;
 
             // Extract XICs for the top-N most intense library fragments.
-            var xics = _pipeline.ExtractTopNFragmentXics(
+            var xics = ExtractTopNFragmentXics(
                 entry, candidateSpectra, rts, CAL_TOP_N_FRAGMENTS, config);
 
             if (OspreyDiagnostics.ShouldDumpCalXicFor(entry.Id, currentPass))
@@ -1832,7 +1820,7 @@ namespace pwiz.OspreySharp.PerFileScoring
                     for (int j = i + 1; j < xics.Count; j++)
                     {
                         double[] intj = xics[j].Intensities;
-                        double corr = AnalysisPipeline.PearsonOverRange(inti, intj, si, ei);
+                        double corr = PearsonOverRange(inti, intj, si, ei);
                         if (!double.IsNaN(corr))
                             corrSum += corr;
                     }
@@ -1922,12 +1910,12 @@ namespace pwiz.OspreySharp.PerFileScoring
             double libCosineApex = scorer.LibCosine(
                 apexSpectrum, entry, config.FragmentTolerance);
             // XCorr at apex always uses the calibration unit-bin scorer
-            // (matches the pre-preprocessed arrays built with AnalysisPipeline.s_calXcorrScorer).
+            // (matches the pre-preprocessed arrays built with s_calXcorrScorer).
             int apexWindowIdx = candidateWindowIndices[apexSpecLocalIdx];
             double xcorrApex = (windowPreprocessed != null && apexWindowIdx < windowPreprocessed.Length)
-                ? AnalysisPipeline.s_calXcorrScorer.XcorrFromPreprocessed(windowPreprocessed[apexWindowIdx], entry)
-                : AnalysisPipeline.s_calXcorrScorer.XcorrAtScan(apexSpectrum, entry);
-            byte top6Matched = _pipeline.CountTop6Matches(entry, apexSpectrum, config);
+                ? s_calXcorrScorer.XcorrFromPreprocessed(windowPreprocessed[apexWindowIdx], entry)
+                : s_calXcorrScorer.XcorrAtScan(apexSpectrum, entry);
+            byte top6Matched = CountTop6Matches(entry, apexSpectrum, config);
 
             // Collect MS2 fragment mass errors at apex for m/z calibration.
             // Matches Rust topn_fragment_match_with_errors: uses TOP-6 fragments
@@ -1964,7 +1952,7 @@ namespace pwiz.OspreySharp.PerFileScoring
                     double lower = frag.Mz - tolDa;
                     double upper = frag.Mz + tolDa;
 
-                    int lo = AnalysisPipeline.BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                    int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
                     if (lo < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[lo] <= upper)
                     {
                         double bestMz = apexSpectrum.Mzs[lo];
@@ -1996,7 +1984,7 @@ namespace pwiz.OspreySharp.PerFileScoring
                     && config.PrecursorTolerance.Unit == ToleranceUnit.Ppm
                     ? config.PrecursorTolerance.Tolerance
                     : 10.0;
-                var apexMs1 = AnalysisPipeline.FindNearestMs1(ms1Spectra, apexRt);
+                var apexMs1 = FindNearestMs1(ms1Spectra, apexRt);
                 if (apexMs1 != null)
                 {
                     var envelope = IsotopeEnvelope.Extract(

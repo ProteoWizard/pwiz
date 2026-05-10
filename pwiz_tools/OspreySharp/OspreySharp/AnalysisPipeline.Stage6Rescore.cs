@@ -90,6 +90,9 @@ namespace pwiz.OspreySharp
         internal int RunWorker(OspreyConfig config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
+            // Init _ctx so the inherited engine methods (RunCoelutionScoring,
+            // etc.) can log via the same callbacks the in-process pipeline uses.
+            _ctx = new Tasks.PipelineContext(config, LogInfo, LogWarning, LogError);
             if (config.InputScores == null || config.InputScores.Count == 0)
             {
                 Program.LogError(

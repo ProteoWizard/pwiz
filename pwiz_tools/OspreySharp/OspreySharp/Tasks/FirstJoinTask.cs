@@ -68,19 +68,12 @@ namespace pwiz.OspreySharp.FirstJoin
     /// is the gate for that next task — it flips to <c>true</c> only
     /// when the Stage 6 planning block actually ran.
     /// </summary>
-    internal sealed class FirstJoinTask : OspreyTask
+    internal sealed class FirstJoinTask : AbstractScoringTask
     {
         private readonly List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
         private readonly System.Collections.Concurrent.ConcurrentDictionary<string, RTCalibration> _perFileCalibrations;
         private readonly Dictionary<string, string> _perFileParquetPaths;
         private readonly List<LibraryEntry> _fullLibrary;
-
-        // PipelineContext is set on Run entry so the moved
-        // private methods (RunFdr, RunFirstPassProteinFdr,
-        // WriteFdrScoresSidecars, WriteReconciliationFiles,
-        // and their helpers) can log through the same
-        // callbacks the pipeline driver uses.
-        private PipelineContext _ctx;
 
         public FirstJoinTask(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
@@ -249,7 +242,7 @@ namespace pwiz.OspreySharp.FirstJoin
                         if (entry.RunPeptideQvalue <= peptideGate ||
                             (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
                         {
-                            firstPassBaseIds.Add(entry.EntryId & AnalysisPipeline.BASE_ID_MASK);
+                            firstPassBaseIds.Add(entry.EntryId & BASE_ID_MASK);
                         }
                     }
                 }
@@ -257,7 +250,7 @@ namespace pwiz.OspreySharp.FirstJoin
                 foreach (var kvp in _perFileEntries)
                 {
                     beforeCount += kvp.Value.Count;
-                    kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & AnalysisPipeline.BASE_ID_MASK));
+                    kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
                     kvp.Value.TrimExcess();
                     afterCount += kvp.Value.Count;
                 }
@@ -1075,7 +1068,7 @@ namespace pwiz.OspreySharp.FirstJoin
                     // well-formed.
                     double[] features;
                     if (fdrEntry.Features != null &&
-                        fdrEntry.Features.Length == AnalysisPipeline.NUM_PIN_FEATURES)
+                        fdrEntry.Features.Length == NUM_PIN_FEATURES)
                     {
                         features = fdrEntry.Features;
                         nWithFeatures++;
@@ -1105,7 +1098,7 @@ namespace pwiz.OspreySharp.FirstJoin
 
             _ctx.LogInfo(string.Format(
                 "[COUNT] Percolator input: {0} entries ({1} targets, {2} decoys, {3} features)",
-                percEntries.Count, nInputTargets, nInputDecoys, AnalysisPipeline.NUM_PIN_FEATURES));
+                percEntries.Count, nInputTargets, nInputDecoys, NUM_PIN_FEATURES));
             _ctx.LogInfo(string.Format(
                 "[COUNT] Percolator features computed: {0} entries with PIN features, {1} fallback",
                 nWithFeatures, nWithoutFeatures));
@@ -1228,7 +1221,7 @@ namespace pwiz.OspreySharp.FirstJoin
         private double[] BuildBasicFeatures(
             FdrEntry entry, Dictionary<uint, LibraryEntry> libraryById)
         {
-            double[] features = new double[AnalysisPipeline.NUM_PIN_FEATURES];
+            double[] features = new double[NUM_PIN_FEATURES];
 
             // 0: coelution_sum
             features[0] = entry.CoelutionSum;

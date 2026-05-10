@@ -48,7 +48,7 @@ namespace pwiz.OspreySharp.PerFileRescore
     /// writer close calls. The heavy lifting stays in
     /// AnalysisPipeline.Stage6Rescore.cs for now.
     /// </summary>
-    internal sealed class PerFileRescoreTask : OspreyTask
+    internal sealed class PerFileRescoreTask : AbstractScoringTask
     {
         private readonly AnalysisPipeline _pipeline;
         private readonly List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
@@ -87,6 +87,12 @@ namespace pwiz.OspreySharp.PerFileRescore
 
         public override bool Run(PipelineContext ctx)
         {
+            _ctx = ctx;
+            // ExecuteStage6Rescore + helpers run on AnalysisPipeline (the
+            // pragmatic shortcut): plant our context on the pipeline so the
+            // inherited engine methods (RunCoelutionScoring, etc.) see a
+            // non-null _ctx through `this`.
+            _pipeline._ctx = ctx;
             var rescoreStats = _pipeline.ExecuteStage6Rescore(
                 _perFileEntries,
                 _perFileConsensusTargets,
