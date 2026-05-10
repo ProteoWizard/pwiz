@@ -34,7 +34,7 @@ using pwiz.OspreySharp.Scoring;
 namespace pwiz.OspreySharp
 {
     /// <summary>
-    /// Aggregate counts returned by <see cref="AnalysisPipeline.ExecuteStage6Rescore"/>.
+    /// Aggregate counts returned by <see cref="AnalysisPipeline.ExecuteRescore"/>.
     /// Mirrors <c>RescoreStats</c> in
     /// <c>osprey/crates/osprey/src/pipeline.rs</c>.
     /// </summary>
@@ -79,9 +79,9 @@ namespace pwiz.OspreySharp
         /// per-file multi-charge consensus targets from the compacted
         /// stubs, builds the per-file original RT calibration map by
         /// loading each sibling <c>.calibration.json</c>, then dispatches
-        /// to <see cref="ExecuteStage6Rescore"/>.
+        /// to <see cref="ExecuteRescore"/>.
         ///
-        /// PHASE 1 of the C# port: existing entries (consensus +
+        /// Initial port: existing entries (consensus +
         /// reconciliation overlay) re-scored from the v3 sidecar inputs.
         /// Gap-fill two-pass and reconciled .scores.parquet write-back are
         /// the next porting phases; today the worker exits with a clear
@@ -101,7 +101,7 @@ namespace pwiz.OspreySharp
             }
 
             // Synthesize config.InputFiles from --input-scores so
-            // ExecuteStage6Rescore's file_name_to_idx can map file_name
+            // ExecuteRescore's file_name_to_idx can map file_name
             // back to a real (synthetic) input path. Mirrors Rust's
             // run_analysis idempotent synthesis at pipeline.rs ~line 3144.
             if (config.InputFiles == null || config.InputFiles.Count == 0)
@@ -263,7 +263,7 @@ namespace pwiz.OspreySharp
             RescoreStats stats;
             try
             {
-                stats = ExecuteStage6Rescore(
+                stats = ExecuteRescore(
                     inputs.PerFileEntries,
                     perFileConsensusTargets,
                     inputs.ReconciliationActions,
@@ -513,7 +513,7 @@ namespace pwiz.OspreySharp
         /// (Score, Pep, q-values, Features, ApexRt/StartRt/EndRt, etc.).
         /// Returns <see cref="RescoreStats"/> with the per-stage counts.
         /// </summary>
-        internal RescoreStats ExecuteStage6Rescore(
+        internal RescoreStats ExecuteRescore(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> perFileConsensusTargets,
             IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> reconciliationActions,

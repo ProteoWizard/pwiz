@@ -41,7 +41,7 @@ namespace pwiz.OspreySharp.PerFileRescore
     /// independent of the others.
     ///
     /// Phase A scope: this task is a thin orchestration wrapper around
-    /// <see cref="AnalysisPipeline.ExecuteStage6Rescore"/> (which
+    /// <see cref="AnalysisPipeline.ExecuteRescore"/> (which
     /// already lives in its own partial-class file, <c>AnalysisPipeline
     /// .Stage6Rescore.cs</c>) plus the Rust-mirrored cross-impl
     /// post-rescore diagnostic dump and the per-process diagnostic
@@ -88,12 +88,12 @@ namespace pwiz.OspreySharp.PerFileRescore
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;
-            // ExecuteStage6Rescore + helpers run on AnalysisPipeline (the
+            // ExecuteRescore + helpers run on AnalysisPipeline (the
             // pragmatic shortcut): plant our context on the pipeline so the
             // inherited engine methods (RunCoelutionScoring, etc.) see a
             // non-null _ctx through `this`.
             _pipeline._ctx = ctx;
-            var rescoreStats = _pipeline.ExecuteStage6Rescore(
+            var rescoreStats = _pipeline.ExecuteRescore(
                 _perFileEntries,
                 _perFileConsensusTargets,
                 _reconciliationActions,
