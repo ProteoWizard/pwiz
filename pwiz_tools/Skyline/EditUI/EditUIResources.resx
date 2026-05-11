@@ -477,4 +477,13 @@ Example: Looplink: T [4]
   <data name="AssociateProteinsDlg_DisplayResults__Click_for_more_information_" xml:space="preserve">
     <value>(Click for more information)</value>
   </data>
+  <data name="EditSpectrumFilterDlg_GetFilterTabNames_Criteria" xml:space="preserve">
+    <value>Criteria</value>
+  </data>
+  <data name="EditSpectrumFilterDlg_GetFilterTabNames_Criteria__0_" xml:space="preserve">
+    <value>Criteria {0}</value>
+  </data>
+  <data name="EditSpectrumFilterDlg_GetFilterTabNames___Add_Alternative" xml:space="preserve">
+    <value>+ Add Alternative</value>
+  </data>
 </root>

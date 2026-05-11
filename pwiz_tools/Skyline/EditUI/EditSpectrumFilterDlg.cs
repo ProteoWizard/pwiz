@@ -99,7 +99,7 @@ namespace pwiz.Skyline.EditUI
         {
             if (filterPages.Pages.Count == 0)
             {
-                return new[] { "Criteria" };
+                return new[] { EditUIResources.EditSpectrumFilterDlg_GetFilterTabNames_Criteria };
             }
 
             bool lastPageEmpty = filterPages.Pages[filterPages.Pages.Count - 1].Discriminant.IsEmpty && filterPages
@@ -116,11 +116,11 @@ namespace pwiz.Skyline.EditUI
                     unnamedTabCount++;
                     if (filterPages.Pages.Count == 1)
                     {
-                        caption = "Criteria";
+                        caption = EditUIResources.EditSpectrumFilterDlg_GetFilterTabNames_Criteria;
                     }
                     else
                     {
-                        caption = string.Format("Criteria {0}", unnamedTabCount);
+                        caption = string.Format(EditUIResources.EditSpectrumFilterDlg_GetFilterTabNames_Criteria__0_, unnamedTabCount);
                     }
                 }
 
@@ -129,7 +129,7 @@ namespace pwiz.Skyline.EditUI
 
             if (!lastPageEmpty)
             {
-                tabNames.Add("+ Add Alternative");
+                tabNames.Add(EditUIResources.EditSpectrumFilterDlg_GetFilterTabNames___Add_Alternative);
             }
 
             return tabNames;
