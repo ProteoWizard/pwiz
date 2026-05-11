@@ -137,6 +137,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 Directory.CreateDirectory(Path.Combine(_baseDir.DirPath, @"Logs"));
                 helper.WriteMessage(message, true);
             }
+// ReSharper disable once EmptyGeneralCatchClause
             catch
             {
                 // ignore: search is already failing; don't let a logging glitch mask the cause
