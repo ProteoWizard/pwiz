@@ -266,7 +266,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 replicateValues.Add(abundances);
             }
 
-            return new MedianPolisher() { IncludeScaleFactor = true }.Polish(replicateValues, replicateIndexes);
+            return new MedianPolisher() { IncludeScaleFactor = true, IterateToConvergence = true }
+                .Polish(replicateValues, replicateIndexes);
         }
 
         private void ApplyPeptideLevelAdjustment(SrmSettings settings, double?[] polished,

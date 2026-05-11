@@ -572,7 +572,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                             }
                         }
                     }
-                    var mp = MedianPolish.GetMedianPolish(matrix);
+                    var mp = MedianPolish.GetConvergedMedianPolish(matrix);
                     double scaleFactor = Math.Log(featureCount, 2);
                     for (int iSample = 0; iSample < sampleCount; iSample++)
                     {
@@ -609,7 +609,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                         matrix[iPeptide, iSample] = peptideAbundances[iPeptide][iSample];
                     }
                 }
-                var mp = MedianPolish.GetMedianPolish(matrix);
+                var mp = MedianPolish.GetConvergedMedianPolish(matrix);
                 proteinAbundances = new double[sampleCount];
                 for (int iSample = 0; iSample < sampleCount; iSample++)
                 {

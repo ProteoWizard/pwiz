@@ -134,7 +134,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
 
-            var polishedProteinAbundances = new MedianPolisher().Polish(replicatePeptideAbundances, replicateIndexes);
+            var polishedProteinAbundances = new MedianPolisher() { IterateToConvergence = true }
+                .Polish(replicatePeptideAbundances, replicateIndexes);
 
             // Convert to AbundanceValue records
             var proteinAbundanceRecords = new Dictionary<int, Protein.AbundanceValue>();

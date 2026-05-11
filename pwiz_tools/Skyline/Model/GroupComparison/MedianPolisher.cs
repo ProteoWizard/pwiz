@@ -9,6 +9,14 @@ namespace pwiz.Skyline.Model.GroupComparison
     public class MedianPolisher
     {
         public bool IncludeScaleFactor { get; set; }
+
+        /// <summary>
+        /// When true, use <see cref="MedianPolish.GetConvergedMedianPolish(double?[,])"/>
+        /// (R / skyline-prism stopping rule) instead of the legacy
+        /// <see cref="MedianPolish.GetMedianPolish(double?[,])"/>. The original
+        /// MSstats-style summarization leaves this false to keep its behavior unchanged.
+        /// </summary>
+        public bool IterateToConvergence { get; set; }
         public double?[] Polish(IList<IDictionary<IdentityPath, double>> values, HashSet<int> include)
         {
             List<int> includedIndexes =
@@ -54,7 +62,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             double scaleFactor = IncludeScaleFactor ? Math.Log(keys.Count, 2) : 0;
-            var medianPolish = MedianPolish.GetMedianPolish(matrix);
+            var medianPolish = IterateToConvergence
+                ? MedianPolish.GetConvergedMedianPolish(matrix)
+                : MedianPolish.GetMedianPolish(matrix);
             for (int iCol = 0; iCol < includedIndexes.Count; iCol++)
             {
                 result[includedIndexes[iCol]] = medianPolish.OverallConstant + medianPolish.ColumnEffects[iCol] + scaleFactor;

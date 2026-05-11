@@ -9,12 +9,14 @@ using System.IO;
 using System.Linq;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
     public class MedianPolishScenariosTest : AbstractFunctionalTest
     {
+        private double _epsilon = 1e-6;
         [TestMethod]
         public void TestMedianPolishSmall()
         {
@@ -62,6 +64,7 @@ namespace pwiz.SkylineTestFunctional
             var expectedMedianPolishedAreas = ReadExpectedMedianPolishedAreas(document, TestFilesDir.GetTestPath("peptides_rollup.parquet"));
             Assert.IsNotNull(expectedMedianPolishedAreas);
             var normalizedValueCalculator = new NormalizedValueCalculator(document);
+            var maxDifference = 0.0;
             foreach (var moleculeGroup in document.MoleculeGroups)
             {
                 foreach (var molecule in moleculeGroup.Molecules)
@@ -90,7 +93,8 @@ namespace pwiz.SkylineTestFunctional
                         if (expectedValue.HasValue)
                         {
                             Assert.IsNotNull(actualValue);
-                            Assert.AreEqual(expectedValue.Value, actualValue.Value, .15, "Mismatch on {0} replicate {1}", molecule.ModifiedSequence, i);
+                            Assert.AreEqual(expectedValue.Value, actualValue.Value, _epsilon, "Mismatch on {0} replicate {1}", molecule.ModifiedSequence, i);
+                            maxDifference = Math.Max(maxDifference, Math.Abs(expectedValue.Value - actualValue.Value));
                         }
                         else
                         {
@@ -99,6 +103,24 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             }
+
+            Console.Out.WriteLine("Maximum difference: {0}", maxDifference);
+
+            // Switch the document to NormalizationMethod=None so the protein-level
+            // median polish runs on un-normalized peptide values, then export the
+            // "Protein Abundances" report to compare against an unnormalized PRISM run.
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
+            {
+                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Quantification;
+                peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.NONE;
+                peptideSettingsUi.OkDialog();
+            });
+            RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportLiveReportDlg =>
+            {
+                exportLiveReportDlg.ReportName = "Protein Abundances";
+                exportLiveReportDlg.SetUseInvariantLanguage(true);
+                exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("ProteinAbundances.parquet"));
+            });
         }
 
         private static bool HasAnyTruncatedTransition(PeptideDocNode molecule)
