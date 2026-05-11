@@ -125,18 +125,10 @@ public sealed class Converter
         {
             if (_config.Verbose)
                 foreach (var f in _config.Filters) _log.WriteLine($"  filter: {f}");
-            msd.Run.SpectrumList = SpectrumListFactory.Wrap(msd.Run.SpectrumList, _config.Filters);
-
-            // Filters that produce a new DataProcessing (e.g. peakPicking) expose it via
-            // SpectrumList.DataProcessing — promote it to the top-level dataProcessingList so
-            // the writer emits the processingMethod entry. Matches pwiz C++ behavior.
-            var wrappedDp = msd.Run.SpectrumList.DataProcessing;
-            if (wrappedDp is not null)
-            {
-                int existing = msd.DataProcessings.FindIndex(d => d.Id == wrappedDp.Id);
-                if (existing >= 0) msd.DataProcessings[existing] = wrappedDp;
-                else msd.DataProcessings.Add(wrappedDp);
-            }
+            // MSData-shaped overload threads the run context through to filters that need it
+            // (mzRefiner, turbocharger, precursorRefine, titleMaker) AND promotes new
+            // DataProcessing records to msd.DataProcessings.
+            SpectrumListFactory.Wrap(msd, _config.Filters);
         }
 
         // Chromatogram filters aren't implemented yet; warn once rather than silently drop.

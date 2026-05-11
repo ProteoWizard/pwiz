@@ -240,6 +240,13 @@ public static class SpectrumListFactory
         // chargeStatePredictor — predict precursor charge from MS2 intensity distribution.
         map["chargestatepredictor"] = (args, inner, _) => ParseChargeStatePredictor(args, inner);
 
+        // turbocharger — predict precursor charge from isotope spacing in MS1 surveys.
+        map["turbocharger"] = (args, _, msd) =>
+        {
+            ArgumentNullException.ThrowIfNull(msd, "turbocharger needs the source MSData for MS1 survey-scan inspection.");
+            return ParseTurbocharger(args, msd);
+        };
+
         // mzRefiner — m/z calibration shift derived from search-engine identifications.
         map["mzrefiner"] = (args, _, msd) =>
         {
@@ -859,6 +866,47 @@ public static class SpectrumListFactory
         string rangeSet = tokens[2];
         var msLevels = tokens.Length > 3 ? ParseIntegerSet(tokens[3]) : new IntegerSet(1, 2);
         return new SpectrumList_MZRefiner(msd, identFile, cvTerm, rangeSet, msLevels);
+    }
+
+    private static SpectrumList_ChargeFromIsotope ParseTurbocharger(string args, MSData msd)
+    {
+        // Cpp filterCreator_chargeFromIsotope: whitespace-separated key=value pairs. Defaults
+        // match cpp (SpectrumListFactory.cpp:1253-1259).
+        int maxCharge = 8;
+        int minCharge = 1;
+        int parentsBefore = 2;
+        int parentsAfter = 0;
+        double halfIso = 1.25;
+        int defaultChargeMax = 0;
+        int defaultChargeMin = 0;
+
+        foreach (var tok in (args ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            int eq = tok.LastIndexOf('=');
+            if (eq < 0) throw new ArgumentException($"turbocharger: = sign required after keyword: {tok}");
+            string kw = tok[..eq];
+            string val = tok[(eq + 1)..];
+            switch (kw.ToLowerInvariant())
+            {
+                case "mincharge": minCharge = int.Parse(val, CultureInfo.InvariantCulture); break;
+                case "maxcharge": maxCharge = int.Parse(val, CultureInfo.InvariantCulture); break;
+                case "precursorsbefore": parentsBefore = int.Parse(val, CultureInfo.InvariantCulture); break;
+                case "precursorsafter": parentsAfter = int.Parse(val, CultureInfo.InvariantCulture); break;
+                case "halfisowidth": halfIso = double.Parse(val, NumberStyles.Float, CultureInfo.InvariantCulture); break;
+                case "defaultmincharge": defaultChargeMin = int.Parse(val, CultureInfo.InvariantCulture); break;
+                case "defaultmaxcharge": defaultChargeMax = int.Parse(val, CultureInfo.InvariantCulture); break;
+                default: throw new ArgumentException($"turbocharger: invalid keyword: {kw}");
+            }
+        }
+
+        if (minCharge < 1) throw new ArgumentException("turbocharger: minCharge must be ≥ 1");
+        if (maxCharge < minCharge) throw new ArgumentException("turbocharger: maxCharge must be ≥ minCharge");
+        if (halfIso <= 0) throw new ArgumentException("turbocharger: halfIsoWidth must be > 0");
+        if (defaultChargeMin > defaultChargeMax)
+            throw new ArgumentException("turbocharger: defaultMaxCharge must be ≥ defaultMinCharge");
+
+        return new SpectrumList_ChargeFromIsotope(msd, maxCharge, minCharge,
+            parentsBefore, parentsAfter, halfIso, defaultChargeMax, defaultChargeMin);
     }
 
     private static SpectrumList_ChargeStateCalculator ParseChargeStatePredictor(string args, ISpectrumList inner)

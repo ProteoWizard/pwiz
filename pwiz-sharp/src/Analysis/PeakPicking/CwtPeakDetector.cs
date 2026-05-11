@@ -103,9 +103,13 @@ public sealed class CwtPeakDetector : IPeakDetector
             }
         }
 
-        var xs = binnedX;
-        var ys = binnedY;
-        int mzLength = xs.Count;
+        // Convert to bare double[] for the hot path — every inner loop in GetScales,
+        // CalcCorrelation, and GetPeakLines re-indexes these arrays per (scale, column),
+        // and List<T>.this[int] bounds-checks on every access. double[] indexing in tight
+        // for-loops is one of the patterns RyuJIT can hoist the bounds check out of.
+        double[] xs = binnedX.ToArray();
+        double[] ys = binnedY.ToArray();
+        int mzLength = xs.Length;
         if (mzLength <= 2) return;
 
         // The correlation matrix has columns at every original m/z point AND at the midpoint
@@ -146,10 +150,10 @@ public sealed class CwtPeakDetector : IPeakDetector
     /// performance optimization that doesn't affect peak counts because the inner correlation
     /// loop applies the same skip.
     /// </summary>
-    private void GetScales(List<double> mz, List<double> intensity,
+    private void GetScales(double[] mz, double[] intensity,
         int[][][] nPoints, double[] widths)
     {
-        int mzLength = mz.Count;
+        int mzLength = mz.Length;
         var xSpacing = new double[mzLength];
         double lastXSpacing = 0;
 
@@ -231,10 +235,10 @@ public sealed class CwtPeakDetector : IPeakDetector
     /// "centered on a sample point" and "centered on the midpoint between two sample points",
     /// hence <c>2*mzLength-1</c> total columns.
     /// </summary>
-    private void CalcCorrelation(List<double> mz, List<double> intensity,
+    private void CalcCorrelation(double[] mz, double[] intensity,
         int[][][] waveletPoints, double[] widths, double[][] matrix)
     {
-        int mzLength = mz.Count;
+        int mzLength = mz.Length;
         // Pad both arrays so the wavelet can extend safely past the spectrum edges.
         const int paddingPoints = 500;
         var padMz = new double[mzLength + 2 * paddingPoints];
@@ -300,7 +304,7 @@ public sealed class CwtPeakDetector : IPeakDetector
     /// surviving an SNR floor estimated as the 95th percentile of the narrowest-scale
     /// correlations within a sliding 300-column window.
     /// </summary>
-    private void GetPeakLines(double[][] corrMatrix, List<double> x,
+    private void GetPeakLines(double[][] corrMatrix, double[] x,
         List<RidgeLine> allLines, List<double> snrs)
     {
         int corrMatrixLength = corrMatrix[0].Length;
@@ -415,7 +419,7 @@ public sealed class CwtPeakDetector : IPeakDetector
     /// Drops noise-floor peaks (intensity &lt; 2 at the narrowest scale), de-duplicates peaks
     /// closer than mzTol, and applies <c>fixedPeaksKeep</c> when set.
     /// </summary>
-    private void RefinePeaks(List<double> noisyX, List<double> noisyY,
+    private void RefinePeaks(double[] noisyX, double[] noisyY,
         List<RidgeLine> lines, double[] widths,
         List<double> smoothX, List<double> smoothY, List<double> snrs)
     {
@@ -584,7 +588,7 @@ public sealed class CwtPeakDetector : IPeakDetector
         return lo + (hi - lo) * fraction;
     }
 
-    private static double ConvertColToMz(List<double> mzs, int col)
+    private static double ConvertColToMz(double[] mzs, int col)
     {
         int mapIndex = col / 2;
         if ((col & 1) == 1) return (mzs[mapIndex] + mzs[mapIndex + 1]) / 2.0;
