@@ -54,6 +54,35 @@ namespace pwiz.OspreySharp.Tasks
 
         public override string Name => @"MergeNode";
 
+        // Phase B resume surface. Reads each file's reconciled
+        // .scores.parquet, writes the .2nd-pass.fdr_scores.bin
+        // sidecars (only when protein-FDR is enabled) and the
+        // .blib output. ValidityKey adds the reconciliation hash
+        // because the reconciled parquet is read.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+                yield return ParquetScoreCache.GetScoresPath(input);
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
+                yield return ctx.Config.OutputBlib;
+            if (ctx.Config.ProteinFdr.HasValue && ctx.Config.InputFiles != null)
+            {
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return FdrScoresSidecar.Pass2Path(input);
+            }
+        }
+
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx)
+                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+        }
+
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;

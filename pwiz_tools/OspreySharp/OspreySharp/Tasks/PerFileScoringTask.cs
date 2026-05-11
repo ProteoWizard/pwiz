@@ -106,6 +106,30 @@ namespace pwiz.OspreySharp.Tasks
         public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations() => _perFileCalibrations;
         public Dictionary<string, string> GetPerFileParquetPaths() => _perFileParquetPaths;
 
+        // Phase B resume surface: the library and every input mzML are
+        // read; per-file .scores.parquet + .calibration.json are written.
+        // ValidityKey is the default (search + library hashes) -- those
+        // are the only parameters that affect per-file scoring output.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.LibrarySource != null && !string.IsNullOrEmpty(ctx.Config.LibrarySource.Path))
+                yield return ctx.Config.LibrarySource.Path;
+            if (ctx.Config.InputFiles != null)
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return input;
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+            {
+                yield return ParquetScoreCache.GetScoresPath(input);
+                string calDir = Path.GetDirectoryName(Path.GetFullPath(input)) ?? @".";
+                yield return CalibrationIO.CalibrationPathForInput(input, calDir);
+            }
+        }
+
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;

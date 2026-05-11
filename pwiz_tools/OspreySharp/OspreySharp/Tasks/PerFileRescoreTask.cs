@@ -130,6 +130,37 @@ namespace pwiz.OspreySharp.Tasks
             return _perFileEntries;
         }
 
+        // Phase B resume surface. The reconciled parquet overwrites the
+        // upstream PerFileScoringTask parquet at the same path, but
+        // the per-task sidecar naming
+        // (<output>.PerFileRescore.osprey.task) keeps the two tasks'
+        // validity records distinct. ValidityKey adds the
+        // reconciliation parameter hash because the rescored content
+        // depends on it.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+            {
+                yield return FdrScoresSidecar.Pass1Path(input);
+                if (ctx.Config.Reconciliation != null && ctx.Config.Reconciliation.Enabled)
+                    yield return ReconciliationFile.PathForInput(input);
+            }
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+                yield return ParquetScoreCache.GetScoresPath(input);
+        }
+
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx)
+                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+        }
+
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;

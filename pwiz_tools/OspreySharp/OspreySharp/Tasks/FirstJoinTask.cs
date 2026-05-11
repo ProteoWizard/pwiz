@@ -89,6 +89,37 @@ namespace pwiz.OspreySharp.Tasks
         public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations() => _refinedCalibrations;
         public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore() => _perFileGapFillForRescore;
 
+        // Phase B resume surface. Reads each file's .scores.parquet,
+        // writes the .1st-pass.fdr_scores.bin sidecars and the
+        // .reconciliation.json envelopes (the latter only when
+        // reconciliation is enabled and we have multi-file evidence).
+        // ValidityKey adds the reconciliation parameter hash so that
+        // toggling reconciliation off/on between runs invalidates the
+        // prior outputs.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+                yield return ParquetScoreCache.GetScoresPath(input);
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+            {
+                yield return FdrScoresSidecar.Pass1Path(input);
+                if (ctx.Config.Reconciliation != null && ctx.Config.Reconciliation.Enabled)
+                    yield return ReconciliationFile.PathForInput(input);
+            }
+        }
+
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx)
+                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+        }
+
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;
