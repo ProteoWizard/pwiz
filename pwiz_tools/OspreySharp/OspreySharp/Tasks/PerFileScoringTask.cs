@@ -89,8 +89,7 @@ namespace pwiz.OspreySharp.Tasks
 
         // Outputs reached by downstream tasks through ctx.GetTask<PerFileScoringTask>().
         // Defaults are non-null empty collections so callers querying
-        // outputs from a not-yet-run task (e.g. worker mode before lazy
-        // rehydrate lands in Pass 2) never NPE on the accessor.
+        // outputs from a not-yet-run task never NPE on the accessor.
         private List<LibraryEntry> _fullLibrary = new List<LibraryEntry>();
         private Dictionary<uint, LibraryEntry> _libraryById = new Dictionary<uint, LibraryEntry>();
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries
@@ -100,11 +99,31 @@ namespace pwiz.OspreySharp.Tasks
         private Dictionary<string, string> _perFileParquetPaths
             = new Dictionary<string, string>();
 
-        public List<LibraryEntry> GetFullLibrary() => _fullLibrary;
-        public Dictionary<uint, LibraryEntry> GetLibraryById() => _libraryById;
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries() => _perFileEntries;
-        public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations() => _perFileCalibrations;
-        public Dictionary<string, string> GetPerFileParquetPaths() => _perFileParquetPaths;
+        // Phase B lazy-rehydrate gate. Set to true at the start of Run
+        // and by EnsureHydrated. Once set, neither path re-executes the
+        // body (multiple accessors querying state from a single skipped
+        // task all hit a fast no-op after the first hydration).
+        private bool _runOrHydrated;
+
+        public List<LibraryEntry> GetFullLibrary(PipelineContext ctx) { EnsureHydrated(ctx); return _fullLibrary; }
+        public Dictionary<uint, LibraryEntry> GetLibraryById(PipelineContext ctx) { EnsureHydrated(ctx); return _libraryById; }
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileEntries; }
+        public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileCalibrations; }
+        public Dictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileParquetPaths; }
+
+        /// <summary>
+        /// Lazy-rehydrate seam: when a downstream task queries one of
+        /// this task's outputs and <see cref="Run"/> has not executed
+        /// (i.e. this task is before <see cref="PipelineContext.StartAtTask"/>),
+        /// invoke Run so the same code path that populates state on a
+        /// straight-through run also populates state here. Idempotent;
+        /// subsequent calls are no-ops.
+        /// </summary>
+        private void EnsureHydrated(PipelineContext ctx)
+        {
+            if (_runOrHydrated) return;
+            Run(ctx);
+        }
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
@@ -132,6 +151,11 @@ namespace pwiz.OspreySharp.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
+            // Idempotent re-entry guard: a lazy-rehydrate via an
+            // accessor may have already executed this task body; the
+            // driver loop's call here is then a no-op.
+            if (_runOrHydrated) return true;
+            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
 

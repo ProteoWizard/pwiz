@@ -90,11 +90,11 @@ namespace pwiz.OspreySharp.Tasks
             // perFileEntries comes from PerFileRescoreTask -- it owns
             // the post-rescore version (mutated in place; or the
             // unchanged upstream reference when planning was skipped).
-            var perFileEntries = ctx.GetTask<PerFileRescoreTask>().GetPerFileEntries();
+            var perFileEntries = ctx.GetTask<PerFileRescoreTask>().GetPerFileEntries(ctx);
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
-            var fullLibrary = perFileScoring.GetFullLibrary();
-            var libraryById = perFileScoring.GetLibraryById();
-            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths();
+            var fullLibrary = perFileScoring.GetFullLibrary(ctx);
+            var libraryById = perFileScoring.GetLibraryById(ctx);
+            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
 
             // Stage 8: Protein FDR (optional)
             if (config.ProteinFdr.HasValue)

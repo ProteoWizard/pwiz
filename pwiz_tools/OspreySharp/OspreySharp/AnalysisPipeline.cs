@@ -75,16 +75,26 @@ namespace pwiz.OspreySharp
                 var ctx = new PipelineContext(config, pipelineTasks,
                     LogInfo, LogWarning, LogError, startAt, stopAfter);
 
-                // ctx.StartAtTask / ctx.StopAfterTask are set but not yet
-                // honored as task-skip boundaries here. Activating that
-                // gating depends on lazy-rehydrate accessors on the
-                // producer tasks (commit 3); until those exist, every task
-                // must run so it can hydrate its own state from disk via
-                // its existing CLI-mode branch.
+                // Phase B range-gating: tasks before StartAt are skipped
+                // silently (their state lazy-rehydrates from disk via the
+                // producer-task accessors when a downstream task queries
+                // it); tasks at-or-after StartAt run normally through
+                // RunTask's sidecar dance; iteration stops after StopAfter.
+                bool inRange = false;
                 foreach (var task in ctx.Tasks)
                 {
+                    if (!inRange)
+                    {
+                        if (task.GetType() != ctx.StartAtTask)
+                            continue;
+                        inRange = true;
+                    }
+
                     if (!RunTask(task, ctx))
                         return ctx.ExitCode;
+
+                    if (task.GetType() == ctx.StopAfterTask)
+                        break;
                 }
 
                 stopwatch.Stop();

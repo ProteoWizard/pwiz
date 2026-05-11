@@ -110,20 +110,24 @@ namespace pwiz.OspreySharp.Tasks
         // list reference falls through unchanged from PerFileScoringTask.
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
 
+        // Phase B lazy-rehydrate gate. See PerFileScoringTask for the
+        // mechanism.
+        private bool _runOrHydrated;
+
         public override string Name => @"PerFileRescore";
 
         /// <summary>
         /// The post-rescore per-file entries. Mutated in place by
         /// <see cref="ExecuteRescore"/>; when this task short-circuits
         /// (no FirstJoinTask plan) the list is the unchanged upstream
-        /// reference. Throws if called before <see cref="Run"/> /
-        /// <see cref="RunWorker"/> has populated the field — a
-        /// programming defect (consumer queried us before we executed),
-        /// matching the fail-fast posture of
-        /// <see cref="PipelineContext.GetTask{T}"/>.
+        /// reference. Lazy-rehydrates by invoking <see cref="Run"/> on
+        /// the first call when this task was skipped by the driver
+        /// (i.e. <see cref="PipelineContext.StartAtTask"/> is downstream),
+        /// so consumers always see populated state.
         /// </summary>
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries()
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx)
         {
+            if (!_runOrHydrated) Run(ctx);
             if (_perFileEntries == null)
                 throw new InvalidOperationException(
                     @"PerFileRescoreTask.GetPerFileEntries called before Run / RunWorker populated the field.");
@@ -163,9 +167,11 @@ namespace pwiz.OspreySharp.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
+            if (_runOrHydrated) return true;
+            _runOrHydrated = true;
             _ctx = ctx;
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
-            _perFileEntries = perFileScoring.GetPerFileEntries();
+            _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 
             // Self-gate on FirstJoinTask: rescore + reconciliation only
             // run when planning actually produced state (multi-file with
@@ -174,18 +180,18 @@ namespace pwiz.OspreySharp.Tasks
             // MergeNodeTask still gets _perFileEntries via our accessor
             // (falls through to the upstream reference).
             var firstJoin = ctx.GetTask<FirstJoinTask>();
-            if (!firstJoin.DidPlan)
+            if (!firstJoin.DidPlan(ctx))
                 return true;
 
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
-                firstJoin.GetPerFileConsensusTargets(),
-                firstJoin.GetReconciliationActions(),
-                firstJoin.GetRefinedCalibrations(),
-                perFileScoring.GetPerFileCalibrations(),
-                firstJoin.GetPerFileGapFillForRescore(),
-                perFileScoring.GetPerFileParquetPaths(),
-                perFileScoring.GetFullLibrary(),
+                firstJoin.GetPerFileConsensusTargets(ctx),
+                firstJoin.GetReconciliationActions(ctx),
+                firstJoin.GetRefinedCalibrations(ctx),
+                perFileScoring.GetPerFileCalibrations(ctx),
+                firstJoin.GetPerFileGapFillForRescore(ctx),
+                perFileScoring.GetPerFileParquetPaths(ctx),
+                perFileScoring.GetFullLibrary(ctx),
                 ctx.Config);
             ctx.LogInfo(string.Format(
                 @"Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
