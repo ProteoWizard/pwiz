@@ -621,8 +621,11 @@ namespace pwiz.OspreySharp.IO
         /// <summary>
         /// Load only the columns needed for FDR stubs from a Parquet cache.
         /// Reads: entry_id, is_decoy, charge, scan_number, apex_rt, start_rt, end_rt,
-        /// fragment_coelution_sum, modified_sequence.
-        /// Sets parquet_index = row index.
+        /// fragment_coelution_sum, bounds_area, modified_sequence.
+        /// Sets parquet_index = row index. <c>bounds_area</c> feeds the
+        /// .blib's <c>OspreyPeakBoundaries.IntegratedArea</c> column at
+        /// Stage 7 — without it, the stage-7 .blib write emits zero for
+        /// every IntegratedArea row and silently diverges from Rust.
         /// </summary>
         public static List<FdrEntry> LoadFdrStubsFromParquet(string path)
         {
@@ -645,6 +648,7 @@ namespace pwiz.OspreySharp.IO
                         var startCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_START_RT.Name);
                         var endCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_END_RT.Name);
                         var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
+                        var boundsAreaCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_AREA.Name);
 
                         if (entryIdCol == null || isDecoyCol == null)
                             continue;
@@ -663,6 +667,7 @@ namespace pwiz.OspreySharp.IO
                                 StartRt = startCol != null ? startCol[row] : 0.0,
                                 EndRt = endCol != null ? endCol[row] : 0.0,
                                 CoelutionSum = coelutionCol != null ? coelutionCol[row] : 0.0,
+                                BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
                                 ModifiedSequence = modseqCol != null ? modseqCol[row] : string.Empty,
                             });
                         }
@@ -1066,6 +1071,28 @@ namespace pwiz.OspreySharp.IO
                     return err;
                 if (warning != null && logWarning != null)
                     logWarning(warning);
+
+                // --join-at-pass=2 strict reconciled-input gate. Mirrors
+                // Rust pipeline.rs:3313-3344: every input parquet must
+                // carry osprey.reconciled = "true" so the operator
+                // cannot mix raw Stage 4 parquets into a Stages 7-8-only
+                // run. Failing fast here is the contract that lets the
+                // post-Stage-6 entry point be a useful HPC boundary
+                // (sidecar fanout across compute nodes).
+                if (config.ExpectReconciledInput)
+                {
+                    string cachedReconciled;
+                    kv.TryGetValue("osprey.reconciled", out cachedReconciled);
+                    if (!string.Equals(cachedReconciled, "true", StringComparison.Ordinal))
+                    {
+                        return string.Format(
+                            "--join-at-pass=2 requires a reconciled (post-Stage-6) parquet, " +
+                            "but {0} has osprey.reconciled = '{1}'. Either it is a Stage 4 " +
+                            "(raw) parquet — in which case use --join-at-pass=1 — or run a " +
+                            "full pipeline first to produce reconciled parquets.",
+                            path, cachedReconciled ?? "<unset>");
+                    }
+                }
             }
             return null;
         }

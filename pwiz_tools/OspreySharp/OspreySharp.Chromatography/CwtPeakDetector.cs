@@ -581,7 +581,7 @@ namespace pwiz.OspreySharp.Chromatography
                 return 0.0;
 
             double[] sorted = values.ToArray();
-            Array.Sort(sorted);
+            Array.Sort(sorted); // Array.Sort OK: median of single primitive array, no parallel data
             int n = sorted.Length;
             if (n % 2 == 0)
                 return (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0;
@@ -596,7 +596,7 @@ namespace pwiz.OspreySharp.Chromatography
             if (values.Length == 0)
                 return 0.0;
 
-            Array.Sort(values);
+            Array.Sort(values); // Array.Sort OK: median of single primitive array, no parallel data
             int n = values.Length;
             if (n % 2 == 0)
                 return (values[n / 2 - 1] + values[n / 2]) / 2.0;
