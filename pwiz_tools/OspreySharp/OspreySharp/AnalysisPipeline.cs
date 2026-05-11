@@ -61,13 +61,14 @@ namespace pwiz.OspreySharp
                 // no-op when planning was skipped). Returning false from
                 // any task is the signal to stop and propagate
                 // ctx.ExitCode.
-                var ctx = new PipelineContext(config, new OspreyTask[]
+                var pipelineTasks = new OspreyTask[]
                 {
                     new PerFileScoringTask(),
                     new FirstJoinTask(),
                     new PerFileRescoreTask(),
-                    new MergeNodeTask(),
-                }, LogInfo, LogWarning, LogError);
+                    new MergeNodeTask()
+                };
+                var ctx = new PipelineContext(config, pipelineTasks, LogInfo, LogWarning, LogError);
 
                 foreach (var task in ctx.Tasks)
                 {
