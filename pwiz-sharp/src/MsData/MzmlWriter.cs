@@ -209,25 +209,36 @@ public sealed class MzmlWriter
     }
 
     /// <summary>
-    /// Records the byte offset where the next element's start tag begins — the <c>&lt;</c> char,
-    /// not the preceding indent whitespace (matching pwiz C++'s indexedmzML convention).
+    /// Arms the underlying counting stream to capture the byte position of the next
+    /// <c>&lt;</c> character. Call this immediately before <see cref="XmlWriter.WriteStartElement(string)"/>
+    /// of a spectrum or chromatogram; once the start tag has been flushed, call
+    /// <see cref="CaptureOffset"/> to retrieve the position.
     /// </summary>
     /// <remarks>
-    /// XmlWriter buffers the indent until it emits the next element, so a plain <c>Flush</c>
-    /// captures only the content up to the previous element's close. To get a position that
-    /// points at the start tag, we emit the indent ourselves via <see cref="XmlWriter.WriteWhitespace"/>,
-    /// flush it, record the position, and let <see cref="XmlWriter.WriteStartElement(string)"/>
-    /// emit the tag body without re-indenting (XmlWriter only re-indents when its last action was
-    /// closing an element, not when whitespace was written).
+    /// The earlier implementation injected the indent whitespace manually via
+    /// <see cref="XmlWriter.WriteWhitespace(string?)"/> so it could Flush + read
+    /// <c>BytesWritten</c> at the tag boundary. That worked for the byte position, but it put
+    /// XmlWriter into mixed-content mode at the spectrumList / chromatogramList level, which
+    /// cascades to suppress indentation for every child of every spectrum (cvParam, scanList,
+    /// binaryDataArray, …). The fix is to let XmlWriter do its own indent + start-tag emission
+    /// and observe the <c>&lt;</c> byte position via the stream wrapper instead.
     /// </remarks>
-    private void RecordOffset(XmlWriter w, string id, List<(string Id, long Offset)>? offsets, int indentDepth)
+    private void ArmOffsetCapture(XmlWriter w)
+    {
+        if (_stream is null) return;
+        w.Flush(); // commit any bytes buffered from prior elements so they don't pollute the search
+        _stream.ResetLastLt();
+    }
+
+    /// <summary>Records the byte position of the first <c>&lt;</c> written since the most recent
+    /// <see cref="ArmOffsetCapture"/>. Call after the element (and all its children) have been
+    /// written — the start tag is guaranteed to be in the stream by then.</summary>
+    private void CaptureOffset(XmlWriter w, string id, List<(string Id, long Offset)>? offsets)
     {
         if (offsets is null || _stream is null) return;
-        // Write newline + indent to match the surrounding pretty-print, then Flush so the position
-        // we read is exactly at the '<' of the upcoming start tag.
-        w.WriteWhitespace("\r\n" + new string(' ', indentDepth * 2));
         w.Flush();
-        offsets.Add((id, _stream.BytesWritten));
+        if (_stream.LastLtPos < 0) return;
+        offsets.Add((id, _stream.LastLtPos));
     }
 
     // ---------- cvList ----------
@@ -449,7 +460,7 @@ public sealed class MzmlWriter
 
     private void WriteChromatogram(XmlWriter w, Chromatogram chrom)
     {
-        RecordOffset(w, chrom.Id, _chromatogramOffsets, indentDepth: Indexed ? 4 : 3);
+        ArmOffsetCapture(w);
         w.WriteStartElement("chromatogram");
         w.WriteAttributeString("index", chrom.Index.ToString(CultureInfo.InvariantCulture));
         // cpp IO.cpp:2833 emits chromatogram.id raw ("not an XML:ID"); reader IO.cpp doesn't
@@ -480,6 +491,7 @@ public sealed class MzmlWriter
         }
 
         w.WriteEndElement();
+        CaptureOffset(w, chrom.Id, _chromatogramOffsets);
     }
 
     private void WriteIntegerDataArray(XmlWriter w, IntegerDataArray arr)
@@ -530,8 +542,7 @@ public sealed class MzmlWriter
 
     private void WriteSpectrum(XmlWriter w, Spectrum spec)
     {
-        // Depth: indexedmzML → mzML → run → spectrumList → spectrum = 4 indents deep.
-        RecordOffset(w, spec.Id, _spectrumOffsets, indentDepth: Indexed ? 4 : 3);
+        ArmOffsetCapture(w);
         w.WriteStartElement("spectrum");
         w.WriteAttributeString("index", spec.Index.ToString(CultureInfo.InvariantCulture));
         // cpp IO.cpp:2611 emits spectrum.id raw ("not an XML:ID"); reader IO.cpp:2716 skips
@@ -612,6 +623,7 @@ public sealed class MzmlWriter
         }
 
         w.WriteEndElement(); // spectrum
+        CaptureOffset(w, spec.Id, _spectrumOffsets);
     }
 
     private static void WritePrecursor(XmlWriter w, Precursor p)
