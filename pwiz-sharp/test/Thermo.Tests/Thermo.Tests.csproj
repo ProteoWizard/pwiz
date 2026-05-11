@@ -20,6 +20,13 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="ThermoModelReference.tsv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+
   <PropertyGroup>
     <VendorTestArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data.tar.bz2</VendorTestArchive>
     <VendorTestDataParent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo</VendorTestDataParent>

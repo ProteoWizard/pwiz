@@ -34,6 +34,13 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Let Thermo.Tests reach internal helpers (GetInstrumentConfigurationRecipe,
+         TranslateAnalyzer, TranslateIonization) so ThermoModelParityTests can compare them
+         against the cpp-generated ThermoModelReference.tsv. -->
+    <InternalsVisibleTo Include="Thermo.Tests" />
+  </ItemGroup>
+
   <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
        and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Thermo
        compile without the SDK and throw from Read() while keeping Identify() working. The
