@@ -33,7 +33,7 @@ namespace pwiz.OspreySharp
     /// Parses CLI arguments and launches the analysis pipeline.
     /// Port of osprey/src/main.rs.
     /// </summary>
-    class Program
+    static class Program
     {
         // Tracks the Rust Osprey upstream version this OspreySharp port
         // is aligned with. Used in parquet footer metadata; the Phase 3

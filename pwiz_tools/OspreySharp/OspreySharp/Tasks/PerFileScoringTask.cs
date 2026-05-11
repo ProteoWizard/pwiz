@@ -87,18 +87,24 @@ namespace pwiz.OspreySharp.Tasks
 
         public override string Name => @"PerFileScoring";
 
-        // Outputs read by AnalysisPipeline.Run after Run completes.
-        // Defaults match the "library load failed before any other
-        // state existed" case so the caller can still safely access
-        // the collections without further null guards.
-        public List<LibraryEntry> FullLibrary { get; private set; } = new List<LibraryEntry>();
-        public Dictionary<uint, LibraryEntry> LibraryById { get; private set; } = new Dictionary<uint, LibraryEntry>();
-        public List<KeyValuePair<string, List<FdrEntry>>> PerFileEntries { get; private set; }
+        // Outputs reached by downstream tasks through ctx.GetTask<PerFileScoringTask>().
+        // Defaults are non-null empty collections so callers querying
+        // outputs from a not-yet-run task (e.g. worker mode before lazy
+        // rehydrate lands in Pass 2) never NPE on the accessor.
+        private List<LibraryEntry> _fullLibrary = new List<LibraryEntry>();
+        private Dictionary<uint, LibraryEntry> _libraryById = new Dictionary<uint, LibraryEntry>();
+        private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries
             = new List<KeyValuePair<string, List<FdrEntry>>>();
-        public ConcurrentDictionary<string, RTCalibration> PerFileCalibrations { get; private set; }
+        private ConcurrentDictionary<string, RTCalibration> _perFileCalibrations
             = new ConcurrentDictionary<string, RTCalibration>();
-        public Dictionary<string, string> PerFileParquetPaths { get; private set; }
+        private Dictionary<string, string> _perFileParquetPaths
             = new Dictionary<string, string>();
+
+        public List<LibraryEntry> GetFullLibrary() => _fullLibrary;
+        public Dictionary<uint, LibraryEntry> GetLibraryById() => _libraryById;
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries() => _perFileEntries;
+        public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations() => _perFileCalibrations;
+        public Dictionary<string, string> GetPerFileParquetPaths() => _perFileParquetPaths;
 
         public override bool Run(PipelineContext ctx)
         {
@@ -188,8 +194,8 @@ namespace pwiz.OspreySharp.Tasks
             foreach (var entry in fullLibrary)
                 libraryById[entry.Id] = entry;
 
-            FullLibrary = fullLibrary;
-            LibraryById = libraryById;
+            _fullLibrary = fullLibrary;
+            _libraryById = libraryById;
 
             // Stage 2-4: Per-file calibration + coelution scoring
             // Process files in parallel when multiple files are provided.
@@ -485,9 +491,9 @@ namespace pwiz.OspreySharp.Tasks
             // Surface per-file outputs for downstream tasks before any
             // early-exit so a partial-success caller still sees the
             // populated collections.
-            PerFileEntries = perFileEntries;
-            PerFileCalibrations = perFileCalibrations;
-            PerFileParquetPaths = perFileParquetPaths;
+            _perFileEntries = perFileEntries;
+            _perFileCalibrations = perFileCalibrations;
+            _perFileParquetPaths = perFileParquetPaths;
 
             if (perFileEntries.Count == 0 || totalScored == 0)
             {

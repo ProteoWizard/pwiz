@@ -26,8 +26,7 @@ namespace pwiz.OspreySharp.Tasks
     /// <summary>
     /// One step in the OspreySharp analysis pipeline. Each task owns a
     /// concrete piece of work — load spectra, calibrate, score,
-    /// reconcile, rescore, write blib — that the <see cref="Pipeline"/>
-    /// driver invokes in sequence.
+    /// reconcile, rescore, write blib — run in a pipeline.
     ///
     /// Phase A scope: Run() does the work, against state held on the
     /// shared <see cref="PipelineContext"/>. Inputs / Outputs / validity-

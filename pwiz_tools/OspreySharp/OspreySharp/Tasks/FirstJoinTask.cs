@@ -66,45 +66,38 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     internal sealed class FirstJoinTask : AbstractScoringTask
     {
-        private readonly List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
-        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, RTCalibration> _perFileCalibrations;
-        private readonly Dictionary<string, string> _perFileParquetPaths;
-        private readonly List<LibraryEntry> _fullLibrary;
-
-        public FirstJoinTask(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            System.Collections.Concurrent.ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
-            Dictionary<string, string> perFileParquetPaths,
-            List<LibraryEntry> fullLibrary)
-        {
-            _perFileEntries = perFileEntries ?? throw new ArgumentNullException(nameof(perFileEntries));
-            _perFileCalibrations = perFileCalibrations ?? throw new ArgumentNullException(nameof(perFileCalibrations));
-            _perFileParquetPaths = perFileParquetPaths ?? throw new ArgumentNullException(nameof(perFileParquetPaths));
-            _fullLibrary = fullLibrary ?? throw new ArgumentNullException(nameof(fullLibrary));
-        }
-
         public override string Name => @"FirstJoin";
 
-        // Outputs read by AnalysisPipeline.Run after Run completes
-        // successfully. Default values match the "skipped planning"
-        // case (single-file, --join-at-pass=2, or
-        // !Reconciliation.Enabled), so the caller can pass them
-        // straight through to PerFileRescoreTask without further
-        // null guards.
+        // Outputs reached by downstream tasks through ctx.GetTask<FirstJoinTask>().
+        // DidPlan is the gate downstream consumers (PerFileRescoreTask)
+        // check to decide whether the Stage 6 planning state below is
+        // meaningful or whether planning was skipped. Defaults are
+        // non-null empty collections so an accessor on a not-yet-run
+        // (or no-op) task never NPEs.
         public bool DidPlan { get; private set; }
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> PerFileConsensusTargets { get; private set; }
+        private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> ReconciliationActions { get; private set; }
+        private IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> _reconciliationActions
             = new Dictionary<(string, int), ReconcileAction>();
-        public IReadOnlyDictionary<string, RTCalibration> RefinedCalibrations { get; private set; }
+        private IReadOnlyDictionary<string, RTCalibration> _refinedCalibrations
             = new Dictionary<string, RTCalibration>();
-        public IReadOnlyDictionary<string, List<GapFillTarget>> PerFileGapFillForRescore { get; private set; }
+        private IReadOnlyDictionary<string, List<GapFillTarget>> _perFileGapFillForRescore
             = new Dictionary<string, List<GapFillTarget>>();
+
+        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets() => _perFileConsensusTargets;
+        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions() => _reconciliationActions;
+        public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations() => _refinedCalibrations;
+        public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore() => _perFileGapFillForRescore;
 
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;
             var config = ctx.Config;
+            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            var perFileEntries = perFileScoring.GetPerFileEntries();
+            var perFileCalibrations = perFileScoring.GetPerFileCalibrations();
+            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths();
+            var fullLibrary = perFileScoring.GetFullLibrary();
 
             // Stage 5: First-pass FDR
             // Skipped under --join-at-pass=2: the 1st-pass sidecar
@@ -121,7 +114,7 @@ namespace pwiz.OspreySharp.Tasks
                     config.FdrMethod));
 
                 var swFdr = Stopwatch.StartNew();
-                RunFdr(_perFileEntries, _fullLibrary, config);
+                RunFdr(perFileEntries, fullLibrary, config);
                 swFdr.Stop();
                 ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                     swFdr.Elapsed.TotalSeconds));
@@ -133,7 +126,7 @@ namespace pwiz.OspreySharp.Tasks
 
             // Log first-pass results
             int passingTargets = 0;
-            foreach (var kvp in _perFileEntries)
+            foreach (var kvp in perFileEntries)
             {
                 int fileTargets = 0;
                 foreach (var entry in kvp.Value)
@@ -158,7 +151,7 @@ namespace pwiz.OspreySharp.Tasks
             // sees both targets and decoys.
             if (OspreyDiagnostics.DumpPercolator)
             {
-                OspreyDiagnostics.WriteStage5PercolatorDump(_perFileEntries);
+                OspreyDiagnostics.WriteStage5PercolatorDump(perFileEntries);
                 if (OspreyDiagnostics.PercolatorOnly)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_PERCOLATOR_ONLY");
             }
@@ -176,13 +169,13 @@ namespace pwiz.OspreySharp.Tasks
             // overwrite the loaded values with the same numbers
             // (~17s on Astral 1-file; saves duplicate work on every
             // post-Stage-6 rehydration entry).
-            if (config.ProteinFdr.HasValue && _perFileEntries.Count > 0
+            if (config.ProteinFdr.HasValue && perFileEntries.Count > 0
                 && !config.ExpectReconciledInput)
             {
                 ctx.LogInfo(string.Empty);
                 ctx.LogInfo(@"First-pass protein FDR");
                 var swFirstPassProtein = Stopwatch.StartNew();
-                RunFirstPassProteinFdr(_perFileEntries, _fullLibrary, config);
+                RunFirstPassProteinFdr(perFileEntries, fullLibrary, config);
                 swFirstPassProtein.Stop();
                 ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
                     swFirstPassProtein.Elapsed.TotalSeconds));
@@ -212,24 +205,24 @@ namespace pwiz.OspreySharp.Tasks
             if (!config.ExpectReconciledInput)
             {
                 fdrSidecarFailures = WriteFdrScoresSidecars(
-                    _perFileEntries, _perFileParquetPaths, config);
+                    perFileEntries, perFileParquetPaths, config);
                 if (fdrSidecarFailures > 0 && config.StopAfterStage5)
                 {
                     ctx.LogError(string.Format(
                         @"--join-at-pass=1 --join-only: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
                         @"writes failed; boundary file pair is incomplete. See warnings above.",
-                        fdrSidecarFailures, _perFileEntries.Count));
+                        fdrSidecarFailures, perFileEntries.Count));
                     ctx.ExitCode = 1;
                     return false;
                 }
             }
 
-            if (_perFileEntries.Count > 0)
+            if (perFileEntries.Count > 0)
             {
                 var firstPassBaseIds = new HashSet<uint>();
                 double peptideGate = config.RunFdr;
                 double proteinGate = config.ProteinFdr ?? 0.0;
-                foreach (var kvp in _perFileEntries)
+                foreach (var kvp in perFileEntries)
                 {
                     foreach (var entry in kvp.Value)
                     {
@@ -243,7 +236,7 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
                 int beforeCount = 0, afterCount = 0;
-                foreach (var kvp in _perFileEntries)
+                foreach (var kvp in perFileEntries)
                 {
                     beforeCount += kvp.Value.Count;
                     kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
@@ -279,7 +272,7 @@ namespace pwiz.OspreySharp.Tasks
                 foreach (var inputFile in config.InputFiles)
                     inputByFileName2[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
 
-                foreach (var kvp in _perFileEntries)
+                foreach (var kvp in perFileEntries)
                 {
                     string fileName = kvp.Key;
                     var entries = kvp.Value;
@@ -347,7 +340,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 ctx.LogInfo(string.Format(
                     @"--join-at-pass=2: loaded 2nd-pass FDR sidecars for {0} file(s)",
-                    _perFileEntries.Count));
+                    perFileEntries.Count));
             }
 
             // Stage 6: planning checkpoint — multi-charge consensus +
@@ -374,7 +367,7 @@ namespace pwiz.OspreySharp.Tasks
             // straight-through pipeline. Mirrors Rust's
             // pipeline.rs:3823 expect_reconciled_input gate.
             if (!config.ExpectReconciledInput
-                && _perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
+                && perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
             {
                 ctx.LogInfo(string.Empty);
                 ctx.LogInfo(@"Stage 6: planning");
@@ -384,7 +377,7 @@ namespace pwiz.OspreySharp.Tasks
                 //    RT computation).
                 var perFileConsensusTargets = new Dictionary<string,
                     IReadOnlyList<(int Index, double Apex, double Start, double End)>>();
-                foreach (var kvp in _perFileEntries)
+                foreach (var kvp in perFileEntries)
                 {
                     perFileConsensusTargets[kvp.Key] =
                         MultiChargeConsensus.SelectRescoreTargets(kvp.Value, config.RunFdr);
@@ -394,13 +387,13 @@ namespace pwiz.OspreySharp.Tasks
                     totalMulticharge += kvp.Value.Count;
                 ctx.LogInfo(string.Format(
                     @"Stage 6 multi-charge consensus: {0} entries need re-scoring across {1} files",
-                    totalMulticharge, _perFileEntries.Count));
+                    totalMulticharge, perFileEntries.Count));
 
                 if (OspreyDiagnostics.DumpMulticharge)
                 {
                     var perFileForDump = new List<KeyValuePair<string,
-                        IReadOnlyList<FdrEntry>>>(_perFileEntries.Count);
-                    foreach (var kvp in _perFileEntries)
+                        IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                    foreach (var kvp in perFileEntries)
                     {
                         perFileForDump.Add(new KeyValuePair<string,
                             IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
@@ -415,8 +408,8 @@ namespace pwiz.OspreySharp.Tasks
                 //    decoys, sigmoid(score)-weighted median, hard
                 //    run_precursor_qvalue gate).
                 var perFileForRecon = new List<KeyValuePair<string,
-                    IReadOnlyList<FdrEntry>>>(_perFileEntries.Count);
-                foreach (var kvp in _perFileEntries)
+                    IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                foreach (var kvp in perFileEntries)
                 {
                     perFileForRecon.Add(new KeyValuePair<string,
                         IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
@@ -438,9 +431,9 @@ namespace pwiz.OspreySharp.Tasks
                 // entirely, leaving multi-charge consensus rescore as the
                 // only Stage 6 work performed.
                 IReadOnlyList<PeptideConsensusRT> consensus =
-                    _perFileEntries.Count > 1
+                    perFileEntries.Count > 1
                         ? ConsensusRts.Compute(
-                            perFileForRecon, _perFileCalibrations,
+                            perFileForRecon, perFileCalibrations,
                             config.Reconciliation.ConsensusFdr,
                             config.ProteinFdr ?? 0.0,
                             invPredictTrace)
@@ -479,7 +472,7 @@ namespace pwiz.OspreySharp.Tasks
 
                 // 3. Per-file calibration refit on consensus peptides.
                 var refinedCalibrations = new Dictionary<string, RTCalibration>();
-                foreach (var kvp in _perFileEntries)
+                foreach (var kvp in perFileEntries)
                 {
                     var refined = CalibrationRefit.Refit(consensus, kvp.Value,
                         config.Reconciliation.ConsensusFdr);
@@ -488,7 +481,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 ctx.LogInfo(string.Format(
                     @"Stage 6 refit: {0}/{1} files produced refined calibrations",
-                    refinedCalibrations.Count, _perFileEntries.Count));
+                    refinedCalibrations.Count, perFileEntries.Count));
 
                 if (OspreyDiagnostics.DumpLoessFit)
                 {
@@ -514,9 +507,9 @@ namespace pwiz.OspreySharp.Tasks
                 IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions = null;
                 var perFileCwtCandidates = new Dictionary<string,
                     IReadOnlyList<IReadOnlyList<CwtCandidate>>>();
-                foreach (var kvp in _perFileEntries)
+                foreach (var kvp in perFileEntries)
                 {
-                    if (_perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath) &&
+                    if (perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath) &&
                         File.Exists(parquetPath))
                     {
                         try
@@ -561,8 +554,8 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
                 var perFileForPlan = new List<KeyValuePair<string,
-                    IReadOnlyList<FdrEntry>>>(_perFileEntries.Count);
-                foreach (var kvp in _perFileEntries)
+                    IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+                foreach (var kvp in perFileEntries)
                 {
                     perFileForPlan.Add(new KeyValuePair<string,
                         IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
@@ -574,7 +567,7 @@ namespace pwiz.OspreySharp.Tasks
                 // RT) degenerate to zero reconciliation actions in
                 // Rust; C# previously planned regardless and produced
                 // ~22k spurious use_cwt actions on Stellar single-file.
-                if (perFileCwtCandidates.Count == _perFileEntries.Count
+                if (perFileCwtCandidates.Count == perFileEntries.Count
                     && consensus.Count > 0)
                 {
                     reconciliationActions = ReconciliationPlanner.Plan(
@@ -582,7 +575,7 @@ namespace pwiz.OspreySharp.Tasks
                         perFileForPlan,
                         perFileCwtCandidates,
                         refinedCalibrations,
-                        _perFileCalibrations,
+                        perFileCalibrations,
                         config.Reconciliation.ConsensusFdr);
                     ctx.LogInfo(string.Format(
                         @"Stage 6 reconciliation: {0} per-(file, entry) actions planned",
@@ -596,7 +589,7 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     ctx.LogInfo(string.Format(
                         @"Stage 6 reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
-                        perFileCwtCandidates.Count, _perFileEntries.Count));
+                        perFileCwtCandidates.Count, perFileEntries.Count));
                 }
 
                 // Stage 6 cross-impl bisection dump for the planner output.
@@ -625,13 +618,13 @@ namespace pwiz.OspreySharp.Tasks
                 // Surfaces gap-fill targets via out param so the in-
                 // process Stage 6 rescore call below can execute them.
                 int reconWriteFailures = WriteReconciliationFiles(
-                    _perFileEntries,
+                    perFileEntries,
                     reconciliationActions,
                     consensus,
                     refinedCalibrations,
-                    _perFileCalibrations,
-                    _fullLibrary,
-                    _perFileParquetPaths,
+                    perFileCalibrations,
+                    fullLibrary,
+                    perFileParquetPaths,
                     config,
                     out var perFileGapFillForRescore);
 
@@ -642,7 +635,7 @@ namespace pwiz.OspreySharp.Tasks
                         ctx.LogError(string.Format(
                             @"--join-at-pass=1 --join-only: {0}/{1} reconciliation.json " +
                             @"writes failed; boundary file pair is incomplete. See warnings above.",
-                            reconWriteFailures, _perFileEntries.Count));
+                            reconWriteFailures, perFileEntries.Count));
                         ctx.ExitCode = 1;
                         return false;
                     }
@@ -650,18 +643,18 @@ namespace pwiz.OspreySharp.Tasks
                         @"--join-at-pass=1 --join-only: Stage 5 + reconciliation planning " +
                         @"complete; wrote {0} reconciliation.json + matching fdr_scores.bin " +
                         @"sidecar pair(s). Exiting before Stage 6 rescore.",
-                        _perFileEntries.Count));
+                        perFileEntries.Count));
                     ctx.ExitCode = 0;
                     return false;
                 }
 
                 // Surface outputs for the next task.
                 DidPlan = true;
-                PerFileConsensusTargets = perFileConsensusTargets;
-                ReconciliationActions = reconciliationActions
+                _perFileConsensusTargets = perFileConsensusTargets;
+                _reconciliationActions = reconciliationActions
                     ?? new Dictionary<(string, int), ReconcileAction>();
-                RefinedCalibrations = refinedCalibrations;
-                PerFileGapFillForRescore = perFileGapFillForRescore
+                _refinedCalibrations = refinedCalibrations;
+                _perFileGapFillForRescore = perFileGapFillForRescore
                     ?? new Dictionary<string, List<GapFillTarget>>();
             }
 

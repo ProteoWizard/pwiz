@@ -47,27 +47,10 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     internal sealed class MergeNodeTask : OspreyTask
     {
-        private readonly List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
-        private readonly List<LibraryEntry> _fullLibrary;
-        private readonly Dictionary<uint, LibraryEntry> _libraryById;
-        private readonly Dictionary<string, string> _perFileParquetPaths;
-
         // PipelineContext is set on Run entry so the moved
         // RunProteinFdr / WriteBlibOutput methods can log
         // through the same callbacks the pipeline driver uses.
         private PipelineContext _ctx;
-
-        public MergeNodeTask(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            List<LibraryEntry> fullLibrary,
-            Dictionary<uint, LibraryEntry> libraryById,
-            Dictionary<string, string> perFileParquetPaths)
-        {
-            _perFileEntries = perFileEntries ?? throw new ArgumentNullException(nameof(perFileEntries));
-            _fullLibrary = fullLibrary ?? throw new ArgumentNullException(nameof(fullLibrary));
-            _libraryById = libraryById ?? throw new ArgumentNullException(nameof(libraryById));
-            _perFileParquetPaths = perFileParquetPaths ?? throw new ArgumentNullException(nameof(perFileParquetPaths));
-        }
 
         public override string Name => @"MergeNode";
 
@@ -75,6 +58,14 @@ namespace pwiz.OspreySharp.Tasks
         {
             _ctx = ctx;
             var config = ctx.Config;
+            // perFileEntries comes from PerFileRescoreTask -- it owns
+            // the post-rescore version (mutated in place; or the
+            // unchanged upstream reference when planning was skipped).
+            var perFileEntries = ctx.GetTask<PerFileRescoreTask>().GetPerFileEntries();
+            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            var fullLibrary = perFileScoring.GetFullLibrary();
+            var libraryById = perFileScoring.GetLibraryById();
+            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths();
 
             // Stage 8: Protein FDR (optional)
             if (config.ProteinFdr.HasValue)
@@ -93,14 +84,14 @@ namespace pwiz.OspreySharp.Tasks
                 // rehydration. Skipped on --join-at-pass=2 itself
                 // (sidecar already loaded; no need to round-trip).
                 if (!config.ExpectReconciledInput
-                    && _perFileParquetPaths.Count > 0)
+                    && perFileParquetPaths.Count > 0)
                 {
                     var inputByFileName = new Dictionary<string, string>();
                     foreach (var inputFile in config.InputFiles)
                         inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
 
                     int pass2Failures = 0;
-                    foreach (var kvp in _perFileEntries)
+                    foreach (var kvp in perFileEntries)
                     {
                         string fileName = kvp.Key;
                         if (!inputByFileName.TryGetValue(fileName, out string inputFile3))
@@ -123,7 +114,7 @@ namespace pwiz.OspreySharp.Tasks
                     {
                         ctx.LogInfo(string.Format(
                             @"Wrote 2nd-pass FDR sidecars for {0} file(s)",
-                            _perFileEntries.Count));
+                            perFileEntries.Count));
                     }
                 }
 
@@ -131,7 +122,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.LogInfo(string.Format(@"Running protein-level FDR at {0:P1}...",
                     config.ProteinFdr.Value));
                 var swProtein = Stopwatch.StartNew();
-                RunProteinFdr(_perFileEntries, _fullLibrary, config);
+                RunProteinFdr(perFileEntries, fullLibrary, config);
                 swProtein.Stop();
                 ctx.LogInfo(string.Format(@"[TIMING] Protein FDR: {0:F1}s",
                     swProtein.Elapsed.TotalSeconds));
@@ -141,7 +132,7 @@ namespace pwiz.OspreySharp.Tasks
             ctx.LogInfo(string.Empty);
             ctx.LogInfo(string.Format(@"Writing output to {0}...", config.OutputBlib));
             var swBlib = Stopwatch.StartNew();
-            WriteBlibOutput(_perFileEntries, _fullLibrary, _libraryById, config);
+            WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config);
             swBlib.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] Blib output: {0:F1}s",
                 swBlib.Elapsed.TotalSeconds));

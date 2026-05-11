@@ -98,64 +98,49 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     internal sealed class PerFileRescoreTask : AbstractScoringTask
     {
-        private readonly List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
-        private readonly IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets;
-        private readonly IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> _reconciliationActions;
-        private readonly IReadOnlyDictionary<string, RTCalibration> _refinedCalibrations;
-        private readonly IReadOnlyDictionary<string, RTCalibration> _perFileCalibrations;
-        private readonly IReadOnlyDictionary<string, List<GapFillTarget>> _perFileGapFill;
-        private readonly IReadOnlyDictionary<string, string> _perFileParquetPaths;
-        private readonly List<LibraryEntry> _fullLibrary;
-
-        /// <summary>
-        /// In-process constructor: takes the assembled state produced by
-        /// FirstJoinTask. <see cref="Run"/> uses these fields directly.
-        /// </summary>
-        public PerFileRescoreTask(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> perFileConsensusTargets,
-            IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> reconciliationActions,
-            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations,
-            IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
-            IReadOnlyDictionary<string, List<GapFillTarget>> perFileGapFill,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            List<LibraryEntry> fullLibrary)
-        {
-            _perFileEntries = perFileEntries ?? throw new ArgumentNullException(nameof(perFileEntries));
-            _perFileConsensusTargets = perFileConsensusTargets;
-            _reconciliationActions = reconciliationActions ?? new Dictionary<(string, int), ReconcileAction>();
-            _refinedCalibrations = refinedCalibrations;
-            _perFileCalibrations = perFileCalibrations;
-            _perFileGapFill = perFileGapFill;
-            _perFileParquetPaths = perFileParquetPaths;
-            _fullLibrary = fullLibrary ?? throw new ArgumentNullException(nameof(fullLibrary));
-        }
-
-        /// <summary>
-        /// Worker-mode constructor: <see cref="RunWorker"/> builds its
-        /// own state from <c>--input-scores</c> sidecars and passes it
-        /// directly to <see cref="ExecuteRescore"/>. The instance fields
-        /// remain unset; <see cref="Run"/> is not used on a worker-mode
-        /// instance.
-        /// </summary>
-        public PerFileRescoreTask()
-        {
-        }
+        // Captured during Run / RunWorker so MergeNodeTask (downstream)
+        // can reach the post-rescore version. Per the ownership-transfer
+        // semantics of the pipeline: this task is the producer of the
+        // post-rescore perFileEntries; consumers query us rather than
+        // PerFileScoringTask. When Run is a no-op (DidPlan = false) the
+        // list reference falls through unchanged from PerFileScoringTask.
+        private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
 
         public override string Name => @"PerFileRescore";
+
+        /// <summary>
+        /// The post-rescore per-file entries. Mutated in place by
+        /// <see cref="ExecuteRescore"/>; when this task short-circuits
+        /// (no FirstJoinTask plan) the list is the unchanged upstream
+        /// reference.
+        /// </summary>
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries() => _perFileEntries;
 
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;
+            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            _perFileEntries = perFileScoring.GetPerFileEntries();
+
+            // Self-gate on FirstJoinTask: rescore + reconciliation only
+            // run when planning actually produced state (multi-file with
+            // Reconciliation.Enabled, not --join-at-pass=2). When
+            // planning was skipped, this task is a no-op; downstream
+            // MergeNodeTask still gets _perFileEntries via our accessor
+            // (falls through to the upstream reference).
+            var firstJoin = ctx.GetTask<FirstJoinTask>();
+            if (!firstJoin.DidPlan)
+                return true;
+
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
-                _perFileConsensusTargets,
-                _reconciliationActions,
-                _refinedCalibrations,
-                _perFileCalibrations,
-                _perFileGapFill,
-                _perFileParquetPaths,
-                _fullLibrary,
+                firstJoin.GetPerFileConsensusTargets(),
+                firstJoin.GetReconciliationActions(),
+                firstJoin.GetRefinedCalibrations(),
+                perFileScoring.GetPerFileCalibrations(),
+                firstJoin.GetPerFileGapFillForRescore(),
+                perFileScoring.GetPerFileParquetPaths(),
+                perFileScoring.GetFullLibrary(),
                 ctx.Config);
             ctx.LogInfo(string.Format(
                 @"Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
@@ -202,7 +187,11 @@ namespace pwiz.OspreySharp.Tasks
             if (config == null) throw new ArgumentNullException(nameof(config));
             // Init _ctx so the inherited engine methods (RunCoelutionScoring,
             // etc.) can log via the same callbacks the in-process pipeline uses.
-            _ctx = new PipelineContext(config,
+            // Worker mode's "pipeline" is just this task; the upstream-task
+            // hydration that the in-process flow gets through ctx.GetTask
+            // happens inside this method (see below) until Pass 2 moves it
+            // onto the producer tasks' accessors.
+            _ctx = new PipelineContext(config, new OspreyTask[] { this },
                 Program.LogInfo, Program.LogWarning, Program.LogError);
             if (config.InputScores == null || config.InputScores.Count == 0)
             {

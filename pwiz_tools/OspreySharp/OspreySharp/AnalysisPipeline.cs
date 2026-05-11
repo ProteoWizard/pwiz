@@ -52,83 +52,28 @@ namespace pwiz.OspreySharp
 
             try
             {
-                // One PipelineContext for the whole run: holds the config,
-                // the logging callbacks, and the process exit code that a
-                // short-circuiting task may set before returning false.
-                // Per-phase state moves through task instance properties
-                // for now; Phase B promotes it to fields on the context.
-                var ctx = new PipelineContext(config, LogInfo, LogWarning, LogError);
-
-                // Per-file scoring phase (Stages 1-4): library load
-                // + decoys + per-file ProcessFile loop. Driven by
-                // PerFileScoringTask; outputs (FullLibrary,
-                // LibraryById, PerFileEntries, PerFileCalibrations,
-                // PerFileParquetPaths) flow back through instance
-                // properties on the task. Returning false here
-                // means the library was empty (error), the
-                // --join-at-pass=2 sidecar load failed (error), or
-                // the --no-join CLI flag wants us to stop after the
-                // per-file fan-out (success). ctx.ExitCode is the
-                // process exit code AnalysisPipeline.Run should
-                // propagate in any of those cases.
-                var perFileScoringTask = new PerFileScoringTask();
-                if (!RunTask(perFileScoringTask, ctx))
-                    return ctx.ExitCode;
-
-                var fullLibrary = perFileScoringTask.FullLibrary;
-                var libraryById = perFileScoringTask.LibraryById;
-                var perFileEntries = perFileScoringTask.PerFileEntries;
-                var perFileCalibrations = perFileScoringTask.PerFileCalibrations;
-                var perFileParquetPaths = perFileScoringTask.PerFileParquetPaths;
-
-                // First-join phase: Stage 5 first-pass FDR + first-pass
-                // protein FDR + 1st-pass FDR sidecar persistence +
-                // post-FDR compaction + (on --join-at-pass=2) 2nd-pass
-                // sidecar overlay + Stage 6 planning. Mirrors the
-                // workflow.html "first join" boundary -- the natural
-                // HPC fan-out / join transition where all-file
-                // representation is required. Returning false here
-                // means a real error or a successful StopAfterStage5
-                // exit; in either case ctx.ExitCode is the process
-                // exit code AnalysisPipeline.Run should propagate.
-                var firstJoinTask = new FirstJoinTask(
-                    perFileEntries, perFileCalibrations,
-                    perFileParquetPaths, fullLibrary);
-                if (!RunTask(firstJoinTask, ctx))
-                    return ctx.ExitCode;
-
-                // Stage 6 per-file rescore: driven by PerFileRescoreTask.
-                // Only runs when FirstJoinTask actually planned (i.e.
-                // not on --join-at-pass=2, not on empty perFileEntries,
-                // and only when Reconciliation.Enabled is true).
-                // Encapsulates ExecuteStage6Rescore + the cross-impl
-                // bisection dump + the per-process diagnostic-writer
-                // close calls that pair with it. Mirrors the Rust
-                // call site at pipeline.rs:run_analysis ~line 3850.
-                if (firstJoinTask.DidPlan)
+                // Pipeline definition: the four HPC-boundary phases in
+                // order. Tasks read upstream state through
+                // ctx.GetTask<T>().GetX() rather than constructor args;
+                // each task short-circuits its own work when there is
+                // nothing to do (e.g. PerFileRescoreTask checks
+                // FirstJoinTask.DidPlan internally and returns true as a
+                // no-op when planning was skipped). Returning false from
+                // any task is the signal to stop and propagate
+                // ctx.ExitCode.
+                var ctx = new PipelineContext(config, new OspreyTask[]
                 {
-                    RunTask(new PerFileRescoreTask(
-                        perFileEntries,
-                        firstJoinTask.PerFileConsensusTargets,
-                        firstJoinTask.ReconciliationActions,
-                        firstJoinTask.RefinedCalibrations,
-                        perFileCalibrations,
-                        firstJoinTask.PerFileGapFillForRescore,
-                        perFileParquetPaths,
-                        fullLibrary), ctx);
-                }
+                    new PerFileScoringTask(),
+                    new FirstJoinTask(),
+                    new PerFileRescoreTask(),
+                    new MergeNodeTask(),
+                }, LogInfo, LogWarning, LogError);
 
-                // Merge-node phase: 2nd-pass FDR sidecar persistence (when
-                // applicable), run-wide protein FDR, blib output. Driven
-                // through the Phase A task-based pipeline so the
-                // boundary between Stage 6 (per-file rescore) and the
-                // post-second-join merge work is explicit. The Pipeline
-                // logs per-task timings; the inline log+timing wrappers
-                // that used to bracket each substep here have moved into
-                // MergeNodeTask alongside the substeps themselves.
-                RunTask(new MergeNodeTask(
-                    perFileEntries, fullLibrary,
-                    libraryById, perFileParquetPaths), ctx);
+                foreach (var task in ctx.Tasks)
+                {
+                    if (!RunTask(task, ctx))
+                        return ctx.ExitCode;
+                }
 
                 stopwatch.Stop();
                 LogInfo("");
