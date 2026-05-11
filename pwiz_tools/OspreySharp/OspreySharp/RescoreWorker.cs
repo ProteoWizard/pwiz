@@ -22,6 +22,7 @@
  */
 
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp
 {
@@ -86,7 +87,7 @@ namespace pwiz.OspreySharp
             // (library load, hydration, compaction, rescore loop,
             // gap-fill, parquet write-back) live alongside the
             // in-process rescore task.
-            var task = new PerFileRescore.PerFileRescoreTask();
+            var task = new PerFileRescoreTask();
             return task.RunWorker(config);
         }
     }

@@ -25,17 +25,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
-using pwiz.OspreySharp.ML;
-using pwiz.OspreySharp.Tasks;
 
-namespace pwiz.OspreySharp.FirstJoin
+namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// First-join phase of the OspreySharp pipeline (Stage 5 in the
@@ -1216,7 +1212,7 @@ namespace pwiz.OspreySharp.FirstJoin
         /// Used as a fallback ONLY when <see cref="FdrEntry.Features"/> has not been
         /// populated (e.g. stubs loaded from a Parquet cache). In normal operation the
         /// 21-feature vector is computed during coelution scoring in
-        /// <see cref="ScoreCandidate"/> and stored on the entry.
+        /// <see cref="AbstractScoringTask.ScoreCandidate"/> and stored on the entry.
         /// </summary>
         private double[] BuildBasicFeatures(
             FdrEntry entry, Dictionary<uint, LibraryEntry> libraryById)

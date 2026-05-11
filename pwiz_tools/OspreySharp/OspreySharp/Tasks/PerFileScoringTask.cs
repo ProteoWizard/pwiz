@@ -27,15 +27,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.IO;
 using pwiz.OspreySharp.Scoring;
-using pwiz.OspreySharp.Tasks;
 
-namespace pwiz.OspreySharp.PerFileScoring
+namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// Per-file first-pass scoring phase: load the spectral library
@@ -85,13 +83,6 @@ namespace pwiz.OspreySharp.PerFileScoring
             public RTCalibrationStats Stats;
             public MzCalibrationResult Ms1Calibration;
             public MzCalibrationResult Ms2Calibration;
-        }
-
-        private readonly AnalysisPipeline _pipeline;
-
-        public PerFileScoringTask(AnalysisPipeline pipeline)
-        {
-            _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
         }
 
         public override string Name => @"PerFileScoring";

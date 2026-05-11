@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.Scoring;
+using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp.Test
 {

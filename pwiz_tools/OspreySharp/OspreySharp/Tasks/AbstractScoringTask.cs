@@ -31,13 +31,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
-using pwiz.OspreySharp.FDR;
 using pwiz.OspreySharp.IO;
-using pwiz.OspreySharp.ML;
 using pwiz.OspreySharp.Scoring;
-using pwiz.OspreySharp.Tasks;
 
-namespace pwiz.OspreySharp
+namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// Base class for tasks that drive the OspreySharp scoring engine

@@ -30,9 +30,8 @@ using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
 using pwiz.OspreySharp.Scoring;
-using pwiz.OspreySharp.Tasks;
 
-namespace pwiz.OspreySharp.PerFileRescore
+namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// Aggregate counts returned by <see cref="PerFileRescoreTask.ExecuteRescore"/>.
@@ -80,10 +79,10 @@ namespace pwiz.OspreySharp.PerFileRescore
     ///   <item>
     ///     In-process: construct via the multi-arg constructor with the
     ///     assembled state produced upstream (FirstJoinTask), then run
-    ///     through <see cref="Pipeline.Execute"/>. <see cref="Run"/>
-    ///     dispatches into <see cref="ExecuteRescore"/> and then runs
-    ///     the per-process diagnostic-writer close + cross-impl
-    ///     bisection dump.
+    ///     through <see cref="AnalysisPipeline"/>'s task driver, which
+    ///     calls <see cref="Run"/>. <see cref="Run"/> dispatches into
+    ///     <see cref="ExecuteRescore"/> and then runs the per-process
+    ///     diagnostic-writer close + cross-impl bisection dump.
     ///   </item>
     ///   <item>
     ///     Worker (<c>--join-at-pass=1 --no-join</c>): construct via the
@@ -124,8 +123,7 @@ namespace pwiz.OspreySharp.PerFileRescore
         {
             _perFileEntries = perFileEntries ?? throw new ArgumentNullException(nameof(perFileEntries));
             _perFileConsensusTargets = perFileConsensusTargets;
-            _reconciliationActions = reconciliationActions
-                ?? new Dictionary<(string, int), ReconcileAction>();
+            _reconciliationActions = reconciliationActions ?? new Dictionary<(string, int), ReconcileAction>();
             _refinedCalibrations = refinedCalibrations;
             _perFileCalibrations = perFileCalibrations;
             _perFileGapFill = perFileGapFill;

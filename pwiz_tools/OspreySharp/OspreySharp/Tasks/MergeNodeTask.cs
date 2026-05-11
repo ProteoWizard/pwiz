@@ -30,9 +30,8 @@ using System.Threading.Tasks;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR;
 using pwiz.OspreySharp.IO;
-using pwiz.OspreySharp.Tasks;
 
-namespace pwiz.OspreySharp.MergeNode
+namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// Final merge-node phase of the OspreySharp pipeline (Stage 7 in the

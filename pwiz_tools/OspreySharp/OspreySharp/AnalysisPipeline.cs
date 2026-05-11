@@ -24,6 +24,7 @@
 using System;
 using System.Diagnostics;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp
 {
@@ -51,6 +52,13 @@ namespace pwiz.OspreySharp
 
             try
             {
+                // One PipelineContext for the whole run: holds the config,
+                // the logging callbacks, and the process exit code that a
+                // short-circuiting task may set before returning false.
+                // Per-phase state moves through task instance properties
+                // for now; Phase B promotes it to fields on the context.
+                var ctx = new PipelineContext(config, LogInfo, LogWarning, LogError);
+
                 // Per-file scoring phase (Stages 1-4): library load
                 // + decoys + per-file ProcessFile loop. Driven by
                 // PerFileScoringTask; outputs (FullLibrary,
@@ -63,13 +71,9 @@ namespace pwiz.OspreySharp
                 // per-file fan-out (success). ctx.ExitCode is the
                 // process exit code AnalysisPipeline.Run should
                 // propagate in any of those cases.
-                var perFileScoringTask = new PerFileScoring.PerFileScoringTask(this);
-                var perFileScoringCtx = new Tasks.PipelineContext(
-                    config, LogInfo, LogWarning, LogError);
-                var perFileScoringPipeline = new Tasks.Pipeline(
-                    new Tasks.OspreyTask[] { perFileScoringTask });
-                if (!perFileScoringPipeline.Execute(perFileScoringCtx))
-                    return perFileScoringCtx.ExitCode;
+                var perFileScoringTask = new PerFileScoringTask();
+                if (!RunTask(perFileScoringTask, ctx))
+                    return ctx.ExitCode;
 
                 var fullLibrary = perFileScoringTask.FullLibrary;
                 var libraryById = perFileScoringTask.LibraryById;
@@ -87,14 +91,11 @@ namespace pwiz.OspreySharp
                 // means a real error or a successful StopAfterStage5
                 // exit; in either case ctx.ExitCode is the process
                 // exit code AnalysisPipeline.Run should propagate.
-                var firstJoinTask = new FirstJoin.FirstJoinTask(
+                var firstJoinTask = new FirstJoinTask(
                     perFileEntries, perFileCalibrations,
                     perFileParquetPaths, fullLibrary);
-                var firstJoinCtx = new Tasks.PipelineContext(
-                    config, LogInfo, LogWarning, LogError);
-                var firstJoinPipeline = new Tasks.Pipeline(new Tasks.OspreyTask[] { firstJoinTask });
-                if (!firstJoinPipeline.Execute(firstJoinCtx))
-                    return firstJoinCtx.ExitCode;
+                if (!RunTask(firstJoinTask, ctx))
+                    return ctx.ExitCode;
 
                 // Stage 6 per-file rescore: driven by PerFileRescoreTask.
                 // Only runs when FirstJoinTask actually planned (i.e.
@@ -106,21 +107,15 @@ namespace pwiz.OspreySharp
                 // call site at pipeline.rs:run_analysis ~line 3850.
                 if (firstJoinTask.DidPlan)
                 {
-                    var rescoreCtx = new Tasks.PipelineContext(
-                        config, LogInfo, LogWarning, LogError);
-                    var rescorePipeline = new Tasks.Pipeline(new Tasks.OspreyTask[]
-                    {
-                        new PerFileRescore.PerFileRescoreTask(
-                            perFileEntries,
-                            firstJoinTask.PerFileConsensusTargets,
-                            firstJoinTask.ReconciliationActions,
-                            firstJoinTask.RefinedCalibrations,
-                            perFileCalibrations,
-                            firstJoinTask.PerFileGapFillForRescore,
-                            perFileParquetPaths,
-                            fullLibrary)
-                    });
-                    rescorePipeline.Execute(rescoreCtx);
+                    RunTask(new PerFileRescoreTask(
+                        perFileEntries,
+                        firstJoinTask.PerFileConsensusTargets,
+                        firstJoinTask.ReconciliationActions,
+                        firstJoinTask.RefinedCalibrations,
+                        perFileCalibrations,
+                        firstJoinTask.PerFileGapFillForRescore,
+                        perFileParquetPaths,
+                        fullLibrary), ctx);
                 }
 
                 // Merge-node phase: 2nd-pass FDR sidecar persistence (when
@@ -131,15 +126,9 @@ namespace pwiz.OspreySharp
                 // logs per-task timings; the inline log+timing wrappers
                 // that used to bracket each substep here have moved into
                 // MergeNodeTask alongside the substeps themselves.
-                var mergeCtx = new Tasks.PipelineContext(
-                    config, LogInfo, LogWarning, LogError);
-                var mergePipeline = new Tasks.Pipeline(new Tasks.OspreyTask[]
-                {
-                    new MergeNode.MergeNodeTask(
-                        perFileEntries, fullLibrary,
-                        libraryById, perFileParquetPaths)
-                });
-                mergePipeline.Execute(mergeCtx);
+                RunTask(new MergeNodeTask(
+                    perFileEntries, fullLibrary,
+                    libraryById, perFileParquetPaths), ctx);
 
                 stopwatch.Stop();
                 LogInfo("");
@@ -156,25 +145,26 @@ namespace pwiz.OspreySharp
             }
         }
 
-        #region Stage 1: Library Loading
-        #endregion
-
-        #region Stage 2-4: Per-File Processing
-        #endregion
-
-        #region Stage 5: FDR Control
-
-        #endregion
-
-        #region Stage 8: Protein FDR
-
-        #endregion
-
-        #region Stage 9: Blib Output
-
-        #endregion
-
         #region Utility Methods
+
+        /// <summary>
+        /// Run a single task against <paramref name="ctx"/> with consistent
+        /// start/done logging and wall-time measurement. Returns the task's
+        /// own <see cref="OspreyTask.Run"/> result so the caller can
+        /// short-circuit on <c>false</c> and propagate
+        /// <see cref="PipelineContext.ExitCode"/>.
+        /// </summary>
+        private static bool RunTask(OspreyTask task, PipelineContext ctx)
+        {
+            var sw = Stopwatch.StartNew();
+            ctx.LogInfo(string.Format(@"[task] {0}: starting", task.Name));
+            bool keepGoing = task.Run(ctx);
+            sw.Stop();
+            ctx.LogInfo(string.Format(@"[task] {0}: done ({1:F1}s)",
+                task.Name, sw.Elapsed.TotalSeconds));
+            return keepGoing;
+        }
+
         private static string FormatDuration(TimeSpan duration)
         {
             if (duration.TotalDays >= 1)

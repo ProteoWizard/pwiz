@@ -65,10 +65,8 @@ namespace pwiz.OspreySharp.Tasks
         /// <c>false</c> from <see cref="OspreyTask.Run"/>. Defaults
         /// to 0; tasks that short-circuit the pipeline because of an
         /// error must set this to a non-zero value before returning.
-        /// The pipeline driver itself does not read this — it is
-        /// purely a channel for the caller of
-        /// <see cref="Pipeline.Execute"/> to learn what code the
-        /// pipeline wants the process to exit with.
+        /// The caller of <see cref="OspreyTask.Run"/> reads this to
+        /// choose its own return code.
         /// </summary>
         public int ExitCode { get; set; }
 
