@@ -79,9 +79,6 @@ public sealed class ThermoRawFile : IDisposable
         RunId = Path.GetFileNameWithoutExtension(filename);
         try
         {
-            // pwiz C++ emits the instrument's local clock value verbatim with a "Z" suffix
-            // (strictly incorrect per ISO-8601 but long-standing pwiz behavior — matches
-            // the reference mzML fixtures byte-for-byte).
             CreationDate = Raw.FileHeader.CreationDate.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
         }
         catch { CreationDate = string.Empty; }
