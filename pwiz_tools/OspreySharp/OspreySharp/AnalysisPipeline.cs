@@ -22,9 +22,7 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.Tasks;
 
@@ -101,93 +99,16 @@ namespace pwiz.OspreySharp
         /// own <see cref="OspreyTask.Run"/> result so the caller can
         /// short-circuit on <c>false</c> and propagate
         /// <see cref="PipelineContext.ExitCode"/>.
-        ///
-        /// Phase B skip: before invoking <see cref="OspreyTask.Run"/>,
-        /// check whether every output declared by
-        /// <see cref="OspreyTask.Outputs"/> exists with a matching
-        /// <c>.osprey.task</c> sidecar (validity-key check against
-        /// <see cref="OspreyTask.ValidityKey"/>). If so, the task's
-        /// work is already on disk -- log and return true without
-        /// executing. After a successful Run, fresh sidecars are
-        /// written next to each output so a future invocation can
-        /// skip in turn.
-        ///
-        /// Worker-mode invocations (<c>--input-scores</c> set) bypass
-        /// the entire validity-key dance: the CLI is the caller's
-        /// "trust the boundary files" signal. The existing parquet
-        /// <c>osprey.search_hash</c> metadata check still enforces
-        /// cross-impl correctness in that path.
         /// </summary>
         private static bool RunTask(OspreyTask task, PipelineContext ctx)
         {
-            bool isWorkerMode = IsWorkerMode(ctx);
-
-            if (!isWorkerMode && IsTaskAlreadyDone(task, ctx))
-            {
-                ctx.LogInfo(string.Format(@"[task] {0}: skipping (outputs valid)", task.Name));
-                return true;
-            }
-
-            // Sidecars from a prior successful run survive until this
-            // task starts; delete them so a mid-Run crash leaves no
-            // sidecar that would falsely claim the partially-written
-            // outputs are valid on the next invocation.
-            if (!isWorkerMode)
-                DeleteTaskSidecars(task, ctx);
-
             var sw = Stopwatch.StartNew();
             ctx.LogInfo(string.Format(@"[task] {0}: starting", task.Name));
             bool keepGoing = task.Run(ctx);
             sw.Stop();
             ctx.LogInfo(string.Format(@"[task] {0}: done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
-
-            if (keepGoing && !isWorkerMode)
-                WriteTaskSidecars(task, ctx);
-
             return keepGoing;
-        }
-
-        private static bool IsWorkerMode(PipelineContext ctx) =>
-            ctx.Config.InputScores != null && ctx.Config.InputScores.Count > 0;
-
-        private static bool IsTaskAlreadyDone(OspreyTask task, PipelineContext ctx)
-        {
-            var outputs = new List<string>(task.Outputs(ctx));
-            if (outputs.Count == 0) return false;
-            string key = task.ValidityKey(ctx);
-            foreach (var output in outputs)
-            {
-                if (!File.Exists(output)) return false;
-                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
-            }
-            return true;
-        }
-
-        private static void WriteTaskSidecars(OspreyTask task, PipelineContext ctx)
-        {
-            string key = task.ValidityKey(ctx);
-            var inputs = new List<string>(task.Inputs(ctx));
-            foreach (var output in task.Outputs(ctx))
-            {
-                if (!File.Exists(output)) continue;  // task may not have written this output
-                try
-                {
-                    TaskValiditySidecar.Write(output, task.Name, Program.VERSION, key, inputs);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        @"Failed to write {0} sidecar for {1}: {2}",
-                        task.Name, output, ex.Message));
-                }
-            }
-        }
-
-        private static void DeleteTaskSidecars(OspreyTask task, PipelineContext ctx)
-        {
-            foreach (var output in task.Outputs(ctx))
-                TaskValiditySidecar.Delete(output, task.Name);
         }
 
         private static string FormatDuration(TimeSpan duration)
