@@ -573,7 +573,10 @@ public sealed class MzmlWriter
                 if (!string.IsNullOrEmpty(scan.ExternalSpectrumId))
                     w.WriteAttributeString("externalSpectrumID", scan.ExternalSpectrumId);
                 if (!string.IsNullOrEmpty(scan.SpectrumId))
-                    w.WriteAttributeString("spectrumRef", XmlIdEncoding.Encode(scan.SpectrumId));
+                    // cpp IO.cpp:1431 emits scan.spectrumRef raw ("not an XML:IDREF"). Same
+                    // story as precursor.spectrumRef: it points at a <spectrum id=...> that
+                    // pwiz also writes raw.
+                    w.WriteAttributeString("spectrumRef", scan.SpectrumId);
 
                 MzmlXml.WriteParams(w, scan);
 
@@ -633,7 +636,12 @@ public sealed class MzmlWriter
         if (!string.IsNullOrEmpty(p.ExternalSpectrumId))
             w.WriteAttributeString("externalSpectrumID", p.ExternalSpectrumId);
         if (!string.IsNullOrEmpty(p.SpectrumId))
-            w.WriteAttributeString("spectrumRef", XmlIdEncoding.Encode(p.SpectrumId));
+            // cpp emits the precursor.spectrumRef raw (matches the corresponding
+            // <spectrum id=...> attribute, which is also written raw — pwiz treats spectrum
+            // ids as free-form strings even though that violates XML's ID type spec). Don't
+            // run XmlIdEncoding here: it would expand "=" and " " into _x003d_/_x0020_ and
+            // make the ref unresolvable by msdiff and by every cpp pwiz reader.
+            w.WriteAttributeString("spectrumRef", p.SpectrumId);
 
         w.WriteStartElement("isolationWindow");
         MzmlXml.WriteParams(w, p.IsolationWindow);
