@@ -49,6 +49,50 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// Return all peptide doc nodes whose precursor Mz matches the given Mz within the
+        /// document's match tolerance. Multiple peptides at the same Q1 (structural isomers,
+        /// or SRM methods that schedule different compounds against a shared precursor) are
+        /// all returned; callers that bind chromatograms per peptide can then emit one entry
+        /// per match instead of collapsing same-Q1 peptides into a single chromatogram.
+        /// </summary>
+        public IEnumerable<PeptideDocNode> FindPeptides(SignedMz precursorMz)
+        {
+            if (_precursorMzPeptideList.Count == 0)
+                yield break;
+
+            var lookup = new PeptidePrecursorMz(null, precursorMz);
+            int i = _precursorMzPeptideList.BinarySearch(lookup, PeptidePrecursorMz.COMPARER);
+            if (i < 0)
+                i = ~i;
+
+            // The same peptide may appear at the same Mz under multiple transition
+            // groups; dedupe by reference so callers see each peptide once.
+            var seen = new HashSet<PeptideDocNode>();
+
+            // Walk outward from the landing index, stopping in each direction as
+            // soon as the candidate falls outside tolerance or crosses polarity
+            // (SignedMz orders negatives before positives).
+            for (int j = i - 1; j >= 0; j--)
+            {
+                var cand = _precursorMzPeptideList[j];
+                if (cand.PrecursorMz.IsNegative != precursorMz.IsNegative ||
+                    Math.Abs(cand.PrecursorMz - precursorMz) > _mzMatchTolerance)
+                    break;
+                if (seen.Add(cand.NodePeptide))
+                    yield return cand.NodePeptide;
+            }
+            for (int j = i; j < _precursorMzPeptideList.Count; j++)
+            {
+                var cand = _precursorMzPeptideList[j];
+                if (cand.PrecursorMz.IsNegative != precursorMz.IsNegative ||
+                    Math.Abs(cand.PrecursorMz - precursorMz) > _mzMatchTolerance)
+                    break;
+                if (seen.Add(cand.NodePeptide))
+                    yield return cand.NodePeptide;
+            }
+        }
+
+        /// <summary>
         /// Return doc node for a peptide associated with a given precursor Mz.  May return
         /// null if the precursor Mz lies outside the matching tolerance setting.
         /// </summary>
