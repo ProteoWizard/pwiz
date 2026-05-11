@@ -53,11 +53,22 @@ namespace pwiz.OspreySharp.Tasks
 
         /// <summary>
         /// The configuration parsed from CLI args and the input library.
-        /// Tasks may shallow-clone the config for per-file scratch
-        /// (mirroring <c>OspreyConfig.ShallowClone</c>) but must not
-        /// mutate the outer instance — downstream tasks rely on its
-        /// post-CLI-parse state for hash-stable
-        /// <see cref="OspreyConfig.SearchParameterHash"/> computations.
+        ///
+        /// Mutation contract: fields that feed
+        /// <see cref="OspreyConfig.SearchParameterHash"/> /
+        /// <see cref="OspreyConfig.LibraryIdentityHash"/> /
+        /// <see cref="OspreyConfig.ReconciliationParameterHash"/> must
+        /// remain stable for the life of the run, so a worker can
+        /// reproduce the same hash a straight-through invocation would
+        /// stamp into its parquet footers. Pipeline-populated fields
+        /// that do NOT feed those hashes (e.g. the worker-mode
+        /// synthesis of <c>InputFiles</c> from <c>InputScores</c>, the
+        /// pipeline's choice of <c>EffectiveFileParallelism</c>) may be
+        /// written once at pipeline entry. For per-file scratch that
+        /// mutates hash-affecting fields (e.g. the MS2-calibrated
+        /// FragmentTolerance), tasks must use
+        /// <c>OspreyConfig.ShallowClone</c> so the mutation stays
+        /// scoped to one file.
         /// </summary>
         public OspreyConfig Config { get; }
 

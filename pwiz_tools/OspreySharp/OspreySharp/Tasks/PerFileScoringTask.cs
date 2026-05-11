@@ -788,16 +788,13 @@ namespace pwiz.OspreySharp.Tasks
             if (parquetFooterMetadata != null)
             {
                 string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
-                // Build a per-file lookup so the writer can pull
-                // sequence/precursor_mz/protein_ids from the library by
-                // entry_id (FdrEntry doesn't carry these). One pass over
-                // ~485K library entries is well under a second.
-                var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
-                foreach (var entry in fullLibrary)
-                    libraryById[entry.Id] = entry;
+                // Reuse the entry-id -> LibraryEntry map Run() built once
+                // before the per-file fan-out (WriteScoresParquet needs
+                // it to pull sequence / precursor_mz / protein_ids from
+                // the library since FdrEntry doesn't carry these).
                 var swParquet = Stopwatch.StartNew();
                 ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, parquetFooterMetadata, libraryById, fileName);
+                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
                 swParquet.Stop();
                 _ctx.LogInfo(string.Format(
                     "Wrote {0} scored entries to {1} ({2:F1}s)",
@@ -845,6 +842,10 @@ namespace pwiz.OspreySharp.Tasks
 
             using (var writer = new StreamWriter(dumpPath))
             {
+                // LF newlines so the dump is byte-stable across Windows and
+                // Linux for cross-impl diffing against Rust's PIN output;
+                // matches the convention used by OspreyDiagnostics.
+                writer.NewLine = "\n";
                 writer.WriteLine(string.Join("\t", header));
                 foreach (var e in sorted)
                 {

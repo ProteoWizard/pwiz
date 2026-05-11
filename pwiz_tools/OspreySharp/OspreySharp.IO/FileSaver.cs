@@ -19,8 +19,6 @@
 
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace pwiz.OspreySharp.IO
 {
@@ -122,35 +120,55 @@ namespace pwiz.OspreySharp.IO
             SafeName = null;
         }
 
-        [DllImport(@"kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private static extern uint GetTempFileName(string lpPathName, string lpPrefixString,
-            uint uUnique, [Out] StringBuilder lpTempFileName);
+        // Number of retries on filename collision before giving up. Matches
+        // the loose contract of Win32 GetTempFileName, which iterates over
+        // generated names until one doesn't collide; in practice a single
+        // attempt almost always succeeds.
+        private const int TEMP_NAME_ATTEMPTS = 100;
 
+        /// <summary>
+        /// Cross-platform replacement for Win32 <c>GetTempFileName</c>:
+        /// allocate a unique 0-byte file under <paramref name="basePath"/>
+        /// whose name starts with <paramref name="prefix"/>. Uses
+        /// <see cref="Path.GetRandomFileName"/> for the unique suffix and
+        /// <see cref="FileMode.CreateNew"/> to claim the name atomically;
+        /// on collision (extremely rare), retries a bounded number of
+        /// times. Works on net472 and net8.0 on Windows / Linux / macOS,
+        /// unlike the kernel32.dll P/Invoke this replaced.
+        /// </summary>
         private static string GetTempFileName(string basePath, string prefix)
         {
-            // 260 is MAX_PATH in Win32 windows.h header. The buffer needs
-            // a >0 capacity or GetTempFileName throws IndexOutOfRangeException.
-            var sb = new StringBuilder(260);
-
             Directory.CreateDirectory(basePath);
-            uint result = GetTempFileName(basePath, prefix, 0, sb);
-            if (result == 0)
+            for (int attempt = 0; attempt < TEMP_NAME_ATTEMPTS; attempt++)
             {
-                var lastWin32Error = Marshal.GetLastWin32Error();
-                if (lastWin32Error == 5)
+                string candidate = Path.Combine(basePath, prefix + Path.GetRandomFileName());
+                try
+                {
+                    // CreateNew + FileShare.None claims the name and creates
+                    // a 0-byte file; immediate close keeps the file in place
+                    // so the caller's downstream writer can reopen it.
+                    using (new FileStream(candidate, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    {
+                    }
+                    return candidate;
+                }
+                catch (IOException) when (File.Exists(candidate))
+                {
+                    // Name collision -- another process or attempt got there
+                    // first. Try a fresh random name.
+                }
+                catch (UnauthorizedAccessException ex)
                 {
                     throw new IOException(string.Format(
                         @"Access denied: unable to create a file in the folder '{0}'. " +
                         @"Adjust the folder write permissions or retry the operation " +
                         @"after moving or copying files to a different folder.",
-                        basePath));
+                        basePath), ex);
                 }
-                throw new IOException(string.Format(
-                    @"Failed attempting to create a temporary file in the folder '{0}': " +
-                    @"Win32 error {1}.",
-                    basePath, lastWin32Error));
             }
-            return sb.ToString();
+            throw new IOException(string.Format(
+                @"Failed to allocate a temporary file in the folder '{0}' " +
+                @"after {1} attempts.", basePath, TEMP_NAME_ATTEMPTS));
         }
     }
 }
