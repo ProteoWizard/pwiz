@@ -68,7 +68,10 @@ namespace pwiz.OspreySharp
                     new PerFileRescoreTask(),
                     new MergeNodeTask()
                 };
-                var ctx = new PipelineContext(config, pipelineTasks, LogInfo, LogWarning, LogError);
+                var startAt = DeriveStartAtTask(config);
+                var stopAfter = DeriveStopAfterTask(config);
+                var ctx = new PipelineContext(config, pipelineTasks,
+                    LogInfo, LogWarning, LogError, startAt, stopAfter);
 
                 foreach (var task in ctx.Tasks)
                 {
@@ -89,6 +92,56 @@ namespace pwiz.OspreySharp
                 LogError(ex.StackTrace);
                 return 1;
             }
+        }
+
+        /// <summary>
+        /// Derives the StartAt task for <paramref name="config"/> from the
+        /// HPC CLI flags it carries. The four mass-spec pipeline tasks
+        /// (PerFileScoring → FirstJoin → PerFileRescore → MergeNode) are
+        /// always present in the registry; this picks which one
+        /// <see cref="AnalysisPipeline.Run"/> starts at, leaving any
+        /// earlier tasks unrun (their lazy-rehydrate accessors fetch state
+        /// from disk if a downstream task needs it).
+        /// </summary>
+        internal static Type DeriveStartAtTask(OspreyConfig config)
+        {
+            bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
+            if (hasInputScores)
+            {
+                // --join-at-pass=2 --input-scores ...
+                if (config.ExpectReconciledInput)
+                    return typeof(MergeNodeTask);
+                // --join-at-pass=1 --no-join --input-scores ... (rescore worker)
+                if (config.NoJoin)
+                    return typeof(PerFileRescoreTask);
+                // --join-at-pass=1 --join-only --input-scores ...
+                if (config.StopAfterStage5)
+                    return typeof(FirstJoinTask);
+            }
+            return typeof(PerFileScoringTask);
+        }
+
+        /// <summary>
+        /// Derives the StopAfter task for <paramref name="config"/> from the
+        /// HPC CLI flags it carries. See <see cref="DeriveStartAtTask"/>
+        /// for the parallel start-point derivation.
+        /// </summary>
+        internal static Type DeriveStopAfterTask(OspreyConfig config)
+        {
+            bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
+            // --no-join (no --input-scores): only Stages 1-4
+            if (config.NoJoin && !hasInputScores)
+                return typeof(PerFileScoringTask);
+            // --join-at-pass=1 --no-join --input-scores ... (rescore worker)
+            if (config.NoJoin && hasInputScores)
+                return typeof(PerFileRescoreTask);
+            // --join-at-pass=1 --join-only (with or without --input-scores)
+            if (config.StopAfterStage5)
+                return typeof(FirstJoinTask);
+            // --join-at-pass=2 --input-scores ... (post-reconciled merge only)
+            if (config.ExpectReconciledInput && hasInputScores)
+                return typeof(MergeNodeTask);
+            return typeof(MergeNodeTask);
         }
 
         #region Utility Methods
