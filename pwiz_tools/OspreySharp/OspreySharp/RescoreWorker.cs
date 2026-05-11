@@ -79,14 +79,15 @@ namespace pwiz.OspreySharp
         /// </summary>
         public static int Run(OspreyConfig config)
         {
-            // Thin facade — all worker logic lives on AnalysisPipeline so
-            // it can share the in-process Stage 6 code path. Keeps
-            // Program.Main's dispatch unchanged while letting the heavy
-            // lifting (library load, hydration, compaction, rescore loop,
-            // future gap-fill + parquet write-back) live alongside the
-            // rest of the pipeline.
-            var pipeline = new AnalysisPipeline();
-            return pipeline.RunWorker(config);
+            // Thin facade -- worker logic lives on PerFileRescoreTask
+            // so it can share the in-process Stage 6 code path through
+            // the same AbstractScoringTask base. Keeps Program.Main's
+            // dispatch unchanged while letting the heavy lifting
+            // (library load, hydration, compaction, rescore loop,
+            // gap-fill, parquet write-back) live alongside the
+            // in-process rescore task.
+            var task = new PerFileRescore.PerFileRescoreTask();
+            return task.RunWorker(config);
         }
     }
 }

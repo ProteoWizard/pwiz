@@ -22,19 +22,8 @@
  */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
-using pwiz.OspreySharp.FDR;
-using pwiz.OspreySharp.FDR.Reconciliation;
-using pwiz.OspreySharp.IO;
-using pwiz.OspreySharp.Scoring;
 
 namespace pwiz.OspreySharp
 {
@@ -49,18 +38,8 @@ namespace pwiz.OspreySharp
     /// 4. Protein FDR (optional)
     /// 5. Write blib output
     /// </summary>
-    public partial class AnalysisPipeline : AbstractScoringTask
+    public class AnalysisPipeline
     {
-        // AbstractScoringTask requires Name + Run(ctx) overrides;
-        // AnalysisPipeline never runs as a task itself (it is the
-        // pipeline orchestrator). The stubs satisfy the abstract
-        // contract; they are never invoked because AnalysisPipeline
-        // is not added to a Tasks.Pipeline.
-        public override string Name => @"AnalysisPipeline";
-        public override bool Run(Tasks.PipelineContext ctx) =>
-            throw new System.NotSupportedException(
-                @"AnalysisPipeline is not a runnable task; call Run(OspreyConfig) instead.");
-
         /// <summary>
         /// Run the complete analysis pipeline.
         /// </summary>
@@ -132,7 +111,6 @@ namespace pwiz.OspreySharp
                     var rescorePipeline = new Tasks.Pipeline(new Tasks.OspreyTask[]
                     {
                         new PerFileRescore.PerFileRescoreTask(
-                            this,
                             perFileEntries,
                             firstJoinTask.PerFileConsensusTargets,
                             firstJoinTask.ReconciliationActions,
