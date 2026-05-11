@@ -74,22 +74,26 @@ namespace pwiz.OspreySharp.Tasks
     /// <c>Osprey-workflow.html</c> view -- each input file's rescore is
     /// independent of the others.
     ///
-    /// Two entry shapes:
+    /// Two entry methods on a single (parameterless-constructed) instance:
     /// <list type="bullet">
     ///   <item>
-    ///     In-process: construct via the multi-arg constructor with the
-    ///     assembled state produced upstream (FirstJoinTask), then run
-    ///     through <see cref="AnalysisPipeline"/>'s task driver, which
-    ///     calls <see cref="Run"/>. <see cref="Run"/> dispatches into
-    ///     <see cref="ExecuteRescore"/> and then runs the per-process
+    ///     <see cref="Run"/> — invoked by <see cref="AnalysisPipeline"/>'s
+    ///     task driver during a straight-through pipeline run. Reads the
+    ///     upstream state from sibling tasks through
+    ///     <c>ctx.GetTask&lt;PerFileScoringTask&gt;()</c> and
+    ///     <c>ctx.GetTask&lt;FirstJoinTask&gt;()</c>, dispatches into
+    ///     <see cref="ExecuteRescore"/>, then runs the per-process
     ///     diagnostic-writer close + cross-impl bisection dump.
     ///   </item>
     ///   <item>
-    ///     Worker (<c>--join-at-pass=1 --no-join</c>): construct via the
-    ///     parameterless ctor and call <see cref="RunWorker"/>, which
-    ///     loads the library, hydrates the boundary-file pair, applies
-    ///     worker compaction, computes per-file consensus targets, and
-    ///     then dispatches into <see cref="ExecuteRescore"/>.
+    ///     <see cref="RunWorker"/> — entry point for the
+    ///     <c>--join-at-pass=1 --no-join</c> worker mode. Loads the
+    ///     library, hydrates the boundary-file pair from sidecars,
+    ///     applies worker compaction, computes per-file consensus
+    ///     targets in-method, then dispatches into
+    ///     <see cref="ExecuteRescore"/>. Pass 2 will fold this into
+    ///     the registry path by moving the hydration onto the
+    ///     upstream producers' lazy-rehydrate accessors.
     ///   </item>
     /// </list>
     /// Inherits the scoring engine (RunCoelutionScoring, LoadLibrary,
@@ -112,9 +116,19 @@ namespace pwiz.OspreySharp.Tasks
         /// The post-rescore per-file entries. Mutated in place by
         /// <see cref="ExecuteRescore"/>; when this task short-circuits
         /// (no FirstJoinTask plan) the list is the unchanged upstream
-        /// reference.
+        /// reference. Throws if called before <see cref="Run"/> /
+        /// <see cref="RunWorker"/> has populated the field — a
+        /// programming defect (consumer queried us before we executed),
+        /// matching the fail-fast posture of
+        /// <see cref="PipelineContext.GetTask{T}"/>.
         /// </summary>
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries() => _perFileEntries;
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries()
+        {
+            if (_perFileEntries == null)
+                throw new InvalidOperationException(
+                    @"PerFileRescoreTask.GetPerFileEntries called before Run / RunWorker populated the field.");
+            return _perFileEntries;
+        }
 
         public override bool Run(PipelineContext ctx)
         {
