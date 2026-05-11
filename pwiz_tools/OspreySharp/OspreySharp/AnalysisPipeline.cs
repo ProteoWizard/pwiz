@@ -189,7 +189,14 @@ namespace pwiz.OspreySharp
                 return true;
             }
 
-            DeleteTaskSidecars(task, ctx);
+            // Note: stale-sidecar cleanup is the responsibility of each
+            // task body. A task-level pre-Run delete here would wipe the
+            // per-file sidecars that <see cref="PerFileScoringTask"/>
+            // relies on for its within-task per-file skip; deletion has
+            // to happen on per-file granularity for tasks that produce
+            // per-file outputs. Tasks that produce a single coarse output
+            // (e.g. MergeNodeTask's output.blib) delete their own
+            // sidecars at the start of Run.
 
             var sw = Stopwatch.StartNew();
             ctx.LogInfo(string.Format(@"[task] {0}: starting", task.Name));
@@ -238,12 +245,6 @@ namespace pwiz.OspreySharp
                         task.Name, output, ex.Message));
                 }
             }
-        }
-
-        private static void DeleteTaskSidecars(OspreyTask task, PipelineContext ctx)
-        {
-            foreach (var output in task.Outputs(ctx))
-                TaskValiditySidecar.Delete(output, task.Name);
         }
 
         private static string FormatDuration(TimeSpan duration)

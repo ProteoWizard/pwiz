@@ -170,6 +170,9 @@ namespace pwiz.OspreySharp.Tasks
             if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
+            // Mid-Run crash safety: see FirstJoinTask.Run for rationale.
+            foreach (var output in Outputs(ctx))
+                TaskValiditySidecar.Delete(output, Name);
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
             _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 

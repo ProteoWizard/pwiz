@@ -136,6 +136,12 @@ namespace pwiz.OspreySharp.Tasks
             if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
+            // Mid-Run crash safety: clear stale sidecars for the outputs
+            // this task is about to produce. A crash before the matching
+            // post-Run sidecar write leaves no false-positive sidecar
+            // claiming the partially-written output is valid.
+            foreach (var output in Outputs(ctx))
+                TaskValiditySidecar.Delete(output, Name);
             var config = ctx.Config;
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
             var perFileEntries = perFileScoring.GetPerFileEntries(ctx);

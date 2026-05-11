@@ -86,6 +86,9 @@ namespace pwiz.OspreySharp.Tasks
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;
+            // Mid-Run crash safety: see FirstJoinTask.Run for rationale.
+            foreach (var output in Outputs(ctx))
+                TaskValiditySidecar.Delete(output, Name);
             var config = ctx.Config;
             // perFileEntries comes from PerFileRescoreTask -- it owns
             // the post-rescore version (mutated in place; or the
