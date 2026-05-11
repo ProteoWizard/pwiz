@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.OspreySharp.IO</RootNamespace>
+    <AssemblyName>OspreySharp.IO</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OspreySharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Parquet.Net" Version="4.25.0" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <!-- net472 needs System.Memory explicitly; net8 has it built in. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
+  </ItemGroup>
+
+  <!-- DotNetZip (Ionic.Zlib) for stock-zlib-compatible deflate output.
+       Matches Skyline's BlibData writer (Util/Extensions/UtilDB.Compress)
+       so OspreySharp .blib peak blobs are byte-identical to Skyline's
+       and to Rust osprey's flate2 output. .NET's built-in DeflateStream
+       produces a 4-byte-shorter non-stock-zlib variant which would split
+       cross-impl byte parity. -->
+  <ItemGroup>
+    <Reference Include="DotNetZip">
+      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

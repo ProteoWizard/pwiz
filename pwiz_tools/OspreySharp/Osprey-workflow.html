@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Osprey / OspreySharp DIA pipeline workflow</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #fafafa;
+    font-family: system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    color: #212121;
+  }
+  header {
+    max-width: 1200px;
+    margin: 20px auto 10px auto;
+    padding: 0 20px;
+  }
+  header h1 {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  header p.sub {
+    margin: 0;
+    color: #616161;
+    font-size: 13px;
+  }
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 40px 20px;
+  }
+  svg.pipeline {
+    width: 100%;
+    height: auto;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  footer {
+    max-width: 1200px;
+    margin: 20px auto 40px auto;
+    padding: 0 20px;
+    color: #616161;
+    font-size: 12px;
+  }
+  footer code {
+    background: #f5f5f5;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Osprey / OspreySharp DIA pipeline workflow</h1>
+  <p class="sub">
+    Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
+    output. Pipeline restructured 2026-04-30 to align stages with the
+    join / per-file-fan-out boundaries that matter for HPC distribution.
+    Stages 1-4 (per-file scoring) match within the
+    <code>Test-Features.ps1</code> 1e-6 tolerance gate on Stellar +
+    Astral. Stage 5 (first-pass FDR + reconciliation planning — the
+    first join) is bit-identical on Stellar + Astral 3-file across all
+    nine cross-impl dumps. Stage 6 (per-file rescore + gap-fill +
+    reconciled parquet write-back — the second per-file fan-out) is
+    bit-identical on Stellar + Astral 3-file (allowlist empty after
+    pwiz #4188). Stage 7 absorbs all post-second-join work — second-pass
+    Percolator, protein FDR (parsimony + picked-protein TDC), and the
+    final BiblioSpecLite <code>.blib</code> SQLite output — into a single
+    merge-node phase, mirroring the way Stage 5 absorbs many sub-steps
+    under the first-join phase. The protein-FDR substep is cross-impl
+    PASS at 1e-9 absolute (Stellar 6204/6204 + Astral 11779/11779 protein
+    groups via <code>Compare-Stage7-Crossimpl.ps1</code>); the
+    <code>.blib</code> output substep is cross-impl PASS at the SQL
+    row+column level (Stellar 45153 + Astral 129352 RefSpectra via
+    <code>Compare-Blib-Crossimpl.ps1</code>, including byte-identical
+    <code>RefSpectraPeaks</code> blobs). Color indicates port status of
+    the OspreySharp (C#) implementation against the Osprey (Rust)
+    reference. End-to-end per-stage walls are in the table near the
+    bottom of the page.
+  </p>
+</header>
+
+<main>
+<svg class="pipeline" viewBox="0 0 1200 2440" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <!-- Arrowhead for control flow between stages -->
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#424242"/>
+  </marker>
+  <marker id="arrow-thick" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+  </marker>
+
+  <style>
+    /* Typography */
+    .title       { font-size: 24px; font-weight: 700; fill: #0d1b2a; }
+    .subtitle    { font-size: 12px; font-weight: 400; fill: #607d8b; }
+
+    .phase-label { font-size: 12px; font-weight: 600; fill: #5e35b1;
+                   text-transform: uppercase; letter-spacing: 1.5px; }
+    .phase-title { font-size: 16px; font-weight: 600; fill: #1a237e; }
+    .phase-note  { font-size: 11px; fill: #546e7a; font-style: italic; }
+    .phase-shape-fanout { font-size: 11px; font-weight: 700;
+                          fill: #1565c0; text-transform: uppercase;
+                          letter-spacing: 1px; }
+    .phase-shape-join   { font-size: 11px; font-weight: 700;
+                          fill: #c62828; text-transform: uppercase;
+                          letter-spacing: 1px; }
+
+    .stage-title { font-size: 13px; font-weight: 600; fill: #263238; }
+    .stage-desc  { font-size: 11px; fill: #455a64; }
+    .stage-meta  { font-size: 10px; fill: #78909c; }
+
+    .legend-title { font-size: 11px; font-weight: 600; fill: #455a64;
+                    text-transform: uppercase; letter-spacing: 1px; }
+    .legend-label { font-size: 11px; fill: #455a64; }
+
+    .you-are-here { font-size: 12px; font-weight: 700; fill: #c62828;
+                    letter-spacing: 0.5px; }
+
+    /* Status fills */
+    .st-done    { fill: #c8e6c9; stroke: #2e7d32; stroke-width: 2; }
+    .st-likely  { fill: #dcedc8; stroke: #558b2f; stroke-width: 2;
+                  stroke-dasharray: 5,3; }
+    .st-partial { fill: #fff9c4; stroke: #f9a825; stroke-width: 2; }
+    .st-unverif { fill: #e1f5fe; stroke: #0277bd; stroke-width: 2; }
+    .st-missing { fill: #f5f5f5; stroke: #757575; stroke-width: 2;
+                  stroke-dasharray: 5,3; }
+    .st-na     { fill: #ffffff; stroke: #bdbdbd; stroke-width: 1.5; }
+
+    /* Phase container backgrounds */
+    .phase-bg   { fill: #fbfbfc; stroke: #cfd8dc; stroke-width: 1;
+                  stroke-dasharray: 2,2; }
+    .phase-bg-active { fill: #fff8e1; stroke: #ffc107; stroke-width: 2; }
+
+    /* Arrows */
+    .flow       { stroke: #424242; stroke-width: 2; fill: none; }
+    .flow-loop  { stroke: #6a1b9a; stroke-width: 2; fill: none;
+                  stroke-dasharray: 6,3; }
+    .flow-you   { stroke: #1565c0; stroke-width: 3; fill: none; }
+
+    /* Input pill */
+    .input-pill { fill: #e8eaf6; stroke: #3949ab; stroke-width: 2; }
+
+    /* Test coverage badges */
+    .badge-label { font-size: 11px; font-weight: 700; }
+    .badge-value { font-size: 11px; font-weight: 400; }
+    .badge-test  { fill: #1b5e20; }
+  </style>
+</defs>
+
+<!-- ================================================================= -->
+<!-- TITLE + SUBTITLE                                                   -->
+<!-- ================================================================= -->
+<g transform="translate(40, 40)">
+  <text class="title">Osprey / OspreySharp DIA search pipeline</text>
+  <text class="subtitle" y="22">
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-05-09: end-to-end cross-impl parity from Stage 1 through Stage 7 + .blib on Stellar + Astral 3-file.
+  </text>
+</g>
+
+<!-- ================================================================= -->
+<!-- LEGEND                                                             -->
+<!-- ================================================================= -->
+<g transform="translate(40, 90)">
+  <text class="legend-title">Port status</text>
+  <g transform="translate(0, 16)">
+    <rect class="st-done"    x="0"   y="0" width="16" height="12"/>
+    <text class="legend-label" x="22" y="10">proven bit-identical</text>
+
+    <rect class="st-likely"  x="180" y="0" width="16" height="12"/>
+    <text class="legend-label" x="202" y="10">expected to match (pending diff)</text>
+
+    <rect class="st-partial" x="420" y="0" width="16" height="12"/>
+    <text class="legend-label" x="442" y="10">partially verified</text>
+
+    <rect class="st-unverif" x="600" y="0" width="16" height="12"/>
+    <text class="legend-label" x="622" y="10">ported, not yet cross-checked</text>
+
+    <rect class="st-missing" x="830" y="0" width="16" height="12"/>
+    <text class="legend-label" x="852" y="10">missing / stubbed</text>
+
+    <rect class="st-n/a"     x="980" y="0" width="16" height="12"/>
+    <text class="legend-label" x="1002" y="10">not applicable</text>
+  </g>
+</g>
+
+<!-- ================================================================= -->
+<!-- INPUTS                                                             -->
+<!-- ================================================================= -->
+<g transform="translate(0, 150)">
+  <text class="phase-label" x="40" y="0">inputs</text>
+
+  <rect class="input-pill" x="260"  y="16" width="260" height="48" rx="24"/>
+  <text class="stage-title" x="390" y="38" text-anchor="middle">Spectral library</text>
+  <text class="stage-desc"  x="390" y="54" text-anchor="middle">DIA-NN TSV, .blib, or .elib</text>
+
+  <rect class="input-pill" x="680" y="16" width="260" height="48" rx="24"/>
+  <text class="stage-title" x="810" y="38" text-anchor="middle">DIA mzML file(s)</text>
+  <text class="stage-desc"  x="810" y="54" text-anchor="middle">one or more replicates</text>
+</g>
+
+<!-- Arrows from inputs into Stage 1 and Stage 2 -->
+<path class="flow" d="M 390 230 L 390 250" marker-end="url(#arrow)"/>
+<path class="flow" d="M 810 230 L 810 250" marker-end="url(#arrow)"/>
+
+<!-- ================================================================= -->
+<!-- STAGE 1 + STAGE 2 (parallel: library prep / mzML prep)             -->
+<!-- ================================================================= -->
+<g transform="translate(0, 250)">
+  <!-- Stage 1 container -->
+  <rect class="phase-bg" x="40"  y="10" width="540" height="180" rx="6"/>
+  <text class="phase-label" x="60"  y="30">stage 1</text>
+  <text class="phase-title" x="60"  y="48">Library preparation</text>
+
+  <rect class="st-done" x="80" y="70" width="460" height="42" rx="4"/>
+  <text class="stage-title" x="310" y="90" text-anchor="middle">Load + dedup + binary cache</text>
+  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, sequential IDs, .libcache for fast reload</text>
+
+  <rect class="st-done" x="80" y="130" width="460" height="42" rx="4"/>
+  <text class="stage-title" x="310" y="150" text-anchor="middle">Decoy generation (parallel)</text>
+  <text class="stage-desc"  x="310" y="164" text-anchor="middle">enzyme-aware reverse, collision detection, Parallel.For</text>
+
+  <!-- Stage 1 badges (upper right of container) -->
+  <text x="535" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">36 + 2 regression (dedup, collision)</tspan></text>
+
+  <path class="flow" d="M 310 112 L 310 128" marker-end="url(#arrow)"/>
+
+  <!-- Stage 2 container -->
+  <rect class="phase-bg" x="620" y="10" width="540" height="180" rx="6"/>
+  <text class="phase-label" x="640" y="30">stage 2</text>
+  <text class="phase-title" x="640" y="48">mzML processing</text>
+
+  <rect class="st-done" x="660" y="70" width="460" height="42" rx="4"/>
+  <text class="stage-title" x="890" y="90" text-anchor="middle">Parse spectra</text>
+  <text class="stage-desc"  x="890" y="104" text-anchor="middle">Native C# XmlReader (base64 + zlib), not COM bridge</text>
+
+  <rect class="st-done" x="660" y="130" width="460" height="42" rx="4"/>
+  <text class="stage-title" x="890" y="150" text-anchor="middle">Isolation window grouping</text>
+  <text class="stage-desc"  x="890" y="164" text-anchor="middle">deterministic, 125 windows on Stellar</text>
+
+  <!-- Stage 2 badges (upper right of container) -->
+  <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">3 (mzML parsing, isolation windows)</tspan></text>
+
+  <path class="flow" d="M 890 112 L 890 128" marker-end="url(#arrow)"/>
+</g>
+
+<!-- Arrows down into calibration -->
+<path class="flow" d="M 310 460 L 310 490 L 600 490 L 600 520" marker-end="url(#arrow)"/>
+<path class="flow" d="M 890 460 L 890 490 L 600 490" />
+
+<!-- ================================================================= -->
+<!-- STAGE 3 CALIBRATION                                                 -->
+<!-- ================================================================= -->
+<g transform="translate(0, 520)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="540" rx="6"/>
+  <text class="phase-label" x="60" y="24">stage 3</text>
+  <text class="phase-title" x="60" y="42">Calibration (a.k.a. recalibration)</text>
+  <text class="phase-note"  x="60" y="58">
+    Goal: fit an RT calibration from the library RT column to the observed spectrum RT,
+    so the main search can trust the per-entry RT window.
+  </text>
+
+  <!-- Pass-1 substages -->
+  <text class="phase-label" x="80" y="90" fill="#2e7d32">pass 1</text>
+
+  <rect class="st-done" x="80" y="100" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="120" text-anchor="middle">2D grid sampling + per-entry calibration windows</text>
+  <text class="stage-desc"  x="600" y="134" text-anchor="middle">100K targets + 100K decoys via stride sampling of a 159x159 (m/z x RT) grid</text>
+
+  <rect class="st-done" x="80" y="160" width="1040" height="62" rx="4"/>
+  <text class="stage-title" x="600" y="180" text-anchor="middle">Pass-1 per-entry scoring</text>
+  <text class="stage-desc"  x="600" y="196" text-anchor="middle">extract top-6 fragment XICs; CWT peaks (with detect-all-peaks fallback); apex = argmax ref XIC</text>
+  <text class="stage-desc"  x="600" y="210" text-anchor="middle">4 features: correlation, libcosine, top6, xcorr (Comet-style) + SNR on reference XIC</text>
+
+  <rect class="st-done" x="80" y="240" width="1040" height="62" rx="4"/>
+  <text class="stage-title" x="600" y="260" text-anchor="middle">Pass-1 LDA (iterative non-negative CV)</text>
+  <text class="stage-desc"  x="600" y="276" text-anchor="middle">3-fold stratified CV by peptide; positive-training-set selection; non-negative consensus weights;</text>
+  <text class="stage-desc"  x="600" y="290" text-anchor="middle">up to 3 iterations with best-iteration tracking and 2-consecutive-no-improve early stop</text>
+
+  <rect class="st-done" x="80" y="320" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="340" text-anchor="middle">Pass-1 S/N quality filter + LOESS fit</text>
+  <text class="stage-desc"  x="600" y="354" text-anchor="middle">keep targets with q &lt;= 1% AND SNR &gt;= 5.0; fit LOESS on (lib_rt, measured_rt) -&gt; expected_rt(lib_rt)</text>
+
+  <!-- Pass-2 substages -->
+  <text class="phase-label" x="80" y="390" fill="#ef6c00">pass 2</text>
+
+  <rect class="st-done" x="80" y="400" width="1040" height="62" rx="4"/>
+  <text class="stage-title" x="600" y="420" text-anchor="middle">Pass-2 re-score with refined RT tolerance</text>
+  <text class="stage-desc"  x="600" y="436" text-anchor="middle">tolerance = clamp(MAD x 1.4826 x 3, [min, max]); expected_rt from pass-1 LOESS; re-extract XICs + peaks</text>
+  <text class="stage-desc"  x="600" y="450" text-anchor="middle">MS2 m/z calibration (offset correction + calibrated fragment tolerance) proven bit-identical</text>
+
+  <rect class="st-done" x="80" y="480" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="500" text-anchor="middle">Pass-2 LDA + LOESS (accept only if R&#178; doesn't degrade &gt;1%)</text>
+  <text class="stage-desc"  x="600" y="514" text-anchor="middle">falls back to pass-1 calibration if the pass-2 fit is worse</text>
+
+  <!-- Flow arrows within stage 3 -->
+  <path class="flow" d="M 600 142 L 600 158" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 222 L 600 238" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 302 L 600 318" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 362 L 600 398" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 462 L 600 478" marker-end="url(#arrow)"/>
+
+  <!-- Stage 3 badges (upper right of container) -->
+  <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">31 + 10 regression (xcorr, apex, SNR, LOESS, LDA, f64)</tspan></text>
+</g>
+
+<!-- Arrow from calibration to main search -->
+<path class="flow" d="M 600 1060 L 600 1100" marker-end="url(#arrow)"/>
+
+<!-- ================================================================= -->
+<!-- STAGE 4 MAIN FIRST-PASS SEARCH                                     -->
+<!-- ================================================================= -->
+<g transform="translate(0, 1100)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="200" rx="6"/>
+  <text class="phase-label" x="60" y="24">stage 4</text>
+  <text class="phase-title" x="60" y="42">Main first-pass search</text>
+  <text class="phase-note"  x="60" y="58">
+    For EVERY library entry (~485K including decoys), extract XICs and compute
+    21 PIN features. Uses the calibrated RT from Stage 3 to pick the right spectra window.
+  </text>
+
+  <rect class="st-done" x="80" y="80" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="100" text-anchor="middle">Per-entry XIC extraction + CWT candidate peaks</text>
+  <text class="stage-desc"  x="600" y="114" text-anchor="middle">XICs proven bit-identical (9 entries); CWT peaks + boundaries match; 311K entries verified</text>
+
+  <rect class="st-done" x="80" y="140" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="160" text-anchor="middle">21 PIN features per entry (pre-preprocessed XCorr, signal prefilter, CWT fallback)</text>
+  <text class="stage-desc"  x="600" y="174" text-anchor="middle">21/21 features ULP-identical on Stellar (466K entries); 21/21 pass on Astral (19 ULP, xcorr/sg_xcorr ~1e-7 from f32 HRAM cache)</text>
+
+  <!-- Stage 4 badges (upper right of container) -->
+  <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">2 + 8 regression (bin dedup, coelution, median polish, boundary)</tspan></text>
+
+  <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 4 -> 5 SEAM: HPC fan-out / first join                        -->
+<!-- ================================================================= -->
+<g transform="translate(0, 1310)">
+  <text x="600" y="14" text-anchor="middle" style="font-size: 10px; fill: #555;">
+    --no-join exits here (per-file .scores.parquet on disk); --join-at-pass=1 resumes here on a coordinator node
+  </text>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 5 FIRST-PASS FDR + RECONCILIATION PLANNING (FIRST JOIN)      -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 1300 L 600 1340" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 1340)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="500" rx="8"/>
+  <text class="phase-label" x="60" y="24">stage 5</text>
+  <text class="phase-title" x="60" y="42">First-pass FDR + reconciliation planning</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-file representation</text>
+  <text class="phase-note"  x="60" y="58">First join in the pipeline. Runs Percolator SVM on the joined per-file scores, computes cross-run consensus RTs,</text>
+  <text class="phase-note"  x="60" y="72">refits per-file calibration, and emits a per-(file, entry) reconciliation plan. All work that needs all-file representation lives here.</text>
+
+  <!-- Sub-phase 1: first-pass Percolator -->
+  <text class="phase-label" x="80" y="92" fill="#2e7d32">first-pass percolator</text>
+
+  <rect class="st-done" x="80" y="102" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="122" text-anchor="middle">Best-per-precursor subsampling (across files)</text>
+  <text class="stage-desc"  x="600" y="136" text-anchor="middle">subsample + fold dump bit-identical on Stellar 3-file (1,388,872 rows)</text>
+
+  <rect class="st-done" x="80" y="162" width="1040" height="56" rx="4"/>
+  <text class="stage-title" x="600" y="182" text-anchor="middle">Iterative non-negative SVM (3-fold stratified CV by peptide)</text>
+  <text class="stage-desc"  x="600" y="196" text-anchor="middle">grid search for C; Percolator-style positive training set; per-fold SVM weights match byte-for-byte</text>
+  <text class="stage-desc"  x="600" y="210" text-anchor="middle">cross-fold score calibration (Granholm 2012); standardizer mean/std match within 1e-12</text>
+
+  <rect class="st-done" x="80" y="236" width="1040" height="32" rx="4"/>
+  <text class="stage-title" x="600" y="256" text-anchor="middle">Target-decoy competition + q-values (run + experiment x precursor + peptide) + first-pass compaction + first-pass protein FDR</text>
+
+  <!-- Sub-phase 2: reconciliation planning -->
+  <text class="phase-label" x="80" y="296" fill="#ef6c00">reconciliation planning</text>
+
+  <rect class="st-done" x="80" y="306" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="326" text-anchor="middle">Multi-charge consensus per file (post-compaction)</text>
+  <text class="stage-desc"  x="600" y="340" text-anchor="middle">SelectRescoreTargets dump bit-identical (31,270 rows on Stellar 3-file)</text>
+
+  <rect class="st-done" x="80" y="366" width="1040" height="56" rx="4"/>
+  <text class="stage-title" x="600" y="386" text-anchor="middle">Cross-run consensus RTs + per-file calibration refit</text>
+  <text class="stage-desc"  x="600" y="400" text-anchor="middle">sigmoid(score)-weighted median, hard run_precursor_qvalue gate, optional protein-FDR rescue</text>
+  <text class="stage-desc"  x="600" y="414" text-anchor="middle">consensus + inv_predict + loess_fit + refit dumps bit-identical on Stellar + Astral 3-file</text>
+
+  <rect class="st-done" x="80" y="440" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="460" text-anchor="middle">Reconciliation plan: per-(file, entry) {Keep | UseCwtPeak | ForcedIntegration}</text>
+  <text class="stage-desc"  x="600" y="474" text-anchor="middle">reconciliation dump bit-identical on Stellar (172,548 actions) + Astral (248,711 actions)</text>
+
+  <!-- Inter-substep arrows (sub-phase 1) -->
+  <path class="flow" d="M 600 144 L 600 160" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 218 L 600 234" marker-end="url(#arrow)"/>
+  <!-- Inter-substep arrows (sub-phase 2) -->
+  <path class="flow" d="M 600 348 L 600 364" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 422 L 600 438" marker-end="url(#arrow)"/>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 5 -> 6 SEAM: planning result drives per-file fan-out          -->
+<!-- ================================================================= -->
+<g transform="translate(0, 1850)">
+  <text x="600" y="14" text-anchor="middle" style="font-size: 10px; fill: #555;">
+    --join-at-pass=1 --join-only would stop here (future: plan files to disk for HPC fan-back-out); --join-at-pass=1 continues
+  </text>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 6 PER-FILE RESCORE (SECOND PER-FILE FAN-OUT)                  -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 1840 L 600 1880" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 1880)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="6"/>
+  <text class="phase-label" x="60" y="24">stage 6</text>
+  <text class="phase-title" x="60" y="42">Per-file rescore + gap-fill + parquet write-back</text>
+  <text class="phase-shape-fanout" x="1115" y="24" text-anchor="end">per-file — N nodes</text>
+  <text class="phase-note"  x="60" y="58">Second per-file fan-out. Each file independently reloads its mzML, re-invokes the search engine with the reconciled boundary overrides,</text>
+  <text class="phase-note"  x="60" y="72">runs the gap-fill two-pass for missing precursors, and writes reconciled scores back to its .scores.parquet. No cross-file work.</text>
+
+  <rect class="st-done" x="80" y="90" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="110" text-anchor="middle">Per-file rescore at reconciled boundaries</text>
+  <text class="stage-desc"  x="600" y="124" text-anchor="middle">consensus + reconciliation overlay; cross-impl byte-parity validated on Stellar + Astral</text>
+
+  <rect class="st-done" x="80" y="148" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="168" text-anchor="middle">Gap-fill (two-pass: CWT with prefilter off, then forced integration)</text>
+  <text class="stage-desc"  x="600" y="182" text-anchor="middle">IdentifyGapFillTargets ported; gap-fill stubs appended with parquet_index = uint.MaxValue</text>
+
+  <rect class="st-done" x="80" y="206" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="226" text-anchor="middle">Reconciled parquet write-back (replace by ParquetIndex, append gap-fill, write reconciliation metadata)</text>
+  <text class="stage-desc"  x="600" y="240" text-anchor="middle">final per-file parquet output of Phase C — feeds Stage 7 second-pass Percolator</text>
+
+  <path class="flow" d="M 600 132 L 600 146" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 190 L 600 204" marker-end="url(#arrow)"/>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 6 -> 7 SEAM: reconciled parquets feed second-pass Percolator -->
+<!-- ================================================================= -->
+<g transform="translate(0, 2150)">
+  <text x="600" y="14" text-anchor="middle" style="font-size: 10px; fill: #555;">
+    --join-at-pass=2 --input-scores ... resumes here from reconciled per-file parquets (second join begins)
+  </text>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 7 POST-SECOND-JOIN: PERCOLATOR + PROTEIN FDR + .BLIB OUTPUT   -->
+<!-- ================================================================= -->
+<!-- One stage, three sub-steps. There is no per-file fan-out and no    -->
+<!-- sidecar / rehydration boundary between second-pass Percolator,     -->
+<!-- protein parsimony / picked-protein FDR, and .blib SQLite output;   -->
+<!-- they all run on the merge node in a single process. Mirrors the    -->
+<!-- way Stage 5 already absorbs many sub-steps (first-pass Percolator, -->
+<!-- experiment-level FDR, first-pass protein FDR, reconciliation       -->
+<!-- planning) under the first-join phase.                              -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 2140 L 600 2180" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 2180)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="230" rx="6"/>
+  <text class="phase-label" x="60" y="24">stage 7</text>
+  <text class="phase-title" x="60" y="42">Post-join: second-pass Percolator + protein FDR + .blib output</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — final merge-node phase (no further per-file fan-out)</text>
+
+  <rect class="st-done" x="80" y="62" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="82" text-anchor="middle">Single Percolator pass on the reconciled + gap-filled pool</text>
+  <text class="stage-desc"  x="600" y="96" text-anchor="middle">final run + experiment q-values at precursor + peptide levels (cross-impl PASS at 1e-9 via the protein-FDR-dump gate which transitively covers second-pass Percolator scores)</text>
+
+  <path class="flow" d="M 600 104 L 600 118" marker-end="url(#arrow)"/>
+
+  <rect class="st-done" x="80" y="120" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="140" text-anchor="middle">Parsimony + picked-protein FDR (Savitski 2015, TDC on best peptide score)</text>
+  <text class="stage-desc"  x="600" y="154" text-anchor="middle">bipartite graph, identical-set grouping, subset elimination, greedy razor assignment (cross-impl PASS Stellar 6204/6204 + Astral 11779/11779 via Compare-Stage7-Crossimpl.ps1)</text>
+
+  <path class="flow" d="M 600 162 L 600 176" marker-end="url(#arrow)"/>
+
+  <rect class="st-done" x="80" y="178" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="198" text-anchor="middle">BiblioSpecLite .blib (RefSpectra, RetentionTimes, Modifications, Proteins, Osprey fragment tables)</text>
+  <text class="stage-desc"  x="600" y="212" text-anchor="middle">cross-impl PASS Stellar 45153 + Astral 129352 RefSpectra via Compare-Blib-Crossimpl.ps1</text>
+</g>
+
+</svg>
+</main>
+
+<footer>
+  <p>
+    <strong>Cross-impl parity (Stellar <code>--resolution unit</code>, Astral
+    <code>--resolution hram</code>):</strong>
+    Stages 1-4 PIN features bit-identical at ULP on Stellar (466K entries,
+    all 21 features under 1e-10); on Astral 19 of 21 are ULP and xcorr /
+    sg_weighted_xcorr drift at ~1e-7 from the intrinsic f32 HRAM
+    preprocessed-bin cache (matches upstream osprey-scoring). Stages 5 and 6
+    pass byte-equality at every dump on both datasets (3-file). Stage 7
+    protein FDR matches at 1e-9 absolute (Stellar 6204/6204, Astral
+    11779/11779 protein groups); Stage 7 <code>.blib</code> output matches
+    at the SQL row+column level (Stellar 45153 + Astral 129352 RefSpectra,
+    byte-identical <code>RefSpectraPeaks</code> blobs).
+  </p>
+  <p>
+    <strong>End-to-end performance (3-file regression, post-sort-fix
+    binaries):</strong>
+    OspreySharp ties or beats Osprey on most stages of both datasets.
+    The table below is the headline; per-stage commentary follows it.
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Stage</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:30</td><td style="text-align: right; padding: 1px 12px;">1:08</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.76× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">8:26</td><td style="text-align: right; padding: 1px 12px;">11:17</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.34×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:44</td><td style="text-align: right; padding: 1px 12px;">1:53</td><td style="text-align: right; padding: 1px 12px;">1.09× (~tied)</td><td style="text-align: right; padding: 1px 12px;">3:30</td><td style="text-align: right; padding: 1px 12px;">2:45</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.79× (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">4:10</td><td style="text-align: right; padding: 1px 12px;">3:34</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.86× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">12:45</td><td style="text-align: right; padding: 1px 12px;">17:30</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.37×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">1.0× (tied)</td><td style="text-align: right; padding: 1px 12px;">0:16</td><td style="text-align: right; padding: 1px 12px;">0:13</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81× (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:11</td><td style="text-align: right; padding: 1px 12px;">0:08</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.71× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">0:55</td><td style="text-align: right; padding: 1px 12px;">0:45</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81× (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>7:38</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>6:46</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.89× (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>~25:51</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>~32:35</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>1.26×</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>Per-stage commentary:</strong>
+  </p>
+  <ul>
+    <li>
+      <strong>stage1to4</strong> (per-file scoring): C# faster on the
+      Stellar (unit-resolution) dataset; modestly slower on Astral
+      (HRAM). Foundations: <code>XcorrScratchPool</code> (LOH-allocation-
+      free ~100K-bin scratch), pre-preprocessed XCorr cache with f32
+      narrowing, pooled <code>visitedBins</code> for O(n_fragments)
+      clear, per-file thread scaling, and a mzML read gate that
+      serializes disk I/O across concurrent <code>ProcessFile</code>
+      calls.
+    </li>
+    <li>
+      <strong>stage5</strong> (first-pass FDR + reconciliation planning):
+      C# faster on Astral, ~tied on Stellar. Percolator SVM training (the
+      dominant cost) runs the three folds in parallel on the C# side
+      (<code>ParallelEx</code>); per-fold wall is around 92s on a
+      16-thread Stellar 3-file run.
+    </li>
+    <li>
+      <strong>stage6</strong> (per-file rescore + gap-fill + reconciled
+      parquet write-back): C# faster on Stellar; on Astral the ratio is
+      modest given ~6 GB HRAM mzML per file.
+    </li>
+    <li>
+      <strong>stage7</strong> (second-pass Percolator + protein FDR):
+      C# tied on Stellar, faster on Astral. Protein parsimony's
+      subset-elimination uses <code>HashSet&lt;string&gt;</code>; the
+      2nd-pass FDR sidecar overlay (<code>FdrScoresSidecar.TryReadOverlay</code>)
+      reads only the sidecar and overlays scores by entry_id without
+      re-reading the source parquet.
+    </li>
+    <li>
+      <strong>blib write</strong>: C# faster on Astral. Per-spectrum
+      <code>Ionic.Zlib</code> compression runs under <code>Parallel.For</code>
+      (<code>BlibWriter.CompressMzs</code> /
+      <code>CompressIntensities</code> pre-compress; SQLite insert stays
+      sequential and the output is byte-identical to the prior
+      sequential-compress run and to Osprey's blib).
+    </li>
+  </ul>
+  <p>
+    <strong>BLIB writer:</strong> OspreySharp's <code>BlibWriter</code>
+    uses DotNetZip / Ionic.Zlib level 6 (the same library Skyline's
+    <code>Util/Extensions/UtilDB.Compress</code> has used since 2009).
+    The Osprey side switched its <code>flate2</code> backend from
+    pure-Rust <code>miniz_oxide</code> to vendored stock zlib so both
+    sides emit identical Ionic.Zlib-compatible deflate output. Future
+    work: pull Skyline's <code>Model/Lib/BlibData</code> out to
+    <code>Shared/BiblioSpec</code> so OspreySharp and Skyline share a
+    single C# BLIB writer.
+  </p>
+  <p style="font-size: 11px; color: #757575;">
+    Detailed work log for the OspreySharp port lives in
+    <code>pwiz-ai/todos/completed/TODO-*_osprey_sharp*.md</code> — sprint-
+    by-sprint history, bisection notes, and per-issue narrative.
+  </p>
+</footer>
+</body>
+</html>

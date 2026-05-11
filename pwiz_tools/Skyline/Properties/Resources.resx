@@ -3960,6 +3960,12 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="ImsDB" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ImsDB.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Mobilogram" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Mobilogram.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="IonMobilityHeatmap" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\IonMobilityHeatmap.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="OptDB" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\OptDB.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

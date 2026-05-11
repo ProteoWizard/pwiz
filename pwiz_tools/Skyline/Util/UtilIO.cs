@@ -1614,6 +1614,55 @@ namespace pwiz.Skyline.Util
         }
     }
 
+    /// <summary>
+    /// A TextWriter that writes to two underlying writers simultaneously.
+    /// Useful for capturing command output to a buffer while still echoing it
+    /// to a live destination (log, immediate window, console).
+    /// </summary>
+    public class TeeTextWriter : TextWriter
+    {
+        private readonly TextWriter _writer1;
+        private readonly TextWriter _writer2;
+
+        public TeeTextWriter(TextWriter writer1, TextWriter writer2)
+        {
+            _writer1 = writer1 ?? Null;
+            _writer2 = writer2 ?? Null;
+        }
+
+        public override Encoding Encoding => _writer1.Encoding;
+
+        public override void Write(char value)
+        {
+            _writer1.Write(value);
+            _writer2.Write(value);
+        }
+
+        public override void Write(string value)
+        {
+            _writer1.Write(value);
+            _writer2.Write(value);
+        }
+
+        public override void WriteLine(string value)
+        {
+            _writer1.WriteLine(value);
+            _writer2.WriteLine(value);
+        }
+
+        public override void WriteLine()
+        {
+            _writer1.WriteLine();
+            _writer2.WriteLine();
+        }
+
+        public override void Flush()
+        {
+            _writer1.Flush();
+            _writer2.Flush();
+        }
+    }
+
     public class NamedPipeServerConnector
     {
         private static readonly object SERVER_CONNECTION_LOCK = new object();
