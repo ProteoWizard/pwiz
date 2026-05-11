@@ -142,39 +142,54 @@ public sealed class ShimadzuRawData : IDisposable
             }
             catch { /* on SDK failure, leave endTime=0; RetTimeToScan will return E_INVALIDARG and we'll fall back */ }
 
-            // Touch MS.Chromatogram.{SegmentCount, EventCount, GetEventNo} to prime
-            // QtflRawDataMain's lazy init. cpp depends on this same sequence (ShimadzuReader.cpp:255-264);
-            // on .NET 8 the priming flips RetTimeToScan from RuntimeBinderException-on-null
-            // to a working dispatch. We don't keep the return values — the EventInfo path
-            // below builds the topology — but the side effect of the calls matters.
+            // Build segment / event topology directly from MS.Chromatogram, matching cpp's
+            // ShimadzuReader.cpp:255-264. The earlier port derived this from the _eventInfo
+            // map populated by GetEventInfo, but that call fails silently on TeamCity (caught
+            // at the GetEventInfo try/catch above), leaving _eventInfo empty and the file
+            // reporting 0 spectra. Cpp doesn't depend on GetEventInfo for topology — only
+            // for the per-event AnalysisMode lookup later — so neither should we.
+            var segmentEventLists = new List<List<short>>();
+            short discoveredSegmentCount = 0;
             try
             {
                 var chromMng = _dataObject.MS.Chromatogram;
-                short segCount = (short)chromMng.SegmentCount;
-                for (short s = 1; s <= segCount; s++)
+                discoveredSegmentCount = (short)chromMng.SegmentCount;
+                for (short s = 1; s <= discoveredSegmentCount; s++)
                 {
                     short evCount = (short)chromMng.EventCount(s);
+                    var eventList = new List<short>(evCount);
                     for (short e = 1; e <= evCount; e++)
-                        chromMng.GetEventNo(s, e);
+                        eventList.Add((short)chromMng.GetEventNo(s, e));
+                    segmentEventLists.Add(eventList);
                 }
             }
             catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { /* QTFL backend unusable — fall back below */ }
             catch (NullReferenceException) { /* same */ }
             catch (System.Reflection.TargetInvocationException) { /* SDK wraps binding failures */ }
 
-            // Build segment / event topology from the EventInfo list we already populated.
-            // The Chromatogram-side iteration above is for SDK priming only; the EventInfo
-            // map carries each event's Segment + Event number, which is all we actually need
-            // for the loop below.
-            var segmentToEvents = new SortedDictionary<short, SortedSet<short>>();
-            foreach (var evt in _eventInfo.Values)
+            // If the Chromatogram path failed but we have an _eventInfo map, fall back to
+            // deriving segments from it. (Preserves the previous behavior for whatever SDK
+            // configuration that path worked under.)
+            if (discoveredSegmentCount == 0 && _eventInfo.Count > 0)
             {
-                if (evt.Segment <= 0) continue;
-                if (!segmentToEvents.TryGetValue(evt.Segment, out var set))
-                    segmentToEvents[evt.Segment] = set = new SortedSet<short>();
-                set.Add(evt.Event);
+                var byPair = new SortedDictionary<short, SortedSet<short>>();
+                foreach (var evt in _eventInfo.Values)
+                {
+                    if (evt.Segment <= 0) continue;
+                    if (!byPair.TryGetValue(evt.Segment, out var set))
+                        byPair[evt.Segment] = set = new SortedSet<short>();
+                    set.Add(evt.Event);
+                }
+                discoveredSegmentCount = byPair.Count == 0 ? (short)0 : byPair.Keys.Max();
+                segmentEventLists.Clear();
+                for (short s = 1; s <= discoveredSegmentCount; s++)
+                {
+                    var list = new List<short>();
+                    if (byPair.TryGetValue(s, out var set)) list.AddRange(set);
+                    segmentEventLists.Add(list);
+                }
             }
-            SegmentCount = segmentToEvents.Count == 0 ? 0 : segmentToEvents.Keys.Max();
+            SegmentCount = discoveredSegmentCount;
 
             uint lastScanNumber = 0;
             // Track whether RetTimeToScan actually FAILED for an event we tried to query
@@ -186,16 +201,20 @@ public sealed class ShimadzuRawData : IDisposable
             // (matches cpp which iterates by segment index).
             for (short seg = 1; seg <= SegmentCount; seg++)
             {
-                var eventNumbers = new List<short>();
-                if (segmentToEvents.TryGetValue(seg, out var eventSet))
-                    eventNumbers.AddRange(eventSet);
+                var eventNumbers = seg <= segmentEventLists.Count
+                    ? segmentEventLists[seg - 1]
+                    : new List<short>();
                 _eventNumbersBySegment.Add(eventNumbers);
 
                 foreach (short eventNo in eventNumbers)
                 {
                     var info = TryGetEventInfo(eventNo);
-                    if (info is null) continue;
-                    if (!srmAsSpectra && info.AnalysisMode == ShimadzuIO.Generic.AcqModes.MRM)
+                    // info is null when GetEventInfo failed earlier — cpp ShimadzuReader.cpp:265
+                    // dereferences getEventInfo(eventNo)->AnalysisMode unconditionally; if that
+                    // returns null on TeamCity but the chromatogram-side topology is intact,
+                    // we'd otherwise drop every event. Treat missing event info as "not MRM" so
+                    // those events still count toward the scan total under default config.
+                    if (info is not null && !srmAsSpectra && info.AnalysisMode == ShimadzuIO.Generic.AcqModes.MRM)
                         continue;
 
                     uint eventLastScanNumber = TryGetEventLastScanNumber(seg, eventNo, endTime);
