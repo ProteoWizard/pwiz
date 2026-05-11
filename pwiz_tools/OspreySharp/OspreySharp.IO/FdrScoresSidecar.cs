@@ -177,13 +177,19 @@ namespace pwiz.OspreySharp.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            // Stage to sibling .tmp file then rename. Avoids partial-file
-            // corruption if the writer is interrupted; not strictly
-            // atomic on overwrite (delete + move), see Write() doc.
-            string tmpPath = path + ".tmp";
-            try
+            // Atomic write via FileSaver: write to a unique sibling
+            // temp file (allocated by Win32 GetTempFileName so parallel
+            // writers can never collide on the same temp path) and
+            // promote it to the destination on Commit. On exception,
+            // the using-block disposes FileSaver which deletes the
+            // temp without touching the destination. The FileStream is
+            // disposed in an inner block before Commit so the file is
+            // unlocked when File.Move runs (FileShare.None would
+            // otherwise block the move and Commit would silently fail
+            // through Trace.TraceWarning).
+            using (var saver = new FileSaver(path))
             {
-                using (var fs = new FileStream(tmpPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var bw = new BinaryWriter(fs))
                 {
                     // Header
@@ -207,15 +213,7 @@ namespace pwiz.OspreySharp.IO
                         bw.Write(e.RunProteinQvalue);                 // [52..60]
                     }
                 }
-
-                if (File.Exists(path))
-                    File.Delete(path);
-                File.Move(tmpPath, path);
-            }
-            finally
-            {
-                if (File.Exists(tmpPath))
-                    File.Delete(tmpPath);
+                saver.Commit();
             }
         }
 

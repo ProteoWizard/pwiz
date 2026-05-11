@@ -1,0 +1,2016 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using pwiz.OspreySharp.Chromatography;
+using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.IO;
+using pwiz.OspreySharp.Scoring;
+
+namespace pwiz.OspreySharp.Tasks
+{
+    /// <summary>
+    /// Per-file first-pass scoring phase: load the spectral library
+    /// and generate decoys (Stage 1), then for each input mzML run
+    /// the parse + RT calibration + main-search scoring pipeline
+    /// (Stages 2-4) to produce a per-file
+    /// <c>.scores.parquet</c>. The HPC "first per-file fan-out"
+    /// boundary in the <c>Osprey-workflow.html</c> view -- each input
+    /// file's Stage 1-4 work is independent of every other file's,
+    /// so an HPC scheduler can fan this task out across N nodes and
+    /// the merge node only needs the resulting parquet sidecars.
+    ///
+    /// Phase A scope: this task is a thin orchestration wrapper that
+    /// delegates to AnalysisPipeline's existing private (now
+    /// <c>internal</c>) methods (LoadLibrary, GenerateDecoys,
+    /// ProcessFile) plus the --join-only / --join-at-pass=2 input
+    /// loading paths that share the same per-file collection layout.
+    /// The inline Stage 1-4 block from <c>AnalysisPipeline.Run</c>
+    /// moved here verbatim; the only changes are LogInfo / LogWarning
+    /// / LogError -> ctx.LogInfo etc. and a return-false / set
+    /// ctx.ExitCode flow for the early-exit paths the original block
+    /// had as <c>return 0</c> / <c>return 1</c>.
+    ///
+    /// Outputs (FullLibrary, LibraryById, PerFileEntries,
+    /// PerFileCalibrations, PerFileParquetPaths) are exposed as
+    /// instance properties for FirstJoinTask + downstream tasks to
+    /// consume after this one completes successfully.
+    /// </summary>
+    internal sealed class PerFileScoringTask : AbstractScoringTask
+    {
+        private const double MIN_SNR_FOR_RT_CAL = 5.0;
+        private const double MIN_COELUTION_CORR_SCORE = 0.5;
+        private const int MIN_COELUTION_SPECTRA = 3;
+        private const double CAL_FDR_THRESHOLD = 0.01;
+        // Hard floor for LOESS refit in the two-pass calibration
+        // refinement. Matches Rust's ABSOLUTE_MIN_CALIBRATION_POINTS
+        // in pipeline.rs:652.
+        private const int ABSOLUTE_MIN_CALIBRATION_POINTS = 50;
+
+        /// <summary>
+        /// Result of one calibration scoring pass (scoring + LDA +
+        /// S/N filter + LOESS fit).
+        /// </summary>
+        private class CalibrationPassResult
+        {
+            public RTCalibration Calibration;
+            public RTCalibrationStats Stats;
+            public MzCalibrationResult Ms1Calibration;
+            public MzCalibrationResult Ms2Calibration;
+        }
+
+        public override string Name => @"PerFileScoring";
+
+        // Outputs reached by downstream tasks through ctx.GetTask<PerFileScoringTask>().
+        // Defaults are non-null empty collections so callers querying
+        // outputs from a not-yet-run task (e.g. worker mode before lazy
+        // rehydrate lands in Pass 2) never NPE on the accessor.
+        private List<LibraryEntry> _fullLibrary = new List<LibraryEntry>();
+        private Dictionary<uint, LibraryEntry> _libraryById = new Dictionary<uint, LibraryEntry>();
+        private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries
+            = new List<KeyValuePair<string, List<FdrEntry>>>();
+        private ConcurrentDictionary<string, RTCalibration> _perFileCalibrations
+            = new ConcurrentDictionary<string, RTCalibration>();
+        private Dictionary<string, string> _perFileParquetPaths
+            = new Dictionary<string, string>();
+
+        public List<LibraryEntry> GetFullLibrary() => _fullLibrary;
+        public Dictionary<uint, LibraryEntry> GetLibraryById() => _libraryById;
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries() => _perFileEntries;
+        public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations() => _perFileCalibrations;
+        public Dictionary<string, string> GetPerFileParquetPaths() => _perFileParquetPaths;
+
+        public override bool Run(PipelineContext ctx)
+        {
+            _ctx = ctx;
+            var config = ctx.Config;
+
+            // Stage 1: Load library + generate decoys
+            var swLibrary = Stopwatch.StartNew();
+            var library = LoadLibrary(config);
+            if (library == null || library.Count == 0)
+            {
+                ctx.LogError(@"Library is empty after loading");
+                ctx.ExitCode = 1;
+                return false;
+            }
+
+            int nLibraryTargets = 0;
+            foreach (var entry in library)
+            {
+                if (!entry.IsDecoy)
+                    nLibraryTargets++;
+            }
+            double libLoadSec = swLibrary.Elapsed.TotalSeconds;
+            ctx.LogInfo(string.Format(@"[COUNT] Library targets loaded: {0}", nLibraryTargets));
+
+            List<LibraryEntry> decoys;
+            if (config.ExpectReconciledInput)
+            {
+                // --join-at-pass=2: decoy LibraryEntries are unused
+                // downstream. The reconciled parquet already carries
+                // both target and decoy FDR rows with their stage-1-4
+                // scores; Stage 5 is skipped, Stage 6 is skipped, and
+                // the protein-parsimony / blib write paths both filter
+                // on `entry.IsDecoy` (only target LibraryEntries get
+                // looked up by entry_id). Skipping the rebuild saves
+                // ~45s on Astral 1-file (BuildDecoyFromSequence +
+                // RecalculateFragments dominated the Stage 7+blib
+                // hotspot list). dotTrace OWN-time on Astral 1-file
+                // Stage 7 cs run before this fix:
+                //   BuildDecoyFromSequence  total=45665 ms (89% wall)
+                //   GenerateDecoys.<>b__0   total=46792 ms
+                decoys = new List<LibraryEntry>();
+            }
+            else if (!config.DecoysInLibrary)
+            {
+                decoys = GenerateDecoys(library, config, out List<LibraryEntry> validTargets);
+                library = validTargets;
+            }
+            else
+            {
+                decoys = new List<LibraryEntry>();
+            }
+            swLibrary.Stop();
+            double totalSec = swLibrary.Elapsed.TotalSeconds;
+            ctx.LogInfo(string.Format(@"[TIMING] Library loading + decoys: {0:F1}s (load: {1:F1}s, decoys: {2:F1}s)",
+                totalSec, libLoadSec, totalSec - libLoadSec));
+
+            ctx.LogInfo(string.Format(@"[COUNT] Library decoys generated: {0}", decoys.Count));
+
+            var fullLibrary = new List<LibraryEntry>(library.Count + decoys.Count);
+            fullLibrary.AddRange(library);
+            fullLibrary.AddRange(decoys);
+
+            ctx.LogInfo(string.Format(@"Full library: {0} entries ({1} targets + {2} decoys)",
+                fullLibrary.Count, library.Count, decoys.Count));
+            ctx.LogInfo(string.Format(@"[COUNT] Full library: {0} ({1} targets + {2} decoys)",
+                fullLibrary.Count, library.Count, decoys.Count));
+
+            // Count entries with few fragments (diagnostic for entry count parity)
+            int nZeroFrag = 0, nOneFrag = 0, nTwoFrag = 0;
+            foreach (var entry in fullLibrary)
+            {
+                int fc = entry.Fragments != null ? entry.Fragments.Count : 0;
+                if (fc == 0)
+                    nZeroFrag++;
+                else if (fc == 1)
+                    nOneFrag++;
+                else if (fc == 2)
+                    nTwoFrag++;
+            }
+            if (nZeroFrag + nOneFrag + nTwoFrag > 0)
+                ctx.LogInfo(string.Format(@"[COUNT] Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
+                    nZeroFrag + nOneFrag + nTwoFrag, nZeroFrag, nOneFrag, nTwoFrag));
+
+            // Build library lookup by ID for fast access
+            var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
+            foreach (var entry in fullLibrary)
+                libraryById[entry.Id] = entry;
+
+            _fullLibrary = fullLibrary;
+            _libraryById = libraryById;
+
+            // Stage 2-4: Per-file calibration + coelution scoring
+            // Process files in parallel when multiple files are provided.
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+            // Per-file RT calibration handles harvested by ProcessFile so
+            // Stage 6 reconciliation has the live RTCalibration objects.
+            var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
+            // fileName -> .scores.parquet path. Populated by --join-only
+            // (which already knows the paths) so Stage 6 reconciliation
+            // can lazily load CWT candidates per file via
+            // ParquetScoreCache.LoadCwtCandidatesFromParquet.
+            var perFileParquetPaths = new Dictionary<string, string>();
+
+            bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
+            int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
+
+            // In --input-scores mode without explicit -i, synthesize
+            // InputFiles from the parquet stems so downstream code
+            // (Stage 6 rescore's fileNameToIdx in particular) can map
+            // each file_name back to a real (synthetic) input path.
+            if (joinOnly && (config.InputFiles == null || config.InputFiles.Count == 0))
+            {
+                var synthetic = new List<string>(config.InputScores.Count);
+                foreach (var p in config.InputScores)
+                    synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
+                config.InputFiles = synthetic;
+            }
+
+            // Pre-compute the parquet footer metadata ONCE, against the
+            // unmutated outer config. ProcessFile clones the config per
+            // file and mutates FragmentTolerance during MS2 calibration,
+            // so reading config.SearchParameterHash() inside ProcessFile
+            // would produce a hash that the join-only validator would
+            // not recognize. Built unconditionally (in any non-joinOnly
+            // mode) because Stage 6 reconciliation needs the per-file
+            // .scores.parquet on disk to lazily load CWT candidates --
+            // matches Rust's end-to-end behavior, which always writes
+            // the parquet sidecar regardless of --no-join.
+            Dictionary<string, string> parquetFooterMetadata = null;
+            if (!joinOnly)
+            {
+                parquetFooterMetadata = new Dictionary<string, string>
+                {
+                    { @"osprey.version", Program.VERSION },
+                    { @"osprey.search_hash", config.SearchParameterHash() },
+                    { @"osprey.library_hash", config.LibraryIdentityHash() },
+                    { @"osprey.reconciled", @"false" },
+                };
+            }
+
+            // File-level parallelism is configurable via
+            // OSPREY_MAX_PARALLEL_FILES. See AnalysisPipeline (and
+            // Osprey-workflow.html) for the policy.
+            int maxParallelFiles = OspreyEnvironment.MaxParallelFiles;
+
+            // Determine how many files will actually run concurrently so
+            // ProcessFile can divide the inner main-search thread budget
+            // and avoid oversubscription. Stored on the config so the
+            // per-file clones inherit it.
+            if (nFiles == 1 || maxParallelFiles == 1)
+                config.EffectiveFileParallelism = 1;
+            else if (maxParallelFiles > 1)
+                config.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
+            else
+                config.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
+
+            var swAllFiles = Stopwatch.StartNew();
+            if (joinOnly)
+            {
+                // --join-only: load per-file FdrEntry stubs directly from
+                // each .scores.parquet listed via --input-scores. Skips
+                // Stages 1-4. Side data (calibration, sidecars) is not
+                // loaded on the C# side yet -- the simple Stage 5 path
+                // doesn't need it. When reconciliation lands, this branch
+                // will need to load the calibration JSON sibling files
+                // (best-effort, like the Rust impl).
+                // Guard: hash check against current --library and search params.
+                // Aborts with a clear, file-named error if the operator points
+                // the merge node at parquets from a different scoring run.
+                string validationError = ParquetScoreCache.ValidateScoresParquetGroup(
+                    config.InputScores, config, Program.VERSION, ctx.LogWarning);
+                if (validationError != null)
+                    throw new InvalidDataException(validationError);
+
+                ctx.LogInfo(string.Format(
+                    @"--join-only: loading {0} per-file score parquet(s)",
+                    config.InputScores.Count));
+                for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
+                {
+                    string parquetPath = config.InputScores[fileIdx];
+                    string fileName = Path.GetFileNameWithoutExtension(parquetPath);
+                    if (fileName.EndsWith(@".scores", StringComparison.Ordinal))
+                        fileName = fileName.Substring(0, fileName.Length - @".scores".Length);
+                    ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
+                        fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
+                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                    // Stage 5+ (Percolator SVM) requires the 21 PIN features
+                    // on each FdrEntry. Load them in lockstep with the stubs
+                    // and bind by row index (parquet rows are stable).
+                    var features = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
+                    if (features.Count != stubs.Count)
+                    {
+                        throw new InvalidDataException(string.Format(
+                            @"--join-only: parquet {0} has {1} stubs but {2} feature rows",
+                            parquetPath, stubs.Count, features.Count));
+                    }
+                    for (int j = 0; j < stubs.Count; j++)
+                        stubs[j].Features = features[j];
+                    ctx.LogInfo(string.Format(@"  Loaded {0} FDR stubs + features", stubs.Count));
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                    perFileParquetPaths[fileName] = parquetPath;
+
+                    // Best-effort calibration JSON load for Stage 6
+                    // reconciliation. Mirrors osprey/src/pipeline.rs:2573-2588.
+                    try
+                    {
+                        string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
+                        if (parquetDir != null)
+                        {
+                            // fileName is the bare input stem (the trailing
+                            // ".scores" was stripped above), so combining it
+                            // with parquetDir yields the same input-stem path
+                            // ProcessFile passes to CalibrationPathForInput.
+                            string calStemPath = Path.Combine(parquetDir, fileName);
+                            string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
+                            if (File.Exists(calPath))
+                            {
+                                var calParams = CalibrationIO.LoadCalibration(calPath);
+                                if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                                {
+                                    var mp = calParams.RtCalibration.ModelParams;
+                                    if (OspreyDiagnostics.DumpCalibration)
+                                    {
+                                        OspreyDiagnostics.WriteStage6CalibrationDump(
+                                            fileName, mp.LibraryRts, mp.FittedRts);
+                                    }
+                                    var rtCal = RTCalibration.FromModelParams(
+                                        mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                                        calParams.RtCalibration.ResidualSD);
+                                    perFileCalibrations[fileName] = rtCal;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
+                    }
+                }
+                if (OspreyDiagnostics.CalibrationOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
+            }
+            else if (config.InputFiles.Count == 1)
+            {
+                // Single file: process directly (no parallel overhead)
+                string inputFile = config.InputFiles[0];
+                string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                ctx.LogInfo(string.Empty);
+                ctx.LogInfo(string.Format(@"===== Processing file 1/1: {0} =====", inputFile));
+                var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+                if (fileResult != null)
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+            }
+            else if (maxParallelFiles == 1)
+            {
+                // Strictly sequential: one file at a time. Matches the
+                // memory envelope of the single-file path while still
+                // sharing the library load. Useful for 3-file Astral
+                // runs that would OOM in parallel.
+                ctx.LogInfo(string.Format(
+                    @"[BENCH] OSPREY_MAX_PARALLEL_FILES=1 - processing {0} files sequentially",
+                    config.InputFiles.Count));
+                for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
+                {
+                    string inputFile = config.InputFiles[fileIdx];
+                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                    ctx.LogInfo(string.Format(@"===== Processing file {0}/{1}: {2} =====",
+                        fileIdx + 1, config.InputFiles.Count, inputFile));
+                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+                    if (fileResult != null)
+                        perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                }
+            }
+            else
+            {
+                // Multiple files: process in parallel, optionally
+                // capped via OSPREY_MAX_PARALLEL_FILES.
+                var parallelOpts = new ParallelOptions();
+                if (maxParallelFiles > 1)
+                {
+                    parallelOpts.MaxDegreeOfParallelism = maxParallelFiles;
+                    ctx.LogInfo(string.Format(
+                        @"[BENCH] OSPREY_MAX_PARALLEL_FILES={0} - capping parallel file count",
+                        maxParallelFiles));
+                }
+                var fileResults = new ConcurrentDictionary<int, KeyValuePair<string, List<FdrEntry>>>();
+                Parallel.For(0, config.InputFiles.Count, parallelOpts, fileIdx =>
+                {
+                    string inputFile = config.InputFiles[fileIdx];
+                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                    ctx.LogInfo(string.Format(@"===== Processing file {0}/{1}: {2} =====",
+                        fileIdx + 1, config.InputFiles.Count, inputFile));
+                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+                    if (fileResult != null)
+                        fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
+                });
+                // Collect in original order
+                for (int i = 0; i < config.InputFiles.Count; i++)
+                {
+                    if (fileResults.TryGetValue(i, out KeyValuePair<string, List<FdrEntry>> result))
+                        perFileEntries.Add(result);
+                }
+            }
+            swAllFiles.Stop();
+            ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds));
+
+            // End-to-end (non-joinOnly) modes: populate perFileParquetPaths
+            // from config.InputFiles so Stage 6 reconciliation can locate
+            // each file's freshly-written .scores.parquet to lazy-load CWT
+            // candidates from. ProcessFile writes the parquet whenever
+            // parquetFooterMetadata != null (now always set in non-joinOnly mode).
+            if (!joinOnly)
+            {
+                foreach (string inputFile in config.InputFiles)
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                    perFileParquetPaths[fileName] = ParquetScoreCache.GetScoresPath(inputFile);
+                }
+            }
+
+            int totalScored = 0;
+            foreach (var kvp in perFileEntries)
+                totalScored += kvp.Value.Count;
+
+            ctx.LogInfo(string.Empty);
+            ctx.LogInfo(string.Format(
+                @"Coelution analysis complete. {0} total scored entries across {1} files",
+                totalScored, nFiles));
+
+            // --join-at-pass=2: load the 1st-pass FDR scores sidecar for
+            // each file onto the freshly-loaded stubs. The sidecar
+            // carries the persisted SVM scores + q-values from the
+            // straight-through pipeline run that produced these
+            // reconciled parquets. Without this load, RunFirstPassProteinFdr
+            // and the compaction step (next) would see uninitialized
+            // entry.Score = 0 / q = 1 for every entry -- every protein
+            // group would tie at score 0 and the picked-protein FDR
+            // would collapse. Mirrors Rust pipeline.rs:3823 sidecar
+            // load order (1st-pass first, then 2nd-pass after
+            // compaction).
+            if (config.ExpectReconciledInput)
+            {
+                // Build a fileName -> synthetic input path map so we
+                // can resolve sidecar paths via FdrScoresSidecar.
+                var inputByFileName = new Dictionary<string, string>();
+                foreach (var inputFile in config.InputFiles)
+                    inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+                foreach (var kvp in perFileEntries)
+                {
+                    string fileName = kvp.Key;
+                    var entries = kvp.Value;
+                    string sidecarPath = inputByFileName.TryGetValue(fileName, out string inputFile)
+                        ? FdrScoresSidecar.Pass1Path(inputFile)
+                        : null;
+                    if (sidecarPath == null || !File.Exists(sidecarPath))
+                    {
+                        ctx.LogError(string.Format(
+                            @"--join-at-pass=2: missing 1st-pass FDR sidecar for {0} " +
+                            @"(expected at {1}). Re-run a straight-through pipeline to " +
+                            @"produce the sidecar.",
+                            fileName, sidecarPath ?? @"<unresolved>"));
+                        ctx.ExitCode = 1;
+                        return false;
+                    }
+                    if (!FdrScoresSidecar.TryRead(sidecarPath, entries,
+                            FdrScoresSidecar.Pass.FirstPass))
+                    {
+                        ctx.LogError(string.Format(
+                            @"--join-at-pass=2: 1st-pass sidecar at {0} failed to load " +
+                            @"(magic / version / pass-byte / count / size mismatch).",
+                            sidecarPath));
+                        ctx.ExitCode = 1;
+                        return false;
+                    }
+                }
+                ctx.LogInfo(string.Format(
+                    @"--join-at-pass=2: loaded 1st-pass FDR sidecars for {0} file(s)",
+                    perFileEntries.Count));
+            }
+
+            // Surface per-file outputs for downstream tasks before any
+            // early-exit so a partial-success caller still sees the
+            // populated collections.
+            _perFileEntries = perFileEntries;
+            _perFileCalibrations = perFileCalibrations;
+            _perFileParquetPaths = perFileParquetPaths;
+
+            if (perFileEntries.Count == 0 || totalScored == 0)
+            {
+                ctx.LogWarning(@"No scored entries found. Cannot perform FDR control.");
+                ctx.ExitCode = 0;
+                return false;
+            }
+
+            // --no-join: stop here. Per-file `.scores.parquet` files are
+            // now on disk; a separate `--join-only` invocation (typically
+            // on a merge node) will pick them up and run Stage 5+.
+            if (config.NoJoin)
+            {
+                ctx.LogInfo(string.Format(
+                    @"--no-join: Stage 1-4 complete. {0} entries scored across {1} file(s). " +
+                    @"Per-file `.scores.parquet` written next to each input mzML. " +
+                    @"Skipping FDR and blib output.",
+                    totalScored, nFiles));
+                ctx.ExitCode = 0;
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Process a single mzML file: load spectra, calibrate RT, score coelution.
+        /// </summary>
+        private List<FdrEntry> ProcessFile(
+            string inputFile, string fileName,
+            List<LibraryEntry> fullLibrary, OspreyConfig config,
+            Dictionary<string, string> parquetFooterMetadata,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrationsOut)
+        {
+            if (inputFile == null)
+                throw new ArgumentNullException(nameof(inputFile));
+
+            // Per-file shallow clone so MS2 calibration's mutation of
+            // FragmentTolerance (and any future per-file overrides) does
+            // not leak between parallel ProcessFile() calls. Without this
+            // the shared OspreyConfig.FragmentTolerance gets clobbered
+            // by whichever calibration completes second, causing
+            // ~1000-2000 entries per file to score with the wrong
+            // (foreign-file-calibrated) tolerance under -MaxParallelFiles>1.
+            config = config.ShallowClone();
+
+            // Divide the inner main-search thread budget across concurrent
+            // files so total demand stays near core count. With 3 files x
+            // 32 threads on a 32-core box, the prior 96-way oversubscription
+            // produced 45-95s wall-time variance on Stellar; a fair share
+            // (10 threads each) holds the run near steady-state.
+            if (config.EffectiveFileParallelism > 1)
+            {
+                int perFileThreads = Math.Max(1, config.NThreads / config.EffectiveFileParallelism);
+                _ctx.LogInfo(string.Format(
+                    "[BENCH] Per-file thread cap: {0} ({1} total / {2} files in parallel)",
+                    perFileThreads, config.NThreads, config.EffectiveFileParallelism));
+                config.NThreads = perFileThreads;
+            }
+
+            var context = new ScoringContext(config, fileName);
+
+            // Load spectra (from mzML or .spectra.bin cache)
+            List<Spectrum> spectra;
+            List<MS1Spectrum> ms1Spectra;
+            var swParse = Stopwatch.StartNew();
+            LoadSpectra(inputFile, config.EffectiveFileParallelism > 1,
+                out spectra, out ms1Spectra);
+            swParse.Stop();
+
+            long inputBytes = 0;
+            try
+            {
+                if (File.Exists(inputFile))
+                    inputBytes = new FileInfo(inputFile).Length;
+            }
+            catch
+            {
+                inputBytes = 0;
+            }
+
+            double parseSeconds = swParse.Elapsed.TotalSeconds;
+            if (inputBytes > 0 && parseSeconds > 0.001)
+            {
+                double mbPerSec = (inputBytes / 1024.0 / 1024.0) / parseSeconds;
+                _ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s ({1:F1} MB/s)",
+                    parseSeconds, mbPerSec));
+            }
+            else
+            {
+                _ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s", parseSeconds));
+            }
+
+            if (spectra == null || spectra.Count == 0)
+            {
+                _ctx.LogWarning(string.Format("No spectra found in {0}", inputFile));
+                return null;
+            }
+
+            _ctx.LogInfo(string.Format("Loaded {0} MS2 spectra and {1} MS1 spectra",
+                spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
+            _ctx.LogInfo(string.Format("[COUNT] mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
+                fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
+
+            // Extract isolation windows from spectra
+            var isolationWindows = ExtractIsolationWindows(spectra);
+            _ctx.LogInfo(string.Format("Found {0} unique isolation windows", isolationWindows.Count));
+            _ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
+                fileName, isolationWindows.Count));
+
+            // RT calibration
+            RTCalibration rtCalibration = null;
+            MzCalibrationResult ms2Cal = MzCalibrationResult.Uncalibrated();
+            MzCalibrationResult ms1Cal = MzCalibrationResult.Uncalibrated();
+
+            // BISECT: load Rust's calibration JSON instead of computing our own.
+            // This eliminates calibration noise from the feature comparison.
+            // Usage: OSPREY_LOAD_CALIBRATION=Ste-...20.calibration.json
+            string loadCalPath = OspreyEnvironment.LoadCalibrationPath;
+            if (!string.IsNullOrEmpty(loadCalPath) && File.Exists(loadCalPath))
+            {
+                _ctx.LogInfo(string.Format("[BISECT] Loading calibration from: {0}", loadCalPath));
+                var calParams = CalibrationIO.LoadCalibration(loadCalPath);
+                if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                {
+                    var mp = calParams.RtCalibration.ModelParams;
+                    rtCalibration = RTCalibration.FromModelParams(
+                        mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                        calParams.RtCalibration.ResidualSD);
+                    _ctx.LogInfo(string.Format("Loaded RT calibration: {0} points, R2={1:F4}",
+                        calParams.RtCalibration.NPoints, calParams.RtCalibration.RSquared));
+                }
+                if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
+                {
+                    ms2Cal = new MzCalibrationResult
+                    {
+                        Mean = calParams.Ms2Calibration.Mean,
+                        Median = calParams.Ms2Calibration.Median,
+                        SD = calParams.Ms2Calibration.SD,
+                        Count = calParams.Ms2Calibration.Count,
+                        Unit = calParams.Ms2Calibration.Unit,
+                        AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
+                        Calibrated = true
+                    };
+                    _ctx.LogInfo(string.Format("Loaded MS2 calibration: mean={0:F4} {1}, SD={2:F4}",
+                        ms2Cal.Mean, ms2Cal.Unit, ms2Cal.SD));
+                }
+                if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
+                {
+                    ms1Cal = new MzCalibrationResult
+                    {
+                        Mean = calParams.Ms1Calibration.Mean,
+                        Median = calParams.Ms1Calibration.Median,
+                        SD = calParams.Ms1Calibration.SD,
+                        Count = calParams.Ms1Calibration.Count,
+                        Unit = calParams.Ms1Calibration.Unit,
+                        AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
+                        Calibrated = true
+                    };
+                    _ctx.LogInfo(string.Format("Loaded MS1 calibration: mean={0:F4} {1}, SD={2:F4}",
+                        ms1Cal.Mean, ms1Cal.Unit, ms1Cal.SD));
+                }
+            }
+            else if (config.RtCalibration.Enabled)
+            {
+                var swCal = Stopwatch.StartNew();
+                rtCalibration = RunCalibration(
+                    fullLibrary, spectra, ms1Spectra, context,
+                    out ms1Cal, out ms2Cal);
+                swCal.Stop();
+                int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
+                _ctx.LogInfo(string.Format(
+                    "[TIMING] RT calibration: {0:F1}s ({1} calibration points)",
+                    swCal.Elapsed.TotalSeconds, nPoints));
+            }
+
+            // Dump 11 calibration summary scalars (MS1/MS2 mean/sd/count/
+            // tolerance + RT n_points/r_squared/residual_sd) so the final
+            // calibration state can be diff'd against Rust's cal JSON.
+            OspreyDiagnostics.WriteCalibrationSummary(rtCalibration, ms1Cal, ms2Cal);
+
+            // Save the full calibration state to {inputStem}.calibration.json
+            // in the same directory as the mzML input. Same schema as Rust
+            // so the file is round-trippable via OSPREY_LOAD_CALIBRATION in
+            // either tool. Enables HPC "compute cal once, reuse on another
+            // node" and the cross-runtime cal-swap bisection.
+            try
+            {
+                var calParams = new CalibrationParams
+                {
+                    Metadata = new CalibrationMetadata
+                    {
+                        CalibrationSuccessful = rtCalibration != null,
+                        NumConfidentPeptides = 0,
+                        NumSampledPrecursors = 0,
+                        Timestamp = DateTime.UtcNow.ToString("o")
+                    },
+                    Ms1Calibration = MzCalibrationJson.FromResult(ms1Cal),
+                    Ms2Calibration = MzCalibrationJson.FromResult(ms2Cal),
+                    RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration),
+                    SecondPassRt = null
+                };
+                // Path.GetDirectoryName can return null for a root path; default
+                // to the current dir so the calibration JSON still has a home.
+                string calDir = Path.GetDirectoryName(Path.GetFullPath(inputFile)) ?? ".";
+                string calPath = CalibrationIO.CalibrationPathForInput(inputFile, calDir);
+                CalibrationIO.SaveCalibration(calParams, calPath);
+                _ctx.LogInfo(string.Format("Saved calibration to {0}", calPath));
+            }
+            catch (Exception ex)
+            {
+                _ctx.LogInfo("Warning: failed to save calibration JSON: " + ex.Message);
+            }
+
+            // Optional early exit after Stage 3 (calibration only, no main search).
+            // Used for Stage 1-3 perf benchmarking and walking up to the main
+            // search incrementally without paying the Stage 4 cost.
+            if (OspreyEnvironment.ExitAfterCalibration)
+            {
+                _ctx.LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
+                return new List<FdrEntry>();
+            }
+
+            // Surface the per-file calibration to Stage 6 reconciliation
+            // (multi-file runs only). Threaded calls share a
+            // ConcurrentDictionary; null on single-file paths that don't
+            // need cross-file consensus.
+            if (perFileCalibrationsOut != null && rtCalibration != null)
+                perFileCalibrationsOut[fileName] = rtCalibration;
+
+            // Run coelution scoring across all isolation windows
+            var swScoring = Stopwatch.StartNew();
+            var scoredEntries = RunCoelutionScoring(
+                fullLibrary, spectra, ms1Spectra,
+                isolationWindows, rtCalibration,
+                ms2Cal, ms1Cal,
+                context);
+            swScoring.Stop();
+            double scoringSeconds = swScoring.Elapsed.TotalSeconds;
+            double ratePerSec = scoringSeconds > 0.001
+                ? scoredEntries.Count / scoringSeconds
+                : 0.0;
+            _ctx.LogInfo(string.Format(
+                "[TIMING] Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
+                scoringSeconds, scoredEntries.Count, ratePerSec));
+
+            int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
+            int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
+            _ctx.LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
+                scoredEntries.Count,
+                nScoredTargets,
+                nScoredDecoys,
+                fileName));
+
+            // Drop double-counted entries (different precursors that latch
+            // onto the same chromatographic feature within an isolation
+            // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
+            // same call site, between scoring and pair-deduplication.
+            scoredEntries = DeduplicateDoubleCounting(
+                scoredEntries, fullLibrary, spectra, ms2Cal,
+                isolationWindows, config);
+            nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
+            nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
+                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
+
+            // Deduplicate: keep best target and best decoy per base_id
+            int nBeforeDedup = scoredEntries.Count;
+            scoredEntries = DeduplicatePairs(scoredEntries);
+            int nAfterDedup = scoredEntries.Count;
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
+                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
+
+            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
+            if (config.WritePin)
+            {
+                WriteFeatureDump(inputFile, fileName, scoredEntries);
+            }
+
+            // Persist the full FdrEntry results (with features) to
+            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
+            // CWT candidates per file, and (b) a subsequent --join-only
+            // invocation can pick them up without re-running Stages 1-4.
+            // Same path convention as Rust (`scores_path_for_input`).
+            // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
+            // as a Phase 4 follow-up. The metadata dictionary is precomputed
+            // in Run() against the original (un-mutated) outer config — see
+            // Run() for why. Skipped only in --join-only mode (no Stages 1-4
+            // ran here, so there is nothing fresh to persist).
+            if (parquetFooterMetadata != null)
+            {
+                string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
+                // Reuse the entry-id -> LibraryEntry map Run() built once
+                // before the per-file fan-out (WriteScoresParquet needs
+                // it to pull sequence / precursor_mz / protein_ids from
+                // the library since FdrEntry doesn't carry these).
+                var swParquet = Stopwatch.StartNew();
+                ParquetScoreCache.WriteScoresParquet(
+                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
+                swParquet.Stop();
+                _ctx.LogInfo(string.Format(
+                    "Wrote {0} scored entries to {1} ({2:F1}s)",
+                    scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
+            }
+
+            return scoredEntries;
+        }
+
+        /// <summary>
+        /// Write a TSV dump of per-entry feature values for direct comparison with
+        /// the Rust implementation's PIN output. Format matches Rust's PIN columns:
+        /// psm_id, label, scan, + 21 features. Sorted by (modified_sequence, charge,
+        /// scan_number) for stable diffing against Rust's output.
+        /// </summary>
+        private void WriteFeatureDump(
+            string inputFile, string fileName,
+            List<FdrEntry> scoredEntries)
+        {
+            string dumpPath = Path.Combine(
+                Path.GetDirectoryName(inputFile) ?? ".",
+                fileName + ".cs_features.tsv");
+
+            var header = new[]
+            {
+                "SpecId", "Label", "ScanNr", "Charge",
+                "fragment_coelution_sum", "fragment_coelution_max", "n_coeluting_fragments",
+                "peak_apex", "peak_area", "peak_sharpness",
+                "xcorr", "consecutive_ions", "explained_intensity",
+                "mass_accuracy_deviation_mean", "abs_mass_accuracy_deviation_mean",
+                "rt_deviation", "abs_rt_deviation",
+                "ms1_precursor_coelution", "ms1_isotope_cosine",
+                "median_polish_cosine", "median_polish_residual_ratio",
+                "sg_weighted_xcorr", "sg_weighted_cosine",
+                "median_polish_min_fragment_r2", "median_polish_residual_correlation",
+                "Peptide"
+            };
+
+            var sorted = scoredEntries
+                .Where(e => e.Features != null && e.Features.Length == NUM_PIN_FEATURES)
+                .OrderBy(e => e.ModifiedSequence, StringComparer.Ordinal)
+                .ThenBy(e => e.Charge)
+                .ThenBy(e => e.ScanNumber)
+                .ToList();
+
+            using (var writer = new StreamWriter(dumpPath))
+            {
+                // LF newlines so the dump is byte-stable across Windows and
+                // Linux for cross-impl diffing against Rust's PIN output;
+                // matches the convention used by OspreyDiagnostics.
+                writer.NewLine = "\n";
+                writer.WriteLine(string.Join("\t", header));
+                foreach (var e in sorted)
+                {
+                    string psmId = string.Format("{0}_{1}_{2}_{3}",
+                        fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
+                    int label = e.IsDecoy ? -1 : 1;
+                    var cols = new List<string>(26)
+                    {
+                        psmId,
+                        label.ToString(),
+                        e.ScanNumber.ToString(),
+                        e.Charge.ToString()
+                    };
+                    for (int i = 0; i < NUM_PIN_FEATURES; i++)
+                        cols.Add(e.Features[i].ToString("G17"));
+                    cols.Add(e.ModifiedSequence ?? "");
+                    writer.WriteLine(string.Join("\t", cols));
+                }
+            }
+
+            _ctx.LogInfo(string.Format("[COUNT] Wrote feature dump: {0} ({1} entries)",
+                dumpPath, sorted.Count));
+        }
+
+        /// <summary>
+        /// Load spectra from mzML file or spectra cache. When multiple
+        /// files are processed in parallel, the mzML parse is gated so
+        /// only one disk scan runs at a time (see s_mzmlReadGate).
+        /// </summary>
+        private void LoadSpectra(string inputFile, bool serializeMzmlRead,
+            out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra)
+        {
+            // Check for binary spectra cache
+            string cachePath = inputFile + ".spectra.bin";
+            if (File.Exists(cachePath))
+            {
+                _ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
+                try
+                {
+                    var cacheResult = SpectraCache.LoadSpectraCache(cachePath);
+                    ms2Spectra = cacheResult.Ms2Spectra;
+                    ms1Spectra = cacheResult.Ms1Spectra;
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _ctx.LogWarning(string.Format(
+                        "Failed to load spectra cache: {0}. Falling back to mzML.", ex.Message));
+                }
+            }
+
+            // Parse mzML directly, optionally serialized across files.
+            _ctx.LogInfo(string.Format("Parsing mzML: {0}", inputFile));
+            MzmlResult mzmlResult;
+            if (serializeMzmlRead)
+                s_mzmlReadGate.Wait();
+            try
+            {
+                mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
+            }
+            finally
+            {
+                if (serializeMzmlRead)
+                    s_mzmlReadGate.Release();
+            }
+            ms2Spectra = mzmlResult.Ms2Spectra;
+            ms1Spectra = mzmlResult.Ms1Spectra;
+            _ctx.LogInfo(string.Format("Loaded {0} MS2 + {1} MS1 spectra",
+                ms2Spectra.Count, ms1Spectra.Count));
+
+            // Save to cache for next run
+            try
+            {
+                SpectraCache.SaveSpectraCache(cachePath, ms2Spectra, ms1Spectra);
+            }
+            catch (Exception ex)
+            {
+                _ctx.LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Run RT calibration using calibration discovery scoring.
+        /// Ports osprey/src/pipeline.rs run_calibration_discovery_windowed:
+        ///   1. Sample target + paired decoy library entries (stratified by RT/m/z).
+        ///   2. For each sample, extract fragment XICs, detect the best co-eluting
+        ///      peak, then compute 4 features at the apex: mean pairwise correlation,
+        ///      LibCosine, top-6 matched, and XCorr.
+        ///   3. Train LDA with non-negative weights + 1% FDR target-decoy competition.
+        ///   4. Apply S/N >= 5.0 quality filter on surviving targets.
+        ///   5. Fit LOESS on the (libRt, measuredRt) pairs.
+        /// </summary>
+        private RTCalibration RunCalibration(
+            List<LibraryEntry> library,
+            List<Spectrum> spectra,
+            List<MS1Spectrum> ms1Spectra,
+            ScoringContext context,
+            out MzCalibrationResult ms1Calibration,
+            out MzCalibrationResult ms2Calibration)
+        {
+            var config = context.Config;
+            _ctx.LogInfo("Running RT calibration...");
+
+            // Calculate library and mzML RT ranges
+            double libMinRt = double.MaxValue, libMaxRt = double.MinValue;
+            double mzmlMinRt = double.MaxValue, mzmlMaxRt = double.MinValue;
+
+            foreach (var entry in library)
+            {
+                if (!entry.IsDecoy)
+                {
+                    if (entry.RetentionTime < libMinRt)
+                        libMinRt = entry.RetentionTime;
+                    if (entry.RetentionTime > libMaxRt)
+                        libMaxRt = entry.RetentionTime;
+                }
+            }
+
+            foreach (var spectrum in spectra)
+            {
+                if (spectrum.RetentionTime < mzmlMinRt)
+                    mzmlMinRt = spectrum.RetentionTime;
+                if (spectrum.RetentionTime > mzmlMaxRt)
+                    mzmlMaxRt = spectrum.RetentionTime;
+            }
+
+            double libRtRange = libMaxRt - libMinRt;
+            double mzmlRtRange = mzmlMaxRt - mzmlMinRt;
+
+            _ctx.LogInfo(string.Format(
+                "Library RT range: {0:F1}-{1:F1}, mzML RT range: {2:F1}-{3:F1} min",
+                libMinRt, libMaxRt, mzmlMinRt, mzmlMaxRt));
+
+            // Linear RT mapping when library and mzML scales differ significantly.
+            bool rangesSimilar = libRtRange > 0 && mzmlRtRange > 0 &&
+                Math.Max(libRtRange / mzmlRtRange, mzmlRtRange / libRtRange) < 2.0 &&
+                Math.Abs(libMinRt - mzmlMinRt) < libRtRange * 0.5;
+
+            double rtSlope = 1.0;
+            double rtIntercept = 0.0;
+            if (!rangesSimilar && libRtRange > 0)
+            {
+                rtSlope = mzmlRtRange / libRtRange;
+                rtIntercept = mzmlMinRt - rtSlope * libMinRt;
+                _ctx.LogInfo(string.Format("RT mapping: slope={0:F4}, intercept={1:F4}",
+                    rtSlope, rtIntercept));
+            }
+
+            double toleranceFraction = rangesSimilar ? 0.2 : 0.5;
+            double initialTolerance = mzmlRtRange * toleranceFraction;
+
+            _ctx.LogInfo(string.Format("Initial RT tolerance: {0:F1} min", initialTolerance));
+
+            // Sample library entries (paired target+decoy). Use seed 43 to match
+            // Rust's sample_library_for_calibration(..., 42 + attempt=1) on the
+            // first calibration attempt.
+            var swSample = Stopwatch.StartNew();
+            var sampledEntries = SampleLibraryForCalibration(
+                library, config.RtCalibration.CalibrationSampleSize, 43UL);
+            swSample.Stop();
+
+            // Diagnostic: dump sorted sampled entry IDs + (modseq, charge) for
+            // direct comparison with Rust. Abort after dump if CAL_SAMPLE_ONLY
+            // env var is set (bisection mode - stop once we agree here).
+            if (config.WritePin || OspreyDiagnostics.DumpCalSample)
+            {
+                OspreyDiagnostics.WriteCalSampleDump(context.FileName, sampledEntries);
+                if (OspreyDiagnostics.CalSampleOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_SAMPLE_ONLY");
+            }
+            int nSampledTargets = 0;
+            int nSampledDecoys = 0;
+            foreach (var e in sampledEntries)
+            {
+                if (e.IsDecoy)
+                    nSampledDecoys++;
+                else nSampledTargets++;
+            }
+            _ctx.LogInfo(string.Format(
+                "[TIMING] Calibration sampling: {0:F2}s ({1} targets + {2} decoys)",
+                swSample.Elapsed.TotalSeconds, nSampledTargets, nSampledDecoys));
+
+            if (nSampledTargets == 0)
+            {
+                _ctx.LogWarning("No target entries available for calibration sampling.");
+                ms1Calibration = MzCalibrationResult.Uncalibrated();
+                ms2Calibration = MzCalibrationResult.Uncalibrated();
+                return null;
+            }
+
+            // Group spectra by isolation window center for O(1) window lookup per candidate.
+            var spectraByWindowKey = new Dictionary<int, List<Spectrum>>();
+            foreach (var spectrum in spectra)
+            {
+                int key = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
+                List<Spectrum> list;
+                if (!spectraByWindowKey.TryGetValue(key, out list))
+                {
+                    list = new List<Spectrum>();
+                    spectraByWindowKey[key] = list;
+                }
+                list.Add(spectrum);
+            }
+            // Sort each window's spectra by RT for deterministic XIC extraction.
+            foreach (var list in spectraByWindowKey.Values)
+                list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime));
+
+            // Pass 1: score all sampled entries with the linear pre-fit RT mapping
+            // and the wide initial tolerance. Fits a LOESS RTCalibration from the
+            // LDA + S/N surviving targets.
+            var pass1 = RunCalibrationScoringPass(
+                1,
+                sampledEntries, spectraByWindowKey, ms1Spectra, context,
+                rtSlope, rtIntercept, initialTolerance,
+                null /* calibrationModel: pass 1 uses linear mapping */,
+                config.RtCalibration.MinCalibrationPoints);
+
+            if (pass1 == null)
+            {
+                _ctx.LogWarning("Calibration pass 1 failed. Using fallback tolerance.");
+                ms1Calibration = MzCalibrationResult.Uncalibrated();
+                ms2Calibration = MzCalibrationResult.Uncalibrated();
+                return null;
+            }
+
+            // === Iterative calibration refinement (2-pass) ===
+            // Mirrors Rust pipeline.rs:714-839.
+            // MAD * 1.4826 ~ SD for a normal distribution; 3* that covers ~99.7%.
+            double madTolerance = pass1.Stats.MAD * 1.4826 * 3.0;
+            double pass1Tolerance = Math.Max(
+                config.RtCalibration.MinRtTolerance,
+                Math.Min(config.RtCalibration.MaxRtTolerance, madTolerance));
+
+            _ctx.LogInfo(string.Format(
+                "First-pass RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4})",
+                pass1Tolerance,
+                pass1.Stats.MAD,
+                pass1.Stats.MAD * 1.4826,
+                pass1.Stats.ResidualSD,
+                pass1.Stats.NPoints,
+                pass1.Stats.RSquared));
+
+            // Only refine if the tolerance narrowed at least 2* tighter than the
+            // initial wide window.
+            if (pass1Tolerance < initialTolerance * 0.5)
+            {
+                _ctx.LogInfo(string.Format(
+                    "Calibration refinement: re-scoring with {0:F2} min tolerance (was {1:F1} min)",
+                    pass1Tolerance, initialTolerance));
+
+                var pass2 = RunCalibrationScoringPass(
+                    2,
+                    sampledEntries, spectraByWindowKey, ms1Spectra, context,
+                    rtSlope, rtIntercept, pass1Tolerance,
+                    pass1.Calibration /* pass 2 predicts RT via the LOESS fit */,
+                    ABSOLUTE_MIN_CALIBRATION_POINTS);
+
+                if (pass2 != null)
+                {
+                    double refinedMadTolerance = pass2.Stats.MAD * 1.4826 * 3.0;
+                    double refinedTolerance = Math.Max(
+                        config.RtCalibration.MinRtTolerance,
+                        Math.Min(config.RtCalibration.MaxRtTolerance, refinedMadTolerance));
+
+                    _ctx.LogInfo(string.Format(
+                        "Refined RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4})",
+                        refinedTolerance,
+                        pass2.Stats.MAD,
+                        pass2.Stats.MAD * 1.4826,
+                        pass2.Stats.ResidualSD,
+                        pass2.Stats.NPoints,
+                        pass2.Stats.RSquared));
+
+                    // Accept the refined calibration only if R^2 didn't degrade
+                    // by more than 1% (matches Rust pipeline.rs:811).
+                    if (pass2.Stats.RSquared >= pass1.Stats.RSquared * 0.99)
+                    {
+                        ms1Calibration = pass2.Ms1Calibration;
+                        ms2Calibration = pass2.Ms2Calibration;
+                        return pass2.Calibration;
+                    }
+                    _ctx.LogInfo(string.Format(
+                        "Refined calibration not better (R^2 {0:F4} vs {1:F4}), keeping original",
+                        pass2.Stats.RSquared, pass1.Stats.RSquared));
+                }
+                else
+                {
+                    _ctx.LogInfo(string.Format(
+                        "Refinement pass: insufficient points (need {0}), keeping original calibration",
+                        ABSOLUTE_MIN_CALIBRATION_POINTS));
+                }
+            }
+
+            ms1Calibration = pass1.Ms1Calibration;
+            ms2Calibration = pass1.Ms2Calibration;
+            return pass1.Calibration;
+        }
+
+        /// <summary>
+        /// Run one calibration scoring pass: score each sampled entry, train LDA,
+        /// apply S/N filter, and fit LOESS on the surviving (libRt, measuredRt) pairs.
+        /// Returns null if the pass has fewer than minLoessPoints survivors or the
+        /// LOESS fit fails. This helper is called twice by RunCalibration to
+        /// implement the two-pass refinement (pipeline.rs:714-839).
+        /// </summary>
+        private CalibrationPassResult RunCalibrationScoringPass(
+            int passNumber,
+            List<LibraryEntry> sampledEntries,
+            Dictionary<int, List<Spectrum>> spectraByWindowKey,
+            List<MS1Spectrum> ms1Spectra,
+            ScoringContext context,
+            double rtSlope, double rtIntercept, double tolerance,
+            RTCalibration calibrationModel,
+            int minLoessPoints)
+        {
+            var config = context.Config;
+            var resolution = context.Resolution;
+            var fileName = context.FileName;
+            // Activate per-entry window dump if requested. Cleared after the
+            // matching loop completes (file written below).
+            OspreyDiagnostics.StartCalWindowCollection();
+
+            // Pre-preprocess all window spectra for XCorr using the calibration
+            // unit-bin scorer (~2K bins per spectrum, ~16 KB per array).
+            // Independent of resolution mode -- HRAM 100K-bin arrays would
+            // consume ~160 GB of LOH for 204K Astral spectra, so we use the
+            // small unit-bin form for calibration regardless. Main search
+            // still uses the resolution-mode bins.
+            // Calibration preprocess runs in pure f32 to match Rust upstream
+            // maccoss/osprey's native f32 XCorr path (cross-impl parity at
+            // F10 rounding noise, vs ~4e-6 drift under f64). f32 values are
+            // widened to double[] here so the downstream XcorrFromPreprocessed
+            // path is unchanged; the widening is lossless (f32 is a subset of
+            // f64) and preserves the f32 bit pattern for the final sum.
+            var preprocessedByWindowKey = new Dictionary<int, double[][]>();
+            foreach (var kvp in spectraByWindowKey)
+            {
+                var pp = new double[kvp.Value.Count][];
+                for (int i = 0; i < kvp.Value.Count; i++)
+                {
+                    float[] f32pp = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
+                    var widened = new double[f32pp.Length];
+                    for (int k = 0; k < f32pp.Length; k++)
+                        widened[k] = f32pp[k];
+                    pp[i] = widened;
+                }
+                preprocessedByWindowKey[kvp.Key] = pp;
+            }
+
+            // Parallel score each sampled entry.
+            var swScoring = Stopwatch.StartNew();
+            var matches = new ConcurrentBag<CalibrationMatch>();
+            var snrByEntryId = new ConcurrentDictionary<uint, double>();
+            var matchRts = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
+
+            Parallel.ForEach(sampledEntries, new ParallelOptions
+            {
+                MaxDegreeOfParallelism = config.NThreads
+            },
+            () => resolution.CreateScorer(),
+            (entry, loopState, localScorer) =>
+            {
+                double entrySnr;
+                double entryLibRt;
+                double entryMeasuredRt;
+                var match = ScoreCalibrationEntry(
+                    entry, spectraByWindowKey, preprocessedByWindowKey, ms1Spectra, context,
+                    rtSlope, rtIntercept, tolerance,
+                    calibrationModel,
+                    localScorer,
+                    out entrySnr, out entryLibRt, out entryMeasuredRt);
+                if (match != null)
+                {
+                    matches.Add(match);
+                    snrByEntryId[entry.Id] = entrySnr;
+                    matchRts[entry.Id] = new KeyValuePair<double, double>(
+                        entryLibRt, entryMeasuredRt);
+                }
+                return localScorer;
+            },
+            localScorer => { });
+            swScoring.Stop();
+            _ctx.LogInfo(string.Format(
+                "[TIMING] Calibration pass {0} scoring: {1:F2}s ({2} matches)",
+                passNumber, swScoring.Elapsed.TotalSeconds, matches.Count));
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Calibration pass {0} matches scored [{1}]: {2}",
+                passNumber, fileName, matches.Count));
+
+            // Write per-entry window dump if requested. When two passes run, the
+            // pass 2 dump overwrites pass 1 - same behaviour as Rust's
+            // run_coelution_calibration_scoring dumping on every invocation.
+            if (OspreyDiagnostics.CalWindowsCollecting)
+            {
+                OspreyDiagnostics.WriteCalWindowsDump(passNumber);
+                if (OspreyDiagnostics.CalWindowsOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_WINDOWS_ONLY");
+            }
+
+            // Cross-implementation diagnostic: dump per-entry calibration match info
+            // for direct diff with Rust. Writes a row for EVERY sampled entry
+            // (matched or not), sorted by entry_id for stable diff.
+            if (OspreyDiagnostics.DumpCalMatch)
+            {
+                OspreyDiagnostics.WriteCalMatchDump(passNumber, matches, sampledEntries, matchRts, snrByEntryId);
+                if (OspreyDiagnostics.CalMatchOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_MATCH_ONLY");
+            }
+
+            if (matches.Count == 0)
+            {
+                _ctx.LogWarning(string.Format(
+                    "No calibration matches could be scored in pass {0}.", passNumber));
+                return null;
+            }
+
+            // Train LDA + 1% FDR target-decoy competition.
+            var swLda = Stopwatch.StartNew();
+            var matchArray = matches.ToArray();
+            // Sort deterministically by (base_id, entry_id) so LDA sees a stable order.
+            Array.Sort(matchArray, (a, b) => // Array.Sort OK: comparator's secondary key is the unique EntryId, so no ties
+            {
+                uint baseA = a.EntryId & 0x7FFFFFFF;
+                uint baseB = b.EntryId & 0x7FFFFFFF;
+                int cmp = baseA.CompareTo(baseB);
+                if (cmp != 0)
+                    return cmp;
+                return a.EntryId.CompareTo(b.EntryId);
+            });
+            int nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false);
+            swLda.Stop();
+
+            int nTargetWins = 0;
+            int nDecoyWins = 0;
+            foreach (var m in matchArray)
+            {
+                if (m.QValue <= CAL_FDR_THRESHOLD)
+                {
+                    if (m.IsDecoy)
+                        nDecoyWins++;
+                    else nTargetWins++;
+                }
+            }
+            _ctx.LogInfo(string.Format(
+                "[TIMING] Calibration pass {0} LDA: {1:F2}s ({2} target wins, {3} decoy wins at 1% FDR)",
+                passNumber, swLda.Elapsed.TotalSeconds, nTargetWins, nDecoyWins));
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
+                passNumber, fileName, nTargetWins, nDecoyWins));
+            _ctx.LogInfo(string.Format(
+                "Calibration pass {0} LDA passing count: {1} (returned by TrainAndScoreCalibration)",
+                passNumber, nPassing));
+
+            // Cross-implementation diagnostic: dump per-entry LDA discriminant + q-value
+            // sorted by entry_id for stable diff with rust_lda_scores.txt. Gated by
+            // OSPREY_DUMP_LDA_SCORES; exits after write when OSPREY_LDA_SCORES_ONLY is set.
+            if (OspreyDiagnostics.DumpLdaScores)
+            {
+                OspreyDiagnostics.WriteLdaScoresDump(passNumber, matchArray);
+                if (OspreyDiagnostics.LdaScoresOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_LDA_SCORES_ONLY");
+            }
+
+            // Collect high-confidence target matches that also meet the S/N quality gate.
+            var libRtsDetected = new List<double>();
+            var measuredRtsDetected = new List<double>();
+            int nSnrFiltered = 0;
+            foreach (var m in matchArray)
+            {
+                if (m.IsDecoy)
+                    continue;
+                if (m.QValue > CAL_FDR_THRESHOLD)
+                    continue;
+
+                KeyValuePair<double, double> rtPair;
+                if (!matchRts.TryGetValue(m.EntryId, out rtPair))
+                    continue;
+
+                double snr;
+                if (!snrByEntryId.TryGetValue(m.EntryId, out snr))
+                    snr = 0.0;
+
+                if (snr < MIN_SNR_FOR_RT_CAL)
+                {
+                    nSnrFiltered++;
+                    continue;
+                }
+
+                libRtsDetected.Add(rtPair.Key);
+                measuredRtsDetected.Add(rtPair.Value);
+            }
+
+            if (nSnrFiltered > 0)
+            {
+                _ctx.LogInfo(string.Format(
+                    "  RT quality filter (pass {0}): {1} -> {2} peptides (removed {3} with S/N < {4:F1})",
+                    passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
+            }
+
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
+                passNumber, fileName, libRtsDetected.Count));
+            _ctx.LogInfo(string.Format("Pass {0} found {1} calibration points",
+                passNumber, libRtsDetected.Count));
+
+            if (libRtsDetected.Count < minLoessPoints)
+            {
+                _ctx.LogWarning(string.Format(
+                    "Insufficient calibration points in pass {0} ({1} < {2}).",
+                    passNumber, libRtsDetected.Count, minLoessPoints));
+                return null;
+            }
+
+            // Aggregate MS1 + MS2 mass errors from passing targets only.
+            // Rust pipeline.rs:610-619 collects both MS1 and MS2 errors from
+            // passing_targets (those surviving LDA + competition + S/N >= 5.0
+            // filter). This is the same set used for RT calibration points.
+            var allMs1Errors = new List<double>();
+            var allMs2Errors = new List<double>();
+            foreach (var m in matchArray)
+            {
+                if (m.Ms2MassErrors == null || m.IsDecoy || m.QValue > CAL_FDR_THRESHOLD)
+                    continue;
+                double snr;
+                if (!snrByEntryId.TryGetValue(m.EntryId, out snr) || snr < MIN_SNR_FOR_RT_CAL)
+                    continue;
+                if (m.Ms1Error.HasValue)
+                    allMs1Errors.Add(m.Ms1Error.Value);
+                allMs2Errors.AddRange(m.Ms2MassErrors);
+            }
+            string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
+            var ms1Cal = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
+            var ms2Cal = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
+            _ctx.LogInfo(string.Format(
+                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
+                passNumber, ms1Cal.Mean, unitStr, ms1Cal.SD, 3.0 * ms1Cal.SD, allMs1Errors.Count));
+            _ctx.LogInfo(string.Format(
+                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
+                passNumber, ms2Cal.Mean, unitStr, ms2Cal.SD, 3.0 * ms2Cal.SD, allMs2Errors.Count));
+
+            // Fit LOESS calibration.
+            var swLoess = Stopwatch.StartNew();
+            try
+            {
+                double[] libRts = libRtsDetected.ToArray();
+                double[] measuredRts = measuredRtsDetected.ToArray();
+
+                var calibratorConfig = new RTCalibratorConfig
+                {
+                    Bandwidth = config.RtCalibration.LoessBandwidth,
+                    Degree = 1,
+                    MinPoints = Math.Min(20, libRts.Length),
+                    RobustnessIterations = 2,
+                    OutlierRetention = 1.0, // LDA + S/N already filtered
+                    ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust
+                };
+
+                // Cross-implementation diagnostic: dump the (lib_rt, measured_rt) pairs
+                // fed to LOESS. Used to verify Rust and C# see identical inputs
+                // before LOESS fitting.
+                if (OspreyDiagnostics.DumpLoessInput)
+                {
+                    OspreyDiagnostics.WriteLoessInputDump(passNumber, libRts, measuredRts);
+                    if (OspreyDiagnostics.LoessInputOnly)
+                        OspreyDiagnostics.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
+                }
+
+                var calibrator = new RTCalibrator(calibratorConfig);
+                var rtCal = calibrator.Fit(libRts, measuredRts);
+                swLoess.Stop();
+
+                var stats = rtCal.Stats();
+                _ctx.LogInfo(string.Format("[TIMING] Calibration pass {0} LOESS fit: {1:F2}s",
+                    passNumber, swLoess.Elapsed.TotalSeconds));
+                _ctx.LogInfo(string.Format(
+                    "RT calibration pass {0}: {1} points, R2={2:F4}, residual SD={3:F3} min, MAD={4:F3}",
+                    passNumber, stats.NPoints, stats.RSquared, stats.ResidualSD, stats.MAD));
+
+                return new CalibrationPassResult
+                {
+                    Calibration = rtCal,
+                    Stats = stats,
+                    Ms1Calibration = ms1Cal,
+                    Ms2Calibration = ms2Cal,
+                };
+            }
+            catch (Exception ex)
+            {
+                swLoess.Stop();
+                _ctx.LogWarning(string.Format("RT calibration pass {0} failed: {1}",
+                    passNumber, ex.Message));
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Sample library entries for calibration discovery, keeping paired target-decoy
+        /// pairs together (matched by base_id = entry_id &amp; 0x7FFFFFFF).
+        /// Direct port of Rust sample_library_for_calibration (osprey-scoring/src/batch.rs:1450).
+        /// Uses a 2D (RT x m/z) stratified grid with deterministic stride sampling.
+        /// This is the first randomized/selected step in the pipeline, so it must match
+        /// Rust exactly for the two tools to process the same calibration peptides.
+        /// </summary>
+        private static List<LibraryEntry> SampleLibraryForCalibration(
+            List<LibraryEntry> library, int sampleSize, ulong seed)
+        {
+            if (sampleSize == 0)
+                return new List<LibraryEntry>(library);
+
+            var targets = new List<LibraryEntry>();
+            var decoys = new List<LibraryEntry>();
+            foreach (var entry in library)
+            {
+                if (entry.IsDecoy)
+                    decoys.Add(entry);
+                else targets.Add(entry);
+            }
+
+            if (targets.Count <= sampleSize)
+                return new List<LibraryEntry>(library);
+
+            // Build target_id -> decoy map (decoy_id = target_id | 0x80000000)
+            var decoyMap = new Dictionary<uint, LibraryEntry>(decoys.Count);
+            foreach (var d in decoys)
+                decoyMap[d.Id & 0x7FFFFFFF] = d;
+
+            // 2D stratified sampling: divide RT x m/z space into a grid.
+            // ~sqrt(sample_size)/2 bins per axis for good 2D coverage.
+            int binsPerAxis = (int)Math.Max(5, Math.Ceiling(Math.Sqrt(sampleSize) / 2.0));
+
+            double rtMin = double.MaxValue, rtMax = double.MinValue;
+            double mzMin = double.MaxValue, mzMax = double.MinValue;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                var t = targets[i];
+                if (t.RetentionTime < rtMin)
+                    rtMin = t.RetentionTime;
+                if (t.RetentionTime > rtMax)
+                    rtMax = t.RetentionTime;
+                if (t.PrecursorMz < mzMin)
+                    mzMin = t.PrecursorMz;
+                if (t.PrecursorMz > mzMax)
+                    mzMax = t.PrecursorMz;
+            }
+            double rtRange = Math.Max(1e-6, rtMax - rtMin);
+            double mzRange = Math.Max(1e-6, mzMax - mzMin);
+            double rtBinWidth = rtRange / binsPerAxis;
+            double mzBinWidth = mzRange / binsPerAxis;
+
+            // Assign each target to a 2D grid cell
+            var grid = new List<int>[binsPerAxis, binsPerAxis];
+            for (int i = 0; i < binsPerAxis; i++)
+                for (int j = 0; j < binsPerAxis; j++)
+                    grid[i, j] = new List<int>();
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                var t = targets[i];
+                int rtBin = (int)Math.Floor((t.RetentionTime - rtMin) / rtBinWidth);
+                int mzBin = (int)Math.Floor((t.PrecursorMz - mzMin) / mzBinWidth);
+                if (rtBin >= binsPerAxis)
+                    rtBin = binsPerAxis - 1;
+                if (mzBin >= binsPerAxis)
+                    mzBin = binsPerAxis - 1;
+                grid[rtBin, mzBin].Add(i);
+            }
+
+            // Count non-empty cells and compute per-cell quota
+            int nOccupied = 0;
+            for (int i = 0; i < binsPerAxis; i++)
+                for (int j = 0; j < binsPerAxis; j++)
+                    if (grid[i, j].Count > 0)
+                        nOccupied++;
+
+            int perCell = nOccupied > 0 ? sampleSize / nOccupied : 1;
+            if (perCell < 1)
+                perCell = 1;
+
+            // Diagnostic dump: scalar parameters + full grid contents,
+            // matching Rust's dump format for direct diff.
+            if (OspreyDiagnostics.DumpCalSample)
+            {
+                OspreyDiagnostics.WriteCalScalarsAndGridDump(
+                    targets, decoys, binsPerAxis,
+                    rtMin, rtMax, mzMin, mzMax,
+                    rtRange, mzRange, rtBinWidth, mzBinWidth,
+                    nOccupied, perCell, seed, grid);
+            }
+
+            // Deterministic stride sampling from each cell.
+            int offset = (int)(seed & 0x7FFFFFFF);
+            var sampledIds = new HashSet<uint>();
+            var sampled = new List<LibraryEntry>(sampleSize * 2);
+
+            for (int ri = 0; ri < binsPerAxis; ri++)
+            {
+                for (int ci = 0; ci < binsPerAxis; ci++)
+                {
+                    var cell = grid[ri, ci];
+                    if (cell.Count == 0)
+                        continue;
+
+                    int nTake = Math.Min(cell.Count, perCell);
+                    int stride = Math.Max(1, cell.Count / nTake);
+                    int cellOffset = offset % Math.Max(1, cell.Count);
+
+                    for (int j = 0; j < nTake; j++)
+                    {
+                        int idx = (cellOffset + j * stride) % cell.Count;
+                        var target = targets[cell[idx]];
+
+                        if (sampledIds.Contains(target.Id))
+                            continue;
+                        sampledIds.Add(target.Id);
+                        sampled.Add(target);
+
+                        LibraryEntry decoy;
+                        if (decoyMap.TryGetValue(target.Id, out decoy))
+                            sampled.Add(decoy);
+                    }
+                }
+            }
+
+            // Second pass: if under-sampled, add more from occupied cells.
+            if (sampledIds.Count < sampleSize)
+            {
+                int remaining = sampleSize - sampledIds.Count;
+                int extraPerCell = Math.Max(1, remaining / Math.Max(1, nOccupied));
+
+                bool done = false;
+                for (int ri = 0; ri < binsPerAxis && !done; ri++)
+                {
+                    for (int ci = 0; ci < binsPerAxis; ci++)
+                    {
+                        var cell = grid[ri, ci];
+                        if (cell.Count == 0)
+                            continue;
+
+                        int added = 0;
+                        foreach (int targetIdx in cell)
+                        {
+                            if (added >= extraPerCell)
+                                break;
+                            var target = targets[targetIdx];
+                            if (sampledIds.Contains(target.Id))
+                                continue;
+                            sampledIds.Add(target.Id);
+                            sampled.Add(target);
+                            LibraryEntry decoy;
+                            if (decoyMap.TryGetValue(target.Id, out decoy))
+                                sampled.Add(decoy);
+                            added++;
+                        }
+
+                        if (sampledIds.Count >= sampleSize) { done = true; break; }
+                    }
+                }
+            }
+
+            return sampled;
+        }
+
+        /// <summary>
+        /// Score a single library entry for calibration: extract fragment XICs across
+        /// spectra in the entry's isolation window that fall within the initial RT
+        /// tolerance, detect the best co-eluting peak, and compute the four LDA
+        /// features at the apex (correlation, LibCosine, top-6 matched, XCorr).
+        /// Returns null if the entry has no viable peak.
+        /// On pass 1 (calibrationModel == null), expectedRt is computed from the
+        /// linear (rtSlope * library_rt + rtIntercept) mapping. On pass 2, the
+        /// LOESS-fitted RTCalibration is used to predict expected_rt and the
+        /// (refined) tolerance is much tighter.
+        /// </summary>
+        private CalibrationMatch ScoreCalibrationEntry(
+            LibraryEntry entry,
+            Dictionary<int, List<Spectrum>> spectraByWindowKey,
+            Dictionary<int, double[][]> preprocessedByWindowKey,
+            List<MS1Spectrum> ms1Spectra,
+            ScoringContext context,
+            double rtSlope, double rtIntercept, double initialTolerance,
+            RTCalibration calibrationModel,
+            SpectralScorer scorer,
+            out double signalToNoise,
+            out double libraryRt,
+            out double measuredRt)
+        {
+            var config = context.Config;
+            var resolution = context.Resolution;
+            signalToNoise = 0.0;
+            libraryRt = entry.RetentionTime;
+            measuredRt = 0.0;
+
+            if (entry.Fragments == null || entry.Fragments.Count < 2)
+                return null;
+
+            // Find spectra in the entry's isolation window.
+            int windowKey = (int)Math.Round(entry.PrecursorMz * 10.0);
+            List<Spectrum> windowSpectra;
+            if (!spectraByWindowKey.TryGetValue(windowKey, out windowSpectra))
+            {
+                // Try neighbouring window keys (handles off-by-one due to rounding).
+                if (!spectraByWindowKey.TryGetValue(windowKey - 1, out windowSpectra) &&
+                    !spectraByWindowKey.TryGetValue(windowKey + 1, out windowSpectra))
+                {
+                    // Fall back to linear scan across windows that contain this precursor.
+                    windowSpectra = null;
+                    foreach (var kvp in spectraByWindowKey)
+                    {
+                        var first = kvp.Value[0];
+                        if (first.IsolationWindow.Contains(entry.PrecursorMz))
+                        {
+                            windowSpectra = kvp.Value;
+                            break;
+                        }
+                    }
+                    if (windowSpectra == null)
+                        return null;
+                }
+            }
+            else if (!windowSpectra[0].IsolationWindow.Contains(entry.PrecursorMz))
+            {
+                // Key collision where the actual isolation window doesn't contain this precursor.
+                return null;
+            }
+
+            // Compute expected RT for this library entry.
+            // Pass 1 (calibrationModel == null): use the linear pre-fit mapping
+            //     rtSlope * library_rt + rtIntercept
+            // Pass 2 (calibrationModel != null): use the LOESS-fitted prediction
+            //     rtCalibration.Predict(library_rt)
+            // Matches Rust's predict_fn pattern in pipeline.rs:740.
+            double expectedRt = calibrationModel != null
+                ? calibrationModel.Predict(entry.RetentionTime)
+                : entry.RetentionTime * rtSlope + rtIntercept;
+
+            // Diagnostic: record per-entry m/z + RT window selection.
+            // C# selects ONE window per entry (the first match in dictionary order),
+            // unlike Rust which scores in ALL matching windows. Capturing this here
+            // before the RT/2-of-6 filter so it matches Rust's pre-filter dump.
+            if (OspreyDiagnostics.CalWindowsCollecting)
+            {
+                OspreyDiagnostics.AddCalWindowRow(
+                    entry, windowSpectra[0].IsolationWindow,
+                    expectedRt,
+                    expectedRt - initialTolerance,
+                    expectedRt + initialTolerance);
+            }
+
+            // Resolve the actual window key that was used (may differ from primary
+            // due to neighbour-key or linear-scan fallback).
+            int resolvedWindowKey = windowKey;
+            if (!spectraByWindowKey.ContainsKey(windowKey))
+            {
+                if (spectraByWindowKey.ContainsKey(windowKey - 1))
+                    resolvedWindowKey = windowKey - 1;
+                else if (spectraByWindowKey.ContainsKey(windowKey + 1))
+                    resolvedWindowKey = windowKey + 1;
+                else
+                {
+                    // Linear scan fallback - find the key that matched
+                    foreach (var kvp in spectraByWindowKey)
+                    {
+                        if (kvp.Value == windowSpectra)
+                        {
+                            resolvedWindowKey = kvp.Key;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Filter by RT tolerance and top-6 fragment prefilter.
+            // Track window indices for preprocessed XCorr lookup.
+            var candidateSpectra = new List<Spectrum>();
+            var candidateWindowIndices = new List<int>();
+            double[][] windowPreprocessed = null;
+            preprocessedByWindowKey.TryGetValue(resolvedWindowKey, out windowPreprocessed);
+            for (int si = 0; si < windowSpectra.Count; si++)
+            {
+                var spec = windowSpectra[si];
+                if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
+                    continue;
+                if (!HasTopNFragmentMatch(entry, spec.Mzs, config.FragmentTolerance))
+                    continue;
+                candidateSpectra.Add(spec);
+                candidateWindowIndices.Add(si);
+            }
+
+            if (candidateSpectra.Count < MIN_COELUTION_SPECTRA)
+                return null;
+
+            // Build shared RT axis for XIC extraction.
+            int nScans = candidateSpectra.Count;
+            double[] rts = new double[nScans];
+            for (int i = 0; i < nScans; i++)
+                rts[i] = candidateSpectra[i].RetentionTime;
+
+            // Per-entry chromatogram diagnostic. Dump candidates + extracted XICs.
+            // We default to pass 1 in OspreyDiagnostics because the cross-tool
+            // bisection walks downstream: until pass 1 chromatograms match,
+            // there's no point comparing pass 2 (which depends on pass 1's
+            // LOESS fit).
+            int currentPass = calibrationModel != null ? 2 : 1;
+
+            // Extract XICs for the top-N most intense library fragments.
+            var xics = ExtractTopNFragmentXics(
+                entry, candidateSpectra, rts, CAL_TOP_N_FRAGMENTS, config);
+
+            if (OspreyDiagnostics.ShouldDumpCalXicFor(entry.Id, currentPass))
+            {
+                OspreyDiagnostics.WriteCalXicEntryDumpAndExit(
+                    entry, currentPass, calibrationModel,
+                    expectedRt, initialTolerance, rtSlope, rtIntercept,
+                    candidateSpectra, xics);
+            }
+
+            if (xics.Count < 2)
+                return null;
+
+            // Detect consensus CWT peaks and score by pairwise correlation sum.
+            var peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+
+            // Fallback: when CWT returns no consensus peaks, run DetectAllXicPeaks
+            // on the reference fragment XIC alone. This rescues entries where
+            // cross-fragment consensus is weak (one dominant fragment, noisy
+            // others) but the reference has a clean peak shape. Matches Rust
+            // batch.rs:2744-2751: the `cwt_candidates.is_empty()` branch.
+            if (peaks.Count == 0)
+            {
+                // Pick the reference fragment (highest total intensity). Uses `>=`
+                // so ties resolve to the LAST fragment, matching Rust's max_by.
+                int refFallbackIdx = 0;
+                double refTotal = -1.0;
+                for (int i = 0; i < xics.Count; i++)
+                {
+                    double total = 0.0;
+                    double[] inten = xics[i].Intensities;
+                    for (int k = 0; k < inten.Length; k++) total += inten[k];
+                    if (total >= refTotal)
+                    {
+                        refTotal = total;
+                        refFallbackIdx = i;
+                    }
+                }
+                var fallbackXic = xics[refFallbackIdx];
+                peaks = PeakDetector.DetectAllXicPeaks(
+                    fallbackXic.RetentionTimes,
+                    fallbackXic.Intensities,
+                    0.01, // min_height
+                    5.0); // peak_boundary
+            }
+
+            if (peaks.Count == 0)
+                return null;
+
+            XICPeakBounds bestPeak = null;
+            double bestCorrSum = double.NegativeInfinity;
+
+            foreach (var peak in peaks)
+            {
+                int si = peak.StartIndex;
+                int ei = peak.EndIndex;
+                if (ei - si + 1 < 3)
+                    continue;
+
+                double corrSum = 0.0;
+                for (int i = 0; i < xics.Count; i++)
+                {
+                    double[] inti = xics[i].Intensities;
+                    for (int j = i + 1; j < xics.Count; j++)
+                    {
+                        double[] intj = xics[j].Intensities;
+                        double corr = PearsonOverRange(inti, intj, si, ei);
+                        if (!double.IsNaN(corr))
+                            corrSum += corr;
+                    }
+                }
+
+                // Use >= to match Rust's max_by tie-break (last wins on ties).
+                if (corrSum >= bestCorrSum)
+                {
+                    bestCorrSum = corrSum;
+                    bestPeak = peak;
+                }
+            }
+
+            if (bestPeak == null || bestCorrSum < MIN_COELUTION_CORR_SCORE)
+                return null;
+
+            // Identify the reference XIC - the single fragment with the highest
+            // total intensity across the extracted XICs. This is the signal that
+            // feeds SNR computation and the apex selection. Direct port of
+            // Rust's `ref_idx = xics.max_by(total intensity)` in batch.rs:~2718.
+            //
+            // Note: Rust's `Iterator::max_by` returns the LAST element on ties,
+            // so we use `>=` (not `>`) here to match. Without this, fragments
+            // with identical total intensities would select different reference
+            // XICs between the two tools, causing downstream apex divergence.
+            int refIdx = 0;
+            double bestTotalIntensity = -1.0;
+            for (int i = 0; i < xics.Count; i++)
+            {
+                double total = 0.0;
+                double[] inten = xics[i].Intensities;
+                for (int k = 0; k < inten.Length; k++)
+                    total += inten[k];
+                if (total >= bestTotalIntensity)
+                {
+                    bestTotalIntensity = total;
+                    refIdx = i;
+                }
+            }
+            var refXic = xics[refIdx];
+            double[] refIntensities = refXic.Intensities;
+
+            // Apex is the highest-intensity point within the peak boundaries of
+            // the reference XIC. No top-6 constraint: Rust's batch.rs:2797-2802
+            // is a straight argmax over `ref_xic[ref_start..=ref_end]`. Uses `>=`
+            // so ties resolve to the LAST index, matching Rust `max_by`.
+            int apexLocalIdx = bestPeak.StartIndex;
+            double apexVal = refIntensities[Math.Min(apexLocalIdx, refIntensities.Length - 1)];
+            for (int scan = bestPeak.StartIndex; scan <= bestPeak.EndIndex; scan++)
+            {
+                if (scan >= refIntensities.Length)
+                    break;
+                if (refIntensities[scan] >= apexVal)
+                {
+                    apexVal = refIntensities[scan];
+                    apexLocalIdx = scan;
+                }
+            }
+
+            // Apex RT from the reference XIC (shared time axis across fragments).
+            double apexRt = refXic.RetentionTimes[apexLocalIdx];
+            measuredRt = apexRt;
+
+            // SNR is computed on the reference fragment's raw intensities
+            // (NOT the composite sum). Direct port of Rust batch.rs:2803-2806.
+            signalToNoise = PeakDetector.ComputeSnr(
+                refIntensities, apexLocalIdx, bestPeak.StartIndex, bestPeak.EndIndex);
+
+            // Map the apex RT to the candidate spectrum with the closest RT
+            // for feature computation. In practice this returns apexLocalIdx
+            // since the XIC time axis is built directly from candidate spectrum
+            // RTs, but we port Rust's lookup verbatim for parity.
+            int apexSpecLocalIdx = 0;
+            double bestDt = Math.Abs(candidateSpectra[0].RetentionTime - apexRt);
+            for (int i = 1; i < candidateSpectra.Count; i++)
+            {
+                double dt = Math.Abs(candidateSpectra[i].RetentionTime - apexRt);
+                if (dt < bestDt)
+                {
+                    bestDt = dt;
+                    apexSpecLocalIdx = i;
+                }
+            }
+            var apexSpectrum = candidateSpectra[apexSpecLocalIdx];
+
+            // Compute the four LDA features at the apex.
+            double libCosineApex = scorer.LibCosine(
+                apexSpectrum, entry, config.FragmentTolerance);
+            // XCorr at apex always uses the calibration unit-bin scorer
+            // (matches the pre-preprocessed arrays built with s_calXcorrScorer).
+            int apexWindowIdx = candidateWindowIndices[apexSpecLocalIdx];
+            double xcorrApex = (windowPreprocessed != null && apexWindowIdx < windowPreprocessed.Length)
+                ? s_calXcorrScorer.XcorrFromPreprocessed(windowPreprocessed[apexWindowIdx], entry)
+                : s_calXcorrScorer.XcorrAtScan(apexSpectrum, entry);
+            byte top6Matched = CountTop6Matches(entry, apexSpectrum, config);
+
+            // Collect MS2 fragment mass errors at apex for m/z calibration.
+            // Matches Rust topn_fragment_match_with_errors: uses TOP-6 fragments
+            // by intensity, not all fragments.
+            var ms2Errors = new List<double>();
+            {
+                // Select top-6 fragment indices by descending intensity
+                int nFragsForErrors = entry.Fragments.Count;
+                int nTopForErrors = Math.Min(nFragsForErrors, CAL_TOP_N_FRAGMENTS);
+                int[] topErrorIndices;
+                if (nFragsForErrors <= CAL_TOP_N_FRAGMENTS)
+                {
+                    topErrorIndices = new int[nFragsForErrors];
+                    for (int ti = 0; ti < nFragsForErrors; ti++)
+                        topErrorIndices[ti] = ti;
+                }
+                else
+                {
+                    // LINQ OrderByDescending is stable per .NET contract;
+                    // List<T>.Sort with Comparison<T> is unstable
+                    // (introsort) and produces different top-N picks
+                    // than Rust's stable slice::sort_by on RelativeIntensity
+                    // ties. Match Rust by using the stable sort.
+                    topErrorIndices = Enumerable.Range(0, nFragsForErrors)
+                        .OrderByDescending(ti => entry.Fragments[ti].RelativeIntensity)
+                        .Take(nTopForErrors)
+                        .ToArray();
+                }
+
+                foreach (int fragIdx in topErrorIndices)
+                {
+                    var frag = entry.Fragments[fragIdx];
+                    double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
+                    double lower = frag.Mz - tolDa;
+                    double upper = frag.Mz + tolDa;
+
+                    int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                    if (lo < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[lo] <= upper)
+                    {
+                        double bestMz = apexSpectrum.Mzs[lo];
+                        double bestDiff = Math.Abs(bestMz - frag.Mz);
+                        for (int k = lo + 1; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
+                        {
+                            double diff = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
+                            if (diff < bestDiff)
+                            {
+                                bestDiff = diff;
+                                bestMz = apexSpectrum.Mzs[k];
+                            }
+                        }
+                        ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, bestMz));
+                    }
+                }
+            }
+
+            // MS1 precursor mass error at apex for MS1 mass calibration.
+            // Port of osprey-scoring/src/batch.rs:2912-2940 -- extract M+0 from the
+            // MS1 scan closest to the apex RT using the config precursor tolerance;
+            // report the error in fragment tolerance units so MS1 + MS2 errors
+            // share the same unit for the MzQCData aggregator.
+            double? ms1Error = null;
+            if (ms1Spectra != null && ms1Spectra.Count > 0)
+            {
+                int charge = entry.Charge > 0 ? entry.Charge : 1;
+                double precursorTolPpm = config.PrecursorTolerance != null
+                    && config.PrecursorTolerance.Unit == ToleranceUnit.Ppm
+                    ? config.PrecursorTolerance.Tolerance
+                    : 10.0;
+                var apexMs1 = FindNearestMs1(ms1Spectra, apexRt);
+                if (apexMs1 != null)
+                {
+                    var envelope = IsotopeEnvelope.Extract(
+                        apexMs1, entry.PrecursorMz, charge, precursorTolPpm);
+                    if (envelope.HasM0 && envelope.M0ObservedMz.HasValue)
+                    {
+                        ms1Error = config.FragmentTolerance.MassError(
+                            entry.PrecursorMz, envelope.M0ObservedMz.Value);
+                    }
+                }
+            }
+
+            return new CalibrationMatch
+            {
+                EntryId = entry.Id,
+                IsDecoy = entry.IsDecoy,
+                Sequence = entry.Sequence,
+                ScanNumber = apexSpectrum.ScanNumber,
+                CorrelationScore = bestCorrSum,
+                LibcosineApex = libCosineApex,
+                Top6MatchedApex = top6Matched,
+                XcorrScore = xcorrApex,
+                IsotopeCosine = 0.0,
+                DiscriminantScore = bestCorrSum,
+                QValue = 1.0,
+                Ms2MassErrors = ms2Errors.ToArray(),
+                Ms1Error = ms1Error
+            };
+        }
+    }
+}
