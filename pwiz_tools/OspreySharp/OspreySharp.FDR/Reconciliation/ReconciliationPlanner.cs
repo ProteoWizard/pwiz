@@ -310,7 +310,7 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
                 var all = new double[absResiduals.Count];
                 for (int i = 0; i < all.Length; i++)
                     all[i] = absResiduals[i];
-                Array.Sort(all);
+                Array.Sort(all); // Array.Sort OK: median of single primitive array, no parallel data
                 return all[all.Length / 2];
             }
 

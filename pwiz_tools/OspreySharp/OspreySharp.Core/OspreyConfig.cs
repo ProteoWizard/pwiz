@@ -129,6 +129,19 @@ namespace pwiz.OspreySharp.Core
         public bool StopAfterStage5 { get; set; }
 
         /// <summary>
+        /// HPC: when true, every <c>--input-scores</c> parquet must carry
+        /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
+        /// by <c>--join-at-pass=2</c>; the post-Stage-6 (reconciled)
+        /// entry point. Stages 1-6 are skipped: the pipeline loads
+        /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
+        /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,
+        /// protein parsimony + picked-protein FDR, blib output). Mirrors
+        /// Rust's <c>config.expect_reconciled_input</c> wired from
+        /// <c>main.rs</c> at the same flag.
+        /// </summary>
+        public bool ExpectReconciledInput { get; set; }
+
+        /// <summary>
         /// How many files will actually run concurrently in the current
         /// invocation. Set by the pipeline before per-file ProcessFile()
         /// calls; used to divide the inner main-search thread budget so
