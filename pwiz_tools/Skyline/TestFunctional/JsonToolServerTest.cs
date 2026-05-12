@@ -729,11 +729,8 @@ namespace pwiz.SkylineTestFunctional
                 @"Long-format row count mismatch ({0})", variant);
             var header = File.ReadLines(filePath).First()
                 .ParseDsvFields(TextUtil.SEPARATOR_CSV);
-            Assert.AreEqual(expectedColumns.Length, header.Length,
-                @"Long-format ({0}) should have {1} columns, got: {2}",
-                variant, expectedColumns.Length, string.Join(@",", header));
-            foreach (var col in expectedColumns)
-                AssertEx.Contains(string.Join(@",", header), col);
+            CollectionAssert.AreEqual(expectedColumns, header,
+                @"Long-format ({0}) header mismatch", variant);
         }
 
         private static void VerifyRowSource(ColumnResolver resolver, string[] columns,
