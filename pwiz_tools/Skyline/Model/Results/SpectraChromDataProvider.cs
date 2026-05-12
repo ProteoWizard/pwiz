@@ -273,10 +273,11 @@ namespace pwiz.Skyline.Model.Results
             // PeptideDocNode directly would dispatch to its structural Equals,
             // which is the wrong primitive for reference-style identity; -1
             // serves as the no-match sentinel (GlobalIndex is always >= 1).
+            // ValueTuple avoids per-spectrum heap allocations in this hot loop.
             // Collapsing same-Q1 peptides onto a single filterIndex routes one
             // of them to a collector tagged with the other's ChromatogramGroupId,
             // and the losing peptide ends up with an empty ChromInfoList after import.
-            var dictKeyToIndex = new Dictionary<Tuple<SignedMz, int>, int>(); // For SRM processing
+            var dictKeyToIndex = new Dictionary<(SignedMz, int), int>(); // For SRM processing
 
             var peptideFinder = _spectra.HasSrmSpectra ? new PeptideFinder(_document) : null;
 
@@ -312,25 +313,35 @@ namespace pwiz.Skyline.Model.Results
 
                     var precursorMz = dataSpectrum.Precursors[0].PrecursorMz ?? SignedMz.ZERO;
 
+                    // Build the spectrum-level arrays once and share them across
+                    // every colliding peptide's emit (read-only after this point),
+                    // so the per-peptide loop doesn't re-convert the same data.
+                    var intensitiesIn = dataSpectrum.Intensities;
+                    var intensityFloats = new float[intensitiesIn.Length];
+                    for (int i = 0; i < intensitiesIn.Length; i++)
+                        intensityFloats[i] = (float) intensitiesIn[i];
+                    var mzsIn = dataSpectrum.Mzs;
+                    var productFilters = new SpectrumProductFilter[mzsIn.Length];
+                    for (int i = 0; i < mzsIn.Length; i++)
+                        productFilters[i] = new SpectrumProductFilter(new SignedMz(mzsIn[i], precursorMz.IsNegative), 0, 0);
+                    var time = (float) dataSpectrum.RetentionTime.Value;
+
                     void EmitForPeptide(PeptideDocNode peptideNode)
                     {
-                        var key = Tuple.Create(precursorMz, peptideNode?.Id.GlobalIndex ?? -1);
-                        int filterIndex;
-                        if (!dictKeyToIndex.TryGetValue(key, out filterIndex))
+                        var key = (precursorMz, peptideNode?.Id.GlobalIndex ?? -1);
+                        if (!dictKeyToIndex.TryGetValue(key, out var filterIndex))
                         {
                             filterIndex = dictKeyToIndex.Count;
                             dictKeyToIndex.Add(key, filterIndex);
                         }
 
-                        ProcessSrmSpectrum(
-                            (float) dataSpectrum.RetentionTime.Value,
+                        var spectrum = new ExtractedSpectrum(
                             ChromatogramGroupId.ForPeptide(peptideNode, null),
                             peptideNode != null ? peptideNode.Color : PeptideDocNode.UNKNOWN_COLOR,
                             precursorMz,
-                            filterIndex,
-                            dataSpectrum.Mzs,
-                            dataSpectrum.Intensities,
-                            chromMap);
+                            IonMobilityFilter.EMPTY, // ion mobility unknown
+                            ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
+                        chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
                     }
 
                     // Fan out the spectrum to every peptide whose Q1 matches in
@@ -559,25 +570,6 @@ namespace pwiz.Skyline.Model.Results
                     chromMap.ProcessExtractedSpectrum(rt, _collectors, GetScanIdIndex(spectrumMetadata), spectrum, AddChromCollector);
                 }
             }
-        }
-
-        private void ProcessSrmSpectrum(float time,
-                                               ChromatogramGroupId chromatogramGroupId,
-                                               Color peptideColor,
-                                               SignedMz precursorMz,
-                                               int filterIndex,
-                                               double[] mzs,
-                                               double[] intensities,
-                                               ChromDataCollectorSet chromMap)
-        {
-            float[] intensityFloats = new float[intensities.Length];
-            for (int i = 0; i < intensities.Length; i++)
-                intensityFloats[i] = (float) intensities[i];
-            var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, 0)).ToArray();
-            var spectrum = new ExtractedSpectrum(chromatogramGroupId, peptideColor, precursorMz,
-            IonMobilityFilter.EMPTY, // ion mobility unknown
-                ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
-            chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
         }
 
         public override IEnumerable<ChromKeyProviderIdPair> ChromIds
