@@ -29,7 +29,18 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj" />
     <ProjectReference Include="..\MsConvert\MsConvert.csproj" />
     <ProjectReference Include="..\StlContainers\StlContainers.csproj" />
+    <ProjectReference Include="..\Vendor\Common\Vendor.Common.csproj" />
     <ProjectReference Include="CustomDataSourceDialog\CustomDataSourceDialog.csproj" />
+  </ItemGroup>
+
+  <!-- vendor-manifest.json lists each vendor SDK's archive URL + SHA + assembly-name
+       prefixes. Pwiz.Vendor.Common.VendorSdkLoader reads it from the EXE's directory at
+       runtime, so it has to land in the build output (and later in the installer MSI). -->
+  <ItemGroup>
+    <None Include="..\..\installer\vendor-manifest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>vendor-manifest.json</Link>
+    </None>
   </ItemGroup>
 
   <!-- CustomDataSourceDialog has its own .csproj (so its embedded resources are named

@@ -6,6 +6,9 @@ public static class Program
     /// <summary>Runs msconvert-sharp with the given args; returns the process exit code (0 on full success).</summary>
     public static int Main(string[] args)
     {
+        // Hook vendor SDK on-demand resolver before any Reader_* is touched. See
+        // Pwiz.Vendor.Common.VendorSdkLoader.
+        Pwiz.Vendor.Common.VendorSdkLoader.RegisterAssemblyResolver();
         try
         {
             var config = ArgParser.Parse(args);

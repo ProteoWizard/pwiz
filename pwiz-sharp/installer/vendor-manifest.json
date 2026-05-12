@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+
+  // One entry per vendor_api_<Vendor>.7z archive. URLs point at the pwiz GitHub release
+  // for the matching pwiz version. Bump `version` + republish a release asset whenever
+  // a vendor SDK is updated; existing pwiz-sharp installs continue to pull the older
+  // version they pinned (cache directory key is name-version).
+  //
+  // `sha256` is optional but recommended — VendorSdkLoader rejects + re-downloads on
+  // mismatch. Compute via: `sha256sum vendor_api_<Vendor>.7z` (Linux) or `Get-FileHash
+  // <path> -Algorithm SHA256` (PowerShell).
+  //
+  // `assemblyPrefixes` enumerates the simple-name prefixes that route to this vendor.
+  // The AssemblyLoadContext.Resolving handler picks the first vendor whose prefix list
+  // matches the requested assembly. Keep these sets disjoint.
+
+  "vendors": [
+    {
+      "name": "Thermo",
+      "version": "TODO-pin-to-pwiz-tag",
+      "url": "https://github.com/ProteoWizard/pwiz/releases/download/TODO/vendor_api_Thermo.7z",
+      "sha256": "",
+      "assemblyPrefixes": [
+        "ThermoFisher.",
+        "OpenMcdf"
+      ]
+    },
+    {
+      "name": "Bruker",
+      "version": "TODO-pin-to-pwiz-tag",
+      "url": "https://github.com/ProteoWizard/pwiz/releases/download/TODO/vendor_api_Bruker.7z",
+      "sha256": "",
+      "assemblyPrefixes": [
+        "Bruker.",
+        "BaseDataAccess",
+        "BDal.",
+        "CompassXtractMS",
+        "EDAL",
+        "Interop.EDAL",
+        "ProtocolBuffers",
+        "BaseError",
+        "BaseCommon",
+        "Compass"
+      ]
+    },
+    {
+      "name": "Waters",
+      "version": "TODO-pin-to-pwiz-tag",
+      "url": "https://github.com/ProteoWizard/pwiz/releases/download/TODO/vendor_api_Waters.7z",
+      "sha256": "",
+      "assemblyPrefixes": [
+        "MassLynxRaw",
+        "cdt",
+        "MassLynx"
+      ]
+    },
+    {
+      "name": "Agilent",
+      "version": "TODO-pin-to-pwiz-tag",
+      "url": "https://github.com/ProteoWizard/pwiz/releases/download/TODO/vendor_api_Agilent.7z",
+      "sha256": "",
+      "assemblyPrefixes": [
+        "Agilent.",
+        "BaseDataAccess",
+        "MIDAC.",
+        "Mhdac.",
+        "MassHunter."
+      ]
+    },
+    {
+      "name": "ABI",
+      "version": "TODO-pin-to-pwiz-tag",
+      "url": "https://github.com/ProteoWizard/pwiz/releases/download/TODO/vendor_api_ABI.7z",
+      "sha256": "",
+      "assemblyPrefixes": [
+        "Clearcore2.",
+        "Sciex.",
+        "SCIEX.",
+        "SciexToolKit",
+        "Interop."
+      ]
+    },
+    {
+      "name": "Shimadzu",
+      "version": "TODO-pin-to-pwiz-tag",
+      "url": "https://github.com/ProteoWizard/pwiz/releases/download/TODO/vendor_api_Shimadzu.7z",
+      "sha256": "",
+      "assemblyPrefixes": [
+        "Shimadzu.",
+        "QTFL",
+        "GCMS",
+        "GCMSProto",
+        "QTFLProto",
+        "DataReader",
+        "Google.Protobuf",
+        "IDQuantLSS",
+        "PeakIDEA",
+        "PeakItgLSS",
+        "MassLibrarySearch",
+        "MassCalcWrap",
+        "MassStandardSpectrum",
+        "DualProbeInterface"
+      ]
+    },
+    {
+      "name": "Mobilion",
+      "version": "TODO-pin-to-pwiz-tag",
+      "url": "https://github.com/ProteoWizard/pwiz/releases/download/TODO/vendor_api_Mobilion.7z",
+      "sha256": "",
+      "assemblyPrefixes": [
+        "Mobilion.",
+        "MBISDK",
+        "MobilionShim"
+      ]
+    }
+  ]
+}

@@ -24,6 +24,7 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\MsData\MsData.csproj" />
     <ProjectReference Include="..\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\Vendor\Common\Vendor.Common.csproj" />
   </ItemGroup>
 
   <!-- Vendor projects always build so Reader.Identify() works. Without
@@ -63,6 +64,16 @@
   <ItemGroup>
     <InternalsVisibleTo Include="MsConvert.Tests" />
     <InternalsVisibleTo Include="MsConvertGUI.Tests" />
+  </ItemGroup>
+
+  <!-- vendor-manifest.json drives Pwiz.Vendor.Common.VendorSdkLoader at runtime — it
+       lives next to msconvert-sharp.exe and is consulted before any Reader_* SDK is
+       loaded. -->
+  <ItemGroup>
+    <None Include="..\..\installer\vendor-manifest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>vendor-manifest.json</Link>
+    </None>
   </ItemGroup>
 
   <!-- Side-by-side wiff2 dlls. The wiff2 SDK is loaded into a custom AssemblyLoadContext
