@@ -280,9 +280,9 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_run_command"),
-     Description("Run a command line against the running Skyline instance. Uses the same command syntax as SkylineCmd/SkylineRunner. Commands are echoed to Skyline's Immediate Window for user visibility. Examples: '--report-name=\"Peak Area\" --report-file=output.csv', '--import-file=results.raw', '--refine-cv-remove-above-cutoff=20'. Use '--help' to see all available commands.")]
+     Description("Run any SkylineCmd command line against the running Skyline instance. This exposes the entire SkylineCmd CLI surface (over 100 flags) inside the live Skyline session so it acts on the open document. Many other MCP tools (skyline_save_document, skyline_import_fasta, skyline_insert_small_molecule_transition_list, skyline_new_document) are thin wrappers around specific flags here; use this tool directly when you need a flag a wrapper does not expose, or for combined operations (e.g., '--in=file --refine-... --out=newfile' in one call). Output is echoed to Skyline's Immediate Window and returned in the response, including error messages, so format problems come back as text rather than as modal dialogs the user has to copy. To discover what is available, call skyline_get_cli_help_sections for the list of section names, then skyline_get_cli_help with a section (e.g., 'import', 'refine', 'export', 'report') for the flags in that section. Examples: '--report-name=\"Peak Area\" --report-file=output.csv', '--in=path/to/doc.sky --discard-changes', '--refine-cv-remove-above-cutoff=20', '--out=path/to/save.sky'.")]
     public static string RunCommand(
-        [Description("Command line arguments in SkylineCmd format (e.g., '--report-name=\"Peak Area\" --report-file=output.csv')")] string commandArgs)
+        [Description("Command line arguments in SkylineCmd format (e.g., '--report-name=\"Peak Area\" --report-file=output.csv'). Use skyline_get_cli_help_sections / skyline_get_cli_help to discover available flags.")] string commandArgs)
     {
         return Invoke(connection =>
         {
@@ -698,10 +698,34 @@ public static class SkylineTools
         }
     }
 
+    [McpServerTool(Name = "skyline_save_document"),
+     Description("Save the current Skyline document. With no filePath, saves to the current " +
+        "document path (equivalent to File > Save). With filePath, saves there and that becomes " +
+        "the new document path (equivalent to File > Save As). " +
+        "Wraps skyline_run_command with --save (or --out=PATH when filePath is provided); " +
+        "use that tool directly to combine saving with other operations in one call. " +
+        "Returns the Skyline Immediate Window output.")]
+    public static string SaveDocument(
+        [Description("Optional path to save to. When omitted, saves to the current document path. " +
+            "When provided, saves there and that becomes the new document path " +
+            "(same as File > Save As).")] string filePath = null)
+    {
+        return Invoke(connection =>
+        {
+            string arg = string.IsNullOrEmpty(filePath) ? "--save" : "--out=" + filePath;
+            string output = connection.RunCommand(new[] { arg });
+            return string.IsNullOrEmpty(output)
+                ? "Document saved."
+                : output;
+        });
+    }
+
     [McpServerTool(Name = "skyline_new_document"),
      Description("Create a new blank Skyline document, optionally with a specific UI mode and/or " +
         "saved settings preset. If the current document has unsaved changes, you must set " +
-        "discardChanges to true or save first (skyline_run_command with --save or --out).")]
+        "discardChanges to true or save first (skyline_save_document). " +
+        "Wraps skyline_run_command with --new (plus --discard-changes and --doc-settings-name=NAME " +
+        "as needed); use that tool directly for richer new-document flows.")]
     public static string NewDocument(
         [Description("UI mode for the new document: 'proteomic', 'small_molecules', or 'mixed'. " +
             "If omitted, keeps the current UI mode.")] string uiMode = null,

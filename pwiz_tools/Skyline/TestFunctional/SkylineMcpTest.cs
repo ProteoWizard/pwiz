@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private const int EXPECTED_TOOL_COUNT = 43;
+        private const int EXPECTED_TOOL_COUNT = 44;
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -238,6 +238,18 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             AssertEx.Contains(saveResponse, saveFileName);
             string savedPath = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path");
             AssertEx.AreEqual(docPath.ToForwardSlashPath(), savedPath);
+
+            // Dedicated save tool: no filePath -> saves in place (wraps --save)
+            McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_save_document");
+            AssertEx.AreEqual(docPath.ToForwardSlashPath(),
+                McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path"));
+
+            // Dedicated save tool: filePath -> save-as (wraps --out=PATH)
+            string docPath2 = TestContext.GetTestResultsPath("SkylineMcpTest2.sky");
+            McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_save_document",
+                new JObject { ["filePath"] = docPath2 });
+            AssertEx.AreEqual(docPath2.ToForwardSlashPath(),
+                McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path"));
 
             // Version mismatch detection: verify that an unknown method sent through
             // the pipe produces an error with the Skyline version, so the LLM can
