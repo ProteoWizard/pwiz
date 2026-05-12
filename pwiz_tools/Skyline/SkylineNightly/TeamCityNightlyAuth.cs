@@ -41,14 +41,16 @@ namespace SkylineNightly
         // env var named by TokenEnvVar.
         public static string GetRequiredToken()
         {
+            // Trim because setx and copy/paste commonly introduce a trailing newline or stray whitespace;
+            // a value of " " or "abc\r\n" should fail fast (or be cleaned), not be sent as the Bearer credential.
             var token = Environment.GetEnvironmentVariable(TokenEnvVar);
-            if (string.IsNullOrEmpty(token))
+            if (string.IsNullOrWhiteSpace(token))
             {
                 throw new IOException("Environment variable " + TokenEnvVar + " is not set. " +
                     "A read-only TeamCity token is required to download nightly build artifacts. " +
                     "See https://skyline.ms/home/development/project-begin.view for test machine setup instructions.");
             }
-            return token;
+            return token.Trim();
         }
 
         // branchQuery is e.g. "?branch=master", or "" for build configs whose VCS root pins the branch.

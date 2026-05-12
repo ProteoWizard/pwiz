@@ -442,17 +442,19 @@ namespace SkylineNightly
         /// <summary>
         /// Downloads and extracts SkylineTester ZIP file and determines the branch name.
         /// </summary>
-        /// <param name="skylineTesterZipName">Name of the ZIP file to download</param>
+        /// <param name="localZipFileName">Local destination filename for the downloaded zip (relative to the SkylineTester directory). The remote artifact name is fixed by SKYLINETESTER_ZIP_NAME.</param>
         /// <returns>Branch URL</returns>
         /// <exception cref="IOException">Failure after 2 hours throws an exception with the reason</exception>
-        private string DownloadSkylineTester(string skylineTesterZipName)
+        private string DownloadSkylineTester(string localZipFileName)
         {
-            // Verify the TeamCity token is present up front, so a misconfigured machine
-            // doesn't get silently retried for the two hours of the loop below.
-            TeamCityNightlyAuth.GetRequiredToken();
+            // Fetch the token once up front: fails fast on a misconfigured machine (rather
+            // than getting silently retried for the two hours of the loop below) and pins
+            // the token value for the whole run, so behavior is consistent even if the
+            // env var were to change mid-run.
+            var token = TeamCityNightlyAuth.GetRequiredToken();
 
             // Download most recent build of SkylineTester.
-            var skylineTesterZip = Path.Combine(_skylineTesterDir, skylineTesterZipName);
+            var skylineTesterZip = Path.Combine(_skylineTesterDir, localZipFileName);
             int attempts = CalcAllowedRetries(120); // Retry for up to two hours
             var useLastSuccessfulInsteadOfLastFinished = false;
             string failedReason = "Unable to download SkylineTester";
@@ -460,7 +462,7 @@ namespace SkylineNightly
             {
                 try
                 {
-                    DownloadSkylineTester(skylineTesterZip, _runMode, useLastSuccessfulInsteadOfLastFinished);
+                    DownloadSkylineTester(skylineTesterZip, _runMode, useLastSuccessfulInsteadOfLastFinished, token);
                 }
                 catch (Exception ex)
                 {
@@ -528,10 +530,10 @@ namespace SkylineNightly
             throw new IOException(failedReason);
         }
 
-        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode, bool desperate)
+        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode, bool desperate, string token)
         {
             using var client = new WebClient();
-            TeamCityNightlyAuth.ConfigureClient(client, TeamCityNightlyAuth.GetRequiredToken());
+            TeamCityNightlyAuth.ConfigureClient(client, token);
 
             var isRelease = ((mode == RunMode.release) || (mode == RunMode.release_perf));
             var isIntegration = mode == RunMode.integration || mode == RunMode.integration_perf;
