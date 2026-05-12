@@ -155,6 +155,11 @@ public sealed class ShimadzuRawData : IDisposable
             throw new InvalidDataException($"Shimadzu LoadData failed: {loadResult}");
 
         bool qtflBackendThrew = false;
+        // Hoisted outside the try block so the retry-decision logic at the bottom can read
+        // it after init completes. true iff at least one RetTimeToScan call returned 0
+        // (Failed result code or null result), indicating the SDK Spectrum.RetTimeToScan
+        // path didn't return scan ids despite being called.
+        bool retTimeToScanCalledAndFailed = false;
 
         try
         {
@@ -263,11 +268,12 @@ public sealed class ShimadzuRawData : IDisposable
             SegmentCount = discoveredSegmentCount;
 
             uint lastScanNumber = 0;
-            // Track whether RetTimeToScan actually FAILED for an event we tried to query
-            // (vs. the event being skipped on purpose, e.g. MRM under srmAsSpectra=false).
-            // The fallback below only runs in the genuine-failure case so that SRM-only files
-            // don't grow phantom spectra under default config.
-            bool retTimeToScanCalledAndFailed = false;
+            // retTimeToScanCalledAndFailed is hoisted to the method level so the retry
+            // decision at the bottom of TryInitializeFromLcd can read it. Tracks whether
+            // RetTimeToScan FAILED for any event we tried to query (vs. the event being
+            // skipped on purpose, e.g. MRM under srmAsSpectra=false). The fallback below
+            // only runs in the genuine-failure case so that SRM-only files don't grow
+            // phantom spectra under default config.
             // Materialize segments 1..SegmentCount in order so empty segments still get an entry
             // (matches cpp which iterates by segment index).
             for (short seg = 1; seg <= SegmentCount; seg++)
@@ -360,10 +366,16 @@ public sealed class ShimadzuRawData : IDisposable
             throw;
         }
 
-        // Retry signal: the QTFL backend threw a binder-style exception during warmup or the
-        // chromMng walk, AND we ended up with no usable scans. A genuinely empty file (no
-        // events, no scans, SDK calls returned cleanly) is not retryable.
-        return qtflBackendThrew && ScanCount == 0;
+        // Retry signal: ScanCount==0 (no usable scans came out) AND one of the two known
+        // failure modes fired — either the QTFL backend THREW a binder-style exception
+        // (qtflBackendThrew, the original signal) OR it silently returned empty: every
+        // RetTimeToScan call we tried failed and the chromatogram TIC fallback also produced
+        // nothing (retTimeToScanCalledAndFailed). The latter is what bit us on TC builds
+        // 3987641 + 3987655. retTimeToScanCalledAndFailed can only be true if the per-event
+        // loop tried at least one non-MRM event (the MRM continue runs before the flag is
+        // set), so header-only LCDs and SRM-only-under-default-config files won't trip it
+        // and we won't loop forever.
+        return ScanCount == 0 && (qtflBackendThrew || retTimeToScanCalledAndFailed);
     }
 
     /// <summary>Wraps <c>RetTimeToScan</c> per event with explicit catches around the SDK's
