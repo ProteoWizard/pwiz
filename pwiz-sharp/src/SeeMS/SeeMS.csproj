@@ -48,6 +48,7 @@
     <ProjectReference Include="..\ZedGraph\ZedGraph.csproj" />
     <ProjectReference Include="..\MSGraph\MSGraph.csproj" />
     <ProjectReference Include="..\StlContainers\StlContainers.csproj" />
+    <ProjectReference Include="..\Vendor\Common\Vendor.Common.csproj" />
   </ItemGroup>
 
   <!-- Vendor support is opt-in (mirrors MsConvert.csproj). Without -p:IAgreeToVendorLicenses=true,

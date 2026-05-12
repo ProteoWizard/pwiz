@@ -52,6 +52,12 @@ namespace Pwiz.SeeMS
 		[SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
 		public static int Main( string[] args )
 		{
+		    // Hook the vendor SDK on-demand resolver before any Reader_* is touched.
+		    // Without this, opening a Thermo / Bruker / Waters / etc. file fails with
+		    // TypeLoadException because the SDK DLLs aren't shipped in the installer
+		    // (they're downloaded into %LOCALAPPDATA%\ProteoWizard\vendor\ on first use).
+		    Pwiz.Vendor.Common.VendorSdkLoader.RegisterAssemblyResolver();
+
 		    // redirect console output to parent process;
 		    // must be before any calls to Console.WriteLine()
 		    AttachConsole(ATTACH_PARENT_PROCESS);
