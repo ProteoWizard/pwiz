@@ -1,11 +1,7 @@
 using System.Globalization;
-using System.IO.Compression;
 using Pwiz.Analysis;
-using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
-using Pwiz.Data.MsData.Mgf;
-using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Util.Misc;
 using Pwiz.Vendor.Bruker;
@@ -140,13 +136,13 @@ public sealed class Converter
 
     private void WriteOutput(MSData msd, string outputFile)
     {
-        if (_config.Gzip && !outputFile.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+        if (_config.WriteConfig.Gzip && !outputFile.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
             outputFile += ".gz";
         if (_config.Verbose) _log.WriteLine($"writing {outputFile}");
 
-        // In verbose mode, attach a console listener to the writer so per-spectrum progress
-        // shows up on the log. Period of 100 so smallish files still show at least one line of
-        // intermediate progress (the registry always fires on the final iteration).
+        // In verbose mode, attach a console listener so per-spectrum progress shows up on the
+        // log. Period of 100 so smallish files still show at least one intermediate line (the
+        // registry always fires on the final iteration).
         IterationListenerRegistry? registry = null;
         if (_config.Verbose)
         {
@@ -154,31 +150,10 @@ public sealed class Converter
             registry.AddListener(new ConsoleProgressListener(_log), iterationPeriod: 100);
         }
 
-        using Stream output = OpenOutputStream(outputFile);
-        switch (_config.Format)
-        {
-            case OutputFormat.Mzml:
-                new MzmlWriter(_config.EncoderConfig)
-                {
-                    Indexed = !_config.NoIndex,
-                    IterationListenerRegistry = registry,
-                }.Write(msd, output);
-                break;
-            case OutputFormat.MzXml:
-                new Pwiz.Data.MsData.MzXml.MzxmlWriter(_config.EncoderConfig)
-                {
-                    Indexed = !_config.NoIndex,
-                    IterationListenerRegistry = registry,
-                }.Write(msd, output);
-                break;
-            case OutputFormat.Mgf:
-                using (var tw = new StreamWriter(output))
-                    new MgfSerializer { IterationListenerRegistry = registry }.Write(msd, tw);
-                break;
-            default:
-                throw new NotImplementedException(
-                    $"Output format {_config.Format} is accepted by the CLI but not yet implemented in msconvert-sharp.");
-        }
+        // MSDataFile.Write owns the gzip-stream wrapping + per-format writer dispatch; we've
+        // already adjusted the filename for the .gz suffix above so callers see the on-disk
+        // name in the log.
+        MSDataFile.Write(msd, outputFile, _config.WriteConfig, registry);
     }
 
     /// <summary>
@@ -201,14 +176,6 @@ public sealed class Converter
             _out.WriteLine(line);
             return IterationStatus.Ok;
         }
-    }
-
-    private Stream OpenOutputStream(string outputFile)
-    {
-        var fs = File.Create(outputFile);
-        return _config.Gzip
-            ? new GZipStream(fs, CompressionLevel.Optimal, leaveOpen: false)
-            : fs;
     }
 
     private static void MergeRun(MSData dest, MSData src)
@@ -250,7 +217,7 @@ public sealed class Converter
 
     private string BuildOutputPath(string input, MSData msd)
     {
-        string ext = _config.OutputExtension ?? DefaultExtension(_config.Format);
+        string ext = _config.OutputExtension ?? DefaultExtension(_config.WriteConfig.Format);
         if (!ext.StartsWith('.')) ext = "." + ext;
 
         string name;
@@ -273,18 +240,18 @@ public sealed class Converter
         return Path.Combine(_config.OutputPath, name);
     }
 
-    private static string DefaultExtension(OutputFormat format) => format switch
+    private static string DefaultExtension(WriteFormat format) => format switch
     {
-        OutputFormat.Mzml => ".mzML",
-        OutputFormat.MzXml => ".mzXML",
-        OutputFormat.Mz5 => ".mz5",
-        OutputFormat.MzMLb => ".mzMLb",
-        OutputFormat.Mgf => ".mgf",
-        OutputFormat.Text => ".txt",
-        OutputFormat.Ms1 => ".ms1",
-        OutputFormat.Cms1 => ".cms1",
-        OutputFormat.Ms2 => ".ms2",
-        OutputFormat.Cms2 => ".cms2",
+        WriteFormat.Mzml => ".mzML",
+        WriteFormat.MzXml => ".mzXML",
+        WriteFormat.Mz5 => ".mz5",
+        WriteFormat.MzMLb => ".mzMLb",
+        WriteFormat.Mgf => ".mgf",
+        WriteFormat.Text => ".txt",
+        WriteFormat.Ms1 => ".ms1",
+        WriteFormat.Cms1 => ".cms1",
+        WriteFormat.Ms2 => ".ms2",
+        WriteFormat.Cms2 => ".cms2",
         _ => ".out",
     };
 

@@ -101,7 +101,8 @@ public class ConverterTests
         string input = WriteSmallMzmlInput();
         string outDir = Path.Combine(_tempDir, "out");
 
-        var cfg = new MsConvertConfig { OutputPath = outDir, Format = OutputFormat.Mgf };
+        var cfg = new MsConvertConfig { OutputPath = outDir };
+        cfg.WriteConfig.Format = WriteFormat.Mgf;
         cfg.InputFiles.Add(input);
 
         new Converter(cfg).Run();

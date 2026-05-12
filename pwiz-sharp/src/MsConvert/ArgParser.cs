@@ -1,5 +1,6 @@
 using System.Globalization;
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Encoding;
 
 namespace Pwiz.Tools.MsConvert;
@@ -58,42 +59,42 @@ internal static class ArgParser
                 // -------- output format --------
                 case "--mzML":
                 case "--mzml":
-                    config.Format = OutputFormat.Mzml;
+                    config.WriteConfig.Format = WriteFormat.Mzml;
                     break;
                 case "--mzXML":
-                    config.Format = OutputFormat.MzXml;
+                    config.WriteConfig.Format = WriteFormat.MzXml;
                     break;
                 case "--mz5":
-                    config.Format = OutputFormat.Mz5;
+                    config.WriteConfig.Format = WriteFormat.Mz5;
                     break;
                 case "--mzMLb":
-                    config.Format = OutputFormat.MzMLb;
+                    config.WriteConfig.Format = WriteFormat.MzMLb;
                     break;
                 case "--mgf":
                 case "--MGF":
-                    config.Format = OutputFormat.Mgf;
+                    config.WriteConfig.Format = WriteFormat.Mgf;
                     break;
                 case "--text":
-                    config.Format = OutputFormat.Text;
+                    config.WriteConfig.Format = WriteFormat.Text;
                     break;
                 case "--ms1":
-                    config.Format = OutputFormat.Ms1;
+                    config.WriteConfig.Format = WriteFormat.Ms1;
                     break;
                 case "--cms1":
-                    config.Format = OutputFormat.Cms1;
+                    config.WriteConfig.Format = WriteFormat.Cms1;
                     break;
                 case "--ms2":
-                    config.Format = OutputFormat.Ms2;
+                    config.WriteConfig.Format = WriteFormat.Ms2;
                     break;
                 case "--cms2":
-                    config.Format = OutputFormat.Cms2;
+                    config.WriteConfig.Format = WriteFormat.Cms2;
                     break;
 
                 case "--mzMLbChunkSize":
-                    config.MzMLbChunkSize = ParseInt(RequireNext(args, ref i, a), a);
+                    config.WriteConfig.MzMLbChunkSize = ParseInt(RequireNext(args, ref i, a), a);
                     break;
                 case "--mzMLbCompressionLevel":
-                    config.MzMLbCompressionLevel = ParseInt(RequireNext(args, ref i, a), a);
+                    config.WriteConfig.MzMLbCompressionLevel = ParseInt(RequireNext(args, ref i, a), a);
                     break;
 
                 // -------- filters --------
@@ -109,31 +110,31 @@ internal static class ArgParser
                 case "--32":
                 case "--32-bit":
                 case "--32bit":
-                    config.EncoderConfig.Precision = BinaryPrecision.Bits32;
+                    config.WriteConfig.EncoderConfig.Precision = BinaryPrecision.Bits32;
                     break;
 
                 case "--64":
                 case "--64-bit":
                 case "--64bit":
-                    config.EncoderConfig.Precision = BinaryPrecision.Bits64;
+                    config.WriteConfig.EncoderConfig.Precision = BinaryPrecision.Bits64;
                     break;
 
                 case "--mz32":
-                    config.EncoderConfig.PrecisionOverrides[CVID.MS_m_z_array] = BinaryPrecision.Bits32;
-                    config.EncoderConfig.PrecisionOverrides[CVID.MS_time_array] = BinaryPrecision.Bits32;
+                    config.WriteConfig.EncoderConfig.PrecisionOverrides[CVID.MS_m_z_array] = BinaryPrecision.Bits32;
+                    config.WriteConfig.EncoderConfig.PrecisionOverrides[CVID.MS_time_array] = BinaryPrecision.Bits32;
                     break;
 
                 case "--mz64":
-                    config.EncoderConfig.PrecisionOverrides[CVID.MS_m_z_array] = BinaryPrecision.Bits64;
-                    config.EncoderConfig.PrecisionOverrides[CVID.MS_time_array] = BinaryPrecision.Bits64;
+                    config.WriteConfig.EncoderConfig.PrecisionOverrides[CVID.MS_m_z_array] = BinaryPrecision.Bits64;
+                    config.WriteConfig.EncoderConfig.PrecisionOverrides[CVID.MS_time_array] = BinaryPrecision.Bits64;
                     break;
 
                 case "--inten32":
-                    config.EncoderConfig.PrecisionOverrides[CVID.MS_intensity_array] = BinaryPrecision.Bits32;
+                    config.WriteConfig.EncoderConfig.PrecisionOverrides[CVID.MS_intensity_array] = BinaryPrecision.Bits32;
                     break;
 
                 case "--inten64":
-                    config.EncoderConfig.PrecisionOverrides[CVID.MS_intensity_array] = BinaryPrecision.Bits64;
+                    config.WriteConfig.EncoderConfig.PrecisionOverrides[CVID.MS_intensity_array] = BinaryPrecision.Bits64;
                     break;
 
                 // -------- lossy encoding tweaks (unimplemented, config-only) --------
@@ -159,21 +160,21 @@ internal static class ArgParser
                 // -------- compression --------
                 case "-z":
                 case "--zlib":
-                    config.EncoderConfig.Compression = BinaryCompression.Zlib;
+                    config.WriteConfig.EncoderConfig.Compression = BinaryCompression.Zlib;
                     break;
 
                 // pwiz C++ numpress flags set per-array overrides; --numpressAll combines Linear+Slof.
                 case "--numpressLinear":
                     SetNumpress(config, BinaryNumpress.Linear, CVID.MS_m_z_array, CVID.MS_time_array);
                     // Optional tolerance value attached to the switch.
-                    if (PeekNumeric(args, i + 1, out double linTol)) { config.EncoderConfig.NumpressLinearErrorTolerance = linTol; i++; }
+                    if (PeekNumeric(args, i + 1, out double linTol)) { config.WriteConfig.EncoderConfig.NumpressLinearErrorTolerance = linTol; i++; }
                     break;
 
                 case "--numpressLinearAbsTol":
                     // Absolute tolerance is an alternative way to specify linear numpress precision.
                     // We stash it as the linear tolerance; the encoder fallback still compares relatively.
                     // This mirrors pwiz's msconvert flag which is really an input to optimalLinearFixedPointMass.
-                    config.EncoderConfig.NumpressLinearErrorTolerance = ParseDouble(RequireNext(args, ref i, a), a);
+                    config.WriteConfig.EncoderConfig.NumpressLinearErrorTolerance = ParseDouble(RequireNext(args, ref i, a), a);
                     break;
 
                 case "--numpressPic":
@@ -182,7 +183,7 @@ internal static class ArgParser
 
                 case "--numpressSlof":
                     SetNumpress(config, BinaryNumpress.Slof, CVID.MS_intensity_array);
-                    if (PeekNumeric(args, i + 1, out double slofTol)) { config.EncoderConfig.NumpressSlofErrorTolerance = slofTol; i++; }
+                    if (PeekNumeric(args, i + 1, out double slofTol)) { config.WriteConfig.EncoderConfig.NumpressSlofErrorTolerance = slofTol; i++; }
                     break;
 
                 case "-n":
@@ -193,12 +194,12 @@ internal static class ArgParser
 
                 // -------- output layout --------
                 case "--noindex":
-                    config.NoIndex = true;
+                    config.WriteConfig.Indexed = false;
                     break;
 
                 case "-g":
                 case "--gzip":
-                    config.Gzip = true;
+                    config.WriteConfig.Gzip = true;
                     break;
 
                 case "-i":
@@ -280,11 +281,11 @@ internal static class ArgParser
     {
         foreach (var type in arrayTypes)
         {
-            config.EncoderConfig.NumpressOverrides[type] = kind;
+            config.WriteConfig.EncoderConfig.NumpressOverrides[type] = kind;
             // pwiz C++ stacks numpress with zlib by default (the combined "followed_by_zlib" CV term)
             // and marks numpress arrays as 32-bit precision semantically.
-            config.EncoderConfig.CompressionOverrides[type] = BinaryCompression.Zlib;
-            config.EncoderConfig.PrecisionOverrides[type] = BinaryPrecision.Bits32;
+            config.WriteConfig.EncoderConfig.CompressionOverrides[type] = BinaryCompression.Zlib;
+            config.WriteConfig.EncoderConfig.PrecisionOverrides[type] = BinaryPrecision.Bits32;
         }
     }
 
@@ -333,11 +334,11 @@ internal static class ArgParser
         if (src.OutputPath != ".") dest.OutputPath = src.OutputPath;
         if (src.OutFile is not null) dest.OutFile = src.OutFile;
         if (src.OutputExtension is not null) dest.OutputExtension = src.OutputExtension;
-        if (src.Format != OutputFormat.Mzml) dest.Format = src.Format;
+        if (src.WriteConfig.Format != WriteFormat.Mzml) dest.WriteConfig.Format = src.WriteConfig.Format;
 
         // Binary encoding — the nested Parse recreated a fresh BinaryEncoderConfig, so we only
         // copy non-default values over.
-        var s = src.EncoderConfig; var d = dest.EncoderConfig;
+        var s = src.WriteConfig.EncoderConfig; var d = dest.WriteConfig.EncoderConfig;
         if (s.Precision != BinaryPrecision.Bits64) d.Precision = s.Precision;
         if (s.Compression != BinaryCompression.None) d.Compression = s.Compression;
         if (s.Numpress != BinaryNumpress.None) d.Numpress = s.Numpress;
@@ -345,9 +346,10 @@ internal static class ArgParser
         foreach (var kv in s.CompressionOverrides) d.CompressionOverrides[kv.Key] = kv.Value;
         foreach (var kv in s.NumpressOverrides) d.NumpressOverrides[kv.Key] = kv.Value;
 
-        // Boolean toggles copy through directly.
-        dest.Gzip |= src.Gzip;
-        dest.NoIndex |= src.NoIndex;
+        // Boolean toggles copy through directly. Indexed defaults to true, so "indexed got
+        // explicitly turned off in the config file" means src.WriteConfig.Indexed == false.
+        dest.WriteConfig.Gzip |= src.WriteConfig.Gzip;
+        if (!src.WriteConfig.Indexed) dest.WriteConfig.Indexed = false;
         dest.Merge |= src.Merge;
         dest.SimAsSpectra |= src.SimAsSpectra;
         dest.SrmAsSpectra |= src.SrmAsSpectra;

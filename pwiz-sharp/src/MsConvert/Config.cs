@@ -1,42 +1,22 @@
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Encoding;
 
 namespace Pwiz.Tools.MsConvert;
-
-/// <summary>Output format. Tracks every <c>--format</c> switch accepted by pwiz C++ msconvert;
-/// formats flagged "NotImplemented" throw when selected until a writer lands.</summary>
-public enum OutputFormat
-{
-    /// <summary>mzML 1.1 (default).</summary>
-    Mzml,
-    /// <summary>Mascot Generic Format — MS/MS peak lists only.</summary>
-    Mgf,
-    /// <summary>mzXML 3.2 — flat-attribute predecessor to mzML.</summary>
-    MzXml,
-    /// <summary>mz5 HDF5 format (unimplemented).</summary>
-    Mz5,
-    /// <summary>mzMLb HDF5 format (unimplemented).</summary>
-    MzMLb,
-    /// <summary>pwiz internal text format (unimplemented).</summary>
-    Text,
-    /// <summary>Legacy MS1 ASCII format (unimplemented).</summary>
-    Ms1,
-    /// <summary>Legacy CMS1 binary format (unimplemented).</summary>
-    Cms1,
-    /// <summary>Legacy MS2 ASCII format (unimplemented).</summary>
-    Ms2,
-    /// <summary>Legacy CMS2 binary format (unimplemented).</summary>
-    Cms2,
-}
 
 /// <summary>
 /// Parsed command-line options for msconvert-sharp. The field set mirrors pwiz C++
 /// <c>msconvert.exe --help</c> output so the CLIs are drop-in compatible.
 /// </summary>
 /// <remarks>
-/// Not every option is wired to working behavior yet — switches for unimplemented output formats
-/// or encoding modes throw a clear error at convert time. The remaining options that record
-/// intent but are no-ops in our simpler pipeline are documented on each property.
+/// <para>Writer-side settings (format, encoder config, indexed/gzip, mzMLb knobs) live on
+/// <see cref="WriteConfig"/> — any tool calling pwiz-sharp's writers uses that same type.
+/// This class adds the msconvert-CLI-specific surface: input file collection, merge mode,
+/// per-source-file post-processing, contact info, filter pipelines, etc.</para>
+/// <para>Not every option is wired to working behavior yet — switches for unimplemented
+/// output formats or encoding modes throw a clear error at convert time. The remaining
+/// options that record intent but are no-ops in our simpler pipeline are documented on
+/// each property.</para>
 /// </remarks>
 public sealed class MsConvertConfig
 {
@@ -49,17 +29,26 @@ public sealed class MsConvertConfig
     /// <summary>Explicit output filename (overrides the derived name).</summary>
     public string? OutFile { get; set; }
 
-    /// <summary>Output extension override (derived from <see cref="Format"/> when null).</summary>
+    /// <summary>Output extension override (derived from <see cref="WriteConfig.Format"/> when null).</summary>
     public string? OutputExtension { get; set; }
 
-    /// <summary>Output format selection.</summary>
-    public OutputFormat Format { get; set; } = OutputFormat.Mzml;
-
-    /// <summary>mzMLb dataset chunk size in bytes (only meaningful for mzMLb).</summary>
-    public int MzMLbChunkSize { get; set; } = 1_048_576;
-
-    /// <summary>mzMLb GZIP compression level 0..9.</summary>
-    public int MzMLbCompressionLevel { get; set; } = 4;
+    /// <summary>
+    /// Writer-side config (format, encoder, indexed/gzip, mzMLb knobs).
+    /// Defaults match pwiz C++ msconvert: 64-bit m/z + retention time, 32-bit intensity,
+    /// zlib compression. (See <c>msconvert.cpp</c>: <c>bool zlib = true</c> at the option
+    /// declaration plus the unconditional 32-bit intensity override around the precision-flag block.)
+    /// </summary>
+    public WriteConfig WriteConfig { get; } = new()
+    {
+        EncoderConfig = new BinaryEncoderConfig
+        {
+            Compression = BinaryCompression.Zlib,
+            PrecisionOverrides =
+            {
+                [CVID.MS_intensity_array] = BinaryPrecision.Bits32,
+            },
+        },
+    };
 
     /// <summary>Spectrum-list filter specs applied left-to-right.</summary>
     public List<string> Filters { get; } = new();
@@ -85,30 +74,8 @@ public sealed class MsConvertConfig
     /// <summary>When true, apply linear prediction to intensity arrays. Unimplemented.</summary>
     public bool IntenLinear { get; set; }
 
-    /// <summary>When true, skip writing an indexedmzML wrapper. No-op because our writer doesn't produce one.</summary>
-    public bool NoIndex { get; set; }
-
     /// <summary>Optional path to a contact-info file to attach to the output's FileDescription.</summary>
     public string? ContactInfo { get; set; }
-
-    /// <summary>
-    /// Binary-array encoder config (precision, compression, numpress). Defaults match the
-    /// pwiz C++ msconvert command-line defaults: 64-bit m/z + retention time, 32-bit
-    /// intensity, zlib compression. (See <c>msconvert.cpp</c>: <c>bool zlib = true</c> at
-    /// the option declaration plus the unconditional 32-bit intensity override around the
-    /// precision-flag block.)
-    /// </summary>
-    public BinaryEncoderConfig EncoderConfig { get; } = new()
-    {
-        Compression = BinaryCompression.Zlib,
-        PrecisionOverrides =
-        {
-            [CVID.MS_intensity_array] = BinaryPrecision.Bits32,
-        },
-    };
-
-    /// <summary>When true, gzip the final output file (appends .gz to the filename).</summary>
-    public bool Gzip { get; set; }
 
     /// <summary>When true, combine every input into a single output file.</summary>
     public bool Merge { get; set; }
