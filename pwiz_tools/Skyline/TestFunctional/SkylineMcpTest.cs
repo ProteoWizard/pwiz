@@ -197,9 +197,14 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             string unsavedPath = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path");
             Assert.AreEqual("(unsaved)", unsavedPath);
 
-            // Import FASTA via MCP - the MCP server drives the document change
+            // Import FASTA via MCP - the MCP server drives the document change.
+            // The tool now takes a file path and routes through RunCommand
+            // (--import-fasta), so the FASTA text never round-trips through the
+            // LLM as tokens.
+            string fastaPath = TestContext.GetTestResultsPath(@"mcp_test.fasta");
+            File.WriteAllText(fastaPath, TEST_FASTA);
             McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_import_fasta",
-                new JObject { ["textFasta"] = TEST_FASTA });
+                new JObject { ["fastaPath"] = fastaPath });
 
             // Verify from inside Skyline that the import worked
             var doc = SkylineWindow.Document;

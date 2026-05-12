@@ -373,27 +373,19 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_insert_small_molecule_transition_list"),
-     Description("Insert a small molecule transition list into the Skyline document. The input is CSV text with column headers in the first row. Skyline determines column meaning from headers. Common headers: MoleculeGroup, PrecursorName, ProductName, PrecursorFormula, ProductFormula, PrecursorAdduct, ProductAdduct, PrecursorMz, ProductMz, PrecursorCharge, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note. This is the same format as Edit > Insert > Transition List in the Skyline UI. If Skyline cannot interpret the headers, it returns an error - adjust header names and retry.")]
+     Description("Insert a small molecule transition list into the Skyline document from a CSV file. The first row contains column headers; Skyline determines column meaning from headers. Common headers: MoleculeGroup, PrecursorName, ProductName, PrecursorFormula, ProductFormula, PrecursorAdduct, ProductAdduct, PrecursorMz, ProductMz, PrecursorCharge, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note. Same format as Edit > Insert > Transition List in the Skyline UI. Internally invokes 'SkylineCmd --import-transition-list=path' so any header or row parse errors are returned from the Skyline Immediate Window as part of this tool's response.")]
     public static string InsertSmallMoleculeTransitionList(
-        [Description("CSV text with column headers in the first row and data rows. Common headers: MoleculeGroup, PrecursorName, PrecursorFormula, PrecursorAdduct, PrecursorMz, PrecursorCharge, ProductFormula, ProductAdduct, ProductMz, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note.")] string textCsv)
+        [Description("Path to a CSV file with column headers in the first row and data rows. Common headers: MoleculeGroup, PrecursorName, PrecursorFormula, PrecursorAdduct, PrecursorMz, PrecursorCharge, ProductFormula, ProductAdduct, ProductMz, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note.")] string csvPath)
     {
-        return Invoke(connection =>
-        {
-            connection.InsertSmallMoleculeTransitionList(textCsv);
-            return "Small molecule transition list inserted.";
-        });
+        return Invoke(connection => connection.RunCommand(new[] { "--import-transition-list=" + csvPath }));
     }
 
     [McpServerTool(Name = "skyline_import_fasta"),
-     Description("Import protein sequences in FASTA format into the Skyline document. Skyline will digest proteins using current enzyme settings and add peptides and transitions based on current transition settings. Each protein starts with a '>' header line followed by sequence lines.")]
+     Description("Import protein sequences in FASTA format into the Skyline document from a file. Skyline will digest proteins using current enzyme settings and add peptides and transitions based on current transition settings. Each protein in the file starts with a '>' header line followed by sequence lines. Internally invokes 'SkylineCmd --import-fasta=path' so any FASTA parse errors are returned from the Skyline Immediate Window as part of this tool's response.")]
     public static string ImportFasta(
-        [Description("Protein sequences in standard FASTA format. Each protein starts with a '>' header line (e.g., '>sp|P01308|INS_HUMAN Insulin') followed by one or more sequence lines.")] string textFasta)
+        [Description("Path to a FASTA file. Each protein in the file starts with a '>' header line (e.g., '>sp|P01308|INS_HUMAN Insulin') followed by one or more sequence lines.")] string fastaPath)
     {
-        return Invoke(connection =>
-        {
-            connection.ImportFasta(textFasta);
-            return "FASTA imported.";
-        });
+        return Invoke(connection => connection.RunCommand(new[] { "--import-fasta=" + fastaPath }));
     }
 
     [McpServerTool(Name = "skyline_import_properties"),
