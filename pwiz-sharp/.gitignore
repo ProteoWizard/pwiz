@@ -11,3 +11,4 @@ Directory.Build.user.props
 # Vendor DLLs extracted from 7z archives at build time (see Bruker.csproj / Thermo.csproj).
 vendor-assemblies/
 installer/build/
+installer/Files.wxs
