@@ -24,7 +24,13 @@ public sealed class ShimadzuRawData : IDisposable
     internal const double PrecursorMzMultiplier = 1.0 / 1e9;
     internal const double TimeMultiplier = 0.001;
 
-    private readonly ShimadzuIO.Data.DataObject _dataObject;
+    /// <summary>How many times to retry the LCD open + SDK init when the QTFL backend looks
+    /// like it failed to wire up. The Shimadzu Qtfl backend's init has a documented .NET 8
+    /// race (~65% pass rate on TC for the 10nmol fixture); a fresh DataObject usually clears
+    /// it. Five attempts gives us &lt;0.5% chance of all attempts failing if each is independent.</summary>
+    private const int QtflInitRetryAttempts = 5;
+
+    private ShimadzuIO.Data.DataObject _dataObject = null!; // assigned during init
     private readonly Dictionary<(short Event, short Channel), ShimadzuIO.Generic.Param.MS.MassEventInfo> _eventInfo
         = new();
     private readonly List<List<short>> _eventNumbersBySegment = new();
@@ -82,10 +88,69 @@ public sealed class ShimadzuRawData : IDisposable
             throw new FileNotFoundException("Shimadzu .lcd file not found", lcdPath);
         Path = lcdPath;
 
+        // The SDK's QtflRawDataMain backend has a flaky lazy-init race on .NET 8 — on the TC
+        // build agent the 10nmol Q-TOF fixture has a 65% pass rate; warmup + chromMng calls
+        // throw RuntimeBinderException because an inner dynamic-dispatched field is still null
+        // at first access. A fresh DataObject usually clears it. Retry on the documented
+        // signature (init produced no scans but ScanCount-derived signals indicate the SDK
+        // failed silently); preserve final-attempt state so the caller sees the underlying
+        // error when retry doesn't help.
+        Exception? lastException = null;
+        for (int attempt = 1; attempt <= QtflInitRetryAttempts; attempt++)
+        {
+            ResetInitState();
+            try
+            {
+                bool qtflBackendLooksBroken = TryInitializeFromLcd(lcdPath, srmAsSpectra);
+                if (!qtflBackendLooksBroken) return;
+                if (attempt == QtflInitRetryAttempts) return; // give up, expose whatever we got
+                CloseDataObjectQuietly();
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+                CloseDataObjectQuietly();
+                if (attempt == QtflInitRetryAttempts) throw;
+            }
+        }
+        // Unreachable in practice — last attempt either returns or throws above.
+        if (lastException is not null) throw lastException;
+    }
+
+    /// <summary>Resets per-attempt state. The collection fields are <c>readonly</c>, so we
+    /// clear in place rather than re-allocating.</summary>
+    private void ResetInitState()
+    {
+        _eventInfo.Clear();
+        _eventNumbersBySegment.Clear();
+        _precursorInfoByScan.Clear();
+        _msLevels.Clear();
+        _transitions.Clear();
+        _transitionsLoaded = false;
+        SegmentCount = 0;
+        ScanCount = 0;
+        SystemName = string.Empty;
+        AnalysisDateRaw = default;
+    }
+
+    private void CloseDataObjectQuietly()
+    {
+        try { _dataObject?.IO.Close(); } catch { /* best-effort */ }
+    }
+
+    /// <summary>One attempt at opening + initializing the LCD. Returns <c>true</c> if the
+    /// SDK's QTFL backend appears to have failed to wire up (warmup + chromMng walk both
+    /// threw a binder-style exception AND no scans were discovered) — the caller retries
+    /// with a fresh <see cref="ShimadzuIO.Data.DataObject"/>. Returns <c>false</c> on success
+    /// or on a non-retryable shape (e.g. a genuinely empty file).</summary>
+    private bool TryInitializeFromLcd(string lcdPath, bool srmAsSpectra)
+    {
         _dataObject = new ShimadzuIO.Data.DataObject();
         var loadResult = _dataObject.IO.LoadData(lcdPath);
         if (ShimadzuIO.Generic.Tool.Failed(loadResult))
             throw new InvalidDataException($"Shimadzu LoadData failed: {loadResult}");
+
+        bool qtflBackendThrew = false;
 
         try
         {
@@ -107,12 +172,6 @@ public sealed class ShimadzuRawData : IDisposable
             }
             catch { AnalysisDateRaw = default; }
 
-            // [DIAG] Temporary tracing to surface which SDK call is empty/null on TeamCity for
-            // the 10nmol_Negative_MS_ID_ON_055 fixture. Remove once root-caused. Output goes to
-            // stderr (Console.Error) so the test runner captures it without polluting stdout.
-            void Diag(string msg) => Console.Error.WriteLine($"[ShimadzuRawData] {System.IO.Path.GetFileName(lcdPath)}: {msg}");
-            Diag("ctor start");
-
             // Build event-info map (event, channel) -> MassEventInfo. cpp ShimadzuReader.cpp:227-241.
             try
             {
@@ -126,9 +185,8 @@ public sealed class ShimadzuRawData : IDisposable
                         _eventInfo[key] = evt;
                     }
                 }
-                Diag($"GetEventInfo ok, list={list?.Count ?? -1}, map={_eventInfo.Count}");
             }
-            catch (Exception ex) { Diag($"GetEventInfo threw {ex.GetType().Name}: {ex.Message}"); }
+            catch { /* tolerate — fallback below derives topology from chromMng */ }
 
             // Warm the SDK before any chromatogram-side calls. cpp does the same. The SDK's
             // Q-TOF backend (Shimadzu.LabSolutions.IO.MassRawData.Qtfl.QtflRawDataMain) needs
@@ -138,18 +196,18 @@ public sealed class ShimadzuRawData : IDisposable
             {
                 var dummySpectrum = new ShimadzuIO.Generic.MassSpectrumObject();
                 _dataObject.MS.Spectrum.GetMSSpectrumByScan(out dummySpectrum, 1u, true);
-                Diag("warmup GetMSSpectrumByScan ok");
             }
-            catch (Exception ex) { Diag($"warmup GetMSSpectrumByScan threw {ex.GetType().Name}: {ex.Message}"); }
+            catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { qtflBackendThrew = true; }
+            catch (NullReferenceException) { qtflBackendThrew = true; }
+            catch { /* priming is best-effort */ }
 
             int endTime = 0;
             try
             {
                 int startTime;
                 _dataObject.MS.Parameters.GetAnalysisTime(out startTime, out endTime, 0);
-                Diag($"GetAnalysisTime ok, startTime={startTime}, endTime={endTime}");
             }
-            catch (Exception ex) { Diag($"GetAnalysisTime threw {ex.GetType().Name}: {ex.Message}"); }
+            catch { /* leave endTime=0; downstream tolerates */ }
 
             // Build segment / event topology directly from MS.Chromatogram, matching cpp's
             // ShimadzuReader.cpp:255-264. The earlier port derived this from the _eventInfo
@@ -163,7 +221,6 @@ public sealed class ShimadzuRawData : IDisposable
             {
                 var chromMng = _dataObject.MS.Chromatogram;
                 discoveredSegmentCount = (short)chromMng.SegmentCount;
-                Diag($"chromMng.SegmentCount = {discoveredSegmentCount}");
                 for (short s = 1; s <= discoveredSegmentCount; s++)
                 {
                     short evCount = (short)chromMng.EventCount(s);
@@ -171,10 +228,11 @@ public sealed class ShimadzuRawData : IDisposable
                     for (short e = 1; e <= evCount; e++)
                         eventList.Add((short)chromMng.GetEventNo(s, e));
                     segmentEventLists.Add(eventList);
-                    Diag($"  segment {s}: EventCount={evCount}, events=[{string.Join(",", eventList)}]");
                 }
             }
-            catch (Exception ex) { Diag($"chromMng walk threw {ex.GetType().Name}: {ex.Message}"); }
+            catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { qtflBackendThrew = true; }
+            catch (NullReferenceException) { qtflBackendThrew = true; }
+            catch { /* fall through to the _eventInfo-derived fallback below */ }
 
             // If the Chromatogram path failed but we have an _eventInfo map, fall back to
             // deriving segments from it. (Preserves the previous behavior for whatever SDK
@@ -262,7 +320,6 @@ public sealed class ShimadzuRawData : IDisposable
                 lastScanNumber = SumScanCountsFromTics();
 
             ScanCount = (int)lastScanNumber;
-            Diag($"final SegmentCount={SegmentCount}, ScanCount={ScanCount}, retTimeToScanCalledAndFailed={retTimeToScanCalledAndFailed}, msLevels=[{string.Join(",", _msLevels)}]");
 
             // Precursor map: cpp ShimadzuReader.cpp:294-313 builds precursor info from
             // GetPrecursorList's SurveyList[0].DependentList, which the SDK populates for
@@ -298,6 +355,11 @@ public sealed class ShimadzuRawData : IDisposable
             try { _dataObject.IO.Close(); } catch { /* best-effort */ }
             throw;
         }
+
+        // Retry signal: the QTFL backend threw a binder-style exception during warmup or the
+        // chromMng walk, AND we ended up with no usable scans. A genuinely empty file (no
+        // events, no scans, SDK calls returned cleanly) is not retryable.
+        return qtflBackendThrew && ScanCount == 0;
     }
 
     /// <summary>Wraps <c>RetTimeToScan</c> per event with explicit catches around the SDK's

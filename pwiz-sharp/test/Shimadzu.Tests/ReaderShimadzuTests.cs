@@ -55,6 +55,9 @@ public class ReaderShimadzuTests
     {
         // Negative-mode LCMS QqTOF. cpp Reader_Shimadzu_Test.cpp:97-100 runs default + peakPicking.
         // References: 10nmol_Negative_MS_ID_ON_055.mzML, ...-centroid.mzML.
+        // Flaky on TC at ~65% pass rate: the SDK's QtflRawDataMain backend init is racy under
+        // .NET 8; ShimadzuRawData retries on the documented signature. The test relies on that
+        // retry; if it surfaces this fixture's failure mode here, regression in retry handling.
         var ctx = SetUp("10nmol_Negative_MS_ID_ON_055.lcd");
         if (ctx is null) return;
 
