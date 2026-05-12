@@ -30,30 +30,42 @@ $pwizRoot = (Resolve-Path "$PSScriptRoot/../..").Path
 $outPath  = Join-Path $pwizRoot "pwiz-sharp/src/Vendor/Common/VendorSdkPins.generated.cs"
 $repo     = "ProteoWizard/pwiz"
 
-# (Name, RepoRelativeArchivePath, AssemblyPrefixes...)
+# (Name, RepoRelativeArchivePath, AssemblyPrefixes...) — the source of truth for
+# vendor SDK pinning. Consumed by:
+#   - VendorSdkPins.generated.cs (this script's output) — runtime resolver
+#   - build.ps1's staging filter (dot-sourced) — strips vendor DLLs from the MSI
 # Most archives live under pwiz_aux/msrc/utility/. Thermo on the pwiz-sharp side has
 # its own newer .NET-8-compatible copy under pwiz-sharp/vendor-archives/.
-$vendors = @(
+$Script:Vendors = @(
     @{ Name = 'Thermo';   Path = 'pwiz-sharp/vendor-archives/vendor_api_Thermo.7z';
        Prefixes = @('ThermoFisher.', 'OpenMcdf') }
     @{ Name = 'Bruker';   Path = 'pwiz_aux/msrc/utility/vendor_api_Bruker.7z';
        Prefixes = @('Bruker.', 'BaseDataAccess', 'BDal.', 'CompassXtractMS',
                     'EDAL', 'Interop.EDAL', 'ProtocolBuffers', 'BaseError',
-                    'BaseCommon', 'Compass') }
+                    'BaseCommon', 'Compass', 'BaseTof', 'timsdata',
+                    'baf2sql', 'mcd_lib') }
     @{ Name = 'Waters';   Path = 'pwiz_aux/msrc/utility/vendor_api_Waters.7z';
        Prefixes = @('MassLynxRaw', 'cdt', 'MassLynx') }
     @{ Name = 'Agilent';  Path = 'pwiz_aux/msrc/utility/vendor_api_Agilent.7z';
-       Prefixes = @('Agilent.', 'BaseDataAccess', 'MIDAC.', 'Mhdac.', 'MassHunter.') }
+       Prefixes = @('Agilent.', 'BaseDataAccess', 'MIDAC.', 'Mhdac.',
+                    'MassHunter.', 'MassSpecDataReader', 'agtsampleinforw') }
     @{ Name = 'ABI';      Path = 'pwiz_aux/msrc/utility/vendor_api_ABI.7z';
-       Prefixes = @('Clearcore2.', 'Sciex.', 'SCIEX.', 'SciexToolKit', 'Interop.') }
+       Prefixes = @('Clearcore2.', 'Sciex.', 'SCIEX.', 'SciexToolKit', 'Interop.',
+                    'OFX.Core.', 'ZipUtility', 'protobuf-net') }
     @{ Name = 'Shimadzu'; Path = 'pwiz_aux/msrc/utility/vendor_api_Shimadzu.7z';
        Prefixes = @('Shimadzu.', 'QTFL', 'GCMS', 'GCMSProto', 'QTFLProto',
-                    'DataReader', 'Google.Protobuf', 'IDQuantLSS', 'PeakIDEA',
+                    'DataReader', 'IDQuantLSS', 'PeakIDEA',
                     'PeakItgLSS', 'MassLibrarySearch', 'MassCalcWrap',
-                    'MassStandardSpectrum', 'DualProbeInterface') }
+                    'MassStandardSpectrum', 'DualProbeInterface',
+                    'IoModule', 'LSSMng', 'CompressedTLM', 'CRHAKEI',
+                    'CPCNLSS', 'CLFIO', 'LibDB', 'MSMSDB') }
     @{ Name = 'Mobilion'; Path = 'pwiz_aux/msrc/utility/vendor_api_Mobilion.7z';
-       Prefixes = @('Mobilion.', 'MBISDK', 'MobilionShim') }
+       Prefixes = @('Mobilion.', 'MBISDK', 'MBI_SDK', 'MobilionShim') }
 )
+
+# When dot-sourced (`. Refresh-VendorPins.ps1`), exit before doing any work — caller
+# only wants the $Vendors table.
+if ($MyInvocation.InvocationName -eq '.') { return }
 
 function Resolve-PinningCommit([string]$RelPath) {
     Push-Location $pwizRoot
@@ -101,7 +113,7 @@ $lines = @(
     "    {"
 )
 
-foreach ($v in $vendors) {
+foreach ($v in $Vendors) {
     $abs = Join-Path $pwizRoot $v.Path
     if (-not (Test-Path $abs)) {
         Write-Warning "$($v.Path) not found, skipping"
