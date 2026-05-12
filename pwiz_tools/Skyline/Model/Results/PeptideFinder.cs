@@ -66,8 +66,10 @@ namespace pwiz.Skyline.Model.Results
                 i = ~i;
 
             // The same peptide may appear at the same Mz under multiple transition
-            // groups; dedupe by reference so callers see each peptide once.
-            var seen = new HashSet<PeptideDocNode>();
+            // groups; dedupe by Id.GlobalIndex (the documented reference-equality
+            // key on Identity) so callers see each peptide once. PeptideDocNode's
+            // own Equals is structural, which is the wrong primitive here.
+            var seen = new HashSet<int>();
 
             // Walk outward from the landing index, stopping in each direction as
             // soon as the candidate falls outside tolerance or crosses polarity
@@ -78,7 +80,7 @@ namespace pwiz.Skyline.Model.Results
                 if (cand.PrecursorMz.IsNegative != precursorMz.IsNegative ||
                     Math.Abs(cand.PrecursorMz - precursorMz) > _mzMatchTolerance)
                     break;
-                if (seen.Add(cand.NodePeptide))
+                if (seen.Add(cand.NodePeptide.Id.GlobalIndex))
                     yield return cand.NodePeptide;
             }
             for (int j = i; j < _precursorMzPeptideList.Count; j++)
@@ -87,7 +89,7 @@ namespace pwiz.Skyline.Model.Results
                 if (cand.PrecursorMz.IsNegative != precursorMz.IsNegative ||
                     Math.Abs(cand.PrecursorMz - precursorMz) > _mzMatchTolerance)
                     break;
-                if (seen.Add(cand.NodePeptide))
+                if (seen.Add(cand.NodePeptide.Id.GlobalIndex))
                     yield return cand.NodePeptide;
             }
         }

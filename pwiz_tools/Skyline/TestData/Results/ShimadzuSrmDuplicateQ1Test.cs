@@ -94,7 +94,11 @@ namespace pwiz.SkylineTestData.Results
                 foreach (var collisionGroup in collisionGroups)
                 {
                     var members = collisionGroup.ToList();
-                    bool anyHasData = members.Any(p => p.NodeGroup.HasResults
+                    // HasResults only checks Results != null, not Count, so guard
+                    // the index access explicitly before reading Results[0].
+                    bool HasFirstResult(TransitionGroupDocNode tg) =>
+                        tg.HasResults && tg.Results.Count > 0;
+                    bool anyHasData = members.Any(p => HasFirstResult(p.NodeGroup)
                                                        && !p.NodeGroup.Results[0].IsEmpty);
                     if (!anyHasData)
                         continue; // No data for this Q1 in the file; not a collapse.
@@ -105,8 +109,8 @@ namespace pwiz.SkylineTestData.Results
                     foreach (var pair in members)
                     {
                         var name = pair.NodePep.ModifiedTarget.ToString();
-                        if (!pair.NodeGroup.HasResults)
-                            failures.Add(string.Format("Q1 {0} ({1}): no Results object",
+                        if (!HasFirstResult(pair.NodeGroup))
+                            failures.Add(string.Format("Q1 {0} ({1}): no Results[0]",
                                 pair.NodeGroup.PrecursorMz, name));
                         else if (pair.NodeGroup.Results[0].IsEmpty)
                             failures.Add(string.Format("Q1 {0} ({1}): empty Results[0]",
@@ -132,7 +136,7 @@ namespace pwiz.SkylineTestData.Results
                         foreach (var entry in sharedQ3.Value)
                         {
                             var nodeTran = entry.Value;
-                            if (!nodeTran.HasResults || nodeTran.Results[0].IsEmpty)
+                            if (!nodeTran.HasResults || nodeTran.Results.Count == 0 || nodeTran.Results[0].IsEmpty)
                             {
                                 failures.Add(string.Format(
                                     "Q1 {0} Q3 {1} ({2}): shared transition has no chromatogram after import",

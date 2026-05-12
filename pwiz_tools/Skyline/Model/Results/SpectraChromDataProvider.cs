@@ -268,12 +268,15 @@ namespace pwiz.Skyline.Model.Results
             var chromMapGlobal = new ChromDataCollectorSet(ChromSource.unknown, TimeSharing.single, _allChromData, _blockWriter);
             var chromMaps = new[] {chromMap, chromMapSim, chromMapMs1Pos, chromMapMs1Neg, chromMapGlobal};
 
-            // Key includes the matched peptide so that compounds sharing a Q1
-            // m/z each get their own ChromDataCollector. Collapsing same-Q1
-            // peptides onto a single filterIndex routes one of them to a
-            // collector tagged with the other's ChromatogramGroupId, and the
-            // losing peptide ends up with an empty ChromInfoList after import.
-            var dictKeyToIndex = new Dictionary<Tuple<SignedMz, PeptideDocNode>, int>(); // For SRM processing
+            // Key includes the matched peptide's GlobalIndex so that compounds
+            // sharing a Q1 m/z each get their own ChromDataCollector. Keying by
+            // PeptideDocNode directly would dispatch to its structural Equals,
+            // which is the wrong primitive for reference-style identity; -1
+            // serves as the no-match sentinel (GlobalIndex is always >= 1).
+            // Collapsing same-Q1 peptides onto a single filterIndex routes one
+            // of them to a collector tagged with the other's ChromatogramGroupId,
+            // and the losing peptide ends up with an empty ChromInfoList after import.
+            var dictKeyToIndex = new Dictionary<Tuple<SignedMz, int>, int>(); // For SRM processing
 
             var peptideFinder = _spectra.HasSrmSpectra ? new PeptideFinder(_document) : null;
 
@@ -309,18 +312,9 @@ namespace pwiz.Skyline.Model.Results
 
                     var precursorMz = dataSpectrum.Precursors[0].PrecursorMz ?? SignedMz.ZERO;
 
-                    // Fan out the spectrum to every peptide whose Q1 matches in
-                    // tolerance. If no peptide matches, emit once with null so
-                    // unmatched data still surfaces in the cache.
-                    var peptideMatches = peptideFinder != null
-                        ? peptideFinder.FindPeptides(precursorMz).ToList()
-                        : new List<PeptideDocNode>();
-                    if (peptideMatches.Count == 0)
-                        peptideMatches.Add(null);
-
-                    foreach (var peptideNode in peptideMatches)
+                    void EmitForPeptide(PeptideDocNode peptideNode)
                     {
-                        var key = Tuple.Create(precursorMz, peptideNode);
+                        var key = Tuple.Create(precursorMz, peptideNode?.Id.GlobalIndex ?? -1);
                         int filterIndex;
                         if (!dictKeyToIndex.TryGetValue(key, out filterIndex))
                         {
@@ -338,6 +332,22 @@ namespace pwiz.Skyline.Model.Results
                             dataSpectrum.Intensities,
                             chromMap);
                     }
+
+                    // Fan out the spectrum to every peptide whose Q1 matches in
+                    // tolerance, streaming the matches to avoid allocating a
+                    // list per spectrum. If no peptide matches, emit once with
+                    // null so unmatched data still surfaces in the cache.
+                    var matched = false;
+                    if (peptideFinder != null)
+                    {
+                        foreach (var peptideNode in peptideFinder.FindPeptides(precursorMz))
+                        {
+                            matched = true;
+                            EmitForPeptide(peptideNode);
+                        }
+                    }
+                    if (!matched)
+                        EmitForPeptide(null);
                 }
                 else if (_filter.EnabledMsMs || _filter.EnabledMs)
                 {
