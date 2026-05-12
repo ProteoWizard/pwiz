@@ -1,4 +1,5 @@
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData.Diff;
 using Pwiz.Data.MsData.Encoding;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Mzml;
@@ -225,4 +226,22 @@ public class MzmlRoundTripTests
         Assert.AreEqual(sb.ToString(), digest, "fileChecksum SHA-1");
     }
 
+    [TestMethod]
+    public void RoundTrip_TinyExample_DiffIsEmpty()
+    {
+        // Examples.InitializeTiny is the canonical fixture cpp tests use as a write+read+diff
+        // input (DiffTest / MSDataFileTest / Serializer_mzML_Test all call examples::initializeTiny).
+        // Wire the same workflow here: write to mzML, read back, run MSData diff. Any diff
+        // surfaces a regression in either the example builder or the round-trip.
+        var original = new MSData();
+        Examples.InitializeTiny(original);
+
+        // Default writer config (64-bit, no compression) keeps the binary arrays bit-exact so
+        // any difference is purely structural (CV terms / refs / order).
+        var xml = new MzmlWriter().Write(original);
+        var reparsed = new MzmlReader().Read(xml);
+
+        string diff = MSDataDiff.Describe(original, reparsed);
+        Assert.AreEqual(string.Empty, diff, $"InitializeTiny mzML round-trip should be empty diff. Got:\n{diff}");
+    }
 }
