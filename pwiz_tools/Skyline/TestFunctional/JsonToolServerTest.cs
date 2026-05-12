@@ -1449,6 +1449,22 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
             Assert.IsTrue(File.Exists(combinedPath));
 
+            // --in with .sky.zip: regression check that the MCP path dispatches
+            // through OpenSharedFile (extract first) rather than feeding the
+            // zip's raw bytes to the XML parser.
+            string sharedZipPath = TestFilesDir.GetTestPath(@"doc_ops_shared.sky.zip");
+            server.RunCommand(
+                CommandArgs.ARG_OPEN + newPath,
+                CommandArgs.ARG_SHARE_ZIP + sharedZipPath);
+            Assert.IsTrue(File.Exists(sharedZipPath));
+            int sharedGroups = SkylineWindow.Document.MoleculeGroupCount;
+
+            string sharedOpenResult = server.RunCommand(CommandArgs.ARG_IN + sharedZipPath);
+            AssertEx.Contains(sharedOpenResult, Path.GetFileName(sharedZipPath));
+            Assert.IsTrue(SkylineWindow.DocumentFilePath.EndsWith(SrmDocument.EXT),
+                @"Expected extracted .sky path after opening .sky.zip, got " + SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(sharedGroups, SkylineWindow.Document.MoleculeGroupCount);
+
             // --new to leave a clean state for subsequent tests
             string tempPath = TestFilesDir.GetTestPath(@"doc_ops_temp.sky");
             server.RunCommand(CommandArgs.ARG_NEW + tempPath, CommandArgs.ARG_OVERWRITE);
