@@ -107,6 +107,12 @@ public sealed class ShimadzuRawData : IDisposable
             }
             catch { AnalysisDateRaw = default; }
 
+            // [DIAG] Temporary tracing to surface which SDK call is empty/null on TeamCity for
+            // the 10nmol_Negative_MS_ID_ON_055 fixture. Remove once root-caused. Output goes to
+            // stderr (Console.Error) so the test runner captures it without polluting stdout.
+            void Diag(string msg) => Console.Error.WriteLine($"[ShimadzuRawData] {System.IO.Path.GetFileName(lcdPath)}: {msg}");
+            Diag("ctor start");
+
             // Build event-info map (event, channel) -> MassEventInfo. cpp ShimadzuReader.cpp:227-241.
             try
             {
@@ -120,8 +126,9 @@ public sealed class ShimadzuRawData : IDisposable
                         _eventInfo[key] = evt;
                     }
                 }
+                Diag($"GetEventInfo ok, list={list?.Count ?? -1}, map={_eventInfo.Count}");
             }
-            catch { /* mirrors cpp: tolerate failure */ }
+            catch (Exception ex) { Diag($"GetEventInfo threw {ex.GetType().Name}: {ex.Message}"); }
 
             // Warm the SDK before any chromatogram-side calls. cpp does the same. The SDK's
             // Q-TOF backend (Shimadzu.LabSolutions.IO.MassRawData.Qtfl.QtflRawDataMain) needs
@@ -131,16 +138,18 @@ public sealed class ShimadzuRawData : IDisposable
             {
                 var dummySpectrum = new ShimadzuIO.Generic.MassSpectrumObject();
                 _dataObject.MS.Spectrum.GetMSSpectrumByScan(out dummySpectrum, 1u, true);
+                Diag("warmup GetMSSpectrumByScan ok");
             }
-            catch { /* warming the SDK; cpp does the same */ }
+            catch (Exception ex) { Diag($"warmup GetMSSpectrumByScan threw {ex.GetType().Name}: {ex.Message}"); }
 
             int endTime = 0;
             try
             {
                 int startTime;
                 _dataObject.MS.Parameters.GetAnalysisTime(out startTime, out endTime, 0);
+                Diag($"GetAnalysisTime ok, startTime={startTime}, endTime={endTime}");
             }
-            catch { /* on SDK failure, leave endTime=0; RetTimeToScan will return E_INVALIDARG and we'll fall back */ }
+            catch (Exception ex) { Diag($"GetAnalysisTime threw {ex.GetType().Name}: {ex.Message}"); }
 
             // Build segment / event topology directly from MS.Chromatogram, matching cpp's
             // ShimadzuReader.cpp:255-264. The earlier port derived this from the _eventInfo
@@ -154,6 +163,7 @@ public sealed class ShimadzuRawData : IDisposable
             {
                 var chromMng = _dataObject.MS.Chromatogram;
                 discoveredSegmentCount = (short)chromMng.SegmentCount;
+                Diag($"chromMng.SegmentCount = {discoveredSegmentCount}");
                 for (short s = 1; s <= discoveredSegmentCount; s++)
                 {
                     short evCount = (short)chromMng.EventCount(s);
@@ -161,11 +171,10 @@ public sealed class ShimadzuRawData : IDisposable
                     for (short e = 1; e <= evCount; e++)
                         eventList.Add((short)chromMng.GetEventNo(s, e));
                     segmentEventLists.Add(eventList);
+                    Diag($"  segment {s}: EventCount={evCount}, events=[{string.Join(",", eventList)}]");
                 }
             }
-            catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { /* QTFL backend unusable — fall back below */ }
-            catch (NullReferenceException) { /* same */ }
-            catch (System.Reflection.TargetInvocationException) { /* SDK wraps binding failures */ }
+            catch (Exception ex) { Diag($"chromMng walk threw {ex.GetType().Name}: {ex.Message}"); }
 
             // If the Chromatogram path failed but we have an _eventInfo map, fall back to
             // deriving segments from it. (Preserves the previous behavior for whatever SDK
@@ -253,6 +262,7 @@ public sealed class ShimadzuRawData : IDisposable
                 lastScanNumber = SumScanCountsFromTics();
 
             ScanCount = (int)lastScanNumber;
+            Diag($"final SegmentCount={SegmentCount}, ScanCount={ScanCount}, retTimeToScanCalledAndFailed={retTimeToScanCalledAndFailed}, msLevels=[{string.Join(",", _msLevels)}]");
 
             // Precursor map: cpp ShimadzuReader.cpp:294-313 builds precursor info from
             // GetPrecursorList's SurveyList[0].DependentList, which the SDK populates for
