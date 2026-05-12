@@ -574,9 +574,6 @@ namespace pwiz.OspreySharp.Tasks
         }
 
         /// <summary>
-        /// Process a single mzML file: load spectra, calibrate RT, score coelution.
-        /// </summary>
-        /// <summary>
         /// Phase B per-file resume: if the file's <c>.scores.parquet</c>
         /// already exists with a matching <c>.PerFileScoring.osprey.task</c>
         /// sidecar (validity key matches the current config), load the
@@ -707,6 +704,9 @@ namespace pwiz.OspreySharp.Tasks
             return stubs;
         }
 
+        /// <summary>
+        /// Process a single mzML file: load spectra, calibrate RT, score coelution.
+        /// </summary>
         private List<FdrEntry> ProcessFile(
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, OspreyConfig config,

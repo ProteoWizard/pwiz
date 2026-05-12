@@ -205,7 +205,14 @@ namespace pwiz.OspreySharp
             ctx.LogInfo(string.Format(@"[task] {0}: done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
 
-            if (keepGoing)
+            // Write sidecars whenever the task ran without setting a
+            // non-zero exit code. Several tasks intentionally return
+            // false on success to stop the pipeline at a configured
+            // boundary (PerFileScoringTask under --no-join, FirstJoinTask
+            // under --join-only-with-StopAfterStage5); gating on
+            // keepGoing alone would skip sidecar writes for those
+            // successful early-exit modes and break resume.
+            if (ctx.ExitCode == 0)
                 WriteTaskSidecars(task, ctx);
 
             return keepGoing;

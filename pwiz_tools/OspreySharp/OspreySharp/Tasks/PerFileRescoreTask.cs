@@ -170,9 +170,6 @@ namespace pwiz.OspreySharp.Tasks
             if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
-            // Mid-Run crash safety: see FirstJoinTask.Run for rationale.
-            foreach (var output in Outputs(ctx))
-                TaskValiditySidecar.Delete(output, Name);
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
             _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 
@@ -181,10 +178,19 @@ namespace pwiz.OspreySharp.Tasks
             // Reconciliation.Enabled, not --join-at-pass=2). When
             // planning was skipped, this task is a no-op; downstream
             // MergeNodeTask still gets _perFileEntries via our accessor
-            // (falls through to the upstream reference).
+            // (falls through to the upstream reference). No sidecar
+            // delete on the no-op path: a lazy-hydrate call from a
+            // downstream task must not invalidate prior-run sidecars.
             var firstJoin = ctx.GetTask<FirstJoinTask>();
             if (!firstJoin.DidPlan(ctx))
                 return true;
+
+            // About to overwrite per-file .scores.parquet with rescored
+            // content: clear stale sidecars first so a mid-Run crash
+            // doesn't leave a false-positive sidecar pointing at the
+            // partially-written parquet.
+            foreach (var output in Outputs(ctx))
+                TaskValiditySidecar.Delete(output, Name);
 
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,

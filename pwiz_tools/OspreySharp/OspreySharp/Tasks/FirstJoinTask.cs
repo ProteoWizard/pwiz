@@ -136,13 +136,22 @@ namespace pwiz.OspreySharp.Tasks
             if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
+            var config = ctx.Config;
             // Mid-Run crash safety: clear stale sidecars for the outputs
             // this task is about to produce. A crash before the matching
             // post-Run sidecar write leaves no false-positive sidecar
-            // claiming the partially-written output is valid.
-            foreach (var output in Outputs(ctx))
-                TaskValiditySidecar.Delete(output, Name);
-            var config = ctx.Config;
+            // claiming the partially-written output is valid. Skipped on
+            // --join-at-pass=2 (ExpectReconciledInput) because that path
+            // only overlays existing 1st/2nd-pass sidecars onto in-memory
+            // stubs; it doesn't write Pass1Path or reconciliation.json,
+            // so the sidecar delete would invalidate valid outputs from
+            // an upstream straight-through run — and crucially, breaks
+            // resume on a lazy-hydrate path from a downstream task.
+            if (!config.ExpectReconciledInput)
+            {
+                foreach (var output in Outputs(ctx))
+                    TaskValiditySidecar.Delete(output, Name);
+            }
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
             var perFileEntries = perFileScoring.GetPerFileEntries(ctx);
             var perFileCalibrations = perFileScoring.GetPerFileCalibrations(ctx);

@@ -45,11 +45,15 @@ namespace pwiz.OspreySharp.Tasks
     /// Phase B adds <see cref="Inputs"/> / <see cref="Outputs"/> /
     /// <see cref="ValidityKey"/> for the resume-on-restart capability:
     /// the pipeline driver checks each task's outputs against
-    /// <c>.osprey.task</c> sidecar validity keys and skips Run when
-    /// every output exists with a matching key. Cross-impl /
-    /// worker-mode invocations (any <c>--input-scores</c> /
-    /// <c>--join-at-pass=*</c> CLI flag set) bypass the new check
-    /// and trust whatever the caller is pointing at.
+    /// <c>.&lt;TaskName&gt;.osprey.task</c> sidecar validity keys and
+    /// skips Run when every output exists with a matching key. The
+    /// same skip-if-valid check applies to every CLI mode — cross-impl
+    /// / worker-mode invocations (<c>--input-scores</c> /
+    /// <c>--join-at-pass=*</c>) flow through the same driver, so
+    /// validity-key match drives the decision rather than any CLI
+    /// flag gate. (Cross-impl correctness on <c>--input-scores</c>
+    /// parquets is enforced separately by the parquet
+    /// <c>osprey.search_hash</c> footer metadata check.)
     /// </summary>
     public abstract class OspreyTask
     {
@@ -91,8 +95,12 @@ namespace pwiz.OspreySharp.Tasks
         /// these for existence and matching validity-key sidecars before
         /// running; if all exist and match, the task's
         /// <see cref="Run"/> is skipped. After a successful Run, the
-        /// driver writes a <c>&lt;output&gt;.osprey.task</c> sidecar
-        /// next to each output file.
+        /// driver writes a <c>&lt;output&gt;.&lt;TaskName&gt;.osprey.task</c>
+        /// sidecar next to each output file. The per-task naming lets
+        /// two tasks that produce the same output path (e.g. PerFileScoring
+        /// writes the initial <c>.scores.parquet</c>, PerFileRescore later
+        /// overwrites it in place with reconciled content) keep distinct
+        /// validity records.
         ///
         /// A task that returns no Outputs cannot be skipped; the driver
         /// always invokes <see cref="Run"/> for it. Use that posture
