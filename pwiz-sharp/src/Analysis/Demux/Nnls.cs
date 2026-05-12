@@ -44,13 +44,13 @@ public sealed class Nnls
     private readonly int _maxIter;
     private readonly double _epsilon;
 
-    // Per-call working buffers — resized only when n changes (it doesn't, for repeat calls
-    // against the same A). Avoids per-Solve GC pressure that dominated the demux hot path.
-    private double[] _x;
-    private double[] _w;
-    private double[] _y;
-    private double[] _Atb;
-    private int[] _perm;
+    // Per-call working buffers — sized in the ctor; n doesn't change for repeat Solve()s
+    // against the same A. Avoids per-Solve GC pressure that dominated the demux hot path.
+    private readonly double[] _x;
+    private readonly double[] _w;
+    private readonly double[] _y;
+    private readonly double[] _Atb;
+    private readonly int[] _perm;
     private int _Np;
     private int _numLs;
 

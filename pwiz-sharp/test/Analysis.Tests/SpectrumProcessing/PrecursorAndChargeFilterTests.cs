@@ -162,7 +162,7 @@ public class PrecursorAndChargeFilterTests
             mz: new[] { 100.0 }, intensity: new[] { 100.0 }));
         var wrapped = SpectrumListFactory.Wrap(inner,
             "chargeStatePredictor maxMultipleCharge=4 minMultipleCharge=2 singleChargeFractionTIC=0.95");
-        Assert.IsInstanceOfType(wrapped, typeof(SpectrumList_ChargeStateCalculator));
+        Assert.IsInstanceOfType<SpectrumList_ChargeStateCalculator>(wrapped);
     }
 
     private static double[] ParseDoubleArray(string s) =>

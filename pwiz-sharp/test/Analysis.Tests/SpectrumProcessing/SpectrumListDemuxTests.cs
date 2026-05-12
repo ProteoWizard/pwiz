@@ -92,7 +92,7 @@ public class SpectrumListDemuxTests
     {
         var inner = BuildSingleOverlapList(numCycles: 5, scansPerHalf: 25, mzStart: 400, mzEnd: 600);
         var wrapped = SpectrumListFactory.Wrap(inner, "demultiplex massError=10ppm nnlsMaxIter=50");
-        Assert.IsInstanceOfType(wrapped, typeof(SpectrumListDemux));
+        Assert.IsInstanceOfType<SpectrumListDemux>(wrapped);
     }
 
     [TestMethod]

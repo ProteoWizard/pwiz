@@ -11,7 +11,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+    <!-- CS1591: missing-xml-comment is informational only.
+         CA1859: "change parameter from IList<T>/IReadOnlyList<T> to List<T>" is a perf
+                 micro-optimization suggestion. The list-vs-interface preference is a
+                 source-shape call, not a correctness one — keep as warning. -->
+    <WarningsNotAsErrors>CS1591;CA1859</WarningsNotAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
