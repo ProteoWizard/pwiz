@@ -48,7 +48,7 @@ namespace SkylineNightly
             {
                 throw new IOException("Environment variable " + TokenEnvVar + " is not set. " +
                     "A read-only TeamCity token is required to download nightly build artifacts. " +
-                    "See https://skyline.ms/home/development/project-begin.view for test machine setup instructions.");
+                    "See https://skyline.ms/home/development/wiki-page.view?name=SkylineNightly to obtain the token and set this env var.");
             }
             return token.Trim();
         }
