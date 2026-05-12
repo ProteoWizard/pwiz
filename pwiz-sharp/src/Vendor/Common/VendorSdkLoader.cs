@@ -2,36 +2,40 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Pwiz.Vendor.Common;
 
 /// <summary>
 /// Runtime resolver for vendor SDK assemblies. The installer MSI ships only pwiz-sharp's
-/// own DLLs; vendor SDK archives (vendor_api_Thermo.7z, vendor_api_Bruker.7z, …) live in
-/// the pwiz GitHub release for the matching pwiz version and are downloaded on first use.
+/// own DLLs; vendor SDK archives (vendor_api_Thermo.7z, vendor_api_Bruker.7z, …) are
+/// pinned to specific pwiz commit SHAs and downloaded on first use from
+/// raw.githubusercontent.com.
 /// </summary>
 /// <remarks>
 /// <para>Wire-up: each entry-point EXE (<c>msconvert-sharp</c>, <c>MSConvertGUI-sharp</c>,
 /// <c>seems-sharp</c>) calls <see cref="RegisterAssemblyResolver"/> once at startup. When
-/// pwiz-sharp's reader code first runs and the JIT tries to bind a ThermoFisher.* / Clearcore2.*
-/// / MIDAC.* / EDAL.* / etc. assembly, the resolver fires, picks the matching vendor manifest
-/// entry by simple-name prefix, downloads + extracts the 7z if needed, and returns the loaded
-/// <see cref="Assembly"/>. Subsequent loads of any DLL in the same archive hit the cache.</para>
-/// <para>Manifest format: see <c>installer/vendor-manifest.json</c>. The cache lives at
-/// <c>%LOCALAPPDATA%\ProteoWizard\vendor\&lt;Vendor&gt;-&lt;Version&gt;\</c> per-user (or
-/// <c>%PROGRAMDATA%\ProteoWizard\vendor\</c> when the installer chose per-machine scope —
-/// look at the install-scope marker file).</para>
-/// <para>Vendor archive password ("i-agree-to-the-vendor-licenses") is a fixed legal
-/// "agreement" gate — same posture as the build flag. The user's responsibility to comply
-/// with each vendor's EULA. We do not display any EULA at runtime.</para>
+/// pwiz-sharp's reader code first runs and the JIT tries to bind a ThermoFisher.* /
+/// Clearcore2.* / MIDAC.* / EDAL.* / etc. assembly, the resolver fires, picks the matching
+/// pin entry by simple-name prefix, downloads + extracts the 7z if not yet cached, and
+/// returns the loaded <see cref="Assembly"/>. Subsequent loads of any DLL in the same
+/// archive hit the cache.</para>
+/// <para>Pins come from <see cref="VendorSdkPins.All"/> — a generated array baked into
+/// this assembly at installer-build time by <c>installer/Refresh-VendorPins.ps1</c>.
+/// Each pin's URL contains its commit SHA, so GitHub serves byte-immutable content
+/// forever; the recorded SHA-256 is defense-in-depth.</para>
+/// <para>Cache: per-user at <c>%LOCALAPPDATA%\ProteoWizard\vendor\&lt;Vendor&gt;-&lt;ShortSha&gt;\</c>.
+/// Per-machine deployments can override by writing a path into
+/// <c>%PROGRAMDATA%\ProteoWizard\vendor-cache-root.txt</c>; admins use this to
+/// pre-populate the cache for shared workstations.</para>
+/// <para>The archive password ("i-agree-to-the-vendor-licenses") is a fixed legal
+/// "agreement" gate — same posture as the build-time <c>-p:IAgreeToVendorLicenses=true</c>
+/// flag. We do not display any EULA at runtime; vendor SDK license compliance is the
+/// user's responsibility.</para>
 /// </remarks>
 public static class VendorSdkLoader
 {
     private static readonly object _registerLock = new();
     private static bool _registered;
-    private static VendorManifest? _manifest;
     private static string? _cacheRoot;
     private static readonly Dictionary<string, string> _vendorExtractDir = new(StringComparer.OrdinalIgnoreCase);
     private const string ArchivePassword = "i-agree-to-the-vendor-licenses";
@@ -50,13 +54,10 @@ public static class VendorSdkLoader
 
     private static Assembly? OnAssemblyResolving(AssemblyLoadContext context, AssemblyName name)
     {
-        var manifest = GetManifest();
-        if (manifest is null) return null;
-
         // Pick the vendor whose AssemblyPrefixes match the requested simple-name. The first
-        // match wins; vendor manifest entries should keep their prefix sets disjoint.
+        // match wins; the pin table keeps prefix sets disjoint.
         string requested = name.Name ?? string.Empty;
-        var entry = manifest.Vendors.FirstOrDefault(v =>
+        var entry = VendorSdkPins.All.FirstOrDefault(v =>
             v.AssemblyPrefixes.Any(p => requested.StartsWith(p, StringComparison.OrdinalIgnoreCase)));
         if (entry is null) return null;
 
@@ -77,8 +78,8 @@ public static class VendorSdkLoader
     }
 
     /// <summary>Ensures <paramref name="entry"/>'s archive is downloaded + extracted into
-    /// the per-user cache. Returns the extraction directory.</summary>
-    public static string EnsureExtracted(VendorManifestEntry entry)
+    /// the cache. Returns the extraction directory.</summary>
+    public static string EnsureExtracted(VendorSdkPin entry)
     {
         if (_vendorExtractDir.TryGetValue(entry.Name, out string? cached))
             return cached;
@@ -127,7 +128,7 @@ public static class VendorSdkLoader
         return _cacheRoot;
     }
 
-    private static void DownloadIfMissing(VendorManifestEntry entry, string dest)
+    private static void DownloadIfMissing(VendorSdkPin entry, string dest)
     {
         if (File.Exists(dest)) return;
         Trace.TraceInformation($"[VendorSdkLoader] downloading {entry.Name} from {entry.Url}");
@@ -144,7 +145,7 @@ public static class VendorSdkLoader
         File.Move(tmp, dest, overwrite: true);
     }
 
-    private static void VerifyHash(VendorManifestEntry entry, string archivePath)
+    private static void VerifyHash(VendorSdkPin entry, string archivePath)
     {
         if (string.IsNullOrEmpty(entry.Sha256)) return;  // hash check is opt-in per entry
         using var stream = File.OpenRead(archivePath);
@@ -219,68 +220,13 @@ public static class VendorSdkLoader
         try { Directory.Delete(nested, recursive: true); }
         catch { /* best-effort cleanup */ }
     }
-
-    private static VendorManifest? GetManifest()
-    {
-        if (_manifest is not null) return _manifest;
-        // The manifest ships alongside the EXE (installer/vendor-manifest.json → output dir).
-        string path = Path.Combine(AppContext.BaseDirectory, "vendor-manifest.json");
-        if (!File.Exists(path))
-        {
-            Trace.TraceWarning($"[VendorSdkLoader] vendor-manifest.json not found at {path}; vendor SDKs won't be resolved on demand.");
-            return null;
-        }
-        try
-        {
-            string json = File.ReadAllText(path);
-            _manifest = JsonSerializer.Deserialize<VendorManifest>(json, ManifestJsonOptions);
-            return _manifest;
-        }
-        catch (Exception ex)
-        {
-            Trace.TraceError($"[VendorSdkLoader] failed to parse {path}: {ex.Message}");
-            return null;
-        }
-    }
-
-    private static readonly JsonSerializerOptions ManifestJsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        ReadCommentHandling = JsonCommentHandling.Skip,
-        AllowTrailingCommas = true,
-    };
 }
 
-/// <summary>Top-level shape of <c>vendor-manifest.json</c>.</summary>
-public sealed class VendorManifest
-{
-    /// <summary>Manifest format version (currently always 1).</summary>
-    [JsonPropertyName("schema")] public int Schema { get; set; } = 1;
-
-    /// <summary>One entry per vendor SDK archive available for on-demand download.</summary>
-    [JsonPropertyName("vendors")] public List<VendorManifestEntry> Vendors { get; set; } = new();
-}
-
-/// <summary>One vendor's archive descriptor inside the manifest.</summary>
-public sealed class VendorManifestEntry
-{
-    /// <summary>Short vendor identifier (e.g. "Thermo", "Bruker", "Waters", "ABI", "Agilent",
-    /// "Shimadzu", "Mobilion"). Used as cache subdir name.</summary>
-    [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
-
-    /// <summary>Archive version, opaque to the loader — used to pick the cache subdir and
-    /// invalidate older extractions. Typically matches the pwiz tag or vendor SDK version.</summary>
-    [JsonPropertyName("version")] public string Version { get; set; } = string.Empty;
-
-    /// <summary>HTTPS URL the loader fetches when this vendor's SDK is requested. Typically
-    /// a GitHub Releases asset URL.</summary>
-    [JsonPropertyName("url")] public string Url { get; set; } = string.Empty;
-
-    /// <summary>Hex-encoded SHA-256 of the archive. Optional but recommended; loader deletes +
-    /// re-downloads on mismatch.</summary>
-    [JsonPropertyName("sha256")] public string Sha256 { get; set; } = string.Empty;
-
-    /// <summary>Assembly simple-name prefixes that should trigger this vendor's load. E.g.
-    /// "ThermoFisher." for Thermo, "Clearcore2." for Sciex, "MIDAC" for Agilent.</summary>
-    [JsonPropertyName("assemblyPrefixes")] public List<string> AssemblyPrefixes { get; set; } = new();
-}
+/// <summary>One vendor SDK pin entry. Populated by the generated
+/// <see cref="VendorSdkPins.All"/> array.</summary>
+public sealed record VendorSdkPin(
+    string Name,
+    string Version,
+    string Url,
+    string Sha256,
+    string[] AssemblyPrefixes);
