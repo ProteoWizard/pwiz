@@ -442,10 +442,10 @@ namespace SkylineNightly
         /// <summary>
         /// Downloads and extracts SkylineTester ZIP file and determines the branch name.
         /// </summary>
-        /// <param name="localZipFileName">Local destination filename for the downloaded zip (relative to the SkylineTester directory). The remote artifact name is fixed by SKYLINETESTER_ZIP_NAME.</param>
+        /// <param name="skylineTesterZipPath">Full local destination path for the downloaded zip. The remote artifact name is fixed by SKYLINETESTER_ZIP_NAME.</param>
         /// <returns>Branch URL</returns>
         /// <exception cref="IOException">Failure after 2 hours throws an exception with the reason</exception>
-        private string DownloadSkylineTester(string localZipFileName)
+        private string DownloadSkylineTester(string skylineTesterZipPath)
         {
             // Fetch the token once up front: fails fast on a misconfigured machine (rather
             // than getting silently retried for the two hours of the loop below) and pins
@@ -454,7 +454,6 @@ namespace SkylineNightly
             var token = TeamCityNightlyAuth.GetRequiredToken();
 
             // Download most recent build of SkylineTester.
-            var skylineTesterZip = Path.Combine(_skylineTesterDir, localZipFileName);
             int attempts = CalcAllowedRetries(120); // Retry for up to two hours
             var useLastSuccessfulInsteadOfLastFinished = false;
             string failedReason = "Unable to download SkylineTester";
@@ -462,7 +461,7 @@ namespace SkylineNightly
             {
                 try
                 {
-                    DownloadSkylineTester(skylineTesterZip, _runMode, useLastSuccessfulInsteadOfLastFinished, token);
+                    DownloadSkylineTester(skylineTesterZipPath, _runMode, useLastSuccessfulInsteadOfLastFinished, token);
                 }
                 catch (Exception ex)
                 {
@@ -486,7 +485,7 @@ namespace SkylineNightly
                 }
 
                 // Install SkylineTester.
-                if (!InstallSkylineTester(skylineTesterZip, _skylineTesterDir))
+                if (!InstallSkylineTester(skylineTesterZipPath, _skylineTesterDir))
                 {
                     throw new IOException("SkylineTester installation failed.");
                 }
@@ -494,8 +493,8 @@ namespace SkylineNightly
                 try
                 {
                     // Delete zip file.
-                    Log("Delete zip file " + skylineTesterZip);
-                    File.Delete(skylineTesterZip);
+                    Log("Delete zip file " + skylineTesterZipPath);
+                    File.Delete(skylineTesterZipPath);
 
                     // Figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
                     var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp"))
