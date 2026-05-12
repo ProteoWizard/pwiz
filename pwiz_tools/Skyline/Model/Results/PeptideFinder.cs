@@ -65,11 +65,32 @@ namespace pwiz.Skyline.Model.Results
             if (i < 0)
                 i = ~i;
 
-            // The same peptide may appear at the same Mz under multiple transition
-            // groups; dedupe by Id.GlobalIndex (the documented reference-equality
-            // key on Identity) so callers see each peptide once. PeptideDocNode's
-            // own Equals is structural, which is the wrong primitive here.
-            var seen = new HashSet<int>();
+            // Most SRM spectra match a single peptide; cache the first hit's
+            // Id.GlobalIndex and only allocate a HashSet if a second distinct
+            // peptide is found. A peptide with multiple transition groups at
+            // the same Q1 is also deduped without any heap allocation. Keying
+            // by PeptideDocNode directly would invoke its structural Equals,
+            // which is the wrong primitive here; GlobalIndex is the preferred
+            // key per Identity's docstring.
+            int firstSeenIndex = -1;
+            HashSet<int> additionalSeen = null;
+
+            bool TryAddSeen(int globalIndex)
+            {
+                if (firstSeenIndex == -1)
+                {
+                    firstSeenIndex = globalIndex;
+                    return true;
+                }
+                if (additionalSeen == null)
+                {
+                    if (globalIndex == firstSeenIndex)
+                        return false;
+                    additionalSeen = new HashSet<int> { firstSeenIndex, globalIndex };
+                    return true;
+                }
+                return additionalSeen.Add(globalIndex);
+            }
 
             // Walk outward from the landing index, stopping in each direction as
             // soon as the candidate falls outside tolerance or crosses polarity
@@ -80,7 +101,7 @@ namespace pwiz.Skyline.Model.Results
                 if (cand.PrecursorMz.IsNegative != precursorMz.IsNegative ||
                     Math.Abs(cand.PrecursorMz - precursorMz) > _mzMatchTolerance)
                     break;
-                if (seen.Add(cand.NodePeptide.Id.GlobalIndex))
+                if (TryAddSeen(cand.NodePeptide.Id.GlobalIndex))
                     yield return cand.NodePeptide;
             }
             for (int j = i; j < _precursorMzPeptideList.Count; j++)
@@ -89,7 +110,7 @@ namespace pwiz.Skyline.Model.Results
                 if (cand.PrecursorMz.IsNegative != precursorMz.IsNegative ||
                     Math.Abs(cand.PrecursorMz - precursorMz) > _mzMatchTolerance)
                     break;
-                if (seen.Add(cand.NodePeptide.Id.GlobalIndex))
+                if (TryAddSeen(cand.NodePeptide.Id.GlobalIndex))
                     yield return cand.NodePeptide;
             }
         }
