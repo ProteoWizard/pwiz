@@ -59,6 +59,19 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 LicenseFile=
 SetupIconFile=
 MinVersion=10.0
+; CloseApplications detects running instances of our app and prompts the user to
+; close them so file replacement doesn't fall back to "schedule for restart".
+; RestartApplications=no skips Inno's "want me to restart those apps for you?"
+; flow — pwiz-sharp users prefer to relaunch manually.
+CloseApplications=yes
+RestartApplications=no
+; AlwaysRestart=no + RestartIfNeededByRun=no: don't show the "restart your PC"
+; prompt at end of setup unless a file we tried to replace is genuinely locked
+; (in that case Inno schedules the replace via MoveFileEx and a restart is
+; required for it to take effect). The .NET runtime EXE in [Run] uses
+; /norestart so it never queues anything.
+AlwaysRestart=no
+RestartIfNeededByRun=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
