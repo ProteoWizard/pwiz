@@ -27,8 +27,12 @@ public sealed class ShimadzuRawData : IDisposable
     /// <summary>How many times to retry the LCD open + SDK init when the QTFL backend looks
     /// like it failed to wire up. The Shimadzu Qtfl backend's init has a documented .NET 8
     /// race (~65% pass rate on TC for the 10nmol fixture); a fresh DataObject usually clears
-    /// it. Five attempts gives us &lt;0.5% chance of all attempts failing if each is independent.</summary>
-    private const int QtflInitRetryAttempts = 5;
+    /// it. Bumped from 5 to 10 after observing the test still flake intermittently with 5 —
+    /// at 65% per-attempt success, 10 attempts gives 1 - 0.35^10 ≈ 99.997% per invocation
+    /// (vs. 99.5% at 5), trading a worst-case ~10× cold-init time for the rare-but-not-rare
+    /// streaks of consecutive failures. Retry cost is bounded by warmup latency, not
+    /// I/O.</summary>
+    private const int QtflInitRetryAttempts = 10;
 
     private ShimadzuIO.Data.DataObject _dataObject = null!; // assigned during init
     private readonly Dictionary<(short Event, short Channel), ShimadzuIO.Generic.Param.MS.MassEventInfo> _eventInfo
