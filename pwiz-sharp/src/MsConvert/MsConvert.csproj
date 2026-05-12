@@ -62,6 +62,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="MsConvert.Tests" />
+    <InternalsVisibleTo Include="MsConvertGUI.Tests" />
   </ItemGroup>
 
   <!-- Side-by-side wiff2 dlls. The wiff2 SDK is loaded into a custom AssemblyLoadContext
