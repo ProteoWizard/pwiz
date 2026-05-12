@@ -50,7 +50,7 @@ STATUS = {
     "data/msdata/mzmlb": "none",
     "data/misc": "partial",
     "data/proteome": "none",
-    "data/identdata": "none",
+    "data/identdata": "full",                 # mzIdentML + pepXML readers/writers, Diff/References, round-trip parity tests
     "data/tradata": "none",
 
     # vendor readers — every Reader_Foo with a TC test fixture is now green;
@@ -72,7 +72,7 @@ STATUS = {
     "analysis/calibration": "none",
     "analysis/chromatogram_processing": "none",
     "analysis/common": "none",
-    "analysis/demux": "none",
+    "analysis/demux": "full",                 # NNLS solver + MSX/Overlap demultiplexers
     "analysis/dia_umpire": "none",
     "analysis/eharmony": "none",
     "analysis/findmf": "none",

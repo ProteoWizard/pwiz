@@ -79,8 +79,8 @@
 <!-- n_analysis__demux -->
 <g id="node4" class="node">
 <title>n_analysis__demux</title>
-<path fill="#f5a8a8" stroke="#a02020" d="M600,-209C600,-209 570,-209 570,-209 564,-209 558,-203 558,-197 558,-197 558,-185 558,-185 558,-179 564,-173 570,-173 570,-173 600,-173 600,-173 606,-173 612,-179 612,-185 612,-185 612,-197 612,-197 612,-203 606,-209 600,-209"/>
-<text xml:space="preserve" text-anchor="middle" x="585" y="-188.05" font-family="Segoe UI" font-size="11.00" fill="#3d0a0a">demux</text>
+<path fill="#9ee5a3" stroke="#2c7a32" d="M600,-209C600,-209 570,-209 570,-209 564,-209 558,-203 558,-197 558,-197 558,-185 558,-185 558,-179 564,-173 570,-173 570,-173 600,-173 600,-173 606,-173 612,-179 612,-185 612,-185 612,-197 612,-197 612,-203 606,-209 600,-209"/>
+<text xml:space="preserve" text-anchor="middle" x="585" y="-188.05" font-family="Segoe UI" font-size="11.00" fill="#0a3d10">demux</text>
 </g>
 <!-- n_analysis__dia_umpire -->
 <g id="node5" class="node">
@@ -133,8 +133,8 @@
 <!-- n_data__identdata -->
 <g id="node13" class="node">
 <title>n_data__identdata</title>
-<path fill="#f5a8a8" stroke="#a02020" d="M70.25,-362C70.25,-362 31.75,-362 31.75,-362 25.75,-362 19.75,-356 19.75,-350 19.75,-350 19.75,-338 19.75,-338 19.75,-332 25.75,-326 31.75,-326 31.75,-326 70.25,-326 70.25,-326 76.25,-326 82.25,-332 82.25,-338 82.25,-338 82.25,-350 82.25,-350 82.25,-356 76.25,-362 70.25,-362"/>
-<text xml:space="preserve" text-anchor="middle" x="51" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#3d0a0a">identdata</text>
+<path fill="#9ee5a3" stroke="#2c7a32" d="M70.25,-362C70.25,-362 31.75,-362 31.75,-362 25.75,-362 19.75,-356 19.75,-350 19.75,-350 19.75,-338 19.75,-338 19.75,-332 25.75,-326 31.75,-326 31.75,-326 70.25,-326 70.25,-326 76.25,-326 82.25,-332 82.25,-338 82.25,-338 82.25,-350 82.25,-350 82.25,-356 76.25,-362 70.25,-362"/>
+<text xml:space="preserve" text-anchor="middle" x="51" y="-341.05" font-family="Segoe UI" font-size="11.00" fill="#0a3d10">identdata</text>
 </g>
 <!-- n_data__identdata&#45;&gt;n_analysis__calibration -->
 <g id="edge1" class="edge">
