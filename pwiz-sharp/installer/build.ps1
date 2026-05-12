@@ -37,13 +37,15 @@ $ErrorActionPreference = 'Stop'
 # downloads our installer, not the runtime separately).
 $dotnetRuntimeUrl = "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe"
 
-$installerDir = $PSScriptRoot
-$pwizSharp    = (Resolve-Path "$installerDir/..").Path
-$msconvertGui = Join-Path $pwizSharp "src/MsConvertGUI/MsConvertGUI.csproj"
-$buildOutput  = Join-Path $pwizSharp "src/MsConvertGUI/bin/Release/net8.0-windows"
-$outDir       = Join-Path $installerDir "build"
-$stagingDir   = Join-Path $outDir "stage"
-$cacheDir     = Join-Path $installerDir "cache"
+$installerDir   = $PSScriptRoot
+$pwizSharp      = (Resolve-Path "$installerDir/..").Path
+$msconvertGui   = Join-Path $pwizSharp "src/MsConvertGUI/MsConvertGUI.csproj"
+$seems          = Join-Path $pwizSharp "src/SeeMS/SeeMS.csproj"
+$msconvertGuiOut = Join-Path $pwizSharp "src/MsConvertGUI/bin/Release/net8.0-windows"
+$seemsOut       = Join-Path $pwizSharp "src/SeeMS/bin/Release/net8.0-windows"
+$outDir         = Join-Path $installerDir "build"
+$stagingDir     = Join-Path $outDir "stage"
+$cacheDir       = Join-Path $installerDir "cache"
 
 if (-not (Test-Path $outDir))   { New-Item -ItemType Directory $outDir   | Out-Null }
 if (-not (Test-Path $cacheDir)) { New-Item -ItemType Directory $cacheDir | Out-Null }
@@ -57,20 +59,32 @@ Write-Host "==> Refresh-VendorPins" -ForegroundColor Cyan
 pwsh -File (Join-Path $installerDir "Refresh-VendorPins.ps1")
 if ($LASTEXITCODE -ne 0) { throw "Refresh-VendorPins failed (exit $LASTEXITCODE)" }
 
-# 2. Build MSConvertGUI Release. Transitive deps land in the same bin/.
+# 2. Build MSConvertGUI + SeeMS Release. MSConvertGUI's chain produces
+#    msconvert-sharp.exe + MSConvertGUI-sharp.exe + all Pwiz.* DLLs. SeeMS is a
+#    separate WinExe target that produces seems-sharp.exe (plus its own copies
+#    of the shared Pwiz.* DLLs which are identical so deduping is trivial at
+#    staging time).
 if (-not $SkipBuild) {
     Write-Host "`n==> dotnet build (Release)" -ForegroundColor Cyan
     dotnet build $msconvertGui -c Release "-p:IAgreeToVendorLicenses=true" --nologo
-    if ($LASTEXITCODE -ne 0) { throw "dotnet build failed (exit $LASTEXITCODE)" }
+    if ($LASTEXITCODE -ne 0) { throw "MSConvertGUI build failed (exit $LASTEXITCODE)" }
+    dotnet build $seems        -c Release "-p:IAgreeToVendorLicenses=true" --nologo
+    if ($LASTEXITCODE -ne 0) { throw "SeeMS build failed (exit $LASTEXITCODE)" }
 }
 
 foreach ($exe in @("MSConvertGUI-sharp.exe", "msconvert-sharp.exe", "7za.exe")) {
-    if (-not (Test-Path (Join-Path $buildOutput $exe))) {
-        throw "expected $exe in $buildOutput but it's missing — did the build succeed?"
+    if (-not (Test-Path (Join-Path $msconvertGuiOut $exe))) {
+        throw "expected $exe in $msconvertGuiOut but it's missing — did the build succeed?"
     }
 }
+if (-not (Test-Path (Join-Path $seemsOut "seems-sharp.exe"))) {
+    throw "expected seems-sharp.exe in $seemsOut but it's missing — did the SeeMS build succeed?"
+}
 
-# 3. Stage a filtered copy of the build output.
+# 3. Stage a filtered copy of the build output. We walk MSConvertGUI's bin
+#    first, then SeeMS's bin — the second pass adds seems-sharp.exe + any
+#    SeeMS-only deps (ZedGraph, MSGraph, DigitalRune.Windows.Docking) without
+#    overwriting files MSConvertGUI already staged.
 Write-Host "`n==> stage payload (strip vendor SDKs + debug symbols + i18n satellites)" -ForegroundColor Cyan
 if (Test-Path $stagingDir) { Remove-Item $stagingDir -Recurse -Force }
 New-Item -ItemType Directory $stagingDir -Force | Out-Null
@@ -88,21 +102,23 @@ function Should-Skip([string] $relName) {
     return $false
 }
 
-$copied = 0; $bytesCopied = 0L; $bytesSkipped = 0L
-Get-ChildItem $buildOutput -Recurse -File | ForEach-Object {
-    $rel = $_.FullName.Substring($buildOutput.Length + 1)
-    if (Should-Skip $rel) {
-        $bytesSkipped += $_.Length
-    } else {
+function Stage-From([string] $source) {
+    $copied = 0; $bytesCopied = 0L; $bytesSkipped = 0L; $dups = 0
+    Get-ChildItem $source -Recurse -File | ForEach-Object {
+        $rel = $_.FullName.Substring($source.Length + 1)
+        if (Should-Skip $rel) { $bytesSkipped += $_.Length; return }
         $dest = Join-Path $stagingDir $rel
+        if (Test-Path $dest) { $dups++; return }
         $destDir = Split-Path -Parent $dest
         if (-not (Test-Path $destDir)) { New-Item -ItemType Directory $destDir -Force | Out-Null }
         Copy-Item $_.FullName $dest
         $copied++; $bytesCopied += $_.Length
     }
+    Write-Host "    from $((Split-Path -Leaf (Split-Path -Parent $source))): $copied new ($([math]::Round($bytesCopied/1MB, 2)) MB), $dups dup, $([math]::Round($bytesSkipped/1MB, 1)) MB skipped"
 }
-Write-Host "    payload:  $copied files, $([math]::Round($bytesCopied/1MB, 1)) MB"
-Write-Host "    skipped:  $([math]::Round($bytesSkipped/1MB, 1)) MB"
+
+Stage-From $msconvertGuiOut
+Stage-From $seemsOut
 
 # 4. Cache the .NET 8 desktop runtime EXE (bundled into Setup.exe).
 $dotnetExe = Join-Path $cacheDir "windowsdesktop-runtime-win-x64.exe"

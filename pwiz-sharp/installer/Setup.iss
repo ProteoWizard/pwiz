@@ -23,7 +23,6 @@
 #define MyAppVersion "0.1.0"
 #define MyAppPublisher "ProteoWizard"
 #define MyAppURL "https://proteowizard.sourceforge.io/"
-#define MyAppExeName "MSConvertGUI-sharp.exe"
 
 ; StagingDir + OutputDir come from build.ps1 via /Dxxx command-line defines so
 ; the script doesn't have to hardcode paths.
@@ -55,7 +54,7 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog commandline
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-UninstallDisplayIcon={app}\{#MyAppExeName}
+UninstallDisplayIcon={app}\MSConvertGUI-sharp.exe
 LicenseFile=
 SetupIconFile=
 MinVersion=10.0
@@ -77,7 +76,18 @@ RestartIfNeededByRun=no
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "Create a &Desktop shortcut"; GroupDescription: "Additional shortcuts:"; Flags: unchecked
+Name: "startmenu_msconvertgui"; Description: "Add a &Start Menu shortcut for MSConvertGUI"; \
+    GroupDescription: "Start Menu shortcuts:"
+Name: "startmenu_seems";        Description: "Add a Start Menu shortcut for See&MS"; \
+    GroupDescription: "Start Menu shortcuts:"
+Name: "context_msconvertgui";   Description: "Add ""Convert with MSConvertGUI"" to the Windows Explorer right-click menu for mass-spec files"; \
+    GroupDescription: "Windows Explorer integration:"
+Name: "context_seems";          Description: "Add ""Open with SeeMS"" to the Windows Explorer right-click menu for mass-spec files"; \
+    GroupDescription: "Windows Explorer integration:"
+Name: "desktopicon_msconvertgui"; Description: "Create a Desktop shortcut for MSConvertGUI"; \
+    GroupDescription: "Desktop shortcuts:"; Flags: unchecked
+Name: "desktopicon_seems";        Description: "Create a Desktop shortcut for SeeMS"; \
+    GroupDescription: "Desktop shortcuts:"; Flags: unchecked
 
 [Files]
 ; Bring the entire pwiz-sharp staging tree (filtered by build.ps1: no vendor
@@ -91,11 +101,135 @@ Source: "cache\windowsdesktop-runtime-win-x64.exe"; DestDir: "{tmp}"; \
     Flags: deleteafterinstall; Check: not IsDotNet8DesktopInstalled
 
 [Icons]
-Name: "{group}\MSConvertGUI-sharp"; Filename: "{app}\{#MyAppExeName}"; \
-    WorkingDir: "{app}"; \
+Name: "{group}\MSConvertGUI"; Filename: "{app}\MSConvertGUI-sharp.exe"; \
+    WorkingDir: "{app}"; Tasks: startmenu_msconvertgui; \
     Comment: "Convert vendor mass-spec data to mzML / mzXML / MGF"
-Name: "{userdesktop}\MSConvertGUI-sharp"; Filename: "{app}\{#MyAppExeName}"; \
-    WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\SeeMS";        Filename: "{app}\seems-sharp.exe"; \
+    WorkingDir: "{app}"; Tasks: startmenu_seems; \
+    Comment: "Spectrum viewer for vendor mass-spec data and mzML"
+Name: "{userdesktop}\MSConvertGUI"; Filename: "{app}\MSConvertGUI-sharp.exe"; \
+    WorkingDir: "{app}"; Tasks: desktopicon_msconvertgui
+Name: "{userdesktop}\SeeMS";        Filename: "{app}\seems-sharp.exe"; \
+    WorkingDir: "{app}"; Tasks: desktopicon_seems
+
+[Registry]
+; Windows Explorer right-click "Open with X" entries for mass-spec file types.
+; SystemFileAssociations is the Microsoft-blessed way to add context-menu
+; verbs to a file extension WITHOUT taking over the default-handler. So we
+; appear in the "Open with" submenu (or as a top-level verb on Win10+),
+; without changing what double-click does on a .raw or .mzML.
+;
+; Root: HKA = "per-user install → HKCU; per-machine install → HKLM". Inno
+; auto-resolves based on PrivilegesRequired at run time.
+;
+; The set of extensions covers the formats msconvert / SeeMS can READ:
+;   .raw   = Thermo and Waters
+;   .wiff  / .wiff2 = Sciex
+;   .lcd   = Shimadzu
+;   .baf   / .yep   = Bruker (small-data and ester formats; .d directories
+;                    are handled by Bruker's Reader_Bruker but Windows
+;                    doesn't support context-menu verbs on directory
+;                    "extensions" reliably, so we skip those)
+;   .mzML  / .mzXML / .mgf = open formats
+;   .ms1   / .cms1 / .ms2 / .cms2 = legacy ASCII / binary
+
+; --- MSConvertGUI ---
+#define ConvertVerb "OpenWithMSConvertGUI"
+#define ConvertLabel "Convert with MSConvertGUI"
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raw\shell\{#ConvertVerb}"; \
+    ValueType: string; ValueData: "{#ConvertLabel}"; Flags: uninsdeletekey; Tasks: context_msconvertgui
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raw\shell\{#ConvertVerb}\command"; \
+    ValueType: string; ValueData: """{app}\MSConvertGUI-sharp.exe"" ""%1"""; Tasks: context_msconvertgui
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wiff\shell\{#ConvertVerb}"; \
+    ValueType: string; ValueData: "{#ConvertLabel}"; Flags: uninsdeletekey; Tasks: context_msconvertgui
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wiff\shell\{#ConvertVerb}\command"; \
+    ValueType: string; ValueData: """{app}\MSConvertGUI-sharp.exe"" ""%1"""; Tasks: context_msconvertgui
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wiff2\shell\{#ConvertVerb}"; \
+    ValueType: string; ValueData: "{#ConvertLabel}"; Flags: uninsdeletekey; Tasks: context_msconvertgui
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wiff2\shell\{#ConvertVerb}\command"; \
+    ValueType: string; ValueData: """{app}\MSConvertGUI-sharp.exe"" ""%1"""; Tasks: context_msconvertgui
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.lcd\shell\{#ConvertVerb}"; \
+    ValueType: string; ValueData: "{#ConvertLabel}"; Flags: uninsdeletekey; Tasks: context_msconvertgui
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.lcd\shell\{#ConvertVerb}\command"; \
+    ValueType: string; ValueData: """{app}\MSConvertGUI-sharp.exe"" ""%1"""; Tasks: context_msconvertgui
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.baf\shell\{#ConvertVerb}"; \
+    ValueType: string; ValueData: "{#ConvertLabel}"; Flags: uninsdeletekey; Tasks: context_msconvertgui
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.baf\shell\{#ConvertVerb}\command"; \
+    ValueType: string; ValueData: """{app}\MSConvertGUI-sharp.exe"" ""%1"""; Tasks: context_msconvertgui
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.yep\shell\{#ConvertVerb}"; \
+    ValueType: string; ValueData: "{#ConvertLabel}"; Flags: uninsdeletekey; Tasks: context_msconvertgui
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.yep\shell\{#ConvertVerb}\command"; \
+    ValueType: string; ValueData: """{app}\MSConvertGUI-sharp.exe"" ""%1"""; Tasks: context_msconvertgui
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mzML\shell\{#ConvertVerb}"; \
+    ValueType: string; ValueData: "{#ConvertLabel}"; Flags: uninsdeletekey; Tasks: context_msconvertgui
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mzML\shell\{#ConvertVerb}\command"; \
+    ValueType: string; ValueData: """{app}\MSConvertGUI-sharp.exe"" ""%1"""; Tasks: context_msconvertgui
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mzXML\shell\{#ConvertVerb}"; \
+    ValueType: string; ValueData: "{#ConvertLabel}"; Flags: uninsdeletekey; Tasks: context_msconvertgui
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mzXML\shell\{#ConvertVerb}\command"; \
+    ValueType: string; ValueData: """{app}\MSConvertGUI-sharp.exe"" ""%1"""; Tasks: context_msconvertgui
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mgf\shell\{#ConvertVerb}"; \
+    ValueType: string; ValueData: "{#ConvertLabel}"; Flags: uninsdeletekey; Tasks: context_msconvertgui
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mgf\shell\{#ConvertVerb}\command"; \
+    ValueType: string; ValueData: """{app}\MSConvertGUI-sharp.exe"" ""%1"""; Tasks: context_msconvertgui
+
+; --- SeeMS ---
+#define ViewVerb "OpenWithSeeMS"
+#define ViewLabel "Open with SeeMS"
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raw\shell\{#ViewVerb}"; \
+    ValueType: string; ValueData: "{#ViewLabel}"; Flags: uninsdeletekey; Tasks: context_seems
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raw\shell\{#ViewVerb}\command"; \
+    ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wiff\shell\{#ViewVerb}"; \
+    ValueType: string; ValueData: "{#ViewLabel}"; Flags: uninsdeletekey; Tasks: context_seems
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wiff\shell\{#ViewVerb}\command"; \
+    ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wiff2\shell\{#ViewVerb}"; \
+    ValueType: string; ValueData: "{#ViewLabel}"; Flags: uninsdeletekey; Tasks: context_seems
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wiff2\shell\{#ViewVerb}\command"; \
+    ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.lcd\shell\{#ViewVerb}"; \
+    ValueType: string; ValueData: "{#ViewLabel}"; Flags: uninsdeletekey; Tasks: context_seems
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.lcd\shell\{#ViewVerb}\command"; \
+    ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.baf\shell\{#ViewVerb}"; \
+    ValueType: string; ValueData: "{#ViewLabel}"; Flags: uninsdeletekey; Tasks: context_seems
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.baf\shell\{#ViewVerb}\command"; \
+    ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.yep\shell\{#ViewVerb}"; \
+    ValueType: string; ValueData: "{#ViewLabel}"; Flags: uninsdeletekey; Tasks: context_seems
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.yep\shell\{#ViewVerb}\command"; \
+    ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mzML\shell\{#ViewVerb}"; \
+    ValueType: string; ValueData: "{#ViewLabel}"; Flags: uninsdeletekey; Tasks: context_seems
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mzML\shell\{#ViewVerb}\command"; \
+    ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mzXML\shell\{#ViewVerb}"; \
+    ValueType: string; ValueData: "{#ViewLabel}"; Flags: uninsdeletekey; Tasks: context_seems
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mzXML\shell\{#ViewVerb}\command"; \
+    ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
+
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mgf\shell\{#ViewVerb}"; \
+    ValueType: string; ValueData: "{#ViewLabel}"; Flags: uninsdeletekey; Tasks: context_seems
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.mgf\shell\{#ViewVerb}\command"; \
+    ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
 
 [Run]
 ; .NET 8 desktop runtime install. Runs only if not already present. /install
@@ -111,9 +245,12 @@ Filename: "{tmp}\windowsdesktop-runtime-win-x64.exe"; \
     Flags: waituntilterminated shellexec; \
     Check: not IsDotNet8DesktopInstalled
 
-; Optional launch at end of install.
-Filename: "{app}\{#MyAppExeName}"; Description: "&Launch MSConvertGUI-sharp"; \
-    Flags: nowait postinstall skipifsilent
+; Optional "launch at end of install" buttons. Both unchecked by default so
+; the wizard finishes silently; users can pick either.
+Filename: "{app}\MSConvertGUI-sharp.exe"; Description: "Launch &MSConvertGUI"; \
+    Flags: nowait postinstall skipifsilent unchecked
+Filename: "{app}\seems-sharp.exe"; Description: "Launch See&MS"; \
+    Flags: nowait postinstall skipifsilent unchecked
 
 [Code]
 { ----- .NET 8 desktop runtime detection -----
