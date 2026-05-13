@@ -72,15 +72,36 @@
 
   <!-- Runtime dependencies: managed assemblies the SDK's late-bound type loads pull in plus
        the x64 native DLLs (CompressedTLMRawDataReader, CRHAKEI2, IOModuleQTFL, etc.). All
-       must land next to Pwiz.Vendor.Shimadzu.dll for the SDK to open .lcd files. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
-    <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)\*.dll"
-                      Exclude="$(ShimadzuAssembliesDir)\Shimadzu.LabSolutions.IO.IoModule.dll" />
-    <Content Include="@(_ShimadzuRuntime)">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
+       must land next to Pwiz.Vendor.Shimadzu.dll for the SDK to open .lcd files.
+
+       This MUST be a target-emitted ItemGroup, not a top-level one. A top-level wildcard like
+       <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)\*.dll"/> is glob-resolved at project
+       LOAD time — i.e., before ExtractShimadzuAssemblies has a chance to populate the
+       directory. On a cold checkout (TC agent that's never built this project before) that
+       leaves the Content list empty (or partial), Pwiz.Vendor.Shimadzu.dll lands in bin without
+       IOModuleQTFL.dll / CRHAKEI2.dll / CompressedTLMRawDataReader.dll / the GCMS IoModule
+       assemblies, and the SDK's QtflRawDataMain backend silently returns empty results (because
+       the assembly it dynamic-dispatches to isn't there) — which is what caused the long string
+       of TC flakes we tried to paper over with ScanCount==0 retries. The reason it worked on
+       warm machines is that a prior build left the directory populated.
+
+       The target below depends on ExtractShimadzuAssemblies and runs before AssignTargetPaths,
+       so the wildcard evaluates the actual post-extract contents on every build (cold or warm)
+       and the items are added before MSBuild assembles the @(ContentWithTargetPath) collection
+       that feeds CopyFilesToOutputDirectory + cross-project Content propagation. -->
+  <Target Name="CollectShimadzuRuntime"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          DependsOnTargets="ExtractShimadzuAssemblies"
+          BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)\*.dll"
+                        Exclude="$(ShimadzuAssembliesDir)\Shimadzu.LabSolutions.IO.IoModule.dll" />
+      <Content Include="@(_ShimadzuRuntime)">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>%(Filename)%(Extension)</Link>
+        <Visible>false</Visible>
+      </Content>
+    </ItemGroup>
+  </Target>
 
 </Project>
