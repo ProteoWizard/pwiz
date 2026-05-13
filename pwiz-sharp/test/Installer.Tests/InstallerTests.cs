@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -53,7 +52,7 @@ public class InstallerTests
     };
 
     [TestMethod]
-    public void Install_PerUser_DeploysFilesAndRegistersContextMenu()
+    public void Install_PerUser_DeploysAndConvertsVendorFile()
     {
         if (!TryFindSetup(out string setupPath, out string skipReason))
         {
@@ -75,7 +74,6 @@ public class InstallerTests
         {
             string installDir = ReadInstallDir(version, perMachine: false);
             AssertRequiredFiles(installDir);
-            AssertContextMenuEntries(perMachine: false, installDir);
             AssertMsconvertSmokes(installDir);
         }
         finally
@@ -85,15 +83,10 @@ public class InstallerTests
 
         Assert.IsFalse(IsInstalled(version, perMachine: false),
             "Uninstall finished but the per-user uninstall registry key is still present.");
-        // NOTE: we intentionally do NOT assert the Explorer context-menu verbs
-        // are gone after uninstall. Setup.iss is "last-installed-wins, no
-        // automatic cleanup" — the verbs are shared across versions and
-        // persist after any individual version's uninstall. That's an
-        // accepted orphan-key trade-off (see Setup.iss for the policy).
     }
 
     [TestMethod]
-    public void Install_PerMachine_DeploysFilesAndRegistersContextMenu()
+    public void Install_PerMachine_DeploysAndConvertsVendorFile()
     {
         if (!IsElevated())
         {
@@ -122,7 +115,6 @@ public class InstallerTests
         {
             string installDir = ReadInstallDir(version, perMachine: true);
             AssertRequiredFiles(installDir);
-            AssertContextMenuEntries(perMachine: true, installDir);
             AssertMsconvertSmokes(installDir);
         }
         finally
@@ -132,7 +124,6 @@ public class InstallerTests
 
         Assert.IsFalse(IsInstalled(version, perMachine: true),
             "Uninstall finished but the per-machine uninstall registry key is still present.");
-        // See note in the per-user test re: context-menu verbs.
     }
 
     // ----------------- Helpers -----------------
@@ -270,20 +261,22 @@ public class InstallerTests
     /// <summary>
     /// Run Setup.exe silently. <c>/CURRENTUSER</c> picks per-user (no UAC),
     /// <c>/ALLUSERS</c> picks per-machine (assumes already-elevated host).
-    /// <c>/TASKS=""</c> disables every optional task by default; tests that
-    /// need context-menu entries override.
+    /// <c>/TASKS=""</c> disables every optional task — crucially the
+    /// context-menu and Start-Menu / Desktop shortcut tasks. The context-menu
+    /// verbs are SHARED across versions by design (last-installed-wins, no
+    /// cleanup on uninstall), so enabling them in an automated test would
+    /// leave orphan entries pointing at the deleted test install dir every
+    /// run, breaking the user's real installation's right-click menu. Manual
+    /// verification of those tasks is fine; the automated installer test
+    /// covers everything else (file deployment, msconvert conversion smoke,
+    /// uninstall accounting).
     /// </summary>
     private static void RunInstaller(string setupPath, bool allUsers)
     {
         string scope = allUsers ? "/ALLUSERS" : "/CURRENTUSER";
-        // Enable just the two context-menu tasks so the post-install verification
-        // can check the corresponding registry writes happened. Skip shortcut tasks
-        // (Start Menu / Desktop) — they're orthogonal to deployment correctness and
-        // pollute the host's start menu during a test run.
-        string tasks = "\"context_msconvertgui,context_seems\"";
         var psi = new ProcessStartInfo(setupPath)
         {
-            Arguments = $"{scope} /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /TASKS={tasks}",
+            Arguments = $"{scope} /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /TASKS=\"\"",
             UseShellExecute = false,
             CreateNoWindow = true,
         };
@@ -346,40 +339,6 @@ public class InstallerTests
             string full = Path.Combine(installDir, file);
             Assert.IsTrue(File.Exists(full),
                 $"Required file missing from install: {full}");
-        }
-    }
-
-    /// <summary>
-    /// Verify the four Explorer context-menu verbs (file + folder × MSConvertGUI +
-    /// SeeMS) are registered AND their command values point at THIS install's
-    /// EXEs. The latter is the load-bearing check for multi-version installs —
-    /// each install overwrites the shared verb's command to its own version,
-    /// and this assertion proves the overwrite happened.
-    /// </summary>
-    private static void AssertContextMenuEntries(bool perMachine, string installDir)
-    {
-        RegistryHive hive = perMachine ? RegistryHive.LocalMachine : RegistryHive.CurrentUser;
-        using RegistryKey root = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
-        // (verb command path, exe name we expect the command to reference)
-        var expected = new (string Path, string Exe)[]
-        {
-            (@"Software\Classes\*\shell\OpenWithMSConvertGUI\command",        "MSConvertGUI-sharp.exe"),
-            (@"Software\Classes\*\shell\OpenWithSeeMS\command",               "seems-sharp.exe"),
-            (@"Software\Classes\Directory\shell\OpenWithMSConvertGUI\command", "MSConvertGUI-sharp.exe"),
-            (@"Software\Classes\Directory\shell\OpenWithSeeMS\command",        "seems-sharp.exe"),
-        };
-        foreach (var (path, exe) in expected)
-        {
-            using RegistryKey? key = root.OpenSubKey(path);
-            Assert.IsNotNull(key,
-                $"Missing context-menu verb registry key after install: {path}");
-            string? cmd = key.GetValue(null) as string;
-            Assert.IsFalse(string.IsNullOrWhiteSpace(cmd),
-                $"Context-menu verb {path} has no default value.");
-            string expectedExePath = Path.Combine(installDir, exe);
-            StringAssert.Contains(cmd, expectedExePath,
-                $"Context-menu verb {path} command points elsewhere — last-installed-wins overwrite didn't happen. " +
-                $"Expected to contain: {expectedExePath}. Actual: {cmd}");
         }
     }
 
