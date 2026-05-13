@@ -6,15 +6,20 @@ Ensure Inno Setup's ISCC.exe is installed and discoverable on this machine.
 Idempotent. Used by tcbuild.bat to bootstrap fresh CI agents (and convenient
 locally too).
 
-Cascade:
-  1. Already installed? — return immediately.
-  2. winget on PATH? — `winget install --id JRSoftware.InnoSetup`.
-  3. winget missing? — install winget via the Microsoft.WinGet.Client
-     PowerShell module's Repair-WinGetPackageManager cmdlet (per-user, no
-     admin), then `winget install --id JRSoftware.InnoSetup`.
+Cascade (each step is best-effort; we fall through on any failure):
+  1. ISCC.exe already discoverable -> done.
+  2. winget already on PATH -> winget install JRSoftware.InnoSetup.
+  3. winget missing -> bootstrap via the Microsoft.WinGet.Client PowerShell
+     module's Repair-WinGetPackageManager cmdlet (per-user, no admin), then
+     winget install Inno Setup. Skipped silently if PSGallery is unreachable
+     from the agent.
+  4. Both winget paths failed -> direct download of Inno Setup's installer
+     from jrsoftware.org and run /VERYSILENT /CURRENTUSER. This last fallback
+     has no dependency on PSGallery / Microsoft bootstrap URLs / winget, so
+     it works on locked-down or offline-ish agents as long as
+     https://jrsoftware.org is reachable.
 
-Exits 0 if ISCC.exe is discoverable at completion, 1 otherwise. Logs progress
-to stdout; errors go to stderr.
+Exits 0 iff ISCC.exe is discoverable at completion, 1 otherwise.
 
 .PARAMETER PassThru
 Print the resolved ISCC.exe path on stdout if successful.
@@ -41,35 +46,82 @@ function Find-Iscc {
     return $null
 }
 
-function Ensure-Winget {
-    if (Get-Command winget -ErrorAction SilentlyContinue) { return $true }
-
-    Write-Host "winget not on PATH; bootstrapping via Microsoft.WinGet.Client PowerShell module..."
+function Try-WingetBootstrap {
+    Write-Host "Bootstrapping winget via Microsoft.WinGet.Client PowerShell module..."
     try {
-        # NuGet provider is needed before Install-Module can pull from PSGallery on a
-        # fresh box. Already-installed is a no-op.
-        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser | Out-Null
+        # Force TLS 1.2 for older Windows PowerShell that defaults to 1.0/1.1.
+        # No-op on pwsh 7 (already uses modern TLS).
+        try {
+            [Net.ServicePointManager]::SecurityProtocol =
+                [Net.ServicePointManager]::SecurityProtocol -bor
+                [Net.SecurityProtocolType]::Tls12
+        } catch { }
 
+        # NB: deliberately NOT calling `Install-PackageProvider -Name NuGet`.
+        # On the TC agents that hit this path, that call fails with
+        # "No match was found for the specified search criteria for the
+        # provider 'NuGet'" because the bootstrap URL
+        # onegetcdn.azureedge.net is unreachable. PowerShell 7 (what
+        # tcbuild.bat runs) has the NuGet provider built into PowerShellGet
+        # already, so the explicit install isn't required — Install-Module
+        # from PSGallery just works.
         if (-not (Get-Module -ListAvailable -Name Microsoft.WinGet.Client)) {
-            # PSGallery is untrusted by default; -Force accepts the trust prompt for
-            # this install only and doesn't change the global trust setting.
             Install-Module -Name Microsoft.WinGet.Client `
-                -Force -Scope CurrentUser -Repository PSGallery -AllowClobber
+                -Force -Scope CurrentUser -Repository PSGallery -AllowClobber `
+                -ErrorAction Stop
         }
         Import-Module Microsoft.WinGet.Client -ErrorAction Stop
 
         # Repair-WinGetPackageManager downloads the App Installer msixbundle plus
         # its VCLibs / Microsoft.UI.Xaml dependencies and installs them per-user
-        # via Add-AppxPackage. Idempotent on machines that already have winget.
-        Repair-WinGetPackageManager
+        # via Add-AppxPackage.
+        Repair-WinGetPackageManager -ErrorAction Stop
     } catch {
-        Write-Warning "Failed to bootstrap winget: $($_.Exception.Message)"
+        Write-Warning "winget bootstrap failed: $($_.Exception.Message)"
         return $false
     }
     return [bool](Get-Command winget -ErrorAction SilentlyContinue)
 }
 
-# 1. Fast path: already installed.
+function Try-WingetInstallInno {
+    Write-Host "winget install JRSoftware.InnoSetup ..."
+    & winget install --id JRSoftware.InnoSetup `
+        --silent --accept-source-agreements --accept-package-agreements `
+        --disable-interactivity 2>&1 | ForEach-Object { Write-Host $_ }
+    $code = $LASTEXITCODE
+    # 0 = installed. -1978335189 = APPINSTALLER_CLI_ERROR_UPDATE_NOT_APPLICABLE
+    # (already up-to-date). Both are success.
+    if ($code -eq 0 -or $code -eq -1978335189) { return $true }
+    Write-Warning "winget install JRSoftware.InnoSetup failed with exit $code"
+    return $false
+}
+
+function Try-DirectInnoInstall {
+    # Fallback when winget isn't available and can't be bootstrapped. Inno
+    # Setup's own installer is itself built with Inno Setup, so it accepts
+    # /VERYSILENT /CURRENTUSER and friends.
+    $url = 'https://jrsoftware.org/download.php/is.exe'
+    $exe = Join-Path $env:TEMP "innosetup-installer-$([Guid]::NewGuid().ToString('N')).exe"
+    Write-Host "Downloading Inno Setup installer from $url ..."
+    try {
+        Invoke-WebRequest -Uri $url -OutFile $exe -UseBasicParsing -MaximumRedirection 10
+    } catch {
+        Write-Warning "Inno Setup direct download failed: $($_.Exception.Message)"
+        return $false
+    }
+    Write-Host "Running Inno Setup installer (/VERYSILENT /CURRENTUSER) ..."
+    & $exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER | Out-Host
+    $code = $LASTEXITCODE
+    Remove-Item $exe -Force -ErrorAction SilentlyContinue
+    if ($code -ne 0) {
+        Write-Warning "Inno Setup direct installer exited with code $code"
+        return $false
+    }
+    return $true
+}
+
+# --- cascade ---
+
 $iscc = Find-Iscc
 if ($iscc) {
     Write-Host "Inno Setup already present at $iscc"
@@ -77,31 +129,33 @@ if ($iscc) {
     exit 0
 }
 
-# 2 / 3. Make sure winget is available, then install Inno Setup with it.
-if (-not (Ensure-Winget)) {
-    Write-Error ("Could not provision winget; install Inno Setup manually on this " +
-                 "agent (winget install --id JRSoftware.InnoSetup, or download from " +
-                 "https://jrsoftware.org/isdl.php).")
-    exit 1
+# Strategy 1: winget (existing or bootstrapped).
+$haveWinget = [bool](Get-Command winget -ErrorAction SilentlyContinue)
+if (-not $haveWinget) {
+    $haveWinget = Try-WingetBootstrap
+}
+if ($haveWinget) {
+    [void](Try-WingetInstallInno)
+    $iscc = Find-Iscc
+    if ($iscc) {
+        Write-Host "Inno Setup installed via winget at $iscc"
+        if ($PassThru) { $iscc }
+        exit 0
+    }
 }
 
-Write-Host "Installing Inno Setup via winget..."
-& winget install --id JRSoftware.InnoSetup `
-    --silent --accept-source-agreements --accept-package-agreements `
-    --disable-interactivity
-$wingetExit = $LASTEXITCODE
-# 0 = installed, -1978335189 (0x8A150049) = APPINSTALLER_CLI_ERROR_UPDATE_NOT_APPLICABLE
-# (i.e. already up-to-date). Both are success states for an idempotent ensure.
-if ($wingetExit -ne 0 -and $wingetExit -ne -1978335189) {
-    Write-Error "winget install JRSoftware.InnoSetup failed with exit $wingetExit"
-    exit 1
+# Strategy 2: direct download fallback (no winget, no PSGallery — just
+# Invoke-WebRequest against jrsoftware.org).
+Write-Host "winget path didn't yield Inno Setup; falling back to direct installer download."
+if (Try-DirectInnoInstall) {
+    $iscc = Find-Iscc
+    if ($iscc) {
+        Write-Host "Inno Setup installed via direct download at $iscc"
+        if ($PassThru) { $iscc }
+        exit 0
+    }
 }
 
-$iscc = Find-Iscc
-if ($iscc) {
-    Write-Host "Inno Setup installed at $iscc"
-    if ($PassThru) { $iscc }
-    exit 0
-}
-Write-Error "winget reported success but ISCC.exe is still not discoverable."
+Write-Error ("All Inno Setup install paths failed. Install manually on this " +
+             "agent: https://jrsoftware.org/isdl.php")
 exit 1
