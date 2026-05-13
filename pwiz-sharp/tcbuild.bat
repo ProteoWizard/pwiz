@@ -48,29 +48,21 @@ set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet not on PATH & goto error)
 
 REM # Bootstrap Inno Setup on the agent so build.bat can produce Setup.exe and
-REM # Installer.Tests can drive it. Idempotent: if ISCC.exe is already
-REM # discoverable, skip. If winget itself isn't available or the install fails,
-REM # log a TC warning and continue — build.bat handles the missing-ISCC case
-REM # by skipping the installer build, and Installer.Tests then skips
-REM # Inconclusive. So the worst case is "no installer coverage on this build,"
-REM # not "build fails."
-set HAVE_ISCC=0
-where ISCC.exe >NUL 2>&1
-if not ERRORLEVEL 1 set HAVE_ISCC=1
-if exist "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" set HAVE_ISCC=1
-if exist "%ProgramFiles%\Inno Setup 6\ISCC.exe"          set HAVE_ISCC=1
-if exist "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"     set HAVE_ISCC=1
-if %HAVE_ISCC%==0 (
-    where winget >NUL 2>&1
-    if ERRORLEVEL 1 (
-        echo ##teamcity[message text='winget not on PATH; cannot auto-install Inno Setup. Install manually on this agent for installer-build coverage.' status='WARNING']
-    ) else (
-        echo ##teamcity[progressMessage 'winget install JRSoftware.InnoSetup ^(first time on this agent^)']
-        winget install --id JRSoftware.InnoSetup --silent --accept-source-agreements --accept-package-agreements --disable-interactivity
-        if ERRORLEVEL 1 (
-            echo ##teamcity[message text='winget install JRSoftware.InnoSetup failed; installer build will be skipped' status='WARNING']
-        )
-    )
+REM # Installer.Tests can drive it end-to-end. Ensure-InnoSetup.ps1 is
+REM # idempotent and handles the full cascade itself:
+REM #   - ISCC.exe already discoverable -> no-op
+REM #   - winget present -> winget install JRSoftware.InnoSetup
+REM #   - winget missing -> install winget via the Microsoft.WinGet.Client
+REM #     PowerShell module (Repair-WinGetPackageManager), then install Inno
+REM #     Setup via winget.
+REM # If any step fails, the script exits non-zero. We log a TC warning and
+REM # continue — build.bat handles the missing-ISCC case by skipping the
+REM # installer build, and Installer.Tests then skips Inconclusive. So the
+REM # worst case is "no installer coverage on this build," not "build fails."
+echo ##teamcity[progressMessage 'Ensure-InnoSetup.ps1 ^(idempotent; bootstraps winget if missing^)']
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\installer\Ensure-InnoSetup.ps1"
+if ERRORLEVEL 1 (
+    echo ##teamcity[message text='Ensure-InnoSetup.ps1 failed; installer build and Installer.Tests will be skipped' status='WARNING']
 )
 
 echo ##teamcity[progressMessage 'pwiz-sharp build.bat %*']
