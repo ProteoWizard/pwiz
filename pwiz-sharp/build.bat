@@ -111,13 +111,42 @@ dotnet build %BUILD_TARGET% --no-restore -nologo %MSBUILD_PROPS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet build failed & goto error)
 
+REM # Installer build. Only runs when vendor support is enabled (the installer
+REM # ships vendor-enabled binaries) AND Inno Setup's ISCC.exe is locatable.
+REM # If ISCC is missing, log a TC warning and continue — Installer.Tests will
+REM # then skip Inconclusive ("Setup.exe not found") instead of failing the
+REM # whole build. tcbuild.bat tries to bootstrap Inno Setup via winget so this
+REM # branch should normally not be taken on CI.
+if %IAGREE%==1 (
+    set HAVE_ISCC=0
+    where ISCC.exe >NUL 2>&1
+    if not ERRORLEVEL 1 set HAVE_ISCC=1
+    if exist "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" set HAVE_ISCC=1
+    if exist "%ProgramFiles%\Inno Setup 6\ISCC.exe"          set HAVE_ISCC=1
+    if exist "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"     set HAVE_ISCC=1
+    if !HAVE_ISCC!==1 (
+        echo ##teamcity[progressMessage 'installer/build.ps1 -SkipBuild ^(uses Release artifacts^)']
+        pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\installer\build.ps1" -SkipBuild
+        if !ERRORLEVEL! NEQ 0 (
+            echo ##teamcity[message text='installer build failed; Installer.Tests will skip' status='WARNING']
+        )
+    ) else (
+        echo ##teamcity[message text='Inno Setup ^(ISCC.exe^) not found; skipping installer build and Installer.Tests will skip' status='WARNING']
+    )
+)
+
 REM # Test discovery: with vendor support, every test csproj under test\.
 REM # Without vendor support, only the projects that don't pull vendor refs
 REM # (Bruker.Tests / Thermo.Tests / Waters.Tests / Agilent.Tests /
 REM # Sciex.Tests / Shimadzu.Tests / UNIFI.Tests / UIMF.Tests / Mobilion.Tests
 REM # all reference vendor projects).
+REM #
+REM # Installer.Tests is vendor-only because its smoke test runs the installed
+REM # msconvert-sharp against a Thermo .raw to exercise VendorSdkLoader +
+REM # Reader_Thermo end-to-end. With no vendor support the conversion would
+REM # fail (and the installer itself wouldn't have vendor-enabled binaries).
 set TEST_TARGET=test\Util.Tests\Util.Tests.csproj test\Common.Tests\Common.Tests.csproj test\MsData.Tests\MsData.Tests.csproj test\IdentData.Tests\IdentData.Tests.csproj test\Analysis.Tests\Analysis.Tests.csproj test\MsConvert.Tests\MsConvert.Tests.csproj
-if %IAGREE%==1 set TEST_TARGET=%TEST_TARGET% test\Agilent.Tests\Agilent.Tests.csproj test\Bruker.Tests\Bruker.Tests.csproj test\Mobilion.Tests\Mobilion.Tests.csproj test\Sciex.Tests\Sciex.Tests.csproj test\Shimadzu.Tests\Shimadzu.Tests.csproj test\Thermo.Tests\Thermo.Tests.csproj test\UIMF.Tests\UIMF.Tests.csproj test\UNIFI.Tests\UNIFI.Tests.csproj test\Waters.Tests\Waters.Tests.csproj
+if %IAGREE%==1 set TEST_TARGET=%TEST_TARGET% test\Agilent.Tests\Agilent.Tests.csproj test\Bruker.Tests\Bruker.Tests.csproj test\Mobilion.Tests\Mobilion.Tests.csproj test\Sciex.Tests\Sciex.Tests.csproj test\Shimadzu.Tests\Shimadzu.Tests.csproj test\Thermo.Tests\Thermo.Tests.csproj test\UIMF.Tests\UIMF.Tests.csproj test\UNIFI.Tests\UNIFI.Tests.csproj test\Waters.Tests\Waters.Tests.csproj test\Installer.Tests\Installer.Tests.csproj
 
 REM # Test step: scripts\Run-Tests-Parallel.ps1 spawns one parallel
 REM # `dotnet test <project>` job per csproj, each redirected to its own log
