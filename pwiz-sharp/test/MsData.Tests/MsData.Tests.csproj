@@ -4,6 +4,10 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- MzMlbConnectionTests builds tiny HDF5 fixtures via HDF.PInvoke; pinning
+         buffers with `fixed` requires unsafe. Compiles to IL — no platform
+         implications. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,6 +6,7 @@ using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Encoding;
 using Pwiz.Data.MsData.Instruments;
+using Pwiz.Data.MsData.MzMlb;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Samples;
 using Pwiz.Data.MsData.Sources;
@@ -44,6 +45,22 @@ public sealed class MzmlWriter
     /// once per spectrum during the spectrumList write loop. Drives msconvert's <c>-v</c>
     /// progress output and any future progress UI.</summary>
     public IterationListenerRegistry? IterationListenerRegistry { get; set; }
+
+    /// <summary>
+    /// Optional sink for external binary array data. When set, the writer
+    /// routes each <c>BinaryDataArray</c> / <c>IntegerDataArray</c> through
+    /// the sink (which stores the values in named HDF5 datasets) and emits
+    /// <c>external_HDF5_dataset</c> + <c>external_offset</c> +
+    /// <c>external_array_length</c> cvParams in place of inline base64. Used
+    /// by <c>Serializer_mzMLb</c>; null for plain mzML.
+    /// </summary>
+    public IExternalBinarySink? ExternalBinarySink { get; set; }
+
+    // "spectrum_" / "chromatogram_" — used as a dataset-name prefix when
+    // ExternalBinarySink is set. Toggled by WriteSpectrumList /
+    // WriteChromatogramList around their per-array call sites so
+    // WriteBinaryDataArray / WriteIntegerDataArray know which context they're in.
+    private string _externalArrayContextPrefix = "spectrum_";
 
     /// <summary>Creates a writer that encodes binary arrays with the given config.</summary>
     public MzmlWriter(BinaryEncoderConfig? encoderConfig = null)
@@ -460,6 +477,24 @@ public sealed class MzmlWriter
 
     private void WriteChromatogram(XmlWriter w, Chromatogram chrom)
     {
+        // Chromatogram binary arrays sit in datasets prefixed "chromatogram_"
+        // (vs. "spectrum_" for spectra) when an mzMLb sink is wired up.
+        // Toggle in/out so nested spectrum-time-array writes don't accidentally
+        // pick the wrong prefix.
+        string previousPrefix = _externalArrayContextPrefix;
+        _externalArrayContextPrefix = "chromatogram_";
+        try
+        {
+            WriteChromatogramInner(w, chrom);
+        }
+        finally
+        {
+            _externalArrayContextPrefix = previousPrefix;
+        }
+    }
+
+    private void WriteChromatogramInner(XmlWriter w, Chromatogram chrom)
+    {
         ArmOffsetCapture(w);
         w.WriteStartElement("chromatogram");
         w.WriteAttributeString("index", chrom.Index.ToString(CultureInfo.InvariantCulture));
@@ -496,6 +531,12 @@ public sealed class MzmlWriter
 
     private void WriteIntegerDataArray(XmlWriter w, IntegerDataArray arr)
     {
+        if (ExternalBinarySink is not null)
+        {
+            WriteIntegerDataArrayMzMlb(w, arr);
+            return;
+        }
+
         var encoder = new BinaryDataEncoder(_encoderConfig);
         string base64 = encoder.EncodeInt64(CollectionsMarshal.AsSpan(arr.Data), out _);
 
@@ -516,6 +557,73 @@ public sealed class MzmlWriter
         w.WriteString(base64);
         w.WriteEndElement();
         w.WriteEndElement();
+    }
+
+    /// <summary>
+    /// mzMLb variant of <see cref="WriteIntegerDataArray"/>. Dispatches on the
+    /// per-array precision config: 64-bit -&gt; <c>AppendInt64</c> into a
+    /// "_int64"-suffixed dataset, 32-bit -&gt; narrow long[] to int[],
+    /// <c>AppendInt32</c> into a "_int32"-suffixed dataset (cpp IO.cpp's
+    /// writeMzMLbExtra&lt;IntegerDataArray&gt;). cpp doesn't define
+    /// numpress for integer arrays — we mirror that.
+    /// </summary>
+    private void WriteIntegerDataArrayMzMlb(XmlWriter w, IntegerDataArray arr)
+    {
+        var globalCfg = _encoderConfig;
+        // IntegerDataArray doesn't carry a binary-array CVID per se, so the
+        // PrecisionOverrides keyed by m/z / intensity won't apply; honor the
+        // global Precision setting only.
+        bool use32Bit = globalCfg.Precision == BinaryPrecision.Bits32;
+
+        CVID typeCv = ArrayTypeCvidInt(arr);
+        string suffix = use32Bit ? "_int32" : "_int64";
+        string dataset = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
+        var data = CollectionsMarshal.AsSpan(arr.Data);
+        long offset;
+        if (use32Bit)
+        {
+            var int32s = new int[data.Length];
+            for (int i = 0; i < data.Length; i++) int32s[i] = (int)data[i];
+            offset = ExternalBinarySink!.AppendInt32(dataset, int32s);
+        }
+        else
+        {
+            offset = ExternalBinarySink!.AppendInt64(dataset, data);
+        }
+
+        w.WriteStartElement("binaryDataArray");
+        w.WriteAttributeString("arrayLength", arr.Data.Count.ToString(CultureInfo.InvariantCulture));
+        w.WriteAttributeString("encodedLength", "0");
+        if (arr.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", XmlIdEncoding.Encode(arr.DataProcessing.Id));
+
+        MzmlXml.WriteCvParam(w, new CVParam(use32Bit ? CVID.MS_32_bit_integer : CVID.MS_64_bit_integer));
+        MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_no_compression));
+        MzmlXml.WriteParams(w, arr);
+        MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_external_HDF5_dataset, dataset));
+        MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_external_offset, offset));
+        MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_external_array_length, arr.Data.Count));
+
+        // Empty <binary/> element keeps mzML schema compliance — pwiz cpp does
+        // the same. Readers see the external-dataset cvParams and skip base64
+        // decoding.
+        w.WriteStartElement("binary");
+        w.WriteEndElement();
+        w.WriteEndElement();
+    }
+
+    /// <summary>IntegerDataArray-specific equivalent of <see cref="ArrayTypeCvid"/>.
+    /// Identifies which "is_a MS_binary_data_array" child the array carries
+    /// (typically <c>MS_charge_array</c> in centroid spectra). Falls back to
+    /// <c>MS_non_standard_data_array</c>'s child if no known accession is
+    /// present.</summary>
+    private static CVID ArrayTypeCvidInt(IntegerDataArray arr)
+    {
+        foreach (var cv in arr.CVParams)
+        {
+            if (CvLookup.CvIsA(cv.Cvid, CVID.MS_binary_data_array))
+                return cv.Cvid;
+        }
+        return CVID.CVID_Unknown;
     }
 
     private void WriteSpectrumList(XmlWriter w, ISpectrumList list)
@@ -616,12 +724,15 @@ public sealed class MzmlWriter
             w.WriteEndElement();
         }
 
-        if (spec.BinaryDataArrays.Count > 0)
+        int totalArrays = spec.BinaryDataArrays.Count + spec.IntegerDataArrays.Count;
+        if (totalArrays > 0)
         {
             w.WriteStartElement("binaryDataArrayList");
-            MzmlXml.WriteCountAttr(w, spec.BinaryDataArrays.Count);
+            MzmlXml.WriteCountAttr(w, totalArrays);
             foreach (var arr in spec.BinaryDataArrays)
                 WriteBinaryDataArray(w, arr);
+            foreach (var arr in spec.IntegerDataArrays)
+                WriteIntegerDataArray(w, arr);
             w.WriteEndElement();
         }
 
@@ -678,6 +789,12 @@ public sealed class MzmlWriter
 
     private void WriteBinaryDataArray(XmlWriter w, BinaryDataArray arr)
     {
+        if (ExternalBinarySink is not null)
+        {
+            WriteBinaryDataArrayMzMlb(w, arr);
+            return;
+        }
+
         // Resolve per-array config using the Numpress/Compression/Precision overrides (keyed by array type).
         var cfg = ResolvePerArrayConfig(_encoderConfig, arr);
         var encoder = new BinaryDataEncoder(cfg);
@@ -735,6 +852,106 @@ public sealed class MzmlWriter
         return cfg;
     }
 
+    /// <summary>
+    /// mzMLb variant of <see cref="WriteBinaryDataArray"/>. Appends the array's
+    /// values to a per-array-type HDF5 dataset via <see cref="ExternalBinarySink"/>
+    /// and emits external-dataset cvParams in place of inline base64.
+    /// Dispatches on the per-array config selected by <see cref="ResolvePerArrayConfig"/>:
+    /// <list type="bullet">
+    ///   <item>Numpress -&gt; encode to raw bytes (zlib applied if configured),
+    ///         <c>AppendBytes</c> into a "_numpress_linear|_pic|_slof"-suffixed
+    ///         dataset; reader pulls bytes back and decodes via BinaryDataEncoder.</item>
+    ///   <item>64-bit -&gt; <c>AppendDoubles</c> into "_double"-suffixed dataset.</item>
+    ///   <item>32-bit -&gt; narrow to float[], <c>AppendFloats</c> into
+    ///         "_float"-suffixed dataset.</item>
+    /// </list>
+    /// Matches cpp IO.cpp:1623-1822.
+    /// </summary>
+    private void WriteBinaryDataArrayMzMlb(XmlWriter w, BinaryDataArray arr)
+    {
+        var cfg = ResolvePerArrayConfig(_encoderConfig, arr);
+        CVID typeCv = ArrayTypeCvid(arr);
+        var data = CollectionsMarshal.AsSpan(arr.Data);
+
+        string suffix;
+        long offset;
+        int encodedLength;
+        BinaryNumpress actualNumpress = cfg.Numpress;
+
+        if (cfg.Numpress != BinaryNumpress.None)
+        {
+            // Encode to raw bytes (post-zlib) and store as an opaque dataset.
+            // The encoder may downgrade to None if tolerance fails; that's
+            // reflected in actualNumpress so the cvParam tells the truth.
+            byte[] bytes = new BinaryDataEncoder(cfg).EncodeToBytes(data, out actualNumpress);
+            suffix = actualNumpress switch
+            {
+                BinaryNumpress.Linear => "_numpress_linear",
+                BinaryNumpress.Pic    => "_numpress_pic",
+                BinaryNumpress.Slof   => "_numpress_slof",
+                _                     => cfg.Precision == BinaryPrecision.Bits32 ? "_float" : "_double",
+            };
+            string dsName = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
+            if (actualNumpress != BinaryNumpress.None)
+            {
+                offset = ExternalBinarySink!.AppendBytes(dsName, bytes);
+                encodedLength = bytes.Length;
+            }
+            else
+            {
+                // Numpress was rejected (tolerance exceeded). EncodeToBytes already
+                // produced the raw float/double payload for us, so reuse those bytes
+                // and let AppendBytes treat them as opaque too. Reader handles this
+                // identically (numpress=None + opaque dataset => just zlib + native).
+                offset = ExternalBinarySink!.AppendBytes(dsName, bytes);
+                encodedLength = bytes.Length;
+            }
+        }
+        else if (cfg.Precision == BinaryPrecision.Bits32)
+        {
+            var floats = new float[data.Length];
+            for (int i = 0; i < data.Length; i++) floats[i] = (float)data[i];
+            suffix = "_float";
+            string dsName = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
+            offset = ExternalBinarySink!.AppendFloats(dsName, floats);
+            encodedLength = 0; // for non-numpress paths cpp emits encodedLength=0
+        }
+        else
+        {
+            suffix = "_double";
+            string dsName = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
+            offset = ExternalBinarySink!.AppendDoubles(dsName, data);
+            encodedLength = 0;
+        }
+
+        string dataset = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
+
+        w.WriteStartElement("binaryDataArray");
+        w.WriteAttributeString("encodedLength", encodedLength.ToString(CultureInfo.InvariantCulture));
+        if (arr.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", XmlIdEncoding.Encode(arr.DataProcessing.Id));
+
+        EmitEncodingCvParams(w, cfg, actualNumpress);
+        WriteArrayParamsExcludingEncoding(w, arr);
+        MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_external_HDF5_dataset, dataset));
+        MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_external_offset, offset));
+        MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_external_array_length, arr.Data.Count));
+
+        w.WriteStartElement("binary");
+        w.WriteEndElement();
+        w.WriteEndElement();
+    }
+
+    /// <summary>Local helper: emit the same precision / compression / numpress
+    /// CV params <c>EmitEncodingCvParams</c> does, but with the
+    /// numpress field overridden to reflect what the encoder actually used
+    /// (may have downgraded from the configured value).</summary>
+    private static void EmitEncodingCvParams(XmlWriter w, BinaryEncoderConfig cfg, BinaryNumpress actualNumpress)
+    {
+        var c = cfg.Clone();
+        c.Numpress = actualNumpress;
+        EmitEncodingCvParams(w, c);
+    }
+
     private static CVID ArrayTypeCvid(BinaryDataArray arr)
     {
         foreach (var cv in arr.CVParams)
@@ -753,7 +970,7 @@ public sealed class MzmlWriter
 
     /// <summary>Emits all CV / user / referenceableParamGroup entries on <paramref name="arr"/>
     /// EXCEPT the precision / compression / numpress CV params — those are emitted from the
-    /// resolved <see cref="BinaryEncoderConfig"/> by <see cref="EmitEncodingCvParams"/>. The
+    /// resolved <see cref="BinaryEncoderConfig"/> by <c>EmitEncodingCvParams</c>. The
     /// array may carry stale encoding CVs from its source (e.g. a 64-bit float term inherited
     /// from the input mzML); writing both that and the writer's chosen precision produces an
     /// XML element with two conflicting precision params, and the reader picks the second one

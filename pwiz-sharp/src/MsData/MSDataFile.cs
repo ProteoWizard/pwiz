@@ -2,6 +2,7 @@ using System.IO.Compression;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Mgf;
 using Pwiz.Data.MsData.Mzml;
+using Pwiz.Data.MsData.MzMlb;
 using Pwiz.Data.MsData.MzXml;
 using Pwiz.Data.MsData.Sources;
 using Pwiz.Util;
@@ -59,6 +60,20 @@ public static class MSDataFile
         ArgumentNullException.ThrowIfNull(msd);
         ArgumentException.ThrowIfNullOrEmpty(path);
         ArgumentNullException.ThrowIfNull(config);
+
+        // mzMLb is path-bound: it's an HDF5 container that needs random-access
+        // file I/O. The Stream-shaped Write overload can't serve it, so
+        // dispatch here before the stream is opened.
+        if (config.Format == WriteFormat.MzMLb)
+        {
+            new MzMlbWriter(config.EncoderConfig)
+            {
+                ChunkSize = (ulong)Math.Max(1, config.MzMLbChunkSize),
+                CompressionLevel = config.MzMLbCompressionLevel,
+                IterationListenerRegistry = ilr,
+            }.Write(msd, path);
+            return;
+        }
 
         using Stream output = OpenOutputStream(path, config.Gzip);
         Write(msd, output, config, ilr);

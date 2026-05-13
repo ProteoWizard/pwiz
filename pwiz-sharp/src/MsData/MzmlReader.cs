@@ -4,6 +4,7 @@ using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Encoding;
 using Pwiz.Data.MsData.Instruments;
+using Pwiz.Data.MsData.MzMlb;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Samples;
 using Pwiz.Data.MsData.Sources;
@@ -30,6 +31,14 @@ public sealed class MzmlReader
     private readonly Dictionary<string, SourceFile> _sourceFileById = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Sample> _sampleById = new(StringComparer.Ordinal);
     private readonly Dictionary<string, ParamGroup> _paramGroupById = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Optional source for external binary arrays referenced by
+    /// <see cref="CVID.MS_external_HDF5_dataset"/> cvParams. Set by
+    /// <c>Reader_MzMlb</c> before calling <see cref="Read(Stream)"/>; null for
+    /// plain mzML.
+    /// </summary>
+    public IExternalBinarySource? ExternalBinarySource { get; set; }
 
     /// <summary>Parses mzML from a string.</summary>
     public MSData Read(string mzml)
@@ -595,6 +604,15 @@ public sealed class MzmlReader
         DataProcessing? dp = null;
         if (dpRef is not null) _dpById.TryGetValue(dpRef, out dp);
 
+        // Capture encodedLength from the <binaryDataArray> opening tag before we
+        // advance into its children. mzMLb numpress uses this to know how many
+        // opaque bytes to read from the HDF5 dataset (the array_length cvParam
+        // is the decoded-element count, not the byte count).
+        int encodedLengthAttr = 0;
+        if (int.TryParse(r.GetAttribute("encodedLength"), NumberStyles.Integer,
+                         CultureInfo.InvariantCulture, out int parsedEncLen))
+            encodedLengthAttr = parsedEncLen;
+
         if (MzmlXml.MoveToFirstChildElement(r))
         {
             MzmlXml.ReadParams(r, tempParams, _paramGroupById);
@@ -609,6 +627,60 @@ public sealed class MzmlReader
         bool isInteger = tempParams.HasCVParam(CVID.MS_32_bit_integer) || tempParams.HasCVParam(CVID.MS_64_bit_integer);
         var encoderConfig = new BinaryEncoderConfig();
         ConfigureFromParams(tempParams, encoderConfig, isInteger);
+
+        // mzMLb branch: the binary element is empty and three cvParams point at
+        // a named dataset in the surrounding HDF5 file. Route through the
+        // injected ExternalBinarySource instead of decoding base64.
+        //
+        // For non-numpress arrays HDF5 handles type conversion at read time so
+        // we always pull as double / long regardless of on-disk precision
+        // (matches cpp IO.cpp:2553).
+        //
+        // For numpress arrays cpp stores the encoded bytes as an opaque dataset
+        // and records the byte count in encodedLength; we read those bytes via
+        // ReadBytes and decode through BinaryDataEncoder.DecodeDoublesFromRawBytes
+        // configured with the same numpress / compression / precision params we
+        // already parsed off the binaryDataArray's cvParams (matches cpp
+        // IO.cpp:2539-2548).
+        string? externalDataset = tempParams.CvParam(CVID.MS_external_HDF5_dataset).Value;
+        if (!string.IsNullOrEmpty(externalDataset) && ExternalBinarySource is not null)
+        {
+            long externalOffset = tempParams.CvParamValueOrDefault(CVID.MS_external_offset, 0L);
+            long externalLength = tempParams.CvParamValueOrDefault(CVID.MS_external_array_length, 0L);
+            if (isInteger)
+            {
+                var arr = new IntegerDataArray { DataProcessing = dp };
+                CopyParams(tempParams, arr);
+                if (externalLength > 0)
+                {
+                    var buf = new long[externalLength];
+                    int got = ExternalBinarySource.ReadInt64(externalDataset!, externalOffset, buf);
+                    arr.Data.AddRange(buf.AsSpan(0, got).ToArray());
+                }
+                integerArrays.Add(arr);
+            }
+            else
+            {
+                var arr = new BinaryDataArray { DataProcessing = dp };
+                CopyParams(tempParams, arr);
+                if (encoderConfig.Numpress != BinaryNumpress.None && encodedLengthAttr > 0)
+                {
+                    // Numpress: read encodedLengthAttr opaque bytes, decode in-process.
+                    var bytes = new byte[encodedLengthAttr];
+                    ExternalBinarySource.ReadBytes(externalDataset!, externalOffset, bytes);
+                    arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeDoublesFromRawBytes(bytes));
+                }
+                else if (externalLength > 0)
+                {
+                    var buf = new double[externalLength];
+                    int got = ExternalBinarySource.ReadDoubles(externalDataset!, externalOffset, buf);
+                    arr.Data.AddRange(buf.AsSpan(0, got).ToArray());
+                }
+                doubleArrays.Add(arr);
+            }
+            r.Read();
+            return;
+        }
 
         if (isInteger)
         {

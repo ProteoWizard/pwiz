@@ -149,6 +149,18 @@ public sealed class BinaryDataEncoder
     /// </summary>
     public string Encode(ReadOnlySpan<double> data, out int binaryByteCount, out BinaryNumpress actualNumpress)
     {
+        byte[] bytes = EncodeToBytes(data, out actualNumpress);
+        binaryByteCount = bytes.Length;
+        return Convert.ToBase64String(bytes);
+    }
+
+    /// <summary>
+    /// Encodes a doubles array to the raw byte buffer (post-numpress, post-compression) without
+    /// the trailing base64 step. Used by mzMLb where the encoded bytes are written to an opaque
+    /// HDF5 dataset rather than spliced as base64 into the mzML XML.
+    /// </summary>
+    public byte[] EncodeToBytes(ReadOnlySpan<double> data, out BinaryNumpress actualNumpress)
+    {
         actualNumpress = _config.Numpress;
         byte[] bytes;
         switch (_config.Numpress)
@@ -189,10 +201,7 @@ public sealed class BinaryDataEncoder
             default:
                 throw new InvalidOperationException($"Unsupported numpress: {_config.Numpress}");
         }
-
-        bytes = Compress(bytes);
-        binaryByteCount = bytes.Length;
-        return Convert.ToBase64String(bytes);
+        return Compress(bytes);
     }
 
     private byte[] EncodeRaw(ReadOnlySpan<double> data) =>
@@ -256,6 +265,15 @@ public sealed class BinaryDataEncoder
     public double[] DecodeDoubles(ReadOnlySpan<char> encoded)
     {
         byte[] bytes = FromBase64(encoded);
+        return DecodeDoublesFromBytes(bytes);
+    }
+
+    /// <summary>Decodes raw (post-zlib, post-numpress-payload) bytes into a doubles array.
+    /// Counterpart to <see cref="EncodeToBytes"/>; used by mzMLb where the encoded bytes come
+    /// from an opaque HDF5 dataset rather than the base64 in a <c>&lt;binary&gt;</c> element.</summary>
+    public double[] DecodeDoublesFromRawBytes(byte[] bytes)
+    {
+        ArgumentNullException.ThrowIfNull(bytes);
         return DecodeDoublesFromBytes(bytes);
     }
 

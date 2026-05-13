@@ -4,11 +4,24 @@
     <RootNamespace>Pwiz.Data.MsData</RootNamespace>
     <AssemblyName>Pwiz.Data.MsData</AssemblyName>
     <Description>MSData model, mzML/mzXML serialization, simple text formats. Port of pwiz/data/msdata.</Description>
+    <!-- The mzMLb HDF5 reader uses unsafe blocks to pass managed Span<T> buffers
+         to native libhdf5 via H5D.read. The alternative (per-call GCHandle.Alloc
+         pinning) would be slower and uglier; the unsafe is confined to that one
+         file. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Util\Util.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- HDF.PInvoke ships P/Invoke bindings + a bundled native libhdf5 for
+         Windows / Linux x64. Used by Reader_MzMlb (and, later, Reader_Mz5)
+         to read/write HDF5-backed mass-spec files. The 1.10 stream tracks
+         HDF5 1.10.x — the same major version pwiz cpp builds against. -->
+    <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.612" />
   </ItemGroup>
 
 </Project>

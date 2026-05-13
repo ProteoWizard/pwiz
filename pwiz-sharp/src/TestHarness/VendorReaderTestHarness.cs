@@ -404,9 +404,65 @@ public static class VendorReaderTestHarness
             }
         }
 
+        // 8. mzMLb round-trip: write to HDF5-backed mzML, read it back, verify the spectrum
+        // data made the trip. One round-trip exercises every mzMLb writer/reader path
+        // in one go:
+        //   - m/z array: numpress_linear (opaque-bytes AppendBytes + DecodeDoublesFromRawBytes)
+        //   - intensity array: 32-bit float (float-narrow + _float-suffixed dataset)
+        //   - other arrays (time / wavelength / etc.): default 64-bit double (_double path)
+        // Mirrors cpp msconvert's "--filter numpress" + default intensity precision.
+        //
+        // Diff tolerance has to accommodate the lossy narrowing. The dominant
+        // source of error is float32 precision on intensity arrays: single-precision
+        // float has ~7 sig digits, so an intensity of 1e7 has ULP ~1.0. 1.0 absolute
+        // is a safe envelope across all the vendor fixtures we exercise (m/z is
+        // numpress_linear which round-trips much tighter than that).
+        // mzMLb writes are path-bound (HDF5 needs random file I/O), so materialize
+        // to %TEMP%.
+        if (config.TestMzmlbRoundTrip && msd.Run.SpectrumList is not null)
+        {
+            var encoderConfig = new Pwiz.Data.MsData.Encoding.BinaryEncoderConfig();
+            encoderConfig.PrecisionOverrides[CVID.MS_intensity_array] =
+                Pwiz.Data.MsData.Encoding.BinaryPrecision.Bits32;
+            encoderConfig.NumpressOverrides[CVID.MS_m_z_array] =
+                Pwiz.Data.MsData.Encoding.BinaryNumpress.Linear;
+            RunMzmlbRoundTrip(msd, config, encoderConfig, diffPrecision: 1.0);
+        }
+
         // We finished a real read+diff (vs. taking the identify-only short-circuit). Tell
         // TestOne to run the file-unlock probe once `using var msd` releases vendor handles.
         readSucceeded = true;
+    }
+
+    /// <summary>
+    /// One mzMLb write+read cycle. Writes <paramref name="msd"/> via
+    /// <see cref="Pwiz.Data.MsData.MzMlb.MzMlbWriter"/> (configured with the supplied
+    /// <paramref name="encoderConfig"/>) to a temp file, reads it back with
+    /// <see cref="Pwiz.Data.MsData.Readers.MzMlbReaderAdapter"/>, and diffs the spectrum
+    /// data at the requested precision.
+    /// </summary>
+    private static void RunMzmlbRoundTrip(
+        MSData msd,
+        ReaderTestConfig config,
+        Pwiz.Data.MsData.Encoding.BinaryEncoderConfig? encoderConfig,
+        double diffPrecision)
+    {
+        string tmp = Path.Combine(
+            Path.GetTempPath(),
+            $"harness-mzmlb-{Guid.NewGuid():N}.mzMLb");
+        try
+        {
+            new Pwiz.Data.MsData.MzMlb.MzMlbWriter(encoderConfig).Write(msd, tmp);
+            var roundtripped = new MSData();
+            new Pwiz.Data.MsData.Readers.MzMlbReaderAdapter().Read(tmp, roundtripped);
+            string report = MSDataDiff.DescribeSpectraDataOnly(msd, roundtripped, diffPrecision);
+            if (report.Length > 0)
+                throw new InvalidOperationException("mzMLb round-trip diff:\n" + report);
+        }
+        finally
+        {
+            try { File.Delete(tmp); } catch { }
+        }
     }
 
     /// <summary>

@@ -125,6 +125,21 @@ public sealed record ReaderTestConfig
     public bool TestMgfRoundTrip { get; set; } = true;
 
     /// <summary>
+    /// When true, the harness writes the in-memory MSData to mzMLb (HDF5-backed mzML),
+    /// reads it back through <c>MzMlbReaderAdapter</c>, and diffs against the original at
+    /// the spectrum-data level. Mirrors cpp <c>VendorReaderTestHarness</c>'s mzML↔mzMLb
+    /// check. mzMLb's binary arrays live in named HDF5 datasets referenced from the
+    /// mzML XML, so the round-trip exercises:
+    /// <list type="bullet">
+    ///   <item>Writer's "concatenate arrays-of-same-type into one HDF5 dataset" layout</item>
+    ///   <item>Per-array offset/length cvParam emission + decoding</item>
+    ///   <item>HDF5 chunking + deflate compression round-trip integrity</item>
+    /// </list>
+    /// Every vendor harness fixture gets free coverage of these paths via this flag.
+    /// </summary>
+    public bool TestMzmlbRoundTrip { get; set; } = true;
+
+    /// <summary>
     /// Builds the reference mzML filename from <paramref name="baseFilename"/>, appending
     /// config-derived suffixes in the same order as <c>ReaderTestConfig::resultFilename</c>.
     /// </summary>

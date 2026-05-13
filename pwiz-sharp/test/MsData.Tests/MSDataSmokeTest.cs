@@ -1,3 +1,4 @@
+using HDF.PInvoke;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Instruments;
@@ -11,6 +12,22 @@ namespace Pwiz.Data.MsData.Tests;
 [TestClass]
 public class MSDataSmokeTest
 {
+    /// <summary>
+    /// HDF.PInvoke loads native libhdf5 on first use. This test fails fast if
+    /// the runtime can't resolve the native binary (bad rid, missing
+    /// libhdf5.dll deployment, etc.) — a prerequisite for the mzMLb / mz5
+    /// reader/writer ports.
+    /// </summary>
+    [TestMethod]
+    public void Hdf5_NativeLibraryLoadsAndReportsVersion()
+    {
+        uint major = 0, minor = 0, release = 0;
+        int rc = H5.get_libversion(ref major, ref minor, ref release);
+        Assert.AreEqual(0, rc, "H5.get_libversion returned non-zero.");
+        Assert.AreEqual(1u, major, "Expected libhdf5 1.x; HDF.PInvoke.1.10 should ship 1.10.x.");
+        Assert.IsTrue(minor >= 10, $"Expected libhdf5 >= 1.10; got {major}.{minor}.{release}.");
+    }
+
     [TestMethod]
     public void Empty_AndDefaultCVList()
     {
