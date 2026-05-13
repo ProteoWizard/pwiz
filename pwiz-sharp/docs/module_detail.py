@@ -102,11 +102,13 @@ STATUS_FILE: dict[str, str] = {
     "data/msdata/mz5/ReferenceWrite_mz5": "none",
     "data/msdata/mz5/Translator_mz5": "none",
 
-    "data/msdata/mzmlb/Connection_mzMLb": "none",
-    "data/msdata/mzmlb/Reader_mzMLb": "none",
-    "data/msdata/mzmlb/SpectrumList_mzMLb": "none",
-    "data/msdata/mzmlb/ChromatogramList_mzMLb": "none",
-    "data/msdata/mzmlb/Serializer_mzMLb": "none",
+    "data/msdata/mzmlb/Connection_mzMLb": "full",   # ported as MzMlbConnection
+    # Reader_mzMLb lives in DefaultReaderList in cpp (not a separate file); the
+    # Serializer / SpectrumList / ChromatogramList variants below don't exist as
+    # standalone cpp files either — they're all collapsed into Connection_mzMLb's
+    # streaming API plus the existing mzML reader/writer. Our port mirrors this
+    # via MzMlbReaderAdapter + MzMlbWriter, composing MzmlReader / MzmlWriter
+    # with an MzMlbConnection-backed external-binary source/sink.
 
     # ------------------------------------------------------------------------
     # data/identdata — mzIdentML + pepXML readers/writers (recent landing)
@@ -449,7 +451,7 @@ DETAIL_FILE: dict[str, str] = {
     "data/msdata/mz5/ReferenceWrite_mz5": "mz5 ID-resolution on write. NOT PORTED.",
     "data/msdata/mz5/Translator_mz5": "mz5 ↔ MSData translation. NOT PORTED.",
 
-    "data/msdata/mzmlb/Connection_mzMLb": "mzMLb (HDF5-backed mzML) connection wrapper. NOT PORTED.",
+    "data/msdata/mzmlb/Connection_mzMLb": "mzMLb (HDF5-backed mzML) connection wrapper. Ported as Pwiz.Data.MsData.MzMlb.MzMlbConnection (HDF.PInvoke-backed, exposes mzML XML as a seekable Stream + typed Append/Read for binary datasets). Reader/Writer adapters at MzMlbReaderAdapter / MzMlbWriter; integration into MzmlReader/MzmlWriter via IExternalBinarySource/Sink. Bidirectional cpp parity verified.",
     "data/msdata/mzmlb/Reader_mzMLb": "mzMLb top-level reader. NOT PORTED.",
     "data/msdata/mzmlb/SpectrumList_mzMLb": "mzMLb lazy SpectrumList. NOT PORTED.",
     "data/msdata/mzmlb/ChromatogramList_mzMLb": "mzMLb lazy ChromatogramList. NOT PORTED.",

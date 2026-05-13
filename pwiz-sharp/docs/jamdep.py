@@ -47,7 +47,7 @@ STATUS = {
     # data/...
     "data/msdata": "partial",
     "data/msdata/mz5": "none",
-    "data/msdata/mzmlb": "none",
+    "data/msdata/mzmlb": "full",      # HDF5-backed mzML reader+writer, bidirectional cpp parity
     "data/misc": "partial",
     "data/proteome": "none",
     "data/identdata": "full",                 # mzIdentML + pepXML readers/writers, Diff/References, round-trip parity tests

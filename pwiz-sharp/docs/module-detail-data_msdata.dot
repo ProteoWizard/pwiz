@@ -150,7 +150,7 @@ digraph pwiz_module_detail {
     fontsize=11;
     margin=10;
     rank=same;
-    n_data__msdata__mzmlb__Connection_mzMLb [label="Connection_mzMLb", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="mzMLb (HDF5-backed mzML) connection wrapper. NOT PORTED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mzmlb/Connection_mzMLb.cpp", target="_blank"];
+    n_data__msdata__mzmlb__Connection_mzMLb [label="Connection_mzMLb", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mzMLb (HDF5-backed mzML) connection wrapper. Ported as Pwiz.Data.MsData.MzMlb.MzMlbConnection (HDF.PInvoke-backed, exposes mzML XML as a seekable Stream + typed Append/Read for binary datasets). Reader/Writer adapters at MzMlbReaderAdapter / MzMlbWriter; integration into MzmlReader/MzmlWriter via IExternalBinarySource/Sink. Bidirectional cpp parity verified.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mzmlb/Connection_mzMLb.cpp", target="_blank"];
   }
   subgraph cluster_data_msdata_Other {
     label=<<b>Other</b>>;

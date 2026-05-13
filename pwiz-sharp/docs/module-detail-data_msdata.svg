@@ -463,9 +463,9 @@
 <!-- n_data__msdata__mzmlb__Connection_mzMLb -->
 <g id="node44" class="node">
 <title>n_data__msdata__mzmlb__Connection_mzMLb</title>
-<g id="a_node44"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mzmlb/Connection_mzMLb.cpp" xlink:title="mzMLb (HDF5&#45;backed mzML) connection wrapper. NOT PORTED." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M119.25,-224C119.25,-224 38.75,-224 38.75,-224 32.75,-224 26.75,-218 26.75,-212 26.75,-212 26.75,-200 26.75,-200 26.75,-194 32.75,-188 38.75,-188 38.75,-188 119.25,-188 119.25,-188 125.25,-188 131.25,-194 131.25,-200 131.25,-200 131.25,-212 131.25,-212 131.25,-218 125.25,-224 119.25,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="79" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Connection_mzMLb</text>
+<g id="a_node44"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mzmlb/Connection_mzMLb.cpp" xlink:title="mzMLb (HDF5&#45;backed mzML) connection wrapper. Ported as Pwiz.Data.MsData.MzMlb.MzMlbConnection (HDF.PInvoke&#45;backed, exposes mzML XML as a seekable Stream + typed Append/Read for binary datasets). Reader/Writer adapters at MzMlbReaderAdapter / MzMlbWriter; integration into MzmlReader/MzmlWriter via IExternalBinarySource/Sink. Bidirectional cpp parity verified." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M119.25,-224C119.25,-224 38.75,-224 38.75,-224 32.75,-224 26.75,-218 26.75,-212 26.75,-212 26.75,-200 26.75,-200 26.75,-194 32.75,-188 38.75,-188 38.75,-188 119.25,-188 119.25,-188 125.25,-188 131.25,-194 131.25,-200 131.25,-200 131.25,-212 131.25,-212 131.25,-218 125.25,-224 119.25,-224"/>
+<text xml:space="preserve" text-anchor="middle" x="79" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">Connection_mzMLb</text>
 </a>
 </g>
 </g>

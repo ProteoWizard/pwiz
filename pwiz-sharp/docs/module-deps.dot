@@ -62,7 +62,7 @@ digraph pwiz_modules {
     margin=12;
     n_data__msdata [label="msdata", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
     n_data__msdata__mz5 [label="mz5", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
-    n_data__msdata__mzmlb [label="mzmlb", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_data__msdata__mzmlb [label="mzmlb", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
   }
 
   subgraph cluster_data_vendor_readers {

@@ -205,8 +205,8 @@
 <!-- n_data__msdata__mzmlb -->
 <g id="node20" class="node">
 <title>n_data__msdata__mzmlb</title>
-<path fill="#f5a8a8" stroke="#a02020" d="M419,-515C419,-515 389,-515 389,-515 383,-515 377,-509 377,-503 377,-503 377,-491 377,-491 377,-485 383,-479 389,-479 389,-479 419,-479 419,-479 425,-479 431,-485 431,-491 431,-491 431,-503 431,-503 431,-509 425,-515 419,-515"/>
-<text xml:space="preserve" text-anchor="middle" x="404" y="-494.05" font-family="Segoe UI" font-size="11.00" fill="#3d0a0a">mzmlb</text>
+<path fill="#9ee5a3" stroke="#2c7a32" d="M419,-515C419,-515 389,-515 389,-515 383,-515 377,-509 377,-503 377,-503 377,-491 377,-491 377,-485 383,-479 389,-479 389,-479 419,-479 419,-479 425,-479 431,-485 431,-491 431,-491 431,-503 431,-503 431,-509 425,-515 419,-515"/>
+<text xml:space="preserve" text-anchor="middle" x="404" y="-494.05" font-family="Segoe UI" font-size="11.00" fill="#0a3d10">mzmlb</text>
 </g>
 <!-- n_data__vendor_readers__ABI&#45;&gt;n_analysis__calibration -->
 <g id="edge2" class="edge">
