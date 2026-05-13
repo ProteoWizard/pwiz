@@ -86,7 +86,7 @@ STATUS = {
     # pwiz_tools (C# / msconvert applications)
     "pwiz_tools/commandline": "full",       # msconvert — ported as msconvert-sharp
     "pwiz_tools/SeeMS": "full",             # ported to .NET 8
-    "pwiz_tools/MSConvertGUI": "none",      # not yet ported
+    "pwiz_tools/MSConvertGUI": "full",      # ported to .NET 8 + CLI-vs-GUI parity tests
 }
 
 LIB_RE = re.compile(r"<library>([^\s/][^\s]*?)//([^\s]+)")

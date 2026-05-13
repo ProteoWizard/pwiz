@@ -91,7 +91,7 @@ digraph pwiz_modules {
     fontname="Segoe UI";
     fontsize=12;
     margin=12;
-    n_pwiz_tools__MSConvertGUI [label="MSConvertGUI", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_pwiz_tools__MSConvertGUI [label="MSConvertGUI", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_pwiz_tools__SeeMS [label="SeeMS", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_pwiz_tools__commandline [label="commandline", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
   }
