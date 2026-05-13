@@ -1697,14 +1697,18 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
-        /// If the sidecar's header entry-count disagrees with the
-        /// caller's stub list, the reader must refuse rather than silently
-        /// truncate or pad.
+        /// Caller may pass a SUPERSET of the sidecar's entries — a real
+        /// case for --join-at-pass=2 stage 7 entry where the reconciled
+        /// parquet has gap-fill stubs the 1st-pass sidecar (written
+        /// pre-gap-fill) does not. Sidecar records overlay onto matching
+        /// entry_ids; entries with no matching record keep their default
+        /// (Score=0, q=1) values. Reader must accept and overlay only
+        /// the matched records.
         /// </summary>
         [TestMethod]
-        public void TestFdrScoresSidecarCountMismatchRejected()
+        public void TestFdrScoresSidecarSupersetEntries()
         {
-            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_cm_" + Guid.NewGuid().ToString("N"));
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_super_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
@@ -1713,12 +1717,89 @@ namespace pwiz.OspreySharp.Test
                     new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
                     FdrScoresSidecar.Pass.FirstPass);
 
-                var wrongCount = new List<FdrEntry>
+                // entry_id=99 is the gap-fill stub (no sidecar record).
+                var entries = new List<FdrEntry>
                 {
                     MakeFdrEntry(0, 0.0, 0.0, 0.0),
-                    MakeFdrEntry(1, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(99, 0.0, 0.0, 0.0),
                 };
-                Assert.IsFalse(FdrScoresSidecar.TryRead(path, wrongCount, FdrScoresSidecar.Pass.FirstPass));
+                Assert.IsTrue(FdrScoresSidecar.TryRead(path, entries, FdrScoresSidecar.Pass.FirstPass));
+                Assert.AreEqual(-3.5, entries[0].Score, 0.0);
+                Assert.AreEqual(0.001, entries[0].RunPrecursorQvalue, 0.0);
+                // Gap-fill stub at index 1: untouched (no sidecar record
+                // for entry_id=99). MakeFdrEntry's q=0.0 placeholder
+                // survives unchanged.
+                Assert.AreEqual(0.0, entries[1].Score, 0.0);
+                Assert.AreEqual(0.0, entries[1].RunPrecursorQvalue, 0.0);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// If a sidecar record's entry_id has no match in the caller's
+        /// stub list, the reader must refuse rather than silently dropping
+        /// the record. Detects "sidecar from a different parquet" and
+        /// "sidecar from a different binary version" corruption.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarStaleRecordRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_stale_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                // Sidecar record for entry_id=0, but the caller's stubs
+                // don't contain entry_id=0 — only entry_id=42.
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
+                    FdrScoresSidecar.Pass.FirstPass);
+
+                var unrelated = new List<FdrEntry> { MakeFdrEntry(42, 0.0, 0.0, 0.0) };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, unrelated, FdrScoresSidecar.Pass.FirstPass));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A corrupt or malicious sidecar with a huge headerCount would
+        /// otherwise wrap int when computing
+        /// <c>HeaderLength + headerCount * RecordLength</c> and let the
+        /// size check pass spuriously, leading to out-of-bounds reads in
+        /// the record loop. Both <see cref="FdrScoresSidecar.TryRead"/>
+        /// and <see cref="FdrScoresSidecar.TryReadOverlay"/> must reject
+        /// the load via the checked-arithmetic guard.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarOversizedHeaderRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_oversized_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                // Write a valid 1-entry sidecar to get the right magic /
+                // version / pass byte layout, then truncate to header-only
+                // and overwrite headerCount with ulong.MaxValue.
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) },
+                    FdrScoresSidecar.Pass.FirstPass);
+                byte[] header = File.ReadAllBytes(path);
+                Array.Resize(ref header, FdrScoresSidecar.HeaderLength);
+                BitConverter.GetBytes(ulong.MaxValue).CopyTo(header, 16);
+                File.WriteAllBytes(path, header);
+
+                var entries = new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, entries, FdrScoresSidecar.Pass.FirstPass));
+
+                var dict = new Dictionary<uint, FdrEntry> { { 0, entries[0] } };
+                Assert.IsFalse(FdrScoresSidecar.TryReadOverlay(path, dict, FdrScoresSidecar.Pass.FirstPass));
             }
             finally
             {

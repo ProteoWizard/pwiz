@@ -729,7 +729,7 @@ namespace pwiz.OspreySharp.FDR
             var pepOrder = new int[nWinners];
             for (int k = 0; k < nWinners; k++)
                 pepOrder[k] = k;
-            Array.Sort(pepOrder, (a, b) =>
+            Array.Sort(pepOrder, (a, b) => // Array.Sort OK: TDC's CompeteAll already produced one winner per base_id, so each base_id appears at most once in pepOrder — no ties.
             {
                 uint ba = entryIds[winnerIndices[a]] & BASE_ID_MASK;
                 uint bb = entryIds[winnerIndices[b]] & BASE_ID_MASK;
@@ -1721,7 +1721,7 @@ namespace pwiz.OspreySharp.FDR
                 result[idx++] = i;
             foreach (int i in bestDecoy.Values)
                 result[idx++] = i;
-            Array.Sort(result); // deterministic order for downstream subsampling
+            Array.Sort(result); // Array.Sort OK: result holds unique entry indices (one per base_id from bestTarget/bestDecoy), so no ties
             return result;
         }
 
@@ -1833,7 +1833,7 @@ namespace pwiz.OspreySharp.FDR
 
             var order = new int[n];
             for (int i = 0; i < n; i++) order[i] = i;
-            Array.Sort(order, (a, b) => entries[a].EntryId.CompareTo(entries[b].EntryId));
+            Array.Sort(order, (a, b) => entries[a].EntryId.CompareTo(entries[b].EntryId)); // Array.Sort OK: EntryId is unique per entry, so no ties
 
             using (var sw = new StreamWriter(path))
             {

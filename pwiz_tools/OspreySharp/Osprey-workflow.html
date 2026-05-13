@@ -66,17 +66,26 @@
     first join) is bit-identical on Stellar + Astral 3-file across all
     nine cross-impl dumps. Stage 6 (per-file rescore + gap-fill +
     reconciled parquet write-back — the second per-file fan-out) is
-    in progress: orchestrator landed in OspreySharp but not yet exercised
-    end-to-end. Stages 7 (second-pass Percolator) and 8 (protein FDR +
-    .blib output) are the remaining joins. Color indicates port status
-    of the OspreySharp (C#) implementation against the Osprey (Rust)
-    reference. Green badges = regression tests; purple badges = C#/Rust
-    perf ratio.
+    bit-identical on Stellar + Astral 3-file (allowlist empty after
+    pwiz #4188). Stage 7 absorbs all post-second-join work — second-pass
+    Percolator, protein FDR (parsimony + picked-protein TDC), and the
+    final BiblioSpecLite <code>.blib</code> SQLite output — into a single
+    merge-node phase, mirroring the way Stage 5 absorbs many sub-steps
+    under the first-join phase. The protein-FDR substep is cross-impl
+    PASS at 1e-9 absolute (Stellar 6204/6204 + Astral 11779/11779 protein
+    groups via <code>Compare-Stage7-Crossimpl.ps1</code>); the
+    <code>.blib</code> output substep is cross-impl PASS at the SQL
+    row+column level (Stellar 45153 + Astral 129352 RefSpectra via
+    <code>Compare-Blib-Crossimpl.ps1</code>, including byte-identical
+    <code>RefSpectraPeaks</code> blobs). Color indicates port status of
+    the OspreySharp (C#) implementation against the Osprey (Rust)
+    reference. End-to-end per-stage walls are in the table near the
+    bottom of the page.
   </p>
 </header>
 
 <main>
-<svg class="pipeline" viewBox="0 0 1200 2540" xmlns="http://www.w3.org/2000/svg">
+<svg class="pipeline" viewBox="0 0 1200 2440" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <!-- Arrowhead for control flow between stages -->
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
@@ -139,11 +148,10 @@
     /* Input pill */
     .input-pill { fill: #e8eaf6; stroke: #3949ab; stroke-width: 2; }
 
-    /* Test coverage and performance badges */
+    /* Test coverage badges */
     .badge-label { font-size: 11px; font-weight: 700; }
     .badge-value { font-size: 11px; font-weight: 400; }
     .badge-test  { fill: #1b5e20; }
-    .badge-perf  { fill: #4a148c; }
   </style>
 </defs>
 
@@ -153,7 +161,7 @@
 <g transform="translate(40, 40)">
   <text class="title">Osprey / OspreySharp DIA search pipeline</text>
   <text class="subtitle" y="22">
-    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-05-06: Stages 1-6 cross-impl byte-parity end-to-end on Stellar + Astral 3-file (post-rescore q-values match max_diff=0; reconciled .scores.parquet diff 3/3 PASS modulo six allowlisted blob columns the C# scoring path doesn't yet write). Stage 7 second-pass Percolator is the next cross-impl validation target.
+    Rust reference (Osprey) vs C# port (OspreySharp)  -  status as of 2026-05-09: end-to-end cross-impl parity from Stage 1 through Stage 7 + .blib on Stellar + Astral 3-file.
   </text>
 </g>
 
@@ -221,7 +229,6 @@
 
   <!-- Stage 1 badges (upper right of container) -->
   <text x="535" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">36 + 2 regression (dedup, collision)</tspan></text>
-  <text x="535" y="44" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">0.7s (0.1x Rust)</tspan></text>
 
   <path class="flow" d="M 310 112 L 310 128" marker-end="url(#arrow)"/>
 
@@ -240,7 +247,6 @@
 
   <!-- Stage 2 badges (upper right of container) -->
   <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">3 (mzML parsing, isolation windows)</tspan></text>
-  <text x="1115" y="44" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">5.8s (1.2x Rust)</tspan></text>
 
   <path class="flow" d="M 890 112 L 890 128" marker-end="url(#arrow)"/>
 </g>
@@ -250,7 +256,7 @@
 <path class="flow" d="M 890 460 L 890 490 L 600 490" />
 
 <!-- ================================================================= -->
-<!-- STAGE 3 CALIBRATION (YOU ARE HERE)                                 -->
+<!-- STAGE 3 CALIBRATION                                                 -->
 <!-- ================================================================= -->
 <g transform="translate(0, 520)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="540" rx="6"/>
@@ -303,7 +309,6 @@
 
   <!-- Stage 3 badges (upper right of container) -->
   <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">31 + 10 regression (xcorr, apex, SNR, LOESS, LDA, f64)</tspan></text>
-  <text x="1115" y="38" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">11.7s (1.5x Rust)</tspan></text>
 </g>
 
 <!-- Arrow from calibration to main search -->
@@ -331,7 +336,6 @@
 
   <!-- Stage 4 badges (upper right of container) -->
   <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">2 + 8 regression (bin dedup, coelution, median polish, boundary)</tspan></text>
-  <text x="1115" y="38" text-anchor="end"><tspan class="badge-label badge-perf">Perf: </tspan><tspan class="badge-value badge-perf">4.5s (0.9x Rust)</tspan></text>
 
   <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
 </g>
@@ -445,49 +449,39 @@
 </g>
 
 <!-- ================================================================= -->
-<!-- STAGE 7 SECOND-PASS PERCOLATOR (SECOND JOIN)                        -->
+<!-- STAGE 7 POST-SECOND-JOIN: PERCOLATOR + PROTEIN FDR + .BLIB OUTPUT   -->
+<!-- ================================================================= -->
+<!-- One stage, three sub-steps. There is no per-file fan-out and no    -->
+<!-- sidecar / rehydration boundary between second-pass Percolator,     -->
+<!-- protein parsimony / picked-protein FDR, and .blib SQLite output;   -->
+<!-- they all run on the merge node in a single process. Mirrors the    -->
+<!-- way Stage 5 already absorbs many sub-steps (first-pass Percolator, -->
+<!-- experiment-level FDR, first-pass protein FDR, reconciliation       -->
+<!-- planning) under the first-join phase.                              -->
 <!-- ================================================================= -->
 <path class="flow" d="M 600 2140 L 600 2180" marker-end="url(#arrow)"/>
 
 <g transform="translate(0, 2180)">
-  <rect class="phase-bg-active" x="40" y="0" width="1120" height="120" rx="6"/>
+  <rect class="phase-bg" x="40" y="0" width="1120" height="230" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 7</text>
-  <text class="phase-title" x="60" y="42">Second-pass Percolator SVM</text>
-  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-file representation</text>
+  <text class="phase-title" x="60" y="42">Post-join: second-pass Percolator + protein FDR + .blib output</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — final merge-node phase (no further per-file fan-out)</text>
 
-  <rect class="st-missing" x="80" y="62" width="1040" height="46" rx="4"/>
+  <rect class="st-done" x="80" y="62" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="82" text-anchor="middle">Single Percolator pass on the reconciled + gap-filled pool</text>
-  <text class="stage-desc"  x="600" y="96" text-anchor="middle">final run + experiment q-values at precursor + peptide levels; OSPREY_DUMP_REFINED_FDR cross-impl bisection dump (planned)</text>
+  <text class="stage-desc"  x="600" y="96" text-anchor="middle">final run + experiment q-values at precursor + peptide levels (cross-impl PASS at 1e-9 via the protein-FDR-dump gate which transitively covers second-pass Percolator scores)</text>
 
-  <!-- "You are here" callout — Stage 6 cross-impl byte-parity landed
-       (Stellar + Astral); Stage 7 second-pass Percolator is the next
-       per-stage cross-impl validation target. -->
-  <g transform="translate(820, 57)">
-    <path class="flow-you" d="M 130 20 L 30 20" marker-end="url(#arrow-thick)"/>
-    <text class="you-are-here" x="136" y="10">YOU ARE</text>
-    <text class="you-are-here" x="136" y="26">HERE</text>
-  </g>
-</g>
+  <path class="flow" d="M 600 104 L 600 118" marker-end="url(#arrow)"/>
 
-<!-- ================================================================= -->
-<!-- STAGE 8 PROTEIN FDR + OUTPUT (FINAL JOIN)                          -->
-<!-- ================================================================= -->
-<path class="flow" d="M 600 2300 L 600 2340" marker-end="url(#arrow)"/>
+  <rect class="st-done" x="80" y="120" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="140" text-anchor="middle">Parsimony + picked-protein FDR (Savitski 2015, TDC on best peptide score)</text>
+  <text class="stage-desc"  x="600" y="154" text-anchor="middle">bipartite graph, identical-set grouping, subset elimination, greedy razor assignment (cross-impl PASS Stellar 6204/6204 + Astral 11779/11779 via Compare-Stage7-Crossimpl.ps1)</text>
 
-<g transform="translate(0, 2340)">
-  <rect class="phase-bg" x="40" y="0" width="1120" height="160" rx="6"/>
-  <text class="phase-label" x="60" y="24">stage 8</text>
-  <text class="phase-title" x="60" y="42">Protein FDR + output</text>
-  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — final coordinator phase</text>
+  <path class="flow" d="M 600 162 L 600 176" marker-end="url(#arrow)"/>
 
-  <rect class="st-unverif" x="80" y="62" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="82" text-anchor="middle">Parsimony + picked-protein FDR (Savitski 2015, TDC on best peptide score)</text>
-  <text class="stage-desc"  x="600" y="96" text-anchor="middle">bipartite graph, identical-set grouping, subset elimination, greedy razor assignment</text>
-
-  <rect class="st-partial" x="80" y="118" width="1040" height="32" rx="4"/>
-  <text class="stage-title" x="600" y="138" text-anchor="middle">BiblioSpecLite .blib (RefSpectra, RetentionTimes, Modifications, Proteins, Osprey fragment tables)</text>
-
-  <path class="flow" d="M 600 104 L 600 116" marker-end="url(#arrow)"/>
+  <rect class="st-done" x="80" y="178" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="198" text-anchor="middle">BiblioSpecLite .blib (RefSpectra, RetentionTimes, Modifications, Proteins, Osprey fragment tables)</text>
+  <text class="stage-desc"  x="600" y="212" text-anchor="middle">cross-impl PASS Stellar 45153 + Astral 129352 RefSpectra via Compare-Blib-Crossimpl.ps1</text>
 </g>
 
 </svg>
@@ -495,103 +489,103 @@
 
 <footer>
   <p>
-    <strong>Evidence (Stellar <code>--resolution unit</code>, Astral
+    <strong>Cross-impl parity (Stellar <code>--resolution unit</code>, Astral
     <code>--resolution hram</code>):</strong>
-    Stages 1-4 fully proven on both datasets. 21 PIN features bit-identical at ULP
-    on Stellar (466K entries match, all 21 under 1e-10). On Astral 19 of 21 are ULP,
-    and xcorr / sg_weighted_xcorr drift at ~1e-7 from the intrinsic f32 HRAM
-    preprocessed-bin cache (matches upstream osprey-scoring). Per-file results are
-    bit-identical across sequential / 2-file parallel / 3-file parallel execution
-    modes after the <code>OspreyConfig.ShallowClone()</code> fix that isolated
-    per-file MS2-calibration tolerance.
+    Stages 1-4 PIN features bit-identical at ULP on Stellar (466K entries,
+    all 21 features under 1e-10); on Astral 19 of 21 are ULP and xcorr /
+    sg_weighted_xcorr drift at ~1e-7 from the intrinsic f32 HRAM
+    preprocessed-bin cache (matches upstream osprey-scoring). Stages 5 and 6
+    pass byte-equality at every dump on both datasets (3-file). Stage 7
+    protein FDR matches at 1e-9 absolute (Stellar 6204/6204, Astral
+    11779/11779 protein groups); Stage 7 <code>.blib</code> output matches
+    at the SQL row+column level (Stellar 45153 + Astral 129352 RefSpectra,
+    byte-identical <code>RefSpectraPeaks</code> blobs).
   </p>
   <p>
-    <strong>Performance (Session 14-16, <code>Bench-Scoring.ps1</code> warm-cache
-    wall clock):</strong>
-    <em>Stellar</em> (median of 5) - single file: C# 22.7s vs Rust 23.2s =
-    <strong>1.0x (tied)</strong>. 3-file sequential: C# 63.9s vs Rust 83.4s =
-    <strong>0.77x (C# 1.3x faster)</strong>. 3-file parallel: C# 49.5s vs Rust 83.4s =
-    <strong>0.59x (C# 1.7x faster)</strong>.
-    <em>Astral</em> (single iteration, ~100x larger main-search workload) - single
-    file: C# 110.7s vs Rust ~917s = <strong>0.12x (C# 8.3x faster)</strong>.
-    3-file sequential: C# 380.1s vs Rust 2751.2s = <strong>0.14x (C# 7.2x faster)</strong>.
-    3-file parallel: C# 342.3s vs Rust 2751.2s = <strong>0.12x (C# 8.0x faster,
-    ~97% parallel efficiency)</strong>. Rust has no file-level parallelism, so 3-file
-    Rust is strictly 3x single-file; C# par-3 exploits the full 32-core box via
-    per-file thread scaling that sidesteps oversubscription.
-    Key optimizations: <code>XcorrScratchPool</code> (eliminates LOH churn on the
-    ~100K-bin HRAM scratch), per-window pre-preprocessed XCorr cache with f32
-    narrowing, pooled <code>visitedBins</code> for O(n_fragments) selective clear,
-    per-file thread scaling to avoid oversubscription when files run in parallel,
-    and a mzML read gate that serializes disk I/O across concurrent
-    <code>ProcessFile</code> calls.
+    <strong>End-to-end performance (3-file regression, post-sort-fix
+    binaries):</strong>
+    OspreySharp ties or beats Osprey on most stages of both datasets.
+    The table below is the headline; per-stage commentary follows it.
   </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Stage</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:30</td><td style="text-align: right; padding: 1px 12px;">1:08</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.76× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">8:26</td><td style="text-align: right; padding: 1px 12px;">11:17</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.34×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:44</td><td style="text-align: right; padding: 1px 12px;">1:53</td><td style="text-align: right; padding: 1px 12px;">1.09× (~tied)</td><td style="text-align: right; padding: 1px 12px;">3:30</td><td style="text-align: right; padding: 1px 12px;">2:45</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.79× (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">4:10</td><td style="text-align: right; padding: 1px 12px;">3:34</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.86× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">12:45</td><td style="text-align: right; padding: 1px 12px;">17:30</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.37×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">1.0× (tied)</td><td style="text-align: right; padding: 1px 12px;">0:16</td><td style="text-align: right; padding: 1px 12px;">0:13</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81× (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:11</td><td style="text-align: right; padding: 1px 12px;">0:08</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.71× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">0:55</td><td style="text-align: right; padding: 1px 12px;">0:45</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81× (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>7:38</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>6:46</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.89× (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>~25:51</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>~32:35</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>1.26×</strong></td></tr>
+    </tbody>
+  </table>
   <p>
-    <strong>Stage 5 (2026-04-22):</strong> single-file Stellar cross-impl
-    bit-parity achieved. Rust and OspreySharp agree exactly on the
-    end-of-Stage-5 dump (<code>score</code>, <code>pep</code>, 4 run/experiment
-    precursor/peptide q-values) across 462,802 <code>FdrEntry</code> rows:
-    per-column <code>max_diff = 0</code>, 0 divergent rows. Both tools report
-    <strong>34,158 precursors at 1% FDR</strong>, 30,712 peptides, 5,471
-    protein groups. Upstream PRs on <code>maccoss/osprey</code>:
-    <a href="https://github.com/maccoss/osprey/pull/16"><code>#16</code></a>
-    (self-parity: PEP non-determinism via sort + serial KDE),
-    <a href="https://github.com/maccoss/osprey/pull/17"><code>#17</code></a>
-    (cross-parity: <code>grid_search_c</code> tie-break +
-    <code>count_passing_targets_svm</code> formula), and
-    <a href="https://github.com/maccoss/osprey/pull/18"><code>#18</code></a>
-    (diagnostic dumps). OspreySharp side:
-    <a href="https://github.com/ProteoWizard/pwiz/pull/4159"><code>pwiz#4159</code></a>
-    (VERSION + C grid sync with v26.4) and
-    <a href="https://github.com/ProteoWizard/pwiz/pull/4160"><code>pwiz#4160</code></a>
-    (matching diagnostic dumps + <code>Compare-Percolator.ps1</code>).
-    Multi-file (3-file) Stage 5 cross-impl bit-parity also achieved
-    (2026-04-25): the per-base_id experiment_precursor_qvalue propagation
-    fix in C# (pwiz <code>a2972ab6d</code>) plus the multi-file
-    <code>--input-scores</code> CLI accumulation closes the gap with Rust.
-    1,388,872 row dump byte-identical on Stellar 3-file.
+    <strong>Per-stage commentary:</strong>
   </p>
+  <ul>
+    <li>
+      <strong>stage1to4</strong> (per-file scoring): C# faster on the
+      Stellar (unit-resolution) dataset; modestly slower on Astral
+      (HRAM). Foundations: <code>XcorrScratchPool</code> (LOH-allocation-
+      free ~100K-bin scratch), pre-preprocessed XCorr cache with f32
+      narrowing, pooled <code>visitedBins</code> for O(n_fragments)
+      clear, per-file thread scaling, and a mzML read gate that
+      serializes disk I/O across concurrent <code>ProcessFile</code>
+      calls.
+    </li>
+    <li>
+      <strong>stage5</strong> (first-pass FDR + reconciliation planning):
+      C# faster on Astral, ~tied on Stellar. Percolator SVM training (the
+      dominant cost) runs the three folds in parallel on the C# side
+      (<code>ParallelEx</code>); per-fold wall is around 92s on a
+      16-thread Stellar 3-file run.
+    </li>
+    <li>
+      <strong>stage6</strong> (per-file rescore + gap-fill + reconciled
+      parquet write-back): C# faster on Stellar; on Astral the ratio is
+      modest given ~6 GB HRAM mzML per file.
+    </li>
+    <li>
+      <strong>stage7</strong> (second-pass Percolator + protein FDR):
+      C# tied on Stellar, faster on Astral. Protein parsimony's
+      subset-elimination uses <code>HashSet&lt;string&gt;</code>; the
+      2nd-pass FDR sidecar overlay (<code>FdrScoresSidecar.TryReadOverlay</code>)
+      reads only the sidecar and overlays scores by entry_id without
+      re-reading the source parquet.
+    </li>
+    <li>
+      <strong>blib write</strong>: C# faster on Astral. Per-spectrum
+      <code>Ionic.Zlib</code> compression runs under <code>Parallel.For</code>
+      (<code>BlibWriter.CompressMzs</code> /
+      <code>CompressIntensities</code> pre-compress; SQLite insert stays
+      sequential and the output is byte-identical to the prior
+      sequential-compress run and to Osprey's blib).
+    </li>
+  </ul>
   <p>
-    <strong>Stage 5 reconciliation planning (2026-04-29):</strong> after
-    the 2026-04-30 pipeline restructure, what was previously called
-    "Stage 6 planning" now lives in Stage 5 alongside first-pass
-    Percolator. Multi-charge consensus, cross-run consensus RTs, per-file
-    calibration refit, and the reconciliation planner all run in the
-    same join phase that ends at the per-(file, entry) reconciliation
-    plan. Nine cross-impl dumps (<code>stage5_percolator</code>,
-    <code>protein_fdr</code>, <code>calibration</code>,
-    <code>inv_predict</code>, <code>consensus</code>,
-    <code>multicharge</code>, <code>loess_fit</code>, <code>refit</code>,
-    <code>reconciliation</code>) byte-identical on Stellar (172,548
-    reconciliation actions) and Astral (248,711) 3-file. The harness
-    <code>Compare-Stage6-Planning.ps1</code> drives all nine via
-    <code>--join-at-pass=1</code> with per-dump <code>_ONLY</code>
-    early-exits.
+    <strong>BLIB writer:</strong> OspreySharp's <code>BlibWriter</code>
+    uses DotNetZip / Ionic.Zlib level 6 (the same library Skyline's
+    <code>Util/Extensions/UtilDB.Compress</code> has used since 2009).
+    The Osprey side switched its <code>flate2</code> backend from
+    pure-Rust <code>miniz_oxide</code> to vendored stock zlib so both
+    sides emit identical Ionic.Zlib-compatible deflate output. Future
+    work: pull Skyline's <code>Model/Lib/BlibData</code> out to
+    <code>Shared/BiblioSpec</code> so OspreySharp and Skyline share a
+    single C# BLIB writer.
   </p>
-  <p>
-    <strong>Pipeline restructure + CLI rename (2026-04-30):</strong>
-    stages renumbered to align with join / per-file-fan-out boundaries
-    that matter for HPC distribution. Stage 5 absorbs reconciliation
-    planning (single first-join phase). Stage 6 is now per-file rescore
-    only (second per-file fan-out). Stage 7 is the second join
-    (second-pass Percolator). Stage 8 absorbs Protein FDR + .blib
-    output (final coordinator phase). CLI matrix: <code>--no-join</code>
-    runs only per-file work, <code>--join-only</code> runs only joined
-    work, <code>--join-at-pass=&lt;1|2&gt;</code> selects entry-point
-    parquets (Stage 4 outputs vs reconciled Stage 6 outputs).
-    Plan-file persistence between Stage 5 and Stage 6 deferred to a
-    future sprint — single-machine flow runs them in one process for
-    now.
-  </p>
-  <p>
-    <strong>Next targets:</strong> exercise the new Stage 6
-    <code>RescorePerFile</code> orchestrator end-to-end (gap-fill +
-    parquet write-back not yet implemented). Add
-    <code>OSPREY_DUMP_REFINED_RESCORE</code> intermediate dump or
-    diff reconciled parquets directly. Once Stage 6 is byte-identical,
-    advance into Stage 7 (second-pass Percolator + new
-    <code>OSPREY_DUMP_REFINED_FDR</code>) then Stage 8. See
-    <code>ai/todos/active/TODO-20260429_osprey_sharp_stage6.md</code>.
+  <p style="font-size: 11px; color: #757575;">
+    Detailed work log for the OspreySharp port lives in
+    <code>pwiz-ai/todos/completed/TODO-*_osprey_sharp*.md</code> — sprint-
+    by-sprint history, bisection notes, and per-issue narrative.
   </p>
 </footer>
 </body>

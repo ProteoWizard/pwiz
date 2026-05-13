@@ -200,7 +200,7 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
                     var absDevs = new double[nRunsDetected];
                     for (int i = 0; i < nRunsDetected; i++)
                         absDevs[i] = Math.Abs(libraryRtWeights[i].Value - consensusLibraryRt);
-                    Array.Sort(absDevs);
+                    Array.Sort(absDevs); // Array.Sort OK: median of single primitive array, no parallel data
                     int mid = absDevs.Length / 2;
                     apexLibraryRtMad = absDevs.Length % 2 == 0
                         ? 0.5 * (absDevs[mid - 1] + absDevs[mid])
@@ -261,7 +261,7 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
                 return pairs[0].Value;
 
             var sorted = pairs.ToArray();
-            Array.Sort(sorted, (a, b) => a.Value.CompareTo(b.Value));
+            Array.Sort(sorted, (a, b) => a.Value.CompareTo(b.Value)); // Array.Sort OK: weighted median; tied Values are by definition equal so output is invariant under tie-permutation
 
             double totalWeight = 0.0;
             for (int i = 0; i < sorted.Length; i++)

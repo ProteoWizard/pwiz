@@ -89,8 +89,15 @@ namespace pwiz.OspreySharp.Core
         /// <summary>How to handle shared peptides for protein inference.</summary>
         public SharedPeptideMode SharedPeptides { get; set; } = SharedPeptideMode.All;
 
-        /// <summary>FDR filtering level for output.</summary>
-        public FdrLevel FdrLevel { get; set; } = FdrLevel.Both;
+        /// <summary>
+        /// FDR filtering level. Default <see cref="FdrLevel.Precursor"/> matches
+        /// Rust osprey-core/src/config.rs (FdrLevel::default() = Precursor).
+        /// Cross-impl bisection requires identical defaults; the previous
+        /// <c>Both</c> default silently shifted every downstream q-value-gated
+        /// step (compaction, Stage 7 detected-peptides filter, blib output)
+        /// toward a stricter pool than Rust uses.
+        /// </summary>
+        public FdrLevel FdrLevel { get; set; } = FdrLevel.Precursor;
 
         /// <summary>Number of threads to use.</summary>
         public int NThreads { get; set; } = Environment.ProcessorCount;
@@ -120,6 +127,19 @@ namespace pwiz.OspreySharp.Core
         /// <c>--join-at-pass=1 --join-only</c> flag combination.
         /// </summary>
         public bool StopAfterStage5 { get; set; }
+
+        /// <summary>
+        /// HPC: when true, every <c>--input-scores</c> parquet must carry
+        /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
+        /// by <c>--join-at-pass=2</c>; the post-Stage-6 (reconciled)
+        /// entry point. Stages 1-6 are skipped: the pipeline loads
+        /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
+        /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,
+        /// protein parsimony + picked-protein FDR, blib output). Mirrors
+        /// Rust's <c>config.expect_reconciled_input</c> wired from
+        /// <c>main.rs</c> at the same flag.
+        /// </summary>
+        public bool ExpectReconciledInput { get; set; }
 
         /// <summary>
         /// How many files will actually run concurrently in the current
