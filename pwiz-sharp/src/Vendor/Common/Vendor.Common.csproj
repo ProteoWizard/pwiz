@@ -21,4 +21,19 @@
     </None>
   </ItemGroup>
 
+  <!-- VendorSdkPins.generated.cs is .gitignored. It's regenerated on every build
+       below from the vendor 7z archives' SHA-256 + commit history. The
+       Compile Remove+Include pair ensures it's in the Compile list even when
+       the file doesn't exist at project-evaluation time (fresh checkout); the
+       BeforeTargets target creates it before CoreCompile reads source. -->
+  <ItemGroup>
+    <Compile Remove="VendorSdkPins.generated.cs" />
+    <Compile Include="VendorSdkPins.generated.cs" />
+  </ItemGroup>
+
+  <Target Name="RegenerateVendorSdkPins" BeforeTargets="CoreCompile">
+    <Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\..\installer\Refresh-VendorPins.ps1&quot;"
+          StandardOutputImportance="low" />
+  </Target>
+
 </Project>

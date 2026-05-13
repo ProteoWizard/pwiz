@@ -13,3 +13,11 @@ vendor-assemblies/
 installer/build/
 installer/cache/
 installer/staging/
+
+# VendorSdkPins.generated.cs is regenerated on every build from the vendor 7z
+# archives' SHA-256 + commit history (see Refresh-VendorPins.ps1, invoked as a
+# pre-CoreCompile target in Vendor.Common.csproj). Keeping it tracked produced
+# spurious dirty-tree failures on TC because cross-machine differences in line
+# endings / archive timestamps would cause the regeneration to write a
+# byte-different file even when the logical content matched.
+src/Vendor/Common/VendorSdkPins.generated.cs
