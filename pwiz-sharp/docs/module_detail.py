@@ -96,11 +96,15 @@ STATUS_FILE: dict[str, str] = {
 
     # mz5 + mzMLb HDF5 sub-modules
     "data/msdata/mz5/Configuration_mz5": "full",      # Mz5Configuration / Mz5Datasets
-    "data/msdata/mz5/Connection_mz5": "partial",      # Mz5Connection — read paths ported (file open + ReadFull/ReadDoubles/vlen reclaim); write paths not
+    "data/msdata/mz5/Connection_mz5": "partial",      # Mz5Connection — read paths ported (file open + ReadFull/ReadDoubles/vlen reclaim); write paths intentionally skipped
     "data/msdata/mz5/Datastructures_mz5": "full",     # Mz5Types — all 25 POD record types + HDF5 compound type registrations match cpp field names
     "data/msdata/mz5/ReferenceRead_mz5": "full",      # Mz5ReferenceRead — walks document-level metadata + CV refs
-    "data/msdata/mz5/ReferenceWrite_mz5": "none",     # writer not done (read-only port)
-    "data/msdata/mz5/Translator_mz5": "partial",      # delta-mz + log-intensity reverse done on read; forward translation not
+    "data/msdata/mz5/ReferenceWrite_mz5": "skipped",  # write side intentionally not ported — mzMLb covers HDF5-backed output
+    "data/msdata/mz5/Translator_mz5": "partial",      # delta-mz + log-intensity reverse done on read; forward translation intentionally skipped
+
+    # ramp — legacy mzXML-style reader, deprecated upstream; intentionally not ported
+    "data/msdata/ramp/ramp": "skipped",
+    "data/msdata/ramp/ramp_base64": "skipped",
 
     "data/msdata/mzmlb/Connection_mzMLb": "full",   # ported as MzMlbConnection
     # Reader_mzMLb lives in DefaultReaderList in cpp (not a separate file); the
@@ -476,10 +480,25 @@ DETAIL_FILE: dict[str, str] = {
         "tables → ParamGroups → SourceFiles / Software / DataProcessings / Samples / ScanSettings "
         "/ InstrumentConfigurations → Run → Spectrum/Chromatogram lists). Memoizes CVID lookups."
     ),
-    "data/msdata/mz5/ReferenceWrite_mz5": "mz5 ID-resolution on write. NOT PORTED — read-only port.",
+    "data/msdata/mz5/ReferenceWrite_mz5": (
+        "mz5 write-side ID resolution. Intentionally NOT PORTED — pwiz-sharp covers HDF5-"
+        "backed output via mzMLb; mz5 stays read-only so we don't carry two parallel writers."
+    ),
     "data/msdata/mz5/Translator_mz5": (
         "mz5 ↔ MSData translation. Reverse direction (delta-mz cumulative-sum + log-intensity "
-        "decode on read) is in Mz5Connection / Mz5SpectrumList; forward translation for write not done."
+        "decode on read) is in Mz5Connection / Mz5SpectrumList; forward translation for write "
+        "intentionally not ported."
+    ),
+
+    # ramp — legacy mzXML-style reader. Marked skipped: deprecated upstream and superseded
+    # by the mzML readers we already ship.
+    "data/msdata/ramp/ramp": (
+        "Legacy mzXML-style reader (ramp.h / ramp.cpp). Intentionally NOT PORTED — superseded "
+        "by Pwiz.Data.MsData.Mzml.MzmlReader; deprecated in upstream cpp too."
+    ),
+    "data/msdata/ramp/ramp_base64": (
+        "Standalone base64 helper paired with ramp. Intentionally NOT PORTED — System.Convert "
+        "covers the same surface in C#."
     ),
 
     "data/msdata/mzmlb/Connection_mzMLb": "mzMLb (HDF5-backed mzML) connection wrapper. Ported as Pwiz.Data.MsData.MzMlb.MzMlbConnection (HDF.PInvoke-backed, exposes mzML XML as a seekable Stream + typed Append/Read for binary datasets). Reader/Writer adapters at MzMlbReaderAdapter / MzMlbWriter; integration into MzmlReader/MzmlWriter via IExternalBinarySource/Sink. Bidirectional cpp parity verified.",

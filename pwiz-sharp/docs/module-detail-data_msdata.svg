@@ -493,9 +493,9 @@
 <!-- n_data__msdata__mz5__ReferenceWrite_mz5 -->
 <g id="node42" class="node">
 <title>n_data__msdata__mz5__ReferenceWrite_mz5</title>
-<g id="a_node42"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/ReferenceWrite_mz5.cpp" xlink:title="mz5 ID&#45;resolution on write. NOT PORTED — read&#45;only port." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M581.38,-311C581.38,-311 498.62,-311 498.62,-311 492.62,-311 486.62,-305 486.62,-299 486.62,-299 486.62,-287 486.62,-287 486.62,-281 492.62,-275 498.62,-275 498.62,-275 581.38,-275 581.38,-275 587.38,-275 593.38,-281 593.38,-287 593.38,-287 593.38,-299 593.38,-299 593.38,-305 587.38,-311 581.38,-311"/>
-<text xml:space="preserve" text-anchor="middle" x="540" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ReferenceWrite_mz5</text>
+<g id="a_node42"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/ReferenceWrite_mz5.cpp" xlink:title="mz5 write&#45;side ID resolution. Intentionally NOT PORTED — pwiz&#45;sharp covers HDF5&#45;backed output via mzMLb; mz5 stays read&#45;only so we don&#39;t carry two parallel writers." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M581.38,-311C581.38,-311 498.62,-311 498.62,-311 492.62,-311 486.62,-305 486.62,-299 486.62,-299 486.62,-287 486.62,-287 486.62,-281 492.62,-275 498.62,-275 498.62,-275 581.38,-275 581.38,-275 587.38,-275 593.38,-281 593.38,-287 593.38,-287 593.38,-299 593.38,-299 593.38,-305 587.38,-311 581.38,-311"/>
+<text xml:space="preserve" text-anchor="start" x="494.62" y="-291.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">ReferenceWrite_mz5</text>
 </a>
 </g>
 </g>
@@ -503,7 +503,7 @@
 <!-- n_data__msdata__mz5__Translator_mz5 -->
 <g id="node43" class="node">
 <title>n_data__msdata__mz5__Translator_mz5</title>
-<g id="a_node43"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Translator_mz5.cpp" xlink:title="mz5 ↔ MSData translation. Reverse direction (delta&#45;mz cumulative&#45;sum + log&#45;intensity decode on read) is in Mz5Connection / Mz5SpectrumList; forward translation for write not done." target="_blank">
+<g id="a_node43"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Translator_mz5.cpp" xlink:title="mz5 ↔ MSData translation. Reverse direction (delta&#45;mz cumulative&#45;sum + log&#45;intensity decode on read) is in Mz5Connection / Mz5SpectrumList; forward translation for write intentionally not ported." target="_blank">
 <path fill="#ffe48a" stroke="#a87000" d="M678.75,-311C678.75,-311 619.25,-311 619.25,-311 613.25,-311 607.25,-305 607.25,-299 607.25,-299 607.25,-287 607.25,-287 607.25,-281 613.25,-275 619.25,-275 619.25,-275 678.75,-275 678.75,-275 684.75,-275 690.75,-281 690.75,-287 690.75,-287 690.75,-299 690.75,-299 690.75,-305 684.75,-311 678.75,-311"/>
 <text xml:space="preserve" text-anchor="middle" x="649" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#4a3000">Translator_mz5</text>
 </a>
@@ -513,9 +513,9 @@
 <!-- n_data__msdata__ramp__ramp -->
 <g id="node45" class="node">
 <title>n_data__msdata__ramp__ramp</title>
-<g id="a_node45"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ramp/ramp.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M94,-137C94,-137 64,-137 64,-137 58,-137 52,-131 52,-125 52,-125 52,-113 52,-113 52,-107 58,-101 64,-101 64,-101 94,-101 94,-101 100,-101 106,-107 106,-113 106,-113 106,-125 106,-125 106,-131 100,-137 94,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="79" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ramp</text>
+<g id="a_node45"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ramp/ramp.cpp" xlink:title="Legacy mzXML&#45;style reader (ramp.h / ramp.cpp). Intentionally NOT PORTED — superseded by Pwiz.Data.MsData.Mzml.MzmlReader; deprecated in upstream cpp too." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M94,-137C94,-137 64,-137 64,-137 58,-137 52,-131 52,-125 52,-125 52,-113 52,-113 52,-107 58,-101 64,-101 64,-101 94,-101 94,-101 100,-101 106,-107 106,-113 106,-113 106,-125 106,-125 106,-131 100,-137 94,-137"/>
+<text xml:space="preserve" text-anchor="start" x="67.38" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">ramp</text>
 </a>
 </g>
 </g>
@@ -523,9 +523,9 @@
 <!-- n_data__msdata__ramp__ramp_base64 -->
 <g id="node46" class="node">
 <title>n_data__msdata__ramp__ramp_base64</title>
-<g id="a_node46"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ramp/ramp_base64.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M183.62,-137C183.62,-137 132.38,-137 132.38,-137 126.38,-137 120.38,-131 120.38,-125 120.38,-125 120.38,-113 120.38,-113 120.38,-107 126.38,-101 132.38,-101 132.38,-101 183.62,-101 183.62,-101 189.62,-101 195.62,-107 195.62,-113 195.62,-113 195.62,-125 195.62,-125 195.62,-131 189.62,-137 183.62,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="158" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ramp_base64</text>
+<g id="a_node46"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ramp/ramp_base64.cpp" xlink:title="Standalone base64 helper paired with ramp. Intentionally NOT PORTED — System.Convert covers the same surface in C#." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M183.62,-137C183.62,-137 132.38,-137 132.38,-137 126.38,-137 120.38,-131 120.38,-125 120.38,-125 120.38,-113 120.38,-113 120.38,-107 126.38,-101 132.38,-101 132.38,-101 183.62,-101 183.62,-101 189.62,-101 195.62,-107 195.62,-113 195.62,-113 195.62,-125 195.62,-125 195.62,-131 189.62,-137 183.62,-137"/>
+<text xml:space="preserve" text-anchor="start" x="128.38" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">ramp_base64</text>
 </a>
 </g>
 </g>
