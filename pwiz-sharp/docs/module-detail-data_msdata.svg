@@ -253,9 +253,9 @@
 <!-- n_data__msdata__Serializer_mz5 -->
 <g id="node18" class="node">
 <title>n_data__msdata__Serializer_mz5</title>
-<g id="a_node18"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Serializer_mz5.cpp" xlink:title="HDF5&#45;based mz5. NOT PORTED — would pull in HDF.PInvoke + ~3k LOC; out of msconvert&#45;sharp scope." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M294.12,-833C294.12,-833 239.88,-833 239.88,-833 233.88,-833 227.88,-827 227.88,-821 227.88,-821 227.88,-809 227.88,-809 227.88,-803 233.88,-797 239.88,-797 239.88,-797 294.12,-797 294.12,-797 300.12,-797 306.12,-803 306.12,-809 306.12,-809 306.12,-821 306.12,-821 306.12,-827 300.12,-833 294.12,-833"/>
-<text xml:space="preserve" text-anchor="middle" x="267" y="-812.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Serializer_mz5</text>
+<g id="a_node18"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Serializer_mz5.cpp" xlink:title="HDF5&#45;based mz5 serializer. READ ported as Mz5ReaderAdapter + Mz5Connection + Mz5ReferenceRead + Mz5SpectrumList + Mz5ChromatogramList (under MsData/Mz5/). Writer not done — round&#45;trip tests shell out to cpp msconvert &#45;&#45;mz5 for the write side." target="_blank">
+<path fill="#ffe48a" stroke="#a87000" d="M294.12,-833C294.12,-833 239.88,-833 239.88,-833 233.88,-833 227.88,-827 227.88,-821 227.88,-821 227.88,-809 227.88,-809 227.88,-803 233.88,-797 239.88,-797 239.88,-797 294.12,-797 294.12,-797 300.12,-797 306.12,-803 306.12,-809 306.12,-809 306.12,-821 306.12,-821 306.12,-827 300.12,-833 294.12,-833"/>
+<text xml:space="preserve" text-anchor="middle" x="267" y="-812.62" font-family="Segoe UI" font-size="10.00" fill="#4a3000">Serializer_mz5</text>
 </a>
 </g>
 </g>
@@ -323,9 +323,9 @@
 <!-- n_data__msdata__ChromatogramList_mz5 -->
 <g id="node30" class="node">
 <title>n_data__msdata__ChromatogramList_mz5</title>
-<g id="a_node30"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ChromatogramList_mz5.cpp" xlink:title="mz5 ChromatogramList. NOT PORTED." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M127.88,-572C127.88,-572 30.12,-572 30.12,-572 24.12,-572 18.12,-566 18.12,-560 18.12,-560 18.12,-548 18.12,-548 18.12,-542 24.12,-536 30.12,-536 30.12,-536 127.88,-536 127.88,-536 133.88,-536 139.88,-542 139.88,-548 139.88,-548 139.88,-560 139.88,-560 139.88,-566 133.88,-572 127.88,-572"/>
-<text xml:space="preserve" text-anchor="middle" x="79" y="-551.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ChromatogramList_mz5</text>
+<g id="a_node30"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ChromatogramList_mz5.cpp" xlink:title="mz5 ChromatogramList. Ported as MsData/Mz5/Mz5ChromatogramList.cs — lazy slicer over ChromatogramTime + ChromatogramIntensity via ChromatogramIndex. No translator (mz5&#39;s delta encoding only applies to m/z, not time)." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M127.88,-572C127.88,-572 30.12,-572 30.12,-572 24.12,-572 18.12,-566 18.12,-560 18.12,-560 18.12,-548 18.12,-548 18.12,-542 24.12,-536 30.12,-536 30.12,-536 127.88,-536 127.88,-536 133.88,-536 139.88,-542 139.88,-548 139.88,-548 139.88,-560 139.88,-560 139.88,-566 133.88,-572 127.88,-572"/>
+<text xml:space="preserve" text-anchor="middle" x="79" y="-551.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ChromatogramList_mz5</text>
 </a>
 </g>
 </g>
@@ -343,9 +343,9 @@
 <!-- n_data__msdata__SpectrumList_mz5 -->
 <g id="node27" class="node">
 <title>n_data__msdata__SpectrumList_mz5</title>
-<g id="a_node27"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_mz5.cpp" xlink:title="mz5 SpectrumList. NOT PORTED." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M453.12,-659C453.12,-659 380.88,-659 380.88,-659 374.88,-659 368.88,-653 368.88,-647 368.88,-647 368.88,-635 368.88,-635 368.88,-629 374.88,-623 380.88,-623 380.88,-623 453.12,-623 453.12,-623 459.12,-623 465.12,-629 465.12,-635 465.12,-635 465.12,-647 465.12,-647 465.12,-653 459.12,-659 453.12,-659"/>
-<text xml:space="preserve" text-anchor="middle" x="417" y="-638.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SpectrumList_mz5</text>
+<g id="a_node27"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_mz5.cpp" xlink:title="mz5 SpectrumList. Ported as MsData/Mz5/Mz5SpectrumList.cs — lazy slicer over the global SpectrumMZ + SpectrumIntensity datasets via SpectrumIndex end&#45;offsets. Reverses delta&#45;mz encoding via cumulative sum when FileInformation.deltaMZ is set." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M453.12,-659C453.12,-659 380.88,-659 380.88,-659 374.88,-659 368.88,-653 368.88,-647 368.88,-647 368.88,-635 368.88,-635 368.88,-629 374.88,-623 380.88,-623 380.88,-623 453.12,-623 453.12,-623 459.12,-623 465.12,-629 465.12,-635 465.12,-635 465.12,-647 465.12,-647 465.12,-653 459.12,-659 453.12,-659"/>
+<text xml:space="preserve" text-anchor="middle" x="417" y="-638.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">SpectrumList_mz5</text>
 </a>
 </g>
 </g>
@@ -423,9 +423,9 @@
 <!-- n_data__msdata__mz5__Configuration_mz5 -->
 <g id="node38" class="node">
 <title>n_data__msdata__mz5__Configuration_mz5</title>
-<g id="a_node38"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Configuration_mz5.cpp" xlink:title="mz5/HDF5 file&#45;level config. NOT PORTED." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M117.38,-311C117.38,-311 40.62,-311 40.62,-311 34.62,-311 28.62,-305 28.62,-299 28.62,-299 28.62,-287 28.62,-287 28.62,-281 34.62,-275 40.62,-275 40.62,-275 117.38,-275 117.38,-275 123.38,-275 129.38,-281 129.38,-287 129.38,-287 129.38,-299 129.38,-299 129.38,-305 123.38,-311 117.38,-311"/>
-<text xml:space="preserve" text-anchor="middle" x="79" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Configuration_mz5</text>
+<g id="a_node38"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Configuration_mz5.cpp" xlink:title="mz5/HDF5 file&#45;level config. Ported as MsData/Mz5/Mz5Configuration.cs + Mz5Datasets.cs (dataset&#45;name enum + version/length constants matching cpp)." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M117.38,-311C117.38,-311 40.62,-311 40.62,-311 34.62,-311 28.62,-305 28.62,-299 28.62,-299 28.62,-287 28.62,-287 28.62,-281 34.62,-275 40.62,-275 40.62,-275 117.38,-275 117.38,-275 123.38,-275 129.38,-281 129.38,-287 129.38,-287 129.38,-299 129.38,-299 129.38,-305 123.38,-311 117.38,-311"/>
+<text xml:space="preserve" text-anchor="middle" x="79" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">Configuration_mz5</text>
 </a>
 </g>
 </g>
@@ -453,9 +453,9 @@
 <!-- n_data__msdata__mz5__Connection_mz5 -->
 <g id="node39" class="node">
 <title>n_data__msdata__mz5__Connection_mz5</title>
-<g id="a_node39"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Connection_mz5.cpp" xlink:title="mz5 H5File wrapper. NOT PORTED." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M222.12,-311C222.12,-311 155.88,-311 155.88,-311 149.88,-311 143.88,-305 143.88,-299 143.88,-299 143.88,-287 143.88,-287 143.88,-281 149.88,-275 155.88,-275 155.88,-275 222.12,-275 222.12,-275 228.12,-275 234.12,-281 234.12,-287 234.12,-287 234.12,-299 234.12,-299 234.12,-305 228.12,-311 222.12,-311"/>
-<text xml:space="preserve" text-anchor="middle" x="189" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Connection_mz5</text>
+<g id="a_node39"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Connection_mz5.cpp" xlink:title="mz5 H5File wrapper. Read paths ported as MsData/Mz5/Mz5Connection.cs — file open + ReadFull/ReadDoubles + vlen&#45;reclaim + refcounted shared ownership for SpectrumList + ChromatogramList. Write paths not done." target="_blank">
+<path fill="#ffe48a" stroke="#a87000" d="M222.12,-311C222.12,-311 155.88,-311 155.88,-311 149.88,-311 143.88,-305 143.88,-299 143.88,-299 143.88,-287 143.88,-287 143.88,-281 149.88,-275 155.88,-275 155.88,-275 222.12,-275 222.12,-275 228.12,-275 234.12,-281 234.12,-287 234.12,-287 234.12,-299 234.12,-299 234.12,-305 228.12,-311 222.12,-311"/>
+<text xml:space="preserve" text-anchor="middle" x="189" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#4a3000">Connection_mz5</text>
 </a>
 </g>
 </g>
@@ -473,9 +473,9 @@
 <!-- n_data__msdata__mz5__Datastructures_mz5 -->
 <g id="node40" class="node">
 <title>n_data__msdata__mz5__Datastructures_mz5</title>
-<g id="a_node40"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Datastructures_mz5.cpp" xlink:title="mz5 typed structs for HDF5 round&#45;trip. NOT PORTED." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M341.62,-311C341.62,-311 260.38,-311 260.38,-311 254.38,-311 248.38,-305 248.38,-299 248.38,-299 248.38,-287 248.38,-287 248.38,-281 254.38,-275 260.38,-275 260.38,-275 341.62,-275 341.62,-275 347.62,-275 353.62,-281 353.62,-287 353.62,-287 353.62,-299 353.62,-299 353.62,-305 347.62,-311 341.62,-311"/>
-<text xml:space="preserve" text-anchor="middle" x="301" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Datastructures_mz5</text>
+<g id="a_node40"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Datastructures_mz5.cpp" xlink:title="mz5 typed structs. Ported as MsData/Mz5/Mz5Types.cs — all 25 POD record types with HDF5 compound type registrations whose field names match cpp&#39;s exactly (HDF5 matches compound fields by name on read — mismatches silently leave struct fields at zero)." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M341.62,-311C341.62,-311 260.38,-311 260.38,-311 254.38,-311 248.38,-305 248.38,-299 248.38,-299 248.38,-287 248.38,-287 248.38,-281 254.38,-275 260.38,-275 260.38,-275 341.62,-275 341.62,-275 347.62,-275 353.62,-281 353.62,-287 353.62,-287 353.62,-299 353.62,-299 353.62,-305 347.62,-311 341.62,-311"/>
+<text xml:space="preserve" text-anchor="middle" x="301" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">Datastructures_mz5</text>
 </a>
 </g>
 </g>
@@ -483,9 +483,9 @@
 <!-- n_data__msdata__mz5__ReferenceRead_mz5 -->
 <g id="node41" class="node">
 <title>n_data__msdata__mz5__ReferenceRead_mz5</title>
-<g id="a_node41"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/ReferenceRead_mz5.cpp" xlink:title="mz5 ID&#45;resolution on read. NOT PORTED." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M460.62,-311C460.62,-311 379.38,-311 379.38,-311 373.38,-311 367.38,-305 367.38,-299 367.38,-299 367.38,-287 367.38,-287 367.38,-281 373.38,-275 379.38,-275 379.38,-275 460.62,-275 460.62,-275 466.62,-275 472.62,-281 472.62,-287 472.62,-287 472.62,-299 472.62,-299 472.62,-305 466.62,-311 460.62,-311"/>
-<text xml:space="preserve" text-anchor="middle" x="420" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ReferenceRead_mz5</text>
+<g id="a_node41"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/ReferenceRead_mz5.cpp" xlink:title="mz5 ID&#45;resolution on read. Ported as MsData/Mz5/Mz5ReferenceRead.cs — walks document&#45;level metadata in cpp&#39;s dependency order (CVs → CVReference → CVParam/UserParam/RefParam tables → ParamGroups → SourceFiles / Software / DataProcessings / Samples / ScanSettings / InstrumentConfigurations → Run → Spectrum/Chromatogram lists). Memoizes CVID lookups." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M460.62,-311C460.62,-311 379.38,-311 379.38,-311 373.38,-311 367.38,-305 367.38,-299 367.38,-299 367.38,-287 367.38,-287 367.38,-281 373.38,-275 379.38,-275 379.38,-275 460.62,-275 460.62,-275 466.62,-275 472.62,-281 472.62,-287 472.62,-287 472.62,-299 472.62,-299 472.62,-305 466.62,-311 460.62,-311"/>
+<text xml:space="preserve" text-anchor="middle" x="420" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ReferenceRead_mz5</text>
 </a>
 </g>
 </g>
@@ -493,7 +493,7 @@
 <!-- n_data__msdata__mz5__ReferenceWrite_mz5 -->
 <g id="node42" class="node">
 <title>n_data__msdata__mz5__ReferenceWrite_mz5</title>
-<g id="a_node42"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/ReferenceWrite_mz5.cpp" xlink:title="mz5 ID&#45;resolution on write. NOT PORTED." target="_blank">
+<g id="a_node42"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/ReferenceWrite_mz5.cpp" xlink:title="mz5 ID&#45;resolution on write. NOT PORTED — read&#45;only port." target="_blank">
 <path fill="#f5a8a8" stroke="#a02020" d="M581.38,-311C581.38,-311 498.62,-311 498.62,-311 492.62,-311 486.62,-305 486.62,-299 486.62,-299 486.62,-287 486.62,-287 486.62,-281 492.62,-275 498.62,-275 498.62,-275 581.38,-275 581.38,-275 587.38,-275 593.38,-281 593.38,-287 593.38,-287 593.38,-299 593.38,-299 593.38,-305 587.38,-311 581.38,-311"/>
 <text xml:space="preserve" text-anchor="middle" x="540" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ReferenceWrite_mz5</text>
 </a>
@@ -503,9 +503,9 @@
 <!-- n_data__msdata__mz5__Translator_mz5 -->
 <g id="node43" class="node">
 <title>n_data__msdata__mz5__Translator_mz5</title>
-<g id="a_node43"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Translator_mz5.cpp" xlink:title="mz5 ↔ MSData translation. NOT PORTED." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M678.75,-311C678.75,-311 619.25,-311 619.25,-311 613.25,-311 607.25,-305 607.25,-299 607.25,-299 607.25,-287 607.25,-287 607.25,-281 613.25,-275 619.25,-275 619.25,-275 678.75,-275 678.75,-275 684.75,-275 690.75,-281 690.75,-287 690.75,-287 690.75,-299 690.75,-299 690.75,-305 684.75,-311 678.75,-311"/>
-<text xml:space="preserve" text-anchor="middle" x="649" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Translator_mz5</text>
+<g id="a_node43"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Translator_mz5.cpp" xlink:title="mz5 ↔ MSData translation. Reverse direction (delta&#45;mz cumulative&#45;sum + log&#45;intensity decode on read) is in Mz5Connection / Mz5SpectrumList; forward translation for write not done." target="_blank">
+<path fill="#ffe48a" stroke="#a87000" d="M678.75,-311C678.75,-311 619.25,-311 619.25,-311 613.25,-311 607.25,-305 607.25,-299 607.25,-299 607.25,-287 607.25,-287 607.25,-281 613.25,-275 619.25,-275 619.25,-275 678.75,-275 678.75,-275 684.75,-275 690.75,-281 690.75,-287 690.75,-287 690.75,-299 690.75,-299 690.75,-305 684.75,-311 678.75,-311"/>
+<text xml:space="preserve" text-anchor="middle" x="649" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#4a3000">Translator_mz5</text>
 </a>
 </g>
 </g>

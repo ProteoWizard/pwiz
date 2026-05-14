@@ -46,7 +46,7 @@ STATUS = {
 
     # data/...
     "data/msdata": "partial",
-    "data/msdata/mz5": "partial",     # read path works (metadata + spectra + delta-decode); chromatograms + write not yet
+    "data/msdata/mz5": "partial",     # read path fully ported (metadata + spectra + chromatograms; cpp round-trip clean); write not done (no native mz5 writer — round-trip tests shell out to cpp msconvert)
     "data/msdata/mzmlb": "full",      # HDF5-backed mzML reader+writer, bidirectional cpp parity
     "data/misc": "partial",
     "data/proteome": "none",

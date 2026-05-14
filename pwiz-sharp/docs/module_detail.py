@@ -82,25 +82,25 @@ STATUS_FILE: dict[str, str] = {
     "data/msdata/Serializer_mzXML": "full",     # MzxmlReader / MzxmlWriter
     "data/msdata/Serializer_MGF": "full",       # MgfReader / MgfSerializer
     "data/msdata/Serializer_MSn": "none",
-    "data/msdata/Serializer_mz5": "none",       # HDF5; not implemented
+    "data/msdata/Serializer_mz5": "partial",    # read path ported (Mz5ReaderAdapter); writer not (use cpp msconvert)
 
     "data/msdata/SpectrumList_mzML": "full",
     "data/msdata/SpectrumList_mzXML": "full",
     "data/msdata/SpectrumList_MGF": "full",
     "data/msdata/SpectrumList_MSn": "none",
-    "data/msdata/SpectrumList_mz5": "none",
+    "data/msdata/SpectrumList_mz5": "full",     # Mz5SpectrumList (lazy slicer over global m/z + intensity + IM datasets)
     "data/msdata/SpectrumList_BTDX": "none",    # legacy Bruker BTDX
     "data/msdata/ChromatogramList_mzML": "full",
-    "data/msdata/ChromatogramList_mz5": "none",
+    "data/msdata/ChromatogramList_mz5": "full", # Mz5ChromatogramList (lazy slicer over global time + intensity datasets)
     "data/msdata/examples": "full",             # InitializeTiny + AddMiapeExampleMetadata
 
     # mz5 + mzMLb HDF5 sub-modules
-    "data/msdata/mz5/Configuration_mz5": "none",
-    "data/msdata/mz5/Connection_mz5": "none",
-    "data/msdata/mz5/Datastructures_mz5": "none",
-    "data/msdata/mz5/ReferenceRead_mz5": "none",
-    "data/msdata/mz5/ReferenceWrite_mz5": "none",
-    "data/msdata/mz5/Translator_mz5": "none",
+    "data/msdata/mz5/Configuration_mz5": "full",      # Mz5Configuration / Mz5Datasets
+    "data/msdata/mz5/Connection_mz5": "partial",      # Mz5Connection — read paths ported (file open + ReadFull/ReadDoubles/vlen reclaim); write paths not
+    "data/msdata/mz5/Datastructures_mz5": "full",     # Mz5Types — all 25 POD record types + HDF5 compound type registrations match cpp field names
+    "data/msdata/mz5/ReferenceRead_mz5": "full",      # Mz5ReferenceRead — walks document-level metadata + CV refs
+    "data/msdata/mz5/ReferenceWrite_mz5": "none",     # writer not done (read-only port)
+    "data/msdata/mz5/Translator_mz5": "partial",      # delta-mz + log-intensity reverse done on read; forward translation not
 
     "data/msdata/mzmlb/Connection_mzMLb": "full",   # ported as MzMlbConnection
     # Reader_mzMLb lives in DefaultReaderList in cpp (not a separate file); the
@@ -427,16 +427,28 @@ DETAIL_FILE: dict[str, str] = {
         "Ported as MsData/Mgf/MgfSerializer.cs (text-mode writer with TPP-compat title formats)."
     ),
     "data/msdata/Serializer_MSn": "Legacy MS1/MS2/CMS1/CMS2 format. NOT PORTED — narrow user base.",
-    "data/msdata/Serializer_mz5": "HDF5-based mz5. NOT PORTED — would pull in HDF.PInvoke + ~3k LOC; out of msconvert-sharp scope.",
+    "data/msdata/Serializer_mz5": (
+        "HDF5-based mz5 serializer. READ ported as Mz5ReaderAdapter + Mz5Connection + "
+        "Mz5ReferenceRead + Mz5SpectrumList + Mz5ChromatogramList (under MsData/Mz5/). "
+        "Writer not done — round-trip tests shell out to cpp msconvert --mz5 for the write side."
+    ),
 
     "data/msdata/SpectrumList_mzML": "Lazy-load mzML SpectrumList implementation. Ported as MsData/Mzml/SpectrumList_Mzml.cs.",
     "data/msdata/SpectrumList_mzXML": "Lazy-load mzXML SpectrumList. Ported as MsData/MzXml/SpectrumList_Mzxml.cs.",
     "data/msdata/SpectrumList_MGF": "Lazy-load MGF SpectrumList. Ported as MsData/Mgf/SpectrumList_Mgf.cs.",
     "data/msdata/SpectrumList_MSn": "Legacy MS1/MS2 SpectrumList. NOT PORTED — paired with Serializer_MSn.",
-    "data/msdata/SpectrumList_mz5": "mz5 SpectrumList. NOT PORTED.",
+    "data/msdata/SpectrumList_mz5": (
+        "mz5 SpectrumList. Ported as MsData/Mz5/Mz5SpectrumList.cs — lazy slicer over the "
+        "global SpectrumMZ + SpectrumIntensity datasets via SpectrumIndex end-offsets. Reverses "
+        "delta-mz encoding via cumulative sum when FileInformation.deltaMZ is set."
+    ),
     "data/msdata/SpectrumList_BTDX": "Legacy Bruker BTDX text format. NOT PORTED — superseded by Bruker .d.",
     "data/msdata/ChromatogramList_mzML": "Lazy-load mzML ChromatogramList. Ported as MsData/Mzml/ChromatogramList_Mzml.cs.",
-    "data/msdata/ChromatogramList_mz5": "mz5 ChromatogramList. NOT PORTED.",
+    "data/msdata/ChromatogramList_mz5": (
+        "mz5 ChromatogramList. Ported as MsData/Mz5/Mz5ChromatogramList.cs — lazy slicer over "
+        "ChromatogramTime + ChromatogramIntensity via ChromatogramIndex. No translator (mz5's "
+        "delta encoding only applies to m/z, not time)."
+    ),
     "data/msdata/examples": (
         "Canonical example MSData fixture builder. Ported as MsData/Examples.cs.\n"
         "InitializeTiny → 5 spectra (MS1/MS2 CID/no-data/MS2 ETD+CID/MALDI) + 2 chromatograms\n"
@@ -444,12 +456,31 @@ DETAIL_FILE: dict[str, str] = {
         "Used by round-trip / Diff / serializer parity tests."
     ),
 
-    "data/msdata/mz5/Configuration_mz5": "mz5/HDF5 file-level config. NOT PORTED.",
-    "data/msdata/mz5/Connection_mz5": "mz5 H5File wrapper. NOT PORTED.",
-    "data/msdata/mz5/Datastructures_mz5": "mz5 typed structs for HDF5 round-trip. NOT PORTED.",
-    "data/msdata/mz5/ReferenceRead_mz5": "mz5 ID-resolution on read. NOT PORTED.",
-    "data/msdata/mz5/ReferenceWrite_mz5": "mz5 ID-resolution on write. NOT PORTED.",
-    "data/msdata/mz5/Translator_mz5": "mz5 ↔ MSData translation. NOT PORTED.",
+    "data/msdata/mz5/Configuration_mz5": (
+        "mz5/HDF5 file-level config. Ported as MsData/Mz5/Mz5Configuration.cs + Mz5Datasets.cs "
+        "(dataset-name enum + version/length constants matching cpp)."
+    ),
+    "data/msdata/mz5/Connection_mz5": (
+        "mz5 H5File wrapper. Read paths ported as MsData/Mz5/Mz5Connection.cs — file open + "
+        "ReadFull/ReadDoubles + vlen-reclaim + refcounted shared ownership for SpectrumList + "
+        "ChromatogramList. Write paths not done."
+    ),
+    "data/msdata/mz5/Datastructures_mz5": (
+        "mz5 typed structs. Ported as MsData/Mz5/Mz5Types.cs — all 25 POD record types with "
+        "HDF5 compound type registrations whose field names match cpp's exactly (HDF5 matches "
+        "compound fields by name on read — mismatches silently leave struct fields at zero)."
+    ),
+    "data/msdata/mz5/ReferenceRead_mz5": (
+        "mz5 ID-resolution on read. Ported as MsData/Mz5/Mz5ReferenceRead.cs — walks document-"
+        "level metadata in cpp's dependency order (CVs → CVReference → CVParam/UserParam/RefParam "
+        "tables → ParamGroups → SourceFiles / Software / DataProcessings / Samples / ScanSettings "
+        "/ InstrumentConfigurations → Run → Spectrum/Chromatogram lists). Memoizes CVID lookups."
+    ),
+    "data/msdata/mz5/ReferenceWrite_mz5": "mz5 ID-resolution on write. NOT PORTED — read-only port.",
+    "data/msdata/mz5/Translator_mz5": (
+        "mz5 ↔ MSData translation. Reverse direction (delta-mz cumulative-sum + log-intensity "
+        "decode on read) is in Mz5Connection / Mz5SpectrumList; forward translation for write not done."
+    ),
 
     "data/msdata/mzmlb/Connection_mzMLb": "mzMLb (HDF5-backed mzML) connection wrapper. Ported as Pwiz.Data.MsData.MzMlb.MzMlbConnection (HDF.PInvoke-backed, exposes mzML XML as a seekable Stream + typed Append/Read for binary datasets). Reader/Writer adapters at MzMlbReaderAdapter / MzMlbWriter; integration into MzmlReader/MzmlWriter via IExternalBinarySource/Sink. Bidirectional cpp parity verified.",
     "data/msdata/mzmlb/Reader_mzMLb": "mzMLb top-level reader. NOT PORTED.",
