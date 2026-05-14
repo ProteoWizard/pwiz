@@ -301,7 +301,7 @@
     <value>284, 22</value>
   </data>
   <data name="imputePeakBoundariesMenuItem.Text" xml:space="preserve">
-    <value>插补峰边界</value>
+    <value>划定峰边界</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>281, 6</value>

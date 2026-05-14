@@ -1396,7 +1396,11 @@
     <value>200, 22</value>
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
-    <value>開始(&amp;T)...</value>
+    <value>開始(&amp;S)...</value>
+    <comment>Needs Review:English text changed
+Old English:Sta&amp;rt...
+Current English:S&amp;tart...
+Old Localized:開始(&amp;R)...</comment>
   </data>
   <data name="newMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1480,7 +1484,7 @@
     <value>200, 22</value>
   </data>
   <data name="ardiaPublishMenuItem.Text" xml:space="preserve">
-    <value>Ardiaにアップロード(&amp;D)...</value>
+    <value>Ardiaにアップロード(&amp;d)...</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 6</value>
@@ -1507,7 +1511,7 @@
     <value>200, 22</value>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
-    <value>検索(&amp;R)</value>
+    <value>検索(&amp;r)</value>
     <comment>Needs Review:English text changed
 Old English:&amp;Search
 Current English:Sea&amp;rch

@@ -209,7 +209,7 @@ Old Localized:ライブラリエクスプローラー(&amp;E)</comment>
     <value>201, 22</value>
   </data>
   <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
-    <value>含むフォルダを開く</value>
+    <value>保存先フォルダを開く</value>
     <comment>Needs Review:English text changed
 Old English:Open &amp;containing folder
 Current English:Open Containing Folder

@@ -585,7 +585,7 @@ Old Localized:アカウントタイプ：</comment>
     <value>6</value>
   </data>
   <data name="lblClientId.Text" xml:space="preserve">
-    <value>クライアントID(&amp;D):</value>
+    <value>クライアントID(&amp;d):</value>
   </data>
   <data name="tbxClientSecret.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -615,7 +615,7 @@ Old Localized:アカウントタイプ：</comment>
     <value>4</value>
   </data>
   <data name="lblClientSecret.Text" xml:space="preserve">
-    <value>クライアントの秘密(&amp;R):</value>
+    <value>クライアントシークレット(&amp;r):</value>
     <comment>Needs Review:English text changed
 Old English:Client secret:
 Current English:Client sec&amp;ret:
@@ -646,7 +646,7 @@ Old Localized:クライアントの秘密：</comment>
     <value>2</value>
   </data>
   <data name="lblClientScope.Text" xml:space="preserve">
-    <value>クライアントの適用範囲(&amp;C):</value>
+    <value>クライアントの適用範囲(&amp;c):</value>
     <comment>Needs Review:English text changed
 Old English:Client scope:
 Current English:Client s&amp;cope:
@@ -677,7 +677,7 @@ Old Localized:クライアントの適用範囲：</comment>
     <value>0</value>
   </data>
   <data name="lblIdentityServer.Text" xml:space="preserve">
-    <value>アイデンティティサーバー(&amp;N):</value>
+    <value>認証サーバー(&amp;n):</value>
     <comment>Needs Review:English text changed
 Old English:Identity server:
 Current English:Ide&amp;ntity server:
@@ -1020,6 +1020,6 @@ Old Localized:アイデンティティサーバー：</comment>
     <value>4</value>
   </data>
   <data name="textAlias.ToolTip" xml:space="preserve">
-    <value>わかりやすいアカウント名。この名前がUIに表示されます。</value>
+    <value>アカウントの表示名です。操作画面上ではこの名前が表示されます。</value>
   </data>
 </root>

@@ -789,7 +789,7 @@
     <value>有効なMassLynxのインストールが見つかりませんでした。</value>
   </data>
   <data name="WatersMethodExporter_Wrong_Session_Type" xml:space="preserve">
-    <value>WatersConnectSessionAcquisitionMethodを期待していましたが、{0}を取得しました。</value>
+    <value>WatersConnectSessionAcquisitionMethodが必要ですが、{0}が指定されました。</value>
   </data>
   <data name="WatersMethodExporter_EnsureLibraries_MassLynx_may_not_be_installed_correctly_The_library__0__could_not_be_found" xml:space="preserve">
     <value>MassLynxが正しくインストールされていない可能性があります。ライブラリ{0}が見つかりませんでした。</value>
@@ -861,33 +861,33 @@
     <value>このURLには一致するWaters Connectアカウントがありません。</value>
   </data>
   <data name="Alphapeptdeep_Warn_unknown_modification" xml:space="preserve">
-    <value>警告：予測されたライブラリは、未知の変更：
+    <value>警告：以下の未知の就職が検出されたため、予測ライブラリは不完全になります：
 
-{0}
+{0} 
 
-が検出されたため、不完全になります。この予測されたライブラリの構築を継続しますか？ </value>
+このまま予測ライブラリの作成を続行しますか？ </value>
   </data>
   <data name="Alphapeptdeep_Warn_limited_modification" xml:space="preserve">
-    <value>警告：予測されたライブラリは、以下の修飾が検出され、デフォルトの予測モデルでは完全にサポートされないため、低品質である可能性があります：
+    <value>警告：既定の予測ライブラリでのサポートが限定的な以下の修飾が検出されたため、予測ライブラリの品質が低くなる可能性があります：
 
-{0}
+{0} 
 
-このライブラリを構築する場合は、Carafeにより提供された微調整メソッドの使用を検討してください。
+このライブラリを作成するには、Carafeが提供するファインチューニング手法の使用をご検討ください。
 
-この予測されたライブラリの構築を継続しますか？</value>
+この予測ライブラリの作成を続行しますか？</value>
   </data>
   <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
-    <value>初めてNvidia Cudaツールをインストールするには、管理者権限が必要です。必要な権限がない場合はシステム管理者に相談して、以下のスクリプト
+    <value>Nvidia Cudaツールの初回インストールには、管理者権限が必要です。必要な権限がない場合はシステム管理者に相談して、以下のスクリプトの実行を依頼してください：
 
-{0}
+{0} 
 
-を実行してもらってください。このまま続行しますか？</value>
+このまま続行しますか？</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_" xml:space="preserve">
-    <value>AlphaPeptDeep export-settingsコマンドを実行してsettings.yamlファイルを生成できませんでした。</value>
+    <value>AlphaPeptDeep export-settingsコマンドを実行しましたが、settings.yamlファイルの生成に失敗しました。</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_" xml:space="preserve">
-    <value>AlphaPeptDeep cmd-flowコマンドを実行してライブラリを構築できませんでした。</value>
+    <value>AlphaPeptDeep cmd-flowコマンドを実行しましたが、ライブラリの構築に失敗しました。</value>
   </data>
   <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
     <value>予測入力ファイルを準備中</value>
