@@ -17,4 +17,13 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
+  <!-- Agilent test fixtures ship as Reader_Agilent_Test.data.tar.bz2; unpack on build so
+       the harness can find the .d directories. Without this, every test goes Inconclusive
+       ("Agilent test data tree not found") on a fresh agent (TC, clean CI checkout, etc.). -->
+  <PropertyGroup>
+    <VendorTestArchive>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data.tar.bz2</VendorTestArchive>
+    <VendorTestDataParent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Agilent</VendorTestDataParent>
+  </PropertyGroup>
+  <Import Project="..\..\build\ExtractTestData.targets" />
+
 </Project>
