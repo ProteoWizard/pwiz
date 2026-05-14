@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,6 +34,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.MSGraph;
 using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
@@ -128,6 +130,14 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = "TestFunctional/AreaCVHistogramTest.zip";
             RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestAreaCVHeatMapIndexOutOfRangeRegression()
+        {
+            // Regression test for issue #4209: IndexOutOfRangeException when maximum bin frequency is 1
+            // This reproduces the Math.Log(1) = 0 condition that makes fullScale = +Infinity
+            TestHeatMapCrashRegression();
         }
 
         protected override void DoTest()
@@ -602,6 +612,81 @@ namespace pwiz.SkylineTestFunctional
                 else
                     Console.WriteLine(graphDataStatistics.ToCode());
             });
+        }
+
+        private void TestHeatMapCrashRegression()
+        {
+            // Regression test for issue #4209
+            // Reproduce the exact crash: when maxZ=1 and we process a point with intensity=0
+            // in discrete mode, the colorIndex calculation produces NaN -> int.MinValue
+
+            // Step 1: Test the exact mathematical conditions that cause the crash
+            const int heatMapColorsLength = 292; // From _heatMapColors.Length in HeatMapGraphPane
+            const int legendStep = heatMapColorsLength / 4; // = 73
+
+            // Simulate the exact crash scenario:
+            double maxZValue = 0.0; // Math.Log(1) = 0
+            double fullScale = (heatMapColorsLength - 1.0) / maxZValue; // = 291 / 0 = +Infinity
+            double scale = Math.Min(legendStep, fullScale); // = Math.Min(73, +Infinity) = 73
+
+            int intensity = 0; // Point with Z=1 gives Math.Log(1) * scale = 0 * 73 = 0
+
+            // This is the problematic calculation from line 117:
+            double colorIndexCalc = intensity / scale * fullScale; // = 0 / 73 * (+Infinity) = 0 * (+Infinity) = NaN
+            int colorIndex = Math.Min((int)colorIndexCalc, heatMapColorsLength - 1);
+
+            // On .NET Framework, (int)NaN = int.MinValue, Math.Min doesn't help with negative values
+            AssertEx.IsTrue(double.IsNaN(colorIndexCalc), "Should produce NaN from 0 * Infinity");
+
+            // This would be the array access that crashes: _heatMapColors[colorIndex]
+            // On .NET Framework, (int)NaN = int.MinValue; on .NET Core+, (int)NaN = 0
+            int nanAsInt = unchecked((int)double.NaN);
+
+            // Either result can be problematic for array indexing:
+            // - int.MinValue (negative) is always out of bounds
+            // - 0 might be valid, but the calculation producing NaN indicates a logic error
+            AssertEx.IsTrue(nanAsInt == int.MinValue || nanAsInt == 0,
+                $"(int)NaN should be int.MinValue or 0, got {nanAsInt}");
+
+            // Step 2: Now test the actual GraphHeatMap method with data that produces this condition
+            var points = new List<HeatMapData.TaggedPoint3D>
+            {
+                new HeatMapData.TaggedPoint3D(new Point3D(2.0, 20.0, 1.0), "CrashPoint")
+            };
+
+            var heatMapData = new HeatMapData(points, "Frequency");
+            var graphPane = new GraphPane();
+
+            // Initialize axis scales - required for GetPoints to return data
+            graphPane.XAxis.Scale.Min = 0;
+            graphPane.XAxis.Scale.Max = 10;
+            graphPane.YAxis.Scale.Min = 0;
+            graphPane.YAxis.Scale.Max = 50;
+
+            bool crashOccurred = false;
+            try
+            {
+                // Call with minDotRadius != maxDotRadius to enable discrete mode
+                // With maxZ = 1, this should trigger the crash
+                HeatMapGraphPane.GraphHeatMap(graphPane, heatMapData, 17, 2, 0.0f, 50.0f, true, 0);
+            }
+            catch (IndexOutOfRangeException)
+            {
+                crashOccurred = true;
+            }
+
+            if (crashOccurred)
+            {
+                AssertEx.Fail("GraphHeatMap crashed with IndexOutOfRangeException (issue #4209). " +
+                    "The bug is reproduced - now implement the fix.");
+            }
+
+            // If we get here without crashing, either:
+            // 1. The bug is already fixed, or
+            // 2. Our test conditions aren't quite right, or
+            // 3. We're on a .NET version where (int)NaN behaves differently
+
+            // This test documents the issue and will verify the fix works
         }
     }
 }

@@ -70,10 +70,24 @@ namespace pwiz.MSGraph
             int legendStep = _heatMapColors.Length / 4;
             bool isDiscrete = minDotRadius != maxDotRadius && heatMapData.MaxPoint.Point.Z <= legendStep;
             double maxZValue = logScale ? Math.Log(heatMapData.MaxPoint.Point.Z) : heatMapData.MaxPoint.Point.Z;
+
+            // Guard against degenerate maxZValue causing non-finite scale values
+            if (maxZValue <= 0 || double.IsNaN(maxZValue) || double.IsInfinity(maxZValue))
+            {
+                // Fallback to minimal valid scale when maxZValue is invalid
+                maxZValue = 1.0;
+            }
+
             double fullScale = (_heatMapColors.Length - 1.0) / maxZValue;
             double scale = isDiscrete
                 ? Math.Min(legendStep, fullScale)
                 : fullScale;
+
+            // Ensure scale is finite and positive to avoid division by zero in legend calculations
+            if (double.IsNaN(scale) || double.IsInfinity(scale) || scale <= 0)
+            {
+                scale = 1.0;
+            }
 
             // Create curves for each intensity color (legend labels assigned after data is loaded).
             var curves = new LineItem[_heatMapColors.Length];
@@ -106,7 +120,9 @@ namespace pwiz.MSGraph
             var usedIntensities = new HashSet<int>();
             foreach (var heatPoint in points) {
                 // A log scale produces a better visual display.
-                int intensity = Math.Min((int)((logScale ? Math.Log(heatPoint.Point.Z) : heatPoint.Point.Z) * scale), curves.Length - 1);
+                double intensityValue = (logScale ? Math.Log(heatPoint.Point.Z) : heatPoint.Point.Z) * scale;
+                int intensity = Math.Max(0, Math.Min((int)intensityValue, curves.Length - 1));
+
                 if (intensity >= cutoff)
                 {
                     curves[intensity].AddPoint(heatPoint.Point.X, heatPoint.Point.Y);
@@ -114,7 +130,8 @@ namespace pwiz.MSGraph
                     if (usedIntensities.Add(intensity) && isDiscrete)
                     {
                         // Remap color to full range so the legend shows blue->red even with few values.
-                        int colorIndex = Math.Min((int)(intensity / scale * fullScale), curves.Length - 1);
+                        double colorIndexValue = intensity / scale * fullScale;
+                        int colorIndex = Math.Max(0, Math.Min((int)colorIndexValue, curves.Length - 1));
                         curves[intensity].Symbol.Fill = new Fill(_heatMapColors[colorIndex]);
                     }
                 }
