@@ -1191,7 +1191,7 @@
     <value>将肽段母离子添加到文档中，以基于 AlphaPeptDeep 的预测来构建库。</value>
   </data>
   <data name="PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip" xml:space="preserve">
-    <value>选择适当的保留时间校准策略，用于将库中 MS/MS ID 的保留时间映射到文档中的结果文件， 
+    <value>选择适当的保留时间校准策略，用于将库中 MS/MS ID 的保留时间映射到文档中的结果文件，
 以及在结果文件之间进行峰边界划定。</value>
   </data>
 </root>

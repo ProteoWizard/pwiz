@@ -695,7 +695,7 @@
     <value>[ファイル]ウィンドウにある{0}個のノードを{1}にドラッグアンドドロップしました</value>
   </data>
   <data name="files_tree_replicates_remove_one" xml:space="preserve">
-    <value>[ファイル]ウィンドウにる繰り返し測定{0}を削除しました</value>
+    <value>[ファイル]ウィンドウにある繰り返し測定{0}を削除しました</value>
   </data>
   <data name="files_tree_replicates_remove_several" xml:space="preserve">
     <value>[ファイル]ウィンドウにある{0}個の繰り返し測定を削除しました</value>

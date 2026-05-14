@@ -1396,7 +1396,7 @@
     <value>200, 22</value>
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
-    <value>开始(&amp;T)...…</value>
+    <value>开始(&amp;T)…</value>
     <comment>Needs Review:English text changed
 Old English:Sta&amp;rt...
 Current English:S&amp;tart...
@@ -1484,7 +1484,7 @@ Old Localized:开始(&amp;R)…</comment>
     <value>200, 22</value>
   </data>
   <data name="ardiaPublishMenuItem.Text" xml:space="preserve">
-    <value>上传至 Ardia(&amp;D)...…</value>
+    <value>上传至 Ardia(&amp;D)…</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 6</value>
@@ -1788,7 +1788,7 @@ Old Localized:搜索(&amp;S)</comment>
     <value>180, 22</value>
   </data>
   <data name="searchToolsMenuItem.Text" xml:space="preserve">
-    <value>搜索工具(&amp;S)...…</value>
+    <value>搜索工具(&amp;S)…</value>
   </data>
   <data name="toolStripSeparator46.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>

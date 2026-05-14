@@ -861,7 +861,7 @@
     <value>このURLには一致するWaters Connectアカウントがありません。</value>
   </data>
   <data name="Alphapeptdeep_Warn_unknown_modification" xml:space="preserve">
-    <value>警告：以下の未知の就職が検出されたため、予測ライブラリは不完全になります：
+    <value>警告：以下の未知の修飾が検出されたため、予測ライブラリは不完全になります：
 
 {0} 
 

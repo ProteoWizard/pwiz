@@ -227,7 +227,7 @@
     <value>获取文件夹“{0}”的信息出错</value>
   </data>
   <data name="AbstractPanoramaClient_GetInfoForFolders_folder___0__" xml:space="preserve">
-    <value>''{0}'的信息时出错</value>
+    <value>文件夹“{0}”</value>
   </data>
   <data name="AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__" xml:space="preserve">
     <value>获取文件夹“{0}”的 WebDAV url 时出错</value>
