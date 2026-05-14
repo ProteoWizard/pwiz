@@ -74,7 +74,7 @@ namespace pwiz.OspreySharp.Tasks
         // meaningful or whether planning was skipped. Defaults are
         // non-null empty collections so an accessor on a not-yet-run
         // (or no-op) task never NPEs.
-        public bool DidPlan { get; private set; }
+        private bool _didPlan;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
         private IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> _reconciliationActions
@@ -84,20 +84,79 @@ namespace pwiz.OspreySharp.Tasks
         private IReadOnlyDictionary<string, List<GapFillTarget>> _perFileGapFillForRescore
             = new Dictionary<string, List<GapFillTarget>>();
 
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets() => _perFileConsensusTargets;
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions() => _reconciliationActions;
-        public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations() => _refinedCalibrations;
-        public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore() => _perFileGapFillForRescore;
+        // Phase B lazy-rehydrate gate. See PerFileScoringTask for the
+        // mechanism; FirstJoinTask uses the same idempotent Run pattern.
+        private bool _runOrHydrated;
+
+        public bool DidPlan(PipelineContext ctx) { EnsureHydrated(ctx); return _didPlan; }
+        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileConsensusTargets; }
+        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions(PipelineContext ctx) { EnsureHydrated(ctx); return _reconciliationActions; }
+        public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _refinedCalibrations; }
+        public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileGapFillForRescore; }
+
+        private void EnsureHydrated(PipelineContext ctx)
+        {
+            if (_runOrHydrated) return;
+            Run(ctx);
+        }
+
+        // Phase B resume surface. Reads each file's .scores.parquet,
+        // writes the .1st-pass.fdr_scores.bin sidecars and the
+        // .reconciliation.json envelopes (the latter only when
+        // reconciliation is enabled and we have multi-file evidence).
+        // ValidityKey adds the reconciliation parameter hash so that
+        // toggling reconciliation off/on between runs invalidates the
+        // prior outputs.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+                yield return ParquetScoreCache.GetScoresPath(input);
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+            {
+                yield return FdrScoresSidecar.Pass1Path(input);
+                if (ctx.Config.Reconciliation != null && ctx.Config.Reconciliation.Enabled)
+                    yield return ReconciliationFile.PathForInput(input);
+            }
+        }
+
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx)
+                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+        }
 
         public override bool Run(PipelineContext ctx)
         {
+            if (_runOrHydrated) return true;
+            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
+            // Mid-Run crash safety: clear stale sidecars for the outputs
+            // this task is about to produce. A crash before the matching
+            // post-Run sidecar write leaves no false-positive sidecar
+            // claiming the partially-written output is valid. Skipped on
+            // --join-at-pass=2 (ExpectReconciledInput) because that path
+            // only overlays existing 1st/2nd-pass sidecars onto in-memory
+            // stubs; it doesn't write Pass1Path or reconciliation.json,
+            // so the sidecar delete would invalidate valid outputs from
+            // an upstream straight-through run — and crucially, breaks
+            // resume on a lazy-hydrate path from a downstream task.
+            if (!config.ExpectReconciledInput)
+            {
+                foreach (var output in Outputs(ctx))
+                    TaskValiditySidecar.Delete(output, Name);
+            }
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
-            var perFileEntries = perFileScoring.GetPerFileEntries();
-            var perFileCalibrations = perFileScoring.GetPerFileCalibrations();
-            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths();
-            var fullLibrary = perFileScoring.GetFullLibrary();
+            var perFileEntries = perFileScoring.GetPerFileEntries(ctx);
+            var perFileCalibrations = perFileScoring.GetPerFileCalibrations(ctx);
+            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
+            var fullLibrary = perFileScoring.GetFullLibrary(ctx);
 
             // Stage 5: First-pass FDR
             // Skipped under --join-at-pass=2: the 1st-pass sidecar
@@ -649,7 +708,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
 
                 // Surface outputs for the next task.
-                DidPlan = true;
+                _didPlan = true;
                 _perFileConsensusTargets = perFileConsensusTargets;
                 _reconciliationActions = reconciliationActions
                     ?? new Dictionary<(string, int), ReconcileAction>();
