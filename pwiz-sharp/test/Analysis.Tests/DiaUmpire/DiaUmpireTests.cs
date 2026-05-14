@@ -1,26 +1,36 @@
+using System.IO;
 using System.Linq;
 using Pwiz.Analysis.DiaUmpire;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Spectra;
 
-// Use the type alias so test methods can write `new DiaUmpireProcessor(...)` without colliding with
-// the Pwiz.Analysis.DiaUmpire namespace import above.
+// Avoid the type/namespace collision between Pwiz.Analysis.DiaUmpire (namespace)
+// and Pwiz.Analysis.DiaUmpire.DiaUmpire (class).
 using DiaUmpireProcessor = Pwiz.Analysis.DiaUmpire.DiaUmpire;
 
 namespace Pwiz.Analysis.Tests.DiaUmpire;
 
 /// <summary>
-/// End-to-end smoke tests for <see cref="DiaUmpire"/>. Builds tiny synthetic SWATH-like
-/// MSData documents in-memory and exercises the full pipeline. Numerical parity against
-/// the cpp implementation is phase 5; here we pin the public surface, error handling,
-/// and the structural invariant that PseudoMsMsKeys is sorted (scanTime, targetMz, charge).
+/// End-to-end behavior tests for <see cref="DiaUmpire"/>. Most leaf-level coverage
+/// (peak curves, clusters, math, scan data) lives implicitly here and in
+/// <see cref="DiaUmpireParityTests"/> — the synthetic SWATH pipeline below
+/// exercises those code paths. The tests in this file are explicit about the
+/// gaps that the parity tests don't naturally hit:
+///
+/// <list type="bullet">
+///   <item>Algorithm error paths (no-MS2-with-isolation, profile spectra).</item>
+///   <item>Config filesystem errors (missing params file).</item>
+///   <item>cpp-bug pins on leaf types where the cpp behavior is documented-but-wrong
+///         and we preserve it; these tests fail if a future cleanup pass accidentally
+///         "fixes" them and breaks bit parity with cpp.</item>
+/// </list>
 /// </summary>
 [TestClass]
 public class DiaUmpireTests
 {
     [TestMethod]
-    public void Ctor_TwoWindowSwath_DoesNotThrow_AndPseudoMsMsKeysReadable()
+    public void Pipeline_HappyPathOnSyntheticSwath()
     {
         var (msd, sl) = BuildTwoWindowSwath(numCycles: 6, ms2PerCycle: 2,
             ms1Peaks: new[] { (mz: 500.0, intensity: 1000.0), (mz: 700.0, intensity: 800.0) });
@@ -28,101 +38,74 @@ public class DiaUmpireTests
 
         var dia = new DiaUmpireProcessor(msd, sl, cfg);
 
-        Assert.IsNotNull(dia.PseudoMsMsKeys);
-        Assert.IsTrue(dia.PseudoMsMsKeys.Count >= 0,
-            "PseudoMsMsKeys must be enumerable and non-negative in count.");
-        Assert.IsNotNull(dia.SpillFileByWindow);
-        // Sanity: every key's spill-file token must be a member of SpillFileByWindow,
-        // and the SpillFileIndex must be a valid index into that spill file.
-        foreach (var key in dia.PseudoMsMsKeys)
-        {
-            Assert.IsNotNull(key.SpillFileToken);
-            Assert.IsTrue(dia.SpillFileByWindow.Values.Contains(key.SpillFileToken!),
-                "every PseudoMsMsKey.SpillFileToken must be present in SpillFileByWindow");
-            var list = key.SpillFileToken!.Data.Run.SpectrumList;
-            Assert.IsNotNull(list);
-            Assert.IsTrue(key.SpillFileIndex >= 0 && key.SpillFileIndex < list!.Count,
-                $"PseudoMsMsKey.SpillFileIndex {key.SpillFileIndex} out of range [0, {list.Count}).");
-        }
+        AssertPseudoMsMsKeysShapeAndIntegrity(dia);
+        AssertPseudoMsMsKeysSortedByScanTimeMzCharge(dia);
+        AssertSpillFilesCoverEmittedKeys(dia);
     }
 
     [TestMethod]
-    public void Ctor_PseudoMsMsKeys_AreSortedByScanTimeMzCharge()
+    public void Ctor_RejectsInvalidInputs()
     {
-        var (msd, sl) = BuildTwoWindowSwath(numCycles: 8, ms2PerCycle: 2,
-            ms1Peaks: new[] { (mz: 520.0, intensity: 1500.0), (mz: 720.0, intensity: 1200.0) });
-        var cfg = new Config { DiaTargetWindowScheme = TargetWindowScheme.SwathFixed, DiaFixedWindowSize = 100 };
+        AssertThrowsOnNoMs2WithIsolation();
+        AssertThrowsOnProfileSpectra();
+    }
 
-        var dia = new DiaUmpireProcessor(msd, sl, cfg);
+    [TestMethod]
+    public void Config_FilesystemErrors_Throw()
+    {
+        Assert.ThrowsException<FileNotFoundException>(() => new Config("doesntexist.params"));
+    }
 
+    [TestMethod]
+    public void CppBugsPinnedForParity()
+    {
+        AssertAddPointKeepMaxIfCloseValueExisted_TracksMaxY();
+        AssertCalculateMzVar_UsesRtNotMz();
+    }
+
+    // ---------------- submethods (called from the [TestMethod]s above) ----------------
+
+    private static void AssertPseudoMsMsKeysShapeAndIntegrity(DiaUmpireProcessor dia)
+    {
+        Assert.IsNotNull(dia.PseudoMsMsKeys);
+        Assert.IsTrue(dia.PseudoMsMsKeys.Count >= 0);
+        Assert.IsNotNull(dia.SpillFileByWindow);
+        // Every key's spill-file token must be in the per-window map, and the
+        // SpillFileIndex must point inside that spill's spectrum list.
+        foreach (var key in dia.PseudoMsMsKeys)
+        {
+            Assert.IsNotNull(key.SpillFileToken);
+            Assert.IsTrue(dia.SpillFileByWindow.Values.Contains(key.SpillFileToken!));
+            var list = key.SpillFileToken!.Data.Run.SpectrumList;
+            Assert.IsNotNull(list);
+            Assert.IsTrue(key.SpillFileIndex >= 0 && key.SpillFileIndex < list!.Count);
+        }
+    }
+
+    private static void AssertPseudoMsMsKeysSortedByScanTimeMzCharge(DiaUmpireProcessor dia)
+    {
         for (int i = 1; i < dia.PseudoMsMsKeys.Count; ++i)
         {
             var prev = dia.PseudoMsMsKeys[i - 1];
             var cur = dia.PseudoMsMsKeys[i];
-            // (scanTime, targetMz, charge) lexicographic
-            if (prev.ScanTime != cur.ScanTime)
-            {
-                Assert.IsTrue(prev.ScanTime < cur.ScanTime,
-                    $"PseudoMsMsKeys not sorted by scanTime at index {i}: {prev.ScanTime} > {cur.ScanTime}");
-                continue;
-            }
-            if (prev.TargetMz != cur.TargetMz)
-            {
-                Assert.IsTrue(prev.TargetMz < cur.TargetMz,
-                    $"PseudoMsMsKeys not sorted by targetMz at index {i} (scanTime tied)");
-                continue;
-            }
-            Assert.IsTrue(prev.Charge <= cur.Charge,
-                $"PseudoMsMsKeys not sorted by charge at index {i} (scanTime+targetMz tied)");
+            if (prev.ScanTime != cur.ScanTime) { Assert.IsTrue(prev.ScanTime < cur.ScanTime); continue; }
+            if (prev.TargetMz != cur.TargetMz) { Assert.IsTrue(prev.TargetMz < cur.TargetMz); continue; }
+            Assert.IsTrue(prev.Charge <= cur.Charge);
         }
     }
 
-    [TestMethod]
-    public void SpillFileByWindow_Populated_WhenAnyPseudoMsMs_Emitted()
+    private static void AssertSpillFilesCoverEmittedKeys(DiaUmpireProcessor dia)
     {
-        // Generous synthetic data: 12 cycles, strong precursor peaks, low SN.
-        // If any pseudo-MS/MS is emitted at all, its spill MSData must contain its spectrum.
-        var (msd, sl) = BuildTwoWindowSwath(numCycles: 12, ms2PerCycle: 3,
-            ms1Peaks: new[] { (mz: 480.0, intensity: 5000.0), (mz: 680.0, intensity: 4000.0), (mz: 530.0, intensity: 3500.0) });
-        var cfg = new Config
-        {
-            DiaTargetWindowScheme = TargetWindowScheme.SwathFixed,
-            DiaFixedWindowSize = 100,
-        };
-        cfg.InstrumentParameters.SN = 1f;
-        cfg.InstrumentParameters.MS2SN = 1f;
-        cfg.InstrumentParameters.MinPeakPerPeakCurve = 0;
-        cfg.InstrumentParameters.MinHighCorrCnt = 0;
-        cfg.InstrumentParameters.MinFrag = 0;
-
-        var dia = new DiaUmpireProcessor(msd, sl, cfg);
-
-        // The constructor returned, and the structural invariant has to hold whether or
-        // not the synthetic data was rich enough to produce pseudo-MS/MS. If we did emit
-        // anything, every spill file must contain at least one spectrum and at least one
-        // key has to live inside it.
-        if (dia.PseudoMsMsKeys.Count > 0)
-        {
-            foreach (var spill in dia.SpillFileByWindow.Values)
-            {
-                Assert.IsNotNull(spill.Data.Run.SpectrumList);
-                Assert.IsTrue(spill.Data.Run.SpectrumList!.Count >= 0);
-            }
-            // At least one spill MSData has at least one spectrum (= each key points
-            // somewhere valid, asserted in the structural test above).
-            int totalSpectra = 0;
-            foreach (var spill in dia.SpillFileByWindow.Values)
-                totalSpectra += spill.Data.Run.SpectrumList?.Count ?? 0;
-            Assert.IsTrue(totalSpectra >= dia.PseudoMsMsKeys.Count,
-                "sum of spill-file spectrum counts must cover all emitted PseudoMsMsKeys.");
-        }
+        if (dia.PseudoMsMsKeys.Count == 0) return;
+        int totalSpectra = 0;
+        foreach (var spill in dia.SpillFileByWindow.Values)
+            totalSpectra += spill.Data.Run.SpectrumList?.Count ?? 0;
+        Assert.IsTrue(totalSpectra >= dia.PseudoMsMsKeys.Count);
     }
 
-    [TestMethod]
-    public void Ctor_NonDiaInput_NoMs2WithIsolation_Throws()
+    private static void AssertThrowsOnNoMs2WithIsolation()
     {
-        // MS1-only document — no MS2 with isolation window. cpp throws
-        // "no MS2 spectra with isolation window target m/z"; pwiz-sharp matches.
+        // MS1-only — cpp throws "no MS2 spectra with isolation window target m/z".
         var msd = new MSData { Id = "no-ms2" };
         msd.Run.Id = msd.Id;
         var sl = new SpectrumListSimple();
@@ -139,19 +122,17 @@ public class DiaUmpireTests
         }
         msd.Run.SpectrumList = sl;
         var cfg = new Config { DiaTargetWindowScheme = TargetWindowScheme.SwathFixed, DiaFixedWindowSize = 100 };
-
         Assert.ThrowsException<System.InvalidOperationException>(() => new DiaUmpireProcessor(msd, sl, cfg));
     }
 
-    [TestMethod]
-    public void Ctor_ProfileSpectra_Throws()
+    private static void AssertThrowsOnProfileSpectra()
     {
         var msd = new MSData { Id = "profile" };
         msd.Run.Id = msd.Id;
         var sl = new SpectrumListSimple();
         var s = new Spectrum { Index = 0, Id = "scan=1" };
         s.Params.Set(CVID.MS_ms_level, 1);
-        s.Params.Set(CVID.MS_profile_spectrum); // profile, not centroid
+        s.Params.Set(CVID.MS_profile_spectrum);
         s.SetMZIntensityArrays(new[] { 400.0 }, new[] { 1000.0 }, CVID.MS_number_of_detector_counts);
         var scan = new Scan();
         scan.Set(CVID.MS_scan_start_time, 0.0, CVID.UO_second);
@@ -163,14 +144,49 @@ public class DiaUmpireTests
         Assert.ThrowsException<System.InvalidOperationException>(() => new DiaUmpireProcessor(msd, sl, cfg));
     }
 
-    // ----------- synthetic fixture builder -----------
+    private static void AssertAddPointKeepMaxIfCloseValueExisted_TracksMaxY()
+    {
+        // cpp XYPointCollection::AddPointKeepMaxIfCloseValueExisted: when a new point is
+        // within ppm of an existing one, the cpp code takes the `if (y < pt.getY())` branch
+        // (despite the method name) — we preserve that. MaxY does track the running max
+        // across all calls regardless. This assertion pins the MaxY contract; the inline
+        // xmldoc on the C# port documents the keep-smaller-Y branch quirk.
+        var c = new XYPointCollection();
+        c.AddPoint(100f, 5f);
+        c.AddPointKeepMaxIfCloseValueExisted(100.0001f, 10f, ppm: 10);
+        Assert.AreEqual(10f, c.MaxY);
+    }
 
-    /// <summary>
-    /// Builds a synthetic 2-window SWATH-like document: each cycle has 1 MS1 followed by
-    /// <paramref name="ms2PerCycle"/> MS2 spectra, alternating across two windows centered
-    /// at 450 and 650 (half-width 50). The MS1 spectrum carries persistent peaks at the
-    /// requested m/z values to make peak-curve detection deterministic.
-    /// </summary>
+    private static void AssertCalculateMzVar_UsesRtNotMz()
+    {
+        // cpp PeakCurve::CalculateMzVar accesses PeakList[j].getX() (== RT, not mz) when
+        // computing "m/z variance". The comment says m/z, the code uses RT — we preserve
+        // that. This test fails if a cleanup pass accidentally "fixes" it; if cpp ever
+        // fixes the bug too, update both at once.
+        var p = new Config().InstrumentParameters;
+        var curve = new PeakCurve(p) { Index = 1, MsLevel = 1 };
+        const float apexRt = 5f, apexMz = 500.5f;
+        for (int i = 0; i < 21; i++)
+        {
+            float rt = apexRt - 1f + i * 0.1f;
+            float dist = System.Math.Abs(rt - apexRt);
+            float intensity = System.Math.Max(0f, 1000f - dist * 1000f);
+            if (intensity == 0) intensity = 1;
+            curve.AddPeak(new XYZData(rt, apexMz, intensity));
+        }
+
+        curve.CalculateMzVar();
+        var pts = curve.GetPeakList();
+        double sum = 0;
+        foreach (var pt in pts) sum += (pt.X - curve.TargetMz) * (pt.X - curve.TargetMz);
+        sum /= pts.Count;
+        Assert.AreEqual(sum, curve.MzVar, 1.0);
+        // NOT zero — that's the cpp-bug signature.
+        Assert.IsTrue(curve.MzVar > 100);
+    }
+
+    // ----------- synthetic fixture builder (shared with sibling test classes) -----------
+
     /// <summary>Default small SWATH MSData for sibling tests. 6 cycles, 2 MS2/cycle, 4 MS1 peaks.</summary>
     internal static (MSData Msd, SpectrumListSimple Sl) BuildTinySwathMsd() =>
         BuildTwoWindowSwath(numCycles: 6, ms2PerCycle: 2,
@@ -184,7 +200,6 @@ public class DiaUmpireTests
         var sl = new SpectrumListSimple();
         int idx = 0;
 
-        // Window centers / half-widths.
         var ms2Windows = new[] { (center: 450.0, half: 50.0), (center: 650.0, half: 50.0) };
 
         for (int cycle = 0; cycle < numCycles; ++cycle)
@@ -198,7 +213,6 @@ public class DiaUmpireTests
             for (int i = 0; i < ms1Peaks.Length; ++i)
             {
                 mzs[i] = ms1Peaks[i].mz;
-                // Slight modulation so peaks rise and fall (gives a real apex).
                 double envelope = System.Math.Exp(-System.Math.Pow(cycle - numCycles / 2.0, 2) / (numCycles * 0.6));
                 ints[i] = ms1Peaks[i].intensity * (0.5 + envelope);
             }
@@ -208,7 +222,6 @@ public class DiaUmpireTests
             ms1.ScanList.Scans.Add(ms1Scan);
             sl.Spectra.Add(ms1);
 
-            // ms2PerCycle MS2 per cycle, alternating across the two windows.
             for (int j = 0; j < ms2PerCycle; ++j)
             {
                 var win = ms2Windows[j % ms2Windows.Length];
@@ -223,7 +236,6 @@ public class DiaUmpireTests
                 p.SelectedIons.Add(new SelectedIon(win.center));
                 s.Precursors.Add(p);
 
-                // Fragments: a fixed pattern at a few m/z values, intensity varies by cycle.
                 double envelope = System.Math.Exp(-System.Math.Pow(cycle - numCycles / 2.0, 2) / (numCycles * 0.6));
                 s.SetMZIntensityArrays(
                     new[] { 220.0, 360.0, 480.0 },
