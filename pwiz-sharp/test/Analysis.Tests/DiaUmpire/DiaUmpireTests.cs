@@ -171,6 +171,11 @@ public class DiaUmpireTests
     /// at 450 and 650 (half-width 50). The MS1 spectrum carries persistent peaks at the
     /// requested m/z values to make peak-curve detection deterministic.
     /// </summary>
+    /// <summary>Default small SWATH MSData for sibling tests. 6 cycles, 2 MS2/cycle, 4 MS1 peaks.</summary>
+    internal static (MSData Msd, SpectrumListSimple Sl) BuildTinySwathMsd() =>
+        BuildTwoWindowSwath(numCycles: 6, ms2PerCycle: 2,
+            new[] { (430.0, 50000.0), (460.0, 30000.0), (640.0, 20000.0), (660.0, 15000.0) });
+
     private static (MSData Msd, SpectrumListSimple Sl) BuildTwoWindowSwath(int numCycles, int ms2PerCycle,
         (double mz, double intensity)[] ms1Peaks)
     {

@@ -230,6 +230,14 @@ public static class SpectrumListFactory
         // demultiplex — DIA / MSX demux via NNLS solve.
         map["demultiplex"] = (args, inner, _) => ParseDemultiplex(args, inner);
 
+        // diaUmpire — DIA pseudo-MS/MS generation. Requires the source MSData (for
+        // run / spectrum-list context) + a params= path to a DiaUmpire .params file.
+        map["diaumpire"] = (args, inner, msd) =>
+        {
+            ArgumentNullException.ThrowIfNull(msd, "diaUmpire needs the source MSData (for run + instrument context).");
+            return ParseDiaUmpire(args, msd, inner);
+        };
+
         // precursorRefine — recentroid MS2 precursor m/z using surrounding MS1 scans.
         map["precursorrefine"] = (_, _, msd) =>
         {
@@ -853,6 +861,28 @@ public static class SpectrumListFactory
             "overlap_only" or "overlaponly" => SpectrumListDemux.Optimization.OverlapOnly,
             _ => throw new ArgumentException($"demultiplex: unknown optimization '{s}'"),
         };
+
+    private static DiaUmpire.SpectrumList_DiaUmpire ParseDiaUmpire(string args, MSData msd, ISpectrumList inner)
+    {
+        // cpp filterCreator_diaUmpire: required `params=<filepath>`, no other args.
+        string paramsFilepath = TakeKeyValue(ref args, "params=", "");
+        // cpp's `unescapeQuotedPath` strips surrounding quotes if the value was
+        // wrapped in them (`--filter "params=\"my params file\""`); cheap to replicate.
+        if (paramsFilepath.Length >= 2 && paramsFilepath[0] == '"' && paramsFilepath[^1] == '"')
+            paramsFilepath = paramsFilepath[1..^1];
+
+        if (string.IsNullOrEmpty(paramsFilepath))
+            throw new ArgumentException("[diaUmpire] params filepath is required (params=path/to/diaumpire.params)");
+        if (!File.Exists(paramsFilepath))
+            throw new FileNotFoundException(
+                $"[diaUmpire] params file \"{paramsFilepath}\" not found", paramsFilepath);
+
+        args = args.Trim();
+        if (!string.IsNullOrEmpty(args))
+            throw new ArgumentException($"diaUmpire: unhandled text in argument string: \"{args}\"");
+
+        return new DiaUmpire.SpectrumList_DiaUmpire(msd, inner, new DiaUmpire.Config(paramsFilepath));
+    }
 
     private static SpectrumList_MZRefiner ParseMzRefiner(string args, MSData msd)
     {
