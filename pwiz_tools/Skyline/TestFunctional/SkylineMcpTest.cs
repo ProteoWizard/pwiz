@@ -29,6 +29,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -47,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private const int EXPECTED_TOOL_COUNT = 43;
+        private const int EXPECTED_TOOL_COUNT = 44;
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -197,9 +198,14 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             string unsavedPath = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path");
             Assert.AreEqual("(unsaved)", unsavedPath);
 
-            // Import FASTA via MCP - the MCP server drives the document change
+            // Import FASTA via MCP - the MCP server drives the document change.
+            // The tool now takes a file path and routes through RunCommand
+            // (--import-fasta), so the FASTA text never round-trips through the
+            // LLM as tokens.
+            string fastaPath = TestContext.GetTestResultsPath(@"mcp_test.fasta");
+            File.WriteAllText(fastaPath, TEST_FASTA);
             McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_import_fasta",
-                new JObject { ["textFasta"] = TEST_FASTA });
+                new JObject { ["fastaPath"] = fastaPath });
 
             // Verify from inside Skyline that the import worked
             var doc = SkylineWindow.Document;
@@ -233,6 +239,41 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             AssertEx.Contains(saveResponse, saveFileName);
             string savedPath = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path");
             AssertEx.AreEqual(docPath.ToForwardSlashPath(), savedPath);
+
+            // Dedicated save tool: no filePath -> saves in place (wraps --save)
+            McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_save_document");
+            AssertEx.AreEqual(docPath.ToForwardSlashPath(),
+                McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path"));
+
+            // Dedicated save tool: filePath -> save-as (wraps --out=PATH).
+            // Pre-delete in case a prior iteration left the file behind, since the
+            // underlying --out check refuses to overwrite an existing file without
+            // --overwrite. Verifies the save-as path works on a clean slate.
+            string docPath2 = TestContext.GetTestResultsPath("SkylineMcpTest2.sky");
+            FileEx.SafeDelete(docPath2);
+            McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_save_document",
+                new JObject { ["filePath"] = docPath2 });
+            AssertEx.AreEqual(docPath2.ToForwardSlashPath(),
+                McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path"));
+
+            // Dedicated save tool: existing file without overwrite=true -> error,
+            // and the current document path is unchanged. A plain text file is
+            // enough to trigger the FileAlreadyExists guard - it fires before any
+            // attempt to read the target as a Skyline document.
+            string existingPath = TestContext.GetTestResultsPath("preexisting.sky");
+            File.WriteAllText(existingPath, @"not a real skyline document");
+            string errorResponse = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_save_document",
+                new JObject { ["filePath"] = existingPath });
+            AssertEx.Contains(errorResponse, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, existingPath));
+            AssertEx.AreEqual(docPath2.ToForwardSlashPath(),
+                McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path"));
+
+            // Dedicated save tool: same existing file with overwrite=true -> success,
+            // and the document path moves to the new location.
+            McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_save_document",
+                new JObject { ["filePath"] = existingPath, ["overwrite"] = true });
+            AssertEx.AreEqual(existingPath.ToForwardSlashPath(),
+                McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path"));
 
             // Version mismatch detection: verify that an unknown method sent through
             // the pipe produces an error with the Skyline version, so the LLM can
