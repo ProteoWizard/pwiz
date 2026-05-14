@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Mgf;
+using Pwiz.Data.MsData.MSn;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.MzMlb;
 using Pwiz.Data.MsData.MzXml;
@@ -106,6 +107,24 @@ public static class MSDataFile
             case WriteFormat.Mgf:
                 using (var tw = new StreamWriter(output, leaveOpen: true))
                     new MgfSerializer { IterationListenerRegistry = ilr }.Write(msd, tw);
+                break;
+            case WriteFormat.Ms1:
+                new SerializerMSn(MSnType.Ms1) { IterationListenerRegistry = ilr }.Write(msd, output);
+                break;
+            case WriteFormat.Bms1:
+                new SerializerMSn(MSnType.Bms1) { IterationListenerRegistry = ilr }.Write(msd, output);
+                break;
+            case WriteFormat.Cms1:
+                new SerializerMSn(MSnType.Cms1) { IterationListenerRegistry = ilr }.Write(msd, output);
+                break;
+            case WriteFormat.Ms2:
+                new SerializerMSn(MSnType.Ms2) { IterationListenerRegistry = ilr }.Write(msd, output);
+                break;
+            case WriteFormat.Bms2:
+                new SerializerMSn(MSnType.Bms2) { IterationListenerRegistry = ilr }.Write(msd, output);
+                break;
+            case WriteFormat.Cms2:
+                new SerializerMSn(MSnType.Cms2) { IterationListenerRegistry = ilr }.Write(msd, output);
                 break;
             default:
                 throw new NotImplementedException(

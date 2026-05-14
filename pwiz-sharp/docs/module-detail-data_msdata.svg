@@ -233,9 +233,9 @@
 <!-- n_data__msdata__Serializer_MSn -->
 <g id="node17" class="node">
 <title>n_data__msdata__Serializer_MSn</title>
-<g id="a_node17"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Serializer_MSn.cpp" xlink:title="Legacy MS1/MS2/CMS1/CMS2 format. NOT PORTED — narrow user base." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M202.25,-833C202.25,-833 145.75,-833 145.75,-833 139.75,-833 133.75,-827 133.75,-821 133.75,-821 133.75,-809 133.75,-809 133.75,-803 139.75,-797 145.75,-797 145.75,-797 202.25,-797 202.25,-797 208.25,-797 214.25,-803 214.25,-809 214.25,-809 214.25,-821 214.25,-821 214.25,-827 208.25,-833 202.25,-833"/>
-<text xml:space="preserve" text-anchor="middle" x="174" y="-812.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Serializer_MSn</text>
+<g id="a_node17"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Serializer_MSn.cpp" xlink:title="MS1/MS2/BMS1/BMS2/CMS1/CMS2 legacy format. Ported as MsData/MSn/SerializerMSn.cs with all 6 variants — text (MS1/MS2), uncompressed binary (BMS1/BMS2), and zlib&#45;compressed binary (CMS1/CMS2). Folds in the SpectrumList parse path that cpp puts in SpectrumList_MSn.cpp." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M202.25,-833C202.25,-833 145.75,-833 145.75,-833 139.75,-833 133.75,-827 133.75,-821 133.75,-821 133.75,-809 133.75,-809 133.75,-803 139.75,-797 145.75,-797 145.75,-797 202.25,-797 202.25,-797 208.25,-797 214.25,-803 214.25,-809 214.25,-809 214.25,-821 214.25,-821 214.25,-827 208.25,-833 202.25,-833"/>
+<text xml:space="preserve" text-anchor="middle" x="174" y="-812.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">Serializer_MSn</text>
 </a>
 </g>
 </g>
@@ -303,9 +303,9 @@
 <!-- n_data__msdata__SpectrumList_BTDX -->
 <g id="node24" class="node">
 <title>n_data__msdata__SpectrumList_BTDX</title>
-<g id="a_node24"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_BTDX.cpp" xlink:title="Legacy Bruker BTDX text format. NOT PORTED — superseded by Bruker .d." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M117.75,-659C117.75,-659 40.25,-659 40.25,-659 34.25,-659 28.25,-653 28.25,-647 28.25,-647 28.25,-635 28.25,-635 28.25,-629 34.25,-623 40.25,-623 40.25,-623 117.75,-623 117.75,-623 123.75,-623 129.75,-629 129.75,-635 129.75,-635 129.75,-647 129.75,-647 129.75,-653 123.75,-659 117.75,-659"/>
-<text xml:space="preserve" text-anchor="middle" x="79" y="-638.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SpectrumList_BTDX</text>
+<g id="a_node24"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_BTDX.cpp" xlink:title="Bruker BioTools DataExchange XML. Ported as MsData/Btdx/SpectrumListBtdx.cs + MsData/BtdxReaderAdapter.cs. Read&#45;only (cpp has no writer either)." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M117.75,-659C117.75,-659 40.25,-659 40.25,-659 34.25,-659 28.25,-653 28.25,-647 28.25,-647 28.25,-635 28.25,-635 28.25,-629 34.25,-623 40.25,-623 40.25,-623 117.75,-623 117.75,-623 123.75,-623 129.75,-629 129.75,-635 129.75,-635 129.75,-647 129.75,-647 129.75,-653 123.75,-659 117.75,-659"/>
+<text xml:space="preserve" text-anchor="middle" x="79" y="-638.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">SpectrumList_BTDX</text>
 </a>
 </g>
 </g>
@@ -333,9 +333,9 @@
 <!-- n_data__msdata__SpectrumList_MSn -->
 <g id="node26" class="node">
 <title>n_data__msdata__SpectrumList_MSn</title>
-<g id="a_node26"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_MSn.cpp" xlink:title="Legacy MS1/MS2 SpectrumList. NOT PORTED — paired with Serializer_MSn." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M343.25,-659C343.25,-659 268.75,-659 268.75,-659 262.75,-659 256.75,-653 256.75,-647 256.75,-647 256.75,-635 256.75,-635 256.75,-629 262.75,-623 268.75,-623 268.75,-623 343.25,-623 343.25,-623 349.25,-623 355.25,-629 355.25,-635 355.25,-635 355.25,-647 355.25,-647 355.25,-653 349.25,-659 343.25,-659"/>
-<text xml:space="preserve" text-anchor="middle" x="306" y="-638.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SpectrumList_MSn</text>
+<g id="a_node26"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_MSn.cpp" xlink:title="Legacy MS1/MS2 SpectrumList. Read path folded into MsData/MSn/SerializerMSn.cs&#39;s parser (no separate lazy&#45;load list class — eager parse into SpectrumListSimple, matching MGF / BTDX patterns)." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M343.25,-659C343.25,-659 268.75,-659 268.75,-659 262.75,-659 256.75,-653 256.75,-647 256.75,-647 256.75,-635 256.75,-635 256.75,-629 262.75,-623 268.75,-623 268.75,-623 343.25,-623 343.25,-623 349.25,-623 355.25,-629 355.25,-635 355.25,-635 355.25,-647 355.25,-647 355.25,-653 349.25,-659 343.25,-659"/>
+<text xml:space="preserve" text-anchor="middle" x="306" y="-638.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">SpectrumList_MSn</text>
 </a>
 </g>
 </g>

@@ -249,8 +249,10 @@ public sealed class Converter
         WriteFormat.Mgf => ".mgf",
         WriteFormat.Text => ".txt",
         WriteFormat.Ms1 => ".ms1",
+        WriteFormat.Bms1 => ".bms1",
         WriteFormat.Cms1 => ".cms1",
         WriteFormat.Ms2 => ".ms2",
+        WriteFormat.Bms2 => ".bms2",
         WriteFormat.Cms2 => ".cms2",
         _ => ".out",
     };

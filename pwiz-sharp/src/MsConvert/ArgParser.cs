@@ -80,11 +80,17 @@ internal static class ArgParser
                 case "--ms1":
                     config.WriteConfig.Format = WriteFormat.Ms1;
                     break;
+                case "--bms1":
+                    config.WriteConfig.Format = WriteFormat.Bms1;
+                    break;
                 case "--cms1":
                     config.WriteConfig.Format = WriteFormat.Cms1;
                     break;
                 case "--ms2":
                     config.WriteConfig.Format = WriteFormat.Ms2;
+                    break;
+                case "--bms2":
+                    config.WriteConfig.Format = WriteFormat.Bms2;
                     break;
                 case "--cms2":
                     config.WriteConfig.Format = WriteFormat.Cms2;
@@ -411,7 +417,8 @@ internal static class ArgParser
         "  --mzML                   mzML 1.1 (default)",
         "  --mgf                    Mascot Generic Format",
         "  --mzXML                  mzXML 3.2",
-        "  --mz5, --mzMLb, --text, --ms1, --cms1, --ms2, --cms2 (unimplemented)",
+        "  --mz5, --mzMLb, --text (unimplemented)",
+        "  --ms1, --bms1, --cms1, --ms2, --bms2, --cms2",
         "",
         "Filters:",
         "  --filter \"SPEC\"          Add spectrum filter (repeatable)",

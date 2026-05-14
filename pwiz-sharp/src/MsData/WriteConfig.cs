@@ -21,13 +21,17 @@ public enum WriteFormat
     MzMLb,
     /// <summary>pwiz internal text format (unimplemented).</summary>
     Text,
-    /// <summary>Legacy MS1 ASCII format (unimplemented).</summary>
+    /// <summary>Legacy MS1 text format.</summary>
     Ms1,
-    /// <summary>Legacy CMS1 binary format (unimplemented).</summary>
+    /// <summary>Legacy BMS1 binary format (uncompressed).</summary>
+    Bms1,
+    /// <summary>Legacy CMS1 binary format (zlib-compressed peaks).</summary>
     Cms1,
-    /// <summary>Legacy MS2 ASCII format (unimplemented).</summary>
+    /// <summary>Legacy MS2 text format.</summary>
     Ms2,
-    /// <summary>Legacy CMS2 binary format (unimplemented).</summary>
+    /// <summary>Legacy BMS2 binary format (uncompressed).</summary>
+    Bms2,
+    /// <summary>Legacy CMS2 binary format (zlib-compressed peaks).</summary>
     Cms2,
 }
 

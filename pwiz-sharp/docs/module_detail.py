@@ -81,15 +81,15 @@ STATUS_FILE: dict[str, str] = {
     "data/msdata/Serializer_mzML": "full",      # MzmlReader / MzmlWriter
     "data/msdata/Serializer_mzXML": "full",     # MzxmlReader / MzxmlWriter
     "data/msdata/Serializer_MGF": "full",       # MgfReader / MgfSerializer
-    "data/msdata/Serializer_MSn": "none",
+    "data/msdata/Serializer_MSn": "full",       # MsData/MSn/SerializerMSn.cs — read+write for all 6 variants
     "data/msdata/Serializer_mz5": "partial",    # read path ported (Mz5ReaderAdapter); writer not (use cpp msconvert)
 
     "data/msdata/SpectrumList_mzML": "full",
     "data/msdata/SpectrumList_mzXML": "full",
     "data/msdata/SpectrumList_MGF": "full",
-    "data/msdata/SpectrumList_MSn": "none",
+    "data/msdata/SpectrumList_MSn": "full",     # MsData/MSn/SerializerMSn.cs folds the SpectrumList parse into the serializer
     "data/msdata/SpectrumList_mz5": "full",     # Mz5SpectrumList (lazy slicer over global m/z + intensity + IM datasets)
-    "data/msdata/SpectrumList_BTDX": "none",    # legacy Bruker BTDX
+    "data/msdata/SpectrumList_BTDX": "full",    # MsData/Btdx/SpectrumListBtdx.cs
     "data/msdata/ChromatogramList_mzML": "full",
     "data/msdata/ChromatogramList_mz5": "full", # Mz5ChromatogramList (lazy slicer over global time + intensity datasets)
     "data/msdata/examples": "full",             # InitializeTiny + AddMiapeExampleMetadata
@@ -430,7 +430,12 @@ DETAIL_FILE: dict[str, str] = {
         "MGF writer (Mascot Generic Format — MS2 peak-list export).\n"
         "Ported as MsData/Mgf/MgfSerializer.cs (text-mode writer with TPP-compat title formats)."
     ),
-    "data/msdata/Serializer_MSn": "Legacy MS1/MS2/CMS1/CMS2 format. NOT PORTED — narrow user base.",
+    "data/msdata/Serializer_MSn": (
+        "MS1/MS2/BMS1/BMS2/CMS1/CMS2 legacy format. Ported as MsData/MSn/SerializerMSn.cs "
+        "with all 6 variants — text (MS1/MS2), uncompressed binary (BMS1/BMS2), and zlib-"
+        "compressed binary (CMS1/CMS2). Folds in the SpectrumList parse path that cpp puts "
+        "in SpectrumList_MSn.cpp."
+    ),
     "data/msdata/Serializer_mz5": (
         "HDF5-based mz5 serializer. READ ported as Mz5ReaderAdapter + Mz5Connection + "
         "Mz5ReferenceRead + Mz5SpectrumList + Mz5ChromatogramList (under MsData/Mz5/). "
@@ -440,13 +445,13 @@ DETAIL_FILE: dict[str, str] = {
     "data/msdata/SpectrumList_mzML": "Lazy-load mzML SpectrumList implementation. Ported as MsData/Mzml/SpectrumList_Mzml.cs.",
     "data/msdata/SpectrumList_mzXML": "Lazy-load mzXML SpectrumList. Ported as MsData/MzXml/SpectrumList_Mzxml.cs.",
     "data/msdata/SpectrumList_MGF": "Lazy-load MGF SpectrumList. Ported as MsData/Mgf/SpectrumList_Mgf.cs.",
-    "data/msdata/SpectrumList_MSn": "Legacy MS1/MS2 SpectrumList. NOT PORTED — paired with Serializer_MSn.",
+    "data/msdata/SpectrumList_MSn": "Legacy MS1/MS2 SpectrumList. Read path folded into MsData/MSn/SerializerMSn.cs's parser (no separate lazy-load list class — eager parse into SpectrumListSimple, matching MGF / BTDX patterns).",
     "data/msdata/SpectrumList_mz5": (
         "mz5 SpectrumList. Ported as MsData/Mz5/Mz5SpectrumList.cs — lazy slicer over the "
         "global SpectrumMZ + SpectrumIntensity datasets via SpectrumIndex end-offsets. Reverses "
         "delta-mz encoding via cumulative sum when FileInformation.deltaMZ is set."
     ),
-    "data/msdata/SpectrumList_BTDX": "Legacy Bruker BTDX text format. NOT PORTED — superseded by Bruker .d.",
+    "data/msdata/SpectrumList_BTDX": "Bruker BioTools DataExchange XML. Ported as MsData/Btdx/SpectrumListBtdx.cs + MsData/BtdxReaderAdapter.cs. Read-only (cpp has no writer either).",
     "data/msdata/ChromatogramList_mzML": "Lazy-load mzML ChromatogramList. Ported as MsData/Mzml/ChromatogramList_Mzml.cs.",
     "data/msdata/ChromatogramList_mz5": (
         "mz5 ChromatogramList. Ported as MsData/Mz5/Mz5ChromatogramList.cs — lazy slicer over "
