@@ -550,6 +550,19 @@ namespace pwiz.OspreySharp.Tasks
                         ctx.ExitCode = 1;
                         return false;
                     }
+                    // Clear PIN features on bundle-hydrated stubs so
+                    // PerFileRescoreTask's WriteReconciledParquet can keep
+                    // its "Features != null means this entry was rescored"
+                    // criterion -- with features pre-populated from the
+                    // parquet, every entry would otherwise look rescored
+                    // and overwrite the original parquet row's binary
+                    // blob columns (fragment_mzs, ref_xic_*, bounds_*).
+                    // Bundle path doesn't need PIN features downstream:
+                    // FirstJoinTask skips Percolator on this path, so the
+                    // SVM training input is irrelevant.
+                    foreach (var kvp in perFileEntries)
+                        foreach (var entry in kvp.Value)
+                            entry.Features = null;
                     ctx.LogInfo(string.Format(
                         @"Hydrated rescore bundle for {0} file(s) ({1} reconciliation actions, " +
                         @"{2} refined RT calibration(s), {3} gap-fill target(s))",
