@@ -72,9 +72,10 @@ namespace pwiz.MSGraph
             double maxZValue = logScale ? Math.Log(heatMapData.MaxPoint.Point.Z) : heatMapData.MaxPoint.Point.Z;
 
             // Guard against degenerate maxZValue causing non-finite scale values
-            if (maxZValue <= 0 || double.IsNaN(maxZValue) || double.IsInfinity(maxZValue))
+            // Math.Log(1) = 0 causes division by zero; negative infinity and NaN also problematic
+            if (maxZValue == 0 || double.IsNaN(maxZValue) || double.IsInfinity(maxZValue))
             {
-                // Fallback to minimal valid scale when maxZValue is invalid
+                // Fallback to minimal valid scale when maxZValue would cause division by zero
                 maxZValue = 1.0;
             }
 
