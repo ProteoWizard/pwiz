@@ -46,7 +46,7 @@ STATUS = {
 
     # data/...
     "data/msdata": "partial",
-    "data/msdata/mz5": "none",
+    "data/msdata/mz5": "partial",     # read path works (metadata + spectra + delta-decode); chromatograms + write not yet
     "data/msdata/mzmlb": "full",      # HDF5-backed mzML reader+writer, bidirectional cpp parity
     "data/misc": "partial",
     "data/proteome": "none",
@@ -57,7 +57,7 @@ STATUS = {
     # 'partial' marks readers whose .NET 8 SDK has known feature gaps vs cpp;
     # 'skipped' marks readers we deliberately won't port (rendered with strikethrough).
     "data/vendor_readers": "full",            # ExtendedReaderList dispatcher
-    "data/vendor_readers/ABI": "partial",     # WIFF1 + WIFF2 paths green (4/4 tests); cpp's simAsSpectra/srmAsSpectra variants not yet wired
+    "data/vendor_readers/ABI": "full",        # WIFF1 + WIFF2 paths green; 6/6 tests including simAsSpectra + srmAsSpectra variants
     "data/vendor_readers/ABI/T2D": "skipped", # 32-bit-only, requires SCIEX vendor app on host; not used in modern workflows
     "data/vendor_readers/Agilent": "full",    # 11/11 tests, IM combineIMS done
     "data/vendor_readers/Bruker": "full",     # 10/10 tests

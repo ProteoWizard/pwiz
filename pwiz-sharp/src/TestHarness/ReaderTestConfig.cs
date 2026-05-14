@@ -129,14 +129,39 @@ public sealed record ReaderTestConfig
     /// reads it back through <c>MzMlbReaderAdapter</c>, and diffs against the original at
     /// the spectrum-data level. Mirrors cpp <c>VendorReaderTestHarness</c>'s mzML↔mzMLb
     /// check.
+    /// </summary>
+    public bool TestMzmlbRoundTrip { get; set; } = true;
+
+    /// <summary>
+    /// When true, the harness materializes the in-memory MSData to a temp mzML,
+    /// shells out to cpp <c>msconvert.exe --mz5</c> to convert that mzML to mz5,
+    /// reads the mz5 back through <see cref="Pwiz.Data.MsData.Readers.Mz5ReaderAdapter"/>,
+    /// and diffs the spectrum-data round-trip. Exercises the read path against fresh
+    /// cpp-written mz5 with this fixture's actual vendor data (a stronger check than
+    /// the standalone fixture-mz5 unit test, which only covers one Bruker sample).
     /// <para>
-    /// Defaults to <c>false</c>: enabling it caused the TC Waters.Tests run to hang under
-    /// dotCover instrumentation (root cause still under investigation; suspected
-    /// HDF.PInvoke + dotCover interaction on one of the larger Waters fixtures).
-    /// Re-enable per-fixture or per-vendor as we narrow it down.
+    /// Skipped silently when the cpp msconvert binary isn't findable on disk — we
+    /// don't have a native mz5 writer yet (read-only port), so this is the only
+    /// way to exercise mz5 round-trip parity inside the harness.
     /// </para>
     /// </summary>
-    public bool TestMzmlbRoundTrip { get; set; }
+    public bool TestMz5RoundTrip { get; set; } = true;
+
+    /// <summary>
+    /// When true, the HDF5-backed round-trips (<see cref="TestMzmlbRoundTrip"/> /
+    /// <see cref="TestMz5RoundTrip"/>) still run when the test process is being
+    /// instrumented by a CLR coverage profiler. Each vendor designates one
+    /// representative fixture (the smallest one) with this set so TC coverage runs
+    /// exercise the round-trip code path for at least one fixture per vendor without
+    /// paying the dotCover-vs-MzmlReader penalty across the whole fixture suite.
+    /// <para>
+    /// Defaults to <c>false</c>: most fixtures get round-trip on dev builds (no
+    /// profiler) but skip it under coverage. Only the per-vendor rep fixture flips
+    /// this to <c>true</c>. See the comment at the round-trip call site in
+    /// <c>VendorReaderTestHarness.ReadAndDiff</c>.
+    /// </para>
+    /// </summary>
+    public bool RunRoundTripUnderProfiler { get; set; }
 
     /// <summary>
     /// Builds the reference mzML filename from <paramref name="baseFilename"/>, appending

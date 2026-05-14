@@ -34,12 +34,13 @@ public class ReaderBrukerTests
     [TestMethod]
     public void Reader_Bruker_20percLaser_100fold_1_0_H6_MS()
     {
-        // MALDI TSF fixture.
+        // MALDI TSF fixture. Smallest Bruker .d — designated coverage rep, so the
+        // HDF5-backed round-trips run for at least one Bruker fixture under TC dotCover.
         // Coverage: base + ms1-centroid. (cpp also has ms2-centroid; not currently exercised.)
         var ctx = SetUp("20percLaser_100fold_1_0_H6_MS.d");
         if (ctx is null) return;
 
-        ctx.Run(new ReaderTestConfig());
+        ctx.Run(new ReaderTestConfig { RunRoundTripUnderProfiler = true });
         ctx.Run(new ReaderTestConfig { PeakPicking = true, PreferOnlyMsLevel = 1 });
 
         ctx.Check();

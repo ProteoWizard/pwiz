@@ -173,11 +173,13 @@ internal static class MzmlXml
     internal static bool MoveToFirstChildElement(XmlReader r)
     {
         if (r.IsEmptyElement) return false; // don't advance — caller's r.Read() will skip the self-closing tag
-        r.Read();
-        while (r.NodeType != XmlNodeType.EndElement)
+        // EOF guard: if r.Read() returns false (stream truncated mid-element), NodeType
+        // becomes None which is neither Element nor EndElement, and a naive
+        // `while (NodeType != EndElement)` would spin forever. Use Read()'s return value.
+        while (r.Read())
         {
             if (r.NodeType == XmlNodeType.Element) return true;
-            r.Read();
+            if (r.NodeType == XmlNodeType.EndElement) return false;
         }
         return false;
     }

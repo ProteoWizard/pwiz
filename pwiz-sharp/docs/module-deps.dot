@@ -61,7 +61,7 @@ digraph pwiz_modules {
     fontsize=12;
     margin=12;
     n_data__msdata [label="msdata", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
-    n_data__msdata__mz5 [label="mz5", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_data__msdata__mz5 [label="mz5", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
     n_data__msdata__mzmlb [label="mzmlb", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
   }
 
@@ -72,7 +72,7 @@ digraph pwiz_modules {
     fontname="Segoe UI";
     fontsize=12;
     margin=12;
-    n_data__vendor_readers__ABI [label="ABI", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    n_data__vendor_readers__ABI [label="ABI", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_data__vendor_readers__ABI__T2D [label=<<s>T2D</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555"];
     n_data__vendor_readers__Agilent [label="Agilent", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_data__vendor_readers__Bruker [label="Bruker", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];

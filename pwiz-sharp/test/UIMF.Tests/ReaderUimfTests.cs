@@ -51,6 +51,8 @@ public class ReaderUimfTests
         {
             IgnoreSourceFileChecksum = true,
             IgnoreStartTimeStamp = true,
+            // Sole UIMF fixture, so also the coverage rep: round-trips run under TC dotCover.
+            RunRoundTripUnderProfiler = true,
         };
         ctx.Run(baseConfig);
 

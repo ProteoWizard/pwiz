@@ -71,7 +71,9 @@ public class ReaderShimadzuTests
             IgnoreStartTimeStamp = true,
             IgnoreSourceFileChecksum = true,
         };
-        ctx.Run(baseConfig);
+        // Designated coverage rep — the default-config variant runs the HDF5-backed
+        // round-trips so at least one Shimadzu fixture exercises them under TC dotCover.
+        ctx.Run(baseConfig with { RunRoundTripUnderProfiler = true });
         ctx.Run(baseConfig with { PeakPicking = true });
 
         ctx.Check();

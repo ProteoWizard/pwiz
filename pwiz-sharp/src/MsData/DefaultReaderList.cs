@@ -111,6 +111,7 @@ public sealed class ReaderList : IReader
             var list = new ReaderList();
             list.Add(new MzmlReaderAdapter());
             list.Add(new MzMlbReaderAdapter());
+            list.Add(new Mz5ReaderAdapter());
             list.Add(new MgfReaderAdapter());
             return list;
         }

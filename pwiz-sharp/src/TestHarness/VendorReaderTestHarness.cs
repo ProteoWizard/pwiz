@@ -419,7 +419,19 @@ public static class VendorReaderTestHarness
         // numpress_linear which round-trips much tighter than that).
         // mzMLb writes are path-bound (HDF5 needs random file I/O), so materialize
         // to %TEMP%.
-        if (config.TestMzmlbRoundTrip && msd.Run.SpectrumList is not null)
+        // The two HDF5-backed round-trips below both re-parse the round-tripped file's
+        // embedded mzML XML. Under a CLR coverage profiler (dotCover, etc.) the
+        // per-method instrumentation overhead on the XML reader's tight inner loop
+        // amplifies a 1–2 s parse into 10+ minutes — confirmed with dotnet-stack:
+        // single CPU-bound thread parked in MzmlReader.ReadMzmlBody. To keep TC
+        // coverage runs reasonable, only the per-vendor rep fixture (smallest one,
+        // flagged via <see cref="ReaderTestConfig.RunRoundTripUnderProfiler"/>) runs
+        // the round-trip under profiler; everyone else short-circuits. Off-profiler
+        // dev runs always run the full round-trip suite.
+        bool skipRoundTripForProfiler =
+            IsCoverageProfilerActive() && !config.RunRoundTripUnderProfiler;
+
+        if (config.TestMzmlbRoundTrip && !skipRoundTripForProfiler && msd.Run.SpectrumList is not null)
         {
             var encoderConfig = new Pwiz.Data.MsData.Encoding.BinaryEncoderConfig();
             encoderConfig.PrecisionOverrides[CVID.MS_intensity_array] =
@@ -427,6 +439,20 @@ public static class VendorReaderTestHarness
             encoderConfig.NumpressOverrides[CVID.MS_m_z_array] =
                 Pwiz.Data.MsData.Encoding.BinaryNumpress.Linear;
             RunMzmlbRoundTrip(msd, config, encoderConfig, diffPrecision: 1.0);
+        }
+
+        // 9. mz5 round-trip: there's no in-process mz5 writer (read-only port), so we
+        // materialize the in-memory MSData to mzML and shell out to cpp msconvert.exe
+        // for the mzML→mz5 conversion, then read the mz5 back through our adapter and
+        // diff the spectra. Silently skipped when cpp msconvert isn't on disk — TC
+        // builds without a cpp tree (or runs outside the dev checkout) keep their
+        // read-only checks. mz5 is lossless on numeric data (delta-mz encoding round-
+        // trips through cumulative-sum), so 1e-6 is plenty.
+        if (config.TestMz5RoundTrip && !skipRoundTripForProfiler && msd.Run.SpectrumList is not null)
+        {
+            string? msconvert = FindCppMsconvertExe();
+            if (msconvert is not null)
+                RunMz5RoundTrip(msd, msconvert, diffPrecision: config.DiffPrecision ?? 1e-6);
         }
 
         // We finished a real read+diff (vs. taking the identify-only short-circuit). Tell
@@ -463,6 +489,108 @@ public static class VendorReaderTestHarness
         {
             try { File.Delete(tmp); } catch { }
         }
+    }
+
+    /// <summary>
+    /// One mz5 write+read cycle. Materializes <paramref name="msd"/> as mzML to a temp
+    /// file, invokes cpp <paramref name="msconvertExe"/> with <c>--mz5</c> to convert
+    /// it, then reads the produced mz5 through <see cref="Pwiz.Data.MsData.Readers.Mz5ReaderAdapter"/>
+    /// and diffs the spectrum data. Two-process workflow because we don't have an in-
+    /// process mz5 writer yet — mz5 is currently a read-only port.
+    /// </summary>
+    private static void RunMz5RoundTrip(MSData msd, string msconvertExe, double diffPrecision)
+    {
+        string tmpDir = Path.Combine(Path.GetTempPath(), $"harness-mz5-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            string mzmlPath = Path.Combine(tmpDir, "in.mzML");
+            using (var fs = File.Create(mzmlPath))
+                new MzmlWriter().Write(msd, fs);
+
+            var psi = new System.Diagnostics.ProcessStartInfo(msconvertExe)
+            {
+                Arguments = $"\"{mzmlPath}\" --mz5 -o \"{tmpDir}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            };
+            using (var proc = System.Diagnostics.Process.Start(psi)!)
+            {
+                if (!proc.WaitForExit(300_000))
+                {
+                    try { proc.Kill(entireProcessTree: true); } catch { }
+                    throw new InvalidOperationException(
+                        "mz5 round-trip: cpp msconvert --mz5 timed out after 5 minutes.");
+                }
+                if (proc.ExitCode != 0)
+                    throw new InvalidOperationException(
+                        $"mz5 round-trip: cpp msconvert --mz5 exited with code {proc.ExitCode}.\n" +
+                        proc.StandardError.ReadToEnd());
+            }
+
+            string? mz5Path = Directory.EnumerateFiles(tmpDir, "*.mz5").FirstOrDefault();
+            if (mz5Path is null)
+                throw new InvalidOperationException(
+                    "mz5 round-trip: cpp msconvert produced no .mz5 file in " + tmpDir);
+
+            var roundtripped = new MSData();
+            new Pwiz.Data.MsData.Readers.Mz5ReaderAdapter().Read(mz5Path, roundtripped);
+            string report = MSDataDiff.DescribeSpectraDataOnly(msd, roundtripped, diffPrecision);
+            if (report.Length > 0)
+                throw new InvalidOperationException("mz5 round-trip diff:\n" + report);
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
+    /// <summary>
+    /// True when the current process is being instrumented by a .NET coverage / profiler
+    /// tool (dotCover, OpenCover, coverlet collector, etc.). Detected via the standard
+    /// CLR profiling env vars (<c>CORECLR_ENABLE_PROFILING</c>=<c>1</c> or
+    /// <c>COR_ENABLE_PROFILING</c>=<c>1</c>) — every CLR profiler sets these before the
+    /// runtime spins up. We use this to short-circuit the HDF5-backed round-trips,
+    /// whose embedded-mzML re-parse is multiplicative-slow under per-method
+    /// instrumentation (see comment at the round-trip call site).
+    /// </summary>
+    private static bool IsCoverageProfilerActive()
+    {
+        return string.Equals(Environment.GetEnvironmentVariable("CORECLR_ENABLE_PROFILING"), "1", StringComparison.Ordinal)
+            || string.Equals(Environment.GetEnvironmentVariable("COR_ENABLE_PROFILING"), "1", StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Best-effort search for the cpp <c>msconvert.exe</c> binary. Walks up from the
+    /// running assembly's location toward typical pwiz layouts
+    /// (<c>build-nt-x86/msvc-release-x86_64/msconvert.exe</c>), and honors the
+    /// <c>PWIZ_MSCONVERT_EXE</c> environment variable for explicit overrides. Returns
+    /// <c>null</c> when no candidate exists — the caller skips the round-trip silently
+    /// in that case.
+    /// </summary>
+    private static string? FindCppMsconvertExe()
+    {
+        string? env = Environment.GetEnvironmentVariable("PWIZ_MSCONVERT_EXE");
+        if (!string.IsNullOrEmpty(env) && File.Exists(env)) return env;
+
+        string baseDir = AppContext.BaseDirectory;
+        for (int up = 0; up <= 8; up++)
+        {
+            string anchor = baseDir;
+            for (int i = 0; i < up; i++) anchor = Path.GetDirectoryName(anchor) ?? anchor;
+            foreach (string rel in new[]
+            {
+                "build-nt-x86/msvc-release-x86_64/msconvert.exe",
+                "build-nt-x86/msvc-release/msconvert.exe",
+            })
+            {
+                string candidate = Path.GetFullPath(Path.Combine(anchor, rel));
+                if (File.Exists(candidate)) return candidate;
+            }
+        }
+        return null;
     }
 
     /// <summary>

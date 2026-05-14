@@ -92,9 +92,11 @@ public class ReaderAgilentTests
     {
         // SIM (selected-ion-monitoring) acquisition. Spectrum list is empty by
         // default; chromatogram list has TIC + one SIM transition.
+        // Designated coverage rep — smallest Agilent .d, exercises the HDF5-backed
+        // round-trips for at least one Agilent fixture under TC dotCover.
         var ctx = SetUp("reserpine-MS2sim-010.d");
         if (ctx is null) return;
-        ctx.Run(new ReaderTestConfig());
+        ctx.Run(new ReaderTestConfig { RunRoundTripUnderProfiler = true });
         ctx.Check();
     }
 

@@ -51,6 +51,8 @@ public class ReaderMobilionTests
     public void Reader_Mobilion_ExampleTuneMix_binned5()
     {
         // cpp Reader_Mobilion_Test.cpp:57-76: default + indexRange, then CWT, then CWT+combineIMS.
+        // Designated coverage rep — the default-config variant runs the HDF5-backed
+        // round-trips so at least one Mobilion fixture exercises them under TC dotCover.
         var ctx = SetUp("ExampleTuneMix_binned5.mbi");
         if (ctx is null) return;
 
@@ -65,7 +67,7 @@ public class ReaderMobilionTests
         };
 
         // 1. default + indexRange(0,100) → ExampleTuneMix_binned5.mzML
-        ctx.Run(baseConfig);
+        ctx.Run(baseConfig with { RunRoundTripUnderProfiler = true });
 
         // 2. peakPickingCWT + indexRange(0,100) → ExampleTuneMix_binned5-centroid-cwt.mzML
         ctx.Run(new ReaderTestConfig

@@ -35,10 +35,12 @@ public class ReaderWatersTests
     public void Reader_Waters_091204_NFDM_008()
     {
         // Smallest fixture (~ 41 spectra) — basic (function, scan) flow without IMS or DDA.
+        // Designated coverage rep so the HDF5-backed round-trips run for at least one
+        // Waters fixture under TC dotCover.
         var ctx = SetUp("091204_NFDM_008.raw");
         if (ctx is null) return;
 
-        ctx.Run(new ReaderTestConfig());
+        ctx.Run(new ReaderTestConfig { RunRoundTripUnderProfiler = true });
 
         ctx.Check();
     }

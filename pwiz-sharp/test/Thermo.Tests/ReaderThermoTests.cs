@@ -78,11 +78,13 @@ public class ReaderThermoTests
     [TestMethod]
     public void Reader_Thermo_FT_HCD_MSX()
     {
+        // Smallest Thermo .raw — designated coverage rep, so the HDF5-backed round-trips
+        // run for at least one Thermo fixture under TC dotCover.
         // base + centroid.
         var ctx = SetUp("FT-HCD-MSX.raw");
         if (ctx is null) return;
 
-        ctx.Run(new ReaderTestConfig());
+        ctx.Run(new ReaderTestConfig { RunRoundTripUnderProfiler = true });
         ctx.Run(new ReaderTestConfig { PeakPicking = true });
 
         ctx.Check();

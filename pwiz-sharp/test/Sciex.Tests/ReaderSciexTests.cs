@@ -31,9 +31,11 @@ public class ReaderSciexTests
     {
         // single-sample legacy WIFF, sample name "6500SysSuit1269",
         // instrument "QTRAP 6500 High Mass" (= API6500QTrap, QqLIT).
+        // Designated coverage rep — exercises the HDF5-backed round-trips for at least
+        // one Sciex fixture under TC dotCover.
         var ctx = SetUp("PressureTrace1.wiff");
         if (ctx is null) return;
-        ctx.Run(new ReaderTestConfig());
+        ctx.Run(new ReaderTestConfig { RunRoundTripUnderProfiler = true });
         ctx.Check();
     }
 

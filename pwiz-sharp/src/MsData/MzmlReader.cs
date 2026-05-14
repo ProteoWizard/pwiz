@@ -82,7 +82,11 @@ public sealed class MzmlReader
 
     private void ReadMzmlBody(XmlReader r, MSData msd)
     {
-        if (!MzmlXml.MoveToFirstChildElement(r)) return;
+        // Empty/self-closing parent: helper leaves reader on the start element (for
+        // <foo/>) or on </foo> (for <foo></foo>). Either way, one more Read() is
+        // needed to advance past the element; otherwise the caller's loop sees the
+        // same start element forever (cvList="0" infinite loop was traced to this).
+        if (!MzmlXml.MoveToFirstChildElement(r)) { r.Read(); return; }
 
         while (r.NodeType != XmlNodeType.EndElement)
         {
@@ -105,7 +109,8 @@ public sealed class MzmlReader
 
     private static void ReadCvList(XmlReader r, MSData msd)
     {
-        if (!MzmlXml.MoveToFirstChildElement(r)) return;
+        // See ReadMzmlBody — empty/self-closing parent needs a Read() to advance.
+        if (!MzmlXml.MoveToFirstChildElement(r)) { r.Read(); return; }
         while (r.NodeType != XmlNodeType.EndElement)
         {
             if (r.LocalName == "cv" && r.NodeType == XmlNodeType.Element)
@@ -126,7 +131,8 @@ public sealed class MzmlReader
 
     private void ReadFileDescription(XmlReader r, MSData msd)
     {
-        if (!MzmlXml.MoveToFirstChildElement(r)) return;
+        // See ReadMzmlBody — empty/self-closing parent needs a Read() to advance.
+        if (!MzmlXml.MoveToFirstChildElement(r)) { r.Read(); return; }
 
         while (r.NodeType != XmlNodeType.EndElement)
         {
