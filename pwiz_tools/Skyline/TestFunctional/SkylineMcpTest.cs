@@ -29,6 +29,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -260,10 +261,10 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             // enough to trigger the FileAlreadyExists guard - it fires before any
             // attempt to read the target as a Skyline document.
             string existingPath = TestContext.GetTestResultsPath("preexisting.sky");
-            File.WriteAllText(existingPath, "not a real skyline document");
+            File.WriteAllText(existingPath, @"not a real skyline document");
             string errorResponse = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_save_document",
                 new JObject { ["filePath"] = existingPath });
-            AssertEx.Contains(errorResponse, "already exists");
+            AssertEx.Contains(errorResponse, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, existingPath));
             AssertEx.AreEqual(docPath2.ToForwardSlashPath(),
                 McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path"));
 
