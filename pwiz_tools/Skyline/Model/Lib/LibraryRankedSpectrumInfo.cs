@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
@@ -183,6 +185,28 @@ namespace pwiz.Skyline.Model.Lib
             public double ObservedMz { get { return _mi.Mz; } }
 
             public ImmutableList<MatchedFragmentIon> MatchedIons { get; private set; }
+
+            // returns the matched ions list sorted by the mass error
+            public ImmutableList<MatchedFragmentIon> MatchedIonsSorted
+            {
+                get
+                {
+                    if (MatchedIons == null)
+                        return null;
+                    if (!MatchedIons.Any())
+                        return ImmutableList<MatchedFragmentIon>.EMPTY;
+                    var sortedByError = MatchedIons.Select(mi =>
+                            new
+                            {
+                                mi,
+                                err =
+                                Math.Abs(SequenceMassCalc.GetPpm(ObservedMz, ObservedMz - mi.PredictedMz))
+                            })
+                        .ToList();
+                    sortedByError.Sort((ion1, ion2) => ion1.err.CompareTo(ion2.err));
+                    return ImmutableList.ValueOf(sortedByError.Select(ie => ie.mi));
+                }
+            }
 
             public RankedMI ChangeMatchedIons(IEnumerable<MatchedFragmentIon> matchedIons)
             {

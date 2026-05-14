@@ -522,7 +522,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                      .Count() > 1;
                 
             StringBuilder sb = new StringBuilder();
-            foreach (var mfi in rmi.MatchedIons.Where(IsVisibleIon))
+            foreach (var mfi in rmi.MatchedIonsSorted.Where(IsVisibleIon))
             {
                 if (sb.Length > 0)
                     sb.AppendLine();
@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (ShowMassError)
             {
-                sb.AppendLine().Append(GetMassErrorString(rmi, rmi.MatchedIons.First()));
+                sb.AppendLine().Append(GetMassErrorString(rmi, rmi.MatchedIonsSorted.First()));
             }
             return sb.ToString();
         }
