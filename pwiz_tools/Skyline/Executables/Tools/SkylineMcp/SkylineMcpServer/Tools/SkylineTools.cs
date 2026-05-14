@@ -701,19 +701,30 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_save_document"),
      Description("Save the current Skyline document. With no filePath, saves to the current " +
         "document path (equivalent to File > Save). With filePath, saves there and that becomes " +
-        "the new document path (equivalent to File > Save As). " +
-        "Wraps skyline_run_command with --save (or --out=PATH when filePath is provided); " +
+        "the new document path (equivalent to File > Save As). When filePath refers to an " +
+        "existing file, the save fails with an 'already exists' message unless overwrite is true; " +
+        "this gives the LLM a chance to confirm with the user before clobbering existing data. " +
+        "Wraps skyline_run_command with --save (or --out=PATH [--overwrite] when filePath is provided); " +
         "use that tool directly to combine saving with other operations in one call. " +
         "Returns the Skyline Immediate Window output.")]
     public static string SaveDocument(
         [Description("Optional path to save to. When omitted, saves to the current document path. " +
             "When provided, saves there and that becomes the new document path " +
-            "(same as File > Save As).")] string filePath = null)
+            "(same as File > Save As).")] string filePath = null,
+        [Description("When saving with a filePath that already exists, set true to overwrite. " +
+            "Default false returns an 'already exists' error so the LLM can confirm with the user " +
+            "before clobbering an existing file. Ignored when filePath is omitted.")] bool overwrite = false)
     {
         return Invoke(connection =>
         {
-            string arg = string.IsNullOrEmpty(filePath) ? "--save" : "--out=" + filePath;
-            string output = connection.RunCommand(new[] { arg });
+            string[] args;
+            if (string.IsNullOrEmpty(filePath))
+                args = new[] { "--save" };
+            else if (overwrite)
+                args = new[] { "--out=" + filePath, "--overwrite" };
+            else
+                args = new[] { "--out=" + filePath };
+            string output = connection.RunCommand(args);
             return string.IsNullOrEmpty(output)
                 ? "Document saved."
                 : output;
