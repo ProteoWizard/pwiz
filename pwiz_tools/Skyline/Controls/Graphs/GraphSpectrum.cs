@@ -1939,16 +1939,25 @@ namespace pwiz.Skyline.Controls.Graphs
         private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
         {
             IonSeriesKey? newKey = null;
-            if (peakRmi?.MatchedIons != null)
+            if (peakRmi?.MatchedIons != null && peakRmi.MatchedIons.Count > 0)
             {
+                // Pick the matched ion with the smallest absolute mass error — that is the
+                // best explanation for the observed peak. Show the ruler only when that ion
+                // has no neutral losses (neutral-loss rulers are a planned follow-up).
+                MatchedFragmentIon bestIon = null;
+                double bestError = double.MaxValue;
                 foreach (var mfi in peakRmi.MatchedIons)
                 {
-                    if (mfi.Losses == null)
+                    double error = Math.Abs(SequenceMassCalc.GetPpm(mfi.PredictedMz,
+                        mfi.PredictedMz - peakRmi.ObservedMz));
+                    if (error < bestError)
                     {
-                        newKey = new IonSeriesKey(mfi.IonType, mfi.Charge.AdductCharge);
-                        break;
+                        bestError = error;
+                        bestIon = mfi;
                     }
                 }
+                if (bestIon != null && bestIon.Losses == null)
+                    newKey = new IonSeriesKey(bestIon.IonType, bestIon.Charge.AdductCharge);
             }
 
             // Only redraw when the hovered ion series actually changes.

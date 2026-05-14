@@ -95,6 +95,15 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
         private LibraryRankedSpectrumInfo _rmis;
 
+        // Most recent SpectrumGraphItem created by RankScan; carries ruler state
+        // (HoveredSeriesKey, PinnedSeriesKeys, SrmSettings) for the active scan.
+        private SpectrumGraphItem _currentGraphItem;
+        private readonly List<IonSeriesKey> _pinnedSeriesKeys = new List<IonSeriesKey>();
+        private bool _contextMenuOpen;
+        // Tracks the previous precursor identity so we can clear pinned rulers
+        // when the user navigates to a different peptide/precursor.
+        private object _lastPrecursorId;
+
         // status info to calculate point dot products
         private SpectrumPeaksInfo.MI[] _peaks;
         private GraphSpectrum.Precursor _precursor;
@@ -127,6 +136,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.GraphPane.AllowLabelOverlap = true;
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMoveEvent += graphControl_MouseMove;
+            graphControl.MouseLeave += (s, e) => { if (!_contextMenuOpen) UpdateHoveredPeak(null); };
             graphControl.MouseClick += graphControl_MouseClick;
             graphControl.ZoomEvent += graphControl_ZoomEvent;
             graphControl.Resize += graphControl_Resize;
@@ -1831,6 +1841,19 @@ namespace pwiz.Skyline.Controls.Graphs
                     LineWidth = Settings.Default.SpectrumLineWidth
                 };
 
+                // Reset pinned rulers whenever the user navigates to a different precursor.
+                if (!Equals(_lastPrecursorId, precursor.Id))
+                {
+                    _pinnedSeriesKeys.Clear();
+                    _lastPrecursorId = precursor.Id;
+                }
+
+                // RankScan only runs when a stick spectrum is being rendered (S, S+H, or
+                // non-IM single-pane stick); heatmap-only and H+M modes don't reach here.
+                graphItem.SrmSettings = settings;
+                graphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
+
+                _currentGraphItem = graphItem;
                 return graphItem;
             }
             return null;
@@ -3177,6 +3200,64 @@ namespace pwiz.Skyline.Controls.Graphs
                 var isProteomic = (_msDataFileScanHelper.CurrentTransition?.Id as Transition)?.Group.IsProteomic;
                 (_documentContainer as GraphSpectrum.IStateProvider)
                     ?.BuildSpectrumMenu(isProteomic.GetValueOrDefault(), sender, menuStrip);
+
+                AddRulerMenuItems(menuStrip);
+            }
+        }
+
+        private void AddRulerMenuItems(ContextMenuStrip menuStrip)
+        {
+            // Capture the hovered key now — MouseLeave fires when the context menu window
+            // appears on top of the graph, which would clear HoveredSeriesKey before the
+            // user can click "Pin Ruler".
+            var hoveredKey = _currentGraphItem?.HoveredSeriesKey;
+            bool hasPinned = _pinnedSeriesKeys.Count > 0;
+
+            if (!hoveredKey.HasValue && !hasPinned)
+                return;
+
+            // Suppress MouseLeave while the menu is open so the ruler stays visible.
+            _contextMenuOpen = true;
+            menuStrip.Closed += (s, e) =>
+            {
+                _contextMenuOpen = false;
+                if (!graphControl.ClientRectangle.Contains(
+                        graphControl.PointToClient(Cursor.Position)))
+                    UpdateHoveredPeak(null);
+            };
+
+            menuStrip.Items.Add(new ToolStripSeparator());
+
+            if (hoveredKey.HasValue)
+            {
+                var key = hoveredKey.Value;
+                if (_pinnedSeriesKeys.Contains(key))
+                {
+                    var item = new ToolStripMenuItem(@"Unpin Ruler");
+                    item.Click += (s, e) => UnpinSeries(key);
+                    menuStrip.Items.Add(item);
+                }
+                else
+                {
+                    var item = new ToolStripMenuItem(@"Pin Ruler");
+                    item.Click += (s, e) =>
+                    {
+                        if (!_pinnedSeriesKeys.Contains(key))
+                        {
+                            _pinnedSeriesKeys.Add(key);
+                            SyncPinnedSeriesToGraphItems();
+                            graphControl.Invalidate();
+                        }
+                    };
+                    menuStrip.Items.Add(item);
+                }
+            }
+
+            if (hasPinned)
+            {
+                var item = new ToolStripMenuItem(@"Unpin All Rulers");
+                item.Click += (s, e) => UnpinAllRulers();
+                menuStrip.Items.Add(item);
             }
         }
 
@@ -3214,6 +3295,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (IsMobilogramVisible && IsInMobilogramArea(pt))
             {
                 graphControl.Cursor = Cursors.Cross;
+                UpdateHoveredPeak(null);
                 return true;
             }
 
@@ -3223,12 +3305,39 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var pane = graphControl.MasterPane.FindChartRect(pt);
                 if (!ReferenceEquals(pane, _stickSpectrumPane))
+                {
+                    UpdateHoveredPeak(null);
                     return false;
+                }
             }
 
             var nearestLabel = GetNearestLabel(pt, labelPane);
             if (nearestLabel == null || nearestLabel.Tag == null)
+            {
+                // No label under cursor — but a stick under the cursor still warrants the ruler.
+                UpdateHoveredPeakFromStick(pt, labelPane);
                 return false;
+            }
+
+            // Update ruler hover for any labeled peak with a known ion assignment, even when
+            // the label isn't clickable (no matching transition in the document) — the ion
+            // still has a valid type+charge that the ruler can display.
+            // Match by label text rather than by Tag/rank: unranked matches (e.g. zh/zhh
+            // alternates of a ranked z peak) carry Rank=0, so a rank-based lookup is
+            // ambiguous. PeaksMatched includes both ranked and unranked matches.
+            if (_showIonSeriesAnnotations && _rmis != null && _currentGraphItem != null)
+            {
+                var peakRmi = _rmis.PeaksMatched.FirstOrDefault(
+                    p => _currentGraphItem.GetLabel(p).Equals(nearestLabel.Text));
+                UpdateHoveredPeak(peakRmi);
+            }
+            else
+            {
+                UpdateHoveredPeak(null);
+            }
+
+            // The remaining checks gate cursor=Hand to clickable labels only (i.e. those that
+            // navigate to a transition in the document). Ruler hover already updated above.
             var transition = (int) nearestLabel.Tag;
             if (transition < 0 || _transitionIndex == null || transition >= _transitionIndex.Length)
                 return false;
@@ -3237,6 +3346,85 @@ namespace pwiz.Skyline.Controls.Graphs
 
             graphControl.Cursor = Cursors.Hand;
             return true;
+        }
+
+        private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
+        {
+            IonSeriesKey? newKey = null;
+            if (peakRmi?.MatchedIons != null && peakRmi.MatchedIons.Count > 0)
+            {
+                // Pick the matched ion with the smallest absolute mass error — that is the
+                // best explanation for the observed peak. Show the ruler only when that ion
+                // has no neutral losses (neutral-loss rulers are a planned follow-up).
+                MatchedFragmentIon bestIon = null;
+                double bestError = double.MaxValue;
+                foreach (var mfi in peakRmi.MatchedIons)
+                {
+                    double error = Math.Abs(SequenceMassCalc.GetPpm(mfi.PredictedMz,
+                        mfi.PredictedMz - peakRmi.ObservedMz));
+                    if (error < bestError)
+                    {
+                        bestError = error;
+                        bestIon = mfi;
+                    }
+                }
+                if (bestIon != null && bestIon.Losses == null)
+                    newKey = new IonSeriesKey(bestIon.IonType, bestIon.Charge.AdductCharge);
+            }
+
+            if (_currentGraphItem == null)
+                return;
+            // Only redraw when the hovered ion series actually changes; same change-detection
+            // pattern as GraphSpectrum to avoid repaint loops.
+            if (Equals(newKey, _currentGraphItem.HoveredSeriesKey))
+                return;
+
+            _currentGraphItem.HoveredSeriesKey = newKey;
+            graphControl.Invalidate();
+        }
+
+        // Resolve the stick under the cursor (if any) to its matched RankedMI and update
+        // ruler hover accordingly. Used as the fallback when GetNearestLabel returns null
+        // — the user is hovering a stick body but not its label text.
+        private void UpdateHoveredPeakFromStick(PointF pt, MSGraphPane spectrumPane)
+        {
+            if (!_showIonSeriesAnnotations || _rmis == null)
+            {
+                UpdateHoveredPeak(null);
+                return;
+            }
+            if (spectrumPane.FindNearestStick(pt, out var nearestCurve, out var nearestIndex)
+                && nearestCurve != null
+                && nearestIndex >= 0 && nearestIndex < nearestCurve.NPts)
+            {
+                var observedMz = nearestCurve.Points[nearestIndex].X;
+                var peakRmi = _rmis.PeaksMatched.FirstOrDefault(p => p.ObservedMz == observedMz);
+                UpdateHoveredPeak(peakRmi);
+            }
+            else
+            {
+                UpdateHoveredPeak(null);
+            }
+        }
+
+        private void UnpinSeries(IonSeriesKey key)
+        {
+            _pinnedSeriesKeys.Remove(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        private void UnpinAllRulers()
+        {
+            _pinnedSeriesKeys.Clear();
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        private void SyncPinnedSeriesToGraphItems()
+        {
+            if (_currentGraphItem != null)
+                _currentGraphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
         }
 
         // For use with CursorTrackingTip _cursorTip
@@ -3428,7 +3616,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 table.AddDetailRowNoBold(@"  ", @"  ", rt); // blank separator line
                 table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons,
                     GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass, rt, true);
-                foreach (var mfi in rmi.MatchedIons)
+                foreach (var mfi in rmi.MatchedIonsSorted)
                     table.AddDetailRowNoBold(AbstractSpectrumGraphItem.GetLabel(mfi, rmi.Rank, false, !_showIonSeriesAnnotations),
                         mfi.PredictedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture) + @"  " +
                         AbstractSpectrumGraphItem.GetMassErrorString(rmi, mfi), rt);
