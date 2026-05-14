@@ -884,27 +884,41 @@ public sealed class MzmlWriter
             // The encoder may downgrade to None if tolerance fails; that's
             // reflected in actualNumpress so the cvParam tells the truth.
             byte[] bytes = new BinaryDataEncoder(cfg).EncodeToBytes(data, out actualNumpress);
-            suffix = actualNumpress switch
-            {
-                BinaryNumpress.Linear => "_numpress_linear",
-                BinaryNumpress.Pic    => "_numpress_pic",
-                BinaryNumpress.Slof   => "_numpress_slof",
-                _                     => cfg.Precision == BinaryPrecision.Bits32 ? "_float" : "_double",
-            };
-            string dsName = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
             if (actualNumpress != BinaryNumpress.None)
             {
+                suffix = actualNumpress switch
+                {
+                    BinaryNumpress.Linear => "_numpress_linear",
+                    BinaryNumpress.Pic    => "_numpress_pic",
+                    BinaryNumpress.Slof   => "_numpress_slof",
+                    _                     => "_numpress_linear", // unreachable
+                };
+                string dsName = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
                 offset = ExternalBinarySink!.AppendBytes(dsName, bytes);
                 encodedLength = bytes.Length;
             }
             else
             {
-                // Numpress was rejected (tolerance exceeded). EncodeToBytes already
-                // produced the raw float/double payload for us, so reuse those bytes
-                // and let AppendBytes treat them as opaque too. Reader handles this
-                // identically (numpress=None + opaque dataset => just zlib + native).
-                offset = ExternalBinarySink!.AppendBytes(dsName, bytes);
-                encodedLength = bytes.Length;
+                // Numpress was rejected (tolerance exceeded). Fall back to the regular
+                // typed-dataset path so the reader can pull the array back without
+                // having to know about opaque uint8 byte storage. cpp behaves the
+                // same way — mzML carries no numpress cvParam, _double / _float dataset
+                // has native float/double type.
+                if (cfg.Precision == BinaryPrecision.Bits32)
+                {
+                    var floats = new float[data.Length];
+                    for (int i = 0; i < data.Length; i++) floats[i] = (float)data[i];
+                    suffix = "_float";
+                    string dsName = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
+                    offset = ExternalBinarySink!.AppendFloats(dsName, floats);
+                }
+                else
+                {
+                    suffix = "_double";
+                    string dsName = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
+                    offset = ExternalBinarySink!.AppendDoubles(dsName, data);
+                }
+                encodedLength = 0;
             }
         }
         else if (cfg.Precision == BinaryPrecision.Bits32)

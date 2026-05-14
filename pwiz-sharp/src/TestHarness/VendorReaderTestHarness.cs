@@ -304,6 +304,11 @@ public static class VendorReaderTestHarness
         // into `simple` (a managed-only list with no SDK handles) and the original SL
         // leaks until GC catches up. cpp's harness doesn't have this problem because
         // its IndexRange path operates on the shared SpectrumList directly.
+        // The orphaned-list dispose has to wait until after the round-trips below run,
+        // because the parallel ChromatogramList (which mzMLb's MzmlWriter walks) shares
+        // backing data with the orphaned SpectrumList for vendors like Mobilion. Earlier
+        // versions disposed right after the reference diff and crashed in the mzMLb
+        // round-trip with ObjectDisposedException on the vendor data.
         ISpectrumList? orphanedSpectrumList = null;
         if (config.IndexRange is { } range && msd.Run.SpectrumList is { } sl)
         {
@@ -354,12 +359,6 @@ public static class VendorReaderTestHarness
         string diff = MSDataDiff.Describe(msd, referenceMsd, diffConfig);
         if (diff.Length > 0)
             throw new InvalidOperationException(diff);
-
-        // The diff is done; the parallel ChromatogramList (which may share backing
-        // data with the orphaned SpectrumList) won't be touched again until
-        // MSData.Dispose at function exit, where the disposal cascade is idempotent.
-        // Safe to release the orphaned SL's SDK handles here.
-        orphanedSpectrumList?.Dispose();
 
         // 6. mzXML round-trip: write to mzXML, parse it back, verify the spectrum data made the
         // round trip. mzXML loses most metadata (instrument config, multi-scan combineIMS,
@@ -454,6 +453,12 @@ public static class VendorReaderTestHarness
             if (msconvert is not null)
                 RunMz5RoundTrip(msd, msconvert, diffPrecision: config.DiffPrecision ?? 1e-6);
         }
+
+        // Round-trips are done; safe now to release the orphaned SpectrumList's SDK
+        // handles (and the shared vendor data that the ChromatogramList rode on top of).
+        // If a round-trip threw, the orphan leaks until MSData.Dispose — same as
+        // pre-IndexRange behavior.
+        orphanedSpectrumList?.Dispose();
 
         // We finished a real read+diff (vs. taking the identify-only short-circuit). Tell
         // TestOne to run the file-unlock probe once `using var msd` releases vendor handles.
