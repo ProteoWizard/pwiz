@@ -638,6 +638,11 @@ namespace pwiz.SkylineTestFunctional
             // On .NET Framework, (int)NaN = int.MinValue, Math.Min doesn't help with negative values
             AssertEx.IsTrue(double.IsNaN(colorIndexCalc), "Should produce NaN from 0 * Infinity");
 
+            // Verify the colorIndex would be problematic for array access
+            int nanAsIntDirect = unchecked((int)colorIndexCalc);
+            AssertEx.IsTrue(colorIndex == nanAsIntDirect || (nanAsIntDirect < 0 && colorIndex == nanAsIntDirect),
+                $"colorIndex should reflect the problematic NaN conversion: calc={colorIndexCalc}, colorIndex={colorIndex}, nanAsInt={nanAsIntDirect}");
+
             // This would be the array access that crashes: _heatMapColors[colorIndex]
             // On .NET Framework, (int)NaN = int.MinValue; on .NET Core+, (int)NaN = 0
             int nanAsInt = unchecked((int)double.NaN);
