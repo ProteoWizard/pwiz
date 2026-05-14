@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private const int EXPECTED_TOOL_COUNT = 44;
+        private const int EXPECTED_TOOL_COUNT = 45;
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -274,6 +274,35 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 new JObject { ["filePath"] = existingPath, ["overwrite"] = true });
             AssertEx.AreEqual(existingPath.ToForwardSlashPath(),
                 McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_document_path"));
+
+            // skyline_list_installed: filesystem enumeration only (no Skyline
+            // connection required). Verifies output is well-formed in both the
+            // "at least one install detected" case (dev machines, most users) and
+            // the "no install detected" case (e.g. headless CI without Skyline).
+            string installsResult = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_list_installed");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(installsResult));
+            var lines = installsResult.ReadLines().ToArray();
+            if (lines[0].StartsWith(@"Release"))
+            {
+                // Header present -> at least one install was reported. Every data
+                // row must have 6 tab-separated columns and exactly one of CliPath
+                // or RunnerPath set, since the two scopes are mutually exclusive.
+                Assert.IsTrue(lines.Length >= 2, "Header row implies at least one install row");
+                for (int i = 1; i < lines.Length; i++)
+                {
+                    var cols = lines[i].ParseDsvFields(TextUtil.SEPARATOR_TSV);
+                    AssertEx.AreEqual(6, cols.Length, $"row {i}: {lines[i]}");
+                    bool hasCli = !string.IsNullOrEmpty(cols[4]);
+                    bool hasRunner = !string.IsNullOrEmpty(cols[5]);
+                    Assert.IsTrue(hasCli ^ hasRunner,
+                        $"row {i} must have exactly one of CliPath / RunnerPath: {lines[i]}");
+                }
+            }
+            else
+            {
+                // No installs detected -> tool returns a helpful message.
+                AssertEx.Contains(installsResult, "No Skyline release detected");
+            }
 
             // Version mismatch detection: verify that an unknown method sent through
             // the pipe produces an error with the Skyline version, so the LLM can
