@@ -706,7 +706,6 @@ public class PseudoMSMSProcessing
 {
     private readonly InstrumentParameter _parameter;
     private List<PrecursorFragmentPairEdge> _fragments;
-    private readonly float _growth = 1;
 
     /// <summary>The MS1 precursor cluster.</summary>
     public PeakCluster Precursorcluster { get; }
@@ -765,11 +764,17 @@ public class PseudoMSMSProcessing
             for (int charge = 2; charge >= 1; charge--)
             {
                 float lastInt = startFrag.Intensity;
+                // cpp parity: `found` is declared outside the pkidx loop and NEVER reset
+                // (PeakCluster.hpp:772). Once any pkidx finds a partner, `found` stays
+                // true for the rest of the pkidx iterations, even if later iterations
+                // find nothing. This means a single-isotope match (e.g. pkidx=1 only) is
+                // enough to trigger charge-state collapse. The behavior is a cpp logic
+                // oversight (it conflates "found at this pkidx" with "found at all"); we
+                // preserve it to keep bit-parity with cpp's pseudo-MS/MS output.
                 bool found = false;
                 for (int pkidx = 1; pkidx < 5; pkidx++)
                 {
                     float targetMz = startFrag.FragmentMz + (float)pkidx / charge;
-                    found = false;
                     for (int j = i + 1; j < _fragments.Count; j++)
                     {
                         if (fragmentMarked[j]) continue;
@@ -813,52 +818,23 @@ public class PseudoMSMSProcessing
         _fragments = newList;
     }
 
-    /// <summary>Boosts complementary-ion partners to the brightest member of each pair group.</summary>
+    /// <summary>
+    /// Boosts complementary-ion partners to the brightest member of each pair group.
+    /// </summary>
+    /// <remarks>
+    /// <b>cpp parity quirk — this method is effectively a no-op on the persisted state.</b>
+    /// cpp uses <c>std::vector&lt;PrecursorFragmentPairEdge&gt;</c> (value-type storage) for
+    /// the grouping buffer; the final loop mutates references-to-copies-in-the-vector and
+    /// those mutations are discarded when the vector goes out of scope. The cpp
+    /// <c>fragmentmarked</c> array is also local. So everything cpp's BoostComplementaryIon
+    /// "does" is silently dropped at function exit. <see cref="PrecursorFragmentPairEdge"/>
+    /// is a class in C# (reference semantics), so a literal port would persist the boost —
+    /// we preserve cpp's behavior by keeping this method body empty. (See PeakCluster.hpp:828
+    /// in cpp for the original.)
+    /// </remarks>
     public void BoostComplementaryIon()
     {
-        float totalMass = Precursorcluster.TargetMz() * Precursorcluster.Charge
-                        - Precursorcluster.Charge * PeakCluster.ProtonMassExternal;
-        var fragmentMarked = new bool[_fragments.Count];
-
-        for (int i = 0; i < _fragments.Count; i++)
-        {
-            var unit = _fragments[i];
-            if (fragmentMarked[i]) continue;
-            fragmentMarked[i] = true;
-
-            var grouped = new List<PrecursorFragmentPairEdge> { unit };
-            float complefrag1 = totalMass - unit.FragmentMz + 2 * PeakCluster.ProtonMassExternal;
-
-            if (complefrag1 >= unit.FragmentMz)
-            {
-                for (int j = i + 1; j < _fragments.Count; j++)
-                {
-                    if (fragmentMarked[j]) continue;
-                    var unit2 = _fragments[j];
-                    if (InstrumentParameter.CalcPPM(complefrag1, unit2.FragmentMz) < _parameter.MS2PPM)
-                    {
-                        grouped.Add(unit2);
-                        fragmentMarked[j] = true;
-                    }
-                    else if (unit2.FragmentMz > complefrag1) break;
-                }
-            }
-
-            if (grouped.Count < 2) continue;
-            var best = grouped[0];
-            foreach (var f in grouped) if (f.Intensity > best.Intensity) best = f;
-
-            foreach (var fragment in grouped)
-            {
-                fragment.ComplementaryFragment = true;
-                fragment.Intensity = best.Intensity * _growth;
-                fragment.Correlation = best.Correlation;
-                fragment.DeltaApex = best.DeltaApex;
-                fragment.RTOverlapP = best.RTOverlapP;
-                fragment.FragmentMS1Rank = best.FragmentMS1Rank;
-                fragment.FragmentMS1RankScore = best.FragmentMS1RankScore;
-            }
-        }
+        // intentionally empty — see <remarks>.
     }
 
     /// <summary>Marks complementary-ion pairs without boosting (used for ID-only mode).</summary>

@@ -149,9 +149,12 @@ public class XYPointCollection
     }
 
     /// <summary>
-    /// Adds <c>(x, y)</c>; if a point within <paramref name="ppm"/> of x already exists,
-    /// the existing point's value is replaced when y is smaller (cpp parity:
-    /// matches the subtly-wrong "y &lt; pt.getY()" branch in cpp <c>AddPointKeepMaxIfCloseValueExisted</c>).
+    /// Adds <c>(x, y)</c> if no point within <paramref name="ppm"/> of x already exists.
+    /// When a close match does exist, the call is a no-op on the stored data — only
+    /// <see cref="MaxY"/> is updated. This is the cpp parity behavior: cpp does
+    /// <c>XYData pt = Data.at(idx); ... pt.y = y;</c> which mutates a local value copy
+    /// (XYData is a struct), so the assignment is silently dropped. The method name
+    /// ("KeepMax") doesn't describe what actually happens — keep parity, not the name.
     /// </summary>
     public void AddPointKeepMaxIfCloseValueExisted(float x, float y, float ppm)
     {
@@ -163,12 +166,10 @@ public class XYPointCollection
             if (InstrumentParameter.CalcPPM(pt.GetX(), x) < ppm)
             {
                 insert = false;
-                if (y < pt.GetY())
-                {
-                    pt.Y = y;
-                    pt.X = x;
-                    Data[idx] = pt;
-                }
+                // cpp branches here on `y < pt.getY()` and mutates a local-copy `pt`;
+                // the mutation is dropped at scope exit (cpp parity bug). We don't write
+                // back either — keep the dead branch out of the C# code entirely so the
+                // intent matches what actually happens.
                 if (MaxY < y) MaxY = y;
             }
         }
@@ -189,11 +190,9 @@ public class XYPointCollection
             if (pt.GetX() == x)
             {
                 insert = false;
-                if (y < pt.GetY())
-                {
-                    pt.Y = y;
-                    Data[idx] = pt;
-                }
+                // cpp parity: same value-copy-mutation-dropped quirk as
+                // AddPointKeepMaxIfCloseValueExisted. Existing point stays untouched;
+                // only MaxY updates.
                 if (MaxY < y) MaxY = y;
             }
         }
