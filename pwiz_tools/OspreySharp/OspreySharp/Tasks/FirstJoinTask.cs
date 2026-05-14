@@ -387,22 +387,39 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
 
-            // --join-at-pass=2: re-load the 2nd-pass FDR sidecar onto
-            // the post-compaction stub list. The 2nd-pass scores +
-            // q-values are what Stage 7 (protein FDR) and the blib
-            // writer consume. Loading happens AFTER compaction
-            // because the 2nd-pass sidecar was written from the
-            // post-compaction state — overlaying it before compaction
-            // would either silently miss records (if the pre-compaction
-            // entries dict happens to also contain compaction-dropped
-            // entry_ids that the 2nd-pass never saw) or scramble
-            // q-values on entries the 2nd-pass had already discarded.
-            // TryReadOverlay tolerates count mismatch (records whose
-            // entry_id is unknown to the caller's dict are skipped),
-            // so the constraint here is correctness-of-state, not
-            // size-equality. Mirrors Rust's load-order inversion at
-            // pipeline.rs:4030-4076.
-            if (config.ExpectReconciledInput)
+            // Re-load the 2nd-pass FDR sidecar onto the post-compaction
+            // stub list when any file already has one on disk. The
+            // 2nd-pass scores + q-values are what Stage 7 (protein FDR)
+            // and the blib writer consume. Loading happens AFTER
+            // compaction because the 2nd-pass sidecar was written from
+            // the post-compaction state -- overlaying it before
+            // compaction would either silently miss records (if the
+            // pre-compaction entries dict happens to also contain
+            // compaction-dropped entry_ids that the 2nd-pass never saw)
+            // or scramble q-values on entries the 2nd-pass had already
+            // discarded. TryReadOverlay tolerates count mismatch
+            // (records whose entry_id is unknown to the caller's dict
+            // are skipped), so the constraint here is
+            // correctness-of-state, not size-equality. Mirrors Rust's
+            // load-order inversion at pipeline.rs:4030-4076.
+            // Gate is probe-the-disk (any 2nd-pass sidecar present)
+            // rather than ExpectReconciledInput so the dispatch follows
+            // the boundary files on disk; stage5/stage6 paths (no
+            // 2nd-pass sidecar yet) skip cleanly without the gate
+            // having to encode CLI semantics.
+            bool anyPass2Present = false;
+            if (config.InputFiles != null)
+            {
+                foreach (var inputFile in config.InputFiles)
+                {
+                    if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
+                    {
+                        anyPass2Present = true;
+                        break;
+                    }
+                }
+            }
+            if (anyPass2Present)
             {
                 // Same input-by-fileName map shape as the 1st-pass
                 // load above (sidecar paths derive from input file
@@ -422,7 +439,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (!inputByFileName2.TryGetValue(fileName, out string inputFile2))
                     {
                         ctx.LogError(string.Format(
-                            @"--join-at-pass=2: no synthetic input path for {0}", fileName));
+                            @"2nd-pass overlay: no synthetic input path for {0}", fileName));
                         ctx.ExitCode = 1;
                         return false;
                     }
@@ -443,7 +460,7 @@ namespace pwiz.OspreySharp.Tasks
                         if (!File.Exists(pass1Path))
                         {
                             ctx.LogError(string.Format(
-                                @"--join-at-pass=2: neither 2nd-pass nor 1st-pass FDR " +
+                                @"2nd-pass overlay: neither 2nd-pass nor 1st-pass FDR " +
                                 @"sidecar found for {0} (looked at {1} and {2}). Re-run a " +
                                 @"straight-through pipeline to produce them.",
                                 fileName, sidecarPath, pass1Path));
@@ -453,7 +470,7 @@ namespace pwiz.OspreySharp.Tasks
                         sidecarPath = pass1Path;
                         expectedPass = FdrScoresSidecar.Pass.FirstPass;
                         ctx.LogInfo(string.Format(
-                            @"--join-at-pass=2: 2nd-pass sidecar missing for {0}; " +
+                            @"2nd-pass overlay: 2nd-pass sidecar missing for {0}; " +
                             @"falling back to 1st-pass (matches Rust single-file behavior)",
                             fileName));
                     }
@@ -471,14 +488,14 @@ namespace pwiz.OspreySharp.Tasks
                     if (!FdrScoresSidecar.TryReadOverlay(sidecarPath, entriesByEntryId, expectedPass))
                     {
                         ctx.LogError(string.Format(
-                            @"--join-at-pass=2: sidecar at {0} failed to load (expected {1}).",
+                            @"2nd-pass overlay: sidecar at {0} failed to load (expected {1}).",
                             sidecarPath, expectedPass));
                         ctx.ExitCode = 1;
                         return false;
                     }
                 }
                 ctx.LogInfo(string.Format(
-                    @"--join-at-pass=2: loaded 2nd-pass FDR sidecars for {0} file(s)",
+                    @"2nd-pass overlay: loaded sidecars for {0} file(s)",
                     perFileEntries.Count));
             }
 

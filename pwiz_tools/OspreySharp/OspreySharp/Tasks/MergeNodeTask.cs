@@ -112,10 +112,26 @@ namespace pwiz.OspreySharp.Tasks
                 // PropagateProteinQvalues. Writing here lets the
                 // OSPREY_STAGE7_PROTEIN_FDR_ONLY early exit (used
                 // by stage6 isolation in Test-Regression) leave the
-                // sidecar on disk for downstream --join-at-pass=2
-                // rehydration. Skipped on --join-at-pass=2 itself
-                // (sidecar already loaded; no need to round-trip).
-                if (!config.ExpectReconciledInput
+                // sidecar on disk for downstream rehydration.
+                // Probe-the-disk: skip the write when any file already
+                // has a 2nd-pass sidecar on disk (replacing the prior
+                // ExpectReconciledInput gate). Under that condition the
+                // sidecar values are already correct on disk (we just
+                // loaded them in FirstJoinTask's 2nd-pass overlay), so
+                // re-writing is wasted I/O.
+                bool anyPass2OnDisk = false;
+                if (config.InputFiles != null)
+                {
+                    foreach (var inputFile in config.InputFiles)
+                    {
+                        if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
+                        {
+                            anyPass2OnDisk = true;
+                            break;
+                        }
+                    }
+                }
+                if (!anyPass2OnDisk
                     && perFileParquetPaths.Count > 0)
                 {
                     var inputByFileName = new Dictionary<string, string>();

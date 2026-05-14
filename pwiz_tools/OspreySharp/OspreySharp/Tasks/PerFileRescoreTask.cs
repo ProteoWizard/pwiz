@@ -170,18 +170,33 @@ namespace pwiz.OspreySharp.Tasks
             // done upstream. State comes from either FirstJoinTask's
             // planning block (in-process pipeline, DidPlan=true) or
             // PerFileScoringTask's probe-the-disk bundle (collapsed worker
-            // path, DidPlan=false but bundle != null). Stage7
-            // (ExpectReconciledInput) populates the bundle from already-
-            // reconciled boundary files; re-running the rescore engine on
-            // that state would re-apply reconciliation actions on top of
-            // already-reconciled values, so stage7 falls back to the
-            // no-op branch alongside the no-state case. Downstream
-            // MergeNodeTask still gets _perFileEntries via our accessor
-            // (falls through to the upstream reference).
+            // path, DidPlan=false but bundle != null). A 2nd-pass FDR
+            // sidecar already on disk for any file is the signal that the
+            // rescore engine has already produced the reconciled output;
+            // re-running it would re-apply reconciliation actions on top
+            // of already-reconciled values, so this branch falls back to
+            // the no-op alongside the no-state case. Probe-the-disk on
+            // 2nd-pass sidecar presence replaces the prior
+            // ExpectReconciledInput gate (Phase C: mechanism-driven, not
+            // flag-driven). Downstream MergeNodeTask still gets
+            // _perFileEntries via our accessor (falls through to the
+            // upstream reference).
             var firstJoin = ctx.GetTask<FirstJoinTask>();
             bool didPlan = firstJoin.DidPlan(ctx);
             var rescoreBundle = perFileScoring.GetRescoreInputs(ctx);
-            if (!didPlan && (rescoreBundle == null || ctx.Config.ExpectReconciledInput))
+            bool anyPass2Present = false;
+            if (ctx.Config.InputFiles != null)
+            {
+                foreach (var inputFile in ctx.Config.InputFiles)
+                {
+                    if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
+                    {
+                        anyPass2Present = true;
+                        break;
+                    }
+                }
+            }
+            if (!didPlan && (rescoreBundle == null || anyPass2Present))
                 return true;
 
             // Per-file sidecar lifecycle (delete-before / write-after) is
