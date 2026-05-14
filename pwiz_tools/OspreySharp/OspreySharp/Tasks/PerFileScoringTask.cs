@@ -98,6 +98,14 @@ namespace pwiz.OspreySharp.Tasks
             = new ConcurrentDictionary<string, RTCalibration>();
         private Dictionary<string, string> _perFileParquetPaths
             = new Dictionary<string, string>();
+        // Probe-the-disk hydration bundle: populated when the joinOnly
+        // dispatch finds every parquet's sibling .1st-pass.fdr_scores.bin
+        // sidecar already on disk. Null otherwise. Carries the reconciliation
+        // state that the worker-mode RescoreHydration.HydrateForRescore
+        // produces, sharing it with FirstJoinTask's reconciliation accessors
+        // so the worker entry-path collapse (next commit) does not need
+        // a separate code path.
+        private RescoreInputs _rescoreInputs;
 
         // Phase B lazy-rehydrate gate. Set to true at the start of Run
         // and by EnsureHydrated. Once set, neither path re-executes the
@@ -110,6 +118,16 @@ namespace pwiz.OspreySharp.Tasks
         public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileEntries; }
         public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileCalibrations; }
         public Dictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileParquetPaths; }
+
+        /// <summary>
+        /// The probe-the-disk reconciliation bundle, or <c>null</c> when
+        /// no per-file 1st-pass sidecar was found at joinOnly hydration
+        /// time (Stage 5 entry, or any non-joinOnly run). When non-null,
+        /// FirstJoinTask's reconciliation-state accessors fall back to
+        /// this bundle so the worker hydration path and the in-pipeline
+        /// path produce identical post-Stage-5 state.
+        /// </summary>
+        public RescoreInputs GetRescoreInputs(PipelineContext ctx) { EnsureHydrated(ctx); return _rescoreInputs; }
 
         /// <summary>
         /// Lazy-rehydrate seam: when a downstream task queries one of
@@ -490,56 +508,56 @@ namespace pwiz.OspreySharp.Tasks
                 @"Coelution analysis complete. {0} total scored entries across {1} files",
                 totalScored, nFiles));
 
-            // --join-at-pass=2: load the 1st-pass FDR scores sidecar for
-            // each file onto the freshly-loaded stubs. The sidecar
-            // carries the persisted SVM scores + q-values from the
-            // straight-through pipeline run that produced these
-            // reconciled parquets. Without this load, RunFirstPassProteinFdr
-            // and the compaction step (next) would see uninitialized
-            // entry.Score = 0 / q = 1 for every entry -- every protein
-            // group would tie at score 0 and the picked-protein FDR
-            // would collapse. Mirrors Rust pipeline.rs:3823 sidecar
-            // load order (1st-pass first, then 2nd-pass after
-            // compaction).
-            if (config.ExpectReconciledInput)
+            // Probe-the-disk reconciliation hydration: when every parquet
+            // already has a sibling .1st-pass.fdr_scores.bin sidecar, load
+            // the rescore bundle (1st-pass q-values overlay + reconciliation
+            // actions + refined RT calibration + gap-fill targets) so the
+            // worker hydration path and the in-pipeline path produce
+            // identical post-Stage-5 state. Mirrors the worker's
+            // RescoreHydration.HydrateForRescore but reuses the stubs +
+            // PIN features already loaded above (so PIN features survive
+            // for stage7's Percolator skip path). Stage 5 entry (no
+            // sidecars present yet) skips this block and _rescoreInputs
+            // stays null.
+            //
+            // Replaces the prior --join-at-pass=2-gated 1st-pass overlay:
+            // the disk state determines the hydration shape, not the CLI
+            // flag (Phase C principle: mechanism-driven, not flag-driven).
+            if (joinOnly)
             {
-                // Build a fileName -> synthetic input path map so we
-                // can resolve sidecar paths via FdrScoresSidecar.
-                var inputByFileName = new Dictionary<string, string>();
-                foreach (var inputFile in config.InputFiles)
-                    inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
-
-                foreach (var kvp in perFileEntries)
+                bool allHave1stPassAndRecon = true;
+                foreach (var parquetPath in config.InputScores)
                 {
-                    string fileName = kvp.Key;
-                    var entries = kvp.Value;
-                    string sidecarPath = inputByFileName.TryGetValue(fileName, out string inputFile)
-                        ? FdrScoresSidecar.Pass1Path(inputFile)
-                        : null;
-                    if (sidecarPath == null || !File.Exists(sidecarPath))
+                    string syntheticInput = RescoreHydration.SyntheticInputFromParquet(parquetPath);
+                    if (!File.Exists(FdrScoresSidecar.Pass1Path(syntheticInput))
+                        || !File.Exists(ReconciliationFile.PathForInput(syntheticInput)))
                     {
-                        ctx.LogError(string.Format(
-                            @"--join-at-pass=2: missing 1st-pass FDR sidecar for {0} " +
-                            @"(expected at {1}). Re-run a straight-through pipeline to " +
-                            @"produce the sidecar.",
-                            fileName, sidecarPath ?? @"<unresolved>"));
-                        ctx.ExitCode = 1;
-                        return false;
-                    }
-                    if (!FdrScoresSidecar.TryRead(sidecarPath, entries,
-                            FdrScoresSidecar.Pass.FirstPass))
-                    {
-                        ctx.LogError(string.Format(
-                            @"--join-at-pass=2: 1st-pass sidecar at {0} failed to load " +
-                            @"(magic / version / pass-byte / count / size mismatch).",
-                            sidecarPath));
-                        ctx.ExitCode = 1;
-                        return false;
+                        allHave1stPassAndRecon = false;
+                        break;
                     }
                 }
-                ctx.LogInfo(string.Format(
-                    @"--join-at-pass=2: loaded 1st-pass FDR sidecars for {0} file(s)",
-                    perFileEntries.Count));
+                if (allHave1stPassAndRecon)
+                {
+                    try
+                    {
+                        _rescoreInputs = RescoreHydration.HydrateReconciliationOverlay(
+                            perFileEntries, config.InputScores);
+                    }
+                    catch (InvalidDataException ex)
+                    {
+                        ctx.LogError(string.Format(
+                            @"--input-scores hydration failed: {0}", ex.Message));
+                        ctx.ExitCode = 1;
+                        return false;
+                    }
+                    ctx.LogInfo(string.Format(
+                        @"Hydrated rescore bundle for {0} file(s) ({1} reconciliation actions, " +
+                        @"{2} refined RT calibration(s), {3} gap-fill target(s))",
+                        perFileEntries.Count,
+                        _rescoreInputs.TotalActions,
+                        _rescoreInputs.RefinedCalibrations.Count,
+                        _rescoreInputs.TotalGapFillTargets));
+                }
             }
 
             // Surface per-file outputs for downstream tasks before any

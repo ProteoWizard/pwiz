@@ -89,10 +89,60 @@ namespace pwiz.OspreySharp.Tasks
         private bool _runOrHydrated;
 
         public bool DidPlan(PipelineContext ctx) { EnsureHydrated(ctx); return _didPlan; }
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileConsensusTargets; }
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions(PipelineContext ctx) { EnsureHydrated(ctx); return _reconciliationActions; }
-        public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _refinedCalibrations; }
-        public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileGapFillForRescore; }
+
+        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets(PipelineContext ctx)
+        {
+            EnsureHydrated(ctx);
+            if (_didPlan) return _perFileConsensusTargets;
+            return ConsensusTargetsFromBundleOrEmpty(ctx);
+        }
+
+        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions(PipelineContext ctx)
+        {
+            EnsureHydrated(ctx);
+            if (_didPlan) return _reconciliationActions;
+            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            return bundle != null ? bundle.ReconciliationActions : _reconciliationActions;
+        }
+
+        public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations(PipelineContext ctx)
+        {
+            EnsureHydrated(ctx);
+            if (_didPlan) return _refinedCalibrations;
+            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            return bundle != null ? bundle.RefinedCalibrations : _refinedCalibrations;
+        }
+
+        public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore(PipelineContext ctx)
+        {
+            EnsureHydrated(ctx);
+            if (_didPlan) return _perFileGapFillForRescore;
+            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            return bundle != null ? bundle.PerFileGapFill : _perFileGapFillForRescore;
+        }
+
+        // Bundle.PerFileConsensusTargets is null at hydration time (consensus
+        // is meaningful only post-compaction); compute on demand from the
+        // post-compaction stub list. Matches the worker's RunWorker-side
+        // multi-charge selection so the worker entry-path collapse keeps
+        // identical consensus output regardless of which producer task
+        // owned the hydration.
+        private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>
+            ConsensusTargetsFromBundleOrEmpty(PipelineContext ctx)
+        {
+            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            if (bundle == null) return _perFileConsensusTargets;
+            if (bundle.PerFileConsensusTargets != null) return bundle.PerFileConsensusTargets;
+            var computed = new Dictionary<string,
+                IReadOnlyList<(int Index, double Apex, double Start, double End)>>();
+            foreach (var kvp in bundle.PerFileEntries)
+            {
+                computed[kvp.Key] =
+                    MultiChargeConsensus.SelectRescoreTargets(kvp.Value, ctx.Config.RunFdr);
+            }
+            bundle.PerFileConsensusTargets = computed;
+            return computed;
+        }
 
         private void EnsureHydrated(PipelineContext ctx)
         {
