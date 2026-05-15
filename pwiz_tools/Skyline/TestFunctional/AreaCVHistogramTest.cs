@@ -632,6 +632,15 @@ namespace pwiz.SkylineTestFunctional
             graphPane.YAxis.Scale.Min = 0;
             graphPane.YAxis.Scale.Max = 50;
 
+            // Properly initialize the GraphPane with a mock graphics context for axis calculations
+            using (var bitmap = new System.Drawing.Bitmap(800, 600))
+            using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
+            {
+                // Set reasonable chart dimensions for scale calculations
+                graphPane.Chart.Rect = new System.Drawing.RectangleF(50, 50, 700, 500);
+                graphPane.AxisChange(graphics);
+            }
+
             // This call should not throw - the fix guards against degenerate scale values
             // Call with different min/max dot radius to trigger discrete mode where the crash occurred
             try
