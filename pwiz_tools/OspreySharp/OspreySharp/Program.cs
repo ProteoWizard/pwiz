@@ -190,7 +190,7 @@ namespace pwiz.OspreySharp
         /// Parse command-line arguments into an OspreyConfig.
         /// Handles the same flags as the Rust CLI.
         /// </summary>
-        private static OspreyConfig ParseArgs(string[] args)
+        internal static OspreyConfig ParseArgs(string[] args)
         {
             var config = new OspreyConfig();
             var inputFiles = new List<string>();
@@ -322,6 +322,28 @@ namespace pwiz.OspreySharp
                     case "--no-prefilter":
                         config.PrefilterEnabled = false;
                         i++;
+                        break;
+
+                    case "--decoys-in-library":
+                        // Flat boolean override matching Rust osprey's
+                        // --decoys-in-library: flips true, never overrides
+                        // a YAML `true` back to false. When set together
+                        // with --decoy-pairing-manifest, the pipeline runs
+                        // the FDRBench manifest pass first; composition-
+                        // based pairing fills whatever the manifest didn't
+                        // cover. Hard error if no library entries match
+                        // any of DecoyPrefixes / Decoy column / manifest.
+                        config.DecoysInLibrary = true;
+                        i++;
+                        break;
+
+                    case "--decoy-pairing-manifest":
+                        i++;
+                        if (i < args.Length)
+                        {
+                            config.DecoyPairingManifestPath = args[i];
+                            i++;
+                        }
                         break;
 
                     case "--write-pin":
