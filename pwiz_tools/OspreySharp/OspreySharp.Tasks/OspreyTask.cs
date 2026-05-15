@@ -21,20 +21,16 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using pwiz.OspreySharp.Core;
+
 namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// One step in the OspreySharp analysis pipeline. Each task owns a
     /// concrete piece of work — load spectra, calibrate, score,
     /// reconcile, rescore, write blib — run in a pipeline.
-    ///
-    /// Phase A scope: Run() does the work, against state held on the
-    /// shared <see cref="PipelineContext"/>. Inputs / Outputs / validity-
-    /// key surfaces (Phase B resume semantics) are deliberately not
-    /// declared yet — adding them before any concrete extractions
-    /// would commit to an API shape we have not yet validated against
-    /// the real per-stage data flow. They can be introduced in a
-    /// follow-up phase without breaking Phase A subclasses.
     ///
     /// Task boundaries are aligned with the HPC fan-out / join
     /// transitions documented in
@@ -45,6 +41,19 @@ namespace pwiz.OspreySharp.Tasks
     ///   <item>per-file rescore + gap-fill (Stage 6) → second join</item>
     ///   <item>merge-node second-pass FDR + protein FDR + blib (Stage 7)</item>
     /// </list>
+    ///
+    /// Phase B adds <see cref="Inputs"/> / <see cref="Outputs"/> /
+    /// <see cref="ValidityKey"/> for the resume-on-restart capability:
+    /// the pipeline driver checks each task's outputs against
+    /// <c>.&lt;TaskName&gt;.osprey.task</c> sidecar validity keys and
+    /// skips Run when every output exists with a matching key. The
+    /// same skip-if-valid check applies to every CLI mode — cross-impl
+    /// / worker-mode invocations (<c>--input-scores</c> /
+    /// <c>--join-at-pass=*</c>) flow through the same driver, so
+    /// validity-key match drives the decision rather than any CLI
+    /// flag gate. (Cross-impl correctness on <c>--input-scores</c>
+    /// parquets is enforced separately by the parquet
+    /// <c>osprey.search_hash</c> footer metadata check.)
     /// </summary>
     public abstract class OspreyTask
     {
@@ -71,5 +80,52 @@ namespace pwiz.OspreySharp.Tasks
         /// <c>pwiz_tools/Skyline/CommandLine.cs</c>.
         /// </summary>
         public abstract bool Run(PipelineContext ctx);
+
+        /// <summary>
+        /// File paths this task reads as inputs. Reported in the
+        /// <c>.osprey.task</c> sidecar so a human inspecting a
+        /// completed-output sidecar can see what the task consumed.
+        /// Default empty; tasks override to list their input files
+        /// (mzML, library, upstream sidecars, etc.).
+        /// </summary>
+        public virtual IEnumerable<string> Inputs(PipelineContext ctx) => Array.Empty<string>();
+
+        /// <summary>
+        /// File paths this task produces as outputs. The driver checks
+        /// these for existence and matching validity-key sidecars before
+        /// running; if all exist and match, the task's
+        /// <see cref="Run"/> is skipped. After a successful Run, the
+        /// driver writes a <c>&lt;output&gt;.&lt;TaskName&gt;.osprey.task</c>
+        /// sidecar next to each output file. The per-task naming lets
+        /// two tasks that produce the same output path (e.g. PerFileScoring
+        /// writes the initial <c>.scores.parquet</c>, PerFileRescore later
+        /// overwrites it in place with reconciled content) keep distinct
+        /// validity records.
+        ///
+        /// A task that returns no Outputs cannot be skipped; the driver
+        /// always invokes <see cref="Run"/> for it. Use that posture
+        /// for tasks whose work isn't durably represented on disk
+        /// (purely-in-memory transformations).
+        /// </summary>
+        public virtual IEnumerable<string> Outputs(PipelineContext ctx) => Array.Empty<string>();
+
+        /// <summary>
+        /// Identifier that distinguishes "outputs from a different
+        /// invocation that happens to share these paths" from "outputs
+        /// from this invocation that I should reuse." Written into each
+        /// output's <c>.osprey.task</c> sidecar after Run; checked on
+        /// the next invocation before deciding whether to skip Run.
+        ///
+        /// Default includes <see cref="OspreyConfig.SearchParameterHash"/>
+        /// and <see cref="OspreyConfig.LibraryIdentityHash"/> — the
+        /// two hashes that already participate in the parquet-metadata
+        /// integrity check downstream. Tasks with extra per-task state
+        /// that affects their output (e.g. <see cref="OspreyConfig.ReconciliationParameterHash"/>
+        /// for the rescore task) override and append.
+        /// </summary>
+        public virtual string ValidityKey(PipelineContext ctx) => string.Format(
+            @"search={0};library={1}",
+            ctx.Config.SearchParameterHash(),
+            ctx.Config.LibraryIdentityHash());
     }
 }

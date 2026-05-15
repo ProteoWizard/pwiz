@@ -589,6 +589,34 @@ namespace pwiz.SkylineTestFunctional
             // The document has replicates, so the header should have more columns than the 2 we selected
             int pivotColCount = pivotHeader.ParseDsvFields(TextUtil.SEPARATOR_CSV).Length;
             Assert.IsTrue(pivotColCount > 2);
+            int replicateCount = pivotColCount - 1;
+
+            // Long format with explicit ReplicateName column: should produce one
+            // row per peptide-replicate with the four selected columns, no
+            // per-replicate pivoted suffixes. Regression for the
+            // report-from-definition bug where adding ReplicateName to the
+            // select caused TotalArea (default) or ReplicateName itself
+            // (pivot_replicate: false) to be pivoted into per-replicate columns.
+            const string COL_REPLICATE_NAME = @"ReplicateName";
+            var longSelect = new[]
+            {
+                COL_PROTEIN_NAME, COL_PEPTIDE_SEQUENCE, COL_REPLICATE_NAME, COL_TOTAL_AREA
+            };
+            int longRowCount = 13 * replicateCount;
+
+            string tempPathLongDefault = TestFilesDir.GetTestPath(@"report_def_long_default.csv");
+            var longDefaultDef = new ReportDefinition { Select = longSelect };
+            var longDefaultMetadata = server.ExportReportFromDefinition(
+                longDefaultDef, tempPathLongDefault, JsonToolConstants.CULTURE_INVARIANT);
+            AssertLongFormat(tempPathLongDefault, longDefaultMetadata, longSelect, longRowCount,
+                @"default pivot_replicate");
+
+            string tempPathLongExplicit = TestFilesDir.GetTestPath(@"report_def_long_explicit.csv");
+            var longExplicitDef = new ReportDefinition { Select = longSelect, PivotReplicate = false };
+            var longExplicitMetadata = server.ExportReportFromDefinition(
+                longExplicitDef, tempPathLongExplicit, JsonToolConstants.CULTURE_INVARIANT);
+            AssertLongFormat(tempPathLongExplicit, longExplicitMetadata, longSelect, longRowCount,
+                @"pivot_replicate: false");
 
             // With sort ascending (exercises "asc" path in ParseSortDirection)
             string tempPathSortAsc = TestFilesDir.GetTestPath(@"report_def_sort_asc.csv");
@@ -692,6 +720,17 @@ namespace pwiz.SkylineTestFunctional
         private static int GetRowCount(ReportMetadata metadata)
         {
             return metadata.RowCount ?? 0;
+        }
+
+        private static void AssertLongFormat(string filePath, ReportMetadata metadata,
+            string[] expectedColumns, int expectedRowCount, string variant)
+        {
+            Assert.AreEqual(expectedRowCount, GetRowCount(metadata),
+                @"Long-format row count mismatch ({0})", variant);
+            var header = File.ReadLines(filePath).First()
+                .ParseDsvFields(TextUtil.SEPARATOR_CSV);
+            CollectionAssert.AreEqual(expectedColumns, header,
+                @"Long-format ({0}) header mismatch", variant);
         }
 
         private static void VerifyRowSource(ColumnResolver resolver, string[] columns,
@@ -1448,6 +1487,22 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
             Assert.IsTrue(File.Exists(combinedPath));
+
+            // --in with .sky.zip: regression check that the MCP path dispatches
+            // through OpenSharedFile (extract first) rather than feeding the
+            // zip's raw bytes to the XML parser.
+            string sharedZipPath = TestFilesDir.GetTestPath(@"doc_ops_shared.sky.zip");
+            server.RunCommand(
+                CommandArgs.ARG_OPEN + newPath,
+                CommandArgs.ARG_SHARE_ZIP + sharedZipPath);
+            Assert.IsTrue(File.Exists(sharedZipPath));
+            int sharedGroups = SkylineWindow.Document.MoleculeGroupCount;
+
+            string sharedOpenResult = server.RunCommand(CommandArgs.ARG_IN + sharedZipPath);
+            AssertEx.Contains(sharedOpenResult, Path.GetFileName(sharedZipPath));
+            Assert.IsTrue(SkylineWindow.DocumentFilePath.EndsWith(SrmDocument.EXT),
+                @"Expected extracted .sky path after opening .sky.zip, got " + SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(sharedGroups, SkylineWindow.Document.MoleculeGroupCount);
 
             // --new to leave a clean state for subsequent tests
             string tempPath = TestFilesDir.GetTestPath(@"doc_ops_temp.sky");

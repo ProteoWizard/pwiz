@@ -54,18 +54,50 @@ namespace pwiz.OspreySharp.Tasks
 
         public override string Name => @"MergeNode";
 
+        // Phase B resume surface. Reads each file's reconciled
+        // .scores.parquet, writes the .2nd-pass.fdr_scores.bin
+        // sidecars (only when protein-FDR is enabled) and the
+        // .blib output. ValidityKey adds the reconciliation hash
+        // because the reconciled parquet is read.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+                yield return ParquetScoreCache.GetScoresPath(input);
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
+                yield return ctx.Config.OutputBlib;
+            if (ctx.Config.ProteinFdr.HasValue && ctx.Config.InputFiles != null)
+            {
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return FdrScoresSidecar.Pass2Path(input);
+            }
+        }
+
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx)
+                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+        }
+
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;
+            // Mid-Run crash safety: see FirstJoinTask.Run for rationale.
+            foreach (var output in Outputs(ctx))
+                TaskValiditySidecar.Delete(output, Name);
             var config = ctx.Config;
             // perFileEntries comes from PerFileRescoreTask -- it owns
             // the post-rescore version (mutated in place; or the
             // unchanged upstream reference when planning was skipped).
-            var perFileEntries = ctx.GetTask<PerFileRescoreTask>().GetPerFileEntries();
+            var perFileEntries = ctx.GetTask<PerFileRescoreTask>().GetPerFileEntries(ctx);
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
-            var fullLibrary = perFileScoring.GetFullLibrary();
-            var libraryById = perFileScoring.GetLibraryById();
-            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths();
+            var fullLibrary = perFileScoring.GetFullLibrary(ctx);
+            var libraryById = perFileScoring.GetLibraryById(ctx);
+            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
 
             // Stage 8: Protein FDR (optional)
             if (config.ProteinFdr.HasValue)

@@ -74,22 +74,26 @@ namespace pwiz.OspreySharp.Tasks
     /// <c>Osprey-workflow.html</c> view -- each input file's rescore is
     /// independent of the others.
     ///
-    /// Two entry shapes:
+    /// Two entry methods on a single (parameterless-constructed) instance:
     /// <list type="bullet">
     ///   <item>
-    ///     In-process: construct via the multi-arg constructor with the
-    ///     assembled state produced upstream (FirstJoinTask), then run
-    ///     through <see cref="AnalysisPipeline"/>'s task driver, which
-    ///     calls <see cref="Run"/>. <see cref="Run"/> dispatches into
-    ///     <see cref="ExecuteRescore"/> and then runs the per-process
+    ///     <see cref="Run"/> — invoked by <see cref="AnalysisPipeline"/>'s
+    ///     task driver during a straight-through pipeline run. Reads the
+    ///     upstream state from sibling tasks through
+    ///     <c>ctx.GetTask&lt;PerFileScoringTask&gt;()</c> and
+    ///     <c>ctx.GetTask&lt;FirstJoinTask&gt;()</c>, dispatches into
+    ///     <see cref="ExecuteRescore"/>, then runs the per-process
     ///     diagnostic-writer close + cross-impl bisection dump.
     ///   </item>
     ///   <item>
-    ///     Worker (<c>--join-at-pass=1 --no-join</c>): construct via the
-    ///     parameterless ctor and call <see cref="RunWorker"/>, which
-    ///     loads the library, hydrates the boundary-file pair, applies
-    ///     worker compaction, computes per-file consensus targets, and
-    ///     then dispatches into <see cref="ExecuteRescore"/>.
+    ///     <see cref="RunWorker"/> — entry point for the
+    ///     <c>--join-at-pass=1 --no-join</c> worker mode. Loads the
+    ///     library, hydrates the boundary-file pair from sidecars,
+    ///     applies worker compaction, computes per-file consensus
+    ///     targets in-method, then dispatches into
+    ///     <see cref="ExecuteRescore"/>. Pass 2 will fold this into
+    ///     the registry path by moving the hydration onto the
+    ///     upstream producers' lazy-rehydrate accessors.
     ///   </item>
     /// </list>
     /// Inherits the scoring engine (RunCoelutionScoring, LoadLibrary,
@@ -106,41 +110,97 @@ namespace pwiz.OspreySharp.Tasks
         // list reference falls through unchanged from PerFileScoringTask.
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
 
+        // Phase B lazy-rehydrate gate. See PerFileScoringTask for the
+        // mechanism.
+        private bool _runOrHydrated;
+
         public override string Name => @"PerFileRescore";
 
         /// <summary>
         /// The post-rescore per-file entries. Mutated in place by
         /// <see cref="ExecuteRescore"/>; when this task short-circuits
         /// (no FirstJoinTask plan) the list is the unchanged upstream
-        /// reference.
+        /// reference. Lazy-rehydrates by invoking <see cref="Run"/> on
+        /// the first call when this task was skipped by the driver
+        /// (i.e. <see cref="PipelineContext.StartAtTask"/> is downstream),
+        /// so consumers always see populated state.
         /// </summary>
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries() => _perFileEntries;
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx)
+        {
+            if (!_runOrHydrated) Run(ctx);
+            if (_perFileEntries == null)
+                throw new InvalidOperationException(
+                    @"PerFileRescoreTask.GetPerFileEntries called before Run / RunWorker populated the field.");
+            return _perFileEntries;
+        }
+
+        // Phase B resume surface. The reconciled parquet overwrites the
+        // upstream PerFileScoringTask parquet at the same path, but
+        // the per-task sidecar naming
+        // (<output>.PerFileRescore.osprey.task) keeps the two tasks'
+        // validity records distinct. ValidityKey adds the
+        // reconciliation parameter hash because the rescored content
+        // depends on it.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+            {
+                yield return FdrScoresSidecar.Pass1Path(input);
+                if (ctx.Config.Reconciliation != null && ctx.Config.Reconciliation.Enabled)
+                    yield return ReconciliationFile.PathForInput(input);
+            }
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+                yield return ParquetScoreCache.GetScoresPath(input);
+        }
+
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx)
+                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+        }
 
         public override bool Run(PipelineContext ctx)
         {
+            if (_runOrHydrated) return true;
+            _runOrHydrated = true;
             _ctx = ctx;
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
-            _perFileEntries = perFileScoring.GetPerFileEntries();
+            _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 
             // Self-gate on FirstJoinTask: rescore + reconciliation only
             // run when planning actually produced state (multi-file with
             // Reconciliation.Enabled, not --join-at-pass=2). When
             // planning was skipped, this task is a no-op; downstream
             // MergeNodeTask still gets _perFileEntries via our accessor
-            // (falls through to the upstream reference).
+            // (falls through to the upstream reference). No sidecar
+            // delete on the no-op path: a lazy-hydrate call from a
+            // downstream task must not invalidate prior-run sidecars.
             var firstJoin = ctx.GetTask<FirstJoinTask>();
-            if (!firstJoin.DidPlan)
+            if (!firstJoin.DidPlan(ctx))
                 return true;
+
+            // About to overwrite per-file .scores.parquet with rescored
+            // content: clear stale sidecars first so a mid-Run crash
+            // doesn't leave a false-positive sidecar pointing at the
+            // partially-written parquet.
+            foreach (var output in Outputs(ctx))
+                TaskValiditySidecar.Delete(output, Name);
 
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
-                firstJoin.GetPerFileConsensusTargets(),
-                firstJoin.GetReconciliationActions(),
-                firstJoin.GetRefinedCalibrations(),
-                perFileScoring.GetPerFileCalibrations(),
-                firstJoin.GetPerFileGapFillForRescore(),
-                perFileScoring.GetPerFileParquetPaths(),
-                perFileScoring.GetFullLibrary(),
+                firstJoin.GetPerFileConsensusTargets(ctx),
+                firstJoin.GetReconciliationActions(ctx),
+                firstJoin.GetRefinedCalibrations(ctx),
+                perFileScoring.GetPerFileCalibrations(ctx),
+                firstJoin.GetPerFileGapFillForRescore(ctx),
+                perFileScoring.GetPerFileParquetPaths(ctx),
+                perFileScoring.GetFullLibrary(ctx),
                 ctx.Config);
             ctx.LogInfo(string.Format(
                 @"Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
