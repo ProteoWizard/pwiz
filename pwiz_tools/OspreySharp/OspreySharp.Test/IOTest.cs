@@ -2566,8 +2566,8 @@ namespace pwiz.OspreySharp.Test
                 string output = Path.Combine(dir, "out.scores.parquet");
                 // Mix of every escape branch in TaskValiditySidecar.JsonString:
                 // quote, backslash, \b \f \n \r \t, and a sub-0x20 control
-                // character ("") that exercises the \u escape branch.
-                const string key = "k=\"v\";path=C:\\proj\\ai;ctrl=\b\f\n\r\t";
+                // character ("\u0001") that exercises the \u escape branch.
+                const string key = "k=\"v\";path=C:\\proj\\ai;ctrl=\b\f\n\r\t\u0001";
 
                 TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key,
                     new[] { "path with \"quotes\".mzML", "C:\\path\\with\\slashes.tsv" });
