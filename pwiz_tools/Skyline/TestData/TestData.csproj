@@ -192,6 +192,7 @@
     <Compile Include="Results\ResultFileMetaDataTest.cs" />
     <Compile Include="Results\ResultsUtilTest.cs" />
     <Compile Include="Results\DocumentRetentionTimesTest.cs" />
+    <Compile Include="Results\ShimadzuSrmDuplicateQ1Test.cs" />
     <Compile Include="Results\ShimadzuSrmTest.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\StructSerializerTest.cs" />
@@ -278,6 +279,7 @@
     <EmbeddedResource Include="Results\PeptideQuantifierTest.sky" />
     <None Include="Results\MultiplePeptidesSameMz.zip" />
     <None Include="Results\ShimadzuSrm.zip" />
+    <None Include="Results\ShimadzuSrmDuplicateQ1.zip" />
     <None Include="Results\SmallWiff.zip" />
     <None Include="Results\ThermoQuant.zip" />
     <None Include="Results\WatersCalcurve.zip" />

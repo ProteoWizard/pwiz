@@ -63,6 +63,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
         //
         private static readonly Dictionary<string, List<LabeledPoint.PointLayout>> _labelsLayouts = new Dictionary<string, List<LabeledPoint.PointLayout>>();
 
+        private readonly LabelLayoutRunner _labelLayoutRunner = new LabelLayoutRunner();
+        private bool _suppressAxisChangeLayout;
+
         private FoldChangeRow _selectedRow;
 
         private NodeTip _tip;
@@ -145,30 +148,54 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void GraphPane_AxisChangeEvent(GraphPane pane)
         {
             AdjustLocations(pane);
+            if (_suppressAxisChangeLayout)
+                return;
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+            {
+                if (!Settings.Default.GroupComparisonSuspendLabelLayout)
+                {
+                    StartLabelLayoutAsync(_labeledPoints);
+                }
+                else if (_labelsLayouts.TryGetValue(GroupComparisonName, out var savedLayout))
+                {
+                    StartLabelLayoutAsync(_labeledPoints, savedLayout);
+                }
+            }
+            else
+            {
+                zedGraphControl.GraphPane.EnableLabelLayout = false;
+            }
         }
 
         private void zedGraphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState,
             ZoomState newState, PointF mousePosition)
         {
-            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
-            {
-                if (!Settings.Default.GroupComparisonSuspendLabelLayout)
-                {
-                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints);
-                    _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
-                }
-                else
-                {
-                    if (_labelsLayouts.TryGetValue(GroupComparisonName, out var savedLayout))
-                    {
-                        zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, savedLayout);
-                        _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
-                    }
-                }
-            }
-            else
-                zedGraphControl.GraphPane.EnableLabelLayout = false;
             AdjustLocations(zedGraphControl.GraphPane);
+        }
+
+        private void zedGraphControl_ZoomAllOutEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
+        {
+            GraphPane_AxisChangeEvent(zedGraphControl.GraphPane);
+        }
+
+        private void zedGraphControl_Resize(object sender, EventArgs e)
+        {
+            GraphPane_AxisChangeEvent(zedGraphControl.GraphPane);
+        }
+
+        private void GraphPane_LayoutRequested(object sender, EventArgs e)
+        {
+            if (sender is GraphPane pane)
+                GraphPane_AxisChangeEvent(pane);
+        }
+
+        private void StartLabelLayoutAsync(List<LabeledPoint> labeledPoints, List<LabeledPoint.PointLayout> savedLayout = null)
+        {
+            _labelLayoutRunner.Start(
+                zedGraphControl,
+                labeledPoints,
+                savedLayout,
+                layout => _labelsLayouts[GroupComparisonName] = layout ?? new List<LabeledPoint.PointLayout>());
         }
 
         private void zedGraphControl_KeyDown(object sender, KeyEventArgs e)
@@ -196,7 +223,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _bindingListSource.ListChanged += BindingListSourceOnListChanged;
                 _bindingListSource.AllRowsChanged += BindingListSourceAllRowsChanged;
                 zedGraphControl.GraphPane.AxisChangeEvent += GraphPane_AxisChangeEvent;
+                zedGraphControl.GraphPane.LayoutRequested += GraphPane_LayoutRequested;
                 zedGraphControl.ZoomEvent += zedGraphControl_ZoomEvent;
+                zedGraphControl.ZoomAllOutEvent += zedGraphControl_ZoomAllOutEvent;
+                zedGraphControl.Resize += zedGraphControl_Resize;
 
                 if (_skylineWindow == null)
                 {
@@ -213,6 +243,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            _labelLayoutRunner.Cancel(Program.MainWindow);
             if (_tip != null)
             {
                 _tip.HideTip();
@@ -227,7 +258,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             zedGraphControl.GraphPane.AxisChangeEvent -= GraphPane_AxisChangeEvent;
+            zedGraphControl.GraphPane.LayoutRequested -= GraphPane_LayoutRequested;
             zedGraphControl.ZoomEvent -= zedGraphControl_ZoomEvent;
+            zedGraphControl.ZoomAllOutEvent -= zedGraphControl_ZoomAllOutEvent;
+            zedGraphControl.Resize -= zedGraphControl_Resize;
             Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
 
             if (_bindingListSource != null)
@@ -318,7 +352,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             if (!IsHandleCreated || _bindingListSource == null)
                 return;
-            
+
+            _suppressAxisChangeLayout = true;
+            try
+            {
+                UpdateGraphInternal();
+            }
+            finally
+            {
+                _suppressAxisChangeLayout = false;
+            }
+        }
+
+        private void UpdateGraphInternal()
+        {
             zedGraphControl.GraphPane.GraphObjList.Clear();
             zedGraphControl.GraphPane.CurveList.Clear();
             _points.Clear();
@@ -404,9 +451,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints,
+                StartLabelLayoutAsync(_labeledPoints,
                     _labelsLayouts.TryGetValue(GroupComparisonName, out var layout) ? layout : null);
-                _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
             }
             zedGraphControl.Invalidate();
         }
@@ -546,7 +592,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     using (var g = Graphics.FromHwnd(IntPtr.Zero))
                     {
                         zedGraphControl.GraphPane.FindNearestObject(point, g, out var nearestObj, out _);
-                        if (nearestObj is TextObj nearestText)
+                        if (nearestObj is TextObj { IsVisible: true } nearestText)
                         {
                             var labels = LabeledPoints.FindAll(lp => lp.Label.Equals(nearestText));
                             if (labels.Any())
@@ -745,9 +791,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
-                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints);
-                    _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
-                    zedGraphControl.Invalidate();
+                    StartLabelLayoutAsync(_labeledPoints);
                 }
             }
         }

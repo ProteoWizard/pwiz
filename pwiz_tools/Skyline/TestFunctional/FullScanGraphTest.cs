@@ -136,6 +136,13 @@ namespace pwiz.SkylineTestFunctional
             };
 
             Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
+            // Force legacy stick-only initial state for the full-scan IM view so the
+            // existing test expectations (single-pane stick intensity ranges, tooltip
+            // row counts, etc.) still apply. New 3-button (Stick/Heatmap/Mobilogram)
+            // defaults are exercised explicitly elsewhere.
+            Settings.Default.SumScansFullScan = true;
+            Settings.Default.ShowHeatmapFullScan = false;
+            Settings.Default.ShowMobilogramFullScan = false;
             OpenDocument("BlibDriftTimeTest.sky");
             ImportResults("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5);
             FindNode("453");
@@ -145,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check ion mobility details display
             var expectedIonMobility =
-                IonMobilityFilter.GetIonMobilityFilter(3.48, eIonMobilityUnits.drift_time_msec, 0, null);
+                IonMobilityFilter.GetIonMobilityFilter(3.48, eIonMobilityUnits.drift_time_msec, null, null);
             for (var loop = 0; loop < 4; loop++)
             {
                 bool wantCCS = loop < 2;
@@ -161,7 +168,6 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(wantCCS, annotation.Contains(ChromGraphItem.FormatCollisionCrossSectionValue(expectedIonMobility)),
                     " did not find expected CCS information display");
             }
-
             // Simulate click on a peak in GraphChromatogram form.
             ClickChromatogram(32.95, 134.6);
             TestScale(452, 456, 0, 250);
@@ -198,17 +204,31 @@ namespace pwiz.SkylineTestFunctional
             // Verify a specific m/z value in the zoomed spectrum (452-456 range).
             TestTooltip(453.3, null, 453.2979, 18);
 
-            // Check zoomed heatmap.
+            // Switch to dual-pane mode (stick + heatmap) and check heatmap Y-axis (ion mobility).
             SetSpectrum(false);
-            TestScale(452, 456, 2.61, 4.34);
+            TestHeatMapScale(452, 456, 2.61, 4.34);
             WaitForOpenForm<GraphFullScan>();   // For localization testing
+
+            // Show mobilogram overlay alongside heatmap.
+            SetMobilogram(true);
+            // PauseTest(@"4-pane mobilogram view — take screenshots as desired");
+            // Test the summarized mobilogram tooltip content returned by the helper
+            // (ion mobility + summed intensity), not every interactive UI tooltip variant
+            // (the UI tooltip can add a Transition row when hovering a per-transition curve).
+            TestMobilogramTooltip();
+            // Verify a point inside the filter band (3.152-3.651) has non-zero summed intensity.
+            TestMobilogramTooltip(3.4);
+            SetMobilogram(false);
 
             // Test Copy Data output for heatmap - should have 3 columns (m/z, ion mobility, intensity)
             // not 100+ columns from separate intensity curves (issue #3953)
+            // In dual-pane mode (stick+heatmap), find the heatmap pane (last pane)
             var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(SkylineWindow.GraphFullScan.ZedGraphControl.MasterPane);
-            AssertEx.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
-            AssertEx.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
-            var dataFrame = graphData.Panes[0].DataFrames[0];
+            AssertEx.IsTrue(graphData.Panes.Count >= 1, "Expected at least 1 pane");
+            // Heatmap pane is the last one (in dual-pane: index 1; in single-pane: index 0)
+            var heatmapPaneData = graphData.Panes[graphData.Panes.Count - 1];
+            AssertEx.AreEqual(1, heatmapPaneData.DataFrames.Count, "Expected 1 DataFrame in heatmap pane");
+            var dataFrame = heatmapPaneData.DataFrames[0];
             AssertEx.AreEqual(3, dataFrame.ColumnCount, "Heatmap Copy Data should have 3 columns");
             AssertEx.IsTrue(dataFrame.RowCount > 100, "Heatmap should have substantial data rows");
 
@@ -238,18 +258,18 @@ namespace pwiz.SkylineTestFunctional
 
             // Check filtered heatmap.
             SetFilter(true);
-            TestScale(452, 456, 3.2, 3.8);
+            TestHeatMapScale(452, 456, 3.2, 3.8);
             SetZoom(false);
-            TestScale(0, 2000, 3.2, 3.8);
+            TestHeatMapScale(0, 2000, 3.2, 3.8);
             SetFilter(false);
-            TestScale(0, 2000, 0, 15);
+            TestHeatMapScale(0, 2000, 0, 15);
 
             // Test cursor-tracking tooltip on heatmap (3 lines: m/z + drift time + intensity).
             TestTooltip(true);
             // Verify a specific (m/z, ion mobility) in the unzoomed heatmap.
             TestTooltip(447, 3.5, 447.2277, 3.45, 21);
             SetZoom(true);
-            TestScale(452, 456, 2.61, 4.34);
+            TestHeatMapScale(452, 456, 2.61, 4.34);
 
             // Regression: switching scan type from MS1 to MS/MS in heatmap+magnify mode used
             // to leave the Y axis inverted (yMin > yMax) and the IM filter band missing,
@@ -268,10 +288,13 @@ namespace pwiz.SkylineTestFunctional
             });
             // Restore precursor view for the remaining tests.
             SetScanType(ChromSource.ms1, 33.23, 27.9);
-            TestScale(452, 456, 2.61, 4.34);
+            TestHeatMapScale(452, 456, 2.61, 4.34);
 
-            // Check click on ion label.
+            // Check click on ion label — return to stick-only view so the remaining
+            // assertions (single-pane Y-axis, label click) see the same layout the
+            // pre-3-button test was written against.
             SetSpectrum(true);
+            SetHeatmap(false);
             SetZoom(false);
             SetScanType(ChromSource.fragment, 33.23, 27.9);
             ClickFullScan(517, 1000);
@@ -422,14 +445,48 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.GraphFullScan.TestMouseClick(x, y));
         }
 
+        /// <summary>
+        /// Test x-axis (m/z) and y-axis scale. In dual-pane mode, y-axis checks use the stick
+        /// pane (intensity). Use TestHeatMapScale for heatmap y-axis (ion mobility) checks.
+        /// </summary>
         private static void TestScale(double xMin, double xMax, double yMin, double yMax)
         {
             RunUI(() =>
             {
-                double xAxisMin = SkylineWindow.GraphFullScan.XAxisMin;
-                double xAxisMax = SkylineWindow.GraphFullScan.XAxisMax;
-                double yAxisMin = SkylineWindow.GraphFullScan.YAxisMin;
-                double yAxisMax = SkylineWindow.GraphFullScan.YAxisMax;
+                var graph = SkylineWindow.GraphFullScan;
+                double xAxisMin = graph.XAxisMin;
+                double xAxisMax = graph.XAxisMax;
+                // In dual-pane, check stick pane Y (intensity); in single-pane, check GraphPane Y
+                double yAxisMin = graph.IsDualPaneMode ? graph.StickYAxisMin : graph.YAxisMin;
+                double yAxisMax = graph.IsDualPaneMode ? graph.StickYAxisMax : graph.YAxisMax;
+
+                Assert.IsTrue(xMin - xAxisMin >= 0 &&
+                              xMin - xAxisMin < (xMax - xMin)/4,
+                              "Expected x minimum {0}, got {1}", xMin, xAxisMin);
+                Assert.IsTrue(xAxisMax - xMax >= 0 &&
+                              xAxisMax - xMax < (xMax - xMin)/4,
+                              "Expected x maximum {0}, got {1}", xMax, xAxisMax);
+                Assert.IsTrue(yMin - yAxisMin >= 0 &&
+                              yMin - yAxisMin < (yMax - yMin)/4,
+                              "Expected y minimum {0}, got {1}", yMin, yAxisMin);
+                Assert.IsTrue(yAxisMax - yMax >= 0 &&
+                              yAxisMax - yMax < (yMax - yMin)/4,
+                              "Expected y maximum {0}, got {1}", yMax, yAxisMax);
+            });
+        }
+
+        /// <summary>
+        /// Test heatmap pane y-axis (ion mobility) scale in dual-pane mode.
+        /// </summary>
+        private static void TestHeatMapScale(double xMin, double xMax, double yMin, double yMax)
+        {
+            RunUI(() =>
+            {
+                var graph = SkylineWindow.GraphFullScan;
+                double xAxisMin = graph.XAxisMin;
+                double xAxisMax = graph.XAxisMax;
+                double yAxisMin = graph.YAxisMin;
+                double yAxisMax = graph.YAxisMax;
 
                 Assert.IsTrue(xMin - xAxisMin >= 0 &&
                               xMin - xAxisMin < (xMax - xMin)/4,
@@ -495,6 +552,45 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.GraphFullScan.SetSpectrum(isChecked));
         }
 
+        private static void SetMobilogram(bool isChecked)
+        {
+            RunUI(() => SkylineWindow.GraphFullScan.SetMobilogram(isChecked));
+        }
+
+        private static void SetHeatmap(bool isChecked)
+        {
+            RunUI(() => SkylineWindow.GraphFullScan.SetHeatmap(isChecked));
+        }
+
+        /// <summary>
+        /// Verifies mobilogram tooltip produces a 2-row table with correct labels and parseable values.
+        /// </summary>
+        private static void TestMobilogramTooltip()
+        {
+            TableDesc table = null;
+            RunUI(() => table = SkylineWindow.GraphFullScan.TestGetMobilogramTooltipTable());
+            Assert.IsNotNull(table, "Mobilogram tooltip returned null");
+            Assert.AreEqual(2, table.Count, string.Format("Expected 2 rows, got: {0}", table));
+            Assert.IsTrue(double.TryParse(table[0][1].Text, out _),
+                "Ion mobility value not parseable: " + table[0][1].Text);
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Summed_Intensity, table[1][0].Text);
+            Assert.IsTrue(double.TryParse(table[1][1].Text, out _),
+                "Summed intensity not parseable: " + table[1][1].Text);
+        }
+
+        /// <summary>
+        /// Verifies mobilogram tooltip at a specific ion mobility value returns non-zero intensity.
+        /// </summary>
+        private static void TestMobilogramTooltip(double imValue)
+        {
+            TableDesc table = null;
+            RunUI(() => table = SkylineWindow.GraphFullScan.TestGetMobilogramTooltipTable(imValue));
+            Assert.IsNotNull(table, string.Format("Mobilogram tooltip returned null at IM={0}", imValue));
+            Assert.IsTrue(double.TryParse(table[1][1].Text, out var intensity));
+            Assert.IsTrue(intensity > 0,
+                string.Format("Expected non-zero summed intensity near IM={0}", imValue));
+        }
+
         private void TestSpecialIonsAnnotations()
         {
             var testIon = new MeasuredIon("Reporter_Test", "C31H47N14O4", 679.3899, 679.3899, Adduct.M_PLUS, true);
@@ -537,6 +633,11 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
 
             //Labels are not created in offscreen mode, so we just validate total number of ions matching the show settings
+            // Onscreen counts are sensitive to MSGraphPane's label-overlap pass, which is in turn
+            // sensitive to Y-axis label width — the title relocation (Intensity into the spacer
+            // pane, Drift Time into the mobilogram pane) shrinks the heatmap Y-axis area, which
+            // bumps the onscreen count back up. Offscreen count (70 — the data-level ion list)
+            // is unchanged and is the authoritative data-level check.
             Assert.AreEqual(ExpectedLabelCount(70, 20, 15), SkylineWindow.GraphFullScan.IonLabels.Count());
 
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -564,7 +665,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
             var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
-            Assert.AreEqual(ExpectedLabelCount(48, 1, 2), graphLabels.Count());
+            Assert.AreEqual(ExpectedLabelCount(48, 2, 2), graphLabels.Count());
         }
 
         private static int ExpectedLabelCount(int offscreenCount, int onscreenEnCount, int onscreenJaCount)
