@@ -28,8 +28,18 @@ public sealed class MzxmlReader
 {
     private static readonly char[] s_pathSeparators = ['/', '\\'];
 
+    /// <summary>When true, stop at the first <c>&lt;scan&gt;</c> element instead of
+    /// reading every spectrum into a <see cref="SpectrumListSimple"/>. Used by
+    /// <c>MzxmlReaderAdapter</c>'s lazy path so the document-level metadata is
+    /// populated without walking the spectrum bodies (which is O(file size)). The
+    /// caller installs a <see cref="MzXml.SpectrumList_Mzxml"/> backed by the
+    /// <c>&lt;index&gt;</c> footer's byte offsets to serve spectra on demand.</summary>
+    internal bool LazyMode { get; set; }
+
     /// <summary>Reads <paramref name="stream"/> into <paramref name="msd"/>.</summary>
-    public static void Read(Stream stream, MSData msd)
+    public static void Read(Stream stream, MSData msd) => new MzxmlReader().ReadInternal(stream, msd);
+
+    internal void ReadInternal(Stream stream, MSData msd)
     {
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentNullException.ThrowIfNull(msd);
@@ -44,8 +54,12 @@ public sealed class MzxmlReader
             CloseInput = false,
         });
 
-        var spectra = new SpectrumListSimple();
-        msd.Run.SpectrumList = spectra;
+        SpectrumListSimple? spectra = null;
+        if (!LazyMode)
+        {
+            spectra = new SpectrumListSimple();
+            msd.Run.SpectrumList = spectra;
+        }
 
         while (reader.Read())
         {
@@ -66,7 +80,15 @@ public sealed class MzxmlReader
                     ReadDataProcessing(reader, msd);
                     break;
                 case "scan":
-                    ReadScan(reader, spectra);
+                    if (LazyMode)
+                    {
+                        // Bail BEFORE walking the spectrum bodies. The caller knows each
+                        // <scan>'s byte offset from the <index> footer and will parse
+                        // them on demand via ReadOneScan.
+                        FillInMetadata(msd);
+                        return;
+                    }
+                    spectra!.Spectra.Add(ReadOneScan(reader, getBinaryData: true));
                     break;
                 case "index":
                 case "indexOffset":
@@ -238,13 +260,20 @@ public sealed class MzxmlReader
 
     // ---------- scan ----------
 
-    private static void ReadScan(XmlReader reader, SpectrumListSimple spectra)
+    /// <summary>
+    /// Parses one <c>&lt;scan&gt;</c> element starting at the reader's current
+    /// position and returns the constructed <see cref="Spectrum"/>. Used by
+    /// <see cref="MzXml.SpectrumList_Mzxml"/> for per-spectrum lazy reads.
+    /// </summary>
+    /// <param name="reader">XmlReader positioned at a <c>&lt;scan&gt;</c> start element.</param>
+    /// <param name="getBinaryData">When false, the <c>&lt;peaks&gt;</c> base64 content is
+    /// skipped — the spectrum is returned with empty m/z and intensity arrays but all
+    /// other metadata intact.</param>
+#pragma warning disable CA1822 // Instance method by design: mirrors MzmlReader.ReadOneSpectrum's API so future ref-map state lives where SpectrumList_Mzxml expects it.
+    internal Spectrum ReadOneScan(XmlReader reader, bool getBinaryData)
+#pragma warning restore CA1822
     {
-        var spec = new Spectrum
-        {
-            Index = spectra.Spectra.Count,
-        };
-        spectra.Spectra.Add(spec);
+        var spec = new Spectrum();
 
         string num = reader.GetAttribute("num") ?? "";
         if (!string.IsNullOrEmpty(num))
@@ -350,7 +379,7 @@ public sealed class MzxmlReader
         int peaksCount = 0;
         if (TryGetIntAttr(reader, "peaksCount", out int pc)) peaksCount = pc;
 
-        if (reader.IsEmptyElement) return;
+        if (reader.IsEmptyElement) return spec;
 
         using var sub = reader.ReadSubtree();
         sub.Read(); // position at scan
@@ -363,7 +392,7 @@ public sealed class MzxmlReader
                     ReadPrecursor(sub, spec, collisionEnergyStr);
                     break;
                 case "peaks":
-                    ReadPeaks(sub, spec, peaksCount);
+                    ReadPeaks(sub, spec, peaksCount, getBinaryData);
                     break;
                 case "nameValue":
                     {
@@ -385,6 +414,7 @@ public sealed class MzxmlReader
                     break;
             }
         }
+        return spec;
     }
 
     private static void ReadPrecursor(XmlReader reader, Spectrum spec, string scanCollisionEnergy)
@@ -479,7 +509,7 @@ public sealed class MzxmlReader
         return sb.ToString();
     }
 
-    private static void ReadPeaks(XmlReader reader, Spectrum spec, int peaksCount)
+    private static void ReadPeaks(XmlReader reader, Spectrum spec, int peaksCount, bool getBinaryData)
     {
         string precision = reader.GetAttribute("precision") ?? "32";
         string compressionType = reader.GetAttribute("compressionType") ?? "none";
@@ -499,8 +529,11 @@ public sealed class MzxmlReader
         // Same manual-text trick as ReadPrecursor — leave reader on </peaks> so the outer
         // scan loop's next Read() lands on the following sibling, not the one after.
         string content = ReadElementText(reader);
-        if (peaksCount == 0 || string.IsNullOrEmpty(content.Trim()))
+        if (peaksCount == 0 || string.IsNullOrEmpty(content.Trim()) || !getBinaryData)
         {
+            // !getBinaryData = lazy reader's metadata-only path: install empty arrays so
+            // the spectrum object is well-formed, but skip the base64 decode (the bulk
+            // of per-spectrum CPU). Matches MzmlReader._skipBinaryData behavior.
             spec.SetMZIntensityArrays(Array.Empty<double>(), Array.Empty<double>(),
                 CVID.MS_number_of_detector_counts);
             return;

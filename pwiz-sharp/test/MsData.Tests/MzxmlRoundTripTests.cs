@@ -150,4 +150,63 @@ public class MzxmlRoundTripTests
         Assert.IsTrue(sf.HasCVParam(CVID.MS_Thermo_RAW_format));
         Assert.IsTrue(sf.HasCVParam(CVID.MS_Thermo_nativeID_format));
     }
+
+    [TestMethod]
+    public void Lazy_RoundTripUsesSpectrumListMzxml_AndServesSpectraOnDemand()
+    {
+        // Build a small multi-spectrum doc, write to a temp file (writer emits an
+        // <indexOffset> footer by default), re-read via the adapter. Expect lazy path.
+        var msd = BuildSynthetic();
+        // Add a second spectrum so we exercise the per-scan seek.
+        var sl = (SpectrumListSimple)msd.Run.SpectrumList!;
+        var spec2 = new Spectrum { Index = 1, Id = "controllerType=0 controllerNumber=1 scan=2" };
+        spec2.Params.Set(CVID.MS_ms_level, 2);
+        spec2.Params.Set(CVID.MS_MSn_spectrum);
+        spec2.Params.Set(CVID.MS_positive_scan);
+        spec2.ScanList.Set(CVID.MS_no_combination);
+        spec2.ScanList.Scans.Add(new Scan());
+        spec2.SetMZIntensityArrays(new[] { 250.0, 350.0 }, new[] { 11.0, 22.0 },
+            CVID.MS_number_of_detector_counts);
+        sl.Spectra.Add(spec2);
+
+        string path = Path.Combine(Path.GetTempPath(), $"lazy-mzxml-{System.Guid.NewGuid():N}.mzXML");
+        try
+        {
+            using (var fs = File.Create(path))
+            {
+                byte[] xml = System.Text.Encoding.UTF8.GetBytes(new MzxmlWriter().Write(msd));
+                fs.Write(xml, 0, xml.Length);
+            }
+
+            // The lazy footer must be parseable on its own.
+            var footer = MzxmlIndexFooter.TryRead(path);
+            Assert.IsNotNull(footer, "Indexed mzXML footer not found in writer output — lazy path will fall back to eager");
+            Assert.AreEqual(2, footer.Value.ScanOffsets.Length);
+            Assert.AreEqual("scan=1", footer.Value.ScanIds[0]);
+            Assert.AreEqual("scan=2", footer.Value.ScanIds[1]);
+
+            var rt = new MSData();
+            new Pwiz.Data.MsData.Readers.MzxmlReaderAdapter().Read(path, rt);
+            Assert.IsInstanceOfType(rt.Run.SpectrumList, typeof(SpectrumList_Mzxml),
+                "Adapter didn't take the lazy path on an indexed mzXML");
+            Assert.AreEqual(2, rt.Run.SpectrumList!.Count);
+
+            // Out-of-order access exercises the seek path properly.
+            var s1 = rt.Run.SpectrumList.GetSpectrum(1, getBinaryData: true);
+            Assert.AreEqual("scan=2", s1.Id);
+            Assert.AreEqual(2, s1.Params.CvParam(CVID.MS_ms_level).ValueAs<int>());
+            CollectionAssert.AreEqual(new[] { 250.0, 350.0 }, s1.GetMZArray()!.Data);
+
+            var s0 = rt.Run.SpectrumList.GetSpectrum(0, getBinaryData: true);
+            Assert.AreEqual("scan=1", s0.Id);
+            Assert.AreEqual(4, s0.DefaultArrayLength);
+            CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, s0.GetMZArray()!.Data);
+
+            // Metadata-only (getBinaryData=false) returns the spectrum but skips peak decoding.
+            var s0meta = rt.Run.SpectrumList.GetSpectrum(0, getBinaryData: false);
+            Assert.AreEqual("scan=1", s0meta.Id);
+            Assert.AreEqual(0, s0meta.GetMZArray()!.Data.Count);
+        }
+        finally { try { File.Delete(path); } catch { } }
+    }
 }
