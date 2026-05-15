@@ -313,6 +313,79 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
+        public void ManifestReplacesProteinIdsWithCleanAccessions()
+        {
+            // Cross-impl port of Rust `manifest_replaces_protein_ids_with_clean_accessions`
+            // (commit 0c3a73e). The manifest's `proteins` column is the
+            // authoritative source of protein info: a Carafe-built library
+            // can stamp a per-peptide suffix into ProteinID (e.g.
+            // `sp|P12345_pep00001|GENE_A`) that breaks protein parsimony
+            // unless we substitute the clean source accessions.
+            string path = WriteManifest(new[]
+            {
+                @"PEPTIDE	No	sp|P12345|GENE_A;sp|Q67890|GENE_B	target	0",
+                @"AEPTPID	Yes	decoy_sp|P12345|GENE_A;decoy_sp|Q67890|GENE_B	decoy	0",
+            });
+            try
+            {
+                var m = DecoyPairingManifest.FromTsv(path);
+                var libEntry1 = MakeEntry(1, @"PEPTIDE", 2, false);
+                libEntry1.ProteinIds.Add(@"sp|P12345_pep00001|GENE_A");
+                var libEntry2 = MakeEntry(2, @"AEPTPID", 2, false);
+                libEntry2.ProteinIds.Add(@"decoy_sp|P12345_pep00001|GENE_A");
+                var lib = new List<LibraryEntry> { libEntry1, libEntry2 };
+
+                var state = new PairingState();
+                var stats = m.ApplyToLibrary(lib, state);
+
+                Assert.AreEqual(1, stats.NPaired);
+                Assert.AreEqual(2, stats.NProteinsReplaced);
+                CollectionAssert.AreEqual(
+                    new[] { @"sp|P12345|GENE_A", @"sp|Q67890|GENE_B" },
+                    libEntry1.ProteinIds);
+                CollectionAssert.AreEqual(
+                    new[] { @"decoy_sp|P12345|GENE_A", @"decoy_sp|Q67890|GENE_B" },
+                    libEntry2.ProteinIds);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [TestMethod]
+        public void ManifestSkipsReplacementWhenProteinsColumnEmpty()
+        {
+            // Cross-impl port of Rust `manifest_skips_replacement_when_proteins_column_empty`.
+            // Empty or "-" `proteins` field is a no-op; library wins.
+            string path = WriteManifest(new[]
+            {
+                @"PEPTIDE	No	-	target	0",
+                @"AEPTPID	Yes		decoy	0",
+            });
+            try
+            {
+                var m = DecoyPairingManifest.FromTsv(path);
+                var libEntry1 = MakeEntry(1, @"PEPTIDE", 2, false);
+                libEntry1.ProteinIds.Add(@"sp|original|FROM_LIB");
+                var libEntry2 = MakeEntry(2, @"AEPTPID", 2, false);
+                libEntry2.ProteinIds.Add(@"sp|orig_decoy|FROM_LIB");
+                var lib = new List<LibraryEntry> { libEntry1, libEntry2 };
+                var state = new PairingState();
+                var stats = m.ApplyToLibrary(lib, state);
+                Assert.AreEqual(0, stats.NProteinsReplaced);
+                CollectionAssert.AreEqual(
+                    new[] { @"sp|original|FROM_LIB" }, libEntry1.ProteinIds);
+                CollectionAssert.AreEqual(
+                    new[] { @"sp|orig_decoy|FROM_LIB" }, libEntry2.ProteinIds);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [TestMethod]
         public void ManifestSkipsUnknownPeptideTypeRows()
         {
             string path = WriteManifest(new[]

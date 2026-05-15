@@ -305,6 +305,14 @@ namespace pwiz.OspreySharp.Tasks
                     }
                     var manifestStats = manifest.ApplyToLibrary(library, pairingState);
                     pairingStats.NPairedViaManifest = manifestStats.NPaired;
+                    if (manifestStats.NProteinsReplaced > 0)
+                    {
+                        ctx.LogInfo(string.Format(
+                            @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
+                            @"entries (clean source-protein accessions from the manifest's " +
+                            @"`proteins` column)",
+                            manifestStats.NProteinsReplaced));
+                    }
                     if (manifestStats.NNewlyMarkedDecoy > 0)
                     {
                         // Manifest classified entries as decoy that were
