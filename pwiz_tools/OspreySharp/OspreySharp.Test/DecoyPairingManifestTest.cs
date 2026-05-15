@@ -115,6 +115,13 @@ namespace pwiz.OspreySharp.Test
                     MakeEntry(3, @"AEPTPIDE", 2, true),
                     MakeEntry(4, @"AEPTPIDE", 3, true),
                 };
+                // Explicitly pin the "last-write-wins on duplicate
+                // sequence" contract: the manifest is indexed by sequence
+                // alone, so this 4-row file with 2 sequences yields 2
+                // entries -- not 4. Charge-aware bucketing happens later
+                // at apply-to-library time.
+                Assert.AreEqual(2, m.Count);
+
                 var state = new PairingState();
                 int nPaired = m.ApplyToLibrary(lib, state).NPaired;
                 Assert.AreEqual(2, nPaired);
@@ -122,6 +129,40 @@ namespace pwiz.OspreySharp.Test
                 var dCharge3 = FindByDecoyAndCharge(lib, @"AEPTPIDE", 3);
                 Assert.AreEqual(1u, dCharge2.Id & 0x7FFFFFFFu);
                 Assert.AreEqual(2u, dCharge3.Id & 0x7FFFFFFFu);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [TestMethod]
+        public void ManifestReaderHandlesUtf8BomInHeader()
+        {
+            // FDRBench can emit TSV files with a UTF-8 BOM (some Excel
+            // workflows insert one when round-tripping). StreamReader's
+            // default ctor enables BOM detection so the BOM is consumed
+            // before the header parse sees the column names. This test
+            // pins that behavior so a future "let me tighten the
+            // StreamReader options" edit doesn't regress.
+            string path = Path.GetTempFileName();
+            try
+            {
+                using (var fs = new FileStream(path, FileMode.Create))
+                {
+                    // UTF-8 BOM: EF BB BF.
+                    fs.WriteByte(0xEF);
+                    fs.WriteByte(0xBB);
+                    fs.WriteByte(0xBF);
+                    using (var sw = new StreamWriter(fs, new System.Text.UTF8Encoding(false)))
+                    {
+                        sw.WriteLine(@"sequence	decoy	proteins	peptide_type	peptide_pair_index");
+                        sw.WriteLine(@"PEPTIDEA	No	protA	target	0");
+                        sw.WriteLine(@"AEPTPIDE	Yes	rev_protA	decoy	0");
+                    }
+                }
+                var m = DecoyPairingManifest.FromTsv(path);
+                Assert.AreEqual(2, m.Count, @"BOM should be stripped; header columns should resolve");
             }
             finally
             {

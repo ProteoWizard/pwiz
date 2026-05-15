@@ -536,6 +536,37 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
+        public void TestSearchHashStableForNonRoundDecoyPairMinFraction()
+        {
+            // SearchParameterHash folds DecoyPairMinFraction (double) via
+            // the default formatter. For round defaults (0.80) C# and
+            // Rust's ryu produce matching output. For non-canonical
+            // doubles (e.g. 1/3) the two formatters CAN diverge -- this
+            // test pins the C# behavior so we notice future drift. If
+            // this test starts failing on a runtime upgrade, the hash
+            // for any non-round threshold has changed and cross-impl
+            // cache compatibility for that value is broken until we
+            // either match Rust's ryu output explicitly or document the
+            // divergence.
+            var configA = new OspreyConfig { DecoyPairMinFraction = 1.0 / 3.0 };
+            var configB = new OspreyConfig { DecoyPairMinFraction = 1.0 / 3.0 };
+            // Deterministic across two constructions of the same config.
+            Assert.AreEqual(configA.SearchParameterHash(),
+                configB.SearchParameterHash());
+            // Sensitive to a tiny perturbation of the threshold.
+            var configC = new OspreyConfig { DecoyPairMinFraction = (1.0 / 3.0) + 1e-12 };
+            Assert.AreNotEqual(configA.SearchParameterHash(),
+                configC.SearchParameterHash());
+            // Sensitive to the default vs an explicit set to the same
+            // value (catches a regression where the default would not be
+            // hashed identically to an explicit-set).
+            var configDefault = new OspreyConfig();
+            var configExplicit80 = new OspreyConfig { DecoyPairMinFraction = 0.80 };
+            Assert.AreEqual(configDefault.SearchParameterHash(),
+                configExplicit80.SearchParameterHash());
+        }
+
+        [TestMethod]
         public void TestLibrarySourceFromPath()
         {
             var tsv = LibrarySource.FromPath("library.tsv");

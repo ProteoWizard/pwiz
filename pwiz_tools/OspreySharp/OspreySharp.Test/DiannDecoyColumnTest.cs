@@ -50,6 +50,11 @@ namespace pwiz.OspreySharp.Test
             Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag(@"false"));
             Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag(@"garbage"));
             Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag(null));
+            // ASCII-only lowercasing: non-ASCII input is never a match.
+            // Mirrors Rust's `to_ascii_lowercase`; `ToLowerInvariant`
+            // would case-fold Unicode differently for some locales.
+            Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag("１"));
+            Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag("Yİ"));
         }
 
         [TestMethod]

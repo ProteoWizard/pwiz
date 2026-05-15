@@ -245,6 +245,29 @@ namespace pwiz.OspreySharp.Tasks
             {
                 decoys = new List<LibraryEntry>();
 
+                // Match Rust pipeline.rs at v26.6.0 (bcd7249): the
+                // "no decoys at all" check runs BEFORE manifest
+                // application. The manifest CAN flip predictor-stripped
+                // entries to IsDecoy=true (the Carafe failure mode commit
+                // d23d496 was built for), so this ordering means a
+                // manifest cannot rescue a load that the prefix scan
+                // misses entirely. TODO(brendanmaclean,maccoss): discuss
+                // with Mike whether this should be relaxed to defer the
+                // check until after manifest application; current C#
+                // ordering matches Rust v26.6.0 for byte parity on the
+                // cross-impl Test-Regression gate.
+                int nLibraryDecoys = library.Count - nLibraryTargets;
+                if (nLibraryDecoys == 0)
+                {
+                    ctx.LogError(string.Format(
+                        @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
+                        @"Check that the library actually contains decoys with one of these prefixes on " +
+                        @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
+                        FormatPrefixList(config.DecoyPrefixes)));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
+
                 // Pair each decoy with its target so their base_ids match
                 // -- required for SVM target-decoy competition, LDA
                 // calibration, and CV fold grouping. Hybrid path:
@@ -322,23 +345,6 @@ namespace pwiz.OspreySharp.Tasks
                     pairingStats.PairedFraction * 100.0,
                     pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
                     pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
-                // "No decoys at all" detection runs AFTER the manifest
-                // pass: the manifest may flip prefix-stripped library
-                // entries to IsDecoy=true (the Carafe failure mode commit
-                // 5 was built for), so a zero count at LOAD time is not
-                // the same as a zero count after manifest application.
-                if (pairingStats.NDecoys == 0)
-                {
-                    ctx.LogError(string.Format(
-                        @"decoys_in_library mode requested but no library entries match prefixes {0} " +
-                        @"and no manifest classified any entry as decoy. Check that the library " +
-                        @"actually contains decoys with one of these prefixes on a protein accession, " +
-                        @"or supply a pairing manifest, or unset decoys_in_library so Osprey " +
-                        @"generates decoys.",
-                        FormatPrefixList(config.DecoyPrefixes)));
-                    ctx.ExitCode = 1;
-                    return false;
-                }
                 if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
                 {
                     ctx.LogError(string.Format(

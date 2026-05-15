@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.IO
@@ -315,7 +316,7 @@ namespace pwiz.OspreySharp.IO
         /// </summary>
         public static string StripModifications(string modified)
         {
-            var result = new System.Text.StringBuilder(modified.Length);
+            var result = new StringBuilder(modified.Length);
             bool inBracket = false;
             bool inParen = false;
 
@@ -637,10 +638,14 @@ namespace pwiz.OspreySharp.IO
 
         /// <summary>
         /// Parse the optional Decoy column. Accepts <c>1</c>, <c>true</c>,
-        /// <c>yes</c>, <c>y</c>, <c>t</c> (case-insensitive) as decoy;
-        /// everything else (including <c>0</c>, empty, garbage) is target.
-        /// Matches Rust <c>parse_decoy_flag</c>; the "default to target if
-        /// unsure" convention matches DIA-NN itself.
+        /// <c>yes</c>, <c>y</c>, <c>t</c> (case-insensitive, ASCII-only)
+        /// as decoy; everything else (including <c>0</c>, empty, garbage)
+        /// is target. Matches Rust <c>parse_decoy_flag</c> exactly,
+        /// including its use of <c>to_ascii_lowercase</c> -- non-ASCII
+        /// input (Turkish dotted-I, fullwidth digits) passes through
+        /// unchanged on both sides so neither produces a spurious match.
+        /// The "default to target if unsure" convention matches DIA-NN
+        /// itself.
         /// </summary>
         internal static bool ParseDecoyFlag(string s)
         {
@@ -649,9 +654,31 @@ namespace pwiz.OspreySharp.IO
             string trimmed = s.Trim();
             if (trimmed.Length == 0)
                 return false;
-            string lower = trimmed.ToLowerInvariant();
+            string lower = AsciiLowerInvariant(trimmed);
             return lower == @"1" || lower == @"true" || lower == @"yes" ||
                    lower == @"y" || lower == @"t";
+        }
+
+        /// <summary>
+        /// Lowercase only the ASCII A-Z range; pass everything else
+        /// (including non-ASCII Unicode) through unchanged. Mirrors
+        /// Rust's <c>str::to_ascii_lowercase</c>. Avoids the divergence
+        /// trap of C# <c>string.ToLowerInvariant()</c> which uses
+        /// Unicode case-folding and can produce different bytes for
+        /// non-ASCII input than Rust's byte-only mapping.
+        /// </summary>
+        private static string AsciiLowerInvariant(string s)
+        {
+            var sb = new StringBuilder(s.Length);
+            for (int i = 0; i < s.Length; i++)
+            {
+                char c = s[i];
+                if (c >= 'A' && c <= 'Z')
+                    sb.Append((char)(c + 32));
+                else
+                    sb.Append(c);
+            }
+            return sb.ToString();
         }
     }
 }
