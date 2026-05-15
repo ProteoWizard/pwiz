@@ -404,19 +404,17 @@ namespace pwiz.OspreySharp.Tasks
             // size-equality. Mirrors Rust's load-order inversion at
             // pipeline.rs:4030-4076.
             //
-            // Gate is "binary present + sidecar (if any) is valid" rather
-            // than bare File.Exists, so a stale 2nd-pass sidecar left
-            // over from a prior run with different config (different
-            // reconciliation hash, different library, etc.) cannot
-            // quietly contaminate the current run's q-values. The
-            // validity sidecar's absence is permitted because the
-            // snapshot test infrastructure produces 2nd-pass binaries
-            // via MergeNodeTask's early-exit path (Environment.Exit
-            // under OSPREY_STAGE7_PROTEIN_FDR_ONLY=1), which fires
-            // before AnalysisPipeline's WriteTaskSidecars step. A
-            // bare 2nd-pass binary with no sidecar at all is treated
-            // as a trusted boundary input; only an explicit
-            // mismatching sidecar invalidates the overlay.
+            // Gate is "binary present + sidecar (when one exists) is
+            // valid". A stale 2nd-pass sidecar left over from a prior
+            // run with different config is rejected; bare binaries with
+            // no sidecar at all are treated as trusted boundary inputs.
+            // The "absent sidecar = trusted" leg is what lets Test-
+            // Regression freeze Rust outputs (which don't carry
+            // OspreySharp's .osprey.task sidecars) as C# inputs without
+            // having to mint sidecars at freeze time. Test-Snapshot
+            // separately propagates the sidecars MergeNodeTask writes
+            // inline, so on a same-impl boundary the validity-key check
+            // is exercised.
             bool allPass2Valid = config.InputFiles != null && perFileEntries.Count > 0;
             if (allPass2Valid)
             {

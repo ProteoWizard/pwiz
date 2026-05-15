@@ -128,6 +128,19 @@ namespace pwiz.OspreySharp.Tasks
                     foreach (var inputFile in config.InputFiles)
                         inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
 
+                    // Compute the task validity key once so each per-file
+                    // .MergeNode.osprey.task sidecar carries an identical
+                    // key. AnalysisPipeline.WriteTaskSidecars also writes
+                    // these at end-of-Run, but that step is bypassed when
+                    // OspreyDiagnostics.ExitAfterDump calls Environment.Exit
+                    // (the test-snapshot stage7 / OSPREY_STAGE7_PROTEIN_FDR_ONLY
+                    // path). Writing inline next to each 2nd-pass binary
+                    // makes the per-file resume contract survive that
+                    // early exit, so a downstream run sees a fully
+                    // resume-able boundary file pair (binary + validity
+                    // sidecar) for every file that completed.
+                    string taskValidityKey = ValidityKey(ctx);
+
                     int pass2Failures = 0;
                     int pass2Written = 0;
                     int pass2AlreadyOnDisk = 0;
@@ -155,6 +168,23 @@ namespace pwiz.OspreySharp.Tasks
                                 @"Failed to write 2nd-pass FDR sidecar for {0}: {1}",
                                 fileName, ex.Message));
                             pass2Failures++;
+                            continue;
+                        }
+                        // Inline per-file validity sidecar: same content
+                        // the end-of-Run WriteTaskSidecars would produce,
+                        // written immediately so an early Environment.Exit
+                        // does not strand the binary without its metadata.
+                        try
+                        {
+                            TaskValiditySidecar.Write(pass2Path, Name, Program.VERSION,
+                                taskValidityKey,
+                                new[] { ParquetScoreCache.GetScoresPath(inputFile3) });
+                        }
+                        catch (Exception ex)
+                        {
+                            ctx.LogWarning(string.Format(
+                                @"Failed to write {0} sidecar for {1}: {2}",
+                                Name, pass2Path, ex.Message));
                         }
                     }
                     if (pass2Failures == 0 && pass2Written > 0)
