@@ -20,6 +20,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- High allocation-pressure phases (DIA-Umpire MS2 processing across many parallel
+         windows) leave workstation GC with a fat committed heap that doesn't shrink between
+         collections. ConserveMemory=9 (max) makes the GC return committed pages to the OS
+         after collections, dropping peak working set by ~40% on the MRC5-20min DIA-Umpire
+         fixture (1085 → 623 MiB) with ~10% wall-time penalty. Safe for all msconvert flows
+         since none are latency-critical. Equivalent to setting DOTNET_GCConserveMemory=9. -->
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="9" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Util\Util.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\MsData\MsData.csproj" />
