@@ -74,40 +74,32 @@ namespace pwiz.OspreySharp.Tasks
     /// <c>Osprey-workflow.html</c> view -- each input file's rescore is
     /// independent of the others.
     ///
-    /// Two entry methods on a single (parameterless-constructed) instance:
-    /// <list type="bullet">
-    ///   <item>
-    ///     <see cref="Run"/> — invoked by <see cref="AnalysisPipeline"/>'s
-    ///     task driver during a straight-through pipeline run. Reads the
-    ///     upstream state from sibling tasks through
-    ///     <c>ctx.GetTask&lt;PerFileScoringTask&gt;()</c> and
-    ///     <c>ctx.GetTask&lt;FirstJoinTask&gt;()</c>, dispatches into
-    ///     <see cref="ExecuteRescore"/>, then runs the per-process
-    ///     diagnostic-writer close + cross-impl bisection dump.
-    ///   </item>
-    ///   <item>
-    ///     <see cref="RunWorker"/> — entry point for the
-    ///     <c>--join-at-pass=1 --no-join</c> worker mode. Loads the
-    ///     library, hydrates the boundary-file pair from sidecars,
-    ///     applies worker compaction, computes per-file consensus
-    ///     targets in-method, then dispatches into
-    ///     <see cref="ExecuteRescore"/>. Pass 2 will fold this into
-    ///     the registry path by moving the hydration onto the
-    ///     upstream producers' lazy-rehydrate accessors.
-    ///   </item>
-    /// </list>
-    /// Inherits the scoring engine (RunCoelutionScoring, LoadLibrary,
+    /// Single entry point: <see cref="Run"/> is invoked by
+    /// <see cref="AnalysisPipeline"/>'s task driver during both
+    /// straight-through pipeline runs and the stage6 worker mode
+    /// (<c>--join-at-pass=1 --no-join --input-scores</c>). The worker
+    /// mode previously had a separate <c>RunWorker</c> entry that
+    /// hand-assembled the upstream hydration; Phase C collapsed that
+    /// path so the canonical pipeline's StartAt/StopAfter + the
+    /// upstream tasks' lazy-rehydrate accessors handle it. Run reads
+    /// upstream state from sibling tasks through
+    /// <c>ctx.GetTask&lt;PerFileScoringTask&gt;()</c> and
+    /// <c>ctx.GetTask&lt;FirstJoinTask&gt;()</c>, dispatches into
+    /// <see cref="ExecuteRescore"/>, then runs the per-process
+    /// diagnostic-writer close + cross-impl bisection dump. Inherits
+    /// the scoring engine (RunCoelutionScoring, LoadLibrary,
     /// GenerateDecoys, ExtractIsolationWindows, ...) from
     /// <see cref="AbstractScoringTask"/>.
     /// </summary>
     internal sealed class PerFileRescoreTask : AbstractScoringTask
     {
-        // Captured during Run / RunWorker so MergeNodeTask (downstream)
-        // can reach the post-rescore version. Per the ownership-transfer
-        // semantics of the pipeline: this task is the producer of the
-        // post-rescore perFileEntries; consumers query us rather than
-        // PerFileScoringTask. When Run is a no-op (DidPlan = false) the
-        // list reference falls through unchanged from PerFileScoringTask.
+        // Captured during Run so MergeNodeTask (downstream) can reach
+        // the post-rescore version. Per the ownership-transfer semantics
+        // of the pipeline: this task is the producer of the post-rescore
+        // perFileEntries; consumers query us rather than
+        // PerFileScoringTask. When Run is a no-op (no planning state)
+        // the list reference falls through unchanged from
+        // PerFileScoringTask.
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
 
         // Phase B lazy-rehydrate gate. See PerFileScoringTask for the
@@ -130,7 +122,7 @@ namespace pwiz.OspreySharp.Tasks
             if (!_runOrHydrated) Run(ctx);
             if (_perFileEntries == null)
                 throw new InvalidOperationException(
-                    @"PerFileRescoreTask.GetPerFileEntries called before Run / RunWorker populated the field.");
+                    @"PerFileRescoreTask.GetPerFileEntries called before Run populated the field.");
             return _perFileEntries;
         }
 
@@ -173,24 +165,44 @@ namespace pwiz.OspreySharp.Tasks
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
             _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 
-            // Self-gate on FirstJoinTask: rescore + reconciliation only
-            // run when planning actually produced state (multi-file with
-            // Reconciliation.Enabled, not --join-at-pass=2). When
-            // planning was skipped, this task is a no-op; downstream
-            // MergeNodeTask still gets _perFileEntries via our accessor
-            // (falls through to the upstream reference). No sidecar
-            // delete on the no-op path: a lazy-hydrate call from a
-            // downstream task must not invalidate prior-run sidecars.
+            // Self-gate: rescore + reconciliation only run when there is
+            // planning state to act on AND the rescore hasn't already been
+            // done upstream. State comes from either FirstJoinTask's
+            // planning block (in-process pipeline, DidPlan=true) or
+            // PerFileScoringTask's probe-the-disk bundle (collapsed worker
+            // path, DidPlan=false but bundle != null). A 2nd-pass FDR
+            // sidecar already on disk for any file is the signal that the
+            // rescore engine has already produced the reconciled output;
+            // re-running it would re-apply reconciliation actions on top
+            // of already-reconciled values, so this branch falls back to
+            // the no-op alongside the no-state case. Probe-the-disk on
+            // 2nd-pass sidecar presence replaces the prior
+            // ExpectReconciledInput gate (Phase C: mechanism-driven, not
+            // flag-driven). Downstream MergeNodeTask still gets
+            // _perFileEntries via our accessor (falls through to the
+            // upstream reference).
             var firstJoin = ctx.GetTask<FirstJoinTask>();
-            if (!firstJoin.DidPlan(ctx))
+            bool didPlan = firstJoin.DidPlan(ctx);
+            var rescoreBundle = perFileScoring.GetRescoreInputs(ctx);
+            bool anyPass2Present = false;
+            if (ctx.Config.InputFiles != null)
+            {
+                foreach (var inputFile in ctx.Config.InputFiles)
+                {
+                    if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
+                    {
+                        anyPass2Present = true;
+                        break;
+                    }
+                }
+            }
+            if (!didPlan && (rescoreBundle == null || anyPass2Present))
                 return true;
 
-            // About to overwrite per-file .scores.parquet with rescored
-            // content: clear stale sidecars first so a mid-Run crash
-            // doesn't leave a false-positive sidecar pointing at the
-            // partially-written parquet.
-            foreach (var output in Outputs(ctx))
-                TaskValiditySidecar.Delete(output, Name);
+            // Per-file sidecar lifecycle (delete-before / write-after) is
+            // handled inside ExecuteRescore's loop so a per-file skip can
+            // preserve the valid sidecars for already-rescored files and
+            // only invalidate the file(s) about to be re-rescored.
 
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
@@ -227,269 +239,15 @@ namespace pwiz.OspreySharp.Tasks
             return true;
         }
 
-        /// <summary>
-        /// Top-level entry point for the <c>--join-at-pass=1 --no-join</c>
-        /// per-file rescore worker. Mirrors <c>run_rescore</c> in
-        /// <c>osprey/crates/osprey/src/rescore.rs</c>.
-        ///
-        /// Synthesizes <c>config.InputFiles</c> from <c>config.InputScores</c>
-        /// (mzML stems derived from parquet stems), loads the spectral
-        /// library, hydrates the boundary file pair via
-        /// <see cref="RescoreHydration.HydrateForRescore"/>, applies worker
-        /// compaction via <see cref="RescoreCompaction.Apply"/>, computes
-        /// per-file multi-charge consensus targets from the compacted
-        /// stubs, builds the per-file original RT calibration map by
-        /// loading each sibling <c>.calibration.json</c>, then dispatches
-        /// to <see cref="ExecuteRescore"/>.
-        /// </summary>
-        internal int RunWorker(OspreyConfig config)
-        {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            // Init _ctx so the inherited engine methods (RunCoelutionScoring,
-            // etc.) can log via the same callbacks the in-process pipeline uses.
-            // Worker mode's "pipeline" is just this task; the upstream-task
-            // hydration that the in-process flow gets through ctx.GetTask
-            // happens inside this method (see below) until Pass 2 moves it
-            // onto the producer tasks' accessors.
-            _ctx = new PipelineContext(config, new OspreyTask[] { this },
-                Program.LogInfo, Program.LogWarning, Program.LogError);
-            if (config.InputScores == null || config.InputScores.Count == 0)
-            {
-                _ctx.LogError(
-                    "--join-at-pass=1 --no-join requires --input-scores <path...>.");
-                return 1;
-            }
-
-            // Synthesize config.InputFiles from --input-scores so
-            // ExecuteRescore's file_name_to_idx can map file_name
-            // back to a real (synthetic) input path. Mirrors Rust's
-            // run_analysis idempotent synthesis at pipeline.rs ~line 3144.
-            if (config.InputFiles == null || config.InputFiles.Count == 0)
-            {
-                var synthetic = new List<string>(config.InputScores.Count);
-                foreach (var p in config.InputScores)
-                    synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
-                config.InputFiles = synthetic;
-            }
-
-            _ctx.LogInfo(string.Format(
-                "--join-at-pass=1 --no-join: per-file rescore worker starting on {0} parquet(s)",
-                config.InputScores.Count));
-
-            // Library loading uses the same path the in-process pipeline does,
-            // including the .libcache fast-path.
-            List<LibraryEntry> fullLibrary;
-            try
-            {
-                fullLibrary = LoadLibrary(config);
-            }
-            catch (Exception ex)
-            {
-                _ctx.LogError(string.Format(
-                    "--join-at-pass=1 --no-join: library load failed: {0}", ex.Message));
-                return 1;
-            }
-            // Decoy generation (mirror the in-process flow's call site at
-            // AnalysisPipeline.Run line 132). Worker needs the decoys in
-            // fullLibrary so subset_library produces the full target+decoy
-            // set ScoreCandidate expects.
-            if (!config.DecoysInLibrary)
-            {
-                List<LibraryEntry> validTargets;
-                var decoys = GenerateDecoys(fullLibrary, config, out validTargets);
-                fullLibrary = new List<LibraryEntry>(validTargets.Count + decoys.Count);
-                fullLibrary.AddRange(validTargets);
-                fullLibrary.AddRange(decoys);
-            }
-
-            // Hydrate boundary file pair -> RescoreInputs.
-            RescoreInputs inputs;
-            try
-            {
-                inputs = RescoreHydration.HydrateForRescore(config.InputScores);
-            }
-            catch (Exception ex)
-            {
-                _ctx.LogError(string.Format(
-                    "--join-at-pass=1 --no-join: hydration failed: {0}", ex.Message));
-                return 1;
-            }
-            _ctx.LogInfo(string.Format(
-                "Hydrated {0} file(s); {1} pre-compaction stubs, {2} reconciliation actions, " +
-                "{3} gap-fill candidates, {4} refined RT calibration(s)",
-                inputs.PerFileEntries.Count,
-                inputs.TotalStubs,
-                inputs.TotalActions,
-                inputs.TotalGapFillTargets,
-                inputs.RefinedCalibrations.Count));
-
-            // Cross-impl bisection seam: dump the per-precursor q-values
-            // so the result can be diffed against Rust's
-            // rust_stage5_percolator.tsv via Compare-Percolator.ps1.
-            if (OspreyDiagnostics.DumpPercolator)
-                OspreyDiagnostics.WriteStage5PercolatorDump(inputs.PerFileEntries);
-
-            // Worker compaction (mirror in-process first-pass FDR drop).
-            RescoreCompaction.Stats compactStats;
-            try
-            {
-                compactStats = RescoreCompaction.Apply(inputs, config);
-            }
-            catch (Exception ex)
-            {
-                _ctx.LogError(string.Format(
-                    "--join-at-pass=1 --no-join: compaction failed: {0}", ex.Message));
-                return 1;
-            }
-            _ctx.LogInfo(string.Format(
-                "Worker compaction: {0} -> {1} entries ({2} surviving base_ids), " +
-                "{3} reconciliation actions retained ({4} dropped)",
-                compactStats.EntriesBefore,
-                compactStats.EntriesAfter,
-                compactStats.FirstPassBaseIds,
-                inputs.ReconciliationActions.Count,
-                compactStats.DroppedActions));
-
-            // Compute per-file multi-charge consensus targets from the
-            // compacted stubs. This is fresh per-file work -- the planner's
-            // reconciliation actions cover cross-run targets, but
-            // multi-charge consensus is a within-file decision and the
-            // worker recomputes it from the same FDR threshold the
-            // in-process flow uses.
-            var perFileConsensusTargets =
-                new Dictionary<string,
-                    IReadOnlyList<(int Index, double Apex, double Start, double End)>>();
-            int totalConsensusTargets = 0;
-            foreach (var kvp in inputs.PerFileEntries)
-            {
-                var targets = MultiChargeConsensus.SelectRescoreTargets(kvp.Value, config.RunFdr);
-                perFileConsensusTargets[kvp.Key] = targets;
-                totalConsensusTargets += targets.Count;
-            }
-            _ctx.LogInfo(string.Format(
-                "Worker multi-charge consensus: {0} entries to re-score across {1} files",
-                totalConsensusTargets, inputs.PerFileEntries.Count));
-
-            // Build per-file original RT calibration map from sibling
-            // .calibration.json. The refinedCalibrations dict (from the
-            // reconciliation envelope) is the preferred source inside the
-            // rescore loop, but the original cal is the fallback when no
-            // refined cal was persisted for a file (Stage 5 LOESS refit
-            // failed). Mirrors the per-file calibration load in
-            // rescore::run_rescore at lines 367-413.
-            var perFileCalibrations = new Dictionary<string, RTCalibration>();
-            foreach (var kvp in inputs.PerFileEntries)
-            {
-                string fileName = kvp.Key;
-                int inputIdx;
-                bool found = false;
-                for (int i = 0; i < config.InputFiles.Count; i++)
-                {
-                    if (Path.GetFileNameWithoutExtension(config.InputFiles[i]) == fileName)
-                    {
-                        inputIdx = i;
-                        found = true;
-                        AddIfNotNull(perFileCalibrations, fileName,
-                            LoadOriginalRtCalibration(config.InputFiles[inputIdx]));
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    _ctx.LogWarning(string.Format(
-                        "Worker: no input_files entry for {0} (no original cal loaded)", fileName));
-                }
-            }
-            _ctx.LogInfo(string.Format(
-                "Worker original calibrations: {0}/{1} files loaded",
-                perFileCalibrations.Count, inputs.PerFileEntries.Count));
-
-            // Per-file parquet paths from --input-scores. Stage 6
-            // write-back rewrites these in place with reconciliation
-            // metadata, mirroring how Rust's worker uses
-            // per_file_cache_paths.
-            var perFileParquetPaths = new Dictionary<string, string>();
-            for (int i = 0; i < config.InputScores.Count; i++)
-            {
-                string parquetPath = config.InputScores[i];
-                string fileName = RescoreHydration.SyntheticInputFromParquet(parquetPath);
-                fileName = Path.GetFileNameWithoutExtension(fileName);
-                if (!string.IsNullOrEmpty(fileName))
-                    perFileParquetPaths[fileName] = parquetPath;
-            }
-
-            // Phases 1 + 2 + 3 of the rescore engine. Phase 3 rewrites
-            // each per-file .scores.parquet with reconciliation metadata.
-            RescoreStats stats;
-            try
-            {
-                stats = ExecuteRescore(
-                    inputs.PerFileEntries,
-                    perFileConsensusTargets,
-                    inputs.ReconciliationActions,
-                    inputs.RefinedCalibrations,
-                    perFileCalibrations,
-                    inputs.PerFileGapFill,
-                    perFileParquetPaths,
-                    fullLibrary,
-                    config);
-            }
-            catch (Exception ex)
-            {
-                _ctx.LogError(string.Format(
-                    "--join-at-pass=1 --no-join: rescore failed: {0}", ex.Message));
-                _ctx.LogError(ex.StackTrace);
-                return 1;
-            }
-
-            _ctx.LogInfo(string.Format(
-                "Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions, " +
-                "{2} gap-fill via CWT, {3} gap-fill via forced)",
-                stats.TotalRescored, stats.TotalReconciliation,
-                stats.TotalGapCwt, stats.TotalGapForced));
-
-            // Cross-impl bisection seam: dump per-precursor state
-            // immediately after the rescore loop. Mirrors Rust's
-            // dump_stage6_rescored call from rescore::run_rescore.
-            if (OspreyDiagnostics.DumpRescored)
-            {
-                OspreyDiagnostics.WriteStage6RescoredDump(inputs.PerFileEntries);
-                if (OspreyDiagnostics.RescoredOnly)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
-            }
-
-            // Flush the median-polish inputs dump (no-op when
-            // OSPREY_DUMP_MP_INPUTS is unset).
-            OspreyDiagnostics.CloseMpInputsDump();
-
-            // Flush the predict() inputs/outputs dump (no-op when
-            // OSPREY_DUMP_PREDICT_RT is unset).
-            OspreyDiagnostics.ClosePredictRtDump();
-
-            // Flush the CWT path summary dump (no-op when
-            // OSPREY_DUMP_CWT_PATH is unset).
-            OspreyDiagnostics.CloseCwtPathDump();
-
-            _ctx.LogInfo(
-                "--join-at-pass=1 --no-join: rescore complete. Reconciled .scores.parquet " +
-                "files written. (C# parity gap: fragment_mzs / fragment_intensities / " +
-                "ref_xic_* / bounds_area / bounds_snr columns null, tracked for follow-up.)");
-            return 0;
-        }
-
-        /// <summary>
-        /// Insert <paramref name="value"/> into <paramref name="dict"/> at
-        /// <paramref name="key"/> only when <paramref name="value"/> is
-        /// non-null. Lifts the null-check out of the call site so
-        /// ReSharper's null-flow analysis doesn't flag the indexer
-        /// assignment for an unannotated possibly-null source.
-        /// </summary>
-        private static void AddIfNotNull(Dictionary<string, RTCalibration> dict,
-            string key, RTCalibration value)
-        {
-            if (value != null)
-                dict[key] = value;
-        }
+        // RunWorker + its helpers (AddIfNotNull, LoadOriginalRtCalibration)
+        // were removed in Phase C. The stage6 worker mode
+        // (--join-at-pass=1 --no-join --input-scores) now routes through
+        // AnalysisPipeline.Run with StartAt = StopAfter =
+        // PerFileRescoreTask. Upstream state previously assembled in
+        // RunWorker (library load, hydration, compaction, consensus,
+        // calibration) is produced by PerFileScoringTask's joinOnly
+        // probe-the-disk path and consumed through the lazy-rehydrate
+        // accessors. Run() above is the only entry point.
 
         /// <summary>
         /// Phase 3 -- write the reconciled per-file <c>.scores.parquet</c>.
@@ -606,35 +364,6 @@ namespace pwiz.OspreySharp.Tasks
         }
 
         /// <summary>
-        /// Load the original (Stage 1-2) RT calibration for a file from its
-        /// sibling .calibration.json. Returns null if the JSON is missing,
-        /// has no model_params, or fails to parse.
-        /// </summary>
-        private RTCalibration LoadOriginalRtCalibration(string inputFile)
-        {
-            string parent = Path.GetDirectoryName(Path.GetFullPath(inputFile));
-            if (string.IsNullOrEmpty(parent))
-                return null;
-            string calPath = CalibrationIO.CalibrationPathForInput(inputFile, parent);
-            if (!File.Exists(calPath))
-                return null;
-            try
-            {
-                var calParams = CalibrationIO.LoadCalibration(calPath);
-                if (calParams.RtCalibration?.ModelParams == null)
-                    return null;
-                var mp = calParams.RtCalibration.ModelParams;
-                return RTCalibration.FromModelParams(
-                    mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
-                    calParams.RtCalibration.ResidualSD);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
         /// Execute the per-file Stage 6 rescore loop. Mirrors
         /// <c>rescore_per_file_loop</c> in
         /// <c>osprey/crates/osprey/src/pipeline.rs</c>.
@@ -721,11 +450,38 @@ namespace pwiz.OspreySharp.Tasks
             int totalGapCwt = 0;
             int totalGapForced = 0;
             int nTotalFiles = perFileEntries.Count;
+            string taskValidityKey = ValidityKey(_ctx);
 
             for (int fileNum = 0; fileNum < nTotalFiles; fileNum++)
             {
                 var fileName = perFileEntries[fileNum].Key;
                 var fdrEntries = perFileEntries[fileNum].Value;
+
+                // Per-file resume: if the file's reconciled parquet is
+                // already on disk with a matching <output>.PerFileRescore.osprey.task
+                // sidecar, skip the rescore for that file. Pairs with the
+                // worker (stage6) crash-resume contract: re-invoking the
+                // same CLI on the same inputs is a no-op for files whose
+                // rescore completed; only files missing a valid sidecar
+                // get re-rescored. The skipped file's in-memory entries
+                // remain at the pre-rescore state (1st-pass overlay)
+                // because the worker's StopAfter terminates the pipeline
+                // here -- no downstream consumer reads them.
+                bool hasParquetPath = perFileParquetPaths.TryGetValue(fileName, out string perFileParquetPath);
+                if (hasParquetPath
+                    && File.Exists(perFileParquetPath)
+                    && TaskValiditySidecar.IsValid(perFileParquetPath, Name, taskValidityKey))
+                {
+                    _ctx.LogInfo(string.Format(
+                        @"[file] {0}/{1} {2}: skipping (outputs valid)",
+                        fileNum + 1, nTotalFiles, fileName));
+                    continue;
+                }
+                // About to (re-)rescore this file: clear any stale sidecar
+                // so a mid-Run crash leaves no false-positive pointing at
+                // the partially-written parquet.
+                if (hasParquetPath)
+                    TaskValiditySidecar.Delete(perFileParquetPath, Name);
 
                 IReadOnlyList<(int Index, double Apex, double Start, double End)> consensusTargets;
                 if (!perFileConsensusTargets.TryGetValue(fileName, out consensusTargets))
@@ -1106,6 +862,29 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     WriteReconciledParquet(parquetPath, fdrEntries, fileName,
                         fullLibrary, config);
+
+                    // Per-file resume sidecar: write next to the
+                    // reconciled parquet so a subsequent invocation with
+                    // the same validity key can skip this file. The
+                    // pre-write delete above guarantees the sidecar
+                    // appears only after WriteReconciledParquet finished.
+                    var perFileInputs = new List<string>
+                    {
+                        FdrScoresSidecar.Pass1Path(inputFile),
+                    };
+                    if (config.Reconciliation != null && config.Reconciliation.Enabled)
+                        perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
+                    try
+                    {
+                        TaskValiditySidecar.Write(parquetPath, Name, Program.VERSION,
+                            taskValidityKey, perFileInputs);
+                    }
+                    catch (Exception ex)
+                    {
+                        _ctx.LogWarning(string.Format(
+                            @"  Failed to write {0} sidecar for {1}: {2}",
+                            Name, parquetPath, ex.Message));
+                    }
                 }
             }
 

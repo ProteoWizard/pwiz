@@ -89,10 +89,60 @@ namespace pwiz.OspreySharp.Tasks
         private bool _runOrHydrated;
 
         public bool DidPlan(PipelineContext ctx) { EnsureHydrated(ctx); return _didPlan; }
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileConsensusTargets; }
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions(PipelineContext ctx) { EnsureHydrated(ctx); return _reconciliationActions; }
-        public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _refinedCalibrations; }
-        public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileGapFillForRescore; }
+
+        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets(PipelineContext ctx)
+        {
+            EnsureHydrated(ctx);
+            if (_didPlan) return _perFileConsensusTargets;
+            return ConsensusTargetsFromBundleOrEmpty(ctx);
+        }
+
+        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions(PipelineContext ctx)
+        {
+            EnsureHydrated(ctx);
+            if (_didPlan) return _reconciliationActions;
+            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            return bundle != null ? bundle.ReconciliationActions : _reconciliationActions;
+        }
+
+        public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations(PipelineContext ctx)
+        {
+            EnsureHydrated(ctx);
+            if (_didPlan) return _refinedCalibrations;
+            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            return bundle != null ? bundle.RefinedCalibrations : _refinedCalibrations;
+        }
+
+        public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore(PipelineContext ctx)
+        {
+            EnsureHydrated(ctx);
+            if (_didPlan) return _perFileGapFillForRescore;
+            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            return bundle != null ? bundle.PerFileGapFill : _perFileGapFillForRescore;
+        }
+
+        // Bundle.PerFileConsensusTargets is null at hydration time (consensus
+        // is meaningful only post-compaction); compute on demand from the
+        // post-compaction stub list. Matches the worker's RunWorker-side
+        // multi-charge selection so the worker entry-path collapse keeps
+        // identical consensus output regardless of which producer task
+        // owned the hydration.
+        private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>
+            ConsensusTargetsFromBundleOrEmpty(PipelineContext ctx)
+        {
+            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            if (bundle == null) return _perFileConsensusTargets;
+            if (bundle.PerFileConsensusTargets != null) return bundle.PerFileConsensusTargets;
+            var computed = new Dictionary<string,
+                IReadOnlyList<(int Index, double Apex, double Start, double End)>>();
+            foreach (var kvp in bundle.PerFileEntries)
+            {
+                computed[kvp.Key] =
+                    MultiChargeConsensus.SelectRescoreTargets(kvp.Value, ctx.Config.RunFdr);
+            }
+            bundle.PerFileConsensusTargets = computed;
+            return computed;
+        }
 
         private void EnsureHydrated(PipelineContext ctx)
         {
@@ -137,36 +187,47 @@ namespace pwiz.OspreySharp.Tasks
             _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
+            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            // Probe-the-disk dispatch: when the upstream PerFileScoring
+            // task hydrated a rescore bundle from sibling sidecars on
+            // disk, Stage 5 work (Percolator first-pass FDR, first-pass
+            // protein FDR, 1st-pass sidecar write) and Stage 6 planning
+            // are already encoded in that bundle's q-values and
+            // reconciliation state. Run the bundle path in those cases;
+            // run the original full Stage 5+6 path otherwise. Single
+            // dispatch covers both stage7 (--join-at-pass=2) and the
+            // collapsed stage6 worker path, replacing the prior
+            // ExpectReconciledInput-only gate.
+            var bundle = perFileScoring.GetRescoreInputs(ctx);
             // Mid-Run crash safety: clear stale sidecars for the outputs
             // this task is about to produce. A crash before the matching
             // post-Run sidecar write leaves no false-positive sidecar
             // claiming the partially-written output is valid. Skipped on
-            // --join-at-pass=2 (ExpectReconciledInput) because that path
-            // only overlays existing 1st/2nd-pass sidecars onto in-memory
-            // stubs; it doesn't write Pass1Path or reconciliation.json,
-            // so the sidecar delete would invalidate valid outputs from
-            // an upstream straight-through run — and crucially, breaks
-            // resume on a lazy-hydrate path from a downstream task.
-            if (!config.ExpectReconciledInput)
+            // the bundle path because that path only overlays existing
+            // 1st/2nd-pass sidecars onto in-memory stubs; it doesn't write
+            // Pass1Path or reconciliation.json, so the sidecar delete
+            // would invalidate valid outputs from an upstream
+            // straight-through run -- and crucially, breaks resume on a
+            // lazy-hydrate path from a downstream task.
+            if (bundle == null)
             {
                 foreach (var output in Outputs(ctx))
                     TaskValiditySidecar.Delete(output, Name);
             }
-            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
             var perFileEntries = perFileScoring.GetPerFileEntries(ctx);
             var perFileCalibrations = perFileScoring.GetPerFileCalibrations(ctx);
             var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
             var fullLibrary = perFileScoring.GetFullLibrary(ctx);
 
             // Stage 5: First-pass FDR
-            // Skipped under --join-at-pass=2: the 1st-pass sidecar
-            // loaded above already carries the SVM scores + q-values
-            // from the straight-through pipeline run that produced
-            // the reconciled parquets. Re-running Percolator here
-            // would re-train SVMs on the same data and drift vs the
-            // sidecar. Mirrors Rust's compute_fdr_from_stubs skip
-            // (pipeline.rs:3916 "if !can_skip_fdr || expect_reconciled_input").
-            if (!config.ExpectReconciledInput)
+            // Skipped under the bundle path: the 1st-pass sidecar
+            // hydrated by PerFileScoringTask already carries the SVM
+            // scores + q-values from the straight-through pipeline run
+            // that produced the per-file boundary files. Re-running
+            // Percolator here would re-train SVMs on the same data and
+            // drift vs the sidecar. Mirrors Rust's compute_fdr_from_stubs
+            // skip (pipeline.rs:3916).
+            if (bundle == null)
             {
                 ctx.LogInfo(string.Empty);
                 ctx.LogInfo(string.Format(@"Running {0} FDR control on coelution results...",
@@ -180,7 +241,7 @@ namespace pwiz.OspreySharp.Tasks
             }
             else
             {
-                ctx.LogInfo(@"--join-at-pass=2: skipping first-pass Percolator (sidecar provides q-values).");
+                ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
             }
 
             // Log first-pass results
@@ -220,16 +281,15 @@ namespace pwiz.OspreySharp.Tasks
             // symmetric set. Sets RunProteinQvalue on every FdrEntry,
             // which Stage 6 reconciliation reads via the protein-rescue
             // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
-            // ("First-pass protein FDR"). Skipped on
-            // --join-at-pass=2: the 1st-pass FDR sidecar loaded above
-            // already carries RunProteinQvalue from the original
-            // straight-through pipeline. Re-running the deterministic
-            // protein-FDR computation on identical inputs would just
-            // overwrite the loaded values with the same numbers
-            // (~17s on Astral 1-file; saves duplicate work on every
-            // post-Stage-6 rehydration entry).
+            // ("First-pass protein FDR"). Skipped on the bundle path:
+            // the 1st-pass FDR sidecar already carries RunProteinQvalue
+            // from the original straight-through pipeline. Re-running
+            // the deterministic protein-FDR computation on identical
+            // inputs would just overwrite the loaded values with the
+            // same numbers (~17s on Astral 1-file; saves duplicate work
+            // on every post-Stage-6 rehydration entry).
             if (config.ProteinFdr.HasValue && perFileEntries.Count > 0
-                && !config.ExpectReconciledInput)
+                && bundle == null)
             {
                 ctx.LogInfo(string.Empty);
                 ctx.LogInfo(@"First-pass protein FDR");
@@ -255,13 +315,13 @@ namespace pwiz.OspreySharp.Tasks
             // around persist_fdr_scores at line ~3180. Stage 6 workers
             // re-derive the post-compaction set by applying the q-value
             // threshold themselves, so they need every entry's q-values
-            // — not just the survivors. Skipped on --join-at-pass=2:
+            // -- not just the survivors. Skipped on the bundle path:
             // the 1st-pass sidecar is what we just LOADED from to seed
             // entries, so re-writing produces the same bytes (any
             // divergence would be a sidecar-load bug, not a write
-            // requirement). Saves ~6s I/O per --join-at-pass=2 invocation.
+            // requirement). Saves ~6s I/O per bundle-hydrated invocation.
             int fdrSidecarFailures = 0;
-            if (!config.ExpectReconciledInput)
+            if (bundle == null)
             {
                 fdrSidecarFailures = WriteFdrScoresSidecars(
                     perFileEntries, perFileParquetPaths, config);
@@ -278,41 +338,62 @@ namespace pwiz.OspreySharp.Tasks
 
             if (perFileEntries.Count > 0)
             {
-                var firstPassBaseIds = new HashSet<uint>();
-                double peptideGate = config.RunFdr;
-                double proteinGate = config.ProteinFdr ?? 0.0;
-                foreach (var kvp in perFileEntries)
+                if (bundle != null)
                 {
-                    foreach (var entry in kvp.Value)
+                    // Bundle path: delegate to RescoreCompaction.Apply so
+                    // the pre-compaction (file, vec_idx) keys in
+                    // bundle.ReconciliationActions get rebuilt to
+                    // post-compaction indices. Without this rebuild,
+                    // PerFileRescoreTask's ExecuteRescore would look up
+                    // reconcile actions at stale indices and overlay
+                    // boundaries onto the wrong entries -- the exact
+                    // failure the worker's hand-rolled compaction at
+                    // RescoreCompaction.Apply was written to avoid.
+                    var stats = RescoreCompaction.Apply(bundle, config);
+                    ctx.LogInfo(string.Format(
+                        @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
+                        stats.EntriesBefore, stats.EntriesAfter,
+                        stats.FirstPassBaseIds, stats.DroppedActions));
+                }
+                else
+                {
+                    var firstPassBaseIds = new HashSet<uint>();
+                    double peptideGate = config.RunFdr;
+                    double proteinGate = config.ProteinFdr ?? 0.0;
+                    foreach (var kvp in perFileEntries)
                     {
-                        if (entry.IsDecoy)
-                            continue;
-                        if (entry.RunPeptideQvalue <= peptideGate ||
-                            (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
+                        foreach (var entry in kvp.Value)
                         {
-                            firstPassBaseIds.Add(entry.EntryId & BASE_ID_MASK);
+                            if (entry.IsDecoy)
+                                continue;
+                            if (entry.RunPeptideQvalue <= peptideGate ||
+                                (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
+                            {
+                                firstPassBaseIds.Add(entry.EntryId & BASE_ID_MASK);
+                            }
                         }
                     }
+                    int beforeCount = 0, afterCount = 0;
+                    foreach (var kvp in perFileEntries)
+                    {
+                        beforeCount += kvp.Value.Count;
+                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
+                        kvp.Value.TrimExcess();
+                        afterCount += kvp.Value.Count;
+                    }
+                    ctx.LogInfo(string.Format(
+                        @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
+                        beforeCount, afterCount, firstPassBaseIds.Count));
                 }
-                int beforeCount = 0, afterCount = 0;
-                foreach (var kvp in perFileEntries)
-                {
-                    beforeCount += kvp.Value.Count;
-                    kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
-                    kvp.Value.TrimExcess();
-                    afterCount += kvp.Value.Count;
-                }
-                ctx.LogInfo(string.Format(
-                    @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
-                    beforeCount, afterCount, firstPassBaseIds.Count));
             }
 
-            // --join-at-pass=2: re-load the 2nd-pass FDR sidecar onto
-            // the post-compaction stub list. The 2nd-pass scores +
-            // q-values are what Stage 7 (protein FDR) and the blib
-            // writer consume. Loading happens AFTER compaction
+            // Re-load the 2nd-pass FDR sidecar onto the post-compaction
+            // stub list when every file has a 2nd-pass sidecar that
+            // matches the current MergeNode validity key. The 2nd-pass
+            // scores + q-values are what Stage 7 (protein FDR) and the
+            // blib writer consume. Loading happens AFTER compaction
             // because the 2nd-pass sidecar was written from the
-            // post-compaction state — overlaying it before compaction
+            // post-compaction state -- overlaying it before compaction
             // would either silently miss records (if the pre-compaction
             // entries dict happens to also contain compaction-dropped
             // entry_ids that the 2nd-pass never saw) or scramble
@@ -322,7 +403,44 @@ namespace pwiz.OspreySharp.Tasks
             // so the constraint here is correctness-of-state, not
             // size-equality. Mirrors Rust's load-order inversion at
             // pipeline.rs:4030-4076.
-            if (config.ExpectReconciledInput)
+            //
+            // Gate is "binary present + sidecar (when one exists) is
+            // valid". A stale 2nd-pass sidecar left over from a prior
+            // run with different config is rejected; bare binaries with
+            // no sidecar at all are treated as trusted boundary inputs.
+            // The "absent sidecar = trusted" leg is what lets Test-
+            // Regression freeze Rust outputs (which don't carry
+            // OspreySharp's .osprey.task sidecars) as C# inputs without
+            // having to mint sidecars at freeze time. Test-Snapshot
+            // separately propagates the sidecars MergeNodeTask writes
+            // inline, so on a same-impl boundary the validity-key check
+            // is exercised.
+            bool allPass2Valid = config.InputFiles != null && perFileEntries.Count > 0;
+            if (allPass2Valid)
+            {
+                var mergeNode = ctx.GetTask<MergeNodeTask>();
+                string mergeNodeValidityKey = mergeNode.ValidityKey(ctx);
+                string mergeNodeTaskName = mergeNode.Name;
+                foreach (var inputFile in config.InputFiles)
+                {
+                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+                    if (!File.Exists(pass2Path))
+                    {
+                        allPass2Valid = false;
+                        break;
+                    }
+                    string sidecarPath = TaskValiditySidecar.PathFor(
+                        pass2Path, mergeNodeTaskName);
+                    if (File.Exists(sidecarPath)
+                        && !TaskValiditySidecar.IsValid(
+                            pass2Path, mergeNodeTaskName, mergeNodeValidityKey))
+                    {
+                        allPass2Valid = false;
+                        break;
+                    }
+                }
+            }
+            if (allPass2Valid)
             {
                 // Same input-by-fileName map shape as the 1st-pass
                 // load above (sidecar paths derive from input file
@@ -342,7 +460,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (!inputByFileName2.TryGetValue(fileName, out string inputFile2))
                     {
                         ctx.LogError(string.Format(
-                            @"--join-at-pass=2: no synthetic input path for {0}", fileName));
+                            @"2nd-pass overlay: no synthetic input path for {0}", fileName));
                         ctx.ExitCode = 1;
                         return false;
                     }
@@ -363,7 +481,7 @@ namespace pwiz.OspreySharp.Tasks
                         if (!File.Exists(pass1Path))
                         {
                             ctx.LogError(string.Format(
-                                @"--join-at-pass=2: neither 2nd-pass nor 1st-pass FDR " +
+                                @"2nd-pass overlay: neither 2nd-pass nor 1st-pass FDR " +
                                 @"sidecar found for {0} (looked at {1} and {2}). Re-run a " +
                                 @"straight-through pipeline to produce them.",
                                 fileName, sidecarPath, pass1Path));
@@ -373,7 +491,7 @@ namespace pwiz.OspreySharp.Tasks
                         sidecarPath = pass1Path;
                         expectedPass = FdrScoresSidecar.Pass.FirstPass;
                         ctx.LogInfo(string.Format(
-                            @"--join-at-pass=2: 2nd-pass sidecar missing for {0}; " +
+                            @"2nd-pass overlay: 2nd-pass sidecar missing for {0}; " +
                             @"falling back to 1st-pass (matches Rust single-file behavior)",
                             fileName));
                     }
@@ -391,14 +509,14 @@ namespace pwiz.OspreySharp.Tasks
                     if (!FdrScoresSidecar.TryReadOverlay(sidecarPath, entriesByEntryId, expectedPass))
                     {
                         ctx.LogError(string.Format(
-                            @"--join-at-pass=2: sidecar at {0} failed to load (expected {1}).",
+                            @"2nd-pass overlay: sidecar at {0} failed to load (expected {1}).",
                             sidecarPath, expectedPass));
                         ctx.ExitCode = 1;
                         return false;
                     }
                 }
                 ctx.LogInfo(string.Format(
-                    @"--join-at-pass=2: loaded 2nd-pass FDR sidecars for {0} file(s)",
+                    @"2nd-pass overlay: loaded sidecars for {0} file(s)",
                     perFileEntries.Count));
             }
 
@@ -417,15 +535,16 @@ namespace pwiz.OspreySharp.Tasks
             // multi-charge rescore must still execute to match Rust's
             // single-file behavior.
             //
-            // --join-at-pass=2 SKIPS Stage 6 entirely. The reconciled
-            // .scores.parquet + 2nd-pass sidecar combination already
-            // carries the post-Stage-6 state (including any rescored
-            // entries' final SVM scores). Re-running Stage 6 here
-            // would re-apply multi-charge consensus + reconciliation
-            // on top of already-reconciled data and drift vs the
-            // straight-through pipeline. Mirrors Rust's
-            // pipeline.rs:3823 expect_reconciled_input gate.
-            if (!config.ExpectReconciledInput
+            // Stage 6 planning is SKIPPED on the bundle path: the bundle's
+            // ReconciliationActions / RefinedCalibrations / PerFileGapFill
+            // already carry the Stage 6 planner output from the
+            // straight-through pipeline run that produced the boundary
+            // files on disk. Re-planning would re-apply multi-charge
+            // consensus + reconciliation on top of the already-reconciled
+            // state and drift vs the straight-through pipeline. Mirrors
+            // Rust's pipeline.rs:3823 expect_reconciled_input gate,
+            // generalized to "Stage 6 state already exists upstream".
+            if (bundle == null
                 && perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
             {
                 ctx.LogInfo(string.Empty);
