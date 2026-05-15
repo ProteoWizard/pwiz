@@ -89,8 +89,7 @@ namespace pwiz.OspreySharp.Tasks
 
         // Outputs reached by downstream tasks through ctx.GetTask<PerFileScoringTask>().
         // Defaults are non-null empty collections so callers querying
-        // outputs from a not-yet-run task (e.g. worker mode before lazy
-        // rehydrate lands in Pass 2) never NPE on the accessor.
+        // outputs from a not-yet-run task never NPE on the accessor.
         private List<LibraryEntry> _fullLibrary = new List<LibraryEntry>();
         private Dictionary<uint, LibraryEntry> _libraryById = new Dictionary<uint, LibraryEntry>();
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries
@@ -100,14 +99,63 @@ namespace pwiz.OspreySharp.Tasks
         private Dictionary<string, string> _perFileParquetPaths
             = new Dictionary<string, string>();
 
-        public List<LibraryEntry> GetFullLibrary() => _fullLibrary;
-        public Dictionary<uint, LibraryEntry> GetLibraryById() => _libraryById;
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries() => _perFileEntries;
-        public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations() => _perFileCalibrations;
-        public Dictionary<string, string> GetPerFileParquetPaths() => _perFileParquetPaths;
+        // Phase B lazy-rehydrate gate. Set to true at the start of Run
+        // and by EnsureHydrated. Once set, neither path re-executes the
+        // body (multiple accessors querying state from a single skipped
+        // task all hit a fast no-op after the first hydration).
+        private bool _runOrHydrated;
+
+        public List<LibraryEntry> GetFullLibrary(PipelineContext ctx) { EnsureHydrated(ctx); return _fullLibrary; }
+        public Dictionary<uint, LibraryEntry> GetLibraryById(PipelineContext ctx) { EnsureHydrated(ctx); return _libraryById; }
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileEntries; }
+        public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileCalibrations; }
+        public Dictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileParquetPaths; }
+
+        /// <summary>
+        /// Lazy-rehydrate seam: when a downstream task queries one of
+        /// this task's outputs and <see cref="Run"/> has not executed
+        /// (i.e. this task is before <see cref="PipelineContext.StartAtTask"/>),
+        /// invoke Run so the same code path that populates state on a
+        /// straight-through run also populates state here. Idempotent;
+        /// subsequent calls are no-ops.
+        /// </summary>
+        private void EnsureHydrated(PipelineContext ctx)
+        {
+            if (_runOrHydrated) return;
+            Run(ctx);
+        }
+
+        // Phase B resume surface: the library and every input mzML are
+        // read; per-file .scores.parquet + .calibration.json are written.
+        // ValidityKey is the default (search + library hashes) -- those
+        // are the only parameters that affect per-file scoring output.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.LibrarySource != null && !string.IsNullOrEmpty(ctx.Config.LibrarySource.Path))
+                yield return ctx.Config.LibrarySource.Path;
+            if (ctx.Config.InputFiles != null)
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return input;
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+            {
+                yield return ParquetScoreCache.GetScoresPath(input);
+                string calDir = Path.GetDirectoryName(Path.GetFullPath(input)) ?? @".";
+                yield return CalibrationIO.CalibrationPathForInput(input, calDir);
+            }
+        }
 
         public override bool Run(PipelineContext ctx)
         {
+            // Idempotent re-entry guard: a lazy-rehydrate via an
+            // accessor may have already executed this task body; the
+            // driver loop's call here is then a no-op.
+            if (_runOrHydrated) return true;
+            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
 
@@ -353,9 +401,11 @@ namespace pwiz.OspreySharp.Tasks
                 // Single file: process directly (no parallel overhead)
                 string inputFile = config.InputFiles[0];
                 string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                ctx.LogInfo(string.Empty);
-                ctx.LogInfo(string.Format(@"===== Processing file 1/1: {0} =====", inputFile));
-                var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+                string validityKey = ValidityKey(ctx);
+                var fileResult = ScoreOrLoadForFile(
+                    inputFile, fileName, 0, 1,
+                    fullLibrary, config, parquetFooterMetadata,
+                    perFileCalibrations, validityKey, ctx);
                 if (fileResult != null)
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
             }
@@ -368,13 +418,15 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.LogInfo(string.Format(
                     @"[BENCH] OSPREY_MAX_PARALLEL_FILES=1 - processing {0} files sequentially",
                     config.InputFiles.Count));
+                string validityKey = ValidityKey(ctx);
                 for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    ctx.LogInfo(string.Format(@"===== Processing file {0}/{1}: {2} =====",
-                        fileIdx + 1, config.InputFiles.Count, inputFile));
-                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+                    var fileResult = ScoreOrLoadForFile(
+                        inputFile, fileName, fileIdx, config.InputFiles.Count,
+                        fullLibrary, config, parquetFooterMetadata,
+                        perFileCalibrations, validityKey, ctx);
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                 }
@@ -391,14 +443,16 @@ namespace pwiz.OspreySharp.Tasks
                         @"[BENCH] OSPREY_MAX_PARALLEL_FILES={0} - capping parallel file count",
                         maxParallelFiles));
                 }
+                string validityKey = ValidityKey(ctx);
                 var fileResults = new ConcurrentDictionary<int, KeyValuePair<string, List<FdrEntry>>>();
                 Parallel.For(0, config.InputFiles.Count, parallelOpts, fileIdx =>
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    ctx.LogInfo(string.Format(@"===== Processing file {0}/{1}: {2} =====",
-                        fileIdx + 1, config.InputFiles.Count, inputFile));
-                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+                    var fileResult = ScoreOrLoadForFile(
+                        inputFile, fileName, fileIdx, config.InputFiles.Count,
+                        fullLibrary, config, parquetFooterMetadata,
+                        perFileCalibrations, validityKey, ctx);
                     if (fileResult != null)
                         fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
                 });
@@ -517,6 +571,137 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Phase B per-file resume: if the file's <c>.scores.parquet</c>
+        /// already exists with a matching <c>.PerFileScoring.osprey.task</c>
+        /// sidecar (validity key matches the current config), load the
+        /// stubs + PIN features + best-effort calibration from disk and
+        /// skip <see cref="ProcessFile"/>. Otherwise clear any stale
+        /// sidecar, run <see cref="ProcessFile"/>, and on success write
+        /// a fresh sidecar. The pre-Run delete is the per-file analogue
+        /// of the task-level safety net other tasks use: a mid-Run crash
+        /// leaves no sidecar pointing at the partial parquet, so the
+        /// resume invocation reprocesses that file.
+        ///
+        /// Returns the per-file <see cref="FdrEntry"/> list (from the
+        /// disk load or <see cref="ProcessFile"/>), or <c>null</c> on
+        /// <see cref="ProcessFile"/> failure.
+        /// </summary>
+        private List<FdrEntry> ScoreOrLoadForFile(
+            string inputFile,
+            string fileName,
+            int fileIdx,
+            int totalFiles,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config,
+            Dictionary<string, string> parquetFooterMetadata,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            string validityKey,
+            PipelineContext ctx)
+        {
+            string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
+            if (File.Exists(scoresPath)
+                && TaskValiditySidecar.IsValid(scoresPath, Name, validityKey))
+            {
+                var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx);
+                if (loaded != null)
+                {
+                    ctx.LogInfo(string.Format(
+                        @"[file] {0}/{1} {2}: skipping (outputs valid)",
+                        fileIdx + 1, totalFiles, fileName));
+                    return loaded;
+                }
+                // load failed -- fall through and rescore the file.
+            }
+
+            ctx.LogInfo(string.Empty);
+            ctx.LogInfo(string.Format(@"===== Processing file {0}/{1}: {2} =====",
+                fileIdx + 1, totalFiles, inputFile));
+            // Clear stale sidecar so a mid-ProcessFile crash leaves no
+            // false-positive sidecar on the next invocation.
+            TaskValiditySidecar.Delete(scoresPath, Name);
+            var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+            if (fileResult != null)
+            {
+                try
+                {
+                    TaskValiditySidecar.Write(scoresPath, Name, Program.VERSION,
+                        validityKey, new[] { inputFile });
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogWarning(string.Format(
+                        @"  Failed to write {0} sidecar for {1}: {2}",
+                        Name, scoresPath, ex.Message));
+                }
+            }
+            return fileResult;
+        }
+
+        /// <summary>
+        /// Best-effort load of one file's stubs + PIN features from a
+        /// <c>.scores.parquet</c> plus the calibration sibling. Returns
+        /// the stub list on success or <c>null</c> on any read failure
+        /// (caller treats null as "fall back to rescore"). Mirrors the
+        /// load logic in the <c>--join-only</c> branch above.
+        /// </summary>
+        private static List<FdrEntry> TryLoadStubsAndCalibration(
+            string scoresPath,
+            string fileName,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            PipelineContext ctx)
+        {
+            List<FdrEntry> stubs;
+            try
+            {
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath);
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                if (features.Count != stubs.Count)
+                {
+                    ctx.LogWarning(string.Format(
+                        @"  Per-file resume: {0} has {1} stubs but {2} feature rows; will rescore.",
+                        scoresPath, stubs.Count, features.Count));
+                    return null;
+                }
+                for (int j = 0; j < stubs.Count; j++)
+                    stubs[j].Features = features[j];
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(
+                    @"  Per-file resume: failed to load {0}: {1}; will rescore.",
+                    scoresPath, ex.Message));
+                return null;
+            }
+
+            try
+            {
+                string parquetDir = Path.GetDirectoryName(Path.GetFullPath(scoresPath));
+                if (parquetDir != null)
+                {
+                    string calStemPath = Path.Combine(parquetDir, fileName);
+                    string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
+                    if (File.Exists(calPath))
+                    {
+                        var calParams = CalibrationIO.LoadCalibration(calPath);
+                        if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                        {
+                            var mp = calParams.RtCalibration.ModelParams;
+                            var rtCal = RTCalibration.FromModelParams(
+                                mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                                calParams.RtCalibration.ResidualSD);
+                            perFileCalibrations[fileName] = rtCal;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
+            }
+            return stubs;
         }
 
         /// <summary>
