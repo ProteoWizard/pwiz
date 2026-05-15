@@ -255,6 +255,35 @@ namespace pwiz.OspreySharp.Tasks
                     ctx.ExitCode = 1;
                     return false;
                 }
+
+                // Pair each decoy with its target so their base_ids match
+                // -- required for SVM target-decoy competition, LDA
+                // calibration, and CV fold grouping. Composition pairing
+                // is the default; the manifest-based path is wired in a
+                // later commit.
+                ctx.LogInfo(
+                    @"Pairing library decoys to targets by amino-acid composition (no manifest provided).");
+                var pairingStats = LibraryDecoyPairing.PairLibraryDecoysByComposition(
+                    library, config.DecoyPrefixes);
+                ctx.LogInfo(string.Format(
+                    @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); {3} unpaired decoys, {4} unpaired targets",
+                    pairingStats.NPaired, pairingStats.NDecoys,
+                    pairingStats.PairedFraction * 100.0,
+                    pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
+                if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
+                {
+                    ctx.LogError(string.Format(
+                        @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
+                        @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
+                        @"target-decoy competition. Either supply a pairing manifest, ensure the " +
+                        @"library uses matching protein accessions with one of `decoy_prefixes` " +
+                        @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
+                        pairingStats.PairedFraction * 100.0,
+                        config.DecoyPairMinFraction * 100.0,
+                        FormatPrefixList(config.DecoyPrefixes)));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
             }
             swLibrary.Stop();
             double totalSec = swLibrary.Elapsed.TotalSeconds;

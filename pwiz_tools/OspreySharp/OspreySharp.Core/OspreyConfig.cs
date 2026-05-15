@@ -94,6 +94,15 @@ namespace pwiz.OspreySharp.Core
             @"decoy_",
         };
 
+        /// <summary>
+        /// Minimum fraction of decoys that must pair successfully with a
+        /// target when <see cref="DecoysInLibrary"/> is set. Below this,
+        /// OspreySharp bails with a clear error rather than running with
+        /// broken target-decoy competition (FDR would be optimistic).
+        /// Maps to Rust <c>OspreyConfig::decoy_pair_min_fraction</c>.
+        /// </summary>
+        public double DecoyPairMinFraction { get; set; } = 0.80;
+
         /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
         public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
 
@@ -228,6 +237,7 @@ namespace pwiz.OspreySharp.Core
                 }
                 prefixList.Append(']');
                 sb.AppendFormat(ic, "decoy_prefixes:{0}\n", prefixList.ToString());
+                sb.AppendFormat(ic, "decoy_pair_min_fraction:{0}\n", DecoyPairMinFraction);
                 sb.AppendFormat(ic, "rt_cal.enabled:{0}\n", b(RtCalibration.Enabled));
                 sb.AppendFormat(ic, "rt_cal.fallback_rt_tolerance:{0}\n", RtCalibration.FallbackRtTolerance);
                 sb.AppendFormat(ic, "rt_cal.rt_tolerance_factor:{0}\n", RtCalibration.RtToleranceFactor);
