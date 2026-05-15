@@ -153,6 +153,12 @@ public class SkylineInstallation
             string shortcutPath = FindClickOnceShortcut(release);
             if (shortcutPath == null)
                 continue;
+            // The runner shim is bundled with the MCP server via Content Include,
+            // so it sits next to this assembly. We do not File.Exists-check here:
+            // if the shim is missing the MCP server itself is broken (packaging
+            // bug), and a shell invocation will surface that loudly. Returning the
+            // expected path keeps the row invariant that every install has exactly
+            // one of CliPath / RunnerPath populated.
             string runnerPath = Path.Combine(baseDir, runnerExe);
             yield return new SkylineInstallation
             {
@@ -162,7 +168,7 @@ public class SkylineInstallation
                 InstallScope = SCOPE_CLICK_ONCE,
                 GuiPath = shortcutPath,
                 CliPath = null,
-                RunnerPath = File.Exists(runnerPath) ? runnerPath : null
+                RunnerPath = runnerPath
             };
         }
     }

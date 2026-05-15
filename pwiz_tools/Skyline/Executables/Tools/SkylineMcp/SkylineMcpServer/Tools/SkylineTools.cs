@@ -633,7 +633,7 @@ public static class SkylineTools
         "  - RunnerPath (ClickOnce installs only) is the bundled SkylineRunner.exe / SkylineDailyRunner.exe shim that launches the user's GUI Skyline in headless CMD mode. " +
         "Because it goes through the GUI binary, it shares the GUI's user.config — custom reports etc. are visible without --save-settings priming. " +
         "Use this when the script needs the user's existing GUI state.\n\n" +
-        "Empty result means no Skyline release was detected. " +
+        "When no Skyline release is detected, the response is a single line starting with 'No Skyline release detected' instead of the column-header row. " +
         "This tool reports filesystem state only; use skyline_get_instances for running/connected instances.")]
     public static string ListInstalled()
     {
@@ -657,7 +657,11 @@ public static class SkylineTools
                 install.CliPath ?? string.Empty,
                 install.RunnerPath ?? string.Empty));
         }
-        return sb.ToString().TrimEnd();
+        // Trim only the trailing line ending. Using bare TrimEnd() would also strip
+        // the terminating tab that separates the empty final field of the last row
+        // (e.g. on an admin-only machine where RunnerPath is empty), turning that
+        // row into a malformed 5-column line.
+        return sb.ToString().TrimEnd('\r', '\n');
     }
 
     [McpServerTool(Name = "skyline_get_instances"),
