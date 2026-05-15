@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.IO
@@ -102,6 +103,7 @@ namespace pwiz.OspreySharp.IO
                 entry.Fragments = data.Fragments;
                 entry.ProteinIds = data.ProteinIds;
                 entry.GeneNames = data.GeneNames;
+                entry.IsDecoy = data.IsDecoy;
 
                 entries.Add(entry);
                 id++;
@@ -171,6 +173,12 @@ namespace pwiz.OspreySharp.IO
             if (!string.IsNullOrEmpty(geneStr))
                 geneNames = SplitList(geneStr);
 
+            // Optional Decoy column. Empty / missing column -> false.
+            // Unparseable values default to false (do NOT error on garbage so
+            // a single malformed cell doesn't fail an entire library load).
+            bool isDecoyRow = cols.Decoy >= 0 &&
+                ParseDecoyFlag(GetFieldOrNull(fields, cols.Decoy));
+
             // Group by precursor key
             string key = modifiedSequence + "_" + charge;
 
@@ -186,9 +194,16 @@ namespace pwiz.OspreySharp.IO
                     RetentionTime = retentionTime,
                     ProteinIds = proteinIds,
                     GeneNames = geneNames,
-                    Fragments = new List<LibraryFragment>()
+                    Fragments = new List<LibraryFragment>(),
+                    IsDecoy = isDecoyRow,
                 };
                 precursorMap[key] = precursor;
+            }
+            else if (isDecoyRow)
+            {
+                // Defensive OR -- any row of a precursor flagging decoy
+                // promotes the precursor.
+                precursor.IsDecoy = true;
             }
 
             precursor.Fragments.Add(new LibraryFragment
@@ -301,7 +316,7 @@ namespace pwiz.OspreySharp.IO
         /// </summary>
         public static string StripModifications(string modified)
         {
-            var result = new System.Text.StringBuilder(modified.Length);
+            var result = new StringBuilder(modified.Length);
             bool inBracket = false;
             bool inParen = false;
 
@@ -546,6 +561,12 @@ namespace pwiz.OspreySharp.IO
             public int NormalizedRT = -1;
             public int ProteinId = -1;
             public int GeneName = -1;
+            // Optional Decoy column (DIA-NN convention: 0=target, 1=decoy).
+            // When present, rows whose value is 1 / true / yes / y / t
+            // (case-insensitive) are flagged at load time. Catches library
+            // decoys that lack the decoy_ / rev_ / DECOY_ protein-accession
+            // prefix and vice versa; some generators set only one signal.
+            public int Decoy = -1;
 
             public static ColumnIndices FromHeaders(string[] headers)
             {
@@ -565,6 +586,7 @@ namespace pwiz.OspreySharp.IO
                 indices.NormalizedRT = FindColumn(headers, "NormalizedRetentionTime", "Tr_recalibrated", "RT");
                 indices.ProteinId = FindColumn(headers, "ProteinId", "Protein.Id", "ProteinName", "Protein", "ProteinIds", "Protein.Ids");
                 indices.GeneName = FindColumn(headers, "GeneName", "Gene.Name", "Genes", "Protein.Names");
+                indices.Decoy = FindColumn(headers, "Decoy", "IsDecoy", "Is.Decoy");
 
                 // Validate required columns
                 if (indices.PrecursorMz < 0)
@@ -608,6 +630,55 @@ namespace pwiz.OspreySharp.IO
             public List<string> ProteinIds;
             public List<string> GeneNames;
             public List<LibraryFragment> Fragments;
+            // True when any fragment row in this precursor had a truthy
+            // Decoy column. DIA-NN writes the same Decoy value on every
+            // row of a given precursor, so the OR is defensive.
+            public bool IsDecoy;
+        }
+
+        /// <summary>
+        /// Parse the optional Decoy column. Accepts <c>1</c>, <c>true</c>,
+        /// <c>yes</c>, <c>y</c>, <c>t</c> (case-insensitive, ASCII-only)
+        /// as decoy; everything else (including <c>0</c>, empty, garbage)
+        /// is target. Matches Rust <c>parse_decoy_flag</c> exactly,
+        /// including its use of <c>to_ascii_lowercase</c> -- non-ASCII
+        /// input (Turkish dotted-I, fullwidth digits) passes through
+        /// unchanged on both sides so neither produces a spurious match.
+        /// The "default to target if unsure" convention matches DIA-NN
+        /// itself.
+        /// </summary>
+        internal static bool ParseDecoyFlag(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+                return false;
+            string trimmed = s.Trim();
+            if (trimmed.Length == 0)
+                return false;
+            string lower = AsciiLowerInvariant(trimmed);
+            return lower == @"1" || lower == @"true" || lower == @"yes" ||
+                   lower == @"y" || lower == @"t";
+        }
+
+        /// <summary>
+        /// Lowercase only the ASCII A-Z range; pass everything else
+        /// (including non-ASCII Unicode) through unchanged. Mirrors
+        /// Rust's <c>str::to_ascii_lowercase</c>. Avoids the divergence
+        /// trap of C# <c>string.ToLowerInvariant()</c> which uses
+        /// Unicode case-folding and can produce different bytes for
+        /// non-ASCII input than Rust's byte-only mapping.
+        /// </summary>
+        private static string AsciiLowerInvariant(string s)
+        {
+            var sb = new StringBuilder(s.Length);
+            for (int i = 0; i < s.Length; i++)
+            {
+                char c = s[i];
+                if (c >= 'A' && c <= 'Z')
+                    sb.Append((char)(c + 32));
+                else
+                    sb.Append(c);
+            }
+            return sb.ToString();
         }
     }
 }
