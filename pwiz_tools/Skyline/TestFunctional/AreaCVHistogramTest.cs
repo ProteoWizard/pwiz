@@ -643,23 +643,16 @@ namespace pwiz.SkylineTestFunctional
 
             // This call should not throw - the fix guards against degenerate scale values
             // Call with different min/max dot radius to trigger discrete mode where the crash occurred
-            try
-            {
-                HeatMapGraphPane.GraphHeatMap(graphPane, heatMapData, 17, 2, 0.0f, 50.0f, true, 0);
+            HeatMapGraphPane.GraphHeatMap(graphPane, heatMapData, 17, 2, 0.0f, 50.0f, true, 0);
 
-                // Verify we created the problematic condition (max frequency = 1)
-                AssertEx.AreEqual(1.0f, heatMapData.MaxPoint.Point.Z,
-                    "Test should use max frequency = 1 to trigger the original Math.Log(1) = 0 bug");
+            // Verify we created the problematic condition (max frequency = 1)
+            AssertEx.AreEqual(1.0f, heatMapData.MaxPoint.Point.Z,
+                "Test should use max frequency = 1 to trigger the original Math.Log(1) = 0 bug");
 
-                // Verify GraphHeatMap actually processed the data (didn't return early)
-                // This ensures the test exercises the crash-prone discrete legend remap logic
-                AssertEx.IsTrue(graphPane.CurveList.Count > 0,
-                    "GraphHeatMap should have populated curves to exercise the crash-prone code path");
-            }
-            catch (IndexOutOfRangeException ex)
-            {
-                AssertEx.Fail($"GraphHeatMap should not crash with max frequency = 1 (issue #4209): {ex.Message}");
-            }
+            // Verify GraphHeatMap actually processed the data (didn't return early)
+            // This ensures the test exercises the crash-prone discrete legend remap logic
+            AssertEx.IsTrue(graphPane.CurveList.Count > 0,
+                "GraphHeatMap should have populated curves to exercise the crash-prone code path");
 
             // Test passes if no exception occurs and curves were created - the fix prevents the crash
         }
