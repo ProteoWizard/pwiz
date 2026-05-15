@@ -102,6 +102,7 @@ namespace pwiz.OspreySharp.IO
                 entry.Fragments = data.Fragments;
                 entry.ProteinIds = data.ProteinIds;
                 entry.GeneNames = data.GeneNames;
+                entry.IsDecoy = data.IsDecoy;
 
                 entries.Add(entry);
                 id++;
@@ -171,6 +172,12 @@ namespace pwiz.OspreySharp.IO
             if (!string.IsNullOrEmpty(geneStr))
                 geneNames = SplitList(geneStr);
 
+            // Optional Decoy column. Empty / missing column -> false.
+            // Unparseable values default to false (do NOT error on garbage so
+            // a single malformed cell doesn't fail an entire library load).
+            bool isDecoyRow = cols.Decoy >= 0 &&
+                ParseDecoyFlag(GetFieldOrNull(fields, cols.Decoy));
+
             // Group by precursor key
             string key = modifiedSequence + "_" + charge;
 
@@ -186,9 +193,16 @@ namespace pwiz.OspreySharp.IO
                     RetentionTime = retentionTime,
                     ProteinIds = proteinIds,
                     GeneNames = geneNames,
-                    Fragments = new List<LibraryFragment>()
+                    Fragments = new List<LibraryFragment>(),
+                    IsDecoy = isDecoyRow,
                 };
                 precursorMap[key] = precursor;
+            }
+            else if (isDecoyRow)
+            {
+                // Defensive OR -- any row of a precursor flagging decoy
+                // promotes the precursor.
+                precursor.IsDecoy = true;
             }
 
             precursor.Fragments.Add(new LibraryFragment
@@ -546,6 +560,12 @@ namespace pwiz.OspreySharp.IO
             public int NormalizedRT = -1;
             public int ProteinId = -1;
             public int GeneName = -1;
+            // Optional Decoy column (DIA-NN convention: 0=target, 1=decoy).
+            // When present, rows whose value is 1 / true / yes / y / t
+            // (case-insensitive) are flagged at load time. Catches library
+            // decoys that lack the decoy_ / rev_ / DECOY_ protein-accession
+            // prefix and vice versa; some generators set only one signal.
+            public int Decoy = -1;
 
             public static ColumnIndices FromHeaders(string[] headers)
             {
@@ -565,6 +585,7 @@ namespace pwiz.OspreySharp.IO
                 indices.NormalizedRT = FindColumn(headers, "NormalizedRetentionTime", "Tr_recalibrated", "RT");
                 indices.ProteinId = FindColumn(headers, "ProteinId", "Protein.Id", "ProteinName", "Protein", "ProteinIds", "Protein.Ids");
                 indices.GeneName = FindColumn(headers, "GeneName", "Gene.Name", "Genes", "Protein.Names");
+                indices.Decoy = FindColumn(headers, "Decoy", "IsDecoy", "Is.Decoy");
 
                 // Validate required columns
                 if (indices.PrecursorMz < 0)
@@ -608,6 +629,29 @@ namespace pwiz.OspreySharp.IO
             public List<string> ProteinIds;
             public List<string> GeneNames;
             public List<LibraryFragment> Fragments;
+            // True when any fragment row in this precursor had a truthy
+            // Decoy column. DIA-NN writes the same Decoy value on every
+            // row of a given precursor, so the OR is defensive.
+            public bool IsDecoy;
+        }
+
+        /// <summary>
+        /// Parse the optional Decoy column. Accepts <c>1</c>, <c>true</c>,
+        /// <c>yes</c>, <c>y</c>, <c>t</c> (case-insensitive) as decoy;
+        /// everything else (including <c>0</c>, empty, garbage) is target.
+        /// Matches Rust <c>parse_decoy_flag</c>; the "default to target if
+        /// unsure" convention matches DIA-NN itself.
+        /// </summary>
+        internal static bool ParseDecoyFlag(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+                return false;
+            string trimmed = s.Trim();
+            if (trimmed.Length == 0)
+                return false;
+            string lower = trimmed.ToLowerInvariant();
+            return lower == @"1" || lower == @"true" || lower == @"yes" ||
+                   lower == @"y" || lower == @"t";
         }
     }
 }

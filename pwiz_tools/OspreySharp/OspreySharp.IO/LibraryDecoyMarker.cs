@@ -28,22 +28,30 @@ namespace pwiz.OspreySharp.IO
 {
     /// <summary>
     /// Counts of entries flagged as decoys by
-    /// <see cref="LibraryDecoyMarker.ApplyLibraryDecoyMarking"/>.
-    /// Initially carries only the prefix-match count; commit 4 of the
-    /// library-decoy catch-up extends this with a column-flagged count
-    /// for DIA-NN TSV loads that carry a <c>Decoy</c> column.
+    /// <see cref="LibraryDecoyMarker.ApplyLibraryDecoyMarking"/>, broken
+    /// down by detection signal (DIA-NN <c>Decoy</c> column vs. protein-
+    /// accession prefix match). Maps to Rust
+    /// <c>osprey_core::types::MarkingStats</c>.
     /// </summary>
     public class MarkingStats
     {
         /// <summary>
-        /// Entries flagged as decoys this pass via prefix match on a
-        /// protein accession. Entries already flagged on entry to
-        /// <c>ApplyLibraryDecoyMarking</c> are NOT counted here.
+        /// Entries whose <see cref="LibraryEntry.IsDecoy"/> was already
+        /// true on entry (set by the loader from a <c>Decoy</c> column)
+        /// and whose <see cref="LibraryEntry.Id"/> got the high bit set
+        /// during this marking pass. Increments on each entry the marker
+        /// canonicalised; idempotent on re-entry.
+        /// </summary>
+        public int NViaColumn { get; set; }
+
+        /// <summary>
+        /// Entries newly flagged as decoys this pass via prefix match on
+        /// a protein accession.
         /// </summary>
         public int NViaPrefix { get; set; }
 
-        /// <summary>Total entries newly flagged in this marking pass.</summary>
-        public int NMarked { get { return NViaPrefix; } }
+        /// <summary>Total entries flagged across both detection paths.</summary>
+        public int NMarked { get { return NViaColumn + NViaPrefix; } }
     }
 
     /// <summary>
@@ -59,19 +67,23 @@ namespace pwiz.OspreySharp.IO
     public static class LibraryDecoyMarker
     {
         /// <summary>
-        /// Scan <paramref name="library"/> and flag entries whose protein
-        /// accession matches one of <paramref name="prefixes"/> (case-
-        /// insensitive prefix match). For each matching entry, sets
-        /// <see cref="LibraryEntry.IsDecoy"/> = true and ORs
-        /// <see cref="LibraryEntry.DECOY_ID_BIT"/> into the Id.
+        /// Scan <paramref name="library"/> for decoys, using two signals:
+        /// (a) entries whose <see cref="LibraryEntry.IsDecoy"/> was set by
+        /// the loader (from a DIA-NN <c>Decoy</c> column) -- these get
+        /// <see cref="LibraryEntry.DECOY_ID_BIT"/> ORed into their Id if
+        /// not already set, contributing to <see cref="MarkingStats.NViaColumn"/>;
+        /// (b) entries whose protein accession matches one of
+        /// <paramref name="prefixes"/> (case-insensitive) -- these get
+        /// <see cref="LibraryEntry.IsDecoy"/> = true and DECOY_ID_BIT,
+        /// contributing to <see cref="MarkingStats.NViaPrefix"/>.
         ///
-        /// Idempotent: entries already flagged as decoys are left
-        /// unchanged (no double-OR of the high bit, no double-count in
-        /// <see cref="MarkingStats.NMarked"/>).
+        /// Idempotent: a second call is a no-op (no double-OR of the
+        /// high bit, no double-count in stats).
         ///
         /// Library-supplied decoys are NOT paired with specific targets
-        /// via matching base_ids; that wiring is the job of the
-        /// composition pairer (commit 2) and manifest reader (commit 3).
+        /// here; that wiring is the job of
+        /// <c>LibraryDecoyPairing.PairLibraryDecoysByComposition</c> and
+        /// the FDRBench manifest reader.
         /// </summary>
         public static void ApplyLibraryDecoyMarking(
             IList<LibraryEntry> library,
@@ -84,8 +96,20 @@ namespace pwiz.OspreySharp.IO
             for (int i = 0; i < library.Count; i++)
             {
                 var entry = library[i];
-                if (entry == null || entry.IsDecoy)
+                if (entry == null)
                     continue;
+                if (entry.IsDecoy)
+                {
+                    // Loader (Decoy column) already flagged this one; make
+                    // sure the high bit on Id is set so base_id pairing
+                    // works.
+                    if ((entry.Id & LibraryEntry.DECOY_ID_BIT) == 0u)
+                    {
+                        entry.Id |= LibraryEntry.DECOY_ID_BIT;
+                        stats.NViaColumn++;
+                    }
+                    continue;
+                }
                 if (entry.LooksLikeLibraryDecoy(prefixes))
                 {
                     entry.IsDecoy = true;

@@ -123,9 +123,35 @@ namespace pwiz.OspreySharp.Test
             LibraryDecoyMarker.ApplyLibraryDecoyMarking(lib, prefixes, out var stats1);
             uint idAfterFirst = lib[0].Id;
             LibraryDecoyMarker.ApplyLibraryDecoyMarking(lib, prefixes, out var stats2);
-            Assert.AreEqual(1, stats1.NMarked);
-            Assert.AreEqual(0, stats2.NMarked); // second pass marks nothing new
+            Assert.AreEqual(1, stats1.NViaPrefix);
+            Assert.AreEqual(0, stats1.NViaColumn);
+            // Second pass: nothing new by prefix; high bit already set so
+            // no column-canonicalisation needed either.
+            Assert.AreEqual(0, stats2.NMarked);
             Assert.AreEqual(idAfterFirst, lib[0].Id); // no double-OR of high bit
+        }
+
+        [TestMethod]
+        public void ApplyLibraryDecoyMarkingCanonicalisesLoaderFlaggedDecoys()
+        {
+            // Simulate: the DIA-NN loader read a Decoy=1 column and set
+            // IsDecoy = true, but did NOT set DECOY_ID_BIT on the Id.
+            // The marking pass should fix that.
+            var lib = new List<LibraryEntry>
+            {
+                MakeLibEntry(7, @"SomeProtein"),     // target (untouched by loader)
+                MakeLibEntry(8, @"SomeOtherProtein"), // loader-flagged below
+            };
+            lib[1].IsDecoy = true;
+            LibraryDecoyMarker.ApplyLibraryDecoyMarking(
+                lib, new List<string> { @"DECOY_" }, out var stats);
+            // The loader-flagged entry got its high bit set; the prefix
+            // scan contributed nothing.
+            Assert.AreEqual(1, stats.NViaColumn);
+            Assert.AreEqual(0, stats.NViaPrefix);
+            Assert.AreEqual(0u, lib[0].Id & LibraryEntry.DECOY_ID_BIT);
+            Assert.IsTrue((lib[1].Id & LibraryEntry.DECOY_ID_BIT) != 0u);
+            Assert.AreEqual(8u, lib[1].Id & 0x7FFFFFFFu);
         }
     }
 }

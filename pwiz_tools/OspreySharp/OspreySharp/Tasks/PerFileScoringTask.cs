@@ -205,8 +205,8 @@ namespace pwiz.OspreySharp.Tasks
                     @"Library-decoy mode: matched prefixes {0}",
                     FormatPrefixList(config.DecoyPrefixes)));
                 ctx.LogInfo(string.Format(
-                    @"[COUNT] Library-decoy mode: {0} entries flagged this pass (prefix match)",
-                    markingStats.NMarked));
+                    @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
+                    markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
             }
 
             int nLibraryTargets = 0;
