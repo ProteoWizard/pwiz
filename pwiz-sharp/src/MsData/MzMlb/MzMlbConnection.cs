@@ -123,7 +123,41 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
         _compressionLevel = compressionLevel;
 
         H5E.set_auto(H5E.DEFAULT, null, IntPtr.Zero);
-        _fileId = H5F.create(filename, H5F.ACC_TRUNC);
+
+        // Configure file-level raw-data chunk cache. The HDF5 default cache is
+        // only ~1 MiB total — when an active chunk doesn't fit, every write
+        // forces a compress + flush, which on deflate level 4 costs ~10ms per
+        // call. For a 475 MiB mzMLb that's hours of pointless re-flushing.
+        // Match cpp Connection_mzMLb.cpp:138-147: bump the cache to at least
+        // chunk_size, set w0=1.0 so freshly-written chunks evict first (pwiz
+        // only writes each chunk once — never re-reads during the same write
+        // session — so write-once preemption is exactly right).
+        long fapl = H5P.create(H5P.FILE_ACCESS);
+        try
+        {
+            int mdcElems = 0;
+            IntPtr nslots = IntPtr.Zero;
+            IntPtr nbytes = IntPtr.Zero;
+            double w0 = 0.0;
+            H5P.get_cache(fapl, ref mdcElems, ref nslots, ref nbytes, ref w0);
+            // Bump the cache so an active chunk fits without immediate eviction.
+            // 4× chunk_size leaves headroom for the mzML chunk + the two binary
+            // chunks (mz + intensity) that are simultaneously being filled per
+            // spectrum. Comparable to cpp's max(default, chunk_size), but we go
+            // higher because cpp's pwiz interleaves XML and binary writes whereas
+            // sharp's BufferedStream on the XML side means a long run of binary
+            // writes can occur without touching the mzML chunk.
+            IntPtr desired = checked((IntPtr)(long)(_chunkSize * 4));
+            if ((long)nbytes < (long)desired) nbytes = desired;
+            w0 = 1.0;
+            H5P.set_cache(fapl, mdcElems, nslots, nbytes, w0);
+
+            _fileId = H5F.create(filename, H5F.ACC_TRUNC, H5P.DEFAULT, fapl);
+        }
+        finally
+        {
+            H5P.close(fapl);
+        }
         if (_fileId < 0)
             throw new IOException($"Could not create mzMLb file: {filename}");
 
@@ -132,6 +166,7 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
             // Create the empty extensible "mzML" dataset up front so we can
             // append XML bytes through the writable stream as the XmlWriter
             // emits them. UNLIMITED max + chunked + deflate matches cpp.
+            // mzML is a char (1-byte) dataset, so chunk size in elements == chunk size in bytes.
             ulong[] dims = { 0 };
             ulong[] maxdims = { H5S.UNLIMITED };
             long space = H5S.create_simple(1, dims, maxdims);
@@ -141,6 +176,7 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
                 ulong[] chunk = { _chunkSize };
                 H5P.set_chunk(dcpl, 1, chunk);
                 if (_compressionLevel > 0) H5P.set_deflate(dcpl, (uint)_compressionLevel);
+                H5P.set_fletcher32(dcpl);
                 long ds = H5D.create(_fileId, "mzML", H5T.NATIVE_UCHAR, space,
                                      lcpl_id: H5P.DEFAULT, dcpl_id: dcpl);
                 if (ds < 0) throw new IOException("H5D.create failed for 'mzML' dataset");
@@ -210,23 +246,23 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
 
     /// <inheritdoc/>
     public long AppendDoubles(string dataset, ReadOnlySpan<double> data)
-        => AppendTyped(dataset, data, H5T.NATIVE_DOUBLE);
+        => AppendTyped(dataset, data, H5T.NATIVE_DOUBLE, sizeof(double));
 
     /// <inheritdoc/>
     public long AppendFloats(string dataset, ReadOnlySpan<float> data)
-        => AppendTyped(dataset, data, H5T.NATIVE_FLOAT);
+        => AppendTyped(dataset, data, H5T.NATIVE_FLOAT, sizeof(float));
 
     /// <inheritdoc/>
     public long AppendInt64(string dataset, ReadOnlySpan<long> data)
-        => AppendTyped(dataset, data, H5T.NATIVE_INT64);
+        => AppendTyped(dataset, data, H5T.NATIVE_INT64, sizeof(long));
 
     /// <inheritdoc/>
     public long AppendInt32(string dataset, ReadOnlySpan<int> data)
-        => AppendTyped(dataset, data, H5T.NATIVE_INT32);
+        => AppendTyped(dataset, data, H5T.NATIVE_INT32, sizeof(int));
 
     /// <inheritdoc/>
     public long AppendBytes(string dataset, ReadOnlySpan<byte> data)
-        => AppendTyped(dataset, data, H5T.NATIVE_UCHAR);
+        => AppendTyped(dataset, data, H5T.NATIVE_UCHAR, sizeof(byte));
 
     /// <summary>Close the HDF5 file and release all dataset / dataspace handles.</summary>
     public void Dispose()
@@ -312,7 +348,7 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
         return (int)count[0];
     }
 
-    private long AppendTyped<T>(string datasetId, ReadOnlySpan<T> data, long nativeType)
+    private long AppendTyped<T>(string datasetId, ReadOnlySpan<T> data, long nativeType, int elementSize)
         where T : unmanaged
     {
         EnsureOpen();
@@ -322,17 +358,32 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
         if (!_binary.TryGetValue(datasetId, out var ds))
         {
             // Create the dataset on first reference. Chunked + UNLIMITED max so
-            // subsequent calls can extend it. Same chunk size + compression as
-            // the mzML dataset.
+            // subsequent calls can extend it. Match cpp Connection_mzMLb.cpp:549:
+            // chunk size is specified in *bytes*, so the dataset's chunk-in-elements
+            // is chunk_size / sizeof(element). For doubles this yields 131072-element
+            // chunks (1 MiB), not 1048576-element chunks (8 MiB). Sticking to a 1 MiB
+            // chunk keeps each chunk small enough to fit in the HDF5 cache, avoiding
+            // a compress + flush per AppendTyped call (the previous bottleneck for
+            // multi-MB mzMLb files: ~90k spectra × 2 arrays × per-write compression).
+            ulong chunkElems = _chunkSize / (ulong)elementSize;
+            if (chunkElems == 0) chunkElems = 1;
             ulong[] dims = { 0 };
             ulong[] maxdims = { H5S.UNLIMITED };
             long space = H5S.create_simple(1, dims, maxdims);
             long dcpl = H5P.create(H5P.DATASET_CREATE);
             try
             {
-                ulong[] chunk = { _chunkSize };
+                ulong[] chunk = { chunkElems };
                 H5P.set_chunk(dcpl, 1, chunk);
-                if (_compressionLevel > 0) H5P.set_deflate(dcpl, (uint)_compressionLevel);
+                if (_compressionLevel > 0)
+                {
+                    // Byte-shuffle reorganizes multi-byte values so similar bytes
+                    // cluster together, materially improving deflate ratios on
+                    // floating-point arrays. Matches cpp Connection_mzMLb.cpp:555.
+                    if (elementSize > 1) H5P.set_shuffle(dcpl);
+                    H5P.set_deflate(dcpl, (uint)_compressionLevel);
+                }
+                H5P.set_fletcher32(dcpl);
                 long ds2 = H5D.create(_fileId, datasetId, nativeType, space,
                                       lcpl_id: H5P.DEFAULT, dcpl_id: dcpl);
                 if (ds2 < 0)

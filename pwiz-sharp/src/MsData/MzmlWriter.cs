@@ -592,7 +592,7 @@ public sealed class MzmlWriter
             BinaryCompression.Zlib => CVID.MS_zlib_compression,
             _ => CVID.MS_no_compression,
         }));
-        MzmlXml.WriteParams(w, arr);
+        WriteArrayParamsExcludingEncoding(w, arr);
 
         w.WriteStartElement("binary");
         w.WriteString(base64);
@@ -637,9 +637,17 @@ public sealed class MzmlWriter
         w.WriteAttributeString("encodedLength", "0");
         if (arr.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", XmlIdEncoding.Encode(arr.DataProcessing.Id));
 
+        // cpp parity (mzMLb): emit a single precision cvParam matching the HDF5 dataset's
+        // native type. The source array can carry a stale precision cvParam from upstream
+        // (e.g. a TIC "ms level" array tagged 32-bit in the input mzML even though our
+        // sink writes int64) — emit the writer's chosen precision and filter the input's
+        // out of arr.CVParams to avoid a binaryDataArray with conflicting precision tags.
+        // Debatable: the precision cvParam is arguably redundant in mzMLb mode because the
+        // HDF5 dataset already declares its native type, but cpp Serializer_mzML emits it
+        // for schema compliance and we follow suit.
         MzmlXml.WriteCvParam(w, new CVParam(use32Bit ? CVID.MS_32_bit_integer : CVID.MS_64_bit_integer));
         MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_no_compression));
-        MzmlXml.WriteParams(w, arr);
+        WriteArrayParamsExcludingEncoding(w, arr);
         MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_external_HDF5_dataset, dataset));
         MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_external_offset, offset));
         MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_external_array_length, arr.Data.Count));
@@ -1039,7 +1047,7 @@ public sealed class MzmlWriter
     /// from the input mzML); writing both that and the writer's chosen precision produces an
     /// XML element with two conflicting precision params, and the reader picks the second one
     /// — yielding wrongly-decoded binary data.</summary>
-    private static void WriteArrayParamsExcludingEncoding(XmlWriter w, BinaryDataArray arr)
+    private static void WriteArrayParamsExcludingEncoding(XmlWriter w, ParamContainer arr)
     {
         foreach (var pg in arr.ParamGroups)
         {

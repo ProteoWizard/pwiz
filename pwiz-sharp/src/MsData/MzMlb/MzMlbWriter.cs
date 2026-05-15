@@ -55,7 +55,13 @@ public sealed class MzMlbWriter
         ArgumentException.ThrowIfNullOrEmpty(path);
 
         using var conn = MzMlbConnection.OpenForWrite(path, ChunkSize, CompressionLevel);
-        using (var stream = conn.OpenMzMlStream())
+        using (var rawStream = conn.OpenMzMlStream())
+        // Buffer the HDF5-backed stream: XmlWriter flushes in ~4 KB chunks and each
+        // Write on MzMlDatasetStream triggers an HDF5 set_extent + hyperslab + H5Dwrite,
+        // which costs ~3 ms each. For a 475 MB inner mzML that's ~120k HDF5 round-trips
+        // and ~6 minutes of pure HDF5 overhead. A 4 MiB BufferedStream batches the
+        // XmlWriter chunks into ~120 HDF5 writes total.
+        using (var stream = new BufferedStream(rawStream, 4 * 1024 * 1024))
         {
             var inner = new MzmlWriter(_encoderConfig)
             {
