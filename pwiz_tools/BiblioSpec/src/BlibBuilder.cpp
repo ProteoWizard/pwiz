@@ -88,6 +88,7 @@ static vector<string> supportedTypes = {
     ".hk.bs.kro", // Hardklor result file postprocessed by BullseyeSharp
     ".mlb",
     ".speclib",
+    ".parquet",
     ".tsv",
     ".osw",
     ".mzTab",

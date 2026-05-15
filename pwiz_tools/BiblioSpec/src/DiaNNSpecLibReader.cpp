@@ -1145,6 +1145,8 @@ bool DiaNNSpecLibReader::parseFile()
         diannReportFilepath = bal::replace_last_copy(specLibFile, "-lib.parquet.skyline.speclib", ".parquet");
     if (diannReportFilepath == specLibFile)
         diannReportFilepath = bal::replace_last_copy(specLibFile, "-lib.skyline.speclib", ".parquet");
+    if (diannReportFilepath == specLibFile)
+        diannReportFilepath = bal::replace_last_copy(specLibFile, "-lib.parquet", ".parquet");
 
     // special case for FragPipe
     if (specLibFilePath.filename().string() == "library.tsv.speclib" ||
@@ -1300,6 +1302,7 @@ bool DiaNNSpecLibReader::parseFile()
 
     Verbosity::status("Reading %d rows from report.", reader.num_rows());
     readAddProgress_ = parentProgress_->newNestedIndicator(reader.num_rows());
+    int missingFromSpeclibCount = 0;
     while (reader.read_row(run, fileName, proteinGrp, precursorId, globalQValue, redundantPSM.score, redundantPSM.rt, redundantPSM.rtStart, redundantPSM.rtEnd, redundantPSM.ionMobility))
     {
         string precursorIdStr(precursorId);
@@ -1310,7 +1313,11 @@ bool DiaNNSpecLibReader::parseFile()
             if (bal::starts_with(proteinGrp, "contaminant_"))
                 continue;
 
-            throw BlibException(false, "could not find precursorId '%s' in speclib; is '%s' the correct report TSV file?", precursorId, bfs::path(diannReportFilepath).filename().string().c_str());
+            // DIA-NN may report precursors that are not in the spectral library (e.g. some
+            // identifications without confident predicted spectra). Skip them rather than
+            // erroring out; we still validate at the end that *some* report rows matched.
+            ++missingFromSpeclibCount;
+            continue;
         }
 
         bfs::path currentRunFilepath = bal::replace_all_copy(string(fileName), "\\", "/"); // backslash to slash should work on both Linux and Windows
@@ -1363,6 +1370,12 @@ bool DiaNNSpecLibReader::parseFile()
         readAddProgress_->increment();
     }
     reader.close();
+
+    if (missingFromSpeclibCount > 0)
+        Verbosity::warn("Skipped %d report rows whose precursors were not in the spectral library.", missingFromSpeclibCount);
+    if (psms_.empty() && missingFromSpeclibCount > 0)
+        throw BlibException(false, "no report rows matched the spectral library; is '%s' the correct report file for '%s'?",
+            bfs::path(diannReportFilepath).filename().string().c_str(), bfs::path(impl_->specLibFile_).filename().string().c_str());
 
     filteredOutPsmCount_ = speclib.entries.size() - psms_.size();
 
