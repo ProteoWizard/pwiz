@@ -142,11 +142,14 @@
   <data name="&gt;&gt;cbAgreeToLicense.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="btnAccept.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="btnAccept.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="btnAccept.Location" type="System.Drawing.Point, System.Drawing">
-    <value>105, 180</value>
+    <value>12, 184</value>
   </data>
   <data name="btnAccept.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 23</value>
@@ -169,8 +172,11 @@
   <data name="&gt;&gt;btnAccept.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="btnSpecifyManually.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="btnSpecifyManually.Location" type="System.Drawing.Point, System.Drawing">
-    <value>241, 180</value>
+    <value>148, 184</value>
   </data>
   <data name="btnSpecifyManually.Size" type="System.Drawing.Size, System.Drawing">
     <value>160, 23</value>
@@ -193,8 +199,11 @@
   <data name="&gt;&gt;btnSpecifyManually.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>407, 180</value>
+    <value>314, 184</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>

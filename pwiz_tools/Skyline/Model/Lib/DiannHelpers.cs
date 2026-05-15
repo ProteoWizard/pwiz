@@ -319,12 +319,12 @@ namespace pwiz.Skyline.Model.Lib
             sb.AppendFormat(@"--fasta {0} ", fastaFilepath.Quote());
             sb.AppendFormat(@"--lib {0} ", inputLibPath.Quote());
 
-            // Output
+            // Output. With BiblioSpec's parquet reader (DiaNNSpecLibReader USE_PARQUET_READER),
+            // the report-lib.parquet that --gen-spec-lib emits is consumed directly, so MBR
+            // (--reanalyse) is no longer required and the search runs with a single DIA file.
             sb.AppendFormat(@"--out {0} ", outputReportPath.Quote());
             sb.AppendFormat(@"--out-lib {0} ", outputLibPath.Quote());
             sb.Append(@"--gen-spec-lib ");
-            // MBR (--reanalyse) is required for DIA-NN to emit the .skyline.speclib file
-            sb.Append(@"--reanalyse ");
 
             AppendCommonArgs(sb, config, fixedMods, variableMods, enzyme);
 
@@ -413,7 +413,9 @@ namespace pwiz.Skyline.Model.Lib
             IEnumerable<StaticMod> variableMods = null,
             Enzyme enzyme = null)
         {
-            string outputReportPath = Path.Combine(outputDir, @"diann-report.parquet");
+            // Names paired so DiaNNSpecLibReader's "-lib.parquet" -> ".parquet"
+            // report-derivation rule resolves the report file from the lib filename.
+            string outputReportPath = Path.Combine(outputDir, @"diann-output.parquet");
             string outputLibPath = Path.Combine(outputDir, @"diann-output-lib.parquet");
 
             if (cancelToken.IsCancellationRequested)
@@ -423,16 +425,7 @@ namespace pwiz.Skyline.Model.Lib
                 outputReportPath, outputLibPath, config, fixedMods, variableMods, enzyme);
             RunDiannProcess(args, progressMonitor, ref status);
 
-            // DIA-NN 2.x produces a Skyline-compatible speclib alongside the parquet library
-            // (requires --reanalyse and 2+ input files). Name: "<out-lib>.skyline.speclib".
-            string skylineSpeclib = outputLibPath + @".skyline.speclib";
-            if (File.Exists(skylineSpeclib))
-                return skylineSpeclib;
-
-            if (File.Exists(outputLibPath))
-                return outputLibPath;
-
-            return null;
+            return File.Exists(outputLibPath) ? outputLibPath : null;
         }
 
         /// <summary>

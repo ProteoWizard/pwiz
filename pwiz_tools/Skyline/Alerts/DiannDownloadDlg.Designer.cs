@@ -78,6 +78,7 @@ namespace pwiz.Skyline.Alerts
             this.Controls.Add(this.cbAgreeToLicense);
             this.Controls.Add(this.linkLicense);
             this.Controls.Add(this.lblSummary);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DiannDownloadDlg";

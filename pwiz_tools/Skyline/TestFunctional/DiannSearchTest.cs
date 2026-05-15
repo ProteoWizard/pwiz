@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
@@ -112,10 +113,11 @@ namespace pwiz.SkylineTestFunctional
             }
 
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library.fasta");
+            // Single-file DIA-NN search exercises the no-MBR path. Multi-file coverage
+            // belongs in a perf test; this functional test is intentionally minimal.
             string[] diaFilePaths =
             {
-                TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1c.mzML"),
-                TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1d.mzML")
+                TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1c.mzML")
             };
 
             // Page 0: Data files - add wide window DIA file
@@ -164,22 +166,72 @@ namespace pwiz.SkylineTestFunctional
                 File.WriteAllText("DiannSearchControlLog.txt", searchDlg.SearchControl.LogText);
             }
 
-            // Verify speclib was created
+            // Verify spectral library (parquet) was created
             AssertEx.IsTrue(File.Exists(searchDlg.SearchControl.OutputSpecLibPath));
 
-            // Transition to Import Peptide Search wizard
+            // Delete any leftover .blib from a previous run so the existing-blib
+            // overwrite prompt doesn't fire (that path is covered in a dedicated test).
+            string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
+            if (File.Exists(docBlibPath))
+                File.Delete(docBlibPath);
+
+            // Transition to Import Peptide Search wizard. DiannSearchDlg pre-loads the
+            // DIA-NN -lib.parquet as the search input; the wizard opens on the spectra
+            // page and BlibBuild converts the parquet to a .blib via DiaNNSpecLibReader.
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
             WaitForDocumentLoaded();
+            // BlibBuild score-type lookup on the parquet runs async on the spectra page;
+            // wait for it to finish before the Next button can validate.
+            WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
 
-            // Should be on spectra page with the speclib loaded
             RunUI(() =>
             {
                 AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+
+                // DiannSearchDlg pre-populated the chromatograms page with the searched
+                // files, so all should appear in Found and Missing should be empty
+                // (no second entry under a different filename casing/extension).
+                var importResults = importPeptideSearchDlg.ImportResultsControl;
+                var foundPaths = importResults.FoundResultsFiles.Select(f => f.Path).ToHashSet();
+                AssertEx.AreEqual(diaFilePaths.Length, foundPaths.Count,
+                    $@"expected {diaFilePaths.Length} found result files, got {foundPaths.Count}");
+                foreach (var p in diaFilePaths)
+                    AssertEx.IsTrue(foundPaths.Contains(p), $@"missing pre-populated file in Found list: {p}");
+                AssertEx.IsFalse(importResults.MissingResultsFiles.Any(),
+                    $@"unexpected entries in Missing list: {string.Join(@", ", importResults.MissingResultsFiles)}");
+
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton()); // 1 file → no rename dialog
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                // DIA-NN default mods (Carbamidomethyl C, Oxidation M) are detected from
+                // the library; add them all so library precursors match document targets.
+                importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true);
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName =
+                    PropertiesResources.IsolationSchemeList_GetDefaults_Results_only;
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
+                importPeptideSearchDlg.ImportFastaControl.AutoTrain = false;
             });
 
-            // Cancel out of the import wizard for now
-            OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
-            OkDialog(searchDlg, () => searchDlg.DialogResult = DialogResult.Cancel);
+            // Finish wizard → AssociateProteinsDlg. The truncated mzML may not yield enough
+            // confident IDs to populate every target type, so we don't assert specific counts
+            // here — the value of this test is that the wizard advances cleanly through every
+            // page and BlibBuild successfully converts the DIA-NN parquet to a .blib.
+            var associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForConditionUI(() => associateProteinsDlg.DocumentFinalCalculated);
+            using (new WaitDocumentChange(null, true))
+            {
+                OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
+            }
+
+            WaitForDocumentLoaded();
+            RunUI(() => SkylineWindow.SaveDocument());
         }
 
         private void PrepareDocument(string documentFile)

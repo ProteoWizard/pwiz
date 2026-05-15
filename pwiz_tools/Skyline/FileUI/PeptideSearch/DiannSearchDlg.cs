@@ -277,9 +277,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             switch (CurrentPage)
             {
                 case Pages.data_files_page:
-                    if (DataFileResults.FoundResultsFiles.Count < 2)
+                    if (!DataFileResults.FoundResultsFiles.Any())
                     {
-                        MessageDlg.Show(this, PeptideSearchResources.DiannSearchDlg_NextPage_Please_add_at_least_two_DIA_data_files_);
+                        MessageDlg.Show(this, PeptideSearchResources.DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_);
                         return;
                     }
                     break;
@@ -330,8 +330,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
-            // Launch Import Peptide Search dialog. The DIA-NN .parquet.skyline.speclib is
-            // passed as a search file so BiblioSpec builds a .blib from it.
+            // If the document already has a sibling .blib from a previous search, the wizard
+            // would silently append to it. Ask the user instead so a re-run replaces the
+            // stale library cleanly.
+            string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
+            if (File.Exists(docBlibPath))
+            {
+                var choice = MultiButtonMsgDlg.Show(this,
+                    string.Format(PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_Existing_blib_prompt__0_, docBlibPath),
+                    PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_Overwrite,
+                    PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_Append,
+                    true);
+                if (choice == DialogResult.Cancel)
+                    return;
+                if (choice == DialogResult.Yes)
+                {
+                    // The doc library has open read streams on the .blib; release them
+                    // before deleting, otherwise SafeDelete fails silently and BlibBuild
+                    // appends to the stale library instead of replacing it.
+                    ImportPeptideSearch.ClosePeptideSearchLibraryStreams(SkylineWindow.Document);
+                    FileEx.SafeDelete(docBlibPath, true);
+                    FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
+                }
+            }
+
+            // Launch Import Peptide Search dialog. The DIA-NN -lib.parquet is passed as a
+            // search file so BiblioSpec builds a .blib from it via DiaNNSpecLibReader.
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager,
                 false, ImportPeptideSearchDlg.Workflow.dia);
             importPeptideSearchDlg.BuildPepSearchLibControl.ForceWorkflow(ImportPeptideSearchDlg.Workflow.dia);
@@ -339,6 +363,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             importPeptideSearchDlg.ImportFastaControl.SetFastaContent(ImportFastaControl.ImportSettings.FastaFile.Path, true);
             importPeptideSearchDlg.ImportFastaControl.Enzyme = ImportFastaControl.ImportSettings.Enzyme;
             importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = ImportFastaControl.ImportSettings.MaxMissedCleavages;
+
+            // Pre-populate the chromatograms page with the data files we just searched, so
+            // the user doesn't have to re-browse for files we already know the paths of.
+            // PrefillFoundResultsFiles uses the BlibBuild-compatible key + display name so
+            // the doc-library scan in InitializeSpectrumSourceFiles doesn't create duplicates.
+            importPeptideSearchDlg.PrefillFoundResultsFiles(DataFileResults.FoundResultsFiles
+                .Select(f => new ImportPeptideSearch.FoundResultsFile(f.Name, f.Path)));
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)
                 DialogResult = DialogResult.OK;

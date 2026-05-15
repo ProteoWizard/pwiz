@@ -188,8 +188,7 @@
     <value>299, 39</value>
   </data>
   <data name="lblDataFiles.Text" xml:space="preserve">
-    <value>Add DIA data files to analyze with DIA-NN.
-DIA-NN requires 2 or more files. MBR (match-between-runs) is always enabled.
+    <value>Add one or more DIA data files to analyze with DIA-NN.
 Supported formats: Thermo .raw, Bruker .d, Sciex .wiff, .mzML</value>
   </data>
   <data name="&gt;&gt;lblDataFiles.Name" xml:space="preserve">

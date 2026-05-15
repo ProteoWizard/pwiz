@@ -415,6 +415,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Append.
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_Append {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_Append", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to DIA-NN output spectral library not found..
         /// </summary>
         public static string DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_ {
@@ -424,11 +433,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Please add at least two DIA data files..
+        ///   Looks up a localized string similar to A spectral library already exists at:
+        ///
+        ///{0}
+        ///
+        ///Overwrite it, or append the new DIA-NN results to it?.
         /// </summary>
-        public static string DiannSearchDlg_NextPage_Please_add_at_least_two_DIA_data_files_ {
+        public static string DiannSearchDlg_ImportDiannLibrary_Existing_blib_prompt__0_ {
             get {
-                return ResourceManager.GetString("DiannSearchDlg_NextPage_Please_add_at_least_two_DIA_data_files_", resourceCulture);
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_Existing_blib_prompt__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Overwrite.
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_Overwrite {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_Overwrite", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Please add at least one DIA data file..
+        /// </summary>
+        public static string DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_", resourceCulture);
             }
         }
 
