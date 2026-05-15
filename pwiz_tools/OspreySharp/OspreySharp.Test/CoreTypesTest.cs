@@ -454,6 +454,88 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
+        public void TestEscapeForRustDebugMatchesRustOutput()
+        {
+            // Rust's {:?} on String escapes \, ", \n, \r, \t, \0, and
+            // sub-0x20 / 0x7F control chars. Windows paths with
+            // backslashes are the load-bearing case: a Windows manifest
+            // path must hash identically under Rust and C#. Linux paths
+            // (forward slashes) contain no special chars under either
+            // formatter, so the function is platform-neutral -- it just
+            // mirrors Rust's debug-format on whatever string it is given.
+            // Expected outputs below pin the exact char sequence Rust's
+            // {:?} would produce on the same input.
+            Assert.AreEqual(@"T:\\test\\manifest.tsv",
+                OspreyConfig.EscapeForRustDebug(@"T:\test\manifest.tsv"));
+            Assert.AreEqual(@"/srv/data/manifest.tsv",
+                OspreyConfig.EscapeForRustDebug(@"/srv/data/manifest.tsv"));
+            Assert.AreEqual(@"line1\nline2",
+                OspreyConfig.EscapeForRustDebug("line1\nline2"));
+            Assert.AreEqual(@"with \""quotes\""",
+                OspreyConfig.EscapeForRustDebug("with \"quotes\""));
+            Assert.AreEqual(@"\t\r\n\0",
+                OspreyConfig.EscapeForRustDebug("\t\r\n\0"));
+            // DEL (0x7F) and sub-0x20 control chars render as Rust's
+            // `\u{HEX}` form.
+            Assert.AreEqual(@"a\u{7f}b",
+                OspreyConfig.EscapeForRustDebug("ab"));
+            Assert.AreEqual(@"\u{1}\u{1f}",
+                OspreyConfig.EscapeForRustDebug(""));
+            Assert.AreEqual(@"plain-ascii-7",
+                OspreyConfig.EscapeForRustDebug(@"plain-ascii-7"));
+            Assert.AreEqual(string.Empty,
+                OspreyConfig.EscapeForRustDebug(string.Empty));
+        }
+
+        [TestMethod]
+        public void TestSearchHashFoldsDecoyPairingManifestPath()
+        {
+            // The manifest path is folded into the search hash as
+            // `decoy_pairing_manifest:None\n` or
+            // `decoy_pairing_manifest:Some("ESCAPED")\n`. We pin (a) the
+            // exact escaped representation for the load-bearing Windows
+            // and Linux path shapes, and (b) that identical inputs
+            // produce identical hashes while distinct inputs diverge.
+            //
+            // Paths use the imaginary T:\ drive and a non-existent /srv
+            // tree so the test is portable across developer machines
+            // (no filesystem touch required; the hash is purely a string
+            // operation).
+            const string winPath = @"T:\test\manifest.tsv";
+            const string linuxPath = @"/srv/test/manifest.tsv";
+            const string winPathAlt = @"T:\test\manifesx.tsv";
+
+            // Pin the exact pre-hash escape that goes into Some("...").
+            Assert.AreEqual(@"T:\\test\\manifest.tsv",
+                OspreyConfig.EscapeForRustDebug(winPath));
+            Assert.AreEqual(linuxPath,
+                OspreyConfig.EscapeForRustDebug(linuxPath));
+
+            var configEmpty = new OspreyConfig();
+            string hashEmpty = configEmpty.SearchParameterHash();
+
+            var configWin = new OspreyConfig { DecoyPairingManifestPath = winPath };
+            string hashWin = configWin.SearchParameterHash();
+            // Hash determinism: identical config -> identical hash.
+            Assert.AreEqual(hashWin, configWin.SearchParameterHash());
+            // Sensitivity: setting a manifest path changes the hash.
+            Assert.AreNotEqual(hashEmpty, hashWin);
+
+            var configLinux = new OspreyConfig { DecoyPairingManifestPath = linuxPath };
+            string hashLinux = configLinux.SearchParameterHash();
+            Assert.AreEqual(hashLinux, configLinux.SearchParameterHash());
+            // Distinct path shapes (different escape semantics) produce
+            // distinct hashes.
+            Assert.AreNotEqual(hashWin, hashLinux);
+
+            // Off-by-one: paths differing in a single character produce
+            // distinct hashes (catches accidental aliasing in the escape
+            // path).
+            var configWinAlt = new OspreyConfig { DecoyPairingManifestPath = winPathAlt };
+            Assert.AreNotEqual(hashWin, configWinAlt.SearchParameterHash());
+        }
+
+        [TestMethod]
         public void TestLibrarySourceFromPath()
         {
             var tsv = LibrarySource.FromPath("library.tsv");

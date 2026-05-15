@@ -250,14 +250,17 @@ namespace pwiz.OspreySharp.Core
                 prefixList.Append(']');
                 sb.AppendFormat(ic, "decoy_prefixes:{0}\n", prefixList.ToString());
                 // Mirror Rust's `format!("decoy_pairing_manifest:{:?}\n", ...)`
-                // where the value is `Some("path")` or `None`. The path is
-                // not normalised; the user's choice (relative or absolute)
-                // is part of the hash so a moved manifest invalidates the
-                // cache.
+                // where the value is `Some("path")` or `None`. Rust's {:?}
+                // on String escapes \, ", \n, \r, \t, \0, and other control
+                // chars (< 0x20) -- critical for Windows paths whose `\`
+                // separators must become `\\` to match Rust's output. The
+                // path is not normalised; the user's choice (relative or
+                // absolute) is part of the hash so a moved manifest
+                // invalidates the cache.
                 sb.AppendFormat(ic, "decoy_pairing_manifest:{0}\n",
                     string.IsNullOrEmpty(DecoyPairingManifestPath)
                         ? "None"
-                        : "Some(\"" + DecoyPairingManifestPath + "\")");
+                        : "Some(\"" + EscapeForRustDebug(DecoyPairingManifestPath) + "\")");
                 sb.AppendFormat(ic, "decoy_pair_min_fraction:{0}\n", DecoyPairMinFraction);
                 sb.AppendFormat(ic, "rt_cal.enabled:{0}\n", b(RtCalibration.Enabled));
                 sb.AppendFormat(ic, "rt_cal.fallback_rt_tolerance:{0}\n", RtCalibration.FallbackRtTolerance);
@@ -319,6 +322,57 @@ namespace pwiz.OspreySharp.Core
                     result.Append(hashBytes[i].ToString("x2"));
                 return result.ToString();
             }
+        }
+
+        /// <summary>
+        /// Escape a string to match Rust's <c>{:?}</c> Debug formatter
+        /// output for <c>&amp;str</c> / <c>String</c>. Handles the cases
+        /// that actually appear in config values folded into the search
+        /// hash: backslashes, double quotes, common C escapes
+        /// (<c>\n</c>, <c>\r</c>, <c>\t</c>, <c>\0</c>), and other
+        /// sub-0x20 control characters via the <c>\u{...}</c> form.
+        /// Printable ASCII and non-ASCII bytes pass through unchanged --
+        /// matching Rust's default Debug output as of the language
+        /// versions in use by maccoss/osprey (1.75+). Used so cross-impl
+        /// hashes agree on Windows paths whose <c>\</c> separators must
+        /// render as <c>\\</c>.
+        /// </summary>
+        internal static string EscapeForRustDebug(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+                return s ?? string.Empty;
+            var sb = new StringBuilder(s.Length + 8);
+            foreach (char c in s)
+            {
+                switch (c)
+                {
+                    case '\\': sb.Append(@"\\"); break;
+                    case '"':  sb.Append("\\\""); break;
+                    case '\n': sb.Append(@"\n"); break;
+                    case '\r': sb.Append(@"\r"); break;
+                    case '\t': sb.Append(@"\t"); break;
+                    case '\0': sb.Append(@"\0"); break;
+                    default:
+                        if (c < 0x20 || c == 0x7F)
+                        {
+                            // Rust's {:?} uses `\u{HEX}` with lowercase hex,
+                            // no padding. AppendFormat's `{0:x}` works on
+                            // net8.0 but produces `{x}` literally on net472
+                            // under the double-brace escape sequence; use
+                            // explicit ToString to avoid the regression.
+                            sb.Append(@"\u{");
+                            sb.Append(((int)c).ToString(@"x",
+                                System.Globalization.CultureInfo.InvariantCulture));
+                            sb.Append('}');
+                        }
+                        else
+                        {
+                            sb.Append(c);
+                        }
+                        break;
+                }
+            }
+            return sb.ToString();
         }
 
         /// <summary>

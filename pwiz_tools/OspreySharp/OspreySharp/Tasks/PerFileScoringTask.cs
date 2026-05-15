@@ -244,17 +244,6 @@ namespace pwiz.OspreySharp.Tasks
             else
             {
                 decoys = new List<LibraryEntry>();
-                int nLibraryDecoys = library.Count - nLibraryTargets;
-                if (nLibraryDecoys == 0)
-                {
-                    ctx.LogError(string.Format(
-                        @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
-                        @"Check that the library actually contains decoys with one of these prefixes on " +
-                        @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
-                        FormatPrefixList(config.DecoyPrefixes)));
-                    ctx.ExitCode = 1;
-                    return false;
-                }
 
                 // Pair each decoy with its target so their base_ids match
                 // -- required for SVM target-decoy competition, LDA
@@ -333,6 +322,23 @@ namespace pwiz.OspreySharp.Tasks
                     pairingStats.PairedFraction * 100.0,
                     pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
                     pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
+                // "No decoys at all" detection runs AFTER the manifest
+                // pass: the manifest may flip prefix-stripped library
+                // entries to IsDecoy=true (the Carafe failure mode commit
+                // 5 was built for), so a zero count at LOAD time is not
+                // the same as a zero count after manifest application.
+                if (pairingStats.NDecoys == 0)
+                {
+                    ctx.LogError(string.Format(
+                        @"decoys_in_library mode requested but no library entries match prefixes {0} " +
+                        @"and no manifest classified any entry as decoy. Check that the library " +
+                        @"actually contains decoys with one of these prefixes on a protein accession, " +
+                        @"or supply a pairing manifest, or unset decoys_in_library so Osprey " +
+                        @"generates decoys.",
+                        FormatPrefixList(config.DecoyPrefixes)));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
                 if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
                 {
                     ctx.LogError(string.Format(
