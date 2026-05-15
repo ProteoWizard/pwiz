@@ -89,11 +89,42 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         public IReadOnlyList<OspreyTask> Tasks { get; }
 
+        /// <summary>
+        /// First task in <see cref="Tasks"/> whose <see cref="OspreyTask.Run"/>
+        /// will be invoked. Tasks before this one are present in the registry
+        /// (so consumers can still <see cref="GetTask{T}"/> them and pull
+        /// state through their lazy-rehydrate accessors) but their
+        /// <c>Run</c> is never called. Defaults to the first entry in
+        /// <see cref="Tasks"/>. Set once by the pipeline entry point from
+        /// CLI-derived <see cref="OspreyConfig"/> flags; immutable thereafter.
+        /// </summary>
+        public Type StartAtTask { get; }
+
+        /// <summary>
+        /// Last task in <see cref="Tasks"/> whose <see cref="OspreyTask.Run"/>
+        /// will be invoked. Tasks after this one are not reached. Defaults
+        /// to the last entry in <see cref="Tasks"/>. Set once by the
+        /// pipeline entry point from CLI-derived <see cref="OspreyConfig"/>
+        /// flags; immutable thereafter.
+        /// </summary>
+        public Type StopAfterTask { get; }
+
         public PipelineContext(OspreyConfig config,
             IEnumerable<OspreyTask> tasks,
             Action<string> logInfo,
             Action<string> logWarning,
             Action<string> logError)
+            : this(config, tasks, logInfo, logWarning, logError, null, null)
+        {
+        }
+
+        public PipelineContext(OspreyConfig config,
+            IEnumerable<OspreyTask> tasks,
+            Action<string> logInfo,
+            Action<string> logWarning,
+            Action<string> logError,
+            Type startAtTask,
+            Type stopAfterTask)
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             if (tasks == null) throw new ArgumentNullException(nameof(tasks));
@@ -110,6 +141,25 @@ namespace pwiz.OspreySharp.Tasks
                 _tasksByType.Add(task.GetType(), task);
             }
             Tasks = list;
+
+            if (list.Count == 0)
+            {
+                StartAtTask = startAtTask;
+                StopAfterTask = stopAfterTask;
+            }
+            else
+            {
+                StartAtTask = startAtTask ?? list[0].GetType();
+                StopAfterTask = stopAfterTask ?? list[list.Count - 1].GetType();
+                if (!_tasksByType.ContainsKey(StartAtTask))
+                    throw new ArgumentException(
+                        string.Format(@"StartAtTask '{0}' is not in the pipeline task list.",
+                            StartAtTask.FullName), nameof(startAtTask));
+                if (!_tasksByType.ContainsKey(StopAfterTask))
+                    throw new ArgumentException(
+                        string.Format(@"StopAfterTask '{0}' is not in the pipeline task list.",
+                            StopAfterTask.FullName), nameof(stopAfterTask));
+            }
         }
 
         public void LogInfo(string message) { _logInfo(message); }
