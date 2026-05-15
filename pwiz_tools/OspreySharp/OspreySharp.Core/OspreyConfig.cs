@@ -103,6 +103,18 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public double DecoyPairMinFraction { get; set; } = 0.80;
 
+        /// <summary>
+        /// Optional path to a FDRBench-style pairing manifest (5-column
+        /// TSV: <c>sequence, decoy, proteins, peptide_type,
+        /// peptide_pair_index</c>). When set together with
+        /// <see cref="DecoysInLibrary"/>, the pipeline runs manifest-based
+        /// pairing first and then falls back to composition-based pairing
+        /// for decoys the manifest didn't cover. Recommended for
+        /// FDRBench-generated entrapment libraries.
+        /// Maps to Rust <c>OspreyConfig::decoy_pairing_manifest</c>.
+        /// </summary>
+        public string DecoyPairingManifestPath { get; set; }
+
         /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
         public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
 
@@ -237,6 +249,15 @@ namespace pwiz.OspreySharp.Core
                 }
                 prefixList.Append(']');
                 sb.AppendFormat(ic, "decoy_prefixes:{0}\n", prefixList.ToString());
+                // Mirror Rust's `format!("decoy_pairing_manifest:{:?}\n", ...)`
+                // where the value is `Some("path")` or `None`. The path is
+                // not normalised; the user's choice (relative or absolute)
+                // is part of the hash so a moved manifest invalidates the
+                // cache.
+                sb.AppendFormat(ic, "decoy_pairing_manifest:{0}\n",
+                    string.IsNullOrEmpty(DecoyPairingManifestPath)
+                        ? "None"
+                        : "Some(\"" + DecoyPairingManifestPath + "\")");
                 sb.AppendFormat(ic, "decoy_pair_min_fraction:{0}\n", DecoyPairMinFraction);
                 sb.AppendFormat(ic, "rt_cal.enabled:{0}\n", b(RtCalibration.Enabled));
                 sb.AppendFormat(ic, "rt_cal.fallback_rt_tolerance:{0}\n", RtCalibration.FallbackRtTolerance);

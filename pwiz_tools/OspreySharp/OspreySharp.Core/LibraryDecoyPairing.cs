@@ -27,7 +27,8 @@ using System.Collections.Generic;
 namespace pwiz.OspreySharp.Core
 {
     /// <summary>
-    /// Statistics from a target-decoy pairing pass.
+    /// Statistics from a target-decoy pairing pass (or sequence of passes
+    /// across the manifest + composition fallback).
     /// Maps to Rust <c>osprey_core::types::PairingStats</c>.
     /// </summary>
     public class PairingStats
@@ -39,10 +40,23 @@ namespace pwiz.OspreySharp.Core
         public int NDecoys { get; set; }
 
         /// <summary>
-        /// Number of decoys successfully paired with a target
-        /// (decoy.Id rewritten to share base_id with the target).
+        /// Number of decoys successfully paired with a target. Equals
+        /// <see cref="NPairedViaManifest"/> + <see cref="NPairedViaComposition"/>.
         /// </summary>
         public int NPaired { get; set; }
+
+        /// <summary>
+        /// Of <see cref="NPaired"/>, how many were resolved by the
+        /// FDRBench-style manifest path.
+        /// </summary>
+        public int NPairedViaManifest { get; set; }
+
+        /// <summary>
+        /// Of <see cref="NPaired"/>, how many were resolved by the
+        /// composition-based fallback (matching protein accession, charge,
+        /// and sorted-AA composition).
+        /// </summary>
+        public int NPairedViaComposition { get; set; }
 
         /// <summary>Number of decoys for which no target match was found.</summary>
         public int NUnpairedDecoys { get; set; }
@@ -63,39 +77,57 @@ namespace pwiz.OspreySharp.Core
     }
 
     /// <summary>
+    /// Shared bookkeeping for multi-pass library-decoy pairing. The
+    /// manifest path may pair some decoys; the composition fallback then
+    /// needs to know which targets are already claimed and which decoys
+    /// are already paired so it doesn't reconsider them.
+    /// Maps to Rust <c>osprey_core::types::PairingState</c>.
+    /// </summary>
+    public class PairingState
+    {
+        /// <summary>Library indices of targets already claimed by a paired decoy.</summary>
+        public HashSet<int> ClaimedTargets { get; } = new HashSet<int>();
+
+        /// <summary>Library indices of decoys already paired with a target.</summary>
+        public HashSet<int> PairedDecoys { get; } = new HashSet<int>();
+    }
+
+    /// <summary>
     /// Pair library-supplied decoys with their targets via amino-acid
     /// composition. Run after <c>LibraryDecoyMarker.ApplyLibraryDecoyMarking</c>
-    /// so decoys already carry <c>IsDecoy = true</c>.
+    /// so decoys already carry <c>IsDecoy = true</c>. Composition pairing
+    /// is the fallback when an FDRBench-style manifest doesn't cover a
+    /// given decoy.
     /// Maps to Rust <c>osprey_core::types::pair_library_decoys_by_composition</c>.
     /// </summary>
     public static class LibraryDecoyPairing
     {
         /// <summary>
-        /// Pair each decoy with the target entry sharing the same protein
-        /// accession (after stripping any of <paramref name="decoyPrefixes"/>),
-        /// the same amino-acid composition (a permutation invariant), and
-        /// the same precursor charge. When found, rewrites the decoy's
-        /// <see cref="LibraryEntry.Id"/> so its
-        /// <c>base_id = Id &amp; 0x7FFFFFFF</c> matches the target's id.
+        /// Pair each un-paired decoy with a target sharing the same
+        /// stripped protein accession, charge, and sorted-AA composition.
+        /// Updates <paramref name="state"/> in place with new pairings;
+        /// targets already in <c>state.ClaimedTargets</c> and decoys
+        /// already in <c>state.PairedDecoys</c> are skipped, so this can
+        /// be chained after a manifest-based pass.
         ///
-        /// Determinism: when a (accession, charge, composition) bucket
-        /// holds multiple peptides, entries are sorted by
-        /// <c>(Sequence, Id)</c> on both sides and zipped 1:1.
+        /// Determinism: when a bucket holds multiple peptides, entries on
+        /// both sides are sorted by <c>(Sequence, Id)</c> and zipped 1:1.
+        /// Shared peptides: a decoy's accessions are sorted
+        /// lexicographically and the first un-claimed target match wins.
         ///
-        /// Shared peptides: when a decoy lists multiple accessions, they
-        /// are sorted lexicographically and the first un-claimed target
-        /// match wins.
+        /// Returns the number of decoys paired on this call.
         /// </summary>
-        public static PairingStats PairLibraryDecoysByComposition(
+        public static int PairLibraryDecoysByComposition(
             IList<LibraryEntry> library,
-            IList<string> decoyPrefixes)
+            IList<string> decoyPrefixes,
+            PairingState state)
         {
-            var stats = new PairingStats();
-            if (library == null || library.Count == 0)
-                return stats;
+            if (library == null || library.Count == 0 || state == null)
+                return 0;
 
             // Phase 1: build target index keyed by (accession, charge,
-            // sorted_aa) -> list of target library indices.
+            // sorted_aa) -> list of target library indices. Targets
+            // already claimed by an earlier pass are excluded entirely.
             var targetIndex =
                 new Dictionary<TargetKey, List<int>>(TargetKeyComparer.Instance);
             for (int idx = 0; idx < library.Count; idx++)
@@ -103,12 +135,8 @@ namespace pwiz.OspreySharp.Core
                 var entry = library[idx];
                 if (entry == null)
                     continue;
-                if (entry.IsDecoy)
-                {
-                    stats.NDecoys++;
+                if (entry.IsDecoy || state.ClaimedTargets.Contains(idx))
                     continue;
-                }
-                stats.NTargets++;
                 if (entry.ProteinIds == null || entry.ProteinIds.Count == 0)
                     continue;
                 string aa = SortedAa(entry.Sequence);
@@ -139,12 +167,12 @@ namespace pwiz.OspreySharp.Core
                 }
             }
 
-            // Phase 2: scan decoys in (sequence, id) order, claim a target
-            // slot from the index. claimed[targetIdx] = true once paired.
+            // Phase 2: scan still-unpaired decoys in (sequence, id) order.
             var decoyOrder = new List<int>();
             for (int i = 0; i < library.Count; i++)
             {
-                if (library[i] != null && library[i].IsDecoy)
+                if (library[i] != null && library[i].IsDecoy &&
+                    !state.PairedDecoys.Contains(i))
                     decoyOrder.Add(i);
             }
             decoyOrder.Sort((a, b) =>
@@ -154,10 +182,7 @@ namespace pwiz.OspreySharp.Core
                 return library[a].Id.CompareTo(library[b].Id);
             });
 
-            var claimed = new HashSet<int>();
-            // Collected pairings; applied after the read-only index scan.
             var pairings = new List<KeyValuePair<int, int>>();
-
             foreach (var decoyIdx in decoyOrder)
             {
                 var decoy = library[decoyIdx];
@@ -177,7 +202,7 @@ namespace pwiz.OspreySharp.Core
                         continue;
                     for (int t = 0; t < candidates.Count; t++)
                     {
-                        if (!claimed.Contains(candidates[t]))
+                        if (!state.ClaimedTargets.Contains(candidates[t]))
                         {
                             matched = candidates[t];
                             break;
@@ -187,7 +212,8 @@ namespace pwiz.OspreySharp.Core
 
                 if (matched >= 0)
                 {
-                    claimed.Add(matched);
+                    state.ClaimedTargets.Add(matched);
+                    state.PairedDecoys.Add(decoyIdx);
                     pairings.Add(new KeyValuePair<int, int>(decoyIdx, matched));
                 }
             }
@@ -201,19 +227,38 @@ namespace pwiz.OspreySharp.Core
                 library[decoyIdx].Id = targetId | LibraryEntry.DECOY_ID_BIT;
             }
 
-            stats.NPaired = pairings.Count;
-            stats.NUnpairedDecoys = stats.NDecoys - stats.NPaired;
-            // saturating_sub: never go negative (defense-in-depth; not
-            // load-bearing because claimed.Count <= n_targets by
-            // construction).
-            stats.NUnpairedTargets = Math.Max(0, stats.NTargets - claimed.Count);
-            return stats;
+            return pairings.Count;
+        }
+
+        /// <summary>
+        /// Count targets vs decoys in <paramref name="library"/>. Used to
+        /// initialize <see cref="PairingStats.NTargets"/> /
+        /// <see cref="PairingStats.NDecoys"/> outside the pairing
+        /// functions (which only track delta counts).
+        /// </summary>
+        public static void CountTargetsAndDecoys(
+            IList<LibraryEntry> library, out int nTargets, out int nDecoys)
+        {
+            nTargets = 0;
+            nDecoys = 0;
+            if (library == null)
+                return;
+            for (int i = 0; i < library.Count; i++)
+            {
+                var entry = library[i];
+                if (entry == null)
+                    continue;
+                if (entry.IsDecoy)
+                    nDecoys++;
+                else
+                    nTargets++;
+            }
         }
 
         /// <summary>
         /// Sorted canonical form of a peptide's amino-acid composition.
-        /// `PEPK` and `KPEP` both map to `EKPP`. Maps to Rust
-        /// <c>sorted_aa</c>.
+        /// <c>PEPK</c> and <c>KPEP</c> both map to <c>EKPP</c>. Maps to
+        /// Rust <c>sorted_aa</c>.
         /// </summary>
         private static string SortedAa(string sequence)
         {

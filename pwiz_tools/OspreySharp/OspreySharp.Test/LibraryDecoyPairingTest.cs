@@ -29,10 +29,10 @@ namespace pwiz.OspreySharp.Test
 {
     /// <summary>
     /// Cross-impl tests for composition-based library-decoy pairing.
-    /// Ports the 7 Rust composition-pairing unit tests from
-    /// <c>osprey-core/src/types.rs</c> at maccoss/osprey commit
-    /// <c>a8ae4a1</c> (Added target-decoy pairing for library-supplied
-    /// decoys).
+    /// Ports the Rust composition-pairing unit tests from
+    /// <c>osprey-core/src/types.rs</c> at maccoss/osprey commits
+    /// <c>a8ae4a1</c> and <c>4bb7068</c> (state-based incremental API
+    /// for chaining with the FDRBench manifest reader).
     /// </summary>
     [TestClass]
     public class LibraryDecoyPairingTest
@@ -47,23 +47,43 @@ namespace pwiz.OspreySharp.Test
             return e;
         }
 
+        // Convenience wrapper for tests: composition-only pairing returning
+        // a self-contained PairingStats. Production code uses
+        // PairingState directly so manifest + composition can be chained.
+        private static PairingStats RunCompositionOnly(
+            IList<LibraryEntry> lib, IList<string> prefixes)
+        {
+            LibraryDecoyPairing.CountTargetsAndDecoys(lib,
+                out int nTargets, out int nDecoys);
+            var state = new PairingState();
+            int nPaired = LibraryDecoyPairing.PairLibraryDecoysByComposition(
+                lib, prefixes, state);
+            return new PairingStats
+            {
+                NTargets = nTargets,
+                NDecoys = nDecoys,
+                NPaired = nPaired,
+                NPairedViaManifest = 0,
+                NPairedViaComposition = nPaired,
+                NUnpairedDecoys = nDecoys - nPaired,
+                NUnpairedTargets = System.Math.Max(0,
+                    nTargets - state.ClaimedTargets.Count),
+            };
+        }
+
         [TestMethod]
         public void PairByCompositionSimplePermutation()
         {
-            // Target PEPK in protein P1; decoy KPEP (permutation) in DECOY_P1.
-            // Decoy already has IsDecoy=true and DECOY_ID_BIT set from marking pass.
             var lib = new List<LibraryEntry>
             {
                 MakePairedEntry(1, @"PEPK", 2, new[] { @"P1" }, false),
                 MakePairedEntry(2u | LibraryEntry.DECOY_ID_BIT, @"KPEP", 2,
                     new[] { @"DECOY_P1" }, true),
             };
-            var stats = LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                lib, new List<string> { @"DECOY_" });
+            var stats = RunCompositionOnly(lib, new List<string> { @"DECOY_" });
             Assert.AreEqual(1, stats.NPaired);
             Assert.AreEqual(0, stats.NUnpairedDecoys);
             Assert.AreEqual(0, stats.NUnpairedTargets);
-            // Decoy's base_id should now match the target's id.
             Assert.AreEqual(lib[0].Id, lib[1].Id & 0x7FFFFFFFu);
             Assert.IsTrue((lib[1].Id & LibraryEntry.DECOY_ID_BIT) != 0u);
         }
@@ -71,15 +91,13 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void PairByCompositionRequiresMatchingProtein()
         {
-            // Same AA composition but different proteins -> no pairing.
             var lib = new List<LibraryEntry>
             {
                 MakePairedEntry(1, @"PEPK", 2, new[] { @"P1" }, false),
                 MakePairedEntry(2u | LibraryEntry.DECOY_ID_BIT, @"KPEP", 2,
                     new[] { @"DECOY_P2" }, true),
             };
-            var stats = LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                lib, new List<string> { @"DECOY_" });
+            var stats = RunCompositionOnly(lib, new List<string> { @"DECOY_" });
             Assert.AreEqual(0, stats.NPaired);
             Assert.AreEqual(1, stats.NUnpairedDecoys);
         }
@@ -87,24 +105,19 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void PairByCompositionRequiresMatchingCharge()
         {
-            // Same protein, same composition, different charge -> no pairing.
             var lib = new List<LibraryEntry>
             {
                 MakePairedEntry(1, @"PEPK", 2, new[] { @"P1" }, false),
                 MakePairedEntry(2u | LibraryEntry.DECOY_ID_BIT, @"KPEP", 3,
                     new[] { @"DECOY_P1" }, true),
             };
-            var stats = LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                lib, new List<string> { @"DECOY_" });
+            var stats = RunCompositionOnly(lib, new List<string> { @"DECOY_" });
             Assert.AreEqual(0, stats.NPaired);
         }
 
         [TestMethod]
         public void PairByCompositionOneToOneWithinCompositionGroup()
         {
-            // Two target peptides in the same protein with the same AA
-            // composition and two decoys with the same composition. Each
-            // decoy must claim a distinct target (1:1).
             var lib = new List<LibraryEntry>
             {
                 MakePairedEntry(1, @"PEPK", 2, new[] { @"P1" }, false),
@@ -114,8 +127,7 @@ namespace pwiz.OspreySharp.Test
                 MakePairedEntry(4u | LibraryEntry.DECOY_ID_BIT, @"PKPE", 2,
                     new[] { @"DECOY_P1" }, true),
             };
-            var stats = LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                lib, new List<string> { @"DECOY_" });
+            var stats = RunCompositionOnly(lib, new List<string> { @"DECOY_" });
             Assert.AreEqual(2, stats.NPaired);
             Assert.AreEqual(0, stats.NUnpairedDecoys);
             Assert.AreEqual(0, stats.NUnpairedTargets);
@@ -129,12 +141,9 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void PairByCompositionDeterministicAcrossInputOrder()
         {
-            // Two compositionally-identical pairs; the pairing assignment
-            // must not depend on the order entries appear in the library
-            // vector.
             var prefixes = new List<string> { @"DECOY_" };
 
-            List<LibraryEntry> libA = new List<LibraryEntry>
+            var libA = new List<LibraryEntry>
             {
                 MakePairedEntry(1, @"PEPK", 2, new[] { @"P1" }, false),
                 MakePairedEntry(2, @"EPKP", 2, new[] { @"P1" }, false),
@@ -143,7 +152,7 @@ namespace pwiz.OspreySharp.Test
                 MakePairedEntry(4u | LibraryEntry.DECOY_ID_BIT, @"PKPE", 2,
                     new[] { @"DECOY_P1" }, true),
             };
-            List<LibraryEntry> libB = new List<LibraryEntry>
+            var libB = new List<LibraryEntry>
             {
                 MakePairedEntry(4u | LibraryEntry.DECOY_ID_BIT, @"PKPE", 2,
                     new[] { @"DECOY_P1" }, true),
@@ -152,8 +161,8 @@ namespace pwiz.OspreySharp.Test
                     new[] { @"DECOY_P1" }, true),
                 MakePairedEntry(1, @"PEPK", 2, new[] { @"P1" }, false),
             };
-            LibraryDecoyPairing.PairLibraryDecoysByComposition(libA, prefixes);
-            LibraryDecoyPairing.PairLibraryDecoysByComposition(libB, prefixes);
+            RunCompositionOnly(libA, prefixes);
+            RunCompositionOnly(libB, prefixes);
 
             Assert.AreEqual(DecoyBaseId(libA, @"KPEP"), DecoyBaseId(libB, @"KPEP"));
             Assert.AreEqual(DecoyBaseId(libA, @"PKPE"), DecoyBaseId(libB, @"PKPE"));
@@ -162,17 +171,13 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void PairByCompositionSharedPeptidePicksAvailableTarget()
         {
-            // A decoy on a shared peptide with two possible targets in
-            // different proteins. The decoy should claim whichever target
-            // is reachable through any of its accessions.
             var lib = new List<LibraryEntry>
             {
                 MakePairedEntry(1, @"PEPK", 2, new[] { @"P1", @"P2" }, false),
                 MakePairedEntry(2u | LibraryEntry.DECOY_ID_BIT, @"KPEP", 2,
                     new[] { @"DECOY_P2" }, true),
             };
-            var stats = LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                lib, new List<string> { @"DECOY_" });
+            var stats = RunCompositionOnly(lib, new List<string> { @"DECOY_" });
             Assert.AreEqual(1, stats.NPaired);
             Assert.AreEqual(1u, lib[1].Id & 0x7FFFFFFFu);
         }
@@ -180,19 +185,16 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void PairByCompositionReportsUnpairedCounts()
         {
-            // 2 targets, 1 decoy pairs, 1 doesn't. 1 unpaired decoy + 1
-            // unpaired target.
             var lib = new List<LibraryEntry>
             {
-                MakePairedEntry(1, @"PEPK", 2, new[] { @"P1" }, false), // paired
-                MakePairedEntry(2, @"AAAR", 2, new[] { @"P2" }, false), // unpaired target
+                MakePairedEntry(1, @"PEPK", 2, new[] { @"P1" }, false),
+                MakePairedEntry(2, @"AAAR", 2, new[] { @"P2" }, false),
                 MakePairedEntry(3u | LibraryEntry.DECOY_ID_BIT, @"KPEP", 2,
-                    new[] { @"DECOY_P1" }, true), // pairs to id=1
+                    new[] { @"DECOY_P1" }, true),
                 MakePairedEntry(4u | LibraryEntry.DECOY_ID_BIT, @"XYZK", 2,
-                    new[] { @"DECOY_P9" }, true), // no target
+                    new[] { @"DECOY_P9" }, true),
             };
-            var stats = LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                lib, new List<string> { @"DECOY_" });
+            var stats = RunCompositionOnly(lib, new List<string> { @"DECOY_" });
             Assert.AreEqual(2, stats.NTargets);
             Assert.AreEqual(2, stats.NDecoys);
             Assert.AreEqual(1, stats.NPaired);
@@ -204,13 +206,11 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void PairByCompositionNoDecoysIsFullPairFraction()
         {
-            // No decoys -> PairedFraction returns 1.0 (no failure to report).
             var lib = new List<LibraryEntry>
             {
                 MakePairedEntry(1, @"PEPK", 2, new[] { @"P1" }, false),
             };
-            var stats = LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                lib, new List<string> { @"DECOY_" });
+            var stats = RunCompositionOnly(lib, new List<string> { @"DECOY_" });
             Assert.AreEqual(0, stats.NDecoys);
             Assert.AreEqual(1.0, stats.PairedFraction);
         }

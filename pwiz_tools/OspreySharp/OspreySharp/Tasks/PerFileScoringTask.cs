@@ -258,17 +258,65 @@ namespace pwiz.OspreySharp.Tasks
 
                 // Pair each decoy with its target so their base_ids match
                 // -- required for SVM target-decoy competition, LDA
-                // calibration, and CV fold grouping. Composition pairing
-                // is the default; the manifest-based path is wired in a
-                // later commit.
-                ctx.LogInfo(
-                    @"Pairing library decoys to targets by amino-acid composition (no manifest provided).");
-                var pairingStats = LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                    library, config.DecoyPrefixes);
+                // calibration, and CV fold grouping. Hybrid path:
+                // manifest first when provided (exact pairs from
+                // FDRBench), composition fallback for whatever the
+                // manifest doesn't cover. Net result on real Carafe-
+                // generated entrapment libraries: ~30% via manifest,
+                // ~70% via composition, >99% total.
+                var pairingState = new PairingState();
+                LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                    out int nTargetsForStats, out int nDecoysForStats);
+                var pairingStats = new PairingStats
+                {
+                    NTargets = nTargetsForStats,
+                    NDecoys = nDecoysForStats,
+                };
+                if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+                {
+                    ctx.LogInfo(string.Format(
+                        @"Loading decoy pairing manifest from {0}",
+                        config.DecoyPairingManifestPath));
+                    DecoyPairingManifest manifest;
+                    try
+                    {
+                        manifest = DecoyPairingManifest.FromTsv(
+                            config.DecoyPairingManifestPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        ctx.LogError(string.Format(
+                            @"Failed to read decoy pairing manifest {0}: {1}",
+                            config.DecoyPairingManifestPath, ex.Message));
+                        ctx.ExitCode = 1;
+                        return false;
+                    }
+                    pairingStats.NPairedViaManifest = manifest.ApplyToLibrary(
+                        library, pairingState);
+                }
+                else
+                {
+                    ctx.LogInfo(
+                        @"Pairing library decoys to targets by amino-acid composition " +
+                        @"(no manifest provided).");
+                }
+                pairingStats.NPairedViaComposition =
+                    LibraryDecoyPairing.PairLibraryDecoysByComposition(
+                        library, config.DecoyPrefixes, pairingState);
+                pairingStats.NPaired = pairingStats.NPairedViaManifest +
+                    pairingStats.NPairedViaComposition;
+                // Defense-in-depth saturating subtract (matches Rust's
+                // saturating_sub intent; not load-bearing).
+                pairingStats.NUnpairedDecoys = Math.Max(0,
+                    pairingStats.NDecoys - pairingStats.NPaired);
+                pairingStats.NUnpairedTargets = Math.Max(0,
+                    pairingStats.NTargets - pairingState.ClaimedTargets.Count);
                 ctx.LogInfo(string.Format(
-                    @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); {3} unpaired decoys, {4} unpaired targets",
+                    @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
+                    @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
                     pairingStats.NPaired, pairingStats.NDecoys,
                     pairingStats.PairedFraction * 100.0,
+                    pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
                     pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
                 if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
                 {
