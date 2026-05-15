@@ -36,7 +36,7 @@ public class DiaUmpireTests
             ms1Peaks: new[] { (mz: 500.0, intensity: 1000.0), (mz: 700.0, intensity: 800.0) });
         var cfg = new Config { DiaTargetWindowScheme = TargetWindowScheme.SwathFixed, DiaFixedWindowSize = 100 };
 
-        var dia = new DiaUmpireProcessor(msd, sl, cfg);
+        using var dia = new DiaUmpireProcessor(msd, sl, cfg);
 
         AssertPseudoMsMsKeysShapeAndIntegrity(dia);
         AssertPseudoMsMsKeysSortedByScanTimeMzCharge(dia);
@@ -71,14 +71,12 @@ public class DiaUmpireTests
         Assert.IsTrue(dia.PseudoMsMsKeys.Count >= 0);
         Assert.IsNotNull(dia.SpillFileByWindow);
         // Every key's spill-file token must be in the per-window map, and the
-        // SpillFileIndex must point inside that spill's spectrum list.
+        // SpillFileIndex must point inside that spill's record set.
         foreach (var key in dia.PseudoMsMsKeys)
         {
             Assert.IsNotNull(key.SpillFileToken);
             Assert.IsTrue(dia.SpillFileByWindow.Values.Contains(key.SpillFileToken!));
-            var list = key.SpillFileToken!.Data.Run.SpectrumList;
-            Assert.IsNotNull(list);
-            Assert.IsTrue(key.SpillFileIndex >= 0 && key.SpillFileIndex < list!.Count);
+            Assert.IsTrue(key.SpillFileIndex >= 0 && key.SpillFileIndex < key.SpillFileToken!.Count);
         }
     }
 
@@ -99,7 +97,7 @@ public class DiaUmpireTests
         if (dia.PseudoMsMsKeys.Count == 0) return;
         int totalSpectra = 0;
         foreach (var spill in dia.SpillFileByWindow.Values)
-            totalSpectra += spill.Data.Run.SpectrumList?.Count ?? 0;
+            totalSpectra += spill.Count;
         Assert.IsTrue(totalSpectra >= dia.PseudoMsMsKeys.Count);
     }
 

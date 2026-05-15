@@ -70,7 +70,7 @@ public class DiaUmpireParityTests
         Assert.IsNotNull(msd.Run.SpectrumList);
 
         var config = new Config(paramsPath);
-        var sl = new SpectrumList_DiaUmpire(msd, msd.Run.SpectrumList!, config);
+        using var sl = new SpectrumList_DiaUmpire(msd, msd.Run.SpectrumList!, config);
 
         // Algorithm produced at least one pseudo-MS/MS.
         Assert.IsTrue(sl.Count > 0,

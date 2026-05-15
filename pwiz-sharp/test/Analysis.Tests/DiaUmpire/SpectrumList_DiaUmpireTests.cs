@@ -27,7 +27,7 @@ public class SpectrumList_DiaUmpireTests
     private static void AssertWrapperCarriesDiaUmpireProcessingMethod()
     {
         var (msd, inner) = DiaUmpireTests.BuildTinySwathMsd();
-        var sl = new SpectrumList_DiaUmpire(msd, inner, new Config());
+        using var sl = new SpectrumList_DiaUmpire(msd, inner, new Config());
 
         Assert.IsNotNull(sl.DataProcessing);
         bool sawConversion = false;
@@ -54,6 +54,7 @@ public class SpectrumList_DiaUmpireTests
             var (msd, inner) = DiaUmpireTests.BuildTinySwathMsd();
             var wrapped = SpectrumListFactory.Wrap(inner, new[] { $"diaUmpire params={tmp}" }, msd);
             Assert.IsInstanceOfType(wrapped, typeof(SpectrumList_DiaUmpire));
+            (wrapped as System.IDisposable)?.Dispose();
         }
         finally { File.Delete(tmp); }
     }

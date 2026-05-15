@@ -10,15 +10,18 @@
 //     each window. pwiz-sharp uses Parallel.ForEach with a ParallelOptions
 //     MaxDegreeOfParallelism cap, no nested pool — the "nested" parallelism
 //     in cpp mainly hides per-spectrum preprocessing, which we do inline.
-//   * Spill files: cpp writes one mz5 file per DIA window into a TemporaryFile.
-//     pwiz-sharp keeps each window's pseudo-MS/MS spectra in-memory inside
-//     a SpillFile wrapper (one MSData + SpectrumListSimple per window). When
-//     memory becomes a problem we can swap in mzMLb-backed spill (we have a
-//     MzMlbWriter); the SpillFileToken shape is opaque so the swap is local.
+//   * Spill files: cpp writes one mz5 file per DIA window into a TemporaryFile
+//     and keeps an MRU cache of MSDataFile instances for lazy spectrum reads.
+//     pwiz-sharp uses a compact custom binary spill format (see SpillFile docs)
+//     so each spectrum read can pull just its own bytes from disk — mzML/mzMLb
+//     would force loading the whole window's MSData at once and defeat the
+//     memory savings on large fixtures. DiaUmpire owns a per-instance temp
+//     directory under Path.GetTempPath() and cleans it up on Dispose.
 //   * exportSeparateQualityMGFs: we honour the flag for sorting purposes but
-//     don't actually write out separate MGFs (the spill files have a per-
-//     spectrum quality-level userParam; the caller can split if needed).
+//     don't actually write out separate MGFs (the spill files carry per-spectrum
+//     quality-level metadata; the caller can split if needed).
 
+using System.IO;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
@@ -28,30 +31,220 @@ using Pwiz.Util.Misc;
 namespace Pwiz.Analysis.DiaUmpire;
 
 /// <summary>
-/// A single per-window spill MSData. cpp uses a temporary mz5 file pointer
-/// (<c>pwiz::util::TemporaryFile*</c>); pwiz-sharp keeps the spilled spectra
-/// in memory for now (one <see cref="MSData"/> per DIA window). The
-/// <see cref="WindowKey"/> is the same string the algorithm uses to key
-/// <see cref="DiaUmpire.SpillFileByWindow"/> — e.g. <c>"MS2:[400-425]"</c>.
+/// Captures everything needed to materialize one pseudo-MS/MS spectrum
+/// from a <see cref="SpillFile"/>. The static spectrum scaffolding
+/// (ms_level=2, MSn_spectrum, centroid, number_of_detector_counts) is
+/// reconstructed by <see cref="SpectrumList_DiaUmpire"/>; only the
+/// per-spectrum payload is persisted to disk.
+/// </summary>
+public readonly record struct PseudoSpectrumRecord(
+    byte QualityLevel,
+    int Charge,
+    double ScanRtMinutes,
+    double TargetMz,
+    double PrecursorIntensity,
+    double[] MzArray,
+    double[] IntensityArray);
+
+/// <summary>
+/// A single per-window spill file, backed by a compact custom binary format on
+/// disk. cpp uses a temporary mz5 file pointer (<c>pwiz::util::TemporaryFile*</c>)
+/// with an MRU cache of <c>MSDataFile</c> instances; pwiz-sharp uses a simpler
+/// per-spectrum binary layout that supports true random-access reads without
+/// materializing the whole window. The <see cref="WindowKey"/> is the same
+/// string the algorithm uses to key <see cref="DiaUmpire.SpillFileByWindow"/>
+/// — e.g. <c>"MS2:[400-425]"</c>.
 /// </summary>
 /// <remarks>
-/// If/when memory pressure forces it, we can replace <see cref="Data"/> with
-/// a path + lazy load. The class is intentionally a token-shaped wrapper so
-/// the swap is local.
+/// <para>The on-disk layout is intentionally trivial — random access is the
+/// goal; mzML XML or mz5 would defeat the memory savings we're after:</para>
+/// <code>
+/// header   : uint32 magic ('SPIL') | uint32 version (1) | int32 spectrumCount
+/// records  : { byte quality, int32 charge, double rtMin, double targetMz,
+///              double precursorIntensity, int32 nPeaks,
+///              double[nPeaks] mz, double[nPeaks] intensity } * spectrumCount
+/// footer   : int64[spectrumCount] recordOffsets | int64 indexOffset
+/// </code>
+/// <para>Spill files live in <see cref="DiaUmpire"/>'s per-instance temp
+/// directory; disposing the DiaUmpire (or the wrapping
+/// <see cref="SpectrumList_DiaUmpire"/>) deletes them.</para>
 /// </remarks>
-public sealed class SpillFile
+public sealed class SpillFile : System.IDisposable
 {
-    /// <summary>The MSData that holds this window's pseudo-MS/MS spectra.</summary>
-    public MSData Data { get; }
+    private const uint Magic = 0x4C495053u; // 'SPIL' little-endian
+    private const uint Version = 1u;
+
+    private readonly string _path;
+    private long[]? _offsets;
+    private int _count;
+    private readonly object _readLock = new();
+    private FileStream? _readStream;
+    private bool _disposed;
 
     /// <summary>Key used in <see cref="DiaUmpire.SpillFileByWindow"/> (e.g. <c>"MS2:[400-425]"</c>).</summary>
     public string WindowKey { get; }
 
-    /// <summary>Constructs a spill file from an in-memory MSData. Owned by the caller.</summary>
-    public SpillFile(string windowKey, MSData data)
+    /// <summary>Absolute path to the on-disk spill file backing this window.</summary>
+    public string Path => _path;
+
+    /// <summary>Number of pseudo-MS/MS spectra in this spill. Triggers a lazy
+    /// open + index read on first access.</summary>
+    public int Count
+    {
+        get { EnsureOpen(); return _count; }
+    }
+
+    internal SpillFile(string windowKey, string path)
     {
         WindowKey = windowKey ?? throw new System.ArgumentNullException(nameof(windowKey));
-        Data = data ?? throw new System.ArgumentNullException(nameof(data));
+        _path = path ?? throw new System.ArgumentNullException(nameof(path));
+    }
+
+    /// <summary>Serializes the supplied records to <paramref name="path"/> in the
+    /// SpillFile binary format. Overwrites any existing file. Called from
+    /// <see cref="DiaUmpire"/>'s end-of-window step. Uses span-based bulk writes
+    /// for the variable-length arrays — per-double BinaryWriter calls show up
+    /// as a hot path on large windows (~thousand spectra × hundreds of peaks).</summary>
+    internal static void WriteAll(string path, System.Collections.Generic.IReadOnlyList<PseudoSpectrumRecord> records)
+    {
+        using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None,
+                                       bufferSize: 1 << 16, FileOptions.SequentialScan);
+        // Fixed-shape header (4+4+4 bytes); spans avoid the BinaryWriter virtual-dispatch overhead.
+        System.Span<byte> hdr = stackalloc byte[12];
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(hdr[..4], Magic);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(hdr[4..8], Version);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(hdr[8..12], records.Count);
+        fs.Write(hdr);
+
+        var offsets = new long[records.Count];
+        System.Span<byte> recHdr = stackalloc byte[1 + 4 + 8 + 8 + 8 + 4]; // quality, charge, rt, targetMz, precInt, nPeaks
+        for (int i = 0; i < records.Count; ++i)
+        {
+            offsets[i] = fs.Position;
+            var r = records[i];
+            recHdr[0] = r.QualityLevel;
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(recHdr.Slice(1, 4), r.Charge);
+            System.Buffers.Binary.BinaryPrimitives.WriteDoubleLittleEndian(recHdr.Slice(5, 8), r.ScanRtMinutes);
+            System.Buffers.Binary.BinaryPrimitives.WriteDoubleLittleEndian(recHdr.Slice(13, 8), r.TargetMz);
+            System.Buffers.Binary.BinaryPrimitives.WriteDoubleLittleEndian(recHdr.Slice(21, 8), r.PrecursorIntensity);
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(recHdr.Slice(29, 4), r.MzArray.Length);
+            fs.Write(recHdr);
+            if (r.MzArray.Length > 0)
+            {
+                fs.Write(System.Runtime.InteropServices.MemoryMarshal.AsBytes(r.MzArray.AsSpan()));
+                fs.Write(System.Runtime.InteropServices.MemoryMarshal.AsBytes(r.IntensityArray.AsSpan()));
+            }
+        }
+
+        long indexPos = fs.Position;
+        fs.Write(System.Runtime.InteropServices.MemoryMarshal.AsBytes(offsets.AsSpan()));
+        System.Span<byte> indexPosBytes = stackalloc byte[8];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(indexPosBytes, indexPos);
+        fs.Write(indexPosBytes);
+    }
+
+    /// <summary>Reads one spectrum's payload by index. The header (ms_level, MSn,
+    /// centroid, scan list, precursor, instrument config) is recreated by the
+    /// caller from the returned record; only the variable-length parts come from
+    /// disk. <paramref name="getBinaryData"/> matches the <see cref="ISpectrumList"/>
+    /// contract — when false, <see cref="PseudoSpectrumRecord.MzArray"/> and
+    /// <see cref="PseudoSpectrumRecord.IntensityArray"/> are returned as empty
+    /// arrays (peak count is still known to the caller via the record metadata
+    /// if needed; here we don't expose it since DiaUmpire doesn't track peaks-only
+    /// metadata).</summary>
+    public PseudoSpectrumRecord ReadRecord(int spillIndex, bool getBinaryData)
+    {
+        EnsureOpen();
+        if ((uint)spillIndex >= (uint)_count)
+            throw new System.ArgumentOutOfRangeException(nameof(spillIndex));
+
+        lock (_readLock)
+        {
+            System.ObjectDisposedException.ThrowIf(_disposed, this);
+            _readStream!.Position = _offsets![spillIndex];
+
+            System.Span<byte> recHdr = stackalloc byte[1 + 4 + 8 + 8 + 8 + 4];
+            ReadFully(_readStream, recHdr);
+            byte quality = recHdr[0];
+            int charge = System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(recHdr.Slice(1, 4));
+            double rtMin = System.Buffers.Binary.BinaryPrimitives.ReadDoubleLittleEndian(recHdr.Slice(5, 8));
+            double targetMz = System.Buffers.Binary.BinaryPrimitives.ReadDoubleLittleEndian(recHdr.Slice(13, 8));
+            double precursorInt = System.Buffers.Binary.BinaryPrimitives.ReadDoubleLittleEndian(recHdr.Slice(21, 8));
+            int nPeaks = System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(recHdr.Slice(29, 4));
+
+            double[] mz, intensity;
+            if (getBinaryData && nPeaks > 0)
+            {
+                mz = new double[nPeaks];
+                intensity = new double[nPeaks];
+                ReadFully(_readStream, System.Runtime.InteropServices.MemoryMarshal.AsBytes(mz.AsSpan()));
+                ReadFully(_readStream, System.Runtime.InteropServices.MemoryMarshal.AsBytes(intensity.AsSpan()));
+            }
+            else
+            {
+                mz = System.Array.Empty<double>();
+                intensity = System.Array.Empty<double>();
+            }
+            return new PseudoSpectrumRecord(quality, charge, rtMin, targetMz, precursorInt, mz, intensity);
+        }
+    }
+
+    private static void ReadFully(FileStream fs, System.Span<byte> buffer)
+    {
+        int total = 0;
+        while (total < buffer.Length)
+        {
+            int n = fs.Read(buffer[total..]);
+            if (n == 0) throw new EndOfStreamException("Unexpected EOF reading SpillFile record");
+            total += n;
+        }
+    }
+
+    private void EnsureOpen()
+    {
+        if (_offsets is not null) return;
+        lock (_readLock)
+        {
+            if (_offsets is not null) return;
+            System.ObjectDisposedException.ThrowIf(_disposed, this);
+            _readStream = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.Read,
+                                          bufferSize: 1 << 16, FileOptions.RandomAccess);
+            System.Span<byte> hdr = stackalloc byte[12];
+            ReadFully(_readStream, hdr);
+            uint magic = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(hdr[..4]);
+            if (magic != Magic)
+                throw new InvalidDataException($"SpillFile magic mismatch in {_path}");
+            uint version = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(hdr[4..8]);
+            if (version != Version)
+                throw new InvalidDataException($"SpillFile version {version} not supported in {_path}");
+            _count = System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(hdr[8..12]);
+
+            _readStream.Position = _readStream.Length - sizeof(long);
+            System.Span<byte> ip = stackalloc byte[8];
+            ReadFully(_readStream, ip);
+            long indexPos = System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(ip);
+            _readStream.Position = indexPos;
+            var offsets = new long[_count];
+            ReadFully(_readStream, System.Runtime.InteropServices.MemoryMarshal.AsBytes(offsets.AsSpan()));
+            _offsets = offsets;
+        }
+    }
+
+    /// <summary>Closes the read handle and deletes the backing file. Idempotent.
+    /// Errors during cleanup are swallowed (temp files; OS reclaims eventually).</summary>
+    public void Dispose()
+    {
+        lock (_readLock)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _readStream?.Dispose();
+            _readStream = null;
+            _offsets = null;
+        }
+        try { if (File.Exists(_path)) File.Delete(_path); }
+        catch (IOException) { /* best-effort temp cleanup */ }
+        catch (System.UnauthorizedAccessException) { /* best-effort */ }
     }
 }
 
@@ -91,10 +284,11 @@ public sealed class PseudoMsMsKey : SpectrumIdentity
     /// <summary>Precursor charge.</summary>
     public int Charge { get; set; }
 
-    /// <summary>Spill file (per-DIA-window MSData) that contains the actual spectrum.</summary>
+    /// <summary>Per-window spill file holding this spectrum's record on disk.</summary>
     public SpillFile? SpillFileToken { get; set; }
 
-    /// <summary>Index of the spectrum inside <see cref="SpillFileToken"/>.Data.Run.SpectrumList.</summary>
+    /// <summary>Record index inside <see cref="SpillFileToken"/>; pass to
+    /// <see cref="SpillFile.ReadRecord"/> to materialize the spectrum payload.</summary>
     public int SpillFileIndex { get; set; }
 }
 
@@ -116,11 +310,14 @@ public sealed class PseudoMsMsKey : SpectrumIdentity
 /// <see cref="PseudoMsMsKeys"/> is sorted by (scan time, target m/z, charge) after all
 /// windows finish.
 /// </remarks>
-public sealed class DiaUmpire
+public sealed class DiaUmpire : System.IDisposable
 {
     private readonly Impl _impl;
+    private bool _disposed;
 
-    /// <summary>Constructs the DIA-Umpire processor and runs the pipeline to completion.</summary>
+    /// <summary>Constructs the DIA-Umpire processor and runs the pipeline to completion.
+    /// Spill files for each DIA window are written to a per-instance temp directory
+    /// under <see cref="Path.GetTempPath"/>; <see cref="Dispose"/> deletes them.</summary>
     /// <param name="msd">The source MSData (used for run id + instrument config copy into spill files).</param>
     /// <param name="spectrumList">The source spectrum list (centroided DIA spectra; must contain MS1 + MS2 with isolation windows).</param>
     /// <param name="config">Configuration (instrument params + threading + windowing).</param>
@@ -140,6 +337,34 @@ public sealed class DiaUmpire
 
     /// <summary>Map from window-key string (e.g. <c>"MS2:[400-425]"</c>) to the spill file holding that window's spectra.</summary>
     public IReadOnlyDictionary<string, SpillFile> SpillFileByWindow => _impl.SpillFiles;
+
+    /// <summary>Disposes every <see cref="SpillFile"/> (deleting the on-disk mzMLb)
+    /// and removes the per-instance spill directory. Idempotent; safe to call from
+    /// multiple threads. Errors during cleanup are swallowed.</summary>
+    public void Dispose()
+    {
+        DisposeCore();
+        System.GC.SuppressFinalize(this);
+    }
+
+    private void DisposeCore()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        foreach (var spill in _impl.SpillFiles.Values)
+        {
+            try { spill.Dispose(); } catch { /* best-effort */ }
+        }
+        try { if (Directory.Exists(_impl.SpillDir)) Directory.Delete(_impl.SpillDir, recursive: true); }
+        catch (IOException) { /* best-effort temp cleanup */ }
+        catch (System.UnauthorizedAccessException) { /* best-effort */ }
+    }
+
+    /// <summary>Finalizer — fallback cleanup if the caller forgot to <see cref="Dispose"/>.
+    /// Spill files in <see cref="Path.GetTempPath"/> get reclaimed eventually, but a
+    /// long-running process that creates many DiaUmpire instances should dispose them
+    /// promptly.</summary>
+    ~DiaUmpire() => DisposeCore();
 
     // ----------------------------------------------------------------------
     // Internal step enum (matches cpp). Used only for progress messages.
@@ -163,7 +388,10 @@ public sealed class DiaUmpire
     internal sealed class Impl
     {
         internal MSData Msd { get; }
-        internal ISpectrumList Sl { get; }
+        // Sl is nulled out mid-Run after both ScanCollections are built — the input's
+        // binary arrays are no longer needed by DIA-Umpire and holding them through
+        // per-window processing inflates working set by ~150 MiB on a 100 MB input.
+        internal ISpectrumList? Sl { get; private set; }
         internal Config Config { get; }
         internal IsotopePatternMap IsotopePatternMap { get; }
         internal List<DiaWindow> DiaWindows { get; } = new();
@@ -180,6 +408,13 @@ public sealed class DiaUmpire
         internal int WindowsProcessed;
         internal List<PseudoMsMsKey> OutputScanKeys { get; } = new();
         internal SortedDictionary<string, SpillFile> SpillFiles { get; } = new(System.StringComparer.Ordinal);
+        internal string SpillDir { get; }
+
+        // Serialize spill writes across threads — each window writes to its own file, but
+        // we don't want to depend on FileStream thread-safety guarantees across handles
+        // for writes that are pure POSIX/Win32. Each write is small (one window's
+        // pseudo-MS/MS, a few MB at most) so the lock isn't a hot path.
+        private static readonly object SpillWriteLock = new();
 
         private readonly List<TargetWindow> _diaTargetWindows = new();
 
@@ -190,17 +425,35 @@ public sealed class DiaUmpire
             Config = config;
             Ilr = ilr;
             IsotopePatternMap = new IsotopePatternMap(config.InstrumentParameters);
+
+            SpillDir = Path.Combine(Path.GetTempPath(),
+                "pwiz-sharp-diaumpire-" + System.Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(SpillDir);
+        }
+
+        internal static string MakeSpillFileName(string windowKey)
+        {
+            // windowKey is "MS2:[400-425]"; sanitize ":" / "[" / "]" / spaces for Windows + Linux.
+            var sb = new System.Text.StringBuilder(windowKey.Length);
+            foreach (var c in windowKey)
+                sb.Append(char.IsLetterOrDigit(c) || c == '-' || c == '.' ? c : '_');
+            return sb.ToString() + ".spill";
         }
 
         public void Run()
         {
             if (!BuildDIAWindows()) { if (Canceled) return; throw new System.InvalidOperationException("error in BuildDIAWindows"); }
             if (!MS1PeakDetection()) { if (Canceled) return; throw new System.InvalidOperationException("error in MS1PeakDetection"); }
+
+            // Reclaim the MS1+MS2 ScanCollection allocated inside MS1PeakDetection before
+            // we build the second one for MS2 (otherwise the GC sits on both transiently
+            // and peak RSS bloats for no reason — cpp's destructors are deterministic so
+            // it never sees this overlap).
+            System.GC.Collect(generation: 2, mode: System.GCCollectionMode.Aggressive,
+                              blocking: true, compacting: true);
+
             if (!DIAMS2PeakDetection()) { if (Canceled) return; throw new System.InvalidOperationException("error in DIAMS2PeakDetection"); }
 
-            // cpp posts the clear() onto a background thread so it doesn't block the destructor.
-            // pwiz-sharp: let the GC handle it — the underlying lists are no longer referenced
-            // outside Ms1PeakCurves_/Ms1PeakClusters_ once Run() returns.
             Ms1PeakClusters.Clear();
             Ms1PeakCurves.Clear();
         }
@@ -252,7 +505,7 @@ public sealed class DiaUmpire
             string progressMessage = "assigning spectra to DIA windows";
             bool sawAnyMs2WithIsolation = false;
 
-            int total = Sl.Count;
+            int total = Sl!.Count;
             for (int i = 0; i < total; ++i)
             {
                 var s = Sl.GetSpectrum(i, DetailLevel.FastMetadata);
@@ -398,7 +651,7 @@ public sealed class DiaUmpire
                 int msLevel = MsLevelAndScanTimeByIndex[index].MsLevel;
                 if ((ms1Included && msLevel == 1) || (ms2Included && msLevel == 2))
                 {
-                    var spec = Sl.GetSpectrum(index, getBinaryData: true);
+                    var spec = Sl!.GetSpectrum(index, getBinaryData: true);
                     var scan = BuildScanData(spec, index);
                     if (scan is not null)
                     {
@@ -467,7 +720,13 @@ public sealed class DiaUmpire
             if (Ms1CycleTime > 0)
                 Config.InstrumentParameters.NoPeakPerMin = (int)(Config.InstrumentParameters.SmoothFactor / Ms1CycleTime);
 
-            var scanCollection = GetAllScanCollectionByMSLabel(true, true, true, false,
+            // cpp passes (ms1Included=true, ms2Included=true) here but never iterates the
+            // MS2 scans during MS1PeakDetection — they're loaded into the ScanCollection,
+            // centroided in parallel, then thrown away when scanCollection goes out of
+            // scope. Skipping the MS2 load shaves the transient peak during MS1 phase
+            // (one full set of MS2 ScanData copies on top of MS1's). Functionally
+            // equivalent — FindAllMzTracePeakCurves below filters to msLevel=1 anyway.
+            var scanCollection = GetAllScanCollectionByMSLabel(true, false, true, false,
                 Config.InstrumentParameters.StartRT, Config.InstrumentParameters.EndRT,
                 DiaUmpireStep.ReadAllSpectra);
             if (scanCollection is null) return false;
@@ -498,6 +757,19 @@ public sealed class DiaUmpire
                 Config.InstrumentParameters.StartRT, Config.InstrumentParameters.EndRT,
                 DiaUmpireStep.ReadMs2Spectra);
             if (scanCollectionAllMs2 is null) return false;
+
+            // Input is fully consumed — the ScanCollection has its own ScanData copies and
+            // SpectrumList_DiaUmpire reconstructs the per-window pseudo-MS/MS from spill
+            // files, not from input spectra. Releasing the eager input SpectrumListSimple
+            // here frees ~150 MiB on a 100 MB input mzML during the most allocation-heavy
+            // phase (multi-window MS2 processing). This only succeeds if SpectrumList_DiaUmpire
+            // ran us via its EnsureRun lazy path — otherwise the ctor-chain stack frames
+            // still root the input. cpp's lazy SpectrumList_mzML doesn't need this — its
+            // input pages out naturally.
+            Sl = null;
+            Msd.Run.SpectrumList = null;
+            System.GC.Collect(generation: 2, mode: System.GCCollectionMode.Aggressive,
+                              blocking: true, compacting: true);
 
             bool multithreadWindows = Config.MultithreadOverWindows;
             string progressMessage = "processing DIA window";
@@ -614,59 +886,56 @@ public sealed class DiaUmpire
                     localScanList.Add(pseudo);
                 }
 
-                // Emit pseudo-MS/MS spectra into the window's spill MSData.
-                var spillData = new MSData
-                {
-                    Id = Msd.Id + " DIA window " + diaWindowId,
-                };
-                spillData.Run.Id = spillData.Id;
-                foreach (var ic in Msd.InstrumentConfigurations) spillData.InstrumentConfigurations.Add(ic);
-                foreach (var sw in Msd.Software) spillData.Software.Add(sw);
-                foreach (var cv in Msd.CVs) spillData.CVs.Add(cv);
-                var outputScans = new SpectrumListSimple();
-                spillData.Run.SpectrumList = outputScans;
-                var spillFile = new SpillFile(diaWindowId, spillData);
+                // Build per-spectrum records, then serialize them to the spill file and drop
+                // them. The static spectrum scaffolding (ms_level, MSn, centroid, scan-list,
+                // precursor, instrument config refs) gets reconstructed on read by
+                // SpectrumList_DiaUmpire.GetSpectrum — only the variable-length payload is
+                // persisted to disk.
+                string spillPath = Path.Combine(SpillDir, MakeSpillFileName(diaWindowId));
+                var spillFile = new SpillFile(diaWindowId, spillPath);
 
-                var localPseudoMsMs = new List<PseudoMsMsKey>();
+                var records = new List<PseudoSpectrumRecord>(localScanList.Count);
+                var localPseudoMsMs = new List<PseudoMsMsKey>(localScanList.Count);
                 foreach (var pseudoScan in localScanList)
                 {
                     var precursorCluster = pseudoScan.Precursorcluster;
-
-                    var s = new Spectrum();
-                    s.Params.Set(CVID.MS_ms_level, 2);
-                    s.Params.Set(CVID.MS_MSn_spectrum);
-                    s.Params.Set(CVID.MS_centroid_spectrum);
-                    string qualityValue = pseudoScan.QualityLevel switch
+                    byte quality = pseudoScan.QualityLevel switch
                     {
-                        QualityLevel.Q1IsotopeComplete => "1",
-                        QualityLevel.Q2Ms1Group => "2",
-                        QualityLevel.Q3UnfragmentedPrecursor => "3",
-                        _ => "0",
+                        QualityLevel.Q1IsotopeComplete => (byte)1,
+                        QualityLevel.Q2Ms1Group => (byte)2,
+                        QualityLevel.Q3UnfragmentedPrecursor => (byte)3,
+                        _ => (byte)0,
                     };
-                    s.Params.UserParams.Add(new UserParam("DIA-Umpire quality level", qualityValue, "xsd:positiveInteger"));
-
-                    var scan = new Scan();
                     // cpp parity: round(rtMinutes * 10000) / 10000 then store with UO_minute.
                     double rtMin = System.Math.Round(precursorCluster.PeakHeightRT[0] * 10000.0) / 10000.0;
-                    scan.Set(CVID.MS_scan_start_time, rtMin, CVID.UO_minute);
-                    if (Msd.InstrumentConfigurations.Count > 0)
-                        scan.InstrumentConfiguration = Msd.InstrumentConfigurations[0];
-                    s.ScanList.Scans.Add(scan);
-
-                    s.Precursors.Add(new Precursor(precursorCluster.TargetMz(),
-                        precursorCluster.PeakHeight[0], precursorCluster.Charge, CVID.MS_number_of_detector_counts));
 
                     pseudoScan.GetScan(out double[] mzArray, out double[] intensityArray);
-                    s.SetMZIntensityArrays(mzArray, intensityArray, CVID.MS_number_of_detector_counts);
 
-                    s.Index = outputScans.Spectra.Count;
-                    s.Id = "merged=" + s.Index.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    outputScans.Spectra.Add(s);
+                    int spillIndex = records.Count;
+                    records.Add(new PseudoSpectrumRecord(
+                        QualityLevel: quality,
+                        Charge: precursorCluster.Charge,
+                        ScanRtMinutes: rtMin,
+                        TargetMz: precursorCluster.TargetMz(),
+                        PrecursorIntensity: precursorCluster.PeakHeight[0],
+                        MzArray: mzArray,
+                        IntensityArray: intensityArray));
 
                     localPseudoMsMs.Add(new PseudoMsMsKey(
                         precursorCluster.PeakHeightRT[0], precursorCluster.TargetMz(),
-                        precursorCluster.Charge, spillFile, s.Index));
+                        precursorCluster.Charge, spillFile, spillIndex));
                 }
+
+                if (records.Count > 0)
+                {
+                    lock (SpillWriteLock)
+                    {
+                        SpillFile.WriteAll(spillPath, records);
+                    }
+                }
+                // Drop the records; spill is on disk now.
+                records.Clear();
+                records.TrimExcess();
 
                 lock (keysLock)
                 {
@@ -683,6 +952,12 @@ public sealed class DiaUmpire
                 diaWindow.UnFragIonClu2Cur.Clear();
                 diaWindow.FragmentMS1Ranking.Clear();
                 diaWindow.FragmentUnfragRanking.Clear();
+                // Per-window allocation pressure is high (peak curves + clusters + fragment
+                // tables + edge lists) and the workload is bursty — without periodic GCs,
+                // working set climbs to ~3× the live heap during processing on multi-window
+                // DIA fixtures. Compacting GC here keeps the committed heap close to actual
+                // live working set.
+                System.GC.Collect(generation: 2, mode: System.GCCollectionMode.Optimized);
                 System.Threading.Interlocked.Increment(ref WindowsProcessed);
             }
 
@@ -724,9 +999,15 @@ public sealed class DiaUmpire
             float ppmTolerance, int msLevel, int windowsProcessedSnapshot, int windowsTotal,
             DiaUmpireStep step, bool multithreaded = false, IReadOnlyList<int>? scanIndices = null)
         {
-            // cpp uses boost::container::flat_set<pair<int,float>>. HashSet<(int,float)>
-            // is slightly faster on the same workload for lookup-only.
-            var included = new HashSet<(int Scan, float Mz)>();
+            // cpp uses boost::container::flat_set<pair<int,float>>. We use a HashSet<long>
+            // with the (scanNum, mz_bits) packed into a long — fewer bytes per slot
+            // than HashSet<(int,float)> (which boxes the value type's hash code in
+            // the slot, costing ~24 vs ~16 bytes per entry). Each window builds one
+            // of these holding a few hundred k entries, so the overhead matters when
+            // running multi-threaded across windows.
+            static long PackKey(int scan, float mz) =>
+                ((long)scan << 32) | (uint)System.BitConverter.SingleToInt32Bits(mz);
+            var included = new HashSet<long>();
 
             float preRT = 0;
             float snr = msLevel == 1 ? Config.InstrumentParameters.SN : Config.InstrumentParameters.MS2SN;
@@ -763,7 +1044,7 @@ public sealed class DiaUmpire
                     var peak = scan.Get(peakIdx);
                     if (peak.Mz < Config.InstrumentParameters.MinMZ) continue;
 
-                    if (!included.Add((scan.ScanNum, peak.Mz))) continue;
+                    if (!included.Add(PackKey(scan.ScanNum, peak.Mz))) continue;
 
                     float startmz = peak.Mz;
                     float startint = peak.Intensity;
@@ -773,7 +1054,7 @@ public sealed class DiaUmpire
                     {
                         var nextPeak = scan.Get(k);
                         if (InstrumentParameter.CalcPPM(nextPeak.Mz, startmz) > ppmTolerance) break;
-                        if (!included.Add((scan.ScanNum, nextPeak.Mz))) continue;
+                        if (!included.Add(PackKey(scan.ScanNum, nextPeak.Mz))) continue;
                         if (nextPeak.Intensity >= startint)
                         {
                             startmz = nextPeak.Mz;
@@ -820,7 +1101,7 @@ public sealed class DiaUmpire
                         {
                             var currentpeak = scanData2.Get(pkidx);
                             if (currentpeak.GetX() < Config.InstrumentParameters.MinMZ) continue;
-                            if (included.Contains((scanNo2, currentpeak.Mz))) continue;
+                            if (included.Contains(PackKey(scanNo2, currentpeak.Mz))) continue;
 
                             if (InstrumentParameter.CalcPPM(currentpeak.GetX(), peakcurve.TargetMz) > ppmTolerance)
                             {
@@ -828,7 +1109,7 @@ public sealed class DiaUmpire
                             }
                             else
                             {
-                                included.Add((scanNo2, currentpeak.Mz));
+                                included.Add(PackKey(scanNo2, currentpeak.Mz));
                                 if (currentint < currentpeak.GetY())
                                 {
                                     currentmz = currentpeak.GetX();
