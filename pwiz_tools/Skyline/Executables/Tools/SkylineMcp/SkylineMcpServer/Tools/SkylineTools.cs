@@ -620,6 +620,50 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_list_installed"),
+     Description("Enumerate Skyline releases installed on this machine. Returns one tab-separated row per install with columns " +
+        "Release\tVersion\tScope\tGuiPath\tCliPath\tRunnerPath. " +
+        "Scope is 'system_admin' for installs under %ProgramFiles% or 'user_clickonce' for per-user ClickOnce installs (both may coexist for the same release). " +
+        "GuiPath launches the Skyline UI: directly for admin installs, or via shell-execute of the .appref-ms shortcut for ClickOnce. " +
+        "For batch/CLI use from a shell or Python script, every install exposes exactly one of CliPath or RunnerPath:\n\n" +
+        "  - CliPath (admin installs only) is SkylineCmd.exe next to Skyline.exe. SkylineCmd.exe uses its OWN user.config separate from the GUI, " +
+        "so custom reports / default-settings presets created in the GUI are not visible by default. To make them visible, run the relevant commands once " +
+        "with --save-settings appended (e.g. '--report-add=my.skyr --save-settings'), which persists the in-memory Settings.Default at the end of the run. " +
+        "(SkylineCmd --ui opens a GUI for manual configuration as a human escape hatch.)\n" +
+        "  - RunnerPath (ClickOnce installs only) is the bundled SkylineRunner.exe / SkylineDailyRunner.exe shim that launches the user's GUI Skyline in headless CMD mode. " +
+        "Because it goes through the GUI binary, it shares the GUI's user.config — custom reports etc. are visible without --save-settings priming. " +
+        "Use this when the script needs the user's existing GUI state.\n\n" +
+        "When no Skyline release is detected, the response is a single line starting with 'No Skyline release detected' instead of the column-header row. " +
+        "This tool reports filesystem state only; use skyline_get_instances for running/connected instances.")]
+    public static string ListInstalled()
+    {
+        var installs = SkylineInstallation.FindAll();
+        if (installs.Count == 0)
+        {
+            return "No Skyline release detected. " +
+                   "Install Skyline from https://skyline.ms or check that the install location is one of " +
+                   "%ProgramFiles%\\Skyline[-daily] or the per-user ClickOnce location under Start Menu Programs.";
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Release\tVersion\tScope\tGuiPath\tCliPath\tRunnerPath");
+        foreach (var install in installs)
+        {
+            sb.AppendLine(string.Join("\t",
+                install.Release,
+                install.Version,
+                install.InstallScope,
+                install.GuiPath ?? string.Empty,
+                install.CliPath ?? string.Empty,
+                install.RunnerPath ?? string.Empty));
+        }
+        // Trim only the trailing line ending. Using bare TrimEnd() would also strip
+        // the terminating tab that separates the empty final field of the last row
+        // (e.g. on an admin-only machine where RunnerPath is empty), turning that
+        // row into a malformed 5-column line.
+        return sb.ToString().TrimEnd('\r', '\n');
+    }
+
     [McpServerTool(Name = "skyline_get_instances"),
      Description("List all connected Skyline instances. Returns process ID, version, document " +
         "path, and whether each is the active target. When multiple Skyline windows are open, " +
