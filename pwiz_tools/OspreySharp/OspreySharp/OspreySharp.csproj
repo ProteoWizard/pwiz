@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>pwiz.OspreySharp</RootNamespace>
+    <AssemblyName>OspreySharp</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OspreySharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
+    <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj" />
+    <ProjectReference Include="..\OspreySharp.IO\OspreySharp.IO.csproj" />
+    <ProjectReference Include="..\OspreySharp.Chromatography\OspreySharp.Chromatography.csproj" />
+    <ProjectReference Include="..\OspreySharp.Scoring\OspreySharp.Scoring.csproj" />
+    <ProjectReference Include="..\OspreySharp.FDR\OspreySharp.FDR.csproj" />
+  </ItemGroup>
+
+</Project>

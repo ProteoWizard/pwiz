@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Tools
     public class PythonInstaller
     {
         private const string PYTHON = @"Python";
-        private const string BOOTSTRAP_PYPA_URL = @"https://bootstrap.pypa.io/";
+        private const string BOOTSTRAP_PYPA_URL = @"https://bootstrap.pypa.io/pip/";
         private const string CD = @"cd";
         private const string CMD_ESCAPE_SYMBOL = TextUtil.CARET;
         internal const string CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND;
@@ -151,8 +151,23 @@ namespace pwiz.Skyline.Model.Tools
         public static Uri PythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + PythonVersion + FORWARD_SLASH + PythonEmbeddablePackageFileName);
         public static string PythonEmbeddablePackageDownloadPath => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileName);
         public static string PythonEmbeddablePackageExtractDir => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileBaseName);
-        public static Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + GET_PIP_SCRIPT_FILE_NAME);
-        public static string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir, GET_PIP_SCRIPT_FILE_NAME);
+        // Use PyPA's version-pinned subpath (e.g. /pip/3.9/get-pip.py) rather than the unpinned
+        // /get-pip.py: the unpinned URL serves the latest pip, which drops support for retired
+        // Python versions. The version-pinned URL serves the last pip release for that Python.
+        public static Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + PythonMajorMinorVersion + FORWARD_SLASH + GET_PIP_SCRIPT_FILE_NAME);
+        private static string PythonMajorMinorVersion
+        {
+            get
+            {
+                var parts = PythonVersion.Split('.');
+                return parts.Length >= 2 ? parts[0] + @"." + parts[1] : PythonVersion;
+            }
+        }
+        // Version the local filename by major.minor so a URL change (e.g. unpinned -> pip/3.9/) invalidates
+        // any previously cached file. DownloadGetPipScriptTask's signature only covers file content, not
+        // source, so without this a stale file from the old URL would be treated as valid.
+        public static string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir,
+            string.Format(@"get-pip-{0}.py", PythonMajorMinorVersion));
         public static string BasePythonExecutablePath => Path.Combine(PythonEmbeddablePackageExtractDir, PYTHON_EXECUTABLE);
 
         public int NumTotalTasks { get; set; }
@@ -473,8 +488,7 @@ namespace pwiz.Skyline.Model.Tools
 
             var cancelToken = broker.GetSafeCancellationToken();
 
-            if (processRunner.RunProcess(cmd, true, Writer, false, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
+            RunProcessOrThrow(processRunner, cmd, cmdLine, true, false, cancelToken);
         }
 
         internal void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages, ILongWaitBroker broker = null)
@@ -513,11 +527,7 @@ namespace pwiz.Skyline.Model.Tools
 
                     var cancelToken = broker.GetSafeCancellationToken();
 
-                    if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
-                    {
-                        throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__,
-                            cmdLine));
-                    }
+                    RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken);
 
                     if (cancelToken.IsCancellationRequested)
                         break;
@@ -548,9 +558,8 @@ namespace pwiz.Skyline.Model.Tools
 
             var cancelToken = broker.GetSafeCancellationToken();
 
-            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
-            
+            RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken);
+
             PythonInstallerUtil.SignDirectory(PythonEmbeddablePackageExtractDir);
         }
 
@@ -562,6 +571,67 @@ namespace pwiz.Skyline.Model.Tools
                 cmdString = cmdString.Replace(specialChar, CMD_ESCAPE_SYMBOL + specialChar);
             }
             return cmdString;
+        }
+
+        // Tees process output to Writer + a bounded tail buffer so that on non-zero exit the
+        // captured stderr/stdout is included in the thrown exception. Bounded because pip
+        // installs can produce megabytes of output; we only need the recent tail for diagnostics.
+        private const int MAX_CAPTURED_PROCESS_OUTPUT_CHARS = 32 * 1024;
+
+        internal static void RunProcessOrThrow(ISkylineProcessRunnerWrapper runner, string cmd,
+            string cmdLineForError, bool runAsAdministrator, bool createNoWindow,
+            CancellationToken cancellationToken)
+        {
+            var capture = new RollingTextWriter(MAX_CAPTURED_PROCESS_OUTPUT_CHARS);
+            var tee = new TeeTextWriter(Writer, capture);
+            if (runner.RunProcess(cmd, runAsAdministrator, tee, createNoWindow, cancellationToken) == 0)
+                return;
+
+            var captured = capture.ToString().Trim();
+            var message = string.IsNullOrEmpty(captured)
+                ? string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLineForError)
+                : string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0____Output____1__,
+                    cmdLineForError, captured);
+            throw new ToolExecutionException(message);
+        }
+
+        /// <summary>
+        /// TextWriter that retains only the last N characters written to it, dropping older
+        /// content to stay within the cap. Used to capture a bounded tail of process output
+        /// for failure diagnostics without growing unboundedly when the process succeeds (pip
+        /// installs in particular can stream megabytes of progress output that we never need).
+        /// </summary>
+        private sealed class RollingTextWriter : TextWriter
+        {
+            private readonly int _maxChars;
+            private readonly StringBuilder _buffer = new StringBuilder();
+
+            public RollingTextWriter(int maxChars) { _maxChars = maxChars; }
+
+            public override Encoding Encoding => Encoding.UTF8;
+
+            public override void Write(char value)
+            {
+                _buffer.Append(value);
+                TrimToMax();
+            }
+
+            public override void Write(string value)
+            {
+                if (string.IsNullOrEmpty(value))
+                    return;
+                _buffer.Append(value);
+                TrimToMax();
+            }
+
+            public override string ToString() => _buffer.ToString();
+
+            private void TrimToMax()
+            {
+                var excess = _buffer.Length - _maxChars;
+                if (excess > 0)
+                    _buffer.Remove(0, excess);
+            }
         }
 
         public void CleanUpPythonEnvironment(string name)
@@ -1071,11 +1141,10 @@ namespace pwiz.Skyline.Model.Tools
             cmd += cmdLine;
             
             var pipedProcessRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            
+
             var cancelToken = broker.GetSafeCancellationToken();
 
-            if (pipedProcessRunner.RunProcess(cmd, false, PythonInstaller.Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
+            PythonInstaller.RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken);
 
             var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
             PythonInstallerUtil.SignFile(filePath);
@@ -1241,8 +1310,7 @@ namespace pwiz.Skyline.Model.Tools
 
             var cancelToken = broker.GetSafeCancellationToken();
 
-            if (pipedProcessRunner.RunProcess(cmd, true, PythonInstaller.Writer, false, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+            PythonInstaller.RunProcessOrThrow(pipedProcessRunner, cmd, cmdBuilder.ToString(), true, false, cancelToken);
         }
 
         public override bool IsRequiredForPythonEnvironment => false;

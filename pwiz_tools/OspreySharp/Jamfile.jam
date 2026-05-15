@@ -1,0 +1,122 @@
+#
+# Original author: Brendan MacLean <brendanx .at. uw.edu>,
+#                  MacCoss Lab, Department of Genome Sciences, UW
+# AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+#
+# Based on osprey (https://github.com/MacCossLab/osprey)
+#   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+#
+# Copyright 2026 University of Washington - Seattle, WA
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
+import modules generate-version ;
+if [ modules.peek : NT ]
+{
+    import path feature ;
+    path-constant OSPREY_SHARP_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/OspreySharp ;
+
+    # Generate per-project AssemblyInfo.cs with current pwiz version metadata,
+    # replacing the hand-written AssemblyInfo.cs files. Same machinery that
+    # stamps SkylineBatch, AutoQC, SeeMS, etc.
+    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp/Properties/AssemblyInfo.cs
+        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+        : "OspreySharp" "Osprey DIA analysis -- C# port of maccoss/osprey"
+          "University of Washington" "OspreySharp" ;
+    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.Core/Properties/AssemblyInfo.cs
+        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+        : "OspreySharp.Core" "Core data types for OspreySharp"
+          "University of Washington" "OspreySharp" ;
+    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.Scoring/Properties/AssemblyInfo.cs
+        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+        : "OspreySharp.Scoring" "Spectral scoring for OspreySharp"
+          "University of Washington" "OspreySharp" ;
+    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.Chromatography/Properties/AssemblyInfo.cs
+        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+        : "OspreySharp.Chromatography" "RT calibration + peak detection for OspreySharp"
+          "University of Washington" "OspreySharp" ;
+    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.IO/Properties/AssemblyInfo.cs
+        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+        : "OspreySharp.IO" "mzML + library loaders for OspreySharp"
+          "University of Washington" "OspreySharp" ;
+    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.ML/Properties/AssemblyInfo.cs
+        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+        : "OspreySharp.ML" "Machine learning primitives for OspreySharp"
+          "University of Washington" "OspreySharp" ;
+    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.FDR/Properties/AssemblyInfo.cs
+        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+        : "OspreySharp.FDR" "Percolator + protein FDR for OspreySharp"
+          "University of Washington" "OspreySharp" ;
+    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.Test/Properties/AssemblyInfo.cs
+        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+        : "OspreySharp.Test" "Unit tests for OspreySharp"
+          "University of Washington" "OspreySharp" ;
+
+    rule do_osprey_sharp ( targets + : sources * : properties * )
+    {
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
+        CONFIGURATION on $(targets) = [ MATCH <variant>(.*) : $(properties) ] ;
+        PLATFORM on $(targets) = [ MATCH <address-model>(.*) : $(properties) ] ;
+    }
+
+    actions do_osprey_sharp
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building OspreySharp in $(CONFIGURATION:L) configuration...
+        msbuild $(OSPREY_SHARP_PATH)/OspreySharp.sln /p:Configuration=$(CONFIGURATION);Platform=x64 /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+    }
+
+    rule do_osprey_sharp_test ( targets + : sources * : properties * )
+    {
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
+        CONFIGURATION on $(targets) = [ MATCH <variant>(.*) : $(properties) ] ;
+    }
+
+    actions do_osprey_sharp_test
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Unit testing OspreySharp in $(CONFIGURATION:L) configuration...
+        vstest.console.exe $(OSPREY_SHARP_PATH)\OspreySharp.Test\bin\x64\$(CONFIGURATION)\OspreySharp.Test.dll /Platform:x64
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
+    # Full solution build. Explicit so it is opt-in (requested by name from
+    # TeamCity or via `bjam OspreySharp`), not pulled into the default
+    # Skyline build.
+    make OspreySharp
+        : # sources
+        : # actions
+            @do_osprey_sharp
+        : # requirements
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+        ;
+    explicit OspreySharp ;
+
+    # Unit-test target. Runs the OspreySharp.Test.dll MSTest suite via
+    # vstest.console.exe after the full solution is built.
+    make OspreySharpTest
+        : # sources
+        : # actions
+            @do_osprey_sharp_test
+        : # requirements
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <dependency>OspreySharp
+        ;
+    explicit OspreySharpTest ;
+}

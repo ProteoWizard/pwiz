@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.OspreySharp.Scoring</RootNamespace>
+    <AssemblyName>OspreySharp.Scoring</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
+    <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj" />
+    <ProjectReference Include="..\OspreySharp.Chromatography\OspreySharp.Chromatography.csproj" />
+  </ItemGroup>
+
+</Project>

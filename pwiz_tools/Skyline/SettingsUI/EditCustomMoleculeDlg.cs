@@ -140,10 +140,9 @@ namespace pwiz.Skyline.SettingsUI
             // Initialise the ion mobility units dropdown with L10N values
             foreach (eIonMobilityUnits t in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
-                var displayString = IonMobilityFilter.IonMobilityUnitsL10NString(t);
-                if (displayString != null) // Special value eIonMobilityUnits.unknown must not appear in list
+                if (IonMobilityFilter.IsUserSelectableIonMobilityUnit(t))
                 {
-                    comboBoxIonMobilityUnits.Items.Add(displayString);
+                    comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(t));
                 }
             }
 
@@ -585,25 +584,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (!string.IsNullOrEmpty(textIonMobility.Text) && Equals(IonMobilityUnits, eIonMobilityUnits.none))
             {
-                // Try to set a reasonable value for ion mobility units
-
-                // First look for any other explicit ion mobility values in the document
+                // Only auto-populate when the document unambiguously implies a single unit.
+                // FAIMS, TIMS, and drift_time_msec are semantically incompatible - silently
+                // picking the first-seen unit would risk mis-interpreting the user's value.
+                // When ambiguous (or there is no evidence), leave units=none and let the user pick.
                 var doc = _parent?.Document;
-                var node =
-                    doc?.MoleculeTransitionGroups.FirstOrDefault(n =>
-                        n.ExplicitValues.IonMobilityUnits != eIonMobilityUnits.none);
-                if (node != null)
-                {
-                    IonMobilityUnits = node.ExplicitValues.IonMobilityUnits;
+                if (doc == null)
                     return;
-                }
-
-                // Then try the ion mobility library if any
-                var filters = doc?.Settings.TransitionSettings.IonMobilityFiltering;
-                if (filters != null)
-                {
-                    IonMobilityUnits = filters.GetFirstSeenIonMobilityUnits();
-                }
+                var candidates = TransitionIonMobilityFiltering.GetDocumentIonMobilityUnits(doc);
+                if (candidates.Count == 1)
+                    IonMobilityUnits = candidates.Single();
             }
         }
 
@@ -623,11 +613,18 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return comboBoxIonMobilityUnits.SelectedIndex >= 0
-                    ? (eIonMobilityUnits) comboBoxIonMobilityUnits.SelectedIndex
-                    : eIonMobilityUnits.none;
+                // Look up by display string rather than relying on the dropdown index matching
+                // the enum value - they only line up today because the user-selectable enum
+                // members happen to occupy contiguous values starting at 0.
+                return IonMobilityFilter.IonMobilityUnitsFromL10NString(
+                    comboBoxIonMobilityUnits.SelectedItem as string);
             }
-            set { comboBoxIonMobilityUnits.SelectedIndex = (int) value; }
+            set
+            {
+                var idx = comboBoxIonMobilityUnits.Items.IndexOf(IonMobilityFilter.IonMobilityUnitsL10NString(value));
+                // Non-displayable values (waters_sonar, unknown) fall back to "None".
+                comboBoxIonMobilityUnits.SelectedIndex = idx >= 0 ? idx : 0;
+            }
         }
 
         public double? PrecursorCollisionEnergy

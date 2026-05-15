@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.OspreySharp.ML</RootNamespace>
+    <AssemblyName>OspreySharp.ML</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OspreySharp.FDR" />
+    <InternalsVisibleTo Include="OspreySharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
+  </ItemGroup>
+
+</Project>
