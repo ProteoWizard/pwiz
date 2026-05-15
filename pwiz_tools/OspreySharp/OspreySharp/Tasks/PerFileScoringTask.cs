@@ -291,8 +291,23 @@ namespace pwiz.OspreySharp.Tasks
                         ctx.ExitCode = 1;
                         return false;
                     }
-                    pairingStats.NPairedViaManifest = manifest.ApplyToLibrary(
-                        library, pairingState);
+                    var manifestStats = manifest.ApplyToLibrary(library, pairingState);
+                    pairingStats.NPairedViaManifest = manifestStats.NPaired;
+                    if (manifestStats.NNewlyMarkedDecoy > 0)
+                    {
+                        // Manifest classified entries as decoy that were
+                        // loaded as targets (the predictor stripped the
+                        // decoy prefix). Update the decoy count so the
+                        // pairing fraction is honest.
+                        ctx.LogInfo(string.Format(
+                            @"Library-decoy mode: manifest classified {0} additional library " +
+                            @"entries as decoys (their protein accessions lacked a decoy prefix)",
+                            manifestStats.NNewlyMarkedDecoy));
+                        LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                            out nTargetsForStats, out nDecoysForStats);
+                        pairingStats.NTargets = nTargetsForStats;
+                        pairingStats.NDecoys = nDecoysForStats;
+                    }
                 }
                 else
                 {

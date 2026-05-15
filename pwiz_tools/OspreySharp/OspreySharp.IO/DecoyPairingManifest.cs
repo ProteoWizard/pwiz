@@ -29,6 +29,30 @@ using pwiz.OspreySharp.Core;
 namespace pwiz.OspreySharp.IO
 {
     /// <summary>
+    /// Stats returned by <see cref="DecoyPairingManifest.ApplyToLibrary"/>.
+    /// Maps to Rust <c>osprey_io::pairing::ManifestApplyStats</c>.
+    /// </summary>
+    public class ManifestApplyStats
+    {
+        /// <summary>
+        /// Decoys paired with a target on this call (decoy.Id rewritten so
+        /// its base_id matches the target's id).
+        /// </summary>
+        public int NPaired { get; set; }
+
+        /// <summary>
+        /// Library entries whose <see cref="LibraryEntry.IsDecoy"/> was
+        /// flipped from false to true because the manifest classified
+        /// them as <c>decoy</c> or <c>p_decoy</c>. The protein-prefix
+        /// scan in <c>LibraryDecoyMarker</c> misses these when the
+        /// library predictor strips the decoy prefix from protein
+        /// accessions; the manifest's sequence-based classification is
+        /// authoritative.
+        /// </summary>
+        public int NNewlyMarkedDecoy { get; set; }
+    }
+
+    /// <summary>
     /// One of the four peptide kinds in an FDRBench manifest row.
     /// Maps to Rust <c>osprey_io::pairing::PeptideKind</c>.
     /// </summary>
@@ -143,23 +167,40 @@ namespace pwiz.OspreySharp.IO
         /// <c>(pair_index, partition, charge)</c> bucket, identify
         /// target-side and decoy-side entries and rewrite each decoy's
         /// <see cref="LibraryEntry.Id"/> so its <c>base_id</c> matches a
-        /// target's id. Returns the number of decoys paired on this call.
+        /// target's id. Returns <see cref="ManifestApplyStats"/> with the
+        /// pair count and the count of newly-marked decoys.
         ///
         /// <paramref name="state"/> carries already-claimed targets and
         /// already-paired decoys so this can be chained with a
         /// composition-based fallback pass without claiming the same
         /// target twice. New pairings made here are added to
         /// <paramref name="state"/>.
+        ///
+        /// <b>Authoritative classification by manifest.</b> Any library
+        /// entry whose sequence appears in the manifest as <c>decoy</c>
+        /// or <c>p_decoy</c> gets <see cref="LibraryEntry.IsDecoy"/> =
+        /// true and <see cref="LibraryEntry.DECOY_ID_BIT"/> set on its
+        /// id, even if it doesn't pair. This catches the common case
+        /// where a library predictor (e.g. Carafe) stripped the
+        /// protein-accession decoy prefix during processing, leaving
+        /// Osprey's prefix scan unable to recognise the decoys. The
+        /// manifest's <c>peptide_type</c> column is taken as the source
+        /// of truth.
         /// </summary>
-        public int ApplyToLibrary(IList<LibraryEntry> library, PairingState state)
+        public ManifestApplyStats ApplyToLibrary(IList<LibraryEntry> library, PairingState state)
         {
+            var stats = new ManifestApplyStats();
             if (library == null || library.Count == 0 || state == null)
-                return 0;
+                return stats;
 
             // Bucket key: (pair_index, partition, charge, is_target_side).
             // Skip entries already paired (decoys) or claimed (targets).
+            // Also collect decoy-side indices so we can stamp IsDecoy +
+            // DECOY_ID_BIT on them even when their predictor stripped the
+            // prefix from the protein accession.
             var buckets = new Dictionary<BucketKey, List<int>>(
                 BucketKeyComparer.Instance);
+            var decoySideIndices = new List<int>();
             for (int idx = 0; idx < library.Count; idx++)
             {
                 var entry = library[idx];
@@ -171,14 +212,33 @@ namespace pwiz.OspreySharp.IO
                     continue;
                 if (!_seqToInfo.TryGetValue(entry.Sequence, out var info))
                     continue;
+                bool isTargetSide = IsTargetSideOf(info.Kind);
                 var key = new BucketKey(info.PairIndex, PartitionOf(info.Kind),
-                    entry.Charge, IsTargetSideOf(info.Kind));
+                    entry.Charge, isTargetSide);
                 if (!buckets.TryGetValue(key, out var list))
                 {
                     list = new List<int>();
                     buckets[key] = list;
                 }
                 list.Add(idx);
+                if (!isTargetSide)
+                    decoySideIndices.Add(idx);
+            }
+
+            // Mark manifest-identified decoys BEFORE pairing. Idempotent:
+            // entries already flagged keep their flag and high bit.
+            // Pairing will overwrite the low 31 bits to the target's
+            // base_id for paired decoys; unpaired decoys keep their
+            // original id with just the high bit set.
+            foreach (var idx in decoySideIndices)
+            {
+                if (!library[idx].IsDecoy)
+                {
+                    library[idx].IsDecoy = true;
+                    stats.NNewlyMarkedDecoy++;
+                }
+                if ((library[idx].Id & LibraryEntry.DECOY_ID_BIT) == 0u)
+                    library[idx].Id |= LibraryEntry.DECOY_ID_BIT;
             }
 
             // Walk every target-side bucket; pair with the matching
@@ -223,7 +283,9 @@ namespace pwiz.OspreySharp.IO
                 }
             }
 
-            // Apply pairings.
+            // Apply pairings. For each paired decoy, set its id so that
+            // base_id matches the target. Unpaired decoy-side entries
+            // keep the high bit set above without an id rewrite.
             for (int i = 0; i < pairings.Count; i++)
             {
                 int decoyIdx = pairings[i].Key;
@@ -231,7 +293,8 @@ namespace pwiz.OspreySharp.IO
                 uint targetId = library[targetIdx].Id;
                 library[decoyIdx].Id = targetId | LibraryEntry.DECOY_ID_BIT;
             }
-            return pairings.Count;
+            stats.NPaired = pairings.Count;
+            return stats;
         }
 
         private static bool TryParsePeptideKind(string s, out PeptideKind kind)

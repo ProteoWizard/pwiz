@@ -79,7 +79,7 @@ namespace pwiz.OspreySharp.Test
                     MakeEntry(4, @"BPETPIDE", 2, true),
                 };
                 var state = new PairingState();
-                int nPaired = m.ApplyToLibrary(lib, state);
+                int nPaired = m.ApplyToLibrary(lib, state).NPaired;
                 Assert.AreEqual(2, nPaired);
                 // The decoy of PEPTIDEA should base_id-match target id=1.
                 var aeptpide = FindBySequence(lib, @"AEPTPIDE");
@@ -116,7 +116,7 @@ namespace pwiz.OspreySharp.Test
                     MakeEntry(4, @"AEPTPIDE", 3, true),
                 };
                 var state = new PairingState();
-                int nPaired = m.ApplyToLibrary(lib, state);
+                int nPaired = m.ApplyToLibrary(lib, state).NPaired;
                 Assert.AreEqual(2, nPaired);
                 var dCharge2 = FindByDecoyAndCharge(lib, @"AEPTPIDE", 2);
                 var dCharge3 = FindByDecoyAndCharge(lib, @"AEPTPIDE", 3);
@@ -146,7 +146,7 @@ namespace pwiz.OspreySharp.Test
                     MakeEntry(2, @"UNKNOWNK", 2, true), // not in manifest
                 };
                 var state = new PairingState();
-                int nPaired = m.ApplyToLibrary(lib, state);
+                int nPaired = m.ApplyToLibrary(lib, state).NPaired;
                 Assert.AreEqual(0, nPaired);
                 // The unpaired decoy must not be in state.PairedDecoys.
                 Assert.IsFalse(state.PairedDecoys.Contains(1));
@@ -178,7 +178,7 @@ namespace pwiz.OspreySharp.Test
                     AddProteins(MakeEntry(4, @"EPBPTIDE", 2, true), @"rev_protB"),
                 };
                 var state = new PairingState();
-                int nManifest = m.ApplyToLibrary(lib, state);
+                int nManifest = m.ApplyToLibrary(lib, state).NPaired;
                 Assert.AreEqual(1, nManifest);
                 int nComposition = LibraryDecoyPairing.PairLibraryDecoysByComposition(
                     lib, new List<string> { @"rev_" }, state);
@@ -187,6 +187,83 @@ namespace pwiz.OspreySharp.Test
                 var decB = FindBySequence(lib, @"EPBPTIDE");
                 Assert.AreEqual(1u, decA.Id & 0x7FFFFFFFu);
                 Assert.AreEqual(3u, decB.Id & 0x7FFFFFFFu);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [TestMethod]
+        public void ManifestFlipsUnflaggedDecoysToIsDecoy()
+        {
+            // Real-world failure mode: a library predictor (Carafe)
+            // strips the rev_ / decoy_ prefix from protein accessions, so
+            // the library loads with every decoy looking like a target
+            // (IsDecoy = false). The manifest's sequence-based
+            // classification is authoritative and must flip those entries
+            // to IsDecoy = true.
+            string path = WriteManifest(new[]
+            {
+                @"PEPTIDEA	No	protA	target	0",
+                @"AEPTPIDE	Yes	rev_protA	decoy	0",
+            });
+            try
+            {
+                var m = DecoyPairingManifest.FromTsv(path);
+                var lib = new List<LibraryEntry>
+                {
+                    MakeEntry(1, @"PEPTIDEA", 2, false),
+                    MakeEntry(2, @"AEPTPIDE", 2, false), // <-- loaded as target
+                };
+                Assert.IsFalse(lib[1].IsDecoy);
+                Assert.AreEqual(0u, lib[1].Id & LibraryEntry.DECOY_ID_BIT);
+
+                var state = new PairingState();
+                var stats = m.ApplyToLibrary(lib, state);
+
+                Assert.AreEqual(1, stats.NPaired);
+                Assert.AreEqual(1, stats.NNewlyMarkedDecoy);
+                var decoy = FindBySequence(lib, @"AEPTPIDE");
+                Assert.IsTrue(decoy.IsDecoy, @"manifest should flip IsDecoy=true");
+                Assert.IsTrue((decoy.Id & LibraryEntry.DECOY_ID_BIT) != 0u,
+                    @"decoy id should have high bit set");
+                Assert.AreEqual(1u, decoy.Id & 0x7FFFFFFFu);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [TestMethod]
+        public void ManifestMarksUnpairedDecoyWithoutPairingIt()
+        {
+            // An unpaired manifest-flagged decoy (no target-side
+            // counterpart in the library) still gets IsDecoy=true and the
+            // high bit on its Id, even though pairing skips it.
+            string path = WriteManifest(new[]
+            {
+                @"PEPTIDEA	No	protA	target	0",
+                @"AEPTPIDE	Yes	rev_protA	decoy	0",
+            });
+            try
+            {
+                var m = DecoyPairingManifest.FromTsv(path);
+                var lib = new List<LibraryEntry>
+                {
+                    // Only the decoy peptide is in the library; the
+                    // target sibling PEPTIDEA isn't.
+                    MakeEntry(7, @"AEPTPIDE", 2, false),
+                };
+                var state = new PairingState();
+                var stats = m.ApplyToLibrary(lib, state);
+                Assert.AreEqual(0, stats.NPaired); // no target -> no pair
+                Assert.AreEqual(1, stats.NNewlyMarkedDecoy);
+                Assert.IsTrue(lib[0].IsDecoy);
+                Assert.IsTrue((lib[0].Id & LibraryEntry.DECOY_ID_BIT) != 0u);
+                // Unpaired: low 31 bits keep the original id.
+                Assert.AreEqual(7u, lib[0].Id & 0x7FFFFFFFu);
             }
             finally
             {
