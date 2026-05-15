@@ -388,38 +388,61 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             // Re-load the 2nd-pass FDR sidecar onto the post-compaction
-            // stub list when any file already has one on disk. The
-            // 2nd-pass scores + q-values are what Stage 7 (protein FDR)
-            // and the blib writer consume. Loading happens AFTER
-            // compaction because the 2nd-pass sidecar was written from
-            // the post-compaction state -- overlaying it before
-            // compaction would either silently miss records (if the
-            // pre-compaction entries dict happens to also contain
-            // compaction-dropped entry_ids that the 2nd-pass never saw)
-            // or scramble q-values on entries the 2nd-pass had already
-            // discarded. TryReadOverlay tolerates count mismatch
-            // (records whose entry_id is unknown to the caller's dict
-            // are skipped), so the constraint here is
-            // correctness-of-state, not size-equality. Mirrors Rust's
-            // load-order inversion at pipeline.rs:4030-4076.
-            // Gate is probe-the-disk (any 2nd-pass sidecar present)
-            // rather than ExpectReconciledInput so the dispatch follows
-            // the boundary files on disk; stage5/stage6 paths (no
-            // 2nd-pass sidecar yet) skip cleanly without the gate
-            // having to encode CLI semantics.
-            bool anyPass2Present = false;
-            if (config.InputFiles != null)
+            // stub list when every file has a 2nd-pass sidecar that
+            // matches the current MergeNode validity key. The 2nd-pass
+            // scores + q-values are what Stage 7 (protein FDR) and the
+            // blib writer consume. Loading happens AFTER compaction
+            // because the 2nd-pass sidecar was written from the
+            // post-compaction state -- overlaying it before compaction
+            // would either silently miss records (if the pre-compaction
+            // entries dict happens to also contain compaction-dropped
+            // entry_ids that the 2nd-pass never saw) or scramble
+            // q-values on entries the 2nd-pass had already discarded.
+            // TryReadOverlay tolerates count mismatch (records whose
+            // entry_id is unknown to the caller's dict are skipped),
+            // so the constraint here is correctness-of-state, not
+            // size-equality. Mirrors Rust's load-order inversion at
+            // pipeline.rs:4030-4076.
+            //
+            // Gate is "binary present + sidecar (if any) is valid" rather
+            // than bare File.Exists, so a stale 2nd-pass sidecar left
+            // over from a prior run with different config (different
+            // reconciliation hash, different library, etc.) cannot
+            // quietly contaminate the current run's q-values. The
+            // validity sidecar's absence is permitted because the
+            // snapshot test infrastructure produces 2nd-pass binaries
+            // via MergeNodeTask's early-exit path (Environment.Exit
+            // under OSPREY_STAGE7_PROTEIN_FDR_ONLY=1), which fires
+            // before AnalysisPipeline's WriteTaskSidecars step. A
+            // bare 2nd-pass binary with no sidecar at all is treated
+            // as a trusted boundary input; only an explicit
+            // mismatching sidecar invalidates the overlay.
+            bool allPass2Valid = config.InputFiles != null && perFileEntries.Count > 0;
+            if (allPass2Valid)
             {
+                var mergeNode = ctx.GetTask<MergeNodeTask>();
+                string mergeNodeValidityKey = mergeNode.ValidityKey(ctx);
+                string mergeNodeTaskName = mergeNode.Name;
                 foreach (var inputFile in config.InputFiles)
                 {
-                    if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
+                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+                    if (!File.Exists(pass2Path))
                     {
-                        anyPass2Present = true;
+                        allPass2Valid = false;
+                        break;
+                    }
+                    string sidecarPath = TaskValiditySidecar.PathFor(
+                        pass2Path, mergeNodeTaskName);
+                    if (File.Exists(sidecarPath)
+                        && !TaskValiditySidecar.IsValid(
+                            pass2Path, mergeNodeTaskName, mergeNodeValidityKey))
+                    {
+                        allPass2Valid = false;
                         break;
                     }
                 }
             }
-            if (anyPass2Present)
+            if (allPass2Valid)
             {
                 // Same input-by-fileName map shape as the 1st-pass
                 // load above (sidecar paths derive from input file

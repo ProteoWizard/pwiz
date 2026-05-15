@@ -113,42 +113,41 @@ namespace pwiz.OspreySharp.Tasks
                 // OSPREY_STAGE7_PROTEIN_FDR_ONLY early exit (used
                 // by stage6 isolation in Test-Regression) leave the
                 // sidecar on disk for downstream rehydration.
-                // Probe-the-disk: skip the write when any file already
-                // has a 2nd-pass sidecar on disk (replacing the prior
-                // ExpectReconciledInput gate). Under that condition the
-                // sidecar values are already correct on disk (we just
-                // loaded them in FirstJoinTask's 2nd-pass overlay), so
-                // re-writing is wasted I/O.
-                bool anyPass2OnDisk = false;
-                if (config.InputFiles != null)
-                {
-                    foreach (var inputFile in config.InputFiles)
-                    {
-                        if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
-                        {
-                            anyPass2OnDisk = true;
-                            break;
-                        }
-                    }
-                }
-                if (!anyPass2OnDisk
-                    && perFileParquetPaths.Count > 0)
+                // Probe-the-disk per file: only write sidecars that are
+                // not already on disk. The earlier "any sidecar present
+                // -> skip all writes" gate broke partial-resume -- if a
+                // prior run crashed mid-write and left some files with
+                // sidecars and others without, the missing ones would
+                // never get written. Per-file probe preserves the
+                // skip-when-already-present optimization for the
+                // stage7-style "everything loaded from disk" case while
+                // also healing partial state.
+                if (perFileParquetPaths.Count > 0 && config.InputFiles != null)
                 {
                     var inputByFileName = new Dictionary<string, string>();
                     foreach (var inputFile in config.InputFiles)
                         inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
 
                     int pass2Failures = 0;
+                    int pass2Written = 0;
+                    int pass2AlreadyOnDisk = 0;
                     foreach (var kvp in perFileEntries)
                     {
                         string fileName = kvp.Key;
                         if (!inputByFileName.TryGetValue(fileName, out string inputFile3))
                             continue;
+                        string pass2Path = FdrScoresSidecar.Pass2Path(inputFile3);
+                        if (File.Exists(pass2Path))
+                        {
+                            pass2AlreadyOnDisk++;
+                            continue;
+                        }
                         try
                         {
                             FdrScoresSidecar.Write(
-                                FdrScoresSidecar.Pass2Path(inputFile3),
+                                pass2Path,
                                 kvp.Value, FdrScoresSidecar.Pass.SecondPass);
+                            pass2Written++;
                         }
                         catch (Exception ex)
                         {
@@ -158,11 +157,14 @@ namespace pwiz.OspreySharp.Tasks
                             pass2Failures++;
                         }
                     }
-                    if (pass2Failures == 0)
+                    if (pass2Failures == 0 && pass2Written > 0)
                     {
                         ctx.LogInfo(string.Format(
-                            @"Wrote 2nd-pass FDR sidecars for {0} file(s)",
-                            perFileEntries.Count));
+                            @"Wrote 2nd-pass FDR sidecars for {0} file(s){1}",
+                            pass2Written,
+                            pass2AlreadyOnDisk > 0
+                                ? string.Format(@" ({0} already on disk; skipped)", pass2AlreadyOnDisk)
+                                : string.Empty));
                     }
                 }
 
