@@ -440,19 +440,17 @@ public static class VendorReaderTestHarness
             RunMzmlbRoundTrip(msd, config, encoderConfig, diffPrecision: 1.0);
         }
 
-        // 9. mz5 round-trip: there's no in-process mz5 writer (read-only port), so we
-        // materialize the in-memory MSData to mzML and shell out to cpp msconvert.exe
-        // for the mzML→mz5 conversion, then read the mz5 back through our adapter and
-        // diff the spectra. Silently skipped when cpp msconvert isn't on disk — TC
-        // builds without a cpp tree (or runs outside the dev checkout) keep their
-        // read-only checks. mz5 is lossless on numeric data (delta-mz encoding round-
-        // trips through cumulative-sum), so 1e-6 is plenty.
-        if (config.TestMz5RoundTrip && !skipRoundTripForProfiler && msd.Run.SpectrumList is not null)
-        {
-            string? msconvert = FindCppMsconvertExe();
-            if (msconvert is not null)
-                RunMz5RoundTrip(msd, msconvert, diffPrecision: config.DiffPrecision ?? 1e-6);
-        }
+        // mz5 round-trip removed — there's no in-process mz5 writer (the C# port is
+        // read-only), and the previous workaround (write mzML, shell out to cpp
+        // msconvert.exe --mz5, read the mz5 back) made pwiz-sharp's CI results depend
+        // on whichever cpp build happened to live in the agent's build-nt-x86 tree.
+        // That coupling produced reproducible "we didn't change anything but the
+        // vendor mz5 tests started failing" surprises (see TC build 3993953 vs 3991833:
+        // cpp version stamp drifted between runs, breaking these on the agent without
+        // any pwiz-sharp change). The mzMLb round-trip above already covers the same
+        // HDF5-backed binary-format round-trip path with no out-of-process dependency.
+        // The Mz5ReaderAdapter itself is tested independently against committed cpp-
+        // written mz5 fixtures (see test/MsData.Tests/Mz5CppFixtureTests).
 
         // Round-trips are done; safe now to release the orphaned SpectrumList's SDK
         // handles (and the shared vendor data that the ChromatogramList rode on top of).
@@ -497,62 +495,6 @@ public static class VendorReaderTestHarness
     }
 
     /// <summary>
-    /// One mz5 write+read cycle. Materializes <paramref name="msd"/> as mzML to a temp
-    /// file, invokes cpp <paramref name="msconvertExe"/> with <c>--mz5</c> to convert
-    /// it, then reads the produced mz5 through <see cref="Pwiz.Data.MsData.Readers.Mz5ReaderAdapter"/>
-    /// and diffs the spectrum data. Two-process workflow because we don't have an in-
-    /// process mz5 writer yet — mz5 is currently a read-only port.
-    /// </summary>
-    private static void RunMz5RoundTrip(MSData msd, string msconvertExe, double diffPrecision)
-    {
-        string tmpDir = Path.Combine(Path.GetTempPath(), $"harness-mz5-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tmpDir);
-        try
-        {
-            string mzmlPath = Path.Combine(tmpDir, "in.mzML");
-            using (var fs = File.Create(mzmlPath))
-                new MzmlWriter().Write(msd, fs);
-
-            var psi = new System.Diagnostics.ProcessStartInfo(msconvertExe)
-            {
-                Arguments = $"\"{mzmlPath}\" --mz5 -o \"{tmpDir}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-            };
-            using (var proc = System.Diagnostics.Process.Start(psi)!)
-            {
-                if (!proc.WaitForExit(300_000))
-                {
-                    try { proc.Kill(entireProcessTree: true); } catch { }
-                    throw new InvalidOperationException(
-                        "mz5 round-trip: cpp msconvert --mz5 timed out after 5 minutes.");
-                }
-                if (proc.ExitCode != 0)
-                    throw new InvalidOperationException(
-                        $"mz5 round-trip: cpp msconvert --mz5 exited with code {proc.ExitCode}.\n" +
-                        proc.StandardError.ReadToEnd());
-            }
-
-            string? mz5Path = Directory.EnumerateFiles(tmpDir, "*.mz5").FirstOrDefault();
-            if (mz5Path is null)
-                throw new InvalidOperationException(
-                    "mz5 round-trip: cpp msconvert produced no .mz5 file in " + tmpDir);
-
-            var roundtripped = new MSData();
-            new Pwiz.Data.MsData.Readers.Mz5ReaderAdapter().Read(mz5Path, roundtripped);
-            string report = MSDataDiff.DescribeSpectraDataOnly(msd, roundtripped, diffPrecision);
-            if (report.Length > 0)
-                throw new InvalidOperationException("mz5 round-trip diff:\n" + report);
-        }
-        finally
-        {
-            try { Directory.Delete(tmpDir, recursive: true); } catch { }
-        }
-    }
-
-    /// <summary>
     /// True when the current process is being instrumented by a .NET coverage / profiler
     /// tool (dotCover, OpenCover, coverlet collector, etc.). Detected via the standard
     /// CLR profiling env vars (<c>CORECLR_ENABLE_PROFILING</c>=<c>1</c> or
@@ -565,37 +507,6 @@ public static class VendorReaderTestHarness
     {
         return string.Equals(Environment.GetEnvironmentVariable("CORECLR_ENABLE_PROFILING"), "1", StringComparison.Ordinal)
             || string.Equals(Environment.GetEnvironmentVariable("COR_ENABLE_PROFILING"), "1", StringComparison.Ordinal);
-    }
-
-    /// <summary>
-    /// Best-effort search for the cpp <c>msconvert.exe</c> binary. Walks up from the
-    /// running assembly's location toward typical pwiz layouts
-    /// (<c>build-nt-x86/msvc-release-x86_64/msconvert.exe</c>), and honors the
-    /// <c>PWIZ_MSCONVERT_EXE</c> environment variable for explicit overrides. Returns
-    /// <c>null</c> when no candidate exists — the caller skips the round-trip silently
-    /// in that case.
-    /// </summary>
-    private static string? FindCppMsconvertExe()
-    {
-        string? env = Environment.GetEnvironmentVariable("PWIZ_MSCONVERT_EXE");
-        if (!string.IsNullOrEmpty(env) && File.Exists(env)) return env;
-
-        string baseDir = AppContext.BaseDirectory;
-        for (int up = 0; up <= 8; up++)
-        {
-            string anchor = baseDir;
-            for (int i = 0; i < up; i++) anchor = Path.GetDirectoryName(anchor) ?? anchor;
-            foreach (string rel in new[]
-            {
-                "build-nt-x86/msvc-release-x86_64/msconvert.exe",
-                "build-nt-x86/msvc-release/msconvert.exe",
-            })
-            {
-                string candidate = Path.GetFullPath(Path.Combine(anchor, rel));
-                if (File.Exists(candidate)) return candidate;
-            }
-        }
-        return null;
     }
 
     /// <summary>

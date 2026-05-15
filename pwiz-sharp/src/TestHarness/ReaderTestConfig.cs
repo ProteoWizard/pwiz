@@ -133,23 +133,8 @@ public sealed record ReaderTestConfig
     public bool TestMzmlbRoundTrip { get; set; } = true;
 
     /// <summary>
-    /// When true, the harness materializes the in-memory MSData to a temp mzML,
-    /// shells out to cpp <c>msconvert.exe --mz5</c> to convert that mzML to mz5,
-    /// reads the mz5 back through <see cref="Pwiz.Data.MsData.Readers.Mz5ReaderAdapter"/>,
-    /// and diffs the spectrum-data round-trip. Exercises the read path against fresh
-    /// cpp-written mz5 with this fixture's actual vendor data (a stronger check than
-    /// the standalone fixture-mz5 unit test, which only covers one Bruker sample).
-    /// <para>
-    /// Skipped silently when the cpp msconvert binary isn't findable on disk — we
-    /// don't have a native mz5 writer yet (read-only port), so this is the only
-    /// way to exercise mz5 round-trip parity inside the harness.
-    /// </para>
-    /// </summary>
-    public bool TestMz5RoundTrip { get; set; } = true;
-
-    /// <summary>
-    /// When true, the HDF5-backed round-trips (<see cref="TestMzmlbRoundTrip"/> /
-    /// <see cref="TestMz5RoundTrip"/>) still run when the test process is being
+    /// When true, the HDF5-backed round-trip (<see cref="TestMzmlbRoundTrip"/>) still
+    /// runs when the test process is being
     /// instrumented by a CLR coverage profiler. Each vendor designates one
     /// representative fixture (the smallest one) with this set so TC coverage runs
     /// exercise the round-trip code path for at least one fixture per vendor without
