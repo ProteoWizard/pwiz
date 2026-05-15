@@ -68,8 +68,31 @@ namespace pwiz.OspreySharp.Core
         /// <summary>Decoy generation method.</summary>
         public DecoyMethod DecoyMethod { get; set; } = DecoyMethod.Reverse;
 
-        /// <summary>Whether library already contains decoys.</summary>
+        /// <summary>
+        /// Whether library already contains decoys. When true (or when
+        /// <see cref="DecoyMethod"/> = <see cref="DecoyMethod.FromLibrary"/>),
+        /// <c>DecoyGenerator</c> is skipped and existing entries are
+        /// scanned for <see cref="DecoyPrefixes"/> matches on their
+        /// protein accessions; matching entries get
+        /// <see cref="LibraryEntry.IsDecoy"/> = true and the high bit of
+        /// their <see cref="LibraryEntry.Id"/> set.
+        /// </summary>
         public bool DecoysInLibrary { get; set; }
+
+        /// <summary>
+        /// Protein-accession prefixes that identify decoys when the
+        /// library already contains them (case-insensitive). Default
+        /// covers the three common conventions: Osprey's own
+        /// <c>DECOY_</c>, plus <c>rev_</c> / <c>decoy_</c> used by tools
+        /// like DIA-NN, EncyclopeDIA, and Carafe.
+        /// Maps to Rust <c>OspreyConfig::decoy_prefixes</c>.
+        /// </summary>
+        public List<string> DecoyPrefixes { get; set; } = new List<string>
+        {
+            @"DECOY_",
+            @"rev_",
+            @"decoy_",
+        };
 
         /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
         public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
@@ -184,6 +207,27 @@ namespace pwiz.OspreySharp.Core
                 sb.AppendFormat(ic, "prefilter_enabled:{0}\n", b(PrefilterEnabled));
                 sb.AppendFormat(ic, "decoy_method:{0}\n", DecoyMethod);
                 sb.AppendFormat(ic, "decoys_in_library:{0}\n", b(DecoysInLibrary));
+                // Sort prefixes so ordering changes don't churn the hash.
+                // Lower-case to make case-only edits no-ops (matching the
+                // runtime comparison). Mirrors Rust's
+                // format!("decoy_prefixes:{:?}\n", prefixes) where {:?} on
+                // Vec<String> yields ["a", "b"] (double-quoted, comma-
+                // space-separated).
+                var prefixes = new List<string>(DecoyPrefixes != null ? DecoyPrefixes.Count : 0);
+                if (DecoyPrefixes != null)
+                {
+                    foreach (var p in DecoyPrefixes)
+                        prefixes.Add(p == null ? string.Empty : p.ToLowerInvariant());
+                }
+                prefixes.Sort(StringComparer.Ordinal);
+                var prefixList = new StringBuilder("[");
+                for (int i = 0; i < prefixes.Count; i++)
+                {
+                    if (i > 0) prefixList.Append(", ");
+                    prefixList.Append('"').Append(prefixes[i]).Append('"');
+                }
+                prefixList.Append(']');
+                sb.AppendFormat(ic, "decoy_prefixes:{0}\n", prefixList.ToString());
                 sb.AppendFormat(ic, "rt_cal.enabled:{0}\n", b(RtCalibration.Enabled));
                 sb.AppendFormat(ic, "rt_cal.fallback_rt_tolerance:{0}\n", RtCalibration.FallbackRtTolerance);
                 sb.AppendFormat(ic, "rt_cal.rt_tolerance_factor:{0}\n", RtCalibration.RtToleranceFactor);
