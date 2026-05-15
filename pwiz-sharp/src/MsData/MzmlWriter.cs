@@ -41,6 +41,29 @@ public sealed class MzmlWriter
     /// indexes and an SHA-1 fileChecksum (matches pwiz C++ msconvert's default output).</summary>
     public bool Indexed { get; set; } = true;
 
+    /// <summary>When true (and <see cref="Indexed"/> is false), capture each spectrum's
+    /// byte position + id but DO NOT wrap the output in an <c>&lt;indexedmzML&gt;</c>
+    /// envelope. Used by <c>MzMlbWriter</c>, which stores the offsets in separate HDF5
+    /// datasets (<c>mzML_spectrumIndex</c> / <c>mzML_spectrumIndex_idRef</c>) instead —
+    /// matching cpp's <c>Serializer_mzML.cpp</c> mzMLb-detection path. After the call to
+    /// <see cref="Write(MSData, Stream)"/> returns, the captures are exposed via
+    /// <see cref="CapturedSpectrumOffsets"/> and <see cref="CapturedEndOfSpectrumList"/>.</summary>
+    public bool TrackSpectrumOffsets { get; set; }
+
+    /// <summary>Per-spectrum (id, byte-position) pairs captured when
+    /// <see cref="TrackSpectrumOffsets"/> is on, valid only between the last
+    /// <see cref="Write(MSData, Stream)"/> call's return and the next one's entry.
+    /// Empty when no tracking was requested or no spectra were written.</summary>
+    public IReadOnlyList<(string Id, long Offset)> CapturedSpectrumOffsets =>
+        _capturedSpectrumOffsets ?? (IReadOnlyList<(string, long)>)System.Array.Empty<(string, long)>();
+
+    /// <summary>Byte position right after <c>&lt;/spectrumList&gt;</c> closed, captured
+    /// in the same conditions as <see cref="CapturedSpectrumOffsets"/>. Use as the
+    /// "end of spectrum list" anchor when writing the mzMLb HDF5 index dataset.</summary>
+    public long CapturedEndOfSpectrumList { get; private set; }
+
+    private List<(string Id, long Offset)>? _capturedSpectrumOffsets;
+
     /// <summary>Optional listener registry that receives <see cref="IterationUpdate"/> messages
     /// once per spectrum during the spectrumList write loop. Drives msconvert's <c>-v</c>
     /// progress output and any future progress UI.</summary>
@@ -85,27 +108,45 @@ public sealed class MzmlWriter
         ArgumentNullException.ThrowIfNull(msd);
         ArgumentNullException.ThrowIfNull(stream);
 
-        if (!Indexed)
+        // Clear any leftover captures from a previous Write call.
+        _capturedSpectrumOffsets = null;
+        CapturedEndOfSpectrumList = 0;
+
+        if (!Indexed && !TrackSpectrumOffsets)
         {
             using var w = CreateWriter(stream);
             WriteMzmlDocument(msd, w);
             return;
         }
 
-        // Indexed mode: wrap the stream so we can record byte offsets + SHA-1, and emit an
-        // <indexedmzML> envelope around <mzML> with the index, indexListOffset, and fileChecksum.
+        // Either indexed mode (full <indexedmzML> envelope + fileChecksum) or mzMLb's
+        // track-offsets-only mode. Both need byte-position tracking, so they share the
+        // HashingCountingStream wrapper — but the offsets-only path leaves the document
+        // as plain <mzML> and exposes the captures via CapturedSpectrumOffsets so
+        // MzMlbWriter can store them in HDF5 datasets.
         _stream = new HashingCountingStream(stream);
+        if (!Indexed) _stream.StopHashing(); // no checksum in offsets-only mode
         _spectrumOffsets = new List<(string, long)>();
         _chromatogramOffsets = new List<(string, long)>();
         try
         {
             using var w = CreateWriter(_stream);
-            WriteIndexedEnvelope(msd, w);
+            if (Indexed)
+            {
+                WriteIndexedEnvelope(msd, w);
+            }
+            else
+            {
+                // Plain <mzML> document, but with spectrum-offset capture enabled inside.
+                WriteMzmlDocument(msd, w);
+                _capturedSpectrumOffsets = _spectrumOffsets;
+            }
         }
         finally
         {
             _stream.Dispose();
             _stream = null;
+            // _capturedSpectrumOffsets stays set on the instance until the next Write.
             _spectrumOffsets = null;
             _chromatogramOffsets = null;
         }
@@ -646,6 +687,15 @@ public sealed class MzmlWriter
         }
 
         w.WriteEndElement();
+
+        // Record the byte position just after </spectrumList>, used by mzMLb's HDF5 index
+        // as the "end of spectrumList" anchor (caller seeks here and byte-scans forward
+        // for <chromatogramList> in the lazy read path).
+        if (_stream is not null && TrackSpectrumOffsets)
+        {
+            w.Flush();
+            CapturedEndOfSpectrumList = _stream.BytesWritten;
+        }
     }
 
     private void WriteSpectrum(XmlWriter w, Spectrum spec)

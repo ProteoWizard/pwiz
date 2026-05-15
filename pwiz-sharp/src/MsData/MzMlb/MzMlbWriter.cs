@@ -55,16 +55,51 @@ public sealed class MzMlbWriter
         ArgumentException.ThrowIfNullOrEmpty(path);
 
         using var conn = MzMlbConnection.OpenForWrite(path, ChunkSize, CompressionLevel);
-        using var stream = conn.OpenMzMlStream();
-        var inner = new MzmlWriter(_encoderConfig)
+        using (var stream = conn.OpenMzMlStream())
         {
-            // mzMLb files inherently aren't indexed via the standard
-            // <indexedmzML> envelope — the HDF5 layer gives random access
-            // to spectra via dataset offsets instead. Match cpp here.
-            Indexed = false,
-            IterationListenerRegistry = IterationListenerRegistry,
-            ExternalBinarySink = conn,
-        };
-        inner.Write(msd, stream);
+            var inner = new MzmlWriter(_encoderConfig)
+            {
+                // No <indexedmzML> envelope inside the mzML dataset — cpp's
+                // Serializer_mzML detects an mzMLb output stream and writes the spectrum
+                // byte offsets to separate HDF5 datasets instead. TrackSpectrumOffsets=true
+                // tells MzmlWriter to capture the per-spectrum byte positions + ids in
+                // CapturedSpectrumOffsets, which we then store in the HDF5 mzML_spectrumIndex
+                // / mzML_spectrumIndex_idRef datasets below — matching the format
+                // MzMlbReaderAdapter's lazy path consumes.
+                Indexed = false,
+                TrackSpectrumOffsets = true,
+                IterationListenerRegistry = IterationListenerRegistry,
+                ExternalBinarySink = conn,
+            };
+            inner.Write(msd, stream);
+
+            // Emit the spectrum-index HDF5 datasets so MzMlbReaderAdapter can take the
+            // lazy path on re-read. Format matches cpp Serializer_mzML.cpp:200-241:
+            //   mzML_spectrumIndex      : long[N+1] of byte positions (N spectrum starts + end-of-list)
+            //   mzML_spectrumIndex_idRef: byte buffer of null-terminated id strings
+            var offsets = inner.CapturedSpectrumOffsets;
+            if (offsets.Count > 0)
+            {
+                var offsetArray = new long[offsets.Count + 1];
+                int idByteCount = 0;
+                for (int i = 0; i < offsets.Count; i++)
+                {
+                    offsetArray[i] = offsets[i].Offset;
+                    idByteCount += System.Text.Encoding.UTF8.GetByteCount(offsets[i].Id) + 1; // +1 for null terminator
+                }
+                offsetArray[^1] = inner.CapturedEndOfSpectrumList;
+                conn.AppendInt64("mzML_spectrumIndex", offsetArray);
+
+                var idBytes = new byte[idByteCount];
+                int p = 0;
+                for (int i = 0; i < offsets.Count; i++)
+                {
+                    int n = System.Text.Encoding.UTF8.GetBytes(offsets[i].Id, 0, offsets[i].Id.Length, idBytes, p);
+                    p += n;
+                    idBytes[p++] = 0; // null terminator
+                }
+                conn.AppendBytes("mzML_spectrumIndex_idRef", idBytes);
+            }
+        }
     }
 }

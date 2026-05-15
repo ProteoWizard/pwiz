@@ -179,6 +179,16 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
         return H5L.exists(_fileId, datasetId) > 0;
     }
 
+    /// <summary>Number of elements in the 1-D dataset (e.g. <c>mzML_spectrumIndex</c>
+    /// contains N+1 int64 byte-offsets where N is the spectrum count). Throws if the
+    /// dataset doesn't exist; callers should check <see cref="Exists"/> first.</summary>
+    public long GetDatasetElementCount(string datasetId)
+    {
+        EnsureOpen();
+        using var ds = OpenDataset(datasetId);
+        return (long)ds.Size;
+    }
+
     /// <summary>Reads <c>buf.Length</c> doubles from <paramref name="dataset"/>
     /// starting at <paramref name="offset"/>. Used for m/z and intensity
     /// arrays regardless of on-disk precision — HDF5 converts NATIVE_FLOAT

@@ -39,17 +39,19 @@ public class MzMlbIntegerArrayTests
         {
             new MzMlbWriter(cfg).Write(msd, path);
 
-            var rt = new MSData();
-            new MzMlbReaderAdapter().Read(path, rt);
+            using (var rt = new MSData())
+            {
+                new MzMlbReaderAdapter().Read(path, rt);
 
-            Assert.AreEqual(1, rt.Run.SpectrumList?.Count ?? 0);
-            var spec = rt.Run.SpectrumList!.GetSpectrum(0, getBinaryData: true);
-            Assert.AreEqual(1, spec.IntegerDataArrays.Count);
-            CollectionAssert.AreEqual(charges, spec.IntegerDataArrays[0].Data);
+                Assert.AreEqual(1, rt.Run.SpectrumList?.Count ?? 0);
+                var spec = rt.Run.SpectrumList!.GetSpectrum(0, getBinaryData: true);
+                Assert.AreEqual(1, spec.IntegerDataArrays.Count);
+                CollectionAssert.AreEqual(charges, spec.IntegerDataArrays[0].Data);
 
-            // The writer should have flagged the data as 32-bit on the binaryDataArray.
-            Assert.IsTrue(spec.IntegerDataArrays[0].HasCVParam(CVID.MS_32_bit_integer),
-                "int32 precision config should emit MS_32_bit_integer cvParam");
+                // The writer should have flagged the data as 32-bit on the binaryDataArray.
+                Assert.IsTrue(spec.IntegerDataArrays[0].HasCVParam(CVID.MS_32_bit_integer),
+                    "int32 precision config should emit MS_32_bit_integer cvParam");
+            }
         }
         finally { File.Delete(path); }
     }
