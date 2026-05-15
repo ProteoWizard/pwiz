@@ -633,11 +633,11 @@ namespace pwiz.SkylineTestFunctional
             graphPane.YAxis.Scale.Max = 50;
 
             // Properly initialize the GraphPane with a mock graphics context for axis calculations
-            using (var bitmap = new System.Drawing.Bitmap(800, 600))
-            using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
+            using (var bitmap = new Bitmap(800, 600))
+            using (var graphics = Graphics.FromImage(bitmap))
             {
                 // Set reasonable chart dimensions for scale calculations
-                graphPane.Chart.Rect = new System.Drawing.RectangleF(50, 50, 700, 500);
+                graphPane.Chart.Rect = new RectangleF(50, 50, 700, 500);
                 graphPane.AxisChange(graphics);
             }
 
