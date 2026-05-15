@@ -54,22 +54,7 @@ namespace pwiz.OspreySharp
 
             try
             {
-                // Pipeline definition: the four HPC-boundary phases in
-                // order. Tasks read upstream state through
-                // ctx.GetTask<T>().GetX() rather than constructor args;
-                // each task short-circuits its own work when there is
-                // nothing to do (e.g. PerFileRescoreTask checks
-                // FirstJoinTask.DidPlan internally and returns true as a
-                // no-op when planning was skipped). Returning false from
-                // any task is the signal to stop and propagate
-                // ctx.ExitCode.
-                var pipelineTasks = new OspreyTask[]
-                {
-                    new PerFileScoringTask(),
-                    new FirstJoinTask(),
-                    new PerFileRescoreTask(),
-                    new MergeNodeTask()
-                };
+                var pipelineTasks = CanonicalPipeline();
                 var startAt = DeriveStartAtTask(config);
                 var stopAfter = DeriveStopAfterTask(config);
                 var ctx = new PipelineContext(config, pipelineTasks,
@@ -113,9 +98,31 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
+        /// The canonical four-task pipeline in execution order:
+        /// PerFileScoring -> FirstJoin -> PerFileRescore -> MergeNode.
+        /// Single source of truth for the task list. Tasks read upstream
+        /// state through ctx.GetTask&lt;T&gt;().GetX() rather than
+        /// constructor args; each task short-circuits its own work when
+        /// there is nothing to do (e.g. PerFileRescoreTask checks
+        /// FirstJoinTask.DidPlan internally and returns true as a no-op
+        /// when planning was skipped). Returning false from any task is
+        /// the signal to stop and propagate ctx.ExitCode.
+        /// </summary>
+        internal static OspreyTask[] CanonicalPipeline()
+        {
+            return new OspreyTask[]
+            {
+                new PerFileScoringTask(),
+                new FirstJoinTask(),
+                new PerFileRescoreTask(),
+                new MergeNodeTask(),
+            };
+        }
+
+        /// <summary>
         /// Derives the StartAt task for <paramref name="config"/> from the
         /// HPC CLI flags it carries. The four mass-spec pipeline tasks
-        /// (PerFileScoring → FirstJoin → PerFileRescore → MergeNode) are
+        /// (PerFileScoring -> FirstJoin -> PerFileRescore -> MergeNode) are
         /// always present in the registry; this picks which one
         /// <see cref="AnalysisPipeline.Run"/> starts at, leaving any
         /// earlier tasks unrun (their lazy-rehydrate accessors fetch state

@@ -582,6 +582,74 @@
     <code>Shared/BiblioSpec</code> so OspreySharp and Skyline share a
     single C# BLIB writer.
   </p>
+  <p>
+    <strong>Source-line audit (per-module, executable code only;
+    measured 2026-05-14 via
+    <code>ai/scripts/OspreySharp/Audit-Loc.ps1</code>):</strong>
+    OspreySharp tracks Osprey at <strong>0.81×</strong> production-code
+    size with the same module split. The Rust side ships its tests
+    inline (<code>#[cfg(test)]</code>); the C# side keeps them in a
+    separate <code>OspreySharp.Test</code> project. The IO module is
+    larger on the C# side mostly due to the BLIB writer surface;
+    Scoring is much smaller on the C# side because XCorr / cosine /
+    median-polish share helpers across resolutions instead of paying
+    the Rust generic-instantiation cost.
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Module</th>
+        <th style="text-align: right; padding: 2px 12px;">C# files</th>
+        <th style="text-align: right; padding: 2px 12px;">C# code</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust files</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust code</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust prod (est)</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust test (est)</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/RustProd</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">Core</td><td style="text-align: right; padding: 1px 12px;">24</td><td style="text-align: right; padding: 1px 12px;">1,226</td><td style="text-align: right; padding: 1px 12px;">7</td><td style="text-align: right; padding: 1px 12px;">1,945</td><td style="text-align: right; padding: 1px 12px;">1,587</td><td style="text-align: right; padding: 1px 12px;">358</td><td style="text-align: right; padding: 1px 12px;">0.63×</td><td style="text-align: right; padding: 1px 12px;">0.77×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">IO</td><td style="text-align: right; padding: 1px 12px;">13</td><td style="text-align: right; padding: 1px 12px;">4,177</td><td style="text-align: right; padding: 1px 12px;">11</td><td style="text-align: right; padding: 1px 12px;">3,676</td><td style="text-align: right; padding: 1px 12px;">2,896</td><td style="text-align: right; padding: 1px 12px;">780</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.14×</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.44×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Chromatography</td><td style="text-align: right; padding: 1px 12px;">7</td><td style="text-align: right; padding: 1px 12px;">1,833</td><td style="text-align: right; padding: 1px 12px;">6</td><td style="text-align: right; padding: 1px 12px;">3,749</td><td style="text-align: right; padding: 1px 12px;">2,273</td><td style="text-align: right; padding: 1px 12px;">1,476</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.49×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Scoring</td><td style="text-align: right; padding: 1px 12px;">9</td><td style="text-align: right; padding: 1px 12px;">2,160</td><td style="text-align: right; padding: 1px 12px;">8</td><td style="text-align: right; padding: 1px 12px;">7,769</td><td style="text-align: right; padding: 1px 12px;">5,744</td><td style="text-align: right; padding: 1px 12px;">2,025</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.28×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.38×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">FDR</td><td style="text-align: right; padding: 1px 12px;">12</td><td style="text-align: right; padding: 1px 12px;">2,725</td><td style="text-align: right; padding: 1px 12px;">4</td><td style="text-align: right; padding: 1px 12px;">4,867</td><td style="text-align: right; padding: 1px 12px;">3,219</td><td style="text-align: right; padding: 1px 12px;">1,648</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.56×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.85×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">ML</td><td style="text-align: right; padding: 1px 12px;">7</td><td style="text-align: right; padding: 1px 12px;">934</td><td style="text-align: right; padding: 1px 12px;">8</td><td style="text-align: right; padding: 1px 12px;">1,910</td><td style="text-align: right; padding: 1px 12px;">1,225</td><td style="text-align: right; padding: 1px 12px;">685</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.49×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.76×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Main (entry)</td><td style="text-align: right; padding: 1px 12px;">12</td><td style="text-align: right; padding: 1px 12px;">8,068</td><td style="text-align: right; padding: 1px 12px;">9</td><td style="text-align: right; padding: 1px 12px;">13,257</td><td style="text-align: right; padding: 1px 12px;">9,109</td><td style="text-align: right; padding: 1px 12px;">4,148</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.61×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.89×</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Production TOTAL</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>84</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>21,123</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>53</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>37,173</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>26,053</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>11,120</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.57×</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.81×</strong></td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">OspreySharp.Test</td><td style="text-align: right; padding: 1px 12px;">12</td><td style="text-align: right; padding: 1px 12px;">6,847</td><td style="text-align: right; padding: 1px 12px;" colspan="2" title="Rust tests are inline #[cfg(test)] blocks; no separate files">— (inline)</td><td style="text-align: right; padding: 1px 12px;">—</td><td style="text-align: right; padding: 1px 12px;">11,120</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;" colspan="2">0.62× vs Rust tests</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Prod + Tests TOTAL</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>96</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>27,970</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>53</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>37,173</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>26,053</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>11,120</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;" colspan="2"><strong>0.75× (C# / Rust)</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>Grand totals.</strong>
+    OspreySharp production: <strong>21.1 KLOC</strong> (84 files).
+    OspreySharp.Test (separate project): <strong>6.8 KLOC</strong>
+    (12 files). Combined: <strong>28.0 KLOC</strong> (96 files).
+    Osprey production (estimated, by stripping inline
+    <code>#[cfg(test)]</code> tails): <strong>26.1 KLOC</strong>.
+    Osprey inline tests (estimated): <strong>11.1 KLOC</strong>. Osprey
+    all code (cloc total, 53 files): <strong>37.2 KLOC</strong>.
+    Apples-to-apples ratios: <strong>production-only 0.81×</strong>
+    (C# / Rust), <strong>production+tests 0.75×</strong>. The C#
+    production side is consistently more compact than Rust's; the
+    test side is sparser, mostly because the C# pipeline has its own
+    full-stage parity gates (<code>Test-Snapshot</code>,
+    <code>Test-Regression</code>, <code>Test-Features</code>) that
+    sit outside the unit-test count.
+  </p>
+  <p>
+    Counts come from <code>cloc</code> (executable code only; build
+    artifacts excluded). The Rust prod/test split is a heuristic: per
+    <code>.rs</code> file, the first
+    <code>^\s*#[cfg(test)]</code> line marks the boundary and
+    everything to EOF is treated as test. Matches the standard
+    <code>mod tests { ... }</code> convention but undercounts the
+    test side when a crate intermixes test items in non-trailing
+    positions. Regenerate with
+    <code>pwsh -File ai/scripts/OspreySharp/Audit-Loc.ps1</code>.
+  </p>
   <p style="font-size: 11px; color: #757575;">
     Detailed work log for the OspreySharp port lives in
     <code>pwiz-ai/todos/completed/TODO-*_osprey_sharp*.md</code> — sprint-

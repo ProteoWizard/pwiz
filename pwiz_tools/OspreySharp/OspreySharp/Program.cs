@@ -170,17 +170,12 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
 
-                // Stage 6 worker mode (--join-at-pass=1 --no-join)
-                // routes to a separate entry point so the in-process
-                // AnalysisPipeline doesn't have to fan out a fourth
-                // "joinOnly with the modifier inverted" code path.
-                if (config.NoJoin && config.InputScores != null
-                    && config.InputScores.Count > 0)
-                {
-                    return RescoreWorker.Run(config);
-                }
-
-                // Run the pipeline
+                // Single entry point. Stage 6 worker mode
+                // (--join-at-pass=1 --no-join --input-scores) is routed
+                // by AnalysisPipeline.DeriveStartAtTask / DeriveStopAfterTask
+                // to start and stop on PerFileRescoreTask; PerFileScoring's
+                // lazy-rehydrate populates the upstream state from the
+                // boundary files on disk.
                 var pipeline = new AnalysisPipeline();
                 return pipeline.Run(config);
             }
