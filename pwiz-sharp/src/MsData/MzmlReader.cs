@@ -40,6 +40,42 @@ public sealed class MzmlReader
     /// </summary>
     public IExternalBinarySource? ExternalBinarySource { get; set; }
 
+    /// <summary>
+    /// When true, <see cref="ReadSpectrumList"/> skips the spectrum bodies — it
+    /// records the spectrumList's <c>count</c> + <c>defaultDataProcessingRef</c>
+    /// attributes but leaves <see cref="MSData.Run"/>.<c>SpectrumList</c> unset.
+    /// Used by <see cref="SpectrumList_Mzml"/> to bypass the eager full-file load
+    /// while still populating the ref maps needed for later per-spectrum parses.
+    /// </summary>
+    internal bool LazyMode { get; set; }
+
+    /// <summary>Spectrum count from the <c>count</c> attribute on <c>&lt;spectrumList&gt;</c>.
+    /// Only populated when <see cref="LazyMode"/> is true.</summary>
+    internal int LazySpectrumCount { get; private set; }
+
+    /// <summary>Resolved default <see cref="DataProcessing"/> for the spectrum list.
+    /// Only populated when <see cref="LazyMode"/> is true.</summary>
+    internal DataProcessing? LazyDefaultDataProcessing { get; private set; }
+
+    /// <summary>Set by <see cref="ReadSpectrumList"/> in <see cref="LazyMode"/> after
+    /// reading the <c>&lt;spectrumList&gt;</c> opening tag's attributes. Outer parse loops
+    /// (<see cref="ReadRun"/>, <see cref="ReadMzmlBody"/>, <see cref="ReadDocument"/>)
+    /// check this and bail out so we never invoke <see cref="XmlReader.Skip"/> over the
+    /// spectrum bodies — that walk is O(file size) and dominates the open phase on large
+    /// files. The caller resumes parsing chromatogramList + closing tags via a separate
+    /// XmlReader positioned past <c>&lt;/spectrumList&gt;</c> using the byte offset from
+    /// the indexList footer.</summary>
+    internal bool Halted { get; private set; }
+
+    /// <summary>
+    /// Per-call flag set by <see cref="ReadOneSpectrum"/> to make
+    /// <see cref="ReadBinaryDataArray"/> skip the actual base64 / HDF5 decode
+    /// while still recording the binary-array cv params (encoding precision,
+    /// compression, array kind). Matches the cpp <c>SpectrumList::spectrum(i, false)</c>
+    /// contract — caller gets all the metadata but no peak values.
+    /// </summary>
+    private bool _skipBinaryData;
+
     /// <summary>Parses mzML from a string.</summary>
     public MSData Read(string mzml)
     {
@@ -90,6 +126,7 @@ public sealed class MzmlReader
 
         while (r.NodeType != XmlNodeType.EndElement)
         {
+            if (Halted) return;
             if (r.NodeType != XmlNodeType.Element) { r.Read(); continue; }
 
             switch (r.LocalName)
@@ -380,6 +417,7 @@ public sealed class MzmlReader
 
         while (r.NodeType != XmlNodeType.EndElement)
         {
+            if (Halted) return;
             if (r.NodeType != XmlNodeType.Element) { r.Read(); continue; }
             switch (r.LocalName)
             {
@@ -392,15 +430,64 @@ public sealed class MzmlReader
                 default: MzmlXml.SkipElement(r); break;
             }
         }
+        if (Halted) return;
         r.Read();
+    }
+
+    /// <summary>Resumes parsing from an arbitrary byte position in an mzML file — picks up
+    /// any <c>&lt;chromatogramList&gt;</c> and then returns. Used by
+    /// <c>MzmlReaderAdapter</c> after lazy-mode header read short-circuited at
+    /// <c>&lt;spectrumList&gt;</c>: the caller seeks past <c>&lt;/spectrumList&gt;</c> using
+    /// the indexList byte offset and calls us to handle whatever's left of <c>&lt;/run&gt;</c>.</summary>
+    internal void ResumeAfterSpectrumList(Stream stream, MSData msd)
+    {
+        // Byte-scan a small window for "<chromatogramList". XmlReader in Fragment mode
+        // would throw "Unexpected end tag" on </run> / </mzML> closing tags (no matching
+        // start is in scope mid-document), so we can't just open it and Read() blindly.
+        // If no chromatogramList is in scope, we're done.
+        long resumeStart = stream.Position;
+        const int scanBytes = 8192;
+        var probe = new byte[scanBytes];
+        int n = stream.Read(probe, 0, probe.Length);
+        if (n <= 0) return;
+        int idx = System.Text.Encoding.ASCII.GetString(probe, 0, n)
+            .IndexOf("<chromatogramList", System.StringComparison.Ordinal);
+        if (idx < 0) return;
+
+        stream.Position = resumeStart + idx;
+        var settings = new XmlReaderSettings
+        {
+            IgnoreWhitespace = true,
+            CloseInput = false,
+            ConformanceLevel = ConformanceLevel.Fragment,
+        };
+        using var r = XmlReader.Create(stream, settings);
+        if (!r.ReadToFollowing("chromatogramList")) return;
+        ReadChromatogramList(r, msd, advancePastEnd: false);
     }
 
     private void ReadSpectrumList(XmlReader r, MSData msd)
     {
-        var list = new SpectrumListSimple();
         string? dpRef = XmlIdEncoding.Decode(r.GetAttribute("defaultDataProcessingRef") ?? string.Empty);
-        if (dpRef is not null && _dpById.TryGetValue(dpRef, out var dp))
-            list.Dp = dp;
+        DataProcessing? dp = null;
+        if (dpRef is not null) _dpById.TryGetValue(dpRef, out dp);
+
+        if (LazyMode)
+        {
+            // Record metadata and bail out — DO NOT call XmlReader.Skip here. Skip walks
+            // every spectrum element to find the matching </spectrumList>, which is the
+            // 2.5-second-per-open hit on a 90k-spectrum file. The caller knows the byte
+            // position of </spectrumList> from the indexList footer and will resume
+            // parsing past it with a fresh XmlReader (see MzmlReaderAdapter.Read).
+            if (int.TryParse(r.GetAttribute("count"), NumberStyles.Integer,
+                             CultureInfo.InvariantCulture, out int cnt))
+                LazySpectrumCount = cnt;
+            LazyDefaultDataProcessing = dp;
+            Halted = true;
+            return;
+        }
+
+        var list = new SpectrumListSimple { Dp = dp };
 
         if (!MzmlXml.MoveToFirstChildElement(r)) { msd.Run.SpectrumList = list; r.Read(); return; }
 
@@ -417,7 +504,34 @@ public sealed class MzmlReader
         r.Read();
     }
 
-    private Spectrum ReadSpectrum(XmlReader r)
+    /// <summary>Parses a single <c>&lt;spectrum&gt;</c> element under the same context the
+    /// instance currently holds (ref maps, external binary source). Used by
+    /// <see cref="SpectrumList_Mzml"/> for per-spectrum lazy reads.</summary>
+    /// <param name="r">An XmlReader positioned at a <c>&lt;spectrum&gt;</c> start element.</param>
+    /// <param name="getBinaryData">When false, <see cref="BinaryDataArray.Data"/> is left empty
+    /// but the cv params describing precision / compression / array type are still populated.</param>
+    internal Spectrum ReadOneSpectrum(XmlReader r, bool getBinaryData)
+    {
+        bool prev = _skipBinaryData;
+        _skipBinaryData = !getBinaryData;
+        try
+        {
+            var spec = ReadSpectrum(r, advancePastEnd: false);
+            return spec;
+        }
+        finally { _skipBinaryData = prev; }
+    }
+
+    private Spectrum ReadSpectrum(XmlReader r) => ReadSpectrum(r, advancePastEnd: true);
+
+    /// <summary>Parses one <c>&lt;spectrum&gt;</c> element. When
+    /// <paramref name="advancePastEnd"/> is true (the eager <see cref="ReadSpectrumList"/>
+    /// caller's contract) the reader is left positioned after <c>&lt;/spectrum&gt;</c>;
+    /// when false (the lazy <see cref="ReadOneSpectrum"/> caller) the reader is left ON
+    /// the <c>&lt;/spectrum&gt;</c> end element. The lazy caller can't advance past — in
+    /// Fragment mode it would try to consume <c>&lt;/spectrumList&gt;</c> with no
+    /// matching start tag in scope and throw "Unexpected end tag".</summary>
+    private Spectrum ReadSpectrum(XmlReader r, bool advancePastEnd)
     {
         var spec = new Spectrum
         {
@@ -453,7 +567,7 @@ public sealed class MzmlReader
             }
             _ = pendingArrayConfig;
         }
-        r.Read();
+        if (advancePastEnd) r.Read();
         return spec;
     }
 
@@ -625,7 +739,9 @@ public sealed class MzmlReader
             while (r.NodeType != XmlNodeType.EndElement)
             {
                 if (r.LocalName == "binary" && r.NodeType == XmlNodeType.Element)
-                    base64 = r.ReadElementContentAsString();
+                {
+                    if (_skipBinaryData) MzmlXml.SkipElement(r); else base64 = r.ReadElementContentAsString();
+                }
                 else r.Read();
             }
         }
@@ -657,7 +773,7 @@ public sealed class MzmlReader
             {
                 var arr = new IntegerDataArray { DataProcessing = dp };
                 CopyParams(tempParams, arr);
-                if (externalLength > 0)
+                if (!_skipBinaryData && externalLength > 0)
                 {
                     var buf = new long[externalLength];
                     int got = ExternalBinarySource.ReadInt64(externalDataset!, externalOffset, buf);
@@ -669,18 +785,21 @@ public sealed class MzmlReader
             {
                 var arr = new BinaryDataArray { DataProcessing = dp };
                 CopyParams(tempParams, arr);
-                if (encoderConfig.Numpress != BinaryNumpress.None && encodedLengthAttr > 0)
+                if (!_skipBinaryData)
                 {
-                    // Numpress: read encodedLengthAttr opaque bytes, decode in-process.
-                    var bytes = new byte[encodedLengthAttr];
-                    ExternalBinarySource.ReadBytes(externalDataset!, externalOffset, bytes);
-                    arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeDoublesFromRawBytes(bytes));
-                }
-                else if (externalLength > 0)
-                {
-                    var buf = new double[externalLength];
-                    int got = ExternalBinarySource.ReadDoubles(externalDataset!, externalOffset, buf);
-                    arr.Data.AddRange(buf.AsSpan(0, got).ToArray());
+                    if (encoderConfig.Numpress != BinaryNumpress.None && encodedLengthAttr > 0)
+                    {
+                        // Numpress: read encodedLengthAttr opaque bytes, decode in-process.
+                        var bytes = new byte[encodedLengthAttr];
+                        ExternalBinarySource.ReadBytes(externalDataset!, externalOffset, bytes);
+                        arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeDoublesFromRawBytes(bytes));
+                    }
+                    else if (externalLength > 0)
+                    {
+                        var buf = new double[externalLength];
+                        int got = ExternalBinarySource.ReadDoubles(externalDataset!, externalOffset, buf);
+                        arr.Data.AddRange(buf.AsSpan(0, got).ToArray());
+                    }
                 }
                 doubleArrays.Add(arr);
             }
@@ -692,7 +811,7 @@ public sealed class MzmlReader
         {
             var arr = new IntegerDataArray { DataProcessing = dp };
             CopyParams(tempParams, arr);
-            if (base64 is not null && base64.Length > 0)
+            if (!_skipBinaryData && base64 is not null && base64.Length > 0)
                 arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeIntegers(base64));
             integerArrays.Add(arr);
         }
@@ -700,7 +819,7 @@ public sealed class MzmlReader
         {
             var arr = new BinaryDataArray { DataProcessing = dp };
             CopyParams(tempParams, arr);
-            if (base64 is not null && base64.Length > 0)
+            if (!_skipBinaryData && base64 is not null && base64.Length > 0)
                 arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeDoubles(base64));
             doubleArrays.Add(arr);
         }
@@ -748,14 +867,26 @@ public sealed class MzmlReader
 
     // ---------- chromatogramList ----------
 
-    private void ReadChromatogramList(XmlReader r, MSData msd)
+    private void ReadChromatogramList(XmlReader r, MSData msd) => ReadChromatogramList(r, msd, advancePastEnd: true);
+
+    /// <summary>Parses a <c>&lt;chromatogramList&gt;</c>. When <paramref name="advancePastEnd"/>
+    /// is false (the Fragment-mode <see cref="ResumeAfterSpectrumList"/> caller's contract)
+    /// the reader is left on <c>&lt;/chromatogramList&gt;</c> — advancing past would try to
+    /// consume the document's <c>&lt;/run&gt;</c> end tag, which Fragment mode rejects
+    /// because no matching <c>&lt;run&gt;</c> start is in scope.</summary>
+    private void ReadChromatogramList(XmlReader r, MSData msd, bool advancePastEnd)
     {
         var list = new ChromatogramListSimple();
         string? dpRef = XmlIdEncoding.Decode(r.GetAttribute("defaultDataProcessingRef") ?? string.Empty);
         if (dpRef is not null && _dpById.TryGetValue(dpRef, out var dp))
             list.Dp = dp;
 
-        if (!MzmlXml.MoveToFirstChildElement(r)) { msd.Run.ChromatogramList = list; r.Read(); return; }
+        if (!MzmlXml.MoveToFirstChildElement(r))
+        {
+            msd.Run.ChromatogramList = list;
+            if (advancePastEnd) r.Read();
+            return;
+        }
 
         while (r.NodeType != XmlNodeType.EndElement)
         {
@@ -764,7 +895,7 @@ public sealed class MzmlReader
             else r.Read();
         }
         msd.Run.ChromatogramList = list;
-        r.Read();
+        if (advancePastEnd) r.Read();
     }
 
     private Chromatogram ReadChromatogram(XmlReader r)

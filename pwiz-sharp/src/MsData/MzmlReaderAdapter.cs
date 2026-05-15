@@ -43,6 +43,33 @@ public sealed class MzmlReaderAdapter : IReader
         ArgumentNullException.ThrowIfNull(filename);
         ArgumentNullException.ThrowIfNull(result);
 
+        // Fast path: indexed mzML (which is what cpp's Serializer_mzML always emits) — parse
+        // the <indexList> footer for byte offsets + the byte position of </spectrumList>,
+        // then read the header eagerly up to <spectrumList> and BAIL — no XmlReader.Skip
+        // over the 90k spectrum bodies. Resume parsing past </spectrumList> on a second
+        // pass to pick up the optional <chromatogramList>. The lazy SpectrumList_Mzml
+        // serves the spectra on demand from the file. Required for multi-gig mzMLs.
+        var indexed = MzmlIndexFooter.TryRead(filename);
+        if (indexed is not null)
+        {
+            var idx = indexed.Value;
+            var lazyReader = new MzmlReader { LazyMode = true };
+            using (var headerStream = File.OpenRead(filename))
+            {
+                var headerOnly = lazyReader.Read(headerStream);
+                CopyInto(headerOnly, result);
+            }
+            using (var tailStream = File.OpenRead(filename))
+            {
+                tailStream.Position = idx.EndOfSpectrumListByteOffset;
+                lazyReader.ResumeAfterSpectrumList(tailStream, result);
+            }
+            result.Run.SpectrumList = new SpectrumList_Mzml(filename, lazyReader,
+                idx.SpectrumIds, idx.SpectrumOffsets, lazyReader.LazyDefaultDataProcessing);
+            return;
+        }
+
+        // Fallback: not an indexedmzML (or footer was malformed). Read eagerly.
         using var stream = File.OpenRead(filename);
         var parsed = new MzmlReader().Read(stream);
         CopyInto(parsed, result);
