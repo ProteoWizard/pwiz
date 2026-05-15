@@ -127,9 +127,12 @@ public sealed class Converter
             SpectrumListFactory.Wrap(msd, _config.Filters);
         }
 
-        // Chromatogram filters aren't implemented yet; warn once rather than silently drop.
-        if (_config.ChromatogramFilters.Count > 0)
-            _log.WriteLine("warning: --chromatogramFilter not implemented; filters ignored");
+        if (_config.ChromatogramFilters.Count > 0 && msd.Run.ChromatogramList is not null)
+        {
+            if (_config.Verbose)
+                foreach (var f in _config.ChromatogramFilters) _log.WriteLine($"  chromatogramFilter: {f}");
+            ChromatogramListFactory.Wrap(msd, _config.ChromatogramFilters);
+        }
 
         return msd;
     }
