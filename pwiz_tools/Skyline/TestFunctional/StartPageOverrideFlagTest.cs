@@ -27,9 +27,10 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Verifies that <see cref="Program.StartPageOverride"/> = true (from the
-    /// --start-page=true launch flag) forces the StartPage to appear even when
-    /// <see cref="Settings.Default"/>.ShowStartupForm would otherwise suppress it.
+    /// Verifies that --start-page=true on the command line forces the StartPage to
+    /// appear even when <see cref="Settings.Default"/>.ShowStartupForm would
+    /// otherwise suppress it. Exercises <see cref="Program.Main"/>'s argument
+    /// parsing end-to-end via the AbstractFunctionalTest LaunchArgs hook.
     /// </summary>
     [TestClass]
     public class StartPageOverrideTrueTest : AbstractFunctionalTest
@@ -42,22 +43,15 @@ namespace pwiz.SkylineTestFunctional
 
         protected override bool ShowStartPage => true;
 
+        protected override string[] LaunchArgs => new[] { @"--start-page=true" };
+
         protected override void InitializeSkylineSettings()
         {
             base.InitializeSkylineSettings();
-            // ShowStartPage = true makes the test framework wait for StartPage,
-            // but we flip ShowStartupForm off so the only thing surfacing the
-            // StartPage is the override flag below.
+            // ShowStartPage = true makes the framework wait for the StartPage, but we
+            // flip ShowStartupForm off so the only thing surfacing the StartPage is
+            // --start-page=true.
             Settings.Default.ShowStartupForm = false;
-            Program.StartPageOverride = true;
-        }
-
-        // The framework's [TestCleanup] always invokes Cleanup(), regardless of where the
-        // test failed -- robust against any path that bypasses DoTest's body.
-        protected override void Cleanup()
-        {
-            Program.StartPageOverride = null;
-            base.Cleanup();
         }
 
         protected override void DoTest()
@@ -70,10 +64,9 @@ namespace pwiz.SkylineTestFunctional
     }
 
     /// <summary>
-    /// Verifies that <see cref="Program.StartPageOverride"/> = false (from the
-    /// --start-page=false launch flag) forces the MainWindow to open directly,
-    /// even when <see cref="Settings.Default"/>.ShowStartupForm would normally
-    /// route the launch through the StartPage.
+    /// Verifies that --start-page=false on the command line forces the MainWindow
+    /// to open directly, even when <see cref="Settings.Default"/>.ShowStartupForm
+    /// would normally route the launch through the StartPage.
     /// </summary>
     [TestClass]
     public class StartPageOverrideFalseTest : AbstractFunctionalTest
@@ -86,25 +79,56 @@ namespace pwiz.SkylineTestFunctional
 
         protected override bool ShowStartPage => false;
 
+        protected override string[] LaunchArgs => new[] { @"--start-page=false" };
+
         protected override void InitializeSkylineSettings()
         {
             base.InitializeSkylineSettings();
-            // ShowStartupForm = true would normally show the StartPage; the override
+            // ShowStartupForm = true would normally show the StartPage; --start-page=false
             // forces a direct MainWindow launch, bypassing the user preference.
             Settings.Default.ShowStartupForm = true;
-            Program.StartPageOverride = false;
-        }
-
-        protected override void Cleanup()
-        {
-            Program.StartPageOverride = null;
-            base.Cleanup();
         }
 
         protected override void DoTest()
         {
             Assert.IsNull(FindOpenForm<StartPage>());
             Assert.IsNotNull(SkylineWindow);
+        }
+    }
+
+    /// <summary>
+    /// Verifies that --opendoc combined with --start-page=true opens the
+    /// MainWindow first and then surfaces the StartPage as a modal dialog on top.
+    /// With a bare --opendoc (no path), the MainWindow comes up with an empty
+    /// document and no file path; the StartPage is layered over it.
+    /// </summary>
+    [TestClass]
+    public class StartPageOpenDocOverrideTrueTest : AbstractFunctionalTest
+    {
+        [TestMethod]
+        public void TestStartPageOpenDocOverrideTrue()
+        {
+            RunFunctionalTest();
+        }
+
+        // The framework waits for MainWindow first (ShowStartPage = false / default);
+        // DoTest waits for the StartPage modal that OnShown surfaces afterward.
+        protected override string[] LaunchArgs => new[] { @"--opendoc", @"--start-page=true" };
+
+        protected override void DoTest()
+        {
+            Assert.IsNotNull(SkylineWindow);
+            // No --opendoc path -> empty new document, no file path.
+            RunUI(() =>
+            {
+                Assert.IsNull(SkylineWindow.DocumentFilePath);
+                Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
+            });
+            var startPage = WaitForOpenForm<StartPage>();
+            Assert.IsNotNull(startPage);
+            // Closing the modal returns control to MainWindow; the framework cleans up.
+            RunUI(() => startPage.DialogResult = System.Windows.Forms.DialogResult.Cancel);
+            WaitForClosedForm<StartPage>();
         }
     }
 }

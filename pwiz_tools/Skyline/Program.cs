@@ -72,8 +72,8 @@ namespace pwiz.Skyline
 
         // Set by --start-page=true|false on the command line. Null when the flag
         // was not specified. When set, overrides Settings.Default.ShowStartupForm and
-        // (when true) can also surface the StartPage modally after --opendoc loads a file.
-        public static bool? StartPageOverride { get; set; }
+        // (when true) can also surface the StartPage modally after --opendoc.
+        public static bool? StartPageOverride { get; private set; }
 
         public static string MainToolServiceName { get; private set; }
         
@@ -191,9 +191,7 @@ namespace pwiz.Skyline
                 a == OPEN_DOCUMENT_ARG || a.StartsWith(OPEN_DOCUMENT_ARG + @"="));
             try
             {
-                var parsedStartPage = ParseStartPageArg(args);
-                if (parsedStartPage.HasValue)
-                    StartPageOverride = parsedStartPage;
+                StartPageOverride = ParseStartPageArg(args);
             }
             catch (ArgumentException ex)
             {

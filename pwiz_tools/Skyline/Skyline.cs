@@ -266,6 +266,9 @@ namespace pwiz.Skyline
             }
             if (args != null && args.Length != 0)
             {
+                _wasOpenDocLaunch = args.Any(a =>
+                    a.Equals(Program.OPEN_DOCUMENT_ARG) ||
+                    a.StartsWith(Program.OPEN_DOCUMENT_ARG + @"="));
                 // Support both --opendoc path/to/file and --opendoc=path/to/file
                 _fileToOpen = args.Select(a =>
                 {
@@ -309,9 +312,6 @@ namespace pwiz.Skyline
         {
             base.OnShown(e);
 
-            // Remember whether --opendoc was on the command line so that
-            // --start-page=true (below) only fires for the open-doc launch path.
-            bool wasOpenDocLaunch = _fileToOpen != null;
             if (HasFileToOpen())
             {
                 try
@@ -328,9 +328,11 @@ namespace pwiz.Skyline
             EnsureUIModeSet();
 
             // --start-page=true combined with --opendoc surfaces the StartPage as a
-            // modal dialog over the loaded document. The flag alone (no --opendoc)
-            // is handled by the startup-time StartPage route in Program.cs.
-            if (wasOpenDocLaunch && Program.StartPageOverride == true)
+            // modal dialog over the MainWindow (loaded with the document or empty if
+            // --opendoc had no path). The flag alone (no --opendoc) is handled by the
+            // startup-time StartPage route in Program.cs, where the SkylineWindow is
+            // constructed with no args and _wasOpenDocLaunch stays false.
+            if (_wasOpenDocLaunch && Program.StartPageOverride == true)
                 OpenStartPage();
         }
 
@@ -1367,6 +1369,7 @@ namespace pwiz.Skyline
 
         private Control _activeClipboardControl;
         private string _fileToOpen;
+        private bool _wasOpenDocLaunch;
 
         public void ClipboardControlGotFocus(Control clipboardControl)
         {
