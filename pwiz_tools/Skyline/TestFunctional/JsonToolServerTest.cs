@@ -87,6 +87,8 @@ namespace pwiz.SkylineTestFunctional
             TestReportDocumentation(server);
             TestNamedReports(server);
             TestReportFromDefinition(server);
+            TestReportRows(server);
+            TestReportFromDefinitionRows(server);
             TestDocumentSettings(server);
             TestAvailableTutorials(server);
             TestCliHelp(server);
@@ -715,6 +717,221 @@ namespace pwiz.SkylineTestFunctional
             };
             AssertEx.ThrowsException<ArgumentException>(() =>
                 server.ExportReportFromDefinition(badSortDef, tempPathBad, JsonToolConstants.CULTURE_INVARIANT));
+        }
+
+        private void TestReportRows(JsonToolServer server)
+        {
+            const string culture = JsonToolConstants.CULTURE_INVARIANT;
+
+            // count = 0 returns shape only: total_rows + columns with types + empty rows.
+            // Derive expected total from this introspection call so the test is robust to
+            // report-definition changes that affect row count.
+            var shape = server.GetReportRows(REPORT_AREAS, 0, 0, null, null, false, culture);
+            Assert.AreEqual(REPORT_AREAS, shape.Report);
+            int totalRows = shape.TotalRows;
+            Assert.IsTrue(totalRows > 0,
+                @"Report '{0}' should produce at least one row on this document", REPORT_AREAS);
+            Assert.IsTrue(shape.Columns.Length > 0);
+            Assert.IsTrue(shape.Columns.All(c => !string.IsNullOrEmpty(c.Name) && !string.IsNullOrEmpty(c.Type)));
+            // No length scan when include_max_length=false: no max_observed_length set.
+            Assert.IsTrue(shape.Columns.All(c => c.MaxObservedLength == null && c.MaxLengthSampled == null));
+            Assert.AreEqual(0, shape.Rows.Length);
+            AssertEx.AreEqual(0, shape.Window.Offset);
+            AssertEx.AreEqual(0, shape.Window.Count);
+            Assert.IsFalse(shape.Window.Truncated);
+            Assert.IsNull(shape.TruncatedAt);
+
+            // count < total_rows returns the requested window only, with full totals.
+            int small_n = Math.Min(3, totalRows);
+            var small = server.GetReportRows(REPORT_AREAS, 0, small_n, null, null, false, culture);
+            Assert.AreEqual(small_n, small.Rows.Length);
+            Assert.AreEqual(totalRows, small.TotalRows);
+            Assert.AreEqual(0, small.Window.Offset);
+            Assert.AreEqual(small_n, small.Window.Count);
+            Assert.IsFalse(small.Window.Truncated);
+
+            // count > total_rows clamps to the available rows with truncated=false.
+            var oversize = server.GetReportRows(REPORT_AREAS, 0, totalRows + 100, null, null, false, culture);
+            Assert.AreEqual(totalRows, oversize.Rows.Length);
+            Assert.AreEqual(totalRows, oversize.TotalRows);
+            Assert.IsFalse(oversize.Window.Truncated);
+
+            // Tail pattern: offset = total - N returns the last N rows.
+            int tail_n = Math.Min(2, totalRows);
+            var tail = server.GetReportRows(REPORT_AREAS, totalRows - tail_n, tail_n, null, null, false, culture);
+            Assert.AreEqual(tail_n, tail.Rows.Length);
+            Assert.AreEqual(totalRows - tail_n, tail.Window.Offset);
+            // The last row of the tail window should match the last row of the full result.
+            CollectionAssert.AreEqual(oversize.Rows[totalRows - 1], tail.Rows[tail_n - 1]);
+
+            // include_max_length populates max_observed_length on string columns; non-string
+            // columns omit the field. Rat_plasma is small, so sampled should be false.
+            var withLengths = server.GetReportRows(REPORT_AREAS, 0, 3, null, null, true, culture);
+            var stringCols = withLengths.Columns.Where(c => c.Type == @"string").ToArray();
+            Assert.IsTrue(stringCols.Length > 0, @"Report must have at least one string column");
+            foreach (var col in stringCols)
+            {
+                Assert.IsNotNull(col.MaxObservedLength,
+                    @"String column {0} should have max_observed_length when include_max_length=true",
+                    col.Name);
+                Assert.IsTrue(col.MaxObservedLength.Value > 0,
+                    @"Column {0} should have positive max_observed_length", col.Name);
+                Assert.AreEqual(false, col.MaxLengthSampled,
+                    @"With total_rows={0} <= sample limit, max_length_sampled should be false",
+                    withLengths.TotalRows);
+            }
+            foreach (var col in withLengths.Columns.Where(c => c.Type != @"string"))
+            {
+                Assert.IsNull(col.MaxObservedLength, @"Non-string column {0} should omit max_observed_length", col.Name);
+            }
+
+            // Filter on get_report_rows reduces returned rows and the total reflects the
+            // filtered count (not the underlying report's count).
+            var filter = new[]
+            {
+                new ReportFilter { Column = COL_PRECURSOR_MZ, Op = @">", Value = @"500" }
+            };
+            var filtered = server.GetReportRows(REPORT_AREAS, 0, 100, null, filter, false, culture);
+            Assert.IsTrue(filtered.TotalRows < oversize.TotalRows,
+                @"Filtered total rows ({0}) should be less than unfiltered ({1})",
+                filtered.TotalRows, oversize.TotalRows);
+            Assert.AreEqual(filtered.TotalRows, filtered.Rows.Length,
+                @"With count > filtered_total, Rows count should match total_rows");
+
+            // Column projection: subset of the report's columns by display name.
+            // Use a column we know exists in the report (the first column).
+            string firstColName = oversize.Columns[0].Name;
+            var projected = server.GetReportRows(REPORT_AREAS, 0, 1,
+                new[] { firstColName }, null, false, culture);
+            Assert.AreEqual(1, projected.Columns.Length);
+            Assert.AreEqual(firstColName, projected.Columns[0].Name);
+            Assert.AreEqual(1, projected.Rows[0].Length);
+
+            // Server-side cap: long cell values get truncated with "..." suffix.
+            // We force this by selecting a saved report into the definition path
+            // is the easier path -- but for the named-report cap, an offset request
+            // is enough to verify the cell-truncation logic round-trips: just verify
+            // no cell exceeds the cap.
+            const int cellCap = 203; // 200 chars + "..." marker
+            foreach (var row in oversize.Rows)
+                foreach (var cell in row)
+                    if (cell != null)
+                        Assert.IsTrue(cell.Length <= cellCap,
+                            @"Cell length {0} exceeds cap of {1}", cell.Length, cellCap);
+
+            // Error: nonexistent report
+            AssertEx.ThrowsException<Exception>(() =>
+                server.GetReportRows(@"NonexistentReport_xyz", 0, 5, null, null, false, culture));
+
+            // Error: negative offset
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, -1, 5, null, null, false, culture));
+
+            // Error: negative count
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, 0, -1, null, null, false, culture));
+
+            // Error: unknown projection column
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, 0, 1,
+                    new[] { @"NotARealColumn_xyz" }, null, false, culture));
+
+            // Error: unknown filter column
+            var badFilter = new[]
+            {
+                new ReportFilter { Column = @"NotARealColumn_xyz", Op = @">", Value = @"1" }
+            };
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, 0, 1, null, badFilter, false, culture));
+        }
+
+        private void TestReportFromDefinitionRows(JsonToolServer server)
+        {
+            const string culture = JsonToolConstants.CULTURE_INVARIANT;
+
+            var def = BuildSelectDef(COL_PROTEIN_NAME, COL_PEPTIDE_SEQUENCE, COL_PRECURSOR_MZ);
+
+            // count = 0 returns shape only.
+            var shape = server.GetReportFromDefinitionRows(def, 0, 0, false, culture);
+            Assert.AreEqual(13, shape.TotalRows);
+            Assert.AreEqual(3, shape.Columns.Length);
+            Assert.AreEqual(0, shape.Rows.Length);
+            Assert.IsFalse(shape.Window.Truncated);
+            // Column types should match what the report schema reports.
+            Assert.IsTrue(shape.Columns.Any(c => c.Type == @"string"));
+            Assert.IsTrue(shape.Columns.Any(c => c.Type == @"number"));
+
+            // count < total_rows
+            var window = server.GetReportFromDefinitionRows(def, 0, 5, false, culture);
+            Assert.AreEqual(5, window.Rows.Length);
+            Assert.AreEqual(13, window.TotalRows);
+            Assert.AreEqual(0, window.Window.Offset);
+            Assert.AreEqual(5, window.Window.Count);
+            Assert.IsFalse(window.Window.Truncated);
+
+            // Each captured row has one cell per column.
+            foreach (var row in window.Rows)
+                Assert.AreEqual(3, row.Length);
+
+            // include_max_length: string columns get max_observed_length; numeric omit.
+            var withLengths = server.GetReportFromDefinitionRows(def, 0, 3, true, culture);
+            var stringCols = withLengths.Columns.Where(c => c.Type == @"string").ToArray();
+            Assert.IsTrue(stringCols.Length > 0);
+            foreach (var col in stringCols)
+                Assert.IsNotNull(col.MaxObservedLength);
+
+            // Filter applied via the definition reduces totals.
+            var filterDef = new ReportDefinition
+            {
+                Select = new[] { COL_PROTEIN_NAME, COL_PRECURSOR_MZ },
+                Filter = new[]
+                {
+                    new ReportFilter { Column = COL_PRECURSOR_MZ, Op = @">", Value = @"500" }
+                }
+            };
+            var filtered = server.GetReportFromDefinitionRows(filterDef, 0, 100, false, culture);
+            Assert.AreEqual(11, filtered.TotalRows);
+            Assert.AreEqual(11, filtered.Rows.Length);
+
+            // Sort applied via the definition should produce the same row count.
+            var sortDef = new ReportDefinition
+            {
+                Select = new[] { COL_PROTEIN_NAME, COL_PRECURSOR_MZ },
+                Sort = new[]
+                {
+                    new ReportSort { Column = COL_PRECURSOR_MZ, Direction = JsonToolConstants.SORT_DESC }
+                }
+            };
+            var sorted = server.GetReportFromDefinitionRows(sortDef, 0, 100, false, culture);
+            Assert.AreEqual(13, sorted.TotalRows);
+            int mzIdx = Array.IndexOf(sorted.Columns.Select(c => c.Name).ToArray(), COL_PRECURSOR_MZ);
+            Assert.IsTrue(mzIdx >= 0);
+            double prev = double.MaxValue;
+            foreach (var row in sorted.Rows)
+            {
+                if (string.IsNullOrEmpty(row[mzIdx])) continue;
+                double mz = double.Parse(row[mzIdx], CultureInfo.InvariantCulture);
+                Assert.IsTrue(mz <= prev, @"Rows not descending: {0} after {1}", mz, prev);
+                prev = mz;
+            }
+
+            // Server-side cell truncation: no cell exceeds the cap.
+            const int cellCap = 203; // 200 chars + "..." marker
+            foreach (var row in sorted.Rows)
+                foreach (var cell in row)
+                    if (cell != null)
+                        Assert.IsTrue(cell.Length <= cellCap);
+
+            // Error: negative offset/count
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportFromDefinitionRows(def, -1, 5, false, culture));
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportFromDefinitionRows(def, 0, -1, false, culture));
+
+            // Error: bad definition (empty select)
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportFromDefinitionRows(new ReportDefinition { Select = new string[0] },
+                    0, 5, false, culture));
         }
 
         private static int GetRowCount(ReportMetadata metadata)

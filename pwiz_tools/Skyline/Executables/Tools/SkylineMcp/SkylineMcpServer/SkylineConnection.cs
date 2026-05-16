@@ -122,6 +122,18 @@ public class SkylineConnection : IJsonToolService, IDisposable
     // 4-arg methods
     public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorialImage(name, imageFilename, language, filePath)); }
 
+    // 5-arg methods
+    public ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition, int offset, int count, bool includeMaxLength, string culture)
+    {
+        return CallClient(c => c.GetReportFromDefinitionRows(definition, offset, count, includeMaxLength, culture));
+    }
+
+    // 7-arg methods
+    public ReportRowsResult GetReportRows(string reportName, int offset, int count, string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture)
+    {
+        return CallClient(c => c.GetReportRows(reportName, offset, count, columns, filter, includeMaxLength, culture));
+    }
+
     /// <summary>
     /// Delegates to the client and captures the diagnostic log.
     /// </summary>

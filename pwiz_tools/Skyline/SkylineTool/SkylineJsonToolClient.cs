@@ -243,6 +243,22 @@ namespace SkylineTool
                 name, imageFilename, language, filePath);
         }
 
+        // 5-arg methods
+        public ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition,
+            int offset, int count, bool includeMaxLength, string culture)
+        {
+            return CallTyped<ReportRowsResult>(nameof(GetReportFromDefinitionRows),
+                definition, offset, count, includeMaxLength, culture);
+        }
+
+        // 7-arg methods
+        public ReportRowsResult GetReportRows(string reportName, int offset, int count,
+            string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture)
+        {
+            return CallTyped<ReportRowsResult>(nameof(GetReportRows),
+                reportName, offset, count, columns, filter, includeMaxLength, culture);
+        }
+
         // --- JSON-RPC 2.0 transport ---
 
         private string Call(string method, params object[] args)

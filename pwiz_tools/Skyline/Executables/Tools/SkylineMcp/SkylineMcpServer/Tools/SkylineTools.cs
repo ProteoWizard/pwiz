@@ -172,6 +172,56 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_get_report_rows"),
+     Description("Run a named Skyline report and return a windowed slice of rows directly in the response, without writing to a file. Companion to skyline_get_report (file-based). Use this for small validation reads (e.g., 10 peptides x 5 columns) to close the validation loop on a document edit. " +
+        "The response is capped server-side at roughly 25K tokens: long string cells are truncated with a '...' suffix, and if the row payload still exceeds the cap, trailing rows are dropped and 'truncated_at' is set to the next row index so the caller can resume with offset=truncated_at. " +
+        "IDIOM: pass count=0 to get the shape only (total_rows, columns with types, empty rows array). This is the canonical way to discover an unfamiliar report's columns, plan windowing, or verify shape after an edit. count must be explicit (no default) so 'fetch everything' is never silently truncated. " +
+        "When include_max_length=true, the response includes max_observed_length on string columns so you can decide a safe count for the next call. On large datasets this is a sampled estimate over the first 200 rows; max_length_sampled=true tells you the value is a lower bound. " +
+        "Optional filter follows the same syntax skyline_get_report_from_definition accepts. Optional columns projects to a subset of the report's columns by display name. " +
+        "No snapshot isolation across paginated calls: if the document changes between calls, the window shifts; for read-immediately-after-write under a single agent this is fine.")]
+    public static string GetReportRows(
+        [Description("The name of a Skyline report to run (e.g., 'Peak Area', 'Transition Results').")] string reportName,
+        [Description("Number of rows to return. REQUIRED. Pass 0 for shape-only introspection (returns total_rows and columns with no row data).")] int count,
+        [Description("0-based row index of the first row to return. Defaults to 0.")] int offset = 0,
+        [Description("Optional projection: subset of the report's columns by display name. When omitted, returns all of the report's columns.")] string[] columns = null,
+        [Description("Optional additional filters as JSON, applied on top of the named report. Same syntax as the 'filter' field of skyline_get_report_from_definition: a JSON array of {column, op, value} objects, e.g. [{\"column\": \"PrecursorMz\", \"op\": \">\", \"value\": \"500\"}].")] string filterJson = null,
+        [Description("When true, scans string columns and reports max_observed_length per column. Off by default to keep the hot path cheap.")] bool includeMaxLength = false,
+        [Description("Use invariant locale for consistent decimal separators and full precision (default: true). Set to false for localized format.")] bool invariant = true)
+    {
+        return Invoke(connection =>
+        {
+            string culture = invariant ? JsonToolConstants.CULTURE_INVARIANT : JsonToolConstants.CULTURE_LOCALIZED;
+            ReportFilter[] filter = null;
+            if (!string.IsNullOrWhiteSpace(filterJson))
+                filter = JsonSerializer.Deserialize<ReportFilter[]>(filterJson, SnakeCaseOptions);
+            var result = connection.GetReportRows(reportName, offset, count, columns, filter, includeMaxLength, culture);
+            return JsonSerializer.Serialize(result, SnakeCaseOptions);
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_report_from_definition_rows"),
+     Description("Run a custom Skyline report from a JSON report definition and return a windowed slice of rows directly in the response, without writing to a file. Companion to skyline_get_report_from_definition (file-based). Use this for small validation reads where a file round-trip is friction; the file form remains the right answer for batch / export / R / Python use. " +
+        "The definition already supports projection, filtering, sorting, and pivots via its 'select', 'filter', 'sort', and 'pivot_*' fields, so this tool does NOT duplicate those parameters. " +
+        "The response is capped server-side at roughly 25K tokens: long string cells are truncated with a '...' suffix, and if the row payload still exceeds the cap, trailing rows are dropped and 'truncated_at' is set so the caller can resume with offset=truncated_at. " +
+        "IDIOM: pass count=0 to get the shape only (total_rows, columns with types, empty rows array). This is the canonical way to verify shape and plan windowing before pulling data. count must be explicit (no default). " +
+        "When include_max_length=true, the response includes max_observed_length on string columns; on large datasets this is a sampled estimate over the first 200 rows with max_length_sampled=true. " +
+        "No snapshot isolation across paginated calls: if the document changes between calls, the window shifts.")]
+    public static string GetReportFromDefinitionRows(
+        [Description("JSON report definition with a 'select' array of column names. Example: {\"select\": [\"ProteinName\", \"PrecursorMz\", \"Area\"]}. Same shape as skyline_get_report_from_definition accepts; use its column-discovery tools (skyline_get_report_doc_topics / skyline_get_report_doc_topic) to find column names.")] string reportDefinitionJson,
+        [Description("Number of rows to return. REQUIRED. Pass 0 for shape-only introspection (returns total_rows and columns with no row data).")] int count,
+        [Description("0-based row index of the first row to return. Defaults to 0.")] int offset = 0,
+        [Description("When true, scans string columns and reports max_observed_length per column. Off by default to keep the hot path cheap.")] bool includeMaxLength = false,
+        [Description("Use invariant locale for consistent decimal separators and full precision (default: true). Set to false for localized format.")] bool invariant = true)
+    {
+        return Invoke(connection =>
+        {
+            string culture = invariant ? JsonToolConstants.CULTURE_INVARIANT : JsonToolConstants.CULTURE_LOCALIZED;
+            var definition = JsonSerializer.Deserialize<ReportDefinition>(reportDefinitionJson, SnakeCaseOptions);
+            var result = connection.GetReportFromDefinitionRows(definition, offset, count, includeMaxLength, culture);
+            return JsonSerializer.Serialize(result, SnakeCaseOptions);
+        });
+    }
+
     [McpServerTool(Name = "skyline_add_report"),
      Description("Save a custom report definition to the user's Skyline session. Uses the same JSON format as skyline_get_report_from_definition but persists the report so it appears in Skyline's report list. The 'name' field is required. Use skyline_get_report_doc_topics and skyline_get_report_doc_topic to discover available column names. " +
         "Supports optional 'data_source', 'filter', 'pivot_replicate', and 'pivot_isotope_label' fields - see skyline_get_report_from_definition for format details. " +

@@ -47,6 +47,43 @@ namespace SkylineTool
     }
 
     /// <summary>
+    /// Inline windowed result returned by GetReportRows / GetReportFromDefinitionRows.
+    /// Rows are formatted strings matching the CSV export; the column descriptors carry
+    /// the type so a caller can parse cells correctly.
+    /// </summary>
+    public class ReportRowsResult
+    {
+        public string Report { get; set; }
+        public int TotalRows { get; set; }
+        public ReportRowsColumn[] Columns { get; set; }
+        public string[][] Rows { get; set; }
+        public ReportRowsWindow Window { get; set; }
+        public int? TruncatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// Column metadata for inline rows results.
+    /// </summary>
+    public class ReportRowsColumn
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public int? MaxObservedLength { get; set; }
+        public bool? MaxLengthSampled { get; set; }
+    }
+
+    /// <summary>
+    /// Window metadata for inline rows results: the actual offset/count returned and
+    /// whether the response was truncated to respect the server-side token cap.
+    /// </summary>
+    public class ReportRowsWindow
+    {
+        public int Offset { get; set; }
+        public int Count { get; set; }
+        public bool Truncated { get; set; }
+    }
+
+    /// <summary>
     /// Definition of a custom report: columns to select, optional filters,
     /// sorting, and pivot settings.
     /// </summary>

@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private const int EXPECTED_TOOL_COUNT = 45;
+        private const int EXPECTED_TOOL_COUNT = 47;
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -228,6 +228,42 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             AssertEx.Contains(reportResult, values.ToDsvLine(TextUtil.SEPARATOR_CSV));
             // And column headers are present
             AssertEx.Contains(reportResult, columnNames.ToDsvLine(TextUtil.SEPARATOR_CSV));
+
+            // Same report through the inline rows tool: count=0 returns shape only,
+            // count=1 returns the single protein row inline (no file round-trip).
+            string shapeResult = McpToolCall(mcpProcess, stdin, stdout, ref id,
+                "skyline_get_report_from_definition_rows",
+                new JObject
+                {
+                    ["reportDefinitionJson"] = reportDef.ToString(),
+                    ["count"] = 0
+                });
+            var shape = JObject.Parse(shapeResult);
+            AssertEx.AreEqual(1, (int)shape["total_rows"]);
+            var shapeColumns = (JArray)shape["columns"];
+            Assert.IsNotNull(shapeColumns);
+            AssertEx.AreEqual(3, shapeColumns.Count);
+            var shapeRows = (JArray)shape["rows"];
+            Assert.IsNotNull(shapeRows);
+            AssertEx.AreEqual(0, shapeRows.Count);
+
+            string rowsResult = McpToolCall(mcpProcess, stdin, stdout, ref id,
+                "skyline_get_report_from_definition_rows",
+                new JObject
+                {
+                    ["reportDefinitionJson"] = reportDef.ToString(),
+                    ["count"] = 1
+                });
+            var rows = JObject.Parse(rowsResult);
+            var rowsArray = (JArray)rows["rows"];
+            Assert.IsNotNull(rowsArray);
+            AssertEx.AreEqual(1, rowsArray.Count);
+            AssertEx.AreEqual(1, (int)rows["total_rows"]);
+            // The single row's cells should match the document model (formatted strings).
+            var firstRow = (JArray)rowsArray[0];
+            AssertEx.AreEqual(protein.Name, (string)firstRow[0]);
+            AssertEx.AreEqual(protein.Description, (string)firstRow[1]);
+            AssertEx.AreEqual(protein.PeptideGroup.Sequence, (string)firstRow[2]);
 
             // Save via MCP run_command and verify get_document_path returns the saved path
             const string saveFileName = "SkÿlineMcpTest.sky";   // Be sure to test Unicode round-tripping
