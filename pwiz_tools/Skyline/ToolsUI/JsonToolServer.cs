@@ -1325,7 +1325,7 @@ namespace pwiz.Skyline.ToolsUI
                 bool success = false;
                 Program.MainWindow.Invoke(new Action(() =>
                 {
-                    success = Program.MainWindow.OpenFile(skylineFile);
+                    success = Program.MainWindow.LoadFile(skylineFile);
                 }));
                 if (!success)
                     return null;

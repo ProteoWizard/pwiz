@@ -22,6 +22,7 @@
  */
 
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp
 {
@@ -79,14 +80,15 @@ namespace pwiz.OspreySharp
         /// </summary>
         public static int Run(OspreyConfig config)
         {
-            // Thin facade — all worker logic lives on AnalysisPipeline so
-            // it can share the in-process Stage 6 code path. Keeps
-            // Program.Main's dispatch unchanged while letting the heavy
-            // lifting (library load, hydration, compaction, rescore loop,
-            // future gap-fill + parquet write-back) live alongside the
-            // rest of the pipeline.
-            var pipeline = new AnalysisPipeline();
-            return pipeline.RunWorker(config);
+            // Phase C: the worker is now an alias for the canonical
+            // pipeline entry. AnalysisPipeline.DeriveStartAtTask /
+            // DeriveStopAfterTask route NoJoin+InputScores configs to
+            // start and stop on PerFileRescoreTask; PerFileScoringTask's
+            // probe-the-disk joinOnly path hydrates the upstream state
+            // (stubs, 1st-pass overlay, reconciliation actions, refined
+            // calibrations, gap-fill targets) from the boundary files,
+            // matching what the deleted RunWorker assembled by hand.
+            return new AnalysisPipeline().Run(config);
         }
     }
 }

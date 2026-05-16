@@ -33,6 +33,7 @@ using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
+using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp.Test
 {
@@ -1697,14 +1698,18 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
-        /// If the sidecar's header entry-count disagrees with the
-        /// caller's stub list, the reader must refuse rather than silently
-        /// truncate or pad.
+        /// Caller may pass a SUPERSET of the sidecar's entries — a real
+        /// case for --join-at-pass=2 stage 7 entry where the reconciled
+        /// parquet has gap-fill stubs the 1st-pass sidecar (written
+        /// pre-gap-fill) does not. Sidecar records overlay onto matching
+        /// entry_ids; entries with no matching record keep their default
+        /// (Score=0, q=1) values. Reader must accept and overlay only
+        /// the matched records.
         /// </summary>
         [TestMethod]
-        public void TestFdrScoresSidecarCountMismatchRejected()
+        public void TestFdrScoresSidecarSupersetEntries()
         {
-            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_cm_" + Guid.NewGuid().ToString("N"));
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_super_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
@@ -1713,12 +1718,89 @@ namespace pwiz.OspreySharp.Test
                     new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
                     FdrScoresSidecar.Pass.FirstPass);
 
-                var wrongCount = new List<FdrEntry>
+                // entry_id=99 is the gap-fill stub (no sidecar record).
+                var entries = new List<FdrEntry>
                 {
                     MakeFdrEntry(0, 0.0, 0.0, 0.0),
-                    MakeFdrEntry(1, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(99, 0.0, 0.0, 0.0),
                 };
-                Assert.IsFalse(FdrScoresSidecar.TryRead(path, wrongCount, FdrScoresSidecar.Pass.FirstPass));
+                Assert.IsTrue(FdrScoresSidecar.TryRead(path, entries, FdrScoresSidecar.Pass.FirstPass));
+                Assert.AreEqual(-3.5, entries[0].Score, 0.0);
+                Assert.AreEqual(0.001, entries[0].RunPrecursorQvalue, 0.0);
+                // Gap-fill stub at index 1: untouched (no sidecar record
+                // for entry_id=99). MakeFdrEntry's q=0.0 placeholder
+                // survives unchanged.
+                Assert.AreEqual(0.0, entries[1].Score, 0.0);
+                Assert.AreEqual(0.0, entries[1].RunPrecursorQvalue, 0.0);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// If a sidecar record's entry_id has no match in the caller's
+        /// stub list, the reader must refuse rather than silently dropping
+        /// the record. Detects "sidecar from a different parquet" and
+        /// "sidecar from a different binary version" corruption.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarStaleRecordRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_stale_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                // Sidecar record for entry_id=0, but the caller's stubs
+                // don't contain entry_id=0 — only entry_id=42.
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
+                    FdrScoresSidecar.Pass.FirstPass);
+
+                var unrelated = new List<FdrEntry> { MakeFdrEntry(42, 0.0, 0.0, 0.0) };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, unrelated, FdrScoresSidecar.Pass.FirstPass));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A corrupt or malicious sidecar with a huge headerCount would
+        /// otherwise wrap int when computing
+        /// <c>HeaderLength + headerCount * RecordLength</c> and let the
+        /// size check pass spuriously, leading to out-of-bounds reads in
+        /// the record loop. Both <see cref="FdrScoresSidecar.TryRead"/>
+        /// and <see cref="FdrScoresSidecar.TryReadOverlay"/> must reject
+        /// the load via the checked-arithmetic guard.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarOversizedHeaderRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_oversized_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                // Write a valid 1-entry sidecar to get the right magic /
+                // version / pass byte layout, then truncate to header-only
+                // and overwrite headerCount with ulong.MaxValue.
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) },
+                    FdrScoresSidecar.Pass.FirstPass);
+                byte[] header = File.ReadAllBytes(path);
+                Array.Resize(ref header, FdrScoresSidecar.HeaderLength);
+                BitConverter.GetBytes(ulong.MaxValue).CopyTo(header, 16);
+                File.WriteAllBytes(path, header);
+
+                var entries = new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, entries, FdrScoresSidecar.Pass.FirstPass));
+
+                var dict = new Dictionary<uint, FdrEntry> { { 0, entries[0] } };
+                Assert.IsFalse(FdrScoresSidecar.TryReadOverlay(path, dict, FdrScoresSidecar.Pass.FirstPass));
             }
             finally
             {
@@ -2428,6 +2510,213 @@ namespace pwiz.OspreySharp.Test
                 RunProteinQvalue = runProteinQ,
                 ModifiedSequence = "PEPTIDE",
             };
+        }
+
+        #endregion
+
+        #region TaskValiditySidecar Tests
+
+        private const string TASK_NAME = "PerFileScoring";
+        private const string TASK_VERSION = "26.6.0";
+
+        /// <summary>
+        /// Write a sidecar with a known validity_key, then confirm
+        /// <see cref="TaskValiditySidecar.IsValid"/> reports true when
+        /// queried with the same key. Baseline round-trip.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_rt_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                File.WriteAllText(output, "stub");
+                const string key = "search=abc123;library=def456";
+
+                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key,
+                    new[] { Path.Combine(dir, "in.mzML"), Path.Combine(dir, "lib.tsv") });
+
+                Assert.IsTrue(File.Exists(TaskValiditySidecar.PathFor(output, TASK_NAME)));
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key + "_modified"));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Validity keys containing quotes, backslashes, newlines, and
+        /// other control characters must round-trip exactly through the
+        /// JSON escape/unescape path. A naive writer would emit invalid
+        /// JSON; a naive reader would scramble the key. Either failure
+        /// would silently invalidate every sidecar with a path-derived
+        /// key on Windows (backslashes in paths).
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarJsonEscapes()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_esc_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                // Mix of every escape branch in TaskValiditySidecar.JsonString:
+                // quote, backslash, \b \f \n \r \t, and a sub-0x20 control
+                // character ("\u0001") that exercises the \u escape branch.
+                const string key = "k=\"v\";path=C:\\proj\\ai;ctrl=\b\f\n\r\t\u0001";
+
+                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key,
+                    new[] { "path with \"quotes\".mzML", "C:\\path\\with\\slashes.tsv" });
+
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A missing sidecar must yield <c>IsValid == false</c> without
+        /// throwing. "I can't tell" is the conservative answer; throwing
+        /// would crash the pipeline driver on its first invocation.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarMissingFile()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_miss_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "never_written.scores.parquet");
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, "any-key"));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Malformed sidecar contents (truncated mid-field, missing
+        /// validity_key, raw garbage) must yield
+        /// <c>IsValid == false</c> without throwing. Each shape exercises
+        /// a different reader path: truncated → unterminated string;
+        /// missing field → ExtractStringField returns null; garbage →
+        /// the field-name needle is never found.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarMalformedRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_bad_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                string sidecar = TaskValiditySidecar.PathFor(output, TASK_NAME);
+                const string key = "the-key";
+
+                // Truncated mid-key: writer wrote the validity_key opening
+                // quote and a few chars, then died. Unterminated string
+                // returns null (which IsValid maps to false).
+                File.WriteAllText(sidecar, "{\n  \"task\": \"PerFileScoring\",\n  \"validity_key\": \"the-");
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                // Missing validity_key field entirely.
+                File.WriteAllText(sidecar, "{\n  \"task\": \"PerFileScoring\",\n  \"version\": \"26.5.0\"\n}\n");
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                // Not-JSON garbage.
+                File.WriteAllText(sidecar, "not json at all");
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                // Empty file.
+                File.WriteAllText(sidecar, string.Empty);
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Two tasks writing sidecars for the same output path must not
+        /// trample each other. Naming includes the task name, so
+        /// PerFileScoring's sidecar and PerFileRescore's sidecar are
+        /// distinct files on disk. This is the load-bearing property
+        /// that lets PerFileRescore overwrite a parquet in place while
+        /// PerFileScoring's "I produced this" record survives untouched.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarPerTaskNamingCollision()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_coll_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                const string scoringKey = "scoring-key";
+                const string rescoreKey = "rescore-key";
+
+                TaskValiditySidecar.Write(output, "PerFileScoring", TASK_VERSION,
+                    scoringKey, new string[0]);
+                TaskValiditySidecar.Write(output, "PerFileRescore", TASK_VERSION,
+                    rescoreKey, new string[0]);
+
+                string scoringPath = TaskValiditySidecar.PathFor(output, "PerFileScoring");
+                string rescorePath = TaskValiditySidecar.PathFor(output, "PerFileRescore");
+                Assert.AreNotEqual(scoringPath, rescorePath);
+                Assert.IsTrue(File.Exists(scoringPath));
+                Assert.IsTrue(File.Exists(rescorePath));
+
+                // Each task's IsValid sees its own key, not the other's.
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileScoring", scoringKey));
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileRescore", rescoreKey));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileScoring", rescoreKey));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileRescore", scoringKey));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// <see cref="TaskValiditySidecar.Delete"/> removes an existing
+        /// sidecar (subsequent IsValid → false) and is a silent no-op
+        /// when the sidecar is absent. The no-op contract matters because
+        /// task Run methods call Delete unconditionally before producing
+        /// outputs.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarDelete()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_del_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                const string key = "k";
+
+                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key, new string[0]);
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                TaskValiditySidecar.Delete(output, TASK_NAME);
+                Assert.IsFalse(File.Exists(TaskValiditySidecar.PathFor(output, TASK_NAME)));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                // Second Delete on the now-absent sidecar must not throw.
+                TaskValiditySidecar.Delete(output, TASK_NAME);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
         }
 
         #endregion
