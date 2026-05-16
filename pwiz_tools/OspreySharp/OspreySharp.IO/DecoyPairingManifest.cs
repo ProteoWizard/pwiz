@@ -50,6 +50,19 @@ namespace pwiz.OspreySharp.IO
         /// authoritative.
         /// </summary>
         public int NNewlyMarkedDecoy { get; set; }
+
+        /// <summary>
+        /// Library entries whose <see cref="LibraryEntry.ProteinIds"/>
+        /// were replaced from the manifest's <c>proteins</c> column.
+        /// Carafe and similar library predictors may stamp a
+        /// per-peptide suffix into ProteinID (e.g.
+        /// <c>sp|P12345_pep00001|GENE_A</c>) which breaks protein
+        /// parsimony / picked-protein FDR -- the manifest carries the
+        /// clean, un-suffixed source accessions in its
+        /// semicolon-separated <c>proteins</c> column and is the
+        /// authoritative source of protein info when present.
+        /// </summary>
+        public int NProteinsReplaced { get; set; }
     }
 
     /// <summary>
@@ -80,9 +93,9 @@ namespace pwiz.OspreySharp.IO
     /// </summary>
     public class DecoyPairingManifest
     {
-        private readonly Dictionary<string, KindPairIndex> _seqToInfo;
+        private readonly Dictionary<string, ManifestEntryInfo> _seqToInfo;
 
-        private DecoyPairingManifest(Dictionary<string, KindPairIndex> seqToInfo)
+        private DecoyPairingManifest(Dictionary<string, ManifestEntryInfo> seqToInfo)
         {
             _seqToInfo = seqToInfo;
         }
@@ -114,12 +127,17 @@ namespace pwiz.OspreySharp.IO
                 if (header == null)
                     throw new InvalidDataException(@"FDRBench manifest is empty");
                 var cols = header.Split('\t');
-                int iSeq = -1, iType = -1, iPair = -1;
+                int iSeq = -1, iType = -1, iPair = -1, iProteins = -1;
                 for (int i = 0; i < cols.Length; i++)
                 {
-                    if (cols[i] == @"sequence") iSeq = i;
-                    else if (cols[i] == @"peptide_type") iType = i;
-                    else if (cols[i] == @"peptide_pair_index") iPair = i;
+                    if (cols[i] == @"sequence")
+                        iSeq = i;
+                    else if (cols[i] == @"peptide_type")
+                        iType = i;
+                    else if (cols[i] == @"peptide_pair_index")
+                        iPair = i;
+                    else if (cols[i] == @"proteins")
+                        iProteins = i;
                 }
                 if (iSeq < 0 || iType < 0 || iPair < 0)
                 {
@@ -128,9 +146,22 @@ namespace pwiz.OspreySharp.IO
                         @"(need sequence, peptide_type, peptide_pair_index). Got: {0}",
                         header));
                 }
-
-                int minRequiredCols = Math.Max(iSeq, Math.Max(iType, iPair)) + 1;
-                var map = new Dictionary<string, KindPairIndex>(StringComparer.Ordinal);
+                // `proteins` is optional -- older manifests without it still
+                // parse fine; ApplyToLibrary simply won't replace
+                // protein_ids when this column is absent.
+                // When the proteins column IS present in the header, rows
+                // truncated to drop it are treated as malformed (skipped
+                // and counted in nSkipped). This matches Rust 0c3a73e
+                // `max_needed = i_proteins.unwrap_or(0).max(...)`:
+                // strict for cross-impl byte parity. The body's
+                // `iProteins < fields.Length` guard is belt-and-suspenders
+                // against the early skip, not a design intent for lenient
+                // parsing of short rows.
+                int maxNeeded = Math.Max(iSeq, Math.Max(iType, iPair));
+                if (iProteins >= 0 && iProteins > maxNeeded)
+                    maxNeeded = iProteins;
+                int minRequiredCols = maxNeeded + 1;
+                var map = new Dictionary<string, ManifestEntryInfo>(StringComparer.Ordinal);
                 int nSkipped = 0;
                 string line;
                 while ((line = reader.ReadLine()) != null)
@@ -156,7 +187,24 @@ namespace pwiz.OspreySharp.IO
                         nSkipped++;
                         continue;
                     }
-                    map[fields[iSeq]] = new KindPairIndex(kind, pairIndex);
+                    // Parse the optional semicolon-separated proteins
+                    // column. Empty / "-" / single-dash -> empty list,
+                    // signalling "don't override library protein_ids."
+                    var proteins = new List<string>();
+                    if (iProteins >= 0 && iProteins < fields.Length)
+                    {
+                        string raw = fields[iProteins].Trim();
+                        if (raw.Length > 0 && raw != @"-")
+                        {
+                            foreach (var p in raw.Split(';'))
+                            {
+                                string pt = p.Trim();
+                                if (pt.Length > 0)
+                                    proteins.Add(pt);
+                            }
+                        }
+                    }
+                    map[fields[iSeq]] = new ManifestEntryInfo(kind, pairIndex, proteins);
                 }
                 return new DecoyPairingManifest(map);
             }
@@ -201,6 +249,14 @@ namespace pwiz.OspreySharp.IO
             var buckets = new Dictionary<BucketKey, List<int>>(
                 BucketKeyComparer.Instance);
             var decoySideIndices = new List<int>();
+            // Library indices whose ProteinIds should be replaced with
+            // the manifest's clean accessions (collected during the
+            // read-only scan; applied below). Carafe-style libraries
+            // stamp a per-peptide suffix into ProteinID that breaks
+            // protein parsimony; the manifest's `proteins` column
+            // carries the clean, un-suffixed source accessions and is
+            // the authoritative source of protein info when present.
+            var proteinOverride = new List<KeyValuePair<int, List<string>>>();
             for (int idx = 0; idx < library.Count; idx++)
             {
                 var entry = library[idx];
@@ -223,6 +279,16 @@ namespace pwiz.OspreySharp.IO
                 list.Add(idx);
                 if (!isTargetSide)
                     decoySideIndices.Add(idx);
+                // Manifest has clean source accessions for this sequence,
+                // and the library's stored ProteinIds differ -> queue the
+                // override. Empty Proteins (column absent / value was
+                // "-") is a no-op: the library wins.
+                if (info.Proteins != null && info.Proteins.Count > 0 &&
+                    !ProteinListsEqual(entry.ProteinIds, info.Proteins))
+                {
+                    proteinOverride.Add(
+                        new KeyValuePair<int, List<string>>(idx, info.Proteins));
+                }
             }
 
             // Mark manifest-identified decoys BEFORE pairing. Idempotent:
@@ -239,6 +305,15 @@ namespace pwiz.OspreySharp.IO
                 }
                 if ((library[idx].Id & LibraryEntry.DECOY_ID_BIT) == 0u)
                     library[idx].Id |= LibraryEntry.DECOY_ID_BIT;
+            }
+
+            // Replace library ProteinIds with the manifest's clean
+            // accessions for every sequence the manifest covers and
+            // whose stored ProteinIds disagree.
+            stats.NProteinsReplaced = proteinOverride.Count;
+            foreach (var kv in proteinOverride)
+            {
+                library[kv.Key].ProteinIds = new List<string>(kv.Value);
             }
 
             // Walk every target-side bucket; pair with the matching
@@ -263,13 +338,15 @@ namespace pwiz.OspreySharp.IO
                 tSorted.Sort((a, b) =>
                 {
                     int c = string.CompareOrdinal(library[a].Sequence, library[b].Sequence);
-                    if (c != 0) return c;
+                    if (c != 0)
+                        return c;
                     return library[a].Id.CompareTo(library[b].Id);
                 });
                 dSorted.Sort((a, b) =>
                 {
                     int c = string.CompareOrdinal(library[a].Sequence, library[b].Sequence);
-                    if (c != 0) return c;
+                    if (c != 0)
+                        return c;
                     return library[a].Id.CompareTo(library[b].Id);
                 });
                 int n = Math.Min(tSorted.Count, dSorted.Count);
@@ -322,15 +399,42 @@ namespace pwiz.OspreySharp.IO
             return (byte)(k == PeptideKind.Target || k == PeptideKind.Decoy ? 0 : 1);
         }
 
-        private struct KindPairIndex
+        // Cheap ordinal equality on two protein-ID lists. Used to decide
+        // whether the manifest's clean accessions would actually change
+        // the library entry (skip the rewrite when they match).
+        private static bool ProteinListsEqual(IList<string> a, IList<string> b)
+        {
+            if (a == null)
+                return b == null || b.Count == 0;
+            if (b == null)
+                return a.Count == 0;
+            if (a.Count != b.Count)
+                return false;
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (!string.Equals(a[i], b[i], StringComparison.Ordinal))
+                    return false;
+            }
+            return true;
+        }
+
+        // Per-sequence manifest metadata: peptide kind, pair index, and
+        // (optionally) the clean source proteins from the `proteins`
+        // column. When Proteins is non-empty, ApplyToLibrary replaces the
+        // matching library entry's ProteinIds; this is the authoritative
+        // protein source for Carafe-built libraries that stamped a
+        // per-peptide suffix into ProteinID.
+        private class ManifestEntryInfo
         {
             public readonly PeptideKind Kind;
             public readonly uint PairIndex;
+            public readonly List<string> Proteins;
 
-            public KindPairIndex(PeptideKind kind, uint pairIndex)
+            public ManifestEntryInfo(PeptideKind kind, uint pairIndex, List<string> proteins)
             {
                 Kind = kind;
                 PairIndex = pairIndex;
+                Proteins = proteins ?? new List<string>();
             }
         }
 
@@ -392,11 +496,14 @@ namespace pwiz.OspreySharp.IO
             public int Compare(BucketKey x, BucketKey y)
             {
                 int c = x.PairIndex.CompareTo(y.PairIndex);
-                if (c != 0) return c;
+                if (c != 0)
+                    return c;
                 c = x.Partition.CompareTo(y.Partition);
-                if (c != 0) return c;
+                if (c != 0)
+                    return c;
                 c = x.Charge.CompareTo(y.Charge);
-                if (c != 0) return c;
+                if (c != 0)
+                    return c;
                 return x.IsTargetSide.CompareTo(y.IsTargetSide);
             }
         }
