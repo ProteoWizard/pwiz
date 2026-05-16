@@ -765,7 +765,8 @@ namespace pwiz.SkylineTestFunctional
             CollectionAssert.AreEqual(oversize.Rows[totalRows - 1], tail.Rows[tail_n - 1]);
 
             // include_max_length populates max_observed_length on string columns; non-string
-            // columns omit the field. Rat_plasma is small, so sampled should be false.
+            // columns omit the field. Rat_plasma is small, so max_length_sampled stays null
+            // (the value is exact, not a sampled estimate).
             var withLengths = server.GetReportRows(REPORT_AREAS, 0, 3, null, null, true, culture);
             var stringCols = withLengths.Columns.Where(c => c.Type == @"string").ToArray();
             Assert.IsTrue(stringCols.Length > 0, @"Report must have at least one string column");
@@ -776,8 +777,8 @@ namespace pwiz.SkylineTestFunctional
                     col.Name);
                 Assert.IsTrue(col.MaxObservedLength.Value > 0,
                     @"Column {0} should have positive max_observed_length", col.Name);
-                Assert.AreEqual(false, col.MaxLengthSampled,
-                    @"With total_rows={0} <= sample limit, max_length_sampled should be false",
+                Assert.IsNull(col.MaxLengthSampled,
+                    @"With total_rows={0} <= sample limit, max_length_sampled should be omitted (exact)",
                     withLengths.TotalRows);
             }
             foreach (var col in withLengths.Columns.Where(c => c.Type != @"string"))
@@ -807,17 +808,64 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(firstColName, projected.Columns[0].Name);
             Assert.AreEqual(1, projected.Rows[0].Length);
 
-            // Server-side cap: long cell values get truncated with "..." suffix.
-            // We force this by selecting a saved report into the definition path
-            // is the easier path -- but for the named-report cap, an offset request
-            // is enough to verify the cell-truncation logic round-trips: just verify
-            // no cell exceeds the cap.
-            const int cellCap = 203; // 200 chars + "..." marker
-            foreach (var row in oversize.Rows)
-                foreach (var cell in row)
-                    if (cell != null)
-                        Assert.IsTrue(cell.Length <= cellCap,
-                            @"Cell length {0} exceeds cap of {1}", cell.Length, cellCap);
+            // Cell-cap enforcement: long values are truncated to MaxCellLength characters
+            // plus the "..." marker. Drive the truncation path with a temporarily lowered
+            // cell cap so the assertion is meaningful for any test document.
+            int savedCellLength = JsonToolServer.MaxCellLength;
+            try
+            {
+                JsonToolServer.MaxCellLength = 5;
+                var truncated = server.GetReportRows(REPORT_AREAS, 0, totalRows, null, null, false, culture);
+                bool sawTruncated = false;
+                int expectedCap = JsonToolServer.MaxCellLength + 3; // "..."
+                foreach (var row in truncated.Rows)
+                {
+                    foreach (var cell in row)
+                    {
+                        if (cell == null)
+                            continue;
+                        Assert.IsTrue(cell.Length <= expectedCap,
+                            @"Cell length {0} exceeds cap of {1}", cell.Length, expectedCap);
+                        if (cell.Length == expectedCap)
+                        {
+                            StringAssert.EndsWith(cell, @"...");
+                            sawTruncated = true;
+                        }
+                    }
+                }
+                Assert.IsTrue(sawTruncated,
+                    @"Lowering MaxCellLength to 5 should produce at least one truncated cell");
+            }
+            finally
+            {
+                JsonToolServer.MaxCellLength = savedCellLength;
+            }
+
+            // Row-cap enforcement: when the captured window's payload exceeds
+            // MaxResponseChars, trailing rows are dropped and TruncatedAt is set to the
+            // index the caller should resume at. Lower the cap to force a drop.
+            int savedResponseChars = JsonToolServer.MaxResponseChars;
+            try
+            {
+                JsonToolServer.MaxResponseChars = 200;
+                var rowCapped = server.GetReportRows(REPORT_AREAS, 0, totalRows, null, null, false, culture);
+                Assert.IsTrue(rowCapped.Window.Truncated,
+                    @"Lowered cap should force the row-drop path to run");
+                Assert.IsNotNull(rowCapped.TruncatedAt);
+                Assert.AreEqual(rowCapped.Window.Offset + rowCapped.Window.Count, rowCapped.TruncatedAt.Value);
+                Assert.IsTrue(rowCapped.Window.Count < totalRows);
+                Assert.AreEqual(totalRows, rowCapped.TotalRows,
+                    @"Truncation should not change total_rows");
+            }
+            finally
+            {
+                JsonToolServer.MaxResponseChars = savedResponseChars;
+            }
+
+            // count cap from ValidateWindow: requests beyond the max are rejected.
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, 0, JsonToolServer.MaxRowCount + 1,
+                    null, null, false, culture));
 
             // Error: nonexistent report
             AssertEx.ThrowsException<Exception>(() =>

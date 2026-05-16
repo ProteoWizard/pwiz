@@ -1245,18 +1245,24 @@ namespace pwiz.Skyline.ToolsUI
 
         // Cell text longer than this is truncated with an explicit "..." suffix so a
         // misjudged window cannot blow caller context on a single long-text cell.
-        private const int MAX_CELL_LENGTH = 200;
+        // internal (not const) so tests can drive the truncation path with smaller caps.
+        internal static int MaxCellLength = 200;
 
         // Hard cap on the serialized row payload. ~4 chars/token gives a ~25K token
         // budget, matching what the LLM caller can absorb without losing context to a
         // single tool response. Rows past this cap are dropped and truncated_at is set
         // so the caller can resume at offset = truncated_at.
-        private const int MAX_RESPONSE_CHARS = 100_000;
+        internal static int MaxResponseChars = 100_000;
 
         // Number of rows sampled when include_max_length is requested on a large
         // dataset. Beyond this, max_length_sampled is set to true on string columns to
         // tell the caller the value is a lower bound estimate.
-        private const int MAX_LENGTH_SAMPLE_ROWS = 200;
+        internal static int MaxLengthSampleRows = 200;
+
+        // Upper bound on count to keep a single request from materializing an
+        // unbounded list of rows in memory and to avoid the (offset + count) overflow
+        // that would silently shift the window to negative range.
+        internal static int MaxRowCount = 10_000;
 
         // String marker appended to a truncated cell value so the caller can detect
         // truncation without parsing the response wrapper.
@@ -1268,6 +1274,12 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(new LlmInstruction(@"offset must be >= 0."));
             if (count < 0)
                 throw new ArgumentException(new LlmInstruction(@"count must be >= 0. Use count = 0 for shape-only introspection."));
+            if (count > MaxRowCount)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"count {0} exceeds the per-request maximum of {1}. Paginate with offset/count.",
+                    count.ToString(), MaxRowCount.ToString()));
+            }
         }
 
         private ViewSpec ApplyFilterToNamedReport(ViewSpec viewSpec, ReportFilter[] filters,
@@ -1354,7 +1366,11 @@ namespace pwiz.Skyline.ToolsUI
             // Mirror RowFactories.ExportReport: use streaming when there are no
             // row transforms; otherwise materialize through BindingListSource so
             // sorts, pivots, and filters get applied uniformly with the file path.
+            // The BindingListSource is held open across the entire materialization
+            // so its ItemProperties and RowItems are guaranteed to be valid for
+            // the duration of BuildReportRowsResult.
             RowItemEnumerator enumerator = null;
+            BindingListSource bindingListSource = null;
             try
             {
                 if (layout == null || layout.RowTransforms.Count == 0)
@@ -1363,7 +1379,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 if (enumerator == null)
                 {
-                    using var bindingListSource = new BindingListSource(CancellationToken.None);
+                    bindingListSource = new BindingListSource(CancellationToken.None);
                     if (layout != null)
                         bindingListSource.ApplyLayout(layout);
                     bindingListSource.SetView(viewInfo, rowSource);
@@ -1374,23 +1390,36 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 layout?.ApplyFormats(enumerator.ColumnFormats);
 
+                // For the non-streaming path we know the total up front; pass it so the
+                // shape-only call (count = 0, !includeMaxLength) can return immediately
+                // without draining the enumerator. RowItems.Count is long; clamp to
+                // int.MaxValue (a single report past that limit is well outside what
+                // the inline tools target).
+                int? knownTotal = null;
+                if (bindingListSource != null)
+                {
+                    long totalLong = bindingListSource.ReportResults.RowItems.Count;
+                    knownTotal = totalLong > int.MaxValue ? int.MaxValue : (int)totalLong;
+                }
                 return BuildReportRowsResult(enumerator, localizer, offset, count,
-                    includeMaxLength, requestedColumns, reportName);
+                    includeMaxLength, requestedColumns, reportName, knownTotal);
             }
             finally
             {
                 enumerator?.Dispose();
+                bindingListSource?.Dispose();
             }
         }
 
         private static ReportRowsResult BuildReportRowsResult(RowItemEnumerator enumerator,
             DataSchemaLocalizer localizer, int offset, int count, bool includeMaxLength,
-            string[] requestedColumns, string reportName)
+            string[] requestedColumns, string reportName, int? knownTotalRows)
         {
             var allProperties = enumerator.ItemProperties.ToList();
-            // Resolve optional column projection to the indices we will return. Resolution
-            // is by display name (case-insensitive) so the caller can match what they see
-            // in the CSV export header.
+            // Resolve optional column projection to the indices we will return.
+            // Names match against both DisplayName and InvariantName so the caller can
+            // pass either the localized header value or the invariant column id that
+            // get_report_doc_topic returns.
             int[] columnIndices = ResolveColumnProjection(allProperties, requestedColumns);
             int columnCount = columnIndices.Length;
 
@@ -1407,50 +1436,66 @@ namespace pwiz.Skyline.ToolsUI
             for (int i = 0; i < columnCount; i++)
                 isStringCol[i] = allProperties[columnIndices[i]].PropertyType == typeof(string);
 
-            var capturedRows = new List<string[]>(Math.Min(count, 1024));
-            int rowIndex = 0;
-            int windowEnd = offset + count;
-            int scanLimit = MAX_LENGTH_SAMPLE_ROWS;
-            bool sampledMaxLength = false;
+            // Shape-only fast path: when there is no window and no length scan to perform,
+            // skip per-row work entirely. For non-streaming (BindingListSource) we already
+            // know the total from RowItems.Count; for streaming we still have to walk to
+            // count, but we avoid formatting any cells.
+            bool needRows = count > 0;
+            bool needLengthScan = includeMaxLength;
 
-            while (enumerator.MoveNext())
+            var capturedRows = new List<string[]>(Math.Min(count, 1024));
+            // (long) cast in windowEnd guards against int overflow when a caller passes a
+            // count near int.MaxValue together with a large offset.
+            long windowEnd = (long)offset + count;
+            int scanLimit = MaxLengthSampleRows;
+            int rowIndex = 0;
+
+            if (!needRows && !needLengthScan && knownTotalRows.HasValue)
             {
-                bool inWindow = rowIndex >= offset && rowIndex < windowEnd;
-                // Decide whether to format this row at all. Format if it's in the
-                // window (we need the strings) or if we still need to scan lengths.
-                bool scanThisRow = includeMaxLength && rowIndex < scanLimit;
-                if (inWindow || scanThisRow)
+                // Shape-only call against the non-streaming path: total is free.
+                rowIndex = knownTotalRows.Value;
+            }
+            else
+            {
+                while (enumerator.MoveNext())
                 {
-                    var row = inWindow ? new string[columnCount] : null;
-                    for (int c = 0; c < columnCount; c++)
+                    bool inWindow = rowIndex >= offset && rowIndex < windowEnd;
+                    bool scanThisRow = needLengthScan && rowIndex < scanLimit;
+                    if (inWindow || scanThisRow)
                     {
-                        var pd = allProperties[columnIndices[c]];
-                        string value = dsvWriter.GetFormattedValue(enumerator.Current, pd);
-                        if (inWindow)
-                            row[c] = TruncateCell(value);
-                        if (scanThisRow && isStringCol[c] && value != null)
+                        var row = inWindow ? new string[columnCount] : null;
+                        for (int c = 0; c < columnCount; c++)
                         {
-                            int len = value.Length;
-                            if (maxLengths[c] == null || len > maxLengths[c].Value)
-                                maxLengths[c] = len;
+                            var pd = allProperties[columnIndices[c]];
+                            string value = dsvWriter.GetFormattedValue(enumerator.Current, pd);
+                            if (inWindow)
+                                row[c] = TruncateCell(value);
+                            if (scanThisRow && isStringCol[c] && value != null)
+                            {
+                                int len = value.Length;
+                                if (maxLengths[c] == null || len > maxLengths[c].Value)
+                                    maxLengths[c] = len;
+                            }
                         }
+                        if (inWindow)
+                            capturedRows.Add(row);
                     }
-                    if (inWindow)
-                        capturedRows.Add(row);
-                }
-                rowIndex++;
-                if (includeMaxLength && rowIndex == scanLimit && rowIndex < windowEnd)
-                {
-                    // Stop length scanning past the sample cap; if more rows follow we
-                    // are sampling, not measuring the entire dataset.
+                    rowIndex++;
+                    // Once we've passed both the window and the scan range, the only
+                    // remaining work is counting rows. If the total is already known,
+                    // skip the rest of the enumeration entirely.
+                    if (rowIndex >= windowEnd && rowIndex >= scanLimit && knownTotalRows.HasValue)
+                    {
+                        rowIndex = knownTotalRows.Value;
+                        break;
+                    }
                 }
             }
             int totalRows = rowIndex;
-            if (includeMaxLength && totalRows > scanLimit)
-                sampledMaxLength = true;
 
-            // Build column descriptors using invariant names so callers get the same
-            // identifier they'd pass back in the definition language.
+            // Build column descriptors. Use the column's invariant caption as Name so
+            // callers get the same identifier they'd pass back in the definition language
+            // -- this also matches what filter/projection resolution accepts.
             var resultColumns = new ReportRowsColumn[columnCount];
             for (int i = 0; i < columnCount; i++)
             {
@@ -1463,21 +1508,33 @@ namespace pwiz.Skyline.ToolsUI
                 if (includeMaxLength && isStringCol[i])
                 {
                     resultColumns[i].MaxObservedLength = maxLengths[i] ?? 0;
-                    resultColumns[i].MaxLengthSampled = sampledMaxLength;
+                    // Per the spec: max_length_sampled is set to true only when the
+                    // value is approximate (we hit the sample cap). Otherwise the value
+                    // is exact -- the field is omitted so consumers can distinguish
+                    // sampled from exact without an extra comparison.
+                    if (totalRows > scanLimit)
+                        resultColumns[i].MaxLengthSampled = true;
                 }
             }
 
-            // Cap total payload by dropping rows from the tail. We have already
-            // truncated long cells, so this only fires when the window itself produces
-            // too much text. truncated_at is the next row index the caller can resume at.
+            // Cap total payload by dropping rows from the tail. We have already truncated
+            // long cells, so this only fires when the window itself produces too much text.
+            // Per-row sizes are precomputed and we subtract on drop to keep this O(N).
             int? truncatedAt = null;
             bool windowTruncated = false;
             int keptRows = capturedRows.Count;
-            int approxSize = EstimatePayloadChars(resultColumns, capturedRows, keptRows);
-            while (keptRows > 0 && approxSize > MAX_RESPONSE_CHARS)
+            int headerOverhead = EstimateHeaderChars(resultColumns);
+            var rowSizes = new int[capturedRows.Count];
+            int approxSize = headerOverhead;
+            for (int i = 0; i < capturedRows.Count; i++)
+            {
+                rowSizes[i] = EstimateRowChars(capturedRows[i]);
+                approxSize += rowSizes[i];
+            }
+            while (keptRows > 0 && approxSize > MaxResponseChars)
             {
                 keptRows--;
-                approxSize = EstimatePayloadChars(resultColumns, capturedRows, keptRows);
+                approxSize -= rowSizes[keptRows];
             }
             if (keptRows < capturedRows.Count)
             {
@@ -1512,9 +1569,18 @@ namespace pwiz.Skyline.ToolsUI
                     all[i] = i;
                 return all;
             }
+            // Index columns by both the localized DisplayName (what the caller sees in
+            // the CSV header) and the invariant column caption (what get_report_doc_topic
+            // returns). Filter resolution keys by InvariantName for the same reason; this
+            // keeps both surfaces consistent for the caller.
             var byName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < properties.Count; i++)
+            {
                 byName[properties[i].DisplayName] = i;
+                string invariant = properties[i].ColumnCaption?.GetCaption(DataSchemaLocalizer.INVARIANT);
+                if (!string.IsNullOrEmpty(invariant))
+                    byName[invariant] = i;
+            }
             var indices = new int[requested.Length];
             for (int i = 0; i < requested.Length; i++)
             {
@@ -1534,38 +1600,36 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (value == null)
                 return null;
-            if (value.Length <= MAX_CELL_LENGTH)
+            if (value.Length <= MaxCellLength)
                 return value;
-            return value.Substring(0, MAX_CELL_LENGTH) + CELL_TRUNCATION_MARKER;
+            return value.Substring(0, MaxCellLength) + CELL_TRUNCATION_MARKER;
         }
 
-        private static int EstimatePayloadChars(ReportRowsColumn[] columns,
-            List<string[]> rows, int rowCount)
-        {
-            // Approximate the serialized size we care about: per-cell content plus
-            // a few characters of JSON overhead per cell and per row. Used only to
-            // decide when to drop tail rows; not a precise byte count.
-            int headerOverhead = 0;
-            foreach (var col in columns)
-                headerOverhead += (col.Name?.Length ?? 0) + (col.Type?.Length ?? 0) + 32;
+        // Per-cell and per-row JSON overhead constants used by the payload-size
+        // estimator. Approximate, not byte-exact: the estimator only decides when
+        // to drop tail rows.
+        private const int PAYLOAD_PER_CELL_OVERHEAD = 4;   // "", + structural punctuation
+        private const int PAYLOAD_PER_ROW_OVERHEAD = 4;    // [], + newline
+        private const int PAYLOAD_PER_COLUMN_HEADER_OVERHEAD = 32; // field names + structural punctuation
 
-            int rowsTotal = 0;
-            const int perCellOverhead = 4;   // "", + structural punctuation
-            const int perRowOverhead = 4;    // [], + newline
-            int columnCount = columns.Length;
-            for (int i = 0; i < rowCount; i++)
+        private static int EstimateHeaderChars(ReportRowsColumn[] columns)
+        {
+            int total = 0;
+            foreach (var col in columns)
+                total += (col.Name?.Length ?? 0) + (col.Type?.Length ?? 0) + PAYLOAD_PER_COLUMN_HEADER_OVERHEAD;
+            return total;
+        }
+
+        private static int EstimateRowChars(string[] row)
+        {
+            int total = PAYLOAD_PER_ROW_OVERHEAD;
+            for (int c = 0; c < row.Length; c++)
             {
-                var row = rows[i];
-                int rowChars = perRowOverhead;
-                for (int c = 0; c < columnCount; c++)
-                {
-                    rowChars += perCellOverhead;
-                    if (row[c] != null)
-                        rowChars += row[c].Length;
-                }
-                rowsTotal += rowChars;
+                total += PAYLOAD_PER_CELL_OVERHEAD;
+                if (row[c] != null)
+                    total += row[c].Length;
             }
-            return headerOverhead + rowsTotal;
+            return total;
         }
 
         private static string GetSimpleTypeName(Type type)
@@ -1583,7 +1647,10 @@ namespace pwiz.Skyline.ToolsUI
                 return @"number";
             if (underlying == typeof(DateTime) || underlying == typeof(DateTimeOffset))
                 return @"datetime";
-            return underlying.Name;
+            // Unknown / unmapped types (Guid, Color, enums, custom proteomics types) get
+            // a stable "other" label so callers don't see raw CLR type names that can
+            // shift on refactor.
+            return @"other";
         }
 
         private static ViewName FindReportViewName(string reportName)
