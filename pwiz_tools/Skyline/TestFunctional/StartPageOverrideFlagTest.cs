@@ -57,7 +57,6 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var startPage = WaitForOpenForm<StartPage>();
-            Assert.IsNotNull(startPage);
             RunUI(() => startPage.DoAction(skylineWindow => true));
             WaitForOpenForm<SkylineWindow>();
         }
@@ -92,7 +91,6 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             Assert.IsNull(FindOpenForm<StartPage>());
-            Assert.IsNotNull(SkylineWindow);
         }
     }
 
@@ -117,7 +115,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Assert.IsNotNull(SkylineWindow);
             // No --opendoc path -> empty new document, no file path.
             RunUI(() =>
             {
@@ -125,10 +122,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
             });
             var startPage = WaitForOpenForm<StartPage>();
-            Assert.IsNotNull(startPage);
             // Closing the modal returns control to MainWindow; the framework cleans up.
-            RunUI(() => startPage.DialogResult = System.Windows.Forms.DialogResult.Cancel);
-            WaitForClosedForm<StartPage>();
+            OkDialog(startPage, startPage.Close);
         }
     }
 }
