@@ -339,11 +339,19 @@ namespace pwiz.OspreySharp
 
                     case "--decoy-pairing-manifest":
                         i++;
-                        if (i < args.Length)
+                        // Reject a missing value (end of args) AND reject
+                        // the next token starting with `--` (i.e. the next
+                        // option), which would otherwise silently consume
+                        // a sibling flag like --decoys-in-library as the
+                        // manifest path. Both produce the same usage
+                        // error so the user knows the option needs a path.
+                        if (i >= args.Length || args[i].StartsWith(@"--", StringComparison.Ordinal))
                         {
-                            config.DecoyPairingManifestPath = args[i];
-                            i++;
+                            throw new ArgumentException(
+                                @"--decoy-pairing-manifest requires a path argument.");
                         }
+                        config.DecoyPairingManifestPath = args[i];
+                        i++;
                         break;
 
                     case "--write-pin":
@@ -795,6 +803,15 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --report <file>               Write TSV report to file");
             Console.Error.WriteLine("    --no-prefilter                Disable coelution signal pre-filter");
             Console.Error.WriteLine("    --write-pin                   Write PIN files for external tools");
+            Console.Error.WriteLine("    --decoys-in-library           Trust decoys already in the spectral library");
+            Console.Error.WriteLine("                                    (DIA-NN Decoy column / decoy_/rev_/DECOY_ protein");
+            Console.Error.WriteLine("                                    prefix / manifest) instead of generating reverse");
+            Console.Error.WriteLine("                                    decoys. Hard error if no decoys are recognised.");
+            Console.Error.WriteLine("    --decoy-pairing-manifest <PATH>");
+            Console.Error.WriteLine("                                  FDRBench 5-column pairing manifest (TSV) used");
+            Console.Error.WriteLine("                                    with --decoys-in-library. Manifest is the");
+            Console.Error.WriteLine("                                    authoritative source for peptide_type and");
+            Console.Error.WriteLine("                                    (optional) clean protein accessions.");
             Console.Error.WriteLine("    --join-at-pass=<N>            HPC: enter the pipeline at a join checkpoint.");
             Console.Error.WriteLine("                                    1 = consume Stage 4 outputs, run Stages 5-8.");
             Console.Error.WriteLine("                                    2 = consume Stage 6 outputs, run Stages 7-8.");

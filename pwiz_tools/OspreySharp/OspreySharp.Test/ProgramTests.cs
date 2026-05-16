@@ -658,20 +658,61 @@ namespace pwiz.OspreySharp.Test
         public void TestParseArgsDecoyPairingManifestFlag()
         {
             // --decoy-pairing-manifest <PATH> sets the path on the config
-            // without flipping DecoysInLibrary. The pipeline only consults
-            // the manifest when DecoysInLibrary is true; pairing this with
-            // --decoys-in-library is the typical invocation.
+            // WITHOUT flipping DecoysInLibrary. Pin the contract here in
+            // isolation (no companion --decoys-in-library) so a regression
+            // where the flag accidentally enables library-decoy mode on
+            // its own would actually fail the test.
             var args = new[]
             {
                 @"-i", @"x.mzML",
                 @"-l", @"lib.tsv",
                 @"-o", @"out.blib",
                 @"--decoy-pairing-manifest", @"T:\test\manifest.tsv",
-                @"--decoys-in-library",
             };
             var config = Program.ParseArgs(args);
-            Assert.IsTrue(config.DecoysInLibrary);
+            Assert.IsFalse(config.DecoysInLibrary);
             Assert.AreEqual(@"T:\test\manifest.tsv", config.DecoyPairingManifestPath);
+        }
+
+        [TestMethod]
+        public void TestParseArgsDecoyPairingManifestRequiresValue()
+        {
+            // A bare --decoy-pairing-manifest with no value, or a value
+            // that's itself an option (--decoys-in-library), must throw
+            // rather than silently consume the next token as the path.
+            var argsNoValue = new[]
+            {
+                @"-i", @"x.mzML",
+                @"-l", @"lib.tsv",
+                @"-o", @"out.blib",
+                @"--decoy-pairing-manifest",
+            };
+            try
+            {
+                Program.ParseArgs(argsNoValue);
+                Assert.Fail(@"Expected ArgumentException for bare --decoy-pairing-manifest.");
+            }
+            catch (ArgumentException)
+            {
+                // expected
+            }
+
+            var argsFlagAsValue = new[]
+            {
+                @"-i", @"x.mzML",
+                @"-l", @"lib.tsv",
+                @"-o", @"out.blib",
+                @"--decoy-pairing-manifest", @"--decoys-in-library",
+            };
+            try
+            {
+                Program.ParseArgs(argsFlagAsValue);
+                Assert.Fail(@"Expected ArgumentException for next-flag-as-value.");
+            }
+            catch (ArgumentException)
+            {
+                // expected
+            }
         }
 
         [TestMethod]

@@ -130,10 +130,14 @@ namespace pwiz.OspreySharp.IO
                 int iSeq = -1, iType = -1, iPair = -1, iProteins = -1;
                 for (int i = 0; i < cols.Length; i++)
                 {
-                    if (cols[i] == @"sequence") iSeq = i;
-                    else if (cols[i] == @"peptide_type") iType = i;
-                    else if (cols[i] == @"peptide_pair_index") iPair = i;
-                    else if (cols[i] == @"proteins") iProteins = i;
+                    if (cols[i] == @"sequence")
+                        iSeq = i;
+                    else if (cols[i] == @"peptide_type")
+                        iType = i;
+                    else if (cols[i] == @"peptide_pair_index")
+                        iPair = i;
+                    else if (cols[i] == @"proteins")
+                        iProteins = i;
                 }
                 if (iSeq < 0 || iType < 0 || iPair < 0)
                 {
@@ -145,8 +149,13 @@ namespace pwiz.OspreySharp.IO
                 // `proteins` is optional -- older manifests without it still
                 // parse fine; ApplyToLibrary simply won't replace
                 // protein_ids when this column is absent.
-
-                int minRequiredCols = Math.Max(iSeq, Math.Max(iType, Math.Max(iPair, iProteins))) + 1;
+                // minRequiredCols deliberately covers only the REQUIRED
+                // columns (sequence, peptide_type, peptide_pair_index).
+                // Rows with fewer fields than the optional proteins
+                // column should still parse -- the iProteins<fields.Length
+                // guard below treats a missing trailing column as "no
+                // override," matching the Rust manifest reader's intent.
+                int minRequiredCols = Math.Max(iSeq, Math.Max(iType, iPair)) + 1;
                 var map = new Dictionary<string, ManifestEntryInfo>(StringComparer.Ordinal);
                 int nSkipped = 0;
                 string line;
@@ -324,13 +333,15 @@ namespace pwiz.OspreySharp.IO
                 tSorted.Sort((a, b) =>
                 {
                     int c = string.CompareOrdinal(library[a].Sequence, library[b].Sequence);
-                    if (c != 0) return c;
+                    if (c != 0)
+                        return c;
                     return library[a].Id.CompareTo(library[b].Id);
                 });
                 dSorted.Sort((a, b) =>
                 {
                     int c = string.CompareOrdinal(library[a].Sequence, library[b].Sequence);
-                    if (c != 0) return c;
+                    if (c != 0)
+                        return c;
                     return library[a].Id.CompareTo(library[b].Id);
                 });
                 int n = Math.Min(tSorted.Count, dSorted.Count);
@@ -388,9 +399,12 @@ namespace pwiz.OspreySharp.IO
         // the library entry (skip the rewrite when they match).
         private static bool ProteinListsEqual(IList<string> a, IList<string> b)
         {
-            if (a == null) return b == null || b.Count == 0;
-            if (b == null) return a.Count == 0;
-            if (a.Count != b.Count) return false;
+            if (a == null)
+                return b == null || b.Count == 0;
+            if (b == null)
+                return a.Count == 0;
+            if (a.Count != b.Count)
+                return false;
             for (int i = 0; i < a.Count; i++)
             {
                 if (!string.Equals(a[i], b[i], StringComparison.Ordinal))
@@ -477,11 +491,14 @@ namespace pwiz.OspreySharp.IO
             public int Compare(BucketKey x, BucketKey y)
             {
                 int c = x.PairIndex.CompareTo(y.PairIndex);
-                if (c != 0) return c;
+                if (c != 0)
+                    return c;
                 c = x.Partition.CompareTo(y.Partition);
-                if (c != 0) return c;
+                if (c != 0)
+                    return c;
                 c = x.Charge.CompareTo(y.Charge);
-                if (c != 0) return c;
+                if (c != 0)
+                    return c;
                 return x.IsTargetSide.CompareTo(y.IsTargetSide);
             }
         }
