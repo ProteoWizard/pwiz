@@ -52,19 +52,20 @@ namespace pwiz.SkylineTestFunctional
             Program.StartPageOverride = true;
         }
 
+        // The framework's [TestCleanup] always invokes Cleanup(), regardless of where the
+        // test failed -- robust against any path that bypasses DoTest's body.
+        protected override void Cleanup()
+        {
+            Program.StartPageOverride = null;
+            base.Cleanup();
+        }
+
         protected override void DoTest()
         {
-            try
-            {
-                var startPage = WaitForOpenForm<StartPage>();
-                Assert.IsNotNull(startPage);
-                RunUI(() => startPage.DoAction(skylineWindow => true));
-                WaitForOpenForm<SkylineWindow>();
-            }
-            finally
-            {
-                Program.StartPageOverride = null;
-            }
+            var startPage = WaitForOpenForm<StartPage>();
+            Assert.IsNotNull(startPage);
+            RunUI(() => startPage.DoAction(skylineWindow => true));
+            WaitForOpenForm<SkylineWindow>();
         }
     }
 
@@ -94,17 +95,16 @@ namespace pwiz.SkylineTestFunctional
             Program.StartPageOverride = false;
         }
 
+        protected override void Cleanup()
+        {
+            Program.StartPageOverride = null;
+            base.Cleanup();
+        }
+
         protected override void DoTest()
         {
-            try
-            {
-                Assert.IsNull(FindOpenForm<StartPage>());
-                Assert.IsNotNull(SkylineWindow);
-            }
-            finally
-            {
-                Program.StartPageOverride = null;
-            }
+            Assert.IsNull(FindOpenForm<StartPage>());
+            Assert.IsNotNull(SkylineWindow);
         }
     }
 }

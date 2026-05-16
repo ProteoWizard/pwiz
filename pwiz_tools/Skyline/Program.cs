@@ -184,9 +184,11 @@ namespace pwiz.Skyline
             SkylineRemoteAccountServices.Initialize();
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
-            // For testing and debugging Skyline command-line interface
-            bool openDoc = args != null && args.Length > 0 &&
-                           (args[0] == OPEN_DOCUMENT_ARG || args[0].StartsWith(OPEN_DOCUMENT_ARG + @"="));
+            // For testing and debugging Skyline command-line interface.
+            // Scan every arg, not just args[0], so --opendoc composes order-independently
+            // with --start-page (and any future GUI-launch flag).
+            bool openDoc = args != null && args.Any(a =>
+                a == OPEN_DOCUMENT_ARG || a.StartsWith(OPEN_DOCUMENT_ARG + @"="));
             try
             {
                 var parsedStartPage = ParseStartPageArg(args);
