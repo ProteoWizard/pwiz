@@ -68,6 +68,12 @@ namespace pwiz.Skyline
         public const int EXIT_CODE_FAILURE_TO_START = 1;
         public const int EXIT_CODE_RAN_WITH_ERRORS = 2;
         public const string OPEN_DOCUMENT_ARG = "--opendoc";
+        public const string START_PAGE_ARG = "--start-page";
+
+        // Set by --start-page=true|false on the command line. Null when the flag
+        // was not specified. When set, overrides Settings.Default.ShowStartupForm and
+        // (when true) can also surface the StartPage modally after --opendoc loads a file.
+        public static bool? StartPageOverride { get; set; }
 
         public static string MainToolServiceName { get; private set; }
         
@@ -181,7 +187,20 @@ namespace pwiz.Skyline
             // For testing and debugging Skyline command-line interface
             bool openDoc = args != null && args.Length > 0 &&
                            (args[0] == OPEN_DOCUMENT_ARG || args[0].StartsWith(OPEN_DOCUMENT_ARG + @"="));
-            if (args != null && args.Length > 0 && !openDoc) 
+            try
+            {
+                var parsedStartPage = ParseStartPageArg(args);
+                if (parsedStartPage.HasValue)
+                    StartPageOverride = parsedStartPage;
+            }
+            catch (ArgumentException ex)
+            {
+                Common.SystemUtil.PInvoke.Kernel32.AttachConsoleToParentProcess();
+                Console.Error.WriteLine(ex.Message);
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+            bool isGuiLaunch = openDoc || StartPageOverride.HasValue;
+            if (args != null && args.Length > 0 && !isGuiLaunch)
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))
                 {
@@ -316,11 +335,15 @@ namespace pwiz.Skyline
                 try
                 {
                     var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
-                    if ((activationArgs != null &&
-                        activationArgs.ActivationData != null &&
-                        activationArgs.ActivationData.Length != 0) ||
-                        openDoc ||
-                        !Settings.Default.ShowStartupForm)
+                    bool activationDataPresent = activationArgs != null &&
+                                                 activationArgs.ActivationData != null &&
+                                                 activationArgs.ActivationData.Length != 0;
+                    // Activation data and --opendoc always go straight to MainWindow.
+                    // Otherwise, --start-page=true|false overrides the user preference,
+                    // and without the flag the existing ShowStartupForm setting wins.
+                    bool showStartPage = !activationDataPresent && !openDoc &&
+                                         (StartPageOverride ?? Settings.Default.ShowStartupForm);
+                    if (!showStartPage)
                     {
                         MainWindow = new SkylineWindow(args);
                     }
@@ -379,6 +402,33 @@ namespace pwiz.Skyline
             MainWindow = null;
             SystemEvents.DisplaySettingsChanged -= SystemEventsOnDisplaySettingsChanged;
             return EXIT_CODE_SUCCESS;
+        }
+
+        // Returns null when --start-page is absent, true/false for --start-page=true|false.
+        // Throws ArgumentException for --start-page with no value or an unparseable value.
+        internal static bool? ParseStartPageArg(string[] args)
+        {
+            if (args == null)
+                return null;
+            bool? result = null;
+            foreach (var a in args)
+            {
+                if (a.Equals(START_PAGE_ARG, StringComparison.OrdinalIgnoreCase) ||
+                    a.StartsWith(START_PAGE_ARG + @"=", StringComparison.OrdinalIgnoreCase))
+                {
+                    var eq = a.IndexOf('=');
+                    var val = eq >= 0 ? a.Substring(eq + 1) : string.Empty;
+                    if (val.Equals(@"true", StringComparison.OrdinalIgnoreCase))
+                        result = true;
+                    else if (val.Equals(@"false", StringComparison.OrdinalIgnoreCase))
+                        result = false;
+                    else
+                        throw new ArgumentException(string.Format(
+                            SkylineResources.Program_ParseStartPageArg_Invalid_argument__0___Use__start_page_true_or__start_page_false,
+                            a));
+                }
+            }
+            return result;
         }
 
         private static void SystemEventsOnDisplaySettingsChanged(object sender, EventArgs eventArgs)

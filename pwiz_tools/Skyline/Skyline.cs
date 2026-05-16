@@ -272,7 +272,9 @@ namespace pwiz.Skyline
                     if (a.StartsWith(Program.OPEN_DOCUMENT_ARG + @"="))
                         return a.Substring(Program.OPEN_DOCUMENT_ARG.Length + 1);
                     return a;
-                }).Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
+                }).Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG) &&
+                              !a.StartsWith(Program.START_PAGE_ARG + @"=", StringComparison.OrdinalIgnoreCase) &&
+                              !a.Equals(Program.START_PAGE_ARG, StringComparison.OrdinalIgnoreCase)).LastOrDefault();
             }
 
             var defaultUIMode = Settings.Default.UIMode;
@@ -307,6 +309,9 @@ namespace pwiz.Skyline
         {
             base.OnShown(e);
 
+            // Remember whether --opendoc was on the command line so that
+            // --start-page=true (below) only fires for the open-doc launch path.
+            bool wasOpenDocLaunch = _fileToOpen != null;
             if (HasFileToOpen())
             {
                 try
@@ -321,6 +326,12 @@ namespace pwiz.Skyline
             _fileToOpen = null;
 
             EnsureUIModeSet();
+
+            // --start-page=true combined with --opendoc surfaces the StartPage as a
+            // modal dialog over the loaded document. The flag alone (no --opendoc)
+            // is handled by the startup-time StartPage route in Program.cs.
+            if (wasOpenDocLaunch && Program.StartPageOverride == true)
+                OpenStartPage();
         }
 
         private bool HasFileToOpen()

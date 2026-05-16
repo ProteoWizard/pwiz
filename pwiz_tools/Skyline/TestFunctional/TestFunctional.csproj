@@ -484,6 +484,7 @@
     <Compile Include="SrmCourseScenarioTest.cs" />
     <Compile Include="SrmSmMolChromTest.cs" />
     <Compile Include="StandardTypeTest.cs" />
+    <Compile Include="StartPageOverrideFlagTest.cs" />
     <Compile Include="StartPageTest.cs" />
     <Compile Include="SummaryGraphLinePlotsTest.cs" />
     <Compile Include="SummaryGraphVisibilityTest.cs" />
