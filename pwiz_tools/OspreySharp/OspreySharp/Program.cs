@@ -556,6 +556,25 @@ namespace pwiz.OspreySharp
                 }
             }
 
+            // Warn on the silent no-op combination `--decoy-pairing-manifest`
+            // without `--decoys-in-library`. The manifest path is folded
+            // into SearchParameterHash, so it busts the .scores.parquet
+            // cache, but the pipeline only consults it inside the
+            // library-supplies-decoys branch. Mirrors Rust v26.6.0 (which
+            // is also silent here) -- the warning is a C#-only courtesy
+            // and does not change the hash or the run behaviour, so it
+            // preserves cross-impl byte parity.
+            if (!config.DecoysInLibrary &&
+                !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                LogWarning(
+                    @"--decoy-pairing-manifest is set without --decoys-in-library; " +
+                    @"the manifest will NOT be consulted by the pipeline, but it " +
+                    @"still contributes to the search-parameter hash and will " +
+                    @"invalidate cached .scores.parquet files. Pass " +
+                    @"--decoys-in-library to actually enable library-decoy mode.");
+            }
+
             return config;
         }
 

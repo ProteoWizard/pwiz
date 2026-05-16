@@ -149,13 +149,18 @@ namespace pwiz.OspreySharp.IO
                 // `proteins` is optional -- older manifests without it still
                 // parse fine; ApplyToLibrary simply won't replace
                 // protein_ids when this column is absent.
-                // minRequiredCols deliberately covers only the REQUIRED
-                // columns (sequence, peptide_type, peptide_pair_index).
-                // Rows with fewer fields than the optional proteins
-                // column should still parse -- the iProteins<fields.Length
-                // guard below treats a missing trailing column as "no
-                // override," matching the Rust manifest reader's intent.
-                int minRequiredCols = Math.Max(iSeq, Math.Max(iType, iPair)) + 1;
+                // When the proteins column IS present in the header, rows
+                // truncated to drop it are treated as malformed (skipped
+                // and counted in nSkipped). This matches Rust 0c3a73e
+                // `max_needed = i_proteins.unwrap_or(0).max(...)`:
+                // strict for cross-impl byte parity. The body's
+                // `iProteins < fields.Length` guard is belt-and-suspenders
+                // against the early skip, not a design intent for lenient
+                // parsing of short rows.
+                int maxNeeded = Math.Max(iSeq, Math.Max(iType, iPair));
+                if (iProteins >= 0 && iProteins > maxNeeded)
+                    maxNeeded = iProteins;
+                int minRequiredCols = maxNeeded + 1;
                 var map = new Dictionary<string, ManifestEntryInfo>(StringComparer.Ordinal);
                 int nSkipped = 0;
                 string line;

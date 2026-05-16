@@ -378,6 +378,13 @@ namespace pwiz.OspreySharp.Test
                     new[] { @"sp|original|FROM_LIB" }, libEntry1.ProteinIds);
                 CollectionAssert.AreEqual(
                     new[] { @"sp|orig_decoy|FROM_LIB" }, libEntry2.ProteinIds);
+                // The second manifest row classifies AEPTPID as `decoy`
+                // and the library entry is loaded as a target, so the
+                // manifest's sequence-based classification flips IsDecoy
+                // on it. Pin that side-effect so a future change to the
+                // marking-before-pairing ordering doesn't silently slip.
+                Assert.IsTrue(libEntry2.IsDecoy);
+                Assert.AreEqual(1, stats.NNewlyMarkedDecoy);
             }
             finally
             {
