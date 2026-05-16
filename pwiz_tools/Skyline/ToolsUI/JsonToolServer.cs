@@ -1390,17 +1390,19 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 layout?.ApplyFormats(enumerator.ColumnFormats);
 
-                // For the non-streaming path we know the total up front; pass it so the
-                // shape-only call (count = 0, !includeMaxLength) can return immediately
-                // without draining the enumerator. RowItems.Count is long; clamp to
-                // int.MaxValue (a single report past that limit is well outside what
-                // the inline tools target).
+                // Total can come from two cheap sources:
+                //  - non-streaming: BindingListSource has materialized the rows already
+                //    (BigList.Count is O(1)).
+                //  - streaming: RowItemEnumerator.Length is populated up front for the
+                //    common "no filter, at most one collection" case, so we still get
+                //    O(1) total without draining the enumerator.
+                // Clamp to int.MaxValue defensively; a single report past that limit is
+                // well outside what the inline tools target.
                 int? knownTotal = null;
-                if (bindingListSource != null)
-                {
-                    long totalLong = bindingListSource.ReportResults.RowItems.Count;
-                    knownTotal = totalLong > int.MaxValue ? int.MaxValue : (int)totalLong;
-                }
+                long? totalLong = bindingListSource?.ReportResults.RowItems.Count
+                                  ?? enumerator.Length;
+                if (totalLong.HasValue)
+                    knownTotal = totalLong.Value > int.MaxValue ? int.MaxValue : (int)totalLong.Value;
                 return BuildReportRowsResult(enumerator, localizer, offset, count,
                     includeMaxLength, requestedColumns, reportName, knownTotal);
             }
@@ -1483,8 +1485,11 @@ namespace pwiz.Skyline.ToolsUI
                     rowIndex++;
                     // Once we've passed both the window and the scan range, the only
                     // remaining work is counting rows. If the total is already known,
-                    // skip the rest of the enumeration entirely.
-                    if (rowIndex >= windowEnd && rowIndex >= scanLimit && knownTotalRows.HasValue)
+                    // skip the rest of the enumeration entirely. When length scanning
+                    // is off, we have nothing to wait for past the window.
+                    bool windowDone = rowIndex >= windowEnd;
+                    bool scanDone = !needLengthScan || rowIndex >= scanLimit;
+                    if (windowDone && scanDone && knownTotalRows.HasValue)
                     {
                         rowIndex = knownTotalRows.Value;
                         break;
@@ -1572,13 +1577,17 @@ namespace pwiz.Skyline.ToolsUI
             // Index columns by both the localized DisplayName (what the caller sees in
             // the CSV header) and the invariant column caption (what get_report_doc_topic
             // returns). Filter resolution keys by InvariantName for the same reason; this
-            // keeps both surfaces consistent for the caller.
+            // keeps both surfaces consistent for the caller. Two passes so DisplayName
+            // always wins -- a single dict-set loop would let a later column's invariant
+            // caption shadow an earlier column's display name in pivoted / localized
+            // reports where the two namespaces collide.
             var byName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < properties.Count; i++)
-            {
                 byName[properties[i].DisplayName] = i;
+            for (int i = 0; i < properties.Count; i++)
+            {
                 string invariant = properties[i].ColumnCaption?.GetCaption(DataSchemaLocalizer.INVARIANT);
-                if (!string.IsNullOrEmpty(invariant))
+                if (!string.IsNullOrEmpty(invariant) && !byName.ContainsKey(invariant))
                     byName[invariant] = i;
             }
             var indices = new int[requested.Length];
