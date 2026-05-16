@@ -3354,8 +3354,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (peakRmi?.MatchedIons != null && peakRmi.MatchedIons.Count > 0)
             {
                 // Pick the matched ion with the smallest absolute mass error — that is the
-                // best explanation for the observed peak. Show the ruler only when that ion
-                // has no neutral losses (neutral-loss rulers are a planned follow-up).
+                // best explanation for the observed peak. The chosen ion's losses (if any)
+                // become part of the key so loss series get their own ruler.
                 MatchedFragmentIon bestIon = null;
                 double bestError = double.MaxValue;
                 foreach (var mfi in peakRmi.MatchedIons)
@@ -3368,8 +3368,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         bestIon = mfi;
                     }
                 }
-                if (bestIon != null && bestIon.Losses == null)
-                    newKey = new IonSeriesKey(bestIon.IonType, bestIon.Charge.AdductCharge);
+                if (bestIon != null)
+                    newKey = new IonSeriesKey(bestIon.IonType, bestIon.Charge.AdductCharge, bestIon.Losses);
             }
 
             if (_currentGraphItem == null)

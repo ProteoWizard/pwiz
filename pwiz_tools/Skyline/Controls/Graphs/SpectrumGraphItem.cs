@@ -36,33 +36,52 @@ using ZedGraph;
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
-    /// Identifies a specific ion series: one ion type at one charge state.
-    /// Used to track which individual series are pinned or currently hovered.
+    /// Identifies a specific ion series: one ion type at one charge state, optionally
+    /// with a neutral loss. Used to track which individual series are pinned or hovered.
     /// </summary>
     public readonly struct IonSeriesKey : IEquatable<IonSeriesKey>
     {
         public readonly IonType IonType;
         /// <summary>Signed adduct charge.</summary>
         public readonly int Charge;
+        /// <summary>Neutral loss applied to this series; null for non-loss ions.</summary>
+        public readonly TransitionLosses Losses;
 
-        public IonSeriesKey(IonType ionType, int charge)
+        public IonSeriesKey(IonType ionType, int charge, TransitionLosses losses = null)
         {
             IonType = ionType;
             Charge = charge;
+            Losses = losses;
         }
 
-        /// <summary>Returns the group key (direction + charge) this series belongs to.</summary>
-        public RulerGroupKey GroupKey => new RulerGroupKey(IonType.IsNTerminal(), Charge);
+        /// <summary>
+        /// Returns the group key this series belongs to. Non-loss ions of the same
+        /// direction+charge share a group; each neutral-loss series gets its own group.
+        /// </summary>
+        public RulerGroupKey GroupKey => Losses == null
+            ? new RulerGroupKey(IonType.IsNTerminal(), Charge, null, null)
+            : new RulerGroupKey(IonType.IsNTerminal(), Charge, Losses, IonType);
 
-        public bool Equals(IonSeriesKey other) => IonType == other.IonType && Charge == other.Charge;
+        public bool Equals(IonSeriesKey other) =>
+            IonType == other.IonType && Charge == other.Charge && Equals(Losses, other.Losses);
         public override bool Equals(object obj) => obj is IonSeriesKey other && Equals(other);
-        public override int GetHashCode() => ((int)IonType * 397) ^ Charge;
-        public override string ToString() => @$"{IonType} z={Charge}";
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int h = ((int)IonType * 397) ^ Charge;
+                return (h * 397) ^ (Losses?.GetHashCode() ?? 0);
+            }
+        }
+        public override string ToString() => Losses == null
+            ? @$"{IonType} z={Charge}"
+            : @$"{IonType}-{Math.Round(Losses.Mass, 1)} z={Charge}";
     }
 
     /// <summary>
-    /// Identifies a ruler group: all non-loss ions sharing the same N/C-terminal direction
-    /// and charge state.  Equality is by (IsNTerminal, Charge).
+    /// Identifies a ruler group. Non-loss groups merge all ion types of the same direction
+    /// and charge (Losses == null, LossIonType == null). Each neutral-loss series is its
+    /// own group, keyed by (direction, charge, losses, ion type).
     /// </summary>
     public readonly struct RulerGroupKey : IEquatable<RulerGroupKey>
     {
@@ -72,20 +91,36 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>Signed adduct charge (e.g. +1, +2, -1).</summary>
         public readonly int Charge;
 
-        public RulerGroupKey(bool isNTerminal, int charge)
+        /// <summary>Neutral loss for this group; null for the shared non-loss group.</summary>
+        public readonly TransitionLosses Losses;
+
+        /// <summary>Ion type for loss groups; null for the shared non-loss group.</summary>
+        public readonly IonType? LossIonType;
+
+        public RulerGroupKey(bool isNTerminal, int charge, TransitionLosses losses, IonType? lossIonType)
         {
             IsNTerminal = isNTerminal;
             Charge = charge;
+            Losses = losses;
+            LossIonType = lossIonType;
         }
 
         public bool Equals(RulerGroupKey other) =>
-            IsNTerminal == other.IsNTerminal && Charge == other.Charge;
+            IsNTerminal == other.IsNTerminal && Charge == other.Charge
+            && Equals(Losses, other.Losses) && LossIonType == other.LossIonType;
 
         public override bool Equals(object obj) =>
             obj is RulerGroupKey other && Equals(other);
 
-        public override int GetHashCode() =>
-            (IsNTerminal.GetHashCode() * 397) ^ Charge;
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int h = (IsNTerminal.GetHashCode() * 397) ^ Charge;
+                h = (h * 397) ^ (Losses?.GetHashCode() ?? 0);
+                return (h * 397) ^ (LossIonType?.GetHashCode() ?? 0);
+            }
+        }
 
         public override string ToString() =>
             string.Format(GraphsResources.RulerGroupKey_ToString__0__terminal_z__1_,
@@ -234,15 +269,15 @@ namespace pwiz.Skyline.Controls.Graphs
             var allResidues = AminoAcidLadderObj.ParseModifiedSequenceResidues(
                 PeptideDocNode.ModifiedSequenceDisplay);
 
-            // Build matched-peak intensity lookup: (ionType, adductCharge, ordinal) → intensity
-            var intensityLookup = new Dictionary<(IonType, int, int), double>();
+            // Build matched-peak intensity lookup keyed by ion identity including losses,
+            // so non-loss and loss series resolve to their own matched peaks independently.
+            var intensityLookup = new Dictionary<(IonType, int, int, TransitionLosses), double>();
             foreach (var rmi in SpectrumInfo.PeaksMatched)
             {
                 if (rmi.MatchedIons == null) continue;
                 foreach (var mfi in rmi.MatchedIons)
                 {
-                    if (mfi.Losses != null) continue;
-                    intensityLookup[(mfi.IonType, mfi.Charge.AdductCharge, mfi.Ordinal)] = rmi.Intensity;
+                    intensityLookup[(mfi.IonType, mfi.Charge.AdductCharge, mfi.Ordinal, mfi.Losses)] = rmi.Intensity;
                 }
             }
 
@@ -264,9 +299,13 @@ namespace pwiz.Skyline.Controls.Graphs
             IonTable<TypedMass> ionMasses,
             int nSeq,
             TypedMass precursorMass,
-            Dictionary<(IonType ionType, int charge, int ordinal), double> intensityLookup,
+            Dictionary<(IonType ionType, int charge, int ordinal, TransitionLosses losses), double> intensityLookup,
             float yLine)
         {
+            // Subtract the loss mass from each boundary so loss-ion rulers sit at the
+            // correct m/z positions (e.g. y-18 is 18 Da lower than y).
+            double lossMass = key.Losses?.Mass ?? 0;
+
             var seriesList = new List<IonSeriesData>();
             foreach (var ionType in ionTypes)
             {
@@ -276,15 +315,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var mass = ionMasses.GetIonValue(ionType, k);
                     if (mass <= 0) { valid = false; break; }
-                    boundaries[k - 1] = SequenceMassCalc.GetMZ(mass, key.Charge);
+                    boundaries[k - 1] = SequenceMassCalc.GetMZ(mass - lossMass, key.Charge);
                 }
                 if (!valid) continue;
-                boundaries[nSeq] = SequenceMassCalc.GetMZ(precursorMass, key.Charge);
+                boundaries[nSeq] = SequenceMassCalc.GetMZ(precursorMass - lossMass, key.Charge);
 
                 var peakIntensities = new Dictionary<int, double>();
                 for (int ordinal = 1; ordinal <= nSeq; ordinal++)
                 {
-                    if (intensityLookup.TryGetValue((ionType, key.Charge, ordinal), out double intensity))
+                    if (intensityLookup.TryGetValue((ionType, key.Charge, ordinal, key.Losses), out double intensity))
                         peakIntensities[ordinal] = intensity;
                 }
 
@@ -314,7 +353,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            return new AminoAcidLadderObj(labels, refSeries.Boundaries, seriesList, yLine, yLine, FontSize * 0.7f);
+            // Loss text shown in the group label, e.g. "-18" or "-98.1".
+            string lossText = key.Losses == null ? string.Empty :
+                @"-" + Math.Round(key.Losses.Mass, 1);
+
+            return new AminoAcidLadderObj(labels, refSeries.Boundaries, seriesList,
+                yLine, yLine, FontSize * 0.7f, key.Charge, lossText);
         }
     }
     

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -74,6 +75,9 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         internal const string FONT_FACE = @"Arial";
         private const float TICK_HALF_HEIGHT_PX = 4f;
+        // Horizontal gap kept between the chart's left edge and the group label so the
+        // label doesn't overlap the Y-axis ticks when the ruler extends offscreen left.
+        private const float GROUP_LABEL_LEFT_MARGIN_PX = 4f;
         private static readonly Color RULER_LINE_COLOR = Color.DarkGray;
         private static readonly Color LABEL_COLOR = Color.DimGray;
 
@@ -93,6 +97,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly float _yLine;
         private readonly float _yLabel;
         private readonly float _fontSize;
+        private readonly int _charge;
+        private readonly string _lossText;
 
         /// <summary>
         /// Creates a grouped sequence ruler.
@@ -110,13 +116,19 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="yLine">Y chart fraction (0=top) for the ruler line.</param>
         /// <param name="yLabel">Y chart fraction for the residue label bottom edge.</param>
         /// <param name="fontSize">Font size for residue labels.</param>
+        /// <param name="charge">Adduct charge shared by all series in the group; rendered
+        /// as "++"/"+++" etc. in the group label when greater than 1.</param>
+        /// <param name="lossText">Neutral-loss display string for the group (e.g. "-18"),
+        /// rendered between the ion-type letter(s) and the charge suffix. Empty for non-loss.</param>
         public AminoAcidLadderObj(
             string[] intervalLabels,
             double[] referenceBoundaries,
             IReadOnlyList<IonSeriesData> series,
             float yLine,
             float yLabel,
-            float fontSize)
+            float fontSize,
+            int charge,
+            string lossText)
             : base(0.5, yLine, CoordType.XScaleYChartFraction)
         {
             IsClippedToChartRect = true;
@@ -126,6 +138,8 @@ namespace pwiz.Skyline.Controls.Graphs
             _yLine = yLine;
             _yLabel = yLabel;
             _fontSize = fontSize;
+            _charge = charge;
+            _lossText = lossText ?? string.Empty;
         }
 
         /// <summary>
@@ -219,7 +233,65 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            // 5. Group label: ion-type letters (each in its type color) + charge suffix.
+            // Drawn last so it renders on top of any residue label it might overlap when the
+            // ruler extends offscreen left and the label has to be clamped to the chart edge.
+            DrawGroupLabel(g, scaleFactor, chartRect, xStart, labelY);
+
             g.Clip = savedClip;
+        }
+
+        private void DrawGroupLabel(Graphics g, float scaleFactor, RectangleF chartRect,
+            float xStart, float labelY)
+        {
+            var ionTokens = _series
+                .Select(s => (s.Color, Text: s.IonType.GetLocalizedString()))
+                .ToList();
+            string chargeStr = _charge > 1 ? new string('+', _charge) : string.Empty;
+            // Loss text uses the ion-type color of the (single) series in a loss group,
+            // so "y-18" reads as one visual token. Falls back to the first series' color
+            // if a loss group ever ends up with more than one ion type (defensive).
+            Color lossColor = ionTokens.Count > 0 ? ionTokens[0].Color : LABEL_COLOR;
+
+            using (var font = new Font(FONT_FACE, _fontSize * scaleFactor))
+            {
+                float totalWidth = ionTokens.Sum(t => g.MeasureString(t.Text, font).Width);
+                if (_lossText.Length > 0)
+                    totalWidth += g.MeasureString(_lossText, font).Width;
+                if (chargeStr.Length > 0)
+                    totalWidth += g.MeasureString(chargeStr, font).Width;
+
+                // Anchor the label's right edge just left of the first tick; clamp the
+                // left edge to the chart's left edge (plus a small margin to clear the
+                // Y-axis ticks) so the label stays fully on-chart.
+                float labelLeft = Math.Max(xStart - totalWidth,
+                    chartRect.Left + GROUP_LABEL_LEFT_MARGIN_PX);
+
+                var fmt = new StringFormat
+                {
+                    Alignment     = StringAlignment.Near,
+                    LineAlignment = StringAlignment.Far  // text bottom at labelY
+                };
+
+                float curX = labelLeft;
+                foreach (var (color, text) in ionTokens)
+                {
+                    using (var brush = new SolidBrush(color))
+                        g.DrawString(text, font, brush, curX, labelY, fmt);
+                    curX += g.MeasureString(text, font).Width;
+                }
+                if (_lossText.Length > 0)
+                {
+                    using (var brush = new SolidBrush(lossColor))
+                        g.DrawString(_lossText, font, brush, curX, labelY, fmt);
+                    curX += g.MeasureString(_lossText, font).Width;
+                }
+                if (chargeStr.Length > 0)
+                {
+                    using (var brush = new SolidBrush(LABEL_COLOR))
+                        g.DrawString(chargeStr, font, brush, curX, labelY, fmt);
+                }
+            }
         }
 
         public override void GetCoords(PaneBase pane, Graphics g, float scaleFactor,
