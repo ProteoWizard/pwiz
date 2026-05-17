@@ -288,15 +288,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             return InvokeOnUiThread(() =>
             {
-                var form = FindFormById(graphId) as DockableFormEx;
-                var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
-                if (zedGraph == null)
-                {
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.",
-                        graphId));
-                }
-                using (var bitmap = zedGraph.MasterPane.GetImage(zedGraph.MasterPane.IsAntiAlias))
+                using (var bitmap = RenderGraphBitmap(graphId, out var form))
                 {
                     filePath = filePath ?? GetMcpTmpFilePath(
                         GRAPH_FILE_PREFIX, form.Text, EXT_PNG);
@@ -311,46 +303,127 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
+        public static ImageBytesMetadata GetGraphImageBytes(string graphId)
+        {
+            return InvokeOnUiThread(() =>
+            {
+                using (var bitmap = RenderGraphBitmap(graphId, out var form))
+                {
+                    return new ImageBytesMetadata
+                    {
+                        Data = BitmapToPngBytes(bitmap),
+                        FilePath = GetMcpTmpFilePath(GRAPH_FILE_PREFIX, form.Text, EXT_PNG)
+                            .ToForwardSlashPath(),
+                        MimeType = MIME_TYPE_PNG
+                    };
+                }
+            });
+        }
+
         private const string FORM_FILE_PREFIX = @"skyline-form";
 
         public static string GetFormImage(string formId, string filePath)
         {
             return InvokeOnUiThread(() =>
             {
-                var form = FindFormById(formId);
-
-                // Check permission (dialog may appear over the target form)
-                bool dialogShown = ScreenCapture.EnsurePermission(out bool wasFirstPrompt);
-                if (!dialogShown)
-                    return new LlmInstruction(@"Screen capture denied by user.");
-
-                // Check desktop availability before attempting capture
-                if (!ScreenCapture.IsDesktopAvailable())
-                    return new LlmInstruction(@"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.");
-
-                // Activate the form
-                ScreenCapture.ActivateForm(form);
-
-                // If the permission dialog was just shown, allow time for it to
-                // fully dismiss and for Windows to repaint the target form.
-                if (wasFirstPrompt)
-                    Thread.Sleep(1000);
-
-                // Get screen rectangle
-                var screenRect = ScreenCapture.GetWindowRectangle(form);
-
-                // Resolve output path before capture so we can derive log path
-                filePath = filePath ?? GetMcpTmpFilePath(
-                    FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG);
-
-                // Capture with redaction
-                using (var bitmap = ScreenCapture.CaptureAndRedact(screenRect, form))
+                var bitmap = CaptureFormBitmap(formId, out var form, out var denial);
+                if (denial != null)
+                    return denial;
+                using (bitmap)
                 {
+                    filePath = filePath ?? GetMcpTmpFilePath(
+                        FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG);
                     DirectoryEx.CreateForFilePath(filePath);
                     bitmap.Save(filePath, ImageFormat.Png);
                 }
                 return filePath.ToForwardSlashPath();
             });
+        }
+
+        public static ImageBytesMetadata GetFormImageBytes(string formId)
+        {
+            return InvokeOnUiThread(() =>
+            {
+                var bitmap = CaptureFormBitmap(formId, out var form, out var denial);
+                if (denial != null)
+                {
+                    // Permission denial / desktop unavailable: throw so the caller
+                    // sees the same text it would have seen from the file-based path.
+                    // The wrapper layer converts this into a normal text response.
+                    throw new InvalidOperationException(denial);
+                }
+                using (bitmap)
+                {
+                    return new ImageBytesMetadata
+                    {
+                        Data = BitmapToPngBytes(bitmap),
+                        FilePath = GetMcpTmpFilePath(FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG)
+                            .ToForwardSlashPath(),
+                        MimeType = MIME_TYPE_PNG
+                    };
+                }
+            });
+        }
+
+        // Renders the bitmap for a ZedGraph form, returning the bitmap and the host form.
+        // Caller owns the bitmap and must dispose it.
+        private static System.Drawing.Bitmap RenderGraphBitmap(string graphId, out DockableFormEx form)
+        {
+            form = FindFormById(graphId) as DockableFormEx;
+            var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
+            if (zedGraph == null)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.",
+                    graphId));
+            }
+            return zedGraph.MasterPane.GetImage(zedGraph.MasterPane.IsAntiAlias);
+        }
+
+        // Captures a screenshot of an open form (with redaction). Returns the
+        // bitmap (caller disposes), or null with a non-null denial message when
+        // screen capture is unavailable or the user denied permission.
+        private static System.Drawing.Bitmap CaptureFormBitmap(string formId, out Form form, out string denial)
+        {
+            form = FindFormById(formId);
+
+            // Check permission (dialog may appear over the target form)
+            bool dialogShown = ScreenCapture.EnsurePermission(out bool wasFirstPrompt);
+            if (!dialogShown)
+            {
+                denial = @"Screen capture denied by user.";
+                return null;
+            }
+
+            // Check desktop availability before attempting capture
+            if (!ScreenCapture.IsDesktopAvailable())
+            {
+                denial = @"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.";
+                return null;
+            }
+
+            // Activate the form
+            ScreenCapture.ActivateForm(form);
+
+            // If the permission dialog was just shown, allow time for it to
+            // fully dismiss and for Windows to repaint the target form.
+            if (wasFirstPrompt)
+                Thread.Sleep(1000);
+
+            var screenRect = ScreenCapture.GetWindowRectangle(form);
+            denial = null;
+            return ScreenCapture.CaptureAndRedact(screenRect, form);
+        }
+
+        private const string MIME_TYPE_PNG = @"image/png";
+
+        private static byte[] BitmapToPngBytes(System.Drawing.Bitmap bitmap)
+        {
+            using (var memory = new MemoryStream())
+            {
+                bitmap.Save(memory, ImageFormat.Png);
+                return memory.ToArray();
+            }
         }
 
         // Private helpers - Graph support

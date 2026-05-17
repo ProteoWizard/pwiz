@@ -184,11 +184,21 @@ namespace SkylineTool
                 : Call(nameof(GetGraphImage), graphId, filePath);
         }
 
+        public ImageBytesMetadata GetGraphImageBytes(string graphId)
+        {
+            return CallTyped<ImageBytesMetadata>(nameof(GetGraphImageBytes), graphId);
+        }
+
         public string GetFormImage(string formId, string filePath = null)
         {
             return filePath == null
                 ? Call(nameof(GetFormImage), formId)
                 : Call(nameof(GetFormImage), formId, filePath);
+        }
+
+        public ImageBytesMetadata GetFormImageBytes(string formId)
+        {
+            return CallTyped<ImageBytesMetadata>(nameof(GetFormImageBytes), formId);
         }
 
         public string GetSettingsListItem(string listType, string itemName)
@@ -241,6 +251,13 @@ namespace SkylineTool
         {
             return CallTyped<TutorialImageMetadata>(nameof(GetTutorialImage),
                 name, imageFilename, language, filePath);
+        }
+
+        public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename,
+            string language = "en")
+        {
+            return CallTyped<ImageBytesMetadata>(nameof(GetTutorialImageBytes),
+                name, imageFilename, language);
         }
 
         // 5-arg methods

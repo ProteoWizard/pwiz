@@ -329,11 +329,29 @@ namespace SkylineTool
         string GetGraphImage(string graphId, string filePath = null);
 
         /// <summary>
+        /// Renders a graph as a PNG and returns the bytes inline together with a
+        /// server-suggested file path the caller may write to as a fallback when
+        /// the inline payload is too large. The file is NOT written by this call.
+        /// Companion to <see cref="GetGraphImage"/> (file-based).
+        /// </summary>
+        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        ImageBytesMetadata GetGraphImageBytes(string graphId);
+
+        /// <summary>
         /// Captures a screenshot of any open form as a PNG image. Returns the file path.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
         string GetFormImage(string formId, string filePath = null);
+
+        /// <summary>
+        /// Captures a form screenshot as a PNG and returns the bytes inline together
+        /// with a server-suggested file path the caller may write to as a fallback.
+        /// The file is NOT written by this call. Companion to <see cref="GetFormImage"/>
+        /// (file-based). Permission denial is signaled as an inline error from the caller.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        ImageBytesMetadata GetFormImageBytes(string formId);
 
         // --- Tutorials ---
 
@@ -359,5 +377,16 @@ namespace SkylineTool
         /// <param name="language">Language code.</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
         TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null);
+
+        /// <summary>
+        /// Fetches a tutorial image and returns the bytes inline together with a
+        /// server-suggested file path the caller may write to as a fallback when
+        /// the inline payload is too large. The file is NOT written by this call.
+        /// Companion to <see cref="GetTutorialImage"/> (file-based).
+        /// </summary>
+        /// <param name="name">Tutorial folder name.</param>
+        /// <param name="imageFilename">Image filename from the tutorial markdown.</param>
+        /// <param name="language">Language code.</param>
+        ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = "en");
     }
 }

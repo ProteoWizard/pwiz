@@ -832,9 +832,19 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.GetGraphImage(graphId, filePath);
         }
 
+        public ImageBytesMetadata GetGraphImageBytes(string graphId)
+        {
+            return JsonUiService.GetGraphImageBytes(graphId);
+        }
+
         public string GetFormImage(string formId, string filePath = null)
         {
             return JsonUiService.GetFormImage(formId, filePath);
+        }
+
+        public ImageBytesMetadata GetFormImageBytes(string formId)
+        {
+            return JsonUiService.GetFormImageBytes(formId);
         }
 
         // Multi-arg methods
@@ -1036,6 +1046,11 @@ namespace pwiz.Skyline.ToolsUI
         public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = @"en", string filePath = null)
         {
             return JsonTutorialCatalog.FetchTutorialImage(name, imageFilename, language, filePath);
+        }
+
+        public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = @"en")
+        {
+            return JsonTutorialCatalog.FetchTutorialImageBytes(name, imageFilename, language);
         }
 
         public string GetDocumentSettings(string filePath)

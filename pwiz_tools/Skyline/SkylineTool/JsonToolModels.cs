@@ -166,6 +166,31 @@ namespace SkylineTool
         public string Image { get; set; }
     }
 
+    /// <summary>
+    /// PNG bytes plus a server-suggested file path, returned by the inline
+    /// image methods on <see cref="IJsonToolService"/>. The server does not
+    /// write the file - the caller decides whether to emit the bytes inline
+    /// (e.g. as an MCP <c>ImageContentBlock</c>) or to write them to
+    /// <see cref="FilePath"/> when the inline payload would exceed a caller-side cap.
+    ///
+    /// <para><see cref="Data"/> is the raw PNG byte array; over JSON-RPC the
+    /// payload is base64-encoded by both Newtonsoft.Json (server) and
+    /// System.Text.Json (client).</para>
+    ///
+    /// <para><see cref="FilePath"/> is the path the server would have written
+    /// to if asked for the file form of the same image - it is suitable for
+    /// fallback writes by the caller (timestamped, in the shared MCP temp
+    /// directory) but does not exist on disk when the inline call returns.</para>
+    ///
+    /// <para><see cref="MimeType"/> is always <c>"image/png"</c> in v1.</para>
+    /// </summary>
+    public class ImageBytesMetadata
+    {
+        public byte[] Data { get; set; }
+        public string FilePath { get; set; }
+        public string MimeType { get; set; }
+    }
+
     // --- Document status and selection models ---
 
     /// <summary>
