@@ -20,8 +20,30 @@
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
+using System;
+
 namespace SkylineTool
 {
+    /// <summary>
+    /// JSON-RPC 2.0 error surfaced by <see cref="SkylineJsonToolClient"/> for any
+    /// server response carrying an <c>error</c> envelope. The numeric
+    /// <see cref="Code"/> matches the JSON-RPC <c>error.code</c> field
+    /// (see <see cref="JsonToolConstants"/> for the well-known values like
+    /// <see cref="JsonToolConstants.ERROR_METHOD_NOT_FOUND"/>) so callers can
+    /// branch on the structured code instead of grepping the message string.
+    /// Derives from <see cref="InvalidOperationException"/> for back-compat with
+    /// existing catch sites that match on the legacy base type.
+    /// </summary>
+    public class JsonRpcException : InvalidOperationException
+    {
+        public int Code { get; }
+
+        public JsonRpcException(int code, string message) : base(message)
+        {
+            Code = code;
+        }
+    }
+
     // POCO models for typed IJsonToolService parameters and return values.
     // Serialized as JSON over the named pipe: PascalCase properties map to
     // snake_case JSON via naming policies (Newtonsoft SnakeCaseNamingStrategy
@@ -164,6 +186,42 @@ namespace SkylineTool
     {
         public string FilePath { get; set; }
         public string Image { get; set; }
+    }
+
+    /// <summary>
+    /// Raw image bytes plus a server-suggested file path, returned by the inline
+    /// image methods on <see cref="IJsonToolService"/>. The server does not
+    /// write the file - the caller decides whether to emit the bytes inline
+    /// (e.g. as an MCP <c>ImageContentBlock</c>) or to write them to
+    /// <see cref="FilePath"/> when the inline payload would exceed a caller-side cap.
+    ///
+    /// <para><see cref="Data"/> carries the image bytes; over JSON-RPC the
+    /// payload is base64-encoded by both Newtonsoft.Json (server) and
+    /// System.Text.Json (client). Form and graph captures always produce PNG;
+    /// tutorial images preserve whatever format the source file uses
+    /// (typically PNG, but JPEG / GIF are also possible).</para>
+    ///
+    /// <para><see cref="FilePath"/> is the path the server would have written
+    /// to if asked for the file form of the same image - it is suitable for
+    /// fallback writes by the caller (timestamped, in the shared MCP temp
+    /// directory) but does not exist on disk when the inline call returns.</para>
+    ///
+    /// <para><see cref="MimeType"/> describes the byte payload. Form / graph
+    /// captures always set this to <c>"image/png"</c>; tutorial images use the
+    /// MIME type implied by the source filename extension.</para>
+    ///
+    /// <para><see cref="Message"/> is set (with <see cref="Data"/> null) when
+    /// the server has a structured non-image response to convey - for example,
+    /// screen-capture permission denial or an unavailable desktop session.
+    /// Callers should emit <see cref="Message"/> as text content (no error
+    /// flag) so the response shape stays consistent with the file-based path.</para>
+    /// </summary>
+    public class ImageBytesMetadata
+    {
+        public byte[] Data { get; set; }
+        public string FilePath { get; set; }
+        public string MimeType { get; set; }
+        public string Message { get; set; }
     }
 
     // --- Document status and selection models ---

@@ -184,11 +184,21 @@ namespace SkylineTool
                 : Call(nameof(GetGraphImage), graphId, filePath);
         }
 
+        public ImageBytesMetadata GetGraphImageBytes(string graphId)
+        {
+            return CallTyped<ImageBytesMetadata>(nameof(GetGraphImageBytes), graphId);
+        }
+
         public string GetFormImage(string formId, string filePath = null)
         {
             return filePath == null
                 ? Call(nameof(GetFormImage), formId)
                 : Call(nameof(GetFormImage), formId, filePath);
+        }
+
+        public ImageBytesMetadata GetFormImageBytes(string formId)
+        {
+            return CallTyped<ImageBytesMetadata>(nameof(GetFormImageBytes), formId);
         }
 
         public string GetSettingsListItem(string listType, string itemName)
@@ -243,6 +253,13 @@ namespace SkylineTool
                 name, imageFilename, language, filePath);
         }
 
+        public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename,
+            string language = "en")
+        {
+            return CallTyped<ImageBytesMetadata>(nameof(GetTutorialImageBytes),
+                name, imageFilename, language);
+        }
+
         // 5-arg methods
         public ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition,
             int offset, int count, bool includeMaxLength, string culture)
@@ -289,7 +306,11 @@ namespace SkylineTool
                     string message = errorElement.TryGetProperty(nameof(JSON_RPC.message), out var msgElement)
                         ? msgElement.GetString()
                         : "Unknown error from Skyline";
-                    throw new InvalidOperationException(message);
+                    int code = errorElement.TryGetProperty(nameof(JSON_RPC.code), out var codeElement) &&
+                               codeElement.ValueKind == JsonValueKind.Number
+                        ? codeElement.GetInt32()
+                        : JsonToolConstants.ERROR_INTERNAL;
+                    throw new JsonRpcException(code, message);
                 }
 
                 if (root.TryGetProperty(nameof(JSON_RPC.result), out var resultElement))

@@ -108,7 +108,9 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
     public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }
     public string GetGraphImage(string graphId, string filePath = null) { return CallClient(c => c.GetGraphImage(graphId, filePath)); }
+    public ImageBytesMetadata GetGraphImageBytes(string graphId) { return CallClient(c => c.GetGraphImageBytes(graphId)); }
     public string GetFormImage(string formId, string filePath = null) { return CallClient(c => c.GetFormImage(formId, filePath)); }
+    public ImageBytesMetadata GetFormImageBytes(string formId) { return CallClient(c => c.GetFormImageBytes(formId)); }
     public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }
     public void SelectSettingsListItems(string listType, string[] itemNames) { CallClientVoid(c => c.SelectSettingsListItems(listType, itemNames)); }
     public void ImportFasta(string textFasta, string keepEmptyProteins = null) { CallClientVoid(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
@@ -118,6 +120,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture) { return CallClient(c => c.ExportReportFromDefinition(definition, filePath, culture)); }
     public TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorial(name, language, filePath)); }
     public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { CallClientVoid(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
+    public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = "en") { return CallClient(c => c.GetTutorialImageBytes(name, imageFilename, language)); }
 
     // 4-arg methods
     public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorialImage(name, imageFilename, language, filePath)); }
