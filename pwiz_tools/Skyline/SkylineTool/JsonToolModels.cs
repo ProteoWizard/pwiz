@@ -47,6 +47,56 @@ namespace SkylineTool
     }
 
     /// <summary>
+    /// Inline windowed result returned by GetReportRows / GetReportFromDefinitionRows.
+    /// Rows are formatted strings matching the CSV export; the column descriptors carry
+    /// the type so a caller can parse cells correctly.
+    /// </summary>
+    public class ReportRowsResult
+    {
+        public string Report { get; set; }
+        public int TotalRows { get; set; }
+        public ReportRowsColumn[] Columns { get; set; }
+        public string[][] Rows { get; set; }
+        public ReportRowsWindow Window { get; set; }
+        public int? TruncatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// Column metadata for inline rows results.
+    ///
+    /// <para><see cref="Type"/> is one of a stable, JSON-friendly vocabulary:
+    /// "string", "boolean", "integer", "number", "datetime", or "other" for
+    /// types that don't map cleanly. The CLR type name is intentionally not
+    /// exposed so the contract is stable across refactors.</para>
+    ///
+    /// <para><see cref="MaxObservedLength"/> and <see cref="MaxLengthSampled"/>
+    /// are set only on text-valued columns (<see cref="Type"/> equal to "string"
+    /// or "other" -- the latter covers entity wrappers like Peptide / Replicate
+    /// that serialize to text) and only when the caller requested
+    /// include_max_length. <see cref="MaxLengthSampled"/> is set to true only
+    /// when the scan stopped at the sample cap (the value is a lower-bound
+    /// estimate); it is null when the value is exact.</para>
+    /// </summary>
+    public class ReportRowsColumn
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public int? MaxObservedLength { get; set; }
+        public bool? MaxLengthSampled { get; set; }
+    }
+
+    /// <summary>
+    /// Window metadata for inline rows results: the actual offset/count returned and
+    /// whether the response was truncated to respect the server-side token cap.
+    /// </summary>
+    public class ReportRowsWindow
+    {
+        public int Offset { get; set; }
+        public int Count { get; set; }
+        public bool Truncated { get; set; }
+    }
+
+    /// <summary>
     /// Definition of a custom report: columns to select, optional filters,
     /// sorting, and pivot settings.
     /// </summary>

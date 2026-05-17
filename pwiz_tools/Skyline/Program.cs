@@ -48,6 +48,7 @@ using pwiz.Skyline.Util.Extensions;
 // Once-per-assembly initialization to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
 [assembly: InternalsVisibleTo("Test")]
+[assembly: InternalsVisibleTo("TestFunctional")]
 
 namespace pwiz.Skyline
 {

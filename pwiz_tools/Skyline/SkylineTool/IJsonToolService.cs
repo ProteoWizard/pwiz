@@ -132,6 +132,39 @@ namespace SkylineTool
         ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture);
 
         /// <summary>
+        /// Runs a named report and returns a windowed slice of rows inline (no file).
+        /// The response is capped server-side to protect caller context size.
+        /// Pass <paramref name="count"/> = 0 for shape-only introspection (total row count
+        /// plus column names and types, with an empty rows array).
+        /// </summary>
+        /// <param name="reportName">Predefined / saved report name.</param>
+        /// <param name="offset">0-based row index of the first row to return.</param>
+        /// <param name="count">Number of rows to return; 0 returns shape only.</param>
+        /// <param name="columns">Optional projection: subset of the report's columns.</param>
+        /// <param name="filter">Optional additional filters applied to the named report.</param>
+        /// <param name="includeMaxLength">When true, scans string columns and reports
+        /// <see cref="ReportRowsColumn.MaxObservedLength"/>.</param>
+        /// <param name="culture">"invariant" or "localized".</param>
+        ReportRowsResult GetReportRows(string reportName, int offset, int count,
+            string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture);
+
+        /// <summary>
+        /// Runs a custom report from a definition and returns a windowed slice of rows
+        /// inline (no file). The response is capped server-side. The definition already
+        /// supports projection, filtering, sorting, and pivots, so this method does NOT
+        /// duplicate those parameters.
+        /// </summary>
+        /// <param name="definition">Report definition (same shape as
+        /// <see cref="ExportReportFromDefinition"/> accepts).</param>
+        /// <param name="offset">0-based row index of the first row to return.</param>
+        /// <param name="count">Number of rows to return; 0 returns shape only.</param>
+        /// <param name="includeMaxLength">When true, scans string columns and reports
+        /// <see cref="ReportRowsColumn.MaxObservedLength"/>.</param>
+        /// <param name="culture">"invariant" or "localized".</param>
+        ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition,
+            int offset, int count, bool includeMaxLength, string culture);
+
+        /// <summary>
         /// Saves a report definition to the user's Skyline settings. The definition
         /// must include a <see cref="ReportDefinition.Name"/>.
         /// </summary>
