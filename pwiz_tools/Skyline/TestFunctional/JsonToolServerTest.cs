@@ -867,6 +867,75 @@ namespace pwiz.SkylineTestFunctional
                 JsonToolServer.MaxResponseChars = savedResponseChars;
             }
 
+            // Resume round-trip: when the row-cap drops trailing rows, calling again
+            // with offset = TruncatedAt must return the row that would have been at that
+            // position in an uncapped result. Catches off-by-one in TruncatedAt.
+            int savedResponseCharsForResume = JsonToolServer.MaxResponseChars;
+            try
+            {
+                JsonToolServer.MaxResponseChars = 200;
+                var firstHalf = server.GetReportRows(REPORT_AREAS, 0, totalRows, null, null, false, culture);
+                Assert.IsTrue(firstHalf.Window.Truncated);
+                Assert.IsNotNull(firstHalf.TruncatedAt);
+                int resumeOffset = firstHalf.TruncatedAt.Value;
+                // Restore the cap so the resume call doesn't trim again -- we want the row
+                // at resumeOffset, not a re-truncated window.
+                JsonToolServer.MaxResponseChars = savedResponseCharsForResume;
+                var resumed = server.GetReportRows(REPORT_AREAS, resumeOffset,
+                    totalRows - resumeOffset, null, null, false, culture);
+                Assert.IsTrue(resumed.Rows.Length > 0,
+                    @"Resume at TruncatedAt={0} should return at least one row (totalRows={1})",
+                    resumeOffset, totalRows);
+                CollectionAssert.AreEqual(oversize.Rows[resumeOffset], resumed.Rows[0],
+                    @"Resume row {0} must match the uncapped row at the same offset", resumeOffset);
+            }
+            finally
+            {
+                JsonToolServer.MaxResponseChars = savedResponseCharsForResume;
+            }
+
+            // Entity-wrapper text columns (type "other") populate max_observed_length too.
+            // Regression: an earlier version scanned only typeof(string), so named reports
+            // whose text columns are entity wrappers reported null on every column.
+            var withLengthsWide = server.GetReportRows(REPORT_AREAS, 0, 0, null, null, true, culture);
+            var otherTextCols = withLengthsWide.Columns.Where(c => c.Type == @"other").ToArray();
+            Assert.IsTrue(otherTextCols.Length > 0,
+                @"Report '{0}' should include at least one entity-wrapper column for this regression check",
+                REPORT_AREAS);
+            foreach (var col in otherTextCols)
+            {
+                Assert.IsNotNull(col.MaxObservedLength,
+                    @"Entity-wrapper column {0} should have max_observed_length when include_max_length=true",
+                    col.Name);
+                Assert.IsTrue(col.MaxObservedLength.Value > 0,
+                    @"Entity-wrapper column {0} should have positive max_observed_length", col.Name);
+            }
+
+            // max_length_sampled = true branch: when total rows exceed the sample cap,
+            // text columns are flagged as sampled (lower-bound estimate). Drive the path
+            // by lowering MaxLengthSampleRows so a tiny report still trips the cap.
+            int savedSampleRows = JsonToolServer.MaxLengthSampleRows;
+            try
+            {
+                JsonToolServer.MaxLengthSampleRows = 1;
+                var sampled = server.GetReportRows(REPORT_AREAS, 0, 0, null, null, true, culture);
+                var sampledTextCols = sampled.Columns
+                    .Where(c => (c.Type == @"string" || c.Type == @"other") && c.MaxObservedLength != null)
+                    .ToArray();
+                Assert.IsTrue(sampledTextCols.Length > 0,
+                    @"Lowering MaxLengthSampleRows to 1 should still produce text columns with lengths");
+                foreach (var col in sampledTextCols)
+                {
+                    Assert.AreEqual(true, col.MaxLengthSampled,
+                        @"With totalRows ({0}) > MaxLengthSampleRows (1), column {1} should be flagged sampled=true",
+                        sampled.TotalRows, col.Name);
+                }
+            }
+            finally
+            {
+                JsonToolServer.MaxLengthSampleRows = savedSampleRows;
+            }
+
             // count cap from ValidateWindow: requests beyond the max are rejected.
             AssertEx.ThrowsException<ArgumentException>(() =>
                 server.GetReportRows(REPORT_AREAS, 0, JsonToolServer.MaxRowCount + 1,
