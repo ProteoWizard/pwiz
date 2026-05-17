@@ -942,7 +942,7 @@ Old Localized:分子属于分子列表并包含母离子。</comment>
   </data>
   <data name="MoleculeListAbundance">
     <value>一个表示分子列表丰度的数值。
-通常为转换峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。</value>
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。</value>
     <comment>Needs Review:English text changed
 Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings
 Current English:A number representing the abundance of the molecule list.
@@ -954,12 +954,12 @@ Old Localized:代表分子列表丰度的数值，该数值根据分子定量设
   </data>
   <data name="MoleculeListAbundanceRaw">
     <value>一个表示分子列表丰度的数值。
-通常为转换峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
 在受缺失数据影响的重复测定之间的比较时仍有效。</value>
   </data>
   <data name="MoleculeListAbundanceStrict">
     <value>一个表示分子列表丰度的数值。
-通常为转换峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
 在受缺失数据影响的重复测定之间的比较时无效。</value>
     <comment>Needs Review:English text changed
 Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
@@ -1339,7 +1339,7 @@ Old Localized:分子列表下的离子对面积归一化总和。这些面积根
   </data>
   <data name="ProteinAbundance">
     <value>一个表示分子列表丰度的数值。
-通常为转换峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。</value>
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。</value>
     <comment>Needs Review:English text changed
 Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
 Current English:A number representing the abundance of the molecule list.
@@ -1351,12 +1351,12 @@ Old Localized:代表蛋白质列表丰度的数值，该数值根据肽段定量
   </data>
   <data name="ProteinAbundanceRaw">
     <value>一个表示分子列表丰度的数值。
-通常为转换峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
 在受缺失数据影响的重复测定之间的比较时仍有效。</value>
   </data>
   <data name="ProteinAbundanceStrict">
     <value>一个表示分子列表丰度的数值。
-通常为转换峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
 在受缺失数据影响的重复测定之间的比较时无效。</value>
     <comment>Needs Review:English text changed
 Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
