@@ -70,7 +70,9 @@ namespace SkylineTool
     /// exposed so the contract is stable across refactors.</para>
     ///
     /// <para><see cref="MaxObservedLength"/> and <see cref="MaxLengthSampled"/>
-    /// are set only on string columns and only when the caller requested
+    /// are set only on text-valued columns (<see cref="Type"/> equal to "string"
+    /// or "other" -- the latter covers entity wrappers like Peptide / Replicate
+    /// that serialize to text) and only when the caller requested
     /// include_max_length. <see cref="MaxLengthSampled"/> is set to true only
     /// when the scan stopped at the sample cap (the value is a lower-bound
     /// estimate); it is null when the value is exact.</para>

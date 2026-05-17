@@ -781,9 +781,14 @@ namespace pwiz.SkylineTestFunctional
                     @"With total_rows={0} <= sample limit, max_length_sampled should be omitted (exact)",
                     withLengths.TotalRows);
             }
-            foreach (var col in withLengths.Columns.Where(c => c.Type != @"string"))
+            // Numeric / boolean / datetime columns omit max_observed_length. Text
+            // columns -- both raw strings and entity wrappers reported as "other" --
+            // are scanned, so they may carry a length.
+            foreach (var col in withLengths.Columns.Where(c => c.Type != @"string" && c.Type != @"other"))
             {
-                Assert.IsNull(col.MaxObservedLength, @"Non-string column {0} should omit max_observed_length", col.Name);
+                Assert.IsNull(col.MaxObservedLength,
+                    @"Non-text column {0} (type {1}) should omit max_observed_length",
+                    col.Name, col.Type);
             }
 
             // Filter on get_report_rows reduces returned rows and the total reflects the

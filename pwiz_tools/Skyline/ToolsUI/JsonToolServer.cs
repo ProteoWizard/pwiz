@@ -1434,9 +1434,19 @@ namespace pwiz.Skyline.ToolsUI
             };
 
             var maxLengths = new int?[columnCount];
-            bool[] isStringCol = new bool[columnCount];
+            // Compute column types up front so the scan can target every column whose
+            // serialized value is text-shaped. That covers both raw strings and the
+            // entity wrappers (Peptide, Protein, Replicate, ModifiedSequence, ...) that
+            // map to the "other" bucket -- in named reports the latter are the common
+            // case, so restricting the scan to typeof(string) would silently produce
+            // null max_observed_length on most useful reports.
+            string[] columnTypes = new string[columnCount];
+            bool[] isTextCol = new bool[columnCount];
             for (int i = 0; i < columnCount; i++)
-                isStringCol[i] = allProperties[columnIndices[i]].PropertyType == typeof(string);
+            {
+                columnTypes[i] = GetSimpleTypeName(allProperties[columnIndices[i]].PropertyType);
+                isTextCol[i] = columnTypes[i] == @"string" || columnTypes[i] == @"other";
+            }
 
             // Shape-only fast path: when there is no window and no length scan to perform,
             // skip per-row work entirely. For non-streaming (BindingListSource) we already
@@ -1472,7 +1482,7 @@ namespace pwiz.Skyline.ToolsUI
                             string value = dsvWriter.GetFormattedValue(enumerator.Current, pd);
                             if (inWindow)
                                 row[c] = TruncateCell(value);
-                            if (scanThisRow && isStringCol[c] && value != null)
+                            if (scanThisRow && isTextCol[c] && value != null)
                             {
                                 int len = value.Length;
                                 if (maxLengths[c] == null || len > maxLengths[c].Value)
@@ -1508,9 +1518,9 @@ namespace pwiz.Skyline.ToolsUI
                 resultColumns[i] = new ReportRowsColumn
                 {
                     Name = pd.DisplayName,
-                    Type = GetSimpleTypeName(pd.PropertyType),
+                    Type = columnTypes[i],
                 };
-                if (includeMaxLength && isStringCol[i])
+                if (includeMaxLength && isTextCol[i])
                 {
                     resultColumns[i].MaxObservedLength = maxLengths[i] ?? 0;
                     // Per the spec: max_length_sampled is set to true only when the
