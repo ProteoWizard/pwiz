@@ -767,6 +767,6 @@
     <value>正在计算…</value>
   </data>
   <data name="GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate" xml:space="preserve">
-    <value>范例重复测定</value>
+    <value>重复测定示例</value>
   </data>
 </root>

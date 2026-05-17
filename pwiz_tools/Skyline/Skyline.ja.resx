@@ -423,6 +423,10 @@
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
     <value>開始(&amp;T)...</value>
+    <comment>Needs Review:English text changed
+Old English:Sta&amp;rt...
+Current English:S&amp;tart...
+Old Localized:開始(&amp;R)...</comment>
   </data>
   <data name="newMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>

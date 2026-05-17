@@ -548,7 +548,7 @@
     <value>スペクトルの読み込みに失敗しました。ライブラリが破損している可能性があります。</value>
   </data>
   <data name="GraphSpectrum_ToolTip_mz">
-    <value>観測されたm/z：</value>
+    <value>実測m/z：</value>
   </data>
   <data name="GraphSpectrum_ToolTip_Intensity">
     <value>強度：</value>
@@ -755,7 +755,7 @@
     <value>定量クロマトグラムがありません</value>
   </data>
   <data name="ToolTipImplementation_RenderTip_Calculated_Mass" xml:space="preserve">
-    <value>イオンm/z（演算後）</value>
+    <value>イオンm/z（計算値）</value>
   </data>
   <data name="GraphChromatogram_SetRetentionTimeIdIndicators_Libraries_are_still_loading" xml:space="preserve">
     <value>ライブラリはまだ読み込み中です</value>
@@ -767,6 +767,6 @@
     <value>計算中...</value>
   </data>
   <data name="GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate" xml:space="preserve">
-    <value>例示的な繰り返し測定</value>
+    <value>代表繰り返し測定</value>
   </data>
 </root>
