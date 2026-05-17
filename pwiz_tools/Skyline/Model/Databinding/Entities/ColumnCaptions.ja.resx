@@ -892,7 +892,7 @@
     <value>分子リスト存在量（メッセージ）</value>
   </data>
   <data name="MoleculeListAbundanceRaw">
-    <value>Molecule List Abundance Raw</value>
+    <value>分子リスト存在量生データ</value>
   </data>
   <data name="MoleculeListAbundanceStrict">
     <value>分子リスト存在量（厳密なデータ）</value>
@@ -1234,7 +1234,7 @@
     <value>タンパク質存在量（メッセージ）</value>
   </data>
   <data name="ProteinAbundanceRaw">
-    <value>Protein Abundance Raw</value>
+    <value>タンパク質存在量の生データ</value>
   </data>
   <data name="ProteinAbundanceStrict">
     <value>タンパク質存在量（厳密なデータ）</value>

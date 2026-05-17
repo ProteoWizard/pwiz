@@ -927,7 +927,7 @@ Unavailable when missing data impacts comparisons between replicates.
 Old Localized:[分子定量化] 設定で指定された「正規化メソッド」に従って算出された、分子リストの存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
-    <value>旧仕様：代わりにMolecule List Abundance Rawを使用してください。</value>
+    <value>旧仕様：代わりに分子リスト存在量生データを使用してください。</value>
     <comment>Needs Review:English text changed
 Old English:Average of the normalized areas of the transitions under the Molecule List.
 The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
@@ -935,7 +935,7 @@ Current English:Obsolete: Use Molecule List Abundance Raw instead.
 Old Localized:分子リストの下にあるトランジションの平均正規化面積。この面積は [分子定量化] 設定で指定された正規化メソッドに従って正規化されます。</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
-    <value>旧仕様：Molecule List Abundance Rawとトランジションの数の積に同じ。</value>
+    <value>旧仕様：分子リスト存在量生データとトランジションの数の積に同じ。</value>
     <comment>Needs Review:English text changed
 Old English:Sum of the normalized areas of the transitions under the Molecule List.
 The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings
@@ -1311,7 +1311,7 @@ Unavailable when missing data impacts comparisons between replicates.
 Old Localized:[ペプチド定量化] 設定で指定された「正規化メソッド」に従って算出された、タンパク質の存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</comment>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>旧仕様：代わりにProtein Abundance Rawを使用してください。</value>
+    <value>旧仕様：代わりにタンパク質存在量の生データを使用してください。</value>
     <comment>Needs Review:English text changed
 Old English:Average of the normalized areas of the transitions under the Protein.
 The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
@@ -1319,7 +1319,7 @@ Current English:Obsolete: Use Protein Abundance Raw instead.
 Old Localized:[タンパク質] の下にあるトランジションの平均正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</comment>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>旧仕様：Protein Abundance Rawとトランジションの数の積に同じ。</value>
+    <value>旧仕様：タンパク質存在量の生データとトランジションの数の積に同じ。</value>
     <comment>Needs Review:English text changed
 Old English:Sum of the normalized areas of the transitions under the Protein.
 The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
