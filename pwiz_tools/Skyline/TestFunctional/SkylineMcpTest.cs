@@ -590,7 +590,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             var autoContent = (JArray)autoResponse["result"]?["content"];
             AssertEx.AreEqual("text", (string)autoContent[0]["type"]);
             string autoText = (string)autoContent[0]["text"];
-            AssertEx.Contains(autoText, "exceeded inline cap");
+            AssertEx.Contains(autoText, JsonToolConstants.MSG_INLINE_CAP_EXCEEDED);
             string fallbackPath = ExtractPathAfter(autoText, "Saved to: ");
             Assert.IsTrue(File.Exists(fallbackPath), "Cap-fallback target should exist on disk: " + fallbackPath);
             AssertPngSignature(File.ReadAllBytes(fallbackPath));
@@ -614,7 +614,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             Assert.IsTrue((bool)(inlineResult["isError"] ?? false),
                 "inline-over-cap should set isError=true on the tool result");
             string inlineErrText = (string)inlineResult["content"]?[0]?["text"];
-            AssertEx.Contains(inlineErrText, "exceeded inline cap");
+            AssertEx.Contains(inlineErrText, JsonToolConstants.MSG_INLINE_CAP_EXCEEDED);
 
             // Close the graph so the test's GC-leak check sees no graph-controller
             // subscription holding SkylineWindow alive.

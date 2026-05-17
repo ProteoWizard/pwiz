@@ -559,9 +559,7 @@ public static class SkylineTools
     {
         return InvokeContent(connection => InvokeImage(connection, returnFormat, filePath,
             bytesCall: c => c.GetGraphImageBytes(graphId),
-            fileCall: (c, fp) => c.GetGraphImage(graphId, fp),
-            tool: "graph",
-            successPrefix: "Graph image"));
+            fileCall: (c, fp) => SavedToPath("Graph image", c.GetGraphImage(graphId, fp))));
     }
 
     [McpServerTool(Name = "skyline_get_form_image"),
@@ -578,9 +576,17 @@ public static class SkylineTools
     {
         return InvokeContent(connection => InvokeImage(connection, returnFormat, filePath,
             bytesCall: c => c.GetFormImageBytes(formId),
-            fileCall: (c, fp) => c.GetFormImage(formId, fp),
-            tool: "form",
-            successPrefix: "Form image"));
+            fileCall: (c, fp) =>
+            {
+                string result = c.GetFormImage(formId, fp);
+                // Older Skyline returns screen-capture denial / desktop-unavailable
+                // messages here as plain strings (with a leading "Screen capture"
+                // prefix) instead of a file path. Pass those through verbatim so
+                // the response shape matches the legacy file-based behavior.
+                if (IsScreenCaptureDenial(result))
+                    return TextContent(result, ignoredFilePath: null);
+                return SavedToPath("Form image", result);
+            }));
     }
 
     [McpServerTool(Name = "skyline_get_document_settings"),
@@ -676,11 +682,15 @@ public static class SkylineTools
             {
                 var metadata = c.GetTutorialImage(name, imageFilename, language, fp);
                 if (metadata == null)
-                    throw new InvalidOperationException($"Image not found: {imageFilename} in tutorial {name}");
-                return metadata.FilePath;
-            },
-            tool: "tutorial",
-            successPrefix: "Image downloaded"));
+                {
+                    // Match the legacy non-error response so callers that ask for
+                    // a not-yet-supported tutorial image get a TextContentBlock,
+                    // not a tool error.
+                    return TextContent($"Image not found: {imageFilename} in tutorial {name}",
+                        ignoredFilePath: null);
+                }
+                return SavedToPath("Image downloaded", metadata.FilePath);
+            }));
     }
 
     [McpServerTool(Name = "skyline_list_installed"),
@@ -986,6 +996,11 @@ public static class SkylineTools
     private const int DEFAULT_INLINE_IMAGE_CAP_BYTES = 500_000;
     private const string ENV_INLINE_IMAGE_CAP_BYTES = "SKYLINE_MCP_INLINE_IMAGE_CAP_BYTES";
 
+    // Recognized prefix for screen-capture denial / desktop-unavailable
+    // responses returned by the legacy file-based GetFormImage path. These
+    // are not paths and must not be wrapped in "saved to: ..." text.
+    private const string SCREEN_CAPTURE_PREFIX = "Screen capture";
+
     private static int GetInlineImageCapBytes()
     {
         string raw = Environment.GetEnvironmentVariable(ENV_INLINE_IMAGE_CAP_BYTES);
@@ -994,30 +1009,37 @@ public static class SkylineTools
         return DEFAULT_INLINE_IMAGE_CAP_BYTES;
     }
 
+    private static bool IsScreenCaptureDenial(string result)
+    {
+        return !string.IsNullOrEmpty(result) &&
+               result.StartsWith(SCREEN_CAPTURE_PREFIX, StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// Shared image-tool body. Handles returnFormat dispatch, inline cap fallback,
     /// version-skew fallback (older Skyline lacking the *Bytes JSON-RPC method),
     /// and the per-mode response shapes:
     /// <list type="bullet">
-    ///   <item>auto: bytes call; if too large or Skyline too old, fall back to the file call and return a TextContentBlock with the file path</item>
+    ///   <item>auto: bytes call; if too large or Skyline too old, fall back to the file call</item>
     ///   <item>inline: bytes call; error response if cap exceeded or Skyline too old</item>
-    ///   <item>file: file call; TextContentBlock with file path (existing behavior)</item>
+    ///   <item>file: file call delegate returns the formatted CallToolResult directly</item>
     /// </list>
+    /// The bytes path also honors <see cref="ImageBytesMetadata.Message"/> - when
+    /// the server has a structured non-image response (e.g. permission denial),
+    /// emit it as text content without flagging the call as an error.
     /// </summary>
     private static CallToolResult InvokeImage(
         SkylineConnection connection,
         string returnFormat,
         string filePath,
         Func<SkylineConnection, ImageBytesMetadata> bytesCall,
-        Func<SkylineConnection, string, string> fileCall,
-        string tool,
-        string successPrefix)
+        Func<SkylineConnection, string, CallToolResult> fileCall)
     {
         returnFormat = string.IsNullOrEmpty(returnFormat) ? RETURN_AUTO : returnFormat.ToLowerInvariant();
         bool filePathProvided = !string.IsNullOrEmpty(filePath);
 
         if (returnFormat == RETURN_FILE)
-            return WriteFileAndDescribe(fileCall(connection, filePath), successPrefix, ignoredFilePath: null);
+            return fileCall(connection, filePath);
 
         if (returnFormat != RETURN_INLINE && returnFormat != RETURN_AUTO)
         {
@@ -1042,14 +1064,21 @@ public static class SkylineTools
                     $"Inline image return is not supported by the connected Skyline. " +
                     $"Retry with returnFormat='auto' or 'file'. ({ex.Message})", ex);
             }
-            string oldPath = fileCall(connection, filePath);
-            return TextContent(
-                $"{successPrefix} saved to: {oldPath}\nInline image not available on this Skyline version; saved to file.\nUse the Read tool to view.",
-                ignoredFilePath: null);
+            return fileCall(connection, filePath);
         }
 
-        if (bytes == null || bytes.Data == null || bytes.Data.Length == 0)
-            return TextContent($"No image data returned for {tool}.", null);
+        if (bytes == null)
+            return TextContent("No image data returned.", null);
+
+        // Structured non-image response (denial / desktop unavailable). Treated
+        // as a normal text result so callers see the same shape as file mode.
+        if (bytes.Data == null || bytes.Data.Length == 0)
+        {
+            string message = string.IsNullOrEmpty(bytes.Message)
+                ? "No image data returned."
+                : bytes.Message;
+            return TextContent(message, null);
+        }
 
         int cap = GetInlineImageCapBytes();
         bool overCap = bytes.Data.Length > cap;
@@ -1057,7 +1086,7 @@ public static class SkylineTools
         if (overCap && returnFormat == RETURN_INLINE)
         {
             throw new InvalidOperationException(
-                $"Image exceeded inline cap ({bytes.Data.Length} bytes > {cap} bytes). " +
+                $"Image {JsonToolConstants.MSG_INLINE_CAP_EXCEEDED} ({bytes.Data.Length} bytes > {cap} bytes). " +
                 $"Retry with returnFormat='auto' or 'file'.");
         }
 
@@ -1068,7 +1097,7 @@ public static class SkylineTools
             string target = filePathProvided ? filePath : bytes.FilePath;
             WriteBytesToDisk(bytes.Data, target);
             return TextContent(
-                $"{successPrefix} exceeded inline cap ({bytes.Data.Length} bytes > {cap} bytes). " +
+                $"Image {JsonToolConstants.MSG_INLINE_CAP_EXCEEDED} ({bytes.Data.Length} bytes > {cap} bytes). " +
                 $"Saved to: {NormalizePath(target)}\nUse the Read tool to view.",
                 ignoredFilePath: null);
         }
@@ -1093,9 +1122,9 @@ public static class SkylineTools
         return new CallToolResult { Content = content };
     }
 
-    private static CallToolResult WriteFileAndDescribe(string filePath, string successPrefix, string ignoredFilePath)
+    private static CallToolResult SavedToPath(string successPrefix, string filePath)
     {
-        return TextContent($"{successPrefix} saved to: {filePath}\n\nUse the Read tool to view this image.", ignoredFilePath);
+        return TextContent($"{successPrefix} saved to: {filePath}\n\nUse the Read tool to view this image.", null);
     }
 
     private static CallToolResult TextContent(string text, string ignoredFilePath)

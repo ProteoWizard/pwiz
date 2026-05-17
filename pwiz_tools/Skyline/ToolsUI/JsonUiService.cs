@@ -347,10 +347,11 @@ namespace pwiz.Skyline.ToolsUI
                 var bitmap = CaptureFormBitmap(formId, out var form, out var denial);
                 if (denial != null)
                 {
-                    // Permission denial / desktop unavailable: throw so the caller
-                    // sees the same text it would have seen from the file-based path.
-                    // The wrapper layer converts this into a normal text response.
-                    throw new InvalidOperationException(denial);
+                    // Permission denial / desktop unavailable: return a structured
+                    // Message instead of bytes. The wrapper emits Message as plain
+                    // text content (no error flag) so the response shape matches
+                    // what the legacy file-based path returned for the same condition.
+                    return new ImageBytesMetadata { Message = denial };
                 }
                 using (bitmap)
                 {
