@@ -1053,11 +1053,14 @@ public static class SkylineTools
         {
             bytes = bytesCall(connection);
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("Unknown method:"))
+        catch (Exception ex) when (IsMethodNotFound(ex))
         {
             // Version skew: the connected Skyline does not expose the bytes
-            // method yet. inline surfaces this as an explicit error so the
-            // caller knows to retry with auto or file; auto silently falls back.
+            // method yet (JSON-RPC ERROR_METHOD_NOT_FOUND). inline surfaces this
+            // as an explicit error so the caller knows to retry with auto or file;
+            // auto silently falls back. Matching on the typed error code (rather
+            // than the message text) keeps unrelated InvalidOperationExceptions
+            // from accidentally triggering the fallback.
             if (returnFormat == RETURN_INLINE)
             {
                 throw new InvalidOperationException(
@@ -1095,7 +1098,21 @@ public static class SkylineTools
             // auto fallback: write bytes to the server-suggested path (or the
             // caller-provided override) and return a TextContentBlock describing the file.
             string target = filePathProvided ? filePath : bytes.FilePath;
-            WriteBytesToDisk(bytes.Data, target);
+            try
+            {
+                WriteBytesToDisk(bytes.Data, target);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                // Disk-full / ACL denial / read-only target on the WRAPPER side.
+                // InvokeContent maps bare IOException to "Skyline disconnected",
+                // which would mislead the caller, so surface a tool error here
+                // that names the actual write failure and the attempted target.
+                return ErrorResult(
+                    $"Image {JsonToolConstants.MSG_INLINE_CAP_EXCEEDED} ({bytes.Data.Length} bytes > {cap} bytes), " +
+                    $"but writing the fallback file failed: {ex.Message} (target: {NormalizePath(target)}). " +
+                    "Retry with returnFormat='file' and an explicit filePath, or free up disk space.");
+            }
             return TextContent(
                 $"Image {JsonToolConstants.MSG_INLINE_CAP_EXCEEDED} ({bytes.Data.Length} bytes > {cap} bytes). " +
                 $"Saved to: {NormalizePath(target)}\nUse the Read tool to view.",
@@ -1178,8 +1195,11 @@ public static class SkylineTools
                        "The Skyline process may have exited or been restarted. Try again.";
             }
 
-            // Enrich version mismatch errors with Skyline and MCP server identity
-            if (ex is InvalidOperationException && ex.Message.Contains("Unknown method:"))
+            // Enrich version mismatch errors with Skyline and MCP server identity.
+            // Match on the JSON-RPC error code (-32601 method-not-found) instead of
+            // the message text so unrelated InvalidOperationExceptions whose messages
+            // happen to mention "Unknown method:" cannot trigger the version-mismatch path.
+            if (IsMethodNotFound(ex))
             {
                 string skylineId = connection?.SkylineVersion;
                 if (!string.IsNullOrEmpty(skylineId))
@@ -1194,6 +1214,11 @@ public static class SkylineTools
                 ? $"Error: {ex}"
                 : $"Error: {ex.Message}";
         }
+    }
+
+    private static bool IsMethodNotFound(Exception ex)
+    {
+        return ex is JsonRpcException rpc && rpc.Code == JsonToolConstants.ERROR_METHOD_NOT_FOUND;
     }
 
     /// <summary>
@@ -1229,7 +1254,7 @@ public static class SkylineTools
                                    "The Skyline process may have exited or been restarted. Try again.");
             }
 
-            if (ex is InvalidOperationException && ex.Message.Contains("Unknown method:"))
+            if (IsMethodNotFound(ex))
             {
                 string skylineId = connection?.SkylineVersion;
                 if (!string.IsNullOrEmpty(skylineId))

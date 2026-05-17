@@ -20,8 +20,30 @@
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
+using System;
+
 namespace SkylineTool
 {
+    /// <summary>
+    /// JSON-RPC 2.0 error surfaced by <see cref="SkylineJsonToolClient"/> for any
+    /// server response carrying an <c>error</c> envelope. The numeric
+    /// <see cref="Code"/> matches the JSON-RPC <c>error.code</c> field
+    /// (see <see cref="JsonToolConstants"/> for the well-known values like
+    /// <see cref="JsonToolConstants.ERROR_METHOD_NOT_FOUND"/>) so callers can
+    /// branch on the structured code instead of grepping the message string.
+    /// Derives from <see cref="InvalidOperationException"/> for back-compat with
+    /// existing catch sites that match on the legacy base type.
+    /// </summary>
+    public class JsonRpcException : InvalidOperationException
+    {
+        public int Code { get; }
+
+        public JsonRpcException(int code, string message) : base(message)
+        {
+            Code = code;
+        }
+    }
+
     // POCO models for typed IJsonToolService parameters and return values.
     // Serialized as JSON over the named pipe: PascalCase properties map to
     // snake_case JSON via naming policies (Newtonsoft SnakeCaseNamingStrategy

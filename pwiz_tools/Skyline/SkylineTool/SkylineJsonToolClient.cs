@@ -306,7 +306,11 @@ namespace SkylineTool
                     string message = errorElement.TryGetProperty(nameof(JSON_RPC.message), out var msgElement)
                         ? msgElement.GetString()
                         : "Unknown error from Skyline";
-                    throw new InvalidOperationException(message);
+                    int code = errorElement.TryGetProperty(nameof(JSON_RPC.code), out var codeElement) &&
+                               codeElement.ValueKind == JsonValueKind.Number
+                        ? codeElement.GetInt32()
+                        : JsonToolConstants.ERROR_INTERNAL;
+                    throw new JsonRpcException(code, message);
                 }
 
                 if (root.TryGetProperty(nameof(JSON_RPC.result), out var resultElement))

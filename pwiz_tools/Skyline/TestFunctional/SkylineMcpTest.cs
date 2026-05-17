@@ -439,6 +439,63 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                     JsonToolConstants.GetConnectionFilePath(server.PipeName));
                 AssertEx.Contains(connectionJson, Install.BareVersion);
             }
+
+            // The typed-exception path: invoking a missing method via the
+            // typed client must throw JsonRpcException with the structured
+            // ERROR_METHOD_NOT_FOUND code. Wrapper version-skew detection
+            // relies on this code, not the message text - see
+            // SkylineTools.IsMethodNotFound. Without the typed code, an
+            // unrelated InvalidOperationException whose message happens to
+            // contain "Unknown method:" could silently trigger fallback.
+            // Runs AFTER the using-block above closes the first pipe, since
+            // the JsonToolServer is single-instance and a second concurrent
+            // connection would block on the semaphore.
+            AssertEx.ThrowsException<JsonRpcException>(
+                () => SendMissingMethodCall(server.PipeName),
+                thrown =>
+                {
+                    AssertEx.AreEqual(JsonToolConstants.ERROR_METHOD_NOT_FOUND, thrown.Code);
+                    AssertEx.Contains(thrown.Message, @"GetFutureFeature");
+                });
+        }
+
+        /// <summary>
+        /// Sends a raw JSON-RPC request for a non-existent method and rethrows
+        /// the resulting <see cref="JsonRpcException"/> the same way
+        /// <see cref="SkylineJsonToolClient.Call"/> would. Lets us assert the
+        /// typed-error path without depending on a real bytes call shape.
+        /// </summary>
+        private static void SendMissingMethodCall(string pipeName)
+        {
+            using var pipe = new NamedPipeClientStream(@".", pipeName, PipeDirection.InOut);
+            pipe.Connect(5000);
+            pipe.ReadMode = PipeTransmissionMode.Message;
+
+            string request = new JObject
+            {
+                [nameof(JSON_RPC.jsonrpc)] = JsonToolConstants.JSONRPC_VERSION,
+                [nameof(JSON_RPC.method)] = @"GetFutureFeature",
+                [nameof(JSON_RPC.id)] = 1
+            }.ToString();
+            byte[] requestBytes = Encoding.UTF8.GetBytes(request);
+            pipe.Write(requestBytes, 0, requestBytes.Length);
+            pipe.Flush();
+            pipe.WaitForPipeDrain();
+
+            var ms = new MemoryStream();
+            do
+            {
+                var buffer = new byte[65536];
+                int count = pipe.Read(buffer, 0, buffer.Length);
+                if (count == 0) break;
+                ms.Write(buffer, 0, count);
+            } while (!pipe.IsMessageComplete);
+
+            var response = JObject.Parse(Encoding.UTF8.GetString(ms.ToArray()));
+            var error = response[nameof(JSON_RPC.error)];
+            int code = (int)error[nameof(JSON_RPC.code)];
+            string message = (string)error[nameof(JSON_RPC.message)];
+            throw new JsonRpcException(code, message);
         }
 
         /// <summary>
@@ -462,7 +519,23 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
             WaitForGraphs();
+            try
+            {
+                RunInlineAndFileModeAssertions(mcpProcess, server);
+            }
+            finally
+            {
+                // Close the opened graph even if an assertion fails so the test's
+                // GC-leak check sees no graph-controller subscription holding
+                // SkylineWindow alive. Without this, an assertion failure would
+                // mask the real error behind a GC-LEAK failure.
+                RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
+                WaitForGraphs();
+            }
+        }
 
+        private void RunInlineAndFileModeAssertions(Process mcpProcess, JsonToolServer server)
+        {
             // ValidateMcpProtocol (run earlier in the same scenario) has already
             // performed MCP initialize / initialized. We continue using the same
             // subprocess and tail the ID space forward to avoid re-initializing
@@ -542,11 +615,6 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             // deserializes correctly across the Newtonsoft (server) and
             // System.Text.Json (client) boundary.
             ValidateGetGraphImageBytesPipe(server, graphId);
-
-            // Close the graph we opened so the test's GC-leak check sees no
-            // graph-controller subscription holding SkylineWindow alive.
-            RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
-            WaitForGraphs();
         }
 
         /// <summary>
@@ -563,7 +631,22 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
             WaitForGraphs();
+            try
+            {
+                RunCapFallbackAssertions(mcpProcess);
+            }
+            finally
+            {
+                // Same rationale as ValidateImageInlineAndFileModes: close the
+                // graph so the GC-leak check stays clean even if an assertion
+                // fails above and the real failure isn't masked.
+                RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
+                WaitForGraphs();
+            }
+        }
 
+        private void RunCapFallbackAssertions(Process mcpProcess)
+        {
             var stdin = new StreamWriter(mcpProcess.StandardInput.BaseStream, new UTF8Encoding(false))
                 { AutoFlush = false };
             var stdout = mcpProcess.StandardOutput;
@@ -615,11 +698,6 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 "inline-over-cap should set isError=true on the tool result");
             string inlineErrText = (string)inlineResult["content"]?[0]?["text"];
             AssertEx.Contains(inlineErrText, JsonToolConstants.MSG_INLINE_CAP_EXCEEDED);
-
-            // Close the graph so the test's GC-leak check sees no graph-controller
-            // subscription holding SkylineWindow alive.
-            RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
-            WaitForGraphs();
         }
 
         /// <summary>
