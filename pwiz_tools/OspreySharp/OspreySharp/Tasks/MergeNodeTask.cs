@@ -54,18 +54,50 @@ namespace pwiz.OspreySharp.Tasks
 
         public override string Name => @"MergeNode";
 
+        // Phase B resume surface. Reads each file's reconciled
+        // .scores.parquet, writes the .2nd-pass.fdr_scores.bin
+        // sidecars (only when protein-FDR is enabled) and the
+        // .blib output. ValidityKey adds the reconciliation hash
+        // because the reconciled parquet is read.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+                yield return ParquetScoreCache.GetScoresPath(input);
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
+                yield return ctx.Config.OutputBlib;
+            if (ctx.Config.ProteinFdr.HasValue && ctx.Config.InputFiles != null)
+            {
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return FdrScoresSidecar.Pass2Path(input);
+            }
+        }
+
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx)
+                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+        }
+
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;
+            // Mid-Run crash safety: see FirstJoinTask.Run for rationale.
+            foreach (var output in Outputs(ctx))
+                TaskValiditySidecar.Delete(output, Name);
             var config = ctx.Config;
             // perFileEntries comes from PerFileRescoreTask -- it owns
             // the post-rescore version (mutated in place; or the
             // unchanged upstream reference when planning was skipped).
-            var perFileEntries = ctx.GetTask<PerFileRescoreTask>().GetPerFileEntries();
+            var perFileEntries = ctx.GetTask<PerFileRescoreTask>().GetPerFileEntries(ctx);
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
-            var fullLibrary = perFileScoring.GetFullLibrary();
-            var libraryById = perFileScoring.GetLibraryById();
-            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths();
+            var fullLibrary = perFileScoring.GetFullLibrary(ctx);
+            var libraryById = perFileScoring.GetLibraryById(ctx);
+            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
 
             // Stage 8: Protein FDR (optional)
             if (config.ProteinFdr.HasValue)
@@ -80,27 +112,55 @@ namespace pwiz.OspreySharp.Tasks
                 // PropagateProteinQvalues. Writing here lets the
                 // OSPREY_STAGE7_PROTEIN_FDR_ONLY early exit (used
                 // by stage6 isolation in Test-Regression) leave the
-                // sidecar on disk for downstream --join-at-pass=2
-                // rehydration. Skipped on --join-at-pass=2 itself
-                // (sidecar already loaded; no need to round-trip).
-                if (!config.ExpectReconciledInput
-                    && perFileParquetPaths.Count > 0)
+                // sidecar on disk for downstream rehydration.
+                // Probe-the-disk per file: only write sidecars that are
+                // not already on disk. The earlier "any sidecar present
+                // -> skip all writes" gate broke partial-resume -- if a
+                // prior run crashed mid-write and left some files with
+                // sidecars and others without, the missing ones would
+                // never get written. Per-file probe preserves the
+                // skip-when-already-present optimization for the
+                // stage7-style "everything loaded from disk" case while
+                // also healing partial state.
+                if (perFileParquetPaths.Count > 0 && config.InputFiles != null)
                 {
                     var inputByFileName = new Dictionary<string, string>();
                     foreach (var inputFile in config.InputFiles)
                         inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
 
+                    // Compute the task validity key once so each per-file
+                    // .MergeNode.osprey.task sidecar carries an identical
+                    // key. AnalysisPipeline.WriteTaskSidecars also writes
+                    // these at end-of-Run, but that step is bypassed when
+                    // OspreyDiagnostics.ExitAfterDump calls Environment.Exit
+                    // (the test-snapshot stage7 / OSPREY_STAGE7_PROTEIN_FDR_ONLY
+                    // path). Writing inline next to each 2nd-pass binary
+                    // makes the per-file resume contract survive that
+                    // early exit, so a downstream run sees a fully
+                    // resume-able boundary file pair (binary + validity
+                    // sidecar) for every file that completed.
+                    string taskValidityKey = ValidityKey(ctx);
+
                     int pass2Failures = 0;
+                    int pass2Written = 0;
+                    int pass2AlreadyOnDisk = 0;
                     foreach (var kvp in perFileEntries)
                     {
                         string fileName = kvp.Key;
                         if (!inputByFileName.TryGetValue(fileName, out string inputFile3))
                             continue;
+                        string pass2Path = FdrScoresSidecar.Pass2Path(inputFile3);
+                        if (File.Exists(pass2Path))
+                        {
+                            pass2AlreadyOnDisk++;
+                            continue;
+                        }
                         try
                         {
                             FdrScoresSidecar.Write(
-                                FdrScoresSidecar.Pass2Path(inputFile3),
+                                pass2Path,
                                 kvp.Value, FdrScoresSidecar.Pass.SecondPass);
+                            pass2Written++;
                         }
                         catch (Exception ex)
                         {
@@ -108,13 +168,33 @@ namespace pwiz.OspreySharp.Tasks
                                 @"Failed to write 2nd-pass FDR sidecar for {0}: {1}",
                                 fileName, ex.Message));
                             pass2Failures++;
+                            continue;
+                        }
+                        // Inline per-file validity sidecar: same content
+                        // the end-of-Run WriteTaskSidecars would produce,
+                        // written immediately so an early Environment.Exit
+                        // does not strand the binary without its metadata.
+                        try
+                        {
+                            TaskValiditySidecar.Write(pass2Path, Name, Program.VERSION,
+                                taskValidityKey,
+                                new[] { ParquetScoreCache.GetScoresPath(inputFile3) });
+                        }
+                        catch (Exception ex)
+                        {
+                            ctx.LogWarning(string.Format(
+                                @"Failed to write {0} sidecar for {1}: {2}",
+                                Name, pass2Path, ex.Message));
                         }
                     }
-                    if (pass2Failures == 0)
+                    if (pass2Failures == 0 && pass2Written > 0)
                     {
                         ctx.LogInfo(string.Format(
-                            @"Wrote 2nd-pass FDR sidecars for {0} file(s)",
-                            perFileEntries.Count));
+                            @"Wrote 2nd-pass FDR sidecars for {0} file(s){1}",
+                            pass2Written,
+                            pass2AlreadyOnDisk > 0
+                                ? string.Format(@" ({0} already on disk; skipped)", pass2AlreadyOnDisk)
+                                : string.Empty));
                     }
                 }
 

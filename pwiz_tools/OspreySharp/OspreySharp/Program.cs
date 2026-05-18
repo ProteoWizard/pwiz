@@ -38,7 +38,7 @@ namespace pwiz.OspreySharp
         // Tracks the Rust Osprey upstream version this OspreySharp port
         // is aligned with. Used in parquet footer metadata; the Phase 3
         // validator requires same major.minor across cross-impl handoff.
-        internal const string VERSION = "26.5.0";
+        internal const string VERSION = "26.6.0";
         internal const string VERSION_STRING = VERSION;
 
         static int Main(string[] args)
@@ -170,17 +170,12 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
 
-                // Stage 6 worker mode (--join-at-pass=1 --no-join)
-                // routes to a separate entry point so the in-process
-                // AnalysisPipeline doesn't have to fan out a fourth
-                // "joinOnly with the modifier inverted" code path.
-                if (config.NoJoin && config.InputScores != null
-                    && config.InputScores.Count > 0)
-                {
-                    return RescoreWorker.Run(config);
-                }
-
-                // Run the pipeline
+                // Single entry point. Stage 6 worker mode
+                // (--join-at-pass=1 --no-join --input-scores) is routed
+                // by AnalysisPipeline.DeriveStartAtTask / DeriveStopAfterTask
+                // to start and stop on PerFileRescoreTask; PerFileScoring's
+                // lazy-rehydrate populates the upstream state from the
+                // boundary files on disk.
                 var pipeline = new AnalysisPipeline();
                 return pipeline.Run(config);
             }
@@ -195,7 +190,7 @@ namespace pwiz.OspreySharp
         /// Parse command-line arguments into an OspreyConfig.
         /// Handles the same flags as the Rust CLI.
         /// </summary>
-        private static OspreyConfig ParseArgs(string[] args)
+        internal static OspreyConfig ParseArgs(string[] args)
         {
             var config = new OspreyConfig();
             var inputFiles = new List<string>();
@@ -326,6 +321,36 @@ namespace pwiz.OspreySharp
 
                     case "--no-prefilter":
                         config.PrefilterEnabled = false;
+                        i++;
+                        break;
+
+                    case "--decoys-in-library":
+                        // Flat boolean override matching Rust osprey's
+                        // --decoys-in-library: flips true, never overrides
+                        // a YAML `true` back to false. When set together
+                        // with --decoy-pairing-manifest, the pipeline runs
+                        // the FDRBench manifest pass first; composition-
+                        // based pairing fills whatever the manifest didn't
+                        // cover. Hard error if no library entries match
+                        // any of DecoyPrefixes / Decoy column / manifest.
+                        config.DecoysInLibrary = true;
+                        i++;
+                        break;
+
+                    case "--decoy-pairing-manifest":
+                        i++;
+                        // Reject a missing value (end of args) AND reject
+                        // the next token starting with `--` (i.e. the next
+                        // option), which would otherwise silently consume
+                        // a sibling flag like --decoys-in-library as the
+                        // manifest path. Both produce the same usage
+                        // error so the user knows the option needs a path.
+                        if (i >= args.Length || args[i].StartsWith(@"--", StringComparison.Ordinal))
+                        {
+                            throw new ArgumentException(
+                                @"--decoy-pairing-manifest requires a path argument.");
+                        }
+                        config.DecoyPairingManifestPath = args[i];
                         i++;
                         break;
 
@@ -529,6 +554,25 @@ namespace pwiz.OspreySharp
                             "Unknown fragment unit '{0}', defaulting to ppm", fragmentUnit));
                         break;
                 }
+            }
+
+            // Warn on the silent no-op combination `--decoy-pairing-manifest`
+            // without `--decoys-in-library`. The manifest path is folded
+            // into SearchParameterHash, so it busts the .scores.parquet
+            // cache, but the pipeline only consults it inside the
+            // library-supplies-decoys branch. Mirrors Rust v26.6.0 (which
+            // is also silent here) -- the warning is a C#-only courtesy
+            // and does not change the hash or the run behaviour, so it
+            // preserves cross-impl byte parity.
+            if (!config.DecoysInLibrary &&
+                !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                LogWarning(
+                    @"--decoy-pairing-manifest is set without --decoys-in-library; " +
+                    @"the manifest will NOT be consulted by the pipeline, but it " +
+                    @"still contributes to the search-parameter hash and will " +
+                    @"invalidate cached .scores.parquet files. Pass " +
+                    @"--decoys-in-library to actually enable library-decoy mode.");
             }
 
             return config;
@@ -778,6 +822,15 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --report <file>               Write TSV report to file");
             Console.Error.WriteLine("    --no-prefilter                Disable coelution signal pre-filter");
             Console.Error.WriteLine("    --write-pin                   Write PIN files for external tools");
+            Console.Error.WriteLine("    --decoys-in-library           Trust decoys already in the spectral library");
+            Console.Error.WriteLine("                                    (DIA-NN Decoy column / decoy_/rev_/DECOY_ protein");
+            Console.Error.WriteLine("                                    prefix / manifest) instead of generating reverse");
+            Console.Error.WriteLine("                                    decoys. Hard error if no decoys are recognised.");
+            Console.Error.WriteLine("    --decoy-pairing-manifest <PATH>");
+            Console.Error.WriteLine("                                  FDRBench 5-column pairing manifest (TSV) used");
+            Console.Error.WriteLine("                                    with --decoys-in-library. Manifest is the");
+            Console.Error.WriteLine("                                    authoritative source for peptide_type and");
+            Console.Error.WriteLine("                                    (optional) clean protein accessions.");
             Console.Error.WriteLine("    --join-at-pass=<N>            HPC: enter the pipeline at a join checkpoint.");
             Console.Error.WriteLine("                                    1 = consume Stage 4 outputs, run Stages 5-8.");
             Console.Error.WriteLine("                                    2 = consume Stage 6 outputs, run Stages 7-8.");

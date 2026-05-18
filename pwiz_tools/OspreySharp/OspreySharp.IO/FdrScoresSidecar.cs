@@ -178,15 +178,15 @@ namespace pwiz.OspreySharp.IO
                 Directory.CreateDirectory(parent);
 
             // Atomic write via FileSaver: write to a unique sibling
-            // temp file (allocated by Win32 GetTempFileName so parallel
-            // writers can never collide on the same temp path) and
-            // promote it to the destination on Commit. On exception,
-            // the using-block disposes FileSaver which deletes the
-            // temp without touching the destination. The FileStream is
+            // temp file (allocated by Path.GetRandomFileName +
+            // FileStream.CreateNew, so parallel writers retry past
+            // any astronomically-rare name collision) and promote it
+            // to the destination on Commit. On exception, the
+            // using-block disposes FileSaver which deletes the temp
+            // without touching the destination. The FileStream is
             // disposed in an inner block before Commit so the file is
             // unlocked when File.Move runs (FileShare.None would
-            // otherwise block the move and Commit would silently fail
-            // through Trace.TraceWarning).
+            // otherwise block the move).
             using (var saver = new FileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))

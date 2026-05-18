@@ -634,6 +634,105 @@ namespace pwiz.OspreySharp.Test
             StringAssert.Contains(warn, "could not parse");
         }
 
+        // --- Library-decoy CLI flags ---------------------------------------
+
+        [TestMethod]
+        public void TestParseArgsDecoysInLibraryFlag()
+        {
+            // --decoys-in-library is a flat boolean; flips DecoysInLibrary
+            // to true without consuming a value. Mirrors Rust osprey's
+            // --decoys-in-library semantics.
+            var args = new[]
+            {
+                @"-i", @"x.mzML",
+                @"-l", @"lib.tsv",
+                @"-o", @"out.blib",
+                @"--decoys-in-library",
+            };
+            var config = Program.ParseArgs(args);
+            Assert.IsTrue(config.DecoysInLibrary);
+            Assert.IsTrue(string.IsNullOrEmpty(config.DecoyPairingManifestPath));
+        }
+
+        [TestMethod]
+        public void TestParseArgsDecoyPairingManifestFlag()
+        {
+            // --decoy-pairing-manifest <PATH> sets the path on the config
+            // WITHOUT flipping DecoysInLibrary. Pin the contract here in
+            // isolation (no companion --decoys-in-library) so a regression
+            // where the flag accidentally enables library-decoy mode on
+            // its own would actually fail the test.
+            var args = new[]
+            {
+                @"-i", @"x.mzML",
+                @"-l", @"lib.tsv",
+                @"-o", @"out.blib",
+                @"--decoy-pairing-manifest", @"T:\test\manifest.tsv",
+            };
+            var config = Program.ParseArgs(args);
+            Assert.IsFalse(config.DecoysInLibrary);
+            Assert.AreEqual(@"T:\test\manifest.tsv", config.DecoyPairingManifestPath);
+        }
+
+        [TestMethod]
+        public void TestParseArgsDecoyPairingManifestRequiresValue()
+        {
+            // A bare --decoy-pairing-manifest with no value, or a value
+            // that's itself an option (--decoys-in-library), must throw
+            // rather than silently consume the next token as the path.
+            var argsNoValue = new[]
+            {
+                @"-i", @"x.mzML",
+                @"-l", @"lib.tsv",
+                @"-o", @"out.blib",
+                @"--decoy-pairing-manifest",
+            };
+            try
+            {
+                Program.ParseArgs(argsNoValue);
+                Assert.Fail(@"Expected ArgumentException for bare --decoy-pairing-manifest.");
+            }
+            catch (ArgumentException)
+            {
+                // expected
+            }
+
+            var argsFlagAsValue = new[]
+            {
+                @"-i", @"x.mzML",
+                @"-l", @"lib.tsv",
+                @"-o", @"out.blib",
+                @"--decoy-pairing-manifest", @"--decoys-in-library",
+            };
+            try
+            {
+                Program.ParseArgs(argsFlagAsValue);
+                Assert.Fail(@"Expected ArgumentException for next-flag-as-value.");
+            }
+            catch (ArgumentException)
+            {
+                // expected
+            }
+        }
+
+        [TestMethod]
+        public void TestParseArgsDecoysInLibraryDefaultsFalse()
+        {
+            // Without the flag, DecoysInLibrary stays at its config default
+            // (false) and DecoyPairingManifestPath stays null. Pipeline runs
+            // the existing reverse-decoy path. Pins the "library-decoy mode
+            // is fully opt-in" contract.
+            var args = new[]
+            {
+                @"-i", @"x.mzML",
+                @"-l", @"lib.tsv",
+                @"-o", @"out.blib",
+            };
+            var config = Program.ParseArgs(args);
+            Assert.IsFalse(config.DecoysInLibrary);
+            Assert.IsTrue(string.IsNullOrEmpty(config.DecoyPairingManifestPath));
+        }
+
         // --- helpers -------------------------------------------------------
 
         private static string NewTempDir()

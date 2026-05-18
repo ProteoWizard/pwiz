@@ -132,6 +132,39 @@ namespace SkylineTool
         ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture);
 
         /// <summary>
+        /// Runs a named report and returns a windowed slice of rows inline (no file).
+        /// The response is capped server-side to protect caller context size.
+        /// Pass <paramref name="count"/> = 0 for shape-only introspection (total row count
+        /// plus column names and types, with an empty rows array).
+        /// </summary>
+        /// <param name="reportName">Predefined / saved report name.</param>
+        /// <param name="offset">0-based row index of the first row to return.</param>
+        /// <param name="count">Number of rows to return; 0 returns shape only.</param>
+        /// <param name="columns">Optional projection: subset of the report's columns.</param>
+        /// <param name="filter">Optional additional filters applied to the named report.</param>
+        /// <param name="includeMaxLength">When true, scans string columns and reports
+        /// <see cref="ReportRowsColumn.MaxObservedLength"/>.</param>
+        /// <param name="culture">"invariant" or "localized".</param>
+        ReportRowsResult GetReportRows(string reportName, int offset, int count,
+            string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture);
+
+        /// <summary>
+        /// Runs a custom report from a definition and returns a windowed slice of rows
+        /// inline (no file). The response is capped server-side. The definition already
+        /// supports projection, filtering, sorting, and pivots, so this method does NOT
+        /// duplicate those parameters.
+        /// </summary>
+        /// <param name="definition">Report definition (same shape as
+        /// <see cref="ExportReportFromDefinition"/> accepts).</param>
+        /// <param name="offset">0-based row index of the first row to return.</param>
+        /// <param name="count">Number of rows to return; 0 returns shape only.</param>
+        /// <param name="includeMaxLength">When true, scans string columns and reports
+        /// <see cref="ReportRowsColumn.MaxObservedLength"/>.</param>
+        /// <param name="culture">"invariant" or "localized".</param>
+        ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition,
+            int offset, int count, bool includeMaxLength, string culture);
+
+        /// <summary>
         /// Saves a report definition to the user's Skyline settings. The definition
         /// must include a <see cref="ReportDefinition.Name"/>.
         /// </summary>
@@ -296,11 +329,29 @@ namespace SkylineTool
         string GetGraphImage(string graphId, string filePath = null);
 
         /// <summary>
+        /// Renders a graph as a PNG and returns the bytes inline together with a
+        /// server-suggested file path the caller may write to as a fallback when
+        /// the inline payload is too large. The file is NOT written by this call.
+        /// Companion to <see cref="GetGraphImage"/> (file-based).
+        /// </summary>
+        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        ImageBytesMetadata GetGraphImageBytes(string graphId);
+
+        /// <summary>
         /// Captures a screenshot of any open form as a PNG image. Returns the file path.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
         string GetFormImage(string formId, string filePath = null);
+
+        /// <summary>
+        /// Captures a form screenshot as a PNG and returns the bytes inline together
+        /// with a server-suggested file path the caller may write to as a fallback.
+        /// The file is NOT written by this call. Companion to <see cref="GetFormImage"/>
+        /// (file-based). Permission denial is signaled as an inline error from the caller.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        ImageBytesMetadata GetFormImageBytes(string formId);
 
         // --- Tutorials ---
 
@@ -326,5 +377,16 @@ namespace SkylineTool
         /// <param name="language">Language code.</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
         TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null);
+
+        /// <summary>
+        /// Fetches a tutorial image and returns the bytes inline together with a
+        /// server-suggested file path the caller may write to as a fallback when
+        /// the inline payload is too large. The file is NOT written by this call.
+        /// Companion to <see cref="GetTutorialImage"/> (file-based).
+        /// </summary>
+        /// <param name="name">Tutorial folder name.</param>
+        /// <param name="imageFilename">Image filename from the tutorial markdown.</param>
+        /// <param name="language">Language code.</param>
+        ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = "en");
     }
 }
