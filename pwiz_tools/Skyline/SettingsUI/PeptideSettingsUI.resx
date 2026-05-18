@@ -1211,6 +1211,27 @@ the lower limit of quantification (LOQ)</value>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
+  <data name="comboSummarizationMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 103</value>
+  </data>
+  <data name="comboSummarizationMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>329, 21</value>
+  </data>
+  <data name="comboSummarizationMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>31</value>
+  </data>
+  <data name="&gt;&gt;comboSummarizationMethod.Name" xml:space="preserve">
+    <value>comboSummarizationMethod</value>
+  </data>
+  <data name="&gt;&gt;comboSummarizationMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSummarizationMethod.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;comboSummarizationMethod.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 21</value>
   </data>
@@ -2849,6 +2870,33 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
     <value>10</value>
+  </data>
+  <data name="lblSummarizationMethod.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSummarizationMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 88</value>
+  </data>
+  <data name="lblSummarizationMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 13</value>
+  </data>
+  <data name="lblSummarizationMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>30</value>
+  </data>
+  <data name="lblSummarizationMethod.Text" xml:space="preserve">
+    <value>S&amp;ummarization method:</value>
+  </data>
+  <data name="&gt;&gt;lblSummarizationMethod.Name" xml:space="preserve">
+    <value>lblSummarizationMethod</value>
+  </data>
+  <data name="&gt;&gt;lblSummarizationMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSummarizationMethod.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;lblSummarizationMethod.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="lblRegressionFit.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

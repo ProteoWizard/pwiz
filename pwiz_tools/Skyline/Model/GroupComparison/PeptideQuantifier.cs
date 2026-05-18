@@ -158,10 +158,43 @@ namespace pwiz.Skyline.Model.GroupComparison
                 .ToHashSet();
         }
 
+        /// <summary>
+        /// Returns per-replicate log2 peptide abundance using the chosen peptide-level
+        /// summarization method. For MEDIANPOLISH, returns the polish row effect plus
+        /// scale factor (same as <see cref="GetMedianPolishQuantities"/>); for AVERAGING,
+        /// returns log2 of the per-replicate transition-area sum.
+        /// </summary>
+        public double?[] GetPeptideLog2Abundances(SrmSettings settings, HashSet<int> replicateIndexes,
+            SummarizationMethod peptideSummarizationMethod)
+        {
+            if (Equals(peptideSummarizationMethod, SummarizationMethod.MEDIANPOLISH))
+            {
+                return GetMedianPolishQuantities(settings, replicateIndexes);
+            }
+            int replicateCount = settings.MeasuredResults?.Chromatograms?.Count ?? 0;
+            var result = new double?[replicateCount];
+            var quantificationSettings = QuantificationSettings.ChangeNormalizationMethod(NormalizationMethod);
+            for (int i = 0; i < replicateCount; i++)
+            {
+                var transitionIntensities = GetTransitionIntensities(settings, i, false);
+                if (transitionIntensities.Count == 0)
+                {
+                    continue;
+                }
+                var transitionKeys = transitionIntensities.Keys.ToHashSet();
+                var sum = SumTransitionQuantities(transitionKeys, transitionIntensities, quantificationSettings);
+                if (sum != null && sum.Raw > 0)
+                {
+                    result[i] = Math.Log(sum.Raw, 2);
+                }
+            }
+            return result;
+        }
+
         public double?[] GetMedianPolishQuantities(SrmSettings settings, HashSet<int> replicateIndexes)
         {
             // For NormalizationMethod=EQUALIZE_MEDIANS or RT_LOESS combined with
-            // SummarizationMethod=MEDIANPOLISH, the normalization factor must be derived
+            // PeptideSummarizationMethod=MEDIANPOLISH, the normalization factor must be derived
             // from the post-rollup peptide abundances, not from the raw transition values.
             // (This matches skyline-prism's pipeline, where median normalization and
             // RT-lowess normalization run after the transition-to-peptide rollup.)

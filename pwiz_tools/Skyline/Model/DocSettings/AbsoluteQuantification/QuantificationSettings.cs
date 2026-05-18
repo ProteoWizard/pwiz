@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     [XmlRoot("quantification")]
     public class QuantificationSettings : Immutable, IXmlSerializable
     {
-        public static readonly QuantificationSettings DEFAULT 
+        public static readonly QuantificationSettings DEFAULT
             = new QuantificationSettings(RegressionWeighting.NONE);
 
         public QuantificationSettings(RegressionWeighting regressionWeighting)
@@ -42,6 +42,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             NormalizationMethod = NormalizationMethod.NONE;
             Units = null;
             LodCalculation = LodCalculation.NONE;
+            PeptideSummarizationMethod = SummarizationMethod.DEFAULT;
+            ProteinSummarizationMethod = SummarizationMethod.DEFAULT;
         }
 
         [Track]
@@ -125,11 +127,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
 
         [Track]
-        public SummarizationMethod SummarizationMethod { get; private set; }
+        public SummarizationMethod PeptideSummarizationMethod { get; private set; }
 
-        public QuantificationSettings ChangeSummarizationMethod(SummarizationMethod summarizationMethod)
+        public QuantificationSettings ChangePeptideSummarizationMethod(SummarizationMethod summarizationMethod)
         {
-            return ChangeProp(ImClone(this), im => im.SummarizationMethod = summarizationMethod ?? SummarizationMethod.DEFAULT);
+            return ChangeProp(ImClone(this), im => im.PeptideSummarizationMethod = summarizationMethod ?? SummarizationMethod.DEFAULT);
+        }
+
+        [Track]
+        public SummarizationMethod ProteinSummarizationMethod { get; private set; }
+
+        public QuantificationSettings ChangeProteinSummarizationMethod(SummarizationMethod summarizationMethod)
+        {
+            return ChangeProp(ImClone(this), im => im.ProteinSummarizationMethod = summarizationMethod ?? SummarizationMethod.DEFAULT);
         }
 
         #region Equality Members
@@ -137,7 +147,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         protected bool Equals(QuantificationSettings other)
         {
             return Equals(RegressionWeighting, other.RegressionWeighting) &&
-                   Equals(RegressionFit, other.RegressionFit) && 
+                   Equals(RegressionFit, other.RegressionFit) &&
                    Equals(NormalizationMethod, other.NormalizationMethod) &&
                    Equals(MsLevel, other.MsLevel) &&
                    Equals(Units, other.Units) &&
@@ -146,7 +156,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                    Equals(MaxLoqCv, other.MaxLoqCv) &&
                    Equals(QualitativeIonRatioThreshold, other.QualitativeIonRatioThreshold) &&
                    Equals(SimpleRatios, other.SimpleRatios) &&
-                   Equals(SummarizationMethod, other.SummarizationMethod);
+                   Equals(PeptideSummarizationMethod, other.PeptideSummarizationMethod) &&
+                   Equals(ProteinSummarizationMethod, other.ProteinSummarizationMethod);
         }
 
         public override bool Equals(object obj)
@@ -170,7 +181,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 hashCode = (hashCode*397) ^ MaxLoqBias.GetHashCode();
                 hashCode = (hashCode*397) ^ MaxLoqCv.GetHashCode();
                 hashCode = (hashCode*397) ^ SimpleRatios.GetHashCode();
-                hashCode = (hashCode*397) ^ (SummarizationMethod != null ? SummarizationMethod.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (PeptideSummarizationMethod != null ? PeptideSummarizationMethod.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (ProteinSummarizationMethod != null ? ProteinSummarizationMethod.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -190,7 +202,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             max_loq_cv,
             qualitative_ion_ratio_threshold,
             simple_ratios,
-            summarization_method
+            peptide_summarization_method,
+            protein_summarization_method
         }
         XmlSchema IXmlSerializable.GetSchema()
         {
@@ -213,7 +226,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             MaxLoqCv = reader.GetNullableDoubleAttribute(Attr.max_loq_cv);
             QualitativeIonRatioThreshold = reader.GetNullableDoubleAttribute(Attr.qualitative_ion_ratio_threshold);
             SimpleRatios = reader.GetBoolAttribute(Attr.simple_ratios, false);
-            SummarizationMethod = SummarizationMethod.FromName(reader.GetAttribute(Attr.summarization_method));
+            PeptideSummarizationMethod = SummarizationMethod.FromName(reader.GetAttribute(Attr.peptide_summarization_method));
+            ProteinSummarizationMethod = SummarizationMethod.FromName(reader.GetAttribute(Attr.protein_summarization_method));
             bool empty = reader.IsEmptyElement;
             reader.Read();
             if (!empty)
@@ -246,9 +260,13 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             writer.WriteAttributeNullable(Attr.max_loq_cv, MaxLoqCv);
             writer.WriteAttributeNullable(Attr.qualitative_ion_ratio_threshold, QualitativeIonRatioThreshold);
             writer.WriteAttribute(Attr.simple_ratios, SimpleRatios, false);
-            if (SummarizationMethod != null && !Equals(SummarizationMethod, SummarizationMethod.DEFAULT))
+            if (PeptideSummarizationMethod != null && !Equals(PeptideSummarizationMethod, SummarizationMethod.DEFAULT))
             {
-                writer.WriteAttributeString(Attr.summarization_method, SummarizationMethod.Name);
+                writer.WriteAttributeString(Attr.peptide_summarization_method, PeptideSummarizationMethod.Name);
+            }
+            if (ProteinSummarizationMethod != null && !Equals(ProteinSummarizationMethod, SummarizationMethod.DEFAULT))
+            {
+                writer.WriteAttributeString(Attr.protein_summarization_method, ProteinSummarizationMethod.Name);
             }
         }
 

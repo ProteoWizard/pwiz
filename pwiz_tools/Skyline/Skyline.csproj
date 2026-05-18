@@ -2566,6 +2566,7 @@
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
     <Compile Include="SettingsUI\SettingsListComboDriver.cs">
     </Compile>
+    <Compile Include="SettingsUI\SummarizationMethodOption.cs" />
     <Compile Include="Controls\SeqNode\SrmTreeNode.cs" />
     <Compile Include="FileUI\ExportMethodDlg.cs">
       <SubType>Form</SubType>

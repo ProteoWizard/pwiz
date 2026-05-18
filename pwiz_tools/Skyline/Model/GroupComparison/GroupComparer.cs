@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 var method = ComparisonDef.SummarizationMethod;
                 if (Equals(method, SummarizationMethod.DEFAULT_FROM_SETTINGS))
                 {
-                    return SrmDocument.Settings.PeptideSettings.Quantification.SummarizationMethod
+                    return SrmDocument.Settings.PeptideSettings.Quantification.ProteinSummarizationMethod
                            ?? SummarizationMethod.DEFAULT;
                 }
                 return method;

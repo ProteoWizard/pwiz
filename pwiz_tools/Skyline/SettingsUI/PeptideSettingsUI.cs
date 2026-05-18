@@ -198,8 +198,11 @@ namespace pwiz.Skyline.SettingsUI
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
             cbxSimpleRatios.Checked = _peptideSettings.Quantification.SimpleRatios;
-            comboSummarizationMethod.Items.AddRange(SummarizationMethod.ListSummarizationMethods().Cast<object>().ToArray());
-            comboSummarizationMethod.SelectedItem = _peptideSettings.Quantification.SummarizationMethod ?? SummarizationMethod.DEFAULT;
+            comboSummarizationMethod.Items.AddRange(SummarizationMethodOption.ALL.Cast<object>().ToArray());
+            var currentPeptideMethod = _peptideSettings.Quantification.PeptideSummarizationMethod ?? SummarizationMethod.DEFAULT;
+            var currentProteinMethod = _peptideSettings.Quantification.ProteinSummarizationMethod ?? SummarizationMethod.DEFAULT;
+            comboSummarizationMethod.SelectedItem = SummarizationMethodOption.FindMatch(currentPeptideMethod, currentProteinMethod);
+            ComboHelper.AutoSizeDropDown(comboSummarizationMethod);
             UpdateComboNormalizationMethod();
             cbxImputeMissingPeaks.Checked = _peptideSettings.Imputation.ImputeMissingPeaks;
             tbxMaxRtShift.Text = _peptideSettings.Imputation.MaxRtShift?.ToString() ?? string.Empty;
@@ -542,7 +545,10 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             quantification = quantification.ChangeSimpleRatios(cbxSimpleRatios.Checked);
-            quantification = quantification.ChangeSummarizationMethod(comboSummarizationMethod.SelectedItem as SummarizationMethod);
+            var summarizationOption = comboSummarizationMethod.SelectedItem as SummarizationMethodOption
+                                      ?? SummarizationMethodOption.DEFAULT;
+            quantification = quantification.ChangePeptideSummarizationMethod(summarizationOption.PeptideMethod);
+            quantification = quantification.ChangeProteinSummarizationMethod(summarizationOption.ProteinMethod);
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome, _peptideSettings.ProteinAssociationSettings)
                 .ChangeAbsoluteQuantification(quantification).ChangeImputation(imputation);
@@ -1794,10 +1800,28 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public SummarizationMethod QuantSummarizationMethod
+        public SummarizationMethod QuantPeptideSummarizationMethod
         {
-            get { return comboSummarizationMethod.SelectedItem as SummarizationMethod; }
-            set { comboSummarizationMethod.SelectedItem = value; }
+            get { return (comboSummarizationMethod.SelectedItem as SummarizationMethodOption)?.PeptideMethod; }
+            set
+            {
+                var current = comboSummarizationMethod.SelectedItem as SummarizationMethodOption
+                              ?? SummarizationMethodOption.DEFAULT;
+                comboSummarizationMethod.SelectedItem = SummarizationMethodOption.FindMatch(
+                    value ?? SummarizationMethod.DEFAULT, current.ProteinMethod);
+            }
+        }
+
+        public SummarizationMethod QuantProteinSummarizationMethod
+        {
+            get { return (comboSummarizationMethod.SelectedItem as SummarizationMethodOption)?.ProteinMethod; }
+            set
+            {
+                var current = comboSummarizationMethod.SelectedItem as SummarizationMethodOption
+                              ?? SummarizationMethodOption.DEFAULT;
+                comboSummarizationMethod.SelectedItem = SummarizationMethodOption.FindMatch(
+                    current.PeptideMethod, value ?? SummarizationMethod.DEFAULT);
+            }
         }
 
         public LodCalculation QuantLodMethod

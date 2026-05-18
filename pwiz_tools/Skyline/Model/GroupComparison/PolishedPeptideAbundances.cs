@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     /// <summary>
     /// Holds per-peptide median-polished log2 abundances and the per-file normalization
-    /// factors derived from those abundances. Used when SummarizationMethod=MEDIANPOLISH
+    /// factors derived from those abundances. Used when PeptideSummarizationMethod=MEDIANPOLISH
     /// is paired with a peptide-level normalization method (EQUALIZE_MEDIANS or RT_LOESS),
     /// so that the normalization factor is computed from the post-rollup peptide values
     /// rather than from raw transition values.

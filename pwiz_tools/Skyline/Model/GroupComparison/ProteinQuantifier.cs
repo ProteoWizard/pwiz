@@ -53,13 +53,25 @@ namespace pwiz.Skyline.Model.GroupComparison
         /// </summary>
         public IDictionary<int, Protein.AbundanceValue> CalculateProteinAbundances()
         {
-            var summarizationMethod = SrmSettings.PeptideSettings.Quantification.SummarizationMethod;
-            if (Equals(summarizationMethod, SummarizationMethod.MEDIANPOLISH))
+            var peptideMethod = SrmSettings.PeptideSettings.Quantification.PeptideSummarizationMethod
+                                ?? SummarizationMethod.DEFAULT;
+            var proteinMethod = SrmSettings.PeptideSettings.Quantification.ProteinSummarizationMethod
+                                ?? SummarizationMethod.DEFAULT;
+            bool peptideMed = Equals(peptideMethod, SummarizationMethod.MEDIANPOLISH);
+            bool proteinMed = Equals(proteinMethod, SummarizationMethod.MEDIANPOLISH);
+
+            // AVG/AVG retains the canonical "sum all transitions in one shot" path so that
+            // truncated/missing-transition error messages from SumTransitionQuantities are
+            // preserved in the common case.
+            if (!peptideMed && !proteinMed)
+            {
+                return CalculateProteinAbundancesWithAveraging();
+            }
+            if (peptideMed && proteinMed)
             {
                 return CalculateProteinAbundancesWithMedianPolish();
             }
-
-            return CalculateProteinAbundancesWithAveraging();
+            return CalculateProteinAbundancesTwoStage(peptideMethod, proteinMethod);
         }
 
         private IDictionary<int, Protein.AbundanceValue> CalculateProteinAbundancesWithAveraging()
@@ -101,6 +113,74 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
             return proteinAbundanceRecords;
+        }
+
+        private IDictionary<int, Protein.AbundanceValue> CalculateProteinAbundancesTwoStage(
+            SummarizationMethod peptideMethod, SummarizationMethod proteinMethod)
+        {
+            int replicateCount = SrmSettings.MeasuredResults?.Chromatograms?.Count ?? 0;
+            if (replicateCount == 0)
+            {
+                return new Dictionary<int, Protein.AbundanceValue>();
+            }
+            var replicateIndexes = PeptideQuantifier.GetMedianPolishReplicates(SrmSettings);
+
+            // Stage 1: per-peptide, per-replicate log2 abundance using the chosen peptide method.
+            var replicatePeptideAbundances =
+                Enumerable.Range(0, replicateCount).Select(_ => new Dictionary<IdentityPath, double>()).ToArray();
+            foreach (var peptideQuantifier in _peptideQuantifiers)
+            {
+                var log2Quantities = peptideQuantifier.GetPeptideLog2Abundances(SrmSettings, replicateIndexes,
+                    peptideMethod);
+                if (log2Quantities == null)
+                {
+                    continue;
+                }
+                var peptideIdentityPath = new IdentityPath(peptideQuantifier.PeptideGroup,
+                    peptideQuantifier.PeptideDocNode.Peptide);
+                for (int i = 0; i < replicateCount && i < log2Quantities.Length; i++)
+                {
+                    if (log2Quantities[i].HasValue)
+                    {
+                        replicatePeptideAbundances[i].Add(peptideIdentityPath, log2Quantities[i].Value);
+                    }
+                }
+            }
+
+            var result = new Dictionary<int, Protein.AbundanceValue>();
+            if (Equals(proteinMethod, SummarizationMethod.MEDIANPOLISH))
+            {
+                var polished = new MedianPolisher() { IterateToConvergence = true }
+                    .Polish(replicatePeptideAbundances, replicateIndexes);
+                for (int i = 0; i < replicateCount; i++)
+                {
+                    double? abundance = polished[i];
+                    if (abundance.HasValue && !double.IsNaN(abundance.Value) && !double.IsInfinity(abundance.Value))
+                    {
+                        double linear = Math.Pow(2, abundance.Value);
+                        result[i] = new Protein.AbundanceValue(linear, linear, null);
+                    }
+                }
+            }
+            else
+            {
+                // AVERAGING at protein level: convert log2 peptide abundances to linear and sum.
+                for (int i = 0; i < replicateCount; i++)
+                {
+                    double sum = 0;
+                    int count = 0;
+                    foreach (var log2Abundance in replicatePeptideAbundances[i].Values)
+                    {
+                        sum += Math.Pow(2, log2Abundance);
+                        count++;
+                    }
+                    if (count > 0)
+                    {
+                        result[i] = new Protein.AbundanceValue(sum, sum * count, null);
+                    }
+                }
+            }
+            return result;
         }
 
         private IDictionary<int, Protein.AbundanceValue> CalculateProteinAbundancesWithMedianPolish()

@@ -2727,7 +2727,43 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish transitions -&gt; median polish peptides.
+        /// </summary>
+        public static string SummarizationMethodOption_Median_polish_transitions__Median_polish_peptides {
+            get {
+                return ResourceManager.GetString("SummarizationMethodOption_Median_polish_transitions__Median_polish_peptides", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish transitions -&gt; sum peptides.
+        /// </summary>
+        public static string SummarizationMethodOption_Median_polish_transitions__Sum_peptides {
+            get {
+                return ResourceManager.GetString("SummarizationMethodOption_Median_polish_transitions__Sum_peptides", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sum transitions -&gt; median polish peptides.
+        /// </summary>
+        public static string SummarizationMethodOption_Sum_transitions__Median_polish_peptides {
+            get {
+                return ResourceManager.GetString("SummarizationMethodOption_Sum_transitions__Median_polish_peptides", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sum transitions -&gt; sum peptides.
+        /// </summary>
+        public static string SummarizationMethodOption_Sum_transitions__Sum_peptides {
+            get {
+                return ResourceManager.GetString("SummarizationMethodOption_Sum_transitions__Sum_peptides", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The SureQuant acquisition method requires &quot;Triggered Chromatogram Extraction&quot;. Unchecking this option will switch to the PRM acquisition method. Do you want to continue?.
         /// </summary>
