@@ -718,9 +718,9 @@
 <!-- n_utility__findmf__base__base__base -->
 <g id="node67" class="node">
 <title>n_utility__findmf__base__base__base</title>
-<g id="a_node67"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/base.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M82,-224C82,-224 52,-224 52,-224 46,-224 40,-218 40,-212 40,-212 40,-200 40,-200 40,-194 46,-188 52,-188 52,-188 82,-188 82,-188 88,-188 94,-194 94,-200 94,-200 94,-212 94,-212 94,-218 88,-224 82,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="67" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">base</text>
+<g id="a_node67"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/base.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M82,-224C82,-224 52,-224 52,-224 46,-224 40,-218 40,-212 40,-212 40,-200 40,-200 40,-194 46,-188 52,-188 52,-188 82,-188 82,-188 88,-188 94,-194 94,-200 94,-200 94,-212 94,-212 94,-218 88,-224 82,-224"/>
+<text xml:space="preserve" text-anchor="start" x="56.5" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">base</text>
 </a>
 </g>
 </g>
@@ -728,9 +728,9 @@
 <!-- n_utility__findmf__base__base__constants -->
 <g id="node68" class="node">
 <title>n_utility__findmf__base__base__constants</title>
-<g id="a_node68"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/constants.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M156.12,-224C156.12,-224 119.88,-224 119.88,-224 113.88,-224 107.88,-218 107.88,-212 107.88,-212 107.88,-200 107.88,-200 107.88,-194 113.88,-188 119.88,-188 119.88,-188 156.12,-188 156.12,-188 162.12,-188 168.12,-194 168.12,-200 168.12,-200 168.12,-212 168.12,-212 168.12,-218 162.12,-224 156.12,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="138" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">constants</text>
+<g id="a_node68"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/constants.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M156.12,-224C156.12,-224 119.88,-224 119.88,-224 113.88,-224 107.88,-218 107.88,-212 107.88,-212 107.88,-200 107.88,-200 107.88,-194 113.88,-188 119.88,-188 119.88,-188 156.12,-188 156.12,-188 162.12,-188 168.12,-194 168.12,-200 168.12,-200 168.12,-212 168.12,-212 168.12,-218 162.12,-224 156.12,-224"/>
+<text xml:space="preserve" text-anchor="start" x="115.88" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">constants</text>
 </a>
 </g>
 </g>
@@ -748,9 +748,9 @@
 <!-- n_utility__findmf__base__base__copyif -->
 <g id="node69" class="node">
 <title>n_utility__findmf__base__base__copyif</title>
-<g id="a_node69"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/copyif.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M224,-224C224,-224 194,-224 194,-224 188,-224 182,-218 182,-212 182,-212 182,-200 182,-200 182,-194 188,-188 194,-188 194,-188 224,-188 224,-188 230,-188 236,-194 236,-200 236,-200 236,-212 236,-212 236,-218 230,-224 224,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="209" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">copyif</text>
+<g id="a_node69"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/copyif.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M224,-224C224,-224 194,-224 194,-224 188,-224 182,-218 182,-212 182,-212 182,-200 182,-200 182,-194 188,-188 194,-188 194,-188 224,-188 224,-188 230,-188 236,-194 236,-200 236,-200 236,-212 236,-212 236,-218 230,-224 224,-224"/>
+<text xml:space="preserve" text-anchor="start" x="195.88" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">copyif</text>
 </a>
 </g>
 </g>
@@ -758,9 +758,9 @@
 <!-- n_utility__findmf__base__base__cumsum -->
 <g id="node70" class="node">
 <title>n_utility__findmf__base__base__cumsum</title>
-<g id="a_node70"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/cumsum.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M292,-224C292,-224 262,-224 262,-224 256,-224 250,-218 250,-212 250,-212 250,-200 250,-200 250,-194 256,-188 262,-188 262,-188 292,-188 292,-188 298,-188 304,-194 304,-200 304,-200 304,-212 304,-212 304,-218 298,-224 292,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="277" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">cumsum</text>
+<g id="a_node70"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/cumsum.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M292,-224C292,-224 262,-224 262,-224 256,-224 250,-218 250,-212 250,-212 250,-200 250,-200 250,-194 256,-188 262,-188 262,-188 292,-188 292,-188 298,-188 304,-194 304,-200 304,-200 304,-212 304,-212 304,-218 298,-224 292,-224"/>
+<text xml:space="preserve" text-anchor="start" x="258.25" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">cumsum</text>
 </a>
 </g>
 </g>
@@ -768,9 +768,9 @@
 <!-- n_utility__findmf__base__base__diff -->
 <g id="node71" class="node">
 <title>n_utility__findmf__base__base__diff</title>
-<g id="a_node71"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/diff.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M360,-224C360,-224 330,-224 330,-224 324,-224 318,-218 318,-212 318,-212 318,-200 318,-200 318,-194 324,-188 330,-188 330,-188 360,-188 360,-188 366,-188 372,-194 372,-200 372,-200 372,-212 372,-212 372,-218 366,-224 360,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="345" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">diff</text>
+<g id="a_node71"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/diff.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M360,-224C360,-224 330,-224 330,-224 324,-224 318,-218 318,-212 318,-212 318,-200 318,-200 318,-194 324,-188 330,-188 330,-188 360,-188 360,-188 366,-188 372,-194 372,-200 372,-200 372,-212 372,-212 372,-218 366,-224 360,-224"/>
+<text xml:space="preserve" text-anchor="start" x="337.88" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">diff</text>
 </a>
 </g>
 </g>
@@ -778,9 +778,9 @@
 <!-- n_utility__findmf__base__base__interpolate -->
 <g id="node72" class="node">
 <title>n_utility__findmf__base__base__interpolate</title>
-<g id="a_node72"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/interpolate.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M439.75,-224C439.75,-224 398.25,-224 398.25,-224 392.25,-224 386.25,-218 386.25,-212 386.25,-212 386.25,-200 386.25,-200 386.25,-194 392.25,-188 398.25,-188 398.25,-188 439.75,-188 439.75,-188 445.75,-188 451.75,-194 451.75,-200 451.75,-200 451.75,-212 451.75,-212 451.75,-218 445.75,-224 439.75,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="419" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">interpolate</text>
+<g id="a_node72"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/interpolate.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M439.75,-224C439.75,-224 398.25,-224 398.25,-224 392.25,-224 386.25,-218 386.25,-212 386.25,-212 386.25,-200 386.25,-200 386.25,-194 392.25,-188 398.25,-188 398.25,-188 439.75,-188 439.75,-188 445.75,-188 451.75,-194 451.75,-200 451.75,-200 451.75,-212 451.75,-212 451.75,-218 445.75,-224 439.75,-224"/>
+<text xml:space="preserve" text-anchor="start" x="394.25" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">interpolate</text>
 </a>
 </g>
 </g>
@@ -788,9 +788,9 @@
 <!-- n_utility__findmf__base__base__scale -->
 <g id="node73" class="node">
 <title>n_utility__findmf__base__base__scale</title>
-<g id="a_node73"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/scale.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M508,-224C508,-224 478,-224 478,-224 472,-224 466,-218 466,-212 466,-212 466,-200 466,-200 466,-194 472,-188 478,-188 478,-188 508,-188 508,-188 514,-188 520,-194 520,-200 520,-200 520,-212 520,-212 520,-218 514,-224 508,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="493" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">scale</text>
+<g id="a_node73"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/scale.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M508,-224C508,-224 478,-224 478,-224 472,-224 466,-218 466,-212 466,-212 466,-200 466,-200 466,-194 472,-188 478,-188 478,-188 508,-188 508,-188 514,-188 520,-194 520,-200 520,-200 520,-212 520,-212 520,-218 514,-224 508,-224"/>
+<text xml:space="preserve" text-anchor="start" x="482.12" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">scale</text>
 </a>
 </g>
 </g>
@@ -798,9 +798,9 @@
 <!-- n_utility__findmf__base__base__utilities__base -->
 <g id="node74" class="node">
 <title>n_utility__findmf__base__base__utilities__base</title>
-<g id="a_node74"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/utilities/base.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M576,-224C576,-224 546,-224 546,-224 540,-224 534,-218 534,-212 534,-212 534,-200 534,-200 534,-194 540,-188 546,-188 546,-188 576,-188 576,-188 582,-188 588,-194 588,-200 588,-200 588,-212 588,-212 588,-218 582,-224 576,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="561" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">base</text>
+<g id="a_node74"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/utilities/base.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M576,-224C576,-224 546,-224 546,-224 540,-224 534,-218 534,-212 534,-212 534,-200 534,-200 534,-194 540,-188 546,-188 546,-188 576,-188 576,-188 582,-188 588,-194 588,-200 588,-200 588,-212 588,-212 588,-218 582,-224 576,-224"/>
+<text xml:space="preserve" text-anchor="start" x="550.5" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">base</text>
 </a>
 </g>
 </g>
@@ -808,9 +808,9 @@
 <!-- n_utility__findmf__base__base__utilities__interpolation -->
 <g id="node75" class="node">
 <title>n_utility__findmf__base__base__utilities__interpolation</title>
-<g id="a_node75"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/utilities/interpolation.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M664.25,-224C664.25,-224 613.75,-224 613.75,-224 607.75,-224 601.75,-218 601.75,-212 601.75,-212 601.75,-200 601.75,-200 601.75,-194 607.75,-188 613.75,-188 613.75,-188 664.25,-188 664.25,-188 670.25,-188 676.25,-194 676.25,-200 676.25,-200 676.25,-212 676.25,-212 676.25,-218 670.25,-224 664.25,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="639" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">interpolation</text>
+<g id="a_node75"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/base/utilities/interpolation.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M664.25,-224C664.25,-224 613.75,-224 613.75,-224 607.75,-224 601.75,-218 601.75,-212 601.75,-212 601.75,-200 601.75,-200 601.75,-194 607.75,-188 613.75,-188 613.75,-188 664.25,-188 664.25,-188 670.25,-188 676.25,-194 676.25,-200 676.25,-200 676.25,-212 676.25,-212 676.25,-218 670.25,-224 664.25,-224"/>
+<text xml:space="preserve" text-anchor="start" x="609.75" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">interpolation</text>
 </a>
 </g>
 </g>
@@ -818,9 +818,9 @@
 <!-- n_utility__findmf__base__filter__filter -->
 <g id="node76" class="node">
 <title>n_utility__findmf__base__filter__filter</title>
-<g id="a_node76"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/filter.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M732,-224C732,-224 702,-224 702,-224 696,-224 690,-218 690,-212 690,-212 690,-200 690,-200 690,-194 696,-188 702,-188 702,-188 732,-188 732,-188 738,-188 744,-194 744,-200 744,-200 744,-212 744,-212 744,-218 738,-224 732,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="717" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">filter</text>
+<g id="a_node76"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/filter.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M732,-224C732,-224 702,-224 702,-224 696,-224 690,-218 690,-212 690,-212 690,-200 690,-200 690,-194 696,-188 702,-188 702,-188 732,-188 732,-188 738,-188 744,-194 744,-200 744,-200 744,-212 744,-212 744,-218 738,-224 732,-224"/>
+<text xml:space="preserve" text-anchor="start" x="706.88" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">filter</text>
 </a>
 </g>
 </g>
@@ -828,9 +828,9 @@
 <!-- n_utility__findmf__base__filter__gaussfilter -->
 <g id="node77" class="node">
 <title>n_utility__findmf__base__filter__gaussfilter</title>
-<g id="a_node77"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/gaussfilter.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M808.25,-224C808.25,-224 769.75,-224 769.75,-224 763.75,-224 757.75,-218 757.75,-212 757.75,-212 757.75,-200 757.75,-200 757.75,-194 763.75,-188 769.75,-188 769.75,-188 808.25,-188 808.25,-188 814.25,-188 820.25,-194 820.25,-200 820.25,-200 820.25,-212 820.25,-212 820.25,-218 814.25,-224 808.25,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="789" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">gaussfilter</text>
+<g id="a_node77"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/gaussfilter.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M808.25,-224C808.25,-224 769.75,-224 769.75,-224 763.75,-224 757.75,-218 757.75,-212 757.75,-212 757.75,-200 757.75,-200 757.75,-194 763.75,-188 769.75,-188 769.75,-188 808.25,-188 808.25,-188 814.25,-188 820.25,-194 820.25,-200 820.25,-200 820.25,-212 820.25,-212 820.25,-218 814.25,-224 808.25,-224"/>
+<text xml:space="preserve" text-anchor="start" x="765.75" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">gaussfilter</text>
 </a>
 </g>
 </g>
@@ -838,9 +838,9 @@
 <!-- n_utility__findmf__base__filter__utilities__gauss -->
 <g id="node78" class="node">
 <title>n_utility__findmf__base__filter__utilities__gauss</title>
-<g id="a_node78"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/utilities/gauss.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M876,-224C876,-224 846,-224 846,-224 840,-224 834,-218 834,-212 834,-212 834,-200 834,-200 834,-194 840,-188 846,-188 846,-188 876,-188 876,-188 882,-188 888,-194 888,-200 888,-200 888,-212 888,-212 888,-218 882,-224 876,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="861" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">gauss</text>
+<g id="a_node78"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/utilities/gauss.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M876,-224C876,-224 846,-224 846,-224 840,-224 834,-218 834,-212 834,-212 834,-200 834,-200 834,-194 840,-188 846,-188 846,-188 876,-188 876,-188 882,-188 888,-194 888,-200 888,-200 888,-212 888,-212 888,-218 882,-224 876,-224"/>
+<text xml:space="preserve" text-anchor="start" x="847.88" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">gauss</text>
 </a>
 </g>
 </g>
@@ -848,9 +848,9 @@
 <!-- n_utility__findmf__base__filter__utilities__mexhat -->
 <g id="node79" class="node">
 <title>n_utility__findmf__base__filter__utilities__mexhat</title>
-<g id="a_node79"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/utilities/mexhat.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M944,-224C944,-224 914,-224 914,-224 908,-224 902,-218 902,-212 902,-212 902,-200 902,-200 902,-194 908,-188 914,-188 914,-188 944,-188 944,-188 950,-188 956,-194 956,-200 956,-200 956,-212 956,-212 956,-218 950,-224 944,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="929" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">mexhat</text>
+<g id="a_node79"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/utilities/mexhat.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M944,-224C944,-224 914,-224 914,-224 908,-224 902,-218 902,-212 902,-212 902,-200 902,-200 902,-194 908,-188 914,-188 914,-188 944,-188 944,-188 950,-188 956,-194 956,-200 956,-200 956,-212 956,-212 956,-218 950,-224 944,-224"/>
+<text xml:space="preserve" text-anchor="start" x="912.5" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">mexhat</text>
 </a>
 </g>
 </g>
@@ -858,9 +858,9 @@
 <!-- n_utility__findmf__base__filter__utilities__preparedata -->
 <g id="node80" class="node">
 <title>n_utility__findmf__base__filter__utilities__preparedata</title>
-<g id="a_node80"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/utilities/preparedata.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1029.75,-224C1029.75,-224 982.25,-224 982.25,-224 976.25,-224 970.25,-218 970.25,-212 970.25,-212 970.25,-200 970.25,-200 970.25,-194 976.25,-188 982.25,-188 982.25,-188 1029.75,-188 1029.75,-188 1035.75,-188 1041.75,-194 1041.75,-200 1041.75,-200 1041.75,-212 1041.75,-212 1041.75,-218 1035.75,-224 1029.75,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1006" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">preparedata</text>
+<g id="a_node80"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/filter/utilities/preparedata.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1029.75,-224C1029.75,-224 982.25,-224 982.25,-224 976.25,-224 970.25,-218 970.25,-212 970.25,-212 970.25,-200 970.25,-200 970.25,-194 976.25,-188 982.25,-188 982.25,-188 1029.75,-188 1029.75,-188 1035.75,-188 1041.75,-194 1041.75,-200 1041.75,-200 1041.75,-212 1041.75,-212 1041.75,-218 1035.75,-224 1029.75,-224"/>
+<text xml:space="preserve" text-anchor="start" x="978.25" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">preparedata</text>
 </a>
 </g>
 </g>
@@ -868,9 +868,9 @@
 <!-- n_utility__findmf__base__ms__peakpickerqtof -->
 <g id="node81" class="node">
 <title>n_utility__findmf__base__ms__peakpickerqtof</title>
-<g id="a_node81"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/ms/peakpickerqtof.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1127.75,-224C1127.75,-224 1068.25,-224 1068.25,-224 1062.25,-224 1056.25,-218 1056.25,-212 1056.25,-212 1056.25,-200 1056.25,-200 1056.25,-194 1062.25,-188 1068.25,-188 1068.25,-188 1127.75,-188 1127.75,-188 1133.75,-188 1139.75,-194 1139.75,-200 1139.75,-200 1139.75,-212 1139.75,-212 1139.75,-218 1133.75,-224 1127.75,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1098" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">peakpickerqtof</text>
+<g id="a_node81"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/ms/peakpickerqtof.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1127.75,-224C1127.75,-224 1068.25,-224 1068.25,-224 1062.25,-224 1056.25,-218 1056.25,-212 1056.25,-212 1056.25,-200 1056.25,-200 1056.25,-194 1062.25,-188 1068.25,-188 1068.25,-188 1127.75,-188 1127.75,-188 1133.75,-188 1139.75,-194 1139.75,-200 1139.75,-200 1139.75,-212 1139.75,-212 1139.75,-218 1133.75,-224 1127.75,-224"/>
+<text xml:space="preserve" text-anchor="start" x="1064.25" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">peakpickerqtof</text>
 </a>
 </g>
 </g>
@@ -878,9 +878,9 @@
 <!-- n_utility__findmf__base__ms__simplepicker -->
 <g id="node82" class="node">
 <title>n_utility__findmf__base__ms__simplepicker</title>
-<g id="a_node82"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/ms/simplepicker.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1213.75,-224C1213.75,-224 1166.25,-224 1166.25,-224 1160.25,-224 1154.25,-218 1154.25,-212 1154.25,-212 1154.25,-200 1154.25,-200 1154.25,-194 1160.25,-188 1166.25,-188 1166.25,-188 1213.75,-188 1213.75,-188 1219.75,-188 1225.75,-194 1225.75,-200 1225.75,-200 1225.75,-212 1225.75,-212 1225.75,-218 1219.75,-224 1213.75,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1190" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">simplepicker</text>
+<g id="a_node82"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/ms/simplepicker.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1213.75,-224C1213.75,-224 1166.25,-224 1166.25,-224 1160.25,-224 1154.25,-218 1154.25,-212 1154.25,-212 1154.25,-200 1154.25,-200 1154.25,-194 1160.25,-188 1166.25,-188 1166.25,-188 1213.75,-188 1213.75,-188 1219.75,-188 1225.75,-194 1225.75,-200 1225.75,-200 1225.75,-212 1225.75,-212 1225.75,-218 1219.75,-224 1213.75,-224"/>
+<text xml:space="preserve" text-anchor="start" x="1162.25" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">simplepicker</text>
 </a>
 </g>
 </g>
@@ -888,9 +888,9 @@
 <!-- n_utility__findmf__base__resample__bin1d -->
 <g id="node83" class="node">
 <title>n_utility__findmf__base__resample__bin1d</title>
-<g id="a_node83"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/bin1d.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1282,-224C1282,-224 1252,-224 1252,-224 1246,-224 1240,-218 1240,-212 1240,-212 1240,-200 1240,-200 1240,-194 1246,-188 1252,-188 1252,-188 1282,-188 1282,-188 1288,-188 1294,-194 1294,-200 1294,-200 1294,-212 1294,-212 1294,-218 1288,-224 1282,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1267" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">bin1d</text>
+<g id="a_node83"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/bin1d.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1282,-224C1282,-224 1252,-224 1252,-224 1246,-224 1240,-218 1240,-212 1240,-212 1240,-200 1240,-200 1240,-194 1246,-188 1252,-188 1252,-188 1282,-188 1282,-188 1288,-188 1294,-194 1294,-200 1294,-200 1294,-212 1294,-212 1294,-218 1288,-224 1282,-224"/>
+<text xml:space="preserve" text-anchor="start" x="1254.25" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">bin1d</text>
 </a>
 </g>
 </g>
@@ -898,9 +898,9 @@
 <!-- n_utility__findmf__base__resample__breakspec -->
 <g id="node84" class="node">
 <title>n_utility__findmf__base__resample__breakspec</title>
-<g id="a_node84"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/breakspec.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1357.88,-224C1357.88,-224 1320.12,-224 1320.12,-224 1314.12,-224 1308.12,-218 1308.12,-212 1308.12,-212 1308.12,-200 1308.12,-200 1308.12,-194 1314.12,-188 1320.12,-188 1320.12,-188 1357.88,-188 1357.88,-188 1363.88,-188 1369.88,-194 1369.88,-200 1369.88,-200 1369.88,-212 1369.88,-212 1369.88,-218 1363.88,-224 1357.88,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1339" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">breakspec</text>
+<g id="a_node84"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/breakspec.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1357.88,-224C1357.88,-224 1320.12,-224 1320.12,-224 1314.12,-224 1308.12,-218 1308.12,-212 1308.12,-212 1308.12,-200 1308.12,-200 1308.12,-194 1314.12,-188 1320.12,-188 1320.12,-188 1357.88,-188 1357.88,-188 1363.88,-188 1369.88,-194 1369.88,-200 1369.88,-200 1369.88,-212 1369.88,-212 1369.88,-218 1363.88,-224 1357.88,-224"/>
+<text xml:space="preserve" text-anchor="start" x="1316.12" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">breakspec</text>
 </a>
 </g>
 </g>
@@ -908,9 +908,9 @@
 <!-- n_utility__findmf__base__resample__bucket1d -->
 <g id="node85" class="node">
 <title>n_utility__findmf__base__resample__bucket1d</title>
-<g id="a_node85"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/bucket1d.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1430,-224C1430,-224 1396,-224 1396,-224 1390,-224 1384,-218 1384,-212 1384,-212 1384,-200 1384,-200 1384,-194 1390,-188 1396,-188 1396,-188 1430,-188 1430,-188 1436,-188 1442,-194 1442,-200 1442,-200 1442,-212 1442,-212 1442,-218 1436,-224 1430,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1413" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">bucket1d</text>
+<g id="a_node85"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/bucket1d.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1430,-224C1430,-224 1396,-224 1396,-224 1390,-224 1384,-218 1384,-212 1384,-212 1384,-200 1384,-200 1384,-194 1390,-188 1396,-188 1396,-188 1430,-188 1430,-188 1436,-188 1442,-194 1442,-200 1442,-200 1442,-212 1442,-212 1442,-218 1436,-224 1430,-224"/>
+<text xml:space="preserve" text-anchor="start" x="1392" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">bucket1d</text>
 </a>
 </g>
 </g>
@@ -918,9 +918,9 @@
 <!-- n_utility__findmf__base__resample__convert2dense -->
 <g id="node86" class="node">
 <title>n_utility__findmf__base__resample__convert2dense</title>
-<g id="a_node86"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/convert2dense.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1526,-224C1526,-224 1468,-224 1468,-224 1462,-224 1456,-218 1456,-212 1456,-212 1456,-200 1456,-200 1456,-194 1462,-188 1468,-188 1468,-188 1526,-188 1526,-188 1532,-188 1538,-194 1538,-200 1538,-200 1538,-212 1538,-212 1538,-218 1532,-224 1526,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1497" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">convert2dense</text>
+<g id="a_node86"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/convert2dense.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1526,-224C1526,-224 1468,-224 1468,-224 1462,-224 1456,-218 1456,-212 1456,-212 1456,-200 1456,-200 1456,-194 1462,-188 1468,-188 1468,-188 1526,-188 1526,-188 1532,-188 1538,-194 1538,-200 1538,-200 1538,-212 1538,-212 1538,-218 1532,-224 1526,-224"/>
+<text xml:space="preserve" text-anchor="start" x="1464" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">convert2dense</text>
 </a>
 </g>
 </g>
@@ -928,9 +928,9 @@
 <!-- n_utility__findmf__base__resample__determinebinwidth -->
 <g id="node87" class="node">
 <title>n_utility__findmf__base__resample__determinebinwidth</title>
-<g id="a_node87"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/determinebinwidth.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1641.75,-224C1641.75,-224 1564.25,-224 1564.25,-224 1558.25,-224 1552.25,-218 1552.25,-212 1552.25,-212 1552.25,-200 1552.25,-200 1552.25,-194 1558.25,-188 1564.25,-188 1564.25,-188 1641.75,-188 1641.75,-188 1647.75,-188 1653.75,-194 1653.75,-200 1653.75,-200 1653.75,-212 1653.75,-212 1653.75,-218 1647.75,-224 1641.75,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1603" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">determinebinwidth</text>
+<g id="a_node87"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/determinebinwidth.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1641.75,-224C1641.75,-224 1564.25,-224 1564.25,-224 1558.25,-224 1552.25,-218 1552.25,-212 1552.25,-212 1552.25,-200 1552.25,-200 1552.25,-194 1558.25,-188 1564.25,-188 1564.25,-188 1641.75,-188 1641.75,-188 1647.75,-188 1653.75,-194 1653.75,-200 1653.75,-200 1653.75,-212 1653.75,-212 1653.75,-218 1647.75,-224 1641.75,-224"/>
+<text xml:space="preserve" text-anchor="start" x="1560.25" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">determinebinwidth</text>
 </a>
 </g>
 </g>
@@ -938,9 +938,9 @@
 <!-- n_utility__findmf__base__resample__masscomparefunctors -->
 <g id="node88" class="node">
 <title>n_utility__findmf__base__resample__masscomparefunctors</title>
-<g id="a_node88"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/masscomparefunctors.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1770.5,-224C1770.5,-224 1679.5,-224 1679.5,-224 1673.5,-224 1667.5,-218 1667.5,-212 1667.5,-212 1667.5,-200 1667.5,-200 1667.5,-194 1673.5,-188 1679.5,-188 1679.5,-188 1770.5,-188 1770.5,-188 1776.5,-188 1782.5,-194 1782.5,-200 1782.5,-200 1782.5,-212 1782.5,-212 1782.5,-218 1776.5,-224 1770.5,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1725" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">masscomparefunctors</text>
+<g id="a_node88"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/masscomparefunctors.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1770.5,-224C1770.5,-224 1679.5,-224 1679.5,-224 1673.5,-224 1667.5,-218 1667.5,-212 1667.5,-212 1667.5,-200 1667.5,-200 1667.5,-194 1673.5,-188 1679.5,-188 1679.5,-188 1770.5,-188 1770.5,-188 1776.5,-188 1782.5,-194 1782.5,-200 1782.5,-200 1782.5,-212 1782.5,-212 1782.5,-218 1776.5,-224 1770.5,-224"/>
+<text xml:space="preserve" text-anchor="start" x="1675.5" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">masscomparefunctors</text>
 </a>
 </g>
 </g>
@@ -948,9 +948,9 @@
 <!-- n_utility__findmf__base__resample__utilities__determinebinwidth -->
 <g id="node89" class="node">
 <title>n_utility__findmf__base__resample__utilities__determinebinwidth</title>
-<g id="a_node89"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/utilities/determinebinwidth.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1885.75,-224C1885.75,-224 1808.25,-224 1808.25,-224 1802.25,-224 1796.25,-218 1796.25,-212 1796.25,-212 1796.25,-200 1796.25,-200 1796.25,-194 1802.25,-188 1808.25,-188 1808.25,-188 1885.75,-188 1885.75,-188 1891.75,-188 1897.75,-194 1897.75,-200 1897.75,-200 1897.75,-212 1897.75,-212 1897.75,-218 1891.75,-224 1885.75,-224"/>
-<text xml:space="preserve" text-anchor="middle" x="1847" y="-203.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">determinebinwidth</text>
+<g id="a_node89"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/findmf/base/resample/utilities/determinebinwidth.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1885.75,-224C1885.75,-224 1808.25,-224 1808.25,-224 1802.25,-224 1796.25,-218 1796.25,-212 1796.25,-212 1796.25,-200 1796.25,-200 1796.25,-194 1802.25,-188 1808.25,-188 1808.25,-188 1885.75,-188 1885.75,-188 1891.75,-188 1897.75,-194 1897.75,-200 1897.75,-200 1897.75,-212 1897.75,-212 1897.75,-218 1891.75,-224 1885.75,-224"/>
+<text xml:space="preserve" text-anchor="start" x="1804.25" y="-204.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">determinebinwidth</text>
 </a>
 </g>
 </g>

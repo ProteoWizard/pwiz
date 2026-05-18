@@ -17,7 +17,7 @@ digraph pwiz_modules {
     fontsize=12;
     margin=12;
     n_analysis__calibration [label="calibration", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
-    n_analysis__chromatogram_processing [label="chromatogram_processing", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_analysis__chromatogram_processing [label="chromatogram_processing", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
     n_analysis__common [label="common", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
     n_analysis__demux [label="demux", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_analysis__dia_umpire [label="dia_umpire", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
@@ -104,7 +104,7 @@ digraph pwiz_modules {
     fontsize=12;
     margin=12;
     n_utility__chemistry [label="chemistry", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
-    n_utility__findmf [label="findmf", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_utility__findmf [label=<<s>findmf</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555"];
     n_utility__math [label="math", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
     n_utility__minimxml [label="minimxml", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_utility__misc [label="misc", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];

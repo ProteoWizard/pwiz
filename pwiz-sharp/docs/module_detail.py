@@ -285,6 +285,20 @@ STATUS_FILE: dict[str, str] = {
     "analysis/demux/EnumConstantNotPresentException": "skipped",
     "analysis/demux/DemuxDataProcessingStrings": "full",
 
+    # analysis/chromatogram_processing — Filter + LockmassRefiner + SG + Factory ported
+    "analysis/chromatogram_processing/ChromatogramListFactory": "full",
+    "analysis/chromatogram_processing/ChromatogramListWrapper": "full",
+    "analysis/chromatogram_processing/ChromatogramList_Filter": "full",
+    "analysis/chromatogram_processing/ChromatogramList_LockmassRefiner": "partial",  # API hook on ChromatogramList_Waters, but Waters SDK has no lockmass-aware chromatogram read (matches cpp)
+    "analysis/chromatogram_processing/ChromatogramList_SavitzkyGolaySmoother": "full",
+    "analysis/chromatogram_processing/SavitzkyGolaySmoother": "full",                 # cpp's hardcoded quartic-9 inlined into the smoother
+    "analysis/chromatogram_processing/ChromatogramList_XICGenerator": "none",         # Thermo-specific XIC, not on msconvert filter path
+
+    # analysis/findmf — research tool, deliberately won't port. Marked at the directory
+    # level so every file under findmf/* picks up "skipped" via the ancestor-match
+    # fallback in status_of.
+    "analysis/findmf": "skipped",
+
     # other analysis subdirs — wholesale "none" or "skipped"
 }
 
@@ -893,9 +907,18 @@ def emit_module_dot(module: str, out_path: Path) -> None:
         buckets.setdefault(matched or fallback_label, []).append(stem)
 
     # Count what we know about each bucket for ordering (full > partial > none).
+    # Exact-key match wins; otherwise walk up the path looking for an ancestor
+    # directory entry (e.g. "utility/findmf" matches "utility/findmf/PeakelFit").
+    # Defaults to "none" so unannotated files render as gaps.
     def status_of(stem: str) -> str:
         key = f"{module}/{stem}"
-        return STATUS_FILE.get(key, "none")
+        if key in STATUS_FILE: return STATUS_FILE[key]
+        parts = key.split("/")
+        while len(parts) > 1:
+            parts.pop()
+            ancestor = "/".join(parts)
+            if ancestor in STATUS_FILE: return STATUS_FILE[ancestor]
+        return "none"
 
     # Stable cluster ordering: walk SUBAREA's declared order first so the page
     # reads top-to-bottom in a sensible curated order, then any "Other" cluster

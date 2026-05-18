@@ -67,8 +67,8 @@
 <!-- n_analysis__chromatogram_processing -->
 <g id="node2" class="node">
 <title>n_analysis__chromatogram_processing</title>
-<path fill="#f5a8a8" stroke="#a02020" d="M442.25,-209C442.25,-209 319.75,-209 319.75,-209 313.75,-209 307.75,-203 307.75,-197 307.75,-197 307.75,-185 307.75,-185 307.75,-179 313.75,-173 319.75,-173 319.75,-173 442.25,-173 442.25,-173 448.25,-173 454.25,-179 454.25,-185 454.25,-185 454.25,-197 454.25,-197 454.25,-203 448.25,-209 442.25,-209"/>
-<text xml:space="preserve" text-anchor="middle" x="381" y="-188.05" font-family="Segoe UI" font-size="11.00" fill="#3d0a0a">chromatogram_processing</text>
+<path fill="#ffe48a" stroke="#a87000" d="M442.25,-209C442.25,-209 319.75,-209 319.75,-209 313.75,-209 307.75,-203 307.75,-197 307.75,-197 307.75,-185 307.75,-185 307.75,-179 313.75,-173 319.75,-173 319.75,-173 442.25,-173 442.25,-173 448.25,-173 454.25,-179 454.25,-185 454.25,-185 454.25,-197 454.25,-197 454.25,-203 448.25,-209 442.25,-209"/>
+<text xml:space="preserve" text-anchor="middle" x="381" y="-188.05" font-family="Segoe UI" font-size="11.00" fill="#4a3000">chromatogram_processing</text>
 </g>
 <!-- n_analysis__common -->
 <g id="node3" class="node">
@@ -295,8 +295,8 @@
 <!-- n_utility__findmf -->
 <g id="node35" class="node">
 <title>n_utility__findmf</title>
-<path fill="#f5a8a8" stroke="#a02020" d="M348,-821C348,-821 318,-821 318,-821 312,-821 306,-815 306,-809 306,-809 306,-797 306,-797 306,-791 312,-785 318,-785 318,-785 348,-785 348,-785 354,-785 360,-791 360,-797 360,-797 360,-809 360,-809 360,-815 354,-821 348,-821"/>
-<text xml:space="preserve" text-anchor="middle" x="333" y="-800.05" font-family="Segoe UI" font-size="11.00" fill="#3d0a0a">findmf</text>
+<path fill="#dcdcdc" stroke="#888888" d="M348,-821C348,-821 318,-821 318,-821 312,-821 306,-815 306,-809 306,-809 306,-797 306,-797 306,-791 312,-785 318,-785 318,-785 348,-785 348,-785 354,-785 360,-791 360,-797 360,-797 360,-809 360,-809 360,-815 354,-821 348,-821"/>
+<text xml:space="preserve" text-anchor="start" x="316.5" y="-801.05" font-family="Segoe UI" text-decoration="line-through" font-size="11.00" fill="#555555">findmf</text>
 </g>
 <!-- n_utility__math -->
 <g id="node36" class="node">

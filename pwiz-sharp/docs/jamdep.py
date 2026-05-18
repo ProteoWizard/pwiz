@@ -38,7 +38,7 @@ STATUS = {
     "utility/proteome": "partial",
     "utility/misc": "partial",
     "utility/minimxml": "full",  # replaced by System.Xml
-    "utility/findmf": "none",
+    "utility/findmf": "skipped",  # research tool, not on msconvert path; won't port
     "utility/bindings/CLI": "none",
 
     # data/common (CV, ParamContainer, OBO, BinaryIndexStream, etc.)
@@ -70,12 +70,12 @@ STATUS = {
 
     # analysis
     "analysis/calibration": "none",
-    "analysis/chromatogram_processing": "none",
+    "analysis/chromatogram_processing": "partial",  # Filter + LockmassRefiner + SG smoother + Factory ported; XICGenerator (Thermo-only) not ported
     "analysis/common": "none",
     "analysis/demux": "full",                 # NNLS solver + MSX/Overlap demultiplexers
     "analysis/dia_umpire": "none",
     "analysis/eharmony": "none",
-    "analysis/findmf": "none",
+    "analysis/findmf": "skipped",             # research tool, not on msconvert path; won't port
     "analysis/frequency": "none",
     "analysis/passive": "none",
     "analysis/peakdetect": "full",

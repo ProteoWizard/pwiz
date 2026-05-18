@@ -523,9 +523,9 @@
 <!-- n_analysis__chromatogram_processing__ChromatogramListFactory -->
 <g id="node60" class="node">
 <title>n_analysis__chromatogram_processing__ChromatogramListFactory</title>
-<g id="a_node60"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramListFactory.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M137.75,-920C137.75,-920 30.25,-920 30.25,-920 24.25,-920 18.25,-914 18.25,-908 18.25,-908 18.25,-896 18.25,-896 18.25,-890 24.25,-884 30.25,-884 30.25,-884 137.75,-884 137.75,-884 143.75,-884 149.75,-890 149.75,-896 149.75,-896 149.75,-908 149.75,-908 149.75,-914 143.75,-920 137.75,-920"/>
-<text xml:space="preserve" text-anchor="middle" x="84" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ChromatogramListFactory</text>
+<g id="a_node60"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramListFactory.cpp" xlink:title="Ported. No per&#45;file detail recorded yet." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M137.75,-920C137.75,-920 30.25,-920 30.25,-920 24.25,-920 18.25,-914 18.25,-908 18.25,-908 18.25,-896 18.25,-896 18.25,-890 24.25,-884 30.25,-884 30.25,-884 137.75,-884 137.75,-884 143.75,-884 149.75,-890 149.75,-896 149.75,-896 149.75,-908 149.75,-908 149.75,-914 143.75,-920 137.75,-920"/>
+<text xml:space="preserve" text-anchor="middle" x="84" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ChromatogramListFactory</text>
 </a>
 </g>
 </g>
@@ -683,9 +683,9 @@
 <!-- n_analysis__chromatogram_processing__ChromatogramListWrapper -->
 <g id="node61" class="node">
 <title>n_analysis__chromatogram_processing__ChromatogramListWrapper</title>
-<g id="a_node61"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramListWrapper.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M290.12,-920C290.12,-920 175.88,-920 175.88,-920 169.88,-920 163.88,-914 163.88,-908 163.88,-908 163.88,-896 163.88,-896 163.88,-890 169.88,-884 175.88,-884 175.88,-884 290.12,-884 290.12,-884 296.12,-884 302.12,-890 302.12,-896 302.12,-896 302.12,-908 302.12,-908 302.12,-914 296.12,-920 290.12,-920"/>
-<text xml:space="preserve" text-anchor="middle" x="233" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ChromatogramListWrapper</text>
+<g id="a_node61"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramListWrapper.hpp" xlink:title="Ported. No per&#45;file detail recorded yet." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M290.12,-920C290.12,-920 175.88,-920 175.88,-920 169.88,-920 163.88,-914 163.88,-908 163.88,-908 163.88,-896 163.88,-896 163.88,-890 169.88,-884 175.88,-884 175.88,-884 290.12,-884 290.12,-884 296.12,-884 302.12,-890 302.12,-896 302.12,-896 302.12,-908 302.12,-908 302.12,-914 296.12,-920 290.12,-920"/>
+<text xml:space="preserve" text-anchor="middle" x="233" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ChromatogramListWrapper</text>
 </a>
 </g>
 </g>
@@ -703,9 +703,9 @@
 <!-- n_analysis__chromatogram_processing__ChromatogramList_Filter -->
 <g id="node62" class="node">
 <title>n_analysis__chromatogram_processing__ChromatogramList_Filter</title>
-<g id="a_node62"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramList_Filter.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M430.12,-920C430.12,-920 327.88,-920 327.88,-920 321.88,-920 315.88,-914 315.88,-908 315.88,-908 315.88,-896 315.88,-896 315.88,-890 321.88,-884 327.88,-884 327.88,-884 430.12,-884 430.12,-884 436.12,-884 442.12,-890 442.12,-896 442.12,-896 442.12,-908 442.12,-908 442.12,-914 436.12,-920 430.12,-920"/>
-<text xml:space="preserve" text-anchor="middle" x="379" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ChromatogramList_Filter</text>
+<g id="a_node62"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramList_Filter.cpp" xlink:title="Ported. No per&#45;file detail recorded yet." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M430.12,-920C430.12,-920 327.88,-920 327.88,-920 321.88,-920 315.88,-914 315.88,-908 315.88,-908 315.88,-896 315.88,-896 315.88,-890 321.88,-884 327.88,-884 327.88,-884 430.12,-884 430.12,-884 436.12,-884 442.12,-890 442.12,-896 442.12,-896 442.12,-908 442.12,-908 442.12,-914 436.12,-920 430.12,-920"/>
+<text xml:space="preserve" text-anchor="middle" x="379" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ChromatogramList_Filter</text>
 </a>
 </g>
 </g>
@@ -713,9 +713,9 @@
 <!-- n_analysis__chromatogram_processing__ChromatogramList_LockmassRefiner -->
 <g id="node63" class="node">
 <title>n_analysis__chromatogram_processing__ChromatogramList_LockmassRefiner</title>
-<g id="a_node63"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramList_LockmassRefiner.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M622,-920C622,-920 468,-920 468,-920 462,-920 456,-914 456,-908 456,-908 456,-896 456,-896 456,-890 462,-884 468,-884 468,-884 622,-884 622,-884 628,-884 634,-890 634,-896 634,-896 634,-908 634,-908 634,-914 628,-920 622,-920"/>
-<text xml:space="preserve" text-anchor="middle" x="545" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ChromatogramList_LockmassRefiner</text>
+<g id="a_node63"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramList_LockmassRefiner.cpp" xlink:title="Partially ported. No per&#45;file detail recorded yet." target="_blank">
+<path fill="#ffe48a" stroke="#a87000" d="M622,-920C622,-920 468,-920 468,-920 462,-920 456,-914 456,-908 456,-908 456,-896 456,-896 456,-890 462,-884 468,-884 468,-884 622,-884 622,-884 628,-884 634,-890 634,-896 634,-896 634,-908 634,-908 634,-914 628,-920 622,-920"/>
+<text xml:space="preserve" text-anchor="middle" x="545" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#4a3000">ChromatogramList_LockmassRefiner</text>
 </a>
 </g>
 </g>
@@ -723,9 +723,9 @@
 <!-- n_analysis__chromatogram_processing__ChromatogramList_SavitzkyGolaySmoother -->
 <g id="node64" class="node">
 <title>n_analysis__chromatogram_processing__ChromatogramList_SavitzkyGolaySmoother</title>
-<g id="a_node64"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramList_SavitzkyGolaySmoother.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M844,-920C844,-920 660,-920 660,-920 654,-920 648,-914 648,-908 648,-908 648,-896 648,-896 648,-890 654,-884 660,-884 660,-884 844,-884 844,-884 850,-884 856,-890 856,-896 856,-896 856,-908 856,-908 856,-914 850,-920 844,-920"/>
-<text xml:space="preserve" text-anchor="middle" x="752" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ChromatogramList_SavitzkyGolaySmoother</text>
+<g id="a_node64"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramList_SavitzkyGolaySmoother.cpp" xlink:title="Ported. No per&#45;file detail recorded yet." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M844,-920C844,-920 660,-920 660,-920 654,-920 648,-914 648,-908 648,-908 648,-896 648,-896 648,-890 654,-884 660,-884 660,-884 844,-884 844,-884 850,-884 856,-890 856,-896 856,-896 856,-908 856,-908 856,-914 850,-920 844,-920"/>
+<text xml:space="preserve" text-anchor="middle" x="752" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ChromatogramList_SavitzkyGolaySmoother</text>
 </a>
 </g>
 </g>
@@ -743,9 +743,9 @@
 <!-- n_analysis__chromatogram_processing__SavitzkyGolaySmoother -->
 <g id="node66" class="node">
 <title>n_analysis__chromatogram_processing__SavitzkyGolaySmoother</title>
-<g id="a_node66"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/SavitzkyGolaySmoother.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1156.12,-920C1156.12,-920 1059.88,-920 1059.88,-920 1053.88,-920 1047.88,-914 1047.88,-908 1047.88,-908 1047.88,-896 1047.88,-896 1047.88,-890 1053.88,-884 1059.88,-884 1059.88,-884 1156.12,-884 1156.12,-884 1162.12,-884 1168.12,-890 1168.12,-896 1168.12,-896 1168.12,-908 1168.12,-908 1168.12,-914 1162.12,-920 1156.12,-920"/>
-<text xml:space="preserve" text-anchor="middle" x="1108" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SavitzkyGolaySmoother</text>
+<g id="a_node66"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/SavitzkyGolaySmoother.hpp" xlink:title="Ported. No per&#45;file detail recorded yet." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M1156.12,-920C1156.12,-920 1059.88,-920 1059.88,-920 1053.88,-920 1047.88,-914 1047.88,-908 1047.88,-908 1047.88,-896 1047.88,-896 1047.88,-890 1053.88,-884 1059.88,-884 1059.88,-884 1156.12,-884 1156.12,-884 1162.12,-884 1168.12,-890 1168.12,-896 1168.12,-896 1168.12,-908 1168.12,-908 1168.12,-914 1162.12,-920 1156.12,-920"/>
+<text xml:space="preserve" text-anchor="middle" x="1108" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">SavitzkyGolaySmoother</text>
 </a>
 </g>
 </g>
@@ -1263,9 +1263,9 @@
 <!-- n_analysis__findmf__qtofpeakpickerfilter -->
 <g id="node120" class="node">
 <title>n_analysis__findmf__qtofpeakpickerfilter</title>
-<g id="a_node120"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/findmf/qtofpeakpickerfilter.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M123.88,-311C123.88,-311 44.12,-311 44.12,-311 38.12,-311 32.12,-305 32.12,-299 32.12,-299 32.12,-287 32.12,-287 32.12,-281 38.12,-275 44.12,-275 44.12,-275 123.88,-275 123.88,-275 129.88,-275 135.88,-281 135.88,-287 135.88,-287 135.88,-299 135.88,-299 135.88,-305 129.88,-311 123.88,-311"/>
-<text xml:space="preserve" text-anchor="middle" x="84" y="-290.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">qtofpeakpickerfilter</text>
+<g id="a_node120"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/findmf/qtofpeakpickerfilter.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M123.88,-311C123.88,-311 44.12,-311 44.12,-311 38.12,-311 32.12,-305 32.12,-299 32.12,-299 32.12,-287 32.12,-287 32.12,-281 38.12,-275 44.12,-275 44.12,-275 123.88,-275 123.88,-275 129.88,-275 135.88,-281 135.88,-287 135.88,-287 135.88,-299 135.88,-299 135.88,-305 129.88,-311 123.88,-311"/>
+<text xml:space="preserve" text-anchor="start" x="40.12" y="-291.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">qtofpeakpickerfilter</text>
 </a>
 </g>
 </g>
