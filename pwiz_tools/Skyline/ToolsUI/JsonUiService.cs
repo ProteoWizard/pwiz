@@ -23,7 +23,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
@@ -324,12 +323,13 @@ namespace pwiz.Skyline.ToolsUI
 
         public static string GetFormImage(string formId, string filePath)
         {
+            string denial = CheckScreenCaptureAvailability();
+            if (denial != null)
+                return denial;
             return InvokeOnUiThread(() =>
             {
-                var bitmap = CaptureFormBitmap(formId, out var form, out var denial);
-                if (denial != null)
-                    return denial;
-                using (bitmap)
+                var form = FindFormById(formId);
+                using (var bitmap = CaptureGrantedForm(form))
                 {
                     filePath = filePath ?? GetMcpTmpFilePath(
                         FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG);
@@ -342,18 +342,19 @@ namespace pwiz.Skyline.ToolsUI
 
         public static ImageBytesMetadata GetFormImageBytes(string formId)
         {
+            string denial = CheckScreenCaptureAvailability();
+            if (denial != null)
+            {
+                // Permission denial / desktop unavailable: return a structured
+                // Message instead of bytes. The wrapper emits Message as plain
+                // text content (no error flag) so the response shape matches
+                // what the legacy file-based path returned for the same condition.
+                return new ImageBytesMetadata { Message = denial };
+            }
             return InvokeOnUiThread(() =>
             {
-                var bitmap = CaptureFormBitmap(formId, out var form, out var denial);
-                if (denial != null)
-                {
-                    // Permission denial / desktop unavailable: return a structured
-                    // Message instead of bytes. The wrapper emits Message as plain
-                    // text content (no error flag) so the response shape matches
-                    // what the legacy file-based path returned for the same condition.
-                    return new ImageBytesMetadata { Message = denial };
-                }
-                using (bitmap)
+                var form = FindFormById(formId);
+                using (var bitmap = CaptureGrantedForm(form))
                 {
                     return new ImageBytesMetadata
                     {
@@ -381,38 +382,34 @@ namespace pwiz.Skyline.ToolsUI
             return zedGraph.MasterPane.GetImage(zedGraph.MasterPane.IsAntiAlias);
         }
 
-        // Captures a screenshot of an open form (with redaction). Returns the
-        // bitmap (caller disposes), or null with a non-null denial message when
-        // screen capture is unavailable or the user denied permission.
-        private static System.Drawing.Bitmap CaptureFormBitmap(string formId, out Form form, out string denial)
+        // Returns null when screen capture can proceed, or the LLM-facing
+        // denial / pending / desktop-unavailable message that the form-image
+        // tools should return to the caller without attempting capture.
+        // Called from the pipe thread (no Invoke marshal) so a Pending or
+        // Denied response does not pay the UI-thread round trip.
+        private static string CheckScreenCaptureAvailability()
         {
-            form = FindFormById(formId);
-
-            // Check permission (dialog may appear over the target form)
-            bool dialogShown = ScreenCapture.EnsurePermission(out bool wasFirstPrompt);
-            if (!dialogShown)
+            switch (ScreenCapture.EnsurePermission())
             {
-                denial = @"Screen capture denied by user.";
-                return null;
+                case PermissionResult.denied:
+                    return @"Screen capture denied by user.";
+                case PermissionResult.pending:
+                    return @"Screen capture permission required. A confirmation dialog is now open in Skyline; ask the user to grant or deny it, then call this tool again. This is the documented two-phase handshake, not an error.";
             }
-
-            // Check desktop availability before attempting capture
             if (!ScreenCapture.IsDesktopAvailable())
             {
-                denial = @"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.";
-                return null;
+                return @"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.";
             }
+            return null;
+        }
 
-            // Activate the form
+        // Captures a screenshot of an open form (with redaction). Caller owns
+        // the bitmap. Must be called on the UI thread, and only after
+        // CheckScreenCaptureAvailability has returned null.
+        private static System.Drawing.Bitmap CaptureGrantedForm(Form form)
+        {
             ScreenCapture.ActivateForm(form);
-
-            // If the permission dialog was just shown, allow time for it to
-            // fully dismiss and for Windows to repaint the target form.
-            if (wasFirstPrompt)
-                Thread.Sleep(1000);
-
             var screenRect = ScreenCapture.GetWindowRectangle(form);
-            denial = null;
             return ScreenCapture.CaptureAndRedact(screenRect, form);
         }
 

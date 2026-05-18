@@ -1239,30 +1239,52 @@ namespace pwiz.SkylineTestFunctional
 
             bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
 
-            // Test Deny - dialog should return denial message
-            // Run server call on a background thread (like the real pipe server thread)
-            // so InvokeOnUiThread marshals to the UI thread correctly.
-            string imagePath = TestFilesDir.GetTestPath(@"deny_test.png");
-            string denyResult = null;
-            ActionUtil.RunAsync(() => denyResult = server.GetFormImage(formId, imagePath));
+            // First call with no permission yet: returns Pending synchronously
+            // and asynchronously opens the confirmation dialog. The previous
+            // implementation blocked the pipe thread inside ShowDialog; the
+            // new flow returns immediately so the test thread does not need
+            // ActionUtil.RunAsync indirection to drive the dialog.
+            string pendingPath = TestFilesDir.GetTestPath(@"pending_test.png");
+            string pendingResult = server.GetFormImage(formId, pendingPath);
+            AssertEx.Contains(pendingResult, @"permission required");
+            Assert.IsFalse(File.Exists(pendingPath),
+                @"Pending response must not write a file");
             var dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
+
+            // Second call while the prompt is still pending: returns Pending
+            // again without opening a second dialog.
+            string repeatPendingPath = TestFilesDir.GetTestPath(@"pending_repeat.png");
+            string repeatPendingResult = server.GetFormImage(formId, repeatPendingPath);
+            AssertEx.Contains(repeatPendingResult, @"permission required");
+            Assert.IsFalse(File.Exists(repeatPendingPath));
+            AssertEx.AreEqual(1, FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Count());
+
+            // User clicks Cancel: state records denial.
             Assert.IsFalse(dlg.DoNotAskAgain);
             CancelDialog(dlg);
-            WaitForCondition(() => denyResult != null);
-            AssertEx.Contains(denyResult, @"denied");
-            Assert.IsFalse(File.Exists(imagePath));
 
-            // Test Allow - dialog should grant session permission
+            // Subsequent calls return Denied without re-prompting.
+            string deniedPath = TestFilesDir.GetTestPath(@"denied_test.png");
+            string deniedResult = server.GetFormImage(formId, deniedPath);
+            AssertEx.Contains(deniedResult, @"denied");
+            Assert.IsFalse(File.Exists(deniedPath));
+            Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any(),
+                @"Session-denied state must not open a second dialog");
+
+            // Reset and walk through the Allow path.
+            RunUI(ScreenCapture.ResetSessionPermission);
             string allowPath = TestFilesDir.GetTestPath(@"allow_test.png");
-            string allowResult = null;
-            ActionUtil.RunAsync(() => allowResult = server.GetFormImage(formId, allowPath));
+            string allowPendingResult = server.GetFormImage(formId, allowPath);
+            AssertEx.Contains(allowPendingResult, @"permission required");
             dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
             Assert.IsFalse(dlg.DoNotAskAgain);
             OkDialog(dlg);
-            WaitForCondition(() => allowResult != null);
+
+            // After Allow, the next call captures (or surfaces desktop-unavailable
+            // in CI environments without a desktop session).
+            string allowResult = server.GetFormImage(formId, allowPath);
             if (desktopAvailable)
             {
-                // After Allow, file should be created
                 Assert.IsTrue(File.Exists(allowPath));
                 Assert.IsTrue(new FileInfo(allowPath).Length > 0);
             }
@@ -1271,13 +1293,14 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.Contains(allowResult, @"not available");
             }
 
-            // Session permission is now granted - subsequent calls should not show dialog
+            // Session permission persists: subsequent calls capture without a dialog.
             string sessionPath = TestFilesDir.GetTestPath(@"session_test.png");
             string sessionResult = server.GetFormImage(formId, sessionPath);
             if (desktopAvailable)
                 Assert.IsTrue(File.Exists(sessionPath));
             else
                 AssertEx.Contains(sessionResult, @"not available");
+            Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any());
 
             // Test Allow + DoNotAskAgain - should persist the setting
             RunUI(() =>
@@ -1287,17 +1310,18 @@ namespace pwiz.SkylineTestFunctional
             });
 
             string persistPath = TestFilesDir.GetTestPath(@"persist_test.png");
-            string persistResult = null;
-            ActionUtil.RunAsync(() => persistResult = server.GetFormImage(formId, persistPath));
+            string persistPendingResult = server.GetFormImage(formId, persistPath);
+            AssertEx.Contains(persistPendingResult, @"permission required");
             dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
             RunUI(() => dlg.DoNotAskAgain = true);
             OkDialog(dlg);
-            WaitForCondition(() => persistResult != null);
+            Assert.IsTrue(Settings.Default.AllowMcpScreenCapture);
+
+            string persistResult = server.GetFormImage(formId, persistPath);
             if (desktopAvailable)
                 Assert.IsTrue(File.Exists(persistPath));
             else
                 AssertEx.Contains(persistResult, @"not available");
-            Assert.IsTrue(Settings.Default.AllowMcpScreenCapture);
 
             // Clean up setting for other tests
             RunUI(() =>

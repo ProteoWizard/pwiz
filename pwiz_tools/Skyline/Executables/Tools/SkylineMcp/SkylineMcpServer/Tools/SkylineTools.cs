@@ -568,7 +568,13 @@ public static class SkylineTools
         "from the screen with non-Skyline content automatically redacted. Set returnFormat='file' to " +
         "force file-on-disk, or 'inline' to require inline (errors if too big or Skyline too old). " +
         "Use skyline_get_open_forms to discover form IDs. For graphs, prefer skyline_get_graph_image " +
-        "which renders directly without screen capture.")]
+        "which renders directly without screen capture. " +
+        "Two-phase permission handshake: on the first call of a session, when the user has not yet " +
+        "authorized screen capture, this tool returns 'Screen capture permission required.' and opens " +
+        "a confirmation dialog inside Skyline. That is the documented handshake, not an error. Tell " +
+        "the user a dialog opened in Skyline, ask them to grant or deny it, then call this tool again. " +
+        "After the user grants, subsequent calls capture normally; if they deny, subsequent calls " +
+        "return 'Screen capture denied by user.' without re-prompting.")]
     public static CallToolResult GetFormImage(
         [Description("Form identifier from skyline_get_open_forms (e.g., 'SequenceTreeForm:Targets', 'PeptideSettingsUI:Peptide Settings')")] string formId,
         [Description("Return shape: 'auto' (default, inline with file fallback), 'inline' (always inline, error if too big or Skyline too old), or 'file' (write to disk and return the path).")] string returnFormat = RETURN_AUTO,

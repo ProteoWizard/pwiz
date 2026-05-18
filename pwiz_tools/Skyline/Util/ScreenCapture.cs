@@ -35,12 +35,27 @@ using pwiz.Skyline.Properties;
 namespace pwiz.Skyline.Util
 {
     /// <summary>
+    /// Result of <see cref="ScreenCapture.EnsurePermission"/>. The pipe-thread
+    /// caller never blocks on a user click: a first-time prompt schedules the
+    /// dialog asynchronously and returns <see cref="PermissionResult.pending"/>,
+    /// letting the LLM surface the prompt and retry.
+    /// </summary>
+    public enum PermissionResult
+    {
+        granted,
+        denied,
+        pending
+    }
+
+    /// <summary>
     /// Production screen capture utility for Skyline forms.
     /// Provides DPI-aware capture with redaction of non-Skyline windows.
     /// </summary>
     public static class ScreenCapture
     {
-        private static bool _sessionPermissionGranted;
+        private static volatile bool _sessionPermissionGranted;
+        private static volatile bool _sessionDenied;
+        private static volatile bool _promptPending;
 
         /// <summary>
         /// Resets the session-level screen capture permission. Used by tests.
@@ -48,6 +63,8 @@ namespace pwiz.Skyline.Util
         public static void ResetSessionPermission()
         {
             _sessionPermissionGranted = false;
+            _sessionDenied = false;
+            _promptPending = false;
         }
 
         public class PointFactor
@@ -282,32 +299,56 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Checks whether screen capture is permitted, showing a confirmation dialog if needed.
-        /// Must be called on the UI thread.
+        /// Returns the current screen-capture permission state. Must be called from a
+        /// background thread (e.g. the JSON-RPC pipe thread); the first-time prompt
+        /// path schedules the modal dialog on the UI thread via
+        /// <see cref="Control.BeginInvoke(Delegate)"/> and returns
+        /// <see cref="PermissionResult.pending"/> immediately, so the calling thread
+        /// never blocks on a user click. Subsequent calls while the dialog is open
+        /// also return <see cref="PermissionResult.pending"/> without opening a
+        /// second dialog.
         /// </summary>
-        /// <param name="wasFirstPrompt">True if the permission dialog was shown this call
-        /// (callers may need to delay for repaint after the dialog dismisses).</param>
-        /// <returns>True if permission is granted.</returns>
-        public static bool EnsurePermission(out bool wasFirstPrompt)
+        public static PermissionResult EnsurePermission()
         {
-            wasFirstPrompt = false;
+            Assume.IsTrue(Program.MainWindow.InvokeRequired);
+
             if (Settings.Default.AllowMcpScreenCapture || _sessionPermissionGranted)
-                return true;
+                return PermissionResult.granted;
+            if (_sessionDenied)
+                return PermissionResult.denied;
+            if (_promptPending)
+                return PermissionResult.pending;
 
-            wasFirstPrompt = true;
-            using (var dlg = new ScreenCapturePermissionDlg())
+            _promptPending = true;
+            Program.MainWindow.BeginInvoke(new Action(ShowPermissionDialog));
+            return PermissionResult.pending;
+        }
+
+        private static void ShowPermissionDialog()
+        {
+            try
             {
-                if (dlg.ShowDialog(Program.MainWindow) != DialogResult.OK)
-                    return false;
-
-                _sessionPermissionGranted = true;
-                if (dlg.DoNotAskAgain)
+                using (var dlg = new ScreenCapturePermissionDlg())
                 {
-                    Settings.Default.AllowMcpScreenCapture = true;
-                    Settings.Default.Save();
+                    if (dlg.ShowDialog(Program.MainWindow) == DialogResult.OK)
+                    {
+                        _sessionPermissionGranted = true;
+                        if (dlg.DoNotAskAgain)
+                        {
+                            Settings.Default.AllowMcpScreenCapture = true;
+                            Settings.Default.Save();
+                        }
+                    }
+                    else
+                    {
+                        _sessionDenied = true;
+                    }
                 }
             }
-            return true;
+            finally
+            {
+                _promptPending = false;
+            }
         }
 
         // Private helpers
