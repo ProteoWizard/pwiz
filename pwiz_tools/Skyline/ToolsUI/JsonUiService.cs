@@ -23,7 +23,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
@@ -322,14 +321,28 @@ namespace pwiz.Skyline.ToolsUI
 
         private const string FORM_FILE_PREFIX = @"skyline-form";
 
+        // LLM-facing instruction text for the form-image permission states.
+        // Wrapped in LlmInstruction so the type makes the not-translated
+        // contract explicit, and exposed as fields so tests can assert against
+        // the canonical value instead of a brittle English substring
+        // (see CRITICAL-RULES.md on translation-proof tests).
+        public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_DENIED =
+            new LlmInstruction(@"Screen capture denied by user.");
+        public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED =
+            new LlmInstruction(@"Screen capture permission required. A confirmation dialog is now open in Skyline; ask the user to grant or deny it, then call this tool again. This is the documented two-phase handshake, not an error.");
+        public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE =
+            new LlmInstruction(@"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.");
+
         public static string GetFormImage(string formId, string filePath)
         {
+            ValidateFormIdFormat(formId);
+            string denial = CheckScreenCaptureAvailability();
+            if (denial != null)
+                return denial;
             return InvokeOnUiThread(() =>
             {
-                var bitmap = CaptureFormBitmap(formId, out var form, out var denial);
-                if (denial != null)
-                    return denial;
-                using (bitmap)
+                var form = FindFormById(formId);
+                using (var bitmap = CaptureGrantedForm(form))
                 {
                     filePath = filePath ?? GetMcpTmpFilePath(
                         FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG);
@@ -342,18 +355,20 @@ namespace pwiz.Skyline.ToolsUI
 
         public static ImageBytesMetadata GetFormImageBytes(string formId)
         {
+            ValidateFormIdFormat(formId);
+            string denial = CheckScreenCaptureAvailability();
+            if (denial != null)
+            {
+                // Permission denial / desktop unavailable: return a structured
+                // Message instead of bytes. The wrapper emits Message as plain
+                // text content (no error flag) so the response shape matches
+                // what the legacy file-based path returned for the same condition.
+                return new ImageBytesMetadata { Message = denial };
+            }
             return InvokeOnUiThread(() =>
             {
-                var bitmap = CaptureFormBitmap(formId, out var form, out var denial);
-                if (denial != null)
-                {
-                    // Permission denial / desktop unavailable: return a structured
-                    // Message instead of bytes. The wrapper emits Message as plain
-                    // text content (no error flag) so the response shape matches
-                    // what the legacy file-based path returned for the same condition.
-                    return new ImageBytesMetadata { Message = denial };
-                }
-                using (bitmap)
+                var form = FindFormById(formId);
+                using (var bitmap = CaptureGrantedForm(form))
                 {
                     return new ImageBytesMetadata
                     {
@@ -381,38 +396,50 @@ namespace pwiz.Skyline.ToolsUI
             return zedGraph.MasterPane.GetImage(zedGraph.MasterPane.IsAntiAlias);
         }
 
-        // Captures a screenshot of an open form (with redaction). Returns the
-        // bitmap (caller disposes), or null with a non-null denial message when
-        // screen capture is unavailable or the user denied permission.
-        private static System.Drawing.Bitmap CaptureFormBitmap(string formId, out Form form, out string denial)
+        // Returns null when screen capture can proceed, or the LLM-facing
+        // denial / pending / desktop-unavailable message that the form-image
+        // tools should return to the caller without attempting capture.
+        // Called from the pipe thread (no Invoke marshal) so a Pending or
+        // Denied response does not pay the UI-thread round trip.
+        private static string CheckScreenCaptureAvailability()
         {
-            form = FindFormById(formId);
-
-            // Check permission (dialog may appear over the target form)
-            bool dialogShown = ScreenCapture.EnsurePermission(out bool wasFirstPrompt);
-            if (!dialogShown)
+            switch (ScreenCapture.EnsurePermission())
             {
-                denial = @"Screen capture denied by user.";
-                return null;
+                case PermissionResult.denied:
+                    return LLM_MSG_SCREEN_CAPTURE_DENIED;
+                case PermissionResult.pending:
+                    return LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED;
+                case PermissionResult.unavailable:
+                    return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             }
-
-            // Check desktop availability before attempting capture
             if (!ScreenCapture.IsDesktopAvailable())
             {
-                denial = @"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.";
-                return null;
+                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             }
+            return null;
+        }
 
-            // Activate the form
+        // Cheap formId well-formedness check that runs on the pipe thread,
+        // before the screen-capture permission prompt fires. Catching obviously
+        // bad input here avoids interrupting the user with a permission dialog
+        // for a request that can never succeed.
+        private static void ValidateFormIdFormat(string formId)
+        {
+            if (formId == null || formId.IndexOf(':') < 0)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Invalid form ID format: {0}. Expected 'TypeName:Title'. Use skyline_get_open_forms to get valid IDs.",
+                    formId ?? string.Empty));
+            }
+        }
+
+        // Captures a screenshot of an open form (with redaction). Caller owns
+        // the bitmap. Must be called on the UI thread, and only after
+        // CheckScreenCaptureAvailability has returned null.
+        private static System.Drawing.Bitmap CaptureGrantedForm(Form form)
+        {
             ScreenCapture.ActivateForm(form);
-
-            // If the permission dialog was just shown, allow time for it to
-            // fully dismiss and for Windows to repaint the target form.
-            if (wasFirstPrompt)
-                Thread.Sleep(1000);
-
             var screenRect = ScreenCapture.GetWindowRectangle(form);
-            denial = null;
             return ScreenCapture.CaptureAndRedact(screenRect, form);
         }
 
@@ -468,14 +495,8 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private static Form FindFormById(string formId)
         {
+            ValidateFormIdFormat(formId);
             int colonIndex = formId.IndexOf(':');
-            if (colonIndex < 0)
-            {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Invalid form ID format: {0}. Expected 'TypeName:Title'. Use skyline_get_open_forms to get valid IDs.",
-                    formId));
-            }
-
             string typeName = formId.Substring(0, colonIndex);
             string title = formId.Substring(colonIndex + 1);
 
