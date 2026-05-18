@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
@@ -55,7 +56,10 @@ namespace pwiz.Skyline.Util
     {
         private static volatile bool _sessionPermissionGranted;
         private static volatile bool _sessionDenied;
-        private static volatile bool _promptPending;
+        // 0 = no prompt outstanding, 1 = prompt scheduled or open.
+        // Treated as a bool but stored as int so Interlocked.CompareExchange
+        // can give us a single atomic check-and-set across concurrent pipe threads.
+        private static int _promptPending;
 
         /// <summary>
         /// Resets the session-level screen capture permission. Used by tests.
@@ -64,7 +68,7 @@ namespace pwiz.Skyline.Util
         {
             _sessionPermissionGranted = false;
             _sessionDenied = false;
-            _promptPending = false;
+            Interlocked.Exchange(ref _promptPending, 0);
         }
 
         public class PointFactor
@@ -316,11 +320,19 @@ namespace pwiz.Skyline.Util
                 return PermissionResult.granted;
             if (_sessionDenied)
                 return PermissionResult.denied;
-            if (_promptPending)
+
+            // Atomic transition into the pending state. If another pipe thread
+            // already won this race, fall through and return pending without
+            // scheduling a second dialog.
+            if (Interlocked.CompareExchange(ref _promptPending, 1, 0) != 0)
                 return PermissionResult.pending;
 
-            _promptPending = true;
-            Program.MainWindow.BeginInvoke(new Action(ShowPermissionDialog));
+            // SafeBeginInvoke returns false if MainWindow has lost its handle
+            // (e.g. Skyline is shutting down). Clear the gate in that case so
+            // a transient handle outage does not leave EnsurePermission stuck
+            // in pending forever.
+            if (!CommonActionUtil.SafeBeginInvoke(Program.MainWindow, ShowPermissionDialog))
+                Interlocked.Exchange(ref _promptPending, 0);
             return PermissionResult.pending;
         }
 
@@ -347,7 +359,7 @@ namespace pwiz.Skyline.Util
             }
             finally
             {
-                _promptPending = false;
+                Interlocked.Exchange(ref _promptPending, 0);
             }
         }
 

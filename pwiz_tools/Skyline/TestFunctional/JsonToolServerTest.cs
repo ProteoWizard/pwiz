@@ -1246,7 +1246,7 @@ namespace pwiz.SkylineTestFunctional
             // ActionUtil.RunAsync indirection to drive the dialog.
             string pendingPath = TestFilesDir.GetTestPath(@"pending_test.png");
             string pendingResult = server.GetFormImage(formId, pendingPath);
-            AssertEx.Contains(pendingResult, @"permission required");
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, pendingResult);
             Assert.IsFalse(File.Exists(pendingPath),
                 @"Pending response must not write a file");
             var dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
@@ -1255,7 +1255,7 @@ namespace pwiz.SkylineTestFunctional
             // again without opening a second dialog.
             string repeatPendingPath = TestFilesDir.GetTestPath(@"pending_repeat.png");
             string repeatPendingResult = server.GetFormImage(formId, repeatPendingPath);
-            AssertEx.Contains(repeatPendingResult, @"permission required");
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, repeatPendingResult);
             Assert.IsFalse(File.Exists(repeatPendingPath));
             AssertEx.AreEqual(1, FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Count());
 
@@ -1266,7 +1266,7 @@ namespace pwiz.SkylineTestFunctional
             // Subsequent calls return Denied without re-prompting.
             string deniedPath = TestFilesDir.GetTestPath(@"denied_test.png");
             string deniedResult = server.GetFormImage(formId, deniedPath);
-            AssertEx.Contains(deniedResult, @"denied");
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_DENIED.Value, deniedResult);
             Assert.IsFalse(File.Exists(deniedPath));
             Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any(),
                 @"Session-denied state must not open a second dialog");
@@ -1275,7 +1275,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(ScreenCapture.ResetSessionPermission);
             string allowPath = TestFilesDir.GetTestPath(@"allow_test.png");
             string allowPendingResult = server.GetFormImage(formId, allowPath);
-            AssertEx.Contains(allowPendingResult, @"permission required");
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, allowPendingResult);
             dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
             Assert.IsFalse(dlg.DoNotAskAgain);
             OkDialog(dlg);
@@ -1290,7 +1290,7 @@ namespace pwiz.SkylineTestFunctional
             }
             else
             {
-                AssertEx.Contains(allowResult, @"not available");
+                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, allowResult);
             }
 
             // Session permission persists: subsequent calls capture without a dialog.
@@ -1299,19 +1299,28 @@ namespace pwiz.SkylineTestFunctional
             if (desktopAvailable)
                 Assert.IsTrue(File.Exists(sessionPath));
             else
-                AssertEx.Contains(sessionResult, @"not available");
+                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, sessionResult);
             Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any());
 
-            // Test Allow + DoNotAskAgain - should persist the setting
+            // Malformed formId is rejected on the pipe thread before any
+            // permission prompt fires - an obvious bad-input request must not
+            // interrupt the user with a confirmation dialog. Reset first so we
+            // start from un-granted state.
             RunUI(() =>
             {
                 Settings.Default.AllowMcpScreenCapture = false;
                 ScreenCapture.ResetSessionPermission();
             });
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetFormImage(@"NoColonHere",
+                    TestFilesDir.GetTestPath(@"malformed_test.png")));
+            Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any(),
+                @"Malformed formId must not trigger the permission dialog");
 
+            // Test Allow + DoNotAskAgain - should persist the setting
             string persistPath = TestFilesDir.GetTestPath(@"persist_test.png");
             string persistPendingResult = server.GetFormImage(formId, persistPath);
-            AssertEx.Contains(persistPendingResult, @"permission required");
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, persistPendingResult);
             dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
             RunUI(() => dlg.DoNotAskAgain = true);
             OkDialog(dlg);
@@ -1321,7 +1330,7 @@ namespace pwiz.SkylineTestFunctional
             if (desktopAvailable)
                 Assert.IsTrue(File.Exists(persistPath));
             else
-                AssertEx.Contains(persistResult, @"not available");
+                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, persistResult);
 
             // Clean up setting for other tests
             RunUI(() =>

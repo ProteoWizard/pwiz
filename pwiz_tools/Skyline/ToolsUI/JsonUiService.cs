@@ -321,8 +321,21 @@ namespace pwiz.Skyline.ToolsUI
 
         private const string FORM_FILE_PREFIX = @"skyline-form";
 
+        // LLM-facing instruction text for the form-image permission states.
+        // Wrapped in LlmInstruction so the type makes the not-translated
+        // contract explicit, and exposed as fields so tests can assert against
+        // the canonical value instead of a brittle English substring
+        // (see CRITICAL-RULES.md on translation-proof tests).
+        public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_DENIED =
+            new LlmInstruction(@"Screen capture denied by user.");
+        public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED =
+            new LlmInstruction(@"Screen capture permission required. A confirmation dialog is now open in Skyline; ask the user to grant or deny it, then call this tool again. This is the documented two-phase handshake, not an error.");
+        public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE =
+            new LlmInstruction(@"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.");
+
         public static string GetFormImage(string formId, string filePath)
         {
+            ValidateFormIdFormat(formId);
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
                 return denial;
@@ -342,6 +355,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static ImageBytesMetadata GetFormImageBytes(string formId)
         {
+            ValidateFormIdFormat(formId);
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
             {
@@ -392,15 +406,29 @@ namespace pwiz.Skyline.ToolsUI
             switch (ScreenCapture.EnsurePermission())
             {
                 case PermissionResult.denied:
-                    return @"Screen capture denied by user.";
+                    return LLM_MSG_SCREEN_CAPTURE_DENIED;
                 case PermissionResult.pending:
-                    return @"Screen capture permission required. A confirmation dialog is now open in Skyline; ask the user to grant or deny it, then call this tool again. This is the documented two-phase handshake, not an error.";
+                    return LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED;
             }
             if (!ScreenCapture.IsDesktopAvailable())
             {
-                return @"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.";
+                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             }
             return null;
+        }
+
+        // Cheap formId well-formedness check that runs on the pipe thread,
+        // before the screen-capture permission prompt fires. Catching obviously
+        // bad input here avoids interrupting the user with a permission dialog
+        // for a request that can never succeed.
+        private static void ValidateFormIdFormat(string formId)
+        {
+            if (formId == null || formId.IndexOf(':') < 0)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Invalid form ID format: {0}. Expected 'TypeName:Title'. Use skyline_get_open_forms to get valid IDs.",
+                    formId ?? string.Empty));
+            }
         }
 
         // Captures a screenshot of an open form (with redaction). Caller owns
@@ -465,14 +493,8 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private static Form FindFormById(string formId)
         {
+            ValidateFormIdFormat(formId);
             int colonIndex = formId.IndexOf(':');
-            if (colonIndex < 0)
-            {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Invalid form ID format: {0}. Expected 'TypeName:Title'. Use skyline_get_open_forms to get valid IDs.",
-                    formId));
-            }
-
             string typeName = formId.Substring(0, colonIndex);
             string title = formId.Substring(colonIndex + 1);
 
