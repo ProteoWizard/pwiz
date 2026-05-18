@@ -40,12 +40,16 @@ namespace pwiz.Skyline.Util
     /// caller never blocks on a user click: a first-time prompt schedules the
     /// dialog asynchronously and returns <see cref="PermissionResult.pending"/>,
     /// letting the LLM surface the prompt and retry.
+    /// <see cref="PermissionResult.unavailable"/> covers transient inability to
+    /// host a dialog at all (Skyline mid-startup or mid-shutdown) so the LLM
+    /// is not falsely told a dialog has opened.
     /// </summary>
     public enum PermissionResult
     {
         granted,
         denied,
-        pending
+        pending,
+        unavailable
     }
 
     /// <summary>
@@ -314,7 +318,14 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static PermissionResult EnsurePermission()
         {
-            Assume.IsTrue(Program.MainWindow.InvokeRequired);
+            // Capture MainWindow once. The pipe thread can reach this line
+            // before MainWindow is set (early startup) or after it has been
+            // cleared (shutdown), in which case we cannot show a prompt at all.
+            var mainWindow = Program.MainWindow;
+            if (mainWindow == null)
+                return PermissionResult.unavailable;
+
+            Assume.IsTrue(mainWindow.InvokeRequired);
 
             if (Settings.Default.AllowMcpScreenCapture || _sessionPermissionGranted)
                 return PermissionResult.granted;
@@ -328,11 +339,14 @@ namespace pwiz.Skyline.Util
                 return PermissionResult.pending;
 
             // SafeBeginInvoke returns false if MainWindow has lost its handle
-            // (e.g. Skyline is shutting down). Clear the gate in that case so
-            // a transient handle outage does not leave EnsurePermission stuck
-            // in pending forever.
-            if (!CommonActionUtil.SafeBeginInvoke(Program.MainWindow, ShowPermissionDialog))
+            // (e.g. Skyline is shutting down). Clear the gate and report
+            // unavailable rather than pending so the LLM is not told to wait
+            // on a dialog that will never open.
+            if (!CommonActionUtil.SafeBeginInvoke(mainWindow, ShowPermissionDialog))
+            {
                 Interlocked.Exchange(ref _promptPending, 0);
+                return PermissionResult.unavailable;
+            }
             return PermissionResult.pending;
         }
 

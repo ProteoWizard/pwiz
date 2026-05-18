@@ -409,6 +409,8 @@ namespace pwiz.Skyline.ToolsUI
                     return LLM_MSG_SCREEN_CAPTURE_DENIED;
                 case PermissionResult.pending:
                     return LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED;
+                case PermissionResult.unavailable:
+                    return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             }
             if (!ScreenCapture.IsDesktopAvailable())
             {

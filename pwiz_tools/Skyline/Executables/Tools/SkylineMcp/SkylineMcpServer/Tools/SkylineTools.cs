@@ -562,6 +562,11 @@ public static class SkylineTools
             fileCall: (c, fp) => SavedToPath("Graph image", c.GetGraphImage(graphId, fp))));
     }
 
+    // Note: the handshake wording below describes the SHAPE of the response,
+    // not the exact runtime strings. The runtime messages live in
+    // JsonUiService.LLM_MSG_SCREEN_CAPTURE_* and may be localized in the
+    // future; the description here intentionally stays abstract so the two
+    // do not drift out of sync.
     [McpServerTool(Name = "skyline_get_form_image"),
      Description("Export a PNG screenshot of any open Skyline form, dialog, or dockable panel. " +
         "By default returns the PNG inline as an MCP ImageContentBlock. The screenshot is captured " +
@@ -570,11 +575,11 @@ public static class SkylineTools
         "Use skyline_get_open_forms to discover form IDs. For graphs, prefer skyline_get_graph_image " +
         "which renders directly without screen capture. " +
         "Two-phase permission handshake: on the first call of a session, when the user has not yet " +
-        "authorized screen capture, this tool returns 'Screen capture permission required.' and opens " +
-        "a confirmation dialog inside Skyline. That is the documented handshake, not an error. Tell " +
-        "the user a dialog opened in Skyline, ask them to grant or deny it, then call this tool again. " +
-        "After the user grants, subsequent calls capture normally; if they deny, subsequent calls " +
-        "return 'Screen capture denied by user.' without re-prompting.")]
+        "authorized screen capture, this tool opens a confirmation dialog inside Skyline and returns a " +
+        "permission-required message. That is the documented handshake, not an error. Tell the user a " +
+        "dialog opened in Skyline, ask them to grant or deny it, then call this tool again. After the " +
+        "user grants, subsequent calls capture normally; if they deny, subsequent calls return a " +
+        "denied message without re-prompting.")]
     public static CallToolResult GetFormImage(
         [Description("Form identifier from skyline_get_open_forms (e.g., 'SequenceTreeForm:Targets', 'PeptideSettingsUI:Peptide Settings')")] string formId,
         [Description("Return shape: 'auto' (default, inline with file fallback), 'inline' (always inline, error if too big or Skyline too old), or 'file' (write to disk and return the path).")] string returnFormat = RETURN_AUTO,
