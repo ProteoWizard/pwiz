@@ -32,7 +32,7 @@ public enum ModificationDelimiter
 /// <summary>A peptide / polypeptide: an amino acid sequence plus optional modifications.</summary>
 /// <remarks>Port of <c>pwiz::proteome::Peptide</c>. Provides mass + fragmentation helpers
 /// for SeeMS-style peptide annotation.</remarks>
-public sealed class Peptide : IEquatable<Peptide>, IComparable<Peptide>
+public class Peptide : IEquatable<Peptide>, IComparable<Peptide>
 {
     private readonly string _sequence;
     private readonly ModificationMap _mods = new();
