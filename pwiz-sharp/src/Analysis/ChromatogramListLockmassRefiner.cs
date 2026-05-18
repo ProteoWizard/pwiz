@@ -11,27 +11,24 @@ namespace Pwiz.Analysis;
 /// Port of <c>pwiz::analysis::ChromatogramList_LockmassRefiner</c>.
 /// </summary>
 /// <remarks>
-/// Construction-time behavior matches cpp: if the inner list is a
-/// <see cref="ChromatogramList_Waters"/>, append a "m/z calibration" + "Waters lockmass
-/// correction" ProcessingMethod to the data-processing chain. Otherwise the wrapper is a
-/// passthrough and a warning is logged.
-/// <para>Read-time: sharp's <c>ChromatogramList_Waters</c> does not yet expose a
-/// lockmass-aware <c>GetChromatogram</c> overload (cpp passes (mzPos, mzNeg, tol) to
-/// <c>ChromatogramList_Waters::chromatogram</c>). Until that's wired up, this wrapper just
-/// stamps the DataProcessing on each returned chromatogram so downstream consumers see the
-/// processing history — the binary data itself isn't refined yet. Matches cpp's behavior on
-/// builds without <c>PWIZ_READER_WATERS</c>.</para>
+/// On Waters input, the wrapper appends a "m/z calibration" + "Waters lockmass correction"
+/// ProcessingMethod to the data-processing chain and threads the lockmass parameters through
+/// <see cref="ChromatogramList_Waters.GetChromatogramWithLockmass"/>. On non-Waters input,
+/// the wrapper logs a warning and passes chromatograms through unchanged — matching cpp's
+/// behavior in <c>ChromatogramList_LockmassRefiner.cpp:60-66</c>.
+/// <para>The binary chromatogram payload is not modified even on Waters input: cpp's
+/// chromatogram-lockmass overload (<c>ChromatogramList_Waters.cpp:91</c>) accepts the
+/// lockmass parameters in its signature but never references them, because the Waters
+/// MassLynx <c>ChromatogramReader</c> doesn't expose a lockmass-aware read path and SRM/SIM
+/// transition m/z values come straight from the function definition rather than peak-picked
+/// spectra. Sharp matches that exactly: the metadata trail records the user's intent and the
+/// extension hook is wired up, but no array values change.</para>
 /// </remarks>
 public sealed class ChromatogramListLockmassRefiner : ChromatogramListWrapper
 {
-    // Stored for the day sharp's Waters reader gains the lockmass-aware chromatogram overload;
-    // until then these are documentation. Kept here so the public ctor signature matches cpp's
-    // and so callers can configure the wrapper from the msconvert filter string today.
-#pragma warning disable CA1823 // unused fields — see remarks
     private readonly double _mzPositiveScans;
     private readonly double _mzNegativeScans;
     private readonly double _tolerance;
-#pragma warning restore CA1823
 
     /// <summary>Constructs the wrapper. <paramref name="lockmassMzPosScans"/> is the lockmass
     /// m/z for positive-mode scans; <paramref name="lockmassMzNegScans"/> is the value for
@@ -57,7 +54,6 @@ public sealed class ChromatogramListLockmassRefiner : ChromatogramListWrapper
         }
         else
         {
-            // cpp logs this to stderr (Connection_LockmassRefiner.cpp:60); mirror.
             Console.Error.WriteLine(
                 "Warning: lockmass refinement for chromatogram data was requested, but is unavailable for non-Waters input data.");
         }
@@ -66,7 +62,10 @@ public sealed class ChromatogramListLockmassRefiner : ChromatogramListWrapper
     /// <inheritdoc/>
     public override Chromatogram GetChromatogram(int index, bool getBinaryData = false)
     {
-        var c = Inner.GetChromatogram(index, getBinaryData);
+        Chromatogram c = Inner is ChromatogramList_Waters waters
+            ? waters.GetChromatogramWithLockmass(index, getBinaryData,
+                _mzPositiveScans, _mzNegativeScans, _tolerance)
+            : Inner.GetChromatogram(index, getBinaryData);
         c.DataProcessing = Dp;
         return c;
     }

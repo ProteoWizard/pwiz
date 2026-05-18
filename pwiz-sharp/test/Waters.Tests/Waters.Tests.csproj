@@ -14,15 +14,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="..\..\src\Analysis\Analysis.csproj" />
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
-  <!-- CcsConversionTests / SonarAndFlagsTests open .raw directories through Reader_Waters
-       directly to cover paths the harness can't reach (CCS<->mobility math, scanning-quadrupole
-       flag emission). Both require the Waters SDK at build time. -->
+  <!-- CcsConversionTests / SonarAndFlagsTests / ChromatogramLockmassTests open .raw directories
+       through Reader_Waters directly to cover paths the harness can't reach (CCS<->mobility math,
+       scanning-quadrupole flag emission, chromatogram lockmass plumbing). All require the Waters
+       SDK at build time. -->
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
     <Compile Remove="CcsConversionTests.cs" />
     <Compile Remove="SonarAndFlagsTests.cs" />
+    <Compile Remove="ChromatogramLockmassTests.cs" />
   </ItemGroup>
 
 </Project>

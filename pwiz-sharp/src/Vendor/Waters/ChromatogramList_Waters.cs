@@ -291,6 +291,28 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
     /// <inheritdoc/>
     public override ChromatogramIdentity ChromatogramIdentity(int index) => _index[index];
 
+    /// <summary>
+    /// Lockmass-aware chromatogram overload. Mirrors cpp
+    /// <c>ChromatogramList_Waters::chromatogram(index, detailLevel, mzPos, mzNeg, tol)</c>.
+    /// </summary>
+    /// <remarks>
+    /// The lockmass parameters are accepted for API parity with cpp but currently unused —
+    /// Waters' MassLynx <c>ChromatogramReader</c> doesn't take a lockmass argument
+    /// (the SDK refines m/z values at the scan level, not at chromatogram-read time), and
+    /// SRM/SIM transition m/z values come straight from the function definition rather than
+    /// peak-picked spectra. Cpp's <c>ChromatogramList_Waters.cpp</c> accepts these parameters
+    /// in the signature but never references them in the body — sharp matches that exactly.
+    /// <para>Kept as a distinct method so <c>Pwiz.Analysis.ChromatogramListLockmassRefiner</c>
+    /// can route through this when configured, and so a future Waters SDK that grows a
+    /// lockmass-aware chromatogram read has an obvious hook.</para>
+    /// </remarks>
+    public Chromatogram GetChromatogramWithLockmass(int index, bool getBinaryData,
+        double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance)
+    {
+        _ = lockmassMzPosScans; _ = lockmassMzNegScans; _ = lockmassTolerance;
+        return GetChromatogram(index, getBinaryData);
+    }
+
     /// <inheritdoc/>
     public override Chromatogram GetChromatogram(int index, bool getBinaryData = false)
     {
