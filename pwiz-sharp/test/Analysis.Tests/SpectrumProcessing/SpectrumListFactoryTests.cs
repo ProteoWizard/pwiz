@@ -189,4 +189,39 @@ public class SpectrumListFactoryTests
             Assert.IsInstanceOfType(wrapped, expectedType, $"filter '{filter}' produced {wrapped.GetType().Name}");
         }
     }
+
+    [TestMethod]
+    public void Wrap_ZeroSamples_ParsesBothModesAndArgs()
+    {
+        // Both modes + arg-string variants in one table. mode/count are validated by casting
+        // back to SpectrumListZeroSamplesFilter and reading the properties; msLevels is
+        // checked by membership probes on the IntegerSet.
+        var inner = new SpectrumListSimple();
+        var cases = new (string Spec, ZeroSamplesMode Mode, int Count, int[] MsLevelsIn, int[] MsLevelsOut)[]
+        {
+            // removeExtra (default + alias + explicit + MS-level tail).
+            ("zeroSamples",                ZeroSamplesMode.RemoveExtra, -1, new[] { 1, 5 }, System.Array.Empty<int>()),
+            ("zeroSamples remove",         ZeroSamplesMode.RemoveExtra, -1, new[] { 1, 5 }, System.Array.Empty<int>()),
+            ("zeroSamples removeExtra",    ZeroSamplesMode.RemoveExtra, -1, new[] { 1, 5 }, System.Array.Empty<int>()),
+            ("zeroSamples removeExtra 2-3", ZeroSamplesMode.RemoveExtra, -1, new[] { 2, 3 }, new[] { 1, 4 }),
+            // addMissing (no count, with count, with count + MS-level tail).
+            ("zeroSamples addMissing",     ZeroSamplesMode.AddMissing,  -1, new[] { 1, 5 }, System.Array.Empty<int>()),
+            ("zeroSamples addMissing=5",   ZeroSamplesMode.AddMissing,   5, new[] { 1, 5 }, System.Array.Empty<int>()),
+            ("zeroSamples addMissing=5 2-3", ZeroSamplesMode.AddMissing, 5, new[] { 2, 3 }, new[] { 1, 4 }),
+        };
+        foreach (var (spec, mode, count, levelsIn, levelsOut) in cases)
+        {
+            var wrapped = (SpectrumListZeroSamplesFilter)SpectrumListFactory.Wrap(inner, spec);
+            Assert.AreEqual(mode, wrapped.Mode, $"mode for '{spec}'");
+            Assert.AreEqual(count, wrapped.FlankingZeroCount, $"flanking count for '{spec}'");
+            foreach (int lvl in levelsIn)
+                Assert.IsTrue(wrapped.MsLevels.Contains(lvl), $"'{spec}' should include MS level {lvl}");
+            foreach (int lvl in levelsOut)
+                Assert.IsFalse(wrapped.MsLevels.Contains(lvl), $"'{spec}' should exclude MS level {lvl}");
+        }
+
+        // Unknown mode is rejected.
+        Assert.ThrowsException<ArgumentException>(() =>
+            SpectrumListFactory.Wrap(inner, "zeroSamples nonsense"));
+    }
 }

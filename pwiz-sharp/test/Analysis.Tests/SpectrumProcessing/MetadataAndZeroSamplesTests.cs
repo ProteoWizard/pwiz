@@ -1,6 +1,7 @@
 using Pwiz.Analysis.PeakFilters;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 
@@ -67,27 +68,42 @@ public class MetadataAndZeroSamplesTests
     [TestMethod]
     public void ZeroSamplesFilter_BehaviorVariants()
     {
-        // Removes zero-intensity peaks from m/z + intensity arrays.
+        // --- removeExtra: drops zero-intensity peaks ---
         var inner = new SpectrumListSimple();
         inner.Spectra.Add(MakeSpectrum(
             new[] { 50.0, 100.0, 150.0, 200.0, 250.0 },
             new[] { 0.0, 50.0, 0.0, 200.0, 0.0 }));
         var filtered = new SpectrumListZeroSamplesFilter(inner).GetSpectrum(0, getBinaryData: true);
-        CollectionAssert.AreEqual(new[] { 100.0, 200.0 }, filtered.GetMZArray()!.Data);
-        CollectionAssert.AreEqual(new[] { 50.0, 200.0 }, filtered.GetIntensityArray()!.Data);
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0 }, filtered.GetMZArray()!.Data, "removeExtra m/z");
+        CollectionAssert.AreEqual(new[] { 50.0, 200.0 }, filtered.GetIntensityArray()!.Data, "removeExtra intensity");
 
-        // MS-level gate: filter limited to MS2 → MS1 spectrum is untouched.
+        // --- MS-level gate: limited to MS2 leaves the MS1 spectrum untouched ---
         var msLevelGated = new SpectrumListSimple();
         msLevelGated.Spectra.Add(MakeSpectrum(
             new[] { 50.0, 100.0, 150.0 }, new[] { 0.0, 50.0, 0.0 }));
-        var ms2Filter = new SpectrumListZeroSamplesFilter(msLevelGated, new Pwiz.Util.Misc.IntegerSet(2));
-        Assert.AreEqual(3, ms2Filter.GetSpectrum(0, getBinaryData: true).GetMZArray()!.Data.Count);
+        var ms2Filter = new SpectrumListZeroSamplesFilter(msLevelGated, new IntegerSet(2));
+        Assert.AreEqual(3, ms2Filter.GetSpectrum(0, getBinaryData: true).GetMZArray()!.Data.Count,
+            "MS-level gate: non-matching spectrum passes through unmodified");
 
-        // Fast-path: when binary data isn't requested, the filter doesn't re-materialize the spectrum.
+        // --- getBinaryData=false fast path: filter must not re-materialize the spectrum ---
         var passthrough = new SpectrumListSimple();
         passthrough.Spectra.Add(MakeSpectrum(new[] { 50.0, 100.0 }, new[] { 0.0, 50.0 }));
         var ptFilter = new SpectrumListZeroSamplesFilter(passthrough);
         Assert.AreEqual(2, ptFilter.GetSpectrum(0, getBinaryData: false).GetMZArray()!.Data.Count,
-            "no-binary-data fast path should not rewrite arrays");
+            "no-binary-data fast path: arrays unchanged");
+
+        // --- addMissing: bounded flanking-zero count pads non-zero runs ---
+        // Bounded count=2; expect the 5.0 sample to survive and the m/z grid to grow.
+        var addMissingInner = new SpectrumListSimple();
+        addMissingInner.Spectra.Add(MakeSpectrum(
+            new[] { 100.0, 101.0, 102.0, 103.0, 200.0, 201.0, 202.0 },
+            new[] {   0.0,   0.0,   5.0,   0.0,   0.0,   3.0,   0.0 }));
+        var addMissingFilter = new SpectrumListZeroSamplesFilter(
+            addMissingInner, IntegerSet.Positive, ZeroSamplesMode.AddMissing, flankingZeroCount: 2);
+        var added = addMissingFilter.GetSpectrum(0, getBinaryData: true);
+        var addedInt = added.GetIntensityArray()!.Data;
+        int peakIdx = addedInt.IndexOf(5.0);
+        Assert.IsTrue(peakIdx >= 0, "addMissing: original 5.0 sample still present");
+        Assert.AreEqual(102.0, added.GetMZArray()!.Data[peakIdx], 1e-9, "addMissing: 5.0 sample stays at m/z 102.0");
     }
 }
