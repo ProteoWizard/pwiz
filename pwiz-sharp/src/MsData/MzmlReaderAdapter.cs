@@ -64,8 +64,13 @@ public sealed class MzmlReaderAdapter : IReader
                 tailStream.Position = idx.EndOfSpectrumListByteOffset;
                 lazyReader.ResumeAfterSpectrumList(tailStream, result);
             }
+            // Add the input file as a SourceFile + pwiz software + pwiz_Reader_conversion DP
+            // BEFORE installing the lazy list so the list's defaultDataProcessingRef points to
+            // the new DP. Cpp's DefaultReaderList::Reader_mzML::read calls fillInCommonMetadata
+            // at the same spot (DefaultReaderList.cpp:168).
+            var dpPwiz = MSDataFile.FillInCommonMetadata(filename, result);
             result.Run.SpectrumList = new SpectrumList_Mzml(filename, lazyReader,
-                idx.SpectrumIds, idx.SpectrumOffsets, lazyReader.LazyDefaultDataProcessing);
+                idx.SpectrumIds, idx.SpectrumOffsets, dpPwiz);
             return;
         }
 
@@ -73,6 +78,7 @@ public sealed class MzmlReaderAdapter : IReader
         using var stream = File.OpenRead(filename);
         var parsed = new MzmlReader().Read(stream);
         CopyInto(parsed, result);
+        MSDataFile.FillInCommonMetadata(filename, result);
     }
 
     internal static void CopyInto(MSData source, MSData dest)

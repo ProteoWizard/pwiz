@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Mgf;
 using Pwiz.Data.MsData.MSn;
 using Pwiz.Data.MsData.Mzml;
@@ -44,6 +45,96 @@ public static class MSDataFile
         ArgumentNullException.ThrowIfNull(msd);
         foreach (var sf in msd.FileDescription.SourceFiles)
             CalculateSourceFileSha1(sf);
+    }
+
+    /// <summary>
+    /// Mirrors cpp <c>fillInCommonMetadata</c> (<c>DefaultReaderList.cpp:86</c>): appends a
+    /// <see cref="SourceFile"/> entry for the input file, ensures a <c>pwiz_&lt;version&gt;</c>
+    /// software entry exists (de-duped by version), and installs a <c>pwiz_Reader_conversion</c>
+    /// <see cref="Processing.DataProcessing"/> stamped with <see cref="CVID.MS_Conversion_to_mzML"/>
+    /// on both the spectrum and chromatogram list. Called by the format-reader adapters
+    /// (mzML, mzMLb, mzXML, MGF, MSn) — vendor readers handle their own provenance.
+    /// </summary>
+    /// <remarks>
+    /// Idempotent on the software-entry side: a second call with the same pwiz version reuses
+    /// the existing <see cref="Software"/> entry rather than appending a duplicate.
+    /// The DataProcessing assignment uses the <c>Dp</c> setters on
+    /// <see cref="Pwiz.Data.MsData.Spectra.SpectrumListSimple"/> /
+    /// <see cref="Pwiz.Data.MsData.Spectra.ChromatogramListSimple"/> when the lists are simple;
+    /// for non-simple list types (e.g. the lazy <c>SpectrumList_Mzml</c>) the caller passes
+    /// the returned DataProcessing to the list constructor — call this helper BEFORE installing
+    /// the lazy list.
+    /// </remarks>
+    /// <returns>The new <c>pwiz_Reader_conversion</c> DataProcessing — pass to lazy-list
+    /// constructors so the spectrum/chromatogram list reports it via
+    /// <c>defaultDataProcessingRef</c> on write.</returns>
+    public static Processing.DataProcessing FillInCommonMetadata(string filename, MSData msd)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(filename);
+        ArgumentNullException.ThrowIfNull(msd);
+
+        // 1. Append a SourceFile entry for the input file. cpp uses BFS_COMPLETE on the parent
+        //    path which canonicalizes to an absolute path; Path.GetFullPath does the same on .NET.
+        string fileName = Path.GetFileName(filename);
+        string parentDir = Path.GetDirectoryName(Path.GetFullPath(filename)) ?? string.Empty;
+        // Pwiz cpp emits "file:///" + path. On Windows the path already starts with the drive,
+        // so the URI looks like "file:///C:\dev\..." (three slashes followed by drive letter).
+        string location = "file:///" + parentDir;
+        msd.FileDescription.SourceFiles.Add(new SourceFile(fileName, fileName, location));
+
+        // 2. Default CV list (no-op if already populated — MSData.CVs uses a list, but the
+        //    default CV's id is unique so duplicates are detectable. cpp resets unconditionally;
+        //    we mirror that for round-trip stability.
+        if (msd.CVs.Count == 0)
+            msd.CVs.AddRange(MSData.DefaultCVList);
+
+        // 3. pwiz software entry, de-duped by (MS_pwiz, version).
+        Software? pwizSoftware = null;
+        foreach (var sw in msd.Software)
+        {
+            if (sw.HasCVParam(CVID.MS_pwiz) && sw.Version == MSData.PwizVersion)
+            {
+                pwizSoftware = sw;
+                break;
+            }
+        }
+        if (pwizSoftware is null)
+        {
+            pwizSoftware = new Software("pwiz_" + MSData.PwizVersion)
+            {
+                Version = MSData.PwizVersion,
+            };
+            pwizSoftware.Set(CVID.MS_pwiz);
+            msd.Software.Add(pwizSoftware);
+        }
+
+        // 4. pwiz_Reader_conversion DataProcessing with MS_Conversion_to_mzML cvParam.
+        var dpPwiz = new Processing.DataProcessing("pwiz_Reader_conversion");
+        var pm = new Processing.ProcessingMethod { Order = 0, Software = pwizSoftware };
+        pm.Set(CVID.MS_Conversion_to_mzML);
+        dpPwiz.ProcessingMethods.Add(pm);
+        msd.DataProcessings.Add(dpPwiz);
+
+        // 5. Assign DataProcessing to the spectrum and chromatogram lists. For SpectrumListSimple
+        //    / ChromatogramListSimple we set the Dp directly; for other list types (e.g. lazy
+        //    SpectrumList_Mzml) the caller passed Dp through the constructor — we can't mutate
+        //    the existing list, so leave it. cpp's setDataProcessingPtr is virtual on the base
+        //    class; sharp's lazy lists construct with the Dp baked in.
+        if (msd.Run.SpectrumList is Pwiz.Data.MsData.Spectra.SpectrumListSimple sls)
+            sls.Dp = dpPwiz;
+        if (msd.Run.ChromatogramList is Pwiz.Data.MsData.Spectra.ChromatogramListSimple cls)
+            cls.Dp = dpPwiz;
+
+        // 6. Fill in run-level ids from the basename when missing. cpp's bfs::basename drops the
+        //    extension — Path.GetFileNameWithoutExtension matches that.
+        if (string.IsNullOrEmpty(msd.Id) || string.IsNullOrEmpty(msd.Run.Id))
+        {
+            string basename = Path.GetFileNameWithoutExtension(filename);
+            if (string.IsNullOrEmpty(msd.Id)) msd.Id = basename;
+            if (string.IsNullOrEmpty(msd.Run.Id)) msd.Run.Id = basename;
+        }
+
+        return dpPwiz;
     }
 
     /// <summary>

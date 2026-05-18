@@ -50,5 +50,6 @@ public sealed class MgfReaderAdapter : IReader
         using var reader = new StreamReader(stream);
         var parsed = new MgfSerializer().Read(reader);
         MzmlReaderAdapter.CopyInto(parsed, result);
+        MSDataFile.FillInCommonMetadata(filename, result);
     }
 }

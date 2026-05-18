@@ -30,13 +30,20 @@ public sealed class SpectrumList_Mzxml : SpectrumListBase
     private bool _disposed;
 
     internal SpectrumList_Mzxml(string filename, MzxmlReader context,
-                                string[] ids, long[] offsets)
+                                string[] ids, long[] offsets,
+                                Pwiz.Data.MsData.Processing.DataProcessing? dp = null)
     {
         _filename = filename;
         _context = context;
         _ids = ids;
         _offsets = offsets;
+        _dp = dp;
     }
+
+    private readonly Pwiz.Data.MsData.Processing.DataProcessing? _dp;
+
+    /// <inheritdoc/>
+    public override Pwiz.Data.MsData.Processing.DataProcessing? DataProcessing => _dp;
 
     /// <inheritdoc/>
     public override int Count => _offsets.Length;

@@ -52,13 +52,17 @@ public sealed class MzxmlReaderAdapter : IReader
             {
                 lazyReader.ReadInternal(headerStream, result);
             }
+            // Add input file as SourceFile + pwiz software + pwiz_Reader_conversion DP before
+            // installing the lazy list (cpp parity — DefaultReaderList.cpp:233/247).
+            var dpPwiz = MSDataFile.FillInCommonMetadata(filename, result);
             result.Run.SpectrumList = new SpectrumList_Mzxml(filename, lazyReader,
-                idx.ScanIds, idx.ScanOffsets);
+                idx.ScanIds, idx.ScanOffsets, dpPwiz);
             return;
         }
 
         // Fallback: not indexed or footer malformed. Read eagerly.
         using var stream = File.OpenRead(filename);
         MzxmlReader.Read(stream, result);
+        MSDataFile.FillInCommonMetadata(filename, result);
     }
 }

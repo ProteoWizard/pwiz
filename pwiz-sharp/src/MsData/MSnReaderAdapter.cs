@@ -57,18 +57,12 @@ public sealed class MSnReaderAdapter : IReader
         using var stream = File.OpenRead(filename);
         new SerializerMSn(type).Read(stream, result);
 
-        var sourceFile = new SourceFile
-        {
-            Id = Path.GetFileNameWithoutExtension(filename),
-            Name = Path.GetFileName(filename),
-            Location = "file:///" + Path.GetDirectoryName(Path.GetFullPath(filename))?.Replace('\\', '/'),
-        };
-        sourceFile.Set(CVID.MS_scan_number_only_nativeID_format);
-        sourceFile.Set(type.IsMs1() ? CVID.MS_MS1_format : CVID.MS_MS2_format);
-        result.FileDescription.SourceFiles.Add(sourceFile);
-
-        string basename = Path.GetFileNameWithoutExtension(filename);
-        result.Id = basename;
-        result.Run.Id = basename;
+        // Append the input file as a SourceFile + pwiz software + pwiz_Reader_conversion DP.
+        // Then stamp the native-id-format and file-format CVs on the just-added SourceFile —
+        // matches cpp Reader_MSn::read (DefaultReaderList.cpp:345-347).
+        MSDataFile.FillInCommonMetadata(filename, result);
+        var addedSourceFile = result.FileDescription.SourceFiles[^1];
+        addedSourceFile.Set(CVID.MS_scan_number_only_nativeID_format);
+        addedSourceFile.Set(type.IsMs1() ? CVID.MS_MS1_format : CVID.MS_MS2_format);
     }
 }

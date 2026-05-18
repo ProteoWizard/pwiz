@@ -12,6 +12,11 @@ public static class Program
         try
         {
             var config = ArgParser.Parse(args);
+            // Rebuild the command-line args verbatim for the MS_command_line_parameters cvParam
+            // we'll stamp onto the output's first DataProcessing. Mirrors cpp msconvert.cpp:1171-1178:
+            // quote any arg with whitespace / separator characters so the recorded string is
+            // re-parseable.
+            config.CommandLineParameters = BuildCommandLineString(args);
             var converter = new Converter(config, Console.Error);
             int converted = converter.Run();
             return converted == config.InputFiles.Count ? 0 : 1;
@@ -28,5 +33,18 @@ public static class Program
             Console.Error.WriteLine(ArgParser.Usage());
             return 2;
         }
+    }
+
+    private static string BuildCommandLineString(string[] args)
+    {
+        // Quote any arg containing whitespace or the characters cpp considers split-significant
+        // (space, tab, comma, semicolon, ampersand). Mirrors cpp msconvert.cpp:1175.
+        char[] needsQuotes = { ' ', '\t', ',', ';', '&', '=' };
+        var parts = new System.Collections.Generic.List<string>(args.Length);
+        foreach (var a in args)
+        {
+            parts.Add(a.IndexOfAny(needsQuotes) >= 0 ? "\"" + a + "\"" : a);
+        }
+        return string.Join(' ', parts);
     }
 }

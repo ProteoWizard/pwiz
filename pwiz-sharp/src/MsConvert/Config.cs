@@ -83,6 +83,13 @@ public sealed class MsConvertConfig
     /// <summary>Optional subset of runs to emit when a vendor file has multiple runs.</summary>
     public string? RunIndexSet { get; set; }
 
+    /// <summary>Reconstructed command-line invocation string, captured by
+    /// <c>Program.Main</c> before parsing. Threaded into the output's
+    /// <c>dataProcessingList</c> as the <see cref="Pwiz.Data.Common.Cv.CVID.MS_command_line_parameters"/>
+    /// cvParam on the first DataProcessing's first ProcessingMethod — matches cpp
+    /// <c>msconvert.cpp:1059-1060</c>.</summary>
+    public string CommandLineParameters { get; set; } = string.Empty;
+
     /// <summary>Emit SIM scans as spectra instead of chromatograms.</summary>
     public bool SimAsSpectra { get; set; }
 

@@ -162,4 +162,14 @@ public class ArgParserTests
         Assert.ThrowsException<ArgumentException>(() => Invoke(), "no input files");
         Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "--filter"), "missing value");
     }
+
+    [TestMethod]
+    public void RunIndexSet_StoresIntervalString()
+    {
+        // Stored verbatim; Converter parses it via IntegerSet.Parse() at Run() time.
+        Assert.AreEqual("0-3", Invoke("in.wiff", "--runIndexSet", "0-3").RunIndexSet);
+        Assert.AreEqual("[1,5] 7", Invoke("in.wiff", "--runIndexSet", "[1,5] 7").RunIndexSet);
+        // Default is null (no filtering).
+        Assert.IsNull(Invoke("in.wiff").RunIndexSet);
+    }
 }
