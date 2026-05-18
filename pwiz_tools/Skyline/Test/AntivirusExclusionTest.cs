@@ -214,7 +214,8 @@ namespace pwiz.SkylineTest
                     {
                         using (var accountKey = accountsKey.OpenSubKey(accountName))
                         {
-                            if (!(accountKey?.GetValue(@"UserFolder") is string userFolder) || string.IsNullOrEmpty(userFolder))
+                            var userFolderObj = accountKey?.GetValue(@"UserFolder");
+                            if (!(userFolderObj is string userFolder) || string.IsNullOrEmpty(userFolder))
                                 continue;
                             if (IsPathUnder(directory, userFolder))
                             {
@@ -276,12 +277,10 @@ namespace pwiz.SkylineTest
                     return;
                 if (catalog.GetCrawlScopeManager(out csm) != 0 || csm == null)
                     return;
-                // IncludedInCrawlScope's parameter is documented as a URL.  Convert to a
-                // file:// URL with a trailing separator so it's interpreted as a directory
-                // rather than a file.
-                var fullPath = Path.GetFullPath(directory).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
-                var fileUrl = new Uri(fullPath).AbsoluteUri;
-                if (csm.IncludedInCrawlScope(fileUrl, out var included) != 0)
+                // IncludedInCrawlScope's parameter is documented as a URL, but actually expects
+                // raw Windows paths (discovered through testing). Use the directory path directly.
+                var directoryPath = Path.GetFullPath(directory);
+                if (csm.IncludedInCrawlScope(directoryPath, out var included) != 0)
                     return;
                 if (included)
                 {
@@ -307,6 +306,7 @@ namespace pwiz.SkylineTest
                 if (mgr != null) Marshal.ReleaseComObject(mgr);
             }
         }
+
 
         // Windows Search COM interop. GUIDs and method declaration order verified against the
         // Windows SDK IDLs (SearchAdmin.idl / SearchCatalog.idl / SearchCrawlScopeManager.idl).
