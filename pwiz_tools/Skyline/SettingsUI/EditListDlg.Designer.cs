@@ -41,7 +41,12 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnReset = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
+            this.btnRename = new System.Windows.Forms.Button();
+            this.btnImport = new System.Windows.Forms.Button();
+            this.btnShare = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.pnlButtons = new System.Windows.Forms.FlowLayoutPanel();
+            this.pnlButtons.SuspendLayout();
             this.SuspendLayout();
             // 
             // listBox
@@ -121,11 +126,50 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
+            // btnRename
+            // 
+            resources.ApplyResources(this.btnRename, "btnRename");
+            this.btnRename.Name = "btnRename";
+            this.btnRename.Text = global::pwiz.Skyline.SettingsUI.SettingsUIResources.EditListDlg_Rename;
+            this.btnRename.UseVisualStyleBackColor = true;
+            this.btnRename.Click += new System.EventHandler(this.btnRename_Click);
+            // 
+            // btnImport
+            // 
+            resources.ApplyResources(this.btnImport, "btnImport");
+            this.btnImport.Name = "btnImport";
+            this.btnImport.Text = global::pwiz.Skyline.SettingsUI.SettingsUIResources.EditListDlg_Import;
+            this.btnImport.UseVisualStyleBackColor = true;
+            this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
+            // 
+            // btnShare
+            // 
+            resources.ApplyResources(this.btnShare, "btnShare");
+            this.btnShare.Name = "btnShare";
+            this.btnShare.Text = global::pwiz.Skyline.SettingsUI.SettingsUIResources.EditListDlg_Share;
+            this.btnShare.UseVisualStyleBackColor = true;
+            this.btnShare.Click += new System.EventHandler(this.btnShare_Click);
+            // 
             // helpTip
             // 
             this.helpTip.AutoPopDelay = 32767;
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
+            // 
+            // pnlButtons
+            // 
+            resources.ApplyResources(this.pnlButtons, "pnlButtons");
+            this.pnlButtons.Controls.Add(this.btnAdd);
+            this.pnlButtons.Controls.Add(this.btnRemove);
+            this.pnlButtons.Controls.Add(this.btnRename);
+            this.pnlButtons.Controls.Add(this.btnEdit);
+            this.pnlButtons.Controls.Add(this.btnUp);
+            this.pnlButtons.Controls.Add(this.btnDown);
+            this.pnlButtons.Controls.Add(this.btnReset);
+            this.pnlButtons.Controls.Add(this.btnCopy);
+            this.pnlButtons.Controls.Add(this.btnImport);
+            this.pnlButtons.Controls.Add(this.btnShare);
+            this.pnlButtons.Name = "pnlButtons";
             // 
             // EditListDlg
             // 
@@ -133,21 +177,16 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.btnCopy);
-            this.Controls.Add(this.btnReset);
+            this.Controls.Add(this.pnlButtons);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.btnDown);
-            this.Controls.Add(this.btnUp);
             this.Controls.Add(this.labelListName);
-            this.Controls.Add(this.btnRemove);
-            this.Controls.Add(this.btnEdit);
-            this.Controls.Add(this.btnAdd);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.listBox);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "EditListDlg";
             this.ShowInTaskbar = false;
+            this.pnlButtons.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -166,6 +205,10 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Button btnCopy;
+        private System.Windows.Forms.Button btnRename;
+        private System.Windows.Forms.Button btnImport;
+        private System.Windows.Forms.Button btnShare;
         private System.Windows.Forms.ToolTip helpTip;
+        private System.Windows.Forms.FlowLayoutPanel pnlButtons;
     }
 }
