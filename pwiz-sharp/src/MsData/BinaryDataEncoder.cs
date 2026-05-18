@@ -61,6 +61,22 @@ public sealed class BinaryEncoderConfig
     public BinaryNumpress Numpress { get; set; } = BinaryNumpress.None;
 
     /// <summary>
+    /// Mantissa-truncation amount applied to each array value before encoding (mzMLb only —
+    /// regular mzML's BinaryDataEncoder ignores this, matching cpp). 0 = no truncation
+    /// (default). Positive N = zero out the bottom N bits of the float / double mantissa.
+    /// -1 = round to the nearest integer. Used together with <see cref="Prediction"/> to
+    /// make adjacent values more similar before zlib compression.
+    /// </summary>
+    public int Truncation { get; set; }
+
+    /// <summary>
+    /// Prediction transformation applied to each array value before encoding (mzMLb only).
+    /// Each value gets replaced by its residual against a predicted value, so a smoothly-
+    /// changing array (m/z, time) compresses to near-zero deltas. Default: no prediction.
+    /// </summary>
+    public BinaryPrediction Prediction { get; set; } = BinaryPrediction.None;
+
+    /// <summary>
     /// Fixed-point multiplier for numpress Linear/Slof. 0 means "choose automatically via
     /// <see cref="MsNumpress.OptimalLinearFixedPoint"/> or <see cref="MsNumpress.OptimalSlofFixedPoint"/>".
     /// Ignored for <see cref="BinaryNumpress.Pic"/>.
@@ -90,6 +106,12 @@ public sealed class BinaryEncoderConfig
     /// <summary>Per-CVID overrides for <see cref="Numpress"/>.</summary>
     public Dictionary<CVID, BinaryNumpress> NumpressOverrides { get; } = new();
 
+    /// <summary>Per-CVID overrides for <see cref="Truncation"/> (e.g. trim only m/z, not intensity).</summary>
+    public Dictionary<CVID, int> TruncationOverrides { get; } = new();
+
+    /// <summary>Per-CVID overrides for <see cref="Prediction"/>.</summary>
+    public Dictionary<CVID, BinaryPrediction> PredictionOverrides { get; } = new();
+
     /// <summary>Deep-copy constructor so callers can tweak without mutating the shared instance.</summary>
     public BinaryEncoderConfig Clone()
     {
@@ -102,12 +124,35 @@ public sealed class BinaryEncoderConfig
             NumpressFixedPoint = NumpressFixedPoint,
             NumpressLinearErrorTolerance = NumpressLinearErrorTolerance,
             NumpressSlofErrorTolerance = NumpressSlofErrorTolerance,
+            Truncation = Truncation,
+            Prediction = Prediction,
         };
         foreach (var kv in CompressionOverrides) c.CompressionOverrides[kv.Key] = kv.Value;
         foreach (var kv in PrecisionOverrides) c.PrecisionOverrides[kv.Key] = kv.Value;
         foreach (var kv in NumpressOverrides) c.NumpressOverrides[kv.Key] = kv.Value;
+        foreach (var kv in TruncationOverrides) c.TruncationOverrides[kv.Key] = kv.Value;
+        foreach (var kv in PredictionOverrides) c.PredictionOverrides[kv.Key] = kv.Value;
         return c;
     }
+}
+
+/// <summary>
+/// Prediction transformation applied before encoding to make adjacent array values more
+/// similar (and hence more compressible). Mirrors cpp
+/// <c>BinaryDataEncoder::Config::Prediction</c>.
+/// </summary>
+public enum BinaryPrediction
+{
+    /// <summary>No prediction; values are encoded as-is.</summary>
+    None,
+
+    /// <summary>First-order delta prediction: each value replaced by
+    /// <c>data[i] - data[i-1]</c>. The first sample stays unchanged.</summary>
+    Delta,
+
+    /// <summary>Linear (second-order) prediction: each value replaced by
+    /// <c>data[i] - (2*data[i-1] - data[i-2])</c>. The first two samples stay unchanged.</summary>
+    Linear,
 }
 
 /// <summary>

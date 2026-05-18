@@ -163,21 +163,52 @@ public static class SpectrumListFactory
 
         map["zerosamples"] = (args, inner, _) =>
         {
-            // "zeroSamples remove"       — default behavior
-            // "zeroSamples remove 1-"    — restrict to given MS levels (argument unused when "remove" alone)
+            // Matches cpp filterCreator_ZeroSamples (SpectrumListFactory.cpp:413):
+            //   "zeroSamples removeExtra"           — drop interior zero runs
+            //   "zeroSamples removeExtra 2-3"       — restrict to those MS levels
+            //   "zeroSamples addMissing"            — fill flanking zeros, no cap
+            //   "zeroSamples addMissing=5"          — fill at most 5 flanking zeros
+            //   "zeroSamples addMissing=5 2-"       — addMissing with MS-level restriction
+            // For back-compat with the previous sharp port, plain "remove" is also accepted.
             string trimmed = args.Trim();
-            if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("remove", StringComparison.OrdinalIgnoreCase))
+            string action;
+            string rest;
+            int sp = trimmed.IndexOf(' ');
+            if (sp < 0) { action = trimmed; rest = string.Empty; }
+            else { action = trimmed[..sp]; rest = trimmed[(sp + 1)..].Trim(); }
+
+            // Parse mode + optional flanking-zero count out of the action token.
+            ZeroSamplesMode mode;
+            int flankingCount = -1;
+            int eq = action.IndexOf('=');
+            string actionName = eq < 0 ? action : action[..eq];
+            if (actionName.Equals("removeExtra", StringComparison.OrdinalIgnoreCase)
+                || actionName.Equals("remove", StringComparison.OrdinalIgnoreCase)
+                || actionName.Length == 0)
             {
-                IntegerSet? msLevels = null;
-                int sp = trimmed.IndexOf(' ');
-                if (sp > 0)
-                {
-                    msLevels = new IntegerSet();
-                    msLevels.Parse(trimmed[(sp + 1)..]);
-                }
-                return new SpectrumListZeroSamplesFilter(inner, msLevels);
+                mode = ZeroSamplesMode.RemoveExtra;
             }
-            throw new ArgumentException($"zeroSamples filter expected 'remove' (add-missing mode is not yet ported); got '{args}'");
+            else if (actionName.Equals("addMissing", StringComparison.OrdinalIgnoreCase))
+            {
+                mode = ZeroSamplesMode.AddMissing;
+                if (eq >= 0
+                    && !int.TryParse(action[(eq + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out flankingCount))
+                    throw new ArgumentException(
+                        $"zeroSamples addMissing flanking-zero count must be an integer; got '{action[(eq + 1)..]}'");
+            }
+            else
+            {
+                throw new ArgumentException(
+                    $"zeroSamples filter: unknown mode '{actionName}' (expected 'removeExtra' or 'addMissing[=N]')");
+            }
+
+            IntegerSet? msLevels = null;
+            if (!string.IsNullOrEmpty(rest))
+            {
+                msLevels = new IntegerSet();
+                msLevels.Parse(rest);
+            }
+            return new SpectrumListZeroSamplesFilter(inner, msLevels, mode, flankingCount);
         };
 
         map["metadatafixer"] = (_, inner, _) => new SpectrumListMetadataFixer(inner);

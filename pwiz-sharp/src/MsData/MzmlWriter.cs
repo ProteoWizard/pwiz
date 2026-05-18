@@ -901,13 +901,112 @@ public sealed class MzmlWriter
         bool hasNp = global.NumpressOverrides.TryGetValue(typeCv, out var np);
         bool hasComp = global.CompressionOverrides.TryGetValue(typeCv, out var comp);
         bool hasPrec = global.PrecisionOverrides.TryGetValue(typeCv, out var prec);
-        if (!hasNp && !hasComp && !hasPrec) return global;
+        bool hasTrunc = global.TruncationOverrides.TryGetValue(typeCv, out var trunc);
+        bool hasPred = global.PredictionOverrides.TryGetValue(typeCv, out var pred);
+        if (!hasNp && !hasComp && !hasPrec && !hasTrunc && !hasPred) return global;
 
         var cfg = global.Clone();
         if (hasNp) cfg.Numpress = np;
         if (hasComp) cfg.Compression = comp;
         if (hasPrec) cfg.Precision = prec;
+        if (hasTrunc) cfg.Truncation = trunc;
+        if (hasPred) cfg.Prediction = pred;
         return cfg;
+    }
+
+    /// <summary>
+    /// Applies mantissa-truncation + delta/linear prediction to <paramref name="data"/> in
+    /// place, matching cpp <c>writeMzMLbExtra</c> (IO.cpp:1660-1820). 32-bit floats and 64-bit
+    /// doubles take separate paths because the bit-mask width differs.
+    /// </summary>
+    /// <remarks>
+    /// Truncation modes:
+    ///   <c>Truncation == 0</c> → no-op
+    ///   <c>Truncation &gt; 0</c> → zero out the bottom N bits of each mantissa
+    ///   <c>Truncation == -1</c> → round each value to the nearest integer
+    /// Prediction modes:
+    ///   <c>Delta</c>     → each value becomes <c>v[i] - v[i-1]</c> (sample 0 unchanged)
+    ///   <c>Linear</c>    → each value becomes <c>v[i] - (2*v[i-1] - v[i-2])</c> (samples 0-1 unchanged)
+    /// </remarks>
+    private static void ApplyTruncationAndPredictionDouble(double[] data, BinaryEncoderConfig cfg)
+    {
+        if (cfg.Truncation > 0)
+        {
+            ulong bitmask = ~(((ulong)1 << cfg.Truncation) - 1);
+            for (int i = 0; i < data.Length; i++)
+                data[i] = System.BitConverter.UInt64BitsToDouble(
+                    System.BitConverter.DoubleToUInt64Bits(data[i]) & bitmask);
+        }
+        else if (cfg.Truncation == -1)
+        {
+            for (int i = 0; i < data.Length; i++) data[i] = System.Math.Round(data[i]);
+        }
+
+        if (cfg.Prediction == BinaryPrediction.Delta && data.Length > 0)
+        {
+            // Capture each original before overwriting, since the next iteration's residual
+            // depends on the previous original (the loop tracks the decoded running value,
+            // which equals the original by construction). cpp computes the same value via
+            // algebraic update of `previous` using the just-encoded data[i]; this form is
+            // mathematically equivalent and simpler.
+            double prev = data[0];
+            for (int i = 1; i < data.Length; i++)
+            {
+                double original = data[i];
+                data[i] = data[0] + original - prev;
+                prev = original;
+            }
+        }
+        else if (cfg.Prediction == BinaryPrediction.Linear && data.Length > 1)
+        {
+            double prev2 = data[0];
+            double prev1 = data[1];
+            for (int i = 2; i < data.Length; i++)
+            {
+                double original = data[i];
+                data[i] = data[1] + original - 2.0 * prev1 + prev2;
+                prev2 = prev1;
+                prev1 = original;
+            }
+        }
+    }
+
+    private static void ApplyTruncationAndPredictionFloat(float[] data, BinaryEncoderConfig cfg)
+    {
+        if (cfg.Truncation > 0)
+        {
+            uint bitmask = ~(((uint)1 << cfg.Truncation) - 1);
+            for (int i = 0; i < data.Length; i++)
+                data[i] = System.BitConverter.UInt32BitsToSingle(
+                    System.BitConverter.SingleToUInt32Bits(data[i]) & bitmask);
+        }
+        else if (cfg.Truncation == -1)
+        {
+            for (int i = 0; i < data.Length; i++) data[i] = (float)System.Math.Round(data[i]);
+        }
+
+        if (cfg.Prediction == BinaryPrediction.Delta && data.Length > 0)
+        {
+            float prev = data[0];
+            for (int i = 1; i < data.Length; i++)
+            {
+                float original = data[i];
+                data[i] = data[0] + original - prev;
+                prev = original;
+            }
+        }
+        else if (cfg.Prediction == BinaryPrediction.Linear && data.Length > 1)
+        {
+            float prev2 = data[0];
+            float prev1 = data[1];
+            for (int i = 2; i < data.Length; i++)
+            {
+                float original = data[i];
+                data[i] = data[1] + original - 2.0f * prev1 + prev2;
+                prev2 = prev1;
+                prev1 = original;
+            }
+        }
     }
 
     /// <summary>
@@ -983,6 +1082,10 @@ public sealed class MzmlWriter
         {
             var floats = new float[data.Length];
             for (int i = 0; i < data.Length; i++) floats[i] = (float)data[i];
+            // Apply mantissa truncation + delta/linear prediction. Matches cpp
+            // writeMzMLbExtra (IO.cpp:1655-1729) — applied to the float-narrowed payload
+            // before HDF5 write so the prediction-residual is what hits disk.
+            ApplyTruncationAndPredictionFloat(floats, cfg);
             suffix = "_float";
             string dsName = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
             offset = ExternalBinarySink!.AppendFloats(dsName, floats);
@@ -990,9 +1093,14 @@ public sealed class MzmlWriter
         }
         else
         {
+            // ApplyTruncationAndPrediction mutates in place; copy `data` (which is a span over
+            // the user's BinaryDataArray.Data) to keep the source intact for any subsequent
+            // reads on the same in-memory document.
+            double[] doubles = data.ToArray();
+            ApplyTruncationAndPredictionDouble(doubles, cfg);
             suffix = "_double";
             string dsName = $"{_externalArrayContextPrefix}MS_{(int)typeCv}{suffix}";
-            offset = ExternalBinarySink!.AppendDoubles(dsName, data);
+            offset = ExternalBinarySink!.AppendDoubles(dsName, doubles);
             encodedLength = 0;
         }
 
@@ -1077,6 +1185,14 @@ public sealed class MzmlWriter
         // of the decoded array (pwiz C++ writes 32-bit float alongside the numpress CV).
         MzmlXml.WriteCvParam(w, new CVParam(
             cfg.Precision == BinaryPrecision.Bits64 ? CVID.MS_64_bit_float : CVID.MS_32_bit_float));
+
+        // Truncation + prediction CV (mzMLb-only in cpp). Emitted before the compression CV
+        // so the order matches cpp IO.cpp:1955-1968. The cvParam's name implies zlib so we
+        // skip the separate zlib CV when prediction is set.
+        if (cfg.Prediction == BinaryPrediction.Linear)
+            MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_truncation__linear_prediction_and_zlib_compression));
+        else if (cfg.Prediction == BinaryPrediction.Delta)
+            MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_truncation__delta_prediction_and_zlib_compression));
 
         if (cfg.Numpress == BinaryNumpress.None)
         {

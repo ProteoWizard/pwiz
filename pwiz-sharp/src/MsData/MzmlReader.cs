@@ -798,6 +798,11 @@ public sealed class MzmlReader
                     {
                         var buf = new double[externalLength];
                         int got = ExternalBinarySource.ReadDoubles(externalDataset!, externalOffset, buf);
+                        // Inverse delta/linear prediction must run before the data is handed back
+                        // — what was stored is the residual; we need the original values. Cpp's
+                        // BinaryDataEncoder doesn't do this (truncation/prediction is an mzMLb
+                        // feature only), so it's a sharp-side responsibility on the reader path.
+                        InvertPrediction(buf.AsSpan(0, got), encoderConfig.Prediction);
                         arr.Data.AddRange(buf.AsSpan(0, got).ToArray());
                     }
                 }
@@ -833,6 +838,40 @@ public sealed class MzmlReader
         foreach (var pg in src.ParamGroups) dst.ParamGroups.Add(pg);
     }
 
+    /// <summary>
+    /// Reverses delta- or linear-prediction in place. The encode-side stores the residual
+    /// against the predictor; the decode-side reconstructs the original values by integrating.
+    /// Mirror of the decoding hooks in cpp <c>writeMzMLbExtra</c>: each loop iteration there
+    /// computes the residual to store AND the running decoded value, so when the same
+    /// transform runs on raw HDF5 input it inverts to the original.
+    /// </summary>
+    private static void InvertPrediction(System.Span<double> data, BinaryPrediction prediction)
+    {
+        if (prediction == BinaryPrediction.Delta && data.Length > 1)
+        {
+            double previous = data[0];
+            for (int i = 1; i < data.Length; i++)
+            {
+                double decoded = data[i] + previous - data[0];
+                previous = decoded;
+                data[i] = decoded;
+            }
+        }
+        else if (prediction == BinaryPrediction.Linear && data.Length > 2)
+        {
+            double previous2 = data[0];
+            double previous1 = data[1];
+            for (int i = 2; i < data.Length; i++)
+            {
+                double decoded = data[i] + 2.0 * previous1 - previous2 - data[1];
+                double t = previous1;
+                previous1 = decoded;
+                previous2 = t;
+                data[i] = decoded;
+            }
+        }
+    }
+
     private static void ConfigureFromParams(ParamContainer arr, BinaryEncoderConfig cfg, bool isInteger = false)
     {
         if (isInteger)
@@ -848,6 +887,14 @@ public sealed class MzmlReader
 
         if (arr.HasCVParam(CVID.MS_zlib_compression)) cfg.Compression = BinaryCompression.Zlib;
         else if (arr.HasCVParam(CVID.MS_no_compression)) cfg.Compression = BinaryCompression.None;
+
+        // Truncation + prediction CVs (mzMLb-only in cpp). Each implies zlib compression in
+        // its name, so encountering one also sets cfg.Compression = Zlib. cpp IO.cpp:2375-2380
+        // does the same.
+        if (arr.HasCVParam(CVID.MS_truncation__linear_prediction_and_zlib_compression))
+        { cfg.Prediction = BinaryPrediction.Linear; cfg.Compression = BinaryCompression.Zlib; }
+        else if (arr.HasCVParam(CVID.MS_truncation__delta_prediction_and_zlib_compression))
+        { cfg.Prediction = BinaryPrediction.Delta; cfg.Compression = BinaryCompression.Zlib; }
 
         // Numpress: each algorithm has a standalone CV and a "followed by zlib" variant. The
         // zlib variant implies Compression = Zlib (the numpress bytes themselves are zlib-compressed).

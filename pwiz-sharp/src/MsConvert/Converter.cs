@@ -337,12 +337,16 @@ public sealed class Converter
     /// </summary>
     private void WarnAboutUnimplementedOptions()
     {
-        if (_config.MzTruncation != 0) _log.WriteLine("warning: --mzTruncation not implemented");
-        if (_config.IntenTruncation != 0) _log.WriteLine("warning: --intenTruncation not implemented");
-        if (_config.MzDelta) _log.WriteLine("warning: --mzDelta not implemented");
-        if (_config.IntenDelta) _log.WriteLine("warning: --intenDelta not implemented");
-        if (_config.MzLinear) _log.WriteLine("warning: --mzLinear not implemented");
-        if (_config.IntenLinear) _log.WriteLine("warning: --intenLinear not implemented");
+        // --mzTruncation / --intenTruncation / --mz*Delta / --mz*Linear apply to mzMLb output
+        // only — cpp's BinaryDataEncoder doesn't honor them for plain mzML (IO.cpp:1932-1958
+        // emits the cvParam but doesn't transform the data; sharp matches that). Warn the
+        // user when these flags are set but the output isn't mzMLb.
+        bool hasLossy = _config.MzTruncation != 0 || _config.IntenTruncation != 0
+                        || _config.MzDelta || _config.IntenDelta
+                        || _config.MzLinear || _config.IntenLinear;
+        if (hasLossy && _config.WriteConfig.Format != WriteFormat.MzMLb)
+            _log.WriteLine("warning: --mz/intenTruncation/Delta/Linear take effect only with --mzMLb output; "
+                + "for plain mzML the cvParam is recorded but the array is not transformed (matches cpp).");
         // --simAsSpectra and --srmAsSpectra are honored for Thermo (Reader_Thermo passes them
         // through to ChromatogramList_Thermo + SpectrumList_Thermo).
         // --combineIonMobilitySpectra is honored for Bruker; silently ignored for Thermo (no IMS).

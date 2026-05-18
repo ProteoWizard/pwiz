@@ -143,24 +143,40 @@ internal static class ArgParser
                     config.WriteConfig.EncoderConfig.PrecisionOverrides[CVID.MS_intensity_array] = BinaryPrecision.Bits64;
                     break;
 
-                // -------- lossy encoding tweaks (unimplemented, config-only) --------
+                // -------- lossy encoding tweaks (mzMLb only; cpp's BinaryDataEncoder doesn't
+                //          honor these for regular mzML output, and sharp follows suit) --------
                 case "--mzTruncation":
-                    config.MzTruncation = ParseInt(RequireNext(args, ref i, a), a);
+                {
+                    int n = ParseInt(RequireNext(args, ref i, a), a);
+                    config.MzTruncation = n;
+                    config.WriteConfig.EncoderConfig.TruncationOverrides[CVID.MS_m_z_array] = n;
+                    config.WriteConfig.EncoderConfig.TruncationOverrides[CVID.MS_time_array] = n;
                     break;
+                }
                 case "--intenTruncation":
-                    config.IntenTruncation = ParseInt(RequireNext(args, ref i, a), a);
+                {
+                    int n = ParseInt(RequireNext(args, ref i, a), a);
+                    config.IntenTruncation = n;
+                    config.WriteConfig.EncoderConfig.TruncationOverrides[CVID.MS_intensity_array] = n;
                     break;
+                }
                 case "--mzDelta":
                     config.MzDelta = true;
+                    config.WriteConfig.EncoderConfig.PredictionOverrides[CVID.MS_m_z_array] = BinaryPrediction.Delta;
+                    config.WriteConfig.EncoderConfig.PredictionOverrides[CVID.MS_time_array] = BinaryPrediction.Delta;
                     break;
                 case "--intenDelta":
                     config.IntenDelta = true;
+                    config.WriteConfig.EncoderConfig.PredictionOverrides[CVID.MS_intensity_array] = BinaryPrediction.Delta;
                     break;
                 case "--mzLinear":
                     config.MzLinear = true;
+                    config.WriteConfig.EncoderConfig.PredictionOverrides[CVID.MS_m_z_array] = BinaryPrediction.Linear;
+                    config.WriteConfig.EncoderConfig.PredictionOverrides[CVID.MS_time_array] = BinaryPrediction.Linear;
                     break;
                 case "--intenLinear":
                     config.IntenLinear = true;
+                    config.WriteConfig.EncoderConfig.PredictionOverrides[CVID.MS_intensity_array] = BinaryPrediction.Linear;
                     break;
 
                 // -------- compression --------
