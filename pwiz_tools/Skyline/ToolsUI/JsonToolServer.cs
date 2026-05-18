@@ -34,6 +34,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -831,9 +832,19 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.GetGraphImage(graphId, filePath);
         }
 
+        public ImageBytesMetadata GetGraphImageBytes(string graphId)
+        {
+            return JsonUiService.GetGraphImageBytes(graphId);
+        }
+
         public string GetFormImage(string formId, string filePath = null)
         {
             return JsonUiService.GetFormImage(formId, filePath);
+        }
+
+        public ImageBytesMetadata GetFormImageBytes(string formId)
+        {
+            return JsonUiService.GetFormImageBytes(formId);
         }
 
         // Multi-arg methods
@@ -846,6 +857,62 @@ namespace pwiz.Skyline.ToolsUI
         public ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture)
         {
             return ExportJsonDefinitionReport(definition, filePath, ParseCulture(culture));
+        }
+
+        public ReportRowsResult GetReportRows(string reportName, int offset, int count,
+            string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture)
+        {
+            ValidateWindow(offset, count);
+            var localizer = ParseCulture(culture);
+            var document = Program.MainWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+
+            var viewName = FindReportViewName(reportName);
+            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(viewName.GroupId);
+            var viewSpec = viewSpecList.GetView(viewName.Name);
+            var layout = viewSpecList.GetViewLayouts(viewName.Name).DefaultLayout;
+
+            if (filter != null && filter.Length > 0)
+                viewSpec = ApplyFilterToNamedReport(viewSpec, filter, dataSchema);
+
+            return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
+                offset, count, includeMaxLength, columns, reportName, localizer);
+        }
+
+        public ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition,
+            int offset, int count, bool includeMaxLength, string culture)
+        {
+            ValidateWindow(offset, count);
+            var localizer = ParseCulture(culture);
+            var document = Program.MainWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+
+            var viewSpec = ResolveReportDefinition(definition, dataSchema);
+            var sortSpecs = ParseSortSpecs(definition);
+            var rowTransforms = new List<IRowTransform>();
+            if (sortSpecs != null && sortSpecs.Count > 0)
+                rowTransforms.Add(RowFilter.Empty.SetColumnSorts(sortSpecs));
+            if (viewSpec.HasTotals && rowTransforms.Count == 0)
+            {
+                var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
+                if (groupByCol != null)
+                {
+                    rowTransforms.Add(RowFilter.Empty.SetColumnSorts(new[]
+                    {
+                        new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
+                            ListSortDirection.Ascending)
+                    }));
+                }
+            }
+            ViewLayout layout = rowTransforms.Count > 0
+                ? new ViewLayout(string.Empty).ChangeRowTransforms(rowTransforms)
+                : null;
+
+            string reportName = viewSpec.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
+            return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
+                offset, count, includeMaxLength, null, reportName, localizer);
         }
 
         public string GetSettingsListItem(string listType, string itemName)
@@ -979,6 +1046,11 @@ namespace pwiz.Skyline.ToolsUI
         public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = @"en", string filePath = null)
         {
             return JsonTutorialCatalog.FetchTutorialImage(name, imageFilename, language, filePath);
+        }
+
+        public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = @"en")
+        {
+            return JsonTutorialCatalog.FetchTutorialImageBytes(name, imageFilename, language);
         }
 
         public string GetDocumentSettings(string filePath)
@@ -1182,6 +1254,437 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             return metadata;
+        }
+
+        // --- Inline rows materialization ---
+
+        // Cell text longer than this is truncated with an explicit "..." suffix so a
+        // misjudged window cannot blow caller context on a single long-text cell.
+        // internal (not const) so tests can drive the truncation path with smaller caps.
+        internal static int MaxCellLength = 200;
+
+        // Hard cap on the serialized row payload. ~4 chars/token gives a ~25K token
+        // budget, matching what the LLM caller can absorb without losing context to a
+        // single tool response. Rows past this cap are dropped and truncated_at is set
+        // so the caller can resume at offset = truncated_at.
+        internal static int MaxResponseChars = 100_000;
+
+        // Number of rows sampled when include_max_length is requested on a large
+        // dataset. Beyond this, max_length_sampled is set to true on string columns to
+        // tell the caller the value is a lower bound estimate.
+        internal static int MaxLengthSampleRows = 200;
+
+        // Upper bound on count to keep a single request from materializing an
+        // unbounded list of rows in memory and to avoid the (offset + count) overflow
+        // that would silently shift the window to negative range.
+        internal static int MaxRowCount = 10_000;
+
+        // String marker appended to a truncated cell value so the caller can detect
+        // truncation without parsing the response wrapper.
+        private const string CELL_TRUNCATION_MARKER = @"...";
+
+        private static void ValidateWindow(int offset, int count)
+        {
+            if (offset < 0)
+                throw new ArgumentException(new LlmInstruction(@"offset must be >= 0."));
+            if (count < 0)
+                throw new ArgumentException(new LlmInstruction(@"count must be >= 0. Use count = 0 for shape-only introspection."));
+            if (count > MaxRowCount)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"count {0} exceeds the per-request maximum of {1}. Paginate with offset/count.",
+                    count.ToString(), MaxRowCount.ToString()));
+            }
+        }
+
+        private ViewSpec ApplyFilterToNamedReport(ViewSpec viewSpec, ReportFilter[] filters,
+            SkylineDataSchema dataSchema)
+        {
+            // Resolve filter columns against the report's row source type. The named
+            // report has fixed RowSource and viewSpec.Columns; filter columns may
+            // reference any column in the data model, not just selected ones.
+            if (string.IsNullOrEmpty(viewSpec.RowSource))
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"Cannot apply additional filters to a report without a row source."));
+            }
+
+            // Find the row source type via the registered factories.
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+            if (!rowFactories.TryGetRowSource(viewSpec.RowSource, out _, out var rowType))
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Cannot apply additional filters: unknown row source {0}.",
+                    viewSpec.RowSource.SingleQuote()));
+            }
+
+            var resolver = new ColumnResolver(dataSchema);
+            var availableColumns = resolver.GetAvailableColumns(rowType);
+            var columnsByName = new Dictionary<string, PropertyPath>(StringComparer.OrdinalIgnoreCase);
+            foreach (var col in availableColumns)
+                columnsByName[col.InvariantName] = col.PropertyPath;
+
+            var filterSpecs = new List<FilterSpec>(viewSpec.Filters);
+            foreach (var f in filters)
+            {
+                if (string.IsNullOrWhiteSpace(f.Column))
+                {
+                    throw new ArgumentException(new LlmInstruction(
+                        @"Each filter must have a 'column' field."));
+                }
+                if (!columnsByName.TryGetValue(f.Column, out var propertyPath))
+                {
+                    var suggestions = ColumnResolver.FindSuggestions(f.Column, columnsByName.Keys);
+                    string hint = suggestions.Count > 0
+                        ? @" Did you mean: " + string.Join(@", ", suggestions.Select(s => s.SingleQuote())) + @"?"
+                        : string.Empty;
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown filter column {0}.{1}", f.Column.SingleQuote(), hint));
+                }
+                if (string.IsNullOrWhiteSpace(f.Op))
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Filter on column {0} must have an 'op' field.", f.Column.SingleQuote()));
+                }
+                var operation = FilterOperations.GetOperation(f.Op);
+                if (operation == null)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown filter operation {0}.", f.Op.SingleQuote()));
+                }
+                bool isUnary = operation == FilterOperations.OP_IS_BLANK ||
+                               operation == FilterOperations.OP_IS_NOT_BLANK;
+                if (!isUnary && string.IsNullOrEmpty(f.Value))
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Filter operation {0} on column {1} requires a 'value' field.",
+                        f.Op.SingleQuote(), f.Column.SingleQuote()));
+                }
+                var predicate = FilterPredicate.FromInvariantOperandText(operation, f.Value ?? string.Empty);
+                filterSpecs.Add(new FilterSpec(propertyPath, predicate));
+            }
+            return viewSpec.SetFilters(filterSpecs);
+        }
+
+        private ReportRowsResult MaterializeReportRows(ViewSpec viewSpec, ViewLayout layout,
+            RowFactories rowFactories, SkylineDataSchema dataSchema,
+            int offset, int count, bool includeMaxLength, string[] requestedColumns,
+            string reportName, DataSchemaLocalizer localizer)
+        {
+            if (!rowFactories.TryGetRowSource(viewSpec.RowSource, out var rowSource, out var rowSourceType))
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The row type {0} cannot be exported.", viewSpec.RowSource.SingleQuote()));
+            }
+            var viewInfo = new ViewInfo(dataSchema, rowSourceType, viewSpec);
+
+            // Mirror RowFactories.ExportReport: use streaming when there are no
+            // row transforms; otherwise materialize through BindingListSource so
+            // sorts, pivots, and filters get applied uniformly with the file path.
+            // The BindingListSource is held open across the entire materialization
+            // so its ItemProperties and RowItems are guaranteed to be valid for
+            // the duration of BuildReportRowsResult.
+            RowItemEnumerator enumerator = null;
+            BindingListSource bindingListSource = null;
+            try
+            {
+                if (layout == null || layout.RowTransforms.Count == 0)
+                {
+                    enumerator = viewInfo.GetStreamingRowItemEnumerator(CancellationToken.None, rowSource);
+                }
+                if (enumerator == null)
+                {
+                    bindingListSource = new BindingListSource(CancellationToken.None);
+                    if (layout != null)
+                        bindingListSource.ApplyLayout(layout);
+                    bindingListSource.SetView(viewInfo, rowSource);
+                    enumerator = new RowItemList(bindingListSource.ReportResults.RowItems)
+                    {
+                        ItemProperties = bindingListSource.ItemProperties
+                    };
+                }
+                layout?.ApplyFormats(enumerator.ColumnFormats);
+
+                // Total can come from two cheap sources:
+                //  - non-streaming: BindingListSource has materialized the rows already
+                //    (BigList.Count is O(1)).
+                //  - streaming: RowItemEnumerator.Length is populated up front for the
+                //    common "no filter, at most one collection" case, so we still get
+                //    O(1) total without draining the enumerator.
+                // Clamp to int.MaxValue defensively; a single report past that limit is
+                // well outside what the inline tools target.
+                int? knownTotal = null;
+                long? totalLong = bindingListSource?.ReportResults.RowItems.Count
+                                  ?? enumerator.Length;
+                if (totalLong.HasValue)
+                    knownTotal = totalLong.Value > int.MaxValue ? int.MaxValue : (int)totalLong.Value;
+                return BuildReportRowsResult(enumerator, localizer, offset, count,
+                    includeMaxLength, requestedColumns, reportName, knownTotal);
+            }
+            finally
+            {
+                enumerator?.Dispose();
+                bindingListSource?.Dispose();
+            }
+        }
+
+        private static ReportRowsResult BuildReportRowsResult(RowItemEnumerator enumerator,
+            DataSchemaLocalizer localizer, int offset, int count, bool includeMaxLength,
+            string[] requestedColumns, string reportName, int? knownTotalRows)
+        {
+            var allProperties = enumerator.ItemProperties.ToList();
+            // Resolve optional column projection to the indices we will return.
+            // Names match against both DisplayName and InvariantName so the caller can
+            // pass either the localized header value or the invariant column id that
+            // get_report_doc_topic returns.
+            int[] columnIndices = ResolveColumnProjection(allProperties, requestedColumns);
+            int columnCount = columnIndices.Length;
+
+            // Use a DsvWriter purely for its culture-aware GetFormattedValue path. The
+            // separator is irrelevant -- we never feed the writer rows -- but it matches
+            // what the file-export tools produce so values round-trip.
+            var dsvWriter = new DsvWriter(localizer.FormatProvider, localizer.Language, ',')
+            {
+                ColumnFormats = enumerator.ColumnFormats
+            };
+
+            var maxLengths = new int?[columnCount];
+            // Compute column types up front so the scan can target every column whose
+            // serialized value is text-shaped. That covers both raw strings and the
+            // entity wrappers (Peptide, Protein, Replicate, ModifiedSequence, ...) that
+            // map to the "other" bucket -- in named reports the latter are the common
+            // case, so restricting the scan to typeof(string) would silently produce
+            // null max_observed_length on most useful reports.
+            string[] columnTypes = new string[columnCount];
+            bool[] isTextCol = new bool[columnCount];
+            for (int i = 0; i < columnCount; i++)
+            {
+                columnTypes[i] = GetSimpleTypeName(allProperties[columnIndices[i]].PropertyType);
+                isTextCol[i] = columnTypes[i] == @"string" || columnTypes[i] == @"other";
+            }
+
+            // Shape-only fast path: when there is no window and no length scan to perform,
+            // skip per-row work entirely. For non-streaming (BindingListSource) we already
+            // know the total from RowItems.Count; for streaming we still have to walk to
+            // count, but we avoid formatting any cells.
+            bool needRows = count > 0;
+            bool needLengthScan = includeMaxLength;
+
+            var capturedRows = new List<string[]>(Math.Min(count, 1024));
+            // (long) cast in windowEnd guards against int overflow when a caller passes a
+            // count near int.MaxValue together with a large offset.
+            long windowEnd = (long)offset + count;
+            int scanLimit = MaxLengthSampleRows;
+            int rowIndex = 0;
+
+            if (!needRows && !needLengthScan && knownTotalRows.HasValue)
+            {
+                // Shape-only call against the non-streaming path: total is free.
+                rowIndex = knownTotalRows.Value;
+            }
+            else
+            {
+                while (enumerator.MoveNext())
+                {
+                    bool inWindow = rowIndex >= offset && rowIndex < windowEnd;
+                    bool scanThisRow = needLengthScan && rowIndex < scanLimit;
+                    if (inWindow || scanThisRow)
+                    {
+                        var row = inWindow ? new string[columnCount] : null;
+                        for (int c = 0; c < columnCount; c++)
+                        {
+                            var pd = allProperties[columnIndices[c]];
+                            string value = dsvWriter.GetFormattedValue(enumerator.Current, pd);
+                            if (inWindow)
+                                row[c] = TruncateCell(value);
+                            if (scanThisRow && isTextCol[c] && value != null)
+                            {
+                                int len = value.Length;
+                                if (maxLengths[c] == null || len > maxLengths[c].Value)
+                                    maxLengths[c] = len;
+                            }
+                        }
+                        if (inWindow)
+                            capturedRows.Add(row);
+                    }
+                    rowIndex++;
+                    // Once we've passed both the window and the scan range, the only
+                    // remaining work is counting rows. If the total is already known,
+                    // skip the rest of the enumeration entirely. When length scanning
+                    // is off, we have nothing to wait for past the window.
+                    bool windowDone = rowIndex >= windowEnd;
+                    bool scanDone = !needLengthScan || rowIndex >= scanLimit;
+                    if (windowDone && scanDone && knownTotalRows.HasValue)
+                    {
+                        rowIndex = knownTotalRows.Value;
+                        break;
+                    }
+                }
+            }
+            int totalRows = rowIndex;
+
+            // Build column descriptors. Use the column's invariant caption as Name so
+            // callers get the same identifier they'd pass back in the definition language
+            // -- this also matches what filter/projection resolution accepts.
+            var resultColumns = new ReportRowsColumn[columnCount];
+            for (int i = 0; i < columnCount; i++)
+            {
+                var pd = allProperties[columnIndices[i]];
+                resultColumns[i] = new ReportRowsColumn
+                {
+                    Name = pd.DisplayName,
+                    Type = columnTypes[i],
+                };
+                if (includeMaxLength && isTextCol[i])
+                {
+                    resultColumns[i].MaxObservedLength = maxLengths[i] ?? 0;
+                    // Per the spec: max_length_sampled is set to true only when the
+                    // value is approximate (we hit the sample cap). Otherwise the value
+                    // is exact -- the field is omitted so consumers can distinguish
+                    // sampled from exact without an extra comparison.
+                    if (totalRows > scanLimit)
+                        resultColumns[i].MaxLengthSampled = true;
+                }
+            }
+
+            // Cap total payload by dropping rows from the tail. We have already truncated
+            // long cells, so this only fires when the window itself produces too much text.
+            // Per-row sizes are precomputed and we subtract on drop to keep this O(N).
+            int? truncatedAt = null;
+            bool windowTruncated = false;
+            int keptRows = capturedRows.Count;
+            int headerOverhead = EstimateHeaderChars(resultColumns);
+            var rowSizes = new int[capturedRows.Count];
+            int approxSize = headerOverhead;
+            for (int i = 0; i < capturedRows.Count; i++)
+            {
+                rowSizes[i] = EstimateRowChars(capturedRows[i]);
+                approxSize += rowSizes[i];
+            }
+            while (keptRows > 0 && approxSize > MaxResponseChars)
+            {
+                keptRows--;
+                approxSize -= rowSizes[keptRows];
+            }
+            if (keptRows < capturedRows.Count)
+            {
+                windowTruncated = true;
+                truncatedAt = offset + keptRows;
+                capturedRows.RemoveRange(keptRows, capturedRows.Count - keptRows);
+            }
+
+            return new ReportRowsResult
+            {
+                Report = reportName,
+                TotalRows = totalRows,
+                Columns = resultColumns,
+                Rows = capturedRows.ToArray(),
+                Window = new ReportRowsWindow
+                {
+                    Offset = offset,
+                    Count = capturedRows.Count,
+                    Truncated = windowTruncated
+                },
+                TruncatedAt = truncatedAt
+            };
+        }
+
+        private static int[] ResolveColumnProjection(IList<DataPropertyDescriptor> properties,
+            string[] requested)
+        {
+            if (requested == null || requested.Length == 0)
+            {
+                var all = new int[properties.Count];
+                for (int i = 0; i < all.Length; i++)
+                    all[i] = i;
+                return all;
+            }
+            // Index columns by both the localized DisplayName (what the caller sees in
+            // the CSV header) and the invariant column caption (what get_report_doc_topic
+            // returns). Filter resolution keys by InvariantName for the same reason; this
+            // keeps both surfaces consistent for the caller. Two passes so DisplayName
+            // always wins -- a single dict-set loop would let a later column's invariant
+            // caption shadow an earlier column's display name in pivoted / localized
+            // reports where the two namespaces collide.
+            var byName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < properties.Count; i++)
+                byName[properties[i].DisplayName] = i;
+            for (int i = 0; i < properties.Count; i++)
+            {
+                string invariant = properties[i].ColumnCaption?.GetCaption(DataSchemaLocalizer.INVARIANT);
+                if (!string.IsNullOrEmpty(invariant) && !byName.ContainsKey(invariant))
+                    byName[invariant] = i;
+            }
+            var indices = new int[requested.Length];
+            for (int i = 0; i < requested.Length; i++)
+            {
+                if (!byName.TryGetValue(requested[i], out int idx))
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown column {0}. Available columns: {1}.",
+                        requested[i].SingleQuote(),
+                        string.Join(@", ", properties.Select(p => p.DisplayName.SingleQuote()))));
+                }
+                indices[i] = idx;
+            }
+            return indices;
+        }
+
+        private static string TruncateCell(string value)
+        {
+            if (value == null)
+                return null;
+            if (value.Length <= MaxCellLength)
+                return value;
+            return value.Substring(0, MaxCellLength) + CELL_TRUNCATION_MARKER;
+        }
+
+        // Per-cell and per-row JSON overhead constants used by the payload-size
+        // estimator. Approximate, not byte-exact: the estimator only decides when
+        // to drop tail rows.
+        private const int PAYLOAD_PER_CELL_OVERHEAD = 4;   // "", + structural punctuation
+        private const int PAYLOAD_PER_ROW_OVERHEAD = 4;    // [], + newline
+        private const int PAYLOAD_PER_COLUMN_HEADER_OVERHEAD = 32; // field names + structural punctuation
+
+        private static int EstimateHeaderChars(ReportRowsColumn[] columns)
+        {
+            int total = 0;
+            foreach (var col in columns)
+                total += (col.Name?.Length ?? 0) + (col.Type?.Length ?? 0) + PAYLOAD_PER_COLUMN_HEADER_OVERHEAD;
+            return total;
+        }
+
+        private static int EstimateRowChars(string[] row)
+        {
+            int total = PAYLOAD_PER_ROW_OVERHEAD;
+            for (int c = 0; c < row.Length; c++)
+            {
+                total += PAYLOAD_PER_CELL_OVERHEAD;
+                if (row[c] != null)
+                    total += row[c].Length;
+            }
+            return total;
+        }
+
+        private static string GetSimpleTypeName(Type type)
+        {
+            Type underlying = Nullable.GetUnderlyingType(type) ?? type;
+            if (underlying == typeof(string))
+                return @"string";
+            if (underlying == typeof(bool))
+                return @"boolean";
+            if (underlying == typeof(int) || underlying == typeof(long) ||
+                underlying == typeof(short) || underlying == typeof(byte))
+                return @"integer";
+            if (underlying == typeof(double) || underlying == typeof(float) ||
+                underlying == typeof(decimal))
+                return @"number";
+            if (underlying == typeof(DateTime) || underlying == typeof(DateTimeOffset))
+                return @"datetime";
+            // Unknown / unmapped types (Guid, Color, enums, custom proteomics types) get
+            // a stable "other" label so callers don't see raw CLR type names that can
+            // shift on refactor.
+            return @"other";
         }
 
         private static ViewName FindReportViewName(string reportName)

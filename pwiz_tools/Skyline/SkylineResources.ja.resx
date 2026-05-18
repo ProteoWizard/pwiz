@@ -598,6 +598,9 @@
   <data name="Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version" xml:space="preserve">
     <value>32ビットOSで{0}の64ビットバージョンを実行しようとしています。32ビットバージョンをインストールしてください。</value>
   </data>
+  <data name="Program_ParseStartPageArg_Invalid_argument__0___Use__start_page_true_or__start_page_false" xml:space="preserve">
+    <value>無効な引数 '{0}' です。--start-page=true または --start-page=false を指定してください。</value>
+  </data>
   <data name="SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching" xml:space="preserve">
     <value>切り替える前に現在の設定を保存しますか？</value>
   </data>
