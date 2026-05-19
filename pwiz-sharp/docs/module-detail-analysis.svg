@@ -163,9 +163,9 @@
 <!-- n_analysis__spectrum_processing__SpectrumList_3D -->
 <g id="node8" class="node">
 <title>n_analysis__spectrum_processing__SpectrumList_3D</title>
-<g id="a_node8"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/spectrum_processing/SpectrumList_3D.cpp" xlink:title="3D (m/z, drift&#45;time, intensity) reshaper. NOT PORTED — niche." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M928.12,-1181C928.12,-1181 861.88,-1181 861.88,-1181 855.88,-1181 849.88,-1175 849.88,-1169 849.88,-1169 849.88,-1157 849.88,-1157 849.88,-1151 855.88,-1145 861.88,-1145 861.88,-1145 928.12,-1145 928.12,-1145 934.12,-1145 940.12,-1151 940.12,-1157 940.12,-1157 940.12,-1169 940.12,-1169 940.12,-1175 934.12,-1181 928.12,-1181"/>
-<text xml:space="preserve" text-anchor="middle" x="895" y="-1160.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SpectrumList_3D</text>
+<g id="a_node8"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/spectrum_processing/SpectrumList_3D.cpp" xlink:title="3D (m/z, drift&#45;time, intensity) reshaper. WON&#39;T PORT — niche, not on the pwiz&#45;sharp roadmap." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M928.12,-1181C928.12,-1181 861.88,-1181 861.88,-1181 855.88,-1181 849.88,-1175 849.88,-1169 849.88,-1169 849.88,-1157 849.88,-1157 849.88,-1151 855.88,-1145 861.88,-1145 861.88,-1145 928.12,-1145 928.12,-1145 934.12,-1145 940.12,-1151 940.12,-1157 940.12,-1157 940.12,-1169 940.12,-1169 940.12,-1175 934.12,-1181 928.12,-1181"/>
+<text xml:space="preserve" text-anchor="start" x="857.88" y="-1161.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">SpectrumList_3D</text>
 </a>
 </g>
 </g>
@@ -203,9 +203,9 @@
 <!-- n_analysis__spectrum_processing__SpectrumList_DiaUmpire -->
 <g id="node12" class="node">
 <title>n_analysis__spectrum_processing__SpectrumList_DiaUmpire</title>
-<g id="a_node12"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/spectrum_processing/SpectrumList_DiaUmpire.cpp" xlink:title="DIA&#45;Umpire MS2 deconvolution. NOT PORTED — ~10k LOC, separate research tool, no current ask." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1565.38,-1181C1565.38,-1181 1464.62,-1181 1464.62,-1181 1458.62,-1181 1452.62,-1175 1452.62,-1169 1452.62,-1169 1452.62,-1157 1452.62,-1157 1452.62,-1151 1458.62,-1145 1464.62,-1145 1464.62,-1145 1565.38,-1145 1565.38,-1145 1571.38,-1145 1577.38,-1151 1577.38,-1157 1577.38,-1157 1577.38,-1169 1577.38,-1169 1577.38,-1175 1571.38,-1181 1565.38,-1181"/>
-<text xml:space="preserve" text-anchor="middle" x="1515" y="-1160.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SpectrumList_DiaUmpire</text>
+<g id="a_node12"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/spectrum_processing/SpectrumList_DiaUmpire.cpp" xlink:title="DIA&#45;Umpire MS2 deconvolution wrapper. Ported as Analysis/DiaUmpire/SpectrumList_DiaUmpire.cs. The full DIA&#45;Umpire algorithm (PeakCluster + PeakCurve + IsotopePatternMap + Config + DiaWindow + DiaUmpireMath + ScanData + InstrumentParameter) lives alongside it under Analysis/DiaUmpire/." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M1565.38,-1181C1565.38,-1181 1464.62,-1181 1464.62,-1181 1458.62,-1181 1452.62,-1175 1452.62,-1169 1452.62,-1169 1452.62,-1157 1452.62,-1157 1452.62,-1151 1458.62,-1145 1464.62,-1145 1464.62,-1145 1565.38,-1145 1565.38,-1145 1571.38,-1145 1577.38,-1151 1577.38,-1157 1577.38,-1157 1577.38,-1169 1577.38,-1169 1577.38,-1175 1571.38,-1181 1565.38,-1181"/>
+<text xml:space="preserve" text-anchor="middle" x="1515" y="-1160.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">SpectrumList_DiaUmpire</text>
 </a>
 </g>
 </g>
@@ -223,7 +223,7 @@
 <!-- n_analysis__spectrum_processing__SpectrumList_IonMobility -->
 <g id="node14" class="node">
 <title>n_analysis__spectrum_processing__SpectrumList_IonMobility</title>
-<g id="a_node14"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/spectrum_processing/SpectrumList_IonMobility.cpp" xlink:title="Ion&#45;mobility CCS calculator filter. NOT PORTED — needs ion&#45;mobility model classes first." target="_blank">
+<g id="a_node14"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/spectrum_processing/SpectrumList_IonMobility.cpp" xlink:title="Ion&#45;mobility CCS calculator filter. NOT YET PORTED — needs to be ported once an ion&#45;mobility&#45;capable vendor reader needs it; the vendor reader implementations themselves wire in the CCS conversion." target="_blank">
 <path fill="#f5a8a8" stroke="#a02020" d="M1823.62,-1181C1823.62,-1181 1718.38,-1181 1718.38,-1181 1712.38,-1181 1706.38,-1175 1706.38,-1169 1706.38,-1169 1706.38,-1157 1706.38,-1157 1706.38,-1151 1712.38,-1145 1718.38,-1145 1718.38,-1145 1823.62,-1145 1823.62,-1145 1829.62,-1145 1835.62,-1151 1835.62,-1157 1835.62,-1157 1835.62,-1169 1835.62,-1169 1835.62,-1175 1829.62,-1181 1823.62,-1181"/>
 <text xml:space="preserve" text-anchor="middle" x="1771" y="-1160.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SpectrumList_IonMobility</text>
 </a>
@@ -733,9 +733,9 @@
 <!-- n_analysis__chromatogram_processing__ChromatogramList_XICGenerator -->
 <g id="node65" class="node">
 <title>n_analysis__chromatogram_processing__ChromatogramList_XICGenerator</title>
-<g id="a_node65"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramList_XICGenerator.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1022.25,-920C1022.25,-920 881.75,-920 881.75,-920 875.75,-920 869.75,-914 869.75,-908 869.75,-908 869.75,-896 869.75,-896 869.75,-890 875.75,-884 881.75,-884 881.75,-884 1022.25,-884 1022.25,-884 1028.25,-884 1034.25,-890 1034.25,-896 1034.25,-896 1034.25,-908 1034.25,-908 1034.25,-914 1028.25,-920 1022.25,-920"/>
-<text xml:space="preserve" text-anchor="middle" x="952" y="-899.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ChromatogramList_XICGenerator</text>
+<g id="a_node65"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/chromatogram_processing/ChromatogramList_XICGenerator.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1022.25,-920C1022.25,-920 881.75,-920 881.75,-920 875.75,-920 869.75,-914 869.75,-908 869.75,-908 869.75,-896 869.75,-896 869.75,-890 875.75,-884 881.75,-884 881.75,-884 1022.25,-884 1022.25,-884 1028.25,-884 1034.25,-890 1034.25,-896 1034.25,-896 1034.25,-908 1034.25,-908 1034.25,-914 1028.25,-920 1022.25,-920"/>
+<text xml:space="preserve" text-anchor="start" x="877.75" y="-900.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">ChromatogramList_XICGenerator</text>
 </a>
 </g>
 </g>
@@ -763,9 +763,9 @@
 <!-- n_analysis__dia_umpire__DiaUmpire -->
 <g id="node81" class="node">
 <title>n_analysis__dia_umpire__DiaUmpire</title>
-<g id="a_node81"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/DiaUmpire.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M103.25,-746C103.25,-746 64.75,-746 64.75,-746 58.75,-746 52.75,-740 52.75,-734 52.75,-734 52.75,-722 52.75,-722 52.75,-716 58.75,-710 64.75,-710 64.75,-710 103.25,-710 103.25,-710 109.25,-710 115.25,-716 115.25,-722 115.25,-722 115.25,-734 115.25,-734 115.25,-740 109.25,-746 103.25,-746"/>
-<text xml:space="preserve" text-anchor="middle" x="84" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">DiaUmpire</text>
+<g id="a_node81"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/DiaUmpire.cpp" xlink:title="Top&#45;level DIA&#45;Umpire orchestrator: builds isotope pattern maps from MS1, groups MS2 fragments into peak clusters, emits pseudo&#45;MS/MS spectra. Ported as Analysis/DiaUmpire/DiaUmpire.cs + SpectrumList_DiaUmpire.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M103.25,-746C103.25,-746 64.75,-746 64.75,-746 58.75,-746 52.75,-740 52.75,-734 52.75,-734 52.75,-722 52.75,-722 52.75,-716 58.75,-710 64.75,-710 64.75,-710 103.25,-710 103.25,-710 109.25,-710 115.25,-716 115.25,-722 115.25,-722 115.25,-734 115.25,-734 115.25,-740 109.25,-746 103.25,-746"/>
+<text xml:space="preserve" text-anchor="middle" x="84" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">DiaUmpire</text>
 </a>
 </g>
 </g>
@@ -893,9 +893,9 @@
 <!-- n_analysis__dia_umpire__DiaUmpireMath -->
 <g id="node82" class="node">
 <title>n_analysis__dia_umpire__DiaUmpireMath</title>
-<g id="a_node82"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/DiaUmpireMath.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M204.25,-746C204.25,-746 141.75,-746 141.75,-746 135.75,-746 129.75,-740 129.75,-734 129.75,-734 129.75,-722 129.75,-722 129.75,-716 135.75,-710 141.75,-710 141.75,-710 204.25,-710 204.25,-710 210.25,-710 216.25,-716 216.25,-722 216.25,-722 216.25,-734 216.25,-734 216.25,-740 210.25,-746 204.25,-746"/>
-<text xml:space="preserve" text-anchor="middle" x="173" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">DiaUmpireMath</text>
+<g id="a_node82"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/DiaUmpireMath.hpp" xlink:title="Numeric helpers (Gaussian smoothing, derivative, integration) used by the peak&#45;detection passes. Ported as Analysis/DiaUmpire/DiaUmpireMath.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M204.25,-746C204.25,-746 141.75,-746 141.75,-746 135.75,-746 129.75,-740 129.75,-734 129.75,-734 129.75,-722 129.75,-722 129.75,-716 135.75,-710 141.75,-710 141.75,-710 204.25,-710 204.25,-710 210.25,-710 216.25,-716 216.25,-722 216.25,-722 216.25,-734 216.25,-734 216.25,-740 210.25,-746 204.25,-746"/>
+<text xml:space="preserve" text-anchor="middle" x="173" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">DiaUmpireMath</text>
 </a>
 </g>
 </g>
@@ -913,9 +913,9 @@
 <!-- n_analysis__dia_umpire__InstrumentParameter -->
 <g id="node83" class="node">
 <title>n_analysis__dia_umpire__InstrumentParameter</title>
-<g id="a_node83"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/InstrumentParameter.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M330,-746C330,-746 242,-746 242,-746 236,-746 230,-740 230,-734 230,-734 230,-722 230,-722 230,-716 236,-710 242,-710 242,-710 330,-710 330,-710 336,-710 342,-716 342,-722 342,-722 342,-734 342,-734 342,-740 336,-746 330,-746"/>
-<text xml:space="preserve" text-anchor="middle" x="286" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">InstrumentParameter</text>
+<g id="a_node83"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/InstrumentParameter.hpp" xlink:title="Mass&#45;accuracy / resolution tuning parameters consumed by the clusterer. Ported as Analysis/DiaUmpire/InstrumentParameter.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M330,-746C330,-746 242,-746 242,-746 236,-746 230,-740 230,-734 230,-734 230,-722 230,-722 230,-716 236,-710 242,-710 242,-710 330,-710 330,-710 336,-710 342,-716 342,-722 342,-722 342,-734 342,-734 342,-740 336,-746 330,-746"/>
+<text xml:space="preserve" text-anchor="middle" x="286" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">InstrumentParameter</text>
 </a>
 </g>
 </g>
@@ -923,9 +923,9 @@
 <!-- n_analysis__dia_umpire__IsotopePatternMap -->
 <g id="node84" class="node">
 <title>n_analysis__dia_umpire__IsotopePatternMap</title>
-<g id="a_node84"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/IsotopePatternMap.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M447.88,-746C447.88,-746 368.12,-746 368.12,-746 362.12,-746 356.12,-740 356.12,-734 356.12,-734 356.12,-722 356.12,-722 356.12,-716 362.12,-710 368.12,-710 368.12,-710 447.88,-710 447.88,-710 453.88,-710 459.88,-716 459.88,-722 459.88,-722 459.88,-734 459.88,-734 459.88,-740 453.88,-746 447.88,-746"/>
-<text xml:space="preserve" text-anchor="middle" x="408" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">IsotopePatternMap</text>
+<g id="a_node84"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/IsotopePatternMap.cpp" xlink:title="Per&#45;charge averagine isotope&#45;pattern lookup table. Ported as Analysis/DiaUmpire/IsotopePatternMap.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M447.88,-746C447.88,-746 368.12,-746 368.12,-746 362.12,-746 356.12,-740 356.12,-734 356.12,-734 356.12,-722 356.12,-722 356.12,-716 362.12,-710 368.12,-710 368.12,-710 447.88,-710 447.88,-710 453.88,-710 459.88,-716 459.88,-722 459.88,-722 459.88,-734 459.88,-734 459.88,-740 453.88,-746 447.88,-746"/>
+<text xml:space="preserve" text-anchor="middle" x="408" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">IsotopePatternMap</text>
 </a>
 </g>
 </g>
@@ -933,9 +933,9 @@
 <!-- n_analysis__dia_umpire__PeakCluster -->
 <g id="node85" class="node">
 <title>n_analysis__dia_umpire__PeakCluster</title>
-<g id="a_node85"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/PeakCluster.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M530.25,-746C530.25,-746 485.75,-746 485.75,-746 479.75,-746 473.75,-740 473.75,-734 473.75,-734 473.75,-722 473.75,-722 473.75,-716 479.75,-710 485.75,-710 485.75,-710 530.25,-710 530.25,-710 536.25,-710 542.25,-716 542.25,-722 542.25,-722 542.25,-734 542.25,-734 542.25,-740 536.25,-746 530.25,-746"/>
-<text xml:space="preserve" text-anchor="middle" x="508" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">PeakCluster</text>
+<g id="a_node85"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/PeakCluster.hpp" xlink:title="Grouped peak curves that form one feature (matched MS1 + co&#45;eluting MS2). Ported as Analysis/DiaUmpire/PeakCluster.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M530.25,-746C530.25,-746 485.75,-746 485.75,-746 479.75,-746 473.75,-740 473.75,-734 473.75,-734 473.75,-722 473.75,-722 473.75,-716 479.75,-710 485.75,-710 485.75,-710 530.25,-710 530.25,-710 536.25,-710 542.25,-716 542.25,-722 542.25,-722 542.25,-734 542.25,-734 542.25,-740 536.25,-746 530.25,-746"/>
+<text xml:space="preserve" text-anchor="middle" x="508" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">PeakCluster</text>
 </a>
 </g>
 </g>
@@ -943,9 +943,9 @@
 <!-- n_analysis__dia_umpire__PeakCurve -->
 <g id="node86" class="node">
 <title>n_analysis__dia_umpire__PeakCurve</title>
-<g id="a_node86"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/PeakCurve.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M607.25,-746C607.25,-746 568.75,-746 568.75,-746 562.75,-746 556.75,-740 556.75,-734 556.75,-734 556.75,-722 556.75,-722 556.75,-716 562.75,-710 568.75,-710 568.75,-710 607.25,-710 607.25,-710 613.25,-710 619.25,-716 619.25,-722 619.25,-722 619.25,-734 619.25,-734 619.25,-740 613.25,-746 607.25,-746"/>
-<text xml:space="preserve" text-anchor="middle" x="588" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">PeakCurve</text>
+<g id="a_node86"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/PeakCurve.hpp" xlink:title="Single&#45;m/z chromatographic peak across consecutive scans — the unit DIA&#45;Umpire clusters. Ported as Analysis/DiaUmpire/PeakCurve.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M607.25,-746C607.25,-746 568.75,-746 568.75,-746 562.75,-746 556.75,-740 556.75,-734 556.75,-734 556.75,-722 556.75,-722 556.75,-716 562.75,-710 568.75,-710 568.75,-710 607.25,-710 607.25,-710 613.25,-710 619.25,-716 619.25,-722 619.25,-722 619.25,-734 619.25,-734 619.25,-740 613.25,-746 607.25,-746"/>
+<text xml:space="preserve" text-anchor="middle" x="588" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">PeakCurve</text>
 </a>
 </g>
 </g>
@@ -953,9 +953,9 @@
 <!-- n_analysis__dia_umpire__ScanData -->
 <g id="node87" class="node">
 <title>n_analysis__dia_umpire__ScanData</title>
-<g id="a_node87"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/ScanData.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M679,-746C679,-746 645,-746 645,-746 639,-746 633,-740 633,-734 633,-734 633,-722 633,-722 633,-716 639,-710 645,-710 645,-710 679,-710 679,-710 685,-710 691,-716 691,-722 691,-722 691,-734 691,-734 691,-740 685,-746 679,-746"/>
-<text xml:space="preserve" text-anchor="middle" x="662" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ScanData</text>
+<g id="a_node87"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/dia_umpire/ScanData.hpp" xlink:title="Per&#45;scan working buffers (mz/intensity arrays, RT, MS level). Ported as Analysis/DiaUmpire/ScanData.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M679,-746C679,-746 645,-746 645,-746 639,-746 633,-740 633,-734 633,-734 633,-722 633,-722 633,-716 639,-710 645,-710 645,-710 679,-710 679,-710 685,-710 691,-716 691,-722 691,-722 691,-734 691,-734 691,-740 685,-746 679,-746"/>
+<text xml:space="preserve" text-anchor="middle" x="662" y="-725.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ScanData</text>
 </a>
 </g>
 </g>
@@ -1223,9 +1223,9 @@
 <!-- n_analysis__proteome_processing__ProteinListFactory -->
 <g id="node117" class="node">
 <title>n_analysis__proteome_processing__ProteinListFactory</title>
-<g id="a_node117"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/proteome_processing/ProteinListFactory.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M119.75,-398C119.75,-398 48.25,-398 48.25,-398 42.25,-398 36.25,-392 36.25,-386 36.25,-386 36.25,-374 36.25,-374 36.25,-368 42.25,-362 48.25,-362 48.25,-362 119.75,-362 119.75,-362 125.75,-362 131.75,-368 131.75,-374 131.75,-374 131.75,-386 131.75,-386 131.75,-392 125.75,-398 119.75,-398"/>
-<text xml:space="preserve" text-anchor="middle" x="84" y="-377.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ProteinListFactory</text>
+<g id="a_node117"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/proteome_processing/ProteinListFactory.cpp" xlink:title="Command&#45;string dispatcher for stacking ProteinList wrappers: `index &lt;int&#45;set&gt;`, `id &lt;file&#45;or&#45;semicolon&#45;list&gt;`, `decoyGenerator &lt;reverse|shuffle[=seed]&gt; &lt;prefix&gt;`. Ported as Analysis/Proteome/ProteinListFactory.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M119.75,-398C119.75,-398 48.25,-398 48.25,-398 42.25,-398 36.25,-392 36.25,-386 36.25,-386 36.25,-374 36.25,-374 36.25,-368 42.25,-362 48.25,-362 48.25,-362 119.75,-362 119.75,-362 125.75,-362 131.75,-368 131.75,-374 131.75,-374 131.75,-386 131.75,-386 131.75,-392 125.75,-398 119.75,-398"/>
+<text xml:space="preserve" text-anchor="middle" x="84" y="-377.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ProteinListFactory</text>
 </a>
 </g>
 </g>
@@ -1253,9 +1253,9 @@
 <!-- n_analysis__proteome_processing__ProteinList_DecoyGenerator -->
 <g id="node118" class="node">
 <title>n_analysis__proteome_processing__ProteinList_DecoyGenerator</title>
-<g id="a_node118"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/proteome_processing/ProteinList_DecoyGenerator.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M274.25,-398C274.25,-398 157.75,-398 157.75,-398 151.75,-398 145.75,-392 145.75,-386 145.75,-386 145.75,-374 145.75,-374 145.75,-368 151.75,-362 157.75,-362 157.75,-362 274.25,-362 274.25,-362 280.25,-362 286.25,-368 286.25,-374 286.25,-374 286.25,-386 286.25,-386 286.25,-392 280.25,-398 274.25,-398"/>
-<text xml:space="preserve" text-anchor="middle" x="216" y="-377.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ProteinList_DecoyGenerator</text>
+<g id="a_node118"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/proteome_processing/ProteinList_DecoyGenerator.cpp" xlink:title="Doubles a ProteinList by generating decoy proteins (reversed or shuffled sequence) for every target. Find(id) strips the decoy prefix on lookup. Ported as Analysis/Proteome/ProteinList_DecoyGenerator.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M274.25,-398C274.25,-398 157.75,-398 157.75,-398 151.75,-398 145.75,-392 145.75,-386 145.75,-386 145.75,-374 145.75,-374 145.75,-368 151.75,-362 157.75,-362 157.75,-362 274.25,-362 274.25,-362 280.25,-362 286.25,-368 286.25,-374 286.25,-374 286.25,-386 286.25,-386 286.25,-392 280.25,-398 274.25,-398"/>
+<text xml:space="preserve" text-anchor="middle" x="216" y="-377.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ProteinList_DecoyGenerator</text>
 </a>
 </g>
 </g>
@@ -1273,9 +1273,9 @@
 <!-- n_analysis__proteome_processing__ProteinList_Filter -->
 <g id="node119" class="node">
 <title>n_analysis__proteome_processing__ProteinList_Filter</title>
-<g id="a_node119"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/proteome_processing/ProteinList_Filter.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M378.12,-398C378.12,-398 311.88,-398 311.88,-398 305.88,-398 299.88,-392 299.88,-386 299.88,-386 299.88,-374 299.88,-374 299.88,-368 305.88,-362 311.88,-362 311.88,-362 378.12,-362 378.12,-362 384.12,-362 390.12,-368 390.12,-374 390.12,-374 390.12,-386 390.12,-386 390.12,-392 384.12,-398 378.12,-398"/>
-<text xml:space="preserve" text-anchor="middle" x="345" y="-377.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ProteinList_Filter</text>
+<g id="a_node119"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/proteome_processing/ProteinList_Filter.cpp" xlink:title="Predicate&#45;driven sub&#45;list over a ProteinList; supports IndexSet, IdSet, and arbitrary client predicates. Tribool return type lets predicates request sequence&#45;loading via a retry pass. Ported as Analysis/Proteome/ProteinList_Filter.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M378.12,-398C378.12,-398 311.88,-398 311.88,-398 305.88,-398 299.88,-392 299.88,-386 299.88,-386 299.88,-374 299.88,-374 299.88,-368 305.88,-362 311.88,-362 311.88,-362 378.12,-362 378.12,-362 384.12,-362 390.12,-368 390.12,-374 390.12,-374 390.12,-386 390.12,-386 390.12,-392 384.12,-398 378.12,-398"/>
+<text xml:space="preserve" text-anchor="middle" x="345" y="-377.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ProteinList_Filter</text>
 </a>
 </g>
 </g>
@@ -1303,9 +1303,9 @@
 <!-- n_analysis__common__CwtPeakDetector -->
 <g id="node145" class="node">
 <title>n_analysis__common__CwtPeakDetector</title>
-<g id="a_node145"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/CwtPeakDetector.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M118.62,-137C118.62,-137 49.38,-137 49.38,-137 43.38,-137 37.38,-131 37.38,-125 37.38,-125 37.38,-113 37.38,-113 37.38,-107 43.38,-101 49.38,-101 49.38,-101 118.62,-101 118.62,-101 124.62,-101 130.62,-107 130.62,-113 130.62,-113 130.62,-125 130.62,-125 130.62,-131 124.62,-137 118.62,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="84" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">CwtPeakDetector</text>
+<g id="a_node145"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/CwtPeakDetector.cpp" xlink:title="Continuous&#45;wavelet&#45;transform peak detector. Ported as Analysis/PeakPicking/CwtPeakDetector.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M118.62,-137C118.62,-137 49.38,-137 49.38,-137 43.38,-137 37.38,-131 37.38,-125 37.38,-125 37.38,-113 37.38,-113 37.38,-107 43.38,-101 49.38,-101 49.38,-101 118.62,-101 118.62,-101 124.62,-101 130.62,-107 130.62,-113 130.62,-113 130.62,-125 130.62,-125 130.62,-131 124.62,-137 118.62,-137"/>
+<text xml:space="preserve" text-anchor="middle" x="84" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">CwtPeakDetector</text>
 </a>
 </g>
 </g>
@@ -1533,9 +1533,9 @@
 <!-- n_analysis__common__DataFilter -->
 <g id="node146" class="node">
 <title>n_analysis__common__DataFilter</title>
-<g id="a_node146"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/DataFilter.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M191.75,-137C191.75,-137 156.25,-137 156.25,-137 150.25,-137 144.25,-131 144.25,-125 144.25,-125 144.25,-113 144.25,-113 144.25,-107 150.25,-101 156.25,-101 156.25,-101 191.75,-101 191.75,-101 197.75,-101 203.75,-107 203.75,-113 203.75,-113 203.75,-125 203.75,-125 203.75,-131 197.75,-137 191.75,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="174" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">DataFilter</text>
+<g id="a_node146"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/DataFilter.hpp" xlink:title="Abstract interface for SpectrumDataFilter + ChromatogramDataFilter. Ported as Analysis/PeakFilters/ISpectrumDataFilter.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M191.75,-137C191.75,-137 156.25,-137 156.25,-137 150.25,-137 144.25,-131 144.25,-125 144.25,-125 144.25,-113 144.25,-113 144.25,-107 150.25,-101 156.25,-101 156.25,-101 191.75,-101 191.75,-101 197.75,-101 203.75,-107 203.75,-113 203.75,-113 203.75,-125 203.75,-125 203.75,-131 197.75,-137 191.75,-137"/>
+<text xml:space="preserve" text-anchor="middle" x="174" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">DataFilter</text>
 </a>
 </g>
 </g>
@@ -1550,9 +1550,9 @@
 <!-- n_analysis__common__ExtraZeroSamplesFilter -->
 <g id="node147" class="node">
 <title>n_analysis__common__ExtraZeroSamplesFilter</title>
-<g id="a_node147"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/ExtraZeroSamplesFilter.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M324.38,-137C324.38,-137 229.62,-137 229.62,-137 223.62,-137 217.62,-131 217.62,-125 217.62,-125 217.62,-113 217.62,-113 217.62,-107 223.62,-101 229.62,-101 229.62,-101 324.38,-101 324.38,-101 330.38,-101 336.38,-107 336.38,-113 336.38,-113 336.38,-125 336.38,-125 336.38,-131 330.38,-137 324.38,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="277" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ExtraZeroSamplesFilter</text>
+<g id="a_node147"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/ExtraZeroSamplesFilter.cpp" xlink:title="Drops / preserves flanking zero samples around peaks (preserveFlankingZeros toggle). Folded inline into Analysis/SpectrumListZeroSamplesFilter.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M324.38,-137C324.38,-137 229.62,-137 229.62,-137 223.62,-137 217.62,-131 217.62,-125 217.62,-125 217.62,-113 217.62,-113 217.62,-107 223.62,-101 229.62,-101 229.62,-101 324.38,-101 324.38,-101 330.38,-101 336.38,-107 336.38,-113 336.38,-113 336.38,-125 336.38,-125 336.38,-131 330.38,-137 324.38,-137"/>
+<text xml:space="preserve" text-anchor="middle" x="277" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ExtraZeroSamplesFilter</text>
 </a>
 </g>
 </g>
@@ -1560,9 +1560,9 @@
 <!-- n_analysis__common__LocalMaximumPeakDetector -->
 <g id="node148" class="node">
 <title>n_analysis__common__LocalMaximumPeakDetector</title>
-<g id="a_node148"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/LocalMaximumPeakDetector.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M480,-137C480,-137 362,-137 362,-137 356,-137 350,-131 350,-125 350,-125 350,-113 350,-113 350,-107 356,-101 362,-101 362,-101 480,-101 480,-101 486,-101 492,-107 492,-113 492,-113 492,-125 492,-125 492,-131 486,-137 480,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="421" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">LocalMaximumPeakDetector</text>
+<g id="a_node148"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/LocalMaximumPeakDetector.cpp" xlink:title="Simple local&#45;maximum peak detector. Ported as Analysis/PeakPicking/LocalMaximumPeakDetector.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M480,-137C480,-137 362,-137 362,-137 356,-137 350,-131 350,-125 350,-125 350,-113 350,-113 350,-107 356,-101 362,-101 362,-101 480,-101 480,-101 486,-101 492,-107 492,-113 492,-113 492,-125 492,-125 492,-131 486,-137 480,-137"/>
+<text xml:space="preserve" text-anchor="middle" x="421" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">LocalMaximumPeakDetector</text>
 </a>
 </g>
 </g>
@@ -1570,9 +1570,9 @@
 <!-- n_analysis__common__PeakDetector -->
 <g id="node149" class="node">
 <title>n_analysis__common__PeakDetector</title>
-<g id="a_node149"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/PeakDetector.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M570,-137C570,-137 518,-137 518,-137 512,-137 506,-131 506,-125 506,-125 506,-113 506,-113 506,-107 512,-101 518,-101 518,-101 570,-101 570,-101 576,-101 582,-107 582,-113 582,-113 582,-125 582,-125 582,-131 576,-137 570,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="544" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">PeakDetector</text>
+<g id="a_node149"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/PeakDetector.hpp" xlink:title="Abstract interface + Peak struct for peak detectors. Ported as Analysis/PeakPicking/IPeakDetector.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M570,-137C570,-137 518,-137 518,-137 512,-137 506,-131 506,-125 506,-125 506,-113 506,-113 506,-107 512,-101 518,-101 518,-101 570,-101 570,-101 576,-101 582,-107 582,-113 582,-113 582,-125 582,-125 582,-131 576,-137 570,-137"/>
+<text xml:space="preserve" text-anchor="middle" x="544" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">PeakDetector</text>
 </a>
 </g>
 </g>
@@ -1580,9 +1580,9 @@
 <!-- n_analysis__common__SavitzkyGolaySmoother -->
 <g id="node150" class="node">
 <title>n_analysis__common__SavitzkyGolaySmoother</title>
-<g id="a_node150"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/SavitzkyGolaySmoother.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M704.12,-137C704.12,-137 607.88,-137 607.88,-137 601.88,-137 595.88,-131 595.88,-125 595.88,-125 595.88,-113 595.88,-113 595.88,-107 601.88,-101 607.88,-101 607.88,-101 704.12,-101 704.12,-101 710.12,-101 716.12,-107 716.12,-113 716.12,-113 716.12,-125 716.12,-125 716.12,-131 710.12,-137 704.12,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="656" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SavitzkyGolaySmoother</text>
+<g id="a_node150"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/SavitzkyGolaySmoother.cpp" xlink:title="Savitzky&#45;Golay polynomial smoothing. Ported as Analysis/PeakPicking/SavitzkyGolaySmoother.cs (and ChromatogramListSavitzkyGolaySmoother for the chromatogram path)." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M704.12,-137C704.12,-137 607.88,-137 607.88,-137 601.88,-137 595.88,-131 595.88,-125 595.88,-125 595.88,-113 595.88,-113 595.88,-107 601.88,-101 607.88,-101 607.88,-101 704.12,-101 704.12,-101 710.12,-101 716.12,-107 716.12,-113 716.12,-113 716.12,-125 716.12,-125 716.12,-131 710.12,-137 704.12,-137"/>
+<text xml:space="preserve" text-anchor="middle" x="656" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">SavitzkyGolaySmoother</text>
 </a>
 </g>
 </g>
@@ -1590,9 +1590,9 @@
 <!-- n_analysis__common__Smoother -->
 <g id="node151" class="node">
 <title>n_analysis__common__Smoother</title>
-<g id="a_node151"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/Smoother.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M778.12,-137C778.12,-137 741.88,-137 741.88,-137 735.88,-137 729.88,-131 729.88,-125 729.88,-125 729.88,-113 729.88,-113 729.88,-107 735.88,-101 741.88,-101 741.88,-101 778.12,-101 778.12,-101 784.12,-101 790.12,-107 790.12,-113 790.12,-113 790.12,-125 790.12,-125 790.12,-131 784.12,-137 778.12,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="760" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Smoother</text>
+<g id="a_node151"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/Smoother.hpp" xlink:title="Abstract interface for 1&#45;D smoothers. Ported as Analysis/PeakPicking/ISmoother.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M778.12,-137C778.12,-137 741.88,-137 741.88,-137 735.88,-137 729.88,-131 729.88,-125 729.88,-125 729.88,-113 729.88,-113 729.88,-107 735.88,-101 741.88,-101 741.88,-101 778.12,-101 778.12,-101 784.12,-101 790.12,-107 790.12,-113 790.12,-113 790.12,-125 790.12,-125 790.12,-131 784.12,-137 778.12,-137"/>
+<text xml:space="preserve" text-anchor="middle" x="760" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">Smoother</text>
 </a>
 </g>
 </g>
@@ -1600,7 +1600,7 @@
 <!-- n_analysis__common__WhittakerSmoother -->
 <g id="node152" class="node">
 <title>n_analysis__common__WhittakerSmoother</title>
-<g id="a_node152"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/WhittakerSmoother.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
+<g id="a_node152"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/WhittakerSmoother.cpp" xlink:title="Whittaker smoothing. NOT PORTED — SeeMS exposes it as a Smoother.Type enum value but the implementation isn&#39;t wired through. msconvert defaults to SG so this rarely matters; port when a user asks for it." target="_blank">
 <path fill="#f5a8a8" stroke="#a02020" d="M896.25,-137C896.25,-137 815.75,-137 815.75,-137 809.75,-137 803.75,-131 803.75,-125 803.75,-125 803.75,-113 803.75,-113 803.75,-107 809.75,-101 815.75,-101 815.75,-101 896.25,-101 896.25,-101 902.25,-101 908.25,-107 908.25,-113 908.25,-113 908.25,-125 908.25,-125 908.25,-131 902.25,-137 896.25,-137"/>
 <text xml:space="preserve" text-anchor="middle" x="856" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">WhittakerSmoother</text>
 </a>
@@ -1610,9 +1610,9 @@
 <!-- n_analysis__common__ZeroSampleFiller -->
 <g id="node153" class="node">
 <title>n_analysis__common__ZeroSampleFiller</title>
-<g id="a_node153"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/ZeroSampleFiller.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1000.12,-137C1000.12,-137 933.88,-137 933.88,-137 927.88,-137 921.88,-131 921.88,-125 921.88,-125 921.88,-113 921.88,-113 921.88,-107 927.88,-101 933.88,-101 933.88,-101 1000.12,-101 1000.12,-101 1006.12,-101 1012.12,-107 1012.12,-113 1012.12,-113 1012.12,-125 1012.12,-125 1012.12,-131 1006.12,-137 1000.12,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="967" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ZeroSampleFiller</text>
+<g id="a_node153"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/common/ZeroSampleFiller.cpp" xlink:title="Inserts zero&#45;intensity samples between m/z gaps so downstream filters see a uniformly&#45;sampled signal. Ported as Analysis/PeakPicking/ZeroSampleFiller.cs." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M1000.12,-137C1000.12,-137 933.88,-137 933.88,-137 927.88,-137 921.88,-131 921.88,-125 921.88,-125 921.88,-113 921.88,-113 921.88,-107 927.88,-101 933.88,-101 933.88,-101 1000.12,-101 1000.12,-101 1006.12,-101 1012.12,-107 1012.12,-113 1012.12,-113 1012.12,-125 1012.12,-125 1012.12,-131 1006.12,-137 1000.12,-137"/>
+<text xml:space="preserve" text-anchor="middle" x="967" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">ZeroSampleFiller</text>
 </a>
 </g>
 </g>

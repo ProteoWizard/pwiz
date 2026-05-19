@@ -47,9 +47,9 @@
 <text xml:space="preserve" text-anchor="start" x="951.38" y="-243.55" font-family="Segoe UI" font-weight="bold" font-size="11.00">findmf</text>
 </g>
 <g id="clust8" class="cluster">
-<title>cluster_utility_Other</title>
+<title>cluster_utility_pwiz_cli_bindings</title>
 <path fill="none" stroke="#888888" stroke-dasharray="5,2" d="M31,-91C31,-91 3204,-91 3204,-91 3210,-91 3216,-97 3216,-103 3216,-103 3216,-158 3216,-158 3216,-164 3210,-170 3204,-170 3204,-170 31,-170 31,-170 25,-170 19,-164 19,-158 19,-158 19,-103 19,-103 19,-97 25,-91 31,-91"/>
-<text xml:space="preserve" text-anchor="start" x="1602.5" y="-156.55" font-family="Segoe UI" font-weight="bold" font-size="11.00">Other</text>
+<text xml:space="preserve" text-anchor="start" x="1573.25" y="-156.55" font-family="Segoe UI" font-weight="bold" font-size="11.00">pwiz_cli_bindings</text>
 </g>
 <g id="clust9" class="cluster">
 <title>cluster_legend</title>
@@ -738,9 +738,9 @@
 <!-- n_utility__bindings__CLI__AssemblyInfo -->
 <g id="node90" class="node">
 <title>n_utility__bindings__CLI__AssemblyInfo</title>
-<g id="a_node90"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/AssemblyInfo.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M93,-137C93,-137 41,-137 41,-137 35,-137 29,-131 29,-125 29,-125 29,-113 29,-113 29,-107 35,-101 41,-101 41,-101 93,-101 93,-101 99,-101 105,-107 105,-113 105,-113 105,-125 105,-125 105,-131 99,-137 93,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="67" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">AssemblyInfo</text>
+<g id="a_node90"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/AssemblyInfo.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M93,-137C93,-137 41,-137 41,-137 35,-137 29,-131 29,-125 29,-125 29,-113 29,-113 29,-107 35,-101 41,-101 41,-101 93,-101 93,-101 99,-101 105,-107 105,-113 105,-113 105,-125 105,-125 105,-131 99,-137 93,-137"/>
+<text xml:space="preserve" text-anchor="start" x="37" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">AssemblyInfo</text>
 </a>
 </g>
 </g>
@@ -958,9 +958,9 @@
 <!-- n_utility__bindings__CLI__ChromatogramList_SavitzkyGolaySmoother -->
 <g id="node91" class="node">
 <title>n_utility__bindings__CLI__ChromatogramList_SavitzkyGolaySmoother</title>
-<g id="a_node91"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/ChromatogramList_SavitzkyGolaySmoother.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M315,-137C315,-137 131,-137 131,-137 125,-137 119,-131 119,-125 119,-125 119,-113 119,-113 119,-107 125,-101 131,-101 131,-101 315,-101 315,-101 321,-101 327,-107 327,-113 327,-113 327,-125 327,-125 327,-131 321,-137 315,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="223" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ChromatogramList_SavitzkyGolaySmoother</text>
+<g id="a_node91"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/ChromatogramList_SavitzkyGolaySmoother.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M315,-137C315,-137 131,-137 131,-137 125,-137 119,-131 119,-125 119,-125 119,-113 119,-113 119,-107 125,-101 131,-101 131,-101 315,-101 315,-101 321,-101 327,-107 327,-113 327,-113 327,-125 327,-125 327,-131 321,-137 315,-137"/>
+<text xml:space="preserve" text-anchor="start" x="127" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">ChromatogramList_SavitzkyGolaySmoother</text>
 </a>
 </g>
 </g>
@@ -975,9 +975,9 @@
 <!-- n_utility__bindings__CLI__analysis__SpectrumList_PeakFilter -->
 <g id="node92" class="node">
 <title>n_utility__bindings__CLI__analysis__SpectrumList_PeakFilter</title>
-<g id="a_node92"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/analysis/SpectrumList_PeakFilter.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M450.88,-137C450.88,-137 353.12,-137 353.12,-137 347.12,-137 341.12,-131 341.12,-125 341.12,-125 341.12,-113 341.12,-113 341.12,-107 347.12,-101 353.12,-101 353.12,-101 450.88,-101 450.88,-101 456.88,-101 462.88,-107 462.88,-113 462.88,-113 462.88,-125 462.88,-125 462.88,-131 456.88,-137 450.88,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="402" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SpectrumList_PeakFilter</text>
+<g id="a_node92"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/analysis/SpectrumList_PeakFilter.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M450.88,-137C450.88,-137 353.12,-137 353.12,-137 347.12,-137 341.12,-131 341.12,-125 341.12,-125 341.12,-113 341.12,-113 341.12,-107 347.12,-101 353.12,-101 353.12,-101 450.88,-101 450.88,-101 456.88,-101 462.88,-107 462.88,-113 462.88,-113 462.88,-125 462.88,-125 462.88,-131 456.88,-137 450.88,-137"/>
+<text xml:space="preserve" text-anchor="start" x="349.12" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">SpectrumList_PeakFilter</text>
 </a>
 </g>
 </g>
@@ -985,9 +985,9 @@
 <!-- n_utility__bindings__CLI__analysis__spectrum_processing -->
 <g id="node93" class="node">
 <title>n_utility__bindings__CLI__analysis__spectrum_processing</title>
-<g id="a_node93"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/analysis/spectrum_processing.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M576.62,-137C576.62,-137 489.38,-137 489.38,-137 483.38,-137 477.38,-131 477.38,-125 477.38,-125 477.38,-113 477.38,-113 477.38,-107 483.38,-101 489.38,-101 489.38,-101 576.62,-101 576.62,-101 582.62,-101 588.62,-107 588.62,-113 588.62,-113 588.62,-125 588.62,-125 588.62,-131 582.62,-137 576.62,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="533" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">spectrum_processing</text>
+<g id="a_node93"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/analysis/spectrum_processing.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M576.62,-137C576.62,-137 489.38,-137 489.38,-137 483.38,-137 477.38,-131 477.38,-125 477.38,-125 477.38,-113 477.38,-113 477.38,-107 483.38,-101 489.38,-101 489.38,-101 576.62,-101 576.62,-101 582.62,-101 588.62,-107 588.62,-113 588.62,-113 588.62,-125 588.62,-125 588.62,-131 582.62,-137 576.62,-137"/>
+<text xml:space="preserve" text-anchor="start" x="485.38" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">spectrum_processing</text>
 </a>
 </g>
 </g>
@@ -995,9 +995,9 @@
 <!-- n_utility__bindings__CLI__chemistry__chemistry -->
 <g id="node94" class="node">
 <title>n_utility__bindings__CLI__chemistry__chemistry</title>
-<g id="a_node94"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/chemistry/chemistry.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M649.38,-137C649.38,-137 614.62,-137 614.62,-137 608.62,-137 602.62,-131 602.62,-125 602.62,-125 602.62,-113 602.62,-113 602.62,-107 608.62,-101 614.62,-101 614.62,-101 649.38,-101 649.38,-101 655.38,-101 661.38,-107 661.38,-113 661.38,-113 661.38,-125 661.38,-125 661.38,-131 655.38,-137 649.38,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="632" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">chemistry</text>
+<g id="a_node94"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/chemistry/chemistry.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M649.38,-137C649.38,-137 614.62,-137 614.62,-137 608.62,-137 602.62,-131 602.62,-125 602.62,-125 602.62,-113 602.62,-113 602.62,-107 608.62,-101 614.62,-101 614.62,-101 649.38,-101 649.38,-101 655.38,-101 661.38,-107 661.38,-113 661.38,-113 661.38,-125 661.38,-125 661.38,-131 655.38,-137 649.38,-137"/>
+<text xml:space="preserve" text-anchor="start" x="610.62" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">chemistry</text>
 </a>
 </g>
 </g>
@@ -1005,9 +1005,9 @@
 <!-- n_utility__bindings__CLI__common__BinaryData -->
 <g id="node95" class="node">
 <title>n_utility__bindings__CLI__common__BinaryData</title>
-<g id="a_node95"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/BinaryData.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M728.38,-137C728.38,-137 687.62,-137 687.62,-137 681.62,-137 675.62,-131 675.62,-125 675.62,-125 675.62,-113 675.62,-113 675.62,-107 681.62,-101 687.62,-101 687.62,-101 728.38,-101 728.38,-101 734.38,-101 740.38,-107 740.38,-113 740.38,-113 740.38,-125 740.38,-125 740.38,-131 734.38,-137 728.38,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="708" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">BinaryData</text>
+<g id="a_node95"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/BinaryData.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M728.38,-137C728.38,-137 687.62,-137 687.62,-137 681.62,-137 675.62,-131 675.62,-125 675.62,-125 675.62,-113 675.62,-113 675.62,-107 681.62,-101 687.62,-101 687.62,-101 728.38,-101 728.38,-101 734.38,-101 740.38,-107 740.38,-113 740.38,-113 740.38,-125 740.38,-125 740.38,-131 734.38,-137 728.38,-137"/>
+<text xml:space="preserve" text-anchor="start" x="683.62" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">BinaryData</text>
 </a>
 </g>
 </g>
@@ -1015,9 +1015,9 @@
 <!-- n_utility__bindings__CLI__common__IterationListener -->
 <g id="node96" class="node">
 <title>n_utility__bindings__CLI__common__IterationListener</title>
-<g id="a_node96"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/IterationListener.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M833.12,-137C833.12,-137 766.88,-137 766.88,-137 760.88,-137 754.88,-131 754.88,-125 754.88,-125 754.88,-113 754.88,-113 754.88,-107 760.88,-101 766.88,-101 766.88,-101 833.12,-101 833.12,-101 839.12,-101 845.12,-107 845.12,-113 845.12,-113 845.12,-125 845.12,-125 845.12,-131 839.12,-137 833.12,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="800" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">IterationListener</text>
+<g id="a_node96"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/IterationListener.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M833.12,-137C833.12,-137 766.88,-137 766.88,-137 760.88,-137 754.88,-131 754.88,-125 754.88,-125 754.88,-113 754.88,-113 754.88,-107 760.88,-101 766.88,-101 766.88,-101 833.12,-101 833.12,-101 839.12,-101 845.12,-107 845.12,-113 845.12,-113 845.12,-125 845.12,-125 845.12,-131 839.12,-137 833.12,-137"/>
+<text xml:space="preserve" text-anchor="start" x="762.88" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">IterationListener</text>
 </a>
 </g>
 </g>
@@ -1025,9 +1025,9 @@
 <!-- n_utility__bindings__CLI__common__ParamTypes -->
 <g id="node97" class="node">
 <title>n_utility__bindings__CLI__common__ParamTypes</title>
-<g id="a_node97"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/ParamTypes.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M915.25,-137C915.25,-137 870.75,-137 870.75,-137 864.75,-137 858.75,-131 858.75,-125 858.75,-125 858.75,-113 858.75,-113 858.75,-107 864.75,-101 870.75,-101 870.75,-101 915.25,-101 915.25,-101 921.25,-101 927.25,-107 927.25,-113 927.25,-113 927.25,-125 927.25,-125 927.25,-131 921.25,-137 915.25,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="893" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ParamTypes</text>
+<g id="a_node97"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/ParamTypes.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M915.25,-137C915.25,-137 870.75,-137 870.75,-137 864.75,-137 858.75,-131 858.75,-125 858.75,-125 858.75,-113 858.75,-113 858.75,-107 864.75,-101 870.75,-101 870.75,-101 915.25,-101 915.25,-101 921.25,-101 927.25,-107 927.25,-113 927.25,-113 927.25,-125 927.25,-125 927.25,-131 921.25,-137 915.25,-137"/>
+<text xml:space="preserve" text-anchor="start" x="866.75" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">ParamTypes</text>
 </a>
 </g>
 </g>
@@ -1035,9 +1035,9 @@
 <!-- n_utility__bindings__CLI__common__SharedCLI -->
 <g id="node98" class="node">
 <title>n_utility__bindings__CLI__common__SharedCLI</title>
-<g id="a_node98"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/SharedCLI.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M990.5,-137C990.5,-137 953.5,-137 953.5,-137 947.5,-137 941.5,-131 941.5,-125 941.5,-125 941.5,-113 941.5,-113 941.5,-107 947.5,-101 953.5,-101 953.5,-101 990.5,-101 990.5,-101 996.5,-101 1002.5,-107 1002.5,-113 1002.5,-113 1002.5,-125 1002.5,-125 1002.5,-131 996.5,-137 990.5,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="972" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SharedCLI</text>
+<g id="a_node98"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/SharedCLI.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M990.5,-137C990.5,-137 953.5,-137 953.5,-137 947.5,-137 941.5,-131 941.5,-125 941.5,-125 941.5,-113 941.5,-113 941.5,-107 947.5,-101 953.5,-101 953.5,-101 990.5,-101 990.5,-101 996.5,-101 1002.5,-107 1002.5,-113 1002.5,-113 1002.5,-125 1002.5,-125 1002.5,-131 996.5,-137 990.5,-137"/>
+<text xml:space="preserve" text-anchor="start" x="949.5" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">SharedCLI</text>
 </a>
 </g>
 </g>
@@ -1045,9 +1045,9 @@
 <!-- n_utility__bindings__CLI__common__Unimod -->
 <g id="node99" class="node">
 <title>n_utility__bindings__CLI__common__Unimod</title>
-<g id="a_node99"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/Unimod.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1059,-137C1059,-137 1029,-137 1029,-137 1023,-137 1017,-131 1017,-125 1017,-125 1017,-113 1017,-113 1017,-107 1023,-101 1029,-101 1029,-101 1059,-101 1059,-101 1065,-101 1071,-107 1071,-113 1071,-113 1071,-125 1071,-125 1071,-131 1065,-137 1059,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1044" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Unimod</text>
+<g id="a_node99"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/Unimod.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1059,-137C1059,-137 1029,-137 1029,-137 1023,-137 1017,-131 1017,-125 1017,-125 1017,-113 1017,-113 1017,-107 1023,-101 1029,-101 1029,-101 1059,-101 1059,-101 1065,-101 1071,-107 1071,-113 1071,-113 1071,-125 1071,-125 1071,-131 1065,-137 1059,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1026.38" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">Unimod</text>
 </a>
 </g>
 </g>
@@ -1055,9 +1055,9 @@
 <!-- n_utility__bindings__CLI__common__cv -->
 <g id="node100" class="node">
 <title>n_utility__bindings__CLI__common__cv</title>
-<g id="a_node100"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/cv.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1127,-137C1127,-137 1097,-137 1097,-137 1091,-137 1085,-131 1085,-125 1085,-125 1085,-113 1085,-113 1085,-107 1091,-101 1097,-101 1097,-101 1127,-101 1127,-101 1133,-101 1139,-107 1139,-113 1139,-113 1139,-125 1139,-125 1139,-131 1133,-137 1127,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1112" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">cv</text>
+<g id="a_node100"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/cv.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1127,-137C1127,-137 1097,-137 1097,-137 1091,-137 1085,-131 1085,-125 1085,-125 1085,-113 1085,-113 1085,-107 1091,-101 1097,-101 1097,-101 1127,-101 1127,-101 1133,-101 1139,-107 1139,-113 1139,-113 1139,-125 1139,-125 1139,-131 1133,-137 1127,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1107.5" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">cv</text>
 </a>
 </g>
 </g>
@@ -1065,9 +1065,9 @@
 <!-- n_utility__bindings__CLI__common__cvgen_cli -->
 <g id="node101" class="node">
 <title>n_utility__bindings__CLI__common__cvgen_cli</title>
-<g id="a_node101"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/cvgen_cli.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1196.88,-137C1196.88,-137 1165.12,-137 1165.12,-137 1159.12,-137 1153.12,-131 1153.12,-125 1153.12,-125 1153.12,-113 1153.12,-113 1153.12,-107 1159.12,-101 1165.12,-101 1165.12,-101 1196.88,-101 1196.88,-101 1202.88,-101 1208.88,-107 1208.88,-113 1208.88,-113 1208.88,-125 1208.88,-125 1208.88,-131 1202.88,-137 1196.88,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1181" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">cvgen_cli</text>
+<g id="a_node101"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/cvgen_cli.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1196.88,-137C1196.88,-137 1165.12,-137 1165.12,-137 1159.12,-137 1153.12,-131 1153.12,-125 1153.12,-125 1153.12,-113 1153.12,-113 1153.12,-107 1159.12,-101 1165.12,-101 1165.12,-101 1196.88,-101 1196.88,-101 1202.88,-101 1208.88,-107 1208.88,-113 1208.88,-113 1208.88,-125 1208.88,-125 1208.88,-131 1202.88,-137 1196.88,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1161.12" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">cvgen_cli</text>
 </a>
 </g>
 </g>
@@ -1075,9 +1075,9 @@
 <!-- n_utility__bindings__CLI__common__map -->
 <g id="node102" class="node">
 <title>n_utility__bindings__CLI__common__map</title>
-<g id="a_node102"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/map.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1265,-137C1265,-137 1235,-137 1235,-137 1229,-137 1223,-131 1223,-125 1223,-125 1223,-113 1223,-113 1223,-107 1229,-101 1235,-101 1235,-101 1265,-101 1265,-101 1271,-101 1277,-107 1277,-113 1277,-113 1277,-125 1277,-125 1277,-131 1271,-137 1265,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1250" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">map</text>
+<g id="a_node102"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/map.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1265,-137C1265,-137 1235,-137 1235,-137 1229,-137 1223,-131 1223,-125 1223,-125 1223,-113 1223,-113 1223,-107 1229,-101 1235,-101 1235,-101 1265,-101 1265,-101 1271,-101 1277,-107 1277,-113 1277,-113 1277,-125 1277,-125 1277,-131 1271,-137 1265,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1240.25" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">map</text>
 </a>
 </g>
 </g>
@@ -1085,9 +1085,9 @@
 <!-- n_utility__bindings__CLI__common__unit -->
 <g id="node103" class="node">
 <title>n_utility__bindings__CLI__common__unit</title>
-<g id="a_node103"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/unit.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1333,-137C1333,-137 1303,-137 1303,-137 1297,-137 1291,-131 1291,-125 1291,-125 1291,-113 1291,-113 1291,-107 1297,-101 1303,-101 1303,-101 1333,-101 1333,-101 1339,-101 1345,-107 1345,-113 1345,-113 1345,-125 1345,-125 1345,-131 1339,-137 1333,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1318" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">unit</text>
+<g id="a_node103"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/unit.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1333,-137C1333,-137 1303,-137 1303,-137 1297,-137 1291,-131 1291,-125 1291,-125 1291,-113 1291,-113 1291,-107 1297,-101 1303,-101 1303,-101 1333,-101 1333,-101 1339,-101 1345,-107 1345,-113 1345,-113 1345,-125 1345,-125 1345,-131 1339,-137 1333,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1309" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">unit</text>
 </a>
 </g>
 </g>
@@ -1095,9 +1095,9 @@
 <!-- n_utility__bindings__CLI__common__util -->
 <g id="node104" class="node">
 <title>n_utility__bindings__CLI__common__util</title>
-<g id="a_node104"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/util.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1401,-137C1401,-137 1371,-137 1371,-137 1365,-137 1359,-131 1359,-125 1359,-125 1359,-113 1359,-113 1359,-107 1365,-101 1371,-101 1371,-101 1401,-101 1401,-101 1407,-101 1413,-107 1413,-113 1413,-113 1413,-125 1413,-125 1413,-131 1407,-137 1401,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1386" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">util</text>
+<g id="a_node104"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/util.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1401,-137C1401,-137 1371,-137 1371,-137 1365,-137 1359,-131 1359,-125 1359,-125 1359,-113 1359,-113 1359,-107 1365,-101 1371,-101 1371,-101 1401,-101 1401,-101 1407,-101 1413,-107 1413,-113 1413,-113 1413,-125 1413,-125 1413,-131 1407,-137 1401,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1378.88" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">util</text>
 </a>
 </g>
 </g>
@@ -1105,9 +1105,9 @@
 <!-- n_utility__bindings__CLI__common__vector -->
 <g id="node105" class="node">
 <title>n_utility__bindings__CLI__common__vector</title>
-<g id="a_node105"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/vector.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1469,-137C1469,-137 1439,-137 1439,-137 1433,-137 1427,-131 1427,-125 1427,-125 1427,-113 1427,-113 1427,-107 1433,-101 1439,-101 1439,-101 1469,-101 1469,-101 1475,-101 1481,-107 1481,-113 1481,-113 1481,-125 1481,-125 1481,-131 1475,-137 1469,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1454" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">vector</text>
+<g id="a_node105"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/vector.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1469,-137C1469,-137 1439,-137 1439,-137 1433,-137 1427,-131 1427,-125 1427,-125 1427,-113 1427,-113 1427,-107 1433,-101 1439,-101 1439,-101 1469,-101 1469,-101 1475,-101 1481,-107 1481,-113 1481,-113 1481,-125 1481,-125 1481,-131 1475,-137 1469,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1440.12" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">vector</text>
 </a>
 </g>
 </g>
@@ -1115,9 +1115,9 @@
 <!-- n_utility__bindings__CLI__common__virtual_map -->
 <g id="node106" class="node">
 <title>n_utility__bindings__CLI__common__virtual_map</title>
-<g id="a_node106"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/virtual_map.hpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1550.88,-137C1550.88,-137 1507.12,-137 1507.12,-137 1501.12,-137 1495.12,-131 1495.12,-125 1495.12,-125 1495.12,-113 1495.12,-113 1495.12,-107 1501.12,-101 1507.12,-101 1507.12,-101 1550.88,-101 1550.88,-101 1556.88,-101 1562.88,-107 1562.88,-113 1562.88,-113 1562.88,-125 1562.88,-125 1562.88,-131 1556.88,-137 1550.88,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1529" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">virtual_map</text>
+<g id="a_node106"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/common/virtual_map.hpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1550.88,-137C1550.88,-137 1507.12,-137 1507.12,-137 1501.12,-137 1495.12,-131 1495.12,-125 1495.12,-125 1495.12,-113 1495.12,-113 1495.12,-107 1501.12,-101 1507.12,-101 1507.12,-101 1550.88,-101 1550.88,-101 1556.88,-101 1562.88,-107 1562.88,-113 1562.88,-113 1562.88,-125 1562.88,-125 1562.88,-131 1556.88,-137 1550.88,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1503.12" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">virtual_map</text>
 </a>
 </g>
 </g>
@@ -1125,9 +1125,9 @@
 <!-- n_utility__bindings__CLI__example__benchmark -->
 <g id="node107" class="node">
 <title>n_utility__bindings__CLI__example__benchmark</title>
-<g id="a_node107"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/example/benchmark.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1631.12,-137C1631.12,-137 1588.88,-137 1588.88,-137 1582.88,-137 1576.88,-131 1576.88,-125 1576.88,-125 1576.88,-113 1576.88,-113 1576.88,-107 1582.88,-101 1588.88,-101 1588.88,-101 1631.12,-101 1631.12,-101 1637.12,-101 1643.12,-107 1643.12,-113 1643.12,-113 1643.12,-125 1643.12,-125 1643.12,-131 1637.12,-137 1631.12,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1610" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">benchmark</text>
+<g id="a_node107"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/example/benchmark.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1631.12,-137C1631.12,-137 1588.88,-137 1588.88,-137 1582.88,-137 1576.88,-131 1576.88,-125 1576.88,-125 1576.88,-113 1576.88,-113 1576.88,-107 1582.88,-101 1588.88,-101 1588.88,-101 1631.12,-101 1631.12,-101 1637.12,-101 1643.12,-107 1643.12,-113 1643.12,-113 1643.12,-125 1643.12,-125 1643.12,-131 1637.12,-137 1631.12,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1584.88" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">benchmark</text>
 </a>
 </g>
 </g>
@@ -1135,9 +1135,9 @@
 <!-- n_utility__bindings__CLI__msdata__Diff -->
 <g id="node108" class="node">
 <title>n_utility__bindings__CLI__msdata__Diff</title>
-<g id="a_node108"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/Diff.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1699,-137C1699,-137 1669,-137 1669,-137 1663,-137 1657,-131 1657,-125 1657,-125 1657,-113 1657,-113 1657,-107 1663,-101 1669,-101 1669,-101 1699,-101 1699,-101 1705,-101 1711,-107 1711,-113 1711,-113 1711,-125 1711,-125 1711,-131 1705,-137 1699,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1684" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Diff</text>
+<g id="a_node108"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/Diff.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1699,-137C1699,-137 1669,-137 1669,-137 1663,-137 1657,-131 1657,-125 1657,-125 1657,-113 1657,-113 1657,-107 1663,-101 1669,-101 1669,-101 1699,-101 1699,-101 1705,-101 1711,-107 1711,-113 1711,-113 1711,-125 1711,-125 1711,-131 1705,-137 1699,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1676.5" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">Diff</text>
 </a>
 </g>
 </g>
@@ -1145,9 +1145,9 @@
 <!-- n_utility__bindings__CLI__msdata__MSData -->
 <g id="node109" class="node">
 <title>n_utility__bindings__CLI__msdata__MSData</title>
-<g id="a_node109"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/MSData.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1767,-137C1767,-137 1737,-137 1737,-137 1731,-137 1725,-131 1725,-125 1725,-125 1725,-113 1725,-113 1725,-107 1731,-101 1737,-101 1737,-101 1767,-101 1767,-101 1773,-101 1779,-107 1779,-113 1779,-113 1779,-125 1779,-125 1779,-131 1773,-137 1767,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1752" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">MSData</text>
+<g id="a_node109"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/MSData.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1767,-137C1767,-137 1737,-137 1737,-137 1731,-137 1725,-131 1725,-125 1725,-125 1725,-113 1725,-113 1725,-107 1731,-101 1737,-101 1737,-101 1767,-101 1767,-101 1773,-101 1779,-107 1779,-113 1779,-113 1779,-125 1779,-125 1779,-131 1773,-137 1767,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1734.38" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">MSData</text>
 </a>
 </g>
 </g>
@@ -1155,9 +1155,9 @@
 <!-- n_utility__bindings__CLI__msdata__MSDataFile -->
 <g id="node110" class="node">
 <title>n_utility__bindings__CLI__msdata__MSDataFile</title>
-<g id="a_node110"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/MSDataFile.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1847.12,-137C1847.12,-137 1804.88,-137 1804.88,-137 1798.88,-137 1792.88,-131 1792.88,-125 1792.88,-125 1792.88,-113 1792.88,-113 1792.88,-107 1798.88,-101 1804.88,-101 1804.88,-101 1847.12,-101 1847.12,-101 1853.12,-101 1859.12,-107 1859.12,-113 1859.12,-113 1859.12,-125 1859.12,-125 1859.12,-131 1853.12,-137 1847.12,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1826" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">MSDataFile</text>
+<g id="a_node110"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/MSDataFile.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1847.12,-137C1847.12,-137 1804.88,-137 1804.88,-137 1798.88,-137 1792.88,-131 1792.88,-125 1792.88,-125 1792.88,-113 1792.88,-113 1792.88,-107 1798.88,-101 1804.88,-101 1804.88,-101 1847.12,-101 1847.12,-101 1853.12,-101 1859.12,-107 1859.12,-113 1859.12,-113 1859.12,-125 1859.12,-125 1859.12,-131 1853.12,-137 1847.12,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1800.88" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">MSDataFile</text>
 </a>
 </g>
 </g>
@@ -1165,9 +1165,9 @@
 <!-- n_utility__bindings__CLI__msdata__Reader -->
 <g id="node111" class="node">
 <title>n_utility__bindings__CLI__msdata__Reader</title>
-<g id="a_node111"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/Reader.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1915,-137C1915,-137 1885,-137 1885,-137 1879,-137 1873,-131 1873,-125 1873,-125 1873,-113 1873,-113 1873,-107 1879,-101 1885,-101 1885,-101 1915,-101 1915,-101 1921,-101 1927,-107 1927,-113 1927,-113 1927,-125 1927,-125 1927,-131 1921,-137 1915,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1900" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Reader</text>
+<g id="a_node111"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/Reader.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1915,-137C1915,-137 1885,-137 1885,-137 1879,-137 1873,-131 1873,-125 1873,-125 1873,-113 1873,-113 1873,-107 1879,-101 1885,-101 1885,-101 1915,-101 1915,-101 1921,-101 1927,-107 1927,-113 1927,-113 1927,-125 1927,-125 1927,-131 1921,-137 1915,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1884.25" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">Reader</text>
 </a>
 </g>
 </g>
@@ -1175,9 +1175,9 @@
 <!-- n_utility__bindings__CLI__msdata__examples -->
 <g id="node112" class="node">
 <title>n_utility__bindings__CLI__msdata__examples</title>
-<g id="a_node112"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/examples.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1986.62,-137C1986.62,-137 1953.38,-137 1953.38,-137 1947.38,-137 1941.38,-131 1941.38,-125 1941.38,-125 1941.38,-113 1941.38,-113 1941.38,-107 1947.38,-101 1953.38,-101 1953.38,-101 1986.62,-101 1986.62,-101 1992.62,-101 1998.62,-107 1998.62,-113 1998.62,-113 1998.62,-125 1998.62,-125 1998.62,-131 1992.62,-137 1986.62,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="1970" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">examples</text>
+<g id="a_node112"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/msdata/examples.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M1986.62,-137C1986.62,-137 1953.38,-137 1953.38,-137 1947.38,-137 1941.38,-131 1941.38,-125 1941.38,-125 1941.38,-113 1941.38,-113 1941.38,-107 1947.38,-101 1953.38,-101 1953.38,-101 1986.62,-101 1986.62,-101 1992.62,-101 1998.62,-107 1998.62,-113 1998.62,-113 1998.62,-125 1998.62,-125 1998.62,-131 1992.62,-137 1986.62,-137"/>
+<text xml:space="preserve" text-anchor="start" x="1949.38" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">examples</text>
 </a>
 </g>
 </g>
@@ -1185,9 +1185,9 @@
 <!-- n_utility__bindings__CLI__proteome__Diff -->
 <g id="node113" class="node">
 <title>n_utility__bindings__CLI__proteome__Diff</title>
-<g id="a_node113"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/Diff.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2055,-137C2055,-137 2025,-137 2025,-137 2019,-137 2013,-131 2013,-125 2013,-125 2013,-113 2013,-113 2013,-107 2019,-101 2025,-101 2025,-101 2055,-101 2055,-101 2061,-101 2067,-107 2067,-113 2067,-113 2067,-125 2067,-125 2067,-131 2061,-137 2055,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2040" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Diff</text>
+<g id="a_node113"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/Diff.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2055,-137C2055,-137 2025,-137 2025,-137 2019,-137 2013,-131 2013,-125 2013,-125 2013,-113 2013,-113 2013,-107 2019,-101 2025,-101 2025,-101 2055,-101 2055,-101 2061,-101 2067,-107 2067,-113 2067,-113 2067,-125 2067,-125 2067,-131 2061,-137 2055,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2032.5" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">Diff</text>
 </a>
 </g>
 </g>
@@ -1195,9 +1195,9 @@
 <!-- n_utility__bindings__CLI__proteome__ProteomeData -->
 <g id="node114" class="node">
 <title>n_utility__bindings__CLI__proteome__ProteomeData</title>
-<g id="a_node114"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/ProteomeData.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2149.25,-137C2149.25,-137 2092.75,-137 2092.75,-137 2086.75,-137 2080.75,-131 2080.75,-125 2080.75,-125 2080.75,-113 2080.75,-113 2080.75,-107 2086.75,-101 2092.75,-101 2092.75,-101 2149.25,-101 2149.25,-101 2155.25,-101 2161.25,-107 2161.25,-113 2161.25,-113 2161.25,-125 2161.25,-125 2161.25,-131 2155.25,-137 2149.25,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2121" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ProteomeData</text>
+<g id="a_node114"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/ProteomeData.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2149.25,-137C2149.25,-137 2092.75,-137 2092.75,-137 2086.75,-137 2080.75,-131 2080.75,-125 2080.75,-125 2080.75,-113 2080.75,-113 2080.75,-107 2086.75,-101 2092.75,-101 2092.75,-101 2149.25,-101 2149.25,-101 2155.25,-101 2161.25,-107 2161.25,-113 2161.25,-113 2161.25,-125 2161.25,-125 2161.25,-131 2155.25,-137 2149.25,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2088.75" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">ProteomeData</text>
 </a>
 </g>
 </g>
@@ -1205,9 +1205,9 @@
 <!-- n_utility__bindings__CLI__proteome__ProteomeDataFile -->
 <g id="node115" class="node">
 <title>n_utility__bindings__CLI__proteome__ProteomeDataFile</title>
-<g id="a_node115"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/ProteomeDataFile.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2258.75,-137C2258.75,-137 2187.25,-137 2187.25,-137 2181.25,-137 2175.25,-131 2175.25,-125 2175.25,-125 2175.25,-113 2175.25,-113 2175.25,-107 2181.25,-101 2187.25,-101 2187.25,-101 2258.75,-101 2258.75,-101 2264.75,-101 2270.75,-107 2270.75,-113 2270.75,-113 2270.75,-125 2270.75,-125 2270.75,-131 2264.75,-137 2258.75,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2223" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">ProteomeDataFile</text>
+<g id="a_node115"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/ProteomeDataFile.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2258.75,-137C2258.75,-137 2187.25,-137 2187.25,-137 2181.25,-137 2175.25,-131 2175.25,-125 2175.25,-125 2175.25,-113 2175.25,-113 2175.25,-107 2181.25,-101 2187.25,-101 2187.25,-101 2258.75,-101 2258.75,-101 2264.75,-101 2270.75,-107 2270.75,-113 2270.75,-113 2270.75,-125 2270.75,-125 2270.75,-131 2264.75,-137 2258.75,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2183.25" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">ProteomeDataFile</text>
 </a>
 </g>
 </g>
@@ -1215,9 +1215,9 @@
 <!-- n_utility__bindings__CLI__proteome__Reader -->
 <g id="node116" class="node">
 <title>n_utility__bindings__CLI__proteome__Reader</title>
-<g id="a_node116"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/Reader.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2327,-137C2327,-137 2297,-137 2297,-137 2291,-137 2285,-131 2285,-125 2285,-125 2285,-113 2285,-113 2285,-107 2291,-101 2297,-101 2297,-101 2327,-101 2327,-101 2333,-101 2339,-107 2339,-113 2339,-113 2339,-125 2339,-125 2339,-131 2333,-137 2327,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2312" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Reader</text>
+<g id="a_node116"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/Reader.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2327,-137C2327,-137 2297,-137 2297,-137 2291,-137 2285,-131 2285,-125 2285,-125 2285,-113 2285,-113 2285,-107 2291,-101 2297,-101 2297,-101 2327,-101 2327,-101 2333,-101 2339,-107 2339,-113 2339,-113 2339,-125 2339,-125 2339,-131 2333,-137 2327,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2296.25" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">Reader</text>
 </a>
 </g>
 </g>
@@ -1225,9 +1225,9 @@
 <!-- n_utility__bindings__CLI__proteome__examples -->
 <g id="node117" class="node">
 <title>n_utility__bindings__CLI__proteome__examples</title>
-<g id="a_node117"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/examples.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2398.62,-137C2398.62,-137 2365.38,-137 2365.38,-137 2359.38,-137 2353.38,-131 2353.38,-125 2353.38,-125 2353.38,-113 2353.38,-113 2353.38,-107 2359.38,-101 2365.38,-101 2365.38,-101 2398.62,-101 2398.62,-101 2404.62,-101 2410.62,-107 2410.62,-113 2410.62,-113 2410.62,-125 2410.62,-125 2410.62,-131 2404.62,-137 2398.62,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2382" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">examples</text>
+<g id="a_node117"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/examples.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2398.62,-137C2398.62,-137 2365.38,-137 2365.38,-137 2359.38,-137 2353.38,-131 2353.38,-125 2353.38,-125 2353.38,-113 2353.38,-113 2353.38,-107 2359.38,-101 2365.38,-101 2365.38,-101 2398.62,-101 2398.62,-101 2404.62,-101 2410.62,-107 2410.62,-113 2410.62,-113 2410.62,-125 2410.62,-125 2410.62,-131 2404.62,-137 2398.62,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2361.38" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">examples</text>
 </a>
 </g>
 </g>
@@ -1235,9 +1235,9 @@
 <!-- n_utility__bindings__CLI__proteome__proteome -->
 <g id="node118" class="node">
 <title>n_utility__bindings__CLI__proteome__proteome</title>
-<g id="a_node118"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/proteome.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2473.12,-137C2473.12,-137 2436.88,-137 2436.88,-137 2430.88,-137 2424.88,-131 2424.88,-125 2424.88,-125 2424.88,-113 2424.88,-113 2424.88,-107 2430.88,-101 2436.88,-101 2436.88,-101 2473.12,-101 2473.12,-101 2479.12,-101 2485.12,-107 2485.12,-113 2485.12,-113 2485.12,-125 2485.12,-125 2485.12,-131 2479.12,-137 2473.12,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2455" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">proteome</text>
+<g id="a_node118"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/proteome/proteome.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2473.12,-137C2473.12,-137 2436.88,-137 2436.88,-137 2430.88,-137 2424.88,-131 2424.88,-125 2424.88,-125 2424.88,-113 2424.88,-113 2424.88,-107 2430.88,-101 2436.88,-101 2436.88,-101 2473.12,-101 2473.12,-101 2479.12,-101 2485.12,-107 2485.12,-113 2485.12,-113 2485.12,-125 2485.12,-125 2485.12,-131 2479.12,-137 2473.12,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2432.88" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">proteome</text>
 </a>
 </g>
 </g>
@@ -1245,9 +1245,9 @@
 <!-- n_utility__bindings__CLI__timstof_prm_scheduler__PrmScheduler -->
 <g id="node119" class="node">
 <title>n_utility__bindings__CLI__timstof_prm_scheduler__PrmScheduler</title>
-<g id="a_node119"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/timstof_prm_scheduler/PrmScheduler.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2564.75,-137C2564.75,-137 2511.25,-137 2511.25,-137 2505.25,-137 2499.25,-131 2499.25,-125 2499.25,-125 2499.25,-113 2499.25,-113 2499.25,-107 2505.25,-101 2511.25,-101 2511.25,-101 2564.75,-101 2564.75,-101 2570.75,-101 2576.75,-107 2576.75,-113 2576.75,-113 2576.75,-125 2576.75,-125 2576.75,-131 2570.75,-137 2564.75,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2538" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">PrmScheduler</text>
+<g id="a_node119"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/timstof_prm_scheduler/PrmScheduler.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2564.75,-137C2564.75,-137 2511.25,-137 2511.25,-137 2505.25,-137 2499.25,-131 2499.25,-125 2499.25,-125 2499.25,-113 2499.25,-113 2499.25,-107 2505.25,-101 2511.25,-101 2511.25,-101 2564.75,-101 2564.75,-101 2570.75,-101 2576.75,-107 2576.75,-113 2576.75,-113 2576.75,-125 2576.75,-125 2576.75,-131 2570.75,-137 2564.75,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2507.25" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">PrmScheduler</text>
 </a>
 </g>
 </g>
@@ -1255,9 +1255,9 @@
 <!-- n_utility__bindings__CLI__tradata__Diff -->
 <g id="node120" class="node">
 <title>n_utility__bindings__CLI__tradata__Diff</title>
-<g id="a_node120"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/Diff.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2633,-137C2633,-137 2603,-137 2603,-137 2597,-137 2591,-131 2591,-125 2591,-125 2591,-113 2591,-113 2591,-107 2597,-101 2603,-101 2603,-101 2633,-101 2633,-101 2639,-101 2645,-107 2645,-113 2645,-113 2645,-125 2645,-125 2645,-131 2639,-137 2633,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2618" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Diff</text>
+<g id="a_node120"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/Diff.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2633,-137C2633,-137 2603,-137 2603,-137 2597,-137 2591,-131 2591,-125 2591,-125 2591,-113 2591,-113 2591,-107 2597,-101 2603,-101 2603,-101 2633,-101 2633,-101 2639,-101 2645,-107 2645,-113 2645,-113 2645,-125 2645,-125 2645,-131 2639,-137 2633,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2610.5" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">Diff</text>
 </a>
 </g>
 </g>
@@ -1265,9 +1265,9 @@
 <!-- n_utility__bindings__CLI__tradata__Reader -->
 <g id="node121" class="node">
 <title>n_utility__bindings__CLI__tradata__Reader</title>
-<g id="a_node121"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/Reader.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2701,-137C2701,-137 2671,-137 2671,-137 2665,-137 2659,-131 2659,-125 2659,-125 2659,-113 2659,-113 2659,-107 2665,-101 2671,-101 2671,-101 2701,-101 2701,-101 2707,-101 2713,-107 2713,-113 2713,-113 2713,-125 2713,-125 2713,-131 2707,-137 2701,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2686" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">Reader</text>
+<g id="a_node121"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/Reader.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2701,-137C2701,-137 2671,-137 2671,-137 2665,-137 2659,-131 2659,-125 2659,-125 2659,-113 2659,-113 2659,-107 2665,-101 2671,-101 2671,-101 2701,-101 2701,-101 2707,-101 2713,-107 2713,-113 2713,-113 2713,-125 2713,-125 2713,-131 2707,-137 2701,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2670.25" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">Reader</text>
 </a>
 </g>
 </g>
@@ -1275,9 +1275,9 @@
 <!-- n_utility__bindings__CLI__tradata__TraData -->
 <g id="node122" class="node">
 <title>n_utility__bindings__CLI__tradata__TraData</title>
-<g id="a_node122"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/TraData.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2769,-137C2769,-137 2739,-137 2739,-137 2733,-137 2727,-131 2727,-125 2727,-125 2727,-113 2727,-113 2727,-107 2733,-101 2739,-101 2739,-101 2769,-101 2769,-101 2775,-101 2781,-107 2781,-113 2781,-113 2781,-125 2781,-125 2781,-131 2775,-137 2769,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2754" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">TraData</text>
+<g id="a_node122"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/TraData.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2769,-137C2769,-137 2739,-137 2739,-137 2733,-137 2727,-131 2727,-125 2727,-125 2727,-113 2727,-113 2727,-107 2733,-101 2739,-101 2739,-101 2769,-101 2769,-101 2775,-101 2781,-107 2781,-113 2781,-113 2781,-125 2781,-125 2781,-131 2775,-137 2769,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2736.75" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">TraData</text>
 </a>
 </g>
 </g>
@@ -1285,9 +1285,9 @@
 <!-- n_utility__bindings__CLI__tradata__TraDataFile -->
 <g id="node123" class="node">
 <title>n_utility__bindings__CLI__tradata__TraDataFile</title>
-<g id="a_node123"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/TraDataFile.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2848.75,-137C2848.75,-137 2807.25,-137 2807.25,-137 2801.25,-137 2795.25,-131 2795.25,-125 2795.25,-125 2795.25,-113 2795.25,-113 2795.25,-107 2801.25,-101 2807.25,-101 2807.25,-101 2848.75,-101 2848.75,-101 2854.75,-101 2860.75,-107 2860.75,-113 2860.75,-113 2860.75,-125 2860.75,-125 2860.75,-131 2854.75,-137 2848.75,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2828" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">TraDataFile</text>
+<g id="a_node123"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/TraDataFile.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2848.75,-137C2848.75,-137 2807.25,-137 2807.25,-137 2801.25,-137 2795.25,-131 2795.25,-125 2795.25,-125 2795.25,-113 2795.25,-113 2795.25,-107 2801.25,-101 2807.25,-101 2807.25,-101 2848.75,-101 2848.75,-101 2854.75,-101 2860.75,-107 2860.75,-113 2860.75,-113 2860.75,-125 2860.75,-125 2860.75,-131 2854.75,-137 2848.75,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2803.25" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">TraDataFile</text>
 </a>
 </g>
 </g>
@@ -1295,9 +1295,9 @@
 <!-- n_utility__bindings__CLI__tradata__examples -->
 <g id="node124" class="node">
 <title>n_utility__bindings__CLI__tradata__examples</title>
-<g id="a_node124"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/examples.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M2919.62,-137C2919.62,-137 2886.38,-137 2886.38,-137 2880.38,-137 2874.38,-131 2874.38,-125 2874.38,-125 2874.38,-113 2874.38,-113 2874.38,-107 2880.38,-101 2886.38,-101 2886.38,-101 2919.62,-101 2919.62,-101 2925.62,-101 2931.62,-107 2931.62,-113 2931.62,-113 2931.62,-125 2931.62,-125 2931.62,-131 2925.62,-137 2919.62,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2903" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">examples</text>
+<g id="a_node124"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/CLI/tradata/examples.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M2919.62,-137C2919.62,-137 2886.38,-137 2886.38,-137 2880.38,-137 2874.38,-131 2874.38,-125 2874.38,-125 2874.38,-113 2874.38,-113 2874.38,-107 2880.38,-101 2886.38,-101 2886.38,-101 2919.62,-101 2919.62,-101 2925.62,-101 2931.62,-107 2931.62,-113 2931.62,-113 2931.62,-125 2931.62,-125 2931.62,-131 2925.62,-137 2919.62,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2882.38" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">examples</text>
 </a>
 </g>
 </g>
@@ -1305,9 +1305,9 @@
 <!-- n_utility__bindings__SWIG__pwiz_RAMPAdapter -->
 <g id="node125" class="node">
 <title>n_utility__bindings__SWIG__pwiz_RAMPAdapter</title>
-<g id="a_node125"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/SWIG/pwiz_RAMPAdapter.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M3038.25,-137C3038.25,-137 2957.75,-137 2957.75,-137 2951.75,-137 2945.75,-131 2945.75,-125 2945.75,-125 2945.75,-113 2945.75,-113 2945.75,-107 2951.75,-101 2957.75,-101 2957.75,-101 3038.25,-101 3038.25,-101 3044.25,-101 3050.25,-107 3050.25,-113 3050.25,-113 3050.25,-125 3050.25,-125 3050.25,-131 3044.25,-137 3038.25,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="2998" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">pwiz_RAMPAdapter</text>
+<g id="a_node125"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/SWIG/pwiz_RAMPAdapter.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M3038.25,-137C3038.25,-137 2957.75,-137 2957.75,-137 2951.75,-137 2945.75,-131 2945.75,-125 2945.75,-125 2945.75,-113 2945.75,-113 2945.75,-107 2951.75,-101 2957.75,-101 2957.75,-101 3038.25,-101 3038.25,-101 3044.25,-101 3050.25,-107 3050.25,-113 3050.25,-113 3050.25,-125 3050.25,-125 3050.25,-131 3044.25,-137 3038.25,-137"/>
+<text xml:space="preserve" text-anchor="start" x="2953.75" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">pwiz_RAMPAdapter</text>
 </a>
 </g>
 </g>
@@ -1315,9 +1315,9 @@
 <!-- n_utility__bindings__SWIG__python_pwiz_RAMPAdapter -->
 <g id="node126" class="node">
 <title>n_utility__bindings__SWIG__python_pwiz_RAMPAdapter</title>
-<g id="a_node126"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/SWIG/python_pwiz_RAMPAdapter.cpp" xlink:title="Not yet ported. No specific reason recorded." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M3193.62,-137C3193.62,-137 3076.38,-137 3076.38,-137 3070.38,-137 3064.38,-131 3064.38,-125 3064.38,-125 3064.38,-113 3064.38,-113 3064.38,-107 3070.38,-101 3076.38,-101 3076.38,-101 3193.62,-101 3193.62,-101 3199.62,-101 3205.62,-107 3205.62,-113 3205.62,-113 3205.62,-125 3205.62,-125 3205.62,-131 3199.62,-137 3193.62,-137"/>
-<text xml:space="preserve" text-anchor="middle" x="3135" y="-116.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">python_pwiz_RAMPAdapter</text>
+<g id="a_node126"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/utility/bindings/SWIG/python_pwiz_RAMPAdapter.cpp" xlink:title="Won&#39;t port. No specific replacement recorded." target="_blank">
+<path fill="#dcdcdc" stroke="#888888" d="M3193.62,-137C3193.62,-137 3076.38,-137 3076.38,-137 3070.38,-137 3064.38,-131 3064.38,-125 3064.38,-125 3064.38,-113 3064.38,-113 3064.38,-107 3070.38,-101 3076.38,-101 3076.38,-101 3193.62,-101 3193.62,-101 3199.62,-101 3205.62,-107 3205.62,-113 3205.62,-113 3205.62,-125 3205.62,-125 3205.62,-131 3199.62,-137 3193.62,-137"/>
+<text xml:space="preserve" text-anchor="start" x="3072.38" y="-117.62" font-family="Segoe UI" text-decoration="line-through" font-size="10.00" fill="#555555">python_pwiz_RAMPAdapter</text>
 </a>
 </g>
 </g>

@@ -1,7 +1,8 @@
 """Per-module file-level port-status diagrams with hover detail.
 
-For each top-level cpp module (data/common, data/msdata, data/identdata, utility,
-analysis), walks the .cpp source files and emits a Graphviz DOT showing each one
+For each top-level cpp module (data/common, data/msdata, data/identdata,
+data/proteome, data/tradata, utility, analysis), walks the .cpp source files
+and emits a Graphviz DOT showing each one
 colored by port status (full / partial / none / skipped). Files are grouped into
 sub-areas — Readers, Writers, Serializers, etc. — via the SUBAREA map below.
 
@@ -139,6 +140,39 @@ STATUS_FILE: dict[str, str] = {
     "data/identdata/examples": "skipped",
 
     # ------------------------------------------------------------------------
+    # data/proteome — Peptide / Protein / FASTA I/O / Digestion / Diff / Cache
+    # ------------------------------------------------------------------------
+    "data/proteome/AminoAcid": "full",
+    "data/proteome/Modification": "full",
+    "data/proteome/Peptide": "full",
+    "data/proteome/Digestion": "full",
+    "data/proteome/ProteomeData": "full",     # Protein + ProteinList + ProteinListSimple + ProteomeData
+    "data/proteome/ProteomeDataFile": "full",
+    "data/proteome/ProteinListCache": "full",
+    "data/proteome/ProteinListWrapper": "full",
+    "data/proteome/Diff": "full",
+    "data/proteome/Reader_FASTA": "full",     # eager + lazy via FastaProteinList
+    "data/proteome/Serializer_FASTA": "full", # cpp-compat .index sidecar
+    "data/proteome/Reader": "none",           # IReader interface, no FASTA dispatcher registered yet
+    "data/proteome/DefaultReaderList": "none",
+    "data/proteome/TextWriter": "skipped",    # Format_Text output never wired
+    "data/proteome/examples": "skipped",      # cpp test-fixture builder
+
+    # ------------------------------------------------------------------------
+    # data/tradata — TraML data model + IO + Diff
+    # ------------------------------------------------------------------------
+    "data/tradata/TraData": "full",
+    "data/tradata/TraDataFile": "full",
+    "data/tradata/IO": "full",                # TraML XmlReader / XmlWriter
+    "data/tradata/Serializer_traML": "full",
+    "data/tradata/Diff": "full",
+    "data/tradata/References": "full",        # two-pass peptideRef/compoundRef/proteinRef/contactRef/instrumentRef/softwareRef resolution
+    "data/tradata/Reader": "none",            # IReader interface, no dispatcher registered yet
+    "data/tradata/DefaultReaderList": "none",
+    "data/tradata/TextWriter": "skipped",
+    "data/tradata/examples": "skipped",
+
+    # ------------------------------------------------------------------------
     # utility — chemistry, math, misc, minimxml, proteome
     # ------------------------------------------------------------------------
     "utility/chemistry/Chemistry": "full",     # Element / Formula / Mass calc
@@ -217,6 +251,8 @@ STATUS_FILE: dict[str, str] = {
     "utility/proteome/Chemistry": "skipped",    # duplicate of utility/chemistry
 
     "utility/findmf": "skipped",                # whole subtree, not used by msconvert
+    "utility/bindings": "skipped",              # pwiz C++/CLI bindings — replaced wholesale by pwiz-sharp managed code; ancestor-match propagates "skipped" to every utility/bindings/CLI/* file
+    "utility/bindings/CLI": "skipped",          # explicit entry for the CLI subtree
 
     # ------------------------------------------------------------------------
     # analysis — every per-filter / per-algorithm cpp file. Sub-namespaces:
@@ -239,8 +275,8 @@ STATUS_FILE: dict[str, str] = {
     "analysis/spectrum_processing/SpectrumList_PeakFilter": "full",   # framework + Ms2Deisotoper / Ms2NoiseFilter / ETD
     "analysis/spectrum_processing/SpectrumList_ScanSummer": "full",
     "analysis/spectrum_processing/SpectrumList_Demux": "full",
-    "analysis/spectrum_processing/SpectrumList_DiaUmpire": "none",
-    "analysis/spectrum_processing/SpectrumList_3D": "none",
+    "analysis/spectrum_processing/SpectrumList_DiaUmpire": "full",
+    "analysis/spectrum_processing/SpectrumList_3D": "skipped",
     "analysis/spectrum_processing/SpectrumList_IonMobility": "none",
     "analysis/spectrum_processing/SpectrumList_PrecursorRecalculator": "none",
     "analysis/spectrum_processing/MS2Deisotoper": "full",
@@ -285,6 +321,32 @@ STATUS_FILE: dict[str, str] = {
     "analysis/demux/EnumConstantNotPresentException": "skipped",
     "analysis/demux/DemuxDataProcessingStrings": "full",
 
+    # analysis/common — shared building blocks for spectrum filters / peak picking
+    "analysis/common/CwtPeakDetector": "full",
+    "analysis/common/LocalMaximumPeakDetector": "full",
+    "analysis/common/SavitzkyGolaySmoother": "full",
+    "analysis/common/ZeroSampleFiller": "full",
+    "analysis/common/ExtraZeroSamplesFilter": "full",   # folded into SpectrumListZeroSamplesFilter.cs
+    "analysis/common/Smoother": "full",                 # PeakPicking/ISmoother.cs
+    "analysis/common/PeakDetector": "full",             # PeakPicking/IPeakDetector.cs
+    "analysis/common/DataFilter": "full",               # PeakFilters/ISpectrumDataFilter.cs
+    "analysis/common/WhittakerSmoother": "none",
+
+    # analysis/proteome_processing — ProteinList filter + decoy generator + command factory
+    "analysis/proteome_processing/ProteinList_Filter": "full",
+    "analysis/proteome_processing/ProteinList_DecoyGenerator": "full",
+    "analysis/proteome_processing/ProteinListFactory": "full",
+
+    # analysis/dia_umpire — DIA-Umpire MS2 deconvolution; the SpectrumList_DiaUmpire
+    # wrapper lives under analysis/spectrum_processing/ (see entry above).
+    "analysis/dia_umpire/DiaUmpire": "full",
+    "analysis/dia_umpire/DiaUmpireMath": "full",
+    "analysis/dia_umpire/InstrumentParameter": "full",
+    "analysis/dia_umpire/IsotopePatternMap": "full",
+    "analysis/dia_umpire/PeakCluster": "full",
+    "analysis/dia_umpire/PeakCurve": "full",
+    "analysis/dia_umpire/ScanData": "full",
+
     # analysis/chromatogram_processing — Filter + LockmassRefiner + SG + Factory ported
     "analysis/chromatogram_processing/ChromatogramListFactory": "full",
     "analysis/chromatogram_processing/ChromatogramListWrapper": "full",
@@ -292,7 +354,7 @@ STATUS_FILE: dict[str, str] = {
     "analysis/chromatogram_processing/ChromatogramList_LockmassRefiner": "partial",  # API hook on ChromatogramList_Waters, but Waters SDK has no lockmass-aware chromatogram read (matches cpp)
     "analysis/chromatogram_processing/ChromatogramList_SavitzkyGolaySmoother": "full",
     "analysis/chromatogram_processing/SavitzkyGolaySmoother": "full",                 # cpp's hardcoded quartic-9 inlined into the smoother
-    "analysis/chromatogram_processing/ChromatogramList_XICGenerator": "none",         # Thermo-specific XIC, not on msconvert filter path
+    "analysis/chromatogram_processing/ChromatogramList_XICGenerator": "skipped",      # Thermo-specific XIC, not on msconvert filter path — won't port
 
     # analysis/findmf — research tool, deliberately won't port. Marked at the directory
     # level so every file under findmf/* picks up "skipped" via the ancestor-match
@@ -549,6 +611,39 @@ DETAIL_FILE: dict[str, str] = {
     "data/identdata/MzidPredicates": "LINQ-style predicates over an IdentData graph. NOT PORTED.",
 
     # =========================================================================
+    # data/proteome
+    # =========================================================================
+    "data/proteome/AminoAcid": "Per-AA residue masses + properties (composition, hydrophobicity, pKa). Ported as Util/Proteome/AminoAcid.cs.",
+    "data/proteome/Modification": "PTM record (name, mono/avg delta, formula, AA specificity). Ported as Util/Proteome/Modification.cs.",
+    "data/proteome/Peptide": "Peptide sequence + mass model + Modifications list. Ported as Util/Proteome/Peptide.cs.",
+    "data/proteome/Digestion": "Enzyme cleavage rules + iterator. Ported as Common/Proteome/Digestion.cs (CVID-keyed so it lives in Common, not Util).",
+    "data/proteome/ProteomeData": "Top-level ProteomeData document + Protein + ProteinList + ProteinListSimple. Ported as Common/Proteome/ProteomeData.cs. IDisposable so lazy-FASTA callers can scope ownership with `using var`.",
+    "data/proteome/ProteomeDataFile": "Format-detecting Read + format-selecting Write (FASTA by extension or content sniff). Ported as Common/Proteome/ProteomeDataFile.cs.",
+    "data/proteome/ProteinListCache": "MRU cache over a ProteinList — meta-only or meta-plus-sequence modes. Ported as Common/Proteome/ProteinListCache.cs.",
+    "data/proteome/ProteinListWrapper": "Pass-through ProteinList for subclassing. Ported as Common/Proteome/ProteinListWrapper.cs.",
+    "data/proteome/Diff": "ProteomeData equality with named-reason output. Ported as Common/Proteome/ProteomeDataDiff.cs.",
+    "data/proteome/Reader_FASTA": "FASTA defline + sequence parser; IPI-aware id regex. Ported as Common/Proteome/Fasta.Read / ReadFile / OpenLazy. Lazy path goes through FastaProteinList (per-protein seek via .index sidecar).",
+    "data/proteome/Serializer_FASTA": "FASTA writer + .index sidecar (BinaryIndexStream). Ported as Common/Proteome/Fasta.Write + FastaProteinList. The .index sidecar is byte-compatible with cpp pwiz (SHA-1-hashed ids, populated 48-byte file-size + SHA-1 prelude).",
+    "data/proteome/Reader": "IReader interface for ProteomeData. NOT PORTED — only Reader_FASTA matters and Fasta.OpenLazy / ReadFile bypass the dispatcher.",
+    "data/proteome/DefaultReaderList": "Reader_FASTA registration into the IReader dispatcher. NOT PORTED — no dispatcher wired for proteome yet.",
+    "data/proteome/TextWriter": "Pretty-print text dump of ProteomeData. WON'T PORT — Format_Text output isn't wired in pwiz-sharp.",
+    "data/proteome/examples": "Hard-coded ProteomeData fixtures for cpp tests. WON'T PORT — fixtures built inline in tests instead.",
+
+    # =========================================================================
+    # data/tradata
+    # =========================================================================
+    "data/tradata/TraData": "Top-level TraData document + ParamContainer-derived entities (Contact, Publication, Software, Instrument, Configuration, Protein, Peptide, Compound, Transition, Target, TargetList, RetentionTime, Prediction, Evidence, Validation, Interpretation, Modification, Precursor, Product). Ported as TraData/TraData.cs.",
+    "data/tradata/TraDataFile": "Format-detecting Read + format-selecting Write (TraML XML by extension). Ported as TraData/TraDataFile.cs.",
+    "data/tradata/IO": "TraML XmlReader/Writer for the nested-list schema (cvList, ContactList, PublicationList, InstrumentList, SoftwareList, ProteinList, CompoundList, TransitionList, TargetList). Ported as TraData/TraDataIO.cs — folded together with Serializer_traML.",
+    "data/tradata/Serializer_traML": "TraML XML serializer. Folded into TraData/TraDataIO.cs.",
+    "data/tradata/Diff": "TraData equality with named-reason output. Ported as TraData/TraDataDiff.cs.",
+    "data/tradata/References": "Two-pass resolver for peptideRef / compoundRef / proteinRef / contactRef / instrumentRef / softwareRef. Ported inline in TraData/TraDataIO.cs via the ReadContext class (first pass populates lists, second pass rebinds references).",
+    "data/tradata/Reader": "IReader interface for TraData. NOT PORTED — TraDataFile.Read handles dispatch directly.",
+    "data/tradata/DefaultReaderList": "Serializer_traML registration into the IReader dispatcher. NOT PORTED — no dispatcher wired yet.",
+    "data/tradata/TextWriter": "Pretty-print text dump of TraData. WON'T PORT — Format_Text output isn't wired in pwiz-sharp.",
+    "data/tradata/examples": "Hard-coded TraData fixtures for cpp tests. WON'T PORT — fixtures built inline in tests instead.",
+
+    # =========================================================================
     # utility
     # =========================================================================
     "utility/chemistry/Chemistry": (
@@ -634,6 +729,8 @@ DETAIL_FILE: dict[str, str] = {
     "utility/proteome/Chemistry": "Duplicate of utility/chemistry/Chemistry inside proteome. SKIPPED.",
 
     "utility/findmf": "findmf (Random-Forest peakelfit) — whole subtree. SKIPPED — separate research tool, not on msconvert path.",
+    "utility/bindings": "pwiz C++/CLI bindings (msdata/proteome/chemistry/analysis/common/example/timstof_prm_scheduler). WON'T PORT — pwiz-sharp IS the managed-code replacement; the CLI bindings exist only so legacy .NET-Framework apps can call into the C++ libraries.",
+    "utility/bindings/CLI": "pwiz C++/CLI bindings (msdata/proteome/chemistry/analysis/common/example/timstof_prm_scheduler). WON'T PORT — pwiz-sharp IS the managed-code replacement; the CLI bindings exist only so legacy .NET-Framework apps can call into the C++ libraries.",
 
     # =========================================================================
     # analysis/spectrum_processing
@@ -672,9 +769,9 @@ DETAIL_FILE: dict[str, str] = {
     "analysis/spectrum_processing/SpectrumList_PeakFilter": "Framework for per-spectrum peak filters (ETD precursor / charge-reduced / neutral-loss). Ported as Analysis/PeakFilters/.",
     "analysis/spectrum_processing/SpectrumList_ScanSummer": "Sum adjacent scans by retention time. Ported as Analysis/SpectrumListScanSummer.cs.",
     "analysis/spectrum_processing/SpectrumList_Demux": "DIA/MSX demultiplexer wrapper. Ported as Analysis/SpectrumListDemux.cs.",
-    "analysis/spectrum_processing/SpectrumList_DiaUmpire": "DIA-Umpire MS2 deconvolution. NOT PORTED — ~10k LOC, separate research tool, no current ask.",
-    "analysis/spectrum_processing/SpectrumList_3D": "3D (m/z, drift-time, intensity) reshaper. NOT PORTED — niche.",
-    "analysis/spectrum_processing/SpectrumList_IonMobility": "Ion-mobility CCS calculator filter. NOT PORTED — needs ion-mobility model classes first.",
+    "analysis/spectrum_processing/SpectrumList_DiaUmpire": "DIA-Umpire MS2 deconvolution wrapper. Ported as Analysis/DiaUmpire/SpectrumList_DiaUmpire.cs. The full DIA-Umpire algorithm (PeakCluster + PeakCurve + IsotopePatternMap + Config + DiaWindow + DiaUmpireMath + ScanData + InstrumentParameter) lives alongside it under Analysis/DiaUmpire/.",
+    "analysis/spectrum_processing/SpectrumList_3D": "3D (m/z, drift-time, intensity) reshaper. WON'T PORT — niche, not on the pwiz-sharp roadmap.",
+    "analysis/spectrum_processing/SpectrumList_IonMobility": "Ion-mobility CCS calculator filter. NOT YET PORTED — needs to be ported once an ion-mobility-capable vendor reader needs it; the vendor reader implementations themselves wire in the CCS conversion.",
     "analysis/spectrum_processing/SpectrumList_PrecursorRecalculator": "Re-derive precursor m/z from MS1 (older approach than PrecursorRefine). NOT PORTED — superseded.",
     "analysis/spectrum_processing/MS2Deisotoper": "MS2 isotope-cluster deisotoper. Ported as Analysis/PeakFilters/Ms2Deisotoper.cs.",
     "analysis/spectrum_processing/MS2NoiseFilter": "MS2 noise-floor trimmer. Ported as Analysis/PeakFilters/Ms2NoiseFilter.cs.",
@@ -736,6 +833,31 @@ DETAIL_FILE: dict[str, str] = {
     "analysis/demux/MatrixIO": "Eigen matrix I/O for debug snapshots. SKIPPED.",
     "analysis/demux/EnumConstantNotPresentException": "Trivial exception type. SKIPPED.",
     "analysis/demux/DemuxDataProcessingStrings": "String constants for DataProcessing entries. Ported inline into DemuxHelpers.cs.",
+
+    # analysis/dia_umpire
+    "analysis/dia_umpire/DiaUmpire": "Top-level DIA-Umpire orchestrator: builds isotope pattern maps from MS1, groups MS2 fragments into peak clusters, emits pseudo-MS/MS spectra. Ported as Analysis/DiaUmpire/DiaUmpire.cs + SpectrumList_DiaUmpire.cs.",
+    "analysis/dia_umpire/DiaUmpireMath": "Numeric helpers (Gaussian smoothing, derivative, integration) used by the peak-detection passes. Ported as Analysis/DiaUmpire/DiaUmpireMath.cs.",
+    "analysis/dia_umpire/InstrumentParameter": "Mass-accuracy / resolution tuning parameters consumed by the clusterer. Ported as Analysis/DiaUmpire/InstrumentParameter.cs.",
+    "analysis/dia_umpire/IsotopePatternMap": "Per-charge averagine isotope-pattern lookup table. Ported as Analysis/DiaUmpire/IsotopePatternMap.cs.",
+    "analysis/dia_umpire/PeakCluster": "Grouped peak curves that form one feature (matched MS1 + co-eluting MS2). Ported as Analysis/DiaUmpire/PeakCluster.cs.",
+    "analysis/dia_umpire/PeakCurve": "Single-m/z chromatographic peak across consecutive scans — the unit DIA-Umpire clusters. Ported as Analysis/DiaUmpire/PeakCurve.cs.",
+    "analysis/dia_umpire/ScanData": "Per-scan working buffers (mz/intensity arrays, RT, MS level). Ported as Analysis/DiaUmpire/ScanData.cs.",
+
+    # analysis/proteome_processing
+    "analysis/proteome_processing/ProteinList_Filter": "Predicate-driven sub-list over a ProteinList; supports IndexSet, IdSet, and arbitrary client predicates. Tribool return type lets predicates request sequence-loading via a retry pass. Ported as Analysis/Proteome/ProteinList_Filter.cs.",
+    "analysis/proteome_processing/ProteinList_DecoyGenerator": "Doubles a ProteinList by generating decoy proteins (reversed or shuffled sequence) for every target. Find(id) strips the decoy prefix on lookup. Ported as Analysis/Proteome/ProteinList_DecoyGenerator.cs.",
+    "analysis/proteome_processing/ProteinListFactory": "Command-string dispatcher for stacking ProteinList wrappers: `index <int-set>`, `id <file-or-semicolon-list>`, `decoyGenerator <reverse|shuffle[=seed]> <prefix>`. Ported as Analysis/Proteome/ProteinListFactory.cs.",
+
+    # analysis/common
+    "analysis/common/CwtPeakDetector": "Continuous-wavelet-transform peak detector. Ported as Analysis/PeakPicking/CwtPeakDetector.cs.",
+    "analysis/common/LocalMaximumPeakDetector": "Simple local-maximum peak detector. Ported as Analysis/PeakPicking/LocalMaximumPeakDetector.cs.",
+    "analysis/common/SavitzkyGolaySmoother": "Savitzky-Golay polynomial smoothing. Ported as Analysis/PeakPicking/SavitzkyGolaySmoother.cs (and ChromatogramListSavitzkyGolaySmoother for the chromatogram path).",
+    "analysis/common/ZeroSampleFiller": "Inserts zero-intensity samples between m/z gaps so downstream filters see a uniformly-sampled signal. Ported as Analysis/PeakPicking/ZeroSampleFiller.cs.",
+    "analysis/common/ExtraZeroSamplesFilter": "Drops / preserves flanking zero samples around peaks (preserveFlankingZeros toggle). Folded inline into Analysis/SpectrumListZeroSamplesFilter.cs.",
+    "analysis/common/Smoother": "Abstract interface for 1-D smoothers. Ported as Analysis/PeakPicking/ISmoother.cs.",
+    "analysis/common/PeakDetector": "Abstract interface + Peak struct for peak detectors. Ported as Analysis/PeakPicking/IPeakDetector.cs.",
+    "analysis/common/DataFilter": "Abstract interface for SpectrumDataFilter + ChromatogramDataFilter. Ported as Analysis/PeakFilters/ISpectrumDataFilter.cs.",
+    "analysis/common/WhittakerSmoother": "Whittaker smoothing. NOT PORTED — SeeMS exposes it as a Smoother.Type enum value but the implementation isn't wired through. msconvert defaults to SG so this rarely matters; port when a user asks for it.",
 }
 
 # ---------------------------------------------------------------------------
@@ -779,6 +901,21 @@ SUBAREA = {
         ("Predicates / CV",           _starts(["MzidPredicates", "KwCVMap"])),
         ("Conversion / examples",     _starts(["Pep2MzIdent", "examples", "Version"])),
     ],
+    "data/proteome": [
+        ("Core model",                _starts(["AminoAcid", "Modification", "Peptide",
+                                                "ProteomeData", "ProteinListWrapper"])),
+        ("Digestion / Diff",          _starts(["Digestion", "Diff"])),
+        ("FASTA I/O",                 _starts(["Reader_FASTA", "Serializer_FASTA",
+                                                "ProteomeDataFile", "ProteinListCache"])),
+        ("Reader dispatch",           _starts(["Reader", "DefaultReaderList"])),
+        ("Misc",                      _starts(["TextWriter", "examples"])),
+    ],
+    "data/tradata": [
+        ("Core model",                _starts(["TraData", "References", "Diff"])),
+        ("IO / Serializers",          _starts(["IO", "Serializer_", "TraDataFile"])),
+        ("Reader dispatch",           _starts(["Reader", "DefaultReaderList"])),
+        ("Misc",                      _starts(["TextWriter", "examples"])),
+    ],
     "utility": [
         ("chemistry",                 lambda s: s.startswith("chemistry/")),
         ("math",                      lambda s: s.startswith("math/")),
@@ -787,6 +924,7 @@ SUBAREA = {
         ("minimxml",                  lambda s: s.startswith("minimxml/")),
         ("proteome",                  lambda s: s.startswith("proteome/")),
         ("findmf",                    lambda s: s.startswith("findmf/")),
+        ("pwiz_cli_bindings",         lambda s: s.startswith("bindings/")),
     ],
     "analysis": [
         ("spectrum_processing",       lambda s: s.startswith("spectrum_processing/")),
@@ -1026,7 +1164,7 @@ def emit_module_dot(module: str, out_path: Path) -> None:
 # CLI
 # ---------------------------------------------------------------------------
 
-MODULES = ["data/common", "data/msdata", "data/identdata", "utility", "analysis"]
+MODULES = ["data/common", "data/msdata", "data/identdata", "data/proteome", "data/tradata", "utility", "analysis"]
 
 def safe_name(module: str) -> str:
     return module.replace("/", "_").replace("-", "_")

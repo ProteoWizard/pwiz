@@ -18,15 +18,15 @@ digraph pwiz_modules {
     margin=12;
     n_analysis__calibration [label="calibration", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
     n_analysis__chromatogram_processing [label="chromatogram_processing", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
-    n_analysis__common [label="common", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_analysis__common [label="common", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
     n_analysis__demux [label="demux", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
-    n_analysis__dia_umpire [label="dia_umpire", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_analysis__dia_umpire [label="dia_umpire", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_analysis__eharmony [label="eharmony", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
     n_analysis__frequency [label="frequency", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
     n_analysis__passive [label="passive", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
     n_analysis__peakdetect [label="peakdetect", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_analysis__peptideid [label="peptideid", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
-    n_analysis__proteome_processing [label="proteome_processing", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_analysis__proteome_processing [label="proteome_processing", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_analysis__spectrum_processing [label="spectrum_processing", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
   }
 
@@ -39,8 +39,8 @@ digraph pwiz_modules {
     margin=12;
     n_data__identdata [label="identdata", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
     n_data__misc [label="misc", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
-    n_data__proteome [label="proteome", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
-    n_data__tradata [label="tradata", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_data__proteome [label="proteome", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__tradata [label="tradata", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
   }
 
   subgraph cluster_data_common {

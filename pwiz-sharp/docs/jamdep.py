@@ -49,9 +49,9 @@ STATUS = {
     "data/msdata/mz5": "partial",     # read path fully ported (metadata + spectra + chromatograms; cpp round-trip clean); write not done (no native mz5 writer — round-trip tests shell out to cpp msconvert)
     "data/msdata/mzmlb": "full",      # HDF5-backed mzML reader+writer, bidirectional cpp parity
     "data/misc": "partial",
-    "data/proteome": "none",
+    "data/proteome": "full",                  # Peptide+Protein+ProteinList+ProteinListSimple+FastaProteinList (lazy, cpp-format .index sidecar) + Digestion + Reader_FASTA + Serializer_FASTA + ProteinListCache + ProteomeDataFile + Diff
     "data/identdata": "full",                 # mzIdentML + pepXML readers/writers, Diff/References, round-trip parity tests
-    "data/tradata": "none",
+    "data/tradata": "full",                   # TraML data model + IO (XmlReader/Writer with two-pass ref resolution) + TraDataFile (format detect/select) + Diff
 
     # vendor readers — every Reader_Foo with a TC test fixture is now green;
     # 'partial' marks readers whose .NET 8 SDK has known feature gaps vs cpp;
@@ -71,16 +71,16 @@ STATUS = {
     # analysis
     "analysis/calibration": "none",
     "analysis/chromatogram_processing": "partial",  # Filter + LockmassRefiner + SG smoother + Factory ported; XICGenerator (Thermo-only) not ported
-    "analysis/common": "none",
+    "analysis/common": "partial",   # Cwt/LocalMax PeakDetector + ISmoother + IPeakDetector + ISpectrumDataFilter + SG smoother + ZeroSampleFiller + ExtraZeroSamplesFilter (inlined) all ported; WhittakerSmoother is the only gap
     "analysis/demux": "full",                 # NNLS solver + MSX/Overlap demultiplexers
-    "analysis/dia_umpire": "none",
+    "analysis/dia_umpire": "full",            # DiaUmpire + DiaUmpireMath + InstrumentParameter + IsotopePatternMap + PeakCluster + PeakCurve + ScanData all ported (Config + DiaWindow + IsotopePatternRange.g.cs supporting types)
     "analysis/eharmony": "none",
     "analysis/findmf": "skipped",             # research tool, not on msconvert path; won't port
     "analysis/frequency": "none",
     "analysis/passive": "none",
     "analysis/peakdetect": "full",
     "analysis/peptideid": "none",
-    "analysis/proteome_processing": "none",
+    "analysis/proteome_processing": "full",   # ProteinList_Filter (IndexSet/IdSet predicates) + ProteinList_DecoyGenerator (Reversed/Shuffled) + ProteinListFactory (index/id/decoyGenerator command parser)
     "analysis/spectrum_processing": "partial",
 
     # pwiz_tools (C# / msconvert applications)
