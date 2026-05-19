@@ -11,20 +11,34 @@ namespace Pwiz.Data.Common.Index;
 /// Find(ordinal) is O(1) — direct seek.
 /// </summary>
 /// <remarks>
-/// Port of pwiz/data/common/BinaryIndexStream.cpp.
-/// On-disk layout (little-endian, compatible with the C++ format):
+/// Port of pwiz/data/common/BinaryIndexStream.cpp. Byte-identical to the C++ format:
+/// the 48-byte prelude reserved for source-file metadata, the layout of the
+/// streamLength + maxIdLength header, and the per-entry record (space-padded id +
+/// uint64 index + int64 offset) all match. A sidecar written by C++ pwiz is readable
+/// by this class and vice versa.
 /// <code>
-///   [0..47]  48 bytes reserved header (8-byte file size + 40-byte SHA1 — written as zeros by Create)
-///   [48..55] int64  streamLength  (total bytes of the index payload including this header)
-///   [56..63] uint64 maxIdLength   (space-padded id width, including the trailing null padding byte)
+///   [0..7]   int64  source file size (zero if not populated; C++ leaves these zero)
+///   [8..47]  40-byte lowercase ASCII hex SHA-1 of the source file (zero-padded if not populated)
+///   [48..55] int64  streamLength  (total payload bytes including streamLength + maxIdLength)
+///   [56..63] uint64 maxIdLength   (space-padded id width — i.e. longest id + 1)
 ///   [64..]   N entries sorted by ordinal index
 ///   [...]    N entries sorted by id (for binary search)
 /// Each entry: maxIdLength bytes of ASCII id (space-padded) + uint64 index + int64 offset.
 /// </code>
+/// <para>
+/// The 48-byte prelude (file size + SHA-1) is C++-compat reserved space. C++ does not
+/// validate it; sharp's <c>Create(entries, sourceFileSize, sourceFileSha1Hex)</c>
+/// overload populates it so callers (e.g. <c>FastaProteinList</c>) can do their own
+/// staleness check by comparing <see cref="SourceFileSize"/> / <see cref="SourceFileSha1Hex"/>
+/// against the current FASTA. The header-less <c>Create(entries)</c> overload writes
+/// zeros (matches C++).
+/// </para>
 /// </remarks>
 public sealed class BinaryIndexStream : IIndex, IDisposable
 {
-    private const int HeaderSize = 40 + sizeof(long);      // matches indexedMetadataHeaderSize_ in C++
+    private const int FileSizeSize = sizeof(long);
+    private const int Sha1HexSize = 40;
+    private const int HeaderSize = FileSizeSize + Sha1HexSize;   // 48 — matches indexedMetadataHeaderSize_ in C++
     private const int StreamLengthSize = sizeof(long);
     private const int MaxIdLengthSize = sizeof(ulong);
     private const int EntryTailSize = sizeof(ulong) + sizeof(long); // index + offset
@@ -39,8 +53,8 @@ public sealed class BinaryIndexStream : IIndex, IDisposable
     private int _entrySize;
 
     /// <summary>
-    /// Opens an existing index or prepares an empty one for <see cref="Create"/>.
-    /// The stream must be seekable and readable; it must be writable for <see cref="Create"/>.
+    /// Opens an existing index or prepares an empty one for one of the <c>Create</c> overloads.
+    /// The stream must be seekable and readable; it must be writable for <c>Create</c>.
     /// </summary>
     public BinaryIndexStream(Stream stream, bool leaveOpen = false)
     {
@@ -53,6 +67,16 @@ public sealed class BinaryIndexStream : IIndex, IDisposable
 
         TryReadHeader();
     }
+
+    /// <summary>Source file size as recorded in the 48-byte prelude, or 0 if the prelude
+    /// is unpopulated (C++-written sidecars, or sharp sidecars created via the
+    /// header-less Create overload).</summary>
+    public long SourceFileSize { get; private set; }
+
+    /// <summary>Source file SHA-1 (40 lowercase hex chars) as recorded in the 48-byte
+    /// prelude, or empty if the prelude is unpopulated. Use together with
+    /// <see cref="SourceFileSize"/> to detect stale sidecars without re-scanning.</summary>
+    public string SourceFileSha1Hex { get; private set; } = string.Empty;
 
     private void TryReadHeader()
     {
@@ -69,10 +93,10 @@ public sealed class BinaryIndexStream : IIndex, IDisposable
                 return;
             }
 
-            _stream.Seek(HeaderSize, SeekOrigin.Begin);
-            Span<byte> buf = stackalloc byte[StreamLengthSize + MaxIdLengthSize];
-            int read = _stream.ReadAtLeast(buf, buf.Length, throwOnEndOfStream: false);
-            if (read < buf.Length)
+            _stream.Seek(0, SeekOrigin.Begin);
+            Span<byte> preludeAndHeader = stackalloc byte[HeaderSize + StreamLengthSize + MaxIdLengthSize];
+            int read = _stream.ReadAtLeast(preludeAndHeader, preludeAndHeader.Length, throwOnEndOfStream: false);
+            if (read < preludeAndHeader.Length)
             {
                 _streamLength = 0;
                 _maxIdLength = 0;
@@ -81,13 +105,57 @@ public sealed class BinaryIndexStream : IIndex, IDisposable
                 return;
             }
 
-            _streamLength = BitConverter.ToInt64(buf[..StreamLengthSize]);
-            _maxIdLength = BitConverter.ToUInt64(buf.Slice(StreamLengthSize, MaxIdLengthSize));
+            SourceFileSize = BitConverter.ToInt64(preludeAndHeader[..FileSizeSize]);
+            var sha1Bytes = preludeAndHeader.Slice(FileSizeSize, Sha1HexSize);
+            // All-zero bytes mean "not populated" (C++ writes zeros for the whole 48-byte prelude).
+            bool anyNonZero = false;
+            for (int i = 0; i < sha1Bytes.Length; i++) { if (sha1Bytes[i] != 0) { anyNonZero = true; break; } }
+            SourceFileSha1Hex = anyNonZero ? Encoding.ASCII.GetString(sha1Bytes) : string.Empty;
+
+            var streamLenBuf = preludeAndHeader.Slice(HeaderSize, StreamLengthSize);
+            var maxIdLenBuf = preludeAndHeader.Slice(HeaderSize + StreamLengthSize, MaxIdLengthSize);
+            _streamLength = BitConverter.ToInt64(streamLenBuf);
+            _maxIdLength = BitConverter.ToUInt64(maxIdLenBuf);
 
             _entrySize = checked((int)_maxIdLength + EntryTailSize);
             int headerTail = StreamLengthSize + MaxIdLengthSize;
             long payload = _streamLength - headerTail;
             _count = payload > 0 && _entrySize > 0 ? (int)(payload / (_entrySize * 2L)) : 0;
+        }
+    }
+
+    /// <summary>Creates an index with a populated 48-byte source-file prelude (file size +
+    /// SHA-1 hex). Use this overload when the caller wants downstream opens to detect
+    /// stale sidecars without re-scanning the source. C++ pwiz tolerates this prelude
+    /// (it seeks past unconditionally), so the resulting sidecar remains byte-readable
+    /// by C++.</summary>
+    /// <param name="entries">Index entries to write.</param>
+    /// <param name="sourceFileSize">Size in bytes of the indexed file (e.g. the FASTA).</param>
+    /// <param name="sourceFileSha1Hex">40-char lowercase hex SHA-1 of the indexed file. Pass
+    /// <see cref="string.Empty"/> to leave the SHA-1 portion zero-filled — useful when
+    /// the caller wants size-only staleness detection without paying for a full hash.</param>
+    public void Create(List<IndexEntry> entries, long sourceFileSize, string sourceFileSha1Hex)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+        ArgumentNullException.ThrowIfNull(sourceFileSha1Hex);
+        ArgumentOutOfRangeException.ThrowIfNegative(sourceFileSize);
+        if (sourceFileSha1Hex.Length != 0 && sourceFileSha1Hex.Length != Sha1HexSize)
+            throw new ArgumentException($"SHA-1 hex must be empty or exactly {Sha1HexSize} chars.", nameof(sourceFileSha1Hex));
+
+        Create(entries);
+
+        lock (_ioLock)
+        {
+            _stream.Seek(0, SeekOrigin.Begin);
+            Span<byte> prelude = stackalloc byte[HeaderSize];
+            prelude.Clear();
+            BitConverter.TryWriteBytes(prelude[..FileSizeSize], sourceFileSize);
+            if (sourceFileSha1Hex.Length == Sha1HexSize)
+                Encoding.ASCII.GetBytes(sourceFileSha1Hex, prelude.Slice(FileSizeSize, Sha1HexSize));
+            _stream.Write(prelude);
+            _stream.Flush();
+            SourceFileSize = sourceFileSize;
+            SourceFileSha1Hex = sourceFileSha1Hex;
         }
     }
 

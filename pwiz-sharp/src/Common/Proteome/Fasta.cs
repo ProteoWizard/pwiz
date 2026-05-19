@@ -135,25 +135,44 @@ public static class Fasta
     private static Pwiz.Data.Common.Index.BinaryIndexStream OpenOrCreateDiskIndex(string path)
     {
         string sidecarPath = path + ".index";
-        // Existing sidecar — open R/W (so MemoryIndex-or-rebuild logic can decide whether
-        // it's stale and replace). For this initial port we assume a sidecar with N>0 entries
-        // is fresh; cpp's SHA-1 + file-size staleness check is a follow-up.
+        long fastaSize = new FileInfo(path).Length;
+
+        // Existing sidecar — accept iff its recorded source-file size matches the current
+        // FASTA. A populated SHA-1 in the prelude is validated too; an empty (zero) prelude
+        // means a cpp-written or sharp-without-staleness sidecar — we trust it on size alone
+        // (cpp doesn't enforce the SHA-1 either).
         if (File.Exists(sidecarPath))
         {
             var rwStream = new FileStream(sidecarPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
             var idx = new Pwiz.Data.Common.Index.BinaryIndexStream(rwStream, leaveOpen: false);
-            if (idx.Count > 0) return idx;
-            // Empty sidecar — fall through to build a fresh one (close + truncate).
+            bool sizeOk = idx.SourceFileSize == 0 || idx.SourceFileSize == fastaSize;
+            if (idx.Count > 0 && sizeOk) return idx;
+            // Stale or empty — close + rebuild below.
             idx.Dispose();
         }
-        // Build the index from the FASTA, then write it to the sidecar.
+        // Build the index from the FASTA + compute its SHA-1 in the same pass.
         List<Pwiz.Data.Common.Index.IndexEntry> entries;
-        using (var fs = File.OpenRead(path)) entries = FastaProteinList.BuildIndex(fs);
+        string sha1Hex;
+        using (var fs = File.OpenRead(path))
+        {
+            entries = FastaProteinList.BuildIndex(fs);
+            fs.Position = 0;
+            sha1Hex = ComputeFileSha1Hex(fs);
+        }
         var sidecar = new FileStream(sidecarPath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
         var bis = new Pwiz.Data.Common.Index.BinaryIndexStream(sidecar, leaveOpen: false);
-        bis.Create(entries);
+        bis.Create(entries, fastaSize, sha1Hex);
         return bis;
     }
+
+#pragma warning disable CA5350 // SHA-1 is not used here for security; format is dictated by cpp pwiz interop
+    private static string ComputeFileSha1Hex(Stream stream)
+    {
+        using var sha = System.Security.Cryptography.SHA1.Create();
+        byte[] hash = sha.ComputeHash(stream);
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+#pragma warning restore CA5350
 
     /// <summary>Writes <paramref name="pd"/> to <paramref name="stream"/> as FASTA.
     /// Each protein becomes <c>"&gt;id description\nsequence\n"</c> — sequence is

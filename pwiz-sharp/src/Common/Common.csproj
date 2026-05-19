@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Common.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="..\..\..\pwiz\data\common\psi-ms.obo" Link="Cv\psi-ms.obo" LogicalName="Pwiz.Data.Common.Cv.psi-ms.obo" />
     <EmbeddedResource Include="..\..\..\pwiz\data\common\unimod.obo" Link="Cv\unimod.obo" LogicalName="Pwiz.Data.Common.Cv.unimod.obo" />
     <EmbeddedResource Include="..\..\..\pwiz\data\common\unit.obo" Link="Cv\unit.obo" LogicalName="Pwiz.Data.Common.Cv.unit.obo" />

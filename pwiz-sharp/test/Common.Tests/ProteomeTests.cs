@@ -1,17 +1,42 @@
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Index;
 using Pwiz.Data.Common.Proteome;
 using Pwiz.Util.Proteome;
 
 namespace Pwiz.Data.Common.Tests;
 
 /// <summary>
-/// Covers the proteome port (ProteomeData / FASTA I/O / Digestion / Diff / ProteinListCache).
-/// Mirrors the spirit of pwiz cpp's <c>ProteomeDataTest</c>, <c>Serializer_FASTA_Test</c>,
-/// and <c>DigestionTest</c>: tight per-feature methods with named asserts.
+/// Covers the proteome port (ProteomeData / FASTA I/O / Digestion / Diff / ProteinListCache,
+/// plus the lazy <see cref="Fasta.OpenLazy"/> / <see cref="FastaProteinList"/> path and its
+/// .index sidecar). Mirrors the spirit of pwiz cpp's <c>ProteomeDataTest</c>,
+/// <c>Serializer_FASTA_Test</c>, and <c>DigestionTest</c>.
 /// </summary>
 [TestClass]
 public class ProteomeTests
 {
+    private static string WriteSampleFasta(int count)
+    {
+        // Variable-length sequences across multiple wrapped lines, so byte offsets aren't
+        // a multiple of any single record stride.
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < count; i++)
+        {
+            sb.Append('>').Append('P').Append(i.ToString("D5")).Append(" description for protein ").Append(i).Append('\n');
+            // Sequence length = 50 + (i * 7) % 80 chars, wrapped at 60.
+            int n = 50 + (i * 7) % 80;
+            var seq = new char[n];
+            for (int j = 0; j < n; j++) seq[j] = "ACDEFGHIKLMNPQRSTVWY"[(i + j) % 20];
+            for (int off = 0; off < n; off += 60)
+            {
+                int len = System.Math.Min(60, n - off);
+                sb.Append(new string(seq, off, len)).Append('\n');
+            }
+        }
+        string path = Path.Combine(Path.GetTempPath(), $"fasta-lazy-{System.Guid.NewGuid():N}.fasta");
+        File.WriteAllText(path, sb.ToString());
+        return path;
+    }
+
     // ---------------------------------------------------------------------------
     // ProteomeData / ProteinListSimple
     // ---------------------------------------------------------------------------
@@ -260,5 +285,189 @@ public class ProteomeTests
         bList.Proteins[1] = new Protein("P2", 1, "second protein", "VVVV");
         Assert.IsFalse(ProteomeDataDiff.IsEqual(a, b, out string reasonSeq, ignoreMetadata: true));
         StringAssert.Contains(reasonSeq, "sequence", StringComparison.Ordinal);
+    }
+
+    // ---------------------------------------------------------------------------
+    // Lazy FASTA reader (Fasta.OpenLazy / FastaProteinList + .index sidecar)
+    // ---------------------------------------------------------------------------
+
+    [TestMethod]
+    public void OpenLazy_GetProteinByIndex_ReturnsCorrectRecord()
+    {
+        string path = WriteSampleFasta(50);
+        try
+        {
+            // Eager read for a reference: gives us the canonical answers to compare against.
+            var eager = Fasta.ReadFile(path);
+            using var pd = Fasta.OpenLazy(path);
+            var lazyList = (FastaProteinList)pd.ProteinList!;
+
+            Assert.AreEqual(eager.ProteinList!.Count, lazyList.Count, "Count must match eager read");
+
+            // Probe a few indices out of order to exercise the seek path.
+            foreach (int i in new[] { 0, 25, 49, 7, 33, 1 })
+            {
+                var lazyP = lazyList.GetProtein(i, getSequence: true);
+                var eagerP = eager.ProteinList.GetProtein(i, getSequence: true);
+                Assert.AreEqual(eagerP.Id, lazyP.Id, $"Id[{i}]");
+                Assert.AreEqual(eagerP.Description, lazyP.Description, $"Description[{i}]");
+                Assert.AreEqual(eagerP.Sequence, lazyP.Sequence, $"Sequence[{i}]");
+                Assert.AreEqual(i, lazyP.Index);
+            }
+
+            // getSequence: false drops the sequence load (metadata-only path).
+            var metaOnly = lazyList.GetProtein(10, getSequence: false);
+            Assert.AreEqual("P00010", metaOnly.Id);
+            Assert.AreEqual(string.Empty, metaOnly.Sequence,
+                "getSequence=false should return an empty sequence");
+        }
+        finally { try { File.Delete(path); } catch { } }
+    }
+
+    [TestMethod]
+    public void OpenLazy_FindById_UsesIndexNoFullScan()
+    {
+        string path = WriteSampleFasta(20);
+        try
+        {
+            using var pd = Fasta.OpenLazy(path);
+            var list = pd.ProteinList!;
+            Assert.AreEqual(0, list.Find("P00000"));
+            Assert.AreEqual(15, list.Find("P00015"));
+            Assert.AreEqual(list.Count, list.Find("does-not-exist"),
+                "missing-id sentinel must be Count (cpp parity)");
+        }
+        finally { try { File.Delete(path); } catch { } }
+    }
+
+    [TestMethod]
+    public void OpenLazy_DiskIndex_PersistsAcrossOpens()
+    {
+        string path = WriteSampleFasta(15);
+        string sidecar = path + ".index";
+        try
+        {
+            // First open: builds + persists the sidecar.
+            using (var pd1 = Fasta.OpenLazy(path, useDiskIndex: true))
+            {
+                Assert.AreEqual(15, pd1.ProteinList!.Count);
+            }
+            Assert.IsTrue(File.Exists(sidecar), "disk index sidecar should have been written");
+            long sidecarSizeAfterFirst = new FileInfo(sidecar).Length;
+            Assert.IsTrue(sidecarSizeAfterFirst > 0);
+
+            // Second open: should reuse the sidecar (no rebuild). We can't directly observe
+            // "no rebuild" through public API, but we can verify the sidecar wasn't truncated
+            // and the contents are still readable.
+            using (var pd2 = Fasta.OpenLazy(path, useDiskIndex: true))
+            {
+                Assert.AreEqual(15, pd2.ProteinList!.Count);
+                var p7 = pd2.ProteinList.GetProtein(7);
+                Assert.AreEqual("P00007", p7.Id);
+            }
+            Assert.AreEqual(sidecarSizeAfterFirst, new FileInfo(sidecar).Length,
+                "sidecar size should be unchanged on the second open");
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+            try { File.Delete(sidecar); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void OpenLazy_DiskIndex_HasCppCompatibleFormat()
+    {
+        // cpp-format sidecar invariants the sharp writer must satisfy so that
+        // a cpp pwiz binary can read sharp-written .index files (and vice versa):
+        //   * 48-byte prelude = int64 file size + 40-byte lowercase-hex SHA-1
+        //   * stored ids are 40-char SHA-1 hex of the raw FASTA id (cpp Serializer_FASTA.cpp:100)
+        //   * maxIdLength = 41 (40 hex chars + 1 space terminator)
+        string path = WriteSampleFasta(5);
+        string sidecar = path + ".index";
+        try
+        {
+            using (var pd = Fasta.OpenLazy(path, useDiskIndex: true))
+            {
+                Assert.AreEqual(5, pd.ProteinList!.Count);
+            }
+            // Reopen the sidecar directly to inspect the prelude and maxIdLength.
+            using var fs = new FileStream(sidecar, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var idx = new BinaryIndexStream(fs, leaveOpen: false);
+
+            Assert.AreEqual(new FileInfo(path).Length, idx.SourceFileSize, "file size in prelude");
+            Assert.AreEqual(40, idx.SourceFileSha1Hex.Length, "SHA-1 hex must be 40 lowercase hex chars");
+            foreach (char c in idx.SourceFileSha1Hex)
+                Assert.IsTrue((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'),
+                    $"SHA-1 hex has non-hex/non-lowercase char '{c}'");
+
+            // The stored id (raw key inside an entry) must be the SHA-1 hex of the FASTA id.
+            // We can't read entries directly here, but Find(hashOfId) must produce the right ordinal
+            // since cpp's lookup path does exactly `index.find(sha1.hash(id))`.
+            string expected = FastaProteinList.HashId("P00003");
+            Assert.AreEqual(40, expected.Length);
+            var hit = idx.Find(expected);
+            Assert.IsNotNull(hit, "BinaryIndexStream must contain the hashed id, not the raw id");
+            Assert.AreEqual(3UL, hit!.Index);
+
+            // And the raw id must NOT be present in the sidecar.
+            Assert.IsNull(idx.Find("P00003"),
+                "Raw ids must not be stored — only their SHA-1 hashes (cpp compat).");
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+            try { File.Delete(sidecar); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void OpenLazy_DiskIndex_RebuildsWhenFastaSizeChanged()
+    {
+        // If the FASTA file grows / shrinks between opens, the cached sidecar must be
+        // discarded and rebuilt (otherwise byte offsets are stale).
+        string path = WriteSampleFasta(5);
+        string sidecar = path + ".index";
+        try
+        {
+            using (var pd1 = Fasta.OpenLazy(path, useDiskIndex: true))
+                Assert.AreEqual(5, pd1.ProteinList!.Count);
+
+            // Append another protein to the FASTA — this changes both size and SHA-1.
+            using (var w = new StreamWriter(path, append: true))
+            {
+                w.NewLine = "\n";
+                w.WriteLine(">P99999 freshly appended");
+                w.WriteLine("ACDEFGHIKLMNPQRSTVWY");
+            }
+
+            using var pd2 = Fasta.OpenLazy(path, useDiskIndex: true);
+            Assert.AreEqual(6, pd2.ProteinList!.Count, "sidecar must rebuild — new protein should be visible");
+            Assert.AreEqual(5, pd2.ProteinList.Find("P99999"), "newly appended id must be findable");
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+            try { File.Delete(sidecar); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void OpenLazy_Dispose_ReleasesFileHandle()
+    {
+        string path = WriteSampleFasta(3);
+        try
+        {
+            var pd = Fasta.OpenLazy(path);
+            ((FastaProteinList)pd.ProteinList!).Dispose();
+            // After dispose, the file must be deletable — no lingering FileStream.
+            File.Delete(path);
+            Assert.IsFalse(File.Exists(path));
+        }
+        catch
+        {
+            try { File.Delete(path); } catch { }
+            throw;
+        }
     }
 }

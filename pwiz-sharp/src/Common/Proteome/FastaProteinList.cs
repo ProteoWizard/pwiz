@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Pwiz.Data.Common.Index;
@@ -63,9 +64,28 @@ public sealed class FastaProteinList : ProteinList, IDisposable
     public override int Find(string id)
     {
         ArgumentNullException.ThrowIfNull(id);
-        var entry = _index.Find(id);
+        // Index entries are keyed by SHA-1 hash of the id (cpp Serializer_FASTA.cpp:141 —
+        // hashes the lookup key before consulting the index). Mirror that so sidecars
+        // produced by either tool work in the other.
+        var entry = _index.Find(HashId(id));
         return entry is null ? Count : (int)entry.Index;
     }
+
+    /// <summary>SHA-1 hash of <paramref name="id"/> formatted as 40 lowercase hex chars.
+    /// Matches cpp's <c>SHA1Calculator::hash(string)</c> on ASCII / UTF-8 inputs (cpp
+    /// hashes the raw bytes of std::string; we hash the UTF-8 bytes of the C# string,
+    /// which agree byte-for-byte on ASCII content — the only thing FASTA ids contain
+    /// in practice).</summary>
+#pragma warning disable CA5350 // SHA-1 is not used here for security; format is dictated by cpp pwiz interop
+    internal static string HashId(string id)
+    {
+        Span<byte> raw = stackalloc byte[Encoding.UTF8.GetMaxByteCount(id.Length)];
+        int n = Encoding.UTF8.GetBytes(id, raw);
+        Span<byte> hash = stackalloc byte[20];
+        SHA1.HashData(raw[..n], hash);
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+#pragma warning restore CA5350
 
     /// <inheritdoc/>
     public void Dispose()
@@ -139,7 +159,9 @@ public sealed class FastaProteinList : ProteinList, IDisposable
                     throw new FormatException($"[FastaProteinList.BuildIndex] empty id in defline \"{defline}\"");
                 if (!seen.Add(id))
                     throw new FormatException($"[FastaProteinList.BuildIndex] duplicate protein id \"{id}\"");
-                entries.Add(new IndexEntry(id, index, lineStart));
+                // Store entries by SHA-1 hash of the id (cpp Serializer_FASTA.cpp:100 does the
+                // same); duplicate detection uses the raw id so the user gets a readable error.
+                entries.Add(new IndexEntry(HashId(id), index, lineStart));
                 index++;
             }
         }
