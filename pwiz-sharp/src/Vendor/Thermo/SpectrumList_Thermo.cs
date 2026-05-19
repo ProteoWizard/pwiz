@@ -27,8 +27,33 @@ namespace Pwiz.Vendor.Thermo;
 /// precursor isolation window + selected ion + charge + activation, ion injection time,
 /// mass resolving power, FAIMS CV, lowest/highest observed m/z, binary arrays.
 /// </remarks>
-public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSpectrumList
+public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSpectrumList, IIonMobilitySpectrumList
 {
+    /// <summary>True iff the file may carry FAIMS data. cpp parity: returns true
+    /// unconditionally because actually checking would require iterating every scan's
+    /// trailer params — too expensive at construction time. The per-spectrum
+    /// FAIMS-on check happens at <c>GetSpectrum</c> time and sets
+    /// <c>MS_FAIMS_compensation_voltage</c> on the scan when present.</summary>
+#pragma warning disable CA1822 // public instance property for cross-vendor consistency; cpp returns true unconditionally too
+    public bool HasIonMobility => true;
+#pragma warning restore CA1822
+
+    /// <inheritdoc cref="IIonMobilitySpectrumList.IonMobilityUnits"/>
+    /// <remarks>Thermo's only IM-style data is FAIMS, which reports compensation voltage in V.
+    /// Reported as <see cref="IonMobilityUnits.CompensationV"/> for every Thermo file
+    /// (cpp parity — see <see cref="HasIonMobility"/>).</remarks>
+    public IonMobilityUnits IonMobilityUnits => IonMobilityUnits.CompensationV;
+
+    /// <inheritdoc/>
+    /// <remarks>FAIMS reports CV per-spectrum, never as a 3-array.</remarks>
+    public bool HasCombinedIonMobility => false;
+
+    /// <inheritdoc/>
+    public bool IsWatersSonar => false;
+
+    // No CCS conversion: FAIMS compensation voltage isn't on a CCS calibration curve,
+    // so neither cpp nor sharp expose IIonMobilityCcsConversion for Thermo.
+
     private readonly ThermoRawFile _raw;
     private readonly bool _ownsRaw;
     private readonly List<IndexEntry> _index = new();

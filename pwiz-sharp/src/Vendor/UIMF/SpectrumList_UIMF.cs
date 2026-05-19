@@ -20,8 +20,27 @@ namespace Pwiz.Vendor.UIMF;
 /// `frame=N scan=N frameType=N` format (SpectrumList_UIMF.cpp:247) so reference mzMLs
 /// keyed off id parse identically.
 /// </remarks>
-public sealed class SpectrumList_UIMF : SpectrumListBase
+public sealed class SpectrumList_UIMF : SpectrumListBase, IIonMobilitySpectrumList
 {
+    /// <summary>True iff the analysis carries IM data — delegates to
+    /// <see cref="UimfData.HasIonMobility"/>.</summary>
+    public bool HasIonMobility => _data.HasIonMobility;
+
+    /// <inheritdoc cref="IIonMobilitySpectrumList.IonMobilityUnits"/>
+    /// <remarks>UIMF reports IM as drift time in ms.</remarks>
+    public IonMobilityUnits IonMobilityUnits =>
+        HasIonMobility ? IonMobilityUnits.DriftTimeMsec : IonMobilityUnits.None;
+
+    /// <inheritdoc/>
+    /// <remarks>UIMF stores per-bin spectra, not a 3-array per frame.</remarks>
+    public bool HasCombinedIonMobility => false;
+
+    /// <inheritdoc/>
+    public bool IsWatersSonar => false;
+
+    // No CCS conversion: cpp's UIMF reader hardcodes canConvertIonMobilityAndCCS() = false
+    // and there's no IMS-CCS calibration source in the file. Sharp matches.
+
     private readonly UimfData _data;
     private readonly InstrumentConfiguration? _defaultIc;
     private readonly bool _ignoreZeroIntensityPoints;

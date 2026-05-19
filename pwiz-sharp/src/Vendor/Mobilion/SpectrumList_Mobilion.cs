@@ -27,8 +27,36 @@ namespace Pwiz.Vendor.Mobilion;
 ///   binary array.</item>
 /// </list>
 /// </remarks>
-public sealed class SpectrumList_Mobilion : SpectrumListBase
+public sealed class SpectrumList_Mobilion : SpectrumListBase, IIonMobilitySpectrumList, IIonMobilityCcsConversion
 {
+    /// <inheritdoc cref="IIonMobilitySpectrumList.IonMobilityUnits"/>
+    /// <remarks>Mobilion is an IMS-only instrument — IM is always drift time in ms.</remarks>
+    public IonMobilityUnits IonMobilityUnits => IonMobilityUnits.DriftTimeMsec;
+
+    /// <inheritdoc cref="IIonMobilitySpectrumList.HasCombinedIonMobility"/>
+    /// <remarks>True iff <c>combineIonMobilitySpectra</c> was enabled (per-frame 3-array mode).</remarks>
+    public bool HasCombinedIonMobility => _combineIonMobilitySpectra;
+
+    /// <inheritdoc/>
+    public bool IsWatersSonar => false;
+
+    /// <inheritdoc/>
+    /// <remarks>Probes <c>EyeOnCcsCalibration::GetAtSurf</c> via
+    /// <see cref="MobilionData.CanConvertIonMobilityAndCcs"/>.</remarks>
+    public bool CanConvertIonMobilityAndCcs => _data.CanConvertIonMobilityAndCcs();
+
+    /// <inheritdoc/>
+    /// <remarks>cpp <c>ionMobilityToCCS(im, mz, charge)</c> -> sharp
+    /// <see cref="MobilionData.ArrivalTimeToCcs"/><c>(driftTime, absMzCharge)</c> where
+    /// <c>absMzCharge = |mz * charge|</c> (cpp SpectrumList_Mobilion.cpp uses the same
+    /// transform before calling the SDK).</remarks>
+    public double IonMobilityToCcs(double ionMobility, double mz, int charge) =>
+        _data.ArrivalTimeToCcs(ionMobility, System.Math.Abs(mz * charge));
+
+    /// <inheritdoc/>
+    public double CcsToIonMobility(double ccs, double mz, int charge) =>
+        _data.CcsToArrivalTime(ccs, System.Math.Abs(mz * charge));
+
     private readonly MobilionData _data;
     private readonly InstrumentConfiguration? _defaultIc;
     private readonly bool _combineIonMobilitySpectra;

@@ -14,14 +14,51 @@ namespace Pwiz.Vendor.Bruker;
 /// Port of pwiz::msdata::SpectrumList_Bruker. The vendor-agnostic split mirrors the C++ split
 /// between <c>SpectrumList_Bruker</c> and <c>CompassData</c>.
 /// </remarks>
-public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSpectrumList
+public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSpectrumList,
+    IIonMobilitySpectrumList, IIonMobilityCcsConversion
 {
     private readonly IBrukerData _data;
     private readonly IReadOnlyList<BrukerIndexEntry> _index;
     private readonly bool _owns;
+    private readonly bool _combineIonMobilitySpectra;
 
     /// <summary>Which Bruker sub-format this list is backed by.</summary>
     public BrukerFormat Format => _data.Format;
+
+    /// <summary>True iff the analysis stores ion-mobility data — cpp parity:
+    /// <c>format_ == Reader_Bruker_Format_TDF</c>. Only the TDF (TIMS) format
+    /// carries IM; BAF / TSF / Yep / Fid don't.</summary>
+    public bool HasIonMobility => _data.Format == BrukerFormat.Tdf;
+
+    /// <inheritdoc cref="IIonMobilitySpectrumList.IonMobilityUnits"/>
+    /// <remarks>Bruker TIMS reports IM as inverse reduced ion mobility (1/K0) in V·s/cm².</remarks>
+    public IonMobilityUnits IonMobilityUnits =>
+        HasIonMobility ? IonMobilityUnits.InverseReducedIonMobilityVsecPerCm2 : IonMobilityUnits.None;
+
+    /// <inheritdoc cref="IIonMobilitySpectrumList.HasCombinedIonMobility"/>
+    /// <remarks>True iff IMS data is present AND <c>combineIonMobilitySpectra</c> was enabled
+    /// (3-array per-frame mode).</remarks>
+    public bool HasCombinedIonMobility => HasIonMobility && _combineIonMobilitySpectra;
+
+    /// <inheritdoc/>
+    public bool IsWatersSonar => false;
+
+    /// <inheritdoc/>
+    /// <remarks>TIMS CCS conversion is a closed-form expression in
+    /// <see cref="TimsBinaryData.OneOverK0ToCcs"/>; it's always available once IM data is
+    /// present (no separate calibration step like Waters .cal).</remarks>
+    public bool CanConvertIonMobilityAndCcs => HasIonMobility;
+
+    /// <inheritdoc/>
+    /// <remarks>cpp signature is <c>(im, mz, charge)</c>; sharp's <see cref="TimsBinaryData.OneOverK0ToCcs"/>
+    /// takes <c>(oneOverK0, charge, mz)</c> — reorder the args here so the public surface
+    /// stays cpp-consistent.</remarks>
+    public double IonMobilityToCcs(double ionMobility, double mz, int charge) =>
+        TimsBinaryData.OneOverK0ToCcs(ionMobility, charge, mz);
+
+    /// <inheritdoc/>
+    public double CcsToIonMobility(double ccs, double mz, int charge) =>
+        TimsBinaryData.CcsToOneOverK0(ccs, charge, mz);
 
     /// <inheritdoc/>
     public string VendorCentroidName => "Bruker/Agilent/CompassXtract peak picking";
@@ -52,6 +89,7 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
         _owns = owns;
+        _combineIonMobilitySpectra = combineIonMobilitySpectra;
         _sortAndJitter = sortAndJitter;
         _index = data.BuildSpectrumIndex(combineIonMobilitySpectra, preferOnlyMsLevel);
     }

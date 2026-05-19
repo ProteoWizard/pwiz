@@ -24,8 +24,28 @@ namespace Pwiz.Vendor.Agilent;
 /// Skipped: ion-mobility frames (MIDAC), non-MS UV/DAD spectra, all-ions scan promotion. Each is
 /// a follow-up port; current scope covers the bulk of Q-TOF / TQ files.
 /// </remarks>
-public sealed class SpectrumList_Agilent : SpectrumListBase
+public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectrumList
 {
+    /// <summary>True iff the .d directory carries IMS data (delegates to
+    /// <see cref="AgilentRawData.HasIonMobilityData"/>).</summary>
+    public bool HasIonMobility => _raw.HasIonMobilityData;
+
+    /// <inheritdoc cref="IIonMobilitySpectrumList.IonMobilityUnits"/>
+    /// <remarks>Agilent IM is always reported as drift time in milliseconds.</remarks>
+    public IonMobilityUnits IonMobilityUnits =>
+        HasIonMobility ? IonMobilityUnits.DriftTimeMsec : IonMobilityUnits.None;
+
+    /// <inheritdoc cref="IIonMobilitySpectrumList.HasCombinedIonMobility"/>
+    /// <remarks>cpp parity: true iff IMS data is present AND <c>combineIonMobilitySpectra</c>
+    /// was enabled in the reader config (3-array per-frame mode).</remarks>
+    public bool HasCombinedIonMobility => HasIonMobility && _combineIms;
+
+    /// <inheritdoc/>
+    public bool IsWatersSonar => false;
+
+    // CCS conversion (cpp's ionMobilityToCCS / ccsToIonMobility) requires the MIDAC
+    // SDK's CalibrationCS bridge, which sharp's AgilentRawData doesn't expose yet.
+    // Wire IIonMobilityCcsConversion as a follow-up when that bridge is added.
     private readonly AgilentRawData _raw;
     private readonly bool _ownsRaw;
     private readonly InstrumentConfiguration? _defaultIc;
