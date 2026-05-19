@@ -55,7 +55,7 @@ namespace pwiz.OspreySharp.Tasks
     /// <code>
     /// {
     ///   "task": "PerFileScoring",
-    ///   "version": "26.5.0",
+    ///   "version": "26.6.0",
     ///   "validity_key": "search=abc...;library=def...",
     ///   "inputs": ["/path/to/file.mzML", "/path/to/library.tsv"]
     /// }

@@ -2517,7 +2517,7 @@ namespace pwiz.OspreySharp.Test
         #region TaskValiditySidecar Tests
 
         private const string TASK_NAME = "PerFileScoring";
-        private const string TASK_VERSION = "26.5.0";
+        private const string TASK_VERSION = "26.6.0";
 
         /// <summary>
         /// Write a sidecar with a known validity_key, then confirm

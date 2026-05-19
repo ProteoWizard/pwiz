@@ -84,6 +84,15 @@ namespace SkylineTool
 
         public const string DEFAULT_REPORT_NAME = @"Custom";
 
+        // --- MCP image-return wire phrases ---
+
+        // Shared fragment emitted by the MCP image wrappers when the inline
+        // image payload exceeds the server-side cap. Centralized here so the
+        // production wrapper (in SkylineMcpServer.dll) and the functional test
+        // (in TestFunctional.dll, running the wrapper as a subprocess and
+        // parsing its responses) agree on the same source of truth.
+        public const string MSG_INLINE_CAP_EXCEEDED = @"exceeded inline cap";
+
         // --- Connection file infrastructure ---
 
         public const string DEPLOY_FOLDER_NAME = @".skyline-mcp";

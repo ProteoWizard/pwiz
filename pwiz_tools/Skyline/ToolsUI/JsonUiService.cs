@@ -23,7 +23,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
@@ -288,15 +287,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             return InvokeOnUiThread(() =>
             {
-                var form = FindFormById(graphId) as DockableFormEx;
-                var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
-                if (zedGraph == null)
-                {
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.",
-                        graphId));
-                }
-                using (var bitmap = zedGraph.MasterPane.GetImage(zedGraph.MasterPane.IsAntiAlias))
+                using (var bitmap = RenderGraphBitmap(graphId, out var form))
                 {
                     filePath = filePath ?? GetMcpTmpFilePath(
                         GRAPH_FILE_PREFIX, form.Text, EXT_PNG);
@@ -311,46 +302,156 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
-        private const string FORM_FILE_PREFIX = @"skyline-form";
-
-        public static string GetFormImage(string formId, string filePath)
+        public static ImageBytesMetadata GetGraphImageBytes(string graphId)
         {
             return InvokeOnUiThread(() =>
             {
-                var form = FindFormById(formId);
-
-                // Check permission (dialog may appear over the target form)
-                bool dialogShown = ScreenCapture.EnsurePermission(out bool wasFirstPrompt);
-                if (!dialogShown)
-                    return new LlmInstruction(@"Screen capture denied by user.");
-
-                // Check desktop availability before attempting capture
-                if (!ScreenCapture.IsDesktopAvailable())
-                    return new LlmInstruction(@"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.");
-
-                // Activate the form
-                ScreenCapture.ActivateForm(form);
-
-                // If the permission dialog was just shown, allow time for it to
-                // fully dismiss and for Windows to repaint the target form.
-                if (wasFirstPrompt)
-                    Thread.Sleep(1000);
-
-                // Get screen rectangle
-                var screenRect = ScreenCapture.GetWindowRectangle(form);
-
-                // Resolve output path before capture so we can derive log path
-                filePath = filePath ?? GetMcpTmpFilePath(
-                    FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG);
-
-                // Capture with redaction
-                using (var bitmap = ScreenCapture.CaptureAndRedact(screenRect, form))
+                using (var bitmap = RenderGraphBitmap(graphId, out var form))
                 {
+                    return new ImageBytesMetadata
+                    {
+                        Data = BitmapToPngBytes(bitmap),
+                        FilePath = GetMcpTmpFilePath(GRAPH_FILE_PREFIX, form.Text, EXT_PNG)
+                            .ToForwardSlashPath(),
+                        MimeType = MIME_TYPE_PNG
+                    };
+                }
+            });
+        }
+
+        private const string FORM_FILE_PREFIX = @"skyline-form";
+
+        // LLM-facing instruction text for the form-image permission states.
+        // Wrapped in LlmInstruction so the type makes the not-translated
+        // contract explicit, and exposed as fields so tests can assert against
+        // the canonical value instead of a brittle English substring
+        // (see CRITICAL-RULES.md on translation-proof tests).
+        public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_DENIED =
+            new LlmInstruction(@"Screen capture denied by user.");
+        public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED =
+            new LlmInstruction(@"Screen capture permission required. A confirmation dialog is now open in Skyline; ask the user to grant or deny it, then call this tool again. This is the documented two-phase handshake, not an error.");
+        public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE =
+            new LlmInstruction(@"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.");
+
+        public static string GetFormImage(string formId, string filePath)
+        {
+            ValidateFormIdFormat(formId);
+            string denial = CheckScreenCaptureAvailability();
+            if (denial != null)
+                return denial;
+            return InvokeOnUiThread(() =>
+            {
+                var form = FindFormById(formId);
+                using (var bitmap = CaptureGrantedForm(form))
+                {
+                    filePath = filePath ?? GetMcpTmpFilePath(
+                        FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG);
                     DirectoryEx.CreateForFilePath(filePath);
                     bitmap.Save(filePath, ImageFormat.Png);
                 }
                 return filePath.ToForwardSlashPath();
             });
+        }
+
+        public static ImageBytesMetadata GetFormImageBytes(string formId)
+        {
+            ValidateFormIdFormat(formId);
+            string denial = CheckScreenCaptureAvailability();
+            if (denial != null)
+            {
+                // Permission denial / desktop unavailable: return a structured
+                // Message instead of bytes. The wrapper emits Message as plain
+                // text content (no error flag) so the response shape matches
+                // what the legacy file-based path returned for the same condition.
+                return new ImageBytesMetadata { Message = denial };
+            }
+            return InvokeOnUiThread(() =>
+            {
+                var form = FindFormById(formId);
+                using (var bitmap = CaptureGrantedForm(form))
+                {
+                    return new ImageBytesMetadata
+                    {
+                        Data = BitmapToPngBytes(bitmap),
+                        FilePath = GetMcpTmpFilePath(FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG)
+                            .ToForwardSlashPath(),
+                        MimeType = MIME_TYPE_PNG
+                    };
+                }
+            });
+        }
+
+        // Renders the bitmap for a ZedGraph form, returning the bitmap and the host form.
+        // Caller owns the bitmap and must dispose it.
+        private static System.Drawing.Bitmap RenderGraphBitmap(string graphId, out DockableFormEx form)
+        {
+            form = FindFormById(graphId) as DockableFormEx;
+            var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
+            if (zedGraph == null)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.",
+                    graphId));
+            }
+            return zedGraph.MasterPane.GetImage(zedGraph.MasterPane.IsAntiAlias);
+        }
+
+        // Returns null when screen capture can proceed, or the LLM-facing
+        // denial / pending / desktop-unavailable message that the form-image
+        // tools should return to the caller without attempting capture.
+        // Called from the pipe thread (no Invoke marshal) so a Pending or
+        // Denied response does not pay the UI-thread round trip.
+        private static string CheckScreenCaptureAvailability()
+        {
+            switch (ScreenCapture.EnsurePermission())
+            {
+                case PermissionResult.denied:
+                    return LLM_MSG_SCREEN_CAPTURE_DENIED;
+                case PermissionResult.pending:
+                    return LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED;
+                case PermissionResult.unavailable:
+                    return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
+            }
+            if (!ScreenCapture.IsDesktopAvailable())
+            {
+                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
+            }
+            return null;
+        }
+
+        // Cheap formId well-formedness check that runs on the pipe thread,
+        // before the screen-capture permission prompt fires. Catching obviously
+        // bad input here avoids interrupting the user with a permission dialog
+        // for a request that can never succeed.
+        private static void ValidateFormIdFormat(string formId)
+        {
+            if (formId == null || formId.IndexOf(':') < 0)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Invalid form ID format: {0}. Expected 'TypeName:Title'. Use skyline_get_open_forms to get valid IDs.",
+                    formId ?? string.Empty));
+            }
+        }
+
+        // Captures a screenshot of an open form (with redaction). Caller owns
+        // the bitmap. Must be called on the UI thread, and only after
+        // CheckScreenCaptureAvailability has returned null.
+        private static System.Drawing.Bitmap CaptureGrantedForm(Form form)
+        {
+            ScreenCapture.ActivateForm(form);
+            var screenRect = ScreenCapture.GetWindowRectangle(form);
+            return ScreenCapture.CaptureAndRedact(screenRect, form);
+        }
+
+        private const string MIME_TYPE_PNG = @"image/png";
+
+        private static byte[] BitmapToPngBytes(System.Drawing.Bitmap bitmap)
+        {
+            using (var memory = new MemoryStream())
+            {
+                bitmap.Save(memory, ImageFormat.Png);
+                return memory.ToArray();
+            }
         }
 
         // Private helpers - Graph support
@@ -394,14 +495,8 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private static Form FindFormById(string formId)
         {
+            ValidateFormIdFormat(formId);
             int colonIndex = formId.IndexOf(':');
-            if (colonIndex < 0)
-            {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Invalid form ID format: {0}. Expected 'TypeName:Title'. Use skyline_get_open_forms to get valid IDs.",
-                    formId));
-            }
-
             string typeName = formId.Substring(0, colonIndex);
             string title = formId.Substring(colonIndex + 1);
 
