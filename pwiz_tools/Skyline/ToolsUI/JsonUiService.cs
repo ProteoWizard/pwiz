@@ -341,12 +341,23 @@ namespace pwiz.Skyline.ToolsUI
             // desktop (disconnected Remote Desktop, locked workstation, etc.)
             // would short-circuit before form lookup and mask the real error.
             ValidateFormIdFormat(formId);
-            var form = InvokeOnUiThread(() => FindFormById(formId));
+            // MainWindow can be null mid-startup or mid-shutdown; if so we
+            // cannot Invoke at all. Surface the same unavailable message
+            // ScreenCapture.EnsurePermission would return in that case.
+            if (Program.MainWindow == null)
+                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
+            // First lookup is purely the input-validation throw; result is
+            // intentionally discarded. The capture closure below re-resolves
+            // the form so we do not depend on the reference surviving the
+            // pipe-thread work in CheckScreenCaptureAvailability (the user
+            // can close the form while permission is being checked).
+            InvokeOnUiThread(() => FindFormById(formId));
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
                 return denial;
             return InvokeOnUiThread(() =>
             {
+                var form = FindFormById(formId);
                 using (var bitmap = CaptureGrantedForm(form))
                 {
                     filePath = filePath ?? GetMcpTmpFilePath(
@@ -360,9 +371,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public static ImageBytesMetadata GetFormImageBytes(string formId)
         {
-            // See GetFormImage for the input-before-environment ordering rationale.
+            // See GetFormImage for the input-before-environment ordering,
+            // MainWindow-null guard, and re-resolve-in-capture rationale.
             ValidateFormIdFormat(formId);
-            var form = InvokeOnUiThread(() => FindFormById(formId));
+            if (Program.MainWindow == null)
+                return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };
+            InvokeOnUiThread(() => FindFormById(formId));
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
             {
@@ -374,6 +388,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             return InvokeOnUiThread(() =>
             {
+                var form = FindFormById(formId);
                 using (var bitmap = CaptureGrantedForm(form))
                 {
                     return new ImageBytesMetadata
