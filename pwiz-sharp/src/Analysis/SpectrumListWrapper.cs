@@ -13,6 +13,22 @@ public abstract class SpectrumListWrapper : SpectrumListBase
     /// <summary>The wrapped inner list.</summary>
     protected ISpectrumList Inner { get; }
 
+    /// <summary>The list at the bottom of any wrapper chain — i.e. the first ancestor
+    /// that isn't itself a <see cref="SpectrumListWrapper"/>. Wrappers expose this so
+    /// capability dispatch (e.g. <see cref="Pwiz.Data.MsData.Spectra.IIonMobilitySpectrumList"/>
+    /// detection) can reach the vendor list under any stack of wrappers. Mirrors cpp
+    /// <c>SpectrumListWrapper::innermost()</c>.</summary>
+    public ISpectrumList Innermost
+    {
+        get
+        {
+            ISpectrumList cur = Inner;
+            while (cur is SpectrumListWrapper w)
+                cur = w.Inner;
+            return cur;
+        }
+    }
+
     /// <summary>Creates a wrapper around <paramref name="inner"/>.</summary>
     /// <remarks>
     /// Disposing this wrapper cascades disposal to <see cref="Inner"/>. When you need

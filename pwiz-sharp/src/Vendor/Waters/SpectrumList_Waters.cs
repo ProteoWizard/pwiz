@@ -14,7 +14,7 @@ namespace Pwiz.Vendor.Waters;
 /// (or per drift bin when ion mobility is enabled). Phase 1 of the port: no IMS, no DDA, no
 /// lockmass. Mirrors pwiz C++ <c>SpectrumList_Waters</c>.
 /// </summary>
-public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSpectrumList, IIonMobilityCcsConversion
+public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSpectrumList, IIonMobilityCcsConversion, IIonMobilitySpectrumList, IWatersSonarSpectrumList
 {
     private readonly WatersRawFile _data;
 
@@ -290,6 +290,19 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     /// <inheritdoc/>
     public double CcsToIonMobility(double ccs, double mz, int charge) =>
         _data.CcsToDriftTime((float)ccs, (float)mz, charge);
+
+    /// <inheritdoc cref="IIonMobilitySpectrumList.IonMobilityUnits"/>
+    /// <remarks>SONAR functions hijack the IM slot for m/z filtering, so SONAR data
+    /// reports <see cref="IonMobilityUnits.WatersSonar"/>; pure IM data reports
+    /// <see cref="IonMobilityUnits.DriftTimeMsec"/>; non-IM Waters data reports
+    /// <see cref="IonMobilityUnits.None"/>.</remarks>
+    public IonMobilityUnits IonMobilityUnits =>
+        HasSonarFunctions ? IonMobilityUnits.WatersSonar
+        : HasIonMobility ? IonMobilityUnits.DriftTimeMsec
+        : IonMobilityUnits.None;
+
+    /// <inheritdoc/>
+    public bool IsWatersSonar => HasSonarFunctions;
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData) =>

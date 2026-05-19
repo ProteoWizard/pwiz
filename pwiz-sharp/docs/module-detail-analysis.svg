@@ -223,9 +223,9 @@
 <!-- n_analysis__spectrum_processing__SpectrumList_IonMobility -->
 <g id="node14" class="node">
 <title>n_analysis__spectrum_processing__SpectrumList_IonMobility</title>
-<g id="a_node14"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/spectrum_processing/SpectrumList_IonMobility.cpp" xlink:title="Ion&#45;mobility CCS calculator filter. NOT YET PORTED — needs to be ported once an ion&#45;mobility&#45;capable vendor reader needs it; the vendor reader implementations themselves wire in the CCS conversion." target="_blank">
-<path fill="#f5a8a8" stroke="#a02020" d="M1823.62,-1181C1823.62,-1181 1718.38,-1181 1718.38,-1181 1712.38,-1181 1706.38,-1175 1706.38,-1169 1706.38,-1169 1706.38,-1157 1706.38,-1157 1706.38,-1151 1712.38,-1145 1718.38,-1145 1718.38,-1145 1823.62,-1145 1823.62,-1145 1829.62,-1145 1835.62,-1151 1835.62,-1157 1835.62,-1157 1835.62,-1169 1835.62,-1169 1835.62,-1175 1829.62,-1181 1823.62,-1181"/>
-<text xml:space="preserve" text-anchor="middle" x="1771" y="-1160.62" font-family="Segoe UI" font-size="10.00" fill="#3d0a0a">SpectrumList_IonMobility</text>
+<g id="a_node14"><a xlink:href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/analysis/spectrum_processing/SpectrumList_IonMobility.cpp" xlink:title="Unified IM/CCS wrapper across vendors + mzML re&#45;read. Ported as Analysis/SpectrumList_IonMobility.cs. Dispatches through MsData/IIonMobilitySpectrumList (units + combined&#45;IM + SONAR flag) and MsData/IIonMobilityCcsConversion (CCS dispatch), with an mzML CV&#45;param sniff fallback. Waters implements both interfaces today; Agilent / Bruker / Mobilion / Thermo / UIMF plumb in via the same interfaces as their workflows land — the wrapper transparently uses the mzML sniff path until they do." target="_blank">
+<path fill="#9ee5a3" stroke="#2c7a32" d="M1823.62,-1181C1823.62,-1181 1718.38,-1181 1718.38,-1181 1712.38,-1181 1706.38,-1175 1706.38,-1169 1706.38,-1169 1706.38,-1157 1706.38,-1157 1706.38,-1151 1712.38,-1145 1718.38,-1145 1718.38,-1145 1823.62,-1145 1823.62,-1145 1829.62,-1145 1835.62,-1151 1835.62,-1157 1835.62,-1157 1835.62,-1169 1835.62,-1169 1835.62,-1175 1829.62,-1181 1823.62,-1181"/>
+<text xml:space="preserve" text-anchor="middle" x="1771" y="-1160.62" font-family="Segoe UI" font-size="10.00" fill="#0a3d10">SpectrumList_IonMobility</text>
 </a>
 </g>
 </g>
