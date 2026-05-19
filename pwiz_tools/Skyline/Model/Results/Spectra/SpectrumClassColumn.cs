@@ -299,6 +299,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return null;
         }
         
+        /// <summary>
+        /// Returns a list of the dissociation methods for the spectrum. This will typically be one dissociation method per MS Level.
+        /// So, if the MS1 dissociation method was CID and the MS2 dissociation method was HCD, this would return ["CID", "HCD"]
+        /// If the MS1 and MS2 levels both had "CID" dissociation method, then this would return ["CID", "CID"].
+        /// In the rare situation where a particular MS Level had more than one dissociation method, the list returned would be a flattened list
+        /// of the unique dissociation methods found at each level.
+        /// </summary>
         private static ListColumnValue<string> GetDissociationMethod(SpectrumMetadata spectrumMetadata)
         {
             if (spectrumMetadata.MsLevel <= 1)
@@ -314,15 +321,19 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return ListColumnValue.FromItems(dissociationMethods);
         }
 
+
+        /// <summary>
+        /// Returns a list of the unique values of a property at each MS Level.
+        /// </summary>
         private static IList<T> GetMsLevelValues<T>(SpectrumMetadata spectrumMetadata,
             Func<SpectrumPrecursor, T> getValueFunc)
         {
             return Enumerable.Range(1, spectrumMetadata.MsLevel - 1)
                 .Select(level =>
                     spectrumMetadata.GetPrecursors(level).Select(getValueFunc).Where(value =>
-                        value is string str ? !string.IsNullOrEmpty(str) : value != null))
+                            value is string str ? !string.IsNullOrEmpty(str) : value != null)
+                        .Distinct())
                 .SelectMany(list => list)
-                .Distinct()
                 .ToList();
         }
 

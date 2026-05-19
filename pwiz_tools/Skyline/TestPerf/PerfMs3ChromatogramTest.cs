@@ -18,6 +18,9 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -47,6 +50,16 @@ namespace TestPerf
             var precursor = peptide.TransitionGroups.First();
             var transitionGroupChromInfo = precursor.Results[0].First();
             Assert.IsTrue(transitionGroupChromInfo.Area > 0);
+            var resultFileMetadata = SkylineWindow.Document.Settings.MeasuredResults.GetResultFileMetadatas().Values.First();
+            foreach (var spectrum in resultFileMetadata.SpectrumMetadatas)
+            {
+                if (spectrum.MsLevel == 3)
+                {
+                    var actualDissociationMethods = TextUtil.SpaceSeparate(
+                        ((ListColumnValue<string>)SpectrumClassColumn.DissociationMethod.GetValue(spectrum)).Items);
+                    Assert.AreEqual(actualDissociationMethods, "HCD CID", "Mismatch at spectrum {0}", spectrum.Id);
+                }
+            }
         }
     }
 }
