@@ -135,6 +135,12 @@ namespace pwiz.Skyline.Model.Databinding
             }, threadName:nameof(PopulateChunk));
         }
 
+        public static IEnumerable<string> MakeValidColumnNames(IEnumerable<string> columnNames)
+        {
+            var usedColumnNames = new HashSet<string>();
+            return columnNames.Select(name => MakeUniqueColumnName(name, usedColumnNames));
+        }
+
         private string GetUniqueColumnName(PropertyDescriptor propertyDescriptor, HashSet<string> usedColumnNames)
         {
             // Get the display name from DisplayNameAttribute, or fall back to property name
@@ -144,9 +150,14 @@ namespace pwiz.Skyline.Model.Databinding
                 baseName = propertyDescriptor.Name;
             }
 
+            return MakeUniqueColumnName(baseName, usedColumnNames);
+        }
+
+        private static string MakeUniqueColumnName(string name, HashSet<string> usedColumnNames)
+        {
             // Sanitize the column name - replace illegal characters with underscores
             // Parquet column names should be valid identifiers (alphanumeric and underscore)
-            var sanitized = SanitizeColumnName(baseName);
+            var sanitized = SanitizeColumnName(name);
 
             // Ensure uniqueness by appending a number if needed
             string uniqueName = Helpers.GetUniqueName(sanitized, usedColumnNames);
@@ -154,7 +165,7 @@ namespace pwiz.Skyline.Model.Databinding
             return uniqueName;
         }
 
-        private string SanitizeColumnName(string name)
+        private static string SanitizeColumnName(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
