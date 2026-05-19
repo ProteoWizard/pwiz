@@ -45,10 +45,12 @@ public readonly record struct DemuxWindow(long MzLow, long MzHigh) : IComparable
     /// <inheritdoc/>
     public int CompareTo(DemuxWindow other) => MzLow.CompareTo(other.MzLow);
 
+#pragma warning disable CS1591 // comparison operators delegate to CompareTo; docs would just restate the operator
     public static bool operator <(DemuxWindow a, DemuxWindow b) => a.CompareTo(b) < 0;
     public static bool operator >(DemuxWindow a, DemuxWindow b) => a.CompareTo(b) > 0;
     public static bool operator <=(DemuxWindow a, DemuxWindow b) => a.CompareTo(b) <= 0;
     public static bool operator >=(DemuxWindow a, DemuxWindow b) => a.CompareTo(b) >= 0;
+#pragma warning restore CS1591
 }
 
 /// <summary>
@@ -71,10 +73,12 @@ public readonly record struct DemuxIsolationWindow(double LowMz, double HighMz, 
     /// <inheritdoc/>
     public int CompareTo(DemuxIsolationWindow other) => Window.CompareTo(other.Window);
 
+#pragma warning disable CS1591 // comparison operators delegate to CompareTo; docs would just restate the operator
     public static bool operator <(DemuxIsolationWindow a, DemuxIsolationWindow b) => a.CompareTo(b) < 0;
     public static bool operator >(DemuxIsolationWindow a, DemuxIsolationWindow b) => a.CompareTo(b) > 0;
     public static bool operator <=(DemuxIsolationWindow a, DemuxIsolationWindow b) => a.CompareTo(b) <= 0;
     public static bool operator >=(DemuxIsolationWindow a, DemuxIsolationWindow b) => a.CompareTo(b) >= 0;
+#pragma warning restore CS1591
 }
 
 /// <summary>

@@ -40,5 +40,5 @@ public interface IProcessing
 public static class ProcessingFactory
 {
     /// <summary>Always returns null in the stub.</summary>
-    public static IProcessing? ParseArgument(string arg) { _ = arg; return null; }
+    public static IProcessing ParseArgument(string arg) { _ = arg; return null; }
 }

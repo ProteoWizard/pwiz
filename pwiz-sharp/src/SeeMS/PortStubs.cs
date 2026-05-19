@@ -25,7 +25,15 @@ public sealed class SpectrumProcessingForm : ManagedDockableForm
         public Scope ChangeScope { get; set; }
         public MassSpectrum Spectrum { get; set; }
     }
-    public event EventHandler<ProcessingChangedEventArgs> ProcessingChanged;
+    // Explicit accessor form (the field-like form trips CS0067 because the stub never
+    // raises). Manager.cs subscribes; the real (excluded) Dialogs/SpectrumProcessingForm.cs
+    // raises via OnProcessingChanged once it's back in the build.
+    private EventHandler<ProcessingChangedEventArgs> _processingChanged;
+    public event EventHandler<ProcessingChangedEventArgs> ProcessingChanged
+    {
+        add => _processingChanged += value;
+        remove => _processingChanged -= value;
+    }
     public IList<MassSpectrum> SpectrumList { get; } = new List<MassSpectrum>();
     public IList<IProcessing> SpectrumProcessing { get; } = new List<IProcessing>();
     public IList<IProcessing> GlobalProcessing { get; } = new List<IProcessing>();
@@ -48,7 +56,13 @@ public sealed class SpectrumAnnotationForm : ManagedDockableForm
     {
         public MassSpectrum Spectrum { get; set; }
     }
-    public event EventHandler<AnnotationChangedEventArgs> AnnotationChanged;
+    // See SpectrumProcessingForm.ProcessingChanged for why this uses explicit accessors.
+    private EventHandler<AnnotationChangedEventArgs> _annotationChanged;
+    public event EventHandler<AnnotationChangedEventArgs> AnnotationChanged
+    {
+        add => _annotationChanged += value;
+        remove => _annotationChanged -= value;
+    }
     public IList<MassSpectrum> SpectrumList { get; } = new List<MassSpectrum>();
     public IList<IAnnotation> Annotations { get; } = new List<IAnnotation>();
     public MassSpectrum CurrentSpectrum { get; set; }

@@ -36,5 +36,5 @@ public interface IAnnotation
 public static class AnnotationFactory
 {
     /// <summary>Always returns null in the stub.</summary>
-    public static IAnnotation? ParseArgument(string arg) { _ = arg; return null; }
+    public static IAnnotation ParseArgument(string arg) { _ = arg; return null; }
 }

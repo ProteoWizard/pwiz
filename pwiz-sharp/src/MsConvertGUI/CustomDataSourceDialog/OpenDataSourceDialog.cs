@@ -32,6 +32,32 @@ namespace CustomDataSourceDialog
 {
     public partial class OpenDataSourceDialog : Form
     {
+        // FolderListIcons was originally populated by the WinForms designer via a
+        // BinaryFormatter-serialized ImageListStreamer in the .resx (MSB3825 in net8.0;
+        // BinaryFormatter is removed in .NET 9). The icons are now stored as individual
+        // embedded PNG resources under Resources/ and loaded here. Names + ordinals
+        // match the original ImageList.Images.SetKeyName order so existing callers
+        // (ImageIndex = N references in this file) keep their meaning.
+        private static readonly string[] s_folderIconNames =
+        {
+            "RecentDocuments", "Desktop", "MyDocuments", "MyComputer", "MyNetworkPlaces",
+            "LocalDrive", "OpticalDrive", "NetworkDrive", "folder", "DataProcessingFolder",
+            "DataProcessing"
+        };
+
+        private void FolderListIcons_Load()
+        {
+            var assembly = typeof(OpenDataSourceDialog).Assembly;
+            foreach (string name in s_folderIconNames)
+            {
+                string resourceName = $"CustomDataSourceDialog.Resources.{name}.png";
+                using Stream stream = assembly.GetManifestResourceStream(resourceName)
+                    ?? throw new InvalidOperationException(
+                        $"Embedded resource '{resourceName}' not found — was it added to the csproj?");
+                this.FolderListIcons.Images.Add(name + ".png", Image.FromStream(stream));
+            }
+        }
+
         private BreadCrumbControl BreadCrumbs = null;
         private List<string> _historyQueue;
         private List<ListViewItem> _unfilteredItems;
