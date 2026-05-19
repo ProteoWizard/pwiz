@@ -335,13 +335,18 @@ namespace pwiz.Skyline.ToolsUI
 
         public static string GetFormImage(string formId, string filePath)
         {
+            // Validate inputs (format + existence) before any environment check,
+            // so a bad formId throws ArgumentException regardless of whether
+            // screen capture is currently available. Otherwise an unavailable
+            // desktop (disconnected Remote Desktop, locked workstation, etc.)
+            // would short-circuit before form lookup and mask the real error.
             ValidateFormIdFormat(formId);
+            var form = InvokeOnUiThread(() => FindFormById(formId));
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
                 return denial;
             return InvokeOnUiThread(() =>
             {
-                var form = FindFormById(formId);
                 using (var bitmap = CaptureGrantedForm(form))
                 {
                     filePath = filePath ?? GetMcpTmpFilePath(
@@ -355,7 +360,9 @@ namespace pwiz.Skyline.ToolsUI
 
         public static ImageBytesMetadata GetFormImageBytes(string formId)
         {
+            // See GetFormImage for the input-before-environment ordering rationale.
             ValidateFormIdFormat(formId);
+            var form = InvokeOnUiThread(() => FindFormById(formId));
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
             {
@@ -367,7 +374,6 @@ namespace pwiz.Skyline.ToolsUI
             }
             return InvokeOnUiThread(() =>
             {
-                var form = FindFormById(formId);
                 using (var bitmap = CaptureGrantedForm(form))
                 {
                     return new ImageBytesMetadata
