@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Bruker.PrmScheduling</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Bruker.PrmScheduling</AssemblyName>
+    <Description>Bruker timsTOF PRM scheduling. P/Invoke bindings for Bruker's native prmscheduler.dll (shipped with pwiz at pwiz/utility/bindings/CLI/timstof_prm_scheduler/x64/). Managed replacement for the legacy C++/CLI pwiz.CLI.Bruker.PrmScheduling assembly so Skyline can consume the same API on .NET 8.</Description>
+
+    <!-- CS1591: The lowercase snake_case properties intentionally mirror the C++/CLI surface
+         that Skyline already calls into (isolation_mz, one_over_k0_lower_limit, etc.); they
+         deliberately violate naming conventions and would otherwise drown the build in
+         CA1707 / IDE1006 warnings. -->
+    <NoWarn>$(NoWarn);CA1707;IDE1006</NoWarn>
+  </PropertyGroup>
+
+  <!-- Bruker ships prmscheduler.dll inside the pwiz repo (x64 build). Copy it next to the
+       output assembly so consumers (Skyline, tests) can resolve the P/Invoke target without
+       needing to install Bruker's SDK separately. The cpp side does the same — see
+       pwiz/utility/bindings/CLI/timstof_prm_scheduler/Jamfile.jam. -->
+  <ItemGroup>
+    <Content Include="..\..\..\..\pwiz\utility\bindings\CLI\timstof_prm_scheduler\x64\prmscheduler.dll">
+      <Link>prmscheduler.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>

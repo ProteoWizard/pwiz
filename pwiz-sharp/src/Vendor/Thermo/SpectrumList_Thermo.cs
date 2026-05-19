@@ -34,6 +34,16 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
     /// trailer params — too expensive at construction time. The per-spectrum
     /// FAIMS-on check happens at <c>GetSpectrum</c> time and sets
     /// <c>MS_FAIMS_compensation_voltage</c> on the scan when present.</summary>
+    /// <remarks>
+    /// TODO: there's probably a way to check this without walking every scan — most
+    /// likely the file-level instrument-method text (the Thermo SDK exposes it via
+    /// <c>IRawDataPlus.GetInstrumentMethod</c>) mentions "FAIMS" iff the run was
+    /// configured with the device, and the run header / sample info tables may carry
+    /// a direct "FAIMSCV" indicator. Worth a short investigation when a non-FAIMS-
+    /// Thermo caller hits the false-positive Units = CompensationV reporting.
+    /// Until then we ship cpp's hardcoded-true behavior so callers see identical
+    /// answers between cpp pwiz and pwiz-sharp.
+    /// </remarks>
 #pragma warning disable CA1822 // public instance property for cross-vendor consistency; cpp returns true unconditionally too
     public bool HasIonMobility => true;
 #pragma warning restore CA1822
