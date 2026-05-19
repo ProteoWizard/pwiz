@@ -47,7 +47,15 @@ namespace pwiz.SkylineTestFunctional
                     dlg.OkDialog();
                 });
             Assert.AreEqual(14, SkylineWindow.Document.PeptideCount);
-            Assert.AreNotEqual(1, SkylineWindow.Document.Peptides.First().TransitionGroupCount);
+            foreach (var peptide in SkylineWindow.Document.Peptides)
+            {
+                AssertEx.AreEqual(16, peptide.TransitionGroupCount);
+                var filters = peptide.TransitionGroups
+                    .Select(tg => tg.SpectrumClassFilter)
+                    .ToList();
+                AssertEx.IsTrue(filters.All(f => !f.IsEmpty));
+                AssertEx.AreEqual(16, filters.Distinct().Count());
+            }
         }
     }
 }

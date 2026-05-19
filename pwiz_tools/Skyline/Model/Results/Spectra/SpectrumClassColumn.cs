@@ -319,9 +319,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         {
             return Enumerable.Range(1, spectrumMetadata.MsLevel - 1)
                 .Select(level =>
-                    spectrumMetadata.GetPrecursors(level).Select(getValueFunc).Where(value => null != value))
+                    spectrumMetadata.GetPrecursors(level).Select(getValueFunc).Where(value =>
+                        value is string str ? !string.IsNullOrEmpty(str) : value != null))
+                .SelectMany(list => list)
                 .Distinct()
-                .SelectMany(list => list).ToList();
+                .ToList();
         }
 
         /// <summary>
