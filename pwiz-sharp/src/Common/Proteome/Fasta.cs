@@ -94,6 +94,67 @@ public static class Fasta
         return Read(fs, id: Path.GetFileNameWithoutExtension(path));
     }
 
+    /// <summary>Opens <paramref name="path"/> for lazy per-protein access. The returned
+    /// <see cref="ProteomeData.ProteinList"/> is a <see cref="FastaProteinList"/> that
+    /// holds the file handle open until disposed; seek/parse one record per
+    /// <see cref="ProteinList.GetProtein"/> call. Suitable for huge FASTA databases
+    /// where you only need a few proteins.</summary>
+    /// <param name="path">Path to a FASTA file.</param>
+    /// <param name="useDiskIndex">When true, persist the index to a <c>.index</c> sidecar
+    /// next to the FASTA file (via <see cref="Pwiz.Data.Common.Index.BinaryIndexStream"/>).
+    /// Subsequent opens with the same sidecar avoid re-scanning the FASTA. When false
+    /// (default), use an in-memory index built once per open.</param>
+    public static ProteomeData OpenLazy(string path, bool useDiskIndex = false)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        if (!File.Exists(path)) throw new FileNotFoundException("FASTA file not found", path);
+
+        Pwiz.Data.Common.Index.IIndex index = useDiskIndex
+            ? OpenOrCreateDiskIndex(path)
+            : BuildMemoryIndex(path);
+        // FileStream stays open for the lifetime of the list.
+        var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
+                                bufferSize: 1 << 16, FileOptions.RandomAccess);
+        var list = new FastaProteinList(fs, index, ownsFile: true);
+        return new ProteomeData
+        {
+            Id = Path.GetFileNameWithoutExtension(path),
+            ProteinList = list,
+        };
+    }
+
+    private static Pwiz.Data.Common.Index.MemoryIndex BuildMemoryIndex(string path)
+    {
+        using var fs = File.OpenRead(path);
+        var entries = FastaProteinList.BuildIndex(fs);
+        var idx = new Pwiz.Data.Common.Index.MemoryIndex();
+        idx.Create(entries);
+        return idx;
+    }
+
+    private static Pwiz.Data.Common.Index.BinaryIndexStream OpenOrCreateDiskIndex(string path)
+    {
+        string sidecarPath = path + ".index";
+        // Existing sidecar — open R/W (so MemoryIndex-or-rebuild logic can decide whether
+        // it's stale and replace). For this initial port we assume a sidecar with N>0 entries
+        // is fresh; cpp's SHA-1 + file-size staleness check is a follow-up.
+        if (File.Exists(sidecarPath))
+        {
+            var rwStream = new FileStream(sidecarPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
+            var idx = new Pwiz.Data.Common.Index.BinaryIndexStream(rwStream, leaveOpen: false);
+            if (idx.Count > 0) return idx;
+            // Empty sidecar — fall through to build a fresh one (close + truncate).
+            idx.Dispose();
+        }
+        // Build the index from the FASTA, then write it to the sidecar.
+        List<Pwiz.Data.Common.Index.IndexEntry> entries;
+        using (var fs = File.OpenRead(path)) entries = FastaProteinList.BuildIndex(fs);
+        var sidecar = new FileStream(sidecarPath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+        var bis = new Pwiz.Data.Common.Index.BinaryIndexStream(sidecar, leaveOpen: false);
+        bis.Create(entries);
+        return bis;
+    }
+
     /// <summary>Writes <paramref name="pd"/> to <paramref name="stream"/> as FASTA.
     /// Each protein becomes <c>"&gt;id description\nsequence\n"</c> — sequence is
     /// emitted on a single line (cpp does the same; FASTA readers tolerate either

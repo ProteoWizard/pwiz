@@ -113,7 +113,13 @@ public sealed class ProteinListSimple : ProteinList
 /// Top-level container for a protein database. Mirrors the MSData shape from
 /// <c>Pwiz.Data.MsData</c>: one id + one list. Port of <c>pwiz::proteome::ProteomeData</c>.
 /// </summary>
-public sealed class ProteomeData
+/// <remarks>
+/// <see cref="IDisposable"/> so callers using lazy-backed protein lists (e.g.
+/// <see cref="Fasta.OpenLazy"/>) can scope ownership with <c>using var</c>. Dispose
+/// is forwarded to the inner <see cref="ProteinList"/> when it implements
+/// <see cref="IDisposable"/>; no-op for in-memory <see cref="ProteinListSimple"/>.
+/// </remarks>
+public sealed class ProteomeData : IDisposable
 {
     /// <summary>Document id (typically the source filename's stem).</summary>
     public string Id { get; set; } = string.Empty;
@@ -123,4 +129,10 @@ public sealed class ProteomeData
 
     /// <summary>True iff the document carries no proteins.</summary>
     public bool IsEmpty => ProteinList is null || ProteinList.IsEmpty;
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (ProteinList is IDisposable d) d.Dispose();
+    }
 }
