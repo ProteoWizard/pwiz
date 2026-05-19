@@ -137,8 +137,28 @@ namespace pwiz.OspreySharp.Scoring
                 return;
             }
 
-            float[] pre = PreprocessSpectrumForXcorrF32(spectrum);
-            Array.Copy(pre, output, n);
+            // True scratch-pool path: use the rented XcorrScratch's f32
+            // companion buffers for the intermediate binned / windowed /
+            // prefix arrays, write the final preprocessed spectrum
+            // directly into `output`. No per-call allocation, no copy.
+            //
+            // Fallback: if no scratch was passed in, allocate as before.
+            // The fallback exists only for safety and code that hasn't
+            // been migrated; the HRAM per-window path (the hot one)
+            // always supplies scratch.
+            if (scratch != null && scratch.BinnedF.Length >= n)
+            {
+                // BinnedF accumulates via +=, so zero it per spectrum.
+                Array.Clear(scratch.BinnedF, 0, n);
+                PreprocessSpectrumForXcorrF32IntoBuffers(
+                    spectrum, n, scratch.BinnedF, scratch.WindowedF,
+                    scratch.PrefixF, output);
+            }
+            else
+            {
+                float[] pre = PreprocessSpectrumForXcorrF32(spectrum);
+                Array.Copy(pre, output, n);
+            }
         }
 
         /// <summary>
@@ -492,7 +512,19 @@ namespace pwiz.OspreySharp.Scoring
             float[] windowed = new float[n];
             float[] prefix = new float[n + 1];
             float[] preprocessed = new float[n];
+            PreprocessSpectrumForXcorrF32IntoBuffers(
+                spectrum, n, binned, windowed, prefix, preprocessed);
+            return preprocessed;
+        }
 
+        // Body of the f32 preprocessing pipeline, parameterized over
+        // pre-allocated work buffers. Caller is responsible for zeroing
+        // `binned` (this method accumulates into it via +=). The other
+        // buffers are fully overwritten.
+        private void PreprocessSpectrumForXcorrF32IntoBuffers(
+            Spectrum spectrum, int n,
+            float[] binned, float[] windowed, float[] prefix, float[] preprocessed)
+        {
             for (int i = 0; i < spectrum.Mzs.Length; i++)
             {
                 int bin = _binConfig.MzToBin(spectrum.Mzs[i]);
@@ -501,7 +533,6 @@ namespace pwiz.OspreySharp.Scoring
             }
             ApplyWindowingNormalizationF(binned, windowed);
             ApplySlidingWindowF(windowed, prefix, preprocessed);
-            return preprocessed;
         }
 
         private static void ApplyWindowingNormalizationF(float[] spectrum, float[] result)

@@ -44,6 +44,16 @@ namespace pwiz.OspreySharp.Scoring
         public readonly double[] Preprocessed;  // NBins, fully overwritten, no zeroing needed
         public readonly bool[] VisitedBins;     // NBins, touched at fragment positions, needs zeroing on return
 
+        // f32 companion buffers for the HRAM preprocess-into path
+        // (SpectralScorer.PreprocessSpectrumForXcorrInto). One scratch
+        // is rented per WINDOW and reused across all spectra in the
+        // window, so BinnedF must be zeroed by the caller PER SPECTRUM
+        // (it accumulates via +=); the others are fully overwritten and
+        // need no zeroing between spectra.
+        public readonly float[] BinnedF;        // NBins, accumulated via +=, caller zeros per spectrum
+        public readonly float[] WindowedF;      // NBins, fully overwritten
+        public readonly float[] PrefixF;        // NBins+1, fully overwritten
+
         public XcorrScratch(int nBins)
         {
             Binned = new double[nBins];
@@ -51,6 +61,10 @@ namespace pwiz.OspreySharp.Scoring
             Prefix = new double[nBins + 1];
             Preprocessed = new double[nBins];
             VisitedBins = new bool[nBins];
+
+            BinnedF = new float[nBins];
+            WindowedF = new float[nBins];
+            PrefixF = new float[nBins + 1];
         }
     }
 
@@ -108,6 +122,8 @@ namespace pwiz.OspreySharp.Scoring
                 return;
             Array.Clear(s.Binned, 0, s.Binned.Length);
             Array.Clear(s.VisitedBins, 0, s.VisitedBins.Length);
+            // BinnedF is zeroed by callers on each preprocess call so it does
+            // not need post-window zeroing here (would just duplicate work).
             _scratchBag.Add(s);
         }
 

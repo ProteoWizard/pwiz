@@ -204,6 +204,30 @@ namespace pwiz.OspreySharp.Tasks
             // preserve the valid sidecars for already-rescored files and
             // only invalidate the file(s) about to be re-rescored.
 
+            // Join file stems for the reconciled parquet metadata hash.
+            // In the in-process pipeline _perFileEntries has every file in
+            // the run; in worker mode (--join-at-pass=1 --no-join) it has
+            // a single file and the planner's full set comes from
+            // RescoreInputs.JoinFileStems (read from reconciliation.json
+            // v2+). Pass _perFileEntries keys when there's more than one;
+            // else fall through to the bundle's JoinFileStems. Null /
+            // empty means "let ExecuteRescore fall back to the
+            // InputFiles-derived hash" (preserves v1 behavior).
+            IReadOnlyList<string> joinFileStems = null;
+            if (_perFileEntries != null && _perFileEntries.Count > 1)
+            {
+                var stems = new List<string>(_perFileEntries.Count);
+                foreach (var kv in _perFileEntries)
+                    stems.Add(kv.Key);
+                joinFileStems = stems;
+            }
+            else if (rescoreBundle != null
+                     && rescoreBundle.JoinFileStems != null
+                     && rescoreBundle.JoinFileStems.Count > 0)
+            {
+                joinFileStems = rescoreBundle.JoinFileStems;
+            }
+
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
                 firstJoin.GetPerFileConsensusTargets(ctx),
@@ -213,7 +237,8 @@ namespace pwiz.OspreySharp.Tasks
                 firstJoin.GetPerFileGapFillForRescore(ctx),
                 perFileScoring.GetPerFileParquetPaths(ctx),
                 perFileScoring.GetFullLibrary(ctx),
-                ctx.Config);
+                ctx.Config,
+                joinFileStems);
             ctx.LogInfo(string.Format(
                 @"Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
                 rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
@@ -267,7 +292,8 @@ namespace pwiz.OspreySharp.Tasks
         /// Mirrors Rust pipeline.rs:3050-3110.
         /// </summary>
         private void WriteReconciledParquet(string parquetPath, List<FdrEntry> fdrEntries,
-            string fileName, List<LibraryEntry> fullLibrary, OspreyConfig config)
+            string fileName, List<LibraryEntry> fullLibrary, OspreyConfig config,
+            IReadOnlyList<string> joinFileStems)
         {
             // 1. Reload the original parquet's per-row state.
             List<FdrEntry> fullEntries;
@@ -336,13 +362,27 @@ namespace pwiz.OspreySharp.Tasks
             // 5. Reconciliation metadata (mirrors Rust
             //    build_reconciled_metadata). osprey.version is what the
             //    next reload's CacheValidity check compares against.
+            //    The reconciliation_hash must be the JOIN-wide hash
+            //    (over every file in the planner step), not the worker's
+            //    single-file InputFiles hash; without that, a worker
+            //    rescoring a single parquet stamps a single-file hash
+            //    that the downstream --join-at-pass=2 merge node rejects
+            //    on hash mismatch. The join file stems come from the
+            //    planner's reconciliation.json (v2+) via
+            //    RescoreInputs.JoinFileStems; fall back to config-derived
+            //    stems when the caller didn't pass any (in-process
+            //    pipeline where config.InputFiles already has all files,
+            //    or v1 backward compat).
+            string reconciliationHash = (joinFileStems != null && joinFileStems.Count > 0)
+                ? config.ReconciliationParameterHashForStems(joinFileStems)
+                : config.ReconciliationParameterHash();
             var metadata = new Dictionary<string, string>
             {
                 { @"osprey.version", Program.VERSION },
                 { @"osprey.search_hash", config.SearchParameterHash() },
                 { @"osprey.library_hash", config.LibraryIdentityHash() },
                 { @"osprey.reconciled", @"true" },
-                { @"osprey.reconciliation_hash", config.ReconciliationParameterHash() },
+                { @"osprey.reconciliation_hash", reconciliationHash },
             };
 
             try
@@ -395,7 +435,8 @@ namespace pwiz.OspreySharp.Tasks
             IReadOnlyDictionary<string, List<GapFillTarget>> perFileGapFill,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
-            OspreyConfig config)
+            OspreyConfig config,
+            IReadOnlyList<string> joinFileStems = null)
         {
             // Pre-group reconciliation actions by file. Mirrors the Rust
             // pre-grouping at pipeline.rs:2719-2744 -- a single pass over
@@ -442,9 +483,12 @@ namespace pwiz.OspreySharp.Tasks
             // --input-scores parquet stems by Program.Main; for in-process,
             // it's the user's -i mzML list. Either way the stem matches
             // the file_name keys in perFileEntries.
-            var fileNameToIdx = new Dictionary<string, int>();
+            var fileNameToIdx = new Dictionary<string, int>(StringComparer.Ordinal);
             for (int i = 0; i < config.InputFiles.Count; i++)
-                fileNameToIdx[Path.GetFileNameWithoutExtension(config.InputFiles[i])] = i;
+            {
+                string stem = Path.GetFileNameWithoutExtension(config.InputFiles[i]) ?? string.Empty;
+                fileNameToIdx[stem] = i;
+            }
 
             int totalRescored = 0;
             int totalGapCwt = 0;
@@ -861,7 +905,7 @@ namespace pwiz.OspreySharp.Tasks
                     File.Exists(parquetPath))
                 {
                     WriteReconciledParquet(parquetPath, fdrEntries, fileName,
-                        fullLibrary, config);
+                        fullLibrary, config, joinFileStems);
 
                     // Per-file resume sidecar: write next to the
                     // reconciled parquet so a subsequent invocation with
@@ -937,8 +981,17 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Load MS2 + MS1 mass calibrations and the original Stage-4 RT
         /// calibration MAD from the sibling .calibration.json that
-        /// Stage 2 wrote. Returns uncalibrated results / null MAD if the
-        /// file is missing or the relevant section is absent.
+        /// Stage 2 wrote. Throws <see cref="InvalidDataException"/> if the
+        /// calibration sidecar is missing or unreadable -- Stage 6
+        /// requires the Stage 1-4 calibration to rescore, and silently
+        /// falling back to uncalibrated would mask a real configuration
+        /// error (the worker's output would diverge from the
+        /// straight-through pipeline's output). Mirrors the hard-error
+        /// behavior in Rust <c>run_rescore</c> at
+        /// <c>osprey/crates/osprey/src/rescore.rs</c>. Individual calibration
+        /// sections (Ms1Calibration / Ms2Calibration / RtMad) may still
+        /// be absent within the file; those leave the corresponding
+        /// out-param at its uncalibrated / null default.
         /// </summary>
         private void LoadMassCalibrations(string inputFile,
             out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
@@ -950,10 +1003,20 @@ namespace pwiz.OspreySharp.Tasks
 
             string parent = Path.GetDirectoryName(Path.GetFullPath(inputFile));
             if (string.IsNullOrEmpty(parent))
-                return;
+            {
+                throw new InvalidDataException(string.Format(
+                    "LoadMassCalibrations: cannot derive sidecar directory from input path `{0}`. " +
+                    "Stage 6 needs to read the Stage 1-4 calibration sidecar; without it the " +
+                    "worker would silently produce uncalibrated rescore output.", inputFile));
+            }
             string calPath = CalibrationIO.CalibrationPathForInput(inputFile, parent);
             if (!File.Exists(calPath))
-                return;
+            {
+                throw new InvalidDataException(string.Format(
+                    "LoadMassCalibrations: required calibration JSON not found at `{0}` " +
+                    "(input file: `{1}`). Stage 6 needs the Stage 1-4 calibration sidecar to " +
+                    "rescore. Run Stages 1-4 first or fix the path.", calPath, inputFile));
+            }
 
             CalibrationParams calParams;
             try
@@ -962,9 +1025,10 @@ namespace pwiz.OspreySharp.Tasks
             }
             catch (Exception ex)
             {
-                _ctx.LogWarning(string.Format(
-                    "Failed to load calibration JSON {0}: {1}", calPath, ex.Message));
-                return;
+                throw new InvalidDataException(string.Format(
+                    "LoadMassCalibrations: failed to read calibration JSON `{0}`: {1}. The file " +
+                    "exists but could not be parsed -- check that it was written by a matching " +
+                    "OspreySharp version.", calPath, ex.Message), ex);
             }
 
             if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)

@@ -406,8 +406,14 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestCalibrationFilenameForInput()
         {
+            // Use Path.Combine for the directory-prefixed case so the test
+            // runs on both Windows (\) and Linux (/). Path.GetFileNameWithoutExtension
+            // only recognizes its host OS's separator, so a hard-coded
+            // Windows literal would fail under Linux/WSL even though the
+            // production code handles either OS correctly given an
+            // OS-native input path.
             Assert.AreEqual("sample.calibration.json",
-                CalibrationIO.CalibrationFilenameForInput(@"C:\data\sample.mzML"));
+                CalibrationIO.CalibrationFilenameForInput(Path.Combine("data", "sample.mzML")));
             Assert.AreEqual("test.dia.calibration.json",
                 CalibrationIO.CalibrationFilenameForInput("test.dia.mzML"));
             Assert.AreEqual("experiment.calibration.json",
