@@ -285,6 +285,11 @@ namespace pwiz.Skyline.ToolsUI
 
         public static string GetGraphImage(string graphId, string filePath)
         {
+            string denial = CheckImageToolPreflight(graphId,
+                () => EnsureGraphForm(graphId, out _, out _),
+                requiresScreenCapture: false);
+            if (denial != null)
+                return denial;
             return InvokeOnUiThread(() =>
             {
                 using (var bitmap = RenderGraphBitmap(graphId, out var form))
@@ -304,6 +309,11 @@ namespace pwiz.Skyline.ToolsUI
 
         public static ImageBytesMetadata GetGraphImageBytes(string graphId)
         {
+            string denial = CheckImageToolPreflight(graphId,
+                () => EnsureGraphForm(graphId, out _, out _),
+                requiresScreenCapture: false);
+            if (denial != null)
+                return new ImageBytesMetadata { Message = denial };
             return InvokeOnUiThread(() =>
             {
                 using (var bitmap = RenderGraphBitmap(graphId, out var form))
@@ -335,28 +345,17 @@ namespace pwiz.Skyline.ToolsUI
 
         public static string GetFormImage(string formId, string filePath)
         {
-            // Validate inputs (format + existence) before any environment check,
-            // so a bad formId throws ArgumentException regardless of whether
-            // screen capture is currently available. Otherwise an unavailable
-            // desktop (disconnected Remote Desktop, locked workstation, etc.)
-            // would short-circuit before form lookup and mask the real error.
-            ValidateFormIdFormat(formId);
-            // MainWindow can be null mid-startup or mid-shutdown; if so we
-            // cannot Invoke at all. Surface the same unavailable message
-            // ScreenCapture.EnsurePermission would return in that case.
-            if (Program.MainWindow == null)
-                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
-            // First lookup is purely the input-validation throw; result is
-            // intentionally discarded. The capture closure below re-resolves
-            // the form so we do not depend on the reference surviving the
-            // pipe-thread work in CheckScreenCaptureAvailability (the user
-            // can close the form while permission is being checked).
-            InvokeOnUiThread(() => FindFormById(formId));
-            string denial = CheckScreenCaptureAvailability();
+            string denial = CheckImageToolPreflight(formId,
+                () => FindFormById(formId),
+                requiresScreenCapture: true);
             if (denial != null)
                 return denial;
             return InvokeOnUiThread(() =>
             {
+                // Re-resolve the form on the UI thread so a close during the
+                // pipe-thread work in CheckScreenCaptureAvailability surfaces
+                // as the same "form not found" ArgumentException as a bad
+                // formId, not as ObjectDisposedException during capture.
                 var form = FindFormById(formId);
                 using (var bitmap = CaptureGrantedForm(form))
                 {
@@ -371,13 +370,9 @@ namespace pwiz.Skyline.ToolsUI
 
         public static ImageBytesMetadata GetFormImageBytes(string formId)
         {
-            // See GetFormImage for the input-before-environment ordering,
-            // MainWindow-null guard, and re-resolve-in-capture rationale.
-            ValidateFormIdFormat(formId);
-            if (Program.MainWindow == null)
-                return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };
-            InvokeOnUiThread(() => FindFormById(formId));
-            string denial = CheckScreenCaptureAvailability();
+            string denial = CheckImageToolPreflight(formId,
+                () => FindFormById(formId),
+                requiresScreenCapture: true);
             if (denial != null)
             {
                 // Permission denial / desktop unavailable: return a structured
@@ -402,19 +397,54 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
-        // Renders the bitmap for a ZedGraph form, returning the bitmap and the host form.
-        // Caller owns the bitmap and must dispose it.
-        private static System.Drawing.Bitmap RenderGraphBitmap(string graphId, out DockableFormEx form)
+        // Validates that the given id identifies a form bearing a ZedGraph
+        // control. Throws ArgumentException if the form is missing or is not
+        // a graph form. Used both as the existence-check step in
+        // CheckImageToolPreflight and as the first step of actual rendering.
+        private static void EnsureGraphForm(string graphId, out DockableFormEx form, out ZedGraphControl graph)
         {
             form = FindFormById(graphId) as DockableFormEx;
-            var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
-            if (zedGraph == null)
+            graph = form != null ? TryGetZedGraphControl(form) : null;
+            if (graph == null)
             {
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.",
                     graphId));
             }
-            return zedGraph.MasterPane.GetImage(zedGraph.MasterPane.IsAntiAlias);
+        }
+
+        // Renders the bitmap for a ZedGraph form, returning the bitmap and the host form.
+        // Caller owns the bitmap and must dispose it.
+        private static System.Drawing.Bitmap RenderGraphBitmap(string graphId, out DockableFormEx form)
+        {
+            EnsureGraphForm(graphId, out form, out var graph);
+            return graph.MasterPane.GetImage(graph.MasterPane.IsAntiAlias);
+        }
+
+        // Shared pre-flight for the image-capture tools (form and graph variants).
+        // Runs format validation on the pipe thread, guards against a null
+        // MainWindow, and runs the type-specific existence check on the UI thread
+        // -- in that order so that bad input throws ArgumentException regardless
+        // of environment. Optionally runs the screen-capture availability check
+        // (form variants only). Returns null when the caller may proceed, or an
+        // LLM-facing message the caller must surface. Throws ArgumentException
+        // for bad input (id format wrong, referenced form not found, wrong form
+        // type) -- those are caller-contract violations and must reach the
+        // caller regardless of environment.
+        //
+        // Note: when MainWindow is null we use LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE
+        // for all variants, including graphs. The wording is slightly off for
+        // graphs (which do not capture from the screen), but the user-facing
+        // intent ("try again momentarily") is correct.
+        private static string CheckImageToolPreflight(string id, Action ensureExistsOnUi, bool requiresScreenCapture)
+        {
+            ValidateFormIdFormat(id);
+            if (Program.MainWindow == null)
+                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
+            // Passing an Action binds InvokeOnUiThread to the void overload,
+            // which preserves ArgumentException across the thread boundary.
+            InvokeOnUiThread(ensureExistsOnUi);
+            return requiresScreenCapture ? CheckScreenCaptureAvailability() : null;
         }
 
         // Returns null when screen capture can proceed, or the LLM-facing
