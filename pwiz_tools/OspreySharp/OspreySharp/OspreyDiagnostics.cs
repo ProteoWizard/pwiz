@@ -601,8 +601,9 @@ namespace pwiz.OspreySharp
                 w.WriteLine("entry_id\tis_decoy\tdiscriminant\tq_value");
                 foreach (var m in sortedByEntry)
                 {
+                    // F17 for round-trip-safe f64 (same rationale as cal_match dump).
                     w.WriteLine(string.Format(inv,
-                        "{0}\t{1}\t{2:F10}\t{3:F10}",
+                        "{0}\t{1}\t{2:F17}\t{3:F17}",
                         m.EntryId,
                         m.IsDecoy ? 1 : 0,
                         m.DiscriminantScore,
