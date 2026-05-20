@@ -607,7 +607,7 @@
     <value>4</value>
   </data>
   <data name="lblClientSecret.Text" xml:space="preserve">
-    <value>クライアントの秘密(&amp;R):</value>
+    <value>クライアントシークレット(&amp;R):</value>
   </data>
   <data name="tbxClientScope.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -661,7 +661,7 @@
     <value>0</value>
   </data>
   <data name="lblIdentityServer.Text" xml:space="preserve">
-    <value>アイデンティティサーバー(&amp;N):</value>
+    <value>認証サーバー(&amp;N):</value>
   </data>
   <data name="wizardPagesByAccountType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -1000,6 +1000,6 @@
     <value>4</value>
   </data>
   <data name="textAlias.ToolTip" xml:space="preserve">
-    <value>わかりやすいアカウント名。この名前がUIに表示されます。</value>
+    <value>アカウントの表示名です。操作画面上ではこの名前が表示されます。</value>
   </data>
 </root>

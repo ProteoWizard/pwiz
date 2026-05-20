@@ -17,13 +17,15 @@
  * limitations under the License.
  */
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Parquet;
+using pwiz.CommonMsData;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using pwiz.CommonMsData;
-using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Model.Databinding;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -60,9 +62,17 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsFalse(exportReportDlg.InvariantLanguage);
                 exportReportDlg.ReportName = "PRISM";
-                exportReportDlg.OkDialog(parquetFilePath, TextUtil.CsvSeparator);
+                exportReportDlg.OkDialog(parquetFilePath);
             });
-
+            var csvFilePath = TestFilesDir.GetTestPath("prism.csv");
+            RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg =>
+            {
+                exportReportDlg.ReportName = "PRISM";
+                exportReportDlg.OkDialog(csvFilePath, TextUtil.CsvSeparator);
+            });
+            using var csvReader = new DsvFileReader(csvFilePath, TextUtil.CsvSeparator);
+            using var reader = ParquetReader.CreateAsync(parquetFilePath).GetAwaiter().GetResult();
+            Assert.AreEqual(TextUtil.SpaceSeparate(ParquetReportExporter.MakeValidColumnNames(csvReader.FieldNames)), TextUtil.SpaceSeparate(reader.Schema.Fields.Select(f => f.Name)));
         }
     }
 }

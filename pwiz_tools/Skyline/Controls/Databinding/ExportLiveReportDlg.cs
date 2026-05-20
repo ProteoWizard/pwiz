@@ -103,11 +103,9 @@ namespace pwiz.Skyline.Controls.Databinding
         public void OkDialog(string fileName)
         {
             Settings.Default.ExportDirectory = Path.GetDirectoryName(fileName);
-            var rowExporter = ReportExporters.ForFilenameExtension(GetDataSchemaLocalizer(), Path.GetExtension(fileName));
-            if (!ExportReport(fileName, rowExporter))
-            {
+            if (!ExportReport(fileName, ReportExporters.ForFilenameExtension(GetDataSchemaLocalizer(), Path.GetExtension(fileName))))
                 return;
-            }
+
             DialogResult = DialogResult.OK;
             Close();
         }

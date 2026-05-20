@@ -168,7 +168,8 @@
     <Reference Include="System.Reflection.Emit.Lightweight">
       <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.IO.RecyclableMemoryStream">
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <SpecificVersion>True</SpecificVersion>
       <HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
     </Reference>
     <Reference Include="Snappier">
