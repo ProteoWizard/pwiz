@@ -165,6 +165,54 @@ namespace pwiz.OspreySharp.Tasks
             var perFileScoring = ctx.GetTask<PerFileScoringTask>();
             _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 
+            // Hard short-circuit for --join-at-pass=2: every input parquet
+            // already has osprey.reconciled = "true" (asserted by
+            // ParquetScoreCache.CheckParquetMetadata when ExpectReconciledInput
+            // is set), so Stage 5 first-pass Percolator AND Stage 6
+            // planning / rescore have ALREADY been performed upstream by
+            // the worker nodes that wrote those parquets. We must NOT
+            // touch FirstJoinTask here -- doing so transitively triggers
+            // FirstJoinTask.Run via EnsureHydrated, which re-runs Stage 5
+            // first-pass Percolator from scratch on the reconciled parquets
+            // (producing wildly different action counts than the planner
+            // saw on the raw Stage 4 inputs) and then attempts a Stage 6
+            // rescore that needs mzML files the merge node does not have
+            // (in production HPC, the merge node ships only sidecars +
+            // reconciled parquets, no mzMLs). MergeNodeTask is responsible
+            // for 2nd-pass Percolator (Bug C) and protein FDR + blib
+            // output starting from this hydrated, reconciled state.
+            // Mirrors Rust pipeline.rs:3313-3344 which gates the entire
+            // Stage 5+6 block on `!config.expect_reconciled_input`.
+            //
+            // Compaction still needs to run though: PerFileScoringTask's
+            // bundle-hydration path loads ALL entries from the parquet,
+            // including ones that failed first-pass FDR. FirstJoinTask's
+            // normal flow would run this compaction inline after first-pass
+            // Percolator (and we're skipping FirstJoinTask entirely here).
+            // Without it, MergeNodeTask's 2nd-pass Percolator would train
+            // on ~3x too many entries -- specifically the non-passing
+            // first-pass entries whose 1st-pass q-values are 1.0 -- and
+            // the SVM would learn a much worse decision boundary than the
+            // in-memory pipeline's, producing different per-precursor
+            // scores and different protein-FDR results. The compaction
+            // reads first-pass q-values that are already overlaid onto
+            // each entry from the .1st-pass.fdr_scores.bin sidecar by
+            // PerFileScoringTask's bundle hydration; no fresh FDR
+            // computation needed.
+            if (ctx.Config.ExpectReconciledInput)
+            {
+                var bundle = perFileScoring.GetRescoreInputs(ctx);
+                if (bundle != null)
+                {
+                    var stats = RescoreCompaction.Apply(bundle, ctx.Config);
+                    ctx.LogInfo(string.Format(
+                        @"--join-at-pass=2 compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
+                        stats.EntriesBefore, stats.EntriesAfter,
+                        stats.FirstPassBaseIds, stats.DroppedActions));
+                }
+                return true;
+            }
+
             // Self-gate: rescore + reconciliation only run when there is
             // planning state to act on AND the rescore hasn't already been
             // done upstream. State comes from either FirstJoinTask's
@@ -178,9 +226,11 @@ namespace pwiz.OspreySharp.Tasks
             // the no-op alongside the no-state case. Probe-the-disk on
             // 2nd-pass sidecar presence replaces the prior
             // ExpectReconciledInput gate (Phase C: mechanism-driven, not
-            // flag-driven). Downstream MergeNodeTask still gets
-            // _perFileEntries via our accessor (falls through to the
-            // upstream reference).
+            // flag-driven) for the worker self-gate cases below;
+            // ExpectReconciledInput keeps the hard short-circuit above for
+            // the strict --join-at-pass=2 merge path. Downstream
+            // MergeNodeTask still gets _perFileEntries via our accessor
+            // (falls through to the upstream reference).
             var firstJoin = ctx.GetTask<FirstJoinTask>();
             bool didPlan = firstJoin.DidPlan(ctx);
             var rescoreBundle = perFileScoring.GetRescoreInputs(ctx);

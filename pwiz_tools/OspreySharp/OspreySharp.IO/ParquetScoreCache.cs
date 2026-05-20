@@ -343,6 +343,25 @@ namespace pwiz.OspreySharp.IO
             for (int i = 0; i < n; i++)
             {
                 var entry = entries[i];
+                // Assign ParquetIndex to match the row position we are
+                // about to write. Mirrors LoadFdrStubsFromParquet, which
+                // assigns ParquetIndex = row on read. Without this
+                // assignment, in-memory entries reach Stage 5
+                // ReconciliationPlanner with ParquetIndex = 0 (FdrEntry
+                // default), and every entry's per-file CWT lookup
+                // (fileCwt[entry.ParquetIndex]) grabs the first row's
+                // CwtCandidate list instead of its own -- the planner
+                // then force-integrates almost every entry because the
+                // wrong CWT list has no candidate near the expected RT.
+                // The HPC chain path was unaffected because its entries
+                // are reloaded via LoadFdrStubsFromParquet, which sets
+                // ParquetIndex correctly. Found by C# in-memory vs
+                // C# HPC-chain strict-rehydration bisection on Stellar
+                // (Stage 5 boundary check: .1st-pass.fdr_scores.bin
+                // byte-identical but reconciliation.json action shape
+                // diverged -- 35K use_cwt actions on HPC side, 814 on
+                // in-memory side, total identical).
+                entry.ParquetIndex = (uint)i;
                 entryIds[i] = entry.EntryId;
                 isDecoys[i] = entry.IsDecoy;
                 charges[i] = entry.Charge;
