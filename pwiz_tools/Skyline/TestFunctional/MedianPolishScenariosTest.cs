@@ -93,6 +93,21 @@ namespace pwiz.SkylineTestFunctional
                 Console.Out.WriteLine("Maximum difference RT loess normalized peptides: {0}", maxDifferenceRtLoessNormalized);
             }
 
+            // Protein-level median polish rollup of the median-polished + normalized peptide
+            // quantities, matching skyline-prism's Stage 4 peptide -> protein median polish.
+            var maxDifferenceProteinMedianNormalized = VerifyProteinAreas(document, normalizedValueCalculator,
+                NormalizationMethod.EQUALIZE_MEDIANS,
+                TestFilesDir.GetTestPath("protein_medianpolish_median_normalized.parquet"), 1e-1);
+            Console.Out.WriteLine("Maximum difference median normalized proteins: {0}", maxDifferenceProteinMedianNormalized);
+
+            if (expectedRtLoessNormalized.Count >= MIN_PEPTIDES_FOR_RT_LOESS)
+            {
+                var maxDifferenceProteinRtLoessNormalized = VerifyProteinAreas(document, normalizedValueCalculator,
+                    NormalizationMethod.RT_LOESS,
+                    TestFilesDir.GetTestPath("protein_medianpolish_rtloess_normalized.parquet"), 1);
+                Console.Out.WriteLine("Maximum difference RT loess normalized proteins: {0}", maxDifferenceProteinRtLoessNormalized);
+            }
+
             // Switch the document to NormalizationMethod=None so the protein-level
             // median polish runs on un-normalized peptide values, then export the
             // "Protein Abundances" report to compare against an unnormalized PRISM run.
@@ -204,6 +219,61 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
+        /// Verifies the protein-level median polish rollup against skyline-prism's expected
+        /// protein abundances for the given peptide-level normalization. For every protein, a
+        /// <see cref="ProteinQuantifier"/> is built from its peptides (peptide and protein
+        /// summarization both MEDIANPOLISH, with the requested normalization), exactly as
+        /// production quantification does, and its per-replicate log2 abundances are compared to
+        /// the expected file. Returns the maximum absolute difference observed.
+        /// </summary>
+        private double VerifyProteinAreas(SrmDocument document, NormalizedValueCalculator normalizedValueCalculator,
+            NormalizationMethod normalizationMethod, string expectedFilePath, double delta)
+        {
+            var expectedAreas = ReadExpectedProteinAreas(document, expectedFilePath);
+            var quantificationSettings = document.Settings.PeptideSettings.Quantification
+                .ChangeNormalizationMethod(normalizationMethod)
+                .ChangePeptideSummarizationMethod(SummarizationMethod.MEDIANPOLISH)
+                .ChangeProteinSummarizationMethod(SummarizationMethod.MEDIANPOLISH);
+            var settings = document.Settings.ChangePeptideSettings(
+                document.Settings.PeptideSettings.ChangeAbsoluteQuantification(quantificationSettings));
+
+            double maxDifference = 0;
+            foreach (var moleculeGroup in document.MoleculeGroups)
+            {
+                if (!expectedAreas.TryGetValue(moleculeGroup.Name, out var expected))
+                {
+                    continue;
+                }
+                var peptideQuantifiers = moleculeGroup.Molecules.Select(molecule =>
+                    new PeptideQuantifier(normalizedValueCalculator, moleculeGroup.PeptideGroup, molecule,
+                        quantificationSettings)
+                    {
+                        ImputeMissingValues = true
+                    });
+                var proteinAbundances = new ProteinQuantifier(settings, peptideQuantifiers).CalculateProteinAbundances();
+                for (int i = 0; i < expected.Length; i++)
+                {
+                    var expectedValue = expected[i];
+                    double? actualValue = proteinAbundances.TryGetValue(i, out var abundanceValue)
+                        ? Math.Log(abundanceValue.Raw, 2)
+                        : (double?) null;
+                    if (expectedValue.HasValue)
+                    {
+                        Assert.IsNotNull(actualValue, "Mismatch on protein {0} replicate {1}", moleculeGroup.Name, i);
+                        Assert.AreEqual(expectedValue.Value, actualValue.Value, delta, "Mismatch on protein {0} replicate {1}", moleculeGroup.Name, i);
+                        maxDifference = Math.Max(maxDifference, Math.Abs(expectedValue.Value - actualValue.Value));
+                    }
+                    else
+                    {
+                        Assert.IsNull(actualValue, "Mismatch on protein {0} replicate {1}", moleculeGroup.Name, i);
+                    }
+                }
+            }
+
+            return maxDifference;
+        }
+
+        /// <summary>
         /// Asserts that the two Parquet files have the same schema and exactly the same
         /// values in every cell.
         /// </summary>
@@ -283,6 +353,35 @@ namespace pwiz.SkylineTestFunctional
                     count++;
                 }
                 Assert.AreNotEqual(0, "Peptide {0} not found", peptideSequence);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Reads expected protein abundances keyed by protein name (the "Protein" column, which
+        /// matches <see cref="PeptideGroupDocNode.Name"/>). Each value is the per-replicate log2
+        /// abundance, ordered to match the document's replicates.
+        /// </summary>
+        private Dictionary<string, double?[]> ReadExpectedProteinAreas(SrmDocument document, string filePath)
+        {
+            using var reader = ParquetReader.CreateAsync(filePath).ConfigureAwait(false).GetAwaiter().GetResult();
+            var fieldIndexes = reader.Schema.Fields.Select((field, index) => new { field.Name, Index = index })
+                .ToDictionary(x => x.Name, x => x.Index);
+            var icolProtein = fieldIndexes["Protein"];
+            var replicateColumns = new List<int>();
+            foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
+            {
+                var columnName = fieldIndexes.Keys.FirstOrDefault(k => k.StartsWith(chromatogramSet.Name));
+                Assert.IsNotNull(columnName, "Unable to find column for replicate {0}", chromatogramSet.Name);
+                replicateColumns.Add(fieldIndexes[columnName]);
+            }
+            var result = new Dictionary<string, double?[]>();
+            foreach (var row in reader.ReadAsTableAsync().ConfigureAwait(false).GetAwaiter().GetResult())
+            {
+                var proteinName = row[icolProtein]!.ToString();
+                var values = replicateColumns.Select(i => i >= 0 ? (double?) row[i] : null).ToArray();
+                result.Add(proteinName, values);
             }
 
             return result;
