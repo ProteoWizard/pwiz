@@ -246,13 +246,19 @@ namespace pwiz.OspreySharp.Chromatography
             if (x.Length < 2)
                 throw new ArgumentException("Need at least 2 data points");
 
-            // Sort by x (stable, matching Rust's slice::sort_by). Array.Sort
-            // with Comparison<T> is unstable (introsort) and reorders ties
-            // differently than Rust for duplicate x values, causing LOESS
-            // divergence on data with repeated x (e.g. multi-charge peptides
-            // sharing a library RT).
+            // Sort by x with a secondary key on y, so the order is
+            // deterministic for duplicate x values (e.g. multi-charge
+            // peptides sharing a library RT). LINQ OrderBy / ThenBy are
+            // stable, but the upstream input order can vary across impls
+            // when discriminant-score-sorted ties get filtered at 1 ULP,
+            // so we cannot rely on input-order tiebreaking for cross-impl
+            // bit-equality. Matches Rust osprey-chromatography
+            // calibration/rt.rs which sorts by (x, y) tuple.
             int n = x.Length;
-            int[] order = Enumerable.Range(0, n).OrderBy(i => x[i]).ToArray();
+            int[] order = Enumerable.Range(0, n)
+                .OrderBy(i => x[i])
+                .ThenBy(i => y[i])
+                .ToArray();
 
             double[] sortedX = new double[n];
             double[] sortedY = new double[n];
