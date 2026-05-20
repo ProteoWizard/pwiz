@@ -65,10 +65,22 @@ if ERRORLEVEL 1 (
     echo ##teamcity[message text='Ensure-InnoSetup.ps1 failed; installer build and Installer.Tests will be skipped' status='WARNING']
 )
 
+REM # Clean before build: TC agents expect a fresh slate every run so stale
+REM # bin/obj from a prior commit can't influence the current build. clean.bat
+REM # wipes everything build.bat would produce — see its header for the full
+REM # list. Default (no args) also wipes installer/cache + vendor-assemblies,
+REM # which means each TC run re-downloads the .NET runtime and re-extracts the
+REM # vendor SDKs from their 7z archives. Adds ~60s; worth it for "this build
+REM # only used inputs from this commit" certainty.
+echo ##teamcity[progressMessage 'pwiz-sharp clean.bat']
+call "%SCRIPT_DIR%\clean.bat"
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set "ERROR_TEXT=clean.bat failed" & goto error)
+
 echo ##teamcity[progressMessage 'pwiz-sharp build.bat %*']
 call "%SCRIPT_DIR%\build.bat" %*
 set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=build.bat failed (exit %EXIT%) & goto error)
+if %EXIT% NEQ 0 (set "ERROR_TEXT=build.bat failed" & goto error)
 
 REM # ------------------------------------------------------------------------
 REM # MsData.NativeAot end-to-end (Native AOT publish + C++ CTest).
