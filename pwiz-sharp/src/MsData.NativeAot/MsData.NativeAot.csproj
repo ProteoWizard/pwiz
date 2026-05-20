@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.MsData.NativeAot</RootNamespace>
+    <AssemblyName>pwiz_msdata</AssemblyName>
+    <Description>Native AOT shim around Pwiz.Data.MsData — exposes a flat C API (UnmanagedCallersOnly exports) for opening an MS data file and querying its spectrum list. Consumers compile against the .h header in examples/cpp-aot-reader and link against the AOT-published pwiz_msdata.dll / libpwiz_msdata.so.</Description>
+
+    <!-- Native AOT: produce a self-contained native shared library. PublishAot also
+         turns on ILC trimming + native compilation at publish time. -->
+    <OutputType>Library</OutputType>
+    <PublishAot>true</PublishAot>
+
+    <!-- AOT requires invariant globalization (no CultureInfo lookups) by default;
+         that matches how the rest of pwiz-sharp formats numbers in CV params. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- ILC inserts ICU embeddings unless we opt out; the mzML/mzXML readers do
+         their own InvariantCulture parsing already. -->
+    <NativeLib>Shared</NativeLib>
+    <IsTrimmable>true</IsTrimmable>
+
+    <!-- All exports use byte* pointers for UTF-8 strings; unsafe is unavoidable. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Force one assembly name regardless of platform-specific extensions. -->
+    <UseAppHost>false</UseAppHost>
+
+    <!-- C-conventional snake_case for the AOT shared library matches how C consumers expect
+         to find pwiz_msdata.dll / libpwiz_msdata.so on the link line. CA1711 fires on
+         ExportsImpl (which is a deliberate "logic methods backing Exports" suffix — see the
+         class docstring for why the split exists). CS1591: the [UnmanagedCallersOnly]
+         wrappers don't need their own docstrings; the impl methods carry them. -->
+    <NoWarn>$(NoWarn);CA1707;CA1711;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\MsData\MsData.csproj" />
+  </ItemGroup>
+
+</Project>

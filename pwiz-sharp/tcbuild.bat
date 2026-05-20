@@ -70,6 +70,51 @@ call "%SCRIPT_DIR%\build.bat" %*
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=build.bat failed (exit %EXIT%) & goto error)
 
+REM # ------------------------------------------------------------------------
+REM # MsData.NativeAot end-to-end (Native AOT publish + C++ CTest).
+REM #
+REM # The managed shim is unit-tested via test\MsData.NativeAot.Tests inside
+REM # build.bat above. THIS section additionally verifies the AOT compile +
+REM # the native ABI surface by:
+REM #   1. dotnet publish the shim for win-x64 (Native AOT -> pwiz_msdata.dll).
+REM #   2. cmake configure + build of examples\cpp-aot-reader against the
+REM #      AOT-published .lib.
+REM #   3. run-tests.ps1 runs CTest, captures JUnit XML, and emits
+REM #      ##teamcity[importData type='junit'] so each CTest case shows up as
+REM #      its own test in TC's Tests tab.
+REM #
+REM # Requirements on the TC agent:
+REM #   - vswhere.exe (ships with VS Installer; the AOT linker discovery uses it)
+REM #   - cmake on PATH (VS-bundled or installed; run-tests.ps1 falls back to
+REM #     the VS-bundled location automatically)
+REM #
+REM # The AOT publish is Release-only regardless of build.bat's config — the
+REM # point is to validate the AOT toolchain + ABI, not to test that AOT works
+REM # in Debug (which it doesn't optimize and would just slow the build).
+REM # ------------------------------------------------------------------------
+set "VSWHERE_DIR=C:\Program Files (x86)\Microsoft Visual Studio\Installer"
+if exist "%VSWHERE_DIR%\vswhere.exe" set "PATH=%VSWHERE_DIR%;%PATH%"
+
+echo ##teamcity[progressMessage 'dotnet publish MsData.NativeAot ^(win-x64 Native AOT^)']
+dotnet publish "%SCRIPT_DIR%\src\MsData.NativeAot\MsData.NativeAot.csproj" -c Release -r win-x64 --verbosity minimal -nologo
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set ERROR_TEXT=Native AOT publish failed (exit %EXIT%) & goto error)
+
+echo ##teamcity[progressMessage 'cmake configure ^(examples\cpp-aot-reader^)']
+cmake -S "%SCRIPT_DIR%\examples\cpp-aot-reader" -B "%SCRIPT_DIR%\examples\cpp-aot-reader\build"
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set ERROR_TEXT=cmake configure failed (exit %EXIT%) & goto error)
+
+echo ##teamcity[progressMessage 'cmake --build ^(examples\cpp-aot-reader^)']
+cmake --build "%SCRIPT_DIR%\examples\cpp-aot-reader\build" --config Release
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set ERROR_TEXT=cmake build failed (exit %EXIT%) & goto error)
+
+echo ##teamcity[progressMessage 'run-tests.ps1 ^(CTest + TC JUnit import^)']
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\examples\cpp-aot-reader\run-tests.ps1" -Config Release
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set ERROR_TEXT=CTest failed (exit %EXIT%) & goto error)
+
 REM # Post-build hygiene checks (mirror scripts/misc/tcbuild.bat).
 REM # Run from repo root so git sees the full working tree, not just pwiz-sharp/.
 pushd "%SCRIPT_DIR%\.."
