@@ -64,49 +64,10 @@ namespace pwiz.SkylineTestFunctional
 
             var document = SkylineWindow.Document;
             var expectedMedianPolishedAreas = ReadExpectedMedianPolishedAreas(document, TestFilesDir.GetTestPath("unnormalized_polished_peptides.parquet"));
-            Assert.IsNotNull(expectedMedianPolishedAreas);
             var normalizedValueCalculator = new NormalizedValueCalculator(document);
-            var maxDifference = 0.0;
-            foreach (var moleculeGroup in document.MoleculeGroups)
-            {
-                foreach (var molecule in moleculeGroup.Molecules)
-                {
-                    var identityPath = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide);
-                    var peptideQuantifier = new PeptideQuantifier(normalizedValueCalculator, moleculeGroup.PeptideGroup,
-                        molecule, document.Settings.PeptideSettings.Quantification);
-                    var medianPolishedValue = peptideQuantifier.PolishUnnormalizedTransitions(document.Settings, null);
-                    // Skyline's polish skips truncated transitions; PRISM does not. For
-                    // peptides where any transition has a truncated peak in any replicate,
-                    // the two implementations operate on different inputs and the comparison
-                    // is not meaningful.
-                    if (HasAnyTruncatedTransition(molecule))
-                    {
-                        continue;
-                    }
-                    if (!expectedMedianPolishedAreas.TryGetValue(identityPath, out var expected))
-                    {
-                        expected = new double?[medianPolishedValue.Length];
-                    }
-                    Assert.AreEqual(expected.Length, medianPolishedValue.Length);
-                    for (int i = 0; i < expected.Length; i++)
-                    {
-                        var expectedValue = expected[i];
-                        var actualValue = medianPolishedValue[i];
-                        if (expectedValue.HasValue)
-                        {
-                            Assert.IsNotNull(actualValue);
-                            Assert.AreEqual(expectedValue.Value, actualValue.Value, _epsilon, "Mismatch on {0} replicate {1}", molecule.ModifiedSequence, i);
-                            maxDifference = Math.Max(maxDifference, Math.Abs(expectedValue.Value - actualValue.Value));
-                        }
-                        else
-                        {
-                            Assert.IsNull(actualValue);
-                        }
-                    }
-                }
-            }
-
-            Console.Out.WriteLine("Maximum difference: {0}", maxDifference);
+            var maxDifference = VerifyPeptideAreas(document, expectedMedianPolishedAreas,
+                identityPath => PolishUnnormalizedTransitions(normalizedValueCalculator, identityPath), _epsilon);
+            Console.Out.WriteLine("Maximum difference median polished peptides: {0}", maxDifference);
 
             // Switch the document to NormalizationMethod=None so the protein-level
             // median polish runs on un-normalized peptide values, then export the
@@ -123,6 +84,56 @@ namespace pwiz.SkylineTestFunctional
                 exportLiveReportDlg.SetUseInvariantLanguage(true);
                 exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("ProteinAbundances.parquet"));
             });
+        }
+
+        private double VerifyPeptideAreas(SrmDocument document, Dictionary<IdentityPath, double?[]> expectedAreas,
+            Func<IdentityPath, double?[]> calculatorFunc, double delta)
+        {
+            double maxDifference = 0;
+            foreach (var moleculeGroup in document.MoleculeGroups)
+            {
+                foreach (var molecule in moleculeGroup.Molecules)
+                {
+                    var identityPath = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide);
+                    var actual = calculatorFunc(identityPath);
+                    if (actual == null)
+                    {
+                        continue;
+                    }
+                    if (!expectedAreas.TryGetValue(identityPath, out var expected))
+                    {
+                        expected = new double?[actual.Length];
+                    }
+                    Assert.AreEqual(expected.Length, actual.Length);
+                    for (int i = 0; i < expected.Length; i++)
+                    {
+                        var expectedValue = expected[i];
+                        var actualValue = actual[i];
+                        if (expectedValue.HasValue)
+                        {
+                            Assert.IsNotNull(actualValue);
+                            Assert.AreEqual(expectedValue.Value, actualValue.Value, delta, "Mismatch on {0} replicate {1}", molecule.ModifiedSequence, i);
+                            maxDifference = Math.Max(maxDifference, Math.Abs(expectedValue.Value - actualValue.Value));
+                        }
+                        else
+                        {
+                            Assert.IsNull(actualValue);
+                        }
+                    }
+                }
+            }
+
+            return maxDifference;
+        }
+
+        private double?[] PolishUnnormalizedTransitions(NormalizedValueCalculator normalizedValueCalculator, IdentityPath moleculeIdentityPath)
+        {
+            var document = normalizedValueCalculator.Document;
+            var moleculeGroup = (PeptideGroupDocNode) document.FindNode(moleculeIdentityPath.GetIdentity(0));
+            var molecule = (PeptideDocNode) moleculeGroup.FindNode(moleculeIdentityPath.GetIdentity(1));
+            var peptideQuantifier = new PeptideQuantifier(normalizedValueCalculator, moleculeGroup.PeptideGroup,
+                molecule, document.Settings.PeptideSettings.Quantification);
+            return peptideQuantifier.PolishUnnormalizedTransitions(document.Settings, null);
         }
 
         /// <summary>
