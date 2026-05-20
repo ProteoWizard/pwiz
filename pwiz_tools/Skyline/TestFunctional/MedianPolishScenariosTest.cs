@@ -51,7 +51,8 @@ namespace pwiz.SkylineTestFunctional
                 exportLiveReportDlg.SetUseInvariantLanguage(true);
                 exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("PRISM-current.parquet"));
             });
-            // TODO: compare PRISM.parquet with PRISM-current.parquet
+            CompareParquetFiles(TestFilesDir.GetTestPath("PRISM.parquet"),
+                TestFilesDir.GetTestPath("PRISM-current.parquet"));
 
             RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportLiveReportDlg =>
             {
@@ -122,6 +123,34 @@ namespace pwiz.SkylineTestFunctional
                 exportLiveReportDlg.SetUseInvariantLanguage(true);
                 exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("ProteinAbundances.parquet"));
             });
+        }
+
+        /// <summary>
+        /// Asserts that the two Parquet files have the same schema and exactly the same
+        /// values in every cell.
+        /// </summary>
+        private void CompareParquetFiles(string expectedPath, string actualPath)
+        {
+            using var expectedReader = ParquetReader.CreateAsync(expectedPath).ConfigureAwait(false).GetAwaiter().GetResult();
+            using var actualReader = ParquetReader.CreateAsync(actualPath).ConfigureAwait(false).GetAwaiter().GetResult();
+            var expectedFields = expectedReader.Schema.Fields.Select(field => field.Name).ToList();
+            var actualFields = actualReader.Schema.Fields.Select(field => field.Name).ToList();
+            CollectionAssert.AreEqual(expectedFields, actualFields,
+                "Schema of {0} does not match {1}", expectedPath, actualPath);
+            var expectedTable = expectedReader.ReadAsTableAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            var actualTable = actualReader.ReadAsTableAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            Assert.AreEqual(expectedTable.Count, actualTable.Count,
+                "Row count of {0} does not match {1}", expectedPath, actualPath);
+            for (int iRow = 0; iRow < expectedTable.Count; iRow++)
+            {
+                var expectedRow = expectedTable[iRow];
+                var actualRow = actualTable[iRow];
+                for (int iCol = 0; iCol < expectedFields.Count; iCol++)
+                {
+                    Assert.AreEqual(expectedRow[iCol], actualRow[iCol],
+                        "Mismatch in column {0} row {1}", expectedFields[iCol], iRow);
+                }
+            }
         }
 
         private static bool HasAnyTruncatedTransition(PeptideDocNode molecule)
