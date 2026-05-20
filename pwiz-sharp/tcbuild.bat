@@ -103,10 +103,19 @@ REM #      vcvarsall.bat amd64 — VsDevCmd is the VS 2017+ replacement.
 REM #   3. Prepending the VS-bundled cmake bin to PATH (VsDevCmd doesn't add
 REM #      cmake on its own; it lives under the IDE's CommonExtensions tree).
 REM # ------------------------------------------------------------------------
+REM # NOTE on quoting: every `set ERROR_TEXT=...` below uses the `set "VAR=value"`
+REM # quoted form. This is the only batch idiom that's safe inside a parens-
+REM # delimited if-block when the value (a) contains literal parens, e.g. from
+REM # expanding a path under `C:\Program Files (x86)\...`, or (b) might contain
+REM # them via %ERRORLEVEL%-style state we don't fully control. Without the
+REM # quotes, batch's parser closes the if-block at the FIRST `)` it sees inside
+REM # the value, mid-token. That's how this section's previous revision blew
+REM # up on the TC agent with "\Microsoft was unexpected at this time" — the
+REM # `(x86)` substring inside VSWHERE_EXE expansion ate the outer if-block.
 set "VSWHERE_DIR=C:\Program Files (x86)\Microsoft Visual Studio\Installer"
 set "VSWHERE_EXE=%VSWHERE_DIR%\vswhere.exe"
 if not exist "%VSWHERE_EXE%" (
-    set ERROR_TEXT=vswhere.exe not found at %VSWHERE_EXE% - Visual Studio Installer dir missing
+    set "ERROR_TEXT=vswhere.exe not found - Visual Studio Installer dir missing"
     set EXIT=1
     goto error
 )
@@ -115,7 +124,7 @@ REM # vswhere returns the VS installationPath on stdout; capture it.
 set "VS_INSTALL="
 for /f "usebackq tokens=*" %%i in (`"%VSWHERE_EXE%" -latest -property installationPath`) do set "VS_INSTALL=%%i"
 if not defined VS_INSTALL (
-    set ERROR_TEXT=vswhere returned no Visual Studio installation
+    set "ERROR_TEXT=vswhere returned no Visual Studio installation"
     set EXIT=1
     goto error
 )
@@ -130,7 +139,7 @@ set "PATH=%VSWHERE_DIR%;%PATH%"
 echo ##teamcity[progressMessage 'VsDevCmd init ^(MSVC env + link.exe for AOT^)']
 call "%VS_INSTALL%\Common7\Tools\VsDevCmd.bat" -arch=amd64 -no_logo
 set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=VsDevCmd init failed (exit %EXIT%) & goto error)
+if %EXIT% NEQ 0 (set "ERROR_TEXT=VsDevCmd init failed" & goto error)
 
 REM # VsDevCmd doesn't add the VS-bundled cmake (lives under the IDE tree, not
 REM # the MSVC tools tree). Prepend it now so the `cmake` invocations below
@@ -142,22 +151,22 @@ set "PATH=%VS_INSTALL%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;%P
 echo ##teamcity[progressMessage 'dotnet publish MsData.NativeAot ^(win-x64 Native AOT^)']
 dotnet publish "%SCRIPT_DIR%\src\MsData.NativeAot\MsData.NativeAot.csproj" -c Release -r win-x64 --verbosity minimal -nologo
 set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=Native AOT publish failed (exit %EXIT%) & goto error)
+if %EXIT% NEQ 0 (set "ERROR_TEXT=Native AOT publish failed" & goto error)
 
 echo ##teamcity[progressMessage 'cmake configure ^(examples\cpp-aot-reader^)']
 cmake -S "%SCRIPT_DIR%\examples\cpp-aot-reader" -B "%SCRIPT_DIR%\examples\cpp-aot-reader\build"
 set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=cmake configure failed (exit %EXIT%) & goto error)
+if %EXIT% NEQ 0 (set "ERROR_TEXT=cmake configure failed" & goto error)
 
 echo ##teamcity[progressMessage 'cmake --build ^(examples\cpp-aot-reader^)']
 cmake --build "%SCRIPT_DIR%\examples\cpp-aot-reader\build" --config Release
 set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=cmake build failed (exit %EXIT%) & goto error)
+if %EXIT% NEQ 0 (set "ERROR_TEXT=cmake build failed" & goto error)
 
 echo ##teamcity[progressMessage 'run-tests.ps1 ^(CTest + TC JUnit import^)']
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\examples\cpp-aot-reader\run-tests.ps1" -Config Release
 set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=CTest failed (exit %EXIT%) & goto error)
+if %EXIT% NEQ 0 (set "ERROR_TEXT=CTest failed" & goto error)
 
 REM # Post-build hygiene checks (mirror scripts/misc/tcbuild.bat).
 REM # Run from repo root so git sees the full working tree, not just pwiz-sharp/.
