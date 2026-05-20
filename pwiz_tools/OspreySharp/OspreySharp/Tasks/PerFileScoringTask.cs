@@ -83,6 +83,10 @@ namespace pwiz.OspreySharp.Tasks
             public RTCalibrationStats Stats;
             public MzCalibrationResult Ms1Calibration;
             public MzCalibrationResult Ms2Calibration;
+            // Total matches scored in this pass (before any q-value or S/N
+            // filtering). Plumbed into CalibrationMetadata.NumSampledPrecursors
+            // for parity with Rust's accumulated_matches.len().
+            public int MatchCount;
         }
 
         public override string Name => @"PerFileScoring";
@@ -969,6 +973,11 @@ namespace pwiz.OspreySharp.Tasks
             RTCalibration rtCalibration = null;
             MzCalibrationResult ms2Cal = MzCalibrationResult.Uncalibrated();
             MzCalibrationResult ms1Cal = MzCalibrationResult.Uncalibrated();
+            // Total matches scored during pass 1 of calibration; threaded
+            // into CalibrationMetadata.NumSampledPrecursors to match Rust's
+            // accumulated_matches.len() (Stellar Single: 192289). Stays 0
+            // when calibration is loaded from a cached JSON.
+            int numSampledPrecursorsForMetadata = 0;
 
             // BISECT: load Rust's calibration JSON instead of computing our own.
             // This eliminates calibration noise from the feature comparison.
@@ -1023,7 +1032,7 @@ namespace pwiz.OspreySharp.Tasks
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = RunCalibration(
                     fullLibrary, spectra, ms1Spectra, context,
-                    out ms1Cal, out ms2Cal);
+                    out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
                 _ctx.LogInfo(string.Format(
@@ -1048,8 +1057,16 @@ namespace pwiz.OspreySharp.Tasks
                     Metadata = new CalibrationMetadata
                     {
                         CalibrationSuccessful = rtCalibration != null,
-                        NumConfidentPeptides = 0,
-                        NumSampledPrecursors = 0,
+                        // Match Rust's CalibrationMetadata field semantics
+                        // (osprey/src/pipeline.rs:1144-1145):
+                        //   num_confident_peptides = LOESS points used by the
+                        //     fit actually saved (post-S/N filter)
+                        //   num_sampled_precursors = total matches scored
+                        //     during sampling (pre any q-value / S/N filter)
+                        NumConfidentPeptides = rtCalibration != null
+                            ? rtCalibration.Stats().NPoints
+                            : 0,
+                        NumSampledPrecursors = numSampledPrecursorsForMetadata,
                         Timestamp = DateTime.UtcNow.ToString("o")
                     },
                     Ms1Calibration = MzCalibrationJson.FromResult(ms1Cal),
@@ -1305,9 +1322,13 @@ namespace pwiz.OspreySharp.Tasks
             List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             out MzCalibrationResult ms1Calibration,
-            out MzCalibrationResult ms2Calibration)
+            out MzCalibrationResult ms2Calibration,
+            out int numSampledPrecursors)
         {
             var config = context.Config;
+            // Default to 0 so early returns / exception paths leave the
+            // metadata caller in a known state. Overwritten on success.
+            numSampledPrecursors = 0;
             _ctx.LogInfo("Running RT calibration...");
 
             // Calculate library and mzML RT ranges
@@ -1431,6 +1452,12 @@ namespace pwiz.OspreySharp.Tasks
                 ms2Calibration = MzCalibrationResult.Uncalibrated();
                 return null;
             }
+
+            // Match Rust accumulated_matches.len() semantics: report pass 1's
+            // total scored matches (before any q-value / S/N filtering).
+            // Pass 2 is a refinement using narrowed RT tolerance and does not
+            // change the sampled-precursor count.
+            numSampledPrecursors = pass1.MatchCount;
 
             // === Iterative calibration refinement (2-pass) ===
             // Mirrors Rust pipeline.rs:714-839.
@@ -1791,6 +1818,7 @@ namespace pwiz.OspreySharp.Tasks
                     Stats = stats,
                     Ms1Calibration = ms1Cal,
                     Ms2Calibration = ms2Cal,
+                    MatchCount = matchArray.Length,
                 };
             }
             catch (Exception ex)
