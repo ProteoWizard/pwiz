@@ -52,6 +52,15 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public bool IncludeTruncatedPeaks { get; set; }
 
+        /// <summary>
+        /// When true, transitions that are missing or have a non-positive area in a replicate
+        /// are imputed with a small positive value (max(0.5 * 1st percentile of positive
+        /// intensities, 1.0)) before the transitions are summarized into a peptide abundance.
+        /// This mirrors skyline-prism, which imputes missing/zero transitions before every
+        /// rollup. When false, such transitions are simply omitted from the summarization.
+        /// </summary>
+        public bool ImputeMissingValues { get; set; }
+
         public IsotopeLabelType RatioLabelType
         {
             get
@@ -173,6 +182,29 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             int replicateCount = settings.MeasuredResults?.Chromatograms?.Count ?? 0;
             var result = new double?[replicateCount];
+            if (ImputeMissingValues)
+            {
+                // Sum the same imputed transition matrix the median polish uses, so the summed
+                // result matches skyline-prism's "sum" rollup (which also imputes missing/zero
+                // transitions before aggregating).
+                var replicateValues = GetTransitionLog2Abundances(settings, replicateCount, NormalizationMethod);
+                for (int i = 0; i < replicateCount; i++)
+                {
+                    double sum = 0;
+                    bool any = false;
+                    foreach (var log2Abundance in replicateValues[i].Values)
+                    {
+                        sum += Math.Pow(2, log2Abundance);
+                        any = true;
+                    }
+                    if (any && sum > 0)
+                    {
+                        result[i] = Math.Log(sum, 2);
+                    }
+                }
+                return result;
+            }
+
             var quantificationSettings = QuantificationSettings.ChangeNormalizationMethod(NormalizationMethod);
             for (int i = 0; i < replicateCount; i++)
             {
@@ -227,7 +259,26 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             int replicateCount = settings.MeasuredResults.Chromatograms.Count;
+            var replicateValues = GetTransitionLog2Abundances(settings, replicateCount, normalizationMethod);
+            return new MedianPolisher() { IncludeScaleFactor = true, IterateToConvergence = true }
+                .Polish(replicateValues, replicateIndexes);
+        }
 
+        /// <summary>
+        /// Builds the per-replicate transition log2 abundances that get summarized into a
+        /// peptide-level abundance, returning one dictionary per replicate mapping transition
+        /// identity to its log2 abundance.
+        ///
+        /// When <see cref="ImputeMissingValues"/> is true, every transition observed in any
+        /// replicate contributes to every replicate; cells with no observation or a
+        /// non-positive area are filled with an imputed low value
+        /// (max(0.5 * 1st percentile of positive intensities, 1.0)), matching how
+        /// skyline-prism builds its transition-by-sample matrix before a rollup. When false,
+        /// only observed positive-area transitions are included.
+        /// </summary>
+        private List<IDictionary<IdentityPath, double>> GetTransitionLog2Abundances(SrmSettings settings,
+            int replicateCount, NormalizationMethod normalizationMethod)
+        {
             // Pass 1: collect per-replicate transition quantities, all observed transition
             // keys, and the positive raw intensities used to derive an imputation value.
             var perReplicateQuantities = new List<Dictionary<IdentityPath, Quantity>>(replicateCount);
@@ -257,7 +308,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             // impute = max(0.5 * P1(positive intensities for this peptide), 1.0). Filling
             // every gap with the same low-positive value keeps the polish from treating
             // missing measurements as outliers, and matches how skyline-prism builds the
-            // transition-by-sample matrix before its median polish.
+            // transition-by-sample matrix before its rollup.
             double imputeIntensity = 1.0;
             if (positiveIntensities.Count > 0)
             {
@@ -265,11 +316,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                 imputeIntensity = Math.Max(p1 * 0.5, 1.0);
             }
 
-            // Pass 2: build the log2 polish input. Every transition key contributes to
-            // every replicate; cells with no observation or zero area are filled with
-            // imputeIntensity (paired with the denominator from any other replicate's
-            // observation of the same key, or 1.0 if the key was never observed with a
-            // valid denominator - the latter does not happen for un-normalized polish).
+            // Pass 2: build the log2 abundance per replicate. When imputing, every transition
+            // key contributes to every replicate; cells with no observation or zero area are
+            // filled with imputeIntensity (paired with the denominator from any other
+            // replicate's observation of the same key, or 1.0 if the key was never observed
+            // with a valid denominator). When not imputing, missing/zero cells are omitted.
             var replicateValues = new List<IDictionary<IdentityPath, double>>(replicateCount);
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
@@ -287,6 +338,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     else
                     {
+                        if (!ImputeMissingValues)
+                        {
+                            continue;
+                        }
                         intensity = imputeIntensity;
                         denominator = q?.Denominator ?? 1.0;
                     }
@@ -298,9 +353,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 replicateValues.Add(abundances);
             }
-
-            return new MedianPolisher() { IncludeScaleFactor = true, IterateToConvergence = true }
-                .Polish(replicateValues, replicateIndexes);
+            return replicateValues;
         }
 
         private void ApplyPeptideLevelAdjustment(SrmSettings settings, double?[] polished,

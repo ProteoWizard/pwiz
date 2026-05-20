@@ -63,11 +63,17 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var document = SkylineWindow.Document;
-            var expectedMedianPolishedAreas = ReadExpectedMedianPolishedAreas(document, TestFilesDir.GetTestPath("unnormalized_polished_peptides.parquet"));
             var normalizedValueCalculator = new NormalizedValueCalculator(document);
+
+            var expectedMedianPolishedAreas = ReadExpectedPeptideAreas(document, TestFilesDir.GetTestPath("unnormalized_polished_peptides.parquet"));
             var maxDifference = VerifyPeptideAreas(document, expectedMedianPolishedAreas,
                 identityPath => PolishUnnormalizedTransitions(normalizedValueCalculator, identityPath), _epsilon);
             Console.Out.WriteLine("Maximum difference median polished peptides: {0}", maxDifference);
+
+            var expectedSummedAreas = ReadExpectedPeptideAreas(document, TestFilesDir.GetTestPath("unnormalized_summed_peptides.parquet"));
+            var maxDifferenceSummed = VerifyPeptideAreas(document, expectedSummedAreas,
+                identityPath => SumUnnormalizedTransitions(normalizedValueCalculator, identityPath), 1e-2);
+            Console.Out.WriteLine("Maximum difference summed peptides: {0}", maxDifferenceSummed);
 
             // Switch the document to NormalizationMethod=None so the protein-level
             // median polish runs on un-normalized peptide values, then export the
@@ -132,8 +138,28 @@ namespace pwiz.SkylineTestFunctional
             var moleculeGroup = (PeptideGroupDocNode) document.FindNode(moleculeIdentityPath.GetIdentity(0));
             var molecule = (PeptideDocNode) moleculeGroup.FindNode(moleculeIdentityPath.GetIdentity(1));
             var peptideQuantifier = new PeptideQuantifier(normalizedValueCalculator, moleculeGroup.PeptideGroup,
-                molecule, document.Settings.PeptideSettings.Quantification);
+                molecule, document.Settings.PeptideSettings.Quantification)
+            {
+                ImputeMissingValues = true
+            };
             return peptideQuantifier.PolishUnnormalizedTransitions(document.Settings, null);
+        }
+
+        private double?[] SumUnnormalizedTransitions(NormalizedValueCalculator normalizedValueCalculator, IdentityPath moleculeIdentityPath)
+        {
+            var document = normalizedValueCalculator.Document;
+            var moleculeGroup = (PeptideGroupDocNode) document.FindNode(moleculeIdentityPath.GetIdentity(0));
+            var molecule = (PeptideDocNode) moleculeGroup.FindNode(moleculeIdentityPath.GetIdentity(1));
+            // Sum the un-normalized transition areas (NormalizationMethod.NONE) so the result
+            // matches skyline-prism's "sum" rollup in "unnormalized_summed_peptides.parquet".
+            var quantificationSettings = document.Settings.PeptideSettings.Quantification
+                .ChangeNormalizationMethod(NormalizationMethod.NONE);
+            var peptideQuantifier = new PeptideQuantifier(normalizedValueCalculator, moleculeGroup.PeptideGroup,
+                molecule, quantificationSettings)
+            {
+                ImputeMissingValues = true
+            };
+            return peptideQuantifier.GetPeptideLog2Abundances(document.Settings, null, SummarizationMethod.AVERAGING);
         }
 
         /// <summary>
@@ -189,7 +215,7 @@ namespace pwiz.SkylineTestFunctional
             return false;
         }
 
-        private Dictionary<IdentityPath, double?[]> ReadExpectedMedianPolishedAreas(SrmDocument document,
+        private Dictionary<IdentityPath, double?[]> ReadExpectedPeptideAreas(SrmDocument document,
             string filePath)
         {
             using var reader = ParquetReader.CreateAsync(filePath).ConfigureAwait(false).GetAwaiter().GetResult();
