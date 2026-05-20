@@ -17,6 +17,11 @@ namespace pwiz.SkylineTestFunctional
     public class MedianPolishScenariosTest : AbstractFunctionalTest
     {
         private double _epsilon = 1e-6;
+
+        // RT-loess fits a smoothing curve across peptides; with too few peptides the curve is
+        // unstable and skyline-prism's lowess and Skyline's LoessInterpolator do not agree
+        // closely. Only verify RT-loess on datasets with at least this many peptides.
+        private const int MIN_PEPTIDES_FOR_RT_LOESS = 100;
         [TestMethod]
         public void TestMedianPolishSmall()
         {
@@ -75,6 +80,19 @@ namespace pwiz.SkylineTestFunctional
                 identityPath => SumUnnormalizedTransitions(normalizedValueCalculator, identityPath), 1e-2);
             Console.Out.WriteLine("Maximum difference summed peptides: {0}", maxDifferenceSummed);
 
+            var expectedMedianNormalized = ReadExpectedPeptideAreas(document, TestFilesDir.GetTestPath("median_normalized_peptides.parquet"));
+            var maxDifferenceMedianNormalized = VerifyPeptideAreas(document, expectedMedianNormalized,
+                identityPath => MedianPolishNormalized(normalizedValueCalculator, identityPath, NormalizationMethod.EQUALIZE_MEDIANS), 1e-1);
+            Console.Out.WriteLine("Maximum difference median normalized peptides: {0}", maxDifferenceMedianNormalized);
+
+            var expectedRtLoessNormalized = ReadExpectedPeptideAreas(document, TestFilesDir.GetTestPath("rtloess_normalized_peptides.parquet"));
+            if (expectedRtLoessNormalized.Count >= MIN_PEPTIDES_FOR_RT_LOESS)
+            {
+                var maxDifferenceRtLoessNormalized = VerifyPeptideAreas(document, expectedRtLoessNormalized,
+                    identityPath => MedianPolishNormalized(normalizedValueCalculator, identityPath, NormalizationMethod.RT_LOESS), 1);
+                Console.Out.WriteLine("Maximum difference RT loess normalized peptides: {0}", maxDifferenceRtLoessNormalized);
+            }
+
             // Switch the document to NormalizationMethod=None so the protein-level
             // median polish runs on un-normalized peptide values, then export the
             // "Protein Abundances" report to compare against an unnormalized PRISM run.
@@ -117,13 +135,13 @@ namespace pwiz.SkylineTestFunctional
                         var actualValue = actual[i];
                         if (expectedValue.HasValue)
                         {
-                            Assert.IsNotNull(actualValue);
+                            Assert.IsNotNull(actualValue, "Mismatch on {0} replicate {1}", molecule.ModifiedSequence, i);
                             Assert.AreEqual(expectedValue.Value, actualValue.Value, delta, "Mismatch on {0} replicate {1}", molecule.ModifiedSequence, i);
                             maxDifference = Math.Max(maxDifference, Math.Abs(expectedValue.Value - actualValue.Value));
                         }
                         else
                         {
-                            Assert.IsNull(actualValue);
+                            Assert.IsNull(actualValue, "Mismatch on {0} replicate {1}", molecule.ModifiedSequence, i);
                         }
                     }
                 }
@@ -160,6 +178,29 @@ namespace pwiz.SkylineTestFunctional
                 ImputeMissingValues = true
             };
             return peptideQuantifier.GetPeptideLog2Abundances(document.Settings, null, SummarizationMethod.AVERAGING);
+        }
+
+        /// <summary>
+        /// Returns the median-polished peptide log2 abundances with the given peptide-level
+        /// normalization applied (EQUALIZE_MEDIANS or RT_LOESS), matching skyline-prism's
+        /// "median_polish + normalization" output. The normalization factor is derived from
+        /// the document's polished peptide abundances, exactly as production quantification does.
+        /// </summary>
+        private double?[] MedianPolishNormalized(NormalizedValueCalculator normalizedValueCalculator,
+            IdentityPath moleculeIdentityPath, NormalizationMethod normalizationMethod)
+        {
+            var document = normalizedValueCalculator.Document;
+            var moleculeGroup = (PeptideGroupDocNode) document.FindNode(moleculeIdentityPath.GetIdentity(0));
+            var molecule = (PeptideDocNode) moleculeGroup.FindNode(moleculeIdentityPath.GetIdentity(1));
+            var quantificationSettings = document.Settings.PeptideSettings.Quantification
+                .ChangeNormalizationMethod(normalizationMethod);
+            var peptideQuantifier = new PeptideQuantifier(normalizedValueCalculator, moleculeGroup.PeptideGroup,
+                molecule, quantificationSettings)
+            {
+                ImputeMissingValues = true
+            };
+            return peptideQuantifier.GetMedianPolishQuantities(document.Settings,
+                PeptideQuantifier.GetMedianPolishReplicates(document.Settings));
         }
 
         /// <summary>

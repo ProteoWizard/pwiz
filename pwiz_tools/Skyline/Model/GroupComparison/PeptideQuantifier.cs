@@ -154,6 +154,55 @@ namespace pwiz.Skyline.Model.GroupComparison
             return quantities;
         }
 
+        /// <summary>
+        /// Returns a single retention time for this peptide: the mean of the per-precursor peak
+        /// retention times over every measured (precursor, replicate, file). This is one RT per
+        /// peptide, used for RT_LOESS normalization so the correction is evaluated at the
+        /// peptide's characteristic RT in every replicate - including replicates where the
+        /// peptide was not measured. It approximates skyline-prism's per-peptide "mean_rt"
+        /// (the mean transition RetentionTime across replicates); the small per-transition vs
+        /// per-precursor difference is immaterial to the smooth LOESS correction. Returns NaN
+        /// if no retention time is available.
+        /// </summary>
+        public double GetPeptideMeanRetentionTime(SrmSettings settings)
+        {
+            if (settings.MeasuredResults == null)
+            {
+                return double.NaN;
+            }
+            int replicateCount = settings.MeasuredResults.Chromatograms.Count;
+            double sum = 0;
+            int count = 0;
+            foreach (var precursor in PeptideDocNode.TransitionGroups)
+            {
+                if (SkipTransitionGroup(precursor) || precursor.Results == null)
+                {
+                    continue;
+                }
+                for (int iReplicate = 0; iReplicate < replicateCount && iReplicate < precursor.Results.Count; iReplicate++)
+                {
+                    var chromInfoList = precursor.Results[iReplicate];
+                    if (chromInfoList.IsEmpty)
+                    {
+                        continue;
+                    }
+                    foreach (var chromInfo in chromInfoList)
+                    {
+                        if (chromInfo == null || chromInfo.OptimizationStep != 0)
+                        {
+                            continue;
+                        }
+                        if (chromInfo.RetentionTime.HasValue)
+                        {
+                            sum += chromInfo.RetentionTime.Value;
+                            count++;
+                        }
+                    }
+                }
+            }
+            return count > 0 ? sum / count : double.NaN;
+        }
+
         public static bool IncludeInMedianPolish(SampleType sampleType)
         {
             return SampleType.STANDARD.Equals(sampleType) || SampleType.QC.Equals(sampleType) ||
@@ -365,6 +414,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return;
             }
             bool useRtLoess = Equals(normalizationMethod, NormalizationMethod.RT_LOESS);
+            // RT_LOESS uses a single mean retention time per peptide for every replicate
+            // (matching skyline-prism's per-peptide mean_rt), so peptides not measured in a
+            // replicate still get the correction at the peptide's characteristic RT.
+            double peptideRt = useRtLoess ? GetPeptideMeanRetentionTime(settings) : double.NaN;
             var measuredResults = settings.MeasuredResults;
             for (int iReplicate = 0; iReplicate < polished.Length; iReplicate++)
             {
@@ -376,25 +429,19 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     continue;
                 }
+                if (useRtLoess && double.IsNaN(peptideRt))
+                {
+                    polished[iReplicate] = null;
+                    continue;
+                }
                 var chromatogramSet = measuredResults.Chromatograms[iReplicate];
                 double? totalAdjustment = null;
                 int adjustmentCount = 0;
                 foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
                 {
-                    double? adj;
-                    if (useRtLoess)
-                    {
-                        double peptideRt = GetPeptideRtForReplicate(iReplicate);
-                        if (double.IsNaN(peptideRt))
-                        {
-                            continue;
-                        }
-                        adj = polishedAbundances.GetRtLoessAdjustment(iReplicate, fileInfo.FileId, peptideRt);
-                    }
-                    else
-                    {
-                        adj = polishedAbundances.GetMedianAdjustment(iReplicate, fileInfo.FileId);
-                    }
+                    double? adj = useRtLoess
+                        ? polishedAbundances.GetRtLoessAdjustment(iReplicate, fileInfo.FileId, peptideRt)
+                        : polishedAbundances.GetMedianAdjustment(iReplicate, fileInfo.FileId);
                     if (adj.HasValue)
                     {
                         totalAdjustment = (totalAdjustment ?? 0) + adj.Value;
@@ -408,37 +455,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 polished[iReplicate] -= totalAdjustment.Value / adjustmentCount;
             }
-        }
-
-        private double GetPeptideRtForReplicate(int replicateIndex)
-        {
-            double sum = 0;
-            int count = 0;
-            foreach (var transitionGroup in PeptideDocNode.TransitionGroups)
-            {
-                if (transitionGroup.Results == null || replicateIndex >= transitionGroup.Results.Count)
-                {
-                    continue;
-                }
-                var chromInfos = transitionGroup.Results[replicateIndex];
-                if (chromInfos.IsEmpty)
-                {
-                    continue;
-                }
-                foreach (var chromInfo in chromInfos)
-                {
-                    if (chromInfo.OptimizationStep != 0)
-                    {
-                        continue;
-                    }
-                    if (chromInfo.RetentionTime.HasValue)
-                    {
-                        sum += chromInfo.RetentionTime.Value;
-                        count++;
-                    }
-                }
-            }
-            return count > 0 ? sum / count : double.NaN;
         }
 
         public double GetIsotopologArea(SrmSettings settings, int replicateIndex, IsotopeLabelType labelType)

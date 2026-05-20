@@ -190,6 +190,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
                     var quantifier = PeptideQuantifier.GetPeptideQuantifier(noneNormalization, document.Settings,
                         peptideGroup.PeptideGroup, peptide);
+                    // Impute missing/zero transitions so the per-file medians and LOESS curves
+                    // are computed from the same imputed peptide abundances skyline-prism
+                    // normalizes against.
+                    quantifier.ImputeMissingValues = true;
                     var polished = quantifier.PolishUnnormalizedTransitions(document.Settings,
                         medianPolishReplicateIndexes);
                     if (polished == null)
@@ -201,6 +205,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                         polishedByPeptide[new ReferenceValue<PeptideDocNode>(peptide)] = polished;
                     }
 
+                    // One retention time per peptide (mean over all replicates), used as the
+                    // RT for every replicate's point so the LOESS curve x-values match
+                    // skyline-prism's per-peptide mean_rt.
+                    double meanRt = quantifier.GetPeptideMeanRetentionTime(document.Settings);
+
                     for (int iReplicate = 0; iReplicate < replicateCount && iReplicate < polished.Length; iReplicate++)
                     {
                         var value = polished[iReplicate];
@@ -209,7 +218,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                             continue;
                         }
 
-                        double meanRt = GetPeptideMeanRt(peptide, iReplicate);
                         var fileIds = GetReplicateFileIds(document.Settings, iReplicate);
                         foreach (var fileId in fileIds)
                         {
@@ -397,39 +405,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-        }
-
-        private static double GetPeptideMeanRt(PeptideDocNode peptide, int replicateIndex)
-        {
-            // Use the peptide's measured RT in this replicate, averaged across precursors.
-            // Falls back to NaN if no RT is available; caller skips NaN points when fitting LOESS.
-            double sum = 0;
-            int count = 0;
-            foreach (var transitionGroup in peptide.TransitionGroups)
-            {
-                if (transitionGroup.Results == null || replicateIndex >= transitionGroup.Results.Count)
-                {
-                    continue;
-                }
-                var chromInfos = transitionGroup.Results[replicateIndex];
-                if (chromInfos.IsEmpty)
-                {
-                    continue;
-                }
-                foreach (var chromInfo in chromInfos)
-                {
-                    if (chromInfo.OptimizationStep != 0)
-                    {
-                        continue;
-                    }
-                    if (chromInfo.RetentionTime.HasValue)
-                    {
-                        sum += chromInfo.RetentionTime.Value;
-                        count++;
-                    }
-                }
-            }
-            return count > 0 ? sum / count : double.NaN;
         }
 
         private static IEnumerable<ChromFileInfoId> GetReplicateFileIds(SrmSettings settings, int replicateIndex)
