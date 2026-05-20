@@ -146,22 +146,71 @@ if (-not $iscc) {
     $iscc = $iscc.Source
 }
 
-Write-Host "`n==> ISCC compile" -ForegroundColor Cyan
-$iss = Join-Path $installerDir "Setup.iss"
-# StagingDir, OutputDir come in as preprocessor defines (#define-able from CLI
-# via /D). ISCC paths are most reliable when absolute.
-& $iscc `
-    "/Q" `
-    "/DStagingDir=$stagingDir" `
-    "/DOutputDir=$outDir" `
-    "/DOutputBaseFilename=ProteoWizard-Sharp-Setup" `
-    $iss
-if ($LASTEXITCODE -ne 0) { throw "ISCC compile failed (exit $LASTEXITCODE)" }
+# 5. Stamp a build-time version: 4.0.YYDOY-gitsha.
+#    Mirrors the cpp pwiz tagging convention (major 4 = the .NET-port lineage).
+#       YYDOY  = two-digit year + three-digit day-of-year (e.g. 26140 = 2026-05-20).
+#                Sortable, ~5 chars, unambiguous across years, and zero-padded so
+#                lexical sort matches chronological sort.
+#       gitsha = first 7 chars of HEAD; --short defaults to 7. We strip the leading
+#                `g` prefix that `git describe` would add — Inno's version field
+#                accepts arbitrary text but starting with a letter trips some
+#                Win32 version-info parsers.
+#    Local "dev" builds with no git history fall back to 4.0.0-dev so direct
+#    ISCC invocations still produce a versioned installer.
+$today = Get-Date
+$yyDoy = "{0:00}{1:000}" -f ($today.Year % 100), $today.DayOfYear
+$gitSha = ""
+try {
+    Push-Location $pwizSharp
+    $gitSha = (git rev-parse --short=7 HEAD 2>$null).Trim()
+} catch { }
+finally { Pop-Location }
+if ([string]::IsNullOrWhiteSpace($gitSha)) {
+    $appVersion = "4.0.0-dev"
+} else {
+    $appVersion = "4.0.$yyDoy-$gitSha"
+}
+Write-Host "`n==> Stamping version: $appVersion" -ForegroundColor Cyan
 
-# 6. Report.
-$setupPath = Join-Path $outDir "ProteoWizard-Sharp-Setup.exe"
-$size = [math]::Round((Get-Item $setupPath).Length / 1MB, 1)
-$hash = (Get-FileHash -Path $setupPath -Algorithm SHA256).Hash
-Write-Host "`nSetup:   $setupPath" -ForegroundColor Green
-Write-Host "Size:    $size MB"
-Write-Host "SHA-256: $hash"
+# 6. ISCC compile — produce both installer variants from one Setup.iss source.
+#    Pass 1: default (bundles the .NET 8 desktop runtime; ~62 MB).
+#    Pass 2: /DNoNetRuntime (skips the bundle; ~5 MB; aborts at install time if
+#            .NET 8 isn't already present).
+$iss = Join-Path $installerDir "Setup.iss"
+
+function Invoke-Iscc {
+    param(
+        [string] $OutputBaseFilename,
+        [string[]] $ExtraDefines = @()
+    )
+    Write-Host "`n==> ISCC compile: $OutputBaseFilename" -ForegroundColor Cyan
+    $args = @(
+        "/Q",
+        "/DStagingDir=$stagingDir",
+        "/DOutputDir=$outDir",
+        "/DOutputBaseFilename=$OutputBaseFilename",
+        "/DMyAppVersion=$appVersion"
+    ) + $ExtraDefines + @($iss)
+    & $iscc @args
+    if ($LASTEXITCODE -ne 0) { throw "ISCC compile failed for $OutputBaseFilename (exit $LASTEXITCODE)" }
+}
+
+Invoke-Iscc -OutputBaseFilename "ProteoWizard-Sharp-Setup"
+Invoke-Iscc -OutputBaseFilename "ProteoWizard-Sharp-NoNetRuntime-Setup" -ExtraDefines @("/DNoNetRuntime")
+
+# 7. Report.
+Write-Host ""
+foreach ($base in @("ProteoWizard-Sharp-Setup", "ProteoWizard-Sharp-NoNetRuntime-Setup")) {
+    $setupPath = Join-Path $outDir "$base.exe"
+    if (-not (Test-Path $setupPath)) {
+        Write-Host "MISSING: $setupPath" -ForegroundColor Red
+        continue
+    }
+    $size = [math]::Round((Get-Item $setupPath).Length / 1MB, 1)
+    $hash = (Get-FileHash -Path $setupPath -Algorithm SHA256).Hash
+    Write-Host "Setup:   $setupPath" -ForegroundColor Green
+    Write-Host "Version: $appVersion"
+    Write-Host "Size:    $size MB"
+    Write-Host "SHA-256: $hash"
+    Write-Host ""
+}

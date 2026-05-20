@@ -1,16 +1,32 @@
 ; -----------------------------------------------------------------------------
 ; Inno Setup script for ProteoWizard-Sharp.
 ;
-; Replaces the WiX 4 MSI + Burn bundle pair. Produces a single self-contained
-; ProteoWizard-Sharp-Setup.exe (~5 MB compressed) that:
-;   - Detects .NET 8 desktop runtime via registry; downloads + installs from
-;     Microsoft if missing
-;   - Asks user to pick "for me" (per-user, no admin) or "for everyone"
-;     (per-machine, admin) at install time
-;   - Installs to %LOCALAPPDATA%\Programs\ProteoWizard-Sharp\ or
-;     %ProgramFiles%\ProteoWizard-Sharp\ accordingly
-;   - Creates a Start Menu shortcut for MSConvertGUI-sharp
-;   - Standard uninstall via Programs and Features
+; build.ps1 invokes ISCC twice from this one script to produce two variants:
+;
+;   ProteoWizard-Sharp-Setup.exe (~62 MB)
+;     Bundles the .NET 8 Desktop Runtime installer. On install, checks for
+;     .NET 8; if missing, silently invokes the bundled runtime installer
+;     (which triggers UAC for its per-machine install).
+;
+;   ProteoWizard-Sharp-NoNetRuntime-Setup.exe (~5 MB)
+;     Same payload minus the bundled runtime. On install, aborts with a
+;     dialog + download link if .NET 8 isn't already present. For users
+;     who manage their own runtime install (corp deployments, dev boxes
+;     that already have it, etc.).
+;
+;   Both variants:
+;     - Ask the user to pick "for me" (per-user, no admin) or "for everyone"
+;       (per-machine, admin) at install time
+;     - Install to %LOCALAPPDATA%\Programs\ProteoWizard-Sharp\ or
+;       %ProgramFiles%\ProteoWizard-Sharp\ accordingly
+;     - Create Start Menu shortcuts for MSConvertGUI and SeeMS
+;     - Register Windows Explorer right-click verbs
+;     - Standard uninstall via Programs and Features
+;
+; The lightweight variant is selected by passing `/DNoNetRuntime` to ISCC —
+; build.ps1 does this automatically for the second compile pass. Without
+; the define (= default behavior, including direct ISCC invocations), the
+; bundled-runtime variant is produced.
 ;
 ; Compile:
 ;   pwsh -File pwiz-sharp/installer/build.ps1
@@ -20,7 +36,11 @@
 ; -----------------------------------------------------------------------------
 
 #define MyAppName "ProteoWizard-Sharp"
-#define MyAppVersion "0.1.0"
+; Version comes in from build.ps1 via /DMyAppVersion=4.0.YYDOY-gitsha. The
+; fallback below keeps direct ISCC invocations buildable for local debugging.
+#ifndef MyAppVersion
+  #define MyAppVersion "4.0.0-dev"
+#endif
 #define MyAppPublisher "ProteoWizard"
 #define MyAppURL "https://proteowizard.sourceforge.io/"
 
@@ -110,11 +130,13 @@ Name: "desktopicon_seems";        Description: "Create a Desktop shortcut for Se
 ; SDKs, no debug symbols, no cross-platform native runtimes) into {app}.
 Source: "{#StagingDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+#ifndef NoNetRuntime
 ; .NET 8 desktop runtime installer EXE. Bundled into the setup; deleted after
 ; install via [InstallDelete]. Skip download (DownloadTemporaryFile would work
 ; but offline-install support is the main reason we bundle Burn-style).
 Source: "cache\windowsdesktop-runtime-win-x64.exe"; DestDir: "{tmp}"; \
     Flags: deleteafterinstall; Check: not IsDotNet8DesktopInstalled
+#endif
 
 [Icons]
 Name: "{group}\MSConvertGUI"; Filename: "{app}\MSConvertGUI-sharp.exe"; \
@@ -200,6 +222,7 @@ Root: HKA; Subkey: "Software\Classes\Directory\shell\{#ViewVerb}\command"; \
     ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
 
 [Run]
+#ifndef NoNetRuntime
 ; .NET 8 desktop runtime install. Runs only if not already present. /install
 ; /quiet /norestart matches Microsoft's documented silent-install flags. The
 ; runtime always installs per-machine (it goes to %ProgramFiles%\dotnet\),
@@ -212,6 +235,7 @@ Filename: "{tmp}\windowsdesktop-runtime-win-x64.exe"; \
     StatusMsg: "Installing .NET 8 desktop runtime..."; \
     Flags: waituntilterminated shellexec; \
     Check: not IsDotNet8DesktopInstalled
+#endif
 
 ; Optional "launch at end of install" buttons. Both unchecked by default so
 ; the wizard finishes silently; users can pick either.
@@ -259,4 +283,33 @@ begin
   finally
     FindClose(rec);
   end;
+end;
+
+{ ----- Pre-flight check (NoNetRuntime variant only) -----
+  When this installer was built without the bundled .NET runtime
+  (build.ps1's second ISCC pass), we can't install .NET ourselves. Abort
+  with a clear message + download link if .NET 8 is missing. With the
+  bundled-runtime variant this function returns True unconditionally
+  (the [Run] section above installs the runtime if needed). }
+function InitializeSetup(): Boolean;
+#ifdef NoNetRuntime
+var
+  rc: Integer;
+#endif
+begin
+  Result := True;
+#ifdef NoNetRuntime
+  if not IsDotNet8DesktopInstalled() then
+  begin
+    rc := MsgBox(
+      'ProteoWizard-Sharp requires the .NET 8 Desktop Runtime (x64), which is not installed on this machine.' + #13#10#13#10 +
+      'Click OK to open the Microsoft download page in your browser, then re-run this installer after installing the runtime.' + #13#10#13#10 +
+      'If you prefer an installer that bundles the runtime, use ProteoWizard-Sharp-Setup.exe instead.',
+      mbError, MB_OKCANCEL);
+    if rc = IDOK then
+      ShellExec('', 'https://dotnet.microsoft.com/download/dotnet/8.0/runtime',
+                '', '', SW_SHOW, ewNoWait, rc);
+    Result := False;
+  end;
+#endif
 end;
