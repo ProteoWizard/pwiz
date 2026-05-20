@@ -91,9 +91,53 @@ REM #
 REM # The AOT publish is Release-only regardless of build.bat's config — the
 REM # point is to validate the AOT toolchain + ABI, not to test that AOT works
 REM # in Debug (which it doesn't optimize and would just slow the build).
+REM #
+REM # Tooling discovery: a stock TC agent has Visual Studio installed but no
+REM # MSVC dev env initialized on PATH — neither link.exe (needed by ILC for
+REM # the AOT native-compile step) nor cmake.exe (needed by the C++ build)
+REM # resolve. We fix that by:
+REM #   1. Locating VS via vswhere (the well-known Installer-dir path).
+REM #   2. Calling VsDevCmd.bat -arch=amd64 to set up the MSVC env (link.exe,
+REM #      Windows SDK, INCLUDE / LIB, etc.). Equivalent to the old
+REM #      vcvarsall.bat amd64 — VsDevCmd is the VS 2017+ replacement.
+REM #   3. Prepending the VS-bundled cmake bin to PATH (VsDevCmd doesn't add
+REM #      cmake on its own; it lives under the IDE's CommonExtensions tree).
 REM # ------------------------------------------------------------------------
 set "VSWHERE_DIR=C:\Program Files (x86)\Microsoft Visual Studio\Installer"
-if exist "%VSWHERE_DIR%\vswhere.exe" set "PATH=%VSWHERE_DIR%;%PATH%"
+set "VSWHERE_EXE=%VSWHERE_DIR%\vswhere.exe"
+if not exist "%VSWHERE_EXE%" (
+    set ERROR_TEXT=vswhere.exe not found at %VSWHERE_EXE% - Visual Studio Installer dir missing
+    set EXIT=1
+    goto error
+)
+
+REM # vswhere returns the VS installationPath on stdout; capture it.
+set "VS_INSTALL="
+for /f "usebackq tokens=*" %%i in (`"%VSWHERE_EXE%" -latest -property installationPath`) do set "VS_INSTALL=%%i"
+if not defined VS_INSTALL (
+    set ERROR_TEXT=vswhere returned no Visual Studio installation
+    set EXIT=1
+    goto error
+)
+
+REM # Put vswhere on PATH BEFORE calling VsDevCmd — VsDevCmd's own internal
+REM # initialization invokes vswhere and prints a warning if it can't find it.
+REM # The warning isn't fatal (the env still gets set up), but it makes the TC
+REM # log look like something failed. ILC's Microsoft.NETCore.Native.targets
+REM # also calls vswhere directly, so the PATH entry stays useful afterward.
+set "PATH=%VSWHERE_DIR%;%PATH%"
+
+echo ##teamcity[progressMessage 'VsDevCmd init ^(MSVC env + link.exe for AOT^)']
+call "%VS_INSTALL%\Common7\Tools\VsDevCmd.bat" -arch=amd64 -no_logo
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set ERROR_TEXT=VsDevCmd init failed (exit %EXIT%) & goto error)
+
+REM # VsDevCmd doesn't add the VS-bundled cmake (lives under the IDE tree, not
+REM # the MSVC tools tree). Prepend it now so the `cmake` invocations below
+REM # resolve. Agents that have a system-wide cmake on PATH already work
+REM # transparently — this is the fallback for the typical "VS installed but
+REM # cmake not separately installed" agent layout.
+set "PATH=%VS_INSTALL%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;%PATH%"
 
 echo ##teamcity[progressMessage 'dotnet publish MsData.NativeAot ^(win-x64 Native AOT^)']
 dotnet publish "%SCRIPT_DIR%\src\MsData.NativeAot\MsData.NativeAot.csproj" -c Release -r win-x64 --verbosity minimal -nologo
