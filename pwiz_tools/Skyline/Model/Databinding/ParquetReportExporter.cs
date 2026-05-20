@@ -40,11 +40,11 @@ namespace pwiz.Skyline.Model.Databinding
             var schema = new ParquetSchema(columns.Select(col => col.SchemaField).ToArray());
 
             // Parquet.Net 4.x uses an async-only API; the no-async/await rule
-            // means we synchronously bridge each Task. ConfigureAwait(false)
-            // avoids deadlock on a captured SynchronizationContext, and
-            // GetAwaiter().GetResult() unwraps the underlying exception
-            // instead of wrapping it in AggregateException.
-            using var writer = ParquetWriter.CreateAsync(schema, stream).ConfigureAwait(false).GetAwaiter().GetResult();
+            // means we synchronously bridge each Task. GetAwaiter().GetResult()
+            // rethrows the original exception instead of wrapping it in an
+            // AggregateException. This is only safe because the export runs off
+            // the UI thread (no captured SynchronizationContext to deadlock on).
+            using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
             writer.CompressionMethod = CompressionMethod.Zstd;
             using var writeWorker = new QueueWorker<DataColumn[]>(
                 consume: (dataColumns, threadIndex) =>
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Databinding
                     using var groupWriter = writer.CreateRowGroup();
                     foreach (var dataColumn in dataColumns)
                     {
-                        groupWriter.WriteColumnAsync(dataColumn).ConfigureAwait(false).GetAwaiter().GetResult();
+                        groupWriter.WriteColumnAsync(dataColumn).GetAwaiter().GetResult();
                     }
                 });
             // Single writer thread, queue at most 1 chunk ahead
@@ -138,7 +138,10 @@ namespace pwiz.Skyline.Model.Databinding
         public static IEnumerable<string> MakeValidColumnNames(IEnumerable<string> columnNames)
         {
             var usedColumnNames = new HashSet<string>();
-            return columnNames.Select(name => MakeUniqueColumnName(name, usedColumnNames));
+            foreach (var name in columnNames)
+            {
+                yield return MakeUniqueColumnName(name, usedColumnNames);
+            }
         }
 
         private string GetUniqueColumnName(PropertyDescriptor propertyDescriptor, HashSet<string> usedColumnNames)

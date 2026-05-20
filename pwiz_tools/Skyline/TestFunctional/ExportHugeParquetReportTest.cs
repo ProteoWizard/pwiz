@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
                 exportReportDlg.OkDialog(csvFilePath, TextUtil.CsvSeparator);
             });
             using var csvReader = new DsvFileReader(csvFilePath, TextUtil.CsvSeparator);
-            using var reader = ParquetReader.CreateAsync(parquetFilePath).ConfigureAwait(false).GetAwaiter().GetResult();
+            using var reader = ParquetReader.CreateAsync(parquetFilePath).GetAwaiter().GetResult();
             Assert.AreEqual(TextUtil.SpaceSeparate(ParquetReportExporter.MakeValidColumnNames(csvReader.FieldNames)), TextUtil.SpaceSeparate(reader.Schema.Fields.Select(f => f.Name)));
         }
     }
