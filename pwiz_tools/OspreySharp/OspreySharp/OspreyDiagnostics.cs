@@ -552,8 +552,13 @@ namespace pwiz.OspreySharp
                         double snr;
                         if (!snrByEntryId.TryGetValue(entry.Id, out snr))
                             snr = 0.0;
+                        // F17 (17 fractional digits) for round-trip-safe f64.
+                        // .NET Framework's F10 uses round-half-away-from-zero
+                        // while Rust's {:.10} uses round-half-to-even; on f64
+                        // values near a rounding boundary the two diverge by
+                        // 1 in the last printed digit. F17 sidesteps that.
                         w.WriteLine(string.Format(inv,
-                            "{0}\t{1}\t{2}\t1\t{3}\t{4:F10}\t{5:F10}\t{6:F10}\t{7}\t{8:F10}\t{9:F10}",
+                            "{0}\t{1}\t{2}\t1\t{3}\t{4:F17}\t{5:F17}\t{6:F17}\t{7}\t{8:F17}\t{9:F17}",
                             entry.Id,
                             entry.IsDecoy ? 1 : 0,
                             entry.Charge,
