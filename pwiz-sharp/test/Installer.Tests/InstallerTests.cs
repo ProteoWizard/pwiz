@@ -223,22 +223,35 @@ public class InstallerTests
     }
 
     /// <summary>
-    /// Parse <c>MyAppVersion</c> out of Setup.iss so the test and the
-    /// installer share one source of truth. Setup.iss lives next to the
-    /// Setup.exe at <c>installer/Setup.iss</c>.
+    /// Returns the version the installer was built with. build.ps1 writes the
+    /// resolved version (4.0.YYDOY-gitsha — the same value passed to ISCC as
+    /// /DMyAppVersion=...) into <c>installer-version.txt</c> beside the .exe.
+    /// We can't reliably parse it back from <c>Setup.iss</c> because the .iss
+    /// only carries the local-debug fallback (`4.0.0-dev`); build.ps1's CLI
+    /// override is what the installer actually registers under.
     /// </summary>
     private static string ReadInstallerVersion(string setupExePath)
     {
-        string iss = Path.Combine(
+        string versionTxt = Path.Combine(
+            Path.GetDirectoryName(setupExePath) ?? "",
+            "installer-version.txt");
+        if (File.Exists(versionTxt))
+        {
+            string v = File.ReadAllText(versionTxt).Trim();
+            if (!string.IsNullOrWhiteSpace(v)) return v;
+        }
+
+        // Fallback: parse the Setup.iss fallback #define. Used only when the
+        // test runs against an installer compiled directly via ISCC (no
+        // build.ps1) — uncommon, but keeps local debugging painless.
+        string iss = Path.GetFullPath(Path.Combine(
             Path.GetDirectoryName(setupExePath) ?? "",
             "..",
-            "Setup.iss");
-        iss = Path.GetFullPath(iss);
+            "Setup.iss"));
         Assert.IsTrue(File.Exists(iss),
-            $"Expected Setup.iss next to Setup.exe at {iss} — installer staging layout has shifted?");
+            $"installer-version.txt missing at {versionTxt} and Setup.iss missing at {iss} — was build.ps1 run?");
         foreach (string line in File.ReadAllLines(iss))
         {
-            // Line shape: `#define MyAppVersion "0.1.0"`
             string trimmed = line.TrimStart();
             if (!trimmed.StartsWith("#define ")) continue;
             if (!trimmed.Contains("MyAppVersion")) continue;
@@ -248,7 +261,7 @@ public class InstallerTests
             return trimmed.Substring(firstQuote + 1, lastQuote - firstQuote - 1);
         }
         throw new InvalidOperationException(
-            $"Could not parse MyAppVersion from {iss} — line format changed?");
+            $"Could not determine installer version from {versionTxt} or {iss}.");
     }
 
     private static bool IsElevated()

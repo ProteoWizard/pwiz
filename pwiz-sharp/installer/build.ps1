@@ -198,6 +198,12 @@ function Invoke-Iscc {
 Invoke-Iscc -OutputBaseFilename "ProteoWizard-Sharp-Setup"
 Invoke-Iscc -OutputBaseFilename "ProteoWizard-Sharp-NoNetRuntime-Setup" -ExtraDefines @("/DNoNetRuntime")
 
+# Write the resolved version next to the .exe so Installer.Tests can find it.
+# The test can't parse it back out of Setup.iss because the build-time /D
+# override (4.0.YYDOY-gitsha) takes precedence over the in-file #define fallback
+# (4.0.0-dev); the test needs the same value the installer registered with.
+Set-Content -Path (Join-Path $outDir "installer-version.txt") -Value $appVersion -NoNewline
+
 # 7. Report.
 Write-Host ""
 foreach ($base in @("ProteoWizard-Sharp-Setup", "ProteoWizard-Sharp-NoNetRuntime-Setup")) {
