@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -130,9 +131,13 @@ public class InstallerTests
 
     /// <summary>
     /// Try to locate the built Setup.exe. Search order: <c>PWIZ_INSTALLER_PATH</c>
-    /// env var (absolute path), then the canonical
-    /// <c>pwiz-sharp/installer/build/ProteoWizard-Sharp-Setup.exe</c> relative to
-    /// the test assembly. Returns false + a human-readable reason if not found.
+    /// env var (absolute path), then the newest
+    /// <c>pwiz-sharp/installer/build/ProteoWizard-Sharp-Setup-*.exe</c> (newest
+    /// by file mtime, so the most recent build wins when older versioned
+    /// installers are sitting alongside it). The NoNetRuntime variant is
+    /// excluded — these tests target the bundled installer; the lightweight
+    /// variant is the same payload minus the runtime and would just duplicate
+    /// the coverage. Returns false + a human-readable reason if not found.
     /// </summary>
     private static bool TryFindSetup(out string setupPath, out string reason)
     {
@@ -154,19 +159,30 @@ public class InstallerTests
         // Installer.Tests -> ../  =  test dir
         // test -> ../  =  pwiz-sharp
         // pwiz-sharp/installer/build/...
-        string candidate = Path.GetFullPath(Path.Combine(
+        string buildDir = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
             "..", "..", "..", "..", "..",
-            "installer", "build", "ProteoWizard-Sharp-Setup.exe"));
-        if (File.Exists(candidate))
+            "installer", "build"));
+        if (Directory.Exists(buildDir))
         {
-            setupPath = candidate;
-            reason = string.Empty;
-            return true;
+            // Versioned bundled-variant filename: ProteoWizard-Sharp-Setup-<ver>.exe
+            // Exclude the NoNetRuntime variant by name; pick the newest by mtime so
+            // a fresh build wins over older artifacts in the same folder.
+            var candidates = new DirectoryInfo(buildDir)
+                .GetFiles("ProteoWizard-Sharp-Setup-*.exe")
+                .Where(f => !f.Name.Contains("NoNetRuntime", StringComparison.Ordinal))
+                .OrderByDescending(f => f.LastWriteTimeUtc)
+                .ToArray();
+            if (candidates.Length > 0)
+            {
+                setupPath = candidates[0].FullName;
+                reason = string.Empty;
+                return true;
+            }
         }
 
         setupPath = string.Empty;
-        reason = $"ProteoWizard-Sharp-Setup.exe not found at {candidate}. " +
+        reason = $"No ProteoWizard-Sharp-Setup-*.exe found in {buildDir}. " +
                  "Run `pwsh -File pwiz-sharp/installer/build.ps1` first, " +
                  "or set PWIZ_INSTALLER_PATH to its absolute path.";
         return false;

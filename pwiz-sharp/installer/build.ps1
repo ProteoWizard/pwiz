@@ -195,18 +195,23 @@ function Invoke-Iscc {
     if ($LASTEXITCODE -ne 0) { throw "ISCC compile failed for $OutputBaseFilename (exit $LASTEXITCODE)" }
 }
 
-Invoke-Iscc -OutputBaseFilename "ProteoWizard-Sharp-Setup"
-Invoke-Iscc -OutputBaseFilename "ProteoWizard-Sharp-NoNetRuntime-Setup" -ExtraDefines @("/DNoNetRuntime")
+# Version suffix on the filenames so multiple builds can coexist in one folder
+# without overwriting each other (releases, nightlies, cherry-pick verifications,
+# etc. all drop side-by-side into installer/build/ instead of clobbering the
+# previous run's artifact).
+$bundledName = "ProteoWizard-Sharp-Setup-$appVersion"
+$lightName   = "ProteoWizard-Sharp-NoNetRuntime-Setup-$appVersion"
+Invoke-Iscc -OutputBaseFilename $bundledName
+Invoke-Iscc -OutputBaseFilename $lightName -ExtraDefines @("/DNoNetRuntime")
 
-# Write the resolved version next to the .exe so Installer.Tests can find it.
-# The test can't parse it back out of Setup.iss because the build-time /D
-# override (4.0.YYDOY-gitsha) takes precedence over the in-file #define fallback
-# (4.0.0-dev); the test needs the same value the installer registered with.
+# Write the resolved version next to the .exes so Installer.Tests can pin to it
+# without re-deriving from the filename (the date+sha format is build.ps1's
+# internal convention, not a public contract).
 Set-Content -Path (Join-Path $outDir "installer-version.txt") -Value $appVersion -NoNewline
 
 # 7. Report.
 Write-Host ""
-foreach ($base in @("ProteoWizard-Sharp-Setup", "ProteoWizard-Sharp-NoNetRuntime-Setup")) {
+foreach ($base in @($bundledName, $lightName)) {
     $setupPath = Join-Path $outDir "$base.exe"
     if (-not (Test-Path $setupPath)) {
         Write-Host "MISSING: $setupPath" -ForegroundColor Red
