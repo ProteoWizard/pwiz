@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var document = SkylineWindow.Document;
-            var expectedMedianPolishedAreas = ReadExpectedMedianPolishedAreas(document, TestFilesDir.GetTestPath("peptides_rollup.parquet"));
+            var expectedMedianPolishedAreas = ReadExpectedMedianPolishedAreas(document, TestFilesDir.GetTestPath("unnormalized_polished_peptides.parquet"));
             Assert.IsNotNull(expectedMedianPolishedAreas);
             var normalizedValueCalculator = new NormalizedValueCalculator(document);
             var maxDifference = 0.0;
