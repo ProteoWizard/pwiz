@@ -362,7 +362,7 @@
     <value>{1} 需要安装 Python {0}，点击“确定”继续。</value>
   </data>
   <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" xml:space="preserve">
-    <value>{1} 需要安装 Python {0}，请等待 Python 安装和配置完成……</value>
+    <value>{1} 需要安装 Python {0}，请等待 Python 的安装和配置完成……</value>
   </data>
   <data name="PythonInstaller_Requesting_Administrator_elevation" xml:space="preserve">
     <value>完成安装需要管理员权限，必要时请咨询您的系统管理员。是否要继续？</value>
@@ -392,7 +392,7 @@
     <value>登录已取消</value>
   </data>
   <data name="EditRemoteAccountDlg_Ardia_OneAccountSupported" xml:space="preserve">
-    <value>Skyline 不支持添加第二个 Ardia 帐户。要使用新帐户，请删除当前帐户并添加新帐户。</value>
+    <value>Skyline 不支持添加第二个 Ardia 账户。要使用新账户，请先删除当前账户，再添加新账户。</value>
   </data>
   <data name="EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection" xml:space="preserve">
     <value>正在测试远程帐户连接</value>

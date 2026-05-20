@@ -1000,6 +1000,6 @@
     <value>4</value>
   </data>
   <data name="textAlias.ToolTip" xml:space="preserve">
-    <value>帐户的用户友好名称。该信息将显示在 UI 中。</value>
+    <value>对用户友好的账户名称。该信息将显示在 UI 中。</value>
   </data>
 </root>
