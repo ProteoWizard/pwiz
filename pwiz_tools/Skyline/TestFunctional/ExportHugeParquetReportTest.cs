@@ -16,16 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parquet;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using pwiz.Skyline.Model.Databinding;
 
 namespace pwiz.SkylineTestFunctional
 {

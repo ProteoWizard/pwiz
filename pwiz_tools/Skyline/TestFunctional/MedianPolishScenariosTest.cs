@@ -49,8 +49,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 exportLiveReportDlg.ReportName = "PRISM";
                 exportLiveReportDlg.SetUseInvariantLanguage(true);
-                exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("PRISM.parquet"));
+                exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("PRISM-current.parquet"));
             });
+            // TODO: compare PRISM.parquet with PRISM-current.parquet
 
             RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportLiveReportDlg =>
             {
