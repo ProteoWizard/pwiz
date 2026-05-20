@@ -67,11 +67,13 @@ if ERRORLEVEL 1 (
 
 REM # Clean before build: TC agents expect a fresh slate every run so stale
 REM # bin/obj from a prior commit can't influence the current build. clean.bat
-REM # wipes everything build.bat would produce — see its header for the full
-REM # list. Default (no args) also wipes installer/cache + vendor-assemblies,
-REM # which means each TC run re-downloads the .NET runtime and re-extracts the
-REM # vendor SDKs from their 7z archives. Adds ~60s; worth it for "this build
-REM # only used inputs from this commit" certainty.
+REM # wipes everything build.bat produces (bin, obj, TestResults, installer
+REM # outputs, examples build trees) but keeps the slow-to-refetch caches
+REM # (.NET runtime download, extracted vendor SDK DLLs). Caches are content-
+REM # addressed by SHA-256 / git history so they can't drift commit-to-commit
+REM # — keeping them across builds saves ~60s of re-download / re-extract
+REM # without any freshness risk. Pass --all to clean.bat if you ever need
+REM # a paranoia-level reset.
 echo ##teamcity[progressMessage 'pwiz-sharp clean.bat']
 call "%SCRIPT_DIR%\clean.bat"
 set EXIT=%ERRORLEVEL%

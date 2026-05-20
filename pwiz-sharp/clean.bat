@@ -7,10 +7,11 @@ REM #
 REM # Mirrors cpp pwiz's clean.bat (one level up): removes everything the build
 REM # produces so the next build starts from a known-clean state.
 REM #
-REM # Default: wipe build outputs AND caches (matches TC's "fresh agent every
-REM # run" expectation). Pass --keep-cache (or -k) to preserve the .NET runtime
-REM # download + extracted vendor SDK assemblies — saves ~60s on a local
-REM # rebuild at the cost of carrying state across builds.
+REM # Default: wipe build outputs but KEEP the slow-to-refetch caches (.NET
+REM # runtime download + extracted vendor SDK assemblies). Pass --all (or -a)
+REM # to clear caches too — that's what TC does for "this build only used
+REM # inputs from this commit" certainty, but locally it's an extra ~60s of
+REM # re-download / re-extract that's rarely worth paying.
 REM #
 REM # What gets removed (always):
 REM #   - bin/ and obj/ under every project (dotnet build outputs, AOT publish
@@ -22,7 +23,7 @@ REM #   - examples/**/build/ (cmake build trees, including the AOT example)
 REM #   - src/Vendor/Common/VendorSdkPins.generated.cs (regenerated on every
 REM #     build from the vendor 7z archives' SHA-256 + git history)
 REM #
-REM # What gets removed (default; preserved by --keep-cache):
+REM # What gets removed only with --all:
 REM #   - installer/cache/windowsdesktop-runtime-win-x64.exe (~56 MB .NET 8
 REM #     runtime installer; re-downloaded by installer/build.ps1 on the next
 REM #     run if missing)
@@ -37,19 +38,18 @@ REM #     i-agree-to-the-vendor-licenses.bat after every clean)
 REM #   - .vs/ and *.user/*.suo files (IDE local state; not build output)
 REM #
 REM # Usage:
-REM #   clean.bat                  Full wipe (default).
-REM #   clean.bat --keep-cache     Preserve runtime download + vendor SDK
-REM #                              extractions.
-REM #   clean.bat -k               Short alias.
+REM #   clean.bat            Wipe build outputs, keep caches (default).
+REM #   clean.bat --all      Wipe caches too (TC-equivalent full reset).
+REM #   clean.bat -a         Short alias.
 REM # ------------------------------------------------------------------------
 
 set SCRIPT_DIR=%~dp0
 set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
 pushd "%SCRIPT_DIR%"
 
-set KEEP_CACHE=0
-if /I "%1"=="--keep-cache" set KEEP_CACHE=1
-if /I "%1"=="-k"           set KEEP_CACHE=1
+set CLEAN_CACHE=0
+if /I "%1"=="--all" set CLEAN_CACHE=1
+if /I "%1"=="-a"    set CLEAN_CACHE=1
 
 echo Cleaning pwiz-sharp build artifacts...
 
@@ -74,18 +74,18 @@ if exist src\Vendor\Common\VendorSdkPins.generated.cs (
     del /q src\Vendor\Common\VendorSdkPins.generated.cs
 )
 
-REM # Caches: wiped by default; --keep-cache preserves them.
-if %KEEP_CACHE%==0 (
+REM # Caches: preserved by default; wiped only with --all.
+if %CLEAN_CACHE%==1 (
     if exist installer\cache rmdir /s /q installer\cache
     for /d /r "%SCRIPT_DIR%\src\Vendor" %%d in (vendor-assemblies) do (
         if exist "%%d" rmdir /s /q "%%d" 2>nul
     )
 )
 
-if %KEEP_CACHE%==1 (
-    echo Clean complete ^(caches preserved^).
+if %CLEAN_CACHE%==1 (
+    echo Clean complete ^(caches wiped too^).
 ) else (
-    echo Clean complete.
+    echo Clean complete ^(caches preserved^).
 )
 
 popd
