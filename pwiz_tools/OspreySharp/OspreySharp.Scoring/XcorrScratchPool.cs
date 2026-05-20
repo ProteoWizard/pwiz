@@ -31,10 +31,12 @@ namespace pwiz.OspreySharp.Scoring
     /// A single set of scratch buffers reused across XCorr calls to avoid
     /// per-call LOH allocation on HRAM (NBins ~100K, ~800 KB per array).
     ///
-    /// Each field is a plain Large Object once pooled; the pool hands out
-    /// and takes back sets of four arrays, never the arrays individually,
-    /// so the binned/windowed/prefix/preprocessed buffers stay co-located
-    /// across the full preprocess -> score pipeline.
+    /// All preprocessing math runs in f64 on these buffers; the per-
+    /// spectrum cache that feeds the dot product is f32 and is owned by
+    /// the caller (see <c>SpectralScorer.PreprocessSpectrumForXcorrInto</c>).
+    /// The f64 scratch is shared between the calibration path
+    /// (XcorrAtScan) and the HRAM main-search cache build path, so a
+    /// single rented scratch services both.
     /// </summary>
     public sealed class XcorrScratch
     {
@@ -44,16 +46,6 @@ namespace pwiz.OspreySharp.Scoring
         public readonly double[] Preprocessed;  // NBins, fully overwritten, no zeroing needed
         public readonly bool[] VisitedBins;     // NBins, touched at fragment positions, needs zeroing on return
 
-        // f32 companion buffers for the HRAM preprocess-into path
-        // (SpectralScorer.PreprocessSpectrumForXcorrInto). One scratch
-        // is rented per WINDOW and reused across all spectra in the
-        // window, so BinnedF must be zeroed by the caller PER SPECTRUM
-        // (it accumulates via +=); the others are fully overwritten and
-        // need no zeroing between spectra.
-        public readonly float[] BinnedF;        // NBins, accumulated via +=, caller zeros per spectrum
-        public readonly float[] WindowedF;      // NBins, fully overwritten
-        public readonly float[] PrefixF;        // NBins+1, fully overwritten
-
         public XcorrScratch(int nBins)
         {
             Binned = new double[nBins];
@@ -61,10 +53,6 @@ namespace pwiz.OspreySharp.Scoring
             Prefix = new double[nBins + 1];
             Preprocessed = new double[nBins];
             VisitedBins = new bool[nBins];
-
-            BinnedF = new float[nBins];
-            WindowedF = new float[nBins];
-            PrefixF = new float[nBins + 1];
         }
     }
 
