@@ -216,6 +216,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                 .ToHashSet();
         }
 
+        public double?[] GetPeptideLog2Abundances(SrmSettings settings, HashSet<int> replicateIndexes,
+            SummarizationMethod peptideSummarizationMethod)
+        {
+            return GetPeptideLog2Abundances(settings, replicateIndexes, peptideSummarizationMethod,
+                NormalizationMethod);
+        }
+
         /// <summary>
         /// Returns per-replicate log2 peptide abundance using the chosen peptide-level
         /// summarization method. For MEDIANPOLISH, returns the polish row effect plus
@@ -223,7 +230,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         /// returns log2 of the per-replicate transition-area sum.
         /// </summary>
         public double?[] GetPeptideLog2Abundances(SrmSettings settings, HashSet<int> replicateIndexes,
-            SummarizationMethod peptideSummarizationMethod)
+            SummarizationMethod peptideSummarizationMethod, NormalizationMethod normalizationMethod)
         {
             if (Equals(peptideSummarizationMethod, SummarizationMethod.MEDIANPOLISH))
             {
@@ -236,7 +243,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 // Sum the same imputed transition matrix the median polish uses, so the summed
                 // result matches skyline-prism's "sum" rollup (which also imputes missing/zero
                 // transitions before aggregating).
-                var replicateValues = GetTransitionLog2Abundances(settings, replicateCount, NormalizationMethod);
+                var replicateValues = GetTransitionLog2Abundances(settings, replicateCount, normalizationMethod);
                 for (int i = 0; i < replicateCount; i++)
                 {
                     double sum = 0;
@@ -254,7 +261,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return result;
             }
 
-            var quantificationSettings = QuantificationSettings.ChangeNormalizationMethod(NormalizationMethod);
+            var quantificationSettings = QuantificationSettings.ChangeNormalizationMethod(normalizationMethod);
             for (int i = 0; i < replicateCount; i++)
             {
                 var transitionIntensities = GetTransitionIntensities(settings, i, false);

@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -126,49 +127,71 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             var cancellationToken = productionMonitor.CancellationToken;
             var rtAreaData = new Dictionary<FileDataKey, List<RtAreaPoint>>();
-            int moleculeCount = Math.Max(1, document.MoleculeCount);
+            // Roll transitions up to one log2 abundance per peptide per file using
+            // PeptideQuantifier, so the RT LOESS curves honor the document's quantification
+            // settings - in particular QuantificationSettings.MsLevel and each transition's
+            // IsQuantitative flag. (Previously this read TransitionGroupChromInfo.Area, the
+            // raw precursor total, which includes MS1 precursor and non-quantitative
+            // transitions regardless of MsLevel.) This mirrors skyline-prism, which sums only
+            // the quantitative MS-level transitions into a single per-peptide abundance before
+            // fitting the curves.
+            var noneNormalization = new NormalizedValueCalculator(cancellationToken, document);
+            // AVERAGING ignores this set (it summarizes every replicate); it is required by the
+            // shared GetPeptideLog2Abundances signature and matches PolishedPeptideAbundances.
+            var replicateIndexes = PeptideQuantifier.GetMedianPolishReplicates(document.Settings);
+
+            var moleculeGroupMolecules = document.MoleculeGroups
+                .SelectMany(mg => mg.Molecules
+                    .Where(mol => !mol.IsDecoy &&
+                                  PeptideDocNode.STANDARD_TYPE_IRT != mol.GlobalStandardType)
+                    .Select(mol => (mg, mol)))
+                .ToList();
+            int molCount = Math.Max(1, moleculeGroupMolecules.Count);
             int processed = 0;
-            ParallelEx.ForEach(document.Molecules, peptide =>
+
+            ParallelEx.For(0, moleculeGroupMolecules.Count, i =>
             {
                 if (cancellationToken.IsCancellationRequested)
                     return;
-
                 try
                 {
-                    if (peptide.IsDecoy)
-                        return;
-                    if (PeptideDocNode.STANDARD_TYPE_IRT == peptide.GlobalStandardType)
+                    var (peptideGroup, peptide) = moleculeGroupMolecules[i];
+                    var quantifier = PeptideQuantifier.GetPeptideQuantifier(noneNormalization,
+                        document.Settings, peptideGroup.PeptideGroup, peptide);
+                    // Impute missing/zero transitions so the per-file abundances match the
+                    // transition-by-sample matrix skyline-prism sums before fitting its curves.
+                    quantifier.ImputeMissingValues = true;
+                    // AVERAGING = sum of the quantitative transition areas, matching
+                    // skyline-prism's default "sum" transition->peptide rollup.
+                    var log2Abundances = quantifier.GetPeptideLog2Abundances(document.Settings,
+                        replicateIndexes, SummarizationMethod.AVERAGING, NormalizationMethod.NONE);
+                    if (log2Abundances == null)
                         return;
 
-                    foreach (var transitionGroup in peptide.TransitionGroups)
+                    // One retention time per peptide (mean over all measured precursor peaks),
+                    // used as the x value for every replicate's point.
+                    double meanRt = quantifier.GetPeptideMeanRetentionTime(document.Settings);
+                    if (double.IsNaN(meanRt))
+                        return;
+
+                    for (int iReplicate = 0; iReplicate < log2Abundances.Length; iReplicate++)
                     {
-                        if (transitionGroup.Results == null)
+                        var value = log2Abundances[iReplicate];
+                        if (!value.HasValue || double.IsNaN(value.Value) || double.IsInfinity(value.Value))
                             continue;
-                        for (int iResult = 0; iResult < transitionGroup.Results.Count; iResult++)
-                        {
-                            if (transitionGroup.Results[iResult].IsEmpty)
-                                continue;
-                            foreach (var groupChromInfo in transitionGroup.Results[iResult])
-                            {
-                                if (groupChromInfo.OptimizationStep != 0)
-                                    continue;
-                                if (!groupChromInfo.RetentionTime.HasValue || !groupChromInfo.Area.HasValue)
-                                    continue;
-                                if (groupChromInfo.Area.Value <= 0)
-                                    continue;
 
-                                var dataKey = new FileDataKey(iResult, groupChromInfo.FileId);
-                                var point = new RtAreaPoint(groupChromInfo.RetentionTime.Value,
-                                    Math.Log(groupChromInfo.Area.Value, 2.0));
-                                lock (rtAreaData)
+                        foreach (var fileId in GetReplicateFileIds(document.Settings, iReplicate))
+                        {
+                            var dataKey = new FileDataKey(iReplicate, fileId);
+                            var point = new RtAreaPoint(meanRt, value.Value);
+                            lock (rtAreaData)
+                            {
+                                if (!rtAreaData.TryGetValue(dataKey, out var list))
                                 {
-                                    if (!rtAreaData.TryGetValue(dataKey, out var list))
-                                    {
-                                        list = new List<RtAreaPoint>();
-                                        rtAreaData.Add(dataKey, list);
-                                    }
-                                    list.Add(point);
+                                    list = new List<RtAreaPoint>();
+                                    rtAreaData.Add(dataKey, list);
                                 }
+                                list.Add(point);
                             }
                         }
                     }
@@ -178,11 +201,24 @@ namespace pwiz.Skyline.Model.GroupComparison
                     lock (rtAreaData)
                     {
                         processed++;
-                        productionMonitor.SetProgress(processed * 50 / moleculeCount);
+                        productionMonitor.SetProgress(processed * 50 / molCount);
                     }
                 }
             });
             return rtAreaData;
+        }
+
+        private static IEnumerable<ChromFileInfoId> GetReplicateFileIds(SrmSettings settings, int replicateIndex)
+        {
+            if (settings.MeasuredResults == null || replicateIndex < 0
+                || replicateIndex >= settings.MeasuredResults.Chromatograms.Count)
+            {
+                yield break;
+            }
+            foreach (var fileInfo in settings.MeasuredResults.Chromatograms[replicateIndex].MSDataFileInfos)
+            {
+                yield return fileInfo.FileId;
+            }
         }
 
         private static RtLoessCurves ComputeCurves(ProductionMonitor productionMonitor,
