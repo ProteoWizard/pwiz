@@ -443,11 +443,11 @@ namespace pwiz.OspreySharp.Tasks
             // Cross-impl bisection: dump sorted detected_peptides to a file so it
             // can be diffed against the Rust side. Gated by env var to keep zero
             // overhead in production runs.
-            if (System.Environment.GetEnvironmentVariable(@"OSPREY_DUMP_DETECTED_PEPTIDES") == "1")
+            if (Environment.GetEnvironmentVariable(@"OSPREY_DUMP_DETECTED_PEPTIDES") == "1")
             {
-                var sorted = new System.Collections.Generic.List<string>(detectedPeptides);
-                sorted.Sort(System.StringComparer.Ordinal);
-                System.IO.File.WriteAllLines("cs_stage7_detected_peptides.txt", sorted);
+                var sorted = new List<string>(detectedPeptides);
+                sorted.Sort(StringComparer.Ordinal);
+                File.WriteAllLines("cs_stage7_detected_peptides.txt", sorted);
                 _ctx.LogInfo(string.Format(
                     "[DIAG] Wrote cs_stage7_detected_peptides.txt ({0} entries)",
                     sorted.Count));
