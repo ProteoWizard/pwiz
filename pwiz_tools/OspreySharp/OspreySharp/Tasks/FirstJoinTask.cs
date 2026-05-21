@@ -1256,7 +1256,18 @@ namespace pwiz.OspreySharp.Tasks
             // scores drift on multi-file datasets even when feature columns are
             // bit-equal. Mirrors Rust pipeline.rs::run_percolator_fdr.
             foreach (var kvp in perFileEntries)
-                kvp.Value.Sort((a, b) => a.EntryId.CompareTo(b.EntryId));
+            {
+                kvp.Value.Sort((a, b) =>
+                {
+                    int c = a.EntryId.CompareTo(b.EntryId);
+                    if (c != 0) return c;
+                    c = a.Charge.CompareTo(b.Charge);
+                    if (c != 0) return c;
+                    c = a.ScanNumber.CompareTo(b.ScanNumber);
+                    if (c != 0) return c;
+                    return a.ParquetIndex.CompareTo(b.ParquetIndex);
+                });
+            }
 
             // Build PercolatorEntry list from all files
             var percEntries = new List<PercolatorEntry>();
@@ -1296,9 +1307,23 @@ namespace pwiz.OspreySharp.Tasks
                         nInputDecoys++;
                     else nInputTargets++;
 
+                    // PSM Id must uniquely identify each observation so the
+                    // result -> FdrEntry write-back can score every row
+                    // independently. EntryId alone is NOT unique within a
+                    // file: a single base_id with multiple scan-time
+                    // observations (different scan numbers, same charge,
+                    // same modified_sequence) shares one EntryId. Using
+                    // "{fileName}_{EntryId}" collided those rows in
+                    // resultMap, leaving the last-inserted score
+                    // overwriting every same-EntryId observation's
+                    // FdrEntry.Score and producing 176-185 score
+                    // divergences per file vs. Rust's 4-component psm_id.
+                    // Mirrors osprey-fdr/src/percolator.rs:5978-5980.
                     percEntries.Add(new PercolatorEntry
                     {
-                        Id = string.Format("{0}_{1}", fileName, fdrEntry.EntryId),
+                        Id = string.Format("{0}_{1}_{2}_{3}",
+                            fileName, fdrEntry.ModifiedSequence,
+                            fdrEntry.Charge, fdrEntry.ScanNumber),
                         FileName = fileName,
                         Peptide = fdrEntry.ModifiedSequence,
                         Charge = fdrEntry.Charge,
@@ -1358,7 +1383,12 @@ namespace pwiz.OspreySharp.Tasks
                 string fileName = kvp.Key;
                 foreach (var fdrEntry in kvp.Value)
                 {
-                    string id = string.Format("{0}_{1}", fileName, fdrEntry.EntryId);
+                    // 4-component psm_id matches the construction in
+                    // the loop above so each FdrEntry pulls back its
+                    // own PercolatorResult. Mirrors Rust direct path.
+                    string id = string.Format("{0}_{1}_{2}_{3}",
+                        fileName, fdrEntry.ModifiedSequence,
+                        fdrEntry.Charge, fdrEntry.ScanNumber);
                     PercolatorResult result;
                     if (resultMap.TryGetValue(id, out result))
                     {

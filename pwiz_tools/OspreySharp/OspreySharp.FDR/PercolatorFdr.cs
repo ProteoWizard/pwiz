@@ -248,6 +248,21 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
 
+            // One-shot diagnostic for 2nd-pass divergence localization.
+            // Gated by OSPREY_DUMP_PERC_INPUT=1; exits via
+            // OSPREY_PERC_INPUT_ONLY=1. Dumps the raw per-entry feature
+            // vectors fed into the standardizer so cross-impl compare
+            // can pinpoint which rows differ.
+            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_PERC_INPUT"), @"1"))
+            {
+                WriteStage5PercInputDump(entries, config.FeatureNames);
+                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_PERC_INPUT_ONLY"), @"1"))
+                {
+                    Console.Error.WriteLine(@"[BISECT] OSPREY_PERC_INPUT_ONLY set - aborting after dump");
+                    Environment.Exit(0);
+                }
+            }
+
             // 3a. Best-per-precursor: pick the single best-scoring observation per
             //     (base_id, isDecoy) tuple across all files. With N files per peptide,
             //     this avoids the SVM seeing the same precursor's target/decoy pair
@@ -2131,7 +2146,20 @@ namespace pwiz.OspreySharp.FDR
 
             var order = new int[n];
             for (int i = 0; i < n; i++) order[i] = i;
-            Array.Sort(order, (a, b) => entries[a].EntryId.CompareTo(entries[b].EntryId)); // Array.Sort OK: EntryId is unique per entry, so no ties
+            // EntryId is NOT unique in the 2nd-pass entries[] vector --
+            // a single (base_id, charge) precursor observed across N
+            // files contributes N entries with the same EntryId, and
+            // post-reconciliation gap-fill can add yet more duplicates
+            // at the same (EntryId, Charge, ScanNumber). Tie-break on
+            // the input index a (native_position) so the dump order
+            // is deterministic AND matches Rust's stable
+            // sort_by_key(|&i| entries[i].entry_id), which preserves
+            // native_position order at duplicate EntryIds.
+            Array.Sort(order, (a, b) => // Array.Sort OK: tie-break on native_position (the input index a/b) makes the comparator total
+            {
+                int c = entries[a].EntryId.CompareTo(entries[b].EntryId);
+                return c != 0 ? c : a.CompareTo(b);
+            });
 
             using (var sw = new StreamWriter(path))
             {
@@ -2235,6 +2263,59 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
             Console.Error.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
+        }
+
+        /// <summary>
+        /// One-shot diagnostic dump of the raw per-entry feature vectors
+        /// fed into FeatureStandardizer.FitTransform. Mirrors Rust
+        /// dump_stage5_perc_input. Writes cs_stage5_perc_input.tsv with
+        /// columns native_position, entry_id, is_decoy, &lt;features...&gt;
+        /// sorted by (entry_id, native_position).
+        /// </summary>
+        private static void WriteStage5PercInputDump(
+            IList<PercolatorEntry> entries,
+            string[] featureNames)
+        {
+            const string path = @"cs_stage5_perc_input.tsv";
+            var inv = CultureInfo.InvariantCulture;
+            int nFeatures = entries.Count > 0 ? entries[0].Features.Length : 0;
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.Write(@"native_position	entry_id	is_decoy");
+                for (int i = 0; i < nFeatures; i++)
+                {
+                    string name = (featureNames != null && i < featureNames.Length)
+                        ? featureNames[i]
+                        : @"unknown";
+                    sw.Write('\t'); sw.Write(name);
+                }
+                sw.WriteLine();
+
+                int n = entries.Count;
+                int[] order = new int[n];
+                for (int i = 0; i < n; i++) order[i] = i;
+                Array.Sort(order, (a, b) => // Array.Sort OK: tie-break on native_position (the input index a/b) makes the comparator total
+                {
+                    int c = entries[a].EntryId.CompareTo(entries[b].EntryId);
+                    return c != 0 ? c : a.CompareTo(b);
+                });
+
+                foreach (int idx in order)
+                {
+                    var e = entries[idx];
+                    sw.Write(idx.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                    for (int i = 0; i < e.Features.Length; i++)
+                    {
+                        sw.Write('\t');
+                        sw.Write(Diagnostics.FormatF64Roundtrip(e.Features[i]));
+                    }
+                    sw.WriteLine();
+                }
+            }
+            Console.Error.WriteLine(@"Wrote Stage 5 Percolator input dump: {0} ({1} rows)", path, entries.Count);
         }
 
         // ============================================================
