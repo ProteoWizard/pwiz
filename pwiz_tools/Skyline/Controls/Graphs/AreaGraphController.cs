@@ -90,6 +90,18 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.RtLoessShowValue = value.ToString(); }
         }
 
+        public static bool RtLoessShowLegend
+        {
+            get { return Settings.Default.RtLoessShowLegend; }
+            set { Settings.Default.RtLoessShowLegend = value; }
+        }
+
+        public static bool RtLoessShowPeptides
+        {
+            get { return Settings.Default.RtLoessShowPeptides; }
+            set { Settings.Default.RtLoessShowPeptides = value; }
+        }
+
         public static NormalizeOption AreaNormalizeOption
         {
             get { return Settings.Default.AreaNormalizeOption; }

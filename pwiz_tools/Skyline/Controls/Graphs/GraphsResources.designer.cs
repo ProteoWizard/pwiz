@@ -519,6 +519,15 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("AreaRtLoessGraphPane_Global_Median", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string AreaRtLoessGraphPane_Peptides {
+            get {
+                return ResourceManager.GetString("AreaRtLoessGraphPane_Peptides", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Log2 Abundance.

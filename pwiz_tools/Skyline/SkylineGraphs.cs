@@ -3028,6 +3028,18 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
+        public void SetRtLoessShowLegend(bool showLegend)
+        {
+            AreaGraphController.RtLoessShowLegend = showLegend;
+            UpdatePeakAreaGraph();
+        }
+
+        public void SetRtLoessShowPeptides(bool showPeptides)
+        {
+            AreaGraphController.RtLoessShowPeptides = showPeptides;
+            UpdatePeakAreaGraph();
+        }
+
         public void SynchronizeSummaryZooming(GraphSummary graphSummary = null, ZoomState zoomState = null)
         {
             var activeGraphSummary = graphSummary ?? dockPanel.ActiveContent as GraphSummary;

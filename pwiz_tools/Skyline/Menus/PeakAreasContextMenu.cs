@@ -440,12 +440,20 @@ namespace pwiz.Skyline.Menus
         private void rtLoessShowNormalizedMedianMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.SetRtLoessShowValue(RtLoessShowValue.NormalizedMedian);
 
+        private void rtLoessShowLegendMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowLegend(!AreaGraphController.RtLoessShowLegend);
+
+        private void rtLoessShowPeptidesMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowPeptides(!AreaGraphController.RtLoessShowPeptides);
+
         private void UpdateRtLoessShowValueMenuItemCheckedState()
         {
             var current = AreaGraphController.RtLoessShowValue;
             rtLoessShowMedianMenuItem.Checked = current == RtLoessShowValue.Median;
             rtLoessShowNormalizationFactorMenuItem.Checked = current == RtLoessShowValue.NormalizationFactor;
             rtLoessShowNormalizedMedianMenuItem.Checked = current == RtLoessShowValue.NormalizedMedian;
+            rtLoessShowLegendMenuItem.Checked = AreaGraphController.RtLoessShowLegend;
+            rtLoessShowPeptidesMenuItem.Checked = AreaGraphController.RtLoessShowPeptides;
         }
 
         private void barAreaGraphTypeMenuItem_Click(object sender, EventArgs e)

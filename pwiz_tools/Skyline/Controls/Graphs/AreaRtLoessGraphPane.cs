@@ -25,9 +25,11 @@ using System.Windows.Forms;
 using Dapper;
 using pwiz.Common.Collections;
 using pwiz.Common.Colors;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using ZedGraph;
@@ -38,6 +40,10 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private readonly Receiver<ReferenceValue<SrmDocument>, RtLoessCurves> _calcListener;
         private PaneProgressBar _progressBar;
+        // The scatter curve of individual peptide points for the selected replicate (null when
+        // "Peptides" is off). Each point's Tag is the peptide's IdentityPath, used to select the
+        // peptide in the Targets tree when clicked.
+        private CurveItem _peptidesCurve;
 
         public AreaRtLoessGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
@@ -90,6 +96,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void UpdateGraph(SrmDocument document, RtLoessCurves rtLoessCurves)
         {
+            _peptidesCurve = null;
             if (!rtLoessCurves.HasCurves)
             {
                 Title.Text = GraphsResources.AreaRtLoessGraphPane_No_RT_LOESS_Data;
@@ -186,6 +193,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 medianCurve.Label.IsVisible = true;
             }
 
+            if (AreaGraphController.RtLoessShowPeptides)
+            {
+                AddPeptidePoints(document, rtLoessCurves, showValue, globalRtGrid, globalFittedValues);
+            }
+
             XAxis.Title.Text = GraphsResources.AreaRtLoessGraphPane_Retention_Time__min_;
             YAxis.Title.Text = showValue == RtLoessShowValue.NormalizationFactor
                 ? GraphsResources.AreaRtLoessGraphPane_Log2_Adjustment
@@ -203,15 +215,122 @@ namespace pwiz.Skyline.Controls.Graphs
                     break;
             }
 
-            Legend.IsVisible = showValue != RtLoessShowValue.NormalizedMedian &&
+            Legend.IsVisible = AreaGraphController.RtLoessShowLegend &&
                                CurveList.Any(c => c.Label.IsVisible);
 
             AxisChange();
         }
 
+        /// <summary>
+        /// Adds a scatter curve of the individual per-precursor (RT, log2 area) points for the
+        /// currently selected replicate. Each point is shifted by the same transform that maps a
+        /// replicate's raw fitted curve to the curve currently displayed, so the points always
+        /// scatter around the visible curve:
+        ///   Median: the raw log2 area.
+        ///   NormalizationFactor: log2 area minus the global median curve (centers on the factor).
+        ///   NormalizedMedian: log2 area minus the RT LOESS adjustment (the normalized quantity).
+        /// Each point's Tag is the peptide's IdentityPath so a click can select it in the tree.
+        /// </summary>
+        private void AddPeptidePoints(SrmDocument document, RtLoessCurves rtLoessCurves,
+            RtLoessShowValue showValue, double[] globalRtGrid, double[] globalFittedValues)
+        {
+            var measuredResults = document.MeasuredResults;
+            int replicateIndex = GraphSummary.ResultsIndex;
+            if (measuredResults == null || replicateIndex < 0 ||
+                replicateIndex >= measuredResults.Chromatograms.Count)
+            {
+                return;
+            }
+            // The Normalization Factor and Normalized Median transforms need the global median
+            // curve; without it there is nothing meaningful to plot.
+            if (showValue != RtLoessShowValue.Median && (globalRtGrid == null || globalFittedValues == null))
+            {
+                return;
+            }
+
+            var pointList = new PointPairList();
+            foreach (var moleculeGroup in document.MoleculeGroups)
+            {
+                foreach (var peptide in moleculeGroup.Molecules)
+                {
+                    if (peptide.IsDecoy || PeptideDocNode.STANDARD_TYPE_IRT == peptide.GlobalStandardType)
+                    {
+                        continue;
+                    }
+                    var identityPath = new IdentityPath(moleculeGroup.PeptideGroup, peptide.Peptide);
+                    foreach (var transitionGroup in peptide.TransitionGroups)
+                    {
+                        if (transitionGroup.Results == null || replicateIndex >= transitionGroup.Results.Count)
+                        {
+                            continue;
+                        }
+                        var chromInfoList = transitionGroup.Results[replicateIndex];
+                        if (chromInfoList.IsEmpty)
+                        {
+                            continue;
+                        }
+                        foreach (var chromInfo in chromInfoList)
+                        {
+                            if (chromInfo == null || chromInfo.OptimizationStep != 0)
+                            {
+                                continue;
+                            }
+                            if (!chromInfo.RetentionTime.HasValue || !chromInfo.Area.HasValue ||
+                                chromInfo.Area.Value <= 0)
+                            {
+                                continue;
+                            }
+                            double rt = chromInfo.RetentionTime.Value;
+                            double log2Area = Math.Log(chromInfo.Area.Value, 2);
+                            double? y = TransformPeptidePoint(showValue, log2Area, rt, replicateIndex,
+                                chromInfo.FileId, rtLoessCurves, globalRtGrid, globalFittedValues);
+                            if (y.HasValue)
+                            {
+                                pointList.Add(new PointPair(rt, y.Value) { Tag = identityPath });
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (pointList.Count == 0)
+            {
+                return;
+            }
+
+            var color = ColorScheme.ChromGraphItemSelected;
+            var curve = AddCurve(GraphsResources.AreaRtLoessGraphPane_Peptides, pointList, color, SymbolType.Circle);
+            curve.Line.IsVisible = false;
+            curve.Symbol.IsVisible = true;
+            curve.Symbol.Size = 5f;
+            curve.Symbol.Fill = new Fill(color);
+            curve.Label.IsVisible = true;
+            _peptidesCurve = curve;
+        }
+
+        private static double? TransformPeptidePoint(RtLoessShowValue showValue, double log2Area, double rt,
+            int replicateIndex, ChromFileInfoId fileId, RtLoessCurves rtLoessCurves,
+            double[] globalRtGrid, double[] globalFittedValues)
+        {
+            switch (showValue)
+            {
+                case RtLoessShowValue.NormalizationFactor:
+                    // Raw area divided by the global median value at this RT, so the points
+                    // scatter around the normalization factor curve (sample - global).
+                    return log2Area - LoessInterpolator.Interpolate(rt, globalRtGrid, globalFittedValues);
+                case RtLoessShowValue.NormalizedMedian:
+                    // The normalized quantity: subtract this file's RT LOESS adjustment (sample -
+                    // global), so the points scatter around the global median curve.
+                    var adjustment = rtLoessCurves.GetAdjustment(replicateIndex, fileId, rt);
+                    return adjustment.HasValue ? log2Area - adjustment.Value : (double?) null;
+                default:
+                    return log2Area;
+            }
+        }
+
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (TryFindReplicateIndexAt(sender, e.Location, out _))
+            if (TryFindPeptideAt(e.Location, out _) || TryFindReplicateIndexAt(sender, e.Location, out _))
             {
                 sender.Cursor = Cursors.Hand;
                 return true;
@@ -226,6 +345,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             if (!(sender is ZedGraphControl ctx))
                 return;
+
+            // A click on an individual peptide point selects that peptide in the Targets tree.
+            if (TryFindPeptideAt(e.Location, out var identityPath))
+            {
+                GraphSummary.StateProvider.SelectPath(identityPath);
+                GraphSummary.Focus();
+                return;
+            }
+
             if (!TryFindReplicateIndexAt(ctx, e.Location, out var replicateIndex))
                 return;
 
@@ -258,6 +386,24 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 replicateIndex = pointIndex;
                 return true;
+            }
+
+            return false;
+        }
+
+        private bool TryFindPeptideAt(PointF mousePt, out IdentityPath identityPath)
+        {
+            identityPath = null;
+            if (_peptidesCurve == null)
+            {
+                return false;
+            }
+            if (FindNearestPoint(mousePt, out var nearestCurve, out var iNearest) &&
+                ReferenceEquals(nearestCurve, _peptidesCurve) &&
+                iNearest >= 0 && iNearest < _peptidesCurve.Points.Count)
+            {
+                identityPath = _peptidesCurve.Points[iNearest].Tag as IdentityPath;
+                return identityPath != null;
             }
 
             return false;

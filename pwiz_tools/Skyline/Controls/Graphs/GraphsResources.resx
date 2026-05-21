@@ -392,6 +392,9 @@
   <data name="AreaRtLoessGraphPane_Global_Median" xml:space="preserve">
     <value>Global Median</value>
   </data>
+  <data name="AreaRtLoessGraphPane_Peptides" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
   <data name="AreaRtLoessGraphPane_Log2_Abundance" xml:space="preserve">
     <value>Log2 Abundance</value>
   </data>

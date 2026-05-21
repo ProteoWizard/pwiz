@@ -718,6 +718,21 @@
   <data name="rtLoessShowNormalizedMedianMenuItem.Text" xml:space="preserve">
     <value>Normalized Median</value>
   </data>
+  <data name="rtLoessShowSeparator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>197, 6</value>
+  </data>
+  <data name="rtLoessShowLegendMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowLegendMenuItem.Text" xml:space="preserve">
+    <value>Legend</value>
+  </data>
+  <data name="rtLoessShowPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowPeptidesMenuItem.Text" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
   <data name="&gt;&gt;areaRtLoessContextMenuItem.Name" xml:space="preserve">
     <value>areaRtLoessContextMenuItem</value>
   </data>
@@ -746,6 +761,24 @@
     <value>rtLoessShowNormalizedMedianMenuItem</value>
   </data>
   <data name="&gt;&gt;rtLoessShowNormalizedMedianMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowSeparator.Name" xml:space="preserve">
+    <value>rtLoessShowSeparator</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowSeparator.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowLegendMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowLegendMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowLegendMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowPeptidesMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowPeptidesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowPeptidesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

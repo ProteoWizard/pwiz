@@ -43,6 +43,9 @@ namespace pwiz.Skyline.Menus
             this.rtLoessShowMedianMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rtLoessShowNormalizationFactorMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rtLoessShowNormalizedMedianMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.rtLoessShowLegendMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.barAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lineAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -153,7 +156,10 @@ namespace pwiz.Skyline.Menus
             this.rtLoessShowValueContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.rtLoessShowMedianMenuItem,
             this.rtLoessShowNormalizationFactorMenuItem,
-            this.rtLoessShowNormalizedMedianMenuItem});
+            this.rtLoessShowNormalizedMedianMenuItem,
+            this.rtLoessShowSeparator,
+            this.rtLoessShowLegendMenuItem,
+            this.rtLoessShowPeptidesMenuItem});
             this.rtLoessShowValueContextMenuItem.Name = "rtLoessShowValueContextMenuItem";
             resources.ApplyResources(this.rtLoessShowValueContextMenuItem, "rtLoessShowValueContextMenuItem");
             //
@@ -174,9 +180,26 @@ namespace pwiz.Skyline.Menus
             this.rtLoessShowNormalizedMedianMenuItem.Name = "rtLoessShowNormalizedMedianMenuItem";
             resources.ApplyResources(this.rtLoessShowNormalizedMedianMenuItem, "rtLoessShowNormalizedMedianMenuItem");
             this.rtLoessShowNormalizedMedianMenuItem.Click += new System.EventHandler(this.rtLoessShowNormalizedMedianMenuItem_Click);
-            // 
+            //
+            // rtLoessShowSeparator
+            //
+            this.rtLoessShowSeparator.Name = "rtLoessShowSeparator";
+            resources.ApplyResources(this.rtLoessShowSeparator, "rtLoessShowSeparator");
+            //
+            // rtLoessShowLegendMenuItem
+            //
+            this.rtLoessShowLegendMenuItem.Name = "rtLoessShowLegendMenuItem";
+            resources.ApplyResources(this.rtLoessShowLegendMenuItem, "rtLoessShowLegendMenuItem");
+            this.rtLoessShowLegendMenuItem.Click += new System.EventHandler(this.rtLoessShowLegendMenuItem_Click);
+            //
+            // rtLoessShowPeptidesMenuItem
+            //
+            this.rtLoessShowPeptidesMenuItem.Name = "rtLoessShowPeptidesMenuItem";
+            resources.ApplyResources(this.rtLoessShowPeptidesMenuItem, "rtLoessShowPeptidesMenuItem");
+            this.rtLoessShowPeptidesMenuItem.Click += new System.EventHandler(this.rtLoessShowPeptidesMenuItem_Click);
+            //
             // graphTypeToolStripMenuItem
-            // 
+            //
             this.graphTypeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.barAreaGraphDisplayTypeMenuItem,
             this.lineAreaGraphDisplayTypeMenuItem});
@@ -471,6 +494,9 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem rtLoessShowMedianMenuItem;
         private System.Windows.Forms.ToolStripMenuItem rtLoessShowNormalizationFactorMenuItem;
         private System.Windows.Forms.ToolStripMenuItem rtLoessShowNormalizedMedianMenuItem;
+        private System.Windows.Forms.ToolStripSeparator rtLoessShowSeparator;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowLegendMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowPeptidesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;

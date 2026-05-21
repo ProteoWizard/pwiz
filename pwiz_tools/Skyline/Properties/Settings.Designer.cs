@@ -2628,6 +2628,30 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RtLoessShowLegend {
+            get {
+                return ((bool)(this["RtLoessShowLegend"]));
+            }
+            set {
+                this["RtLoessShowLegend"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RtLoessShowPeptides {
+            get {
+                return ((bool)(this["RtLoessShowPeptides"]));
+            }
+            set {
+                this["RtLoessShowPeptides"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("NaN")]
         public double AreaCVMinLog10Area {
             get {
