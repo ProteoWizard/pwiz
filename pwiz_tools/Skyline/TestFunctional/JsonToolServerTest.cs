@@ -1271,6 +1271,15 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any(),
                 @"Session-denied state must not open a second dialog");
 
+            // Input validation must run before the environment check: an invalid
+            // formId throws ArgumentException whether or not screen capture is
+            // currently available. (Regression guard for #4229 - on nightly
+            // machines with disconnected Remote Desktop, IsDesktopAvailable
+            // returned false and short-circuited the form-existence check.)
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetFormImage(@"NonexistentForm:NoTitle",
+                    TestFilesDir.GetTestPath(@"denied_invalid.png")));
+
             // Reset and walk through the Allow path.
             RunUI(ScreenCapture.ResetSessionPermission);
             string allowPath = TestFilesDir.GetTestPath(@"allow_test.png");
