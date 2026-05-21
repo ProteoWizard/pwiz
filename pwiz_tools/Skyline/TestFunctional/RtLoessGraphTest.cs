@@ -61,6 +61,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyLegendToggle();
             VerifyPeptidesToggleAndSelection();
             VerifyAdaptiveAlpha();
+            VerifyZoomReducesVisiblePoints();
         }
 
         private void VerifyLegendToggle()
@@ -147,6 +148,40 @@ namespace pwiz.SkylineTestFunctional
                 var curve = (LineItem) FindPeptidesCurve(pane);
                 Assert.IsNotNull(curve);
                 Assert.AreEqual(255, curve.Symbol.Border.Color.A);
+            });
+        }
+
+        private void VerifyZoomReducesVisiblePoints()
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.SetRtLoessShowPeptides(true);
+                SkylineWindow.SetRtLoessAdaptiveAlpha(true);
+            });
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                Assert.IsTrue(TryGetRtLoessPane(out var pane));
+                var curve = (AreaRtLoessGraphPane.PeptidePointsCurve) FindPeptidesCurve(pane);
+                Assert.IsNotNull(curve);
+
+                int fullCount = curve.CountVisiblePoints(pane);
+                Assert.IsTrue(fullCount > 0);
+                int fullAlpha = curve.GetAlphaForPane(pane);
+
+                // Zoom the X axis to a narrow window in the middle of the range. Fewer points are
+                // then visible, so the adaptive alpha must not decrease.
+                var scale = pane.XAxis.Scale;
+                double mid = (scale.Min + scale.Max) / 2;
+                double half = (scale.Max - scale.Min) / 10;
+                scale.MinAuto = false;
+                scale.MaxAuto = false;
+                scale.Min = mid - half;
+                scale.Max = mid + half;
+
+                int zoomedCount = curve.CountVisiblePoints(pane);
+                Assert.IsTrue(zoomedCount < fullCount);
+                Assert.IsTrue(curve.GetAlphaForPane(pane) >= fullAlpha);
             });
         }
 

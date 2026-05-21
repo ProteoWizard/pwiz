@@ -38,15 +38,6 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     internal class AreaRtLoessGraphPane : SummaryGraphPane
     {
-        // Adaptive transparency for the hollow peptide point circles: with many points the alpha
-        // is lowered so dense clusters do not merge into a solid block, and with few points it is
-        // raised so the handful of circles stay visible. alpha = PEPTIDE_ALPHA_BUDGET / pointCount,
-        // clamped to [MIN, MAX] (as a fraction of opaque). When Adaptive Alpha is off the points
-        // are fully opaque.
-        private const double PEPTIDE_ALPHA_BUDGET = 5000.0;
-        private const double PEPTIDE_ALPHA_MIN = 0.08;
-        private const double PEPTIDE_ALPHA_MAX = 0.5;
-
         private readonly Receiver<ReferenceValue<SrmDocument>, RtLoessCurves> _calcListener;
         private PaneProgressBar _progressBar;
         // The scatter curve of individual peptide points for the selected replicate (null when
@@ -307,17 +298,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            // Draw the points as hollow circles so that dense clusters stay legible (overlapping
-            // rings) instead of merging into a solid block. The ring is semi-transparent, with the
-            // alpha adapted to the number of points unless Adaptive Alpha is turned off.
-            var color = Color.FromArgb(GetPeptidePointAlpha(pointList.Count), ColorScheme.ChromGraphItemSelected);
-            var curve = AddCurve(GraphsResources.AreaRtLoessGraphPane_Peptides, pointList, color, SymbolType.Circle);
-            curve.Line.IsVisible = false;
-            curve.Symbol.IsVisible = true;
-            curve.Symbol.Size = 6f;
-            curve.Symbol.Border = new Border(true, color, 1.5f) { IsAntiAlias = true };
-            curve.Symbol.Fill = new Fill { Type = FillType.None };
-            curve.Label.IsVisible = true;
+            // Draw the points as hollow circles so dense clusters stay legible (overlapping rings)
+            // instead of merging into a solid block. PeptidePointsCurve adapts the ring transparency
+            // to how many points are currently visible: it lightens when zoomed out (many points)
+            // and darkens when zoomed in (few points), unless Adaptive Alpha is turned off.
+            var curve = new PeptidePointsCurve(GraphsResources.AreaRtLoessGraphPane_Peptides,
+                pointList, ColorScheme.ChromGraphItemSelected);
+            CurveList.Add(curve);
             _peptidesCurve = curve;
         }
 
@@ -342,19 +329,81 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Returns the alpha (0-255) for the hollow peptide point circles. When Adaptive Alpha is
-        /// on, the alpha falls as the number of points grows so dense clouds stay legible; when off,
-        /// the points are fully opaque.
+        /// A <see cref="LineItem"/> for the peptide scatter whose hollow-circle transparency adapts
+        /// to the number of points currently visible within the axis bounds. Zooming in (fewer
+        /// visible points) makes the rings more opaque; zooming out (many points) makes them more
+        /// transparent so dense regions stay legible. When Adaptive Alpha is off the points are
+        /// fully opaque. The alpha is recomputed on every <see cref="Draw"/>, so it tracks zoom and
+        /// pan as well as the document.
         /// </summary>
-        private static int GetPeptidePointAlpha(int pointCount)
+        internal sealed class PeptidePointsCurve : LineItem
         {
-            if (!AreaGraphController.RtLoessAdaptiveAlpha || pointCount <= 0)
+            // alpha = ALPHA_BUDGET / (visible point count), clamped to [MIN, MAX] as a fraction of
+            // opaque. The budget is the rough number of points at which the cloud starts to fill in.
+            private const double ALPHA_BUDGET = 5000.0;
+            private const double ALPHA_MIN = 0.08;
+            private const double ALPHA_MAX = 0.5;
+
+            private readonly Color _baseColor;
+
+            public PeptidePointsCurve(string label, IPointList points, Color baseColor)
+                : base(label)
             {
-                return 255;
+                _baseColor = baseColor;
+                Points = points;
+                Line.IsVisible = false;
+                Symbol.Type = SymbolType.Circle;
+                Symbol.Size = 6f;
+                Symbol.IsVisible = true;
+                Symbol.Fill = new Fill { Type = FillType.None };
+                // Seed with the alpha for the full point set; Draw refines it for the current zoom.
+                Symbol.Border = new Border(true, AlphaColor(GetAlpha(points.Count)), 1.5f) { IsAntiAlias = true };
+                Label.IsVisible = true;
             }
-            double fraction = PEPTIDE_ALPHA_BUDGET / pointCount;
-            fraction = Math.Max(PEPTIDE_ALPHA_MIN, Math.Min(PEPTIDE_ALPHA_MAX, fraction));
-            return (int) Math.Round(fraction * 255);
+
+            public override void Draw(Graphics g, GraphPane pane, int pos, float scaleFactor)
+            {
+                Symbol.Border.Color = AlphaColor(GetAlphaForPane(pane));
+                base.Draw(g, pane, pos, scaleFactor);
+            }
+
+            internal int GetAlphaForPane(GraphPane pane)
+            {
+                return GetAlpha(CountVisiblePoints(pane));
+            }
+
+            internal int CountVisiblePoints(GraphPane pane)
+            {
+                var xScale = pane.XAxis.Scale;
+                var yScale = pane.YAxis.Scale;
+                int count = 0;
+                for (int i = 0; i < Points.Count; i++)
+                {
+                    var pt = Points[i];
+                    if (pt.X >= xScale.Min && pt.X <= xScale.Max &&
+                        pt.Y >= yScale.Min && pt.Y <= yScale.Max)
+                    {
+                        count++;
+                    }
+                }
+                return count;
+            }
+
+            private Color AlphaColor(int alpha)
+            {
+                return Color.FromArgb(alpha, _baseColor);
+            }
+
+            private static int GetAlpha(int visiblePointCount)
+            {
+                if (!AreaGraphController.RtLoessAdaptiveAlpha || visiblePointCount <= 0)
+                {
+                    return 255;
+                }
+                double fraction = ALPHA_BUDGET / visiblePointCount;
+                fraction = Math.Max(ALPHA_MIN, Math.Min(ALPHA_MAX, fraction));
+                return (int) Math.Round(fraction * 255);
+            }
         }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
