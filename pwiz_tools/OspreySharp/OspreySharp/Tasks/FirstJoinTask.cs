@@ -1245,6 +1245,19 @@ namespace pwiz.OspreySharp.Tasks
             PipelineContext ctx,
             string passLabel = "First-pass")
         {
+            // Sort each file's entries by EntryId so the SVM working-set
+            // selection sees a canonical order regardless of upstream operation
+            // history. The 1st-pass input is already entry_id-sorted via
+            // DeduplicatePairs (AbstractScoringTask.cs), but the post-rescore
+            // pool that feeds 2nd-pass Percolator can have gap-fill entries
+            // appended after the sorted pre-existing rows. Re-sorting here
+            // guarantees identical iteration order across Rust and OspreySharp;
+            // without it, gap-fill ordering diverges and the cross-impl 2nd-pass
+            // scores drift on multi-file datasets even when feature columns are
+            // bit-equal. Mirrors Rust pipeline.rs::run_percolator_fdr.
+            foreach (var kvp in perFileEntries)
+                kvp.Value.Sort((a, b) => a.EntryId.CompareTo(b.EntryId));
+
             // Build PercolatorEntry list from all files
             var percEntries = new List<PercolatorEntry>();
 
