@@ -102,6 +102,12 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.RtLoessShowPeptides = value; }
         }
 
+        public static bool RtLoessAdaptiveAlpha
+        {
+            get { return Settings.Default.RtLoessAdaptiveAlpha; }
+            set { Settings.Default.RtLoessAdaptiveAlpha = value; }
+        }
+
         public static NormalizeOption AreaNormalizeOption
         {
             get { return Settings.Default.AreaNormalizeOption; }

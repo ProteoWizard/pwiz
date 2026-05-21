@@ -38,6 +38,15 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     internal class AreaRtLoessGraphPane : SummaryGraphPane
     {
+        // Adaptive transparency for the hollow peptide point circles: with many points the alpha
+        // is lowered so dense clusters do not merge into a solid block, and with few points it is
+        // raised so the handful of circles stay visible. alpha = PEPTIDE_ALPHA_BUDGET / pointCount,
+        // clamped to [MIN, MAX] (as a fraction of opaque). When Adaptive Alpha is off the points
+        // are fully opaque.
+        private const double PEPTIDE_ALPHA_BUDGET = 5000.0;
+        private const double PEPTIDE_ALPHA_MIN = 0.08;
+        private const double PEPTIDE_ALPHA_MAX = 0.5;
+
         private readonly Receiver<ReferenceValue<SrmDocument>, RtLoessCurves> _calcListener;
         private PaneProgressBar _progressBar;
         // The scatter curve of individual peptide points for the selected replicate (null when
@@ -298,12 +307,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            var color = ColorScheme.ChromGraphItemSelected;
+            // Draw the points as hollow circles so that dense clusters stay legible (overlapping
+            // rings) instead of merging into a solid block. The ring is semi-transparent, with the
+            // alpha adapted to the number of points unless Adaptive Alpha is turned off.
+            var color = Color.FromArgb(GetPeptidePointAlpha(pointList.Count), ColorScheme.ChromGraphItemSelected);
             var curve = AddCurve(GraphsResources.AreaRtLoessGraphPane_Peptides, pointList, color, SymbolType.Circle);
             curve.Line.IsVisible = false;
             curve.Symbol.IsVisible = true;
-            curve.Symbol.Size = 5f;
-            curve.Symbol.Fill = new Fill(color);
+            curve.Symbol.Size = 6f;
+            curve.Symbol.Border = new Border(true, color, 1.5f) { IsAntiAlias = true };
+            curve.Symbol.Fill = new Fill { Type = FillType.None };
             curve.Label.IsVisible = true;
             _peptidesCurve = curve;
         }
@@ -326,6 +339,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 default:
                     return log2Area;
             }
+        }
+
+        /// <summary>
+        /// Returns the alpha (0-255) for the hollow peptide point circles. When Adaptive Alpha is
+        /// on, the alpha falls as the number of points grows so dense clouds stay legible; when off,
+        /// the points are fully opaque.
+        /// </summary>
+        private static int GetPeptidePointAlpha(int pointCount)
+        {
+            if (!AreaGraphController.RtLoessAdaptiveAlpha || pointCount <= 0)
+            {
+                return 255;
+            }
+            double fraction = PEPTIDE_ALPHA_BUDGET / pointCount;
+            fraction = Math.Max(PEPTIDE_ALPHA_MIN, Math.Min(PEPTIDE_ALPHA_MAX, fraction));
+            return (int) Math.Round(fraction * 255);
         }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)

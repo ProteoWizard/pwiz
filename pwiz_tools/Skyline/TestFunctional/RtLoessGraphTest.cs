@@ -60,6 +60,7 @@ namespace pwiz.SkylineTestFunctional
 
             VerifyLegendToggle();
             VerifyPeptidesToggleAndSelection();
+            VerifyAdaptiveAlpha();
         }
 
         private void VerifyLegendToggle()
@@ -121,6 +122,31 @@ namespace pwiz.SkylineTestFunctional
                 pane.HandleMouseClick(SkylineWindow.GraphPeakArea.GraphControl,
                     new MouseEventArgs(MouseButtons.Left, 1, (int) screenPt.X, (int) screenPt.Y, 0));
                 Assert.AreEqual(expectedPath, SkylineWindow.SelectedPath);
+            });
+        }
+
+        private void VerifyAdaptiveAlpha()
+        {
+            // Adaptive Alpha on (default): the hollow circles are semi-transparent.
+            RunUI(() => SkylineWindow.SetRtLoessAdaptiveAlpha(true));
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                Assert.IsTrue(TryGetRtLoessPane(out var pane));
+                var curve = (LineItem) FindPeptidesCurve(pane);
+                Assert.IsNotNull(curve);
+                Assert.IsTrue(curve.Symbol.Border.Color.A < 255);
+            });
+
+            // Turning Adaptive Alpha off makes the points fully opaque.
+            RunUI(() => SkylineWindow.SetRtLoessAdaptiveAlpha(false));
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                Assert.IsTrue(TryGetRtLoessPane(out var pane));
+                var curve = (LineItem) FindPeptidesCurve(pane);
+                Assert.IsNotNull(curve);
+                Assert.AreEqual(255, curve.Symbol.Border.Color.A);
             });
         }
 

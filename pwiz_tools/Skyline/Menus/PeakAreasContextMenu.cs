@@ -446,6 +446,9 @@ namespace pwiz.Skyline.Menus
         private void rtLoessShowPeptidesMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.SetRtLoessShowPeptides(!AreaGraphController.RtLoessShowPeptides);
 
+        private void rtLoessShowAdaptiveAlphaMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessAdaptiveAlpha(!AreaGraphController.RtLoessAdaptiveAlpha);
+
         private void UpdateRtLoessShowValueMenuItemCheckedState()
         {
             var current = AreaGraphController.RtLoessShowValue;
@@ -454,6 +457,9 @@ namespace pwiz.Skyline.Menus
             rtLoessShowNormalizedMedianMenuItem.Checked = current == RtLoessShowValue.NormalizedMedian;
             rtLoessShowLegendMenuItem.Checked = AreaGraphController.RtLoessShowLegend;
             rtLoessShowPeptidesMenuItem.Checked = AreaGraphController.RtLoessShowPeptides;
+            // Adaptive Alpha only affects the peptide points, so it is only enabled with them.
+            rtLoessShowAdaptiveAlphaMenuItem.Enabled = AreaGraphController.RtLoessShowPeptides;
+            rtLoessShowAdaptiveAlphaMenuItem.Checked = AreaGraphController.RtLoessAdaptiveAlpha;
         }
 
         private void barAreaGraphTypeMenuItem_Click(object sender, EventArgs e)

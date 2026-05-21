@@ -2652,6 +2652,18 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RtLoessAdaptiveAlpha {
+            get {
+                return ((bool)(this["RtLoessAdaptiveAlpha"]));
+            }
+            set {
+                this["RtLoessAdaptiveAlpha"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("NaN")]
         public double AreaCVMinLog10Area {
             get {

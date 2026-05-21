@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Menus
             this.rtLoessShowSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.rtLoessShowLegendMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rtLoessShowPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowAdaptiveAlphaMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.barAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lineAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -159,7 +160,8 @@ namespace pwiz.Skyline.Menus
             this.rtLoessShowNormalizedMedianMenuItem,
             this.rtLoessShowSeparator,
             this.rtLoessShowLegendMenuItem,
-            this.rtLoessShowPeptidesMenuItem});
+            this.rtLoessShowPeptidesMenuItem,
+            this.rtLoessShowAdaptiveAlphaMenuItem});
             this.rtLoessShowValueContextMenuItem.Name = "rtLoessShowValueContextMenuItem";
             resources.ApplyResources(this.rtLoessShowValueContextMenuItem, "rtLoessShowValueContextMenuItem");
             //
@@ -197,6 +199,12 @@ namespace pwiz.Skyline.Menus
             this.rtLoessShowPeptidesMenuItem.Name = "rtLoessShowPeptidesMenuItem";
             resources.ApplyResources(this.rtLoessShowPeptidesMenuItem, "rtLoessShowPeptidesMenuItem");
             this.rtLoessShowPeptidesMenuItem.Click += new System.EventHandler(this.rtLoessShowPeptidesMenuItem_Click);
+            //
+            // rtLoessShowAdaptiveAlphaMenuItem
+            //
+            this.rtLoessShowAdaptiveAlphaMenuItem.Name = "rtLoessShowAdaptiveAlphaMenuItem";
+            resources.ApplyResources(this.rtLoessShowAdaptiveAlphaMenuItem, "rtLoessShowAdaptiveAlphaMenuItem");
+            this.rtLoessShowAdaptiveAlphaMenuItem.Click += new System.EventHandler(this.rtLoessShowAdaptiveAlphaMenuItem_Click);
             //
             // graphTypeToolStripMenuItem
             //
@@ -497,6 +505,7 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripSeparator rtLoessShowSeparator;
         private System.Windows.Forms.ToolStripMenuItem rtLoessShowLegendMenuItem;
         private System.Windows.Forms.ToolStripMenuItem rtLoessShowPeptidesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowAdaptiveAlphaMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;

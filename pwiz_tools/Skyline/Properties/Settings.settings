@@ -662,6 +662,9 @@
     <Setting Name="RtLoessShowPeptides" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="RtLoessAdaptiveAlpha" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="AreaCVMinLog10Area" Type="System.Double" Scope="User">
       <Value Profile="(Default)">NaN</Value>
     </Setting>

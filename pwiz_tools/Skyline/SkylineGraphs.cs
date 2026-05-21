@@ -3040,6 +3040,12 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
+        public void SetRtLoessAdaptiveAlpha(bool adaptiveAlpha)
+        {
+            AreaGraphController.RtLoessAdaptiveAlpha = adaptiveAlpha;
+            UpdatePeakAreaGraph();
+        }
+
         public void SynchronizeSummaryZooming(GraphSummary graphSummary = null, ZoomState zoomState = null)
         {
             var activeGraphSummary = graphSummary ?? dockPanel.ActiveContent as GraphSummary;
