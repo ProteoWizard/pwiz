@@ -217,9 +217,21 @@ namespace pwiz.OspreySharp.IO
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
                 featureArrays[f] = new double[n];
 
+            // Iterate in canonical sorted order (entry_id, charge, scan_number)
+            // so per-side parquets have identical physical row layout across the
+            // Rust and C# impls. Order-sensitive consumers downstream (Stage 5
+            // standardizer, SVM training) then see the same row sequence
+            // regardless of which side wrote the parquet. Mirrors Rust
+            // pipeline.rs::write_scores_parquet_with_metadata.
+            var sortedIndices = Enumerable.Range(0, n)
+                .OrderBy(idx => entries[idx].EntryId)
+                .ThenBy(idx => entries[idx].Charge)
+                .ThenBy(idx => entries[idx].ScanNumber)
+                .ToArray();
+
             for (int i = 0; i < n; i++)
             {
-                var entry = entries[i];
+                var entry = entries[sortedIndices[i]];
                 entryIds[i] = entry.EntryId;
                 isDecoys[i] = entry.IsDecoy;
                 sequences[i] = entry.Sequence ?? string.Empty;
@@ -340,9 +352,22 @@ namespace pwiz.OspreySharp.IO
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
                 featureArrays[f] = new double[n];
 
+            // Iterate in canonical sorted order (entry_id, charge, scan_number)
+            // so per-side parquets have identical physical row layout across
+            // Rust and C# impls. Order-sensitive consumers downstream (Stage 5
+            // standardizer, SVM training) then see the same row sequence
+            // regardless of which side wrote the parquet. Mirrors Rust
+            // pipeline.rs::write_scores_parquet_with_metadata. ParquetIndex is
+            // assigned to the post-sort destination row below.
+            var sortedIndices = Enumerable.Range(0, n)
+                .OrderBy(idx => entries[idx].EntryId)
+                .ThenBy(idx => entries[idx].Charge)
+                .ThenBy(idx => entries[idx].ScanNumber)
+                .ToArray();
+
             for (int i = 0; i < n; i++)
             {
-                var entry = entries[i];
+                var entry = entries[sortedIndices[i]];
                 // Assign ParquetIndex to match the row position we are
                 // about to write. Mirrors LoadFdrStubsFromParquet, which
                 // assigns ParquetIndex = row on read. Without this
