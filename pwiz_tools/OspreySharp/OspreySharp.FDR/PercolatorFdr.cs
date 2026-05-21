@@ -253,7 +253,14 @@ namespace pwiz.OspreySharp.FDR
             //     this avoids the SVM seeing the same precursor's target/decoy pair
             //     N times, which would inflate apparent target/decoy separation and
             //     cause the SVM to learn file-specific noise rather than peptide
-            //     discriminating features. Matches the Rust streaming Percolator path.
+            //     discriminating features. Mirrors the streaming Percolator path's
+            //     dedup step (RunPercolatorStreaming); the Rust direct path
+            //     historically omitted this step, but on multi-file inputs sized
+            //     below the streaming threshold (Stellar 3-file at 393k entries)
+            //     the omission produced a statistically incorrect training set
+            //     that treated multi-file repeats of the same precursor as
+            //     independent samples. Rust was patched to match this dedup
+            //     (osprey-fdr/src/percolator.rs::run_percolator direct path).
             int[] bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries);
 
             int dedupTargets = 0, dedupDecoys = 0;
