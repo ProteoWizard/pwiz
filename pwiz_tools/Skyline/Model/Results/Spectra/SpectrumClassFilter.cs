@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -256,6 +257,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     return string.Empty;
                 }
 
+                // Use the operation-aware filter handler so values format the same as the grid
+                // (e.g. Equals shows "5, 7" rather than the explicit-precision form "5E+0,7E+0").
+                var handler = dataSchema.GetFilterHandler(column.ValueType);
+                if (handler != null)
+                {
+                    return handler.OperandToString(filterSpec.Operation, dataSchema.DataSchemaLocalizer.FormatProvider, value);
+                }
                 return column.FormatAbbreviatedValue(value);
             }
             catch
@@ -363,13 +371,96 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public static SpectrumClassFilter ParseFilterString(string filterString)
         {
-            return new SpectrumClassFilter(CreateSerializer().ParseFilterString(filterString));
+            // Try several cultures so a filter authored in one locale parses in another (e.g. a
+            // comma-decimal value from a European transition list imported on a period-decimal
+            // machine). Only number formatting varies; keywords are culture-independent (English).
+            FormatException firstError = null;
+            foreach (var localizer in GetParseLocalizers())
+            {
+                try
+                {
+                    return new SpectrumClassFilter(CreateSerializer(localizer).ParseFilterString(filterString));
+                }
+                catch (FormatException ex)
+                {
+                    firstError = firstError ?? ex;
+                }
+            }
+            throw firstError ?? new FormatException(filterString);
+        }
+
+        /// <summary>
+        /// Returns null if <paramref name="filterString"/> parses and refers only to known
+        /// spectrum properties; otherwise a message describing the problem. The serializer is
+        /// syntactically lenient (an unrecognized column name is preserved rather than rejected),
+        /// so this also checks that every referenced column resolves to a real spectrum property.
+        /// </summary>
+        public static string ValidateFilterString(string filterString)
+        {
+            if (string.IsNullOrEmpty(filterString))
+            {
+                return null;
+            }
+            SpectrumClassFilter filter;
+            try
+            {
+                filter = ParseFilterString(filterString);
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            foreach (var clause in filter.Clauses)
+            {
+                foreach (var filterSpec in clause.FilterSpecs)
+                {
+                    if (SpectrumClassColumn.FindColumn(filterSpec.ColumnId) == null)
+                    {
+                        return string.Format(
+                            SpectraResources.SpectrumClassFilter_ValidateFilterString_Unknown_spectrum_property___0__,
+                            filterSpec.Column);
+                    }
+                }
+            }
+            return null;
         }
 
         private static FilterClauseSerializer CreateSerializer()
         {
             return new FilterClauseSerializer(
                 ColumnDescriptor.RootColumn(new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer()), typeof(SpectrumClass)));
+        }
+
+        private static FilterClauseSerializer CreateSerializer(DataSchemaLocalizer localizer)
+        {
+            return new FilterClauseSerializer(
+                ColumnDescriptor.RootColumn(new DataSchema(localizer), typeof(SpectrumClass)));
+        }
+
+        /// <summary>
+        /// Cultures to try when parsing a filter string, in priority order: invariant (period
+        /// decimals; US/UK/Asian-authored files), French (the representative comma-decimal locale,
+        /// so a European-authored value parses on a period-decimal machine), then the current
+        /// culture (the user's own typing). Only the decimal separator differs between these;
+        /// "and"/"or" are intentionally English in the parseable form regardless of culture, so
+        /// no locale-specific keyword handling belongs here.
+        /// </summary>
+        private static IEnumerable<DataSchemaLocalizer> GetParseLocalizers()
+        {
+            var seen = new HashSet<string>();
+            var cultures = new[]
+            {
+                CultureInfo.InvariantCulture,
+                CultureInfo.GetCultureInfo(@"fr-FR"),
+                CultureInfo.CurrentCulture
+            };
+            foreach (var culture in cultures)
+            {
+                if (seen.Add(culture.Name))
+                {
+                    yield return new DataSchemaLocalizer(culture, culture);
+                }
+            }
         }
     }
 }

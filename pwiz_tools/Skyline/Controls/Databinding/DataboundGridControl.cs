@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private bool _errorMessagePending;
         private bool _suppressErrorMessages;
         private DataGridViewPasteHandler _boundDataGridViewPasteHandler;
+        private readonly ToolTip _cellEditToolTip = new ToolTip();
         private bool _inColumnChange;
         private IViewContext _viewContext;
         private ReplicatePivotColumns _replicatePivotColumns;
@@ -70,8 +71,89 @@ namespace pwiz.Skyline.Controls.Databinding
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_PCA_Plot, null,
                 pCAToolStripMenuItem_Click));
 
+            // Columns implementing ICellValidatingColumn show red cell errors and block exit on bad input
+            boundDataGridView.CellValidating += boundDataGridView_CellValidating;
+            boundDataGridView.CellEndEdit += boundDataGridView_CellEndEdit;
+            boundDataGridView.EditingControlShowing += boundDataGridView_EditingControlShowing;
+
             // Attach the event handlers for the BindingListSource
             BindingListSource = bindingListSource;
+        }
+
+        private void boundDataGridView_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            {
+                return;
+            }
+            if (!(boundDataGridView.Columns[e.ColumnIndex] is ICellValidatingColumn validatingColumn))
+            {
+                return;
+            }
+            var cell = boundDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            var error = validatingColumn.GetValidationError(e.FormattedValue?.ToString());
+            if (string.IsNullOrEmpty(error))
+            {
+                cell.ErrorText = string.Empty;
+                cell.Style.ForeColor = Color.Empty;
+            }
+            else
+            {
+                e.Cancel = true;
+                cell.ErrorText = error;
+                cell.Style.ForeColor = Color.Red;
+                // Proactively show the reason for the blocked exit next to the editing control
+                var editingControl = boundDataGridView.EditingControl;
+                if (editingControl != null)
+                {
+                    _cellEditToolTip.Show(error, editingControl, 0, editingControl.Height, 3000);
+                }
+            }
+        }
+
+        private void boundDataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            // Clear any error styling once editing ends (successful commit or Escape revert)
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            {
+                return;
+            }
+            if (!(boundDataGridView.Columns[e.ColumnIndex] is ICellValidatingColumn))
+            {
+                return;
+            }
+            var cell = boundDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            cell.ErrorText = string.Empty;
+            cell.Style.ForeColor = Color.Empty;
+            _cellEditToolTip.Hide(boundDataGridView);
+        }
+
+        private void boundDataGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            // Color the editing text red in real time while a validating column's text fails to parse
+            if (!(e.Control is TextBox textBox))
+            {
+                return;
+            }
+            textBox.TextChanged -= ValidatingEditControl_TextChanged;
+            if (boundDataGridView.CurrentCell?.OwningColumn is ICellValidatingColumn)
+            {
+                textBox.TextChanged += ValidatingEditControl_TextChanged;
+                ValidatingEditControl_TextChanged(textBox, EventArgs.Empty);
+            }
+        }
+
+        private void ValidatingEditControl_TextChanged(object sender, EventArgs e)
+        {
+            if (!(sender is TextBox textBox) ||
+                !(boundDataGridView.CurrentCell?.OwningColumn is ICellValidatingColumn validatingColumn))
+            {
+                return;
+            }
+            var error = validatingColumn.GetValidationError(textBox.Text);
+            textBox.ForeColor = string.IsNullOrEmpty(error) ? SystemColors.WindowText : Color.Red;
+            // Hover tooltip on the edit box explains the parse error in real time (mirrors FormulaBox)
+            _cellEditToolTip.SetToolTip(textBox, error ?? string.Empty);
         }
 
         public BindingListSource BindingListSource

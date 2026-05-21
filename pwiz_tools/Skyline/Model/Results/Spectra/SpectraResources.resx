@@ -145,6 +145,9 @@
   <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
     <value>MS2+</value>
   </data>
+  <data name="SpectrumClassFilter_ValidateFilterString_Unknown_spectrum_property___0__" xml:space="preserve">
+    <value>Unknown spectrum property '{0}'.</value>
+  </data>
   <data name="SpectrumClassFilter_GetText_All" xml:space="preserve">
     <value>All</value>
   </data>

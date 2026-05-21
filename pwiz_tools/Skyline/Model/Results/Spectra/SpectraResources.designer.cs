@@ -142,5 +142,14 @@ namespace pwiz.Skyline.Model.Results.Spectra {
                 return ResourceManager.GetString("SpectrumClassFilter_Ms2FilterPage_MS2_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown spectrum property &apos;{0}&apos;..
+        /// </summary>
+        public static string SpectrumClassFilter_ValidateFilterString_Unknown_spectrum_property___0__ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_ValidateFilterString_Unknown_spectrum_property___0__", resourceCulture);
+            }
+        }
     }
 }

@@ -17,11 +17,15 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using System.Globalization;
 using System.Linq;
@@ -71,6 +75,67 @@ namespace pwiz.SkylineTestFunctional
                 row.SetValue("HCD");
                 dlg.OkDialog();
             });
+
+            // A multi-criterion filter (HCD spectra are MS2, so this stays non-empty)
+            RunUI(() =>
+            {
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 3);
+            });
+            RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
+            {
+                var row1 = dlg.RowBindingList.AddNew();
+                Assert.IsNotNull(row1);
+                row1.Property = SpectrumClassColumn.DissociationMethod.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+                row1.SetOperation(FilterOperations.OP_EQUALS);
+                row1.SetValue("HCD");
+                var row2 = dlg.RowBindingList.AddNew();
+                Assert.IsNotNull(row2);
+                row2.Property = SpectrumClassColumn.MsLevel.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+                row2.SetOperation(FilterOperations.OP_EQUALS);
+                row2.SetValue("2");
+                dlg.OkDialog();
+            });
+
+            // The multi-criterion filter on molecule 3 references both properties
+            var molecules = SkylineWindow.Document.Molecules.ToArray();
+            var mol3FilterText = molecules[3].TransitionGroups.First().SpectrumClassFilter.ToFilterString();
+            AssertEx.Contains(mol3FilterText, nameof(SpectrumClass.DissociationMethod));
+            AssertEx.Contains(mol3FilterText, nameof(SpectrumClass.MsLevel));
+
+            // The document grid uses the custom Spectrum Filter column and shows the applied filter text
+            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
+            {
+                Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.SpectrumFilter")));
+                viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                viewEditor.ViewName = "SpectrumFilterTest";
+                viewEditor.OkDialog();
+            });
+            // The SpectrumFilter property is rendered with our custom column type
+            WaitForConditionUI(() => documentGrid.IsComplete && documentGrid.DataGridView.Columns
+                .Cast<DataGridViewColumn>().Any(col => col is SpectrumFilterDataGridViewColumn));
+            var expectedFilters = new[] { 1, 2, 3 }
+                .Select(i => molecules[i].TransitionGroups.First().SpectrumClassFilter.ToFilterString())
+                .ToHashSet();
+            var actualFilters = new HashSet<string>();
+            RunUI(() =>
+            {
+                var spectrumFilterColumn = documentGrid.DataGridView.Columns
+                    .Cast<DataGridViewColumn>().First(col => col is SpectrumFilterDataGridViewColumn);
+                foreach (DataGridViewRow gridRow in documentGrid.DataGridView.Rows)
+                {
+                    if (gridRow.Cells[spectrumFilterColumn.Index].Value is string value && !string.IsNullOrEmpty(value))
+                    {
+                        actualFilters.Add(value);
+                    }
+                }
+            });
+            AssertEx.IsTrue(expectedFilters.IsSubsetOf(actualFilters));
+            RunUI(() => documentGrid.Close());
+
             ImportResultsFile(TestFilesDir.GetTestPath("DissociationMethodTest.mzML"));
             var chromatogramPointCounts = new List<int>();
             var document = SkylineWindow.Document;
