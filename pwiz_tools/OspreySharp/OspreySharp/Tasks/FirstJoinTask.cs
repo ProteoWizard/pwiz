@@ -1640,31 +1640,35 @@ namespace pwiz.OspreySharp.Tasks
             List<LibraryEntry> fullLibrary,
             OspreyConfig config)
         {
-            // Detected-peptide gate: targets passing peptide-level run FDR.
-            // Matches Rust pipeline.rs:3048 (e.run_peptide_qvalue <= run_fdr).
-            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
+            // Detected-peptide count for logging only; the core computation +
+            // propagation lives in ProteinFdr.RunFirstPassProteinFdr so the
+            // join-at-pass=2 rehydration path (PerFileRescoreTask) can run the
+            // same logic without duplicating it.
+            int detectedCount = 0;
+            var detectedTracker = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
                 {
                     if (!entry.IsDecoy && entry.RunPeptideQvalue <= config.RunFdr)
-                        detectedPeptides.Add(entry.ModifiedSequence);
+                        detectedTracker.Add(entry.ModifiedSequence);
                 }
             }
+            detectedCount = detectedTracker.Count;
             _ctx.LogInfo(string.Format(
                 "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
-                detectedPeptides.Count));
+                detectedCount));
 
+            ProteinFdr.RunFirstPassProteinFdr(perFileEntries, fullLibrary, config);
+
+            // Recompute summary counters for log parity with the prior inline
+            // implementation. The static helper has already mutated entries
+            // via PropagateProteinQvalues; the parsimony / FDR objects below
+            // are rebuilt for logging + the diagnostic dump only.
             var parsimony = ProteinFdr.BuildProteinParsimony(
-                fullLibrary, config.SharedPeptides, detectedPeptides);
-
-            // Best peptide score across all files for picked-protein TDC.
+                fullLibrary, config.SharedPeptides, detectedTracker);
             var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
-
-            // First-pass gate is config.RunFdr exactly — matches Rust
-            // pipeline.rs:3062 (compute_protein_fdr at config.run_fdr).
             var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
-
             int nAtRunFdr = 0;
             foreach (var qv in proteinFdr.GroupQvalues.Values)
             {
@@ -1682,11 +1686,6 @@ namespace pwiz.OspreySharp.Tasks
                 if (OspreyDiagnostics.ProteinFdrOnly)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
             }
-
-            // Set RunProteinQvalue ONLY. Experiment-protein-q is set by the
-            // post-output Stage 8 protein FDR pass (Rust calls it second-pass).
-            ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr,
-                setRun: true, setExperiment: false);
         }
     }
 }

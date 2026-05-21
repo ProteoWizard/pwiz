@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.FDR;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
 using pwiz.OspreySharp.Scoring;
@@ -204,6 +205,28 @@ namespace pwiz.OspreySharp.Tasks
                 var bundle = perFileScoring.GetRescoreInputs(ctx);
                 if (bundle != null)
                 {
+                    // First-pass protein FDR BEFORE compaction. The 1st-pass FDR
+                    // sidecar v3 already carries RunProteinQvalue from the original
+                    // straight-through pipeline, but Rust pipeline.rs:4292 (gated by
+                    // `!can_skip_fdr || config.expect_reconciled_input`) recomputes
+                    // it inline in the --join-at-pass=2 path. The recompute uses the
+                    // post-rehydration detected_peptides set + best_peptide_scores
+                    // (which differ from the original write-time inputs whenever any
+                    // upstream rebuild has nudged peptide q-values or score values
+                    // even at the ULP level). Without this matching recompute on the
+                    // C# side, the protein-rescue branch of compaction below sees
+                    // slightly stale RunProteinQvalue values and the post-compaction
+                    // detected_peptides set diverges from Rust by ~19 peptides on
+                    // Stellar Single (1 protein delta at Stage 7). Only runs when
+                    // protein FDR is enabled — the recompute is the protein-rescue
+                    // input and is meaningless otherwise. Mirrors Rust pipeline.rs:
+                    // 4292-4358.
+                    if (ctx.Config.ProteinFdr.HasValue && bundle.PerFileEntries.Count > 0)
+                    {
+                        var fullLibrary = perFileScoring.GetFullLibrary(ctx);
+                        ProteinFdr.RunFirstPassProteinFdr(
+                            bundle.PerFileEntries, fullLibrary, ctx.Config);
+                    }
                     var stats = RescoreCompaction.Apply(bundle, ctx.Config);
                     ctx.LogInfo(string.Format(
                         @"--join-at-pass=2 compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",

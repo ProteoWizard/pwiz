@@ -314,6 +314,61 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
 
+                // Re-load 2nd-pass FDR sidecar onto the post-compaction stub list.
+                // After the post-Stage-6 rehydration path, every stub still carries
+                // the 1st-pass q-values from RescoreHydration's 1st-pass sidecar
+                // overlay (PerFileScoringTask). The 2nd-pass q-values produced by
+                // Stage 6's reconciliation-aware rescore live in the
+                // .2nd-pass.fdr_scores.bin sidecar (or were just computed above and
+                // written to it). RunProteinFdr's detected_peptides gate filters on
+                // ExperimentPrecursorQvalue, which has to be the 2nd-pass value to
+                // match Rust pipeline.rs:4480-4494's reload-then-second-pass-FDR
+                // sequence. Without this reload, single-file --join-at-pass=2 runs
+                // include ~19 borderline peptides whose 1st-pass q-value passes
+                // <=1% but 2nd-pass q-value does not, producing a 1-protein delta
+                // in the Stage 7 picked-protein output cross-impl.
+                if (perFileParquetPaths.Count > 0 && config.InputFiles != null)
+                {
+                    var inputByName = new Dictionary<string, string>(StringComparer.Ordinal);
+                    foreach (var inputFile in config.InputFiles)
+                        inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+                    int filesReloaded = 0;
+                    int filesMissing = 0;
+                    foreach (var kvp in perFileEntries)
+                    {
+                        if (!inputByName.TryGetValue(kvp.Key, out string inputFile4))
+                            continue;
+                        string pass2Path = FdrScoresSidecar.Pass2Path(inputFile4);
+                        if (!File.Exists(pass2Path))
+                        {
+                            filesMissing++;
+                            continue;
+                        }
+                        var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
+                        foreach (var e in kvp.Value)
+                            byEntryId[e.EntryId] = e;
+                        if (FdrScoresSidecar.TryReadOverlay(
+                                pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass))
+                        {
+                            filesReloaded++;
+                        }
+                        else
+                        {
+                            filesMissing++;
+                            ctx.LogWarning(string.Format(
+                                "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
+                                "protein FDR will use stale 1st-pass q-values",
+                                kvp.Key, pass2Path));
+                        }
+                    }
+                    if (filesReloaded > 0)
+                    {
+                        ctx.LogInfo(string.Format(
+                            "--join-at-pass=2: reloaded 2nd-pass FDR sidecar for {0}/{1} file(s) post-compaction",
+                            filesReloaded, filesReloaded + filesMissing));
+                    }
+                }
+
                 ctx.LogInfo(string.Empty);
                 ctx.LogInfo(string.Format(@"Running protein-level FDR at {0:P1}...",
                     config.ProteinFdr.Value));
@@ -384,6 +439,19 @@ namespace pwiz.OspreySharp.Tasks
             _ctx.LogInfo(string.Format(
                 "[COUNT] Detected peptides for protein FDR: {0} unique",
                 detectedPeptides.Count));
+
+            // Cross-impl bisection: dump sorted detected_peptides to a file so it
+            // can be diffed against the Rust side. Gated by env var to keep zero
+            // overhead in production runs.
+            if (System.Environment.GetEnvironmentVariable(@"OSPREY_DUMP_DETECTED_PEPTIDES") == "1")
+            {
+                var sorted = new System.Collections.Generic.List<string>(detectedPeptides);
+                sorted.Sort(System.StringComparer.Ordinal);
+                System.IO.File.WriteAllLines("cs_stage7_detected_peptides.txt", sorted);
+                _ctx.LogInfo(string.Format(
+                    "[DIAG] Wrote cs_stage7_detected_peptides.txt ({0} entries)",
+                    sorted.Count));
+            }
 
             // Build protein parsimony
             var parsimony = ProteinFdr.BuildProteinParsimony(
