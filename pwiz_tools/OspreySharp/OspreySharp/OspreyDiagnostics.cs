@@ -552,13 +552,18 @@ namespace pwiz.OspreySharp
                         double snr;
                         if (!snrByEntryId.TryGetValue(entry.Id, out snr))
                             snr = 0.0;
-                        // F17 (17 fractional digits) for round-trip-safe f64.
-                        // .NET Framework's F10 uses round-half-away-from-zero
-                        // while Rust's {:.10} uses round-half-to-even; on f64
-                        // values near a rounding boundary the two diverge by
-                        // 1 in the last printed digit. F17 sidesteps that.
+                        // G17 (17 significant digits) for round-trip-safe f64.
+                        // .NET Framework 4.7.2's F17 truncates output at ~15
+                        // significant digits and pads with zeros, so a
+                        // string -> parse round-trip yields a different f64
+                        // than the original. G17 prints enough digits for the
+                        // result to round-trip exactly back to the same f64.
+                        // The cross-impl comparator parses both sides as
+                        // numbers, so variable-width G17 output on C# vs
+                        // fixed {:.17} on Rust is fine - both round-trip to
+                        // the same f64 when the underlying value matches.
                         w.WriteLine(string.Format(inv,
-                            "{0}\t{1}\t{2}\t1\t{3}\t{4:F17}\t{5:F17}\t{6:F17}\t{7}\t{8:F17}\t{9:F17}",
+                            "{0}\t{1}\t{2}\t1\t{3}\t{4:G17}\t{5:G17}\t{6:G17}\t{7}\t{8:G17}\t{9:G17}",
                             entry.Id,
                             entry.IsDecoy ? 1 : 0,
                             entry.Charge,
@@ -601,9 +606,9 @@ namespace pwiz.OspreySharp
                 w.WriteLine("entry_id\tis_decoy\tdiscriminant\tq_value");
                 foreach (var m in sortedByEntry)
                 {
-                    // F17 for round-trip-safe f64 (same rationale as cal_match dump).
+                    // G17 for round-trip-safe f64 (same rationale as cal_match dump).
                     w.WriteLine(string.Format(inv,
-                        "{0}\t{1}\t{2:F17}\t{3:F17}",
+                        "{0}\t{1}\t{2:G17}\t{3:G17}",
                         m.EntryId,
                         m.IsDecoy ? 1 : 0,
                         m.DiscriminantScore,
