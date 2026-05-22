@@ -445,36 +445,50 @@ namespace pwiz.OspreySharp.FDR
             }
 
             // Step 2: Pair picking. Iterate parsimony.Groups in deterministic
-            // order. Each group yields one winner: target if t >= d, else decoy.
+            // order. Each group yields one winner: target if t >= d, else
+            // decoy. Carry a sorted-accessions string on each winner so the
+            // Step 3 sort tiebreak can use a cross-impl-deterministic key.
+            // The numeric GroupId is HashMap-iteration-order-derived in
+            // BuildProteinParsimony and so picks different positions on
+            // ties cross-impl once upstream arithmetic is bit-equal.
             var winners = new List<ProteinWinner>();
             foreach (var group in parsimony.Groups)
             {
+                // Build sort_key once per group: accessions sorted then
+                // joined with semicolons (matches the Rust port and the
+                // Stage 7 diagnostic dump).
+                var sortedAccs = new List<string>(group.Accessions);
+                sortedAccs.Sort(StringComparer.Ordinal);
+                string sortKey = string.Join(";", sortedAccs);
+
                 bool hasT = targetScore.TryGetValue(group.Id, out double t);
                 bool hasD = decoyScore.TryGetValue(group.Id, out double d);
                 if (hasT && hasD)
                 {
                     if (t >= d)
-                        winners.Add(new ProteinWinner { GroupId = group.Id, Score = t, IsDecoy = false });
+                        winners.Add(new ProteinWinner { GroupId = group.Id, SortKey = sortKey, Score = t, IsDecoy = false });
                     else
-                        winners.Add(new ProteinWinner { GroupId = group.Id, Score = d, IsDecoy = true });
+                        winners.Add(new ProteinWinner { GroupId = group.Id, SortKey = sortKey, Score = d, IsDecoy = true });
                 }
                 else if (hasT)
                 {
-                    winners.Add(new ProteinWinner { GroupId = group.Id, Score = t, IsDecoy = false });
+                    winners.Add(new ProteinWinner { GroupId = group.Id, SortKey = sortKey, Score = t, IsDecoy = false });
                 }
                 else if (hasD)
                 {
-                    winners.Add(new ProteinWinner { GroupId = group.Id, Score = d, IsDecoy = true });
+                    winners.Add(new ProteinWinner { GroupId = group.Id, SortKey = sortKey, Score = d, IsDecoy = true });
                 }
             }
 
             // Step 3: Cumulative FDR. Sort winners by score descending,
-            // tiebreak by group_id ascending for determinism.
-            winners.Sort((a, b) =>
+            // tiebreak by sorted accessions ASCENDING — cross-impl-
+            // deterministic, unlike GroupId which is HashMap-iteration-
+            // order from BuildProteinParsimony.
+            winners.Sort((a, b) => // Array.Sort OK: SortKey is the sorted-accessions string from BuildProteinParsimony, which assigns a unique accessions list to each ProteinGroup (identical sets are merged), so the comparator never returns 0 and unstable-sort tie reorder cannot fire
             {
                 int cmp = b.Score.CompareTo(a.Score);
                 if (cmp != 0) return cmp;
-                return a.GroupId.CompareTo(b.GroupId);
+                return string.CompareOrdinal(a.SortKey, b.SortKey);
             });
 
             var rawQvalues = new double[winners.Count];
@@ -537,6 +551,7 @@ namespace pwiz.OspreySharp.FDR
         private struct ProteinWinner
         {
             public uint GroupId;
+            public string SortKey; // sorted-accessions string for cross-impl tiebreak
             public double Score;
             public bool IsDecoy;
         }
