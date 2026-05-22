@@ -437,24 +437,28 @@ namespace pwiz.Common.DataBinding.Filtering
         public bool StartsWith(object value, object operand)
         {
             var listValue = ToListValue(value);
-            if (listValue == null || !(operand is IList<object> listOperand))
+            // Operands produced by this infrastructure are IListColumnValue, not IList<object>
+            if (listValue == null || !(operand is IListColumnValue listOperand))
             {
                 return false;
             }
+            var operandItems = listOperand.AsEnumerable().ToList();
 
-            return listValue.Count >= listOperand.Count &&
-                   ElementsEqual(listValue.AsEnumerable().Take(listOperand.Count), listOperand);
+            return listValue.Count >= operandItems.Count &&
+                   ElementsEqual(listValue.AsEnumerable().Take(operandItems.Count), operandItems);
         }
 
         public bool Contains(object value, object operand)
         {
             var listValue = ToListValue(value);
-            if (listValue == null || !(operand is IList<object> listOperand))
+            // Operands produced by this infrastructure are IListColumnValue, not IList<object>
+            if (listValue == null || !(operand is IListColumnValue listOperand))
             {
                 return false;
             }
+            var operandItems = listOperand.AsEnumerable().ToList();
 
-            if (listOperand.Count == 0)
+            if (operandItems.Count == 0)
             {
                 return true;
             }
@@ -462,12 +466,12 @@ namespace pwiz.Common.DataBinding.Filtering
             var window = new List<object>();
             foreach (var item in listValue.AsEnumerable())
             {
-                if (window.Count == listOperand.Count)
+                if (window.Count == operandItems.Count)
                 {
                     window.RemoveAt(0);
                 }
                 window.Add(item);
-                if (window.Count == listOperand.Count && ElementsEqual(window, listOperand))
+                if (window.Count == operandItems.Count && ElementsEqual(window, operandItems))
                 {
                     return true;
                 }

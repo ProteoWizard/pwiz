@@ -57,7 +57,7 @@ namespace TestPerf
                 {
                     var actualDissociationMethods = TextUtil.SpaceSeparate(
                         ((ListColumnValue<string>)SpectrumClassColumn.DissociationMethod.GetValue(spectrum)).Items);
-                    Assert.AreEqual(actualDissociationMethods, "HCD CID", "Mismatch at spectrum {0}", spectrum.Id);
+                    Assert.AreEqual("HCD CID", actualDissociationMethods, "Mismatch at spectrum {0}", spectrum.Id);
                 }
             }
         }
