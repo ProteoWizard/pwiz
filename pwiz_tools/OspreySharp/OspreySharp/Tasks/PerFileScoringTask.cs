@@ -1753,6 +1753,10 @@ namespace pwiz.OspreySharp.Tasks
             // filter). This is the same set used for RT calibration points.
             var allMs1Errors = new List<double>();
             var allMs2Errors = new List<double>();
+            // Track contributing matches in a stable list so a cross-impl
+            // bisection dump can replay them in the same order the
+            // calibration accumulator sees their errors.
+            var contributingMatches = new List<CalibrationMatch>();
             foreach (var m in matchArray)
             {
                 if (m.Ms2MassErrors == null || m.IsDecoy || m.QValue > CAL_FDR_THRESHOLD)
@@ -1763,6 +1767,13 @@ namespace pwiz.OspreySharp.Tasks
                 if (m.Ms1Error.HasValue)
                     allMs1Errors.Add(m.Ms1Error.Value);
                 allMs2Errors.AddRange(m.Ms2MassErrors);
+                contributingMatches.Add(m);
+            }
+            if (OspreyDiagnostics.DumpMs2CalErrors)
+            {
+                OspreyDiagnostics.WriteMs2CalErrorsDump(contributingMatches);
+                if (OspreyDiagnostics.Ms2CalErrorsOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_MS2_CAL_ERRORS_ONLY");
             }
             string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
             var ms1Cal = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);

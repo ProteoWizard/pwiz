@@ -103,6 +103,18 @@ namespace pwiz.OspreySharp
         public static readonly bool CalMatchOnly = IsOne(@"OSPREY_CAL_MATCH_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_MS2_CAL_ERRORS: dump the per-fragment MS2 mass errors
+        /// that feed the MS2 mass calibration mean/sd computation, to
+        /// cs_ms2_cal_errors.txt. Used to bisect a 1-ULP MS2 calibration
+        /// mean divergence cross-impl by checking whether the input
+        /// fragment errors are identical in value AND order across impls.
+        /// </summary>
+        public static readonly bool DumpMs2CalErrors = IsOne(@"OSPREY_DUMP_MS2_CAL_ERRORS");
+
+        /// <summary>OSPREY_MS2_CAL_ERRORS_ONLY: exit after cs_ms2_cal_errors.txt dump.</summary>
+        public static readonly bool Ms2CalErrorsOnly = IsOne(@"OSPREY_MS2_CAL_ERRORS_ONLY");
+
+        /// <summary>
         /// OSPREY_DUMP_LDA_SCORES: dump per-entry LDA discriminant + q-value
         /// after LDA scoring (cs_lda_scores.txt).
         /// </summary>
@@ -597,6 +609,57 @@ namespace pwiz.OspreySharp
         /// Dump per-entry LDA discriminant + q-value (cs_lda_scores.txt),
         /// sorted by entry_id, F10-formatted.
         /// </summary>
+        /// <summary>
+        /// Dump per-fragment MS2 mass errors that feed the MS2 calibration
+        /// (cs_ms2_cal_errors.txt). One row per
+        /// (entry_id, fragment_order_index, error) triple, sorted by
+        /// (entry_id, fragment_order_index). Mirrors Rust
+        /// dump_ms2_cal_errors. Use to bisect 1-ULP MS2 calibration mean
+        /// divergence cross-impl: if dumps match exactly, divergence is in
+        /// the mean/sd computation (e.g. naive sum vs Welford); if not,
+        /// divergence is in per-match top-N fragment selection or per-
+        /// fragment error arithmetic.
+        ///
+        /// Pass only the matches contributing to calibration (i.e. post-
+        /// LDA passing targets with q_value &lt;= calibration_fdr and
+        /// snr &gt;= MIN_SNR_FOR_RT_CAL) so this dump aligns with what
+        /// MzCalibration.CalculateSingleCalibration actually sees.
+        /// </summary>
+        public static void WriteMs2CalErrorsDump(IEnumerable<CalibrationMatch> contributingMatches)
+        {
+            var sortedByEntry = contributingMatches.OrderBy(m => m.EntryId).ToArray();
+            var inv = CultureInfo.InvariantCulture;
+            int nRows = 0;
+            int nMatches = 0;
+            using (var w = new StreamWriter(@"cs_ms2_cal_errors.txt"))
+            {
+                w.WriteLine("entry_id\tfrag_order_idx\terror");
+                foreach (var m in sortedByEntry)
+                {
+                    nMatches++;
+                    if (m.Ms2MassErrors == null) continue;
+                    for (int i = 0; i < m.Ms2MassErrors.Length; i++)
+                    {
+                        double err = m.Ms2MassErrors[i];
+                        // G17: round-trip-safe canonical form. C# G17 and
+                        // Rust ryu (the `{}` default) format the same f64
+                        // value with different strings (e.g. "1.23E-05"
+                        // vs "0.0000123"), so this dump is intended to be
+                        // compared numerically via a Python diff script,
+                        // not via SHA byte-equality. Inside one impl, the
+                        // G17 strings round-trip the f64 bits exactly.
+                        w.WriteLine(string.Format(inv,
+                            "{0}\t{1}\t{2:G17}",
+                            m.EntryId, i, err));
+                        nRows++;
+                    }
+                }
+            }
+            LogAction(string.Format(inv,
+                @"[COUNT] Wrote MS2 cal errors dump: cs_ms2_cal_errors.txt ({0} rows across {1} matches)",
+                nRows, nMatches));
+        }
+
         public static void WriteLdaScoresDump(int passNumber, IEnumerable<CalibrationMatch> matchArray)
         {
             var sortedByEntry = matchArray.OrderBy(m => m.EntryId).ToArray();

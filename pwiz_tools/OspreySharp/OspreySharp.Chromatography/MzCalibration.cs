@@ -257,27 +257,40 @@ namespace pwiz.OspreySharp.Chromatography
 
             int n = errors.Length;
 
-            // Calculate mean
-            double sum = 0;
+            // Welford-Knuth online mean + variance.
+            //
+            // The naive sum/n formulation lets the running sum drift up to
+            // magnitude ~|n * mean|; for the MS2 calibration on Astral 3-file
+            // that reaches ~4000 (18,245 errors × ~-0.22 ppm), where f64 ULP
+            // is ~5e-13 — enough to produce a 1-ULP cross-impl drift in the
+            // computed mean and cascade through the calibration into
+            // mass_accuracy_deviation_mean features and the SVM training
+            // that depends on them. Welford's running mean keeps the
+            // accumulator bounded near the true mean (~0.22 magnitude, ULP
+            // ~2e-17), giving ~10,000× more headroom; the variance
+            // accumulator m2 uses the companion (x - mean_prev) * (x - mean_new)
+            // formulation to stay bit-deterministic for a given input
+            // sequence. Mirrors Skyline's running-mean pattern (e.g.
+            // NextGenFeatureCalc.MassErrorCalc).
+            double mean = 0.0;
+            double m2 = 0.0;
             for (int i = 0; i < n; i++)
-                sum += errors[i];
-            double mean = sum / n;
+            {
+                double x = errors[i];
+                double nF = (i + 1);
+                double delta = x - mean;
+                mean += delta / nF;
+                double delta2 = x - mean;
+                m2 += delta * delta2;
+            }
 
-            // Calculate median
+            // Calculate median (sort-based, unaffected by the Welford change)
             double median = LoessRegression.Median(errors);
 
-            // Calculate standard deviation (sample SD)
+            // Sample standard deviation: sqrt(M2 / (n-1)).
             double variance = 0;
             if (n > 1)
-            {
-                double sumSq = 0;
-                for (int i = 0; i < n; i++)
-                {
-                    double d = errors[i] - mean;
-                    sumSq += d * d;
-                }
-                variance = sumSq / (n - 1);
-            }
+                variance = m2 / (n - 1);
             double sd = Math.Sqrt(variance);
 
             return new MzCalibrationResult
