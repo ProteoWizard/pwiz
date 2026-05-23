@@ -119,6 +119,9 @@ namespace pwiz.Skyline.Model
 
             res.IsCentroided = spectrum.Centroided.ToString(CultureInfo.CurrentCulture);
 
+            res.Polarity = FullScanPropertiesRes.ResourceManager.GetString(
+                spectrum.NegativeCharge ? @"Polarity_negative" : @"Polarity_positive");
+
             if (spectrum.Metadata.ConstantNeutralLoss.HasValue)
             {
                 res.ConstantNeutralLoss = spectrum.Metadata.ConstantNeutralLoss.Value.ToString(Formats.Mz);
@@ -161,6 +164,7 @@ namespace pwiz.Skyline.Model
         [Category("AcquisitionInfo")] public string TotalIonCurrent { get; set; }
         [Category("AcquisitionInfo")] public string InjectionTime { get; set; }
         [Category("AcquisitionInfo")] public string IsCentroided { get; set; }
+        [Category("AcquisitionInfo")] public string Polarity { get; set; }
         [Category("AcquisitionInfo")] public string WindowGroup { get; set; } // For Bruker PASEF
         [Category("AcquisitionInfo")] public string SourceOffsetVoltage { get; set; }
         [Category("MatchInfo")] public string dotp { get; set; }

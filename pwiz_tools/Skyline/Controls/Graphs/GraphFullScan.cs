@@ -1947,9 +1947,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int j = 0; j < _msDataFileScanHelper.ScanProvider.Transitions.Length; j++)
                 {
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[j];
-                    // Polarity should match, because these are the spectra used for extraction
-                    Assume.IsTrue(transition.PrecursorMz.IsNegative == negativeScan);
-                    if (transition.Source != _msDataFileScanHelper.Source ||
+                    // Normally these are the spectra used for extraction, so polarity matches. But the
+                    // transition list can include co-displayed precursors of the opposite polarity (e.g. a
+                    // molecule with both [M+H]+ and [M-H]- precursors shown together in one chromatogram
+                    // pane), so just skip any whose polarity does not match this scan rather than asserting.
+                    if (transition.PrecursorMz.IsNegative != negativeScan ||
+                        transition.Source != _msDataFileScanHelper.Source ||
                         !transition.MatchMz(mz))
                         continue;
                     assignedPointList = pointLists[j];
