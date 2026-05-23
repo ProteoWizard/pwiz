@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model
             }
             res.Instrument.InstrumentSerialNumber = spectrum.InstrumentSerialNumber;
 
-            res.IsCentroided = spectrum.Centroided.ToString(CultureInfo.CurrentCulture);
+            res.IsCentroided = spectrum.Centroided ? FullScanPropertiesRes.True : FullScanPropertiesRes.False;
 
             res.Polarity = spectrum.NegativeCharge
                 ? FullScanPropertiesRes.Polarity_Negative

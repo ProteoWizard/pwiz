@@ -283,6 +283,12 @@
   <data name="Description_IsCentroided" xml:space="preserve">
     <value>Is this a centroided or high resolution spectrum.</value>
   </data>
+  <data name="True" xml:space="preserve">
+    <value>True</value>
+  </data>
+  <data name="False" xml:space="preserve">
+    <value>False</value>
+  </data>
   <data name="Polarity" xml:space="preserve">
     <value>Polarity</value>
   </data>

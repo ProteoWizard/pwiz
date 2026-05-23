@@ -653,6 +653,24 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("IsCentroided", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to True.
+        /// </summary>
+        internal static string True {
+            get {
+                return ResourceManager.GetString("True", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to False.
+        /// </summary>
+        internal static string False {
+            get {
+                return ResourceManager.GetString("False", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Isolation Window.

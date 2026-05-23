@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
                 },
                 {"DataPoints",105373.ToString(@"N0", CultureInfo.CurrentCulture)},
                 {"MzCount",45751.ToString(@"N0", CultureInfo.CurrentCulture)},
-                {"IsCentroided","False"},
+                {"IsCentroided",FullScanPropertiesRes.False},
                 {"Polarity",FullScanPropertiesRes.Polarity_Positive},
                 {"idotp",0.84.ToString(CultureInfo.CurrentCulture)}
             };
@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestFunctional
                 },
                 {"DataPoints",67630.ToString(@"N0", CultureInfo.CurrentCulture)},
                 {"MzCount",31378.ToString(@"N0", CultureInfo.CurrentCulture)},
-                {"IsCentroided","False"},
+                {"IsCentroided",FullScanPropertiesRes.False},
                 {"Polarity",FullScanPropertiesRes.Polarity_Positive},
                 { "dotp", 0.81.ToString(CultureInfo.CurrentCulture) }
             };
@@ -133,7 +133,7 @@ namespace pwiz.SkylineTestFunctional
                 },
                 { "DataPoints", 60587.ToString(@"N0", CultureInfo.CurrentCulture) },
                 { "MzCount", 29876.ToString(@"N0", CultureInfo.CurrentCulture) },
-                { "IsCentroided", "False" },
+                { "IsCentroided", FullScanPropertiesRes.False },
                 { "Polarity", FullScanPropertiesRes.Polarity_Positive },
                 { "dotp", 0.51.ToString(CultureInfo.CurrentCulture) }
             };
