@@ -94,7 +94,9 @@ namespace pwiz.SkylineTestFunctional
             // Decline the auto-manage offer if it appears (a precursor-only paste may not show it).
             var autoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(3000);
             if (autoManageDlg != null)
+            {
                 OkDialog(autoManageDlg, autoManageDlg.ClickNo);
+            }
             WaitForDocumentLoaded();
 
             // Confirm the setup actually produced the mixed-polarity condition before testing the graph.
@@ -145,8 +147,12 @@ namespace pwiz.SkylineTestFunctional
             var posIntensities = posInfo.TimeIntensities.Intensities;
             var apexScan = 0;
             for (var i = 1; i < posIntensities.Count; i++)
+            {
                 if (posIntensities[i] > posIntensities[apexScan])
+                {
                     apexScan = i;
+                }
+            }
 
             // Transition list spans both polarities; display a positive scan (transition 0 = positive).
             var scanProvider = new ScanProvider(SkylineWindow.DocumentFilePath, dataFile, posInfo.Source,
