@@ -60,8 +60,6 @@ namespace pwiz.OspreySharp.IO
         private const string CV_ZLIB_COMPRESSION = "MS:1000574";
         private const string CV_NO_COMPRESSION = "MS:1000576";
 
-        private const double DEFAULT_ISOLATION_HALF_WIDTH = 12.5;
-
         #endregion
 
         /// <summary>
@@ -355,10 +353,28 @@ namespace pwiz.OspreySharp.IO
                 if (center <= 0)
                     return; // Skip spectra without precursor info
 
-                double lowerOffset = isoLower > 0 ? isoLower : DEFAULT_ISOLATION_HALF_WIDTH;
-                double upperOffset = isoUpper > 0 ? isoUpper : DEFAULT_ISOLATION_HALF_WIDTH;
+                // Fail fast on missing offsets rather than substituting a
+                // 12.5 hardcoded default. DIA processing cannot proceed
+                // without true isolation windows, and a silent default
+                // produces bogus results that are very hard to diagnose
+                // downstream. The error names the spectrum index and which
+                // cvParam is missing. Mirrors the equivalent fail-fast
+                // change in osprey/crates/osprey-io/src/mzml/parser.rs
+                // (PR #39 on maccoss/osprey).
+                if (isoLower <= 0)
+                    throw new InvalidDataException(string.Format(
+                        "spectrum index {0}: no valid isolation-window lower offset " +
+                        "(cvParam MS:1000828 missing or non-positive); cannot process DIA data " +
+                        "without true isolation windows.",
+                        spectrumIndex));
+                if (isoUpper <= 0)
+                    throw new InvalidDataException(string.Format(
+                        "spectrum index {0}: no valid isolation-window upper offset " +
+                        "(cvParam MS:1000829 missing or non-positive); cannot process DIA data " +
+                        "without true isolation windows.",
+                        spectrumIndex));
 
-                var isoWindow = new IsolationWindow(center, lowerOffset, upperOffset);
+                var isoWindow = new IsolationWindow(center, isoLower, isoUpper);
 
                 ms2List.Add(new Spectrum
                 {
@@ -761,15 +777,27 @@ namespace pwiz.OspreySharp.IO
                 if (center <= 0)
                     return null;
 
-                double lowerOffset = IsoLower > 0 ? IsoLower : DEFAULT_ISOLATION_HALF_WIDTH;
-                double upperOffset = IsoUpper > 0 ? IsoUpper : DEFAULT_ISOLATION_HALF_WIDTH;
+                // Fail fast on missing offsets (see the equivalent block
+                // in the linear convert path above for the rationale).
+                if (IsoLower <= 0)
+                    throw new InvalidDataException(string.Format(
+                        "spectrum index {0}: no valid isolation-window lower offset " +
+                        "(cvParam MS:1000828 missing or non-positive); cannot process DIA data " +
+                        "without true isolation windows.",
+                        Index));
+                if (IsoUpper <= 0)
+                    throw new InvalidDataException(string.Format(
+                        "spectrum index {0}: no valid isolation-window upper offset " +
+                        "(cvParam MS:1000829 missing or non-positive); cannot process DIA data " +
+                        "without true isolation windows.",
+                        Index));
 
                 return new Spectrum
                 {
                     ScanNumber = Index,
                     RetentionTime = RetentionTime,
                     PrecursorMz = PrecursorMz > 0 ? PrecursorMz : center,
-                    IsolationWindow = new IsolationWindow(center, lowerOffset, upperOffset),
+                    IsolationWindow = new IsolationWindow(center, IsoLower, IsoUpper),
                     Mzs = MzArray,
                     Intensities = IntensityArray,
                 };
