@@ -838,12 +838,25 @@ namespace pwiz.OspreySharp.Tasks
                 int nGapForced = 0;
                 if (gapFillTargets.Count > 0)
                 {
-                    // Build target+decoy id set from gap_fill_targets.
+                    // Build gap-fill library subset (targets only).
+                    //
+                    // Decoys are intentionally excluded from gap-fill: forcing a
+                    // random decoy sequence to be scored at the target's
+                    // consensus RT has no biological basis (decoys are not
+                    // expected to co-elute with their paired target), and the
+                    // 1st-pass parquet already has a score for every decoy at
+                    // its own natural-but-best peak. Gap-filling decoys also
+                    // re-scored them at consensus RT and APPENDED a second
+                    // parquet row alongside the existing 1st-pass row,
+                    // producing exact-duplicate rows in the reconciled parquet.
+                    // Those duplicates cascaded into different max-per-modseq
+                    // aggregations cross-impl and a 1.1e-4 group_qvalue drift
+                    // on Astral 3-file. Targets are still gap-filled because
+                    // they were missing from this file by definition.
                     var gapFillIds = new HashSet<uint>();
                     foreach (var gf in gapFillTargets)
                     {
                         gapFillIds.Add(gf.TargetEntryId);
-                        gapFillIds.Add(gf.DecoyEntryId);
                     }
                     var gapFillLibrary = new List<LibraryEntry>(gapFillIds.Count);
                     foreach (var libEntry in fullLibrary)
@@ -904,10 +917,9 @@ namespace pwiz.OspreySharp.Tasks
                         cwtHitIds = new HashSet<uint>();
                     }
 
-                    // Pass 2: Forced integration for entries CWT missed.
-                    // For each gap-fill target, check both the target_id
-                    // and decoy_id; either or both may have missed the CWT
-                    // pass.
+                    // Pass 2: Forced integration for targets CWT missed.
+                    // Decoys are intentionally excluded from gap-fill (see
+                    // gapFillIds build above).
                     var forcedOverrides = new Dictionary<uint, (double Apex, double Start, double End)>();
                     var forcedIds = new HashSet<uint>();
                     foreach (var gf in gapFillTargets)
@@ -918,11 +930,6 @@ namespace pwiz.OspreySharp.Tasks
                         {
                             forcedOverrides[gf.TargetEntryId] = (gf.ExpectedRt, start, end);
                             forcedIds.Add(gf.TargetEntryId);
-                        }
-                        if (!cwtHitIds.Contains(gf.DecoyEntryId))
-                        {
-                            forcedOverrides[gf.DecoyEntryId] = (gf.ExpectedRt, start, end);
-                            forcedIds.Add(gf.DecoyEntryId);
                         }
                     }
 
