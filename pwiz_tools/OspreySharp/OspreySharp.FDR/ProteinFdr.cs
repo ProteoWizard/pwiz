@@ -33,6 +33,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.FDR
@@ -524,35 +525,16 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
 
-            // Diagnostic dump: emit the FULL winners list (target+decoy together)
-            // with their winner.Score, SortKey, raw_qvalue, and monotonic_qvalue.
-            // The existing Stage 7 dump (WriteStage7ProteinFdrDump in
-            // OspreyDiagnostics.cs) only emits target winners' scores;
-            // decoy-winner scores are not exposed there. Mirrors Rust's
-            // OSPREY_DUMP_STAGE7_WINNERS path in protein.rs.
-            if (Environment.GetEnvironmentVariable("OSPREY_DUMP_STAGE7_WINNERS") == "1")
+            // Cross-impl bisection dump (env-var-gated, no-op in production).
+            // The flag check short-circuits the LINQ projection below; in
+            // the disabled-dump path this whole block is one field read.
+            // Dump function lives in FdrDiagnostics so the file I/O stays
+            // isolated from the protein-FDR algorithm code.
+            if (FdrDiagnostics.DumpStage7Winners)
             {
-                const string path = "cs_stage7_winners.tsv";
-                try
-                {
-                    using (var sw = new System.IO.StreamWriter(path))
-                    {
-                        sw.WriteLine("rank\tscore\tis_decoy\tsort_key\traw_qvalue\tmonotonic_qvalue");
-                        for (int i = 0; i < winners.Count; i++)
-                        {
-                            var w = winners[i];
-                            sw.WriteLine(
-                                "{0}\t{1}\t{2}\t{3}\t{4}\t{5}",
-                                i,
-                                w.Score.ToString("G17", System.Globalization.CultureInfo.InvariantCulture),
-                                w.IsDecoy ? "true" : "false",
-                                w.SortKey,
-                                rawQvalues[i].ToString("G17", System.Globalization.CultureInfo.InvariantCulture),
-                                monotonicQvalues[i].ToString("G17", System.Globalization.CultureInfo.InvariantCulture));
-                        }
-                    }
-                }
-                catch (System.IO.IOException) { }
+                FdrDiagnostics.WriteStage7WinnersDump(
+                    winners.Select(w => (w.Score, w.IsDecoy)).ToList(),
+                    rawQvalues, monotonicQvalues);
             }
 
             // Step 5: Propagate to peptides. Each peptide's q-value is the min
@@ -625,34 +607,10 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
 
-            // Diagnostic dump: emit (modified_sequence, score, is_decoy, best_qvalue)
-            // for every peptide in best_scores. Mirrors Rust's
-            // OSPREY_DUMP_BEST_PEPTIDE_SCORES path in protein.rs.
-            if (Environment.GetEnvironmentVariable("OSPREY_DUMP_BEST_PEPTIDE_SCORES") == "1")
-            {
-                const string path = "cs_best_peptide_scores.tsv";
-                try
-                {
-                    var keys = new List<string>(best.Keys);
-                    keys.Sort(StringComparer.Ordinal);
-                    using (var sw = new System.IO.StreamWriter(path))
-                    {
-                        sw.WriteLine("modified_sequence\tscore\tis_decoy\tbest_qvalue");
-                        var inv = System.Globalization.CultureInfo.InvariantCulture;
-                        foreach (var seq in keys)
-                        {
-                            var ps = best[seq];
-                            sw.WriteLine(
-                                "{0}\t{1}\t{2}\t{3}",
-                                seq,
-                                ps.Score.ToString("G17", inv),
-                                ps.IsDecoy ? "true" : "false",
-                                ps.BestQvalue.ToString("G17", inv));
-                        }
-                    }
-                }
-                catch (System.IO.IOException) { }
-            }
+            // Cross-impl bisection dump (env-var-gated, no-op in production).
+            // See FdrDiagnostics.WriteBestPeptideScoresDump for context.
+            if (FdrDiagnostics.DumpBestPeptideScores)
+                FdrDiagnostics.WriteBestPeptideScoresDump(best);
 
             return best;
         }

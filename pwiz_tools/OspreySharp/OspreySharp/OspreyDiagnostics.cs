@@ -306,6 +306,15 @@ namespace pwiz.OspreySharp
         public static readonly bool Stage7ProteinFdrOnly = IsOne(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_DETECTED_PEPTIDES: dump the sorted set of detected
+        /// target peptides handed to BuildProteinParsimony for Stage 7 to
+        /// cs_stage7_detected_peptides.txt. Mirrors Rust
+        /// dump_stage7_detected_peptides; lets the protein-FDR input set
+        /// be diffed cross-impl before debugging downstream divergence.
+        /// </summary>
+        public static readonly bool DumpDetectedPeptides = IsOne(@"OSPREY_DUMP_DETECTED_PEPTIDES");
+
+        /// <summary>
         /// OSPREY_DUMP_LOESS_FIT: dump the per-point LOESS fit state of the
         /// Stage 6 refit RTCalibration to cs_stage6_loess_fit.tsv. Used to
         /// bisect the refit ULP divergence: if (library_rt, fitted_value,
@@ -1984,5 +1993,21 @@ namespace pwiz.OspreySharp
                 @"Wrote Stage 6 LOESS fit dump: {0} ({1} rows across {2} files)",
                 path, totalRows, fileNames.Count));
         }
+
+        /// <summary>
+        /// Write the sorted set of detected target peptides handed to
+        /// BuildProteinParsimony for Stage 7 to cs_stage7_detected_peptides.txt.
+        /// Mirrors Rust dump_stage7_detected_peptides. Gated by
+        /// <see cref="DumpDetectedPeptides"/>.
+        /// </summary>
+        public static void WriteStage7DetectedPeptidesDump(HashSet<string> detectedPeptides)
+        {
+            const string path = @"cs_stage7_detected_peptides.txt";
+            var sorted = new List<string>(detectedPeptides);
+            sorted.Sort(StringComparer.Ordinal);
+            File.WriteAllLines(path, sorted);
+            LogAction(string.Format(@"[DIAG] Wrote {0} ({1} entries)", path, sorted.Count));
+        }
+
     }
 }
