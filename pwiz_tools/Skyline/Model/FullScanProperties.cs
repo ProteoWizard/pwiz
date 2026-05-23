@@ -119,8 +119,9 @@ namespace pwiz.Skyline.Model
 
             res.IsCentroided = spectrum.Centroided.ToString(CultureInfo.CurrentCulture);
 
-            res.Polarity = FullScanPropertiesRes.ResourceManager.GetString(
-                spectrum.NegativeCharge ? @"Polarity_negative" : @"Polarity_positive");
+            res.Polarity = spectrum.NegativeCharge
+                ? FullScanPropertiesRes.Polarity_Negative
+                : FullScanPropertiesRes.Polarity_Positive;
 
             if (spectrum.Metadata.ConstantNeutralLoss.HasValue)
             {

@@ -289,10 +289,10 @@
   <data name="Description_Polarity" xml:space="preserve">
     <value>Ion polarity of the scan (positive or negative).</value>
   </data>
-  <data name="Polarity_positive" xml:space="preserve">
+  <data name="Polarity_Positive" xml:space="preserve">
     <value>Positive</value>
   </data>
-  <data name="Polarity_negative" xml:space="preserve">
+  <data name="Polarity_Negative" xml:space="preserve">
     <value>Negative</value>
   </data>
   <data name="WindowGroup" xml:space="preserve">
