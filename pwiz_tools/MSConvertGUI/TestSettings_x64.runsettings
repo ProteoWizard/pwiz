@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <ResultsDirectory>.\TestResults</ResultsDirectory>
+    <!-- [x86] | x64 -->
+    <TargetPlatform>x64</TargetPlatform>
+    <!-- Framework35 | [Framework40] | Framework45 -->
+    <TargetFrameworkVersion>.NETFramework,Version=v4.7.2</TargetFrameworkVersion>
+    <!-- Run in isolated test host so vendor DLLs get the test assembly config instead of vstest.console.exe.Config -->
+    <InIsolation>true</InIsolation>
+  </RunConfiguration>
+
+  <MSTest>
+    <MapInconclusiveToFailed>False</MapInconclusiveToFailed>
+    <CaptureTraceOutput>False</CaptureTraceOutput>
+    <DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>
+    <DeploymentEnabled>False</DeploymentEnabled>
+  </MSTest>
+</RunSettings>

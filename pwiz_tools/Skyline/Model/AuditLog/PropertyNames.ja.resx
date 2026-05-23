@@ -1818,10 +1818,10 @@
     <value>スペクトルフィルタ</value>
   </data>
   <data name="AnnotationDef_Lookup" xml:space="preserve">
-    <value>ルックアップ</value>
+    <value>参照</value>
   </data>
   <data name="ImputationSettings_ImputeMissingPeaks" xml:space="preserve">
-    <value>欠損しているピークを補間</value>
+    <value>欠損ピークを補完</value>
   </data>
   <data name="ImputationSettings_MaxPeakWidthVariation" xml:space="preserve">
     <value>最大ピーク幅変動</value>
@@ -1830,7 +1830,7 @@
     <value>最大RTシフト</value>
   </data>
   <data name="PeptideSettings_Imputation" xml:space="preserve">
-    <value>補間</value>
+    <value>補完</value>
   </data>
   <data name="AlignmentTargetSpec_Type" xml:space="preserve">
     <value>タイプ</value>

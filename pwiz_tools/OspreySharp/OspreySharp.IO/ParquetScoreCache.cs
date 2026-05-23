@@ -539,18 +539,18 @@ namespace pwiz.OspreySharp.IO
             return double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
         }
 
-        // Synchronously bridge an async Parquet.Net call. ConfigureAwait(false)
-        // avoids deadlock on a captured SynchronizationContext, and
-        // GetAwaiter().GetResult() unwraps the underlying exception instead
-        // of wrapping it in AggregateException.
+        // Synchronously bridge an async Parquet.Net call. GetAwaiter().GetResult()
+        // rethrows the original exception instead of wrapping it in an
+        // AggregateException. This is only safe because these calls run without a
+        // captured SynchronizationContext to deadlock on.
         private static T RunSync<T>(Task<T> task)
         {
-            return task.ConfigureAwait(false).GetAwaiter().GetResult();
+            return task.GetAwaiter().GetResult();
         }
 
         private static void RunSync(Task task)
         {
-            task.ConfigureAwait(false).GetAwaiter().GetResult();
+            task.GetAwaiter().GetResult();
         }
 
         // Build a name -> DataField lookup from the reader's actual schema.
