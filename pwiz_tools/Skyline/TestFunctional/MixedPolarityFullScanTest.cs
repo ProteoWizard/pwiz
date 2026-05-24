@@ -20,7 +20,6 @@
 using System.Drawing;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -80,8 +79,9 @@ namespace pwiz.SkylineTestFunctional
                 "MixedPol,TestMol,C20H30O2,1",
                 "MixedPol,TestMol,C20H30O2,-1").Replace(',', TextUtil.CsvSeparator);
             var insertDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => insertDlg.TransitionListText = csv);
-            RunUI(() =>
+            // RunDlg waits for the column-select dialog to be shown before interacting, avoiding a
+            // UI race (the exercise action runs on the event thread once the dialog is up).
+            RunDlg<ImportTransitionListColumnSelectDlg>(() => insertDlg.TransitionListText = csv, colDlg =>
             {
                 colDlg.radioMolecule.PerformClick();
                 colDlg.SetSelectedColumnTypes(
@@ -89,14 +89,8 @@ namespace pwiz.SkylineTestFunctional
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                colDlg.OkDialog();
             });
-            OkDialog(colDlg, colDlg.OkDialog);
-            // Decline the auto-manage offer if it appears (a precursor-only paste may not show it).
-            var autoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(3000);
-            if (autoManageDlg != null)
-            {
-                OkDialog(autoManageDlg, autoManageDlg.ClickNo);
-            }
             WaitForDocumentLoaded();
 
             // Confirm the setup actually produced the mixed-polarity condition before testing the graph.
