@@ -257,32 +257,43 @@ namespace pwiz.OspreySharp.Chromatography
 
             int n = errors.Length;
 
-            // Welford-Knuth online mean + variance.
+            // Naive sum/n with consistent left-to-right accumulation.
+            // Mirror of osprey-chromatography/src/calibration/mass.rs.
             //
-            // The naive sum/n formulation lets the running sum drift up to
-            // magnitude ~|n * mean|; for the MS2 calibration on Astral 3-file
-            // that reaches ~4000 (18,245 errors × ~-0.22 ppm), where f64 ULP
-            // is ~5e-13 — enough to produce a 1-ULP cross-impl drift in the
-            // computed mean and cascade through the calibration into
-            // mass_accuracy_deviation_mean features and the SVM training
-            // that depends on them. Welford's running mean keeps the
-            // accumulator bounded near the true mean (~0.22 magnitude, ULP
-            // ~2e-17), giving ~10,000× more headroom; the variance
-            // accumulator m2 uses the companion (x - mean_prev) * (x - mean_new)
-            // formulation to stay bit-deterministic for a given input
-            // sequence. Mirrors Skyline's running-mean pattern (e.g.
-            // NextGenFeatureCalc.MassErrorCalc).
-            double mean = 0.0;
-            double m2 = 0.0;
+            // For ppm mass-error inputs the running sum stays well below
+            // the f64 precision wall (worst case ~18 k errors × ~0.22 ppm
+            // ≈ 4 000, f64 ULP ~5e-13, ~9 digits headroom for the mean —
+            // well clear of the 1e-9 cross-impl gate).
+            //
+            // The caller sorts the error list by (base_id, entry_id)
+            // before this method runs, matching the Rust caller's
+            // deterministic ordering. With deterministic order and .NET's
+            // default IEEE 754 strict mode (no `-ffast-math`, no
+            // associative re-ordering), the JIT cannot vectorise the
+            // dependent reduction `sum += errors[i]`, so the loop stays
+            // serial-scalar and bit-equal to the Rust mirror which is
+            // similarly constrained by Rust's default IEEE 754 mode.
+            //
+            // The earlier Welford-Knuth recurrence was bit-equal to Rust
+            // but cost ~21 s extra on Stellar Rust stage1to4 (4 ops per
+            // element vs 1) for stability we did not need at ppm scale.
+            double sum = 0.0;
             for (int i = 0; i < n; i++)
             {
-                double x = errors[i];
-                double nF = (i + 1);
-                double delta = x - mean;
-                mean += delta / nF;
-                double delta2 = x - mean;
-                m2 += delta * delta2;
+                sum += errors[i];
             }
+            double mean = sum / n;
+
+            // Sample variance via a second left-to-right walk over
+            // (x - mean)^2 contributions.  Two passes total still beat
+            // Welford's single-pass 4-op recurrence on per-element cost.
+            double sumSqDev = 0.0;
+            for (int i = 0; i < n; i++)
+            {
+                double d = errors[i] - mean;
+                sumSqDev += d * d;
+            }
+            double m2 = sumSqDev;
 
             // Calculate median (sort-based, unaffected by the Welford change)
             double median = LoessRegression.Median(errors);
