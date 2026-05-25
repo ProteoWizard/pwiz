@@ -1204,9 +1204,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     CreateMobilogram();
 
                     PopulateProperties();
-                    AddExtractionBoxes(_heatMapPane, IsDisplayedScanNegative());
+                    var negativeScan = IsDisplayedScanNegative();
+                    AddExtractionBoxes(_heatMapPane, negativeScan);
                     if (!_showIonSeriesAnnotations)
-                        AddTransitionLabels(_heatMapPane, null, IsDisplayedScanNegative());
+                        AddTransitionLabels(_heatMapPane, null, negativeScan);
 
                     _heatMapPane.Title.IsVisible = false;
 
@@ -1234,9 +1235,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     CreateIonMobilityHeatmap();
 
                     PopulateProperties();
-                    AddExtractionBoxes(_heatMapPane, IsDisplayedScanNegative());
+                    var negativeScan = IsDisplayedScanNegative();
+                    AddExtractionBoxes(_heatMapPane, negativeScan);
                     if (!_showIonSeriesAnnotations)
-                        AddTransitionLabels(_heatMapPane, null, IsDisplayedScanNegative());
+                        AddTransitionLabels(_heatMapPane, null, negativeScan);
 
                     _heatMapPane.Title.IsVisible = false;
 
