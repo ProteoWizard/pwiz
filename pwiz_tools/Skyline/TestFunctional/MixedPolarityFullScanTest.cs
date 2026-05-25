@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -164,7 +165,8 @@ namespace pwiz.SkylineTestFunctional
             // stray label. Assert it produces no curve; the displayed [M+H]+ transition still does.
             RunUI(() =>
             {
-                var curveLabels = graphFullScan.ZedGraphControl.MasterPane.PaneList
+                var panes = graphFullScan.ZedGraphControl.MasterPane.PaneList;
+                var curveLabels = panes
                     .SelectMany(pane => pane.CurveList)
                     .Select(curve => curve.Label.Text)
                     .ToArray();
@@ -172,6 +174,12 @@ namespace pwiz.SkylineTestFunctional
                     string.Format("expected a curve for the displayed-polarity transition '{0}'", posInfo.Name));
                 Assert.IsFalse(curveLabels.Contains(negInfo.Name),
                     string.Format("opposite-polarity transition '{0}' must not be rendered for a positive scan", negInfo.Name));
+
+                // Extraction boxes are drawn per in-polarity transition as well; the off-polarity
+                // precursor must not contribute one (issue #4240, AddExtractionBoxes).
+                var extractionBoxCount = panes.SelectMany(pane => pane.GraphObjList.OfType<BoxObj>()).Count();
+                Assert.AreEqual(1, extractionBoxCount,
+                    "expected a single extraction box, for the displayed-polarity transition only");
             });
 
             // Step to the adjacent scan and back to exercise the refresh path too.

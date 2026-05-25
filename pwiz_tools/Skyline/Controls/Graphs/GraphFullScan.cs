@@ -1154,8 +1154,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     ZoomStickYAxis();
 
                     PopulateProperties();
-                    AddExtractionBoxes(_heatMapPane);
-                    AddExtractionBoxes(_stickSpectrumPane);
+                    AddExtractionBoxes(_heatMapPane, negativeScan);
+                    AddExtractionBoxes(_stickSpectrumPane, negativeScan);
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(_stickSpectrumPane, massErrors, negativeScan);
 
@@ -1204,7 +1204,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     CreateMobilogram();
 
                     PopulateProperties();
-                    AddExtractionBoxes(_heatMapPane);
+                    AddExtractionBoxes(_heatMapPane, IsDisplayedScanNegative());
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(_heatMapPane, null, IsDisplayedScanNegative());
 
@@ -1234,7 +1234,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     CreateIonMobilityHeatmap();
 
                     PopulateProperties();
-                    AddExtractionBoxes(_heatMapPane);
+                    AddExtractionBoxes(_heatMapPane, IsDisplayedScanNegative());
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(_heatMapPane, null, IsDisplayedScanNegative());
 
@@ -1260,7 +1260,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     CreateSingleScan(out massErrors, out var negativeScan);
 
                     PopulateProperties();
-                    AddExtractionBoxes(GraphPane);
+                    AddExtractionBoxes(GraphPane, negativeScan);
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(GraphPane, massErrors, negativeScan);
 
@@ -1295,7 +1295,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 CreateSingleScan(out massErrors, out var negativeScan);
 
                 PopulateProperties();
-                AddExtractionBoxes(GraphPane);
+                AddExtractionBoxes(GraphPane, negativeScan);
                 if (!_showIonSeriesAnnotations)
                     AddTransitionLabels(GraphPane, massErrors, negativeScan);
 
@@ -1330,12 +1330,12 @@ namespace pwiz.Skyline.Controls.Graphs
             return extractionBox;
         }
 
-        private void AddExtractionBoxes(MSGraphPane targetPane)
+        private void AddExtractionBoxes(MSGraphPane targetPane, bool negativeScan)
         {
             for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
             {
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
-                if (transition.Source != _msDataFileScanHelper.Source)
+                if (!TransitionAppliesToScan(transition, negativeScan))
                     continue;
                 targetPane.GraphObjList.Add(CreateExtractionBox(transition));
             }
