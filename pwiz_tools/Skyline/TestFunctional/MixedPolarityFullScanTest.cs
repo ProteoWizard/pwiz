@@ -157,6 +157,23 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(graphFullScan);
             WaitForConditionUI(() => graphFullScan.IsLoaded);
 
+            // The opposite-polarity precursor must not be rendered for a positive scan. The crash fix
+            // skips it when assigning spectrum points, but the curve/label/mass-error loops in
+            // CreateSingleScanInPane originally filtered by Source only (assuming the now-removed
+            // same-polarity invariant), so the [M-H]- transition still produced an empty curve and a
+            // stray label. Assert it produces no curve; the displayed [M+H]+ transition still does.
+            RunUI(() =>
+            {
+                var curveLabels = graphFullScan.ZedGraphControl.MasterPane.PaneList
+                    .SelectMany(pane => pane.CurveList)
+                    .Select(curve => curve.Label.Text)
+                    .ToArray();
+                Assert.IsTrue(curveLabels.Contains(posInfo.Name),
+                    string.Format("expected a curve for the displayed-polarity transition '{0}'", posInfo.Name));
+                Assert.IsFalse(curveLabels.Contains(negInfo.Name),
+                    string.Format("opposite-polarity transition '{0}' must not be rendered for a positive scan", negInfo.Name));
+            });
+
             // Step to the adjacent scan and back to exercise the refresh path too.
             RunUI(() => graphFullScan.ChangeScan(1));
             WaitForGraphs();

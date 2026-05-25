@@ -1150,14 +1150,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     // Top pane: stick spectrum (summed across ion mobility)
                     double[] massErrors;
-                    CreateSingleScanInPane(_stickSpectrumPane, out massErrors);
+                    CreateSingleScanInPane(_stickSpectrumPane, out massErrors, out var negativeScan);
                     ZoomStickYAxis();
 
                     PopulateProperties();
                     AddExtractionBoxes(_heatMapPane);
                     AddExtractionBoxes(_stickSpectrumPane);
                     if (!_showIonSeriesAnnotations)
-                        AddTransitionLabels(_stickSpectrumPane, massErrors);
+                        AddTransitionLabels(_stickSpectrumPane, massErrors, negativeScan);
 
                     _stickSpectrumPane.Title.IsVisible = false;
                     _heatMapPane.Title.IsVisible = false;
@@ -1206,7 +1206,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     PopulateProperties();
                     AddExtractionBoxes(_heatMapPane);
                     if (!_showIonSeriesAnnotations)
-                        AddTransitionLabels(_heatMapPane, null);
+                        AddTransitionLabels(_heatMapPane, null, IsDisplayedScanNegative());
 
                     _heatMapPane.Title.IsVisible = false;
 
@@ -1236,7 +1236,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     PopulateProperties();
                     AddExtractionBoxes(_heatMapPane);
                     if (!_showIonSeriesAnnotations)
-                        AddTransitionLabels(_heatMapPane, null);
+                        AddTransitionLabels(_heatMapPane, null, IsDisplayedScanNegative());
 
                     _heatMapPane.Title.IsVisible = false;
 
@@ -1257,12 +1257,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     ResetStickYAxis();
                     GetRankedSpectrum();
                     double[] massErrors;
-                    CreateSingleScan(out massErrors);
+                    CreateSingleScan(out massErrors, out var negativeScan);
 
                     PopulateProperties();
                     AddExtractionBoxes(GraphPane);
                     if (!_showIonSeriesAnnotations)
-                        AddTransitionLabels(GraphPane, massErrors);
+                        AddTransitionLabels(GraphPane, massErrors, negativeScan);
 
                     GraphPane.Title.IsVisible = false;
 
@@ -1292,12 +1292,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 GetRankedSpectrum();
                 double[] massErrors;
-                CreateSingleScan(out massErrors);
+                CreateSingleScan(out massErrors, out var negativeScan);
 
                 PopulateProperties();
                 AddExtractionBoxes(GraphPane);
                 if (!_showIonSeriesAnnotations)
-                    AddTransitionLabels(GraphPane, massErrors);
+                    AddTransitionLabels(GraphPane, massErrors, negativeScan);
 
                 double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
                 graphControl.MasterPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
@@ -1341,13 +1341,13 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void AddTransitionLabels(MSGraphPane targetPane, double[] massErrors)
+        private void AddTransitionLabels(MSGraphPane targetPane, double[] massErrors, bool negativeScan)
         {
             var showMassError = Settings.Default.ShowFullScanMassError;
             for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
             {
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
-                if (transition.Source != _msDataFileScanHelper.Source)
+                if (!TransitionAppliesToScan(transition, negativeScan))
                     continue;
                 var labelBuilder = new StringBuilder(transition.Name);
                 if (massErrors != null && showMassError)
@@ -1886,16 +1886,42 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Create stick graph of a single scan.
         /// </summary>
-        private void CreateSingleScan(out double[] massErrors)
+        private void CreateSingleScan(out double[] massErrors, out bool negativeScan)
         {
-            CreateSingleScanInPane(GraphPane, out massErrors);
+            CreateSingleScanInPane(GraphPane, out massErrors, out negativeScan);
             graphControl.IsEnableVZoom = graphControl.IsEnableVPan = false;
+        }
+
+        /// <summary>
+        /// True if the transition belongs to the scan currently being displayed: same chromatogram
+        /// source and same polarity. The displayed transition list can include co-displayed precursors
+        /// of the opposite polarity (e.g. a molecule with both [M+H]+ and [M-H]- precursors), and those
+        /// must be ignored everywhere transitions are enumerated for a single scan (issue #4240).
+        /// </summary>
+        private bool TransitionAppliesToScan(TransitionFullScanInfo transition, bool negativeScan)
+        {
+            return transition.Source == _msDataFileScanHelper.Source &&
+                   transition.PrecursorMz.IsNegative == negativeScan;
+        }
+
+        /// <summary>
+        /// True if the scan currently being displayed is negative polarity. Mirrors the determination
+        /// in <see cref="CreateSingleScanInPane"/> for rendering paths (e.g. the ion-mobility heatmap)
+        /// that don't compute it themselves.
+        /// </summary>
+        private bool IsDisplayedScanNegative()
+        {
+            var spectra = _msDataFileScanHelper.MsDataSpectra;
+            if (spectra.Length == 1 && spectra[0].IonMobilities == null)
+                return spectra[0].NegativeCharge;
+            var fullScans = _msDataFileScanHelper.GetFilteredScans(out _, out _);
+            return fullScans.Any() && fullScans.First().NegativeCharge;
         }
 
         /// <summary>
         /// Create stick graph of a single scan in a specific pane.
         /// </summary>
-        private void CreateSingleScanInPane(MSGraphPane targetPane, out double[] massErrors)
+        private void CreateSingleScanInPane(MSGraphPane targetPane, out double[] massErrors, out bool negativeScan)
         {
             targetPane.YAxis.Title.Text = GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
             massErrors = null;
@@ -1911,7 +1937,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // Assign each point to a transition point list, or else the default point list.
             IList<double> mzs;
             IList<double> intensities;
-            bool negativeScan;
             var spectra = _msDataFileScanHelper.MsDataSpectra;
 
             if (spectra.Length == 1 && spectra[0].IonMobilities == null)
@@ -1947,13 +1972,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int j = 0; j < _msDataFileScanHelper.ScanProvider.Transitions.Length; j++)
                 {
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[j];
-                    // Normally these are the spectra used for extraction, so polarity matches. But the
-                    // transition list can include co-displayed precursors of the opposite polarity (e.g. a
-                    // molecule with both [M+H]+ and [M-H]- precursors shown together in one chromatogram
-                    // pane), so just skip any whose polarity does not match this scan rather than asserting.
-                    if (transition.PrecursorMz.IsNegative != negativeScan ||
-                        transition.Source != _msDataFileScanHelper.Source ||
-                        !transition.MatchMz(mz))
+                    if (!TransitionAppliesToScan(transition, negativeScan) || !transition.MatchMz(mz))
                         continue;
                     assignedPointList = pointLists[j];
                     break;
@@ -2004,7 +2023,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int i = 0; i < pointLists.Length; i++)
                 {
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
-                    if (transition.Source != _msDataFileScanHelper.Source)
+                    if (!TransitionAppliesToScan(transition, negativeScan))
                         continue;
                     var item = new SpectrumItem(pointLists[i], GetTransitionColor(transition), _msDataFileScanHelper.ScanProvider.Transitions[i].Name, 2);
                     var curveItem = _graphHelper.GraphControl.AddGraphItem(targetPane, item, false);
@@ -2038,10 +2057,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     .ForEach(t => meanErrorsMap.Add(t.Id,
                         new IntensityAccumulator(true, ChromExtractor.summed, t.ProductMz)));
 
+                var scanIsNegative = negativeScan; // out params cannot be captured by the lambda below
                 for (int i = 0; i < mzs.Count; i++)     //accumulate errors for each spectrum point
                 {
                     _msDataFileScanHelper.ScanProvider.Transitions.ToList()
-                        .FindAll(t => t.Source == _msDataFileScanHelper.Source && t.MatchMz(mzs[i]))
+                        .FindAll(t => TransitionAppliesToScan(t, scanIsNegative) && t.MatchMz(mzs[i]))
                         .ForEach(t => meanErrorsMap[t.Id].AddPoint(mzs[i], intensities[i]));
                 }
                 //move results to the output array
