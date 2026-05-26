@@ -267,19 +267,22 @@ namespace pwiz.OspreySharp
                         reconPath, ex.Message), ex);
                 }
 
-                // Capture / validate file_stems across all envelopes. v2+
-                // envelopes carry the planner's full join file set; v1
-                // envelopes have FileStems null or empty, in which case
-                // the worker falls back to OspreyConfig.InputFiles stems
-                // downstream. Mirrors the consistency check in Rust's
-                // hydrate_for_rescore.
+                // Capture / validate file_stems across all envelopes.
+                // ReconciliationFile.Load already rejects any envelope whose
+                // format_version != CurrentFormatVersion (currently 2), so by
+                // the time we reach here `envelope.FileStems` must be the
+                // planner's full join file set -- a non-empty list, identical
+                // across every envelope produced by a single planner step.
+                // Any disagreement (including unexpected empty stems) means
+                // the on-disk envelopes were produced by different planner
+                // steps and indicates a corrupted hand-off. Mirrors the
+                // consistency check in Rust's hydrate_for_rescore.
                 var envelopeStems = NormalizeStems(envelope.FileStems);
                 if (joinFileStems == null)
                 {
                     joinFileStems = envelopeStems;
                 }
-                else if (envelopeStems.Count > 0
-                         && !StemsEqual(joinFileStems, envelopeStems))
+                else if (!StemsEqual(joinFileStems, envelopeStems))
                 {
                     throw new InvalidDataException(string.Format(
                         "HydrateReconciliationOverlay: reconciliation.json {0} carries a " +

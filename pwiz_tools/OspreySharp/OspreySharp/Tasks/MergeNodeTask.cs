@@ -161,7 +161,19 @@ namespace pwiz.OspreySharp.Tasks
                         foreach (var kvp in perFileEntries)
                         {
                             if (!perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath))
+                            {
+                                // No first-join parquet was produced (or mapped) for this
+                                // file. The {0} entries below will go into the second-pass
+                                // Percolator with stale / null Features, which silently
+                                // regresses 2nd-pass FDR -- log so the operator can detect
+                                // an incomplete first-join hand-off.
+                                ctx.LogWarning(string.Format(
+                                    "Second-pass FDR: no parquet path mapped for file '{0}' " +
+                                    "({1} entries will run with stale/null features). " +
+                                    "Check first-join output completeness.",
+                                    kvp.Key, kvp.Value.Count));
                                 continue;
+                            }
                             List<double[]> featRows;
                             try
                             {
@@ -183,6 +195,21 @@ namespace pwiz.OspreySharp.Tasks
                                     entry.Features = featRows[idx];
                                     nMapped++;
                                 }
+                            }
+                            // An entry whose ParquetIndex lies past the loaded row count
+                            // is a stub/parquet mismatch (e.g., the first-join parquet
+                            // was regenerated with fewer rows than the in-memory FDR
+                            // stubs reference). Such entries silently keep their stale
+                            // Features and corrupt 2nd-pass FDR; warn so the mismatch
+                            // is visible.
+                            if (nMapped < kvp.Value.Count)
+                            {
+                                ctx.LogWarning(string.Format(
+                                    "Second-pass FDR: file '{0}' parquet has {1} feature rows " +
+                                    "but {2} FDR entries reference it; {3} entries will run with " +
+                                    "stale/null features. Stub/parquet mismatch -- check first-join " +
+                                    "output integrity.",
+                                    kvp.Key, featRows.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
                             }
                             nReloaded += nMapped;
                         }
