@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -766,7 +766,7 @@ namespace pwiz.OspreySharp.FDR
             var pepOrder = new int[nWinners];
             for (int k = 0; k < nWinners; k++)
                 pepOrder[k] = k;
-            Array.Sort(pepOrder, (a, b) => // Array.Sort OK: TDC's CompeteAll already produced one winner per base_id, so each base_id appears at most once in pepOrder â€” no ties.
+            Array.Sort(pepOrder, (a, b) => // Array.Sort OK: TDC's CompeteAll already produced one winner per base_id, so each base_id appears at most once in pepOrder -- no ties.
             {
                 uint ba = entryIds[winnerIndices[a]] & BASE_ID_MASK;
                 uint bb = entryIds[winnerIndices[b]] & BASE_ID_MASK;
@@ -1821,7 +1821,7 @@ namespace pwiz.OspreySharp.FDR
             // Propagate the winner's q-value to all observations sharing the
             // same base_id (both target and decoy sides). Matches Rust's
             // base_id_exp_prec_q HashMap at osprey-fdr/src/percolator.rs:2168
-            // â€” without this, non-winning per-file observations of a
+            // -- without this, non-winning per-file observations of a
             // multi-file precursor stay at q=1.0 and downstream stages that
             // gate on experiment_precursor_qvalue (Stage 6 calibration refit
             // and reconciliation) miss the bulk of the consensus pool.
