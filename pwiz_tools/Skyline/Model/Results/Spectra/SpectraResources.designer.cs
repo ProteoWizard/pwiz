@@ -151,5 +151,14 @@ namespace pwiz.Skyline.Model.Results.Spectra {
                 return ResourceManager.GetString("SpectrumClassFilter_ValidateFilterString_Unknown_spectrum_property___0__", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid spectrum filter: {0}. Use the form &apos;&lt;Property&gt; &lt;Operator&gt; &lt;Value&gt;&apos;, for example &apos;CollisionEnergy = 17&apos; (note the spaces), and combine criteria with &apos;and&apos; and &apos;or&apos;, for example &apos;MsLevel = 1 or (MsLevel &gt; 1 and CollisionEnergy = 17)&apos;..
+        /// </summary>
+        public static string SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format", resourceCulture);
+            }
+        }
     }
 }

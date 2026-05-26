@@ -64,6 +64,11 @@ namespace pwiz.SkylineTest
             // Syntactically invalid text is rejected
             var syntaxError = SpectrumClassFilter.ValidateFilterString("not a filter");
             Assert.IsFalse(string.IsNullOrEmpty(syntaxError));
+            // The message shows an example of the expected format (e.g. for a wrong operator like "Equals")
+            const string badText = "CollisionEnergy Equals -17";
+            AssertEx.AreEqual(
+                string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, badText),
+                SpectrumClassFilter.ValidateFilterString(badText));
         }
 
         [TestMethod]

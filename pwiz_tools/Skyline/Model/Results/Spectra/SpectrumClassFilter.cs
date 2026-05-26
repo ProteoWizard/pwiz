@@ -430,7 +430,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     firstError = firstError ?? ex;
                 }
             }
-            throw firstError ?? new FormatException(filterString);
+            // Replace the serializer's terse "invalid filter string" with a message that shows the
+            // expected form (e.g. column/operator/value with spaces, combined with "and"/"or").
+            throw new FormatException(string.Format(
+                SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, filterString),
+                firstError);
         }
 
         /// <summary>

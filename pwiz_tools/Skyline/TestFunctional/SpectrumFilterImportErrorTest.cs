@@ -19,6 +19,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -54,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
             // Before the fix this threw an unhandled FormatException; now it surfaces as a row error
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(() => transitionDlg.buttonCheckForErrors.PerformClick());
             var expectedMessage = string.Format(
-                pwiz.Common.Properties.Resources.FilterClauseSerializer_ParseFilterString_Invalid_filter_string___0_,
+                SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format,
                 badFilter);
             RunUI(() =>
             {
