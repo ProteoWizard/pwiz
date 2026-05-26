@@ -124,7 +124,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             var dataSchema = new DataSchema();
-            var predicates = Clauses.Select(x => x.MakePredicate<SpectrumClass>(dataSchema)).ToList();
+            var predicates = Clauses
+                .Select(clause => AbsoluteCollisionEnergy(clause).MakePredicate<SpectrumClass>(dataSchema)).ToList();
             return x =>
             {
                 var spectrumClass = new SpectrumClass(new SpectrumClassKey(SpectrumClassColumn.ALL, x));
@@ -138,6 +139,49 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
                 return false;
             };
+        }
+
+        /// <summary>
+        /// Returns a copy of <paramref name="clause"/> with any CollisionEnergy criterion's operand
+        /// replaced by its absolute value, so the filter matches on CE magnitude. Vendors report
+        /// collision energy as a positive magnitude, but users (and Sciex-style transition lists) use
+        /// negative CE for negative-polarity data; matching on magnitude lets a "CollisionEnergy = -17"
+        /// filter select spectra acquired at CE 17.
+        ///
+        /// Comparing magnitudes cannot mix polarities here: a spectrum only reaches this filter for a
+        /// target whose precursor m/z it matches, and that match already requires the spectrum's scan
+        /// polarity and the target precursor's charge to agree. So the two CE values necessarily share a
+        /// polarity and can differ only in sign convention (vendor magnitude vs. the user's signed value).
+        ///
+        /// Only the predicate built here uses the magnitude; the stored filter (and what the user sees)
+        /// is left unchanged, and the spectrum side is already a magnitude.
+        /// </summary>
+        private static FilterClause AbsoluteCollisionEnergy(FilterClause clause)
+        {
+            var collisionEnergyPath = SpectrumClassColumn.CollisionEnergy.PropertyPath;
+            if (!clause.FilterSpecs.Any(spec => Equals(spec.ColumnId, collisionEnergyPath)))
+            {
+                return clause;
+            }
+            return new FilterClause(clause.FilterSpecs.Select(spec =>
+                Equals(spec.ColumnId, collisionEnergyPath) ? AbsoluteOperand(spec) : spec));
+        }
+
+        private static FilterSpec AbsoluteOperand(FilterSpec spec)
+        {
+            var operandText = spec.Predicate.InvariantOperandText;
+            if (string.IsNullOrEmpty(operandText))
+            {
+                return spec;
+            }
+            // InvariantOperandText is a single value or a comma-separated list of doubles (invariant
+            // formatting uses '.' for the decimal point and ',' to separate list items).
+            var absoluteText = string.Join(@",", operandText.Split(',').Select(token =>
+                double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
+                    ? Math.Abs(value).ToString(CultureInfo.InvariantCulture)
+                    : token));
+            return new FilterSpec(spec.ColumnId,
+                FilterPredicate.FromInvariantOperandText(spec.Operation, absoluteText));
         }
 
         public override string ToString()

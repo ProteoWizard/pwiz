@@ -22,8 +22,10 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
+using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -51,6 +53,27 @@ namespace pwiz.SkylineTest
             var operandValue = filterPredicate.GetOperandValue(dataSchema, typeof(SpectrumPrecursors));
             Assert.IsInstanceOfType(operandValue, typeof(ListColumnValue<object>));
             Assert.AreEqual(expectedSpectrumPrecursors, operandValue);
+        }
+
+        [TestMethod]
+        public void TestCollisionEnergyMagnitudeMatch()
+        {
+            // Vendors report collision energy as a positive magnitude, but users (and Sciex-style
+            // transition lists) use negative CE for negative-polarity data. The spectrum filter
+            // matches on magnitude so a "CollisionEnergy = -17" filter still selects spectra
+            // acquired at CE 17. Polarity is already pinned by precursor m/z, so this cannot match
+            // across polarities.
+            var spectrum = new SpectrumMetadata(@"scan1", 1.0)
+                .ChangePrecursors(new[] { new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(17.0) } });
+
+            var negativeFilter = SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17");
+            Assert.IsTrue(negativeFilter.MakePredicate()(spectrum));
+
+            var positiveFilter = SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = 17");
+            Assert.IsTrue(positiveFilter.MakePredicate()(spectrum));
+
+            var wrongMagnitudeFilter = SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -25");
+            Assert.IsFalse(wrongMagnitudeFilter.MakePredicate()(spectrum));
         }
 
         [TestMethod]
