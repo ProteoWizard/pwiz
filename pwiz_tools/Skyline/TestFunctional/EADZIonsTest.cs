@@ -89,8 +89,8 @@ namespace pwiz.SkylineTestFunctional
                 var testNode = new Transition(selectedPrecursor.Id as TransitionGroup, testIon.type, testIon.offset, 1, Adduct.M_PLUS);
                 //check for the peaks in the library spectrum
                 Assert.IsTrue( libMatch.PeaksMatched.Any(peak =>
-                    peak.MatchedIons[0].IonType.Equals(testNode.IonType) &&
-                    peak.MatchedIons[0].Ordinal.Equals(testNode.Ordinal)));
+                    peak.MatchedIonsSorted[0].IonType.Equals(testNode.IonType) &&
+                    peak.MatchedIonsSorted[0].Ordinal.Equals(testNode.Ordinal)));
                 //check for the transitions in the tree
                 Assert.IsTrue(selectedPrecursor.Children.Any(t => (t is TransitionDocNode trans) &&
                     trans.Transition.GetFragmentIonName(CultureInfo.CurrentCulture).StartsWith(testNode.FragmentIonName)));

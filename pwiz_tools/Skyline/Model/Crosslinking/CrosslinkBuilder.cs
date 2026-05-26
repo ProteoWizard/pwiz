@@ -444,7 +444,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
                 var complexIonName = transition.ComplexFragmentIon.GetName();
                 var matchedIon =
-                    rankedMI.MatchedIons.FirstOrDefault(ion => Equals(complexIonName, ion.ComplexFragmentIonName));
+                    rankedMI.MatchedIonsSorted.FirstOrDefault(ion => Equals(complexIonName, ion.ComplexFragmentIonName));
                 if (matchedIon == null)
                 {
                     continue;
