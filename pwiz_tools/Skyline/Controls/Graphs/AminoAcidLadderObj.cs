@@ -236,14 +236,21 @@ namespace pwiz.Skyline.Controls.Graphs
             // 5. Group label: ion-type letters (each in its type color) + charge suffix.
             // Drawn last so it renders on top of any residue label it might overlap when the
             // ruler extends offscreen left and the label has to be clamped to the chart edge.
-            DrawGroupLabel(g, scaleFactor, chartRect, xStart, labelY);
+            DrawGroupLabel(g, scaleFactor, chartRect, xStart, xEnd, labelY);
 
             g.Clip = savedClip;
         }
 
         private void DrawGroupLabel(Graphics g, float scaleFactor, RectangleF chartRect,
-            float xStart, float labelY)
+            float xStart, float xEnd, float labelY)
         {
+            // Suppress the label when the ruler is entirely outside the visible chart
+            // area (zoomed/panned away). The ticks and drop lines are already clipped
+            // to chartRect, but the label is clamped to the chart's left edge — so it
+            // would otherwise appear with no visible ruler beside it.
+            if (xEnd < chartRect.Left || xStart > chartRect.Right)
+                return;
+
             var ionTokens = _series
                 .Select(s => (s.Color, Text: s.IonType.GetLocalizedString()))
                 .ToList();
