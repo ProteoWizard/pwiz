@@ -417,7 +417,23 @@ namespace pwiz.Skyline.Model
                 {
                     bool tranGroupFound = false;
                     var pepPath = new IdentityPath(pathPepGroup, pep.Id);
-                    var rowSpectrumFilter = ReadSpectrumClassFilter(row);
+                    SpectrumClassFilter rowSpectrumFilter;
+                    try
+                    {
+                        rowSpectrumFilter = ReadSpectrumClassFilter(row);
+                    }
+                    catch (Exception e) when (IsParserException(e))
+                    {
+                        // This path (adding to an existing molecule group) has no surrounding
+                        // IsParserException guard, so report the bad filter text as a row error here.
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = INDEX_SPECTRUM_FILTER,
+                            Line = row.Index,
+                            Message = e.Message
+                        });
+                        return true; // Error
+                    }
                     foreach (var tranGroup in pep.TransitionGroups)
                     {
                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
@@ -2402,6 +2418,13 @@ namespace pwiz.Skyline.Model
             var filterString = GetCellTrimmed(row, INDEX_SPECTRUM_FILTER);
             if (string.IsNullOrEmpty(filterString))
                 return default;
+            // Surface unparseable or unknown-property filter text as a row import error rather than
+            // letting ParseFilterString throw a FormatException that escapes the IsParserException
+            // guards and crashes the import. ValidateFilterString also flags unknown spectrum
+            // properties, which the lenient parser would otherwise accept.
+            var error = SpectrumClassFilter.ValidateFilterString(filterString);
+            if (error != null)
+                throw new InvalidDataException(error);
             return SpectrumClassFilter.ParseFilterString(filterString);
         }
 
