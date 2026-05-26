@@ -78,11 +78,37 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return;
             }
-            if (!(bindingListSource[rowIndex] is RowItem rowItem) || !(rowItem.Value is Precursor precursorEntity))
+            if (!(bindingListSource[rowIndex] is RowItem rowItem))
+            {
+                return;
+            }
+            // A view that shows the precursor's Spectrum Filter can be rooted below the Precursor
+            // level (e.g. a transition list), so the row entity may be a Transition or a results row
+            // rather than the Precursor itself. Resolve the owning Precursor from whichever entity
+            // backs the clicked row.
+            var precursorEntity = GetPrecursor(rowItem.Value);
+            if (precursorEntity == null)
             {
                 return;
             }
             LaunchEditor(grid, precursorEntity);
+        }
+
+        private static Precursor GetPrecursor(object rowValue)
+        {
+            switch (rowValue)
+            {
+                case Precursor precursor:
+                    return precursor;
+                case Transition transition:
+                    return transition.Precursor;
+                case PrecursorResult precursorResult:
+                    return precursorResult.Precursor;
+                case TransitionResult transitionResult:
+                    return transitionResult.Transition?.Precursor;
+                default:
+                    return null;
+            }
         }
 
         private static void LaunchEditor(DataGridView grid, Precursor precursor)
