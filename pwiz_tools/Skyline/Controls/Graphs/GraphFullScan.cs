@@ -3230,7 +3230,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     UpdateHoveredPeak(null);
             };
 
-            menuStrip.Items.Add(new ToolStripSeparator());
+            // Insert just below the first separator so ruler items sit close to the
+            // ion-type/charge items that BuildSpectrumMenu placed above it.
+            int insertAt = FindIndexAfterFirstSeparator(menuStrip);
 
             if (hoveredKey.HasValue)
             {
@@ -3239,7 +3241,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var item = new ToolStripMenuItem(@"Unpin Ruler");
                     item.Click += (s, e) => UnpinSeries(key);
-                    menuStrip.Items.Add(item);
+                    menuStrip.Items.Insert(insertAt++, item);
                 }
                 else
                 {
@@ -3253,7 +3255,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             graphControl.Invalidate();
                         }
                     };
-                    menuStrip.Items.Add(item);
+                    menuStrip.Items.Insert(insertAt++, item);
                 }
             }
 
@@ -3261,8 +3263,25 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var item = new ToolStripMenuItem(@"Unpin All Rulers");
                 item.Click += (s, e) => UnpinAllRulers();
-                menuStrip.Items.Add(item);
+                menuStrip.Items.Insert(insertAt++, item);
             }
+
+            // Trailing separator to visually group ruler items, unless the next item is
+            // already a separator (avoid two adjacent separators).
+            if (insertAt >= menuStrip.Items.Count || !(menuStrip.Items[insertAt] is ToolStripSeparator))
+                menuStrip.Items.Insert(insertAt, new ToolStripSeparator());
+        }
+
+        // Returns the index right after the first ToolStripSeparator in the menu, or
+        // the menu length (append at end) when no separator is found.
+        private static int FindIndexAfterFirstSeparator(ContextMenuStrip menuStrip)
+        {
+            for (int i = 0; i < menuStrip.Items.Count; i++)
+            {
+                if (menuStrip.Items[i] is ToolStripSeparator)
+                    return i + 1;
+            }
+            return menuStrip.Items.Count;
         }
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)
