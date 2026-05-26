@@ -170,6 +170,7 @@ namespace pwiz.SkylineTestFunctional
             TestLabelsNoFormulas();
             TestHeavyLightPairs();
             TestHeavyPrecursorNoFormulas();
+            TestHeavyPrecursorMultipleTransitionsNoFormulas();
             TestImportAllData(true);
             TestImportAllData(false);
             TestInconsistentMoleculeDescriptions();
@@ -2738,6 +2739,38 @@ namespace pwiz.SkylineTestFunctional
                 }
                 AssertEx.Serializable(pastedDoc); // Original error report was in terms of not being able to reload the inconsistent document, so check that
             }
+        }
+
+        void TestHeavyPrecursorMultipleTransitionsNoFormulas()
+        {
+            // Support request https://skyline.ms/announcements/home/support/announcements-thread.view?rowId=74741
+            // A mass-only molecule (no formula) declared with a [M-H] adduct at two precursor m/z values, and
+            // NO explicit label type. The heavier precursor (87.9) is inferred to be isotopically labeled
+            // ([M1.1-H], "heavy"). Each precursor has two declared transitions (a fragment, plus a precursor-type
+            // transition where product m/z equals precursor m/z). The two heavy transitions must group under a
+            // SINGLE heavy precursor, exactly as the two light transitions group under the single light precursor.
+            // Before the fix, the second heavy transition would land on a duplicate heavy precursor because the
+            // transition-group matching code only derived the implied isotope label for charge-only adducts,
+            // not for adducts like [M-H], so [M-H] failed to match the existing [M1.1-H] precursor.
+            var input =
+                "Molecule List Name,Molecule Name,Molecule Formula,Precursor Adduct,Precursor Mz,Precursor Charge,Explicit Retention Time,Explicit Retention Time Window,Product Mz,Product Charge,Product Adduct,Label Type\n" +
+                "AcideOrganique,Pyruvate,,M-H,86.8,-1,1,1,42.9,-1,M-,\n" +
+                "AcideOrganique,Pyruvate,,M-H,86.8,-1,1,1,86.9,-1,M-,\n" +
+                "AcideOrganique,Pyruvate,,M-H,87.9,-1,1,1,43.9,-1,M-,\n" +
+                "AcideOrganique,Pyruvate,,M-H,87.9,-1,1,1,87.9,-1,M-,\n";
+            var pastedDoc = PasteNewDocument(input); // New document, decline automanage to keep the explicit transitions
+
+            // One molecule list, one molecule, two precursors (light 86.8 and heavy 87.9), two transitions each
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 2, 4);
+            foreach (var tranGroup in pastedDoc.MoleculeTransitionGroups)
+            {
+                AssertEx.AreEqual(2, tranGroup.TransitionCount,
+                    string.Format("precursor {0} should have two transitions", tranGroup.PrecursorAdduct));
+            }
+            AssertEx.AreEqual(1, pastedDoc.MoleculeTransitionGroups.Count(t => !t.PrecursorAdduct.HasIsotopeLabels)); // light
+            AssertEx.AreEqual(1, pastedDoc.MoleculeTransitionGroups.Count(t => t.PrecursorAdduct.HasIsotopeLabels));  // inferred heavy
+            AssertEx.Serializable(pastedDoc);
+            NewDocument();
         }
 
         void TestNotes()
