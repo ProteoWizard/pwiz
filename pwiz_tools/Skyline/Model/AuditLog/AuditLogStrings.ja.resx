@@ -683,40 +683,40 @@
     <value>スペクトルフィルタを追加しました</value>
   </data>
   <data name="imputed_boundaries" xml:space="preserve">
-    <value>「{0}」の境界を補間しました</value>
+    <value>「{0}」の境界を補完しました</value>
   </data>
   <data name="files_tree_node_renamed" xml:space="preserve">
-    <value>[ファイル]ウィンドウでノード{0}の名前が{1}に変更されました</value>
+    <value>[ファイル]ウィンドウにあるノード{0}の名前が{1}に変更されました</value>
   </data>
   <data name="files_tree_node_drag_and_drop" xml:space="preserve">
-    <value>[ファイル]ウィンドウで{0}個のノードを{1}にドラッグアンドドロップしました</value>
+    <value>[ファイル]ウィンドウにある{0}個のノードを{1}にドラッグアンドドロップしました</value>
   </data>
   <data name="files_tree_nodes_drag_and_drop" xml:space="preserve">
-    <value>[ファイル]ウィンドウで{0}個のノードを{1}にドラッグアンドドロップしました</value>
+    <value>[ファイル]ウィンドウにある{0}個のノードを{1}にドラッグアンドドロップしました</value>
   </data>
   <data name="files_tree_replicates_remove_one" xml:space="preserve">
-    <value>[ファイル]ウィンドウで繰り返し測定{0}を削除しました</value>
+    <value>[ファイル]ウィンドウにある繰り返し測定{0}を削除しました</value>
   </data>
   <data name="files_tree_replicates_remove_several" xml:space="preserve">
-    <value>[ファイル]ウィンドウで{0}個の繰り返し測定を削除しました</value>
+    <value>[ファイル]ウィンドウにある{0}個の繰り返し測定を削除しました</value>
   </data>
   <data name="files_tree_replicates_remove_all" xml:space="preserve">
-    <value>[ファイル]ウィンドウですべての繰り返し測定を削除しました</value>
+    <value>[ファイル]ウィンドウにあるすべての繰り返し測定を削除しました</value>
   </data>
   <data name="files_tree_libraries_remove_one" xml:space="preserve">
-    <value>[ファイル]ウィンドウでスペクトルライブラリ{0}を削除しました</value>
+    <value>[ファイル]ウィンドウにあるスペクトルライブラリ{0}を削除しました</value>
   </data>
   <data name="files_tree_libraries_remove_several" xml:space="preserve">
-    <value>[ファイル]ウィンドウで{0}個のスペクトルライブラリを削除しました</value>
+    <value>[ファイル]ウィンドウにある{0}個のスペクトルライブラリを削除しました</value>
   </data>
   <data name="files_tree_libraries_remove_all" xml:space="preserve">
-    <value>[ファイル]ウィンドウですべてのスペクトルライブラリを削除しました</value>
+    <value>[ファイル]ウィンドウにあるすべてのスペクトルライブラリを削除しました</value>
   </data>
   <data name="files_tree_background_proteome_update" xml:space="preserve">
     <value>[ファイル]ウィンドウから{0}という名前のバックグラウンドプロテオームを編集しました</value>
   </data>
   <data name="files_tree_rt_calculator_update" xml:space="preserve">
-    <value>[ファイル]ウィンドウから{0}という名前の保持時間カリキュレータを編集しました</value>
+    <value>[ファイル]ウィンドウから{0}という名前の保持時間計算ツールを編集しました</value>
   </data>
   <data name="files_tree_optimization_library_update" xml:space="preserve">
     <value>[ファイル]ウィンドウから{0}という名前の最適化ライブラリを編集しました</value>
