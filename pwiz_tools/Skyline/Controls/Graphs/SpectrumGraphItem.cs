@@ -141,6 +141,15 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>Individual ion series pinned by the user, in order of pinning.</summary>
         public IReadOnlyList<IonSeriesKey> PinnedSeriesKeys { get; set; } = new IonSeriesKey[0];
 
+        /// <summary>
+        /// Whether amino-acid sequence rulers apply to this spectrum. False for small
+        /// molecules (no defined sequence), crosslinked peptides, or when settings are
+        /// unavailable — in those cases no ruler is drawn, hovered, or offered for pinning.
+        /// </summary>
+        public bool RulersApplicable =>
+            PeptideDocNode != null && PeptideDocNode.IsProteomic &&
+            !PeptideDocNode.CrosslinkStructure.HasCrosslinks && SrmSettings != null;
+
         public SpectrumGraphItem(PeptideDocNode peptideDocNode,
             TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
             LibraryRankedSpectrumInfo spectrumInfo, string libName) : base(spectrumInfo)
@@ -222,7 +231,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
         {
-            if (!IsProteomic() || PeptideDocNode == null || PeptideDocNode.CrosslinkStructure.HasCrosslinks || SrmSettings == null)
+            if (!RulersApplicable)
                 return;
 
             // Build groups from pinned series, preserving order of first appearance.

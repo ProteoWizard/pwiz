@@ -3207,6 +3207,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddRulerMenuItems(ContextMenuStrip menuStrip)
         {
+            // Rulers don't apply to small molecules / crosslinks — offer no Pin/Unpin items.
+            if (_currentGraphItem == null || !_currentGraphItem.RulersApplicable)
+                return;
+
             // Capture the hovered key now — MouseLeave fires when the context menu window
             // appears on top of the graph, which would clear HoveredSeriesKey before the
             // user can click "Pin Ruler".
@@ -3350,6 +3354,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
         {
+            // Rulers don't apply to small molecules / crosslinks — never hover a series there.
+            if (_currentGraphItem != null && !_currentGraphItem.RulersApplicable)
+                peakRmi = null;
+
             IonSeriesKey? newKey = null;
             if (peakRmi?.MatchedIons != null && peakRmi.MatchedIons.Count > 0)
             {
