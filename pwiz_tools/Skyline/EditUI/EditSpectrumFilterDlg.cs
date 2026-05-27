@@ -137,7 +137,12 @@ namespace pwiz.Skyline.EditUI
 
         public int CurrentPageIndex { get; private set; }
 
-        public FilterPage CurrentPage { get { return FilterPages.Pages[CurrentPageIndex]; } }
+        // CurrentPageIndex can be Pages.Count (the "+ Add Alternative" tab) or Pages can be empty,
+        // so guard the index (mirrors DisplayCurrentPage) rather than throwing ArgumentOutOfRangeException.
+        public FilterPage CurrentPage
+        {
+            get { return FilterPages.Pages.ElementAtOrDefault(CurrentPageIndex) ?? SpectrumClassFilter.GenericFilterPage; }
+        }
 
         public IFilterAutoComplete AutoComplete { get; set; }
 

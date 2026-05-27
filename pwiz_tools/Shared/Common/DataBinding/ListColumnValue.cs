@@ -178,12 +178,13 @@ namespace pwiz.Common.DataBinding
 
         int IListColumnValue.Count
         {
-            get { return Items.Count; }
+            // Items can be null (ImmutableList.ValueOf(null) returns null), so guard like ToString/ToArray do
+            get { return Items?.Count ?? 0; }
         }
 
         IEnumerable<object> IListColumnValue.AsEnumerable()
         {
-            return Items.Cast<object>();
+            return Items?.Cast<object>() ?? Enumerable.Empty<object>();
         }
 
 

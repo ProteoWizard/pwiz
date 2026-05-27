@@ -96,6 +96,13 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(Convert.ToString(doublesListColumnValue, cultureInfo),
                     formattableDoublesList.ToString(Formats.Percent, cultureInfo));
             }
+
+            // A list value whose Items ended up null (ImmutableList.ValueOf(null)) must not throw from
+            // the IListColumnValue members that filtering reads (Count / AsEnumerable).
+            var nullList = (IListColumnValue)new FormattableList<float>(null);
+            Assert.AreEqual(0, nullList.Count);
+            Assert.AreEqual(0, nullList.AsEnumerable().Count());
+            Assert.IsNull(nullList.ToArray());
         }
 
         private IList<CultureInfo> GetTestCultureInfos()

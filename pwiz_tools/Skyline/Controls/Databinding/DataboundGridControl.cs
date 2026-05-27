@@ -151,6 +151,13 @@ namespace pwiz.Skyline.Controls.Databinding
                 textBox.TextChanged += ValidatingEditControl_TextChanged;
                 ValidatingEditControl_TextChanged(textBox, EventArgs.Empty);
             }
+            else
+            {
+                // The grid reuses one editing control across cells; clear any red text/tooltip left by a
+                // prior invalid validating-column edit so a non-validating cell does not inherit it.
+                textBox.ForeColor = SystemColors.WindowText;
+                _cellEditToolTip.SetToolTip(textBox, string.Empty);
+            }
         }
 
         private void ValidatingEditControl_TextChanged(object sender, EventArgs e)
