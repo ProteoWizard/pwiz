@@ -26,8 +26,10 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// A transition list whose Spectrum Filter column contains text that cannot be parsed must be
-    /// reported as an ordinary row error in the import dialog, not crash the import. The small
-    /// molecule transition list reader previously let the parse exception escape unhandled.
+    /// reported as an ordinary row error in the import dialog, not crash the import. Both the small
+    /// molecule reader and the peptide (general) reader previously let the parse exception escape
+    /// unhandled (a FormatException is treated as a programming defect, so the row loop's broad
+    /// catch did not handle it).
     /// </summary>
     [TestClass]
     public class SpectrumFilterImportErrorTest : AbstractFunctionalTest
@@ -64,6 +66,26 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(errDlg, errDlg.OkDialog);
             OkDialog(transitionDlg, transitionDlg.CancelDialog);
+
+            // Same check for the peptide (general) reader path, which had the identical exposure.
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
+            const string badPeptideFilter = "CollisionEnergy Equals -17";
+            var peptideText =
+                "Protein Name\tPeptide Modified Sequence\tPrecursor m/z\tProduct m/z\tSpectrumFilter\n" +
+                "peptides1\tPEPTIDER\t478.737814\t478.737814\t" + badPeptideFilter + "\n";
+            SetClipboardText(peptideText);
+            var peptideDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            var peptideErrDlg = ShowDialog<ImportTransitionListErrorDlg>(() => peptideDlg.buttonCheckForErrors.PerformClick());
+            var expectedPeptideMessage = string.Format(
+                SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format,
+                badPeptideFilter);
+            RunUI(() =>
+            {
+                Assert.AreEqual(1, peptideErrDlg.ErrorList.Count);
+                AssertEx.Contains(peptideErrDlg.ErrorList[0].ErrorMessage, expectedPeptideMessage);
+            });
+            OkDialog(peptideErrDlg, peptideErrDlg.OkDialog);
+            OkDialog(peptideDlg, peptideDlg.CancelDialog);
         }
     }
 }
