@@ -121,6 +121,24 @@ namespace pwiz.OspreySharp.Tasks
                     foreach (var inputFile in config.InputFiles)
                         inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
 
+                    // Surface any perFileEntries key that has no matching
+                    // entry in config.InputFiles -- a silent skip here would
+                    // hide a name-drift bug that the standard cross-impl gate
+                    // (where keys always match) cannot catch.
+                    var unmatchedKeys = perFileEntries
+                        .Where(kvp => !inputByFileName.ContainsKey(kvp.Key))
+                        .Select(kvp => kvp.Key)
+                        .ToList();
+                    if (unmatchedKeys.Count > 0)
+                    {
+                        ctx.LogWarning(string.Format(
+                            "--join-at-pass=2: {0} perFileEntries key(s) have no matching " +
+                            "config.InputFiles entry and will be skipped: [{1}]. This usually " +
+                            "indicates an input-file rename or path drift between Stage 5 and " +
+                            "Stage 7; the skipped files will not get a 2nd-pass sidecar.",
+                            unmatchedKeys.Count, string.Join(", ", unmatchedKeys)));
+                    }
+
                     int missingPass2 = 0;
                     int totalFiles = 0;
                     foreach (var kvp in perFileEntries)
@@ -270,6 +288,22 @@ namespace pwiz.OspreySharp.Tasks
                     var inputByFileName = new Dictionary<string, string>();
                     foreach (var inputFile in config.InputFiles)
                         inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+                    // Surface any perFileEntries key not in config.InputFiles
+                    // -- a silent skip below would mean that file gets no
+                    // .2nd-pass sidecar written and the next resume re-runs
+                    // its second-pass FDR unnecessarily.
+                    var unmatchedSidecarKeys = perFileEntries
+                        .Where(kvp => !inputByFileName.ContainsKey(kvp.Key))
+                        .Select(kvp => kvp.Key)
+                        .ToList();
+                    if (unmatchedSidecarKeys.Count > 0)
+                    {
+                        ctx.LogWarning(string.Format(
+                            "2nd-pass sidecar write: {0} perFileEntries key(s) have no matching " +
+                            "config.InputFiles entry and will be skipped: [{1}].",
+                            unmatchedSidecarKeys.Count, string.Join(", ", unmatchedSidecarKeys)));
+                    }
 
                     // Compute the task validity key once so each per-file
                     // .MergeNode.osprey.task sidecar carries an identical

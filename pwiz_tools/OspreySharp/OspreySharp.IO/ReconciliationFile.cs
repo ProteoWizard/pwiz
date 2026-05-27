@@ -111,6 +111,22 @@ namespace pwiz.OspreySharp.IO
                     "Reconciliation file {0} has unsupported format_version {1} (expected {2})",
                     path, parsed.FormatVersion, CurrentFormatVersion));
             }
+            // v2 envelopes must carry the planner's full join file_stems set;
+            // a deserialized v2 file with file_stems missing or empty would
+            // silently flow through RescoreHydration with joinFileStems = []
+            // and cause downstream --join-at-pass=2 to compute a single-file
+            // ReconciliationParameterHash for what was meant to be a
+            // multi-file join. JsonProperty does not enforce required, so
+            // assert it here. Matches the Rust serde behavior (file_stems is
+            // a required field, not defaulted).
+            if (parsed.FileStems == null || parsed.FileStems.Count == 0)
+            {
+                throw new InvalidDataException(string.Format(
+                    "Reconciliation file {0} has format_version {1} but file_stems is missing " +
+                    "or empty; v{1} envelopes are required to carry the planner's full join " +
+                    "file set.",
+                    path, CurrentFormatVersion));
+            }
             return parsed;
         }
 

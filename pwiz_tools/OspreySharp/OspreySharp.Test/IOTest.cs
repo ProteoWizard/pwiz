@@ -1859,6 +1859,7 @@ namespace pwiz.OspreySharp.Test
                     new ForcedIntegrationEntry { EntryId = 201, ExpectedRt = 18.5,   HalfWidth = 0.05  },
                 },
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                FileStems = new List<string> { "round_trip" },
                 GapFillTargets = new List<GapFillEntry>
                 {
                     new GapFillEntry
@@ -2145,6 +2146,7 @@ namespace pwiz.OspreySharp.Test
                 var reconFile = new ReconciliationFile
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                    FileStems = new List<string> { stem },
                     SearchHash = "abc123",
                     LibraryHash = "lib-h",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
@@ -2280,6 +2282,7 @@ namespace pwiz.OspreySharp.Test
                 var reconFile = new ReconciliationFile
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                    FileStems = new List<string> { stem },
                     SearchHash = "x",
                     LibraryHash = "y",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
