@@ -46,16 +46,13 @@ namespace SkylineNightly
 
         private const string NIGHTLY_TASK_NAME = "Skyline nightly build";
 
-        private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/guestAuth/repository/download/{0}/.lastFinished/SkylineTester.zip{1}";
+        private const string SKYLINETESTER_ZIP_NAME = "SkylineTester.zip";
         private const string TEAM_CITY_BUILD_TYPE_64_MASTER = "bt209";
 
         // N.B. choice of "release" and "integration" branches is made in TeamCity VCS Roots "pwiz Github Skyline_Integration_Only" and "pwiz Github Skyline_Release_Only"
         // Thus TC admins can easily change the "release" and "integration" git branches at http://teamcity.labkey.org/admin/editProject.html?projectId=ProteoWizard&tab=projectVcsRoots
         private const string TEAM_CITY_BUILD_TYPE_64_RELEASE = "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional";
         private const string TEAM_CITY_BUILD_TYPE_64_INTEGRATION = "ProteoWizard_SkylineIntegrationBranchX8664";
-
-        private const string TEAM_CITY_USER_NAME = "guest";
-        private const string TEAM_CITY_USER_PASSWORD = "guest";
         private const string LABKEY_PROTOCOL = "https";
         private const string LABKEY_SERVER_ROOT = "skyline.ms";
         private const string LABKEY_MODULE = "testresults";
@@ -445,13 +442,18 @@ namespace SkylineNightly
         /// <summary>
         /// Downloads and extracts SkylineTester ZIP file and determines the branch name.
         /// </summary>
-        /// <param name="skylineTesterZipName">Name of the ZIP file to download</param>
+        /// <param name="skylineTesterZipPath">Full local destination path for the downloaded zip. The remote artifact name is fixed by SKYLINETESTER_ZIP_NAME.</param>
         /// <returns>Branch URL</returns>
         /// <exception cref="IOException">Failure after 2 hours throws an exception with the reason</exception>
-        private string DownloadSkylineTester(string skylineTesterZipName)
+        private string DownloadSkylineTester(string skylineTesterZipPath)
         {
+            // Fetch the token once up front: fails fast on a misconfigured machine (rather
+            // than getting silently retried for the two hours of the loop below) and pins
+            // the token value for the whole run, so behavior is consistent even if the
+            // env var were to change mid-run.
+            var token = TeamCityNightlyAuth.GetRequiredToken();
+
             // Download most recent build of SkylineTester.
-            var skylineTesterZip = Path.Combine(_skylineTesterDir, skylineTesterZipName);
             int attempts = CalcAllowedRetries(120); // Retry for up to two hours
             var useLastSuccessfulInsteadOfLastFinished = false;
             string failedReason = "Unable to download SkylineTester";
@@ -459,7 +461,7 @@ namespace SkylineNightly
             {
                 try
                 {
-                    DownloadSkylineTester(skylineTesterZip, _runMode, useLastSuccessfulInsteadOfLastFinished);
+                    DownloadSkylineTester(skylineTesterZipPath, _runMode, useLastSuccessfulInsteadOfLastFinished, token);
                 }
                 catch (Exception ex)
                 {
@@ -483,7 +485,7 @@ namespace SkylineNightly
                 }
 
                 // Install SkylineTester.
-                if (!InstallSkylineTester(skylineTesterZip, _skylineTesterDir))
+                if (!InstallSkylineTester(skylineTesterZipPath, _skylineTesterDir))
                 {
                     throw new IOException("SkylineTester installation failed.");
                 }
@@ -491,8 +493,8 @@ namespace SkylineNightly
                 try
                 {
                     // Delete zip file.
-                    Log("Delete zip file " + skylineTesterZip);
-                    File.Delete(skylineTesterZip);
+                    Log("Delete zip file " + skylineTesterZipPath);
+                    File.Delete(skylineTesterZipPath);
 
                     // Figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
                     var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp"))
@@ -527,32 +529,19 @@ namespace SkylineNightly
             throw new IOException(failedReason);
         }
 
-        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode, bool desperate)
+        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode, bool desperate, string token)
         {
-            // The current recommendation from MSFT for future-proofing HTTPS https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
-            // is don't specify TLS levels at all, let the OS decide. But we worry that this will mess up Win7 and Win8 installs, so we continue to specify explicitly
-            try
-            {
-                var Tls13 = (SecurityProtocolType)12288; // From decompiled SecurityProtocolType - compiler has no definition for some reason
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | Tls13;
-            }
-            catch (NotSupportedException)
-            {
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12; // Probably an older Windows Server
-            }
-
             using var client = new WebClient();
+            TeamCityNightlyAuth.ConfigureClient(client, token);
 
-            client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
             var isRelease = ((mode == RunMode.release) || (mode == RunMode.release_perf));
             var isIntegration = mode == RunMode.integration || mode == RunMode.integration_perf;
             var branchType = (isRelease || isIntegration) ? "" : "?branch=master"; // TC has a config just for release branch, and another for integration branch, but main config builds pull requests, other branches etc
             var buildType = isIntegration ? TEAM_CITY_BUILD_TYPE_64_INTEGRATION : isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
 
-            string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, buildType, branchType);
+            string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(buildType, SKYLINETESTER_ZIP_NAME, branchType, desperate);
             if (desperate)
             {
-                zipFileLink = zipFileLink.Replace(".lastFinished", ".lastSuccessful");
                 Log("In retry, download possibly stale (\".lastSuccessful\" rather than \".lastFinished\") SkylineTester zip file as " + zipFileLink);
             }
             else

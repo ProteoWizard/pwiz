@@ -103,6 +103,18 @@ namespace pwiz.OspreySharp
         public static readonly bool CalMatchOnly = IsOne(@"OSPREY_CAL_MATCH_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_MS2_CAL_ERRORS: dump the per-fragment MS2 mass errors
+        /// that feed the MS2 mass calibration mean/sd computation, to
+        /// cs_ms2_cal_errors.txt. Used to bisect a 1-ULP MS2 calibration
+        /// mean divergence cross-impl by checking whether the input
+        /// fragment errors are identical in value AND order across impls.
+        /// </summary>
+        public static readonly bool DumpMs2CalErrors = IsOne(@"OSPREY_DUMP_MS2_CAL_ERRORS");
+
+        /// <summary>OSPREY_MS2_CAL_ERRORS_ONLY: exit after cs_ms2_cal_errors.txt dump.</summary>
+        public static readonly bool Ms2CalErrorsOnly = IsOne(@"OSPREY_MS2_CAL_ERRORS_ONLY");
+
+        /// <summary>
         /// OSPREY_DUMP_LDA_SCORES: dump per-entry LDA discriminant + q-value
         /// after LDA scoring (cs_lda_scores.txt).
         /// </summary>
@@ -294,6 +306,15 @@ namespace pwiz.OspreySharp
         public static readonly bool Stage7ProteinFdrOnly = IsOne(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_DETECTED_PEPTIDES: dump the sorted set of detected
+        /// target peptides handed to BuildProteinParsimony for Stage 7 to
+        /// cs_stage7_detected_peptides.txt. Mirrors Rust
+        /// dump_stage7_detected_peptides; lets the protein-FDR input set
+        /// be diffed cross-impl before debugging downstream divergence.
+        /// </summary>
+        public static readonly bool DumpDetectedPeptides = IsOne(@"OSPREY_DUMP_DETECTED_PEPTIDES");
+
+        /// <summary>
         /// OSPREY_DUMP_LOESS_FIT: dump the per-point LOESS fit state of the
         /// Stage 6 refit RTCalibration to cs_stage6_loess_fit.tsv. Used to
         /// bisect the refit ULP divergence: if (library_rt, fitted_value,
@@ -418,14 +439,14 @@ namespace pwiz.OspreySharp
                 w.WriteLine(@"n_targets" + "\t" + targets.Count);
                 w.WriteLine(@"n_decoys" + "\t" + decoys.Count);
                 w.WriteLine(@"bins_per_axis" + "\t" + binsPerAxis);
-                w.WriteLine(@"rt_min" + "\t" + rtMin.ToString(@"F17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"rt_max" + "\t" + rtMax.ToString(@"F17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"mz_min" + "\t" + mzMin.ToString(@"F17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"mz_max" + "\t" + mzMax.ToString(@"F17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"rt_range" + "\t" + rtRange.ToString(@"F17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"mz_range" + "\t" + mzRange.ToString(@"F17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"rt_bin_width" + "\t" + rtBinWidth.ToString(@"F17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"mz_bin_width" + "\t" + mzBinWidth.ToString(@"F17", CultureInfo.InvariantCulture));
+                w.WriteLine(@"rt_min" + "\t" + rtMin.ToString(@"G17", CultureInfo.InvariantCulture));
+                w.WriteLine(@"rt_max" + "\t" + rtMax.ToString(@"G17", CultureInfo.InvariantCulture));
+                w.WriteLine(@"mz_min" + "\t" + mzMin.ToString(@"G17", CultureInfo.InvariantCulture));
+                w.WriteLine(@"mz_max" + "\t" + mzMax.ToString(@"G17", CultureInfo.InvariantCulture));
+                w.WriteLine(@"rt_range" + "\t" + rtRange.ToString(@"G17", CultureInfo.InvariantCulture));
+                w.WriteLine(@"mz_range" + "\t" + mzRange.ToString(@"G17", CultureInfo.InvariantCulture));
+                w.WriteLine(@"rt_bin_width" + "\t" + rtBinWidth.ToString(@"G17", CultureInfo.InvariantCulture));
+                w.WriteLine(@"mz_bin_width" + "\t" + mzBinWidth.ToString(@"G17", CultureInfo.InvariantCulture));
                 w.WriteLine(@"n_occupied" + "\t" + nOccupied);
                 w.WriteLine(@"per_cell" + "\t" + perCell);
                 w.WriteLine(@"seed" + "\t" + seed);
@@ -552,8 +573,18 @@ namespace pwiz.OspreySharp
                         double snr;
                         if (!snrByEntryId.TryGetValue(entry.Id, out snr))
                             snr = 0.0;
+                        // G17 (17 significant digits) for round-trip-safe f64.
+                        // .NET Framework 4.7.2's F17 truncates output at ~15
+                        // significant digits and pads with zeros, so a
+                        // string -> parse round-trip yields a different f64
+                        // than the original. G17 prints enough digits for the
+                        // result to round-trip exactly back to the same f64.
+                        // The cross-impl comparator parses both sides as
+                        // numbers, so variable-width G17 output on C# vs
+                        // fixed {:.17} on Rust is fine - both round-trip to
+                        // the same f64 when the underlying value matches.
                         w.WriteLine(string.Format(inv,
-                            "{0}\t{1}\t{2}\t1\t{3}\t{4:F10}\t{5:F10}\t{6:F10}\t{7}\t{8:F10}\t{9:F10}",
+                            "{0}\t{1}\t{2}\t1\t{3}\t{4:G17}\t{5:G17}\t{6:G17}\t{7}\t{8:G17}\t{9:G17}",
                             entry.Id,
                             entry.IsDecoy ? 1 : 0,
                             entry.Charge,
@@ -587,6 +618,57 @@ namespace pwiz.OspreySharp
         /// Dump per-entry LDA discriminant + q-value (cs_lda_scores.txt),
         /// sorted by entry_id, F10-formatted.
         /// </summary>
+        /// <summary>
+        /// Dump per-fragment MS2 mass errors that feed the MS2 calibration
+        /// (cs_ms2_cal_errors.txt). One row per
+        /// (entry_id, fragment_order_index, error) triple, sorted by
+        /// (entry_id, fragment_order_index). Mirrors Rust
+        /// dump_ms2_cal_errors. Use to bisect 1-ULP MS2 calibration mean
+        /// divergence cross-impl: if dumps match exactly, divergence is in
+        /// the mean/sd computation (e.g. naive sum vs Welford); if not,
+        /// divergence is in per-match top-N fragment selection or per-
+        /// fragment error arithmetic.
+        ///
+        /// Pass only the matches contributing to calibration (i.e. post-
+        /// LDA passing targets with q_value &lt;= calibration_fdr and
+        /// snr &gt;= MIN_SNR_FOR_RT_CAL) so this dump aligns with what
+        /// MzCalibration.CalculateSingleCalibration actually sees.
+        /// </summary>
+        public static void WriteMs2CalErrorsDump(IEnumerable<CalibrationMatch> contributingMatches)
+        {
+            var sortedByEntry = contributingMatches.OrderBy(m => m.EntryId).ToArray();
+            var inv = CultureInfo.InvariantCulture;
+            int nRows = 0;
+            int nMatches = 0;
+            using (var w = new StreamWriter(@"cs_ms2_cal_errors.txt"))
+            {
+                w.WriteLine("entry_id\tfrag_order_idx\terror");
+                foreach (var m in sortedByEntry)
+                {
+                    nMatches++;
+                    if (m.Ms2MassErrors == null) continue;
+                    for (int i = 0; i < m.Ms2MassErrors.Length; i++)
+                    {
+                        double err = m.Ms2MassErrors[i];
+                        // G17: round-trip-safe canonical form. C# G17 and
+                        // Rust ryu (the `{}` default) format the same f64
+                        // value with different strings (e.g. "1.23E-05"
+                        // vs "0.0000123"), so this dump is intended to be
+                        // compared numerically via a Python diff script,
+                        // not via SHA byte-equality. Inside one impl, the
+                        // G17 strings round-trip the f64 bits exactly.
+                        w.WriteLine(string.Format(inv,
+                            "{0}\t{1}\t{2:G17}",
+                            m.EntryId, i, err));
+                        nRows++;
+                    }
+                }
+            }
+            LogAction(string.Format(inv,
+                @"[COUNT] Wrote MS2 cal errors dump: cs_ms2_cal_errors.txt ({0} rows across {1} matches)",
+                nRows, nMatches));
+        }
+
         public static void WriteLdaScoresDump(int passNumber, IEnumerable<CalibrationMatch> matchArray)
         {
             var sortedByEntry = matchArray.OrderBy(m => m.EntryId).ToArray();
@@ -596,8 +678,9 @@ namespace pwiz.OspreySharp
                 w.WriteLine("entry_id\tis_decoy\tdiscriminant\tq_value");
                 foreach (var m in sortedByEntry)
                 {
+                    // G17 for round-trip-safe f64 (same rationale as cal_match dump).
                     w.WriteLine(string.Format(inv,
-                        "{0}\t{1}\t{2:F10}\t{3:F10}",
+                        "{0}\t{1}\t{2:G17}\t{3:G17}",
                         m.EntryId,
                         m.IsDecoy ? 1 : 0,
                         m.DiscriminantScore,
@@ -1910,5 +1993,21 @@ namespace pwiz.OspreySharp
                 @"Wrote Stage 6 LOESS fit dump: {0} ({1} rows across {2} files)",
                 path, totalRows, fileNames.Count));
         }
+
+        /// <summary>
+        /// Write the sorted set of detected target peptides handed to
+        /// BuildProteinParsimony for Stage 7 to cs_stage7_detected_peptides.txt.
+        /// Mirrors Rust dump_stage7_detected_peptides. Gated by
+        /// <see cref="DumpDetectedPeptides"/>.
+        /// </summary>
+        public static void WriteStage7DetectedPeptidesDump(HashSet<string> detectedPeptides)
+        {
+            const string path = @"cs_stage7_detected_peptides.txt";
+            var sorted = new List<string>(detectedPeptides);
+            sorted.Sort(StringComparer.Ordinal);
+            File.WriteAllLines(path, sorted);
+            LogAction(string.Format(@"[DIAG] Wrote {0} ({1} entries)", path, sorted.Count));
+        }
+
     }
 }

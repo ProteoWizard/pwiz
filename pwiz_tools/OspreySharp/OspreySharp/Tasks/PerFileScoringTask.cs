@@ -83,14 +83,25 @@ namespace pwiz.OspreySharp.Tasks
             public RTCalibrationStats Stats;
             public MzCalibrationResult Ms1Calibration;
             public MzCalibrationResult Ms2Calibration;
+            // Total matches scored in this pass (before any q-value or S/N
+            // filtering). Plumbed into CalibrationMetadata.NumSampledPrecursors
+            // for parity with Rust's accumulated_matches.len().
+            public int MatchCount;
+            // (lib_rt, measured_rt) pairs that were actually fed to the LOESS
+            // fit for this pass. Exposed so the caller can emit the
+            // OSPREY_DUMP_LOESS_INPUT diagnostic only for the pass whose
+            // calibration is actually used (pass 1 always; pass 2 only on
+            // acceptance) -- mirroring Rust pipeline.rs's "dump reflects
+            // the calibration actually used" semantics.
+            public double[] LibRts;
+            public double[] MeasuredRts;
         }
 
         public override string Name => @"PerFileScoring";
 
         // Outputs reached by downstream tasks through ctx.GetTask<PerFileScoringTask>().
         // Defaults are non-null empty collections so callers querying
-        // outputs from a not-yet-run task (e.g. worker mode before lazy
-        // rehydrate lands in Pass 2) never NPE on the accessor.
+        // outputs from a not-yet-run task never NPE on the accessor.
         private List<LibraryEntry> _fullLibrary = new List<LibraryEntry>();
         private Dictionary<uint, LibraryEntry> _libraryById = new Dictionary<uint, LibraryEntry>();
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries
@@ -99,15 +110,82 @@ namespace pwiz.OspreySharp.Tasks
             = new ConcurrentDictionary<string, RTCalibration>();
         private Dictionary<string, string> _perFileParquetPaths
             = new Dictionary<string, string>();
+        // Probe-the-disk hydration bundle: populated when the joinOnly
+        // dispatch finds every parquet's sibling .1st-pass.fdr_scores.bin
+        // sidecar already on disk. Null otherwise. Carries the reconciliation
+        // state that the worker-mode RescoreHydration.HydrateForRescore
+        // produces, sharing it with FirstJoinTask's reconciliation accessors
+        // so the worker entry-path collapse (next commit) does not need
+        // a separate code path.
+        private RescoreInputs _rescoreInputs;
 
-        public List<LibraryEntry> GetFullLibrary() => _fullLibrary;
-        public Dictionary<uint, LibraryEntry> GetLibraryById() => _libraryById;
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries() => _perFileEntries;
-        public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations() => _perFileCalibrations;
-        public Dictionary<string, string> GetPerFileParquetPaths() => _perFileParquetPaths;
+        // Phase B lazy-rehydrate gate. Set to true at the start of Run
+        // and by EnsureHydrated. Once set, neither path re-executes the
+        // body (multiple accessors querying state from a single skipped
+        // task all hit a fast no-op after the first hydration).
+        private bool _runOrHydrated;
+
+        public List<LibraryEntry> GetFullLibrary(PipelineContext ctx) { EnsureHydrated(ctx); return _fullLibrary; }
+        public Dictionary<uint, LibraryEntry> GetLibraryById(PipelineContext ctx) { EnsureHydrated(ctx); return _libraryById; }
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileEntries; }
+        public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileCalibrations; }
+        public Dictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileParquetPaths; }
+
+        /// <summary>
+        /// The probe-the-disk reconciliation bundle, or <c>null</c> when
+        /// no per-file 1st-pass sidecar was found at joinOnly hydration
+        /// time (Stage 5 entry, or any non-joinOnly run). When non-null,
+        /// FirstJoinTask's reconciliation-state accessors fall back to
+        /// this bundle so the worker hydration path and the in-pipeline
+        /// path produce identical post-Stage-5 state.
+        /// </summary>
+        public RescoreInputs GetRescoreInputs(PipelineContext ctx) { EnsureHydrated(ctx); return _rescoreInputs; }
+
+        /// <summary>
+        /// Lazy-rehydrate seam: when a downstream task queries one of
+        /// this task's outputs and <see cref="Run"/> has not executed
+        /// (i.e. this task is before <see cref="PipelineContext.StartAtTask"/>),
+        /// invoke Run so the same code path that populates state on a
+        /// straight-through run also populates state here. Idempotent;
+        /// subsequent calls are no-ops.
+        /// </summary>
+        private void EnsureHydrated(PipelineContext ctx)
+        {
+            if (_runOrHydrated) return;
+            Run(ctx);
+        }
+
+        // Phase B resume surface: the library and every input mzML are
+        // read; per-file .scores.parquet + .calibration.json are written.
+        // ValidityKey is the default (search + library hashes) -- those
+        // are the only parameters that affect per-file scoring output.
+        public override IEnumerable<string> Inputs(PipelineContext ctx)
+        {
+            if (ctx.Config.LibrarySource != null && !string.IsNullOrEmpty(ctx.Config.LibrarySource.Path))
+                yield return ctx.Config.LibrarySource.Path;
+            if (ctx.Config.InputFiles != null)
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return input;
+        }
+
+        public override IEnumerable<string> Outputs(PipelineContext ctx)
+        {
+            if (ctx.Config.InputFiles == null) yield break;
+            foreach (var input in ctx.Config.InputFiles)
+            {
+                yield return ParquetScoreCache.GetScoresPath(input);
+                string calDir = Path.GetDirectoryName(Path.GetFullPath(input)) ?? @".";
+                yield return CalibrationIO.CalibrationPathForInput(input, calDir);
+            }
+        }
 
         public override bool Run(PipelineContext ctx)
         {
+            // Idempotent re-entry guard: a lazy-rehydrate via an
+            // accessor may have already executed this task body; the
+            // driver loop's call here is then a no-op.
+            if (_runOrHydrated) return true;
+            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
 
@@ -119,6 +197,28 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.LogError(@"Library is empty after loading");
                 ctx.ExitCode = 1;
                 return false;
+            }
+
+            // Decoys: either supplied by the library (DIA-NN / EncyclopeDIA
+            // output with rev_ / DECOY_ prefixes) or generated by Osprey
+            // from the targets. DecoyMethod.FromLibrary is treated as a
+            // synonym for DecoysInLibrary -- historically it silently fell
+            // through to Reverse generation, which was the bug behind
+            // v26.5.3's library-decoy mode being effectively unusable.
+            // Mark BEFORE counting targets so the count reflects post-
+            // marking state and matches Rust pipeline.rs.
+            bool librarySuppliesDecoys = config.DecoysInLibrary ||
+                config.DecoyMethod == DecoyMethod.FromLibrary;
+            if (librarySuppliesDecoys)
+            {
+                LibraryDecoyMarker.ApplyLibraryDecoyMarking(
+                    library, config.DecoyPrefixes, out var markingStats);
+                ctx.LogInfo(string.Format(
+                    @"Library-decoy mode: matched prefixes {0}",
+                    FormatPrefixList(config.DecoyPrefixes)));
+                ctx.LogInfo(string.Format(
+                    @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
+                    markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
             }
 
             int nLibraryTargets = 0;
@@ -148,7 +248,7 @@ namespace pwiz.OspreySharp.Tasks
                 //   GenerateDecoys.<>b__0   total=46792 ms
                 decoys = new List<LibraryEntry>();
             }
-            else if (!config.DecoysInLibrary)
+            else if (!librarySuppliesDecoys)
             {
                 decoys = GenerateDecoys(library, config, out List<LibraryEntry> validTargets);
                 library = validTargets;
@@ -156,6 +256,129 @@ namespace pwiz.OspreySharp.Tasks
             else
             {
                 decoys = new List<LibraryEntry>();
+
+                // Match Rust pipeline.rs at v26.6.0 (bcd7249): the
+                // "no decoys at all" check runs BEFORE manifest
+                // application. The manifest CAN flip predictor-stripped
+                // entries to IsDecoy=true (the Carafe failure mode commit
+                // d23d496 was built for), so this ordering means a
+                // manifest cannot rescue a load that the prefix scan
+                // misses entirely. TODO(brendanmaclean,maccoss): discuss
+                // with Mike whether this should be relaxed to defer the
+                // check until after manifest application; current C#
+                // ordering matches Rust v26.6.0 for byte parity on the
+                // cross-impl Test-Regression gate.
+                int nLibraryDecoys = library.Count - nLibraryTargets;
+                if (nLibraryDecoys == 0)
+                {
+                    ctx.LogError(string.Format(
+                        @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
+                        @"Check that the library actually contains decoys with one of these prefixes on " +
+                        @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
+                        FormatPrefixList(config.DecoyPrefixes)));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
+
+                // Pair each decoy with its target so their base_ids match
+                // -- required for SVM target-decoy competition, LDA
+                // calibration, and CV fold grouping. Hybrid path:
+                // manifest first when provided (exact pairs from
+                // FDRBench), composition fallback for whatever the
+                // manifest doesn't cover. Net result on real Carafe-
+                // generated entrapment libraries: ~30% via manifest,
+                // ~70% via composition, >99% total.
+                var pairingState = new PairingState();
+                LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                    out int nTargetsForStats, out int nDecoysForStats);
+                var pairingStats = new PairingStats
+                {
+                    NTargets = nTargetsForStats,
+                    NDecoys = nDecoysForStats,
+                };
+                if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+                {
+                    ctx.LogInfo(string.Format(
+                        @"Loading decoy pairing manifest from {0}",
+                        config.DecoyPairingManifestPath));
+                    DecoyPairingManifest manifest;
+                    try
+                    {
+                        manifest = DecoyPairingManifest.FromTsv(
+                            config.DecoyPairingManifestPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        ctx.LogError(string.Format(
+                            @"Failed to read decoy pairing manifest {0}: {1}",
+                            config.DecoyPairingManifestPath, ex.Message));
+                        ctx.ExitCode = 1;
+                        return false;
+                    }
+                    var manifestStats = manifest.ApplyToLibrary(library, pairingState);
+                    pairingStats.NPairedViaManifest = manifestStats.NPaired;
+                    if (manifestStats.NProteinsReplaced > 0)
+                    {
+                        ctx.LogInfo(string.Format(
+                            @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
+                            @"entries (clean source-protein accessions from the manifest's " +
+                            @"`proteins` column)",
+                            manifestStats.NProteinsReplaced));
+                    }
+                    if (manifestStats.NNewlyMarkedDecoy > 0)
+                    {
+                        // Manifest classified entries as decoy that were
+                        // loaded as targets (the predictor stripped the
+                        // decoy prefix). Update the decoy count so the
+                        // pairing fraction is honest.
+                        ctx.LogInfo(string.Format(
+                            @"Library-decoy mode: manifest classified {0} additional library " +
+                            @"entries as decoys (their protein accessions lacked a decoy prefix)",
+                            manifestStats.NNewlyMarkedDecoy));
+                        LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                            out nTargetsForStats, out nDecoysForStats);
+                        pairingStats.NTargets = nTargetsForStats;
+                        pairingStats.NDecoys = nDecoysForStats;
+                    }
+                }
+                else
+                {
+                    ctx.LogInfo(
+                        @"Pairing library decoys to targets by amino-acid composition " +
+                        @"(no manifest provided).");
+                }
+                pairingStats.NPairedViaComposition =
+                    LibraryDecoyPairing.PairLibraryDecoysByComposition(
+                        library, config.DecoyPrefixes, pairingState);
+                pairingStats.NPaired = pairingStats.NPairedViaManifest +
+                    pairingStats.NPairedViaComposition;
+                // Defense-in-depth saturating subtract (matches Rust's
+                // saturating_sub intent; not load-bearing).
+                pairingStats.NUnpairedDecoys = Math.Max(0,
+                    pairingStats.NDecoys - pairingStats.NPaired);
+                pairingStats.NUnpairedTargets = Math.Max(0,
+                    pairingStats.NTargets - pairingState.ClaimedTargets.Count);
+                ctx.LogInfo(string.Format(
+                    @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
+                    @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
+                    pairingStats.NPaired, pairingStats.NDecoys,
+                    pairingStats.PairedFraction * 100.0,
+                    pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
+                    pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
+                if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
+                {
+                    ctx.LogError(string.Format(
+                        @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
+                        @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
+                        @"target-decoy competition. Either supply a pairing manifest, ensure the " +
+                        @"library uses matching protein accessions with one of `decoy_prefixes` " +
+                        @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
+                        pairingStats.PairedFraction * 100.0,
+                        config.DecoyPairMinFraction * 100.0,
+                        FormatPrefixList(config.DecoyPrefixes)));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
             }
             swLibrary.Stop();
             double totalSec = swLibrary.Elapsed.TotalSeconds;
@@ -353,9 +576,11 @@ namespace pwiz.OspreySharp.Tasks
                 // Single file: process directly (no parallel overhead)
                 string inputFile = config.InputFiles[0];
                 string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                ctx.LogInfo(string.Empty);
-                ctx.LogInfo(string.Format(@"===== Processing file 1/1: {0} =====", inputFile));
-                var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+                string validityKey = ValidityKey(ctx);
+                var fileResult = ScoreOrLoadForFile(
+                    inputFile, fileName, 0, 1,
+                    fullLibrary, config, parquetFooterMetadata,
+                    perFileCalibrations, validityKey, ctx);
                 if (fileResult != null)
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
             }
@@ -368,13 +593,15 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.LogInfo(string.Format(
                     @"[BENCH] OSPREY_MAX_PARALLEL_FILES=1 - processing {0} files sequentially",
                     config.InputFiles.Count));
+                string validityKey = ValidityKey(ctx);
                 for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    ctx.LogInfo(string.Format(@"===== Processing file {0}/{1}: {2} =====",
-                        fileIdx + 1, config.InputFiles.Count, inputFile));
-                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+                    var fileResult = ScoreOrLoadForFile(
+                        inputFile, fileName, fileIdx, config.InputFiles.Count,
+                        fullLibrary, config, parquetFooterMetadata,
+                        perFileCalibrations, validityKey, ctx);
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                 }
@@ -391,14 +618,16 @@ namespace pwiz.OspreySharp.Tasks
                         @"[BENCH] OSPREY_MAX_PARALLEL_FILES={0} - capping parallel file count",
                         maxParallelFiles));
                 }
+                string validityKey = ValidityKey(ctx);
                 var fileResults = new ConcurrentDictionary<int, KeyValuePair<string, List<FdrEntry>>>();
                 Parallel.For(0, config.InputFiles.Count, parallelOpts, fileIdx =>
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    ctx.LogInfo(string.Format(@"===== Processing file {0}/{1}: {2} =====",
-                        fileIdx + 1, config.InputFiles.Count, inputFile));
-                    var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+                    var fileResult = ScoreOrLoadForFile(
+                        inputFile, fileName, fileIdx, config.InputFiles.Count,
+                        fullLibrary, config, parquetFooterMetadata,
+                        perFileCalibrations, validityKey, ctx);
                     if (fileResult != null)
                         fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
                 });
@@ -436,56 +665,69 @@ namespace pwiz.OspreySharp.Tasks
                 @"Coelution analysis complete. {0} total scored entries across {1} files",
                 totalScored, nFiles));
 
-            // --join-at-pass=2: load the 1st-pass FDR scores sidecar for
-            // each file onto the freshly-loaded stubs. The sidecar
-            // carries the persisted SVM scores + q-values from the
-            // straight-through pipeline run that produced these
-            // reconciled parquets. Without this load, RunFirstPassProteinFdr
-            // and the compaction step (next) would see uninitialized
-            // entry.Score = 0 / q = 1 for every entry -- every protein
-            // group would tie at score 0 and the picked-protein FDR
-            // would collapse. Mirrors Rust pipeline.rs:3823 sidecar
-            // load order (1st-pass first, then 2nd-pass after
-            // compaction).
-            if (config.ExpectReconciledInput)
+            // Probe-the-disk reconciliation hydration: when every parquet
+            // already has a sibling .1st-pass.fdr_scores.bin sidecar, load
+            // the rescore bundle (1st-pass q-values overlay + reconciliation
+            // actions + refined RT calibration + gap-fill targets) so the
+            // worker hydration path and the in-pipeline path produce
+            // identical post-Stage-5 state. Mirrors the worker's
+            // RescoreHydration.HydrateForRescore but reuses the stubs +
+            // PIN features already loaded above (so PIN features survive
+            // for stage7's Percolator skip path). Stage 5 entry (no
+            // sidecars present yet) skips this block and _rescoreInputs
+            // stays null.
+            //
+            // Replaces the prior --join-at-pass=2-gated 1st-pass overlay:
+            // the disk state determines the hydration shape, not the CLI
+            // flag (Phase C principle: mechanism-driven, not flag-driven).
+            if (joinOnly)
             {
-                // Build a fileName -> synthetic input path map so we
-                // can resolve sidecar paths via FdrScoresSidecar.
-                var inputByFileName = new Dictionary<string, string>();
-                foreach (var inputFile in config.InputFiles)
-                    inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
-
-                foreach (var kvp in perFileEntries)
+                bool allHave1stPassAndRecon = true;
+                foreach (var parquetPath in config.InputScores)
                 {
-                    string fileName = kvp.Key;
-                    var entries = kvp.Value;
-                    string sidecarPath = inputByFileName.TryGetValue(fileName, out string inputFile)
-                        ? FdrScoresSidecar.Pass1Path(inputFile)
-                        : null;
-                    if (sidecarPath == null || !File.Exists(sidecarPath))
+                    string syntheticInput = RescoreHydration.SyntheticInputFromParquet(parquetPath);
+                    if (!File.Exists(FdrScoresSidecar.Pass1Path(syntheticInput))
+                        || !File.Exists(ReconciliationFile.PathForInput(syntheticInput)))
                     {
-                        ctx.LogError(string.Format(
-                            @"--join-at-pass=2: missing 1st-pass FDR sidecar for {0} " +
-                            @"(expected at {1}). Re-run a straight-through pipeline to " +
-                            @"produce the sidecar.",
-                            fileName, sidecarPath ?? @"<unresolved>"));
-                        ctx.ExitCode = 1;
-                        return false;
-                    }
-                    if (!FdrScoresSidecar.TryRead(sidecarPath, entries,
-                            FdrScoresSidecar.Pass.FirstPass))
-                    {
-                        ctx.LogError(string.Format(
-                            @"--join-at-pass=2: 1st-pass sidecar at {0} failed to load " +
-                            @"(magic / version / pass-byte / count / size mismatch).",
-                            sidecarPath));
-                        ctx.ExitCode = 1;
-                        return false;
+                        allHave1stPassAndRecon = false;
+                        break;
                     }
                 }
-                ctx.LogInfo(string.Format(
-                    @"--join-at-pass=2: loaded 1st-pass FDR sidecars for {0} file(s)",
-                    perFileEntries.Count));
+                if (allHave1stPassAndRecon)
+                {
+                    try
+                    {
+                        _rescoreInputs = RescoreHydration.HydrateReconciliationOverlay(
+                            perFileEntries, config.InputScores);
+                    }
+                    catch (InvalidDataException ex)
+                    {
+                        ctx.LogError(string.Format(
+                            @"--input-scores hydration failed: {0}", ex.Message));
+                        ctx.ExitCode = 1;
+                        return false;
+                    }
+                    // Clear PIN features on bundle-hydrated stubs so
+                    // PerFileRescoreTask's WriteReconciledParquet can keep
+                    // its "Features != null means this entry was rescored"
+                    // criterion -- with features pre-populated from the
+                    // parquet, every entry would otherwise look rescored
+                    // and overwrite the original parquet row's binary
+                    // blob columns (fragment_mzs, ref_xic_*, bounds_*).
+                    // Bundle path doesn't need PIN features downstream:
+                    // FirstJoinTask skips Percolator on this path, so the
+                    // SVM training input is irrelevant.
+                    foreach (var kvp in perFileEntries)
+                        foreach (var entry in kvp.Value)
+                            entry.Features = null;
+                    ctx.LogInfo(string.Format(
+                        @"Hydrated rescore bundle for {0} file(s) ({1} reconciliation actions, " +
+                        @"{2} refined RT calibration(s), {3} gap-fill target(s))",
+                        perFileEntries.Count,
+                        _rescoreInputs.TotalActions,
+                        _rescoreInputs.RefinedCalibrations.Count,
+                        _rescoreInputs.TotalGapFillTargets));
+                }
             }
 
             // Surface per-file outputs for downstream tasks before any
@@ -517,6 +759,137 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Phase B per-file resume: if the file's <c>.scores.parquet</c>
+        /// already exists with a matching <c>.PerFileScoring.osprey.task</c>
+        /// sidecar (validity key matches the current config), load the
+        /// stubs + PIN features + best-effort calibration from disk and
+        /// skip <see cref="ProcessFile"/>. Otherwise clear any stale
+        /// sidecar, run <see cref="ProcessFile"/>, and on success write
+        /// a fresh sidecar. The pre-Run delete is the per-file analogue
+        /// of the task-level safety net other tasks use: a mid-Run crash
+        /// leaves no sidecar pointing at the partial parquet, so the
+        /// resume invocation reprocesses that file.
+        ///
+        /// Returns the per-file <see cref="FdrEntry"/> list (from the
+        /// disk load or <see cref="ProcessFile"/>), or <c>null</c> on
+        /// <see cref="ProcessFile"/> failure.
+        /// </summary>
+        private List<FdrEntry> ScoreOrLoadForFile(
+            string inputFile,
+            string fileName,
+            int fileIdx,
+            int totalFiles,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config,
+            Dictionary<string, string> parquetFooterMetadata,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            string validityKey,
+            PipelineContext ctx)
+        {
+            string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
+            if (File.Exists(scoresPath)
+                && TaskValiditySidecar.IsValid(scoresPath, Name, validityKey))
+            {
+                var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx);
+                if (loaded != null)
+                {
+                    ctx.LogInfo(string.Format(
+                        @"[file] {0}/{1} {2}: skipping (outputs valid)",
+                        fileIdx + 1, totalFiles, fileName));
+                    return loaded;
+                }
+                // load failed -- fall through and rescore the file.
+            }
+
+            ctx.LogInfo(string.Empty);
+            ctx.LogInfo(string.Format(@"===== Processing file {0}/{1}: {2} =====",
+                fileIdx + 1, totalFiles, inputFile));
+            // Clear stale sidecar so a mid-ProcessFile crash leaves no
+            // false-positive sidecar on the next invocation.
+            TaskValiditySidecar.Delete(scoresPath, Name);
+            var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+            if (fileResult != null)
+            {
+                try
+                {
+                    TaskValiditySidecar.Write(scoresPath, Name, Program.VERSION,
+                        validityKey, new[] { inputFile });
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogWarning(string.Format(
+                        @"  Failed to write {0} sidecar for {1}: {2}",
+                        Name, scoresPath, ex.Message));
+                }
+            }
+            return fileResult;
+        }
+
+        /// <summary>
+        /// Best-effort load of one file's stubs + PIN features from a
+        /// <c>.scores.parquet</c> plus the calibration sibling. Returns
+        /// the stub list on success or <c>null</c> on any read failure
+        /// (caller treats null as "fall back to rescore"). Mirrors the
+        /// load logic in the <c>--join-only</c> branch above.
+        /// </summary>
+        private static List<FdrEntry> TryLoadStubsAndCalibration(
+            string scoresPath,
+            string fileName,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            PipelineContext ctx)
+        {
+            List<FdrEntry> stubs;
+            try
+            {
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath);
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                if (features.Count != stubs.Count)
+                {
+                    ctx.LogWarning(string.Format(
+                        @"  Per-file resume: {0} has {1} stubs but {2} feature rows; will rescore.",
+                        scoresPath, stubs.Count, features.Count));
+                    return null;
+                }
+                for (int j = 0; j < stubs.Count; j++)
+                    stubs[j].Features = features[j];
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(
+                    @"  Per-file resume: failed to load {0}: {1}; will rescore.",
+                    scoresPath, ex.Message));
+                return null;
+            }
+
+            try
+            {
+                string parquetDir = Path.GetDirectoryName(Path.GetFullPath(scoresPath));
+                if (parquetDir != null)
+                {
+                    string calStemPath = Path.Combine(parquetDir, fileName);
+                    string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
+                    if (File.Exists(calPath))
+                    {
+                        var calParams = CalibrationIO.LoadCalibration(calPath);
+                        if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                        {
+                            var mp = calParams.RtCalibration.ModelParams;
+                            var rtCal = RTCalibration.FromModelParams(
+                                mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                                calParams.RtCalibration.ResidualSD);
+                            perFileCalibrations[fileName] = rtCal;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
+            }
+            return stubs;
         }
 
         /// <summary>
@@ -608,6 +981,11 @@ namespace pwiz.OspreySharp.Tasks
             RTCalibration rtCalibration = null;
             MzCalibrationResult ms2Cal = MzCalibrationResult.Uncalibrated();
             MzCalibrationResult ms1Cal = MzCalibrationResult.Uncalibrated();
+            // Total matches scored during pass 1 of calibration; threaded
+            // into CalibrationMetadata.NumSampledPrecursors to match Rust's
+            // accumulated_matches.len() (Stellar Single: 192289). Stays 0
+            // when calibration is loaded from a cached JSON.
+            int numSampledPrecursorsForMetadata = 0;
 
             // BISECT: load Rust's calibration JSON instead of computing our own.
             // This eliminates calibration noise from the feature comparison.
@@ -662,7 +1040,7 @@ namespace pwiz.OspreySharp.Tasks
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = RunCalibration(
                     fullLibrary, spectra, ms1Spectra, context,
-                    out ms1Cal, out ms2Cal);
+                    out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
                 _ctx.LogInfo(string.Format(
@@ -687,8 +1065,16 @@ namespace pwiz.OspreySharp.Tasks
                     Metadata = new CalibrationMetadata
                     {
                         CalibrationSuccessful = rtCalibration != null,
-                        NumConfidentPeptides = 0,
-                        NumSampledPrecursors = 0,
+                        // Match Rust's CalibrationMetadata field semantics
+                        // (osprey/src/pipeline.rs:1144-1145):
+                        //   num_confident_peptides = LOESS points used by the
+                        //     fit actually saved (post-S/N filter)
+                        //   num_sampled_precursors = total matches scored
+                        //     during sampling (pre any q-value / S/N filter)
+                        NumConfidentPeptides = rtCalibration != null
+                            ? rtCalibration.Stats().NPoints
+                            : 0,
+                        NumSampledPrecursors = numSampledPrecursorsForMetadata,
                         Timestamp = DateTime.UtcNow.ToString("o")
                     },
                     Ms1Calibration = MzCalibrationJson.FromResult(ms1Cal),
@@ -944,9 +1330,13 @@ namespace pwiz.OspreySharp.Tasks
             List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             out MzCalibrationResult ms1Calibration,
-            out MzCalibrationResult ms2Calibration)
+            out MzCalibrationResult ms2Calibration,
+            out int numSampledPrecursors)
         {
             var config = context.Config;
+            // Default to 0 so early returns / exception paths leave the
+            // metadata caller in a known state. Overwritten on success.
+            numSampledPrecursors = 0;
             _ctx.LogInfo("Running RT calibration...");
 
             // Calculate library and mzML RT ranges
@@ -1071,6 +1461,24 @@ namespace pwiz.OspreySharp.Tasks
                 return null;
             }
 
+            // Pass 1 succeeded -- emit the OSPREY_DUMP_LOESS_INPUT diagnostic
+            // for the pass-1 fit unconditionally. If pass 2 is later accepted
+            // it will overwrite this with the pass-2 pairs; if pass 2 is
+            // rejected (or never runs) the pass-1 dump stays, matching the
+            // calibration actually used. Mirrors Rust pipeline.rs.
+            if (OspreyDiagnostics.DumpLoessInput)
+            {
+                OspreyDiagnostics.WriteLoessInputDump(1, pass1.LibRts, pass1.MeasuredRts);
+                if (OspreyDiagnostics.LoessInputOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
+            }
+
+            // Match Rust accumulated_matches.len() semantics: report pass 1's
+            // total scored matches (before any q-value / S/N filtering).
+            // Pass 2 is a refinement using narrowed RT tolerance and does not
+            // change the sampled-precursor count.
+            numSampledPrecursors = pass1.MatchCount;
+
             // === Iterative calibration refinement (2-pass) ===
             // Mirrors Rust pipeline.rs:714-839.
             // MAD * 1.4826 ~ SD for a normal distribution; 3* that covers ~99.7%.
@@ -1123,6 +1531,15 @@ namespace pwiz.OspreySharp.Tasks
                     // by more than 1% (matches Rust pipeline.rs:811).
                     if (pass2.Stats.RSquared >= pass1.Stats.RSquared * 0.99)
                     {
+                        // Overwrite the OSPREY_DUMP_LOESS_INPUT dump with
+                        // pass 2's points so the diagnostic reflects the
+                        // calibration actually being used. Mirrors Rust
+                        // pipeline.rs; only fires on acceptance.
+                        if (OspreyDiagnostics.DumpLoessInput)
+                        {
+                            OspreyDiagnostics.WriteLoessInputDump(
+                                2, pass2.LibRts, pass2.MeasuredRts);
+                        }
                         ms1Calibration = pass2.Ms1Calibration;
                         ms2Calibration = pass2.Ms2Calibration;
                         return pass2.Calibration;
@@ -1365,6 +1782,10 @@ namespace pwiz.OspreySharp.Tasks
             // filter). This is the same set used for RT calibration points.
             var allMs1Errors = new List<double>();
             var allMs2Errors = new List<double>();
+            // Track contributing matches in a stable list so a cross-impl
+            // bisection dump can replay them in the same order the
+            // calibration accumulator sees their errors.
+            var contributingMatches = new List<CalibrationMatch>();
             foreach (var m in matchArray)
             {
                 if (m.Ms2MassErrors == null || m.IsDecoy || m.QValue > CAL_FDR_THRESHOLD)
@@ -1375,6 +1796,13 @@ namespace pwiz.OspreySharp.Tasks
                 if (m.Ms1Error.HasValue)
                     allMs1Errors.Add(m.Ms1Error.Value);
                 allMs2Errors.AddRange(m.Ms2MassErrors);
+                contributingMatches.Add(m);
+            }
+            if (OspreyDiagnostics.DumpMs2CalErrors)
+            {
+                OspreyDiagnostics.WriteMs2CalErrorsDump(contributingMatches);
+                if (OspreyDiagnostics.Ms2CalErrorsOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_MS2_CAL_ERRORS_ONLY");
             }
             string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
             var ms1Cal = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
@@ -1403,15 +1831,12 @@ namespace pwiz.OspreySharp.Tasks
                     ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust
                 };
 
-                // Cross-implementation diagnostic: dump the (lib_rt, measured_rt) pairs
-                // fed to LOESS. Used to verify Rust and C# see identical inputs
-                // before LOESS fitting.
-                if (OspreyDiagnostics.DumpLoessInput)
-                {
-                    OspreyDiagnostics.WriteLoessInputDump(passNumber, libRts, measuredRts);
-                    if (OspreyDiagnostics.LoessInputOnly)
-                        OspreyDiagnostics.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
-                }
+                // NOTE: the OSPREY_DUMP_LOESS_INPUT diagnostic is emitted by
+                // the caller (RunCalibration) so that pass 2 only dumps when
+                // it is actually accepted -- mirrors Rust pipeline.rs (and
+                // matches the PR #42 semantics of "dump reflects the
+                // calibration actually used"). The pairs are returned via
+                // CalibrationPassResult.LibRts/MeasuredRts.
 
                 var calibrator = new RTCalibrator(calibratorConfig);
                 var rtCal = calibrator.Fit(libRts, measuredRts);
@@ -1430,6 +1855,9 @@ namespace pwiz.OspreySharp.Tasks
                     Stats = stats,
                     Ms1Calibration = ms1Cal,
                     Ms2Calibration = ms2Cal,
+                    MatchCount = matchArray.Length,
+                    LibRts = libRts,
+                    MeasuredRts = measuredRts,
                 };
             }
             catch (Exception ex)
@@ -2011,6 +2439,26 @@ namespace pwiz.OspreySharp.Tasks
                 Ms2MassErrors = ms2Errors.ToArray(),
                 Ms1Error = ms1Error
             };
+        }
+
+        /// <summary>
+        /// Render a prefix list in Rust's <c>{:?}</c> debug format
+        /// (<c>["DECOY_", "rev_", "decoy_"]</c>) for log messages and
+        /// error reports, so cross-impl messages compare consistently.
+        /// </summary>
+        private static string FormatPrefixList(IList<string> prefixes)
+        {
+            var sb = new System.Text.StringBuilder("[");
+            if (prefixes != null)
+            {
+                for (int i = 0; i < prefixes.Count; i++)
+                {
+                    if (i > 0) sb.Append(", ");
+                    sb.Append('"').Append(prefixes[i] ?? string.Empty).Append('"');
+                }
+            }
+            sb.Append(']');
+            return sb.ToString();
         }
     }
 }

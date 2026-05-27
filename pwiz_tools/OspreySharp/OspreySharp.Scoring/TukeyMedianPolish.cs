@@ -536,25 +536,32 @@ namespace pwiz.OspreySharp.Scoring
 
         private static double PearsonCorrelationRaw(List<double> x, List<double> y)
         {
+            // Single-pass moment form: matches Rust pearson_correlation_raw in
+            // osprey-scoring/src/lib.rs and the existing PearsonCorrelation.Pearson
+            // helper. Aligning here brings median_polish_residual_correlation to
+            // cross-impl bit-equality.
             int n = Math.Min(x.Count, y.Count);
             if (n < 2)
                 return 0.0;
-            double mx = 0.0, my = 0.0;
-            for (int i = 0; i < n; i++) { mx += x[i]; my += y[i]; }
-            mx /= n; my /= n;
 
-            double sxy = 0.0, sxx = 0.0, syy = 0.0;
+            double dn = n;
+            double sx = 0.0, sy = 0.0;
+            double sx2 = 0.0, sy2 = 0.0, sxy = 0.0;
             for (int i = 0; i < n; i++)
             {
-                double dx = x[i] - mx;
-                double dy = y[i] - my;
-                sxy += dx * dy;
-                sxx += dx * dx;
-                syy += dy * dy;
+                double xi = x[i];
+                double yi = y[i];
+                sx += xi;
+                sy += yi;
+                sx2 += xi * xi;
+                sy2 += yi * yi;
+                sxy += xi * yi;
             }
-            if (sxx < 1e-30 || syy < 1e-30)
+
+            double denom = (dn * sx2 - sx * sx) * (dn * sy2 - sy * sy);
+            if (denom < 1e-30)
                 return 0.0;
-            return sxy / Math.Sqrt(sxx * syy);
+            return (dn * sxy - sx * sy) / Math.Sqrt(denom);
         }
     }
 }

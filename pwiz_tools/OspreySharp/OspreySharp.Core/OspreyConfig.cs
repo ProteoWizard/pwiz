@@ -68,8 +68,52 @@ namespace pwiz.OspreySharp.Core
         /// <summary>Decoy generation method.</summary>
         public DecoyMethod DecoyMethod { get; set; } = DecoyMethod.Reverse;
 
-        /// <summary>Whether library already contains decoys.</summary>
+        /// <summary>
+        /// Whether library already contains decoys. When true (or when
+        /// <see cref="DecoyMethod"/> = <see cref="DecoyMethod.FromLibrary"/>),
+        /// <c>DecoyGenerator</c> is skipped and existing entries are
+        /// scanned for <see cref="DecoyPrefixes"/> matches on their
+        /// protein accessions; matching entries get
+        /// <see cref="LibraryEntry.IsDecoy"/> = true and the high bit of
+        /// their <see cref="LibraryEntry.Id"/> set.
+        /// </summary>
         public bool DecoysInLibrary { get; set; }
+
+        /// <summary>
+        /// Protein-accession prefixes that identify decoys when the
+        /// library already contains them (case-insensitive). Default
+        /// covers the three common conventions: Osprey's own
+        /// <c>DECOY_</c>, plus <c>rev_</c> / <c>decoy_</c> used by tools
+        /// like DIA-NN, EncyclopeDIA, and Carafe.
+        /// Maps to Rust <c>OspreyConfig::decoy_prefixes</c>.
+        /// </summary>
+        public List<string> DecoyPrefixes { get; set; } = new List<string>
+        {
+            @"DECOY_",
+            @"rev_",
+            @"decoy_",
+        };
+
+        /// <summary>
+        /// Minimum fraction of decoys that must pair successfully with a
+        /// target when <see cref="DecoysInLibrary"/> is set. Below this,
+        /// OspreySharp bails with a clear error rather than running with
+        /// broken target-decoy competition (FDR would be optimistic).
+        /// Maps to Rust <c>OspreyConfig::decoy_pair_min_fraction</c>.
+        /// </summary>
+        public double DecoyPairMinFraction { get; set; } = 0.80;
+
+        /// <summary>
+        /// Optional path to a FDRBench-style pairing manifest (5-column
+        /// TSV: <c>sequence, decoy, proteins, peptide_type,
+        /// peptide_pair_index</c>). When set together with
+        /// <see cref="DecoysInLibrary"/>, the pipeline runs manifest-based
+        /// pairing first and then falls back to composition-based pairing
+        /// for decoys the manifest didn't cover. Recommended for
+        /// FDRBench-generated entrapment libraries.
+        /// Maps to Rust <c>OspreyConfig::decoy_pairing_manifest</c>.
+        /// </summary>
+        public string DecoyPairingManifestPath { get; set; }
 
         /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
         public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
@@ -184,6 +228,40 @@ namespace pwiz.OspreySharp.Core
                 sb.AppendFormat(ic, "prefilter_enabled:{0}\n", b(PrefilterEnabled));
                 sb.AppendFormat(ic, "decoy_method:{0}\n", DecoyMethod);
                 sb.AppendFormat(ic, "decoys_in_library:{0}\n", b(DecoysInLibrary));
+                // Sort prefixes so ordering changes don't churn the hash.
+                // Lower-case to make case-only edits no-ops (matching the
+                // runtime comparison). Mirrors Rust's
+                // format!("decoy_prefixes:{:?}\n", prefixes) where {:?} on
+                // Vec<String> yields ["a", "b"] (double-quoted, comma-
+                // space-separated).
+                var prefixes = new List<string>(DecoyPrefixes != null ? DecoyPrefixes.Count : 0);
+                if (DecoyPrefixes != null)
+                {
+                    foreach (var p in DecoyPrefixes)
+                        prefixes.Add(p == null ? string.Empty : p.ToLowerInvariant());
+                }
+                prefixes.Sort(StringComparer.Ordinal);
+                var prefixList = new StringBuilder("[");
+                for (int i = 0; i < prefixes.Count; i++)
+                {
+                    if (i > 0) prefixList.Append(", ");
+                    prefixList.Append('"').Append(prefixes[i]).Append('"');
+                }
+                prefixList.Append(']');
+                sb.AppendFormat(ic, "decoy_prefixes:{0}\n", prefixList.ToString());
+                // Mirror Rust's `format!("decoy_pairing_manifest:{:?}\n", ...)`
+                // where the value is `Some("path")` or `None`. Rust's {:?}
+                // on String escapes \, ", \n, \r, \t, \0, and other control
+                // chars (< 0x20) -- critical for Windows paths whose `\`
+                // separators must become `\\` to match Rust's output. The
+                // path is not normalised; the user's choice (relative or
+                // absolute) is part of the hash so a moved manifest
+                // invalidates the cache.
+                sb.AppendFormat(ic, "decoy_pairing_manifest:{0}\n",
+                    string.IsNullOrEmpty(DecoyPairingManifestPath)
+                        ? "None"
+                        : "Some(\"" + EscapeForRustDebug(DecoyPairingManifestPath) + "\")");
+                sb.AppendFormat(ic, "decoy_pair_min_fraction:{0}\n", DecoyPairMinFraction);
                 sb.AppendFormat(ic, "rt_cal.enabled:{0}\n", b(RtCalibration.Enabled));
                 sb.AppendFormat(ic, "rt_cal.fallback_rt_tolerance:{0}\n", RtCalibration.FallbackRtTolerance);
                 sb.AppendFormat(ic, "rt_cal.rt_tolerance_factor:{0}\n", RtCalibration.RtToleranceFactor);
@@ -247,6 +325,57 @@ namespace pwiz.OspreySharp.Core
         }
 
         /// <summary>
+        /// Escape a string to match Rust's <c>{:?}</c> Debug formatter
+        /// output for <c>&amp;str</c> / <c>String</c>. Handles the cases
+        /// that actually appear in config values folded into the search
+        /// hash: backslashes, double quotes, common C escapes
+        /// (<c>\n</c>, <c>\r</c>, <c>\t</c>, <c>\0</c>), and other
+        /// sub-0x20 control characters via the <c>\u{...}</c> form.
+        /// Printable ASCII and non-ASCII bytes pass through unchanged --
+        /// matching Rust's default Debug output as of the language
+        /// versions in use by maccoss/osprey (1.75+). Used so cross-impl
+        /// hashes agree on Windows paths whose <c>\</c> separators must
+        /// render as <c>\\</c>.
+        /// </summary>
+        internal static string EscapeForRustDebug(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+                return s ?? string.Empty;
+            var sb = new StringBuilder(s.Length + 8);
+            foreach (char c in s)
+            {
+                switch (c)
+                {
+                    case '\\': sb.Append(@"\\"); break;
+                    case '"':  sb.Append("\\\""); break;
+                    case '\n': sb.Append(@"\n"); break;
+                    case '\r': sb.Append(@"\r"); break;
+                    case '\t': sb.Append(@"\t"); break;
+                    case '\0': sb.Append(@"\0"); break;
+                    default:
+                        if (c < 0x20 || c == 0x7F)
+                        {
+                            // Rust's {:?} uses `\u{HEX}` with lowercase hex,
+                            // no padding. AppendFormat's `{0:x}` works on
+                            // net8.0 but produces `{x}` literally on net472
+                            // under the double-brace escape sequence; use
+                            // explicit ToString to avoid the regression.
+                            sb.Append(@"\u{");
+                            sb.Append(((int)c).ToString(@"x",
+                                System.Globalization.CultureInfo.InvariantCulture));
+                            sb.Append('}');
+                        }
+                        else
+                        {
+                            sb.Append(c);
+                        }
+                        break;
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// SHA-256 of (search hash + reconciliation parameters + run FDR
         /// + sorted file stems). Mirrors Rust
         /// <c>OspreyConfig::reconciliation_parameter_hash</c> in
@@ -258,6 +387,33 @@ namespace pwiz.OspreySharp.Core
         /// hash invariant to invocation order).
         /// </summary>
         public string ReconciliationParameterHash()
+        {
+            var stems = new List<string>(InputFiles?.Count ?? 0);
+            if (InputFiles != null)
+            {
+                foreach (var path in InputFiles)
+                {
+                    string stem = Path.GetFileNameWithoutExtension(path);
+                    if (!string.IsNullOrEmpty(stem))
+                        stems.Add(stem);
+                }
+            }
+            return ReconciliationParameterHashForStems(stems);
+        }
+
+        /// <summary>
+        /// Compute the reconciliation parameter hash for an explicit set of
+        /// file stems. Used by per-file Stage 6 rescore workers, whose
+        /// <see cref="InputFiles"/> only carries this worker's single
+        /// parquet — the hash that the downstream <c>--join-at-pass=2</c>
+        /// merge node expects is computed over ALL files in the join, so
+        /// the worker must read the full set from the planner's
+        /// <c>reconciliation.json</c> envelope and pass it in here. The
+        /// stems are sorted + deduped internally so the hash is invariant
+        /// to caller ordering. Mirrors Rust
+        /// <c>OspreyConfig::reconciliation_parameter_hash_for_stems</c>.
+        /// </summary>
+        public string ReconciliationParameterHashForStems(IReadOnlyList<string> fileStems)
         {
             using (var sha256 = SHA256.Create())
             {
@@ -272,17 +428,31 @@ namespace pwiz.OspreySharp.Core
                 // Mirror Rust's `format!("file_stems:{:?}\n", stems)` output
                 // exactly. {:?} on Vec<String> yields ["a", "b"] with the
                 // brackets and double-quoted, comma-space-separated values.
-                var stems = new List<string>(InputFiles?.Count ?? 0);
-                if (InputFiles != null)
+                // Stems are sorted + deduped here so the hash matches the
+                // Rust side, which also sorts + dedups before hashing.
+                var stems = new List<string>(fileStems?.Count ?? 0);
+                if (fileStems != null)
                 {
-                    foreach (var path in InputFiles)
+                    foreach (var stem in fileStems)
                     {
-                        string stem = Path.GetFileNameWithoutExtension(path);
                         if (!string.IsNullOrEmpty(stem))
                             stems.Add(stem);
                     }
                 }
                 stems.Sort(StringComparer.Ordinal);
+                // Dedup in place (stems is sorted, so duplicates are
+                // adjacent). Rust does `dedup()` on a sorted Vec; same here.
+                int write = 0;
+                for (int read = 0; read < stems.Count; read++)
+                {
+                    if (read == 0 || !string.Equals(stems[read], stems[read - 1], StringComparison.Ordinal))
+                    {
+                        stems[write++] = stems[read];
+                    }
+                }
+                if (write < stems.Count)
+                    stems.RemoveRange(write, stems.Count - write);
+
                 var stemsList = new StringBuilder("[");
                 for (int i = 0; i < stems.Count; i++)
                 {

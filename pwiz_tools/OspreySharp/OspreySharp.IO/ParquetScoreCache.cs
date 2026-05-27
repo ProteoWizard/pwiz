@@ -217,9 +217,21 @@ namespace pwiz.OspreySharp.IO
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
                 featureArrays[f] = new double[n];
 
+            // Iterate in canonical sorted order (entry_id, charge, scan_number)
+            // so per-side parquets have identical physical row layout across the
+            // Rust and C# impls. Order-sensitive consumers downstream (Stage 5
+            // standardizer, SVM training) then see the same row sequence
+            // regardless of which side wrote the parquet. Mirrors Rust
+            // pipeline.rs::write_scores_parquet_with_metadata.
+            var sortedIndices = Enumerable.Range(0, n)
+                .OrderBy(idx => entries[idx].EntryId)
+                .ThenBy(idx => entries[idx].Charge)
+                .ThenBy(idx => entries[idx].ScanNumber)
+                .ToArray();
+
             for (int i = 0; i < n; i++)
             {
-                var entry = entries[i];
+                var entry = entries[sortedIndices[i]];
                 entryIds[i] = entry.EntryId;
                 isDecoys[i] = entry.IsDecoy;
                 sequences[i] = entry.Sequence ?? string.Empty;
@@ -340,9 +352,41 @@ namespace pwiz.OspreySharp.IO
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
                 featureArrays[f] = new double[n];
 
+            // Iterate in canonical sorted order (entry_id, charge, scan_number)
+            // so per-side parquets have identical physical row layout across
+            // Rust and C# impls. Order-sensitive consumers downstream (Stage 5
+            // standardizer, SVM training) then see the same row sequence
+            // regardless of which side wrote the parquet. Mirrors Rust
+            // pipeline.rs::write_scores_parquet_with_metadata. ParquetIndex is
+            // assigned to the post-sort destination row below.
+            var sortedIndices = Enumerable.Range(0, n)
+                .OrderBy(idx => entries[idx].EntryId)
+                .ThenBy(idx => entries[idx].Charge)
+                .ThenBy(idx => entries[idx].ScanNumber)
+                .ToArray();
+
             for (int i = 0; i < n; i++)
             {
-                var entry = entries[i];
+                var entry = entries[sortedIndices[i]];
+                // Assign ParquetIndex to match the row position we are
+                // about to write. Mirrors LoadFdrStubsFromParquet, which
+                // assigns ParquetIndex = row on read. Without this
+                // assignment, in-memory entries reach Stage 5
+                // ReconciliationPlanner with ParquetIndex = 0 (FdrEntry
+                // default), and every entry's per-file CWT lookup
+                // (fileCwt[entry.ParquetIndex]) grabs the first row's
+                // CwtCandidate list instead of its own -- the planner
+                // then force-integrates almost every entry because the
+                // wrong CWT list has no candidate near the expected RT.
+                // The HPC chain path was unaffected because its entries
+                // are reloaded via LoadFdrStubsFromParquet, which sets
+                // ParquetIndex correctly. Found by C# in-memory vs
+                // C# HPC-chain strict-rehydration bisection on Stellar
+                // (Stage 5 boundary check: .1st-pass.fdr_scores.bin
+                // byte-identical but reconciliation.json action shape
+                // diverged -- 35K use_cwt actions on HPC side, 814 on
+                // in-memory side, total identical).
+                entry.ParquetIndex = (uint)i;
                 entryIds[i] = entry.EntryId;
                 isDecoys[i] = entry.IsDecoy;
                 charges[i] = entry.Charge;
@@ -495,18 +539,18 @@ namespace pwiz.OspreySharp.IO
             return double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
         }
 
-        // Synchronously bridge an async Parquet.Net call. ConfigureAwait(false)
-        // avoids deadlock on a captured SynchronizationContext, and
-        // GetAwaiter().GetResult() unwraps the underlying exception instead
-        // of wrapping it in AggregateException.
+        // Synchronously bridge an async Parquet.Net call. GetAwaiter().GetResult()
+        // rethrows the original exception instead of wrapping it in an
+        // AggregateException. This is only safe because these calls run without a
+        // captured SynchronizationContext to deadlock on.
         private static T RunSync<T>(Task<T> task)
         {
-            return task.ConfigureAwait(false).GetAwaiter().GetResult();
+            return task.GetAwaiter().GetResult();
         }
 
         private static void RunSync(Task task)
         {
-            task.ConfigureAwait(false).GetAwaiter().GetResult();
+            task.GetAwaiter().GetResult();
         }
 
         // Build a name -> DataField lookup from the reader's actual schema.

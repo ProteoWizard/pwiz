@@ -50,28 +50,43 @@ namespace pwiz.OspreySharp.IO
     /// </summary>
     public class ReconciliationFile
     {
-        /// <summary>Current schema version. Bump on incompatible changes.</summary>
-        public const int CurrentFormatVersion = 1;
+        /// <summary>
+        /// Current schema version. Bump on incompatible changes.
+        ///
+        /// v1: initial format.
+        /// v2: added <c>file_stems</c> so per-file Stage 6 rescore workers
+        ///     can compute the reconciliation parameter hash that the
+        ///     downstream <c>--join-at-pass=2</c> merge node expects (the
+        ///     hash is computed over all files in the join, not the
+        ///     worker's single parquet). Old v1 files deserialize with an
+        ///     empty <see cref="FileStems"/> list; the worker falls back
+        ///     to its <c>OspreyConfig.InputFiles</c> stems in that case,
+        ///     preserving v1 behavior.
+        /// </summary>
+        public const int CurrentFormatVersion = 2;
 
-        [JsonProperty("forced_integration_actions", Order = 0)]
+        [JsonProperty("file_stems", Order = 0)]
+        public List<string> FileStems { get; set; }
+
+        [JsonProperty("forced_integration_actions", Order = 1)]
         public List<ForcedIntegrationEntry> ForcedIntegrationActions { get; set; }
 
-        [JsonProperty("format_version", Order = 1)]
+        [JsonProperty("format_version", Order = 2)]
         public int FormatVersion { get; set; }
 
-        [JsonProperty("gap_fill_targets", Order = 2)]
+        [JsonProperty("gap_fill_targets", Order = 3)]
         public List<GapFillEntry> GapFillTargets { get; set; }
 
-        [JsonProperty("library_hash", Order = 3)]
+        [JsonProperty("library_hash", Order = 4)]
         public string LibraryHash { get; set; }
 
-        [JsonProperty("refined_rt_calibration", Order = 4, NullValueHandling = NullValueHandling.Include)]
+        [JsonProperty("refined_rt_calibration", Order = 5, NullValueHandling = NullValueHandling.Include)]
         public RefinedRtCalibrationJson RefinedRtCalibration { get; set; }
 
-        [JsonProperty("search_hash", Order = 5)]
+        [JsonProperty("search_hash", Order = 6)]
         public string SearchHash { get; set; }
 
-        [JsonProperty("use_cwt_peak_actions", Order = 6)]
+        [JsonProperty("use_cwt_peak_actions", Order = 7)]
         public List<UseCwtPeakEntry> UseCwtPeakActions { get; set; }
 
         /// <summary>
@@ -95,6 +110,22 @@ namespace pwiz.OspreySharp.IO
                 throw new InvalidDataException(string.Format(
                     "Reconciliation file {0} has unsupported format_version {1} (expected {2})",
                     path, parsed.FormatVersion, CurrentFormatVersion));
+            }
+            // v2 envelopes must carry the planner's full join file_stems set;
+            // a deserialized v2 file with file_stems missing or empty would
+            // silently flow through RescoreHydration with joinFileStems = []
+            // and cause downstream --join-at-pass=2 to compute a single-file
+            // ReconciliationParameterHash for what was meant to be a
+            // multi-file join. JsonProperty does not enforce required, so
+            // assert it here. Matches the Rust serde behavior (file_stems is
+            // a required field, not defaulted).
+            if (parsed.FileStems == null || parsed.FileStems.Count == 0)
+            {
+                throw new InvalidDataException(string.Format(
+                    "Reconciliation file {0} has format_version {1} but file_stems is missing " +
+                    "or empty; v{1} envelopes are required to carry the planner's full join " +
+                    "file set.",
+                    path, CurrentFormatVersion));
             }
             return parsed;
         }

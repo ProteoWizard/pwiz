@@ -1725,7 +1725,17 @@ namespace pwiz.Skyline {
                         "ase_install_the_32_bit_version", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid argument &apos;{0}&apos;. Use --start-page=true or --start-page=false..
+        /// </summary>
+        public static string Program_ParseStartPageArg_Invalid_argument__0___Use__start_page_true_or__start_page_false {
+            get {
+                return ResourceManager.GetString("Program_ParseStartPageArg_Invalid_argument__0___Use__start_page_true_or__start_pa" +
+                        "ge_false", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Do you want to save your current settings before switching?.
         /// </summary>

@@ -502,10 +502,15 @@
     byte-identical <code>RefSpectraPeaks</code> blobs).
   </p>
   <p>
-    <strong>End-to-end performance (3-file regression, post-sort-fix
-    binaries):</strong>
-    OspreySharp ties or beats Osprey on most stages of both datasets.
-    The table below is the headline; per-stage commentary follows it.
+    <strong>End-to-end performance (3-file regression, Windows
+    native, C: SSD source data, AV-scan excluded; all 8 cells
+    median-of-3 refreshed 2026-05-24):</strong>
+    Measured on the <code>test/integration-bucket3</code> branch
+    (PRs #38-#45 stacked, including the decoy gap-fill exclusion fix
+    AND the Welford → sum/n revert that recovered ~21 s on Stellar
+    Rust stage1to4) immediately after 3-file Astral straight-through
+    cross-impl bit-equality landed at 1e-9. Variance is &lt;5 s on
+    Stellar and &lt;90 s on Astral across the three repeats.
   </p>
   <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
     <thead>
@@ -520,12 +525,12 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:30</td><td style="text-align: right; padding: 1px 12px;">1:08</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.76× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">8:26</td><td style="text-align: right; padding: 1px 12px;">11:17</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.34×</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:44</td><td style="text-align: right; padding: 1px 12px;">1:53</td><td style="text-align: right; padding: 1px 12px;">1.09× (~tied)</td><td style="text-align: right; padding: 1px 12px;">3:30</td><td style="text-align: right; padding: 1px 12px;">2:45</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.79× (C# faster)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">4:10</td><td style="text-align: right; padding: 1px 12px;">3:34</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.86× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">12:45</td><td style="text-align: right; padding: 1px 12px;">17:30</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.37×</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">1.0× (tied)</td><td style="text-align: right; padding: 1px 12px;">0:16</td><td style="text-align: right; padding: 1px 12px;">0:13</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81× (C# faster)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:11</td><td style="text-align: right; padding: 1px 12px;">0:08</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.71× (C# faster)</td><td style="text-align: right; padding: 1px 12px;">0:55</td><td style="text-align: right; padding: 1px 12px;">0:45</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81× (C# faster)</td></tr>
-      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>7:38</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>6:46</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.89× (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>~25:51</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>~32:35</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>1.26×</strong></td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:42</td><td style="text-align: right; padding: 1px 12px;">1:13</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.72x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">7:54</td><td style="text-align: right; padding: 1px 12px;">6:24</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:14</td><td style="text-align: right; padding: 1px 12px;">2:04</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.68x</td><td style="text-align: right; padding: 1px 12px;">1:27</td><td style="text-align: right; padding: 1px 12px;">5:12</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">3.59x</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">0:34</td><td style="text-align: right; padding: 1px 12px;">0:27</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">7:10</td><td style="text-align: right; padding: 1px 12px;">3:49</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.53x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:43</td><td style="text-align: right; padding: 1px 12px;">0:50</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.17x</td><td style="text-align: right; padding: 1px 12px;">2:54</td><td style="text-align: right; padding: 1px 12px;">3:07</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.07x</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:19</td><td style="text-align: right; padding: 1px 12px;">0:02</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.14x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">2:02</td><td style="text-align: right; padding: 1px 12px;">0:07</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.06x (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>4:33</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>4:38</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>1.02x (~tied)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>21:29</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>18:41</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.87x (C# faster)</strong></td></tr>
     </tbody>
   </table>
   <p>
@@ -533,44 +538,236 @@
   </p>
   <ul>
     <li>
-      <strong>stage1to4</strong> (per-file scoring): C# faster on the
-      Stellar (unit-resolution) dataset; modestly slower on Astral
-      (HRAM). Foundations: <code>XcorrScratchPool</code> (LOH-allocation-
-      free ~100K-bin scratch), pre-preprocessed XCorr cache with f32
-      narrowing, pooled <code>visitedBins</code> for O(n_fragments)
-      clear, per-file thread scaling, and a mzML read gate that
-      serializes disk I/O across concurrent <code>ProcessFile</code>
-      calls.
+      <strong>stage1to4</strong> (per-file scoring): C# faster on
+      both datasets on Windows native (0.72&times; Stellar,
+      0.81&times; Astral). Foundations: <code>XcorrScratchPool</code>
+      (LOH-allocation-free ~100K-bin scratch), pre-preprocessed XCorr
+      cache with f32 narrowing, pooled <code>visitedBins</code> for
+      O(n_fragments) clear, per-file thread scaling, and a mzML read
+      gate that serializes disk I/O across concurrent
+      <code>ProcessFile</code> calls.
     </li>
     <li>
       <strong>stage5</strong> (first-pass FDR + reconciliation planning):
-      C# faster on Astral, ~tied on Stellar. Percolator SVM training (the
-      dominant cost) runs the three folds in parallel on the C# side
+      Rust faster on both datasets (the headline 1.67&times; / 3.62&times;
+      C#/Rust ratios in the Windows table are this stage). Percolator SVM
+      training runs the three folds in parallel on the C# side
       (<code>ParallelEx</code>); per-fold wall is around 92s on a
-      16-thread Stellar 3-file run.
+      16-thread Stellar 3-file run, but the inner SVM loop overhead in
+      managed code still trails the Rust <code>par_iter</code> path.
     </li>
     <li>
       <strong>stage6</strong> (per-file rescore + gap-fill + reconciled
-      parquet write-back): C# faster on Stellar; on Astral the ratio is
-      modest given ~6 GB HRAM mzML per file.
+      parquet write-back): C# faster on both datasets (0.81&times;
+      Stellar, 0.53&times; Astral on Windows native). The Astral ratio
+      reflects the pooled-scratch XCorr fix landed 2026-05-19.
     </li>
     <li>
       <strong>stage7</strong> (second-pass Percolator + protein FDR):
-      C# tied on Stellar, faster on Astral. Protein parsimony's
-      subset-elimination uses <code>HashSet&lt;string&gt;</code>; the
-      2nd-pass FDR sidecar overlay (<code>FdrScoresSidecar.TryReadOverlay</code>)
-      reads only the sidecar and overlays scores by entry_id without
-      re-reading the source parquet.
+      Rust slightly faster (1.07&ndash;1.33&times; depending on
+      config), driven by Rust's <code>par_iter</code> SVM training in
+      the second-pass Percolator. Protein parsimony's
+      subset-elimination uses <code>HashSet&lt;string&gt;</code> on
+      the C# side; the 2nd-pass FDR sidecar overlay
+      (<code>FdrScoresSidecar.TryReadOverlay</code>) reads only the
+      sidecar and overlays scores by entry_id without re-reading the
+      source parquet. (Note: OspreySharp emits the 2nd-pass
+      Percolator work under a separate <code>[STAGE-WALL]
+      second-pass-fdr</code> marker; the totals above combine that
+      with the <code>stage7</code> marker so the column compares
+      like-for-like with Rust's single <code>stage7</code> marker.)
     </li>
     <li>
-      <strong>blib write</strong>: C# faster on Astral. Per-spectrum
-      <code>Ionic.Zlib</code> compression runs under <code>Parallel.For</code>
-      (<code>BlibWriter.CompressMzs</code> /
-      <code>CompressIntensities</code> pre-compress; SQLite insert stays
-      sequential and the output is byte-identical to the prior
-      sequential-compress run and to Osprey's blib).
+      <strong>blib write</strong>: C# faster on both datasets.
+      Per-spectrum <code>Ionic.Zlib</code> compression runs under
+      <code>Parallel.For</code> (<code>BlibWriter.CompressMzs</code> /
+      <code>CompressIntensities</code> pre-compress); SQLite insert
+      stays sequential and the output is byte-identical to the prior
+      sequential-compress run and to Osprey's blib.
     </li>
   </ul>
+  <p>
+    <strong>WSL Linux end-to-end performance &mdash; ext4 inside
+    <code>/home</code> (median-of-3 2026-05-24)</strong>:
+    Same workstation as the Windows benchmark above, WSL2 Ubuntu
+    22.04, .NET 8.0.421, Rust 1.95.0. The WSL <code>ext4.vhdx</code>
+    is on the C: SSD (relocated this session via
+    <code>wsl --export</code>/<code>--import</code> from a D: HDD
+    location, where it had drifted at some point between the prior
+    2026-05-18 measurement and now). Test data is staged inside
+    the VHDX at <code>/home/brendanx/test/osprey-runs</code>, so
+    every read and write goes through Linux ext4 with no 9P drvfs
+    crossing. This is the &ldquo;Linux-native&rdquo; configuration:
+    Rust is 23-25% faster than C# in this regime (Stellar 3:56 vs
+    4:52; Astral 15:38 vs 19:31), matching the historical pattern
+    of native Linux ext4 favouring the Rust toolchain. Cross-OS
+    output parity is gated separately
+    by <code>Test-Snapshot.ps1</code> at 1e-6
+    tolerance on four median-polish columns
+    (<code>median_polish_cosine</code>, <code>_residual_ratio</code>,
+    <code>_min_fragment_r2</code>, <code>_residual_correlation</code>)
+    because both runtimes delegate <code>Math.Log</code> and
+    <code>Math.Exp</code> to the host libm (Linux glibc vs Windows ucrt),
+    which differ at f64 ULP level. All other Stage 1-4 columns are
+    bit-equal cross-OS, and the cross-OS divergence in stage5 percolator
+    TSV output is bounded to a handful of formatted-float characters
+    per ~200 MB file.
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Stage</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:44</td><td style="text-align: right; padding: 1px 12px;">1:19</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.76x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">6:40</td><td style="text-align: right; padding: 1px 12px;">6:47</td><td style="text-align: right; padding: 1px 12px;">1.02x (~tied)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:05</td><td style="text-align: right; padding: 1px 12px;">2:09</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.98x</td><td style="text-align: right; padding: 1px 12px;">1:14</td><td style="text-align: right; padding: 1px 12px;">5:17</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">4.25x</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">0:21</td><td style="text-align: right; padding: 1px 12px;">0:27</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.27x</td><td style="text-align: right; padding: 1px 12px;">3:54</td><td style="text-align: right; padding: 1px 12px;">3:53</td><td style="text-align: right; padding: 1px 12px;">0.99x (~tied)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:39</td><td style="text-align: right; padding: 1px 12px;">0:52</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.33x</td><td style="text-align: right; padding: 1px 12px;">2:55</td><td style="text-align: right; padding: 1px 12px;">3:24</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.17x</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:06</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.54x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">0:53</td><td style="text-align: right; padding: 1px 12px;">0:09</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.18x (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>3:56</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>4:52</strong></td><td style="text-align: right; padding: 1px 12px; color: #b54708;"><strong>1.23x (Rust faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>15:38</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>19:31</strong></td><td style="text-align: right; padding: 1px 12px; color: #b54708;"><strong>1.25x (Rust faster)</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>WSL Linux end-to-end performance &mdash; 9P drvfs to
+    Windows <code>/mnt/c</code> (median-of-3 2026-05-24)</strong>:
+    Same WSL distro and binaries, but with test data living on the
+    Windows side at <code>C:\test\osprey-runs</code> (accessed as
+    <code>/mnt/c/test/osprey-runs</code> from inside WSL). Every
+    read and write crosses the 9P protocol bridge between Linux and
+    Windows NTFS — this is the configuration developers get by
+    default when they keep their data on the Windows filesystem and
+    just run the pipeline from a WSL shell. 9P adds substantial
+    per-syscall overhead (240 vs 14 files/s for fsync'd metadata
+    writes; raw I/O bench below) but the absolute totals are still
+    workable, and the C#/Rust ratio collapses to near 1.0&times; on
+    both datasets &mdash; C# and Rust are essentially tied here, and
+    on Stellar C# is marginally faster. The 9P penalty applies to
+    both implementations equally, so the cross-impl story is
+    unchanged: C# is not a performance sacrifice on the storage path
+    most users have.
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Stage</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">3:11</td><td style="text-align: right; padding: 1px 12px;">2:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.65x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">12:51</td><td style="text-align: right; padding: 1px 12px;">9:49</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.76x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:06</td><td style="text-align: right; padding: 1px 12px;">2:12</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">2.00x</td><td style="text-align: right; padding: 1px 12px;">1:17</td><td style="text-align: right; padding: 1px 12px;">5:23</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">4.20x</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">0:53</td><td style="text-align: right; padding: 1px 12px;">0:39</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.75x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">5:41</td><td style="text-align: right; padding: 1px 12px;">5:02</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.88x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:48</td><td style="text-align: right; padding: 1px 12px;">0:51</td><td style="text-align: right; padding: 1px 12px;">1.07x (~tied)</td><td style="text-align: right; padding: 1px 12px;">3:08</td><td style="text-align: right; padding: 1px 12px;">3:30</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.11x</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:06</td><td style="text-align: right; padding: 1px 12px;">0:09</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.40x</td><td style="text-align: right; padding: 1px 12px;">0:56</td><td style="text-align: right; padding: 1px 12px;">0:24</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.43x (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>6:05</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>5:56</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>0.97x (~tied)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>23:54</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>24:09</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>1.01x (~tied)</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    A raw 9P / ext4 I/O bench from this session
+    (<code>ai/.tmp/wsl-io-bench/summary.md</code>) explains the
+    spread &mdash; ext4 inside the VHDX is dramatically faster than
+    drvfs for both sequential writes and the small-fsync metadata
+    pattern that stage5/6 dump writers used to hit:
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">WSL target</th>
+        <th style="text-align: left; padding: 2px 12px;">Backing</th>
+        <th style="text-align: right; padding: 2px 12px;">Seq write</th>
+        <th style="text-align: right; padding: 2px 12px;">Seq read (O_DIRECT)</th>
+        <th style="text-align: right; padding: 2px 12px;">500×4KiB fsync</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;"><code>/mnt/c</code></td><td style="padding: 1px 12px;">C: SSD via 9P drvfs</td><td style="text-align: right; padding: 1px 12px;">356 MB/s</td><td style="text-align: right; padding: 1px 12px;">431 MB/s</td><td style="text-align: right; padding: 1px 12px;">190 files/s</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;"><code>/mnt/d</code></td><td style="padding: 1px 12px;">D: HDD via 9P drvfs</td><td style="text-align: right; padding: 1px 12px;">215 MB/s</td><td style="text-align: right; padding: 1px 12px;">140 MB/s</td><td style="text-align: right; padding: 1px 12px;">30 files/s</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;"><code>/home</code></td><td style="padding: 1px 12px;">ext4 / VHDX / C: SSD</td><td style="text-align: right; padding: 1px 12px;">2064 MB/s ‡</td><td style="text-align: right; padding: 1px 12px;">12328 MB/s †</td><td style="text-align: right; padding: 1px 12px;">cached</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;"><code>/dev/shm</code></td><td style="padding: 1px 12px;">tmpfs (RAM)</td><td style="text-align: right; padding: 1px 12px;">3333 MB/s</td><td style="text-align: right; padding: 1px 12px;">10085 MB/s</td><td style="text-align: right; padding: 1px 12px;">cached</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size: 11px;">
+    † Cache-influenced read: the 4 GiB test file is fully cached
+    after the immediately preceding write on a 64 GB workstation;
+    <code>O_DIRECT</code> on 9p drvfs does not always bypass the
+    Windows-side NTFS cache. Sustained read on the underlying HDD
+    platters is ~200 MB/s.
+    ‡ <code>fdatasync</code> forces Linux dirty pages out to
+    <code>/dev/sdd</code> (the VHDX virtual disk), not all the way
+    through the Windows VHDX layer to the underlying SSD; large
+    sustained writes that exceed the page cache would converge to
+    SSD write speed.
+  </p>
+  <p>
+    <em>Reference for past closure (2026-05-17 to 2026-05-21 work):</em>
+    Two parallelism / allocation fixes closed an earlier WSL gap:
+    <em>(a)</em> parallelizing the c-value loop in
+    <code>PercolatorFdr.GridSearchC</code> (was serial; Rust used
+    <code>par_iter</code>) — ~1:30 savings on Stellar and ~0:15 on
+    Astral stage5;
+    <em>(b)</em> wiring <code>SpectralScorer.PreprocessSpectrumForXcorrInto</code>
+    to use its passed-in <code>XcorrScratch</code> (it was nominally
+    scratch-aware but actually allocated four <code>float[NBins]</code>
+    arrays per call then copied) — ~5:14 savings on Astral stage6 and
+    ~1:20 on Astral stage1to4. Both changes are behavior-preserving
+    (cross-impl Test-Snapshot remained bit-exact). Stellar runs through
+    <code>UnitStrategy</code> which is not affected by the f32 scratch
+    path, so the Astral-targeted fix produces no regression there.
+  </p>
+  <p>
+    <strong>Methodology notes.</strong>
+    <em>(1) Storage layout.</em> All numbers in the three tables
+    above are on C: SSD physical media; both Windows
+    <code>C:\test\osprey-runs</code> and the WSL <code>ext4.vhdx</code>
+    (now backing both <code>/home</code> and <code>/mnt/c</code>
+    via different paths) live on the same SK hynix 2 TB NVMe.
+    Defender real-time scan exclusions cover both
+    <code>C:\test</code> and the Windows mount points the WSL distro
+    touches; without those exclusions, every disk-bound stage paid
+    a 5-10% scan overhead.
+    <em>(2) Rust dump-writer patch (still load-bearing).</em> Rust's
+    stage-5/6 diagnostic-dump writers in osprey v26.6.0 use unbuffered
+    <code>std::fs::File::create</code>: each <code>writeln!</code>
+    crosses to the kernel. On WSL drvfs/9P that took ~14 min for
+    the 74 MB stage5 percolator dump alone (vs ~1 min for the
+    percolator algorithm itself); BufWriter eliminates this on either
+    OS. The numbers above reflect that patch (committed via PR #36)
+    plus an explicit <code>f.flush(); drop(f);</code> before
+    <code>exit_if_only</code>.
+    <em>(3) Welford → sum/n MS2 calibration revert.</em> An earlier
+    attempt to close the Astral 3-file cross-impl bit-equality gate
+    used Welford's online running mean for MS2 calibration; this
+    avoided LLVM/JIT vectorisation divergence at the cost of a
+    4-op-per-element loop that defeated SIMD on both sides
+    (~21 s on Stellar Rust stage1to4, more on Astral). The same
+    bit-equality goal is now met by a plain <code>sum / n</code> with
+    a deterministic <code>(base_id, entry_id)</code> sort upstream and
+    IEEE 754 strict mode (Rust default, .NET default) preventing
+    re-association. Stellar + Astral 3-file end-to-end pass at 1e-9
+    cross-impl with the simpler implementation, and the perf table
+    above is on the post-revert binaries.
+    <em>(4) C# Astral parallelism.</em> C# Astral was run with
+    <code>OSPREY_MAX_PARALLEL_FILES=1</code> &mdash; the Windows reference
+    above runs three files concurrently in stage 1-4, which on this
+    64 GB workstation requires ~60 GB peak under WSL (which fits
+    ~30 GB of overhead in the Hyper-V + ext4.vhdx machinery). Without
+    the cap, Stage 1-4 is OOM-killed in WSL. Rust naturally processes
+    files sequentially and is unaffected. A fully fair
+    WSL-vs-Windows comparison would set
+    <code>OSPREY_MAX_PARALLEL_FILES=1</code> on both sides too.
+  </p>
   <p>
     <strong>BLIB writer:</strong> OspreySharp's <code>BlibWriter</code>
     uses DotNetZip / Ionic.Zlib level 6 (the same library Skyline's
@@ -581,6 +778,74 @@
     work: pull Skyline's <code>Model/Lib/BlibData</code> out to
     <code>Shared/BiblioSpec</code> so OspreySharp and Skyline share a
     single C# BLIB writer.
+  </p>
+  <p>
+    <strong>Source-line audit (per-module, executable code only;
+    measured 2026-05-14 via
+    <code>ai/scripts/OspreySharp/Audit-Loc.ps1</code>):</strong>
+    OspreySharp tracks Osprey at <strong>0.81×</strong> production-code
+    size with the same module split. The Rust side ships its tests
+    inline (<code>#[cfg(test)]</code>); the C# side keeps them in a
+    separate <code>OspreySharp.Test</code> project. The IO module is
+    larger on the C# side mostly due to the BLIB writer surface;
+    Scoring is much smaller on the C# side because XCorr / cosine /
+    median-polish share helpers across resolutions instead of paying
+    the Rust generic-instantiation cost.
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Module</th>
+        <th style="text-align: right; padding: 2px 12px;">C# files</th>
+        <th style="text-align: right; padding: 2px 12px;">C# code</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust files</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust code</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust prod (est)</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust test (est)</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/RustProd</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">Core</td><td style="text-align: right; padding: 1px 12px;">24</td><td style="text-align: right; padding: 1px 12px;">1,226</td><td style="text-align: right; padding: 1px 12px;">7</td><td style="text-align: right; padding: 1px 12px;">1,945</td><td style="text-align: right; padding: 1px 12px;">1,587</td><td style="text-align: right; padding: 1px 12px;">358</td><td style="text-align: right; padding: 1px 12px;">0.63×</td><td style="text-align: right; padding: 1px 12px;">0.77×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">IO</td><td style="text-align: right; padding: 1px 12px;">13</td><td style="text-align: right; padding: 1px 12px;">4,177</td><td style="text-align: right; padding: 1px 12px;">11</td><td style="text-align: right; padding: 1px 12px;">3,676</td><td style="text-align: right; padding: 1px 12px;">2,896</td><td style="text-align: right; padding: 1px 12px;">780</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.14×</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.44×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Chromatography</td><td style="text-align: right; padding: 1px 12px;">7</td><td style="text-align: right; padding: 1px 12px;">1,833</td><td style="text-align: right; padding: 1px 12px;">6</td><td style="text-align: right; padding: 1px 12px;">3,749</td><td style="text-align: right; padding: 1px 12px;">2,273</td><td style="text-align: right; padding: 1px 12px;">1,476</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.49×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Scoring</td><td style="text-align: right; padding: 1px 12px;">9</td><td style="text-align: right; padding: 1px 12px;">2,160</td><td style="text-align: right; padding: 1px 12px;">8</td><td style="text-align: right; padding: 1px 12px;">7,769</td><td style="text-align: right; padding: 1px 12px;">5,744</td><td style="text-align: right; padding: 1px 12px;">2,025</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.28×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.38×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">FDR</td><td style="text-align: right; padding: 1px 12px;">12</td><td style="text-align: right; padding: 1px 12px;">2,725</td><td style="text-align: right; padding: 1px 12px;">4</td><td style="text-align: right; padding: 1px 12px;">4,867</td><td style="text-align: right; padding: 1px 12px;">3,219</td><td style="text-align: right; padding: 1px 12px;">1,648</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.56×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.85×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">ML</td><td style="text-align: right; padding: 1px 12px;">7</td><td style="text-align: right; padding: 1px 12px;">934</td><td style="text-align: right; padding: 1px 12px;">8</td><td style="text-align: right; padding: 1px 12px;">1,910</td><td style="text-align: right; padding: 1px 12px;">1,225</td><td style="text-align: right; padding: 1px 12px;">685</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.49×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.76×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Main (entry)</td><td style="text-align: right; padding: 1px 12px;">12</td><td style="text-align: right; padding: 1px 12px;">8,068</td><td style="text-align: right; padding: 1px 12px;">9</td><td style="text-align: right; padding: 1px 12px;">13,257</td><td style="text-align: right; padding: 1px 12px;">9,109</td><td style="text-align: right; padding: 1px 12px;">4,148</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.61×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.89×</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Production TOTAL</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>84</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>21,123</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>53</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>37,173</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>26,053</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>11,120</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.57×</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.81×</strong></td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">OspreySharp.Test</td><td style="text-align: right; padding: 1px 12px;">12</td><td style="text-align: right; padding: 1px 12px;">6,847</td><td style="text-align: right; padding: 1px 12px;" colspan="2" title="Rust tests are inline #[cfg(test)] blocks; no separate files">— (inline)</td><td style="text-align: right; padding: 1px 12px;">—</td><td style="text-align: right; padding: 1px 12px;">11,120</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;" colspan="2">0.62× vs Rust tests</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Prod + Tests TOTAL</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>96</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>27,970</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>53</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>37,173</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>26,053</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>11,120</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;" colspan="2"><strong>0.75× (C# / Rust)</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>Grand totals.</strong>
+    OspreySharp production: <strong>21.1 KLOC</strong> (84 files).
+    OspreySharp.Test (separate project): <strong>6.8 KLOC</strong>
+    (12 files). Combined: <strong>28.0 KLOC</strong> (96 files).
+    Osprey production (estimated, by stripping inline
+    <code>#[cfg(test)]</code> tails): <strong>26.1 KLOC</strong>.
+    Osprey inline tests (estimated): <strong>11.1 KLOC</strong>. Osprey
+    all code (cloc total, 53 files): <strong>37.2 KLOC</strong>.
+    Apples-to-apples ratios: <strong>production-only 0.81×</strong>
+    (C# / Rust), <strong>production+tests 0.75×</strong>. The C#
+    production side is consistently more compact than Rust's; the
+    test side is sparser, mostly because the C# pipeline has its own
+    full-stage parity gates (<code>Test-Snapshot</code>,
+    <code>Test-Regression</code>, <code>Test-Features</code>) that
+    sit outside the unit-test count.
+  </p>
+  <p>
+    Counts come from <code>cloc</code> (executable code only; build
+    artifacts excluded). The Rust prod/test split is a heuristic: per
+    <code>.rs</code> file, the first
+    <code>^\s*#[cfg(test)]</code> line marks the boundary and
+    everything to EOF is treated as test. Matches the standard
+    <code>mod tests { ... }</code> convention but undercounts the
+    test side when a crate intermixes test items in non-trailing
+    positions. Regenerate with
+    <code>pwsh -File ai/scripts/OspreySharp/Audit-Loc.ps1</code>.
   </p>
   <p style="font-size: 11px; color: #757575;">
     Detailed work log for the OspreySharp port lives in
