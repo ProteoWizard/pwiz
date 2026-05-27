@@ -178,7 +178,10 @@ namespace pwiz.Common.DataBinding.Filtering
             {
                 return FormatSingleToken(tokens[0]);
             }
-            return @"[" + string.Join(@", ", tokens.Select(FormatSingleToken)) + @"]";
+            // Join with the culture's CSV separator (";" in comma-decimal locales) so the item
+            // delimiter never collides with the decimal separator inside a value (e.g. French "422,5").
+            var itemSeparator = ListColumnValue.GetCsvSeparator(CultureInfo) + @" ";
+            return @"[" + string.Join(itemSeparator, tokens.Select(FormatSingleToken)) + @"]";
         }
 
         /// <summary>
@@ -248,10 +251,12 @@ namespace pwiz.Common.DataBinding.Filtering
             // Single operand token (string literal or number text)
             var singleToken = singleQuotedString.Or(unquotedNumber);
 
-            // Array of tokens: [value1, value2, ...]
+            // Array of tokens: [value1, value2, ...] delimited by the culture's CSV separator
+            // (";" in comma-decimal locales) so it cannot collide with a decimal comma in a value.
+            var listSeparator = ListColumnValue.GetCsvSeparator(CultureInfo);
             var arrayTokens = Parse.Char('[')
                 .Then(_ => ws)
-                .Then(_ => singleToken.DelimitedBy(ws.Then(_ => Parse.Char(',')).Then(_ => ws)))
+                .Then(_ => singleToken.DelimitedBy(ws.Then(_ => Parse.Char(listSeparator)).Then(_ => ws)))
                 .Then(values => ws.Then(_ => Parse.Char(']'))
                     .Return((IList<string>)values.ToList()));
 

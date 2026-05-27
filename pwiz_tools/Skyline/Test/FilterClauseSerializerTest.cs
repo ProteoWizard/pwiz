@@ -50,6 +50,17 @@ namespace pwiz.SkylineTest
             });
             VerifyFilterClause(typeof(SpectrumClass), new[]{clause1});
             VerifyFilterClause(typeof(SpectrumClass), new[]{clause1, clause2});
+
+            // A multi-value list operand must round-trip in comma-decimal cultures (e.g. French):
+            // the array item separator is the culture's CSV separator (";" when the decimal is ","),
+            // so it cannot collide with a decimal comma inside a value. VerifyFilterClause iterates
+            // invariant/en/fr/tr/zh/ja, so this guards the round-trip independent of the running culture.
+            var multiValueClause = new FilterClause(new[]
+            {
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.Ms2Precursors)),
+                    FilterOperations.OP_EQUALS, "422.5,475.7")
+            });
+            VerifyFilterClause(typeof(SpectrumClass), new[] { multiValueClause });
         }
 
         [TestMethod]
