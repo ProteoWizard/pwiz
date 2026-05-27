@@ -998,6 +998,13 @@ namespace pwiz.Skyline.Model
                     var filterString = ColumnString(Fields, Indices.SpectrumFilterColumn);
                     if (string.IsNullOrEmpty(filterString))
                         return default;
+                    // Surface a malformed Spectrum Filter as a row import error rather than letting a
+                    // FormatException escape and crash the import. FormatException is treated as a
+                    // programming defect (ExceptionUtil.IsProgrammingDefect), so the row loop's broad
+                    // catch would not handle it; InvalidDataException is recognized as user-actionable.
+                    var error = SpectrumClassFilter.ValidateFilterString(filterString);
+                    if (error != null)
+                        throw new InvalidDataException(error);
                     return SpectrumClassFilter.ParseFilterString(filterString);
                 }
             }

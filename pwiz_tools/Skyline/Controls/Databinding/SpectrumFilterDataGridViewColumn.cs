@@ -46,9 +46,14 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private static Image CreateEditImage()
         {
-            var editImage = new Bitmap(Resources.Edit_Item);
-            editImage.MakeTransparent(Color.Magenta);
-            return editImage;
+            // Resources.Edit_Item returns a fresh Bitmap; dispose it once we have copied it so the
+            // intermediate GDI handle is not leaked.
+            using (var resourceImage = Resources.Edit_Item)
+            {
+                var editImage = new Bitmap(resourceImage);
+                editImage.MakeTransparent(Color.Magenta);
+                return editImage;
+            }
         }
 
         private readonly Image[] _images = { EDIT_IMAGE };

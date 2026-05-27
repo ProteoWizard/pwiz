@@ -116,7 +116,8 @@ namespace pwiz.Common.DataBinding
             try
             {
                 var handler = dataSchema.GetFilterHandler(propertyType);
-                return handler.OperandToString(FilterOperation, CultureInfo.CurrentCulture, handler.DeserializeOperand(FilterOperation, InvariantOperandText));
+                // Format with the schema's locale (matches the parsing side), not the process culture
+                return handler.OperandToString(FilterOperation, dataSchema.DataSchemaLocalizer.FormatProvider, handler.DeserializeOperand(FilterOperation, InvariantOperandText));
             }
             catch (Exception)
             {

@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private bool _suppressErrorMessages;
         private DataGridViewPasteHandler _boundDataGridViewPasteHandler;
         private readonly ToolTip _cellEditToolTip;
+        private Control _cellEditToolTipControl;
         private bool _inColumnChange;
         private IViewContext _viewContext;
         private ReplicatePivotColumns _replicatePivotColumns;
@@ -109,6 +110,8 @@ namespace pwiz.Skyline.Controls.Databinding
                 if (editingControl != null)
                 {
                     _cellEditToolTip.Show(error, editingControl, 0, editingControl.Height, 3000);
+                    // Remember the control we showed against so we can hide against the same one
+                    _cellEditToolTipControl = editingControl;
                 }
             }
         }
@@ -127,7 +130,12 @@ namespace pwiz.Skyline.Controls.Databinding
             var cell = boundDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex];
             cell.ErrorText = string.Empty;
             cell.Style.ForeColor = Color.Empty;
-            _cellEditToolTip.Hide(boundDataGridView);
+            // Hide against the control the tooltip was shown on (not boundDataGridView), or it can linger
+            if (_cellEditToolTipControl != null)
+            {
+                _cellEditToolTip.Hide(_cellEditToolTipControl);
+                _cellEditToolTipControl = null;
+            }
         }
 
         private void boundDataGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
