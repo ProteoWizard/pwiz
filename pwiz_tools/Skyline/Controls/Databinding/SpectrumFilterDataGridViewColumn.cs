@@ -40,14 +40,22 @@ namespace pwiz.Skyline.Controls.Databinding
     /// </summary>
     public class SpectrumFilterDataGridViewColumn : TextImageColumn, ICellValidatingColumn
     {
-        private readonly Image[] _images;
+        // Shared so that creating columns repeatedly (different views/grids) does not leak a GDI
+        // bitmap handle each time. Resources.Edit_Item returns a fresh Bitmap on every access.
+        private static readonly Image EDIT_IMAGE = CreateEditImage();
+
+        private static Image CreateEditImage()
+        {
+            var editImage = new Bitmap(Resources.Edit_Item);
+            editImage.MakeTransparent(Color.Magenta);
+            return editImage;
+        }
+
+        private readonly Image[] _images = { EDIT_IMAGE };
 
         public SpectrumFilterDataGridViewColumn()
         {
             CellTemplate = new SpectrumFilterImageCell();
-            var editImage = new Bitmap(Resources.Edit_Item);
-            editImage.MakeTransparent(Color.Magenta);
-            _images = new Image[] { editImage };
         }
 
         public override IList<Image> Images

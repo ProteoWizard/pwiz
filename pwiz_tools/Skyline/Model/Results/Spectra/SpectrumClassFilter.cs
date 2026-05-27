@@ -175,11 +175,20 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return spec;
             }
             // InvariantOperandText is a single value or a comma-separated list of doubles (invariant
-            // formatting uses '.' for the decimal point and ',' to separate list items).
+            // formatting uses '.' for the decimal point and ',' to separate list items). Strip a
+            // leading minus sign from each numeric token but otherwise leave the text exactly as
+            // entered: the number of decimal places controls the match tolerance (PrecisionNumber),
+            // so reformatting (e.g. Math.Abs(value).ToString()) would silently change the tolerance.
             var absoluteText = string.Join(@",", operandText.Split(',').Select(token =>
-                double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
-                    ? Math.Abs(value).ToString(CultureInfo.InvariantCulture)
-                    : token));
+            {
+                var trimmed = token.Trim();
+                if (trimmed.StartsWith(@"-") &&
+                    double.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+                {
+                    return trimmed.Substring(1);
+                }
+                return token;
+            }));
             return new FilterSpec(spec.ColumnId,
                 FilterPredicate.FromInvariantOperandText(spec.Operation, absoluteText));
         }

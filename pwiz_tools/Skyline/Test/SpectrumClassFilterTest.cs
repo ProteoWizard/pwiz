@@ -74,6 +74,16 @@ namespace pwiz.SkylineTest
 
             var wrongMagnitudeFilter = SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -25");
             Assert.IsFalse(wrongMagnitudeFilter.MakePredicate()(spectrum));
+
+            // Magnitude normalization must preserve the entered precision (number of decimal places
+            // controls the match tolerance); it must not reformat the value to integer width.
+            // CE 17.4 is within integer tolerance of 17 but well outside the tolerance of 17.00.
+            var spectrumNear = new SpectrumMetadata(@"scan2", 1.0)
+                .ChangePrecursors(new[] { new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(17.4) } });
+            var precisePredicate = SpectrumClassFilter
+                .ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17.00").MakePredicate();
+            Assert.IsTrue(precisePredicate(spectrum));       // CE 17.0 is within the 17.00 tolerance
+            Assert.IsFalse(precisePredicate(spectrumNear));  // CE 17.4 is not
         }
 
         [TestMethod]

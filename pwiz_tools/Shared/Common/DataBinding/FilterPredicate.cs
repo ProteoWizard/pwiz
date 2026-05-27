@@ -54,7 +54,9 @@ namespace pwiz.Common.DataBinding
             }
 
             var handler = dataSchema.GetFilterHandler(columnType);
-            return new FilterPredicate(filterOperation, handler.SerializeOperand(filterOperation, handler.ParseOperand(filterOperation, CultureInfo.CurrentCulture, operandText)));
+            // Parse the operand using the schema's locale (as this method's summary documents),
+            // not the process current culture, which may differ (e.g. an invariant schema).
+            return new FilterPredicate(filterOperation, handler.SerializeOperand(filterOperation, handler.ParseOperand(filterOperation, dataSchema.DataSchemaLocalizer.FormatProvider, operandText)));
         }
 
         public static FilterPredicate SafeParse(DataSchema dataSchema, Type columnType,

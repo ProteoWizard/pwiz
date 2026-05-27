@@ -249,8 +249,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
-        /// If the spectrum has only one collision energy, then return that collision energy.
-        /// Otherwise, return null.
+        /// Returns the distinct collision energies found across the spectrum's precursor levels as a
+        /// list, or null if the spectrum reports none.
         /// </summary>
         private static FormattableList<double> GetCollisionEnergy(SpectrumMetadata spectrumMetadata)
         {

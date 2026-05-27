@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private bool _errorMessagePending;
         private bool _suppressErrorMessages;
         private DataGridViewPasteHandler _boundDataGridViewPasteHandler;
-        private readonly ToolTip _cellEditToolTip = new ToolTip();
+        private readonly ToolTip _cellEditToolTip;
         private bool _inColumnChange;
         private IViewContext _viewContext;
         private ReplicatePivotColumns _replicatePivotColumns;
@@ -62,6 +62,8 @@ namespace pwiz.Skyline.Controls.Databinding
         public DataboundGridControl()
         {
             InitializeComponent();
+            // Owned by the designer container so it is disposed with the control (avoids a native leak)
+            _cellEditToolTip = new ToolTip(components);
             _boundDataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView, bindingListSource);
             DataGridViewPasteHandler.Attach(ReplicatePivotDataGridView, bindingListSource);
             replicatePivotDataGridView.CellValueChanged += replicatePivotDataGridView_CellValueChanged;
