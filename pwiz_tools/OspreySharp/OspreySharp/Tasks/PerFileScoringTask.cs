@@ -83,6 +83,18 @@ namespace pwiz.OspreySharp.Tasks
             public RTCalibrationStats Stats;
             public MzCalibrationResult Ms1Calibration;
             public MzCalibrationResult Ms2Calibration;
+            // Total matches scored in this pass (before any q-value or S/N
+            // filtering). Plumbed into CalibrationMetadata.NumSampledPrecursors
+            // for parity with Rust's accumulated_matches.len().
+            public int MatchCount;
+            // (lib_rt, measured_rt) pairs that were actually fed to the LOESS
+            // fit for this pass. Exposed so the caller can emit the
+            // OSPREY_DUMP_LOESS_INPUT diagnostic only for the pass whose
+            // calibration is actually used (pass 1 always; pass 2 only on
+            // acceptance) -- mirroring Rust pipeline.rs's "dump reflects
+            // the calibration actually used" semantics.
+            public double[] LibRts;
+            public double[] MeasuredRts;
         }
 
         public override string Name => @"PerFileScoring";
@@ -969,6 +981,11 @@ namespace pwiz.OspreySharp.Tasks
             RTCalibration rtCalibration = null;
             MzCalibrationResult ms2Cal = MzCalibrationResult.Uncalibrated();
             MzCalibrationResult ms1Cal = MzCalibrationResult.Uncalibrated();
+            // Total matches scored during pass 1 of calibration; threaded
+            // into CalibrationMetadata.NumSampledPrecursors to match Rust's
+            // accumulated_matches.len() (Stellar Single: 192289). Stays 0
+            // when calibration is loaded from a cached JSON.
+            int numSampledPrecursorsForMetadata = 0;
 
             // BISECT: load Rust's calibration JSON instead of computing our own.
             // This eliminates calibration noise from the feature comparison.
@@ -1023,7 +1040,7 @@ namespace pwiz.OspreySharp.Tasks
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = RunCalibration(
                     fullLibrary, spectra, ms1Spectra, context,
-                    out ms1Cal, out ms2Cal);
+                    out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
                 _ctx.LogInfo(string.Format(
@@ -1048,8 +1065,16 @@ namespace pwiz.OspreySharp.Tasks
                     Metadata = new CalibrationMetadata
                     {
                         CalibrationSuccessful = rtCalibration != null,
-                        NumConfidentPeptides = 0,
-                        NumSampledPrecursors = 0,
+                        // Match Rust's CalibrationMetadata field semantics
+                        // (osprey/src/pipeline.rs:1144-1145):
+                        //   num_confident_peptides = LOESS points used by the
+                        //     fit actually saved (post-S/N filter)
+                        //   num_sampled_precursors = total matches scored
+                        //     during sampling (pre any q-value / S/N filter)
+                        NumConfidentPeptides = rtCalibration != null
+                            ? rtCalibration.Stats().NPoints
+                            : 0,
+                        NumSampledPrecursors = numSampledPrecursorsForMetadata,
                         Timestamp = DateTime.UtcNow.ToString("o")
                     },
                     Ms1Calibration = MzCalibrationJson.FromResult(ms1Cal),
@@ -1305,9 +1330,13 @@ namespace pwiz.OspreySharp.Tasks
             List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             out MzCalibrationResult ms1Calibration,
-            out MzCalibrationResult ms2Calibration)
+            out MzCalibrationResult ms2Calibration,
+            out int numSampledPrecursors)
         {
             var config = context.Config;
+            // Default to 0 so early returns / exception paths leave the
+            // metadata caller in a known state. Overwritten on success.
+            numSampledPrecursors = 0;
             _ctx.LogInfo("Running RT calibration...");
 
             // Calculate library and mzML RT ranges
@@ -1432,6 +1461,24 @@ namespace pwiz.OspreySharp.Tasks
                 return null;
             }
 
+            // Pass 1 succeeded -- emit the OSPREY_DUMP_LOESS_INPUT diagnostic
+            // for the pass-1 fit unconditionally. If pass 2 is later accepted
+            // it will overwrite this with the pass-2 pairs; if pass 2 is
+            // rejected (or never runs) the pass-1 dump stays, matching the
+            // calibration actually used. Mirrors Rust pipeline.rs.
+            if (OspreyDiagnostics.DumpLoessInput)
+            {
+                OspreyDiagnostics.WriteLoessInputDump(1, pass1.LibRts, pass1.MeasuredRts);
+                if (OspreyDiagnostics.LoessInputOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
+            }
+
+            // Match Rust accumulated_matches.len() semantics: report pass 1's
+            // total scored matches (before any q-value / S/N filtering).
+            // Pass 2 is a refinement using narrowed RT tolerance and does not
+            // change the sampled-precursor count.
+            numSampledPrecursors = pass1.MatchCount;
+
             // === Iterative calibration refinement (2-pass) ===
             // Mirrors Rust pipeline.rs:714-839.
             // MAD * 1.4826 ~ SD for a normal distribution; 3* that covers ~99.7%.
@@ -1484,6 +1531,15 @@ namespace pwiz.OspreySharp.Tasks
                     // by more than 1% (matches Rust pipeline.rs:811).
                     if (pass2.Stats.RSquared >= pass1.Stats.RSquared * 0.99)
                     {
+                        // Overwrite the OSPREY_DUMP_LOESS_INPUT dump with
+                        // pass 2's points so the diagnostic reflects the
+                        // calibration actually being used. Mirrors Rust
+                        // pipeline.rs; only fires on acceptance.
+                        if (OspreyDiagnostics.DumpLoessInput)
+                        {
+                            OspreyDiagnostics.WriteLoessInputDump(
+                                2, pass2.LibRts, pass2.MeasuredRts);
+                        }
                         ms1Calibration = pass2.Ms1Calibration;
                         ms2Calibration = pass2.Ms2Calibration;
                         return pass2.Calibration;
@@ -1726,6 +1782,10 @@ namespace pwiz.OspreySharp.Tasks
             // filter). This is the same set used for RT calibration points.
             var allMs1Errors = new List<double>();
             var allMs2Errors = new List<double>();
+            // Track contributing matches in a stable list so a cross-impl
+            // bisection dump can replay them in the same order the
+            // calibration accumulator sees their errors.
+            var contributingMatches = new List<CalibrationMatch>();
             foreach (var m in matchArray)
             {
                 if (m.Ms2MassErrors == null || m.IsDecoy || m.QValue > CAL_FDR_THRESHOLD)
@@ -1736,6 +1796,13 @@ namespace pwiz.OspreySharp.Tasks
                 if (m.Ms1Error.HasValue)
                     allMs1Errors.Add(m.Ms1Error.Value);
                 allMs2Errors.AddRange(m.Ms2MassErrors);
+                contributingMatches.Add(m);
+            }
+            if (OspreyDiagnostics.DumpMs2CalErrors)
+            {
+                OspreyDiagnostics.WriteMs2CalErrorsDump(contributingMatches);
+                if (OspreyDiagnostics.Ms2CalErrorsOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_MS2_CAL_ERRORS_ONLY");
             }
             string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
             var ms1Cal = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
@@ -1764,15 +1831,12 @@ namespace pwiz.OspreySharp.Tasks
                     ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust
                 };
 
-                // Cross-implementation diagnostic: dump the (lib_rt, measured_rt) pairs
-                // fed to LOESS. Used to verify Rust and C# see identical inputs
-                // before LOESS fitting.
-                if (OspreyDiagnostics.DumpLoessInput)
-                {
-                    OspreyDiagnostics.WriteLoessInputDump(passNumber, libRts, measuredRts);
-                    if (OspreyDiagnostics.LoessInputOnly)
-                        OspreyDiagnostics.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
-                }
+                // NOTE: the OSPREY_DUMP_LOESS_INPUT diagnostic is emitted by
+                // the caller (RunCalibration) so that pass 2 only dumps when
+                // it is actually accepted -- mirrors Rust pipeline.rs (and
+                // matches the PR #42 semantics of "dump reflects the
+                // calibration actually used"). The pairs are returned via
+                // CalibrationPassResult.LibRts/MeasuredRts.
 
                 var calibrator = new RTCalibrator(calibratorConfig);
                 var rtCal = calibrator.Fit(libRts, measuredRts);
@@ -1791,6 +1855,9 @@ namespace pwiz.OspreySharp.Tasks
                     Stats = stats,
                     Ms1Calibration = ms1Cal,
                     Ms2Calibration = ms2Cal,
+                    MatchCount = matchArray.Length,
+                    LibRts = libRts,
+                    MeasuredRts = measuredRts,
                 };
             }
             catch (Exception ex)

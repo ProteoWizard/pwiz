@@ -85,6 +85,19 @@ namespace pwiz.OspreySharp
         /// </summary>
         public Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> PerFileConsensusTargets { get; set; }
 
+        /// <summary>
+        /// Full set of file stems participating in the planner's join, as
+        /// read from <c>reconciliation.json</c>'s <c>file_stems</c> field
+        /// (v2+). Per-file Stage 6 rescore workers carry this through so
+        /// they can compute the join-wide reconciliation parameter hash —
+        /// the worker's <c>OspreyConfig.InputFiles</c> only has its single
+        /// parquet, but the hash that the downstream
+        /// <c>--join-at-pass=2</c> merge node validates is computed over
+        /// all files. Empty list when reading a v1 envelope (the worker
+        /// falls back to its <c>InputFiles</c> stems in that case).
+        /// </summary>
+        public List<string> JoinFileStems { get; set; }
+
         /// <summary>Total non-Keep reconciliation actions across all files.</summary>
         public int TotalActions => ReconciliationActions.Count;
 
@@ -215,6 +228,11 @@ namespace pwiz.OspreySharp
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
             var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
             var reconciliationActions = new Dictionary<(string, int), ReconcileAction>();
+            // Captured from the first envelope's file_stems field (v2+);
+            // every subsequent envelope must carry the same set so the
+            // worker's join-wide reconciliation hash matches the planner's.
+            // Mirrors the consistency check in Rust hydrate_for_rescore.
+            List<string> joinFileStems = null;
 
             for (int i = 0; i < perFileEntries.Count; i++)
             {
@@ -247,6 +265,32 @@ namespace pwiz.OspreySharp
                     throw new InvalidDataException(string.Format(
                         "HydrateReconciliationOverlay: failed to read {0}: {1}",
                         reconPath, ex.Message), ex);
+                }
+
+                // Capture / validate file_stems across all envelopes.
+                // ReconciliationFile.Load already rejects any envelope whose
+                // format_version != CurrentFormatVersion (currently 2), so by
+                // the time we reach here `envelope.FileStems` must be the
+                // planner's full join file set -- a non-empty list, identical
+                // across every envelope produced by a single planner step.
+                // Any disagreement (including unexpected empty stems) means
+                // the on-disk envelopes were produced by different planner
+                // steps and indicates a corrupted hand-off. Mirrors the
+                // consistency check in Rust's hydrate_for_rescore.
+                var envelopeStems = NormalizeStems(envelope.FileStems);
+                if (joinFileStems == null)
+                {
+                    joinFileStems = envelopeStems;
+                }
+                else if (!StemsEqual(joinFileStems, envelopeStems))
+                {
+                    throw new InvalidDataException(string.Format(
+                        "HydrateReconciliationOverlay: reconciliation.json {0} carries a " +
+                        "different file_stems set than its siblings (planner inconsistency). " +
+                        "Expected: [{1}]; got: [{2}]",
+                        reconPath,
+                        string.Join(", ", joinFileStems),
+                        string.Join(", ", envelopeStems)));
                 }
 
                 // Build entry_id -> vec_idx map from the loaded stubs so the
@@ -322,7 +366,48 @@ namespace pwiz.OspreySharp
                 RefinedCalibrations = refinedCalibrations,
                 PerFileGapFill = perFileGapFill,
                 PerFileConsensusTargets = null,
+                JoinFileStems = joinFileStems ?? new List<string>(),
             };
+        }
+
+        /// <summary>
+        /// Sort + dedup a list of file stems (Ordinal). Returns a new list;
+        /// the input is not mutated. Empty / null input becomes an empty
+        /// list. Used to canonicalize the <c>file_stems</c> field from
+        /// each <c>reconciliation.json</c> envelope before consistency
+        /// checks across siblings.
+        /// </summary>
+        private static List<string> NormalizeStems(IList<string> stems)
+        {
+            if (stems == null || stems.Count == 0)
+                return new List<string>();
+            var result = new List<string>(stems.Count);
+            foreach (var s in stems)
+            {
+                if (!string.IsNullOrEmpty(s))
+                    result.Add(s);
+            }
+            result.Sort(StringComparer.Ordinal);
+            for (int i = result.Count - 1; i > 0; i--)
+            {
+                if (string.Equals(result[i], result[i - 1], StringComparison.Ordinal))
+                    result.RemoveAt(i);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Ordinal element-wise equality on two pre-normalized stem lists.
+        /// </summary>
+        private static bool StemsEqual(IList<string> a, IList<string> b)
+        {
+            if (a.Count != b.Count) return false;
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (!string.Equals(a[i], b[i], StringComparison.Ordinal))
+                    return false;
+            }
+            return true;
         }
 
         /// <summary>

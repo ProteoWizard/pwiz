@@ -22,7 +22,6 @@
  */
 
 using pwiz.OspreySharp.Core;
-using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp
 {

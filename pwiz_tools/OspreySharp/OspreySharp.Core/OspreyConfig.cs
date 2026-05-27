@@ -388,6 +388,33 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public string ReconciliationParameterHash()
         {
+            var stems = new List<string>(InputFiles?.Count ?? 0);
+            if (InputFiles != null)
+            {
+                foreach (var path in InputFiles)
+                {
+                    string stem = Path.GetFileNameWithoutExtension(path);
+                    if (!string.IsNullOrEmpty(stem))
+                        stems.Add(stem);
+                }
+            }
+            return ReconciliationParameterHashForStems(stems);
+        }
+
+        /// <summary>
+        /// Compute the reconciliation parameter hash for an explicit set of
+        /// file stems. Used by per-file Stage 6 rescore workers, whose
+        /// <see cref="InputFiles"/> only carries this worker's single
+        /// parquet — the hash that the downstream <c>--join-at-pass=2</c>
+        /// merge node expects is computed over ALL files in the join, so
+        /// the worker must read the full set from the planner's
+        /// <c>reconciliation.json</c> envelope and pass it in here. The
+        /// stems are sorted + deduped internally so the hash is invariant
+        /// to caller ordering. Mirrors Rust
+        /// <c>OspreyConfig::reconciliation_parameter_hash_for_stems</c>.
+        /// </summary>
+        public string ReconciliationParameterHashForStems(IReadOnlyList<string> fileStems)
+        {
             using (var sha256 = SHA256.Create())
             {
                 var ic = System.Globalization.CultureInfo.InvariantCulture;
@@ -401,17 +428,31 @@ namespace pwiz.OspreySharp.Core
                 // Mirror Rust's `format!("file_stems:{:?}\n", stems)` output
                 // exactly. {:?} on Vec<String> yields ["a", "b"] with the
                 // brackets and double-quoted, comma-space-separated values.
-                var stems = new List<string>(InputFiles?.Count ?? 0);
-                if (InputFiles != null)
+                // Stems are sorted + deduped here so the hash matches the
+                // Rust side, which also sorts + dedups before hashing.
+                var stems = new List<string>(fileStems?.Count ?? 0);
+                if (fileStems != null)
                 {
-                    foreach (var path in InputFiles)
+                    foreach (var stem in fileStems)
                     {
-                        string stem = Path.GetFileNameWithoutExtension(path);
                         if (!string.IsNullOrEmpty(stem))
                             stems.Add(stem);
                     }
                 }
                 stems.Sort(StringComparer.Ordinal);
+                // Dedup in place (stems is sorted, so duplicates are
+                // adjacent). Rust does `dedup()` on a sorted Vec; same here.
+                int write = 0;
+                for (int read = 0; read < stems.Count; read++)
+                {
+                    if (read == 0 || !string.Equals(stems[read], stems[read - 1], StringComparison.Ordinal))
+                    {
+                        stems[write++] = stems[read];
+                    }
+                }
+                if (write < stems.Count)
+                    stems.RemoveRange(write, stems.Count - write);
+
                 var stemsList = new StringBuilder("[");
                 for (int i = 0; i < stems.Count; i++)
                 {
