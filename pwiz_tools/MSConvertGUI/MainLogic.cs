@@ -322,7 +322,16 @@ namespace MSConvertGUI
                             break;
                         case "--zlib":
                         case "-z":
-                            zlib = true;
+                            // This loop pre-replaces '=' with ' ', so --zlib=off arrives as two tokens
+                            // ["--zlib", "off"]; peek and consume an explicit off/false value.
+                            if (x + 1 < commandList.Length &&
+                                (commandList[x + 1] == "off" || commandList[x + 1] == "false"))
+                            {
+                                zlib = false;
+                                x++;
+                            }
+                            else
+                                zlib = true;
                             break;
                         case "--gzip":
                         case "-g":
