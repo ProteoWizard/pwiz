@@ -212,6 +212,23 @@ namespace pwiz.OspreySharp
             ctx.LogInfo(string.Format(@"[task] {0}: done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
 
+            // [STAGE-WALL] one line per task->stage with parseable format
+            // for Measure-Pipeline.ps1 / Osprey-workflow.html perf tables.
+            // MergeNodeTask emits its own stage7 + blib lines internally
+            // (one task -> two pipeline stages).
+            string stageName = task.Name switch
+            {
+                "PerFileScoring" => "stage1to4",
+                "FirstJoin"      => "stage5",
+                "PerFileRescore" => "stage6",
+                _                => null,
+            };
+            if (stageName != null)
+            {
+                ctx.LogInfo(string.Format(@"[STAGE-WALL] {0}: {1:F1}s",
+                    stageName, sw.Elapsed.TotalSeconds));
+            }
+
             // Write sidecars whenever the task ran without setting a
             // non-zero exit code. Several tasks intentionally return
             // false on success to stop the pipeline at a configured

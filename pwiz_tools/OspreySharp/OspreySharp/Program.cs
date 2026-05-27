@@ -38,7 +38,18 @@ namespace pwiz.OspreySharp
         // Tracks the Rust Osprey upstream version this OspreySharp port
         // is aligned with. Used in parquet footer metadata; the Phase 3
         // validator requires same major.minor across cross-impl handoff.
-        internal const string VERSION = "26.6.0";
+        // TODO: 26.6.1 bumped the version string but the algorithmic
+        // payload of v26.6.1 (reconciliation pairing library-supplied
+        // decoys by base_id instead of stripping a DECOY_ prefix in
+        // compute_consensus_rts + plan_reconciliation) is NOT yet
+        // ported to this side. It does not affect reverse-decoy mode
+        // (Stellar, DecoysInLibrary=false), but it WILL affect any
+        // dataset run with --decoys-in-library. See osprey
+        // release-notes/RELEASE_NOTES_v26.6.1.md and the
+        // test_consensus_rts_pairs_library_decoy_by_base_id +
+        // test_plan_reconciliation_includes_library_decoy_via_base_id
+        // regression tests on the Rust side.
+        internal const string VERSION = "26.6.1";
         internal const string VERSION_STRING = VERSION;
 
         static int Main(string[] args)

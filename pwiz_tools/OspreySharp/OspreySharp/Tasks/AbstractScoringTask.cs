@@ -2975,6 +2975,18 @@ namespace pwiz.OspreySharp.Tasks
                     deduped.Add(pair.Value);
             }
 
+            // Sort by EntryId for deterministic order regardless of Dictionary
+            // iteration. Mirrors Rust deduplicate_pairs's final sort_by_key
+            // (pipeline.rs:6123) and its comment: "Without this, the random
+            // HashMap order propagates to SVM feature matrix row ordering,
+            // causing non-deterministic gradient updates and model weights."
+            // Cross-impl: the straight-through path feeds these entries
+            // directly to Percolator (no parquet round-trip to mask the
+            // un-sorted order), so an unsorted dedup output cascades into
+            // SVM working-set divergence and ~190-precursor / ~270-peptide
+            // first-pass FDR drift on Stellar Single.
+            deduped.Sort((a, b) => a.EntryId.CompareTo(b.EntryId));
+
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {

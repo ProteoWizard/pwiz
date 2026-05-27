@@ -1859,6 +1859,7 @@ namespace pwiz.OspreySharp.Test
                     new ForcedIntegrationEntry { EntryId = 201, ExpectedRt = 18.5,   HalfWidth = 0.05  },
                 },
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                FileStems = new List<string> { "round_trip" },
                 GapFillTargets = new List<GapFillEntry>
                 {
                     new GapFillEntry
@@ -2145,6 +2146,7 @@ namespace pwiz.OspreySharp.Test
                 var reconFile = new ReconciliationFile
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                    FileStems = new List<string> { stem },
                     SearchHash = "abc123",
                     LibraryHash = "lib-h",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
@@ -2280,6 +2282,7 @@ namespace pwiz.OspreySharp.Test
                 var reconFile = new ReconciliationFile
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                    FileStems = new List<string> { stem },
                     SearchHash = "x",
                     LibraryHash = "y",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
@@ -2323,23 +2326,38 @@ namespace pwiz.OspreySharp.Test
         /// does between first-pass FDR and Stage 6 — see
         /// AnalysisPipeline's "First-pass compaction" block.
         ///
+        /// Compaction predicate is the UNION of (a) the local-FDR
+        /// predicate (peptide_q OR protein_q pass) AND (b) every
+        /// base_id that has a reconciliation action emitted by the
+        /// planner. The planner runs cross-file consensus rescue
+        /// (ConsensusRts.Compute), so an entry whose own file fails
+        /// local first-pass FDR can still be a reconciliation target
+        /// when its peptide passes FDR in a sibling file. Without the
+        /// union, the local-FDR-only predicate drops those entries and
+        /// their planner actions are silently dropped too -- the
+        /// reconciled .scores.parquet ends up with stale Stage 4 apex_rt
+        /// / bounds for the rescued entries and the blib output diverges
+        /// from the in-memory straight-through pipeline.
+        ///
         /// Test layout (single file, five entries):
         ///   idx 0: target id=1, peptide_q=0.005 (PASS peptide)
         ///   idx 1: decoy  id=0x80000001, base=1 (retained via target's base_id)
-        ///   idx 2: target id=2, peptide_q=0.5  (FAIL — non-passing)
-        ///   idx 3: decoy  id=0x80000002, base=2 (dropped because base=2 not in pass set)
+        ///   idx 2: target id=2, peptide_q=0.5  (FAIL local; PLANNER ACTION at (f,2))
+        ///   idx 3: decoy  id=0x80000002, base=2 (retained via target's base_id from action)
         ///   idx 4: target id=3, peptide_q=0.5, protein_q=0.005 (PASS via protein-rescue)
         ///
-        /// With ProteinFdr=0.01, base_ids {1, 3} pass. After compaction:
-        ///   idx 0: id=1, idx 1: id=0x80000001, idx 2: id=3.
+        /// With ProteinFdr=0.01 AND the planner-action union:
+        ///   local-FDR pass: base_ids {1, 3}
+        ///   planner action targets: base_ids {1, 2, 3}
+        ///   UNION: base_ids {1, 2, 3} — all 5 entries survive compaction.
         ///
         /// Reconciliation actions are seeded at:
-        ///   (f, 0) on id=1  → should remain at (f, 0)
-        ///   (f, 4) on id=3  → should move to (f, 2)
-        ///   (f, 2) on id=2  → should be dropped (entry compacted away)
+        ///   (f, 0) on id=1  → remains at (f, 0) (no compaction shift)
+        ///   (f, 4) on id=3  → remains at (f, 4)
+        ///   (f, 2) on id=2  → remains at (f, 2) (entry survives via union)
         /// </summary>
         [TestMethod]
-        public void TestRescoreCompactionRekeysActionsAndDropsNonpassing()
+        public void TestRescoreCompactionUnionsActionsWithLocalFdrPredicate()
         {
             const string fileName = "f1";
             var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
@@ -2375,30 +2393,30 @@ namespace pwiz.OspreySharp.Test
                 ProteinFdr = 0.01,
             });
 
-            // Compaction stats.
+            // Compaction stats: planner-action union keeps base 2 alive.
             Assert.AreEqual(5, stats.EntriesBefore);
-            Assert.AreEqual(3, stats.EntriesAfter);
-            Assert.AreEqual(2, stats.FirstPassBaseIds);   // base_ids {1, 3}
-            Assert.AreEqual(1, stats.DroppedActions);     // the (f, 2) action
+            Assert.AreEqual(5, stats.EntriesAfter);
+            Assert.AreEqual(3, stats.FirstPassBaseIds);   // base_ids {1, 2, 3}
+            Assert.AreEqual(0, stats.DroppedActions);     // no actions dropped
 
-            // Per-file list compacted.
+            // Per-file list unchanged (all base_ids survived).
             Assert.AreEqual(1, inputs.PerFileEntries.Count);
             var got = inputs.PerFileEntries[0].Value;
-            Assert.AreEqual(3, got.Count);
+            Assert.AreEqual(5, got.Count);
             Assert.AreEqual(1u, got[0].EntryId);
             Assert.AreEqual(0x80000001u, got[1].EntryId);
-            Assert.AreEqual(3u, got[2].EntryId);
+            Assert.AreEqual(2u, got[2].EntryId);
+            Assert.AreEqual(0x80000002u, got[3].EntryId);
+            Assert.AreEqual(3u, got[4].EntryId);
 
-            // Reconciliation actions re-keyed.
-            Assert.AreEqual(2, inputs.ReconciliationActions.Count);
+            // All 3 reconciliation actions preserved.
+            Assert.AreEqual(3, inputs.ReconciliationActions.Count);
             Assert.IsInstanceOfType(
                 inputs.ReconciliationActions[(fileName, 0)], typeof(ReconcileAction.UseCwtPeak));
             Assert.IsInstanceOfType(
-                inputs.ReconciliationActions[(fileName, 2)],
-                typeof(ReconcileAction.ForcedIntegration));
-            // The action at the dropped entry is gone, NOT silently re-keyed
-            // to a different surviving entry.
-            Assert.IsFalse(inputs.ReconciliationActions.ContainsKey((fileName, 1)));
+                inputs.ReconciliationActions[(fileName, 2)], typeof(ReconcileAction.UseCwtPeak));
+            Assert.IsInstanceOfType(
+                inputs.ReconciliationActions[(fileName, 4)], typeof(ReconcileAction.ForcedIntegration));
         }
 
         /// <summary>

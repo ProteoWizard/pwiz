@@ -102,6 +102,167 @@ namespace pwiz.OspreySharp.Tasks
             // Stage 8: Protein FDR (optional)
             if (config.ProteinFdr.HasValue)
             {
+                // Run 2nd-pass Percolator on the post-reconciliation
+                // entries when any 2nd-pass FDR sidecar is missing.
+                // Mirrors Rust pipeline.rs:4394-4468. After Stage 6
+                // reconciliation, the entries' Features have been
+                // overwritten with rescored values, but their Scores
+                // are still the 1st-pass Percolator output (from
+                // FirstJoinTask). Without this 2nd-pass run, protein
+                // FDR (Stage 8) and the blib output would use stale
+                // 1st-pass scores; in the HPC distribution case the
+                // straight-through pipeline would silently lose ~25%
+                // of the precursors it produces -- the missing
+                // 2nd-pass step was the root cause behind the C#
+                // Stage 7 algorithmic divergence (issue: "Bug C").
+                if (perFileParquetPaths.Count > 0 && config.InputFiles != null)
+                {
+                    var inputByFileName = new Dictionary<string, string>(StringComparer.Ordinal);
+                    foreach (var inputFile in config.InputFiles)
+                        inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+                    // Surface any perFileEntries key that has no matching
+                    // entry in config.InputFiles -- a silent skip here would
+                    // hide a name-drift bug that the standard cross-impl gate
+                    // (where keys always match) cannot catch.
+                    var unmatchedKeys = perFileEntries
+                        .Where(kvp => !inputByFileName.ContainsKey(kvp.Key))
+                        .Select(kvp => kvp.Key)
+                        .ToList();
+                    if (unmatchedKeys.Count > 0)
+                    {
+                        ctx.LogWarning(string.Format(
+                            "--join-at-pass=2: {0} perFileEntries key(s) have no matching " +
+                            "config.InputFiles entry and will be skipped: [{1}]. This usually " +
+                            "indicates an input-file rename or path drift between Stage 5 and " +
+                            "Stage 7; the skipped files will not get a 2nd-pass sidecar.",
+                            unmatchedKeys.Count, string.Join(", ", unmatchedKeys)));
+                    }
+
+                    int missingPass2 = 0;
+                    int totalFiles = 0;
+                    foreach (var kvp in perFileEntries)
+                    {
+                        totalFiles++;
+                        if (!inputByFileName.TryGetValue(kvp.Key, out string probeInput))
+                            continue;
+                        if (!File.Exists(FdrScoresSidecar.Pass2Path(probeInput)))
+                            missingPass2++;
+                    }
+                    if (missingPass2 > 0)
+                    {
+                        ctx.LogInfo(string.Format(
+                            "--join-at-pass=2: {0}/{1} file(s) lack a 2nd-pass sidecar -- running " +
+                            "second-pass FDR to compute scores from reconciled features " +
+                            "(HPC distribution path; mirrors Rust pipeline.rs:4394-4468).",
+                            missingPass2, totalFiles));
+                        ctx.LogInfo(string.Empty);
+                        ctx.LogInfo("Second-pass FDR");
+                        // Reload PIN features from the reconciled parquets.
+                        // PerFileScoringTask's bundle-hydration path
+                        // explicitly nulls Features after stub load (see
+                        // PerFileScoringTask.cs ~line 710) to keep
+                        // PerFileRescoreTask.WriteReconciledParquet's
+                        // "Features != null means this entry was rescored"
+                        // criterion. That assumption was safe when Stage 7
+                        // didn't run Percolator -- with the Bug C 2nd-pass
+                        // wired in below, we now need the 21-PIN features
+                        // for SVM training, so pull them back from the
+                        // post-Stage-6 reconciled parquet. The features
+                        // there are the rescored values that Stage 6 wrote
+                        // back, so they are the correct input for 2nd-pass
+                        // Percolator. Mirrors Rust pipeline.rs:4209-4218
+                        // (run_search loads PIN features from parquet
+                        // before second-pass FDR via the cache path).
+                        var swReloadFeats = Stopwatch.StartNew();
+                        int nReloaded = 0;
+                        foreach (var kvp in perFileEntries)
+                        {
+                            if (!perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath))
+                            {
+                                // No first-join parquet was produced (or mapped) for this
+                                // file. The {0} entries below will go into the second-pass
+                                // Percolator with stale / null Features, which silently
+                                // regresses 2nd-pass FDR -- log so the operator can detect
+                                // an incomplete first-join hand-off.
+                                ctx.LogWarning(string.Format(
+                                    "Second-pass FDR: no parquet path mapped for file '{0}' " +
+                                    "({1} entries will run with stale/null features). " +
+                                    "Check first-join output completeness.",
+                                    kvp.Key, kvp.Value.Count));
+                                continue;
+                            }
+                            List<double[]> featRows;
+                            try
+                            {
+                                featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
+                            }
+                            catch (Exception ex)
+                            {
+                                ctx.LogWarning(string.Format(
+                                    "Second-pass FDR: failed to reload PIN features from {0}: {1}",
+                                    parquetPath, ex.Message));
+                                continue;
+                            }
+                            int nMapped = 0;
+                            foreach (var entry in kvp.Value)
+                            {
+                                int idx = (int)entry.ParquetIndex;
+                                if (idx >= 0 && idx < featRows.Count)
+                                {
+                                    entry.Features = featRows[idx];
+                                    nMapped++;
+                                }
+                            }
+                            // An entry whose ParquetIndex lies past the loaded row count
+                            // is a stub/parquet mismatch (e.g., the first-join parquet
+                            // was regenerated with fewer rows than the in-memory FDR
+                            // stubs reference). Such entries silently keep their stale
+                            // Features and corrupt 2nd-pass FDR; warn so the mismatch
+                            // is visible.
+                            if (nMapped < kvp.Value.Count)
+                            {
+                                ctx.LogWarning(string.Format(
+                                    "Second-pass FDR: file '{0}' parquet has {1} feature rows " +
+                                    "but {2} FDR entries reference it; {3} entries will run with " +
+                                    "stale/null features. Stub/parquet mismatch -- check first-join " +
+                                    "output integrity.",
+                                    kvp.Key, featRows.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
+                            }
+                            nReloaded += nMapped;
+                        }
+                        swReloadFeats.Stop();
+                        ctx.LogInfo(string.Format(
+                            "[TIMING] Reloaded PIN features for {0} entries: {1:F1}s",
+                            nReloaded, swReloadFeats.Elapsed.TotalSeconds));
+
+                        var swPass2 = Stopwatch.StartNew();
+                        switch (config.FdrMethod)
+                        {
+                            case FdrMethod.Percolator:
+                                FirstJoinTask.RunPercolatorFdr(
+                                    perFileEntries, fullLibrary, config, ctx, "Second-pass");
+                                break;
+                            // Simple / Mokapot 2nd-pass paths intentionally
+                            // not implemented yet -- the in-process pipeline's
+                            // FirstJoinTask.RunFdr already covers Simple, and
+                            // Mokapot is not used in OspreySharp's current
+                            // scope. If those become relevant for an HPC chain,
+                            // mirror the Rust dispatch in pipeline.rs:4424-4448.
+                            default:
+                                ctx.LogWarning(string.Format(
+                                    "Second-pass FDR: {0} is not supported in MergeNodeTask; " +
+                                    "skipping (protein FDR will run on first-pass scores)",
+                                    config.FdrMethod));
+                                break;
+                        }
+                        swPass2.Stop();
+                        ctx.LogInfo(string.Format(
+                            "[STAGE-WALL] second-pass-fdr: {0:F1}s",
+                            swPass2.Elapsed.TotalSeconds));
+                    }
+                }
+
                 // Persist post-Stage-6 per-file 2nd-pass FDR scores
                 // BEFORE RunProteinFdr. The sidecar holds Score +
                 // run/experiment precursor/peptide q-values + Pep +
@@ -127,6 +288,22 @@ namespace pwiz.OspreySharp.Tasks
                     var inputByFileName = new Dictionary<string, string>();
                     foreach (var inputFile in config.InputFiles)
                         inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+                    // Surface any perFileEntries key not in config.InputFiles
+                    // -- a silent skip below would mean that file gets no
+                    // .2nd-pass sidecar written and the next resume re-runs
+                    // its second-pass FDR unnecessarily.
+                    var unmatchedSidecarKeys = perFileEntries
+                        .Where(kvp => !inputByFileName.ContainsKey(kvp.Key))
+                        .Select(kvp => kvp.Key)
+                        .ToList();
+                    if (unmatchedSidecarKeys.Count > 0)
+                    {
+                        ctx.LogWarning(string.Format(
+                            "2nd-pass sidecar write: {0} perFileEntries key(s) have no matching " +
+                            "config.InputFiles entry and will be skipped: [{1}].",
+                            unmatchedSidecarKeys.Count, string.Join(", ", unmatchedSidecarKeys)));
+                    }
 
                     // Compute the task validity key once so each per-file
                     // .MergeNode.osprey.task sidecar carries an identical
@@ -198,13 +375,68 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
 
+                // Re-load 2nd-pass FDR sidecar onto the post-compaction stub list.
+                // After the post-Stage-6 rehydration path, every stub still carries
+                // the 1st-pass q-values from RescoreHydration's 1st-pass sidecar
+                // overlay (PerFileScoringTask). The 2nd-pass q-values produced by
+                // Stage 6's reconciliation-aware rescore live in the
+                // .2nd-pass.fdr_scores.bin sidecar (or were just computed above and
+                // written to it). RunProteinFdr's detected_peptides gate filters on
+                // ExperimentPrecursorQvalue, which has to be the 2nd-pass value to
+                // match Rust pipeline.rs:4480-4494's reload-then-second-pass-FDR
+                // sequence. Without this reload, single-file --join-at-pass=2 runs
+                // include ~19 borderline peptides whose 1st-pass q-value passes
+                // <=1% but 2nd-pass q-value does not, producing a 1-protein delta
+                // in the Stage 7 picked-protein output cross-impl.
+                if (perFileParquetPaths.Count > 0 && config.InputFiles != null)
+                {
+                    var inputByName = new Dictionary<string, string>(StringComparer.Ordinal);
+                    foreach (var inputFile in config.InputFiles)
+                        inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+                    int filesReloaded = 0;
+                    int filesMissing = 0;
+                    foreach (var kvp in perFileEntries)
+                    {
+                        if (!inputByName.TryGetValue(kvp.Key, out string inputFile4))
+                            continue;
+                        string pass2Path = FdrScoresSidecar.Pass2Path(inputFile4);
+                        if (!File.Exists(pass2Path))
+                        {
+                            filesMissing++;
+                            continue;
+                        }
+                        var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
+                        foreach (var e in kvp.Value)
+                            byEntryId[e.EntryId] = e;
+                        if (FdrScoresSidecar.TryReadOverlay(
+                                pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass))
+                        {
+                            filesReloaded++;
+                        }
+                        else
+                        {
+                            filesMissing++;
+                            ctx.LogWarning(string.Format(
+                                "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
+                                "protein FDR will use stale 1st-pass q-values",
+                                kvp.Key, pass2Path));
+                        }
+                    }
+                    if (filesReloaded > 0)
+                    {
+                        ctx.LogInfo(string.Format(
+                            "--join-at-pass=2: reloaded 2nd-pass FDR sidecar for {0}/{1} file(s) post-compaction",
+                            filesReloaded, filesReloaded + filesMissing));
+                    }
+                }
+
                 ctx.LogInfo(string.Empty);
                 ctx.LogInfo(string.Format(@"Running protein-level FDR at {0:P1}...",
                     config.ProteinFdr.Value));
                 var swProtein = Stopwatch.StartNew();
                 RunProteinFdr(perFileEntries, fullLibrary, config);
                 swProtein.Stop();
-                ctx.LogInfo(string.Format(@"[TIMING] Protein FDR: {0:F1}s",
+                ctx.LogInfo(string.Format(@"[STAGE-WALL] stage7: {0:F1}s",
                     swProtein.Elapsed.TotalSeconds));
             }
 
@@ -214,7 +446,7 @@ namespace pwiz.OspreySharp.Tasks
             var swBlib = Stopwatch.StartNew();
             WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config);
             swBlib.Stop();
-            ctx.LogInfo(string.Format(@"[TIMING] Blib output: {0:F1}s",
+            ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
                 swBlib.Elapsed.TotalSeconds));
             return true;
         }
@@ -268,6 +500,10 @@ namespace pwiz.OspreySharp.Tasks
             _ctx.LogInfo(string.Format(
                 "[COUNT] Detected peptides for protein FDR: {0} unique",
                 detectedPeptides.Count));
+
+            // Cross-impl bisection dump (env-var-gated, no-op in production).
+            if (OspreyDiagnostics.DumpDetectedPeptides)
+                OspreyDiagnostics.WriteStage7DetectedPeptidesDump(detectedPeptides);
 
             // Build protein parsimony
             var parsimony = ProteinFdr.BuildProteinParsimony(

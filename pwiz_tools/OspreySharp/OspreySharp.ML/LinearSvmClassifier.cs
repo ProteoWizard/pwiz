@@ -34,9 +34,230 @@
 // Licensed under the MIT License
 
 using System;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace pwiz.OspreySharp.ML
 {
+    /// <summary>
+    /// Minimal explicit-thread parallel-for, modeled after
+    /// pwiz.Common.SystemUtil.ParallelEx (Skyline). The key difference
+    /// vs <c>System.Threading.Tasks.Parallel.For</c> is direct
+    /// thread allocation: a fixed count of dedicated Threads pull
+    /// indices from a shared atomic counter and call the body. No
+    /// TaskReplicator heuristics, no ThreadPool hill-climbing, no
+    /// scheduler throttling. Used by the Percolator hot path where
+    /// TPL Parallel.For was failing to scale beyond ~2.5x on HRAM
+    /// Astral (vs Rust rayon's ~9x on the same workload).
+    /// </summary>
+    public static class OspreyParallel
+    {
+        public static void For(int fromInclusive, int toExclusive, int threadCount, Action<int> body)
+        {
+            int count = toExclusive - fromInclusive;
+            if (count <= 0) return;
+            if (count == 1 || threadCount <= 1)
+            {
+                for (int i = fromInclusive; i < toExclusive; i++)
+                    body(i);
+                return;
+            }
+
+            int effectiveThreads = Math.Min(threadCount, count);
+            int next = fromInclusive - 1;       // pre-decrement; Interlocked.Increment yields fromInclusive on first call
+            Exception firstException = null;
+            object exLock = new object();
+
+            var threads = new Thread[effectiveThreads];
+            for (int t = 0; t < effectiveThreads; t++)
+            {
+                threads[t] = new Thread(() =>
+                {
+                    while (true)
+                    {
+                        int i = Interlocked.Increment(ref next);
+                        if (i >= toExclusive) return;
+                        try
+                        {
+                            body(i);
+                        }
+                        catch (Exception ex)
+                        {
+                            lock (exLock)
+                            {
+                                if (firstException == null) firstException = ex;
+                            }
+                            return;
+                        }
+                    }
+                });
+                threads[t].IsBackground = true;
+                threads[t].Name = "OspreyParallel";
+                threads[t].Start();
+            }
+            foreach (var th in threads) th.Join();
+            if (firstException != null)
+                throw new AggregateException("Exception in OspreyParallel.For", firstException);
+        }
+    }
+
+
+    /// <summary>
+    /// Reusable per-call buffers for <c>LinearSvmClassifier.Train</c>.
+    /// On large training sets each Train call allocated five fresh arrays
+    /// (y, diag, alpha, w, indices) totalling ~2 MB at HRAM-Astral scale
+    /// (n ~ 51K). With ~570 Train calls running 8-way parallel under
+    /// Percolator's grid search, that allocation pressure showed up as
+    /// per-call slowdown vs Rust (which uses stack-frame-local Vec but
+    /// no GC pressure). Pool one scratch per parallel worker; rent/return
+    /// around each Train call.
+    /// </summary>
+    public sealed class SvmTrainScratch
+    {
+        // n-sized (resized as the largest seen n grows; never shrinks)
+        public double[] Y;
+        public double[] Diag;
+        public double[] Alpha;
+        public int[] Indices;
+        // (p+1)-sized; p (feature count) is constant in a Percolator run
+        public double[] W;
+
+        // Pooled row-major data buffers for ExtractRows results used in
+        // Percolator's grid search. Each one wraps an (rows * p)-size
+        // double[] that the caller fills via ExtractRowsInto and then
+        // hands as a Matrix to LinearSvm.Train / DecisionFunction. For
+        // HRAM Astral these would otherwise be ~8 MB LOH allocations
+        // ~540x per file. TrainData and TestData are paired so a single
+        // grid-search iteration can hold both simultaneously.
+        public double[] TrainData;
+        public double[] TestData;
+
+        // Pooled buffers for PercolatorFdr.CountPassing's two per-call
+        // arrays (allIndices: 0..n-1; qValues: per-winner). Sized to
+        // initialN at scratch construction; EnsureCountPassingCapacity
+        // grows on rare oversize requests.
+        public int[] CountPassingIndices;
+        public double[] CountPassingQvalues;
+
+        // Pooled output buffers for the hot-path CompeteFromIndicesInto
+        // helper. Sized to initialN. The active prefix length is
+        // returned by the helper; callers read only [0..count).
+        public int[] CompetitionWinnerIndices;
+        public double[] CompetitionWinnerScores;
+        public bool[] CompetitionWinnerIsDecoy;
+
+        public SvmTrainScratch(int initialN, int p)
+        {
+            Y = new double[initialN];
+            Diag = new double[initialN];
+            Alpha = new double[initialN];
+            Indices = new int[initialN];
+            W = new double[p + 1];
+            // Pre-allocate the ExtractRows buffers up front -- they
+            // dominate per-call allocation pressure (8+ MB each for HRAM
+            // Astral). The pool constructor knows the largest expected
+            // subset size (subN); sizing here avoids the first-iteration
+            // LOH stampede when ~20 parallel scratches each lazily
+            // allocate 17 MB simultaneously (showed up as 10s OwnTime
+            // in EnsureExtractCapacity in dotTrace).
+            int extractCap = initialN * p;
+            TrainData = new double[extractCap];
+            TestData = new double[extractCap];
+            CountPassingIndices = new int[initialN];
+            CountPassingQvalues = new double[initialN];
+            CompetitionWinnerIndices = new int[initialN];
+            CompetitionWinnerScores = new double[initialN];
+            CompetitionWinnerIsDecoy = new bool[initialN];
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public void EnsureCountPassingCapacity(int n)
+        {
+            if (CountPassingIndices.Length < n)
+                CountPassingIndices = new int[n];
+            if (CountPassingQvalues.Length < n)
+                CountPassingQvalues = new double[n];
+            if (CompetitionWinnerIndices.Length < n)
+                CompetitionWinnerIndices = new int[n];
+            if (CompetitionWinnerScores.Length < n)
+                CompetitionWinnerScores = new double[n];
+            if (CompetitionWinnerIsDecoy.Length < n)
+                CompetitionWinnerIsDecoy = new bool[n];
+        }
+
+        public void EnsureCapacity(int n, int p)
+        {
+            if (Y.Length < n)
+            {
+                Y = new double[n];
+                Diag = new double[n];
+                Alpha = new double[n];
+                Indices = new int[n];
+            }
+            if (W.Length < p + 1)
+                W = new double[p + 1];
+        }
+
+        /// <summary>
+        /// Ensure <see cref="TrainData"/> / <see cref="TestData"/> each
+        /// have capacity for <paramref name="rows"/> * <paramref name="p"/>
+        /// doubles. The constructor pre-sizes both to the expected max,
+        /// so this is a no-op in the steady state; the branch covers
+        /// rare cases where a caller's actual subset exceeds the
+        /// pool's <c>initialN</c>.
+        /// </summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public void EnsureExtractCapacity(int rows, int p)
+        {
+            int need = rows * p;
+            if (TrainData.Length < need)
+                TrainData = new double[need];
+            if (TestData.Length < need)
+                TestData = new double[need];
+        }
+    }
+
+    /// <summary>
+    /// Concurrent pool of <see cref="SvmTrainScratch"/> sets. Same pattern
+    /// as <c>XcorrScratchPool</c>: organic growth up to the parallel-worker
+    /// high-water mark; arrays live in gen-2 LOH for the lifetime of the
+    /// Percolator run; no LOH allocation in steady state.
+    /// </summary>
+    public sealed class SvmTrainScratchPool
+    {
+        private readonly ConcurrentBag<SvmTrainScratch> _bag = new ConcurrentBag<SvmTrainScratch>();
+        private readonly int _initialN;
+        private readonly int _p;
+        private int _allocCount;
+
+        public SvmTrainScratchPool(int initialN, int p)
+        {
+            _initialN = initialN;
+            _p = p;
+        }
+
+        public int AllocCount { get { return _allocCount; } }
+
+        public SvmTrainScratch Rent()
+        {
+            SvmTrainScratch s;
+            if (_bag.TryTake(out s))
+                return s;
+            Interlocked.Increment(ref _allocCount);
+            return new SvmTrainScratch(_initialN, _p);
+        }
+
+        public void Return(SvmTrainScratch s)
+        {
+            if (s == null)
+                return;
+            // No zeroing on return: Train re-initializes Y, Alpha, W,
+            // Diag, and Indices from scratch each call.
+            _bag.Add(s);
+        }
+    }
+
+
     /// <summary>
     /// Deterministic xorshift64 PRNG for reproducible shuffling.
     /// Matches the Rust implementation: x ^= x &lt;&lt; 13; x ^= x &gt;&gt; 7; x ^= x &lt;&lt; 17.
@@ -202,6 +423,20 @@ namespace pwiz.OspreySharp.ML
         /// <returns>Trained LinearSvmClassifier model</returns>
         public static LinearSvmClassifier Train(Matrix features, bool[] labels, double c, ulong seed)
         {
+            return Train(features, labels, c, seed, null);
+        }
+
+        /// <summary>
+        /// Overload that reuses pre-allocated working buffers from
+        /// <paramref name="scratch"/>. Pass a per-worker
+        /// <see cref="SvmTrainScratch"/> rented from
+        /// <see cref="SvmTrainScratchPool"/> to avoid the five n-sized
+        /// array allocations per call. Pass null to allocate fresh (the
+        /// pre-pool behavior, retained for tests and ad-hoc callers).
+        /// </summary>
+        public static LinearSvmClassifier Train(Matrix features, bool[] labels, double c, ulong seed,
+            SvmTrainScratch scratch)
+        {
             if (features.Rows != labels.Length)
                 throw new ArgumentException("Feature rows must match label count");
 
@@ -217,15 +452,41 @@ namespace pwiz.OspreySharp.ML
             double[] data = features.Data;
             int cols = p;
 
+            // Working buffers: either from the scratch pool (no allocation)
+            // or fresh per-call (the legacy path). Pool mode reuses arrays
+            // sized by the largest-seen n; we re-initialize the prefix we
+            // actually use, so leftover bytes past n are harmless.
+            double[] y, diag, alpha, w;
+            int[] indices;
+            if (scratch != null)
+            {
+                scratch.EnsureCapacity(n, p);
+                y = scratch.Y;
+                diag = scratch.Diag;
+                alpha = scratch.Alpha;
+                w = scratch.W;
+                indices = scratch.Indices;
+                // alpha and w start at zero each call; the loop reads them
+                // before writing so we must clear the prefix we use.
+                Array.Clear(alpha, 0, n);
+                Array.Clear(w, 0, p + 1);
+            }
+            else
+            {
+                y = new double[n];
+                diag = new double[n];
+                alpha = new double[n];
+                w = new double[p + 1];
+                indices = new int[n];
+            }
+
             // Convert labels: target (false) -> +1, decoy (true) -> -1
-            var y = new double[n];
             for (int i = 0; i < n; i++)
                 y[i] = labels[i] ? -1.0 : 1.0;
 
             double inv2c = 1.0 / (2.0 * c);
 
             // Precompute diagonal: D_ii = ||x_i||^2 + 1.0 (bias feature) + 1/(2C)
-            var diag = new double[n];
             for (int i = 0; i < n; i++)
             {
                 double normSq = 0.0;
@@ -238,14 +499,8 @@ namespace pwiz.OspreySharp.ML
                 diag[i] = normSq + 1.0 + inv2c;
             }
 
-            // Initialize dual variables and primal weight vector
-            // w has p+1 elements: w[0..p] = feature weights, w[p] = bias
-            var alpha = new double[n];
-            var w = new double[p + 1];
-
             // RNG for index permutation
             var rng = new XorShift64(seed);
-            var indices = new int[n];
             for (int i = 0; i < n; i++)
                 indices[i] = i;
 
@@ -253,7 +508,7 @@ namespace pwiz.OspreySharp.ML
 
             for (int iter = 0; iter < MAX_ITER; iter++)
             {
-                FisherYatesShuffle(indices, rng);
+                FisherYatesShuffle(indices, n, rng);
 
                 double maxPgViolation = 0.0;
 
@@ -349,10 +604,13 @@ namespace pwiz.OspreySharp.ML
         /// <summary>
         /// Fisher-Yates shuffle using XorShift64 PRNG.
         /// Matches the Rust implementation exactly.
+        /// Shuffles <c>slice[0..length]</c> -- callers that pass a pooled
+        /// over-sized buffer must supply the active prefix length so
+        /// shuffling stops there.
         /// </summary>
-        private static void FisherYatesShuffle(int[] slice, XorShift64 rng)
+        private static void FisherYatesShuffle(int[] slice, int length, XorShift64 rng)
         {
-            for (int i = slice.Length - 1; i >= 1; i--)
+            for (int i = length - 1; i >= 1; i--)
             {
                 int j = (int)(rng.Next() % (ulong)(i + 1));
                 int tmp = slice[i];
