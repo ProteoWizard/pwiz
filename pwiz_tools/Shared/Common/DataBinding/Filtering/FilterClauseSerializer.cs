@@ -287,6 +287,13 @@ namespace pwiz.Common.DataBinding.Filtering
                             {
                                 // "= ''" / "<> ''" (a single empty-string operand) are the readable
                                 // rendering of the operand-less blank tests; map them back accordingly.
+                                // This intentionally treats an equals/not-equals empty-string operand as
+                                // is-blank/is-not-blank, which also matches null values (blank means
+                                // null-or-empty) -- slightly wider than a literal OP_EQUALS "" (non-null
+                                // empty only). That is the intended semantics here; a distinct "equals the
+                                // empty string" is not separately expressible (or needed) in this syntax.
+                                // A non-empty value containing quotes (e.g. "''''''") is not empty, so it
+                                // stays a normal equals comparison.
                                 if (tokens.Count == 1 && string.IsNullOrEmpty(tokens[0]))
                                 {
                                     if (Equals(op, FilterOperations.OP_EQUALS))

@@ -84,6 +84,19 @@ namespace pwiz.SkylineTest
                 .ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17.00").MakePredicate();
             Assert.IsTrue(precisePredicate(spectrum));       // CE 17.0 is within the 17.00 tolerance
             Assert.IsFalse(precisePredicate(spectrumNear));  // CE 17.4 is not
+
+            // Range operators are sign-stripped too (magnitude throughout), so "> -20" behaves
+            // identically to "> 20" for any spectrum, consistent with the equality case.
+            var greaterNegative = SpectrumClassFilter
+                .ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" > -20").MakePredicate();
+            var greaterPositive = SpectrumClassFilter
+                .ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" > 20").MakePredicate();
+            foreach (var ce in new[] { 17.0, 25.0 })
+            {
+                var rangeSpectrum = new SpectrumMetadata(@"range" + ce, 1.0)
+                    .ChangePrecursors(new[] { new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(ce) } });
+                Assert.AreEqual(greaterPositive(rangeSpectrum), greaterNegative(rangeSpectrum));
+            }
         }
 
         [TestMethod]
