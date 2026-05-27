@@ -53,9 +53,10 @@ namespace pwiz.Common.DataBinding.Filtering
 
         /// <summary>
         /// Returns a list of filter clauses as a human-readable string that can be parsed back.
-        /// Format: FilterClauses are separated by " or ", FilterSpecs within a clause by " and ".
-        /// Multiple specs get parentheses: (spec1) and (spec2)
-        /// Multiple clauses get parentheses: (clause1) or (clause2)
+        /// FilterSpecs within a clause are joined by " and ", clauses by " or ". A clause with more
+        /// than one spec is wrapped in parentheses when there is more than one clause, e.g.
+        /// "(a and b) or c". The operand-less blank tests render against the empty string:
+        /// "Column = ''" for is-blank and the not-equals form for is-not-blank.
         /// </summary>
         public string ToFilterString(IList<FilterClause> clauses)
         {
@@ -106,11 +107,28 @@ namespace pwiz.Common.DataBinding.Filtering
             var sb = new StringBuilder();
             sb.Append(QuoteColumnIfNeeded(spec.Column));
             sb.Append(@" ");
-            sb.Append(spec.Operation.OpSymbol);
-            if (spec.Operation.HasOperand())
+            // The operand-less blank tests have no readable operator symbol (their OpSymbol falls back
+            // to an internal token like "isnullorblank"), so render them as a comparison against the
+            // empty string. This keeps the output in the readable "<column> <operator> <value>" form;
+            // ParseFilterString maps "= ''" / "<> ''" back to the blank operators.
+            if (Equals(spec.Operation, FilterOperations.OP_IS_BLANK))
             {
-                sb.Append(@" ");
-                sb.Append(FormatOperandTokens(GetOperandTokens(spec)));
+                sb.Append(FilterOperations.OP_EQUALS.OpSymbol);
+                sb.Append(@" ''");
+            }
+            else if (Equals(spec.Operation, FilterOperations.OP_IS_NOT_BLANK))
+            {
+                sb.Append(FilterOperations.OP_NOT_EQUALS.OpSymbol);
+                sb.Append(@" ''");
+            }
+            else
+            {
+                sb.Append(spec.Operation.OpSymbol);
+                if (spec.Operation.HasOperand())
+                {
+                    sb.Append(@" ");
+                    sb.Append(FormatOperandTokens(GetOperandTokens(spec)));
+                }
             }
             return sb.ToString();
         }
@@ -265,8 +283,24 @@ namespace pwiz.Common.DataBinding.Filtering
                                 new FilterPredicate(op, null)));
                         }
                         return ws.Then(_ => operandTokens)
-                            .Select(tokens => new FilterSpec(columnId,
-                                new FilterPredicate(op, TokensToInvariantText(columnId, op, tokens))));
+                            .Select(tokens =>
+                            {
+                                // "= ''" / "<> ''" (a single empty-string operand) are the readable
+                                // rendering of the operand-less blank tests; map them back accordingly.
+                                if (tokens.Count == 1 && string.IsNullOrEmpty(tokens[0]))
+                                {
+                                    if (Equals(op, FilterOperations.OP_EQUALS))
+                                    {
+                                        return new FilterSpec(columnId, new FilterPredicate(FilterOperations.OP_IS_BLANK, null));
+                                    }
+                                    if (Equals(op, FilterOperations.OP_NOT_EQUALS))
+                                    {
+                                        return new FilterSpec(columnId, new FilterPredicate(FilterOperations.OP_IS_NOT_BLANK, null));
+                                    }
+                                }
+                                return new FilterSpec(columnId,
+                                    new FilterPredicate(op, TokensToInvariantText(columnId, op, tokens)));
+                            });
                     }));
 
             // FilterSpec possibly wrapped in parentheses

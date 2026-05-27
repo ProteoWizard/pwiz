@@ -53,6 +53,43 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
+        public void TestBlankOperatorRoundTrip()
+        {
+            // The operand-less blank tests have no readable operator symbol, so they serialize against
+            // the empty string ("Column = ''" / "Column <> ''") and must round-trip back to the
+            // blank operators rather than to an equals-empty-string comparison.
+            var isBlank = new FilterClause(new[]
+            {
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.ScanDescription)),
+                    new FilterPredicate(FilterOperations.OP_IS_BLANK, null))
+            });
+            var isNotBlank = new FilterClause(new[]
+            {
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.ScanDescription)),
+                    new FilterPredicate(FilterOperations.OP_IS_NOT_BLANK, null))
+            });
+            VerifyFilterClause(typeof(SpectrumClass), new[] { isBlank });
+            VerifyFilterClause(typeof(SpectrumClass), new[] { isNotBlank });
+
+            // The rendered form uses the empty-string notation (column/operator are culture-independent)
+            var serializer = new FilterClauseSerializer(
+                ColumnDescriptor.RootColumn(GetDataSchema(DataSchemaLocalizer.INVARIANT), typeof(SpectrumClass)));
+            Assert.AreEqual("ScanDescription = ''", serializer.ToFilterString(new[] { isBlank }));
+            Assert.AreEqual("ScanDescription <> ''", serializer.ToFilterString(new[] { isNotBlank }));
+
+            // Only the *empty* operand means "is blank". A non-empty value that happens to contain
+            // single quotes (e.g. the two-character literal "''") is escaped as six quotes and still
+            // round-trips as an equals comparison -- it must not collapse to is-blank.
+            var equalsLiteralQuotes = new FilterClause(new[]
+            {
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.ScanDescription)),
+                    FilterOperations.OP_EQUALS, "''")
+            });
+            VerifyFilterClause(typeof(SpectrumClass), new[] { equalsLiteralQuotes });
+            Assert.AreEqual("ScanDescription = ''''''", serializer.ToFilterString(new[] { equalsLiteralQuotes }));
+        }
+
+        [TestMethod]
         public void TestToFilterString()
         {
             var frenchDataSchema = GetDataSchema(new DataSchemaLocalizer(CultureInfo.GetCultureInfo("fr"),
