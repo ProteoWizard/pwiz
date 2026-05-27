@@ -213,6 +213,9 @@ namespace MSConvertGUI
                     case "-z":
                         zlib = true;
                         break;
+                    case "--zlib=off":
+                        zlib = false;
+                        break;
                     case "--gzip":
                     case "-g":
                         gzip = true;
