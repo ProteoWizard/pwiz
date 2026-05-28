@@ -87,22 +87,6 @@ namespace TestRunnerLib
         }
 
         /// <summary>
-        /// Returns the number of still-tracked objects (those not yet collected and
-        /// not yet pruned). Used by <see cref="CheckAfterTest"/>'s adaptive retry loop
-        /// to detect whether cleanup is still making progress (count dropping between
-        /// forced GCs) versus stuck (count stable across cycles). Expects to be called
-        /// after <see cref="CheckForLeaks"/> in the same sequence so the underlying
-        /// list reflects the post-prune alive count.
-        /// </summary>
-        private static int SurvivorCount()
-        {
-            lock (_lock)
-            {
-                return _trackedObjects.Count;
-            }
-        }
-
-        /// <summary>
         /// Clears all tracked objects without checking. Use when a test has
         /// already failed and leak checking would produce misleading noise.
         /// </summary>
@@ -154,19 +138,8 @@ namespace TestRunnerLib
             }
         }
 
-        // Adaptive retry parameters. The post-test GC check sleeps GC_RETRY_SLEEP_MS
-        // between forced collections and accepts the survivor count as a real leak only
-        // after GC_STABLE_CYCLES_REQUIRED consecutive cycles produce no further drop in
-        // the count (forced GC made no progress on freeing the survivors). This is more
-        // tolerant of legitimate transient retention than a fixed-budget retry --
-        // background loaders, finalizer queue drain, and deferred GC under high-RAM /
-        // server-GC modes can all extend the cleanup tail past a sub-second budget --
-        // without losing the regression check, since a truly stuck reference still shows
-        // as an unchanged count and is reported. GC_MAX_RETRY_CYCLES caps total wall
-        // time so a runaway leak path cannot stall the suite.
+        private const int GC_RETRY_COUNT = 3;
         private const int GC_RETRY_SLEEP_MS = 500;
-        private const int GC_STABLE_CYCLES_REQUIRED = 3;
-        private const int GC_MAX_RETRY_CYCLES = 20;
 
         /// <summary>
         /// Post-test GC leak check with automatic dotMemory snapshot on leak detection.
@@ -175,11 +148,8 @@ namespace TestRunnerLib
         /// Behavior depends on context:
         /// - DotMemoryWarmupRuns > 0: PinSurvivors mode (for explicit profiling sessions)
         /// - Prior test exception: Clear tracked objects (leak check would be misleading)
-        /// - Survivors found: Retry with sleep+GC cycles, keeping the loop running as long
-        ///   as the survivor count is still dropping. Declare a leak only after the count
-        ///   has been stable across GC_STABLE_CYCLES_REQUIRED consecutive cycles (i.e.
-        ///   forced GC made no further progress -- a real retention) or GC_MAX_RETRY_CYCLES
-        ///   total cycles have elapsed. Then pin survivors and snapshot.
+        /// - Survivors found: Retry with sleep+GC cycles to distinguish transient GC
+        ///   timing from real leaks, then pin survivors and snapshot if still leaking
         /// </summary>
         public static string CheckAfterTest(string testName, int dotMemoryWarmupRuns,
             Exception exception, Action<string, object[]> log)
@@ -201,36 +171,14 @@ namespace TestRunnerLib
             if (leakMessage == null)
                 return null;
 
-            // Phase 2: Survivors found - keep forcing GC while cleanup is still making
-            // progress (survivor count dropping). Declare a leak only when the count has
-            // been stable across GC_STABLE_CYCLES_REQUIRED consecutive cycles, since a
-            // genuinely stuck reference cannot be released by additional forced GC while
-            // a falling count means cleanup is still draining. See the constants block
-            // above for the rationale (background loaders, finalizer drain, deferred GC
-            // under high-RAM/server-GC modes can extend the cleanup tail past a fixed
-            // sub-second budget without indicating a real leak).
-            int lastCount = SurvivorCount();
-            int stableCycles = 0;
-            for (int cycle = 0; cycle < GC_MAX_RETRY_CYCLES; cycle++)
+            // Phase 2: Survivors found - retry with sleep+GC to rule out transient GC timing
+            for (int retry = 0; retry < GC_RETRY_COUNT; retry++)
             {
                 Thread.Sleep(GC_RETRY_SLEEP_MS);
                 RunTests.MemoryManagement.FlushMemory();
                 leakMessage = CheckForLeaks();
                 if (leakMessage == null)
                     return null;
-
-                int currentCount = SurvivorCount();
-                if (currentCount < lastCount)
-                {
-                    // Cleanup is still draining survivors -- reset stability and wait more
-                    stableCycles = 0;
-                }
-                else if (++stableCycles >= GC_STABLE_CYCLES_REQUIRED)
-                {
-                    // Survivor count unchanged across enough cycles -- treat as a real leak
-                    break;
-                }
-                lastCount = currentCount;
             }
 
             // Phase 3: Still leaking after retries - pin survivors and report
