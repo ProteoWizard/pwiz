@@ -329,14 +329,22 @@ namespace TestRunnerLib
                 return;
             }
 
-            var grouped = stillAlive
-                .GroupBy(t => string.Format(@"{0} ({1})", t.TypeName, t.TestName ?? @"unknown"))
-                .Select(g => g.Count() == 1 ? g.Key : string.Format(@"{0} x{1}", g.Key, g.Count()))
-                .OrderBy(s => s)
-                .ToList();
+            log(@"# GC-LEAK final check: {0} of {1} previously-reported survivors STILL alive after {2}s settle" + Environment.NewLine,
+                new object[] { stillAlive.Count, survivors.Count, FINAL_CHECK_SETTLE_SECONDS });
 
-            log(@"# GC-LEAK final check: {0} of {1} previously-reported survivors STILL alive after {2}s settle: {3}" + Environment.NewLine,
-                new object[] { stillAlive.Count, survivors.Count, FINAL_CHECK_SETTLE_SECONDS, string.Join(@", ", grouped) });
+            var byTest = stillAlive
+                .GroupBy(t => t.TestName ?? @"unknown")
+                .OrderBy(g => g.Key);
+            foreach (var testGroup in byTest)
+            {
+                var typeList = testGroup
+                    .GroupBy(t => t.TypeName)
+                    .Select(g => g.Count() == 1 ? g.Key : string.Format(@"{0} x{1}", g.Key, g.Count()))
+                    .OrderBy(s => s)
+                    .ToList();
+                log(@"# GC-LEAK final check: ({0}, [{1}])" + Environment.NewLine,
+                    new object[] { testGroup.Key, string.Join(@", ", typeList) });
+            }
         }
 
         private class TrackedObject
