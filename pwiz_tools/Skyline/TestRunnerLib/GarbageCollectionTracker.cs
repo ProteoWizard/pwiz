@@ -39,6 +39,23 @@ namespace TestRunnerLib
         private static readonly object _lock = new object();
         private static readonly List<TrackedObject> _trackedObjects = new List<TrackedObject>();
 
+        // Weak-ref shadow of every object that a per-test CheckAfterTest declared a
+        // leak and pinned. FinalCheck at end of run drops the pins and re-checks
+        // these weak refs after a long settle; whatever is still alive is a real
+        // leak, anything that has died was a slow-drain false positive. Purely
+        // additive to per-test reporting -- entries are appended at PinSurvivors
+        // time, never consulted during the test run.
+        private static readonly List<TrackedObject> _postReportSurvivors = new List<TrackedObject>();
+
+        /// <summary>
+        /// Name of the currently-executing test, or null between tests. Set by
+        /// RunTests at the start of each test so Register can stamp each
+        /// <see cref="TrackedObject"/> with the test that introduced it, enabling
+        /// <see cref="FinalCheck"/> to attribute end-of-run survivors back to a
+        /// specific test.
+        /// </summary>
+        public static string CurrentTestName { get; set; }
+
         /// <summary>
         /// Register an object that should become garbage-collectible after the
         /// current test completes. Only a WeakReference is stored, so this call
@@ -148,7 +165,12 @@ namespace TestRunnerLib
                 {
                     var target = t.Reference.Target;
                     if (target != null)
+                    {
                         _pinnedSurvivors.Add(target);
+                        // Record a weak-ref shadow with test attribution so FinalCheck
+                        // can later distinguish real leaks from slow-drain transients.
+                        _postReportSurvivors.Add(t);
+                    }
                 }
                 _trackedObjects.Clear();
             }
@@ -244,15 +266,90 @@ namespace TestRunnerLib
             return leakMessage;
         }
 
+        // Settle budget for FinalCheck. Generous compared to the per-test budget
+        // because (a) there is no test-progress pressure at end of run, and (b)
+        // the whole point of this check is to filter out drain-tail false
+        // positives that the per-test check missed -- agents (e.g. Windows
+        // Server 2022) where finalizer-chain reclamation runs slower than the
+        // per-test budget will be reported as leaks per-test but should clear
+        // here. Sleep is split across FINAL_CHECK_GC_CYCLES forced collections
+        // so each cycle gets a chance to advance the finalizer chain.
+        private const int FINAL_CHECK_SETTLE_SECONDS = 60;
+        private const int FINAL_CHECK_GC_CYCLES = 10;
+
+        /// <summary>
+        /// End-of-run leak verification. Purely additive to per-test
+        /// <see cref="CheckAfterTest"/>: it does not affect any test's pass/fail
+        /// status and only logs an informational summary. Drops the strong
+        /// references that per-test PinSurvivors calls accumulated, waits
+        /// FINAL_CHECK_SETTLE_SECONDS while running FINAL_CHECK_GC_CYCLES forced
+        /// collections, then logs any previously-pinned object whose
+        /// WeakReference is still alive -- grouped by type and the test that
+        /// first registered it.
+        ///
+        /// Distinguishes genuine leaks (still rooted after a generous settle)
+        /// from per-test false positives caused by slow finalizer drain on some
+        /// agents. Call once, just before the test runner exits.
+        /// </summary>
+        public static void FinalCheck(Action<string, object[]> log)
+        {
+            List<TrackedObject> survivors;
+            lock (_lock)
+            {
+                if (_postReportSurvivors.Count == 0)
+                {
+                    log(@"# GC-LEAK final check: no previously-reported survivors to verify." + Environment.NewLine,
+                        new object[0]);
+                    return;
+                }
+
+                // Drop the strong refs so weak refs can actually reach zero if
+                // cleanup was just slow. Per-test reporting has already happened
+                // so dotMemory inspection is no longer relevant.
+                _pinnedSurvivors.Clear();
+                survivors = new List<TrackedObject>(_postReportSurvivors);
+                _postReportSurvivors.Clear();
+            }
+
+            log(@"# GC-LEAK final check: settling for {0}s before re-checking {1} previously-reported survivors..." + Environment.NewLine,
+                new object[] { FINAL_CHECK_SETTLE_SECONDS, survivors.Count });
+
+            var sleepMs = (FINAL_CHECK_SETTLE_SECONDS * 1000) / FINAL_CHECK_GC_CYCLES;
+            for (var i = 0; i < FINAL_CHECK_GC_CYCLES; i++)
+            {
+                Thread.Sleep(sleepMs);
+                RunTests.MemoryManagement.FlushMemory();
+            }
+
+            var stillAlive = survivors.Where(t => t.IsAlive).ToList();
+            if (stillAlive.Count == 0)
+            {
+                log(@"# GC-LEAK final check: all {0} previously-reported survivors were eventually collected (per-test reports were transient drain-tail, not real leaks)." + Environment.NewLine,
+                    new object[] { survivors.Count });
+                return;
+            }
+
+            var grouped = stillAlive
+                .GroupBy(t => string.Format(@"{0} ({1})", t.TypeName, t.TestName ?? @"unknown"))
+                .Select(g => g.Count() == 1 ? g.Key : string.Format(@"{0} x{1}", g.Key, g.Count()))
+                .OrderBy(s => s)
+                .ToList();
+
+            log(@"# GC-LEAK final check: {0} of {1} previously-reported survivors STILL alive after {2}s settle: {3}" + Environment.NewLine,
+                new object[] { stillAlive.Count, survivors.Count, FINAL_CHECK_SETTLE_SECONDS, string.Join(@", ", grouped) });
+        }
+
         private class TrackedObject
         {
             public string TypeName { get; }
+            public string TestName { get; }
             public WeakReference Reference { get; }
             public bool IsAlive => Reference.IsAlive;
 
             public TrackedObject(Type type, object target)
             {
                 TypeName = type.Name;
+                TestName = CurrentTestName;
                 Reference = new WeakReference(target);
             }
         }

@@ -355,6 +355,14 @@ namespace TestRunnerLib
 
             string tmpTestDir = null; // If non-null, we've put temp files in an elaborately named temp directory, so delete it when done
 
+            // Stamp the GC tracker with the current test so any Register call
+            // during the test attributes its tracked object back to this test.
+            // Full coordinate matches the per-test log header so a final-check
+            // report can be grepped back to a specific timestamped line.
+            GarbageCollectionTracker.CurrentTestName = string.Format(@"Pass{0}:{1} {2}.{3}-{4}",
+                pass, testNumber, test.TestClassType.Name, test.TestMethod.Name,
+                Language.TwoLetterISOLanguageName);
+
             try
             {
                 // Run test in a separate method so the test class instance is not kept

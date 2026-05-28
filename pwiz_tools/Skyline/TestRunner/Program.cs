@@ -1865,6 +1865,14 @@ namespace TestRunner
                 }
             }
 
+            // End-of-run GC leak verification: drops the strong refs that per-test
+            // PinSurvivors accumulated, gives the runtime a long settle, then
+            // reports anything from the per-test GC-LEAK reports that is STILL
+            // alive. Purely informational -- distinguishes real leaks from
+            // slow-drain false positives on agents whose finalizer chain
+            // reclamation runs slower than the per-test budget.
+            GarbageCollectionTracker.FinalCheck(runTests.Log);
+
             Console.WriteLine($"Tests finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
             return runTests.FailureCount == 0;
         }
