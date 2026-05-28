@@ -24,7 +24,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding.AuditLog;
 using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
