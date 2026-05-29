@@ -23,6 +23,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace pwiz.OspreySharp.Chromatography
 {
@@ -407,7 +408,16 @@ namespace pwiz.OspreySharp.Chromatography
 
             double[] fitted = new double[n];
 
-            for (int i = 0; i < n; i++)
+            // Each output index i is independent: it reads x/y/weights only
+            // (read-only across the loop) and writes fitted[i] only. The
+            // outer loop is embarrassingly parallel. At Astral 3-file scale
+            // ~96K x-points per LOESS fit x 9 fits per Fit() call (3 files x
+            // (1 initial + 2 robust)) the serial form burned 130s of CPU on
+            // a single core; parallelizing across 16 cores collapses that
+            // wall to a few seconds. Rust's loess_fit is also serial per
+            // call but auto-vectorized to be ~50x faster per iteration; we
+            // close most of the gap with parallelism alone.
+            Parallel.For(0, n, i =>
             {
                 double xi = x[i];
 
@@ -454,7 +464,7 @@ namespace pwiz.OspreySharp.Chromatography
                         fitted[i] = b0 + b1 * xi;
                     }
                 }
-            }
+            });
 
             return fitted;
         }
