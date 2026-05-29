@@ -504,16 +504,20 @@
   <p>
     <strong>End-to-end performance (3-file regression, Windows
     native, C: SSD source data, AV-scan excluded; all 8 cells
-    median-of-3 refreshed 2026-05-28 — round 3):</strong>
+    median-of-3 refreshed 2026-05-29 — round 4):</strong>
     Measured on the <code>Skyline/work/20260527_svm_stage5_perf</code>
-    branch with Fix #1 landed (SIMD inner loops in
-    <code>LinearSvmClassifier.Train</code>). Round 3 walls run
-    ~20% slower than round 2 (2026-05-26 night) for both impls
-    uniformly — environmental drift, not a runtime change.  The
-    C#/Rust ratios are the load-bearing comparison; absolute walls
-    should be interpreted relative to the round-3 column on its own.
-    Variance is &lt;10 s on Stellar and &lt;90 s on Astral across
-    the three repeats.
+    branch with Fix #1 + Fix #5b + Fix #6 landed (SIMD inner loops
+    in <code>LinearSvmClassifier.Train</code>, parallel LOESS outer
+    loop, parallel KDE Pdf binning in <code>PepEstimator.Fit</code>).
+    Stage 5/6 boundaries now aligned cross-impl: Rust labels stage5 =
+    percolator + protein FDR, stage6 = reconciliation + rescore +
+    gap-fill; C# previously folded reconciliation into stage5, which
+    is the artifact that created the historical &ldquo;Astral stage5
+    4&times;&rdquo; figure.  Measure-Pipeline.ps1 now derives the
+    reconciliation portion from the <code>[TIMING]</code> markers on
+    the C# side and shifts it into stage6, so the per-stage cells
+    here compare like-for-like.  Variance is &lt;7s on Stellar and
+    &lt;25s on Astral across the three repeats.
   </p>
   <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
     <thead>
@@ -528,12 +532,12 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:55</td><td style="text-align: right; padding: 1px 12px;">1:22</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.72x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">9:11</td><td style="text-align: right; padding: 1px 12px;">7:25</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81x (C# faster)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:21</td><td style="text-align: right; padding: 1px 12px;">1:58</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.45x</td><td style="text-align: right; padding: 1px 12px;">1:43</td><td style="text-align: right; padding: 1px 12px;">6:20</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">3.67x</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">0:40</td><td style="text-align: right; padding: 1px 12px;">0:32</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.80x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">9:39</td><td style="text-align: right; padding: 1px 12px;">4:21</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.45x (C# faster)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:47</td><td style="text-align: right; padding: 1px 12px;">0:42</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.89x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">3:13</td><td style="text-align: right; padding: 1px 12px;">2:30</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.78x (C# faster)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:22</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.15x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">1:41</td><td style="text-align: right; padding: 1px 12px;">0:09</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.08x (C# faster)</td></tr>
-      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>5:05</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>4:39</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.92x (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>25:32</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>21:00</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.82x (C# faster)</strong></td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:54</td><td style="text-align: right; padding: 1px 12px;">1:19</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.70x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">9:09</td><td style="text-align: right; padding: 1px 12px;">7:17</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.80x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR, aligned)</td><td style="text-align: right; padding: 1px 12px;">1:21</td><td style="text-align: right; padding: 1px 12px;">1:14</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.92x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">1:42</td><td style="text-align: right; padding: 1px 12px;">1:14</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.73x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (reconciliation + rescore, aligned)</td><td style="text-align: right; padding: 1px 12px;">0:40</td><td style="text-align: right; padding: 1px 12px;">0:42</td><td style="text-align: right; padding: 1px 12px;">1.06x (~tied)</td><td style="text-align: right; padding: 1px 12px;">7:58</td><td style="text-align: right; padding: 1px 12px;">4:55</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.62x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:47</td><td style="text-align: right; padding: 1px 12px;">0:42</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.91x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">3:14</td><td style="text-align: right; padding: 1px 12px;">2:30</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.78x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:19</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.17x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">1:53</td><td style="text-align: right; padding: 1px 12px;">0:09</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.08x (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>5:03</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>4:01</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.79x (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>24:26</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>16:10</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.66x (C# faster)</strong></td></tr>
     </tbody>
   </table>
   <p>
@@ -551,35 +555,46 @@
       <code>ProcessFile</code> calls.
     </li>
     <li>
-      <strong>stage5</strong> (first-pass FDR + reconciliation planning):
-      Rust still faster (1.45&times; Stellar / 3.67&times; Astral in the
-      Windows table). Fix #1 (SIMD inner loops via
-      <code>System.Numerics.Vector&lt;double&gt;</code> in
-      <code>LinearSvmClassifier.Train</code>) closed the SVM-Train CPU
-      gap at the 1-file scale (-31% Stellar Stage 5 wall isolated), but
-      at Astral 3-file scale Stage 5 wall is no longer SVM-dominated —
-      the 300K-sample training subsampling cap means Train CPU is
-      similar at 1-file and 3-file, and reconciliation planning across
-      3 large Astral files now dwarfs Train. Closing the residual Astral
-      Stage 5 gap requires a separate fix in the reconciliation path,
-      which is the next sprint target after Fix #1 lands.
+      <strong>stage5</strong> (first-pass FDR — percolator + protein
+      FDR; reconciliation planning is now in stage6 per the alignment
+      noted above): C# is 8% faster on Stellar (1:14 vs 1:21) and
+      27% faster on Astral (1:14 vs 1:42).  Three fixes drove this:
+      Fix #1 SIMD-vectorized the SVM dual-coordinate-descent inner
+      loops via <code>System.Numerics.Vector&lt;double&gt;</code>;
+      Fix #6 parallelized <code>PepEstimator.Fit</code>'s KDE binning
+      loop (the same kernel-density work Rust ran under
+      <code>par_iter</code>); the SVM grid search + folds run under
+      <code>OspreyParallel.For</code> with a per-worker
+      <code>SvmTrainScratch</code> pool that holds the per-fold
+      buffers in gen-2 across the run.  At Astral 3-file scale the
+      stage5 wall is dominated by the percolator FDR loop itself.
     </li>
     <li>
-      <strong>stage6</strong> (per-file rescore + gap-fill + reconciled
-      parquet write-back): C# faster on both datasets (0.81&times;
-      Stellar, 0.53&times; Astral on Windows native). The Astral ratio
-      reflects the pooled-scratch XCorr fix landed 2026-05-19.
+      <strong>stage6</strong> (reconciliation planning + per-file
+      rescore + gap-fill + reconciled parquet write-back, aligned to
+      include the reconciliation portion that C# previously logged
+      under stage5): essentially tied on Stellar (1.06&times;, 0:42
+      vs 0:40); C# 38% faster on Astral (4:55 vs 7:58 on Windows
+      native).  Two fixes drove the Astral win: Fix #5b wrapped
+      <code>LoessRegression.LoessFitInternal</code>'s outer loop in
+      <code>Parallel.For</code> (the per-x-point local regressions
+      are independent; serial form burned ~130s of single-core CPU
+      across the 9 LOESS fits per pipeline run); the existing
+      pooled-scratch XCorr fix (2026-05-19) handles the rescore
+      portion. The Astral stage6 fold-in revealed that
+      reconciliation planning, not SVM training, was the dominant
+      pre-fix bottleneck.
     </li>
     <li>
       <strong>stage7</strong> (second-pass Percolator + protein FDR):
-      C# now faster than Rust on Stage 7 across every storage
-      configuration after Fix #1 (Windows 0.89&times; Stellar /
-      0.78&times; Astral; <code>/mnt/c</code> 0.75&times; / 0.74&times;;
-      <code>/home</code> 0.94&times; / 0.79&times;). Stage 7 is heavily
-      SVM-dominated — the 2nd-pass FDR re-runs Percolator on the
-      reconciled feature pool, and the same SIMD-vectorized
-      <code>LinearSvmClassifier.Train</code> that Fix #1 sped up
-      runs here too. Protein parsimony's subset-elimination uses
+      C# faster than Rust everywhere after Fix #1 + #6 (Windows
+      0.91&times; Stellar / 0.78&times; Astral; <code>/mnt/c</code>
+      0.75&times; / 0.72&times;). Stage 7 is heavily SVM-dominated
+      — the 2nd-pass FDR re-runs Percolator on the reconciled feature
+      pool, and the same SIMD-vectorized
+      <code>LinearSvmClassifier.Train</code> + parallel KDE
+      <code>PepEstimator.Fit</code> that lifted stage5 lift stage7
+      too. Protein parsimony's subset-elimination uses
       <code>HashSet&lt;string&gt;</code> on the C# side; the 2nd-pass
       FDR sidecar overlay (<code>FdrScoresSidecar.TryReadOverlay</code>)
       reads only the sidecar and overlays scores by entry_id without
@@ -601,30 +616,39 @@
   </ul>
   <p>
     <strong>WSL Linux end-to-end performance &mdash; ext4 inside
-    <code>/home</code> (median-of-3 2026-05-28 round 3 post
-    Fix #1)</strong>:
+    <code>/home</code> (median-of-3 2026-05-29 round 4 post
+    Fix #1 + #5b + #6)</strong>:
     Same workstation as the Windows benchmark above, WSL2 Ubuntu
-    22.04, .NET 8.0.421, Rust 1.95.0. The WSL <code>ext4.vhdx</code>
-    is on the C: SSD; test data is staged inside the VHDX at
-    <code>/home/brendanx/test/osprey-runs</code>, so every read and
-    write goes through Linux ext4 with no 9P drvfs crossing. This
-    is the &ldquo;Linux-native&rdquo; configuration. With Fix #1
-    (SIMD inner loops in <code>LinearSvmClassifier.Train</code>) the
-    cross-impl gap closes considerably here: Rust beats C# by only
-    4% on Stellar (3:58 vs 4:09, was 23%) and 15% on Astral (16:06
-    vs 18:31, was 25%). Stage 7 ratio dropped from 1.33&times;
-    Stellar / 1.17&times; Astral to 0.94&times; / 0.79&times; — same
-    SVM kernel ran in 2nd-pass FDR. Cross-OS output parity is
-    gated separately by <code>Test-Snapshot.ps1</code> at 1e-6
-    tolerance on four median-polish columns
-    (<code>median_polish_cosine</code>, <code>_residual_ratio</code>,
-    <code>_min_fragment_r2</code>, <code>_residual_correlation</code>)
-    because both runtimes delegate <code>Math.Log</code> and
-    <code>Math.Exp</code> to the host libm (Linux glibc vs Windows ucrt),
-    which differ at f64 ULP level. All other Stage 1-4 columns are
-    bit-equal cross-OS, and the cross-OS divergence in stage5 percolator
-    TSV output is bounded to a handful of formatted-float characters
-    per ~200 MB file.
+    22.04, .NET 8.0.421, Rust 1.95.0.  The WSL
+    <code>ext4.vhdx</code> is on the C: SSD; test data is staged
+    inside the VHDX at <code>/home/brendanx/test/osprey-runs</code>,
+    so every read and write goes through Linux ext4 with no 9P
+    drvfs crossing.  This is the &ldquo;Linux-native&rdquo;
+    configuration, historically the cell where Rust&apos;s lead was
+    largest (round 2 had Rust 23&ndash;25% faster).  Round 4 has C#
+    ahead by 7% on Stellar (3:41 vs 3:58) and 4% on Astral (15:57
+    vs 16:38) at the total wall.  The gap is tighter than the
+    Windows-native or <code>/mnt/c</code> cells because of an
+    asymmetric benefit at stage6 on native Linux ext4: Rust stage6
+    drops from 5:57 (<code>/mnt/c</code>) to 4:05
+    (<code>/home</code>) &ndash;32%; C# stage6 drops from 5:36 to
+    4:39 &ndash;17%.  After Fix #5b parallelized the LOESS planner,
+    C#&apos;s stage6 is largely CPU-bound; Rust&apos;s remaining
+    stage6 work is more I/O-heavy and benefits more from the
+    native filesystem.  Stage 5 (aligned) is tied on both datasets
+    (0.97&times; Stellar / 0.91&times; Astral); stage7 is
+    decisively C#-faster (0.93&times; / 0.78&times;).  Cross-OS
+    output parity is gated separately by
+    <code>Test-Snapshot.ps1</code> at 1e-6 tolerance on four
+    median-polish columns (<code>median_polish_cosine</code>,
+    <code>_residual_ratio</code>, <code>_min_fragment_r2</code>,
+    <code>_residual_correlation</code>) because both runtimes
+    delegate <code>Math.Log</code> and <code>Math.Exp</code> to the
+    host libm (Linux glibc vs Windows ucrt), which differ at f64
+    ULP level.  All other Stage 1-4 columns are bit-equal cross-OS,
+    and the cross-OS divergence in stage5 percolator TSV output is
+    bounded to a handful of formatted-float characters per ~200 MB
+    file.
   </p>
   <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
     <thead>
@@ -639,35 +663,39 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:46</td><td style="text-align: right; padding: 1px 12px;">1:20</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.76x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">7:08</td><td style="text-align: right; padding: 1px 12px;">7:13</td><td style="text-align: right; padding: 1px 12px;">1.01x (~tied)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:06</td><td style="text-align: right; padding: 1px 12px;">1:40</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.51x</td><td style="text-align: right; padding: 1px 12px;">1:14</td><td style="text-align: right; padding: 1px 12px;">5:01</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">4.07x</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">0:21</td><td style="text-align: right; padding: 1px 12px;">0:27</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.28x</td><td style="text-align: right; padding: 1px 12px;">3:59</td><td style="text-align: right; padding: 1px 12px;">3:52</td><td style="text-align: right; padding: 1px 12px;">0.97x (~tied)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:39</td><td style="text-align: right; padding: 1px 12px;">0:36</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.94x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">2:50</td><td style="text-align: right; padding: 1px 12px;">2:14</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.79x (C# faster)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:06</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.52x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">0:54</td><td style="text-align: right; padding: 1px 12px;">0:10</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.18x (C# faster)</td></tr>
-      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>3:58</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>4:09</strong></td><td style="text-align: right; padding: 1px 12px; color: #b54708;"><strong>1.04x (Rust faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>16:06</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>18:31</strong></td><td style="text-align: right; padding: 1px 12px; color: #b54708;"><strong>1.15x (Rust faster)</strong></td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:44</td><td style="text-align: right; padding: 1px 12px;">1:20</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.77x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">7:27</td><td style="text-align: right; padding: 1px 12px;">7:32</td><td style="text-align: right; padding: 1px 12px;">1.01x (~tied)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR, aligned)</td><td style="text-align: right; padding: 1px 12px;">1:07</td><td style="text-align: right; padding: 1px 12px;">1:05</td><td style="text-align: right; padding: 1px 12px;">0.97x (~tied)</td><td style="text-align: right; padding: 1px 12px;">1:15</td><td style="text-align: right; padding: 1px 12px;">1:09</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.91x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (reconciliation + rescore, aligned)</td><td style="text-align: right; padding: 1px 12px;">0:22</td><td style="text-align: right; padding: 1px 12px;">0:35</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.61x</td><td style="text-align: right; padding: 1px 12px;">4:05</td><td style="text-align: right; padding: 1px 12px;">4:39</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.14x</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:39</td><td style="text-align: right; padding: 1px 12px;">0:36</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.93x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">2:52</td><td style="text-align: right; padding: 1px 12px;">2:14</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.78x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:06</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.51x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">0:55</td><td style="text-align: right; padding: 1px 12px;">0:11</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.20x (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>3:58</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>3:41</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.93x (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>16:38</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>15:57</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.96x (C# faster)</strong></td></tr>
     </tbody>
   </table>
   <p>
     <strong>WSL Linux end-to-end performance &mdash; 9P drvfs to
-    Windows <code>/mnt/c</code> (median-of-3 2026-05-28 round 3
-    post Fix #1)</strong>:
+    Windows <code>/mnt/c</code> (median-of-3 2026-05-29 round 4
+    post Fix #1 + #5b + #6)</strong>:
     Same WSL distro and binaries, but with test data living on the
     Windows side at <code>C:\test\osprey-runs</code> (accessed as
     <code>/mnt/c/test/osprey-runs</code> from inside WSL). Every
     read and write crosses the 9P protocol bridge between Linux and
-    Windows NTFS — this is the configuration developers get by
-    default when they keep their data on the Windows filesystem and
-    just run the pipeline from a WSL shell. 9P adds substantial
-    per-syscall overhead (240 vs 14 files/s for fsync'd metadata
-    writes; raw I/O bench below). With Fix #1 (SIMD inner loops in
-    <code>LinearSvmClassifier.Train</code>) C# now beats Rust by 14%
-    on Stellar and 5% on Astral at the total wall on this storage
-    path, despite the 9P penalty applying equally to both impls.
-    Stage 7 ratio dropped from 1.07&times; (Stellar) and 1.11&times;
-    (Astral) to 0.75&times; / 0.74&times; — the same SVM kernel that
-    Fix #1 vectorized runs in 2nd-pass FDR too, and the SVM is a
-    much larger fraction of Stage 7 wall than of Stage 5 at 3-file
-    scale (where reconciliation planning dominates).
+    Windows NTFS &mdash; this is the configuration developers get
+    by default when they keep their data on the Windows filesystem
+    and just run the pipeline from a WSL shell.  9P adds substantial
+    per-syscall overhead but the absolute totals are still
+    workable.  C# beats Rust by 23% on Stellar (4:48 vs 6:13) and
+    21% on Astral (19:24 vs 24:31) at the total wall, despite
+    the 9P penalty applying equally to both impls.  Aligned-stage5
+    is essentially tied (0.98&times; Stellar / 0.93&times; Astral)
+    after Fix #6 closed the KDE Pdf parallelism gap; aligned-stage6
+    is also tied to slightly C#-faster (0.94&times; both datasets)
+    after Fix #5b parallelized the LOESS planner; stage7 is
+    decisively C#-faster (0.75&times; Stellar / 0.72&times;
+    Astral).  The historical &ldquo;Astral stage5 4&times; C#/Rust&rdquo;
+    figure was a combination of two effects that the round-4 numbers
+    isolate cleanly: the underlying LOESS parallelism gap (Fix #5b
+    closed it) and a stage-label boundary mismatch (the alignment
+    above moved reconciliation into stage6 where Rust labels it).
   </p>
   <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
     <thead>
@@ -682,12 +710,12 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">3:13</td><td style="text-align: right; padding: 1px 12px;">2:04</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.64x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">13:06</td><td style="text-align: right; padding: 1px 12px;">9:51</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.75x (C# faster)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR + plan)</td><td style="text-align: right; padding: 1px 12px;">1:06</td><td style="text-align: right; padding: 1px 12px;">1:43</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.56x</td><td style="text-align: right; padding: 1px 12px;">1:16</td><td style="text-align: right; padding: 1px 12px;">5:10</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">4.07x</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage6 (rescore + gap-fill)</td><td style="text-align: right; padding: 1px 12px;">0:56</td><td style="text-align: right; padding: 1px 12px;">0:41</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.74x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">5:55</td><td style="text-align: right; padding: 1px 12px;">4:57</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.84x (C# faster)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:48</td><td style="text-align: right; padding: 1px 12px;">0:36</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.75x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">3:07</td><td style="text-align: right; padding: 1px 12px;">2:18</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.74x (C# faster)</td></tr>
-      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:06</td><td style="text-align: right; padding: 1px 12px;">0:10</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.52x</td><td style="text-align: right; padding: 1px 12px;">0:53</td><td style="text-align: right; padding: 1px 12px;">0:27</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.50x (C# faster)</td></tr>
-      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>6:10</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>5:17</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.86x (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>24:20</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>23:08</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.95x (C# faster)</strong></td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">3:16</td><td style="text-align: right; padding: 1px 12px;">2:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.63x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">13:09</td><td style="text-align: right; padding: 1px 12px;">9:51</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.75x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR, aligned)</td><td style="text-align: right; padding: 1px 12px;">1:07</td><td style="text-align: right; padding: 1px 12px;">1:05</td><td style="text-align: right; padding: 1px 12px;">0.98x (~tied)</td><td style="text-align: right; padding: 1px 12px;">1:16</td><td style="text-align: right; padding: 1px 12px;">1:10</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.93x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (reconciliation + rescore, aligned)</td><td style="text-align: right; padding: 1px 12px;">0:56</td><td style="text-align: right; padding: 1px 12px;">0:53</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.94x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">5:57</td><td style="text-align: right; padding: 1px 12px;">5:36</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.94x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:48</td><td style="text-align: right; padding: 1px 12px;">0:36</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.75x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">3:08</td><td style="text-align: right; padding: 1px 12px;">2:16</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.72x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:06</td><td style="text-align: right; padding: 1px 12px;">0:09</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.54x</td><td style="text-align: right; padding: 1px 12px;">0:54</td><td style="text-align: right; padding: 1px 12px;">0:25</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.47x (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>6:13</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>4:48</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.77x (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>24:31</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>19:24</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.79x (C# faster)</strong></td></tr>
     </tbody>
   </table>
   <p>
