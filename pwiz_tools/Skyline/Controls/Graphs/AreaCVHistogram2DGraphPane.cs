@@ -55,6 +55,12 @@ namespace pwiz.Skyline.Controls.Graphs
             _receiver = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, OnProductAvailable);
         }
 
+        public override void OnClose(EventArgs e)
+        {
+            base.OnClose(e);
+            _receiver.Dispose();
+        }
+
 
         public int Items { get; private set; }
 

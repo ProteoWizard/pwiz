@@ -273,6 +273,7 @@ namespace pwiz.Skyline.EditUI
             {
                 _skylineWindow.DocumentUIChangedEvent -= SkylineWindowOnDocumentUIChangedEvent;
             }
+            _receiver?.Dispose();
             base.OnFormClosed(e);
         }
 

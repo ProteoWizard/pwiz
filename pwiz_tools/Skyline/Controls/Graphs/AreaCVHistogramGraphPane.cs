@@ -54,6 +54,12 @@ namespace pwiz.Skyline.Controls.Graphs
             _receiver = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, () => graphSummary.UpdateUI());
         }
 
+        public override void OnClose(EventArgs e)
+        {
+            base.OnClose(e);
+            _receiver.Dispose();
+        }
+
         public int Items { get { return GetTotalBars(); } }
 
         public override bool HasToolbar { get { return true; } }
