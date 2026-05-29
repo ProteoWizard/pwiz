@@ -211,6 +211,15 @@ namespace pwiz.Skyline.Controls
                 _nodeTip.Dispose();
                 _nodeTip = null;
             }
+            // Explicitly dispose _receiver so it is unregistered from the static
+            // ProductionFacility.DEFAULT listener list. Receiver normally auto-
+            // disposes when OwnerControl.HandleDestroyed fires, but that only
+            // runs if the control's Win32 handle was actually realized -- if
+            // SequenceTree is disposed before its handle is created, the
+            // Receiver remains in the static list with OwnerControl still
+            // pointing at this SequenceTree, transitively rooting SkylineWindow
+            // and every SrmDocument in its undo stack.
+            _receiver?.Dispose();
             base.Dispose(disposing);
         }
 
