@@ -527,6 +527,22 @@ namespace pwiz.OspreySharp.ML
                     // indexed loop. For p=21 features the AVX2 path is 5
                     // vector iters + 1 scalar tail, ~3.5x fewer instructions
                     // than the scalar form.
+                    //
+                    // f64 reduction order vs Rust: Rust does a strict
+                    // left-fold scalar sum over the row.  This path
+                    // accumulates per-lane partial sums (lane stride =
+                    // Vector<double>.Count, which is 4 on AVX2, 8 on
+                    // AVX-512, 2 on ARM NEON) then horizontal-sums via
+                    // Vector.Dot.  Per-op drift is sub-ULP; cumulative
+                    // drift on the n*iter dot products stays inside the
+                    // 1e-9 cross-impl parity gate at p=21.  Note that
+                    // the gate's headroom now implicitly assumes a
+                    // lane-stride-stable runtime -- a future CPU/runtime
+                    // swap (e.g. AVX2 -> AVX-512 in production) shifts
+                    // the lane stride and therefore the divergence
+                    // pattern.  If parity ever drifts past 1e-9 after
+                    // such a swap, bisect by forcing the scalar tail
+                    // (set vecSize to a value > cols) to confirm.
                     double wx;
                     int k = 0;
                     if (cols >= vecSize)

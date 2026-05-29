@@ -115,15 +115,18 @@ namespace pwiz.OspreySharp.ML
 
             // Compute raw PEP at each bin. Each bin's Pdf evaluation is
             // independent and writes to its own bins[i] slot, so this
-            // outer loop parallelizes cleanly. Inside Pdf the sum over
-            // the sample stays serial -- that preserves bit-for-bit
-            // PDF values relative to the prior serial implementation
-            // (no reduction-order perturbation), so the cross-impl
-            // 1e-9 parity gate (which already tolerates Rust's
-            // par_iter reduction in its kde::pdf) stays comfortably
-            // wide.  Default nBins is 1000, so 16 cores get ~62
-            // iterations each -- well above the Parallel.For overhead
-            // floor.
+            // outer loop parallelizes cleanly.  Inside Pdf the sum over
+            // the sample stays serial: PDF values remain bit-for-bit
+            // identical to the prior serial implementation here on the
+            // C# side.  The Rust counterpart at osprey-ml/src/kde.rs
+            // uses rayon par_iter inside pdf, so its PDF values are
+            // already non-deterministic at sub-ULP; cross-impl 1e-9
+            // parity tolerates that Rust-side variation.  This PR
+            // doesn't change either side's reduction order; it only
+            // parallelizes the outer binning loop, leaving the
+            // cross-impl bit-equality budget untouched.  Default
+            // nBins is 1000, so 16 cores get ~62 iterations each --
+            // well above the Parallel.For overhead floor.
             var bins = new double[nBins];
             Parallel.For(0, nBins, i =>
             {
