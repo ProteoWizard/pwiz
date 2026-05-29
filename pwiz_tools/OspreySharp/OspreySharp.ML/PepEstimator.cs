@@ -34,6 +34,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace pwiz.OspreySharp.ML
 {
@@ -112,9 +113,19 @@ namespace pwiz.OspreySharp.ML
             }
             double scoreStep = nBins > 1 ? (maxScore - minScore) / (nBins - 1) : 1.0;
 
-            // Compute raw PEP at each bin
+            // Compute raw PEP at each bin. Each bin's Pdf evaluation is
+            // independent and writes to its own bins[i] slot, so this
+            // outer loop parallelizes cleanly. Inside Pdf the sum over
+            // the sample stays serial -- that preserves bit-for-bit
+            // PDF values relative to the prior serial implementation
+            // (no reduction-order perturbation), so the cross-impl
+            // 1e-9 parity gate (which already tolerates Rust's
+            // par_iter reduction in its kde::pdf) stays comfortably
+            // wide.  Default nBins is 1000, so 16 cores get ~62
+            // iterations each -- well above the Parallel.For overhead
+            // floor.
             var bins = new double[nBins];
-            for (int i = 0; i < nBins; i++)
+            Parallel.For(0, nBins, i =>
             {
                 double score = minScore + i * scoreStep;
                 double fDecoy = decoyKde.Pdf(score) * pi0;
@@ -124,7 +135,7 @@ namespace pwiz.OspreySharp.ML
                     bins[i] = Math.Max(0.0, Math.Min(1.0, fDecoy / denom));
                 else
                     bins[i] = 1.0;
-            }
+            });
 
             // Enforce monotonicity: PEP must be non-increasing as score increases
             IsotonicRegressionDecreasing(bins);
