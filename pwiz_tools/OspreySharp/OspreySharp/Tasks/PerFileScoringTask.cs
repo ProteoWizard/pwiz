@@ -191,7 +191,7 @@ namespace pwiz.OspreySharp.Tasks
 
             // Stage 1: Load library + generate decoys
             var swLibrary = Stopwatch.StartNew();
-            var library = LoadLibrary(config);
+            var library = LibraryLoader.Load(config, ctx.LogInfo, ctx.LogWarning);
             if (library == null || library.Count == 0)
             {
                 ctx.LogError(@"Library is empty after loading");
