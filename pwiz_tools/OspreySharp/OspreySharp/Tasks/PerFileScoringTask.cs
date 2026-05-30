@@ -2156,7 +2156,7 @@ namespace pwiz.OspreySharp.Tasks
                 var spec = windowSpectra[si];
                 if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
                     continue;
-                if (!HasTopNFragmentMatch(entry, spec.Mzs, config.FragmentTolerance))
+                if (!FragmentMath.HasTopNFragmentMatch(entry, spec.Mzs, config.FragmentTolerance))
                     continue;
                 candidateSpectra.Add(spec);
                 candidateWindowIndices.Add(si);

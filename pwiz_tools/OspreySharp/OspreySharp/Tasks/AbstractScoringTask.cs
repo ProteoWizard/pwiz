@@ -84,14 +84,6 @@ namespace pwiz.OspreySharp.Tasks
                 if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
                 return la.CompareTo(lb);
             });
-        /// <summary>
-        /// Get cached top-6 fragment m/z values for an entry. Computed once,
-        /// reused across all prefilter calls for the same entry. Thread-safe
-        /// via ConcurrentDictionary.
-        /// </summary>
-        internal static readonly ConcurrentDictionary<uint, double[]> _top6MzCache =
-            new ConcurrentDictionary<uint, double[]>();
-
         // Internal so FirstJoinTask (which now owns RunPercolatorFdr +
         // RunPercolatorStreaming + BuildBasicFeatures) can reuse the
         // same 21-feature width without redeclaring it.
@@ -1105,7 +1097,7 @@ namespace pwiz.OspreySharp.Tasks
 
                 for (int i = startScan; i <= endScan; i++)
                 {
-                    bool passes = HasTopNFragmentMatch(
+                    bool passes = FragmentMath.HasTopNFragmentMatch(
                         candidate, windowSpectra[i].Mzs, config.FragmentTolerance);
                     int slot = (i - startScan) % WIN;
                     if (window[slot])
@@ -1816,74 +1808,6 @@ namespace pwiz.OspreySharp.Tasks
         }
 
 
-        private static double[] GetTop6FragmentMzs(LibraryEntry entry)
-        {
-            return _top6MzCache.GetOrAdd(entry.Id, _ =>
-            {
-                var frags = entry.Fragments;
-                if (frags == null || frags.Count == 0)
-                    return new double[0];
-
-                int nTop = Math.Min(frags.Count, 6);
-                if (frags.Count <= 6)
-                {
-                    var mzs = new double[frags.Count];
-                    for (int i = 0; i < frags.Count; i++)
-                        mzs[i] = frags[i].Mz;
-                    return mzs;
-                }
-
-                // Find top 6 by intensity, stable on ties to match
-                // Rust slice::sort_by. Array.Sort with Comparison<T>
-                // is introsort and unstable.
-                var result = Enumerable.Range(0, frags.Count)
-                    .OrderByDescending(i => frags[i].RelativeIntensity)
-                    .Take(nTop)
-                    .Select(i => frags[i].Mz)
-                    .ToArray();
-                return result;
-            });
-        }
-
-
-        /// <summary>
-        /// Check if at least 2 of the top 6 library fragments have matching peaks
-        /// in the spectrum. Uses cached top-6 m/z values (no allocation per call).
-        /// Port of has_topn_fragment_match in osprey-scoring/src/lib.rs:112.
-        /// </summary>
-        protected static bool HasTopNFragmentMatch(
-            LibraryEntry entry, double[] spectrumMzs, FragmentToleranceConfig fragTol)
-        {
-            var frags = entry.Fragments;
-            if (frags == null || frags.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
-                return true;
-
-            double[] top6Mzs = GetTop6FragmentMzs(entry);
-            int nTop = top6Mzs.Length;
-            int requiredMatches = nTop <= 1 ? 1 : 2;
-            int matchCount = 0;
-
-            // Per-fragment tolerance: in ppm mode, each fragment's Da window
-            // depends on its own m/z. Matches Rust has_topn_fragment_match.
-            for (int t = 0; t < nTop; t++)
-            {
-                double mz = top6Mzs[t];
-                double tolDa = fragTol.ToleranceDa(mz);
-                double lower = mz - tolDa;
-                double upper = mz + tolDa;
-                int lo = 0, hi = spectrumMzs.Length;
-                while (lo < hi) { int mid = (lo + hi) / 2; if (spectrumMzs[mid] < lower) lo = mid + 1; else hi = mid; }
-                if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
-                {
-                    matchCount++;
-                    if (matchCount >= requiredMatches)
-                        return true;
-                }
-            }
-            return false;
-        }
-
-
         /// <summary>
         /// Extract fragment XICs for a candidate across the scan range.
         /// </summary>
@@ -2446,6 +2370,10 @@ namespace pwiz.OspreySharp.Tasks
         /// [M-1, M+0, M+1, M+2, M+3]. Uses a simple mass-dependent decay model -
         /// sufficient for cosine-similarity comparison with the observed envelope.
         /// </summary>
+        // Dead code: no callers tree-wide (found during the domain-helper
+        // relocation). Left in place, not relocated, pending the Tasks-layer
+        // dead-code pass tracked in TODO-ospreysharp_task_layer_decomposition
+        // (PR-C); do not delete without confirming it is still uncalled.
         private static double[] TheoreticalIsotopeEnvelope(double precursorMz, int charge)
         {
             // Approximate neutral mass (ignores proton mass precisely - good enough here).
@@ -2772,7 +2700,7 @@ namespace pwiz.OspreySharp.Tasks
 
                         var fragsA = library[libIdxA].Fragments;
                         var fragsB = library[libIdxB].Fragments;
-                        int overlap = CountTopNFragmentOverlap(fragsA, fragsB, 6,
+                        int overlap = FragmentOverlap.CountTopNFragmentOverlap(fragsA, fragsB, 6,
                             fragTolValue, fragTolUnit);
                         int minA = Math.Min(fragsA.Count, 6);
                         int minB = Math.Min(fragsB.Count, 6);
@@ -2814,56 +2742,6 @@ namespace pwiz.OspreySharp.Tasks
             for (int i = 0; i < n; i++)
                 if (!removed[i]) kept.Add(entries[i]);
             return kept;
-        }
-
-
-        /// <summary>
-        /// Count how many of the top-N (by intensity) m/z values from
-        /// <paramref name="fragsA"/> have a match within tolerance in
-        /// the top-N of <paramref name="fragsB"/>. Mirrors
-        /// osprey/crates/osprey/src/pipeline.rs::count_topn_fragment_overlap.
-        /// </summary>
-        private static int CountTopNFragmentOverlap(
-            IList<LibraryFragment> fragsA, IList<LibraryFragment> fragsB,
-            int n, double tolerance, ToleranceUnit unit)
-        {
-            double[] topA = TopNFragmentMzs(fragsA, n);
-            double[] topB = TopNFragmentMzs(fragsB, n);
-            Array.Sort(topB); // Array.Sort OK: single primitive array used only for binary-search of m/z; tie-ordering doesn't affect match-or-not
-            int matches = 0;
-            for (int i = 0; i < topA.Length; i++)
-            {
-                double mz = topA[i];
-                double tolDa = unit == ToleranceUnit.Ppm ? mz * tolerance / 1e6 : tolerance;
-                double lo = mz - tolDa;
-                double hi = mz + tolDa;
-                int idx = ScoringMath.LowerBoundDouble(topB, lo);
-                if (idx < topB.Length && topB[idx] <= hi) matches++;
-            }
-            return matches;
-        }
-
-
-        /// <summary>Get m/z values of top-N fragments by intensity (stable on ties).</summary>
-        private static double[] TopNFragmentMzs(IList<LibraryFragment> fragments, int n)
-        {
-            if (fragments.Count <= n)
-            {
-                var all = new double[fragments.Count];
-                for (int i = 0; i < fragments.Count; i++) all[i] = fragments[i].Mz;
-                return all;
-            }
-            // Stable sort by descending intensity (matches Rust slice::sort_by).
-            var idx = new int[fragments.Count];
-            for (int i = 0; i < idx.Length; i++) idx[i] = i;
-            Array.Sort(idx, (a, b) => // Array.Sort OK: comparator's secondary key is the unique fragment index, so no ties
-            {
-                int c = fragments[b].RelativeIntensity.CompareTo(fragments[a].RelativeIntensity);
-                return c != 0 ? c : a.CompareTo(b);
-            });
-            var top = new double[n];
-            for (int i = 0; i < n; i++) top[i] = fragments[idx[i]].Mz;
-            return top;
         }
 
 
