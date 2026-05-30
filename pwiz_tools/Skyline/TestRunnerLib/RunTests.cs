@@ -837,6 +837,16 @@ namespace TestRunnerLib
             private static extern int SetProcessWorkingSetSize(IntPtr process, int minimumWorkingSetSize, int
                 maximumWorkingSetSize);
 
+            // Windows UI Automation pins WinForms controls via RefCounted handles
+            // on their AccessibleObjects. Once any UIA client (Narrator, RDP, a
+            // screen reader, automation tooling) queries an accessible control,
+            // the runtime keeps a strong ref to that control's AccessibleObject
+            // until the process exits -- transitively rooting SkylineWindow and
+            // its undo stack through every dialog's back-pointer. This call
+            // releases all such roots so the next GC can reclaim normally.
+            [DllImport("UIAutomationCore.dll")]
+            private static extern int UiaDisconnectAllProviders();
+
             [DllImport("kernel32.dll", SetLastError = true)]
             public static extern UInt32 GetProcessHeaps(
                 UInt32 NumberOfHeaps,
@@ -1108,6 +1118,17 @@ namespace TestRunnerLib
 
             public static void FlushMemory()
             {
+                // Release UI Automation accessibility roots before GC so
+                // accessibility-pinned dialogs can be reclaimed normally.
+                try
+                {
+                    UiaDisconnectAllProviders();
+                }
+                catch
+                {
+                    // UIAutomationCore.dll unavailable -- non-fatal
+                }
+
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
