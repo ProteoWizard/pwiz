@@ -68,7 +68,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly Dictionary<TABS, TabWithPage> _tabPages;
 
-        private readonly SkylineWindow _parent;
+        private SkylineWindow _parent;
         private readonly LibraryManager _libraryManager;
         private PeptideSettings _peptideSettings;
         private IEnumerable<LibrarySpec> _eventChosenLibraries;
@@ -284,6 +284,12 @@ namespace pwiz.Skyline.SettingsUI
                 _parent.DocumentUIChangedEvent -= ParentOnDocumentChangedEvent;
             }
             base.OnHandleDestroyed(e);
+            // Break the back-pointer to SkylineWindow so that if this dialog
+            // itself ends up pinned by a long-lived root (e.g. Windows
+            // accessibility holding a RefCounted handle on a child ComboBox),
+            // the SkylineWindow and its undo stack of SrmDocuments are still
+            // free to be collected.
+            _parent = null;
         }
 
         public bool FilterLibraryEnabled
