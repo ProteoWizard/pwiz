@@ -48,6 +48,11 @@ namespace pwiz.OspreySharp.IO
         public static List<LibraryEntry> Load(OspreyConfig config,
             Action<string> logInfo, Action<string> logWarning)
         {
+            // Default the injected log callbacks to no-ops so a null delegate
+            // cannot NRE this public API (matches PipelineContext's pattern).
+            logInfo = logInfo ?? (_ => { });
+            logWarning = logWarning ?? (_ => { });
+
             string path = config.LibrarySource.Path;
             string cachePath = path + ".libcache";
 
