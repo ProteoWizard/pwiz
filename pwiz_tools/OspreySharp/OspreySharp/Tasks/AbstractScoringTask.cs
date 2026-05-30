@@ -2471,6 +2471,10 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Cosine similarity between two equal-length arrays (sqrt-intensity preprocessing).
         /// </summary>
+        // Dead code: no callers tree-wide. Left in place (not relocated with the
+        // other stateless math) pending the Tasks-layer dead-code pass tracked in
+        // TODO-ospreysharp_task_layer_decomposition (PR-C); do not delete without
+        // confirming it is still uncalled.
         private static double CosineSimilarity(double[] a, double[] b)
         {
             if (a == null || b == null || a.Length != b.Length || a.Length == 0)
