@@ -111,6 +111,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.LostFocus -= FilesTree_LostFocus;
 
             base.OnHandleDestroyed(e);
+
+            // Break back-pointer to SkylineWindow so accessibility/layout-cache
+            // pinning of this form (e.g. via DockZone.cachedLayoutEventArgs) does
+            // not transitively root SkylineWindow and its undo stack.
+            SkylineWindow = null;
         }
 
         [Browsable(false)]
@@ -119,7 +124,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public SkylineWindow SkylineWindow { get; }
+        public SkylineWindow SkylineWindow { get; private set; }
 
         /// <summary>
         /// Wrapper for SkylineWindow.ModifyDocument that skips debouncing in FilesTree.
