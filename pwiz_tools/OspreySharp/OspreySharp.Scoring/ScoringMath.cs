@@ -53,8 +53,9 @@ namespace pwiz.OspreySharp.Scoring
     public static class ScoringMath
     {
         /// <summary>
-        /// Pearson correlation over an inclusive index range. Returns NaN if either
-        /// subrange has no variance or the range is too short.
+        /// Pearson correlation over an inclusive index range. Returns NaN when the
+        /// range is too short (fewer than 3 points); returns 0.0 when either
+        /// subrange has no variance (denominator below 1e-30).
         /// </summary>
         public static double PearsonOverRange(double[] x, double[] y, int start, int end)
         {
