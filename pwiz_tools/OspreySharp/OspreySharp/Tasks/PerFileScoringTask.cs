@@ -2246,7 +2246,7 @@ namespace pwiz.OspreySharp.Tasks
                     for (int j = i + 1; j < xics.Count; j++)
                     {
                         double[] intj = xics[j].Intensities;
-                        double corr = PearsonOverRange(inti, intj, si, ei);
+                        double corr = ScoringMath.PearsonOverRange(inti, intj, si, ei);
                         if (!double.IsNaN(corr))
                             corrSum += corr;
                     }
@@ -2378,7 +2378,7 @@ namespace pwiz.OspreySharp.Tasks
                     double lower = frag.Mz - tolDa;
                     double upper = frag.Mz + tolDa;
 
-                    int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                    int lo = ScoringMath.BinarySearchLowerBound(apexSpectrum.Mzs, lower);
                     if (lo < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[lo] <= upper)
                     {
                         double bestMz = apexSpectrum.Mzs[lo];

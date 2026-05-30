@@ -306,7 +306,7 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
-        /// Exercises the SIMD path in <see cref="LinearSvmClassifier.Train"/>
+        /// Exercises the SIMD path in <see cref="LinearSvmClassifier.Train(Matrix, bool[], double, ulong)"/>
         /// at the feature dimension Osprey actually uses (21 PIN features).
         /// On AVX2 (Vector&lt;double&gt;.Count = 4) the inner dot product is
         /// 5 vector iters + 1 scalar tail; on AVX-512 (Count = 8) it is
@@ -336,7 +336,7 @@ namespace pwiz.OspreySharp.Test
                 {
                     // Map uint64 to [-0.5, 0.5] via the high 53 bits.
                     ulong r = rng.Next();
-                    data[row * p + col] = ((double)(r >> 11) / (double)(1UL << 53)) - 0.5;
+                    data[row * p + col] = ((double)(r >> 11) / (1UL << 53)) - 0.5;
                 }
             }
             var features = new Matrix(data, n, p);
