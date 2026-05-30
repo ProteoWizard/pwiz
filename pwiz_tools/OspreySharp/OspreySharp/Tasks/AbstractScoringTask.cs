@@ -431,7 +431,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
                         continue;
 
-                    int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
                     if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
                         continue;
 
@@ -457,37 +457,6 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return xics;
-        }
-
-
-        /// <summary>
-        /// Pearson correlation over an inclusive index range. Returns NaN if either
-        /// subrange has no variance or the range is too short.
-        /// </summary>
-        protected static double PearsonOverRange(double[] x, double[] y, int start, int end)
-        {
-            int n = end - start + 1;
-            if (n < 3)
-                return double.NaN;
-
-            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-            for (int i = start; i <= end; i++)
-            {
-                double xi = x[i];
-                double yi = y[i];
-                sumX += xi;
-                sumY += yi;
-                sumXY += xi * yi;
-                sumX2 += xi * xi;
-                sumY2 += yi * yi;
-            }
-
-            double dn = n;
-            double denom = (dn * sumX2 - sumX * sumX) * (dn * sumY2 - sumY * sumY);
-            if (denom < 1e-30)
-                return 0.0;
-
-            return (dn * sumXY - sumX * sumY) / Math.Sqrt(denom);
         }
 
 
@@ -937,14 +906,14 @@ namespace pwiz.OspreySharp.Tasks
 
             // Map override RTs to indices via Rust partition_point semantics:
             // first index where rt >= target. start_index then saturating_sub(1).
-            int startIdx = BinarySearchLowerBound(rtArr, ob.Start);
+            int startIdx = ScoringMath.BinarySearchLowerBound(rtArr, ob.Start);
             if (startIdx > 0) startIdx--;
             if (startIdx > last) startIdx = last;
 
-            int endIdx = BinarySearchLowerBound(rtArr, ob.End);
+            int endIdx = ScoringMath.BinarySearchLowerBound(rtArr, ob.End);
             if (endIdx > last) endIdx = last;
 
-            int apexIdx = BinarySearchLowerBound(rtArr, ob.Apex);
+            int apexIdx = ScoringMath.BinarySearchLowerBound(rtArr, ob.Apex);
             if (apexIdx > last) apexIdx = last;
             if (apexIdx > 0 &&
                 Math.Abs(rtArr[apexIdx - 1] - ob.Apex) < Math.Abs(rtArr[apexIdx] - ob.Apex))
@@ -1360,7 +1329,7 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     for (int jj = ii + 1; jj < xics.Count; jj++)
                     {
-                        double corr = PearsonCorrelation(
+                        double corr = ScoringMath.PearsonCorrelationInRange(
                             xics[ii].Intensities, xics[jj].Intensities,
                             p.StartIndex, p.EndIndex);
                         if (!double.IsNaN(corr))
@@ -1438,7 +1407,7 @@ namespace pwiz.OspreySharp.Tasks
                             for (int ii = 0; ii < xics.Count; ii++)
                                 for (int jj = ii + 1; jj < xics.Count; jj++)
                                 {
-                                    double c = PearsonCorrelation(xics[ii].Intensities, xics[jj].Intensities,
+                                    double c = ScoringMath.PearsonCorrelationInRange(xics[ii].Intensities, xics[jj].Intensities,
                                         p.StartIndex, p.EndIndex);
                                     if (!double.IsNaN(c)) { psum += c; pcnt++; }
                                 }
@@ -1983,7 +1952,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
                         continue;
 
-                    int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
                     if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
                         continue;
 
@@ -2039,7 +2008,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 for (int j = i + 1; j < xics.Count; j++)
                 {
-                    double corr = PearsonCorrelation(
+                    double corr = ScoringMath.PearsonCorrelationInRange(
                         xics[i].Intensities, xics[j].Intensities,
                         peak.StartIndex, peak.EndIndex);
                     if (double.IsNaN(corr))
@@ -2202,7 +2171,7 @@ namespace pwiz.OspreySharp.Tasks
                 double lower = frag.Mz - tolDa;
                 double upper = frag.Mz + tolDa;
 
-                int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
                 double bestIntensity = 0.0;
                 double bestDiff = double.MaxValue;
 
@@ -2285,7 +2254,7 @@ namespace pwiz.OspreySharp.Tasks
                     double lower = frag.Mz - tolDa;
                     double upper = frag.Mz + tolDa;
 
-                    int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                    int lo = ScoringMath.BinarySearchLowerBound(apexSpectrum.Mzs, lower);
                     double bestError = double.MaxValue;
                     double bestIntensity = 0.0;
                     double bestMz = 0.0;
@@ -2408,7 +2377,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 double[] ms1Arr = ms1Intensities.ToArray();
                 double[] refArr = refValues.ToArray();
-                ms1PrecursorCoelution = PearsonCorrelation(ms1Arr, refArr, 0, ms1Arr.Length - 1);
+                ms1PrecursorCoelution = ScoringMath.PearsonCorrelationInRange(ms1Arr, refArr, 0, ms1Arr.Length - 1);
                 if (double.IsNaN(ms1PrecursorCoelution))
                     ms1PrecursorCoelution = 0.0;
             }
@@ -2522,33 +2491,6 @@ namespace pwiz.OspreySharp.Tasks
                 return 0.0;
 
             return Math.Max(0.0, Math.Min(1.0, dot / denom));
-        }
-
-
-        /// <summary>
-        /// Compute Pearson correlation between two intensity arrays over a range.
-        /// </summary>
-        private double PearsonCorrelation(double[] x, double[] y, int start, int end)
-        {
-            int n = end - start + 1;
-            if (n < 3)
-                return double.NaN;
-
-            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-            for (int i = start; i <= end; i++)
-            {
-                sumX += x[i];
-                sumY += y[i];
-                sumXY += x[i] * y[i];
-                sumX2 += x[i] * x[i];
-                sumY2 += y[i] * y[i];
-            }
-
-            double denom = Math.Sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-            if (denom < 1e-10)
-                return 0.0;
-
-            return (n * sumXY - sumX * sumY) / denom;
         }
 
 
@@ -2891,7 +2833,7 @@ namespace pwiz.OspreySharp.Tasks
                 double tolDa = unit == ToleranceUnit.Ppm ? mz * tolerance / 1e6 : tolerance;
                 double lo = mz - tolDa;
                 double hi = mz + tolDa;
-                int idx = LowerBoundDouble(topB, lo);
+                int idx = ScoringMath.LowerBoundDouble(topB, lo);
                 if (idx < topB.Length && topB[idx] <= hi) matches++;
             }
             return matches;
@@ -2918,19 +2860,6 @@ namespace pwiz.OspreySharp.Tasks
             var top = new double[n];
             for (int i = 0; i < n; i++) top[i] = fragments[idx[i]].Mz;
             return top;
-        }
-
-
-        /// <summary>Smallest index i where arr[i] >= v (sorted ascending).</summary>
-        private static int LowerBoundDouble(double[] arr, double v)
-        {
-            int lo = 0, hi = arr.Length;
-            while (lo < hi)
-            {
-                int m = (lo + hi) >> 1;
-                if (arr[m] < v) lo = m + 1; else hi = m;
-            }
-            return lo;
         }
 
 
@@ -2995,22 +2924,6 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return deduped;
-        }
-
-
-        protected static int BinarySearchLowerBound(double[] sortedArray, double value)
-        {
-            int lo = 0;
-            int hi = sortedArray.Length;
-            while (lo < hi)
-            {
-                int mid = lo + (hi - lo) / 2;
-                if (sortedArray[mid] < value)
-                    lo = mid + 1;
-                else
-                    hi = mid;
-            }
-            return lo;
         }
     }
 }
