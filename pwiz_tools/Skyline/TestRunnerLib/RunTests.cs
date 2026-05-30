@@ -1112,13 +1112,26 @@ namespace TestRunnerLib
             {
                 // Release UI Automation accessibility roots before GC so
                 // accessibility-pinned dialogs can be reclaimed normally.
-                try
+                // Non-fatal -- but log unexpected failures so the diagnostic is
+                // visible in test output (UIAutomationCore.dll should always be
+                // present on supported Windows versions).
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    UiaDisconnectAllProviders();
-                }
-                catch
-                {
-                    // UIAutomationCore.dll unavailable -- non-fatal
+                    try
+                    {
+                        UiaDisconnectAllProviders();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Should never happen on supported Windows targets -- if it does,
+                        // accessibility-rooted Controls (and any SkylineWindow they
+                        // transitively pin) may still be reachable through Windows UI
+                        // Automation refs and appear as GC-LEAK survivors in this run.
+                        Console.WriteLine(
+                            @"UiaDisconnectAllProviders (UIAutomationCore.dll) failed: {0}. " +
+                            @"Accessibility-pinned controls may be reported as GC-LEAK survivors.",
+                            ex);
+                    }
                 }
 
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
