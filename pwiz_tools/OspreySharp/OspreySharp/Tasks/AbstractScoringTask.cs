@@ -84,14 +84,6 @@ namespace pwiz.OspreySharp.Tasks
                 if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
                 return la.CompareTo(lb);
             });
-        /// <summary>
-        /// Get cached top-6 fragment m/z values for an entry. Computed once,
-        /// reused across all prefilter calls for the same entry. Thread-safe
-        /// via ConcurrentDictionary.
-        /// </summary>
-        internal static readonly ConcurrentDictionary<uint, double[]> _top6MzCache =
-            new ConcurrentDictionary<uint, double[]>();
-
         // Internal so FirstJoinTask (which now owns RunPercolatorFdr +
         // RunPercolatorStreaming + BuildBasicFeatures) can reuse the
         // same 21-feature width without redeclaring it.
@@ -431,7 +423,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
                         continue;
 
-                    int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
                     if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
                         continue;
 
@@ -457,37 +449,6 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return xics;
-        }
-
-
-        /// <summary>
-        /// Pearson correlation over an inclusive index range. Returns NaN if either
-        /// subrange has no variance or the range is too short.
-        /// </summary>
-        protected static double PearsonOverRange(double[] x, double[] y, int start, int end)
-        {
-            int n = end - start + 1;
-            if (n < 3)
-                return double.NaN;
-
-            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-            for (int i = start; i <= end; i++)
-            {
-                double xi = x[i];
-                double yi = y[i];
-                sumX += xi;
-                sumY += yi;
-                sumXY += xi * yi;
-                sumX2 += xi * xi;
-                sumY2 += yi * yi;
-            }
-
-            double dn = n;
-            double denom = (dn * sumX2 - sumX * sumX) * (dn * sumY2 - sumY * sumY);
-            if (denom < 1e-30)
-                return 0.0;
-
-            return (dn * sumXY - sumX * sumY) / Math.Sqrt(denom);
         }
 
 
@@ -937,14 +898,14 @@ namespace pwiz.OspreySharp.Tasks
 
             // Map override RTs to indices via Rust partition_point semantics:
             // first index where rt >= target. start_index then saturating_sub(1).
-            int startIdx = BinarySearchLowerBound(rtArr, ob.Start);
+            int startIdx = ScoringMath.BinarySearchLowerBound(rtArr, ob.Start);
             if (startIdx > 0) startIdx--;
             if (startIdx > last) startIdx = last;
 
-            int endIdx = BinarySearchLowerBound(rtArr, ob.End);
+            int endIdx = ScoringMath.BinarySearchLowerBound(rtArr, ob.End);
             if (endIdx > last) endIdx = last;
 
-            int apexIdx = BinarySearchLowerBound(rtArr, ob.Apex);
+            int apexIdx = ScoringMath.BinarySearchLowerBound(rtArr, ob.Apex);
             if (apexIdx > last) apexIdx = last;
             if (apexIdx > 0 &&
                 Math.Abs(rtArr[apexIdx - 1] - ob.Apex) < Math.Abs(rtArr[apexIdx] - ob.Apex))
@@ -1136,7 +1097,7 @@ namespace pwiz.OspreySharp.Tasks
 
                 for (int i = startScan; i <= endScan; i++)
                 {
-                    bool passes = HasTopNFragmentMatch(
+                    bool passes = FragmentMath.HasTopNFragmentMatch(
                         candidate, windowSpectra[i].Mzs, config.FragmentTolerance);
                     int slot = (i - startScan) % WIN;
                     if (window[slot])
@@ -1360,7 +1321,7 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     for (int jj = ii + 1; jj < xics.Count; jj++)
                     {
-                        double corr = PearsonCorrelation(
+                        double corr = ScoringMath.PearsonCorrelationInRange(
                             xics[ii].Intensities, xics[jj].Intensities,
                             p.StartIndex, p.EndIndex);
                         if (!double.IsNaN(corr))
@@ -1438,7 +1399,7 @@ namespace pwiz.OspreySharp.Tasks
                             for (int ii = 0; ii < xics.Count; ii++)
                                 for (int jj = ii + 1; jj < xics.Count; jj++)
                                 {
-                                    double c = PearsonCorrelation(xics[ii].Intensities, xics[jj].Intensities,
+                                    double c = ScoringMath.PearsonCorrelationInRange(xics[ii].Intensities, xics[jj].Intensities,
                                         p.StartIndex, p.EndIndex);
                                     if (!double.IsNaN(c)) { psum += c; pcnt++; }
                                 }
@@ -1847,74 +1808,6 @@ namespace pwiz.OspreySharp.Tasks
         }
 
 
-        private static double[] GetTop6FragmentMzs(LibraryEntry entry)
-        {
-            return _top6MzCache.GetOrAdd(entry.Id, _ =>
-            {
-                var frags = entry.Fragments;
-                if (frags == null || frags.Count == 0)
-                    return new double[0];
-
-                int nTop = Math.Min(frags.Count, 6);
-                if (frags.Count <= 6)
-                {
-                    var mzs = new double[frags.Count];
-                    for (int i = 0; i < frags.Count; i++)
-                        mzs[i] = frags[i].Mz;
-                    return mzs;
-                }
-
-                // Find top 6 by intensity, stable on ties to match
-                // Rust slice::sort_by. Array.Sort with Comparison<T>
-                // is introsort and unstable.
-                var result = Enumerable.Range(0, frags.Count)
-                    .OrderByDescending(i => frags[i].RelativeIntensity)
-                    .Take(nTop)
-                    .Select(i => frags[i].Mz)
-                    .ToArray();
-                return result;
-            });
-        }
-
-
-        /// <summary>
-        /// Check if at least 2 of the top 6 library fragments have matching peaks
-        /// in the spectrum. Uses cached top-6 m/z values (no allocation per call).
-        /// Port of has_topn_fragment_match in osprey-scoring/src/lib.rs:112.
-        /// </summary>
-        protected static bool HasTopNFragmentMatch(
-            LibraryEntry entry, double[] spectrumMzs, FragmentToleranceConfig fragTol)
-        {
-            var frags = entry.Fragments;
-            if (frags == null || frags.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
-                return true;
-
-            double[] top6Mzs = GetTop6FragmentMzs(entry);
-            int nTop = top6Mzs.Length;
-            int requiredMatches = nTop <= 1 ? 1 : 2;
-            int matchCount = 0;
-
-            // Per-fragment tolerance: in ppm mode, each fragment's Da window
-            // depends on its own m/z. Matches Rust has_topn_fragment_match.
-            for (int t = 0; t < nTop; t++)
-            {
-                double mz = top6Mzs[t];
-                double tolDa = fragTol.ToleranceDa(mz);
-                double lower = mz - tolDa;
-                double upper = mz + tolDa;
-                int lo = 0, hi = spectrumMzs.Length;
-                while (lo < hi) { int mid = (lo + hi) / 2; if (spectrumMzs[mid] < lower) lo = mid + 1; else hi = mid; }
-                if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
-                {
-                    matchCount++;
-                    if (matchCount >= requiredMatches)
-                        return true;
-                }
-            }
-            return false;
-        }
-
-
         /// <summary>
         /// Extract fragment XICs for a candidate across the scan range.
         /// </summary>
@@ -1983,7 +1876,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
                         continue;
 
-                    int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
                     if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
                         continue;
 
@@ -2039,7 +1932,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 for (int j = i + 1; j < xics.Count; j++)
                 {
-                    double corr = PearsonCorrelation(
+                    double corr = ScoringMath.PearsonCorrelationInRange(
                         xics[i].Intensities, xics[j].Intensities,
                         peak.StartIndex, peak.EndIndex);
                     if (double.IsNaN(corr))
@@ -2202,7 +2095,7 @@ namespace pwiz.OspreySharp.Tasks
                 double lower = frag.Mz - tolDa;
                 double upper = frag.Mz + tolDa;
 
-                int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
                 double bestIntensity = 0.0;
                 double bestDiff = double.MaxValue;
 
@@ -2285,7 +2178,7 @@ namespace pwiz.OspreySharp.Tasks
                     double lower = frag.Mz - tolDa;
                     double upper = frag.Mz + tolDa;
 
-                    int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                    int lo = ScoringMath.BinarySearchLowerBound(apexSpectrum.Mzs, lower);
                     double bestError = double.MaxValue;
                     double bestIntensity = 0.0;
                     double bestMz = 0.0;
@@ -2408,7 +2301,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 double[] ms1Arr = ms1Intensities.ToArray();
                 double[] refArr = refValues.ToArray();
-                ms1PrecursorCoelution = PearsonCorrelation(ms1Arr, refArr, 0, ms1Arr.Length - 1);
+                ms1PrecursorCoelution = ScoringMath.PearsonCorrelationInRange(ms1Arr, refArr, 0, ms1Arr.Length - 1);
                 if (double.IsNaN(ms1PrecursorCoelution))
                     ms1PrecursorCoelution = 0.0;
             }
@@ -2477,6 +2370,10 @@ namespace pwiz.OspreySharp.Tasks
         /// [M-1, M+0, M+1, M+2, M+3]. Uses a simple mass-dependent decay model -
         /// sufficient for cosine-similarity comparison with the observed envelope.
         /// </summary>
+        // Dead code: no callers tree-wide (found during the domain-helper
+        // relocation). Left in place, not relocated, pending the Tasks-layer
+        // dead-code pass tracked in TODO-ospreysharp_task_layer_decomposition
+        // (PR-C); do not delete without confirming it is still uncalled.
         private static double[] TheoreticalIsotopeEnvelope(double precursorMz, int charge)
         {
             // Approximate neutral mass (ignores proton mass precisely - good enough here).
@@ -2502,6 +2399,10 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Cosine similarity between two equal-length arrays (sqrt-intensity preprocessing).
         /// </summary>
+        // Dead code: no callers tree-wide. Left in place (not relocated with the
+        // other stateless math) pending the Tasks-layer dead-code pass tracked in
+        // TODO-ospreysharp_task_layer_decomposition (PR-C); do not delete without
+        // confirming it is still uncalled.
         private static double CosineSimilarity(double[] a, double[] b)
         {
             if (a == null || b == null || a.Length != b.Length || a.Length == 0)
@@ -2522,33 +2423,6 @@ namespace pwiz.OspreySharp.Tasks
                 return 0.0;
 
             return Math.Max(0.0, Math.Min(1.0, dot / denom));
-        }
-
-
-        /// <summary>
-        /// Compute Pearson correlation between two intensity arrays over a range.
-        /// </summary>
-        private double PearsonCorrelation(double[] x, double[] y, int start, int end)
-        {
-            int n = end - start + 1;
-            if (n < 3)
-                return double.NaN;
-
-            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-            for (int i = start; i <= end; i++)
-            {
-                sumX += x[i];
-                sumY += y[i];
-                sumXY += x[i] * y[i];
-                sumX2 += x[i] * x[i];
-                sumY2 += y[i] * y[i];
-            }
-
-            double denom = Math.Sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-            if (denom < 1e-10)
-                return 0.0;
-
-            return (n * sumXY - sumX * sumY) / denom;
         }
 
 
@@ -2826,7 +2700,7 @@ namespace pwiz.OspreySharp.Tasks
 
                         var fragsA = library[libIdxA].Fragments;
                         var fragsB = library[libIdxB].Fragments;
-                        int overlap = CountTopNFragmentOverlap(fragsA, fragsB, 6,
+                        int overlap = FragmentOverlap.CountTopNFragmentOverlap(fragsA, fragsB, 6,
                             fragTolValue, fragTolUnit);
                         int minA = Math.Min(fragsA.Count, 6);
                         int minB = Math.Min(fragsB.Count, 6);
@@ -2868,69 +2742,6 @@ namespace pwiz.OspreySharp.Tasks
             for (int i = 0; i < n; i++)
                 if (!removed[i]) kept.Add(entries[i]);
             return kept;
-        }
-
-
-        /// <summary>
-        /// Count how many of the top-N (by intensity) m/z values from
-        /// <paramref name="fragsA"/> have a match within tolerance in
-        /// the top-N of <paramref name="fragsB"/>. Mirrors
-        /// osprey/crates/osprey/src/pipeline.rs::count_topn_fragment_overlap.
-        /// </summary>
-        private static int CountTopNFragmentOverlap(
-            IList<LibraryFragment> fragsA, IList<LibraryFragment> fragsB,
-            int n, double tolerance, ToleranceUnit unit)
-        {
-            double[] topA = TopNFragmentMzs(fragsA, n);
-            double[] topB = TopNFragmentMzs(fragsB, n);
-            Array.Sort(topB); // Array.Sort OK: single primitive array used only for binary-search of m/z; tie-ordering doesn't affect match-or-not
-            int matches = 0;
-            for (int i = 0; i < topA.Length; i++)
-            {
-                double mz = topA[i];
-                double tolDa = unit == ToleranceUnit.Ppm ? mz * tolerance / 1e6 : tolerance;
-                double lo = mz - tolDa;
-                double hi = mz + tolDa;
-                int idx = LowerBoundDouble(topB, lo);
-                if (idx < topB.Length && topB[idx] <= hi) matches++;
-            }
-            return matches;
-        }
-
-
-        /// <summary>Get m/z values of top-N fragments by intensity (stable on ties).</summary>
-        private static double[] TopNFragmentMzs(IList<LibraryFragment> fragments, int n)
-        {
-            if (fragments.Count <= n)
-            {
-                var all = new double[fragments.Count];
-                for (int i = 0; i < fragments.Count; i++) all[i] = fragments[i].Mz;
-                return all;
-            }
-            // Stable sort by descending intensity (matches Rust slice::sort_by).
-            var idx = new int[fragments.Count];
-            for (int i = 0; i < idx.Length; i++) idx[i] = i;
-            Array.Sort(idx, (a, b) => // Array.Sort OK: comparator's secondary key is the unique fragment index, so no ties
-            {
-                int c = fragments[b].RelativeIntensity.CompareTo(fragments[a].RelativeIntensity);
-                return c != 0 ? c : a.CompareTo(b);
-            });
-            var top = new double[n];
-            for (int i = 0; i < n; i++) top[i] = fragments[idx[i]].Mz;
-            return top;
-        }
-
-
-        /// <summary>Smallest index i where arr[i] >= v (sorted ascending).</summary>
-        private static int LowerBoundDouble(double[] arr, double v)
-        {
-            int lo = 0, hi = arr.Length;
-            while (lo < hi)
-            {
-                int m = (lo + hi) >> 1;
-                if (arr[m] < v) lo = m + 1; else hi = m;
-            }
-            return lo;
         }
 
 
@@ -2995,22 +2806,6 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return deduped;
-        }
-
-
-        protected static int BinarySearchLowerBound(double[] sortedArray, double value)
-        {
-            int lo = 0;
-            int hi = sortedArray.Length;
-            while (lo < hi)
-            {
-                int mid = lo + (hi - lo) / 2;
-                if (sortedArray[mid] < value)
-                    lo = mid + 1;
-                else
-                    hi = mid;
-            }
-            return lo;
         }
     }
 }
