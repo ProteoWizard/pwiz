@@ -933,6 +933,64 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
+        /// Returns the reconciled scores Parquet path for a given mzML path:
+        /// {stem}.reconciled.scores.parquet in the same directory. Stage 6
+        /// (<c>PerFileRescoreTask</c>) writes this file instead of overwriting
+        /// the Stage 4 <see cref="GetScoresPath"/> output, so the original
+        /// per-file scores survive a reconciliation pass (and a partial Stage 6
+        /// crash can no longer leave the Stage 4 parquet in an indeterminate
+        /// half-rewritten state).
+        /// </summary>
+        public static string GetReconciledScoresPath(string mzmlPath)
+        {
+            string dir = Path.GetDirectoryName(mzmlPath) ?? string.Empty;
+            string stem = Path.GetFileNameWithoutExtension(mzmlPath);
+            return Path.Combine(dir, stem + ".reconciled.scores.parquet");
+        }
+
+        /// <summary>
+        /// Map an original <c>.scores.parquet</c> path to its sibling
+        /// <c>.reconciled.scores.parquet</c> path. Uses a literal-suffix
+        /// replace rather than a stem rebuild because
+        /// <c>Path.GetFileNameWithoutExtension</c> of
+        /// <c>x.scores.parquet</c> is <c>x.scores</c> -- the <c>.reconciled</c>
+        /// marker has to be inserted BEFORE <c>.scores</c>, not appended to the
+        /// trailing-extension-stripped stem. Inputs that already end in
+        /// <c>.reconciled.scores.parquet</c> are returned unchanged.
+        /// </summary>
+        public static string ReconciledPathFromScoresPath(string scoresPath)
+        {
+            if (string.IsNullOrEmpty(scoresPath))
+                return scoresPath;
+            const string reconciledSuffix = ".reconciled.scores.parquet";
+            const string scoresSuffix = ".scores.parquet";
+            if (scoresPath.EndsWith(reconciledSuffix, StringComparison.Ordinal))
+                return scoresPath;
+            if (scoresPath.EndsWith(scoresSuffix, StringComparison.Ordinal))
+                return scoresPath.Substring(0, scoresPath.Length - scoresSuffix.Length)
+                    + reconciledSuffix;
+            return scoresPath;
+        }
+
+        /// <summary>
+        /// The path a post-Stage-6 reader (Stage 7 feature reload, resume /
+        /// <c>--join-at-pass=2</c>) should consume for a given original
+        /// <c>.scores.parquet</c> path: the reconciled sibling when it exists
+        /// on disk, otherwise the original. This per-file selection is the
+        /// read-side contract that makes the separate-reconciled-file design
+        /// byte-equivalent to the former in-place overwrite: files that had
+        /// reconciliation work read the reconciled bytes (which used to be
+        /// written over the original), while files with no Stage 6 work -- which
+        /// <c>PerFileRescoreTask</c> deliberately skips, leaving no reconciled
+        /// file -- read the untouched original (which used to be left in place).
+        /// </summary>
+        public static string EffectiveScoresPathFromScoresPath(string scoresPath)
+        {
+            string reconciled = ReconciledPathFromScoresPath(scoresPath);
+            return File.Exists(reconciled) ? reconciled : scoresPath;
+        }
+
+        /// <summary>
         /// Check if an existing Parquet file's custom metadata matches the expected values.
         /// Returns true if all expected keys exist with matching values.
         /// </summary>

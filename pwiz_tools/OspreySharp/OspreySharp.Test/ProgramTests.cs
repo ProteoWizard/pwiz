@@ -445,6 +445,32 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
+        public void TestResolveDirectoryPrefersReconciledPerStem()
+        {
+            // The *.scores.parquet glob also matches Stage 6's
+            // <stem>.reconciled.scores.parquet siblings. For any stem that has
+            // both, only the reconciled file is returned; never both.
+            string dir = NewTempDir();
+            try
+            {
+                File.WriteAllText(Path.Combine(dir, "a.scores.parquet"), string.Empty);
+                File.WriteAllText(Path.Combine(dir, "a.reconciled.scores.parquet"), string.Empty);
+                File.WriteAllText(Path.Combine(dir, "b.scores.parquet"), string.Empty); // no reconciled sibling
+                File.WriteAllText(Path.Combine(dir, "c.reconciled.scores.parquet"), string.Empty); // no original
+                var resolved = Program.ResolveInputScores(new List<string> { dir });
+                CollectionAssert.AreEqual(
+                    new[] { "a.reconciled.scores.parquet", "b.scores.parquet", "c.reconciled.scores.parquet" },
+                    resolved.ConvertAll(Path.GetFileName));
+                // The superseded original must not appear.
+                CollectionAssert.DoesNotContain(resolved.ConvertAll(Path.GetFileName), "a.scores.parquet");
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        [TestMethod]
         public void TestResolveEmptyDirectoryErrors()
         {
             string dir = NewTempDir();

@@ -412,8 +412,9 @@ namespace pwiz.OspreySharp
 
         /// <summary>
         /// Inverse of <c>scores_path_for_input</c>: given
-        /// <c>/data/sample1.scores.parquet</c>, produce a synthetic input
-        /// path <c>/data/sample1.mzML</c> whose stem matches what the
+        /// <c>/data/sample1.scores.parquet</c> (or its reconciled sibling
+        /// <c>/data/sample1.reconciled.scores.parquet</c>), produce a synthetic
+        /// input path <c>/data/sample1.mzML</c> whose stem matches what the
         /// worker used. This lets the worker reuse the existing
         /// path-derivation helpers (FDR sidecars, calibration JSON,
         /// reconciliation JSON) without duplicating them. The synthetic
@@ -426,9 +427,16 @@ namespace pwiz.OspreySharp
             // GetFileNameWithoutExtension returns "" not null for valid paths
             // and throws on invalid input, so the result is never null here.
             string stem = Path.GetFileNameWithoutExtension(parquetPath);
-            // Strip a trailing ".scores" if present.
+            // Strip the trailing ".reconciled.scores" (Stage 6 reconciled
+            // output) or ".scores" (Stage 4 output). Check the longer suffix
+            // first: GetFileNameWithoutExtension of "x.reconciled.scores.parquet"
+            // is "x.reconciled.scores", and stripping only ".scores" would
+            // leave the bogus stem "x.reconciled".
+            const string ReconciledScoresSuffix = ".reconciled.scores";
             const string ScoresSuffix = ".scores";
-            if (stem.EndsWith(ScoresSuffix, StringComparison.Ordinal))
+            if (stem.EndsWith(ReconciledScoresSuffix, StringComparison.Ordinal))
+                stem = stem.Substring(0, stem.Length - ReconciledScoresSuffix.Length);
+            else if (stem.EndsWith(ScoresSuffix, StringComparison.Ordinal))
                 stem = stem.Substring(0, stem.Length - ScoresSuffix.Length);
             string parent = Path.GetDirectoryName(parquetPath);
             string filename = stem + ".mzML";

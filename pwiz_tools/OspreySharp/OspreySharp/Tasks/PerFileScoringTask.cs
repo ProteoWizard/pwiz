@@ -714,9 +714,12 @@ namespace pwiz.OspreySharp.Tasks
             for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
             {
                 string parquetPath = config.InputScores[fileIdx];
-                string fileName = Path.GetFileNameWithoutExtension(parquetPath);
-                if (fileName.EndsWith(@".scores", StringComparison.Ordinal))
-                    fileName = fileName.Substring(0, fileName.Length - @".scores".Length);
+                // Derive the bare input stem via the single shared suffix-strip
+                // helper so a .reconciled.scores.parquet input maps to the same
+                // fileName key as its .scores.parquet sibling (a naive trailing
+                // ".scores" strip would leave the bogus key "<stem>.reconciled").
+                string fileName = Path.GetFileNameWithoutExtension(
+                    RescoreHydration.SyntheticInputFromParquet(parquetPath)) ?? string.Empty;
                 _ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
                     fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
                 var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
@@ -743,9 +746,10 @@ namespace pwiz.OspreySharp.Tasks
                     string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
                     if (parquetDir != null)
                     {
-                        // fileName is the bare input stem (the trailing
-                        // ".scores" was stripped above), so combining it
-                        // with parquetDir yields the same input-stem path
+                        // fileName is the bare input stem (the scores /
+                        // reconciled-scores suffix was stripped above via
+                        // SyntheticInputFromParquet), so combining it with
+                        // parquetDir yields the same input-stem path
                         // ProcessFile passes to CalibrationPathForInput.
                         string calStemPath = Path.Combine(parquetDir, fileName);
                         string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);

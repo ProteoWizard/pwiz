@@ -62,8 +62,13 @@ namespace pwiz.OspreySharp.Tasks
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             if (ctx.Config.InputFiles == null) yield break;
+            // Stage 7 reads the reconciled parquet when Stage 6 produced one,
+            // else the original Stage 4 parquet (no-work files). Recorded for
+            // provenance only -- the driver validates tasks by output sidecar
+            // key, never by re-checking Inputs() existence (TaskValiditySidecar).
             foreach (var input in ctx.Config.InputFiles)
-                yield return ParquetScoreCache.GetScoresPath(input);
+                yield return ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                    ParquetScoreCache.GetScoresPath(input));
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -192,16 +197,23 @@ namespace pwiz.OspreySharp.Tasks
                                     kvp.Key, kvp.Value.Count));
                                 continue;
                             }
+                            // Read the RECONCILED parquet (Stage 6's rescored
+                            // features) when it exists; fall back to the original
+                            // Stage 4 parquet for files that had no reconciliation
+                            // work (no reconciled sibling was written). The
+                            // perFileParquetPaths map holds original paths.
+                            string effectiveParquetPath =
+                                ParquetScoreCache.EffectiveScoresPathFromScoresPath(parquetPath);
                             List<double[]> featRows;
                             try
                             {
-                                featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
+                                featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(effectiveParquetPath);
                             }
                             catch (Exception ex)
                             {
                                 ctx.LogWarning(string.Format(
                                     "Second-pass FDR: failed to reload PIN features from {0}: {1}",
-                                    parquetPath, ex.Message));
+                                    effectiveParquetPath, ex.Message));
                                 continue;
                             }
                             int nMapped = 0;
@@ -355,7 +367,8 @@ namespace pwiz.OspreySharp.Tasks
                         {
                             TaskValiditySidecar.Write(pass2Path, Name, Program.VERSION,
                                 taskValidityKey,
-                                new[] { ParquetScoreCache.GetScoresPath(inputFile3) });
+                                new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                                    ParquetScoreCache.GetScoresPath(inputFile3)) });
                         }
                         catch (Exception ex)
                         {

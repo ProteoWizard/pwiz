@@ -34,13 +34,15 @@ namespace pwiz.OspreySharp.Tasks
     /// next to each task output at path
     /// <c>&lt;output&gt;.&lt;TaskName&gt;.osprey.task</c>.
     ///
-    /// Naming includes the task name so that two tasks which write
-    /// to the same output (e.g. PerFileScoringTask writes the
-    /// initial <c>.scores.parquet</c>, PerFileRescoreTask later
-    /// overwrites it in place with reconciled content) do not
-    /// trample each other's validity records. Each task checks its
-    /// own sidecar; downstream consumers don't need to know which
-    /// task wrote last.
+    /// Naming includes the task name so that two tasks writing to the
+    /// same output path do not trample each other's validity records.
+    /// (Historically PerFileScoringTask wrote <c>.scores.parquet</c> and
+    /// PerFileRescoreTask overwrote it in place; Stage 6 now writes a
+    /// separate <c>.reconciled.scores.parquet</c>, so the two tasks no
+    /// longer share an output -- but the task-name disambiguation remains
+    /// for any future same-path producers.) Each task checks its own
+    /// sidecar; downstream consumers don't need to know which task wrote
+    /// last.
     ///
     /// On the next pipeline invocation, the driver reads each
     /// output's sidecar before running the producing task; when

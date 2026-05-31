@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.IO;
 
 namespace pwiz.OspreySharp
 {
@@ -772,6 +773,13 @@ namespace pwiz.OspreySharp
         /// non-recursive list of *.scores.parquet files in it; explicit file
         /// paths are passed through unchanged. Throws if the directory is
         /// empty or any explicit path doesn't exist.
+        ///
+        /// Directory mode dedupes per stem: the glob <c>*.scores.parquet</c>
+        /// also matches Stage 6's <c>&lt;stem&gt;.reconciled.scores.parquet</c>
+        /// sibling, so for any stem that has both, only the reconciled file is
+        /// returned (the authoritative later pass; the <c>--join-at-pass=2</c>
+        /// reconciled-input gate expects reconciled parquets). A stem with only
+        /// an original is returned as-is.
         /// </summary>
         internal static List<string> ResolveInputScores(List<string> paths)
         {
@@ -785,8 +793,22 @@ namespace pwiz.OspreySharp
                 if (found.Length == 0)
                     throw new ArgumentException(string.Format(
                         "No *.scores.parquet files found in --input-scores directory: {0}", dir));
-                Array.Sort(found, StringComparer.Ordinal); // Array.Sort OK: filenames are unique, no ties possible
-                return new List<string>(found);
+                const string reconciledSuffix = ".reconciled.scores.parquet";
+                var reconciledSet = new HashSet<string>(StringComparer.Ordinal);
+                foreach (string f in found)
+                    if (f.EndsWith(reconciledSuffix, StringComparison.Ordinal))
+                        reconciledSet.Add(f);
+                var result = new List<string>(found.Length);
+                foreach (string f in found)
+                {
+                    if (f.EndsWith(reconciledSuffix, StringComparison.Ordinal))
+                        result.Add(f); // reconciled: always authoritative
+                    else if (!reconciledSet.Contains(ParquetScoreCache.ReconciledPathFromScoresPath(f)))
+                        result.Add(f); // original with no reconciled sibling
+                    // else: original superseded by its reconciled sibling -> drop
+                }
+                result.Sort(StringComparer.Ordinal); // unique filenames, no ties
+                return result;
             }
 
             foreach (string p in paths)
