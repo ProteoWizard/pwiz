@@ -22,6 +22,15 @@
 #define PWIZ_SOURCE
 
 
+// Windows headers must come before boost so that WIN32_LEAN_AND_MEAN and
+// NOMINMAX take effect before boost transitively includes <windows.h>.
+#ifdef _MSC_VER
+    #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
+    #include <windows.h>
+    #include <RestartManager.h>
+#endif
+
 #include "VendorReaderTestHarness.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
@@ -48,13 +57,6 @@
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include <thread>
 #include <chrono>
-
-#ifdef _MSC_VER
-    #define WIN32_LEAN_AND_MEAN
-    #define NOMINMAX
-    #include <windows.h>
-    #include <RestartManager.h>
-#endif
 
 
 using namespace pwiz::util;
@@ -94,11 +96,18 @@ std::string findLockingProcesses(const std::string& path)
             UINT nProcInfo = 0;
             DWORD lpdwRebootReasons = RmRebootReasonNone;
             DWORD rc = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, nullptr, &lpdwRebootReasons);
-            if (nProcInfoNeeded > 0 && (rc == ERROR_MORE_DATA || rc == ERROR_SUCCESS))
+            if (rc != ERROR_MORE_DATA && rc != ERROR_SUCCESS)
+            {
+                std::ostringstream oss;
+                oss << "(RmGetList failed, rc=" << rc << ")";
+                result = oss.str();
+            }
+            else if (nProcInfoNeeded > 0)
             {
                 std::vector<RM_PROCESS_INFO> procs(nProcInfoNeeded);
                 nProcInfo = nProcInfoNeeded;
-                if (RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, procs.data(), &lpdwRebootReasons) == ERROR_SUCCESS)
+                DWORD rc2 = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, procs.data(), &lpdwRebootReasons);
+                if (rc2 == ERROR_SUCCESS)
                 {
                     std::ostringstream oss;
                     for (UINT i = 0; i < nProcInfo; ++i)
@@ -108,6 +117,12 @@ std::string findLockingProcesses(const std::string& path)
                         oss << boost::locale::conv::utf_to_utf<char>(procs[i].strAppName)
                             << " (PID " << procs[i].Process.dwProcessId << ")";
                     }
+                    result = oss.str();
+                }
+                else
+                {
+                    std::ostringstream oss;
+                    oss << "(RmGetList (second call) failed, rc=" << rc2 << ")";
                     result = oss.str();
                 }
             }
