@@ -125,11 +125,30 @@ namespace pwiz.OspreySharp.Tasks
         // task all hit a fast no-op after the first hydration).
         private bool _runOrHydrated;
 
+        // Producer accessors. The backing fields are built and mutated ONLY
+        // inside this task (during Run / hydration); consumers in other tasks
+        // only read them. The dictionary accessors return IReadOnly* views to
+        // make the "Scoring owns this state; downstream only reads" contract
+        // explicit (the compiler now enforces no external mutation).
+        //
+        // GetFullLibrary is read-only by the same contract, but its return
+        // type stays List<LibraryEntry> for now: tightening it to
+        // IReadOnlyList would cascade through scoring-engine + FDR-project
+        // signatures (RunCoelutionScoring, RunFdr, ProteinFdr, ...), out of
+        // proportion to the value. Deferred to a future cross-project sweep.
         public List<LibraryEntry> GetFullLibrary(PipelineContext ctx) { EnsureHydrated(ctx); return _fullLibrary; }
-        public Dictionary<uint, LibraryEntry> GetLibraryById(PipelineContext ctx) { EnsureHydrated(ctx); return _libraryById; }
+        public IReadOnlyDictionary<uint, LibraryEntry> GetLibraryById(PipelineContext ctx) { EnsureHydrated(ctx); return _libraryById; }
+        // GetPerFileEntries is DELIBERATELY a live, mutable, shared buffer --
+        // NOT a read-only view, by design. The same
+        // List<KeyValuePair<string, List<FdrEntry>>> reference is the
+        // pipeline's working set: PerFileScoring produces it, FirstJoin
+        // compacts it in place, PerFileRescore overlays rescored entries in
+        // place -- all on this one instance. The no-copy cross-task hand-off
+        // is load-bearing (copying it is a measured perf regression at
+        // Astral scale). Do NOT "fix" this to IReadOnly or to return a copy.
         public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileEntries; }
-        public ConcurrentDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileCalibrations; }
-        public Dictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileParquetPaths; }
+        public IReadOnlyDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileCalibrations; }
+        public IReadOnlyDictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileParquetPaths; }
 
         /// <summary>
         /// The probe-the-disk reconciliation bundle, or <c>null</c> when
