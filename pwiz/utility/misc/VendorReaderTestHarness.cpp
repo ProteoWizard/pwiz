@@ -46,6 +46,15 @@
 #include "boost/locale/encoding_utf.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include <thread>
+#include <chrono>
+
+#ifdef _MSC_VER
+    #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
+    #include <windows.h>
+    #include <RestartManager.h>
+#endif
 
 
 using namespace pwiz::util;
@@ -61,6 +70,59 @@ namespace util {
 
 
 namespace {
+
+#ifdef _MSC_VER
+// Use Windows RestartManager to identify which processes hold a handle on
+// the given path. Used as a diagnostic when the rename-back round-trip
+// after a vendor reader test fails (typical culprits on TeamCity agents:
+// Windows Defender, Search indexer, recently-loaded reader DLLs).
+std::string findLockingProcesses(const std::string& path)
+{
+    DWORD sessionHandle = 0;
+    WCHAR sessionKey[CCH_RM_SESSION_KEY + 1] = {0};
+    if (RmStartSession(&sessionHandle, 0, sessionKey) != ERROR_SUCCESS)
+        return "(RestartManager session unavailable)";
+
+    std::string result;
+    try
+    {
+        std::wstring widePath = boost::locale::conv::utf_to_utf<wchar_t>(path);
+        PCWSTR files[1] = { widePath.c_str() };
+        if (RmRegisterResources(sessionHandle, 1, files, 0, nullptr, 0, nullptr) == ERROR_SUCCESS)
+        {
+            UINT nProcInfoNeeded = 0;
+            UINT nProcInfo = 0;
+            DWORD lpdwRebootReasons = RmRebootReasonNone;
+            DWORD rc = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, nullptr, &lpdwRebootReasons);
+            if (nProcInfoNeeded > 0 && (rc == ERROR_MORE_DATA || rc == ERROR_SUCCESS))
+            {
+                std::vector<RM_PROCESS_INFO> procs(nProcInfoNeeded);
+                nProcInfo = nProcInfoNeeded;
+                if (RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, procs.data(), &lpdwRebootReasons) == ERROR_SUCCESS)
+                {
+                    std::ostringstream oss;
+                    for (UINT i = 0; i < nProcInfo; ++i)
+                    {
+                        if (i > 0) oss << ", ";
+                        oss << boost::locale::conv::utf_to_utf<char>(procs[i].strAppName)
+                            << " (PID " << procs[i].Process.dwProcessId << ")";
+                    }
+                    result = oss.str();
+                }
+            }
+        }
+    }
+    catch (...) {}
+    RmEndSession(sessionHandle);
+    return result.empty() ? "(no holders identified by RestartManager)" : result;
+}
+#else
+std::string findLockingProcesses(const std::string& /*path*/)
+{
+    return "(RestartManager not available on this platform)";
+}
+#endif
+
 
 struct TestTimer : Timer
 {
@@ -1004,18 +1066,37 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                 if (bfs::exists(rawpath))
                 {
                     // test that the reader releases any locks on the data so it can be moved/deleted
-                    try
+                    // retry briefly to absorb transient holds from AV scanners / indexers / OS
+                    // file-handle release lag on CI agents -- a real reader-side handle leak
+                    // remains pinned no matter how long we wait, so the final failure path
+                    // still surfaces those
+                    bool renameOk = false;
+                    std::string lastError = "(no exception captured)";
+                    for (int attempt = 0; attempt < 5; ++attempt)
                     {
-                        bfs::rename(rawpath, rawpath + ".renamed");
-                        bfs::rename(rawpath + ".renamed", rawpath);
+                        if (attempt > 0)
+                            std::this_thread::sleep_for(std::chrono::milliseconds(250 * attempt));
+                        try
+                        {
+                            bfs::rename(rawpath, rawpath + ".renamed");
+                            bfs::rename(rawpath + ".renamed", rawpath);
+                            renameOk = true;
+                            break;
+                        }
+                        catch (const std::exception& e) { lastError = e.what(); }
+                        catch (...) { lastError = "(unknown rename failure)"; }
                     }
-                    catch (...)
+                    if (!renameOk)
                     {
                         // HACK: bug in CompassXtract, used only for YEP/FID formats now, keeps directory locked after opening it but has no problem with re-opening the file
                         if (bfs::exists(bfs::path(rawpath) / "Analysis.yep"))
                             cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
                         else
-                            throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
+                        {
+                            std::string holders = findLockingProcesses(rawpath);
+                            throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks! "
+                                                "Last error: " + lastError + ". Lock holders: " + holders);
+                        }
                     }
                 }
             }
