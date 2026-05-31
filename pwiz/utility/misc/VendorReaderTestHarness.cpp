@@ -90,7 +90,14 @@ std::string findLockingProcesses(const std::string& path)
     {
         std::wstring widePath = boost::locale::conv::utf_to_utf<wchar_t>(path);
         PCWSTR files[1] = { widePath.c_str() };
-        if (RmRegisterResources(sessionHandle, 1, files, 0, nullptr, 0, nullptr) == ERROR_SUCCESS)
+        DWORD rcRegister = RmRegisterResources(sessionHandle, 1, files, 0, nullptr, 0, nullptr);
+        if (rcRegister != ERROR_SUCCESS)
+        {
+            std::ostringstream oss;
+            oss << "(RmRegisterResources failed, rc=" << rcRegister << ")";
+            result = oss.str();
+        }
+        else
         {
             UINT nProcInfoNeeded = 0;
             UINT nProcInfo = 0;
