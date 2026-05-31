@@ -1069,7 +1069,15 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                     // retry briefly to absorb transient holds from AV scanners / indexers / OS
                     // file-handle release lag on CI agents -- a real reader-side handle leak
                     // remains pinned no matter how long we wait, so the final failure path
-                    // still surfaces those
+                    // still surfaces those.
+                    //
+                    // Track which side of the rename round-trip we are on so that if the
+                    // forward rename succeeds but the rename-back fails, the retry only
+                    // repeats the rename-back step (rather than failing with "path not
+                    // found" because the source has already moved) and the final
+                    // diagnostic queries the path that is actually still on disk.
+                    std::string renamedPath = rawpath + ".renamed";
+                    bool isRenamed = false;
                     bool renameOk = false;
                     std::string lastError = "(no exception captured)";
                     for (int attempt = 0; attempt < 5; ++attempt)
@@ -1078,8 +1086,13 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                             std::this_thread::sleep_for(std::chrono::milliseconds(250 * attempt));
                         try
                         {
-                            bfs::rename(rawpath, rawpath + ".renamed");
-                            bfs::rename(rawpath + ".renamed", rawpath);
+                            if (!isRenamed)
+                            {
+                                bfs::rename(rawpath, renamedPath);
+                                isRenamed = true;
+                            }
+                            bfs::rename(renamedPath, rawpath);
+                            isRenamed = false;
                             renameOk = true;
                             break;
                         }
@@ -1088,12 +1101,13 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                     }
                     if (!renameOk)
                     {
+                        const std::string& currentPath = isRenamed ? renamedPath : rawpath;
                         // HACK: bug in CompassXtract, used only for YEP/FID formats now, keeps directory locked after opening it but has no problem with re-opening the file
-                        if (bfs::exists(bfs::path(rawpath) / "Analysis.yep"))
+                        if (bfs::exists(bfs::path(currentPath) / "Analysis.yep"))
                             cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
                         else
                         {
-                            std::string holders = findLockingProcesses(rawpath);
+                            std::string holders = findLockingProcesses(currentPath);
                             throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks! "
                                                 "Last error: " + lastError + ". Lock holders: " + holders);
                         }
