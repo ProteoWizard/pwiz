@@ -455,9 +455,9 @@ namespace pwiz.OspreySharp.Tasks
         /// prior config is rejected; bare binaries with no sidecar are
         /// treated as trusted boundary inputs (lets Test-Regression freeze
         /// Rust outputs as C# inputs without minting sidecars). Returns
-        /// false (with ctx.ExitCode set) on a fatal overlay error; true
-        /// when the overlay loaded or was skipped. Mirrors Rust's
-        /// load-order inversion at pipeline.rs:4030-4076.
+        /// false (with <see cref="PipelineContext.ExitCode"/> set) on a
+        /// fatal overlay error; true when the overlay loaded or was
+        /// skipped. Mirrors Rust's load-order inversion at pipeline.rs:4030-4076.
         /// </summary>
         private bool ReloadSecondPassOverlay(
             OspreyConfig config,
@@ -577,8 +577,9 @@ namespace pwiz.OspreySharp.Tasks
         /// .reconciliation.json envelopes. On success sets the
         /// <see cref="_didPlan"/> output fields the next task
         /// (PerFileRescoreTask) consumes and returns true. Returns false
-        /// (with ctx.ExitCode set) on the --join-at-pass=1 --join-only
-        /// StopAfterStage5 exit paths. Mirrors pipeline.rs Stage 6 entry
+        /// (with <see cref="PipelineContext.ExitCode"/> set) on the
+        /// --join-at-pass=1 --join-only StopAfterStage5 exit paths.
+        /// Mirrors pipeline.rs Stage 6 entry
         /// block at lines 3208-3273. The caller gates this on
         /// bundle == null (Stage 6 state already exists upstream on the
         /// bundle path) + Reconciliation.Enabled.
