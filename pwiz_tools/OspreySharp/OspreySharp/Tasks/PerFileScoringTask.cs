@@ -660,8 +660,10 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// --join-only: load per-file FdrEntry stubs + PIN features directly
         /// from each <c>.scores.parquet</c> listed via <c>--input-scores</c>
-        /// (skips Stages 1-4), plus a best-effort calibration-JSON load per
-        /// file for Stage 6 reconciliation. Validates the parquet group's
+        /// (skips the per-file Stage 2-4 scoring; Stage 1 library load
+        /// already ran in <see cref="Run"/>), plus a best-effort
+        /// calibration-JSON load per file for Stage 6 reconciliation.
+        /// Validates the parquet group's
         /// hashes against the current library/search params first (throws
         /// <see cref="InvalidDataException"/> on mismatch). Populates
         /// <paramref name="perFileEntries"/>, <paramref name="perFileParquetPaths"/>,
@@ -674,12 +676,11 @@ namespace pwiz.OspreySharp.Tasks
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations)
         {
             // --join-only: load per-file FdrEntry stubs directly from
-            // each .scores.parquet listed via --input-scores. Skips
-            // Stages 1-4. Side data (calibration, sidecars) is not
-            // loaded on the C# side yet -- the simple Stage 5 path
-            // doesn't need it. When reconciliation lands, this branch
-            // will need to load the calibration JSON sibling files
-            // (best-effort, like the Rust impl).
+            // each .scores.parquet listed via --input-scores. Skips the
+            // per-file Stage 2-4 scoring (Stage 1 library load already ran
+            // in Run). Also loads a best-effort calibration JSON sibling
+            // per file (the loop below) for Stage 6 reconciliation, like
+            // the Rust impl.
             // Guard: hash check against current --library and search params.
             // Aborts with a clear, file-named error if the operator points
             // the merge node at parquets from a different scoring run.
@@ -766,8 +767,10 @@ namespace pwiz.OspreySharp.Tasks
         /// hydration path and the in-pipeline path produce identical
         /// post-Stage-5 state, and clear PIN features on the hydrated stubs.
         /// Returns false (with <see cref="PipelineContext.ExitCode"/> set) if
-        /// hydration throws; true otherwise (including when no sidecars are
-        /// present yet and <see cref="_rescoreInputs"/> stays null).
+        /// hydration throws <see cref="InvalidDataException"/>; true otherwise
+        /// (including when no sidecars are present yet and
+        /// <see cref="_rescoreInputs"/> stays null). Other exception types
+        /// propagate uncaught, matching the original inline behavior.
         /// </summary>
         private bool HydrateRescoreBundleIfPresent(
             OspreyConfig config,
