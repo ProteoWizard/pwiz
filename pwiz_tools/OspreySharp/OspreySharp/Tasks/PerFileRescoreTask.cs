@@ -511,57 +511,14 @@ namespace pwiz.OspreySharp.Tasks
             OspreyConfig config,
             IReadOnlyList<string> joinFileStems = null)
         {
-            // Pre-group reconciliation actions by file. Mirrors the Rust
-            // pre-grouping at pipeline.rs:2719-2744 -- a single pass over
-            // the action map produces (file -> [(idx, apex, start, end)])
-            // so the per-file loop below just looks up its slice.
+            // Pre-group reconciliation actions by file so the per-file loop
+            // below just looks up its slice.
             var perFileReconTargets =
-                new Dictionary<string, List<(int Index, double Apex, double Start, double End)>>();
-            int totalReconciliation = 0;
-            foreach (var kvp in reconciliationActions)
-            {
-                var fileName = kvp.Key.FileName;
-                var idx = kvp.Key.Index;
-                double apex, start, end;
-                if (kvp.Value is ReconcileAction.UseCwtPeak useCwt)
-                {
-                    apex = useCwt.ApexRt;
-                    start = useCwt.StartRt;
-                    end = useCwt.EndRt;
-                }
-                else if (kvp.Value is ReconcileAction.ForcedIntegration forced)
-                {
-                    apex = forced.ExpectedRt;
-                    start = forced.ExpectedRt - forced.HalfWidth;
-                    end = forced.ExpectedRt + forced.HalfWidth;
-                }
-                else
-                {
-                    // Keep: planner omits these from the map by design,
-                    // but stay defensive -- skip rather than crash.
-                    continue;
-                }
-                if (!perFileReconTargets.TryGetValue(fileName, out var list))
-                {
-                    list = new List<(int, double, double, double)>();
-                    perFileReconTargets[fileName] = list;
-                }
-                list.Add((idx, apex, start, end));
-                totalReconciliation++;
-            }
+                GroupReconciliationActionsByFile(reconciliationActions, out int totalReconciliation);
 
-            // file_name -> input_files index. Used to pick the right mzML
+            // file_name -> input_files index, used to pick the right mzML
             // path for spectra cache load + sibling .calibration.json.
-            // For the worker, config.InputFiles was synthesized from
-            // --input-scores parquet stems by Program.Main; for in-process,
-            // it's the user's -i mzML list. Either way the stem matches
-            // the file_name keys in perFileEntries.
-            var fileNameToIdx = new Dictionary<string, int>(StringComparer.Ordinal);
-            for (int i = 0; i < config.InputFiles.Count; i++)
-            {
-                string stem = Path.GetFileNameWithoutExtension(config.InputFiles[i]) ?? string.Empty;
-                fileNameToIdx[stem] = i;
-            }
+            var fileNameToIdx = BuildFileNameToIndex(config.InputFiles);
 
             int totalRescored = 0;
             int totalGapCwt = 0;
@@ -661,37 +618,10 @@ namespace pwiz.OspreySharp.Tasks
                     gapFillTargets.Count,
                     combinedTargets.Count));
 
-                // Build boundary_overrides keyed by entry_id + entry_id->idx
-                // map for the post-scoring overlay step. Also collect the
-                // subset of library ids the search engine needs to score.
-                var boundaryOverrides = new Dictionary<uint, (double Apex, double Start, double End)>();
-                var subsetIds = new HashSet<uint>();
-                foreach (var kvp in combinedTargets)
-                {
-                    int idx = kvp.Key;
-                    uint entryId = fdrEntries[idx].EntryId;
-                    boundaryOverrides[entryId] = kvp.Value;
-                    subsetIds.Add(entryId);
-                }
-
-                // Build the subset library for re-scoring. The same library
-                // entries the original Stage 1-4 scoring used; we just hand
-                // RunCoelutionScoring a smaller list so it doesn't waste
-                // work on entries we're not re-scoring.
-                List<LibraryEntry> subsetLibrary;
-                if (subsetIds.Count == 0)
-                {
-                    subsetLibrary = new List<LibraryEntry>();
-                }
-                else
-                {
-                    subsetLibrary = new List<LibraryEntry>(subsetIds.Count);
-                    foreach (var libEntry in fullLibrary)
-                    {
-                        if (subsetIds.Contains(libEntry.Id))
-                            subsetLibrary.Add(libEntry);
-                    }
-                }
+                // Build the per-file scoring subset: boundary_overrides keyed
+                // by entry_id + the subset library RunCoelutionScoring scores.
+                var (boundaryOverrides, subsetLibrary) =
+                    BuildScoringSubset(combinedTargets, fdrEntries, fullLibrary);
 
                 // Load spectra: prefer the .spectra.bin cache the original
                 // Stage 1 wrote; fall back to mzML if the cache is missing
@@ -752,75 +682,10 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 swRescore.Stop();
 
-                // Overlay re-scored entries back onto fdr_entries by
-                // entry_id. Preserve the original ParquetIndex so the
-                // future write-back step can target the right Parquet row
-                // (post-compaction Vec position != Parquet row index).
-                //
-                // Mirror Rust's to_fdr_entry semantics: post-rescore stubs
-                // carry default Score (0.0), q-values (1.0), and Pep
-                // (1.0). Percolator (Stage 7, second-pass FDR) recomputes
-                // these from the new Features. Without this reset the
-                // OspreySharp ScoreCandidate's `Score = coelutionSum`
-                // initializer (AnalysisPipeline.cs ~line 4088) bleeds
-                // through, producing 173k rows of post-rescore divergence
-                // vs the Rust worker's rust_stage6_rescored.tsv.
-                //
-                // Pass 1: index the rescored results by entry_id so we
-                // can look up successful re-scores in the second pass.
-                var rescoredByEntryId = new Dictionary<uint, FdrEntry>();
-                foreach (var entry in rescored)
-                {
-                    rescoredByEntryId[entry.EntryId] = entry;
-                }
-
-                // Pass 2: iterate every combined target. Successful
-                // re-scores get the new entry overlaid with reset
-                // discriminant fields. Targets where RunCoelutionScoring
-                // returned no entry (no peak found at the override
-                // boundary) STILL get their existing fdrEntries[idx]
-                // reset to default discriminant values. Without this,
-                // ~9956 multi-charge consensus targets on Stellar 1-file
-                // retain their first-pass Percolator scores in the
-                // post-rescore dump while Rust's writes score=0/q=1
-                // because Rust's worker emits zeroed stubs for every
-                // override regardless of peak success.
-                int nOverlay = 0;
-                int nNoPeak = 0;
-                foreach (var kvp in combinedTargets)
-                {
-                    int idx = kvp.Key;
-                    uint entryId = fdrEntries[idx].EntryId;
-                    if (rescoredByEntryId.TryGetValue(entryId, out FdrEntry rescoredEntry))
-                    {
-                        rescoredEntry.Score = 0.0;
-                        rescoredEntry.RunPrecursorQvalue = 1.0;
-                        rescoredEntry.RunPeptideQvalue = 1.0;
-                        rescoredEntry.RunProteinQvalue = 1.0;
-                        rescoredEntry.ExperimentPrecursorQvalue = 1.0;
-                        rescoredEntry.ExperimentPeptideQvalue = 1.0;
-                        rescoredEntry.ExperimentProteinQvalue = 1.0;
-                        rescoredEntry.Pep = 1.0;
-                        rescoredEntry.ParquetIndex = fdrEntries[idx].ParquetIndex;
-                        fdrEntries[idx] = rescoredEntry;
-                        nOverlay++;
-                    }
-                    else
-                    {
-                        // No peak at the override boundary -- reset to
-                        // defaults in place to match Rust's behavior.
-                        var existing = fdrEntries[idx];
-                        existing.Score = 0.0;
-                        existing.RunPrecursorQvalue = 1.0;
-                        existing.RunPeptideQvalue = 1.0;
-                        existing.RunProteinQvalue = 1.0;
-                        existing.ExperimentPrecursorQvalue = 1.0;
-                        existing.ExperimentPeptideQvalue = 1.0;
-                        existing.ExperimentProteinQvalue = 1.0;
-                        existing.Pep = 1.0;
-                        nNoPeak++;
-                    }
-                }
+                // Overlay the re-scored subset back onto the per-file stubs,
+                // resetting discriminant fields to Rust to_fdr_entry defaults.
+                var (nOverlay, nNoPeak) =
+                    OverlayRescoredEntries(fdrEntries, combinedTargets, rescored);
                 totalRescored += nOverlay;
                 if (nNoPeak > 0)
                 {
@@ -834,146 +699,12 @@ namespace pwiz.OspreySharp.Tasks
                     nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
 
                 // PHASE 2 -- gap-fill two-pass.
-                int nGapCwt = 0;
-                int nGapForced = 0;
                 if (gapFillTargets.Count > 0)
                 {
-                    // Build gap-fill library subset (targets only).
-                    //
-                    // Decoys are intentionally excluded from gap-fill: forcing a
-                    // random decoy sequence to be scored at the target's
-                    // consensus RT has no biological basis (decoys are not
-                    // expected to co-elute with their paired target), and the
-                    // 1st-pass parquet already has a score for every decoy at
-                    // its own natural-but-best peak. Gap-filling decoys also
-                    // re-scored them at consensus RT and APPENDED a second
-                    // parquet row alongside the existing 1st-pass row,
-                    // producing exact-duplicate rows in the reconciled parquet.
-                    // Those duplicates cascaded into different max-per-modseq
-                    // aggregations cross-impl and a 1.1e-4 group_qvalue drift
-                    // on Astral 3-file. Targets are still gap-filled because
-                    // they were missing from this file by definition.
-                    var gapFillIds = new HashSet<uint>();
-                    foreach (var gf in gapFillTargets)
-                    {
-                        gapFillIds.Add(gf.TargetEntryId);
-                    }
-                    var gapFillLibrary = new List<LibraryEntry>(gapFillIds.Count);
-                    foreach (var libEntry in fullLibrary)
-                    {
-                        if (gapFillIds.Contains(libEntry.Id))
-                            gapFillLibrary.Add(libEntry);
-                    }
-
-                    HashSet<uint> cwtHitIds;
-                    if (gapFillLibrary.Count > 0)
-                    {
-                        // Pass 1: CWT pass with prefilter disabled. Clone
-                        // fileConfig (already a per-file clone) so the
-                        // disable is scoped to this CWT pass and doesn't
-                        // affect the forced-integration pass below.
-                        var cwtConfig = fileConfig.ShallowClone();
-                        cwtConfig.PrefilterEnabled = false;
-                        var cwtContext = new ScoringContext(cwtConfig, fileName);
-                        cwtContext.OriginalRtMad = rtMadFromCalJson;
-                        // No BoundaryOverrides -- CWT picks peaks freely.
-
-                        var swCwt = Stopwatch.StartNew();
-                        var cwtResults = RunCoelutionScoring(
-                            gapFillLibrary, spectra, ms1Spectra,
-                            isolationWindows, rtCal,
-                            ms2Cal, ms1Cal,
-                            cwtContext);
-                        swCwt.Stop();
-
-                        cwtHitIds = new HashSet<uint>();
-                        foreach (var entry in cwtResults)
-                            cwtHitIds.Add(entry.EntryId);
-                        nGapCwt = cwtResults.Count;
-
-                        // Append CWT results as new FdrEntry stubs with the
-                        // gap-fill sentinel + score-reset (mirroring Rust
-                        // to_fdr_entry semantics for new stubs).
-                        foreach (var entry in cwtResults)
-                        {
-                            entry.ParquetIndex = uint.MaxValue;
-                            entry.Score = 0.0;
-                            entry.RunPrecursorQvalue = 1.0;
-                            entry.RunPeptideQvalue = 1.0;
-                            entry.RunProteinQvalue = 1.0;
-                            entry.ExperimentPrecursorQvalue = 1.0;
-                            entry.ExperimentPeptideQvalue = 1.0;
-                            entry.ExperimentProteinQvalue = 1.0;
-                            entry.Pep = 1.0;
-                            fdrEntries.Add(entry);
-                        }
-
-                        _ctx.LogInfo(string.Format(
-                            "  Gap-fill CWT: {0} hits ({1:F1}s)",
-                            nGapCwt, swCwt.Elapsed.TotalSeconds));
-                    }
-                    else
-                    {
-                        cwtHitIds = new HashSet<uint>();
-                    }
-
-                    // Pass 2: Forced integration for targets CWT missed.
-                    // Decoys are intentionally excluded from gap-fill (see
-                    // gapFillIds build above).
-                    var forcedOverrides = new Dictionary<uint, (double Apex, double Start, double End)>();
-                    var forcedIds = new HashSet<uint>();
-                    foreach (var gf in gapFillTargets)
-                    {
-                        double start = gf.ExpectedRt - gf.HalfWidth;
-                        double end = gf.ExpectedRt + gf.HalfWidth;
-                        if (!cwtHitIds.Contains(gf.TargetEntryId))
-                        {
-                            forcedOverrides[gf.TargetEntryId] = (gf.ExpectedRt, start, end);
-                            forcedIds.Add(gf.TargetEntryId);
-                        }
-                    }
-
-                    if (forcedOverrides.Count > 0)
-                    {
-                        var forcedLibrary = new List<LibraryEntry>(forcedIds.Count);
-                        foreach (var libEntry in gapFillLibrary)
-                        {
-                            if (forcedIds.Contains(libEntry.Id))
-                                forcedLibrary.Add(libEntry);
-                        }
-
-                        var forcedContext = new ScoringContext(fileConfig, fileName);
-                        forcedContext.BoundaryOverrides = forcedOverrides;
-                        forcedContext.OriginalRtMad = rtMadFromCalJson;
-
-                        var swForced = Stopwatch.StartNew();
-                        var forcedResults = RunCoelutionScoring(
-                            forcedLibrary, spectra, ms1Spectra,
-                            isolationWindows, rtCal,
-                            ms2Cal, ms1Cal,
-                            forcedContext);
-                        swForced.Stop();
-                        nGapForced = forcedResults.Count;
-
-                        foreach (var entry in forcedResults)
-                        {
-                            entry.ParquetIndex = uint.MaxValue;
-                            entry.Score = 0.0;
-                            entry.RunPrecursorQvalue = 1.0;
-                            entry.RunPeptideQvalue = 1.0;
-                            entry.RunProteinQvalue = 1.0;
-                            entry.ExperimentPrecursorQvalue = 1.0;
-                            entry.ExperimentPeptideQvalue = 1.0;
-                            entry.ExperimentProteinQvalue = 1.0;
-                            entry.Pep = 1.0;
-                            fdrEntries.Add(entry);
-                        }
-
-                        _ctx.LogInfo(string.Format(
-                            "  Gap-fill forced: {0} integrated ({1:F1}s)",
-                            nGapForced, swForced.Elapsed.TotalSeconds));
-                    }
-
+                    var (nGapCwt, nGapForced) = RunGapFillTwoPass(
+                        gapFillTargets, fullLibrary, spectra, ms1Spectra,
+                        isolationWindows, rtCal, ms2Cal, ms1Cal,
+                        fileConfig, fileName, rtMadFromCalJson, fdrEntries);
                     totalGapCwt += nGapCwt;
                     totalGapForced += nGapForced;
                     totalRescored += nGapCwt + nGapForced;
@@ -1019,6 +750,350 @@ namespace pwiz.OspreySharp.Tasks
                 TotalGapCwt = totalGapCwt,
                 TotalGapForced = totalGapForced,
             };
+        }
+
+        /// <summary>
+        /// Pre-group reconciliation actions by file. Mirrors the Rust
+        /// pre-grouping at pipeline.rs:2719-2744 -- a single pass over
+        /// the action map produces (file -> [(idx, apex, start, end)])
+        /// so the per-file loop just looks up its slice. Returns the
+        /// per-file map; <paramref name="totalReconciliation"/> receives
+        /// the count of non-Keep actions grouped.
+        /// </summary>
+        private static Dictionary<string, List<(int Index, double Apex, double Start, double End)>>
+            GroupReconciliationActionsByFile(
+                IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> reconciliationActions,
+                out int totalReconciliation)
+        {
+            var perFileReconTargets =
+                new Dictionary<string, List<(int Index, double Apex, double Start, double End)>>();
+            totalReconciliation = 0;
+            foreach (var kvp in reconciliationActions)
+            {
+                var fileName = kvp.Key.FileName;
+                var idx = kvp.Key.Index;
+                double apex, start, end;
+                if (kvp.Value is ReconcileAction.UseCwtPeak useCwt)
+                {
+                    apex = useCwt.ApexRt;
+                    start = useCwt.StartRt;
+                    end = useCwt.EndRt;
+                }
+                else if (kvp.Value is ReconcileAction.ForcedIntegration forced)
+                {
+                    apex = forced.ExpectedRt;
+                    start = forced.ExpectedRt - forced.HalfWidth;
+                    end = forced.ExpectedRt + forced.HalfWidth;
+                }
+                else
+                {
+                    // Keep: planner omits these from the map by design,
+                    // but stay defensive -- skip rather than crash.
+                    continue;
+                }
+                if (!perFileReconTargets.TryGetValue(fileName, out var list))
+                {
+                    list = new List<(int, double, double, double)>();
+                    perFileReconTargets[fileName] = list;
+                }
+                list.Add((idx, apex, start, end));
+                totalReconciliation++;
+            }
+            return perFileReconTargets;
+        }
+
+        /// <summary>
+        /// Build the file_name -> input_files index map used to pick the
+        /// right mzML path for the spectra-cache load + sibling
+        /// .calibration.json. For the worker, config.InputFiles was
+        /// synthesized from --input-scores parquet stems by Program.Main;
+        /// for in-process it's the user's -i mzML list. Either way the
+        /// stem matches the file_name keys in perFileEntries.
+        /// </summary>
+        private static Dictionary<string, int> BuildFileNameToIndex(IReadOnlyList<string> inputFiles)
+        {
+            var fileNameToIdx = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int i = 0; i < inputFiles.Count; i++)
+            {
+                string stem = Path.GetFileNameWithoutExtension(inputFiles[i]) ?? string.Empty;
+                fileNameToIdx[stem] = i;
+            }
+            return fileNameToIdx;
+        }
+
+        /// <summary>
+        /// Build the per-file scoring subset: the boundary_overrides map
+        /// keyed by entry_id, and the subset library handed to
+        /// <see cref="AbstractScoringTask.RunCoelutionScoring"/> so it
+        /// doesn't waste work on entries we're not re-scoring. The subset
+        /// is the same library entries the original Stage 1-4 scoring used,
+        /// just a smaller list.
+        /// </summary>
+        private static (Dictionary<uint, (double Apex, double Start, double End)> BoundaryOverrides,
+            List<LibraryEntry> SubsetLibrary) BuildScoringSubset(
+                Dictionary<int, (double Apex, double Start, double End)> combinedTargets,
+                List<FdrEntry> fdrEntries,
+                List<LibraryEntry> fullLibrary)
+        {
+            // Build boundary_overrides keyed by entry_id. Also collect the
+            // subset of library ids the search engine needs to score.
+            var boundaryOverrides = new Dictionary<uint, (double Apex, double Start, double End)>();
+            var subsetIds = new HashSet<uint>();
+            foreach (var kvp in combinedTargets)
+            {
+                int idx = kvp.Key;
+                uint entryId = fdrEntries[idx].EntryId;
+                boundaryOverrides[entryId] = kvp.Value;
+                subsetIds.Add(entryId);
+            }
+
+            List<LibraryEntry> subsetLibrary;
+            if (subsetIds.Count == 0)
+            {
+                subsetLibrary = new List<LibraryEntry>();
+            }
+            else
+            {
+                subsetLibrary = new List<LibraryEntry>(subsetIds.Count);
+                foreach (var libEntry in fullLibrary)
+                {
+                    if (subsetIds.Contains(libEntry.Id))
+                        subsetLibrary.Add(libEntry);
+                }
+            }
+            return (boundaryOverrides, subsetLibrary);
+        }
+
+        /// <summary>
+        /// Overlay re-scored entries back onto the per-file FdrEntry stubs
+        /// by entry_id, preserving the original ParquetIndex so the
+        /// write-back step can target the right Parquet row (post-compaction
+        /// Vec position != Parquet row index).
+        ///
+        /// Mirror Rust's to_fdr_entry semantics: post-rescore stubs carry
+        /// default Score (0.0), q-values (1.0), and Pep (1.0). Percolator
+        /// (Stage 7, second-pass FDR) recomputes these from the new
+        /// Features. Without this reset the OspreySharp ScoreCandidate's
+        /// <c>Score = coelutionSum</c> initializer bleeds through, producing
+        /// 173k rows of post-rescore divergence vs the Rust worker's
+        /// rust_stage6_rescored.tsv. Targets where RunCoelutionScoring
+        /// returned no entry (no peak at the override boundary) STILL get
+        /// their existing stub reset in place -- Rust's worker emits zeroed
+        /// stubs for every override regardless of peak success. Returns
+        /// (entries overlaid, no-peak resets).
+        /// </summary>
+        private static (int NOverlay, int NNoPeak) OverlayRescoredEntries(
+            List<FdrEntry> fdrEntries,
+            Dictionary<int, (double Apex, double Start, double End)> combinedTargets,
+            List<FdrEntry> rescored)
+        {
+            // Pass 1: index the rescored results by entry_id so we
+            // can look up successful re-scores in the second pass.
+            var rescoredByEntryId = new Dictionary<uint, FdrEntry>();
+            foreach (var entry in rescored)
+            {
+                rescoredByEntryId[entry.EntryId] = entry;
+            }
+
+            // Pass 2: iterate every combined target.
+            int nOverlay = 0;
+            int nNoPeak = 0;
+            foreach (var kvp in combinedTargets)
+            {
+                int idx = kvp.Key;
+                uint entryId = fdrEntries[idx].EntryId;
+                if (rescoredByEntryId.TryGetValue(entryId, out FdrEntry rescoredEntry))
+                {
+                    rescoredEntry.Score = 0.0;
+                    rescoredEntry.RunPrecursorQvalue = 1.0;
+                    rescoredEntry.RunPeptideQvalue = 1.0;
+                    rescoredEntry.RunProteinQvalue = 1.0;
+                    rescoredEntry.ExperimentPrecursorQvalue = 1.0;
+                    rescoredEntry.ExperimentPeptideQvalue = 1.0;
+                    rescoredEntry.ExperimentProteinQvalue = 1.0;
+                    rescoredEntry.Pep = 1.0;
+                    rescoredEntry.ParquetIndex = fdrEntries[idx].ParquetIndex;
+                    fdrEntries[idx] = rescoredEntry;
+                    nOverlay++;
+                }
+                else
+                {
+                    // No peak at the override boundary -- reset to
+                    // defaults in place to match Rust's behavior.
+                    var existing = fdrEntries[idx];
+                    existing.Score = 0.0;
+                    existing.RunPrecursorQvalue = 1.0;
+                    existing.RunPeptideQvalue = 1.0;
+                    existing.RunProteinQvalue = 1.0;
+                    existing.ExperimentPrecursorQvalue = 1.0;
+                    existing.ExperimentPeptideQvalue = 1.0;
+                    existing.ExperimentProteinQvalue = 1.0;
+                    existing.Pep = 1.0;
+                    nNoPeak++;
+                }
+            }
+            return (nOverlay, nNoPeak);
+        }
+
+        /// <summary>
+        /// PHASE 2 gap-fill two-pass for a single file: a CWT pass (prefilter
+        /// disabled, peaks picked freely) followed by a forced-integration
+        /// pass for the targets CWT missed. CWT + forced results are appended
+        /// to <paramref name="fdrEntries"/> as new gap-fill stubs (ParquetIndex
+        /// sentinel + score-reset, mirroring Rust to_fdr_entry semantics).
+        /// Decoys are intentionally excluded from gap-fill: forcing a random
+        /// decoy sequence to be scored at the target's consensus RT has no
+        /// biological basis (decoys are not expected to co-elute with their
+        /// paired target), and the 1st-pass parquet already has a score for
+        /// every decoy at its own natural-but-best peak. Gap-filling decoys
+        /// also re-scored them at consensus RT and APPENDED a second parquet
+        /// row alongside the existing 1st-pass row, producing exact-duplicate
+        /// rows in the reconciled parquet. Those duplicates cascaded into
+        /// different max-per-modseq aggregations cross-impl and a 1.1e-4
+        /// group_qvalue drift on Astral 3-file. Targets are still gap-filled
+        /// because they were missing from this file by definition. Returns
+        /// (CWT hits, forced integrations).
+        /// </summary>
+        private (int NGapCwt, int NGapForced) RunGapFillTwoPass(
+            List<GapFillTarget> gapFillTargets,
+            List<LibraryEntry> fullLibrary,
+            List<Spectrum> spectra,
+            List<MS1Spectrum> ms1Spectra,
+            List<IsolationWindow> isolationWindows,
+            RTCalibration rtCal,
+            MzCalibrationResult ms2Cal,
+            MzCalibrationResult ms1Cal,
+            OspreyConfig fileConfig,
+            string fileName,
+            double? rtMadFromCalJson,
+            List<FdrEntry> fdrEntries)
+        {
+            int nGapCwt = 0;
+            int nGapForced = 0;
+
+            // Build gap-fill library subset (targets only).
+            var gapFillIds = new HashSet<uint>();
+            foreach (var gf in gapFillTargets)
+            {
+                gapFillIds.Add(gf.TargetEntryId);
+            }
+            var gapFillLibrary = new List<LibraryEntry>(gapFillIds.Count);
+            foreach (var libEntry in fullLibrary)
+            {
+                if (gapFillIds.Contains(libEntry.Id))
+                    gapFillLibrary.Add(libEntry);
+            }
+
+            HashSet<uint> cwtHitIds;
+            if (gapFillLibrary.Count > 0)
+            {
+                // Pass 1: CWT pass with prefilter disabled. Clone
+                // fileConfig (already a per-file clone) so the
+                // disable is scoped to this CWT pass and doesn't
+                // affect the forced-integration pass below.
+                var cwtConfig = fileConfig.ShallowClone();
+                cwtConfig.PrefilterEnabled = false;
+                var cwtContext = new ScoringContext(cwtConfig, fileName);
+                cwtContext.OriginalRtMad = rtMadFromCalJson;
+                // No BoundaryOverrides -- CWT picks peaks freely.
+
+                var swCwt = Stopwatch.StartNew();
+                var cwtResults = RunCoelutionScoring(
+                    gapFillLibrary, spectra, ms1Spectra,
+                    isolationWindows, rtCal,
+                    ms2Cal, ms1Cal,
+                    cwtContext);
+                swCwt.Stop();
+
+                cwtHitIds = new HashSet<uint>();
+                foreach (var entry in cwtResults)
+                    cwtHitIds.Add(entry.EntryId);
+                nGapCwt = cwtResults.Count;
+
+                // Append CWT results as new FdrEntry stubs with the
+                // gap-fill sentinel + score-reset (mirroring Rust
+                // to_fdr_entry semantics for new stubs).
+                foreach (var entry in cwtResults)
+                {
+                    entry.ParquetIndex = uint.MaxValue;
+                    entry.Score = 0.0;
+                    entry.RunPrecursorQvalue = 1.0;
+                    entry.RunPeptideQvalue = 1.0;
+                    entry.RunProteinQvalue = 1.0;
+                    entry.ExperimentPrecursorQvalue = 1.0;
+                    entry.ExperimentPeptideQvalue = 1.0;
+                    entry.ExperimentProteinQvalue = 1.0;
+                    entry.Pep = 1.0;
+                    fdrEntries.Add(entry);
+                }
+
+                _ctx.LogInfo(string.Format(
+                    "  Gap-fill CWT: {0} hits ({1:F1}s)",
+                    nGapCwt, swCwt.Elapsed.TotalSeconds));
+            }
+            else
+            {
+                cwtHitIds = new HashSet<uint>();
+            }
+
+            // Pass 2: Forced integration for targets CWT missed.
+            // Decoys are intentionally excluded from gap-fill (see
+            // gapFillIds build above).
+            var forcedOverrides = new Dictionary<uint, (double Apex, double Start, double End)>();
+            var forcedIds = new HashSet<uint>();
+            foreach (var gf in gapFillTargets)
+            {
+                double start = gf.ExpectedRt - gf.HalfWidth;
+                double end = gf.ExpectedRt + gf.HalfWidth;
+                if (!cwtHitIds.Contains(gf.TargetEntryId))
+                {
+                    forcedOverrides[gf.TargetEntryId] = (gf.ExpectedRt, start, end);
+                    forcedIds.Add(gf.TargetEntryId);
+                }
+            }
+
+            if (forcedOverrides.Count > 0)
+            {
+                var forcedLibrary = new List<LibraryEntry>(forcedIds.Count);
+                foreach (var libEntry in gapFillLibrary)
+                {
+                    if (forcedIds.Contains(libEntry.Id))
+                        forcedLibrary.Add(libEntry);
+                }
+
+                var forcedContext = new ScoringContext(fileConfig, fileName);
+                forcedContext.BoundaryOverrides = forcedOverrides;
+                forcedContext.OriginalRtMad = rtMadFromCalJson;
+
+                var swForced = Stopwatch.StartNew();
+                var forcedResults = RunCoelutionScoring(
+                    forcedLibrary, spectra, ms1Spectra,
+                    isolationWindows, rtCal,
+                    ms2Cal, ms1Cal,
+                    forcedContext);
+                swForced.Stop();
+                nGapForced = forcedResults.Count;
+
+                foreach (var entry in forcedResults)
+                {
+                    entry.ParquetIndex = uint.MaxValue;
+                    entry.Score = 0.0;
+                    entry.RunPrecursorQvalue = 1.0;
+                    entry.RunPeptideQvalue = 1.0;
+                    entry.RunProteinQvalue = 1.0;
+                    entry.ExperimentPrecursorQvalue = 1.0;
+                    entry.ExperimentPeptideQvalue = 1.0;
+                    entry.ExperimentProteinQvalue = 1.0;
+                    entry.Pep = 1.0;
+                    fdrEntries.Add(entry);
+                }
+
+                _ctx.LogInfo(string.Format(
+                    "  Gap-fill forced: {0} integrated ({1:F1}s)",
+                    nGapForced, swForced.Elapsed.TotalSeconds));
+            }
+
+            return (nGapCwt, nGapForced);
         }
 
         /// <summary>
