@@ -103,7 +103,8 @@ std::string findLockingProcesses(const std::string& path)
                     std::ostringstream oss;
                     for (UINT i = 0; i < nProcInfo; ++i)
                     {
-                        if (i > 0) oss << ", ";
+                        if (i > 0)
+                            oss << ", ";
                         oss << boost::locale::conv::utf_to_utf<char>(procs[i].strAppName)
                             << " (PID " << procs[i].Process.dwProcessId << ")";
                     }
@@ -1102,8 +1103,13 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                     if (!renameOk)
                     {
                         const std::string& currentPath = isRenamed ? renamedPath : rawpath;
-                        // HACK: bug in CompassXtract, used only for YEP/FID formats now, keeps directory locked after opening it but has no problem with re-opening the file
-                        if (bfs::exists(bfs::path(currentPath) / "Analysis.yep"))
+                        // HACK: bug in CompassXtract, used only for YEP/FID formats now,
+                        // keeps directory locked after opening it but has no problem with
+                        // re-opening the file. Only suppress when the fixture is still intact
+                        // (forward rename never happened); a failed rename-back leaves the
+                        // fixture at <rawpath>.renamed and must surface as an error so the
+                        // test run does not continue against a broken fixture.
+                        if (!isRenamed && bfs::exists(bfs::path(rawpath) / "Analysis.yep"))
                             cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
                         else
                         {
