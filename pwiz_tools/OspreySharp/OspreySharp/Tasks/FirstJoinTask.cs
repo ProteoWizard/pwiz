@@ -587,7 +587,7 @@ namespace pwiz.OspreySharp.Tasks
         private bool PlanStage6(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
-            Dictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config)
         {
@@ -900,7 +900,7 @@ namespace pwiz.OspreySharp.Tasks
         /// </returns>
         private int WriteFdrScoresSidecars(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            Dictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config)
         {
             int failures = 0;
@@ -955,7 +955,7 @@ namespace pwiz.OspreySharp.Tasks
             Dictionary<string, RTCalibration> refinedCalibrations,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             List<LibraryEntry> fullLibrary,
-            Dictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             out Dictionary<string, List<GapFillTarget>> gapFillByFileOut)
         {
@@ -1106,7 +1106,7 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private static string ResolveSidecarBasePath(
             string fileName,
-            Dictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config)
         {
             // Normal mode: prefer the actual input mzML path so sidecars

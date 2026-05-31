@@ -554,7 +554,7 @@ namespace pwiz.OspreySharp.Tasks
         private void WriteBlibOutput(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             List<LibraryEntry> fullLibrary,
-            Dictionary<uint, LibraryEntry> libraryById,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config)
         {
             // Two-stage blib output gate, mirroring Rust pipeline.rs:4596-4668.
@@ -892,7 +892,7 @@ namespace pwiz.OspreySharp.Tasks
         private static void WriteBlibFile(
             OspreyConfig config,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            Dictionary<uint, LibraryEntry> libraryById,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor,
             Dictionary<(string, byte), double> bestExpPrecursorQ,
             Dictionary<(string, string), double[]> sharedBounds,
