@@ -1643,78 +1643,18 @@ namespace pwiz.OspreySharp.Tasks
             int minLoessPoints)
         {
             var config = context.Config;
-            var resolution = context.Resolution;
             var fileName = context.FileName;
             // Activate per-entry window dump if requested. Cleared after the
             // matching loop completes (file written below).
             OspreyDiagnostics.StartCalWindowCollection();
 
-            // Pre-preprocess all window spectra for XCorr using the calibration
-            // unit-bin scorer (~2K bins per spectrum, ~16 KB per array).
-            // Independent of resolution mode -- HRAM 100K-bin arrays would
-            // consume ~160 GB of LOH for 204K Astral spectra, so we use the
-            // small unit-bin form for calibration regardless. Main search
-            // still uses the resolution-mode bins.
-            // Calibration preprocess runs in pure f32 to match Rust upstream
-            // maccoss/osprey's native f32 XCorr path (cross-impl parity at
-            // F10 rounding noise, vs ~4e-6 drift under f64). f32 values are
-            // widened to double[] here so the downstream XcorrFromPreprocessed
-            // path is unchanged; the widening is lossless (f32 is a subset of
-            // f64) and preserves the f32 bit pattern for the final sum.
-            var preprocessedByWindowKey = new Dictionary<int, double[][]>();
-            foreach (var kvp in spectraByWindowKey)
-            {
-                var pp = new double[kvp.Value.Count][];
-                for (int i = 0; i < kvp.Value.Count; i++)
-                {
-                    float[] f32pp = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
-                    var widened = new double[f32pp.Length];
-                    for (int k = 0; k < f32pp.Length; k++)
-                        widened[k] = f32pp[k];
-                    pp[i] = widened;
-                }
-                preprocessedByWindowKey[kvp.Key] = pp;
-            }
+            // Pre-preprocess all window spectra for XCorr (f32 unit-bin scorer).
+            var preprocessedByWindowKey = PreprocessWindowsForXcorr(spectraByWindowKey);
 
-            // Parallel score each sampled entry.
-            var swScoring = Stopwatch.StartNew();
-            var matches = new ConcurrentBag<CalibrationMatch>();
-            var snrByEntryId = new ConcurrentDictionary<uint, double>();
-            var matchRts = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
-
-            Parallel.ForEach(sampledEntries, new ParallelOptions
-            {
-                MaxDegreeOfParallelism = config.NThreads
-            },
-            () => resolution.CreateScorer(),
-            (entry, loopState, localScorer) =>
-            {
-                double entrySnr;
-                double entryLibRt;
-                double entryMeasuredRt;
-                var match = ScoreCalibrationEntry(
-                    entry, spectraByWindowKey, preprocessedByWindowKey, ms1Spectra, context,
-                    rtSlope, rtIntercept, tolerance,
-                    calibrationModel,
-                    localScorer,
-                    out entrySnr, out entryLibRt, out entryMeasuredRt);
-                if (match != null)
-                {
-                    matches.Add(match);
-                    snrByEntryId[entry.Id] = entrySnr;
-                    matchRts[entry.Id] = new KeyValuePair<double, double>(
-                        entryLibRt, entryMeasuredRt);
-                }
-                return localScorer;
-            },
-            localScorer => { });
-            swScoring.Stop();
-            _ctx.LogInfo(string.Format(
-                "[TIMING] Calibration pass {0} scoring: {1:F2}s ({2} matches)",
-                passNumber, swScoring.Elapsed.TotalSeconds, matches.Count));
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} matches scored [{1}]: {2}",
-                passNumber, fileName, matches.Count));
+            // Parallel score each sampled entry (timing + match-count logs inside).
+            var (matches, snrByEntryId, matchRts) = ScoreCalibrationMatches(
+                passNumber, sampledEntries, spectraByWindowKey, preprocessedByWindowKey,
+                ms1Spectra, context, rtSlope, rtIntercept, tolerance, calibrationModel);
 
             // Write per-entry window dump if requested. When two passes run, the
             // pass 2 dump overwrites pass 1 - same behaviour as Rust's
@@ -1790,47 +1730,10 @@ namespace pwiz.OspreySharp.Tasks
                     OspreyDiagnostics.ExitAfterDump("OSPREY_LDA_SCORES_ONLY");
             }
 
-            // Collect high-confidence target matches that also meet the S/N quality gate.
-            var libRtsDetected = new List<double>();
-            var measuredRtsDetected = new List<double>();
-            int nSnrFiltered = 0;
-            foreach (var m in matchArray)
-            {
-                if (m.IsDecoy)
-                    continue;
-                if (m.QValue > CAL_FDR_THRESHOLD)
-                    continue;
-
-                KeyValuePair<double, double> rtPair;
-                if (!matchRts.TryGetValue(m.EntryId, out rtPair))
-                    continue;
-
-                double snr;
-                if (!snrByEntryId.TryGetValue(m.EntryId, out snr))
-                    snr = 0.0;
-
-                if (snr < MIN_SNR_FOR_RT_CAL)
-                {
-                    nSnrFiltered++;
-                    continue;
-                }
-
-                libRtsDetected.Add(rtPair.Key);
-                measuredRtsDetected.Add(rtPair.Value);
-            }
-
-            if (nSnrFiltered > 0)
-            {
-                _ctx.LogInfo(string.Format(
-                    "  RT quality filter (pass {0}): {1} -> {2} peptides (removed {3} with S/N < {4:F1})",
-                    passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
-            }
-
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
-                passNumber, fileName, libRtsDetected.Count));
-            _ctx.LogInfo(string.Format("Pass {0} found {1} calibration points",
-                passNumber, libRtsDetected.Count));
+            // Collect high-confidence target matches that also meet the S/N
+            // quality gate (logs the S/N filter + calibration-point counts).
+            var (libRtsDetected, measuredRtsDetected) = CollectCalibrationPoints(
+                matchArray, matchRts, snrByEntryId, passNumber, fileName, nTargetWins);
 
             if (libRtsDetected.Count < minLoessPoints)
             {
@@ -1840,43 +1743,12 @@ namespace pwiz.OspreySharp.Tasks
                 return null;
             }
 
-            // Aggregate MS1 + MS2 mass errors from passing targets only.
-            // Rust pipeline.rs:610-619 collects both MS1 and MS2 errors from
-            // passing_targets (those surviving LDA + competition + S/N >= 5.0
-            // filter). This is the same set used for RT calibration points.
-            var allMs1Errors = new List<double>();
-            var allMs2Errors = new List<double>();
-            // Track contributing matches in a stable list so a cross-impl
-            // bisection dump can replay them in the same order the
-            // calibration accumulator sees their errors.
-            var contributingMatches = new List<CalibrationMatch>();
-            foreach (var m in matchArray)
-            {
-                if (m.Ms2MassErrors == null || m.IsDecoy || m.QValue > CAL_FDR_THRESHOLD)
-                    continue;
-                double snr;
-                if (!snrByEntryId.TryGetValue(m.EntryId, out snr) || snr < MIN_SNR_FOR_RT_CAL)
-                    continue;
-                if (m.Ms1Error.HasValue)
-                    allMs1Errors.Add(m.Ms1Error.Value);
-                allMs2Errors.AddRange(m.Ms2MassErrors);
-                contributingMatches.Add(m);
-            }
-            if (OspreyDiagnostics.DumpMs2CalErrors)
-            {
-                OspreyDiagnostics.WriteMs2CalErrorsDump(contributingMatches);
-                if (OspreyDiagnostics.Ms2CalErrorsOnly)
-                    OspreyDiagnostics.ExitAfterDump("OSPREY_MS2_CAL_ERRORS_ONLY");
-            }
-            string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
-            var ms1Cal = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
-            var ms2Cal = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
-            _ctx.LogInfo(string.Format(
-                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
-                passNumber, ms1Cal.Mean, unitStr, ms1Cal.SD, 3.0 * ms1Cal.SD, allMs1Errors.Count));
-            _ctx.LogInfo(string.Format(
-                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
-                passNumber, ms2Cal.Mean, unitStr, ms2Cal.SD, 3.0 * ms2Cal.SD, allMs2Errors.Count));
+            // Aggregate MS1 + MS2 mass errors from passing targets only
+            // (same LDA + competition + S/N survivors as the RT points;
+            // emits the MS2 cal-errors dump + the MS1/MS2 calibration logs).
+            AggregateMassCalibrations(
+                matchArray, snrByEntryId, config, passNumber,
+                out var ms1Cal, out var ms2Cal);
 
             // Fit LOESS calibration.
             var swLoess = Stopwatch.StartNew();
@@ -1931,6 +1803,207 @@ namespace pwiz.OspreySharp.Tasks
                     passNumber, ex.Message));
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Pre-preprocess all window spectra for XCorr using the calibration
+        /// unit-bin scorer (~2K bins per spectrum, ~16 KB per array).
+        /// Independent of resolution mode -- HRAM 100K-bin arrays would
+        /// consume ~160 GB of LOH for 204K Astral spectra, so we use the
+        /// small unit-bin form for calibration regardless. Main search
+        /// still uses the resolution-mode bins.
+        /// Calibration preprocess runs in pure f32 to match Rust upstream
+        /// maccoss/osprey's native f32 XCorr path (cross-impl parity at
+        /// F10 rounding noise, vs ~4e-6 drift under f64). f32 values are
+        /// widened to double[] here so the downstream XcorrFromPreprocessed
+        /// path is unchanged; the widening is lossless (f32 is a subset of
+        /// f64) and preserves the f32 bit pattern for the final sum.
+        /// </summary>
+        private Dictionary<int, double[][]> PreprocessWindowsForXcorr(
+            Dictionary<int, List<Spectrum>> spectraByWindowKey)
+        {
+            var preprocessedByWindowKey = new Dictionary<int, double[][]>();
+            foreach (var kvp in spectraByWindowKey)
+            {
+                var pp = new double[kvp.Value.Count][];
+                for (int i = 0; i < kvp.Value.Count; i++)
+                {
+                    float[] f32pp = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
+                    var widened = new double[f32pp.Length];
+                    for (int k = 0; k < f32pp.Length; k++)
+                        widened[k] = f32pp[k];
+                    pp[i] = widened;
+                }
+                preprocessedByWindowKey[kvp.Key] = pp;
+            }
+            return preprocessedByWindowKey;
+        }
+
+        /// <summary>
+        /// Parallel-score each sampled calibration entry against its isolation
+        /// window, returning the successful matches plus the per-entry S/N and
+        /// (libRt, measuredRt) maps. Emits the pass timing + match-count logs.
+        /// </summary>
+        private (ConcurrentBag<CalibrationMatch> Matches,
+            ConcurrentDictionary<uint, double> SnrByEntryId,
+            ConcurrentDictionary<uint, KeyValuePair<double, double>> MatchRts) ScoreCalibrationMatches(
+                int passNumber,
+                List<LibraryEntry> sampledEntries,
+                Dictionary<int, List<Spectrum>> spectraByWindowKey,
+                Dictionary<int, double[][]> preprocessedByWindowKey,
+                List<MS1Spectrum> ms1Spectra,
+                ScoringContext context,
+                double rtSlope, double rtIntercept, double tolerance,
+                RTCalibration calibrationModel)
+        {
+            var config = context.Config;
+            var resolution = context.Resolution;
+            var fileName = context.FileName;
+
+            var swScoring = Stopwatch.StartNew();
+            var matches = new ConcurrentBag<CalibrationMatch>();
+            var snrByEntryId = new ConcurrentDictionary<uint, double>();
+            var matchRts = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
+
+            Parallel.ForEach(sampledEntries, new ParallelOptions
+            {
+                MaxDegreeOfParallelism = config.NThreads
+            },
+            () => resolution.CreateScorer(),
+            (entry, loopState, localScorer) =>
+            {
+                double entrySnr;
+                double entryLibRt;
+                double entryMeasuredRt;
+                var match = ScoreCalibrationEntry(
+                    entry, spectraByWindowKey, preprocessedByWindowKey, ms1Spectra, context,
+                    rtSlope, rtIntercept, tolerance,
+                    calibrationModel,
+                    localScorer,
+                    out entrySnr, out entryLibRt, out entryMeasuredRt);
+                if (match != null)
+                {
+                    matches.Add(match);
+                    snrByEntryId[entry.Id] = entrySnr;
+                    matchRts[entry.Id] = new KeyValuePair<double, double>(
+                        entryLibRt, entryMeasuredRt);
+                }
+                return localScorer;
+            },
+            localScorer => { });
+            swScoring.Stop();
+            _ctx.LogInfo(string.Format(
+                "[TIMING] Calibration pass {0} scoring: {1:F2}s ({2} matches)",
+                passNumber, swScoring.Elapsed.TotalSeconds, matches.Count));
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Calibration pass {0} matches scored [{1}]: {2}",
+                passNumber, fileName, matches.Count));
+            return (matches, snrByEntryId, matchRts);
+        }
+
+        /// <summary>
+        /// Collect the high-confidence target matches that pass the 1% FDR gate
+        /// and the S/N >= <see cref="MIN_SNR_FOR_RT_CAL"/> quality filter,
+        /// returning their (libRt, measuredRt) pairs as the LOESS fit input.
+        /// Emits the S/N-filter and calibration-point-count logs.
+        /// </summary>
+        private (List<double> LibRts, List<double> MeasuredRts) CollectCalibrationPoints(
+            CalibrationMatch[] matchArray,
+            ConcurrentDictionary<uint, KeyValuePair<double, double>> matchRts,
+            ConcurrentDictionary<uint, double> snrByEntryId,
+            int passNumber, string fileName, int nTargetWins)
+        {
+            var libRtsDetected = new List<double>();
+            var measuredRtsDetected = new List<double>();
+            int nSnrFiltered = 0;
+            foreach (var m in matchArray)
+            {
+                if (m.IsDecoy)
+                    continue;
+                if (m.QValue > CAL_FDR_THRESHOLD)
+                    continue;
+
+                KeyValuePair<double, double> rtPair;
+                if (!matchRts.TryGetValue(m.EntryId, out rtPair))
+                    continue;
+
+                double snr;
+                if (!snrByEntryId.TryGetValue(m.EntryId, out snr))
+                    snr = 0.0;
+
+                if (snr < MIN_SNR_FOR_RT_CAL)
+                {
+                    nSnrFiltered++;
+                    continue;
+                }
+
+                libRtsDetected.Add(rtPair.Key);
+                measuredRtsDetected.Add(rtPair.Value);
+            }
+
+            if (nSnrFiltered > 0)
+            {
+                _ctx.LogInfo(string.Format(
+                    "  RT quality filter (pass {0}): {1} -> {2} peptides (removed {3} with S/N < {4:F1})",
+                    passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
+            }
+
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
+                passNumber, fileName, libRtsDetected.Count));
+            _ctx.LogInfo(string.Format("Pass {0} found {1} calibration points",
+                passNumber, libRtsDetected.Count));
+
+            return (libRtsDetected, measuredRtsDetected);
+        }
+
+        /// <summary>
+        /// Aggregate MS1 + MS2 mass errors from passing targets only (those
+        /// surviving LDA + competition + the S/N >= 5.0 filter -- the same set
+        /// used for RT calibration points), compute the single-level MS1/MS2
+        /// mass calibrations, and emit the MS2 cal-errors bisection dump plus
+        /// the MS1/MS2 calibration logs. Mirrors Rust pipeline.rs:610-619.
+        /// </summary>
+        private void AggregateMassCalibrations(
+            CalibrationMatch[] matchArray,
+            ConcurrentDictionary<uint, double> snrByEntryId,
+            OspreyConfig config, int passNumber,
+            out MzCalibrationResult ms1Calibration,
+            out MzCalibrationResult ms2Calibration)
+        {
+            var allMs1Errors = new List<double>();
+            var allMs2Errors = new List<double>();
+            // Track contributing matches in a stable list so a cross-impl
+            // bisection dump can replay them in the same order the
+            // calibration accumulator sees their errors.
+            var contributingMatches = new List<CalibrationMatch>();
+            foreach (var m in matchArray)
+            {
+                if (m.Ms2MassErrors == null || m.IsDecoy || m.QValue > CAL_FDR_THRESHOLD)
+                    continue;
+                double snr;
+                if (!snrByEntryId.TryGetValue(m.EntryId, out snr) || snr < MIN_SNR_FOR_RT_CAL)
+                    continue;
+                if (m.Ms1Error.HasValue)
+                    allMs1Errors.Add(m.Ms1Error.Value);
+                allMs2Errors.AddRange(m.Ms2MassErrors);
+                contributingMatches.Add(m);
+            }
+            if (OspreyDiagnostics.DumpMs2CalErrors)
+            {
+                OspreyDiagnostics.WriteMs2CalErrorsDump(contributingMatches);
+                if (OspreyDiagnostics.Ms2CalErrorsOnly)
+                    OspreyDiagnostics.ExitAfterDump("OSPREY_MS2_CAL_ERRORS_ONLY");
+            }
+            string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
+            ms1Calibration = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
+            ms2Calibration = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
+            _ctx.LogInfo(string.Format(
+                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
+                passNumber, ms1Calibration.Mean, unitStr, ms1Calibration.SD, 3.0 * ms1Calibration.SD, allMs1Errors.Count));
+            _ctx.LogInfo(string.Format(
+                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
+                passNumber, ms2Calibration.Mean, unitStr, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
         }
 
         /// <summary>
