@@ -573,10 +573,65 @@ namespace pwiz.OspreySharp.Tasks
             // peptide-level FDR aggregates across charges), include the best
             // charge state (lowest experiment_precursor_qvalue) as a
             // representative.
-            double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
-            double expThreshold = config.ExperimentFdr;
+            var passingPeptides = ComputePassingPeptides(perFileEntries, config);
 
-            // Stage 1: passing peptides
+            var passingPrecursors = ComputePassingPrecursors(
+                perFileEntries, config, passingPeptides, out int nFallback);
+            if (nFallback > 0)
+            {
+                _ctx.LogInfo(string.Format(
+                    "{0} peptides had no charge state passing precursor-level FDR; best charge state kept as fallback",
+                    nFallback));
+            }
+
+            var passingEntries = CollectPassingEntries(perFileEntries, passingPrecursors);
+
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Stage 1 passing peptides: {0}", passingPeptides.Count));
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Stage 2 passing precursors: {0}", passingPrecursors.Count));
+            _ctx.LogInfo(string.Format("Writing {0} passing entries to blib", passingEntries.Count));
+
+            if (passingEntries.Count == 0)
+            {
+                _ctx.LogWarning("No entries pass FDR threshold. Creating empty blib.");
+            }
+
+            // Ensure output directory exists
+            string outputDir = Path.GetDirectoryName(config.OutputBlib);
+            if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            var bestByPrecursor = BuildBestByPrecursor(passingEntries);
+
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Best-per-precursor for blib: {0}", bestByPrecursor.Count));
+
+            var bestExpPrecursorQ = BuildBestExpPrecursorQ(perFileEntries, passingPrecursors);
+
+            var sharedBounds = BuildSharedBoundaries(perFileEntries, passingPrecursors);
+
+            var entriesByPrecursor = BuildCrossFileObservations(
+                perFileEntries, out int nCrossFileObservations);
+
+            _ctx.LogInfo(string.Format(
+                "[COUNT] Cross-file observations to write: {0}", nCrossFileObservations));
+
+            MaybeDumpBlibQValues(bestByPrecursor);
+
+            WriteBlibFile(config, perFileEntries, libraryById, bestByPrecursor,
+                bestExpPrecursorQ, sharedBounds, entriesByPrecursor);
+
+            _ctx.LogInfo(string.Format("Wrote {0} spectra to {1}",
+                bestByPrecursor.Count, config.OutputBlib));
+        }
+
+        // Stage 1 (peptide gate): the configured FdrLevel determines which
+        // peptide identities are eligible for output. EXPERIMENT-level q-value.
+        private static HashSet<string> ComputePassingPeptides(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, OspreyConfig config)
+        {
+            double expThreshold = config.ExperimentFdr;
             var passingPeptides = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
             {
@@ -588,12 +643,19 @@ namespace pwiz.OspreySharp.Tasks
                         passingPeptides.Add(e.ModifiedSequence);
                 }
             }
+            return passingPeptides;
+        }
 
-            // Stage 2: passing precursors, with fallback to best charge per peptide.
-            // Tuple keys (modseq, charge) avoid the separator-collision risk of
-            // string concatenation and skip a string allocation per lookup —
-            // same shape as Rust's HashMap<(Arc<str>, u8), ...> at
-            // pipeline.rs:4630.
+        // Stage 2 (precursor gate): within each eligible peptide, include only
+        // charge states that individually pass experiment_precursor_qvalue <=
+        // experiment_fdr; if none does, keep the best charge as a representative
+        // (nFallback counts those). Tuple keys (modseq, charge) mirror Rust's
+        // HashMap<(Arc<str>, u8), ...> at pipeline.rs:4630.
+        private static HashSet<(string, byte)> ComputePassingPrecursors(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, OspreyConfig config,
+            HashSet<string> passingPeptides, out int nFallback)
+        {
+            double expThreshold = config.ExperimentFdr;
             var passingPrecursors = new HashSet<(string, byte)>();
             var bestChargePerPeptide = new Dictionary<string, KeyValuePair<byte, double>>(
                 StringComparer.Ordinal);
@@ -615,10 +677,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
             // Fallback: peptides with no precursor-passing charge state keep their best.
-            // The OR check (`best.Value <= expThreshold`) is the substantive one — if
-            // best has q <= threshold, the loop above already added it to passingPrecursors;
-            // the Contains check is redundant defensive belt-and-suspenders.
-            int nFallback = 0;
+            nFallback = 0;
             foreach (var peptide in passingPeptides)
             {
                 KeyValuePair<byte, double> best;
@@ -629,24 +688,17 @@ namespace pwiz.OspreySharp.Tasks
                 passingPrecursors.Add((peptide, best.Key));
                 nFallback++;
             }
-            if (nFallback > 0)
-            {
-                _ctx.LogInfo(string.Format(
-                    "{0} peptides had no charge state passing precursor-level FDR; best charge state kept as fallback",
-                    nFallback));
-            }
+            return passingPrecursors;
+        }
 
-            // Collect passing entries for downstream best-per-precursor selection.
-            // A precursor is admitted iff (modseq, charge) is in passingPrecursors.
-            //
-            // No protein-FDR gate here: Rust only filters the .blib by protein
-            // FDR when `--fdr-level=protein` (the FdrLevel::Protein variant
-            // routes through the peptide-gate's effective_experiment_qvalue).
-            // C#'s FdrLevel enum doesn't include Protein, and `--protein-fdr`
-            // is interpreted by Rust as a computation-enable flag, not a
-            // hard blib filter. Mirror that: keep the (modseq, charge)
-            // membership check from Stages 1+2 and don't apply
-            // ExperimentProteinQvalue here.
+        // Collect passing entries for downstream best-per-precursor selection.
+        // A precursor is admitted iff (modseq, charge) is in passingPrecursors.
+        // No protein-FDR gate here (mirrors Rust: --protein-fdr is a compute
+        // flag, not a hard blib filter; FdrLevel has no Protein variant).
+        private static List<KeyValuePair<string, FdrEntry>> CollectPassingEntries(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            HashSet<(string, byte)> passingPrecursors)
+        {
             var passingEntries = new List<KeyValuePair<string, FdrEntry>>();
             foreach (var kvp in perFileEntries)
             {
@@ -660,34 +712,16 @@ namespace pwiz.OspreySharp.Tasks
                         new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
                 }
             }
+            return passingEntries;
+        }
 
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Stage 1 passing peptides: {0}", passingPeptides.Count));
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Stage 2 passing precursors: {0}", passingPrecursors.Count));
-            _ctx.LogInfo(string.Format("Writing {0} passing entries to blib", passingEntries.Count));
-
-            if (passingEntries.Count == 0)
-            {
-                _ctx.LogWarning("No entries pass FDR threshold. Creating empty blib.");
-            }
-
-            // Ensure output directory exists
-            string outputDir = Path.GetDirectoryName(config.OutputBlib);
-            if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
-                Directory.CreateDirectory(outputDir);
-
-            // Deduplicate by (modseq, charge) — keep best by
-            // EffectiveRunQvalue(FdrLevel.Both). Matches Rust
-            // pipeline.rs:6133-6138 which picks `best = min_by(run_qvalue)`
-            // from the precursor group. The blib's downstream
-            // OspreyRunScores / OspreyPeakBoundaries / RefSpectra
-            // (peak boundaries + retention time) all source from this
-            // best run, so the cross-impl best-file choice has to match
-            // exactly or the per-file rows split into disjoint sets.
-            // (Earlier this dedup keyed on ExperimentPrecursorQvalue,
-            // producing a 26002+26002 only-rust/only-cs key split on
-            // OspreyRunScores/PeakBoundaries.)
+        // Deduplicate by (modseq, charge) — keep best by EffectiveRunQvalue(Both).
+        // Matches Rust pipeline.rs:6133-6138. The blib's RefSpectra /
+        // OspreyRunScores / OspreyPeakBoundaries all source from this best run,
+        // so the cross-impl best-file choice must match exactly.
+        private static Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> BuildBestByPrecursor(
+            List<KeyValuePair<string, FdrEntry>> passingEntries)
+        {
             var bestByPrecursor = new Dictionary<(string, byte), KeyValuePair<string, FdrEntry>>();
             foreach (var kvp in passingEntries)
             {
@@ -700,16 +734,16 @@ namespace pwiz.OspreySharp.Tasks
                     bestByPrecursor[key] = kvp;
                 }
             }
+            return bestByPrecursor;
+        }
 
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Best-per-precursor for blib: {0}", bestByPrecursor.Count));
-
-            // Compute best (min) experiment_precursor_qvalue per (modseq, charge)
-            // across all files. This is the value Rust writes into the .blib's
-            // RefSpectra.score and OspreyExperimentScores.ExperimentQValue
-            // columns (pipeline.rs:4670-4683 + 4795). NOT max(precursor,
-            // peptide) — the experiment-level peptide q-value isn't used at
-            // the .blib write site at all.
+        // Best (min) experiment_precursor_qvalue per (modseq, charge) across all
+        // files — the value Rust writes into RefSpectra.score and
+        // OspreyExperimentScores.ExperimentQValue (pipeline.rs:4670-4683 + 4795).
+        private static Dictionary<(string, byte), double> BuildBestExpPrecursorQ(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            HashSet<(string, byte)> passingPrecursors)
+        {
             var bestExpPrecursorQ = new Dictionary<(string, byte), double>();
             foreach (var fileKvpExp in perFileEntries)
             {
@@ -726,22 +760,18 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
             }
+            return bestExpPrecursorQ;
+        }
 
-            // Build shared peak boundaries per (peptide, file): when the same
-            // peptide is detected at multiple charge states in the same run,
-            // all charges share the boundaries from the charge with lowest
-            // run_qvalue. Mirrors Rust pipeline.rs:6020-6063
-            // (build_shared_boundaries_from_plan). Without this, charge-N's
-            // RefSpectra row gets charge-N's own boundaries, but Rust gives
-            // charge-N the boundaries of whatever charge happened to score
-            // best in that file — Skyline wants the consistent peptide-level
-            // boundary so quantification across charges integrates the same
-            // RT region. Key: (modseq, fileName); value: (apexRt, startRt,
-            // endRt) from the min-run-qvalue entry across charges.
-            // Tuple key matches Rust HashMap<(Arc<str>, u16), ...> at
-            // pipeline.rs:6027 directly — no string concat or separator needed.
+        // Shared peak boundaries per (peptide, file): all charge states of the
+        // same peptide in a run share the boundaries from the charge with lowest
+        // run_qvalue. Mirrors Rust pipeline.rs:6020-6063. Key: (modseq, fileName);
+        // value: { apexRt, startRt, endRt, run_q } from the min-run-qvalue entry.
+        private static Dictionary<(string, string), double[]> BuildSharedBoundaries(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            HashSet<(string, byte)> passingPrecursors)
+        {
             var sharedBounds = new Dictionary<(string, string), double[]>();
-            // For each (modseq, file), track the (apex, start, end, run_q) of best entry
             foreach (var fileKvpBounds in perFileEntries)
             {
                 string boundsFile = fileKvpBounds.Key;
@@ -758,13 +788,18 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
             }
+            return sharedBounds;
+        }
 
-            // Pre-index all per-file target entries by (ModifiedSequence, Charge) for O(1)
-            // lookup of cross-file observations. Without this, the inner loop below is
-            // O(N_passing * N_total) which is ~70 billion ops for typical experiments.
+        // Pre-index all per-file target entries by (ModifiedSequence, Charge) for
+        // O(1) lookup of cross-file observations (otherwise the write loop is
+        // O(N_passing * N_total)). nObservations = total non-decoy rows indexed.
+        private static Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>> BuildCrossFileObservations(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, out int nObservations)
+        {
             var entriesByPrecursor =
                 new Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>>();
-            int nCrossFileObservations = 0;
+            nObservations = 0;
             foreach (var fileKvp in perFileEntries)
             {
                 string fn = fileKvp.Key;
@@ -780,64 +815,132 @@ namespace pwiz.OspreySharp.Tasks
                         entriesByPrecursor[key] = list;
                     }
                     list.Add(new KeyValuePair<string, FdrEntry>(fn, fileEntry));
-                    nCrossFileObservations++;
+                    nObservations++;
                 }
             }
+            return entriesByPrecursor;
+        }
 
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Cross-file observations to write: {0}", nCrossFileObservations));
-
-            // Diagnostic: dump per-best-precursor q-values for cross-impl
-            // bisection of the RefSpectra.score / OspreyExperimentScores
-            // gap. Rust and C# agree on run-q-values (RetentionTimes.score
-            // and OspreyRunScores PASS) but disagree on experiment-peptide-q
-            // for ~42k of 45k entries. Schema:
-            //   modseq <tab> charge <tab> file <tab> entry_id <tab>
-            //   run_prec_q <tab> run_pept_q <tab> exp_prec_q <tab> exp_pept_q
-            // Sort key = (modseq, charge). Compared externally against a
-            // Rust-side dump produced by mirroring this code on the Rust
-            // side (pipeline.rs blib write loop) under the same env-var
-            // gate. Gated by OSPREY_DUMP_BLIB_QVALUES=1; zero overhead
-            // when unset. Temporary — remove once peptide-q drift is
-            // bisected and fixed.
-            if (Environment.GetEnvironmentVariable(@"OSPREY_DUMP_BLIB_QVALUES") == @"1")
+        // Diagnostic: dump per-best-precursor q-values for cross-impl bisection
+        // of the RefSpectra.score / OspreyExperimentScores gap. Gated by
+        // OSPREY_DUMP_BLIB_QVALUES=1; zero overhead when unset. \n newlines so
+        // the dump byte-diffs against the Rust-side TSVs. Temporary.
+        private void MaybeDumpBlibQValues(
+            Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor)
+        {
+            if (Environment.GetEnvironmentVariable(@"OSPREY_DUMP_BLIB_QVALUES") != @"1")
+                return;
+            var rows = new List<string>();
+            foreach (var kvp in bestByPrecursor.Values)
             {
-                var rows = new List<string>();
-                foreach (var kvp in bestByPrecursor.Values)
+                var e = kvp.Value;
+                rows.Add(string.Format(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    "{0}\t{1}\t{2}\t{3}\t{4:R}\t{5:R}\t{6:R}\t{7:R}",
+                    e.ModifiedSequence, e.Charge, kvp.Key, e.EntryId,
+                    e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                    e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue));
+            }
+            rows.Sort(StringComparer.Ordinal);
+            using (var w = new StreamWriter(@"cs_blib_qvalues.tsv"))
+            {
+                w.NewLine = "\n";
+                w.WriteLine("modseq\tcharge\tfile\tentry_id\trun_prec_q\trun_pept_q\texp_prec_q\texp_pept_q");
+                foreach (var row in rows)
+                    w.WriteLine(row);
+            }
+            _ctx.LogInfo(string.Format(
+                @"Wrote cs_blib_qvalues.tsv ({0} best-per-precursor q-value rows)", rows.Count));
+        }
+
+        // Per-observation RetentionTimes rows — one row for EVERY run where this
+        // precursor was detected. retentionTime (drives Skyline ID-line display)
+        // is populated iff the run passes run-level FDR, OR (fallback) no run
+        // passes and this is the best run by lowest run_qvalue. Cross-charge
+        // shared boundaries applied. Mirrors Rust pipeline.rs:6191-6243.
+        private static void WriteRetentionTimes(
+            BlibWriter writer, long refId, string fileName,
+            List<KeyValuePair<string, FdrEntry>> observations,
+            Dictionary<string, long> sourceFileIds,
+            Dictionary<(string, string), double[]> sharedBounds,
+            double fdrThreshold)
+        {
+            if (observations == null)
+                return;
+            // Compute the fallback ID-line file: if NO run passes run-level FDR,
+            // the run with the lowest run_qvalue gets the ID line so every blib
+            // RefSpectra has at least one ID line.
+            bool anyPassesRunFdr = false;
+            string bestRunFile = null;
+            double bestRunQ = double.MaxValue;
+            foreach (var obs in observations)
+            {
+                double rq = obs.Value.EffectiveRunQvalue(FdrLevel.Both);
+                if (rq <= fdrThreshold)
+                    anyPassesRunFdr = true;
+                if (rq < bestRunQ)
                 {
-                    var e = kvp.Value;
-                    rows.Add(string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "{0}\t{1}\t{2}\t{3}\t{4:R}\t{5:R}\t{6:R}\t{7:R}",
-                        e.ModifiedSequence, e.Charge, kvp.Key, e.EntryId,
-                        e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                        e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue));
+                    bestRunQ = rq;
+                    bestRunFile = obs.Key;
                 }
-                rows.Sort(StringComparer.Ordinal);
-                // \n newlines (not Environment.NewLine) so the dump
-                // byte-diffs against the corresponding Rust-side TSVs.
-                // Same convention as OspreyDiagnostics — see its `LF`
-                // field doc comment.
-                using (var w = new StreamWriter(@"cs_blib_qvalues.tsv"))
-                {
-                    w.NewLine = "\n";
-                    w.WriteLine("modseq\tcharge\tfile\tentry_id\trun_prec_q\trun_pept_q\texp_prec_q\texp_pept_q");
-                    foreach (var row in rows)
-                        w.WriteLine(row);
-                }
-                _ctx.LogInfo(string.Format(
-                    @"Wrote cs_blib_qvalues.tsv ({0} best-per-precursor q-value rows)", rows.Count));
             }
 
+            foreach (var obs in observations)
+            {
+                long srcId = sourceFileIds[obs.Key];
+                var fileEntry = obs.Value;
+                double runQ = fileEntry.EffectiveRunQvalue(FdrLevel.Both);
+                bool passesFdr = runQ <= fdrThreshold;
+                bool showIdLine = passesFdr ||
+                    (!anyPassesRunFdr && obs.Key == bestRunFile);
+                bool isBest = obs.Key == fileName;
+
+                var runSharedKey = (fileEntry.ModifiedSequence, obs.Key);
+                double runApex = fileEntry.ApexRt;
+                double runStart = fileEntry.StartRt;
+                double runEnd = fileEntry.EndRt;
+                double[] runShared;
+                if (sharedBounds.TryGetValue(runSharedKey, out runShared))
+                {
+                    runApex = runShared[0];
+                    runStart = runShared[1];
+                    runEnd = runShared[2];
+                }
+
+                double? rtForIdLine = null;
+                if (showIdLine)
+                    rtForIdLine = runApex;
+                writer.AddRetentionTime(
+                    refId, srcId,
+                    rtForIdLine,
+                    runStart,
+                    runEnd,
+                    runQ,
+                    isBest);
+            }
+        }
+
+        // Write the .blib: source file IDs, parallel zlib pre-compress, then the
+        // sequential per-best-precursor RefSpectra + modifications + protein +
+        // RetentionTimes + Osprey extension-table emission, metadata, finalize.
+        private static void WriteBlibFile(
+            OspreyConfig config,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            Dictionary<uint, LibraryEntry> libraryById,
+            Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor,
+            Dictionary<(string, byte), double> bestExpPrecursorQ,
+            Dictionary<(string, string), double[]> sharedBounds,
+            Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>> entriesByPrecursor)
+        {
+            double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
             using (var writer = new BlibWriter(config.OutputBlib))
             {
                 writer.BeginBatch();
 
-                // Pre-create source file IDs once (instead of lazily inside the loop).
-                // SpectrumSourceFiles.idFileName carries the library filename
-                // (Skyline expects this — see Rust pipeline.rs:6110 + blib.rs:435).
-                // The library file is the "ID source" because that's what the IDs
-                // came from; the mzML file is the spectrum source.
+                // Pre-create source file IDs once. SpectrumSourceFiles.idFileName
+                // carries the library filename (Skyline expects this — Rust
+                // pipeline.rs:6110 + blib.rs:435). The library file is the "ID
+                // source"; the mzML file is the spectrum source.
                 string libraryIdName = Path.GetFileName(config.LibrarySource.Path);
                 var sourceFileIds = new Dictionary<string, long>();
                 foreach (var kvp in perFileEntries)
@@ -846,15 +949,10 @@ namespace pwiz.OspreySharp.Tasks
                         kvp.Key + ".mzML", libraryIdName, fdrThreshold);
                 }
 
-                // Parallel pre-compress pass. Per-spectrum zlib (Ionic.Zlib
-                // level 6) dominates the blib write wall (~12s of the
-                // observed 26s C# Stellar 3-file blib run); the SQLite
-                // INSERT itself is fast and must stay sequential because
-                // BlibWriter holds a single connection. Pre-compute
-                // (mzBlob, intBlob, numPeaks) for every entry in parallel,
-                // then drive AddSpectrumPrecompressed in iteration order
-                // so RefSpectra row IDs stay deterministic. Mirrors the
-                // Skyline BlibDb pattern in Model/Lib/BlibData/BlibDb.cs.
+                // Parallel pre-compress pass. Per-spectrum zlib dominates the blib
+                // write wall; pre-compute (mzBlob, intBlob, numPeaks) for every
+                // entry in parallel, then drive AddSpectrumPrecompressed in
+                // iteration order so RefSpectra row IDs stay deterministic.
                 var blibEntries = bestByPrecursor.Values.ToList();
                 int blibN = blibEntries.Count;
                 var blibMzBlobs = new byte[blibN][];
@@ -897,26 +995,17 @@ namespace pwiz.OspreySharp.Tasks
                     byte[] intBlobPre = blibIntBlobs[blibIdx];
                     int numPeaksPre = blibNumPeaks[blibIdx];
 
-                    // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value
-                    // (min across all observations of this (modseq, charge)
-                    // precursor in the experiment). Mirrors Rust
-                    // pipeline.rs:4670-4683 which builds best_exp_q from
-                    // e.experiment_precursor_qvalue (NOT max(precursor,
-                    // peptide), despite the misleading LightFdr.experiment_qvalue
-                    // = effective_experiment_qvalue(Both) at pipeline.rs:4705 —
-                    // BlibPlanEntry.experiment_qvalue at pipeline.rs:4795
-                    // overrides with best_exp_q.get(...) which is precursor-only).
-                    // The same value feeds OspreyExperimentScores.ExperimentQValue
-                    // below.
+                    // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value (min
+                    // across all observations of this (modseq, charge)). Mirrors
+                    // Rust pipeline.rs:4670-4683 / 4795. Same value feeds
+                    // OspreyExperimentScores.ExperimentQValue below.
                     var lookupKey = (entry.ModifiedSequence, entry.Charge);
                     double scoreQvalue;
                     if (!bestExpPrecursorQ.TryGetValue(lookupKey, out scoreQvalue))
                         scoreQvalue = entry.ExperimentPrecursorQvalue;
 
-                    // Compute nRunsDetected up-front so AddSpectrum can pass it
-                    // through to RefSpectra.copies (matches Rust pipeline.rs:6179
-                    // which passes n_runs_detected = group.len()). Was hardcoded
-                    // to 1 before this fix; the same count is reused by
+                    // nRunsDetected -> RefSpectra.copies (Rust pipeline.rs:6179
+                    // passes n_runs_detected = group.len()). Reused by
                     // OspreyExperimentScores below.
                     List<KeyValuePair<string, FdrEntry>> observations;
                     int nRunsDetected = 1;
@@ -926,9 +1015,8 @@ namespace pwiz.OspreySharp.Tasks
                         nRunsDetected = observations.Count;
                     }
 
-                    // Use shared peak boundaries when the same peptide
-                    // is detected at multiple charges in this file (Rust
-                    // pipeline.rs:6160-6164 + 6219-6222).
+                    // Shared peak boundaries when the peptide is detected at
+                    // multiple charges in this file (Rust pipeline.rs:6160-6164).
                     var sharedKey = (entry.ModifiedSequence, fileName);
                     double sharedApex = entry.ApexRt;
                     double sharedStart = entry.StartRt;
@@ -960,90 +1048,14 @@ namespace pwiz.OspreySharp.Tasks
                     if (libEntry.ProteinIds != null && libEntry.ProteinIds.Count > 0)
                         writer.AddProteinMapping(refId, libEntry.ProteinIds);
 
-                    // Per-file RetentionTimes — one row for EVERY run where this
-                    // precursor was detected, including the best-run/RefSpectra-source
-                    // run itself. retentionTime (which drives Skyline ID-line
-                    // display) is populated iff the run passes run-level FDR, OR
-                    // (fallback) no run passes run-level FDR and this is the best
-                    // run by lowest run_qvalue. Mirrors Rust pipeline.rs:6191-6243
-                    // exactly. Uses FdrLevel.Both for the run-level q-value, matching
-                    // the LightFdr.run_qvalue assignment at pipeline.rs:4704.
-                    if (observations != null)
-                    {
-                        // Compute the fallback ID-line file: if NO run passes
-                        // run-level FDR (post-second-pass q-values can shift
-                        // slightly above threshold even when the precursor passes
-                        // experiment-level), the run with the lowest run_qvalue
-                        // gets the ID line so every blib RefSpectra has at least
-                        // one ID line.
-                        bool anyPassesRunFdr = false;
-                        string bestRunFile = null;
-                        double bestRunQ = double.MaxValue;
-                        foreach (var obs in observations)
-                        {
-                            double rq = obs.Value.EffectiveRunQvalue(FdrLevel.Both);
-                            if (rq <= fdrThreshold)
-                                anyPassesRunFdr = true;
-                            if (rq < bestRunQ)
-                            {
-                                bestRunQ = rq;
-                                bestRunFile = obs.Key;
-                            }
-                        }
+                    WriteRetentionTimes(writer, refId, fileName, observations,
+                        sourceFileIds, sharedBounds, fdrThreshold);
 
-                        foreach (var obs in observations)
-                        {
-                            long srcId = sourceFileIds[obs.Key];
-                            var fileEntry = obs.Value;
-                            double runQ = fileEntry.EffectiveRunQvalue(FdrLevel.Both);
-                            bool passesFdr = runQ <= fdrThreshold;
-                            // Show an ID line if this run passes run-level FDR,
-                            // OR if no run passes and this is the fallback best.
-                            bool showIdLine = passesFdr ||
-                                (!anyPassesRunFdr && obs.Key == bestRunFile);
-                            bool isBest = obs.Key == fileName;
-
-                            // Apply shared peak boundaries for this peptide
-                            // in this run's file (cross-charge sharing —
-                            // Rust pipeline.rs:6219-6222).
-                            var runSharedKey = (fileEntry.ModifiedSequence, obs.Key);
-                            double runApex = fileEntry.ApexRt;
-                            double runStart = fileEntry.StartRt;
-                            double runEnd = fileEntry.EndRt;
-                            double[] runShared;
-                            if (sharedBounds.TryGetValue(runSharedKey, out runShared))
-                            {
-                                runApex = runShared[0];
-                                runStart = runShared[1];
-                                runEnd = runShared[2];
-                            }
-
-                            double? rtForIdLine = null;
-                            if (showIdLine)
-                                rtForIdLine = runApex;
-                            writer.AddRetentionTime(
-                                refId, srcId,
-                                rtForIdLine,
-                                runStart,
-                                runEnd,
-                                runQ,
-                                isBest);
-                        }
-                    }
-
-                    // Osprey extension tables — one row per RefSpectra each, mirroring
-                    // Rust pipeline.rs:6255-6272 byte-for-byte. Best-run-only semantics
-                    // for OspreyPeakBoundaries + OspreyRunScores; experiment-level for
-                    // OspreyExperimentScores. Note the four 0.0 fields below are the
-                    // same "not yet plumbed through Stage 7 plan entries" placeholders
-                    // Rust currently writes:
-                    //   PeakBoundaries.ApexIntensity (Rust: apex_coefficient = 0.0)
-                    //   RunScores.DiscriminantScore (Rust: dot_product not avail = 0.0)
-                    //   RunScores.PosteriorErrorProb (Rust: PEP not avail = 0.0)
-                    // When Rust starts plumbing real values through, this block updates
-                    // in lockstep to keep cross-impl parity.
-                    // OspreyPeakBoundaries uses the shared boundaries for
-                    // this (peptide, file) — same source as RefSpectra above.
+                    // Osprey extension tables — one row per RefSpectra each,
+                    // mirroring Rust pipeline.rs:6255-6272. Best-run-only for
+                    // OspreyPeakBoundaries + OspreyRunScores; experiment-level for
+                    // OspreyExperimentScores. The 0.0 fields are the same "not yet
+                    // plumbed through Stage 7 plan entries" placeholders Rust writes.
                     writer.AddPeakBoundaries(refId, fileName,
                         sharedStart, sharedEnd, sharedApex,
                         0.0, // ApexIntensity — matches Rust's apex_coefficient placeholder
@@ -1053,22 +1065,15 @@ namespace pwiz.OspreySharp.Tasks
                         0.0, // DiscriminantScore — matches Rust's dot_product placeholder
                         0.0); // PosteriorErrorProb — matches Rust's PEP placeholder
                     writer.AddExperimentScores(refId,
-                        scoreQvalue, // Same value as RefSpectra.score: min(experiment_precursor_qvalue) across observations
+                        scoreQvalue, // Same value as RefSpectra.score
                         nRunsDetected,
                         perFileEntries.Count);
                 }
 
                 writer.Commit();
 
-                // Add metadata
-                // OspreyMetadata key set must match Rust's
+                // Add metadata. OspreyMetadata key set must match Rust's
                 // write_blib_from_plan (pipeline.rs:6078-6081) byte-for-byte.
-                // The previous C#-only keys (search_parameter_hash,
-                // n_passing_precursors) are dropped: search_parameter_hash
-                // is already on every reconciled .scores.parquet (where it's
-                // used for cache validation, the actual purpose), and
-                // n_passing_precursors is recoverable as
-                // SELECT COUNT(*) FROM RefSpectra.
                 writer.AddMetadata(@"osprey_version", Program.VERSION_STRING);
                 writer.AddMetadata(@"search_mode", @"coelution");
                 writer.AddMetadata(@"run_fdr",
@@ -1078,9 +1083,6 @@ namespace pwiz.OspreySharp.Tasks
 
                 writer.FinalizeDatabase();
             }
-
-            _ctx.LogInfo(string.Format("Wrote {0} spectra to {1}",
-                bestByPrecursor.Count, config.OutputBlib));
         }
     }
 }
