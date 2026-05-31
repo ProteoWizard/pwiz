@@ -2229,36 +2229,9 @@ namespace pwiz.OspreySharp.Tasks
             if (peaks.Count == 0)
                 return null;
 
-            XICPeakBounds bestPeak = null;
-            double bestCorrSum = double.NegativeInfinity;
-
-            foreach (var peak in peaks)
-            {
-                int si = peak.StartIndex;
-                int ei = peak.EndIndex;
-                if (ei - si + 1 < 3)
-                    continue;
-
-                double corrSum = 0.0;
-                for (int i = 0; i < xics.Count; i++)
-                {
-                    double[] inti = xics[i].Intensities;
-                    for (int j = i + 1; j < xics.Count; j++)
-                    {
-                        double[] intj = xics[j].Intensities;
-                        double corr = ScoringMath.PearsonOverRange(inti, intj, si, ei);
-                        if (!double.IsNaN(corr))
-                            corrSum += corr;
-                    }
-                }
-
-                // Use >= to match Rust's max_by tie-break (last wins on ties).
-                if (corrSum >= bestCorrSum)
-                {
-                    bestCorrSum = corrSum;
-                    bestPeak = peak;
-                }
-            }
+            // Score each candidate peak by its summed pairwise fragment-XIC
+            // correlation; keep the highest (ties -> last, matching Rust max_by).
+            var (bestPeak, bestCorrSum) = ScorePeaksByCorrelation(peaks, xics);
 
             if (bestPeak == null || bestCorrSum < MIN_COELUTION_CORR_SCORE)
                 return null;
@@ -2344,64 +2317,144 @@ namespace pwiz.OspreySharp.Tasks
             byte top6Matched = CountTop6Matches(entry, apexSpectrum, config);
 
             // Collect MS2 fragment mass errors at apex for m/z calibration.
-            // Matches Rust topn_fragment_match_with_errors: uses TOP-6 fragments
-            // by intensity, not all fragments.
-            var ms2Errors = new List<double>();
-            {
-                // Select top-6 fragment indices by descending intensity
-                int nFragsForErrors = entry.Fragments.Count;
-                int nTopForErrors = Math.Min(nFragsForErrors, CAL_TOP_N_FRAGMENTS);
-                int[] topErrorIndices;
-                if (nFragsForErrors <= CAL_TOP_N_FRAGMENTS)
-                {
-                    topErrorIndices = new int[nFragsForErrors];
-                    for (int ti = 0; ti < nFragsForErrors; ti++)
-                        topErrorIndices[ti] = ti;
-                }
-                else
-                {
-                    // LINQ OrderByDescending is stable per .NET contract;
-                    // List<T>.Sort with Comparison<T> is unstable
-                    // (introsort) and produces different top-N picks
-                    // than Rust's stable slice::sort_by on RelativeIntensity
-                    // ties. Match Rust by using the stable sort.
-                    topErrorIndices = Enumerable.Range(0, nFragsForErrors)
-                        .OrderByDescending(ti => entry.Fragments[ti].RelativeIntensity)
-                        .Take(nTopForErrors)
-                        .ToArray();
-                }
-
-                foreach (int fragIdx in topErrorIndices)
-                {
-                    var frag = entry.Fragments[fragIdx];
-                    double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
-                    double lower = frag.Mz - tolDa;
-                    double upper = frag.Mz + tolDa;
-
-                    int lo = ScoringMath.BinarySearchLowerBound(apexSpectrum.Mzs, lower);
-                    if (lo < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[lo] <= upper)
-                    {
-                        double bestMz = apexSpectrum.Mzs[lo];
-                        double bestDiff = Math.Abs(bestMz - frag.Mz);
-                        for (int k = lo + 1; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
-                        {
-                            double diff = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
-                            if (diff < bestDiff)
-                            {
-                                bestDiff = diff;
-                                bestMz = apexSpectrum.Mzs[k];
-                            }
-                        }
-                        ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, bestMz));
-                    }
-                }
-            }
+            var ms2Errors = CollectMs2FragmentErrors(entry, apexSpectrum, config);
 
             // MS1 precursor mass error at apex for MS1 mass calibration.
-            // Port of osprey-scoring/src/batch.rs:2912-2940 -- extract M+0 from the
-            // MS1 scan closest to the apex RT using the config precursor tolerance;
-            // report the error in fragment tolerance units so MS1 + MS2 errors
-            // share the same unit for the MzQCData aggregator.
+            double? ms1Error = ComputeMs1MassError(entry, ms1Spectra, apexRt, config);
+
+            return new CalibrationMatch
+            {
+                EntryId = entry.Id,
+                IsDecoy = entry.IsDecoy,
+                Sequence = entry.Sequence,
+                ScanNumber = apexSpectrum.ScanNumber,
+                CorrelationScore = bestCorrSum,
+                LibcosineApex = libCosineApex,
+                Top6MatchedApex = top6Matched,
+                XcorrScore = xcorrApex,
+                IsotopeCosine = 0.0,
+                DiscriminantScore = bestCorrSum,
+                QValue = 1.0,
+                Ms2MassErrors = ms2Errors.ToArray(),
+                Ms1Error = ms1Error
+            };
+        }
+
+        /// <summary>
+        /// Score each candidate CWT peak by the sum of pairwise Pearson
+        /// correlations between fragment XICs over the peak's index range,
+        /// and return the highest-scoring peak (ties resolve to the last,
+        /// matching Rust's max_by) with its correlation sum. bestPeak is null
+        /// when no peak spans at least three points.
+        /// </summary>
+        private static (XICPeakBounds BestPeak, double BestCorrSum) ScorePeaksByCorrelation(
+            List<XICPeakBounds> peaks, List<XicData> xics)
+        {
+            XICPeakBounds bestPeak = null;
+            double bestCorrSum = double.NegativeInfinity;
+
+            foreach (var peak in peaks)
+            {
+                int si = peak.StartIndex;
+                int ei = peak.EndIndex;
+                if (ei - si + 1 < 3)
+                    continue;
+
+                double corrSum = 0.0;
+                for (int i = 0; i < xics.Count; i++)
+                {
+                    double[] inti = xics[i].Intensities;
+                    for (int j = i + 1; j < xics.Count; j++)
+                    {
+                        double[] intj = xics[j].Intensities;
+                        double corr = ScoringMath.PearsonOverRange(inti, intj, si, ei);
+                        if (!double.IsNaN(corr))
+                            corrSum += corr;
+                    }
+                }
+
+                // Use >= to match Rust's max_by tie-break (last wins on ties).
+                if (corrSum >= bestCorrSum)
+                {
+                    bestCorrSum = corrSum;
+                    bestPeak = peak;
+                }
+            }
+            return (bestPeak, bestCorrSum);
+        }
+
+        /// <summary>
+        /// Collect MS2 fragment mass errors at the apex spectrum for m/z
+        /// calibration. Matches Rust topn_fragment_match_with_errors: uses the
+        /// TOP-6 fragments by intensity (stable sort to match Rust's tie-break),
+        /// matches each within the fragment tolerance, and reports the mass
+        /// error of the closest peak in fragment-tolerance units.
+        /// </summary>
+        private static List<double> CollectMs2FragmentErrors(
+            LibraryEntry entry, Spectrum apexSpectrum, OspreyConfig config)
+        {
+            var ms2Errors = new List<double>();
+            // Select top-6 fragment indices by descending intensity
+            int nFragsForErrors = entry.Fragments.Count;
+            int nTopForErrors = Math.Min(nFragsForErrors, CAL_TOP_N_FRAGMENTS);
+            int[] topErrorIndices;
+            if (nFragsForErrors <= CAL_TOP_N_FRAGMENTS)
+            {
+                topErrorIndices = new int[nFragsForErrors];
+                for (int ti = 0; ti < nFragsForErrors; ti++)
+                    topErrorIndices[ti] = ti;
+            }
+            else
+            {
+                // LINQ OrderByDescending is stable per .NET contract;
+                // List<T>.Sort with Comparison<T> is unstable
+                // (introsort) and produces different top-N picks
+                // than Rust's stable slice::sort_by on RelativeIntensity
+                // ties. Match Rust by using the stable sort.
+                topErrorIndices = Enumerable.Range(0, nFragsForErrors)
+                    .OrderByDescending(ti => entry.Fragments[ti].RelativeIntensity)
+                    .Take(nTopForErrors)
+                    .ToArray();
+            }
+
+            foreach (int fragIdx in topErrorIndices)
+            {
+                var frag = entry.Fragments[fragIdx];
+                double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
+                double lower = frag.Mz - tolDa;
+                double upper = frag.Mz + tolDa;
+
+                int lo = ScoringMath.BinarySearchLowerBound(apexSpectrum.Mzs, lower);
+                if (lo < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[lo] <= upper)
+                {
+                    double bestMz = apexSpectrum.Mzs[lo];
+                    double bestDiff = Math.Abs(bestMz - frag.Mz);
+                    for (int k = lo + 1; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
+                    {
+                        double diff = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
+                        if (diff < bestDiff)
+                        {
+                            bestDiff = diff;
+                            bestMz = apexSpectrum.Mzs[k];
+                        }
+                    }
+                    ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, bestMz));
+                }
+            }
+            return ms2Errors;
+        }
+
+        /// <summary>
+        /// MS1 precursor mass error at the apex RT for MS1 mass calibration.
+        /// Port of osprey-scoring/src/batch.rs:2912-2940 -- extract M+0 from the
+        /// MS1 scan closest to the apex RT using the config precursor tolerance;
+        /// report the error in fragment-tolerance units so MS1 + MS2 errors
+        /// share the same unit for the MzQCData aggregator. Returns null when
+        /// there are no MS1 spectra or no M+0 isotope peak is found.
+        /// </summary>
+        private double? ComputeMs1MassError(
+            LibraryEntry entry, List<MS1Spectrum> ms1Spectra, double apexRt, OspreyConfig config)
+        {
             double? ms1Error = null;
             if (ms1Spectra != null && ms1Spectra.Count > 0)
             {
@@ -2422,23 +2475,7 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
             }
-
-            return new CalibrationMatch
-            {
-                EntryId = entry.Id,
-                IsDecoy = entry.IsDecoy,
-                Sequence = entry.Sequence,
-                ScanNumber = apexSpectrum.ScanNumber,
-                CorrelationScore = bestCorrSum,
-                LibcosineApex = libCosineApex,
-                Top6MatchedApex = top6Matched,
-                XcorrScore = xcorrApex,
-                IsotopeCosine = 0.0,
-                DiscriminantScore = bestCorrSum,
-                QValue = 1.0,
-                Ms2MassErrors = ms2Errors.ToArray(),
-                Ms1Error = ms1Error
-            };
+            return ms1Error;
         }
 
         /// <summary>
