@@ -31,7 +31,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
-using pwiz.OspreySharp.IO;
 using pwiz.OspreySharp.Scoring;
 
 namespace pwiz.OspreySharp.Tasks
@@ -139,85 +138,6 @@ namespace pwiz.OspreySharp.Tasks
         private static string F10(double v)
         {
             return OspreyDiagnostics.F10(v);
-        }
-
-
-        /// <summary>
-        /// Load spectral library from the configured source, using binary cache
-        /// when available. Matches Rust's .libcache mechanism for fast reload.
-        /// </summary>
-        protected List<LibraryEntry> LoadLibrary(OspreyConfig config)
-        {
-            string path = config.LibrarySource.Path;
-            string cachePath = path + ".libcache";
-
-            // Try loading from binary cache first
-            if (File.Exists(cachePath))
-            {
-                try
-                {
-                    var cached = LibraryCache.LoadCache(cachePath);
-                    if (cached != null && cached.Count > 0)
-                    {
-                        _ctx.LogInfo(string.Format(
-                            "Loaded {0} library entries from cache '{1}'",
-                            cached.Count, cachePath));
-                        return cached;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _ctx.LogWarning(string.Format(
-                        "Failed to load library cache: {0}. Falling back to source.", ex.Message));
-                }
-            }
-
-            // Parse from source
-            _ctx.LogInfo(string.Format("Loading spectral library from {0}...", path));
-
-            List<LibraryEntry> entries;
-
-            switch (config.LibrarySource.Format)
-            {
-                case LibraryFormat.DiannTsv:
-                    var tsvLoader = new DiannTsvLoader();
-                    entries = tsvLoader.Load(path);
-                    break;
-
-                case LibraryFormat.Blib:
-                    var blibLoader = new BlibLoader();
-                    entries = blibLoader.Load(path);
-                    break;
-
-                case LibraryFormat.Elib:
-                    var elibLoader = new ElibLoader();
-                    entries = elibLoader.Load(path);
-                    break;
-
-                default:
-                    throw new NotSupportedException(string.Format(
-                        "Unsupported library format: {0}", config.LibrarySource.Format));
-            }
-
-            // Deduplicate library entries
-            entries = LibraryDeduplicator.DeduplicateLibrary(entries);
-
-            _ctx.LogInfo(string.Format("Loaded {0} library entries", entries.Count));
-
-            // Save binary cache for next run
-            try
-            {
-                LibraryCache.SaveCache(cachePath, entries);
-                _ctx.LogInfo(string.Format(
-                    "Saved library cache ({0} entries) to '{1}'",
-                    entries.Count, cachePath));
-            }
-            catch (Exception ex)
-            {
-                _ctx.LogWarning(string.Format("Failed to save library cache: {0}", ex.Message));
-            }
-
-            return entries;
         }
 
 
