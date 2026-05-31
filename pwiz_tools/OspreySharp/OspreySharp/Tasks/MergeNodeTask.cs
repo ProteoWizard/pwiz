@@ -617,8 +617,6 @@ namespace pwiz.OspreySharp.Tasks
             _ctx.LogInfo(string.Format(
                 "[COUNT] Cross-file observations to write: {0}", nCrossFileObservations));
 
-            MaybeDumpBlibQValues(bestByPrecursor);
-
             WriteBlibFile(config, perFileEntries, libraryById, bestByPrecursor,
                 bestExpPrecursorQ, sharedBounds, entriesByPrecursor);
 
@@ -819,38 +817,6 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
             return entriesByPrecursor;
-        }
-
-        // Diagnostic: dump per-best-precursor q-values for cross-impl bisection
-        // of the RefSpectra.score / OspreyExperimentScores gap. Gated by
-        // OSPREY_DUMP_BLIB_QVALUES=1; zero overhead when unset. \n newlines so
-        // the dump byte-diffs against the Rust-side TSVs. Temporary.
-        private void MaybeDumpBlibQValues(
-            Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor)
-        {
-            if (Environment.GetEnvironmentVariable(@"OSPREY_DUMP_BLIB_QVALUES") != @"1")
-                return;
-            var rows = new List<string>();
-            foreach (var kvp in bestByPrecursor.Values)
-            {
-                var e = kvp.Value;
-                rows.Add(string.Format(
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    "{0}\t{1}\t{2}\t{3}\t{4:R}\t{5:R}\t{6:R}\t{7:R}",
-                    e.ModifiedSequence, e.Charge, kvp.Key, e.EntryId,
-                    e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                    e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue));
-            }
-            rows.Sort(StringComparer.Ordinal);
-            using (var w = new StreamWriter(@"cs_blib_qvalues.tsv"))
-            {
-                w.NewLine = "\n";
-                w.WriteLine("modseq\tcharge\tfile\tentry_id\trun_prec_q\trun_pept_q\texp_prec_q\texp_pept_q");
-                foreach (var row in rows)
-                    w.WriteLine(row);
-            }
-            _ctx.LogInfo(string.Format(
-                @"Wrote cs_blib_qvalues.tsv ({0} best-per-precursor q-value rows)", rows.Count));
         }
 
         // Per-observation RetentionTimes rows — one row for EVERY run where this
