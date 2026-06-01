@@ -445,6 +445,37 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
+        public void TestResolveDirectoryPrefersReconciledPerStem()
+        {
+            // The directory holds both Stage 4 <stem>.scores.parquet and Stage 6
+            // <stem>.scores-reconciled.parquet files. For any stem that has both,
+            // only the reconciled file is returned; never both.
+            string dir = NewTempDir();
+            try
+            {
+                File.WriteAllText(Path.Combine(dir, "a.scores.parquet"), string.Empty);
+                File.WriteAllText(Path.Combine(dir, "a.scores-reconciled.parquet"), string.Empty);
+                File.WriteAllText(Path.Combine(dir, "b.scores.parquet"), string.Empty); // no reconciled sibling
+                File.WriteAllText(Path.Combine(dir, "c.scores-reconciled.parquet"), string.Empty); // no original
+                // An input stem ending in ".reconciled" stays an original (Copilot
+                // ambiguity regression guard) -- its Stage 4 file must be returned
+                // as an original, not misread as a reconciled output.
+                File.WriteAllText(Path.Combine(dir, "d.reconciled.scores.parquet"), string.Empty);
+                var resolved = Program.ResolveInputScores(new List<string> { dir });
+                CollectionAssert.AreEqual(
+                    new[] { "a.scores-reconciled.parquet", "b.scores.parquet",
+                            "c.scores-reconciled.parquet", "d.reconciled.scores.parquet" },
+                    resolved.ConvertAll(Path.GetFileName));
+                // The superseded original must not appear.
+                CollectionAssert.DoesNotContain(resolved.ConvertAll(Path.GetFileName), "a.scores.parquet");
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        [TestMethod]
         public void TestResolveEmptyDirectoryErrors()
         {
             string dir = NewTempDir();

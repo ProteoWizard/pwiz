@@ -127,11 +127,12 @@ namespace pwiz.OspreySharp.Tasks
             return _perFileEntries;
         }
 
-        // Phase B resume surface. The reconciled parquet overwrites the
-        // upstream PerFileScoringTask parquet at the same path, but
-        // the per-task sidecar naming
-        // (<output>.PerFileRescore.osprey.task) keeps the two tasks'
-        // validity records distinct. ValidityKey adds the
+        // Phase B resume surface. The reconciled parquet is written to a
+        // SEPARATE <stem>.scores-reconciled.parquet sibling, leaving the
+        // upstream PerFileScoringTask <stem>.scores.parquet intact (so a
+        // partial Stage 6 crash can no longer half-rewrite the Stage 4
+        // output, and downstream readers can fall back to the original
+        // for files that had no reconciliation work). ValidityKey adds the
         // reconciliation parameter hash because the rescored content
         // depends on it.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
@@ -148,8 +149,17 @@ namespace pwiz.OspreySharp.Tasks
         public override IEnumerable<string> Outputs(PipelineContext ctx)
         {
             if (ctx.Config.InputFiles == null) yield break;
+            // Declares a reconciled path per input, but ExecuteRescore skips
+            // files with no consensus/reconciliation/gap-fill work, so those get
+            // no reconciled output. When any no-work file is present the driver's
+            // task-level IsTaskAlreadyDone (which requires EVERY declared output
+            // to exist) therefore can't short-circuit the whole task on resume --
+            // it re-enters Run, which fast per-file-skips already-rescored files
+            // via their reconciled sidecars. Correctness is unaffected; this is a
+            // deliberate, inert coarse-skip. (We don't filter to work-files here
+            // because that set isn't known until the Stage 6 planner has run.)
             foreach (var input in ctx.Config.InputFiles)
-                yield return ParquetScoreCache.GetScoresPath(input);
+                yield return ParquetScoreCache.GetReconciledScoresPath(input);
         }
 
         public override string ValidityKey(PipelineContext ctx)
@@ -348,38 +358,46 @@ namespace pwiz.OspreySharp.Tasks
         // accessors. Run() above is the only entry point.
 
         /// <summary>
-        /// Phase 3 -- write the reconciled per-file <c>.scores.parquet</c>.
+        /// Phase 3 -- write the reconciled per-file
+        /// <c>.scores-reconciled.parquet</c>.
         ///
         /// Reload the original Stage 4 parquet's full per-row data
-        /// (identity, boundaries, 21 PIN features, CWT candidate lists),
-        /// replace re-scored rows in place by <see cref="FdrEntry.ParquetIndex"/>
-        /// (NOT by post-compaction Vec position; the two diverge after
-        /// first-pass FDR drops non-passing entries), append gap-fill
-        /// rows at the end, reassign each gap-fill stub's
-        /// <see cref="FdrEntry.ParquetIndex"/> to the actual row it now
-        /// occupies, then write back via
+        /// (identity, boundaries, 21 PIN features, CWT candidate lists) from
+        /// <paramref name="originalPath"/>, replace re-scored rows in place by
+        /// <see cref="FdrEntry.ParquetIndex"/> (NOT by post-compaction Vec
+        /// position; the two diverge after first-pass FDR drops non-passing
+        /// entries), append gap-fill rows at the end, reassign each gap-fill
+        /// stub's <see cref="FdrEntry.ParquetIndex"/> to the actual row it now
+        /// occupies, then write to the SEPARATE
+        /// <paramref name="reconciledPath"/> via
         /// <see cref="ParquetScoreCache.WriteScoresParquet(string, List{FdrEntry}, Dictionary{string, string}, Dictionary{uint, LibraryEntry}, string)"/>
         /// with reconciliation metadata
         /// (<c>osprey.reconciled = "true"</c> +
         /// <c>osprey.reconciliation_hash = config.ReconciliationParameterHash()</c>).
-        /// Mirrors Rust pipeline.rs:3050-3110.
+        /// The original parquet is read-only here -- it is never overwritten,
+        /// so it survives intact for files whose reconciliation is a no-op and
+        /// as a crash-safe Stage 4 record. Mirrors Rust pipeline.rs:3050-3110.
+        /// Returns true when the reconciled parquet was written; false on a
+        /// reload/write failure (so the caller does not stamp a validity sidecar
+        /// over a stale or absent output).
         /// </summary>
-        private void WriteReconciledParquet(string parquetPath, List<FdrEntry> fdrEntries,
+        private bool WriteReconciledParquet(string originalPath, string reconciledPath,
+            List<FdrEntry> fdrEntries,
             string fileName, List<LibraryEntry> fullLibrary, OspreyConfig config,
             IReadOnlyList<string> joinFileStems)
         {
-            // 1. Reload the original parquet's per-row state.
+            // 1. Reload the original parquet's per-row state (read-only).
             List<FdrEntry> fullEntries;
             try
             {
-                fullEntries = ParquetScoreCache.LoadFullFdrEntries(parquetPath);
+                fullEntries = ParquetScoreCache.LoadFullFdrEntries(originalPath);
             }
             catch (Exception ex)
             {
                 _ctx.LogWarning(string.Format(
                     "Stage 6 write-back: failed to reload {0}: {1} (skipping)",
-                    parquetPath, ex.Message));
-                return;
+                    originalPath, ex.Message));
+                return false;
             }
             int origRowCount = fullEntries.Count;
 
@@ -460,7 +478,7 @@ namespace pwiz.OspreySharp.Tasks
 
             try
             {
-                ParquetScoreCache.WriteScoresParquet(parquetPath, fullEntries,
+                ParquetScoreCache.WriteScoresParquet(reconciledPath, fullEntries,
                     metadata, libraryById, fileName);
             }
             catch (Exception ex)
@@ -468,12 +486,13 @@ namespace pwiz.OspreySharp.Tasks
                 _ctx.LogWarning(string.Format(
                     "Stage 6 write-back: failed to write reconciled scores for {0}: {1}",
                     fileName, ex.Message));
-                return;
+                return false;
             }
 
             _ctx.LogInfo(string.Format(
                 "  Wrote reconciled parquet for {0}: {1} rows ({2} replaced + {3} appended; original {4} rows)",
                 fileName, fullEntries.Count, nReplaced, nAppended, origRowCount));
+            return true;
         }
 
         /// <summary>
@@ -541,10 +560,17 @@ namespace pwiz.OspreySharp.Tasks
                 // remain at the pre-rescore state (1st-pass overlay)
                 // because the worker's StopAfter terminates the pipeline
                 // here -- no downstream consumer reads them.
+                // The rescore READS the original Stage 4 parquet and WRITES a
+                // separate <stem>.scores-reconciled.parquet. Resume validity is
+                // keyed on the reconciled output (the task's declared Output),
+                // not on the original read source.
                 bool hasParquetPath = perFileParquetPaths.TryGetValue(fileName, out string perFileParquetPath);
+                string reconciledPath = hasParquetPath
+                    ? ParquetScoreCache.ReconciledPathFromScoresPath(perFileParquetPath)
+                    : null;
                 if (hasParquetPath
-                    && File.Exists(perFileParquetPath)
-                    && TaskValiditySidecar.IsValid(perFileParquetPath, Name, taskValidityKey))
+                    && File.Exists(reconciledPath)
+                    && TaskValiditySidecar.IsValid(reconciledPath, Name, taskValidityKey))
                 {
                     _ctx.LogInfo(string.Format(
                         @"[file] {0}/{1} {2}: skipping (outputs valid)",
@@ -553,9 +579,9 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 // About to (re-)rescore this file: clear any stale sidecar
                 // so a mid-Run crash leaves no false-positive pointing at
-                // the partially-written parquet.
+                // the partially-written reconciled parquet.
                 if (hasParquetPath)
-                    TaskValiditySidecar.Delete(perFileParquetPath, Name);
+                    TaskValiditySidecar.Delete(reconciledPath, Name);
 
                 IReadOnlyList<(int Index, double Apex, double Start, double End)> consensusTargets;
                 if (!perFileConsensusTargets.TryGetValue(fileName, out consensusTargets))
@@ -710,35 +736,57 @@ namespace pwiz.OspreySharp.Tasks
                     totalRescored += nGapCwt + nGapForced;
                 }
 
-                // PHASE 3 -- reconciled parquet write-back.
+                // PHASE 3 -- reconciled parquet write-back. Read the original
+                // Stage 4 parquet, write a separate .scores-reconciled.parquet
+                // sibling (leaving the original intact).
                 if (perFileParquetPaths != null &&
                     perFileParquetPaths.TryGetValue(fileName, out string parquetPath) &&
                     File.Exists(parquetPath))
                 {
-                    WriteReconciledParquet(parquetPath, fdrEntries, fileName,
+                    string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
+                    bool wrote = WriteReconciledParquet(parquetPath, reconciledOutPath, fdrEntries, fileName,
                         fullLibrary, config, joinFileStems);
 
-                    // Per-file resume sidecar: write next to the
-                    // reconciled parquet so a subsequent invocation with
-                    // the same validity key can skip this file. The
-                    // pre-write delete above guarantees the sidecar
-                    // appears only after WriteReconciledParquet finished.
-                    var perFileInputs = new List<string>
+                    // Only stamp the per-file resume sidecar when the reconciled
+                    // parquet was actually written. Stamping it after a failed
+                    // write could mark a STALE reconciled parquet (left from a
+                    // prior run with a different validity key) as valid, letting
+                    // Stage 7 / a future resume consume old rescored content. On
+                    // failure, clear any such stale output + sidecar so the next
+                    // run re-rescores this file from scratch.
+                    if (wrote)
                     {
-                        FdrScoresSidecar.Pass1Path(inputFile),
-                    };
-                    if (config.Reconciliation != null && config.Reconciliation.Enabled)
-                        perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
-                    try
-                    {
-                        TaskValiditySidecar.Write(parquetPath, Name, Program.VERSION,
-                            taskValidityKey, perFileInputs);
+                        var perFileInputs = new List<string>
+                        {
+                            FdrScoresSidecar.Pass1Path(inputFile),
+                        };
+                        if (config.Reconciliation != null && config.Reconciliation.Enabled)
+                            perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
+                        try
+                        {
+                            TaskValiditySidecar.Write(reconciledOutPath, Name, Program.VERSION,
+                                taskValidityKey, perFileInputs);
+                        }
+                        catch (Exception ex)
+                        {
+                            _ctx.LogWarning(string.Format(
+                                @"  Failed to write {0} sidecar for {1}: {2}",
+                                Name, reconciledOutPath, ex.Message));
+                        }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        _ctx.LogWarning(string.Format(
-                            @"  Failed to write {0} sidecar for {1}: {2}",
-                            Name, parquetPath, ex.Message));
+                        TaskValiditySidecar.Delete(reconciledOutPath, Name);
+                        try
+                        {
+                            if (File.Exists(reconciledOutPath)) File.Delete(reconciledOutPath);
+                        }
+                        catch (Exception ex)
+                        {
+                            _ctx.LogWarning(string.Format(
+                                @"  Failed to remove stale reconciled parquet {0} after a failed write: {1}",
+                                reconciledOutPath, ex.Message));
+                        }
                     }
                 }
             }
