@@ -527,7 +527,7 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
 
 PWIZ_API_DECL std::string find_locking_processes(const std::string& path)
 {
-#ifdef WIN32
+#ifdef _MSC_VER
     DWORD sessionHandle = 0;
     WCHAR sessionKey[CCH_RM_SESSION_KEY + 1] = {0};
     if (RmStartSession(&sessionHandle, 0, sessionKey) != ERROR_SUCCESS)
