@@ -104,12 +104,12 @@ PWIZ_API_DECL bool running_on_wine();
 PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, bool closeMemoryMappedSections = false) noexcept(true);
 
 
-/// on MSVC Windows builds, uses the Restart Manager API to identify processes holding
-/// handles on the given path; returns a comma-separated "appname (PID N)" listing, or a
-/// sentinel string describing the failure mode (RestartManager session unavailable,
-/// RmRegisterResources or RmGetList failure with rc, etc.). On non-MSVC builds
-/// (including non-MSVC Windows toolsets such as clang-cl or mingw, where the Restart
-/// Manager header/library are not linked) returns a stub string.
+/// when PWIZ_HAS_RESTART_MANAGER is defined (set by the Jamfile under the msvc toolset,
+/// where rstrtmgr.lib is linked), uses the Restart Manager API to identify processes
+/// holding handles on the given path; returns a comma-separated "appname (PID N)"
+/// listing, or a sentinel string describing the failure mode (RmStartSession /
+/// RmRegisterResources / RmGetList failure with rc, etc.). On any other build returns
+/// a stub string.
 PWIZ_API_DECL std::string find_locking_processes(const std::string& path);
 
 

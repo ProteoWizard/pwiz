@@ -60,6 +60,7 @@ lib pwiz_utility_misc
         <toolset>msvc:<library>oleaut32
         <toolset>msvc:<library>psapi
         <toolset>msvc:<library>rstrtmgr
+        <toolset>msvc:<define>PWIZ_HAS_RESTART_MANAGER
         <library>/ext/boost//thread
         <library>/ext/boost//iostreams
         <library>/ext/boost//filesystem

@@ -1052,8 +1052,15 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                             cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
                         else
                         {
+                            // Report the source -> target of the actual failing rename:
+                            // if isRenamed is true the forward rename succeeded and the
+                            // rename-back is the failing operation (renamedPath -> rawpath);
+                            // otherwise the forward rename itself failed (rawpath -> renamedPath).
+                            const std::string& sourcePath = isRenamed ? renamedPath : rawpath;
+                            const std::string& targetPath = isRenamed ? rawpath : renamedPath;
                             std::string holders = find_locking_processes(currentPath);
-                            throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks! "
+                            throw runtime_error("Cannot rename " + sourcePath + " -> " + targetPath +
+                                                ": there are unreleased file locks! "
                                                 "Last error: " + lastError + ". Lock holders: " + holders);
                         }
                     }

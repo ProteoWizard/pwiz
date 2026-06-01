@@ -527,7 +527,12 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
 
 PWIZ_API_DECL std::string find_locking_processes(const std::string& path)
 {
-#ifdef _MSC_VER
+    // Gate on PWIZ_HAS_RESTART_MANAGER (set by the Jamfile under
+    // <toolset>msvc:) rather than _MSC_VER -- clang-cl also defines
+    // _MSC_VER but the Jamfile does not link rstrtmgr.lib for non-msvc
+    // toolsets, so an _MSC_VER-only gate would compile the body but
+    // fail at link.
+#ifdef PWIZ_HAS_RESTART_MANAGER
     DWORD sessionHandle = 0;
     WCHAR sessionKey[CCH_RM_SESSION_KEY + 1] = {0};
     DWORD rcStart = RmStartSession(&sessionHandle, 0, sessionKey);
