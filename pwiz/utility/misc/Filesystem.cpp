@@ -567,38 +567,49 @@ PWIZ_API_DECL std::string find_locking_processes(const std::string& path)
                 oss << "(RmGetList failed, rc=" << rc << ")";
                 result = oss.str();
             }
-            else if (nProcInfoNeeded > 0)
+            else
             {
-                // Retry the fetch a few times if the holder list grows
-                // between the sizing call and the fetch (RmGetList returns
-                // ERROR_MORE_DATA in that race); otherwise we would lose
-                // the diagnostic on exactly the contested cases this
-                // helper is meant to surface.
-                DWORD rc2 = ERROR_MORE_DATA;
-                std::vector<RM_PROCESS_INFO> procs;
-                for (int attempt = 0; attempt < 3 && rc2 == ERROR_MORE_DATA; ++attempt)
+                // Treat ERROR_MORE_DATA with nProcInfoNeeded==0 as a fuzzy
+                // degenerate case: RM indicated holders exist but didn't
+                // size the buffer. Floor at 16 so the second call has a
+                // chance to return them rather than silently reporting
+                // "no holders".
+                if (rc == ERROR_MORE_DATA && nProcInfoNeeded == 0)
+                    nProcInfoNeeded = 16;
+
+                if (nProcInfoNeeded > 0)
                 {
-                    procs.resize(nProcInfoNeeded);
-                    nProcInfo = nProcInfoNeeded;
-                    rc2 = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, procs.data(), &lpdwRebootReasons);
-                }
-                if (rc2 == ERROR_SUCCESS)
-                {
-                    std::ostringstream oss;
-                    for (UINT i = 0; i < nProcInfo; ++i)
+                    // Retry the fetch a few times if the holder list grows
+                    // between the sizing call and the fetch (RmGetList returns
+                    // ERROR_MORE_DATA in that race); otherwise we would lose
+                    // the diagnostic on exactly the contested cases this
+                    // helper is meant to surface.
+                    DWORD rc2 = ERROR_MORE_DATA;
+                    std::vector<RM_PROCESS_INFO> procs;
+                    for (int attempt = 0; attempt < 3 && rc2 == ERROR_MORE_DATA; ++attempt)
                     {
-                        if (i > 0)
-                            oss << ", ";
-                        oss << boost::locale::conv::utf_to_utf<char>(procs[i].strAppName)
-                            << " (PID " << procs[i].Process.dwProcessId << ")";
+                        procs.resize(nProcInfoNeeded);
+                        nProcInfo = nProcInfoNeeded;
+                        rc2 = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, procs.data(), &lpdwRebootReasons);
                     }
-                    result = oss.str();
-                }
-                else
-                {
-                    std::ostringstream oss;
-                    oss << "(RmGetList (second call) failed, rc=" << rc2 << ")";
-                    result = oss.str();
+                    if (rc2 == ERROR_SUCCESS)
+                    {
+                        std::ostringstream oss;
+                        for (UINT i = 0; i < nProcInfo; ++i)
+                        {
+                            if (i > 0)
+                                oss << ", ";
+                            oss << boost::locale::conv::utf_to_utf<char>(procs[i].strAppName)
+                                << " (PID " << procs[i].Process.dwProcessId << ")";
+                        }
+                        result = oss.str();
+                    }
+                    else
+                    {
+                        std::ostringstream oss;
+                        oss << "(RmGetList (second call) failed, rc=" << rc2 << ")";
+                        result = oss.str();
+                    }
                 }
             }
         }

@@ -1058,10 +1058,32 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                             // otherwise the forward rename itself failed (rawpath -> renamedPath).
                             const std::string& sourcePath = isRenamed ? renamedPath : rawpath;
                             const std::string& targetPath = isRenamed ? rawpath : renamedPath;
-                            std::string holders = find_locking_processes(currentPath);
-                            throw runtime_error("Cannot rename " + sourcePath + " -> " + targetPath +
-                                                ": there are unreleased file locks! "
-                                                "Last error: " + lastError + ". Lock holders: " + holders);
+                            // Distinguish "path no longer exists" (e.g. AV quarantined it)
+                            // from "RestartManager found no holders" -- the former is a
+                            // useful diagnostic; the latter is the default sentinel.
+                            std::string holders = bfs::exists(currentPath)
+                                ? find_locking_processes(currentPath)
+                                : "(path no longer exists: " + currentPath + ")";
+                            // Best-effort restoration: if the forward rename succeeded but
+                            // the rename-back is what's failing, try one last non-throwing
+                            // rename-back so subsequent tests at least see the fixture at
+                            // its expected location (locked, but locatable) rather than
+                            // missing entirely.
+                            if (isRenamed)
+                            {
+                                boost::system::error_code ec;
+                                bfs::rename(renamedPath, rawpath, ec);
+                                // result intentionally ignored; we're about to throw
+                            }
+                            // Also log to cerr before throwing -- test harnesses sometimes
+                            // truncate or reformat exception what() strings, and the
+                            // lock-holder list is exactly the information we want preserved
+                            // verbatim in CI logs.
+                            std::string msg = "Cannot rename " + sourcePath + " -> " + targetPath +
+                                              ": there are unreleased file locks! "
+                                              "Last error: " + lastError + ". Lock holders: " + holders;
+                            cerr << msg << endl;
+                            throw runtime_error(msg);
                         }
                     }
                 }
