@@ -97,10 +97,12 @@ namespace pwiz.OspreySharp.Tasks
         /// <see cref="Run"/> is skipped. After a successful Run, the
         /// driver writes a <c>&lt;output&gt;.&lt;TaskName&gt;.osprey.task</c>
         /// sidecar next to each output file. The per-task naming lets
-        /// two tasks that produce the same output path (e.g. PerFileScoring
-        /// writes the initial <c>.scores.parquet</c>, PerFileRescore later
-        /// overwrites it in place with reconciled content) keep distinct
-        /// validity records.
+        /// two tasks that produce the same output path keep distinct
+        /// validity records. (Historically PerFileScoring wrote the initial
+        /// <c>.scores.parquet</c> and PerFileRescore overwrote it in place;
+        /// Stage 6 now writes a separate <c>.scores-reconciled.parquet</c>, so
+        /// they no longer share an output -- the per-task naming remains for any
+        /// future same-path producers.)
         ///
         /// A task that returns no Outputs cannot be skipped; the driver
         /// always invokes <see cref="Run"/> for it. Use that posture

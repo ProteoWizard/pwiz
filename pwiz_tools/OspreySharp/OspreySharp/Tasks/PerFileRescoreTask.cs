@@ -149,6 +149,15 @@ namespace pwiz.OspreySharp.Tasks
         public override IEnumerable<string> Outputs(PipelineContext ctx)
         {
             if (ctx.Config.InputFiles == null) yield break;
+            // Declares a reconciled path per input, but ExecuteRescore skips
+            // files with no consensus/reconciliation/gap-fill work, so those get
+            // no reconciled output. When any no-work file is present the driver's
+            // task-level IsTaskAlreadyDone (which requires EVERY declared output
+            // to exist) therefore can't short-circuit the whole task on resume --
+            // it re-enters Run, which fast per-file-skips already-rescored files
+            // via their reconciled sidecars. Correctness is unaffected; this is a
+            // deliberate, inert coarse-skip. (We don't filter to work-files here
+            // because that set isn't known until the Stage 6 planner has run.)
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
         }
