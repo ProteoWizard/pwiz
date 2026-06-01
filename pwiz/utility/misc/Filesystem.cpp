@@ -530,8 +530,13 @@ PWIZ_API_DECL std::string find_locking_processes(const std::string& path)
 #ifdef _MSC_VER
     DWORD sessionHandle = 0;
     WCHAR sessionKey[CCH_RM_SESSION_KEY + 1] = {0};
-    if (RmStartSession(&sessionHandle, 0, sessionKey) != ERROR_SUCCESS)
-        return "(RestartManager session unavailable)";
+    DWORD rcStart = RmStartSession(&sessionHandle, 0, sessionKey);
+    if (rcStart != ERROR_SUCCESS)
+    {
+        std::ostringstream oss;
+        oss << "(RmStartSession failed, rc=" << rcStart << ")";
+        return oss.str();
+    }
 
     std::string result;
     try
@@ -593,7 +598,16 @@ PWIZ_API_DECL std::string find_locking_processes(const std::string& path)
             }
         }
     }
-    catch (...) {}
+    catch (const std::exception& e)
+    {
+        if (result.empty())
+            result = std::string("(internal exception: ") + e.what() + ")";
+    }
+    catch (...)
+    {
+        if (result.empty())
+            result = "(unknown internal exception)";
+    }
     RmEndSession(sessionHandle);
     return result.empty() ? "(no holders identified by RestartManager)" : result;
 #else
