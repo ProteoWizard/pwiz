@@ -38,7 +38,7 @@ namespace pwiz.OspreySharp.Tasks
     /// same output path do not trample each other's validity records.
     /// (Historically PerFileScoringTask wrote <c>.scores.parquet</c> and
     /// PerFileRescoreTask overwrote it in place; Stage 6 now writes a
-    /// separate <c>.reconciled.scores.parquet</c>, so the two tasks no
+    /// separate <c>.scores-reconciled.parquet</c>, so the two tasks no
     /// longer share an output -- but the task-name disambiguation remains
     /// for any future same-path producers.) Each task checks its own
     /// sidecar; downstream consumers don't need to know which task wrote

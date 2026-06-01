@@ -715,7 +715,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 string parquetPath = config.InputScores[fileIdx];
                 // Derive the bare input stem via the single shared suffix-strip
-                // helper so a .reconciled.scores.parquet input maps to the same
+                // helper so a .scores-reconciled.parquet input maps to the same
                 // fileName key as its .scores.parquet sibling (a naive trailing
                 // ".scores" strip would leave the bogus key "<stem>.reconciled").
                 string fileName = Path.GetFileNameWithoutExtension(

@@ -413,7 +413,7 @@ namespace pwiz.OspreySharp
         /// <summary>
         /// Inverse of <c>scores_path_for_input</c>: given
         /// <c>/data/sample1.scores.parquet</c> (or its reconciled sibling
-        /// <c>/data/sample1.reconciled.scores.parquet</c>), produce a synthetic
+        /// <c>/data/sample1.scores-reconciled.parquet</c>), produce a synthetic
         /// input path <c>/data/sample1.mzML</c> whose stem matches what the
         /// worker used. This lets the worker reuse the existing
         /// path-derivation helpers (FDR sidecars, calibration JSON,
@@ -427,12 +427,13 @@ namespace pwiz.OspreySharp
             // GetFileNameWithoutExtension returns "" not null for valid paths
             // and throws on invalid input, so the result is never null here.
             string stem = Path.GetFileNameWithoutExtension(parquetPath);
-            // Strip the trailing ".reconciled.scores" (Stage 6 reconciled
-            // output) or ".scores" (Stage 4 output). Check the longer suffix
-            // first: GetFileNameWithoutExtension of "x.reconciled.scores.parquet"
-            // is "x.reconciled.scores", and stripping only ".scores" would
-            // leave the bogus stem "x.reconciled".
-            const string ReconciledScoresSuffix = ".reconciled.scores";
+            // Strip the trailing ".scores-reconciled" (Stage 6 reconciled output)
+            // or ".scores" (Stage 4 output). These two tokens never collide with
+            // an input stem because Stage 4 always appends exactly ".scores"
+            // (so the only way a name ends in ".scores-reconciled" is Stage 6).
+            // GetFileNameWithoutExtension of "x.scores-reconciled.parquet" is
+            // "x.scores-reconciled"; check the longer token first.
+            const string ReconciledScoresSuffix = ".scores-reconciled";
             const string ScoresSuffix = ".scores";
             if (stem.EndsWith(ReconciledScoresSuffix, StringComparison.Ordinal))
                 stem = stem.Substring(0, stem.Length - ReconciledScoresSuffix.Length);

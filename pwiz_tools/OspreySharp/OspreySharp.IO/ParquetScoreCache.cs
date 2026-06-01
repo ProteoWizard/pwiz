@@ -932,9 +932,19 @@ namespace pwiz.OspreySharp.IO
             return Path.Combine(dir, stem + ".scores.parquet");
         }
 
+        // The reconciled-output marker is appended AFTER the ".scores" token
+        // (".scores-reconciled.parquet"), NOT inserted before it. Stage 4 always
+        // writes exactly "<stem>.scores.parquet" (GetScoresPath appends that
+        // literal), so a Stage 4 path can never end in ".scores-reconciled.parquet"
+        // even when the input stem itself ends in ".reconciled". That makes the
+        // suffix an UNAMBIGUOUS "this is a Stage 6 reconciled output" signal --
+        // no parquet-metadata read needed to tell the two apart.
+        public const string ScoresParquetSuffix = ".scores.parquet";
+        public const string ReconciledScoresParquetSuffix = ".scores-reconciled.parquet";
+
         /// <summary>
         /// Returns the reconciled scores Parquet path for a given mzML path:
-        /// {stem}.reconciled.scores.parquet in the same directory. Stage 6
+        /// {stem}.scores-reconciled.parquet in the same directory. Stage 6
         /// (<c>PerFileRescoreTask</c>) writes this file instead of overwriting
         /// the Stage 4 <see cref="GetScoresPath"/> output, so the original
         /// per-file scores survive a reconciliation pass (and a partial Stage 6
@@ -945,30 +955,35 @@ namespace pwiz.OspreySharp.IO
         {
             string dir = Path.GetDirectoryName(mzmlPath) ?? string.Empty;
             string stem = Path.GetFileNameWithoutExtension(mzmlPath);
-            return Path.Combine(dir, stem + ".reconciled.scores.parquet");
+            return Path.Combine(dir, stem + ReconciledScoresParquetSuffix);
         }
 
         /// <summary>
-        /// Map an original <c>.scores.parquet</c> path to its sibling
-        /// <c>.reconciled.scores.parquet</c> path. Uses a literal-suffix
-        /// replace rather than a stem rebuild because
-        /// <c>Path.GetFileNameWithoutExtension</c> of
-        /// <c>x.scores.parquet</c> is <c>x.scores</c> -- the <c>.reconciled</c>
-        /// marker has to be inserted BEFORE <c>.scores</c>, not appended to the
-        /// trailing-extension-stripped stem. Inputs that already end in
-        /// <c>.reconciled.scores.parquet</c> are returned unchanged.
+        /// True if <paramref name="path"/> is a Stage 6 reconciled-scores parquet
+        /// (ends in <c>.scores-reconciled.parquet</c>). Unambiguous: see the note
+        /// on <see cref="ReconciledScoresParquetSuffix"/>.
+        /// </summary>
+        public static bool IsReconciledScoresPath(string path)
+        {
+            return !string.IsNullOrEmpty(path)
+                && path.EndsWith(ReconciledScoresParquetSuffix, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Map an original <c>.scores.parquet</c> path to its reconciled sibling
+        /// <c>.scores-reconciled.parquet</c> by swapping the trailing suffix. A
+        /// path that is already a reconciled output is returned unchanged (safe
+        /// and unambiguous, since the two suffixes never collide).
         /// </summary>
         public static string ReconciledPathFromScoresPath(string scoresPath)
         {
             if (string.IsNullOrEmpty(scoresPath))
                 return scoresPath;
-            const string reconciledSuffix = ".reconciled.scores.parquet";
-            const string scoresSuffix = ".scores.parquet";
-            if (scoresPath.EndsWith(reconciledSuffix, StringComparison.Ordinal))
+            if (scoresPath.EndsWith(ReconciledScoresParquetSuffix, StringComparison.Ordinal))
                 return scoresPath;
-            if (scoresPath.EndsWith(scoresSuffix, StringComparison.Ordinal))
-                return scoresPath.Substring(0, scoresPath.Length - scoresSuffix.Length)
-                    + reconciledSuffix;
+            if (scoresPath.EndsWith(ScoresParquetSuffix, StringComparison.Ordinal))
+                return scoresPath.Substring(0, scoresPath.Length - ScoresParquetSuffix.Length)
+                    + ReconciledScoresParquetSuffix;
             return scoresPath;
         }
 

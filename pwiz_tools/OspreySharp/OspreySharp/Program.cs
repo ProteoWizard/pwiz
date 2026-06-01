@@ -774,12 +774,14 @@ namespace pwiz.OspreySharp
         /// paths are passed through unchanged. Throws if the directory is
         /// empty or any explicit path doesn't exist.
         ///
-        /// Directory mode dedupes per stem: the glob <c>*.scores.parquet</c>
-        /// also matches Stage 6's <c>&lt;stem&gt;.reconciled.scores.parquet</c>
-        /// sibling, so for any stem that has both, only the reconciled file is
-        /// returned (the authoritative later pass; the <c>--join-at-pass=2</c>
-        /// reconciled-input gate expects reconciled parquets). A stem with only
-        /// an original is returned as-is.
+        /// Directory mode collects both the Stage 4 <c>*.scores.parquet</c> files
+        /// and the Stage 6 <c>*.scores-reconciled.parquet</c> siblings, then
+        /// dedupes per stem: for any stem that has both, only the reconciled file
+        /// is returned (the authoritative later pass; the <c>--join-at-pass=2</c>
+        /// reconciled-input gate expects reconciled parquets). A stem with only an
+        /// original is returned as-is. The two suffixes are unambiguous, so this
+        /// never returns both files for one stem (see
+        /// <see cref="ParquetScoreCache.ReconciledScoresParquetSuffix"/>).
         /// </summary>
         internal static List<string> ResolveInputScores(List<string> paths)
         {
@@ -789,24 +791,25 @@ namespace pwiz.OspreySharp
             if (paths.Count == 1 && Directory.Exists(paths[0]))
             {
                 string dir = paths[0];
-                string[] found = Directory.GetFiles(dir, "*.scores.parquet", SearchOption.TopDirectoryOnly);
-                if (found.Length == 0)
+                // Glob *.parquet and classify by suffix in code rather than
+                // relying on multi-dot search-pattern matching (which differs
+                // across platforms). Keep only the two known scores suffixes.
+                var originals = new List<string>();
+                var reconciledSet = new HashSet<string>(StringComparer.Ordinal);
+                foreach (string f in Directory.GetFiles(dir, "*.parquet", SearchOption.TopDirectoryOnly))
+                {
+                    if (ParquetScoreCache.IsReconciledScoresPath(f))
+                        reconciledSet.Add(f);
+                    else if (f.EndsWith(ParquetScoreCache.ScoresParquetSuffix, StringComparison.Ordinal))
+                        originals.Add(f);
+                }
+                if (originals.Count == 0 && reconciledSet.Count == 0)
                     throw new ArgumentException(string.Format(
                         "No *.scores.parquet files found in --input-scores directory: {0}", dir));
-                const string reconciledSuffix = ".reconciled.scores.parquet";
-                var reconciledSet = new HashSet<string>(StringComparer.Ordinal);
-                foreach (string f in found)
-                    if (f.EndsWith(reconciledSuffix, StringComparison.Ordinal))
-                        reconciledSet.Add(f);
-                var result = new List<string>(found.Length);
-                foreach (string f in found)
-                {
-                    if (f.EndsWith(reconciledSuffix, StringComparison.Ordinal))
-                        result.Add(f); // reconciled: always authoritative
-                    else if (!reconciledSet.Contains(ParquetScoreCache.ReconciledPathFromScoresPath(f)))
-                        result.Add(f); // original with no reconciled sibling
-                    // else: original superseded by its reconciled sibling -> drop
-                }
+                var result = new List<string>(reconciledSet);            // reconciled: authoritative
+                foreach (string f in originals)
+                    if (!reconciledSet.Contains(ParquetScoreCache.ReconciledPathFromScoresPath(f)))
+                        result.Add(f);                                   // original with no reconciled sibling
                 result.Sort(StringComparer.Ordinal); // unique filenames, no ties
                 return result;
             }
