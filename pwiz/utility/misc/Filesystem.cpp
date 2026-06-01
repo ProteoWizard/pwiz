@@ -559,9 +559,19 @@ PWIZ_API_DECL std::string find_locking_processes(const std::string& path)
             }
             else if (nProcInfoNeeded > 0)
             {
-                std::vector<RM_PROCESS_INFO> procs(nProcInfoNeeded);
-                nProcInfo = nProcInfoNeeded;
-                DWORD rc2 = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, procs.data(), &lpdwRebootReasons);
+                // Retry the fetch a few times if the holder list grows
+                // between the sizing call and the fetch (RmGetList returns
+                // ERROR_MORE_DATA in that race); otherwise we would lose
+                // the diagnostic on exactly the contested cases this
+                // helper is meant to surface.
+                DWORD rc2 = ERROR_MORE_DATA;
+                std::vector<RM_PROCESS_INFO> procs;
+                for (int attempt = 0; attempt < 3 && rc2 == ERROR_MORE_DATA; ++attempt)
+                {
+                    procs.resize(nProcInfoNeeded);
+                    nProcInfo = nProcInfoNeeded;
+                    rc2 = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, procs.data(), &lpdwRebootReasons);
+                }
                 if (rc2 == ERROR_SUCCESS)
                 {
                     std::ostringstream oss;
