@@ -38,6 +38,7 @@
     #include <wincrypt.h>
     #include <winternl.h>
     #include <Psapi.h>
+    #include <RestartManager.h>
     #include <boost/nowide/convert.hpp>
     #include <boost/noncopyable.hpp>
 #else
@@ -61,6 +62,7 @@
 #include <boost/spirit/include/karma.hpp>
 //#include <boost/xpressive/xpressive.hpp>
 #include <iostream>
+#include <sstream>
 #include <thread>
 #include <filesystem>
 
@@ -519,6 +521,73 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
             //    fprintf(stderr, "[force_close_handles_to_filepath()] Closed section handle.\n");
         }
     }
+#endif
+}
+
+
+PWIZ_API_DECL std::string find_locking_processes(const std::string& path)
+{
+#ifdef WIN32
+    DWORD sessionHandle = 0;
+    WCHAR sessionKey[CCH_RM_SESSION_KEY + 1] = {0};
+    if (RmStartSession(&sessionHandle, 0, sessionKey) != ERROR_SUCCESS)
+        return "(RestartManager session unavailable)";
+
+    std::string result;
+    try
+    {
+        std::wstring widePath = boost::locale::conv::utf_to_utf<wchar_t>(path);
+        PCWSTR files[1] = { widePath.c_str() };
+        DWORD rcRegister = RmRegisterResources(sessionHandle, 1, files, 0, nullptr, 0, nullptr);
+        if (rcRegister != ERROR_SUCCESS)
+        {
+            std::ostringstream oss;
+            oss << "(RmRegisterResources failed, rc=" << rcRegister << ")";
+            result = oss.str();
+        }
+        else
+        {
+            UINT nProcInfoNeeded = 0;
+            UINT nProcInfo = 0;
+            DWORD lpdwRebootReasons = RmRebootReasonNone;
+            DWORD rc = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, nullptr, &lpdwRebootReasons);
+            if (rc != ERROR_MORE_DATA && rc != ERROR_SUCCESS)
+            {
+                std::ostringstream oss;
+                oss << "(RmGetList failed, rc=" << rc << ")";
+                result = oss.str();
+            }
+            else if (nProcInfoNeeded > 0)
+            {
+                std::vector<RM_PROCESS_INFO> procs(nProcInfoNeeded);
+                nProcInfo = nProcInfoNeeded;
+                DWORD rc2 = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, procs.data(), &lpdwRebootReasons);
+                if (rc2 == ERROR_SUCCESS)
+                {
+                    std::ostringstream oss;
+                    for (UINT i = 0; i < nProcInfo; ++i)
+                    {
+                        if (i > 0)
+                            oss << ", ";
+                        oss << boost::locale::conv::utf_to_utf<char>(procs[i].strAppName)
+                            << " (PID " << procs[i].Process.dwProcessId << ")";
+                    }
+                    result = oss.str();
+                }
+                else
+                {
+                    std::ostringstream oss;
+                    oss << "(RmGetList (second call) failed, rc=" << rc2 << ")";
+                    result = oss.str();
+                }
+            }
+        }
+    }
+    catch (...) {}
+    RmEndSession(sessionHandle);
+    return result.empty() ? "(no holders identified by RestartManager)" : result;
+#else
+    return "(RestartManager not available on this platform)";
 #endif
 }
 
