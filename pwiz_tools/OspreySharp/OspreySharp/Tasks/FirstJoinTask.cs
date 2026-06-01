@@ -322,11 +322,15 @@ namespace pwiz.OspreySharp.Tasks
 
             CompactFirstPass(perFileEntries, bundle, config);
 
-            // Re-load the 2nd-pass FDR sidecar onto the post-compaction stub
-            // list when every file has a valid 2nd-pass sidecar (the 2nd-pass
-            // scores + q-values are what Stage 7 + the blib writer consume).
-            if (!ReloadSecondPassOverlay(config, perFileEntries))
-                return false;
+            // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
+            // (MergeNodeTask) owns its own 2nd-pass rehydrate -- it reloads (or
+            // recomputes) the 2nd-pass scores onto the shared entry buffer
+            // before protein FDR and the blib write. A former overlay at this
+            // point was redundant (its result was overwritten by MergeNode's,
+            // and nothing between here and Stage 7 consumes it -- Stage 6 is a
+            // no-op once a 2nd-pass sidecar exists) and forced Stage 5 to reach
+            // forward into MergeNodeTask for its validity key. Removed so Stage 5
+            // holds no knowledge of what runs after it.
 
             // Stage 6: planning checkpoint -- multi-charge consensus +
             // consensus RTs + per-file calibration refit + reconciliation
@@ -440,134 +444,6 @@ namespace pwiz.OspreySharp.Tasks
                         beforeCount, afterCount, firstPassBaseIds.Count));
                 }
             }
-        }
-
-        /// <summary>
-        /// Re-load the 2nd-pass FDR sidecar onto the post-compaction stub
-        /// list when every file has a 2nd-pass sidecar that matches the
-        /// current MergeNode validity key. The 2nd-pass scores + q-values
-        /// are what Stage 7 (protein FDR) and the blib writer consume.
-        /// Loading happens AFTER compaction because the 2nd-pass sidecar
-        /// was written from the post-compaction state. TryReadOverlay
-        /// tolerates count mismatch (records whose entry_id is unknown to
-        /// the caller's dict are skipped). The gate is "binary present +
-        /// sidecar (when one exists) is valid": a stale sidecar from a
-        /// prior config is rejected; bare binaries with no sidecar are
-        /// treated as trusted boundary inputs (lets Test-Regression freeze
-        /// Rust outputs as C# inputs without minting sidecars). Returns
-        /// false (with <see cref="PipelineContext.ExitCode"/> set) on a
-        /// fatal overlay error; true when the overlay loaded or was
-        /// skipped. Mirrors Rust's load-order inversion at pipeline.rs:4030-4076.
-        /// </summary>
-        private bool ReloadSecondPassOverlay(
-            OspreyConfig config,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
-        {
-            bool allPass2Valid = config.InputFiles != null && perFileEntries.Count > 0;
-            if (allPass2Valid)
-            {
-                var mergeNode = _ctx.GetTask<MergeNodeTask>();
-                string mergeNodeValidityKey = mergeNode.ValidityKey(_ctx);
-                string mergeNodeTaskName = mergeNode.Name;
-                foreach (var inputFile in config.InputFiles)
-                {
-                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
-                    if (!File.Exists(pass2Path))
-                    {
-                        allPass2Valid = false;
-                        break;
-                    }
-                    string sidecarPath = TaskValiditySidecar.PathFor(
-                        pass2Path, mergeNodeTaskName);
-                    if (File.Exists(sidecarPath)
-                        && !TaskValiditySidecar.IsValid(
-                            pass2Path, mergeNodeTaskName, mergeNodeValidityKey))
-                    {
-                        allPass2Valid = false;
-                        break;
-                    }
-                }
-            }
-            if (allPass2Valid)
-            {
-                // Same input-by-fileName map shape as the 1st-pass
-                // load above (sidecar paths derive from input file
-                // stem, not parquet stem).
-                var inputByFileName2 = new Dictionary<string, string>();
-                foreach (var inputFile in config.InputFiles)
-                    inputByFileName2[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
-
-                foreach (var kvp in perFileEntries)
-                {
-                    string fileName = kvp.Key;
-                    var entries = kvp.Value;
-                    // Sidecar overlay onto the compacted entry list.
-                    // The sidecar carries entry_ids per record, so we
-                    // skip the parquet re-read that earlier versions
-                    // used purely to size-check the load.
-                    if (!inputByFileName2.TryGetValue(fileName, out string inputFile2))
-                    {
-                        _ctx.LogError(string.Format(
-                            @"2nd-pass overlay: no synthetic input path for {0}", fileName));
-                        _ctx.ExitCode = 1;
-                        return false;
-                    }
-                    // Prefer 2nd-pass sidecar; fall back to 1st-pass.
-                    // Rust skips 2nd-pass sidecar write on single-file
-                    // runs (pipeline.rs:4489 gates on input_files > 1)
-                    // and reuses 1st-pass SVM scores in that case. The
-                    // 2nd-pass sidecar's distinct contents arise only
-                    // when reconciliation actually rescores entries
-                    // (multi-file Stellar+Astral). Without this
-                    // fallback, single-file --join-at-pass=2 errors
-                    // even though the 1st-pass scores are equivalent.
-                    string sidecarPath = FdrScoresSidecar.Pass2Path(inputFile2);
-                    FdrScoresSidecar.Pass expectedPass = FdrScoresSidecar.Pass.SecondPass;
-                    if (!File.Exists(sidecarPath))
-                    {
-                        string pass1Path = FdrScoresSidecar.Pass1Path(inputFile2);
-                        if (!File.Exists(pass1Path))
-                        {
-                            _ctx.LogError(string.Format(
-                                @"2nd-pass overlay: neither 2nd-pass nor 1st-pass FDR " +
-                                @"sidecar found for {0} (looked at {1} and {2}). Re-run a " +
-                                @"straight-through pipeline to produce them.",
-                                fileName, sidecarPath, pass1Path));
-                            _ctx.ExitCode = 1;
-                            return false;
-                        }
-                        sidecarPath = pass1Path;
-                        expectedPass = FdrScoresSidecar.Pass.FirstPass;
-                        _ctx.LogInfo(string.Format(
-                            @"2nd-pass overlay: 2nd-pass sidecar missing for {0}; " +
-                            @"falling back to 1st-pass (matches Rust single-file behavior)",
-                            fileName));
-                    }
-                    // Overlay sidecar scores directly onto the
-                    // compacted list by entry_id. The sidecar's binary
-                    // format carries entry_ids per record, so we don't
-                    // need to re-read the parquet to size-match — that
-                    // re-read used to dominate Stage 7 cs walls (~7s
-                    // on Stellar 3-file). TryReadOverlay tolerates
-                    // sidecar entries that aren't in the compacted
-                    // dict (failing precursors dropped by compaction).
-                    var entriesByEntryId = new Dictionary<uint, FdrEntry>(entries.Count);
-                    for (int i = 0; i < entries.Count; i++)
-                        entriesByEntryId[entries[i].EntryId] = entries[i];
-                    if (!FdrScoresSidecar.TryReadOverlay(sidecarPath, entriesByEntryId, expectedPass))
-                    {
-                        _ctx.LogError(string.Format(
-                            @"2nd-pass overlay: sidecar at {0} failed to load (expected {1}).",
-                            sidecarPath, expectedPass));
-                        _ctx.ExitCode = 1;
-                        return false;
-                    }
-                }
-                _ctx.LogInfo(string.Format(
-                    @"2nd-pass overlay: loaded sidecars for {0} file(s)",
-                    perFileEntries.Count));
-            }
-            return true;
         }
 
         /// <summary>
