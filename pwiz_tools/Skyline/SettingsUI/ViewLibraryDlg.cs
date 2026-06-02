@@ -265,21 +265,13 @@ namespace pwiz.Skyline.SettingsUI
                 if (_pinnedSeriesKeys.Contains(key))
                 {
                     var item = new ToolStripMenuItem(@"Unpin Ruler");
-                    item.Click += (s, e) => UnpinSeries(key);
+                    item.Click += (s, e) => UnpinRuler(key);
                     menuStrip.Items.Insert(insertAt++, item);
                 }
                 else
                 {
                     var item = new ToolStripMenuItem(@"Pin Ruler");
-                    item.Click += (s, e) =>
-                    {
-                        if (!_pinnedSeriesKeys.Contains(key))
-                        {
-                            _pinnedSeriesKeys.Add(key);
-                            SyncPinnedSeriesToGraphItem();
-                            GraphControl.Invalidate();
-                        }
-                    };
+                    item.Click += (s, e) => PinRuler(key);
                     menuStrip.Items.Insert(insertAt++, item);
                 }
             }
@@ -353,27 +345,7 @@ namespace pwiz.Skyline.SettingsUI
             if (GraphItem != null && !GraphItem.RulersApplicable)
                 peakRmi = null;
 
-            IonSeriesKey? newKey = null;
-            if (peakRmi?.MatchedIons != null && peakRmi.MatchedIons.Count > 0)
-            {
-                // Pick the matched ion with the smallest absolute mass error — that is the
-                // best explanation for the observed peak. The chosen ion's losses (if any)
-                // become part of the key so loss series get their own ruler.
-                MatchedFragmentIon bestIon = null;
-                double bestError = double.MaxValue;
-                foreach (var mfi in peakRmi.MatchedIons)
-                {
-                    double error = Math.Abs(SequenceMassCalc.GetPpm(mfi.PredictedMz,
-                        mfi.PredictedMz - peakRmi.ObservedMz));
-                    if (error < bestError)
-                    {
-                        bestError = error;
-                        bestIon = mfi;
-                    }
-                }
-                if (bestIon != null)
-                    newKey = new IonSeriesKey(bestIon.IonType, bestIon.Charge.AdductCharge, bestIon.Losses);
-            }
+            var newKey = SpectrumGraphItem.GetBestSeriesKey(peakRmi);
 
             if (GraphItem == null)
                 return;
@@ -384,14 +356,24 @@ namespace pwiz.Skyline.SettingsUI
             GraphControl.Invalidate();
         }
 
-        private void UnpinSeries(IonSeriesKey key)
+        // Pins the ruler for a single ion series (the body of the "Pin Ruler" menu command).
+        private void PinRuler(IonSeriesKey key)
+        {
+            if (_pinnedSeriesKeys.Contains(key))
+                return;
+            _pinnedSeriesKeys.Add(key);
+            SyncPinnedSeriesToGraphItem();
+            GraphControl.Invalidate();
+        }
+
+        public void UnpinRuler(IonSeriesKey key)
         {
             _pinnedSeriesKeys.Remove(key);
             SyncPinnedSeriesToGraphItem();
             GraphControl.Invalidate();
         }
 
-        private void UnpinAllRulers()
+        public void UnpinAllRulers()
         {
             _pinnedSeriesKeys.Clear();
             SyncPinnedSeriesToGraphItem();
@@ -402,6 +384,19 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (GraphItem != null)
                 GraphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
+        }
+
+        // The sequence ruler is driven by mouse-over and context-menu commands, neither of
+        // which a functional test can synthesize. These public seams invoke the same code
+        // paths so SpectrumSequenceRulerTest can verify hover resolution and pin/unpin
+        // without a physical mouse. See ai/todos TODO-20260416_spectrumSequenceRuler.
+        public SpectrumGraphItem RulerGraphItem => GraphItem;
+        public void HoverRulerPeak(LibraryRankedSpectrumInfo.RankedMI peak) => UpdateHoveredPeak(peak);
+        public void PinHoveredRuler()
+        {
+            var key = GraphItem?.HoveredSeriesKey;
+            if (key.HasValue)
+                PinRuler(key.Value);
         }
 
         /// <summary>

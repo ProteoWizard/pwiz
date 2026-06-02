@@ -150,6 +150,37 @@ namespace pwiz.Skyline.Controls.Graphs
             PeptideDocNode != null && PeptideDocNode.IsProteomic &&
             !PeptideDocNode.CrosslinkStructure.HasCrosslinks && SrmSettings != null;
 
+        /// <summary>
+        /// Resolves an observed peak to the ion series whose ruler should be shown when the
+        /// peak is hovered. Picks the matched ion with the smallest absolute mass error —
+        /// the best explanation for the peak — and returns its <see cref="IonSeriesKey"/>,
+        /// or null when the peak has no matched ions. The chosen ion's losses (if any) become
+        /// part of the key so neutral-loss series get their own ruler. Shared by all three
+        /// spectrum hosts (GraphFullScan, GraphSpectrum, ViewLibraryDlg) so mouse-over maps a
+        /// peak to a ruler series identically everywhere.
+        /// </summary>
+        public static IonSeriesKey? GetBestSeriesKey(LibraryRankedSpectrumInfo.RankedMI peakRmi)
+        {
+            if (peakRmi?.MatchedIons == null || peakRmi.MatchedIons.Count == 0)
+                return null;
+
+            MatchedFragmentIon bestIon = null;
+            double bestError = double.MaxValue;
+            foreach (var mfi in peakRmi.MatchedIons)
+            {
+                double error = Math.Abs(SequenceMassCalc.GetPpm(mfi.PredictedMz,
+                    mfi.PredictedMz - peakRmi.ObservedMz));
+                if (error < bestError)
+                {
+                    bestError = error;
+                    bestIon = mfi;
+                }
+            }
+            return bestIon == null
+                ? (IonSeriesKey?)null
+                : new IonSeriesKey(bestIon.IonType, bestIon.Charge.AdductCharge, bestIon.Losses);
+        }
+
         public SpectrumGraphItem(PeptideDocNode peptideDocNode,
             TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
             LibraryRankedSpectrumInfo spectrumInfo, string libName) : base(spectrumInfo)

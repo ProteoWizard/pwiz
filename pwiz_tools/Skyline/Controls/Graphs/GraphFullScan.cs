@@ -3240,21 +3240,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_pinnedSeriesKeys.Contains(key))
                 {
                     var item = new ToolStripMenuItem(@"Unpin Ruler");
-                    item.Click += (s, e) => UnpinSeries(key);
+                    item.Click += (s, e) => UnpinRuler(key);
                     menuStrip.Items.Insert(insertAt++, item);
                 }
                 else
                 {
                     var item = new ToolStripMenuItem(@"Pin Ruler");
-                    item.Click += (s, e) =>
-                    {
-                        if (!_pinnedSeriesKeys.Contains(key))
-                        {
-                            _pinnedSeriesKeys.Add(key);
-                            SyncPinnedSeriesToGraphItems();
-                            graphControl.Invalidate();
-                        }
-                    };
+                    item.Click += (s, e) => PinRuler(key);
                     menuStrip.Items.Insert(insertAt++, item);
                 }
             }
@@ -3377,27 +3369,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_currentGraphItem != null && !_currentGraphItem.RulersApplicable)
                 peakRmi = null;
 
-            IonSeriesKey? newKey = null;
-            if (peakRmi?.MatchedIons != null && peakRmi.MatchedIons.Count > 0)
-            {
-                // Pick the matched ion with the smallest absolute mass error — that is the
-                // best explanation for the observed peak. The chosen ion's losses (if any)
-                // become part of the key so loss series get their own ruler.
-                MatchedFragmentIon bestIon = null;
-                double bestError = double.MaxValue;
-                foreach (var mfi in peakRmi.MatchedIons)
-                {
-                    double error = Math.Abs(SequenceMassCalc.GetPpm(mfi.PredictedMz,
-                        mfi.PredictedMz - peakRmi.ObservedMz));
-                    if (error < bestError)
-                    {
-                        bestError = error;
-                        bestIon = mfi;
-                    }
-                }
-                if (bestIon != null)
-                    newKey = new IonSeriesKey(bestIon.IonType, bestIon.Charge.AdductCharge, bestIon.Losses);
-            }
+            var newKey = SpectrumGraphItem.GetBestSeriesKey(peakRmi);
 
             if (_currentGraphItem == null)
                 return;
@@ -3434,14 +3406,24 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void UnpinSeries(IonSeriesKey key)
+        // Pins the ruler for a single ion series (the body of the "Pin Ruler" menu command).
+        private void PinRuler(IonSeriesKey key)
+        {
+            if (_pinnedSeriesKeys.Contains(key))
+                return;
+            _pinnedSeriesKeys.Add(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        public void UnpinRuler(IonSeriesKey key)
         {
             _pinnedSeriesKeys.Remove(key);
             SyncPinnedSeriesToGraphItems();
             graphControl.Invalidate();
         }
 
-        private void UnpinAllRulers()
+        public void UnpinAllRulers()
         {
             _pinnedSeriesKeys.Clear();
             SyncPinnedSeriesToGraphItems();
@@ -3452,6 +3434,31 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_currentGraphItem != null)
                 _currentGraphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
+        }
+
+        // The sequence ruler is driven by mouse-over and context-menu commands, neither of
+        // which a functional test can synthesize. These public seams invoke the same code
+        // paths so SpectrumSequenceRulerTest can verify hover resolution and pin/unpin
+        // without a physical mouse. See ai/todos TODO-20260416_spectrumSequenceRuler.
+        public SpectrumGraphItem RulerGraphItem => _currentGraphItem;
+        public void HoverRulerPeak(LibraryRankedSpectrumInfo.RankedMI peak) => UpdateHoveredPeak(peak);
+        public void PinHoveredRuler()
+        {
+            var key = _currentGraphItem?.HoveredSeriesKey;
+            if (key.HasValue)
+                PinRuler(key.Value);
+        }
+
+        // Programmatic equivalent of clicking the "Show Annotations" toolstrip button.
+        // Annotated mode is required for the ruler to apply — in target-only mode the graph
+        // shows only document transitions, with no broader matched-peak set to align against.
+        // No-op when the toolstrip button isn't visible (the scan isn't a fragment scan).
+        public void ShowAnnotations(bool show)
+        {
+            if (!toolStripButtonShowAnnotations.Visible
+                || toolStripButtonShowAnnotations.Checked == show)
+                return;
+            toolStripButtonShowAnnotations.Checked = show;
         }
 
         // For use with CursorTrackingTip _cursorTip
