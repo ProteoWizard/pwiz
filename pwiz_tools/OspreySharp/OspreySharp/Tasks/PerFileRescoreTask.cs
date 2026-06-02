@@ -165,7 +165,7 @@ namespace pwiz.OspreySharp.Tasks
         public override string ValidityKey(PipelineContext ctx)
         {
             return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
         }
 
         public override bool Run(PipelineContext ctx)
@@ -465,13 +465,13 @@ namespace pwiz.OspreySharp.Tasks
             //    pipeline where config.InputFiles already has all files,
             //    or v1 backward compat).
             string reconciliationHash = (joinFileStems != null && joinFileStems.Count > 0)
-                ? config.ReconciliationParameterHashForStems(joinFileStems)
-                : config.ReconciliationParameterHash();
+                ? config.Identity.ReconciliationParameterHashForStems(joinFileStems)
+                : config.Identity.ReconciliationParameterHash();
             var metadata = new Dictionary<string, string>
             {
                 { @"osprey.version", Program.VERSION },
-                { @"osprey.search_hash", config.SearchParameterHash() },
-                { @"osprey.library_hash", config.LibraryIdentityHash() },
+                { @"osprey.search_hash", config.Identity.SearchParameterHash() },
+                { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                 { @"osprey.reconciled", @"true" },
                 { @"osprey.reconciliation_hash", reconciliationHash },
             };

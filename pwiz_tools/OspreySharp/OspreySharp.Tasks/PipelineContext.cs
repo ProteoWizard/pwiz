@@ -55,9 +55,9 @@ namespace pwiz.OspreySharp.Tasks
         /// The configuration parsed from CLI args and the input library.
         ///
         /// Mutation contract: fields that feed
-        /// <see cref="OspreyConfig.SearchParameterHash"/> /
-        /// <see cref="OspreyConfig.LibraryIdentityHash"/> /
-        /// <see cref="OspreyConfig.ReconciliationParameterHash"/> must
+        /// <see cref="SearchIdentity.SearchParameterHash"/> /
+        /// <see cref="SearchIdentity.LibraryIdentityHash"/> /
+        /// <see cref="SearchIdentity.ReconciliationParameterHash"/> must
         /// remain stable for the life of the run, so a worker can
         /// reproduce the same hash a straight-through invocation would
         /// stamp into its parquet footers. Pipeline-populated fields

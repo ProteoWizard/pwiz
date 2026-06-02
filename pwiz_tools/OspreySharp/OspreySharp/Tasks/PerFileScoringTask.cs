@@ -256,8 +256,8 @@ namespace pwiz.OspreySharp.Tasks
                 parquetFooterMetadata = new Dictionary<string, string>
                 {
                     { @"osprey.version", Program.VERSION },
-                    { @"osprey.search_hash", config.SearchParameterHash() },
-                    { @"osprey.library_hash", config.LibraryIdentityHash() },
+                    { @"osprey.search_hash", config.Identity.SearchParameterHash() },
+                    { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                     { @"osprey.reconciled", @"false" },
                 };
             }

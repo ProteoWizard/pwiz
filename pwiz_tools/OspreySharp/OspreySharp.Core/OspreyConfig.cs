@@ -215,34 +215,6 @@ namespace pwiz.OspreySharp.Core
         /// and MUST stay byte-identical with Rust.
         /// </summary>
         public SearchIdentity Identity => new SearchIdentity(this);
-
-        /// <summary>
-        /// Convenience delegator to <see cref="Core.SearchIdentity.SearchParameterHash"/>.
-        /// </summary>
-        public string SearchParameterHash() => Identity.SearchParameterHash();
-
-        /// <summary>
-        /// Convenience delegator to <see cref="Core.SearchIdentity.LibraryIdentityHash"/>.
-        /// </summary>
-        public string LibraryIdentityHash() => Identity.LibraryIdentityHash();
-
-        /// <summary>
-        /// Convenience delegator to <see cref="Core.SearchIdentity.ReconciliationParameterHash"/>.
-        /// </summary>
-        public string ReconciliationParameterHash() => Identity.ReconciliationParameterHash();
-
-        /// <summary>
-        /// Convenience delegator to <see cref="Core.SearchIdentity.ReconciliationParameterHashForStems"/>.
-        /// </summary>
-        public string ReconciliationParameterHashForStems(IReadOnlyList<string> fileStems)
-            => Identity.ReconciliationParameterHashForStems(fileStems);
-
-        /// <summary>
-        /// Convenience delegator to <see cref="Core.SearchIdentity.EscapeForRustDebug"/>,
-        /// retained so existing callers / tests that referenced
-        /// <c>OspreyConfig.EscapeForRustDebug</c> keep compiling.
-        /// </summary>
-        internal static string EscapeForRustDebug(string s) => SearchIdentity.EscapeForRustDebug(s);
     }
 
     /// <summary>

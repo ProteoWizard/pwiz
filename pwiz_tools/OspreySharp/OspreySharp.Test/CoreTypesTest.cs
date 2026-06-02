@@ -435,8 +435,8 @@ namespace pwiz.OspreySharp.Test
         public void TestSearchHashDeterministic()
         {
             var config = new OspreyConfig();
-            string hash1 = config.SearchParameterHash();
-            string hash2 = config.SearchParameterHash();
+            string hash1 = config.Identity.SearchParameterHash();
+            string hash2 = config.Identity.SearchParameterHash();
 
             Assert.AreEqual(hash1, hash2);
             Assert.AreEqual(64, hash1.Length); // SHA-256 hex is 64 chars
@@ -446,9 +446,9 @@ namespace pwiz.OspreySharp.Test
         public void TestSearchHashChangesWithTolerance()
         {
             var config = new OspreyConfig();
-            string hash1 = config.SearchParameterHash();
+            string hash1 = config.Identity.SearchParameterHash();
             config.FragmentTolerance.Tolerance = 20.0;
-            string hash2 = config.SearchParameterHash();
+            string hash2 = config.Identity.SearchParameterHash();
 
             Assert.AreNotEqual(hash1, hash2);
         }
@@ -466,25 +466,25 @@ namespace pwiz.OspreySharp.Test
             // Expected outputs below pin the exact char sequence Rust's
             // {:?} would produce on the same input.
             Assert.AreEqual(@"T:\\test\\manifest.tsv",
-                OspreyConfig.EscapeForRustDebug(@"T:\test\manifest.tsv"));
+                SearchIdentity.EscapeForRustDebug(@"T:\test\manifest.tsv"));
             Assert.AreEqual(@"/srv/data/manifest.tsv",
-                OspreyConfig.EscapeForRustDebug(@"/srv/data/manifest.tsv"));
+                SearchIdentity.EscapeForRustDebug(@"/srv/data/manifest.tsv"));
             Assert.AreEqual(@"line1\nline2",
-                OspreyConfig.EscapeForRustDebug("line1\nline2"));
+                SearchIdentity.EscapeForRustDebug("line1\nline2"));
             Assert.AreEqual(@"with \""quotes\""",
-                OspreyConfig.EscapeForRustDebug("with \"quotes\""));
+                SearchIdentity.EscapeForRustDebug("with \"quotes\""));
             Assert.AreEqual(@"\t\r\n\0",
-                OspreyConfig.EscapeForRustDebug("\t\r\n\0"));
+                SearchIdentity.EscapeForRustDebug("\t\r\n\0"));
             // DEL (0x7F) and sub-0x20 control chars render as Rust's
             // `\u{HEX}` form.
             Assert.AreEqual(@"a\u{7f}b",
-                OspreyConfig.EscapeForRustDebug("ab"));
+                SearchIdentity.EscapeForRustDebug("ab"));
             Assert.AreEqual(@"\u{1}\u{1f}",
-                OspreyConfig.EscapeForRustDebug(""));
+                SearchIdentity.EscapeForRustDebug(""));
             Assert.AreEqual(@"plain-ascii-7",
-                OspreyConfig.EscapeForRustDebug(@"plain-ascii-7"));
+                SearchIdentity.EscapeForRustDebug(@"plain-ascii-7"));
             Assert.AreEqual(string.Empty,
-                OspreyConfig.EscapeForRustDebug(string.Empty));
+                SearchIdentity.EscapeForRustDebug(string.Empty));
         }
 
         [TestMethod]
@@ -507,23 +507,23 @@ namespace pwiz.OspreySharp.Test
 
             // Pin the exact pre-hash escape that goes into Some("...").
             Assert.AreEqual(@"T:\\test\\manifest.tsv",
-                OspreyConfig.EscapeForRustDebug(winPath));
+                SearchIdentity.EscapeForRustDebug(winPath));
             Assert.AreEqual(linuxPath,
-                OspreyConfig.EscapeForRustDebug(linuxPath));
+                SearchIdentity.EscapeForRustDebug(linuxPath));
 
             var configEmpty = new OspreyConfig();
-            string hashEmpty = configEmpty.SearchParameterHash();
+            string hashEmpty = configEmpty.Identity.SearchParameterHash();
 
             var configWin = new OspreyConfig { DecoyPairingManifestPath = winPath };
-            string hashWin = configWin.SearchParameterHash();
+            string hashWin = configWin.Identity.SearchParameterHash();
             // Hash determinism: identical config -> identical hash.
-            Assert.AreEqual(hashWin, configWin.SearchParameterHash());
+            Assert.AreEqual(hashWin, configWin.Identity.SearchParameterHash());
             // Sensitivity: setting a manifest path changes the hash.
             Assert.AreNotEqual(hashEmpty, hashWin);
 
             var configLinux = new OspreyConfig { DecoyPairingManifestPath = linuxPath };
-            string hashLinux = configLinux.SearchParameterHash();
-            Assert.AreEqual(hashLinux, configLinux.SearchParameterHash());
+            string hashLinux = configLinux.Identity.SearchParameterHash();
+            Assert.AreEqual(hashLinux, configLinux.Identity.SearchParameterHash());
             // Distinct path shapes (different escape semantics) produce
             // distinct hashes.
             Assert.AreNotEqual(hashWin, hashLinux);
@@ -532,7 +532,7 @@ namespace pwiz.OspreySharp.Test
             // distinct hashes (catches accidental aliasing in the escape
             // path).
             var configWinAlt = new OspreyConfig { DecoyPairingManifestPath = winPathAlt };
-            Assert.AreNotEqual(hashWin, configWinAlt.SearchParameterHash());
+            Assert.AreNotEqual(hashWin, configWinAlt.Identity.SearchParameterHash());
         }
 
         [TestMethod]
@@ -551,19 +551,19 @@ namespace pwiz.OspreySharp.Test
             var configA = new OspreyConfig { DecoyPairMinFraction = 1.0 / 3.0 };
             var configB = new OspreyConfig { DecoyPairMinFraction = 1.0 / 3.0 };
             // Deterministic across two constructions of the same config.
-            Assert.AreEqual(configA.SearchParameterHash(),
-                configB.SearchParameterHash());
+            Assert.AreEqual(configA.Identity.SearchParameterHash(),
+                configB.Identity.SearchParameterHash());
             // Sensitive to a tiny perturbation of the threshold.
             var configC = new OspreyConfig { DecoyPairMinFraction = (1.0 / 3.0) + 1e-12 };
-            Assert.AreNotEqual(configA.SearchParameterHash(),
-                configC.SearchParameterHash());
+            Assert.AreNotEqual(configA.Identity.SearchParameterHash(),
+                configC.Identity.SearchParameterHash());
             // Sensitive to the default vs an explicit set to the same
             // value (catches a regression where the default would not be
             // hashed identically to an explicit-set).
             var configDefault = new OspreyConfig();
             var configExplicit80 = new OspreyConfig { DecoyPairMinFraction = 0.80 };
-            Assert.AreEqual(configDefault.SearchParameterHash(),
-                configExplicit80.SearchParameterHash());
+            Assert.AreEqual(configDefault.Identity.SearchParameterHash(),
+                configExplicit80.Identity.SearchParameterHash());
         }
 
         [TestMethod]
