@@ -373,7 +373,7 @@ namespace pwiz.OspreySharp.Tasks
         /// <see cref="ParquetScoreCache.WriteScoresParquet(string, List{FdrEntry}, Dictionary{string, string}, Dictionary{uint, LibraryEntry}, string)"/>
         /// with reconciliation metadata
         /// (<c>osprey.reconciled = "true"</c> +
-        /// <c>osprey.reconciliation_hash = config.ReconciliationParameterHash()</c>).
+        /// <c>osprey.reconciliation_hash = config.Identity.ReconciliationParameterHash()</c>).
         /// The original parquet is read-only here -- it is never overwritten,
         /// so it survives intact for files whose reconciliation is a no-op and
         /// as a crash-safe Stage 4 record. Mirrors Rust pipeline.rs:3050-3110.
@@ -627,7 +627,7 @@ namespace pwiz.OspreySharp.Tasks
                 // the MS2-calibrated tolerance (AnalysisPipeline.cs ~line 3552);
                 // without a per-file clone the mutation persists on the outer
                 // config, leaks into subsequent files, AND poisons the
-                // WriteReconciledParquet hash stamp (config.SearchParameterHash()
+                // WriteReconciledParquet hash stamp (config.Identity.SearchParameterHash()
                 // would then reflect the calibrated tolerance, not the value
                 // a fresh --join-at-pass=2 invocation recomputes from CLI
                 // defaults -- causing search_hash mismatch errors). Mirrors
