@@ -197,12 +197,12 @@ namespace pwiz.OspreySharp.Core
 
         /// <summary>
         /// The bit-parity-critical identity hashing for this run. Split out
-        /// of <see cref="OspreyConfig"/> into <see cref="Core.SearchIdentity"/>
+        /// of <see cref="OspreyConfig"/> into <see cref="SearchIdentity"/>
         /// so this type is only the configuration bag and the SHA hashing is
         /// its own single-responsibility unit. A fresh instance is returned
         /// per access; it reads this config's hash-affecting fields at call
         /// time, preserving the historical behavior of the former instance
-        /// methods. The hash recipes live on <see cref="Core.SearchIdentity"/>
+        /// methods. The hash recipes live on <see cref="SearchIdentity"/>
         /// and MUST stay byte-identical with Rust.
         /// </summary>
         public SearchIdentity Identity => new SearchIdentity(this);

@@ -243,7 +243,7 @@ namespace pwiz.OspreySharp.Tasks
             // Pre-compute the parquet footer metadata ONCE, against the
             // unmutated outer config. ProcessFile clones the config per
             // file and mutates FragmentTolerance during MS2 calibration,
-            // so reading config.SearchParameterHash() inside ProcessFile
+            // so reading config.Identity.SearchParameterHash() inside ProcessFile
             // would produce a hash that the join-only validator would
             // not recognize. Built unconditionally (in any non-joinOnly
             // mode) because Stage 6 reconciliation needs the per-file
